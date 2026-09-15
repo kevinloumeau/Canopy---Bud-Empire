@@ -21,7 +21,7 @@
       <button class="icon" id="resetOpen" aria-label="Reset progress">↻</button>
     </header>
 
-    <section class="world" id="world" aria-label="Fixed isometric dispensary. Tap a station to select it.">
+    <section class="world" id="world" aria-label="Isometric dispensary. Drag to pan, pinch to zoom, and tap a station.">
       <div class="loading" id="loading">
         <div class="load-card">
           <div class="load-head"><span class="load-mark">G</span><div><small>GROVE DISPENSARY</small><b id="loadStatus">OPENING DISPENSARY</b></div><strong id="loadPercent">0%</strong></div>
@@ -37,14 +37,15 @@
         </div>
       </div>
       <div class="markers" id="markers"></div>
+      <div class="map-controls" aria-label="Map view"><button id="zoomIn" aria-label="Zoom in">+</button><button id="zoomOut" aria-label="Zoom out">−</button><button id="centerView" aria-label="Center map">⌖</button></div>
       <p class="upgrade-hint mission" id="upgradeHint">Build your seed-to-customer line.</p>
       <button class="run" id="run" aria-label="Work a shift to earn cash"><b>WORK</b><span id="tapValue">+$1</span></button>
-      <div class="gesture-hint" id="gestureHint">TAP A STATION · UPGRADE ITS TEAM</div>
+      <div class="gesture-hint" id="gestureHint">DRAG TO PAN · PINCH TO ZOOM</div>
       <div class="float-layer" id="floatLayer"></div>
     </section>
 
     <section class="sheet" id="sheet">
-      <nav class="tray-tabs" aria-label="Dispensary controls"><button data-tray="factory" aria-pressed="true">Grow line</button><button data-tray="orders" aria-pressed="false">Orders <span id="orderBadge" hidden>•</span></button><button data-tray="boosts" aria-pressed="false">Boosters</button></nav>
+      <nav class="tray-tabs" aria-label="Dispensary controls"><button data-tray="factory" aria-pressed="true">Grow line</button><button data-tray="employees" aria-pressed="false">Employees</button><button data-tray="orders" aria-pressed="false">Online <span id="onlineBadge" hidden>•</span></button><button data-tray="boosts" aria-pressed="false">Upgrades <span id="orderBadge" hidden>•</span></button></nav>
       <div data-pane="factory">
         <nav class="machine-nav" aria-label="Select production stage"><button data-machine="0" aria-pressed="true"><small>01</small><canvas class="machine-thumb" width="160" height="100" aria-hidden="true"></canvas>Seeds<em>Not built</em></button>
 <button data-machine="1" aria-pressed="false"><small>02</small><canvas class="machine-thumb" width="160" height="100" aria-hidden="true"></canvas>Grow<em>Not built</em></button>
@@ -56,15 +57,24 @@
           <div class="machine-info"><div><small id="machineNumber">STAGE 01</small><h1 id="machineName">SEED STATION</h1><p class="production-detail"><b id="machineRate">$0/s</b> · Lv <b id="machineLevel">0</b></p></div></div>
           <button class="buy" id="buyMachine"><span>BUILD</span><b id="machineCost">$10</b></button>
         </div>
-        <div class="staff-row"><div><b id="staffLevel">Employee Lv 0</b><small id="staffBenefit">Station speed +0% · next +30%</small></div><button id="upgradeStaff"><span>TRAIN EMPLOYEE</span><b id="staffCost">$20</b></button></div>
+
       </div>
+      <div data-pane="employees" hidden><div class="tray-heading">Your team<p>Train each employee to speed up their station.</p></div><div class="employee-list"><div class="employee-card"><div class="employee-number">01</div><div><b>Seed attendant</b><small id="employeeInfo0">Lv 0 · +0% speed</small></div><button data-staff="0"><span>Train +30%</span><b>$20</b></button></div>
+<div class="employee-card"><div class="employee-number">02</div><div><b>Grow attendant</b><small id="employeeInfo1">Lv 0 · +0% speed</small></div><button data-staff="1"><span>Train +30%</span><b>$20</b></button></div>
+<div class="employee-card"><div class="employee-number">03</div><div><b>Picker</b><small id="employeeInfo2">Lv 0 · +0% speed</small></div><button data-staff="2"><span>Train +30%</span><b>$20</b></button></div>
+<div class="employee-card"><div class="employee-number">04</div><div><b>Packer</b><small id="employeeInfo3">Lv 0 · +0% speed</small></div><button data-staff="3"><span>Train +30%</span><b>$20</b></button></div>
+<div class="employee-card"><div class="employee-number">05</div><div><b>Order clerk</b><small id="employeeInfo4">Lv 0 · +0% speed</small></div><button data-staff="4"><span>Train +30%</span><b>$20</b></button></div>
+<div class="employee-card"><div class="employee-number">06</div><div><b>Pickup associate</b><small id="employeeInfo5">Lv 0 · +0% speed</small></div><button data-staff="5"><span>Train +30%</span><b>$20</b></button></div></div></div>
       <div data-pane="orders" hidden>
-        <div class="tray-heading">Customer orders<p id="customerStatus">0 waiting · 0 orders ready · 0 served</p><p class="stock-label">Seeds → Plants → Picked → Packed → Ready</p><p id="stockStatus">0 → 0 → 0 → 0 → 0</p></div>
-        <div class="order-row"><div class="order"><small id="orderName">FIRST BATCH</small><span><i id="orderFill"></i></span><b id="orderProgress">$0 / $100</b></div><button id="claim" disabled>CLAIM <b id="claimReward">+$40</b></button></div>
+        <div class="tray-heading">Extra online orders<p>Optional bonus deliveries using packed jars. Walk-in pickups stay reserved.</p></div>
+        <div class="online-card"><small id="onlineTitle">Web order #001</small><div><b id="onlineNeed">4 packed jars</b><strong id="onlineReward">$96</strong></div><p id="onlineStock">0 packed jars available</p><button id="fulfillOnline">Fulfill online order</button></div>
       </div>
       <div data-pane="boosts" hidden>
-        <div class="tray-heading">Whole-shop boost<p>Speed up all six stages by 25%.</p></div>
+        <div class="tray-heading">Shop upgrades<p>Speed up every station by 25%.</p></div>
         <div class="order-row"><button class="boost" id="boost"><span>BOOST +25%</span><b id="boostCost">$250</b></button></div>
+        <div class="tray-heading">Milestone bonuses</div>
+        <div class="order-row"><div class="order"><small id="orderName">FIRST BATCH</small><span><i id="orderFill"></i></span><b id="orderProgress">$0 / $100</b></div><button id="claim" disabled>CLAIM <b id="claimReward">+$40</b></button></div>
+        <details class="shop-status"><summary>Shop activity &amp; stock</summary><p id="customerStatus"></p><p class="stock-label">Seeds → Plants → Picked → Packed → Ready</p><p id="stockStatus"></p></details>
       </div>
     </section>
   </main>
