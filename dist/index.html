@@ -4,61 +4,63 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#10110e" />
-  <meta name="description" content="Build and automate a tactile 3D isometric factory." />
+  <meta name="description" content="A fictional dispensary idle game. Build a seed-to-customer production line." />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2310110e'/%3E%3Cpath d='M10 49V27l13 7V23l13 7V15h10v34z' fill='%23d7ff43'/%3E%3C/svg%3E" />
-  <title>SHIFT — 3D Idle Factory</title>
-  <script defer src="/assets/shift-D1IR7yWY.js"></script>
-  <link rel="stylesheet" href="/assets/shift-CuzQ5FXQ.css">
+  <title>GROVE — Dispensary Idle</title>
+  <script defer src="/assets/shift-BubPVEri.js"></script>
+  <link rel="stylesheet" href="/assets/shift-I8VqH9V2.css">
 </head>
 <body>
   <main class="app">
     <header class="hud">
-      <div class="brand"><span>S</span><b>SHIFT</b></div>
+      <div class="brand"><span>G</span><b>GROVE</b></div>
       <div class="stat"><small>CASH</small><strong id="money">$0</strong></div>
-      <div class="stat output"><small>OUTPUT</small><strong id="rate">$0/s</strong></div>
+      <div class="stat output"><small>CAPACITY</small><strong id="rate">$0/s</strong></div>
       <button class="icon" id="resetOpen" aria-label="Reset progress">↻</button>
     </header>
 
-    <section class="world" id="world" aria-label="Interactive 3D factory. Drag to rotate and tap machines to select them.">
+    <section class="world" id="world" aria-label="Interactive dispensary. Drag to rotate and tap a stage to select it.">
       <div class="loading" id="loading">
         <div class="load-card">
-          <div class="load-head"><span class="load-mark">S</span><div><small>SHIFT INDUSTRIAL</small><b id="loadStatus">ASSEMBLING FACTORY</b></div><strong id="loadPercent">0%</strong></div>
+          <div class="load-head"><span class="load-mark">G</span><div><small>GROVE DISPENSARY</small><b id="loadStatus">OPENING DISPENSARY</b></div><strong id="loadPercent">0%</strong></div>
           <div class="load-bar"><i id="loadBar"></i></div>
           <ol class="load-steps">
-            <li data-load-step><span>01</span><b>Factory floor</b><i>WAITING</i></li>
-            <li data-load-step><span>02</span><b>Conveyor system</b><i>WAITING</i></li>
-            <li data-load-step><span>03</span><b>Production machines</b><i>WAITING</i></li>
-            <li data-load-step><span>04</span><b>Controls &amp; economy</b><i>WAITING</i></li>
-            <li data-load-step><span>05</span><b>Production line</b><i>WAITING</i></li>
+            <li data-load-step><span>01</span><b>Seed station</b><i>WAITING</i></li>
+            <li data-load-step><span>02</span><b>Grow room</b><i>WAITING</i></li>
+            <li data-load-step><span>03</span><b>Picking & packing</b><i>WAITING</i></li>
+            <li data-load-step><span>04</span><b>Order desk</b><i>WAITING</i></li>
+            <li data-load-step><span>05</span><b>Customer pickup</b><i>WAITING</i></li>
           </ol>
           <button class="load-retry" id="loadRetry" onclick="location.reload()" hidden>RETRY</button>
         </div>
       </div>
       <div class="markers" id="markers"></div>
-      <p class="upgrade-hint mission" id="upgradeHint">Tap Run to earn your first machine.</p>
-      <button class="run" id="run" aria-label="Run factory to earn cash"><b>RUN</b><span id="tapValue">+$1</span></button>
-      <div class="gesture-hint" id="gestureHint">DRAG TO ROTATE · TAP A MACHINE</div>
+      <p class="upgrade-hint mission" id="upgradeHint">Build your seed-to-customer line.</p>
+      <button class="run" id="run" aria-label="Work a shift to earn cash"><b>WORK</b><span id="tapValue">+$1</span></button>
+      <div class="gesture-hint" id="gestureHint">DRAG TO ROTATE · TAP A STAGE</div>
       <div class="float-layer" id="floatLayer"></div>
     </section>
 
     <section class="sheet" id="sheet">
-      <nav class="tray-tabs" aria-label="Factory controls"><button data-tray="factory" aria-pressed="true">Factory</button><button data-tray="orders" aria-pressed="false">Orders <span id="orderBadge" hidden>•</span></button><button data-tray="boosts" aria-pressed="false">Boosters</button></nav>
+      <nav class="tray-tabs" aria-label="Dispensary controls"><button data-tray="factory" aria-pressed="true">Grow line</button><button data-tray="orders" aria-pressed="false">Orders <span id="orderBadge" hidden>•</span></button><button data-tray="boosts" aria-pressed="false">Boosters</button></nav>
       <div data-pane="factory">
-        <nav class="machine-nav" aria-label="Select machine"><button data-machine="0" aria-pressed="true"><small>01</small><canvas class="machine-thumb" width="160" height="100" aria-hidden="true"></canvas>Crusher<em>Not built</em></button>
-<button data-machine="1" aria-pressed="false"><small>02</small><canvas class="machine-thumb" width="160" height="100" aria-hidden="true"></canvas>Smelter<em>Not built</em></button>
-<button data-machine="2" aria-pressed="false"><small>03</small><canvas class="machine-thumb" width="160" height="100" aria-hidden="true"></canvas>Press<em>Not built</em></button>
-<button data-machine="3" aria-pressed="false"><small>04</small><canvas class="machine-thumb" width="160" height="100" aria-hidden="true"></canvas>Packer<em>Not built</em></button></nav>
+        <nav class="machine-nav" aria-label="Select production stage"><button data-machine="0" aria-pressed="true"><small>01</small><canvas class="machine-thumb" width="160" height="100" aria-hidden="true"></canvas>Seeds<em>Not built</em></button>
+<button data-machine="1" aria-pressed="false"><small>02</small><canvas class="machine-thumb" width="160" height="100" aria-hidden="true"></canvas>Grow<em>Not built</em></button>
+<button data-machine="2" aria-pressed="false"><small>03</small><canvas class="machine-thumb" width="160" height="100" aria-hidden="true"></canvas>Pick<em>Not built</em></button>
+<button data-machine="3" aria-pressed="false"><small>04</small><canvas class="machine-thumb" width="160" height="100" aria-hidden="true"></canvas>Pack<em>Not built</em></button>
+<button data-machine="4" aria-pressed="false"><small>05</small><canvas class="machine-thumb" width="160" height="100" aria-hidden="true"></canvas>Orders<em>Not built</em></button>
+<button data-machine="5" aria-pressed="false"><small>06</small><canvas class="machine-thumb" width="160" height="100" aria-hidden="true"></canvas>Pickup<em>Not built</em></button></nav>
         <div class="selected-line">
-          <div class="machine-info"><div><small id="machineNumber">MACHINE 01</small><h1 id="machineName">ORE CRUSHER</h1><p class="production-detail"><b id="machineRate">$0/s</b> · Lv <b id="machineLevel">0</b></p></div></div>
+          <div class="machine-info"><div><small id="machineNumber">STAGE 01</small><h1 id="machineName">SEED STATION</h1><p class="production-detail"><b id="machineRate">$0/s</b> · Lv <b id="machineLevel">0</b></p></div></div>
           <button class="buy" id="buyMachine"><span>BUILD</span><b id="machineCost">$10</b></button>
         </div>
       </div>
       <div data-pane="orders" hidden>
-        <div class="tray-heading">Production orders<p>Earn cash to fill orders and collect bonuses.</p></div>
+        <div class="tray-heading">Customer orders<p id="customerStatus">0 waiting · 0 orders ready · 0 served</p><p class="stock-label">Seeds → Plants → Picked → Packed → Ready</p><p id="stockStatus">0 → 0 → 0 → 0 → 0</p></div>
         <div class="order-row"><div class="order"><small id="orderName">FIRST BATCH</small><span><i id="orderFill"></i></span><b id="orderProgress">$0 / $100</b></div><button id="claim" disabled>CLAIM <b id="claimReward">+$40</b></button></div>
       </div>
       <div data-pane="boosts" hidden>
-        <div class="tray-heading">Factory-wide boost<p>Increase every machine’s output by 25%.</p></div>
+        <div class="tray-heading">Whole-shop boost<p>Speed up all six stages by 25%.</p></div>
         <div class="order-row"><button class="boost" id="boost"><span>BOOST +25%</span><b id="boostCost">$250</b></button></div>
       </div>
     </section>
@@ -67,7 +69,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <div class="modal-wrap" id="resetModal" hidden>
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="resetTitle">
-      <small>RESET FACTORY</small><h2 id="resetTitle">Start over?</h2><p>This clears every machine, upgrade, and order.</p>
+      <small>RESET DISPENSARY</small><h2 id="resetTitle">Start over?</h2><p>This clears all stages, stock, upgrades, and customer progress.</p>
       <div><button id="resetCancel">CANCEL</button><button class="danger" id="resetConfirm">RESET</button></div>
     </div>
   </div>
