@@ -7,8 +7,8 @@
   <meta name="description" content="Build and automate a tactile 3D isometric factory." />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2310110e'/%3E%3Cpath d='M10 49V27l13 7V23l13 7V15h10v34z' fill='%23d7ff43'/%3E%3C/svg%3E" />
   <title>SHIFT — 3D Idle Factory</title>
-  <script defer src="/assets/shift-CmV9D0Sw.js"></script>
-  <link rel="stylesheet" href="/assets/shift-CbHVFm6n.css">
+  <script defer src="/assets/shift-D1IR7yWY.js"></script>
+  <link rel="stylesheet" href="/assets/shift-CuzQ5FXQ.css">
 </head>
 <body>
   <main class="app">
@@ -35,30 +35,31 @@
         </div>
       </div>
       <div class="markers" id="markers"></div>
+      <p class="upgrade-hint mission" id="upgradeHint">Tap Run to earn your first machine.</p>
+      <button class="run" id="run" aria-label="Run factory to earn cash"><b>RUN</b><span id="tapValue">+$1</span></button>
       <div class="gesture-hint" id="gestureHint">DRAG TO ROTATE · TAP A MACHINE</div>
       <div class="float-layer" id="floatLayer"></div>
     </section>
 
     <section class="sheet" id="sheet">
-      <nav class="machine-nav" aria-label="Select machine">
-        <button data-machine="0" aria-pressed="true"><small>01</small>Crusher<em>Build</em></button>
-        <button data-machine="1" aria-pressed="false"><small>02</small>Smelter<em>Locked</em></button>
-        <button data-machine="2" aria-pressed="false"><small>03</small>Press<em>Locked</em></button>
-        <button data-machine="3" aria-pressed="false"><small>04</small>Packer<em>Locked</em></button>
-      </nav>
-      <div class="machine-info">
-        <div><small id="machineNumber">MACHINE 01</small><h1 id="machineName">ORE CRUSHER</h1><p class="production-detail">Production <b id="machineRate">$0/s</b></p></div>
-        <div class="level"><small>LEVEL</small><b id="machineLevel">0</b></div>
+      <nav class="tray-tabs" aria-label="Factory controls"><button data-tray="factory" aria-pressed="true">Factory</button><button data-tray="orders" aria-pressed="false">Orders <span id="orderBadge" hidden>•</span></button><button data-tray="boosts" aria-pressed="false">Boosters</button></nav>
+      <div data-pane="factory">
+        <nav class="machine-nav" aria-label="Select machine"><button data-machine="0" aria-pressed="true"><small>01</small><canvas class="machine-thumb" width="160" height="100" aria-hidden="true"></canvas>Crusher<em>Not built</em></button>
+<button data-machine="1" aria-pressed="false"><small>02</small><canvas class="machine-thumb" width="160" height="100" aria-hidden="true"></canvas>Smelter<em>Not built</em></button>
+<button data-machine="2" aria-pressed="false"><small>03</small><canvas class="machine-thumb" width="160" height="100" aria-hidden="true"></canvas>Press<em>Not built</em></button>
+<button data-machine="3" aria-pressed="false"><small>04</small><canvas class="machine-thumb" width="160" height="100" aria-hidden="true"></canvas>Packer<em>Not built</em></button></nav>
+        <div class="selected-line">
+          <div class="machine-info"><div><small id="machineNumber">MACHINE 01</small><h1 id="machineName">ORE CRUSHER</h1><p class="production-detail"><b id="machineRate">$0/s</b> · Lv <b id="machineLevel">0</b></p></div></div>
+          <button class="buy" id="buyMachine"><span>BUILD</span><b id="machineCost">$10</b></button>
+        </div>
       </div>
-      <div class="machine-stats">
-        <button class="run" id="run"><b>Run</b><span id="tapValue">+$1</span></button>
-        <button class="buy" id="buyMachine"><span>BUILD</span><b id="machineCost">$10</b></button>
+      <div data-pane="orders" hidden>
+        <div class="tray-heading">Production orders<p>Earn cash to fill orders and collect bonuses.</p></div>
+        <div class="order-row"><div class="order"><small id="orderName">FIRST BATCH</small><span><i id="orderFill"></i></span><b id="orderProgress">$0 / $100</b></div><button id="claim" disabled>CLAIM <b id="claimReward">+$40</b></button></div>
       </div>
-      <p class="upgrade-hint" id="upgradeHint">Tap Run to earn your first machine.</p>
-      <div class="order-row">
-        <div class="order"><small id="orderName">FIRST BATCH</small><span><i id="orderFill"></i></span><b id="orderProgress">$0 / $100</b></div>
-        <button id="claim" disabled>CLAIM <b id="claimReward">+$40</b></button>
-        <button class="boost" id="boost"><span>BOOST +25%</span><b id="boostCost">$250</b></button>
+      <div data-pane="boosts" hidden>
+        <div class="tray-heading">Factory-wide boost<p>Increase every machine’s output by 25%.</p></div>
+        <div class="order-row"><button class="boost" id="boost"><span>BOOST +25%</span><b id="boostCost">$250</b></button></div>
       </div>
     </section>
   </main>
