@@ -10,12 +10,12 @@
   <link rel="stylesheet" href="/src/factory-tray.css" />
   <link rel="stylesheet" href="/src/dispensary.css" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2310110e'/%3E%3Cpath d='M10 49V27l13 7V23l13 7V15h10v34z' fill='%23d7ff43'/%3E%3C/svg%3E" />
-  <title>GROVE — Dispensary Idle</title>
+  <title>Dispensary Idle</title>
 </head>
 <body>
   <main class="app">
     <header class="hud">
-      <div class="brand"><span>G</span><b>GROVE</b></div>
+      <div class="brand" aria-label="Dispensary"><span>✿</span></div>
       <div class="stat"><small>CASH</small><strong id="money">$0</strong></div>
       <div class="stat output"><small>CAPACITY</small><strong id="rate">$0/s</strong></div>
       <button class="icon" id="resetOpen" aria-label="Reset progress">↻</button>
@@ -24,7 +24,7 @@
     <section class="world" id="world" aria-label="Isometric dispensary. Drag to pan, pinch to zoom, and tap a station.">
       <div class="loading" id="loading">
         <div class="load-card">
-          <div class="load-head"><span class="load-mark">G</span><div><small>GROVE DISPENSARY</small><b id="loadStatus">OPENING DISPENSARY</b></div><strong id="loadPercent">0%</strong></div>
+          <div class="load-head"><span class="load-mark">✿</span><div><b id="loadStatus">OPENING DISPENSARY</b></div><strong id="loadPercent">0%</strong></div>
           <div class="load-bar"><i id="loadBar"></i></div>
           <ol class="load-steps">
             <li data-load-step><span>01</span><b>Seed station</b><i>WAITING</i></li>
