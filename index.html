@@ -21,7 +21,7 @@
       <button class="icon" id="resetOpen" aria-label="Reset progress">↻</button>
     </header>
 
-    <section class="world" id="world" aria-label="Interactive dispensary. Drag to rotate and tap a stage to select it.">
+    <section class="world" id="world" aria-label="Fixed isometric dispensary. Tap a station to select it.">
       <div class="loading" id="loading">
         <div class="load-card">
           <div class="load-head"><span class="load-mark">G</span><div><small>GROVE DISPENSARY</small><b id="loadStatus">OPENING DISPENSARY</b></div><strong id="loadPercent">0%</strong></div>
@@ -39,7 +39,7 @@
       <div class="markers" id="markers"></div>
       <p class="upgrade-hint mission" id="upgradeHint">Build your seed-to-customer line.</p>
       <button class="run" id="run" aria-label="Work a shift to earn cash"><b>WORK</b><span id="tapValue">+$1</span></button>
-      <div class="gesture-hint" id="gestureHint">DRAG TO ROTATE · TAP A STAGE</div>
+      <div class="gesture-hint" id="gestureHint">TAP A STATION · UPGRADE ITS TEAM</div>
       <div class="float-layer" id="floatLayer"></div>
     </section>
 
@@ -56,6 +56,7 @@
           <div class="machine-info"><div><small id="machineNumber">STAGE 01</small><h1 id="machineName">SEED STATION</h1><p class="production-detail"><b id="machineRate">$0/s</b> · Lv <b id="machineLevel">0</b></p></div></div>
           <button class="buy" id="buyMachine"><span>BUILD</span><b id="machineCost">$10</b></button>
         </div>
+        <div class="staff-row"><div><b id="staffLevel">Employee Lv 0</b><small id="staffBenefit">Station speed +0% · next +30%</small></div><button id="upgradeStaff"><span>TRAIN EMPLOYEE</span><b id="staffCost">$20</b></button></div>
       </div>
       <div data-pane="orders" hidden>
         <div class="tray-heading">Customer orders<p id="customerStatus">0 waiting · 0 orders ready · 0 served</p><p class="stock-label">Seeds → Plants → Picked → Packed → Ready</p><p id="stockStatus">0 → 0 → 0 → 0 → 0</p></div>
