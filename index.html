@@ -39,13 +39,11 @@
       <div class="markers" id="markers"></div>
       <div class="map-controls" aria-label="Map view"><button id="zoomIn" aria-label="Zoom in">+</button><button id="zoomOut" aria-label="Zoom out">−</button><button id="centerView" aria-label="Center map">⌖</button></div>
       <p class="upgrade-hint mission" id="upgradeHint">Build your seed-to-customer line.</p>
-      <button class="run" id="run" aria-label="Work a shift to earn cash"><b>WORK</b><span id="tapValue">+$1</span></button>
       <div class="gesture-hint" id="gestureHint">DRAG TO PAN · PINCH TO ZOOM</div>
-      <div class="float-layer" id="floatLayer"></div>
     </section>
 
     <section class="sheet" id="sheet">
-      <nav class="tray-tabs" aria-label="Dispensary controls"><button data-tray="factory" aria-pressed="true">Grow line</button><button data-tray="employees" aria-pressed="false">Employees</button><button data-tray="orders" aria-pressed="false">Online <span id="onlineBadge" hidden>•</span></button><button data-tray="boosts" aria-pressed="false">Upgrades <span id="orderBadge" hidden>•</span></button></nav>
+      <div class="panel-header"><b id="panelTitle">Stations</b><button id="panelToggle" aria-label="Expand or collapse controls" aria-expanded="true">⌄</button></div>
       <div data-pane="factory">
         <nav class="machine-nav" aria-label="Select production stage"><button data-machine="0" aria-pressed="true"><small>01</small><canvas class="machine-thumb" width="160" height="100" aria-hidden="true"></canvas>Seeds<em>Not built</em></button>
 <button data-machine="1" aria-pressed="false"><small>02</small><canvas class="machine-thumb" width="160" height="100" aria-hidden="true"></canvas>Grow<em>Not built</em></button>
@@ -74,8 +72,9 @@
         <div class="order-row"><button class="boost" id="boost"><span>BOOST +25%</span><b id="boostCost">$250</b></button></div>
         <div class="tray-heading">Milestone bonuses</div>
         <div class="order-row"><div class="order"><small id="orderName">FIRST BATCH</small><span><i id="orderFill"></i></span><b id="orderProgress">$0 / $100</b></div><button id="claim" disabled>CLAIM <b id="claimReward">+$40</b></button></div>
-        <details class="shop-status"><summary>Shop activity &amp; stock</summary><p id="customerStatus"></p><p class="stock-label">Seeds → Plants → Picked → Packed → Ready</p><p id="stockStatus"></p></details>
+        <div class="shop-status"><h3>Customers &amp; stock</h3><p id="customerStatus"></p><p class="stock-label">Seeds → Plants → Picked → Packed → Ready</p><p id="stockStatus"></p></div>
       </div>
+      <nav class="tray-tabs" aria-label="Dispensary controls"><button data-tray="factory" aria-pressed="true">Stations</button><button data-tray="employees" aria-pressed="false">Employees</button><button data-tray="orders" aria-pressed="false">Online <span id="onlineBadge" hidden>•</span></button><button data-tray="boosts" aria-pressed="false">Shop <span id="orderBadge" hidden>•</span></button></nav>
     </section>
   </main>
 
