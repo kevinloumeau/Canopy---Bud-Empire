@@ -41,10 +41,10 @@
 
     <section class="sheet" id="sheet">
       <nav class="machine-nav" aria-label="Select machine">
-        <button data-machine="0" aria-pressed="true"><small>01</small>Crusher</button>
-        <button data-machine="1" aria-pressed="false"><small>02</small>Smelter</button>
-        <button data-machine="2" aria-pressed="false"><small>03</small>Press</button>
-        <button data-machine="3" aria-pressed="false"><small>04</small>Packer</button>
+        <button data-machine="0" aria-pressed="true"><small>01</small>Crusher<em>Build</em></button>
+        <button data-machine="1" aria-pressed="false"><small>02</small>Smelter<em>Locked</em></button>
+        <button data-machine="2" aria-pressed="false"><small>03</small>Press<em>Locked</em></button>
+        <button data-machine="3" aria-pressed="false"><small>04</small>Packer<em>Locked</em></button>
       </nav>
       <div class="machine-info">
         <div><small id="machineNumber">MACHINE 01</small><h1 id="machineName">ORE CRUSHER</h1><p class="production-detail">Production <b id="machineRate">$0/s</b></p></div>
@@ -54,10 +54,11 @@
         <button class="run" id="run"><b>Run</b><span id="tapValue">+$1</span></button>
         <button class="buy" id="buyMachine"><span>BUILD</span><b id="machineCost">$10</b></button>
       </div>
+      <p class="upgrade-hint" id="upgradeHint">Tap Run to earn your first machine.</p>
       <div class="order-row">
         <div class="order"><small id="orderName">FIRST BATCH</small><span><i id="orderFill"></i></span><b id="orderProgress">$0 / $100</b></div>
         <button id="claim" disabled>CLAIM <b id="claimReward">+$40</b></button>
-        <button class="boost" id="boost"><span>BOOST ALL</span><b id="boostCost">$250</b></button>
+        <button class="boost" id="boost"><span>BOOST +25%</span><b id="boostCost">$250</b></button>
       </div>
     </section>
   </main>

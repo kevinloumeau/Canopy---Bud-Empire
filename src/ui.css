@@ -53,3 +53,28 @@ button:active{filter:brightness(.88)}
 @media(max-width:380px){.hud{gap:10px;padding-left:12px;padding-right:12px}.brand b{display:none}.stat.output{display:block}.stat{margin-left:auto}.sheet{padding-left:12px;padding-right:12px}.machine-info h1{font-size:1.25rem}.machine-stats .run,.buy{padding:0 12px}.order-row button{padding:0 10px}}
 @media(min-width:780px){.hud{padding:20px 28px;gap:28px}.brand span{width:40px;height:44px}.stat{min-width:110px}.stat strong{font-size:1.5rem}.world{inset:0 400px 0 0}.sheet{width:372px;right:20px;bottom:20px;left:auto;padding:0 18px 18px;border:1px solid #454e365c;border-radius:22px;max-height:calc(100dvh - 120px)}.gesture-hint{bottom:24px}.machine-info h1{font-size:1.5rem}}
 @media(max-height:560px) and (max-width:779px){.sheet{max-height:52dvh}.hud{min-height:62px;padding-top:8px}.gesture-hint{display:none}}
+
+/* State-aware controls: lime is reserved for actions available now. */
+.machine-nav{gap:6px;margin-bottom:13px;padding:10px 0}
+.machine-nav button{position:relative;padding:9px 3px 8px;border-radius:10px;line-height:1.15}
+.machine-nav button small{display:inline;margin-right:5px;font-size:.75rem}
+.machine-nav button em{display:block;font:500 .75rem 'DM Mono',monospace;color:#929e85;margin-top:7px;font-style:normal}
+.machine-nav button[aria-pressed=true]{background:#28331d;border-color:#637d37;box-shadow:inset 0 2px 0 #d7ff43}
+.machine-nav button.can-upgrade em{color:var(--acid)}
+.machine-nav button.is-locked{color:#8b9482}.machine-nav button.is-locked em{color:#77846a}
+.machine-stats{margin:13px 0 0}
+.buy{position:relative;overflow:hidden}
+.buy:disabled{background:linear-gradient(90deg,#354128 var(--funded,0%),#252e1e var(--funded,0%));color:#b8c5a7;border:1px solid #48573a;opacity:1}
+.buy:not(:disabled){box-shadow:0 4px 18px #c2ee301a}
+.upgrade-hint{min-height:18px;margin:8px 0 13px;font-size:.8125rem;line-height:1.4;color:#a0ad92;text-align:center}
+.upgrade-hint.ready{color:#c4db99}
+.order-row{padding-top:11px;gap:9px}
+.order-row #claim:not(:disabled){background:#d7ff43;color:#172006;font-weight:700;box-shadow:0 0 16px #d7ff4318}
+.marker{min-width:44px;min-height:44px;border-radius:50%;display:grid;place-content:center;padding:10px;background:#1d261bdd;border-color:#88967555}
+.marker.selected{border-radius:9px;min-height:36px;padding:9px 12px;box-shadow:0 4px 16px #0004}
+.marker:not(.selected):after{height:7px}.marker.locked{opacity:.55}
+.level{background:#222b1b;border-color:#465934}.level small{color:#a3b291}
+.stat strong{font-variant-numeric:tabular-nums}.hud .stat{padding-left:14px;border-left:1px solid #3a442e}
+.sheet{background:linear-gradient(155deg,#20271a,#151b11);border-top-color:#596a3b88}
+@media(max-width:380px){.hud .stat{padding-left:9px}.machine-nav button{font-size:.8125rem}.machine-nav button small{margin-right:3px}.upgrade-hint{font-size:.75rem}}
+@media(prefers-reduced-motion:reduce){.buy:not(:disabled){box-shadow:none}}
