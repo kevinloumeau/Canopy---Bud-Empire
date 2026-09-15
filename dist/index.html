@@ -7,8 +7,8 @@
   <meta name="description" content="Build and automate a tactile 3D isometric factory." />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2310110e'/%3E%3Cpath d='M10 49V27l13 7V23l13 7V15h10v34z' fill='%23d7ff43'/%3E%3C/svg%3E" />
   <title>SHIFT — 3D Idle Factory</title>
-  <script type="module" crossorigin src="/assets/index-AGtmeyOT.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-C9NaWk9M.css">
+  <script type="module" crossorigin src="/assets/index-DUGR9Umz.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-Ct6SuaJG.css">
 </head>
 <body>
   <main class="app">
@@ -20,7 +20,20 @@
     </header>
 
     <section class="world" id="world" aria-label="Interactive 3D factory. Drag to rotate and tap machines to select them.">
-      <div class="loading" id="loading"><span></span>BUILDING FACTORY</div>
+      <div class="loading" id="loading">
+        <div class="load-card">
+          <div class="load-head"><span class="load-mark">S</span><div><small>SHIFT INDUSTRIAL</small><b id="loadStatus">ASSEMBLING FACTORY</b></div><strong id="loadPercent">0%</strong></div>
+          <div class="load-bar"><i id="loadBar"></i></div>
+          <ol class="load-steps">
+            <li data-load-step><span>01</span><b>Factory floor</b><i>WAITING</i></li>
+            <li data-load-step><span>02</span><b>Conveyor system</b><i>WAITING</i></li>
+            <li data-load-step><span>03</span><b>Production machines</b><i>WAITING</i></li>
+            <li data-load-step><span>04</span><b>Controls &amp; economy</b><i>WAITING</i></li>
+            <li data-load-step><span>05</span><b>Production line</b><i>WAITING</i></li>
+          </ol>
+          <button class="load-retry" id="loadRetry" onclick="location.reload()" hidden>RETRY</button>
+        </div>
+      </div>
       <div class="markers" id="markers"></div>
       <div class="gesture-hint" id="gestureHint">DRAG TO ROTATE · TAP A MACHINE</div>
       <button class="run" id="run"><b>RUN</b><span id="tapValue">+$1</span></button>
@@ -52,5 +65,20 @@
       <div><button id="resetCancel">CANCEL</button><button class="danger" id="resetConfirm">RESET</button></div>
     </div>
   </div>
+  <script>
+    window.__shiftReady = false;
+    window.addEventListener('error', function () {
+      if (window.__shiftReady) return;
+      var status = document.getElementById('loadStatus');
+      if (status) status.textContent = 'OPTIMIZING 3D GRAPHICS';
+    });
+    setTimeout(function () {
+      if (window.__shiftReady) return;
+      var status = document.getElementById('loadStatus');
+      var retry = document.getElementById('loadRetry');
+      if (status) status.textContent = '3D STARTUP NEEDS A RETRY';
+      if (retry) retry.hidden = false;
+    }, 7000);
+  </script>
 </body>
 </html>
