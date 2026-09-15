@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#171915" />
+  <meta name="description" content="A compact idle factory game about building a tiny industrial empire." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23171915'/%3E%3Cpath d='M10 49V27l13 7V23l13 7V15h10v34z' fill='%23d7ff43'/%3E%3C/svg%3E" />
+  <title>SHIFT — Idle Factory</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">S</span>
+        <div><h1>SHIFT</h1><p>INDUSTRIAL WORKS</p></div>
+      </div>
+      <div class="shift-info"><span class="live-dot"></span> SHIFT <strong id="shiftNumber">01</strong></div>
+      <button class="icon-button" id="resetButton" title="Reset all progress" aria-label="Reset all progress">↻</button>
+    </header>
+
+    <section class="command-deck" aria-labelledby="factory-title">
+      <div class="intro">
+        <p class="eyebrow">FACTORY FLOOR / ONLINE</p>
+        <h2 id="factory-title">MAKE MORE.<br><span>MOVE FASTER.</span></h2>
+        <p class="intro-copy">Build lines, automate production, and turn a tiny workshop into an industrial machine.</p>
+      </div>
+      <div class="meter-panel">
+        <p class="eyebrow">TOTAL OUTPUT</p>
+        <div class="money" id="money">$0</div>
+        <div class="rate"><span id="perSecond">+$0 / SEC</span><span id="lifetime">LIFETIME $0</span></div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <p class="next-unlock" id="nextUnlock">NEXT LINE AT $25</p>
+      </div>
+    </section>
+
+    <section class="production-panel">
+      <div class="panel-heading">
+        <div><p class="eyebrow">01 / PRODUCTION</p><h3>Assembly lines</h3></div>
+        <button class="crank-button" id="crankButton"><span>+<b id="tapValue">1</b></span> RUN MACHINE</button>
+      </div>
+      <div class="lines-grid" id="linesGrid"></div>
+    </section>
+
+    <section class="bottom-grid">
+      <article class="contract-card">
+        <p class="eyebrow">02 / ACTIVE CONTRACT</p>
+        <div class="contract-top"><h3 id="contractName">FIRST BATCH</h3><span id="contractReward">+$40</span></div>
+        <p id="contractCopy">Produce $100 in total output.</p>
+        <div class="progress-track dark"><div class="progress-fill" id="contractFill"></div></div>
+        <div class="contract-foot"><span id="contractProgress">$0 / $100</span><button id="claimButton" disabled>CLAIM</button></div>
+      </article>
+      <article class="upgrade-card">
+        <p class="eyebrow">03 / CONTROL ROOM</p>
+        <h3>Machine tuning</h3>
+        <p>Increase every line's output by 25%.</p>
+        <button id="globalUpgrade"><span>INSTALL UPGRADE</span><b id="upgradeCost">$250</b></button>
+      </article>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="modal-backdrop" id="resetModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="resetTitle">
+      <p class="eyebrow">SYSTEM WARNING</p><h3 id="resetTitle">Reset the factory?</h3>
+      <p>This permanently clears your machines, upgrades, and output.</p>
+      <div class="modal-actions"><button id="cancelReset">CANCEL</button><button class="danger" id="confirmReset">RESET</button></div>
+    </div>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
