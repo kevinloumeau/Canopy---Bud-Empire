@@ -3,70 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#171915" />
-  <meta name="description" content="A compact idle factory game about building a tiny industrial empire." />
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23171915'/%3E%3Cpath d='M10 49V27l13 7V23l13 7V15h10v34z' fill='%23d7ff43'/%3E%3C/svg%3E" />
+  <meta name="theme-color" content="#11120f" />
+  <meta name="description" content="A visual idle factory game with machines, conveyor belts, and automated production." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2311120f'/%3E%3Cpath d='M10 49V27l13 7V23l13 7V15h10v34z' fill='%23d7ff43'/%3E%3C/svg%3E" />
   <title>SHIFT — Idle Factory</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="noise" aria-hidden="true"></div>
-  <main class="shell">
+  <main class="game">
     <header class="topbar">
-      <div class="brand">
-        <span class="brand-mark" aria-hidden="true">S</span>
-        <div><h1>SHIFT</h1><p>INDUSTRIAL WORKS</p></div>
-      </div>
-      <div class="shift-info"><span class="live-dot"></span> SHIFT <strong id="shiftNumber">01</strong></div>
-      <button class="icon-button" id="resetButton" title="Reset all progress" aria-label="Reset all progress">↻</button>
+      <a class="brand" href="#" aria-label="SHIFT factory home"><span>S</span> SHIFT</a>
+      <div class="balance"><small>CASH</small><strong id="money">$0</strong></div>
+      <div class="rate"><small>OUTPUT</small><strong id="perSecond">$0/sec</strong></div>
+      <button class="reset" id="resetButton" aria-label="Reset progress" title="Reset progress">↻</button>
     </header>
 
-    <section class="command-deck" aria-labelledby="factory-title">
-      <div class="intro">
-        <p class="eyebrow">FACTORY FLOOR / ONLINE</p>
-        <h2 id="factory-title">MAKE MORE.<br><span>MOVE FASTER.</span></h2>
-        <p class="intro-copy">Build lines, automate production, and turn a tiny workshop into an industrial machine.</p>
-      </div>
-      <div class="meter-panel">
-        <p class="eyebrow">TOTAL OUTPUT</p>
-        <div class="money" id="money">$0</div>
-        <div class="rate"><span id="perSecond">+$0 / SEC</span><span id="lifetime">LIFETIME $0</span></div>
-        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-        <p class="next-unlock" id="nextUnlock">NEXT LINE AT $25</p>
-      </div>
+    <section class="factory" id="factory" aria-label="Interactive factory floor">
+      <img src="assets/factory-floor.png" alt="A compact factory with four machines connected by conveyor belts" />
+      <div class="shade" aria-hidden="true"></div>
+      <div class="machine-layer" id="machineLayer"></div>
+      <div class="crate-track" id="crateTrack" aria-hidden="true"></div>
+      <button class="run-button" id="crankButton"><span>RUN LINE</span><small>+<b id="tapValue">$1</b></small></button>
+      <div class="float-layer" id="floatLayer" aria-hidden="true"></div>
+      <div class="hint" id="hint">Tap a machine to build it</div>
     </section>
 
-    <section class="production-panel">
-      <div class="panel-heading">
-        <div><p class="eyebrow">01 / PRODUCTION</p><h3>Assembly lines</h3></div>
-        <button class="crank-button" id="crankButton"><span>+<b id="tapValue">1</b></span> RUN MACHINE</button>
-      </div>
-      <div class="lines-grid" id="linesGrid"></div>
-    </section>
-
-    <section class="bottom-grid">
-      <article class="contract-card">
-        <p class="eyebrow">02 / ACTIVE CONTRACT</p>
-        <div class="contract-top"><h3 id="contractName">FIRST BATCH</h3><span id="contractReward">+$40</span></div>
-        <p id="contractCopy">Produce $100 in total output.</p>
-        <div class="progress-track dark"><div class="progress-fill" id="contractFill"></div></div>
-        <div class="contract-foot"><span id="contractProgress">$0 / $100</span><button id="claimButton" disabled>CLAIM</button></div>
+    <section class="dock">
+      <article class="contract">
+        <div><small>ORDER</small><strong id="contractName">FIRST BATCH</strong></div>
+        <div class="contract-progress"><span><i id="contractFill"></i></span><small id="contractProgress">$0 / $100</small></div>
+        <button id="claimButton" disabled>CLAIM <b id="contractReward">+$40</b></button>
       </article>
-      <article class="upgrade-card">
-        <p class="eyebrow">03 / CONTROL ROOM</p>
-        <h3>Machine tuning</h3>
-        <p>Increase every line's output by 25%.</p>
-        <button id="globalUpgrade"><span>INSTALL UPGRADE</span><b id="upgradeCost">$250</b></button>
-      </article>
+      <button class="boost" id="globalUpgrade"><span><small>FACTORY BOOST</small>ALL MACHINES +25%</span><b id="upgradeCost">$250</b></button>
     </section>
   </main>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <div class="modal-backdrop" id="resetModal" hidden>
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="resetTitle">
-      <p class="eyebrow">SYSTEM WARNING</p><h3 id="resetTitle">Reset the factory?</h3>
-      <p>This permanently clears your machines, upgrades, and output.</p>
-      <div class="modal-actions"><button id="cancelReset">CANCEL</button><button class="danger" id="confirmReset">RESET</button></div>
+      <small>RESET FACTORY</small><h2 id="resetTitle">Start over?</h2><p>This clears all machines and output.</p>
+      <div><button id="cancelReset">CANCEL</button><button class="danger" id="confirmReset">RESET</button></div>
     </div>
   </div>
   <script src="game.js"></script>
