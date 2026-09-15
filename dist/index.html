@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#10110e" />
   <meta name="description" content="Build and automate a tactile 3D isometric factory." />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2310110e'/%3E%3Cpath d='M10 49V27l13 7V23l13 7V15h10v34z' fill='%23d7ff43'/%3E%3C/svg%3E" />
   <title>SHIFT — 3D Idle Factory</title>
-  <script defer src="/assets/shift-BudJM-_E.js"></script>
-  <link rel="stylesheet" href="/assets/shift-gGrqJW9p.css">
+  <script defer src="/assets/shift-B2R7mpOd.js"></script>
+  <link rel="stylesheet" href="/assets/shift-lRa-ccAA.css">
 </head>
 <body>
   <main class="app">
@@ -36,18 +36,22 @@
       </div>
       <div class="markers" id="markers"></div>
       <div class="gesture-hint" id="gestureHint">DRAG TO ROTATE · TAP A MACHINE</div>
-      <button class="run" id="run"><b>RUN</b><span id="tapValue">+$1</span></button>
       <div class="float-layer" id="floatLayer"></div>
     </section>
 
     <section class="sheet" id="sheet">
-      <div class="handle"></div>
+      <nav class="machine-nav" aria-label="Select machine">
+        <button data-machine="0" aria-pressed="true"><small>01</small>Crusher</button>
+        <button data-machine="1" aria-pressed="false"><small>02</small>Smelter</button>
+        <button data-machine="2" aria-pressed="false"><small>03</small>Press</button>
+        <button data-machine="3" aria-pressed="false"><small>04</small>Packer</button>
+      </nav>
       <div class="machine-info">
-        <div><small id="machineNumber">MACHINE 01</small><h1 id="machineName">ORE CRUSHER</h1></div>
+        <div><small id="machineNumber">MACHINE 01</small><h1 id="machineName">ORE CRUSHER</h1><p class="production-detail">Production <b id="machineRate">$0/s</b></p></div>
         <div class="level"><small>LEVEL</small><b id="machineLevel">0</b></div>
       </div>
       <div class="machine-stats">
-        <span><small>PRODUCES</small><b id="machineRate">$0/s</b></span>
+        <button class="run" id="run"><b>Run</b><span id="tapValue">+$1</span></button>
         <button class="buy" id="buyMachine"><span>BUILD</span><b id="machineCost">$10</b></button>
       </div>
       <div class="order-row">
