@@ -20,3 +20,8 @@ html,body{background:#15291f}.hud{background:#11251fee;border-color:#b4d2b327}.b
 .online-card{margin:4px 3px 10px;padding:14px;background:#243d2c;border:1px solid #708859;border-radius:12px}.online-card>small{font-size:.75rem;letter-spacing:.05em;color:#bfd49e}.online-card>div{display:flex;justify-content:space-between;gap:12px;margin-top:10px;align-items:center}.online-card>div>b{font-size:1.1rem}.online-card strong{font:600 1.25rem 'DM Mono',monospace;color:#daecad}.online-card p{font-size:.8125rem;line-height:1.4;color:#b8c9a7}.online-card button{width:100%;min-height:44px;border:0;border-radius:7px;background:#c7e39f;color:#193622;font-weight:700;cursor:pointer}.online-card button:disabled{background:#39503a;color:#8fa580;cursor:not-allowed}#onlineBadge{color:#cce7a3}
 .shop-status{padding:8px 4px;font-size:.8125rem;color:#afc5a4}.shop-status summary{min-height:40px;cursor:pointer}.shop-status p{line-height:1.5}.shop-status .stock-label{font-size:.75rem}
 @media(min-width:780px){.employee-list{grid-template-columns:1fr 1fr}.employee-card{grid-template-columns:1fr 90px}.employee-number{display:none}}
+/* World labels use the same frame and projection as the canvas. Never tween camera coordinates. */
+.world .marker,.world .marker.selected{left:0;top:0;transition:none!important;animation:none!important;will-change:transform;transform-origin:50% 100%;box-shadow:0 3px 9px #0003}
+.world .marker:after{height:9px;background:#c5deb282;left:50%;transform:translateX(-50%)}
+.world .marker.selected{background:#d0e6b6;border-color:#e2efcc;color:#203b2a;border-radius:7px;font-weight:700}
+.world .marker:not(.selected){background:#183528ed;border-color:#809a705c}
