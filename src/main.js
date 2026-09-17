@@ -1884,7 +1884,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     $('upgradeProgress').value=Math.min(100,state.money/price*100);
     $('upgradeProgress').setAttribute('aria-valuetext',affordable?'Upgrade ready':fmt(Math.max(0,price-state.money))+' needed for level '+(level+1));
     $('upgradeBenefit').textContent=selected<4?'+'+gain+'% batch size':(counterServiceDuration(selected)/Math.max(1,state.gameSpeed)).toFixed(3)+'s → '+(counterServiceDuration(selected,next)/Math.max(1,state.gameSpeed)).toFixed(3)+'s handoff';
-    var preview=$('upgradePreview'),source=machineTabs[selected].querySelector('canvas');if(preview&&typeof preview.getContext==='function'&&source){var pc=preview.getContext('2d');if(pc){pc.clearRect(0,0,160,100);pc.drawImage(source,0,0)}}
+    var preview=$('upgradePreview'),source=machineTabs[selected].querySelector('canvas');if(preview&&typeof preview.getContext==='function'&&source){var pc=preview.getContext('2d');if(pc){pc.clearRect(0,0,80,100);pc.drawImage(source,0,0)}}
     $('nextAppearance').textContent=tier<6?'New look at level '+TIER_LEVELS[tier+1]+' · '+STATION_TIERS[tier+1]:'Flagship equipment · upgrades keep increasing output';
     $('machineCost').textContent=fmt(price);$('buyMachine').disabled=!affordable;$('buyMachine').querySelector('span').textContent=!open?'LOCKED':level?'UPGRADE':'BUILD';
     var maxUpgrade=maxStationUpgrade(selected);

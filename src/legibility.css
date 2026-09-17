@@ -56,3 +56,8 @@
 body{font-optical-sizing:auto}
 h1,h2,.guide-card h2,.empire-screen h2,.machine-info h1,.canopy-brand b{font-variation-settings:'opsz' 48;letter-spacing:-.025em}
 .canopy-brand b{letter-spacing:-.04em}
+
+/* Selected-station portrait: same portrait canvas as the cards, shown larger and base-aligned beside the details. */
+.selected-line{grid-template-columns:80px minmax(0,1fr) 112px;align-items:center}
+#upgradePreview{display:block;width:80px;height:100px;object-fit:contain;object-position:center bottom;margin:0}
+@media(max-width:380px){.selected-line{grid-template-columns:64px minmax(0,1fr) 96px}#upgradePreview{width:64px;height:80px}}
