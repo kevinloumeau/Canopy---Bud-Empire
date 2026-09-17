@@ -26,7 +26,7 @@
 /* Attention dot sits on the icon's shoulder instead of inside the label, so labels never shift. */
 .sheet .tray-tabs .tray-badge{
  position:absolute;top:7px;left:calc(50% + 6px);width:8px;height:8px;border-radius:50%;
- background:var(--tray-badge);box-shadow:0 0 0 2px #1d3428,0 0 8px #e9c96a66;font-size:0;
+ background:var(--tray-badge);box-shadow:0 0 0 2px #1d3428;font-size:0;
 }
 .sheet .tray-tabs .tray-badge[hidden]{display:none}
 @media(prefers-reduced-motion:no-preference){

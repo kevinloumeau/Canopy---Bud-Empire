@@ -2,7 +2,7 @@
 .shop-browser .shop-categories{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
 .shop-browser .shop-categories button{min-width:0;min-height:44px;padding:6px 2px;border:1px solid transparent;border-radius:7px;background:transparent;color:#bacbb2;font:inherit;font-size:11px}
 .shop-browser .shop-categories button[aria-pressed=true]{background:#496044;border-color:#8ba67d;color:#f0f4e5}
-.shop-browser .shop-filter{display:flex;justify-content:space-between;align-items:center;color:#bdcdb5;font-size:11px;padding:0 5px}
+.shop-browser .shop-filter{display:flex;justify-content:space-between;align-items:center;color:#bdcdb5;font-size:12px;padding:0 5px}
 .shop-filter label{display:flex;gap:6px;align-items:center;min-height:44px;cursor:pointer}
 .shop-filter input{accent-color:#aacb85;width:16px;height:16px}
 .shop-browser .shop-recommendation{display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;min-height:52px;padding:8px 10px;margin:2px 0 8px;border:1px solid #7c7953;border-radius:8px;background:#354832;color:#e5d3a0}
@@ -11,7 +11,7 @@
 .shop-browser .shop-item .shop-symbol svg{width:26px;height:26px}
 .shop-browser .shop-item .shop-copy,.shop-browser .shop-item .storage-copy{display:grid;gap:4px;min-width:0}
 .shop-browser .shop-item h2,.shop-browser .shop-item .storage-copy>b{font-size:12px;font-weight:600;color:#edf3df;margin:0}
-.shop-browser .shop-item strong{font-size:11px;font-weight:400;color:#c5d3bb;line-height:1.35}
+.shop-browser .shop-item strong{font-size:12px;font-weight:400;color:#c5d3bb;line-height:1.35}
 .shop-browser .shop-item small,.shop-browser .shop-item progress,.shop-browser #kioskCountLabel{display:none}
 .shop-browser .shop-level{font-size:10px;color:#aabda1}
 .shop-browser .shop-item button{width:82px;min-height:44px;padding:5px 3px;gap:2px;font-size:11px}

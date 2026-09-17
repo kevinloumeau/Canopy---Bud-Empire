@@ -4,14 +4,14 @@
  --menu-edge:rgba(228,249,225,.25);
  --menu-control:rgba(215,239,207,.09);
  --menu-text:#f0f5e8;
- --menu-muted:#cad8c3;
+ --menu-muted:#d0ddc9;
 }
 .sheet{
  background:linear-gradient(145deg,rgba(209,232,204,.13),rgba(30,53,42,.08) 42%),var(--menu-glass);
  -webkit-backdrop-filter:blur(24px) saturate(135%);
  backdrop-filter:blur(24px) saturate(135%);
  border:1px solid var(--menu-edge);border-radius:26px;
- box-shadow:inset 0 1px 0 #f3ffe52b,inset 0 -1px 0 #e5f7d910,0 16px 42px #081b2850;
+ box-shadow:inset 0 1px 0 #f3ffe52b,inset 0 -1px 0 #e5f7d910;
  color:var(--menu-text);padding-inline:12px;
 }
 .sheet .panel-header{min-height:46px;padding:4px 7px;gap:12px}
@@ -58,7 +58,7 @@
 }
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.sheet{background:#243a2e}}
 @media(prefers-reduced-transparency:reduce){.sheet{background:#243a2e;-webkit-backdrop-filter:none;backdrop-filter:none}}
-@media(prefers-contrast:more){.sheet{background:#182e23;border-color:#e1efd6}.sheet button{border-color:#afc89e}.sheet button:disabled{color:#cad7c1!important}}
+@media(prefers-contrast:more){.sheet{background:#182e23;border-color:#e1efd6}.sheet button{border-color:#afc89e}.sheet button:disabled{color:#f0f5e8!important}}
 @media(prefers-reduced-motion:reduce){.sheet button{transition:none}.sheet button:not(:disabled):active{transform:none}}
 
 /* The HUD shares the menu material, with a quieter surface for live metrics. */
@@ -67,7 +67,7 @@
  -webkit-backdrop-filter:blur(20px) saturate(125%);
  backdrop-filter:blur(20px) saturate(125%);
  border-bottom:1px solid #e3f6d922;
- box-shadow:inset 0 1px 0 #edffe51c,0 5px 18px #091d1720;
+ box-shadow:inset 0 1px 0 #edffe51c;
 }
 .hud .factory-info{border-top-color:#d8ecd322}
 .hud .stat{border-color:#d8ecd326}
@@ -122,7 +122,7 @@
  letter-spacing:.015em;
  -webkit-backdrop-filter:blur(24px) saturate(135%);
  backdrop-filter:blur(24px) saturate(135%);
- box-shadow:inset 0 1px 0 #edffe52e,0 8px 28px #091d1738;
+ box-shadow:inset 0 1px 0 #edffe52e,0 4px 10px #00000047;
  transform:translate(-50%,-6px);
  transition:opacity 240ms ease,transform 320ms cubic-bezier(.22,1,.36,1);
 }

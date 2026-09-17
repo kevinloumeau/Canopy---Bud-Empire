@@ -1,0 +1,52 @@
+/* Legibility pass: functional text at 11px or more, paragraphs at 12px or more, AA contrast on primary actions, no decorative glows. */
+
+/* Type floor. */
+.hud .factory-info .customer-info{font-size:11px}
+.hud .canopy-name small{font-size:10px;letter-spacing:1.2px}
+.sheet small{letter-spacing:.02em}
+.sheet .machine-nav button>em,.sheet .machine-nav .station-card-name{font-size:11px}
+.sheet .machine-nav button{grid-template-rows:auto auto;height:auto;min-height:52px}
+.sheet .machine-nav button>em{line-height:1.25;white-space:normal;padding-right:6px}
+.sheet .machine-nav button.is-bottleneck em{font-size:11px;white-space:normal}
+.selected-line #buyMachineMax span{font-size:11px}
+.flow-guide{font-size:12px}
+.shop-copy small,#orderProgress,.online-reserved,.online-batch-copy small,.dispatch-option>small,[data-pane="boosts"] .storage-copy small,[data-pane="boosts"] #resetOpen{font-size:12px}
+.journal-entry small,.shop-browser .shop-level,.shop-browser .shop-item button span,.shop-recommendation small,.auto-drone-control small{font-size:11px}
+.empire-content .operation-hint,.branch-choices .choice-effect,.branch-project strong,.operation-muted,.selected-line #stationStatus{font-size:12px}
+.daily-track span{font-size:11px}
+.daily-track b{font-size:11.5px}
+.daily-track li{padding:8px 4px 7px}
+@media(max-width:360px){.daily-track span{font-size:11px}.daily-track b{font-size:11px}.daily-track li{padding-inline:3px}}
+.sheet .customer-mood{font-size:11px!important}
+
+/* Stock strip: labels at 11px where they fit; phones show icon and count only (the title and label stay for assistive tech). */
+.sheet #stockStatus .stock-item small{font-size:11px;letter-spacing:.01em}
+@media(max-width:480px){
+ .sheet #stockStatus .stock-item small{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+ .sheet #stockStatus .stock-item{position:relative;gap:5px;padding:2px 5px}
+ .sheet #stockStatus .stock-item b{font-size:13px}
+}
+
+/* Contrast: a deeper action green so cream labels clear 4.5:1. */
+.sheet .buy,.sheet .employee-card button,.sheet .shop-upgrade button,.sheet .station-training,.sheet .flower-actions button,.sheet .flow-guide button,
+.sheet [data-pane="orders"] .dispatch-option button,.selected-line .buy,.online-card button,.storage-upgrade button,.shop-upgrade button,
+[data-pane="orders"] #fulfillOnlineBatch,[data-pane="orders"] #fulfillOnlineMax{
+ background:linear-gradient(145deg,#c9e4b820,#c6dfb608),#55733e;color:#f8fbed;
+}
+.sheet .production-detail{color:#bfd0b5}
+.sheet .production-detail b,.sheet .online-card strong{color:#cde1b4}
+
+/* Elevation without glow. */
+.order-row #claim:not(:disabled){box-shadow:none}
+.buy:not(:disabled){box-shadow:none}
+.marker.selected,.world .marker.selected{box-shadow:0 3px 9px #0003}
+
+/* Sticky bands share the sheet's glass instead of sitting on it as opaque boxes; blur keeps scrolled rows from reading through. */
+.empire-back,.sheet .empire-views,.branch-sticky-header,.shop-browser .shop-browser-header{
+ background:linear-gradient(145deg,#d1e8cc12,#1e352a08 42%),rgba(26,48,38,.9);
+ -webkit-backdrop-filter:blur(18px) saturate(130%);backdrop-filter:blur(18px) saturate(130%);
+}
+.empire-back{margin-inline:-11px;padding-inline:11px;border-bottom:1px solid #e3f6d91a}
+.branch-sticky-header{box-shadow:none;border-bottom:1px solid #e3f6d91a}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.empire-back,.branch-sticky-header,.shop-browser .shop-browser-header{background:#213a2e}}
+@media(prefers-reduced-transparency:reduce){.empire-back,.branch-sticky-header,.shop-browser .shop-browser-header{background:#213a2e;-webkit-backdrop-filter:none;backdrop-filter:none}}
