@@ -196,3 +196,9 @@
  .shop-browser .shop-categories button{min-height:34px}
  .shop-browser .shop-categories{margin-bottom:4px}
 }
+
+/* Card buttons: text centred on both axes, and no taller than the text needs. */
+.shop-browser .shop-item button{align-items:center;line-height:1;padding:0 8px}
+.shop-browser .shop-item button b,.shop-browser .shop-item button span{line-height:1;display:block}
+@media(max-width:779px){.shop-browser .shop-item button{min-height:30px;height:30px;margin-top:4px}}
+@media(max-width:779px) and (max-height:760px){.shop-browser .shop-item button{min-height:28px;height:28px}}
