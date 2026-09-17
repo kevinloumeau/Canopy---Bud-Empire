@@ -5,7 +5,10 @@
 .hud .canopy-name small{font-size:10px;letter-spacing:1.2px}
 .sheet small{letter-spacing:.02em}
 .sheet .machine-nav button>em,.sheet .machine-nav .station-card-name{font-size:11px}
-.sheet .machine-nav button{grid-template-rows:auto auto;height:auto;min-height:52px}
+.sheet .machine-nav button{grid-template-rows:auto auto;height:auto;min-height:70px;grid-template-columns:54px minmax(0,1fr) auto;padding:6px 6px 6px 4px}
+.sheet .machine-nav button .machine-thumb{width:54px;height:64px;object-fit:contain;object-position:center bottom}
+@media(max-width:380px){.sheet .machine-nav button{grid-template-columns:46px minmax(0,1fr) auto}.sheet .machine-nav button .machine-thumb{width:46px;height:58px}}
+@media(min-width:780px){.sheet .machine-nav button{grid-template-columns:58px minmax(0,1fr) auto;min-height:74px}.sheet .machine-nav button .machine-thumb{width:58px;height:68px}}
 .sheet .machine-nav button>em{line-height:1.25;white-space:normal;padding-right:6px}
 .sheet .machine-nav button.is-bottleneck em{font-size:11px;white-space:normal}
 .selected-line #buyMachineMax span{font-size:11px}
