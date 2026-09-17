@@ -11,7 +11,7 @@
  -webkit-backdrop-filter:blur(24px) saturate(135%);
  backdrop-filter:blur(24px) saturate(135%);
  border:1px solid var(--menu-edge);border-radius:26px;
- box-shadow:inset 0 1px 0 #f3ffe52b,inset 0 -1px 0 #e5f7d910;
+ box-shadow:inset 0 1px 0 #f3ffe52b,inset 0 -1px 0 #e5f7d910,0 16px 42px #081b2850;
  color:var(--menu-text);padding-inline:12px;
 }
 .sheet .panel-header{min-height:46px;padding:4px 7px;gap:12px}
@@ -67,7 +67,7 @@
  -webkit-backdrop-filter:blur(20px) saturate(125%);
  backdrop-filter:blur(20px) saturate(125%);
  border-bottom:1px solid #e3f6d922;
- box-shadow:inset 0 1px 0 #edffe51c;
+ box-shadow:inset 0 1px 0 #edffe51c,0 5px 18px #091d1720;
 }
 .hud .factory-info{border-top-color:#d8ecd322}
 .hud .stat{border-color:#d8ecd326}
@@ -122,7 +122,7 @@
  letter-spacing:.015em;
  -webkit-backdrop-filter:blur(24px) saturate(135%);
  backdrop-filter:blur(24px) saturate(135%);
- box-shadow:inset 0 1px 0 #edffe52e,0 4px 10px #00000047;
+ box-shadow:inset 0 1px 0 #edffe52e,0 8px 28px #091d1738;
  transform:translate(-50%,-6px);
  transition:opacity 240ms ease,transform 320ms cubic-bezier(.22,1,.36,1);
 }

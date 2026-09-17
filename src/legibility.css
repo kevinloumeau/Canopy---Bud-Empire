@@ -39,10 +39,8 @@
 .sheet .production-detail{color:#bfd0b5}
 .sheet .production-detail b,.sheet .online-card strong{color:#cde1b4}
 
-/* Elevation without glow. */
-.order-row #claim:not(:disabled){box-shadow:none}
-.buy:not(:disabled){box-shadow:none}
-.marker.selected,.world .marker.selected{box-shadow:0 3px 9px #0003}
+/* Soft lime and gold glows stay: they are the game's own light, kept faint and on dark glass. */
+.marker.selected,.world .marker.selected{box-shadow:0 3px 18px #d7ff431a}
 
 /* Sticky bands share the sheet's glass instead of sitting on it as opaque boxes; blur keeps scrolled rows from reading through. */
 .empire-back,.sheet .empire-views,.branch-sticky-header,.shop-browser .shop-browser-header{
