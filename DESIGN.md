@@ -96,3 +96,7 @@ With a fine pointer the map hint reads DRAG TO PAN · SCROLL TO ZOOM · SPACE PA
 ## Settings
 
 A gear at the end of the speed pill opens a small glass dialog: Sound, Lighting, Start guide (replay) and, set apart below a rule, Start over in a warm terracotta. Rows are full-width buttons showing the current value on the right. On phones the day/night toggle leaves the HUD pill and lives here. The Shop tab's old footer links are hidden; their controls remain in the DOM and the dialog proxies to them.
+
+## Welcome back
+
+The return report is a card over the map in the start guide's language (dimmed world, glass card, one primary button), shown whenever a report exists and dismissed with its button or Escape. Returning no longer switches the tray; the player lands where they left off.

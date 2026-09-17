@@ -31,3 +31,18 @@
 @media(min-width:780px){.guide-card,.start-guide[data-step] .guide-card{left:auto;right:420px;top:auto;bottom:40px;width:380px}}
 @media(prefers-reduced-motion:reduce){.guide-card{animation:none}.guide-ring{transition:none}}
 .shop-reset .guide-replay{margin-right:auto}
+
+/* Welcome-back report: same card language as the guide, over the map, dismissed with one tap. */
+.return-overlay{position:fixed;inset:0;z-index:58;display:grid;place-items:start center;padding:calc(var(--hud-height,60px) + 18px) 16px 16px;background:#08140e66}
+.return-overlay[hidden]{display:none}
+.return-card{width:min(400px,100%);padding:18px 18px 16px;border-radius:22px;color:#f0f5e8;background:linear-gradient(145deg,#d1e8cc14,#1e352a08 42%),rgba(26,48,38,.94);-webkit-backdrop-filter:blur(20px) saturate(130%);backdrop-filter:blur(20px) saturate(130%);border:1px solid #e4f9e133;box-shadow:inset 0 1px 0 #f3ffe52b,0 12px 28px #00000055;animation:guide-in .32s cubic-bezier(.16,1,.3,1) both}
+.return-card #returnSummary{padding:0;margin:0;border:0}
+.return-card h2{margin:0 0 4px;font-size:20px;line-height:1.15;letter-spacing:-.02em;font-weight:700}
+.return-card p{margin:0 0 10px;font-size:13px;line-height:1.5;color:#d3e0cb}
+.return-card #returnEarnings{list-style:none;padding:0;margin:8px 0 10px;border-top:1px solid #c1d7b71f}
+.return-card #returnEarnings li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #c1d7b71f;font-size:14px;font-variant-numeric:tabular-nums}
+.return-card #returnEarnings strong{font:600 14px 'DM Mono',monospace;color:#dcefc0;letter-spacing:-.02em}
+.return-card #dismissReturn{display:block;width:100%;min-height:46px;margin-top:6px;border:1px solid #d9f1c445;border-radius:12px;background:linear-gradient(145deg,#c9e4b820,#c6dfb608),#55733e;color:#f8fbed;font:inherit;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 3px 9px #0b1c1626}
+.return-card #dismissReturn:focus-visible{outline:2px solid #e3d1a6;outline-offset:2px}
+@media(min-width:780px){.return-overlay{place-items:center}}
+@media(prefers-reduced-motion:reduce){.return-card{animation:none}}

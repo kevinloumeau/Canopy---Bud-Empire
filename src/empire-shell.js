@@ -21,7 +21,12 @@ export function mountEmpireShell({fit}){
  const toggles=[],articles=[];
  growth.querySelectorAll('.empire-branch').forEach((article,i)=>{const toggle=article.querySelector('.branch-toggle');toggles[i]=toggle;articles[i]=article;list.append(toggle);});
  const more=el('button','empire-more','<span>Rewards &amp; records</span><span class="empire-more-hint" id="empireMoreHint"></span>'+chevron);more.type='button';more.onclick=()=>show('details');
- screens.home.append($('returnSummary'),strip,storesHead,storesSummary,list,storesHelp,more);
+ screens.home.append(strip,storesHead,storesSummary,list,storesHelp,more);
+ // The welcome-back report is a moment over the map, not a row in a tab.
+ const summary=$('returnSummary');if(summary){const overlay=el('div','return-overlay');overlay.hidden=true;const card=el('div','return-card');card.append(summary);overlay.append(card);document.body.append(overlay);
+  const reflect=()=>{overlay.hidden=summary.hidden;if(!summary.hidden){const b=$('dismissReturn');if(b)b.focus({preventScroll:true});}};
+  if(window.MutationObserver)new MutationObserver(reflect).observe(summary,{attributes:true,attributeFilter:['hidden']});reflect();
+  overlay.addEventListener('keydown',e=>{if(e.key==='Escape'){const b=$('dismissReturn');if(b)b.click();}});}
 
  // Store: back bar, then the branch's own sticky tabs and body.
  const storeBar=backBar('Stores');screens.store.append(storeBar.bar);
