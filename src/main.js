@@ -121,11 +121,13 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
   function stationTier(i){var tier=0;for(var n=1;n<TIER_LEVELS.length;n++)if(state.lines[i]>=TIER_LEVELS[n])tier=n;return tier}
   function nextCapacity(i){return (1+state.lines[i]*.4)*(1+state.staff[i]*.3)*state.multiplier}
   function isOpen(i){return i===0||state.lines[i-1]>0}
+  // Customers buy a basket of bags that grows with the order desk, so the counters move items, not just people.
+  function basketSize(){return 1+Math.floor(Math.max(0,state.lines[4]-1)/2)}
   function stationThroughput(i){
     if(!state.lines[i])return 0;
     if(i<4)return capacity(i)/[2,3,2,2][i]/(i===3?format().packing:1);
     var service=1/counterServiceDuration(i);
-    return i===4?Math.min(capacity(i)/2,service+kioskCount()/kioskServiceDuration()):service;
+    return (i===4?Math.min(capacity(i)/2,service+kioskCount()/kioskServiceDuration()):service)*basketSize();
   }
   function production(){return Math.min.apply(null,LINES.map(function(_,i){return stationThroughput(i)}))*flowerValue()}
   function batchSize(i){return 1+(state.lines[i]-1)*.4}
@@ -157,7 +159,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     customers=customers.filter(function(c){return c.phase!=='leaving'||c.t<1});
     if(state.lines[5]){
       var pickups=customers.filter(function(c){return c.ordered&&!c.bag}).sort(function(a,b){return (a.pickupTicket||a.id)-(b.pickupTicket||b.id)}).slice(0,1).filter(function(c){return c.phase==='pickup'&&!c.walking&&Math.hypot(c.x-4,c.z-6.4)<.01});
-      if(pickups.length&&state.stock[4]>0){var served=advanceCounterService(pickups[0],5,dt)?1:0;if(served>0){work[5]=0;state.stock[4]-=served;state.sold+=served;playSound('sale',state.sound);recordEvent(state.empire,'pickup',served);add(pickups.slice(0,served).reduce(function(total,c){return total+(c.salePrice||flowerValue())*satisfyCustomer(state.empire,-1,c.kind,c.strain===0?'everyday':'boutique',c.waitSeconds||0)*(c.eventGuest&&c.strain>0?1.25:1)},0));pickups.slice(0,served).forEach(function(c){c.phase='leaving';c.t=0;c.bag=true;c.effectAge=0;recentPickupRatings.push(customerRatings(c).highness);if(recentPickupRatings.length>20)recentPickupRatings.shift()});burst(machinePos[5],colors.acid)}}else work[5]=0;
+      if(pickups.length&&state.stock[4]>0){var served=advanceCounterService(pickups[0],5,dt)?1:0;if(served>0){work[5]=0;var bags=Math.max(1,Math.min(pickups[0].bags||1,state.stock[4]));pickups[0].bags=bags;state.stock[4]-=bags;state.sold+=bags;playSound('sale',state.sound);recordEvent(state.empire,'pickup',served);add(pickups.slice(0,served).reduce(function(total,c){return total+(c.salePrice||flowerValue())*(c.bags||1)*satisfyCustomer(state.empire,-1,c.kind,c.strain===0?'everyday':'boutique',c.waitSeconds||0)*(c.eventGuest&&c.strain>0?1.25:1)},0));pickups.slice(0,served).forEach(function(c){c.phase='leaving';c.t=0;c.bag=true;c.effectAge=0;recentPickupRatings.push(customerRatings(c).highness);if(recentPickupRatings.length>20)recentPickupRatings.shift()});burst(machinePos[5],colors.acid)}}else work[5]=0;
     }
     // Prepare pickup bags independently of the number of customers collecting.
     if(state.lines[4]&&state.stock[3]>0&&state.stock[4]<readyCapacity()){
@@ -167,10 +169,10 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     }else readyWork=Math.min(readyWork,.9);
     if(state.lines[4]){
       var queue=customers.filter(function(c){return !c.kiosk&&!c.ordered&&c.phase!=='leaving'}).slice(0,1).filter(function(c){return c.phase==='ordering'&&!c.walking&&Math.hypot(c.x+4,c.z-6.4)<.01});
-      var reserved=customers.filter(function(c){return c.ordered&&!c.bag}).length,available=Math.max(0,state.stock[4]-reserved);
-      if(queue.length&&reserved<pickupLimit()&&available>0){
+      var waitingPickups=customers.filter(function(c){return c.ordered&&!c.bag}),reserved=waitingPickups.reduce(function(n,c){return n+(c.bags||1)},0),available=Math.max(0,state.stock[4]-reserved);
+      if(queue.length&&waitingPickups.length<pickupLimit()&&available>0){
         var count=advanceCounterService(queue[0],4,dt)?1:0;
-        for(var j=0;j<count;j++){available--;queue[j].strain=menuChoice(queue[j].id);queue[j].salePrice=flowerValue(queue[j].strain);queue[j].ordered=true;queue[j].pickupTicket=++pickupQueueSequence;queue[j].phase='toPickup';queue[j].t=0}if(count)work[4]=0;
+        for(var j=0;j<count;j++){queue[j].bags=Math.max(1,Math.min(basketSize(),available));available-=queue[j].bags;queue[j].strain=menuChoice(queue[j].id);queue[j].salePrice=flowerValue(queue[j].strain);queue[j].ordered=true;queue[j].pickupTicket=++pickupQueueSequence;queue[j].phase='toPickup';queue[j].t=0}if(count)work[4]=0;
       }else work[4]=0;
     }
     if(state.kiosk)for(var kioskIndex=0;kioskIndex<kioskCount();kioskIndex++){
@@ -1930,7 +1932,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     $('buyMachine').style.setProperty('--funded',Math.min(100,state.money/price*100)+'%');
     $('upgradeHint').textContent=!open?'Build '+LINES[selected-1].name.toLowerCase()+' first.':!affordable?fmt(price-state.money)+' to go · customer sales earn cash automatically.':level?selected<4?'Larger batches per cycle. Train employees to shorten each cycle.':'Upgrade for faster '+['','','','','order preparation','customer service'][selected]+'.':'Build this stage to extend your line.';
     $('upgradeHint').classList.toggle('ready',affordable);
-    if(selected===4&&level)$('upgradeHint').textContent+=' Queue: '+queueLimit()+' customers · every 2 desk or employee upgrades adds a place (max 12).';
+    if(selected===4&&level)$('upgradeHint').textContent+=' Baskets: '+basketSize()+' bag'+(basketSize()===1?'':'s')+' per customer (+1 every 2 desk levels). Queue: '+queueLimit()+' customers · every 2 desk or employee upgrades adds a place (max 12).';
     }
     securityMarker.classList.add('station-sign');securityMarker.classList.toggle('selected',securitySelected);securityMarker.classList.toggle('can-upgrade',state.idStaff<10000&&state.money>=Math.floor(20*Math.pow(1.6,state.idStaff)));securityMarker.innerHTML='<span class=station-sign-name>Security</span><span class=station-sign-level>Lv '+state.idStaff+'</span>';securityMarker.style.setProperty('--station-tier',TIER_COLORS[state.idStaff>=25?3:state.idStaff>=10?2:1]);securityMarker.setAttribute('aria-label','Security, level '+state.idStaff+'. Open security station');securityMarker.setAttribute('aria-pressed',String(securitySelected));
     var idPrice=Math.floor(20*Math.pow(1.6,state.idStaff)),idMax=idTrainingQuote(10000);

@@ -36,7 +36,7 @@ export function mountEmpireShell({fit,getState,format}){
  const detailsBar=backBar('Empire','Rewards & records');screens.details.append(detailsBar.bar);
  // Scoreboard: the lifetime figures that left the HUD, at the top of the records.
  const board=el('section','scoreboard');board.setAttribute('aria-label','Lifetime figures');
- const stats=[['Lifetime revenue','revenue'],['Customers served','served'],['Deliveries','deliveries'],['Trophies','trophies'],['Prestige rank','prestige']];
+ const stats=[['Lifetime revenue','revenue'],['Bags sold','served'],['Deliveries','deliveries'],['Trophies','trophies'],['Prestige rank','prestige']];
  board.innerHTML=stats.map(([label,key])=>'<div class="score"><small>'+label+'</small><b data-score="'+key+'">—</b></div>').join('');
  screens.details.append(board);
  let boardSig='';

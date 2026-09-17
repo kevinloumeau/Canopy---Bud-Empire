@@ -165,3 +165,7 @@ Security is the first card in the Stations row and the map's Security marker ope
 ## Deliveries module and scoreboard
 
 Delivery-request maths moved to `src/deliveries.js` (cap, rate, accrue, ready, consume, heat) with unit tests in `tests/deliveries.test.js`; `main.js` calls those functions. The Rewards & records screen opens with a scoreboard of lifetime revenue, customers served, deliveries completed, trophies and prestige rank, read from state through the Empire shell.
+
+## Baskets (September 17, 2026)
+
+Customers now buy a basket of bags: `basketSize() = 1 + floor((ordersLevel - 1) / 2)`, so the order desk governs volume as well as queue places. Ordering reserves the basket (or whatever is available, at least one), pickup hands over and charges for the whole basket, and both counter stations' throughput is measured in bags per second (service rate × basket). This ends the previous situation where Pickup was always the bottleneck by an order of magnitude and plant upgrades only filled storage; Seeds, Grow, Harvest and Pack now take turns as the constraint. `state.sold` counts bags and the scoreboard says Bags sold. No save format change.
