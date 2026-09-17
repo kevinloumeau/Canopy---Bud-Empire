@@ -106,3 +106,7 @@ On phones the queue reads as icon plus figure only; the word ordering appears fr
 ## Night lighting
 
 At night the shade is a deep blue at darkness + .04, and a lighting pass is drawn above it so the shop reads as lit rather than dimmed: a work light over every station (cool over the grow room), shop-floor downlights, a lit entrance, the mint glow of the online kiosk sign, stronger fascia strip glows along the mezzanine and top floor (no string bulbs), a warm wash behind the top-floor shelving, a cool wash on the planted wall, and pools on the stair treads. Flicker respects reduced motion.
+
+## Scene lettering and plaques
+
+Canvas lettering (ORDER, PICKUP, ONLINE ORDERS, stock pins) uses Bricolage Grotesque with a sans fallback so the world and interface share one voice. Station plaques are small glass tags: 11px Bricolage name, 10.5px DM Mono level, 9px radius, dark green glass at 82% with a hairline and a soft offset shadow; the selected plaque fills with its tier colour.

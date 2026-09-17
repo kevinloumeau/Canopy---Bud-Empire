@@ -889,9 +889,9 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
   function drawCustomer(c,now){
     var moving=c.walking;
     if(c.eventGuest||c.kind==='vip'){var guest=project(c.x,.02,c.z);ellipse(guest.x,guest.y,unit*.48,unit*.22,'#dac18b80');}
-    if(c.kind==='vip'){var vip=project(c.x,2.6,c.z);ctx.fillStyle='#f0cf7f';ctx.font='bold '+Math.max(9,unit*.25)+'px sans-serif';ctx.textAlign='center';ctx.fillText('VIP',vip.x,vip.y)}
+    if(c.kind==='vip'){var vip=project(c.x,2.6,c.z);ctx.fillStyle='#f0cf7f';ctx.font='bold '+Math.max(9,unit*.25)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText('VIP',vip.x,vip.y)}
     drawPerson(c.x,c.z,now,c.id,moving,false,c.bag,{phase:c.walkPhase||0,amount:c.walkAmount||0,facing:c.facing===undefined?.3:c.facing});
-    if((c.phase==='ordering'&&Math.hypot(c.x+4,c.z-6.4)<.2)||c.phase==='pickup'||c.phase==='toPickup'){var p=project(c.x,2.05,c.z);ellipse(p.x,p.y,unit*.2,unit*.18,c.ordered?'#c4e8a7':'#f0dfb0');ctx.fillStyle='#24412f';ctx.font='bold '+Math.max(8,unit*.22)+'px sans-serif';ctx.textAlign='center';ctx.fillText(c.ordered?'✓':'…',p.x,p.y+unit*.075)}
+    if((c.phase==='ordering'&&Math.hypot(c.x+4,c.z-6.4)<.2)||c.phase==='pickup'||c.phase==='toPickup'){var p=project(c.x,2.05,c.z);ellipse(p.x,p.y,unit*.2,unit*.18,c.ordered?'#c4e8a7':'#f0dfb0');ctx.fillStyle='#24412f';ctx.font='bold '+Math.max(8,unit*.22)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText(c.ordered?'✓':'…',p.x,p.y+unit*.075)}
   }
   function drawFloor(){
     ctx.fillStyle='#ecdac3';ctx.fillRect(0,0,width,height);
@@ -1047,7 +1047,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     worldLine([[x-w/2+.07,y+.06,z+.09],[x+w/2-.07,y+.06,z+.09]],'#c9b77e',.025);
     var p=project(x,y+h*.45,z+.1),axis=project(x+1,y+h*.45,z+.1),slope=(axis.y-p.y)/(axis.x-p.x);
     ctx.save();ctx.translate(p.x,p.y);ctx.transform(1,slope,0,1,0,0);
-    ctx.shadowColor='#ffe8b6';ctx.shadowBlur=unit*.12;ctx.fillStyle='#fff5d9';ctx.font='600 '+Math.max(7,unit*.27)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,0,0,w*unit*.64);ctx.restore();
+    ctx.shadowColor='#ffe8b6';ctx.shadowBlur=unit*.12;ctx.fillStyle='#fff5d9';ctx.font='600 '+Math.max(7,unit*.27)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,0,0,w*unit*.64);ctx.restore();
   }
   function onlinePackingCounter(now){
     var x=-10.7,z=1.5,oak=['#cbb085','#7f6a4b','#ac9168'],green=['#86a795','#3e6250','#648a70'];
@@ -1086,10 +1086,10 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     worldLine([[x-1.4,2.29,z-.64],[x+1.4,2.29,z-.64]],'#ecd39c',.027);
     var sign=project(x,2.55,z-.64),axis=project(x+1,2.55,z-.64);
     ctx.save();ctx.translate(sign.x,sign.y);ctx.transform(1,(axis.y-sign.y)/(axis.x-sign.x),0,1,0,0);
-    ctx.shadowColor='#ffe8b6';ctx.shadowBlur=unit*.1;ctx.fillStyle='#fff5d9';ctx.font='600 '+Math.max(7,unit*.235)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('ONLINE ORDERS',0,0,unit*2.3);ctx.restore();
+    ctx.shadowColor='#ffe8b6';ctx.shadowBlur=unit*.1;ctx.fillStyle='#fff5d9';ctx.font='600 '+Math.max(7,unit*.235)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('ONLINE ORDERS',0,0,unit*2.3);ctx.restore();
     var status=project(x+.85,1.5,z-.49);ellipse(status.x,status.y,unit*.065,unit*.065,state.stock[3]>=onlineSize()?'#b7e394':'#d7b775');
     
-    var stockPin=project(x,1.25,z+.3);ctx.fillStyle='#b9e2d7';ctx.font='600 '+Math.max(8,unit*.22)+'px sans-serif';ctx.textAlign='center';ctx.fillText(state.stock[3]+' available',stockPin.x,stockPin.y-unit*.12);ctx.fillStyle='#20392d';ctx.fillRect(stockPin.x-unit*.55,stockPin.y,unit*1.1,unit*.12);ctx.fillStyle='#a9d2c8';ctx.fillRect(stockPin.x-unit*.55,stockPin.y,unit*1.1*Math.min(1,state.stock[3]/onlineSize()),unit*.12);
+    var stockPin=project(x,1.25,z+.3);ctx.fillStyle='#b9e2d7';ctx.font='600 '+Math.max(8,unit*.22)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText(state.stock[3]+' available',stockPin.x,stockPin.y-unit*.12);ctx.fillStyle='#20392d';ctx.fillRect(stockPin.x-unit*.55,stockPin.y,unit*1.1,unit*.12);ctx.fillStyle='#a9d2c8';ctx.fillRect(stockPin.x-unit*.55,stockPin.y,unit*1.1*Math.min(1,state.stock[3]/onlineSize()),unit*.12);
     // Its own feed branch carries packed jars from the packing station.
     transferTube([[-4.55,-.9,1],[-7.4,-.9,1],[-7.4,1.5,1.5],[-9.05,1.5,1.5]],3);
   }
@@ -1489,7 +1489,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
       worldLine([[x-.29,1.11,z-.43],[x-.29,1.11,z+.43]],'#577465',.035);
       if(checkProgress>0)worldLine([[x-.29,1.115,z-.43],[x-.29,1.115,z-.43+checkProgress*.86]],'#c5e89e',.045);
       var light=project(x-.12,1.19,z);ellipse(light.x,light.y,unit*.055,unit*.035,checking?'#e9cf87':'#b7dd96');
-      var label=project(x,.65,z+.61);ctx.save();ctx.fillStyle='#f2ecd5';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='600 '+(unit*.12)+'px sans-serif';ctx.fillText('ID CHECK',label.x,label.y,unit*.55);ctx.restore();
+      var label=project(x,.65,z+.61);ctx.save();ctx.fillStyle='#f2ecd5';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='600 '+(unit*.12)+'px "Bricolage Grotesque",sans-serif';ctx.fillText('ID CHECK',label.x,label.y,unit*.55);ctx.restore();
     }});
   }
   function addEntryDoor(jobs){
@@ -1552,7 +1552,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
       drawBox(sx,sz,2.2,1.2,.055,.38,['#b8b49a','#283e32','#355342']);
       var label=project(sx,2.39,sz+.03),axis=project(sx+1,2.39,sz+.03);
       ctx.save();ctx.translate(label.x,label.y);ctx.transform((axis.x-label.x)/unit,(axis.y-label.y)/unit,0,1,0,0);
-      ctx.fillStyle='#eee6ca';ctx.font='600 '+unit*.16+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('EXIT ONLY',0,0,unit*1.02);ctx.restore();
+      ctx.fillStyle='#eee6ca';ctx.font='600 '+unit*.16+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('EXIT ONLY',0,0,unit*1.02);ctx.restore();
     });
     [exitX-1.15,exitX+1.15].forEach(function(edge){add(edge,exitZ,function(){drawBox(edge,exitZ,0,.16,.24,3.65,['#454d44','#202923','#303c32'])})});
     add(exitX,exitZ,function(){
@@ -1671,7 +1671,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
       drawBox(x,6.35,.75,5.6,.9,.16,['#dfbd8e','#9d7b52','#bd986b']);
       drawBox(x,6.35,2.55,5.6,.15,.1,sage);
       [-2.8,2.8].forEach(function(dx){drawBox(x+dx,6.3,.88,.12,.12,1.75,cream)});
-      var label=project(x,2.83,6.5);ctx.fillStyle='#375b43';ctx.font='bold '+Math.max(10,unit*.35)+'px sans-serif';ctx.textAlign='center';ctx.fillText(x<0?'ORDER':'PICKUP',label.x,label.y);
+      var label=project(x,2.83,6.5);ctx.fillStyle='#375b43';ctx.font='bold '+Math.max(10,unit*.35)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText(x<0?'ORDER':'PICKUP',label.x,label.y);
     })});
     for(var stripe=0;stripe<16;stripe++){(function(k){var x=-7.5+k;add(x,6.3,function(){drawBox(x,6.3,3.15,1,1.65,.13,k%2?cream:rose);drawBox(x,7.13,2.95,1,.06,.25,k%2?cream:rose)})})(stripe)}
     [-8.7,8.7].forEach(function(x){add(x,7,function(){drawBox(x,7,0,.95,.95,.6,cream);plant(x,7,.6,1.1)})});
@@ -1710,7 +1710,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
       updateBranchMarker();requestAnimationFrame(render);return;
     }
     drawTower(now);
-    var held=customers.filter(function(c){return c.ordered&&!c.bag}).length,heldPin=project(machinePos[5].x,2.2-sceneElevation,machinePos[5].z);ctx.fillStyle='#ead49b';ctx.font='600 '+Math.max(8,unit*.22)+'px sans-serif';ctx.textAlign='center';ctx.fillText(held+' held',heldPin.x,heldPin.y);
+    var held=customers.filter(function(c){return c.ordered&&!c.bag}).length,heldPin=project(machinePos[5].x,2.2-sceneElevation,machinePos[5].z);ctx.fillStyle='#ead49b';ctx.font='600 '+Math.max(8,unit*.22)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText(held+' held',heldPin.x,heldPin.y);
     tierFlashes.forEach(function(life,i){if(life<=0)return;tierFlashes[i]=Math.max(0,life-frameDelta);var station=machinePos[i];ctx.save();ctx.globalAlpha=life*.8;for(var n=0;n<5;n++){var q=project(station.x-1.3+n*.65,station.y+1.6+(motionPreference.matches?0:(1-life)*.5),station.z+.7),r=unit*.09*life;ctx.strokeStyle='#f6e3ae';ctx.lineWidth=Math.max(.7,unit*.025);ctx.beginPath();ctx.moveTo(q.x-r,q.y);ctx.lineTo(q.x+r,q.y);ctx.moveTo(q.x,q.y-r);ctx.lineTo(q.x,q.y+r);ctx.stroke()}ctx.restore()});
     var speed=state.lines.some(function(n){return n>0})?Math.min(.07,.02+production()*.00002):0;
     crateTime=(crateTime+frameDelta*speed*1.4)%1;
@@ -1747,7 +1747,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
       // Match both the angle and projected width of the kiosk face.
       ctx.transform((axis.x-label.x)/unit,(axis.y-label.y)/unit,0,1,0,0);
       ctx.beginPath();ctx.rect(-unit*.365,-unit*.095,unit*.73,unit*.19);ctx.clip();
-      ctx.fillStyle='#e8edcf';ctx.font='600 '+(unit*.1)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillStyle='#e8edcf';ctx.font='600 '+(unit*.1)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
       ctx.fillText('SELF ORDER',0,0,unit*.59);ctx.restore();
     }});});
     // Ground planters share guest depth sorting, so foliage occludes people behind it.
@@ -1798,7 +1798,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
       ctx.save();ctx.globalAlpha=Math.min(1,nightShade/.34);
       [[-9,9,4.62,3.075],[-6.5,6.5,9.32,-.275]].forEach(function(edge){warmStrip([[edge[0]+.2,edge[2],edge[3]],[edge[1]-.2,edge[2],edge[3]]],false)});
       machinePos.forEach(function(p,i){var half=stationTier(i)===0?.8:1.3,y=p.y+1.1,z=p.z+(stationTier(i)===0?.84:1.26);warmStrip([[p.x-half,y,z],[p.x+half,y,z]],i===1)});
-      [[-4,3.6,5.35,'ORDER',2.55],[4,3.6,5.35,'PICKUP',2.55],[-10.7,9.6,.86,'ONLINE ORDERS',3.15]].forEach(function(sign){var p=project(sign[0],sign[1],sign[2]),axis=project(sign[0]+1,sign[1],sign[2]);glow(p.x,p.y,unit*1.4,'#ffda8a38');ctx.save();ctx.translate(p.x,p.y);ctx.transform(1,(axis.y-p.y)/(axis.x-p.x),0,1,0,0);ctx.shadowColor='#ffdca0';ctx.shadowBlur=unit*.13;ctx.fillStyle='#fff0cf';ctx.font='600 '+Math.max(7,unit*.235)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(sign[3],0,0,sign[4]*unit*.64);ctx.restore()});
+      [[-4,3.6,5.35,'ORDER',2.55],[4,3.6,5.35,'PICKUP',2.55],[-10.7,9.6,.86,'ONLINE ORDERS',3.15]].forEach(function(sign){var p=project(sign[0],sign[1],sign[2]),axis=project(sign[0]+1,sign[1],sign[2]);glow(p.x,p.y,unit*1.4,'#ffda8a38');ctx.save();ctx.translate(p.x,p.y);ctx.transform(1,(axis.y-p.y)/(axis.x-p.x),0,1,0,0);ctx.shadowColor='#ffdca0';ctx.shadowBlur=unit*.13;ctx.fillStyle='#fff0cf';ctx.font='600 '+Math.max(7,unit*.235)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(sign[3],0,0,sign[4]*unit*.64);ctx.restore()});
       ctx.restore();
     }
     for(var i=particles.length-1;i>=0;i--){var p=particles[i];p.life-=frameDelta*1.5;if(!motionPreference.matches){p.x+=p.vx*frameDelta;p.z+=p.vz*frameDelta;p.y+=p.vy*frameDelta;}p.vy-=frameDelta*5;var screen=project(p.x,p.y,p.z),size=Math.max(2,unit*.1);ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.fillRect(screen.x-size/2,screen.y-size/2,size,size);ctx.globalAlpha=1;if(p.life<=0)particles.splice(i,1)}
@@ -1829,7 +1829,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
       carton(x,z,y-.9,.62);
       if(drone.orders>1){
         var cargoLabel=project(x,y-.55,z+.36);
-        ctx.fillStyle='#f5efd7';ctx.font='600 '+Math.max(9,unit*.23)+'px sans-serif';ctx.textAlign='center';ctx.fillText('×'+drone.orders,cargoLabel.x,cargoLabel.y);
+        ctx.fillStyle='#f5efd7';ctx.font='600 '+Math.max(9,unit*.23)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText('×'+drone.orders,cargoLabel.x,cargoLabel.y);
       }
       worldLine([[x-.2,y-.35,z],[x-.2,y-.04,z]],'#d8c89e',.035);
       worldLine([[x+.2,y-.35,z],[x+.2,y-.04,z]],'#d8c89e',.035);
