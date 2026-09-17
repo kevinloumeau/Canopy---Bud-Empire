@@ -68,3 +68,7 @@ Old Town's revised furniture layout places service counters and staff deeper ins
 ### Store projects
 
 Each Growth store row includes a native expandable Store projects section with an installed count, level locks, prices, income gains, and Installed states; the main upgrade row previews next-level income. Three optional projects per branch unlock at levels 2, 4, and 7: Riverside offers Riverwalk showcases, Cedar checkout, and Pollinator planters; Old Town offers Brass vitrines, Boutique checkout, and Heritage flower boxes; City Center offers Flagship showcases, Concierge checkout, and Atrium planting. Their visible changes are brass vitrine trim with a warm display strip, a larger brass-framed checkout screen and rail, and flowering planters. The respective 20%, 30%, and 50% base-income bonuses add together for that store, including offline earnings, while existing branch levels remain independent.
+
+## Bottom bar
+
+The tray's six tabs are icon-led: a 22px line icon in the HUD's 1.6 stroke above a short label, six equal columns, the pressed tab keeping the glass pill. Attention dots sit on the icon's shoulder, never inside the label. Below 400px the Employees tab reads Staff; its pane title stays Employees. Happiness and Live highness share one row with fixed-length meters. Collapsed, the header shrinks to a sheet handle (the toggle button restyled), so the collapsed sheet is handle, mood row, and tabs.
