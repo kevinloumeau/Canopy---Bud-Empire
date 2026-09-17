@@ -117,7 +117,7 @@ Each floor carries soft occlusion bands: a gradient along the base of the rear a
 
 ## Kiosk display
 
-The online kiosk's available-jar count is a shelf-edge display set into the counter's front face: a dark green panel with a mint hairline, N AVAILABLE in Bricolage (mint, turning light green when an order can ship), and a slim fill line beneath toward the next order size. Nothing floats above the counter. In the stock strip every item has 8px of inner padding and the Delivery item keeps 6px clear of Ready with 11-12px inside its frame.
+The online kiosk's available-jar count is a shelf-edge display set into the counter's front face: a dark green panel with a mint hairline, N AVAILABLE in Bricolage (mint, turning light green when an order can ship), and a slim fill line beneath toward the next order size. Nothing floats above the counter. Stock strip items share the width equally (flex 1) with centred icon and count, so three-digit stock never overflows; the Delivery frame is slightly wider.
 
 ## Station row
 
@@ -128,4 +128,4 @@ Above the station strip, the bottleneck is one quiet tappable row on a faint gol
 
 ## Staff pane
 
-On phones the seven staff rows fit without scrolling: a 20px icon, name over its level/speed line, and two compact Train / Max buttons (32px, 28px on short screens). The intro sentence is hidden on phones; the pane may use 48dvh.
+On phones the seven staff rows fit without scrolling: a 20px icon, name over its level/speed line, and two compact buttons under Train and Max column headings, each showing only its gain and price (32px, 28px on short screens). The intro sentence is hidden on phones; the pane may use 48dvh.

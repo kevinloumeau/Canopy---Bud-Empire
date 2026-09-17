@@ -25,10 +25,11 @@
 
 /* Stock strip: icon and count only on every size (the sheet is never wide enough for six labels); labels stay for assistive tech via title and sr-only text. */
 .sheet #stockStatus .stock-item small{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.sheet #stockStatus .stock-item{position:relative;flex:0 0 auto;gap:6px;padding:4px 8px}
+.sheet #stockStatus .stock-item{position:relative;flex:1 1 0;justify-content:center;min-width:0;gap:5px;padding:4px 4px}
 .sheet #stockStatus .stock-item b{font-size:13px}
-.sheet #stockStatus .stock-online{margin-left:6px;padding:4px 12px 4px 11px}
-.sheet #stockStatus{gap:2px;padding:8px 4px 4px}
+.sheet #stockStatus .stock-online{flex:1.15 1 0;margin-left:4px;padding:4px 6px}
+.sheet #stockStatus{gap:2px;padding:8px 2px 4px}
+@media(max-width:360px){.sheet #stockStatus .stock-item{gap:4px;padding:4px 2px}.sheet #stockStatus .stock-item svg{width:16px;height:18px}.sheet #stockStatus .stock-item b{font-size:12px}}
 
 /* Contrast: a deeper action green so cream labels clear 4.5:1. */
 .sheet .buy,.sheet .employee-card button,.sheet .shop-upgrade button,.sheet .station-training,.sheet .flower-actions button,.sheet .flow-guide button,

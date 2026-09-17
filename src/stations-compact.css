@@ -139,3 +139,12 @@
  .sheet .employee-train-actions button{min-height:28px;padding:1px 8px;line-height:1.05}
  .sheet .employee-train-actions button b{font-size:11px}
 }
+
+/* Column headings replace the repeated Train / Max words on every button. */
+.sheet .employee-columns{display:grid;grid-template-columns:1fr auto auto;gap:5px;padding:2px 2px 4px;font-size:11px;letter-spacing:.02em;color:#aebfa8;text-align:center}
+.sheet .employee-columns span{grid-column:auto;min-width:78px}
+.sheet .employee-columns span:first-child{grid-column:2}
+.sheet .employee-train-actions button{min-width:78px}
+.sheet .employee-train-actions button span{font-size:11px;color:#c3dca5}
+.sheet .employee-train-actions button:disabled span{color:inherit}
+@media(min-width:780px){.sheet .employee-columns{padding:6px 2px 4px;grid-template-columns:1fr 106px 106px;gap:6px}.sheet .employee-columns span{min-width:0}}
