@@ -17,7 +17,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
   var STRAINS=[{name:'Meadow Mint',price:18,unlock:0,color:'#aacb85'},{name:'Amber Bloom',price:26,unlock:1500,color:'#ddbc75'},{name:'Violet Haze',price:38,unlock:12000,color:'#baa1cf'},{name:'Midnight Orchid',price:56,unlock:65000,color:'#8ebcbb'}];
   // Contract progression is defined in depth.js, including post-city milestones.
   var $=function(id){return document.getElementById(id)};
-  function fresh(){return{money:30,lifetime:0,lightMode:null,autoDrone:migrateAutoDrone(),productMenu:migrateMenu(),sound:false,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,scannerLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[1,1,1,1,1,1],stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,queueLevel:0,storageLevel:0,onlineCompleted:0,multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1}}
+  function fresh(){return{money:30,lifetime:0,lightMode:null,autoDrone:migrateAutoDrone(),productMenu:migrateMenu(),sound:false,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,scannerLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[1,1,1,1,1,1],stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1}}
   function readSave(){
     for(var key of ['shift-save','shift-save-backup']){
       try{var raw=localStorage.getItem(key);if(!raw)continue;var value=JSON.parse(raw);if(value&&typeof value==='object'&&!Array.isArray(value))return value}catch(e){}
@@ -34,7 +34,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     next.money=finite(old.money,30,0,Number.MAX_SAFE_INTEGER);
     next.lifetime=finite(old.lifetime,0,0,Number.MAX_SAFE_INTEGER);
     next.sold=Math.floor(finite(old.sold,0,0,Number.MAX_SAFE_INTEGER));
-    next.onlineCompleted=Math.floor(finite(old.onlineCompleted,0,0,Number.MAX_SAFE_INTEGER));
+    next.onlineCompleted=Math.floor(finite(old.onlineCompleted,0,0,Number.MAX_SAFE_INTEGER));next.onlineRequests=finite(old.onlineRequests,0,0,40);
     next.contract=Math.floor(finite(old.contract,0,0,21));next.productMenu=migrateMenu(old.productMenu);next.sound=old.sound===true;next.lightMode=['day','night'].includes(old.lightMode)?old.lightMode:null;next.autoDrone=migrateAutoDrone(old.autoDrone);
     next.globalLevel=Math.floor(finite(old.globalLevel,0,0,500));
     next.multiplier=Math.pow(1.25,next.globalLevel);
@@ -64,7 +64,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
   function offlineReward(seconds){return state.gameSpeed===0?0:(Math.min(production(),flowerValue()/arrivalInterval())+branchRate(state.empire))*Math.min(14400,Math.max(0,seconds))}
   function collectOffline(elapsed){
     var away=elapsed===undefined?Math.max(0,(Date.now()-state.lastSeen)/1000):elapsed;
-    var seconds=Math.min(14400,away);
+    var seconds=Math.min(14400,away);if(state.gameSpeed!==0)accrueOnlineRequests(seconds);
     var rates=[Math.min(production(),flowerValue()/arrivalInterval())].concat(STORES.map(function(_,i){return storeRate(state.empire,i)}));
     var earnings=rates.map(function(rate){return state.gameSpeed===0?0:rate*seconds});
     var reward=earnings.reduce(function(a,b){return a+b},0);
@@ -141,6 +141,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     return work[i]>=1;
   }
   function simulate(dt){
+    accrueOnlineRequests(dt);
     add(branchRate(state.empire)*dt);tickBranches(state.empire,dt);var operationResult=tickOperations(state,dt);if(operationResult.revenue)add(operationResult.revenue);if(operationResult.deliveries){state.onlineCompleted+=operationResult.deliveries;recordEvent(state.empire,'online',operationResult.deliveries)}
     arrival+=dt;
     if(arrival>=arrivalInterval()&&customers.filter(function(c){return !c.ordered&&c.phase!=='leaving'}).length<queueLimit()){
@@ -191,7 +192,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
         if(i>0)state.stock[i-1]-=amount;state.stock[i]+=amount;
       }
     }
-    if(autoDroneReady(state.autoDrone,dt,state.lines[4]>0&&state.stock[3]>=onlineSize()))sendOnlineOrders(autoDroneLimit(state.autoDrone),true);
+    if(autoDroneReady(state.autoDrone,dt,state.lines[4]>0&&state.stock[3]>=onlineSize()&&onlineRequestsReady()>0))sendOnlineOrders(autoDroneLimit(state.autoDrone),true);
   }
   function staffCost(i){return Math.floor(20*Math.pow(1.6,state.staff[i]))}
   function idTrainingQuote(limit){
@@ -248,14 +249,19 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
   function storageCost(){return Math.round(250*Math.pow(1.7,state.storageLevel))}
   function upgradeStorage(){if(state.storageLevel>=20||state.money<storageCost())return;state.money-=storageCost();state.storageLevel++;save();renderUI();notify('STORAGE EXPANDED · '+storageCapacity()+' per stage','upgrade')}
   function onlineSize(){return 4+(state.onlineCompleted%5)*3}
+  // Web requests arrive slowly at first (one per ~45s) and speed up with completed orders, up to one per 5s.
+  function onlineRequestCap(){return 12+Math.min(28,Math.floor(state.onlineCompleted/10))}
+  function onlineRequestRate(){return state.lines[4]?Math.min(.2,(1+state.onlineCompleted/20)/45):0}
+  function accrueOnlineRequests(seconds){state.onlineRequests=Math.min(onlineRequestCap(),state.onlineRequests+onlineRequestRate()*seconds)}
+  function onlineRequestsReady(){return Math.floor(state.onlineRequests)}
   function onlineBatch(limit,jarBudget){
-    var jars=jarBudget===undefined?state.stock[3]:jarBudget,count=0,used=0,reward=0;
+    var jars=jarBudget===undefined?state.stock[3]:jarBudget,count=0,used=0,reward=0;limit=Math.min(limit,onlineRequestsReady());
     if(state.lines[4])while(count<limit){var need=4+((state.onlineCompleted+count)%5)*3;if(jars<need)break;jars-=need;used+=need;reward+=need*onlineValue(state.onlineCompleted+count);count++}
     return {count:count,jars:used,reward:reward};
   }
   function sendOnlineOrders(limit,automatic){
     var batch=onlineBatch(limit);if(!batch.count)return;
-    state.stock[3]-=batch.jars;state.onlineCompleted+=batch.count;
+    state.stock[3]-=batch.jars;state.onlineCompleted+=batch.count;state.onlineRequests=Math.max(0,state.onlineRequests-batch.count);
     queueDeliveryWave(batch.count);
     recordEvent(state.empire,'online',batch.count);add(batch.reward);if(!automatic)notifyDispatch(batch);burst({x:-10.7,z:1.5,y:7.05},'#dbc38b');renderUI();save();
   }
@@ -1912,7 +1918,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     $('fulfillOnlineBatch').disabled=batch.count<10;$('onlineBatchLabel').textContent='Send 10';$('onlineBatchReward').textContent=fmt(quote.reward);$('onlineBatchInfo').textContent=quote.jars+' jars total';
     $('onlineMaxOption').hidden=!maxUnlocked;$('fulfillOnlineMax').disabled=!maxBatch.count;$('onlineMaxLabel').textContent='Send max ('+maxBatch.count+')';$('onlineMaxReward').textContent=fmt(maxBatch.reward);$('onlineMaxInfo').textContent=maxBatch.jars+' jars total';
 
-    $('onlineTitle').textContent='Web order #'+String(state.onlineCompleted+1).padStart(3,'0');$('onlineNeed').textContent=onlineSize()+' jars · '+STRAINS[menuChoice(state.onlineCompleted)].name;$('onlineReward').textContent=fmt(onlineSize()*onlineValue());$('onlineStock').textContent=state.stock[3]+' jars available · '+customers.filter(function(c){return c.ordered&&!c.bag}).length+' walk-in bags held';$('dispatchHint').textContent=state.stock[3]<onlineSize()?'Waiting for '+(onlineSize()-state.stock[3])+' more packed jars. Walk-in pickups stay reserved.':'Ready for drone delivery. Walk-in pickups stay reserved.';$('fulfillOnline').disabled=!state.lines[4]||state.stock[3]<onlineSize();$('onlineBadge').hidden=$('fulfillOnline').disabled;if(!maxUnlocked)$('dispatchHint').textContent+=' Send max unlocks at Packing Lv 10.';
+    $('onlineTitle').textContent='Web order #'+String(state.onlineCompleted+1).padStart(3,'0');$('onlineNeed').textContent=onlineSize()+' jars · '+STRAINS[menuChoice(state.onlineCompleted)].name;$('onlineReward').textContent=fmt(onlineSize()*onlineValue());$('onlineStock').textContent=onlineRequestsReady()+' request'+(onlineRequestsReady()===1?'':'s')+' waiting · '+state.stock[3]+' jars available · '+customers.filter(function(c){return c.ordered&&!c.bag}).length+' walk-in bags held';$('dispatchHint').textContent=onlineRequestsReady()<1?'Waiting for the next web request. Requests arrive faster as you complete orders.':state.stock[3]<onlineSize()?'Waiting for '+(onlineSize()-state.stock[3])+' more packed jars. Walk-in pickups stay reserved.':'Ready for drone delivery. Walk-in pickups stay reserved.';$('fulfillOnline').disabled=!state.lines[4]||state.stock[3]<onlineSize()||onlineRequestsReady()<1;var webItem=$('stockCountOnline').closest('.stock-item'),webCount=onlineRequestsReady();$('stockCountOnline').textContent=webCount;webItem.dataset.heat=webCount>=6?'3':webCount>=3?'2':webCount>=1?'1':'0';webItem.title=webCount+' deliver'+(webCount===1?'y':'ies')+' requested · '+onlineRequestCap()+' max';$('onlineBadge').hidden=$('fulfillOnline').disabled;if(!maxUnlocked)$('dispatchHint').textContent+=' Send max unlocks at Packing Lv 10.';
     renderCustomerRatings();
     $('queueCount').textContent=customers.filter(function(c){return !c.ordered&&c.phase!=='leaving'}).length+'/'+queueLimit();$('pickupCount').textContent=customers.filter(function(c){return c.phase==='pickup'||c.phase==='toPickup'}).length;$('servedCount').textContent=state.sold.toLocaleString();state.stock.forEach(function(n,i){$('stockCount'+i).textContent=n;$('stockCount'+i).title=i===4?n+' / '+readyCapacity()+' packed orders ready for walk-in pickup':n+' / '+storageCapacity()+(n>=storageCapacity()?' · Storage full':'');$('stockCount'+i).classList.toggle('stock-full',n>=(i===4?readyCapacity():storageCapacity()))});var order=milestone(state.contract);
     if(order){$('orderName').textContent=state.lifetime>=order.goal?'ORDER READY TO CLAIM':order.name;$('orderProgress').textContent=fmt(Math.min(state.lifetime,order.goal))+' / '+fmt(order.goal);$('orderFill').style.width=Math.min(100,state.lifetime/order.goal*100)+'%';$('claimReward').textContent='+'+fmt(order.reward);$('claim').disabled=state.lifetime<order.goal}
@@ -1927,7 +1933,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
   machineTabs.forEach(function(tab,i){var progress=document.createElement('progress');progress.max=100;progress.value=0;progress.setAttribute('aria-label',LINES[i].name+' equipment progress');tab.appendChild(progress);var label=document.createElement('span');label.className='level-funding';tab.appendChild(label);tab.onclick=function(){selectMachine(Number(tab.getAttribute('data-machine')))}});
   var trayTabs=Array.prototype.slice.call(document.querySelectorAll('[data-tray]'));
   var activeTray='factory',panelOpen=true;
-  function showTray(name){document.body.dataset.activeTray=name;if(state.empire.activeStore&&name!=='empire')visitStore(0,false);activeTray=name;panelOpen=true;$('sheet').classList.remove('collapsed');$('panelToggle').setAttribute('aria-expanded','true');$('panelToggle').textContent='⌄';var titles={factory:'Stations',employees:'Employees',orders:'Online orders',boosts:'Shop',flowers:'Flowers',empire:'Empire'};$('panelTitle').textContent=titles[name];trayTabs.forEach(function(t){t.setAttribute('aria-pressed',String(t.getAttribute('data-tray')===name))});Array.prototype.forEach.call(document.querySelectorAll('[data-pane]'),function(p){p.hidden=p.getAttribute('data-pane')!==name});fitControls()}
+  function showTray(name){document.body.dataset.activeTray=name;if(state.empire.activeStore&&name!=='empire')visitStore(0,false);activeTray=name;panelOpen=true;$('sheet').classList.remove('collapsed');$('panelToggle').setAttribute('aria-expanded','true');$('panelToggle').textContent='⌄';var titles={factory:'Stations',employees:'Employees',orders:'Deliveries',boosts:'Shop',flowers:'Flower',empire:'Empire'};$('panelTitle').textContent=titles[name];trayTabs.forEach(function(t){t.setAttribute('aria-pressed',String(t.getAttribute('data-tray')===name))});Array.prototype.forEach.call(document.querySelectorAll('[data-pane]'),function(p){p.hidden=p.getAttribute('data-pane')!==name});fitControls()}
   function collapsePanel(){panelOpen=false;$('sheet').classList.add('collapsed');$('panelToggle').setAttribute('aria-expanded','false');$('panelToggle').textContent='⌃';fitControls()}
   trayTabs.forEach(function(tab){tab.onclick=function(){var name=tab.getAttribute('data-tray');if(name===activeTray&&panelOpen)collapsePanel();else showTray(name)}});
   $('panelToggle').onclick=function(){if(panelOpen)collapsePanel();else showTray(activeTray)};
@@ -2134,7 +2140,8 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
   staffButtons.forEach(function(button){button.onclick=function(){upgradeStaff(Number(button.getAttribute('data-staff')))}});
   STRAINS.forEach(function(_,i){$('flowerBuy'+i).onclick=function(){buyStrain(i)};$('flowerSelect'+i).onclick=function(){selectStrain(i)}});
   COMPONENTS.forEach(function(_,i){$('componentBuy'+i).onclick=function(){upgradeComponent(i)}});
-  Array.prototype.forEach.call(document.querySelectorAll('#stockStatus .stock-item'),function(item,i){
+  var webStock=document.querySelector('#stockStatus .stock-online');webStock.setAttribute('role','button');webStock.setAttribute('tabindex','0');webStock.setAttribute('aria-label','Open deliveries');webStock.onclick=function(){showTray('orders')};webStock.onkeydown=function(event){if(event.key==='Enter'||event.key===' '){event.preventDefault();showTray('orders')}};
+  Array.prototype.forEach.call(document.querySelectorAll('#stockStatus .stock-item:not(.stock-online)'),function(item,i){
     var station=[0,1,2,3,5][i];
     item.setAttribute('role','button');item.setAttribute('tabindex','0');
     item.setAttribute('aria-label','Open '+LINES[station].name.toLowerCase()+' upgrades');
