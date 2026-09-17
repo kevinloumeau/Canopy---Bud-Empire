@@ -153,3 +153,7 @@ A five-step first-run walkthrough (`src/start-guide.js`, `src/start-guide.css`) 
 ## Security station (September 17, 2026)
 
 Security is the first card in the Stations row and the map's Security marker opens it. It is a door station backed by the existing `idStaff` ID-checker training rather than a seventh production line: selecting it swaps the station panel to Security (level, seconds per check, +% check speed, tier names Unstaffed door / Door staff / Seasoned doorman / Head of security) and routes the Hire/Train and Max buttons to `trainIdChecker`. The Staff tab's ID-checker training remains and the two stay in sync. The station row is now seven vertical cards on every size.
+
+## Installable web app (September 17, 2026)
+
+`public/manifest.webmanifest` (standalone, portrait, relative start URL so it works under the GitHub Pages path), PNG icons at 192/512 plus an Apple touch icon rasterized from the leaf mark, and Apple/mobile web-app meta tags make the game installable to a phone home screen. `public/sw.js` is a small service worker: hashed `/assets/` files and icons are cache-first, the page is network-first with an offline fallback, and old caches are dropped on activate. It is registered only outside localhost so the dev server never serves stale code.
