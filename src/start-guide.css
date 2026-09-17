@@ -1,0 +1,33 @@
+/* Start guide: a dimmed world, one spotlight, one glass card, five short steps. */
+.start-guide{position:fixed;inset:0;z-index:60}
+.start-guide[hidden]{display:none}
+.guide-dim{position:absolute;inset:0;background:#08140e66}
+.start-guide.is-spotlight .guide-dim{background:transparent}
+.guide-ring{position:fixed;z-index:1;border:2px solid #e3d1a6;border-radius:16px;box-shadow:0 0 0 9999px #08140e73;pointer-events:none;transition:left .35s cubic-bezier(.2,.8,.2,1),top .35s cubic-bezier(.2,.8,.2,1),width .35s cubic-bezier(.2,.8,.2,1),height .35s cubic-bezier(.2,.8,.2,1)}
+.guide-ring[hidden]{display:none}
+.guide-card{
+ position:fixed;z-index:2;left:16px;right:16px;top:calc(var(--hud-height,60px) + 18px);max-width:400px;margin:0 auto;
+ padding:18px 18px 16px;border-radius:22px;color:#f0f5e8;
+ background:linear-gradient(145deg,#d1e8cc14,#1e352a08 42%),rgba(26,48,38,.94);
+ -webkit-backdrop-filter:blur(20px) saturate(130%);backdrop-filter:blur(20px) saturate(130%);
+ border:1px solid #e4f9e133;box-shadow:inset 0 1px 0 #f3ffe52b,0 12px 28px #00000055;
+ animation:guide-in .32s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes guide-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.guide-dots{display:flex;gap:5px;margin-bottom:12px}
+.guide-dots i{width:18px;height:4px;border-radius:2px;background:#d8ecd333}
+.guide-dots i.is-on{background:#e3d1a6}
+.guide-card h2{margin:0 0 6px;font-size:20px;line-height:1.15;letter-spacing:-.02em;font-weight:700}
+.guide-card p{margin:0 0 16px;font-size:14px;line-height:1.5;color:#d3e0cb}
+.guide-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px}
+.guide-actions button{min-height:44px;padding:0 16px;border-radius:12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.guide-skip{border:0;background:transparent;color:#aec3a8}
+.guide-next{border:1px solid #d9f1c445;background:linear-gradient(145deg,#c9e4b820,#c6dfb608),#55733e;color:#f8fbed;box-shadow:0 3px 9px #0b1c1626}
+.guide-actions button:focus-visible{outline:2px solid #e3d1a6;outline-offset:2px}
+@media(hover:hover){.guide-next:hover{filter:brightness(1.1)}.guide-skip:hover{color:#f0f5e8}}
+/* Steps that point at the sheet lift the card so the target stays visible. */
+.start-guide[data-step="1"] .guide-card,.start-guide[data-step="3"] .guide-card,.start-guide[data-step="4"] .guide-card{top:calc(var(--hud-height,60px) + 18px)}
+.start-guide[data-step="2"] .guide-card{top:calc(var(--hud-height,60px) + 26px)}
+@media(min-width:780px){.guide-card,.start-guide[data-step] .guide-card{left:auto;right:420px;top:auto;bottom:40px;width:380px}}
+@media(prefers-reduced-motion:reduce){.guide-card{animation:none}.guide-ring{transition:none}}
+.shop-reset .guide-replay{margin-right:auto}

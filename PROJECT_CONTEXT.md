@@ -145,3 +145,7 @@ User clarified that the in-tab bottleneck callout should remain. Restored the wa
 ## Delivery requests (September 17, 2026)
 
 Web orders are now demand-limited. `state.onlineRequests` accrues while the order desk exists: one request per ~45 seconds at first, faster with completed orders (rate `(1 + completed/20) / 45` per second, capped at one per 5 seconds), up to a cap of 12 + completed/10 (max 40). Offline time accrues requests too, except while paused. Sending a delivery (manual, bulk, or auto drone) consumes one request per order, and dispatch is blocked with no requests waiting. The count shows as the sixth stock-strip item (labelled Delivery, drone icon) with four heat levels: 0 muted, 1–2 normal, 3–5 gold, 6+ gold-framed with a hovering icon; tapping it opens the Deliveries tab. The Online tab and its pane title are renamed Deliveries (Delivery under 400px), and the Flowers tab reads Flower. Saves without the field start at 0.
+
+## Start guide (September 17, 2026)
+
+A five-step first-run walkthrough (`src/start-guide.js`, `src/start-guide.css`) opens 600ms after loading when no `shift-save` existed at startup and `shift-guide-seen` is unset. Steps: welcome, station cards, cash and rate, the delivery counter, the Empire tab; each later step spotlights its target with a ring cut out of a dim overlay, and steps that point at the sheet switch the tray to Stations first. Skip or Escape closes it; finishing or skipping writes `shift-guide-seen`. The Shop tab's bottom row has a Replay the start guide button. Copy is deliberately light and cheeky.
