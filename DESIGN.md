@@ -69,9 +69,13 @@ Old Town's revised furniture layout places service counters and staff deeper ins
 
 Each Growth store row includes a native expandable Store projects section with an installed count, level locks, prices, income gains, and Installed states; the main upgrade row previews next-level income. Three optional projects per branch unlock at levels 2, 4, and 7: Riverside offers Riverwalk showcases, Cedar checkout, and Pollinator planters; Old Town offers Brass vitrines, Boutique checkout, and Heritage flower boxes; City Center offers Flagship showcases, Concierge checkout, and Atrium planting. Their visible changes are brass vitrine trim with a warm display strip, a larger brass-framed checkout screen and rail, and flowering planters. The respective 20%, 30%, and 50% base-income bonuses add together for that store, including offline earnings, while existing branch levels remain independent.
 
+## Top bar
+
+One row on every size: the leaf mark (with wordmark on desktop), cash as the hero in DM Mono with the income rate as a small +$/s suffix, the customer queue as one figure with a people icon, and a single glass speed pill (pause, 1×, 2×, 4×, day/night). Cash and rate labels exist for screen readers only; picking-up and served totals are hidden; the stock row left the header. Map overlays hang off the measured `--hud-height`.
+
 ## Bottom bar
 
-The tray's six tabs are icon-led: a 22px line icon in the HUD's 1.6 stroke above a short label, six equal columns, the pressed tab keeping the glass pill. Attention dots sit on the icon's shoulder, never inside the label. Below 400px the Employees tab reads Staff; its pane title stays Employees. Happiness and Live highness share one row with fixed-length meters. Collapsed, the header shrinks to a sheet handle (the toggle button restyled), so the collapsed sheet is handle, mood row, and tabs.
+The tray's six tabs are icon-led: a 22px line icon in the HUD's 1.6 stroke above a short label, six equal columns, the pressed tab keeping the glass pill. Attention dots sit on the icon's shoulder, never inside the label. Below 400px the Employees tab reads Staff; its pane title stays Employees. Above the tabs sits the stock strip, Seeds through Ready with icon, label and mono count, each item opening its station; the happiness and highness meters are hidden. Collapsed, the header shrinks to a sheet handle, so the collapsed sheet is handle, stock strip, and tabs.
 
 ## Empire pane
 
