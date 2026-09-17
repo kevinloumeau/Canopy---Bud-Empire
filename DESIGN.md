@@ -75,7 +75,7 @@ One row on every size: the leaf mark (with wordmark on desktop), cash as the her
 
 ## Bottom bar
 
-The tray's six tabs are icon-led: a 22px line icon in the HUD's 1.6 stroke above a short label, six equal columns, the pressed tab keeping the glass pill. Attention dots sit on the icon's shoulder, never inside the label. Below 400px the Employees tab reads Staff; its pane title stays Employees. Above the tabs sits the stock strip, Seeds through Ready with icon, label and mono count, each item opening its station; the happiness and highness meters are hidden. Collapsed, the header shrinks to a sheet handle, so the collapsed sheet is handle, stock strip, and tabs.
+The tray's six tabs are icon-led: a 22px line icon in the HUD's 1.6 stroke above a short label, six equal columns, the pressed tab keeping the glass pill. Attention dots sit on the icon's shoulder, never inside the label. The staff tab reads Staff on every size, as does its pane title. Above the tabs sits the stock strip, Seeds through Ready with icon, label and mono count, each item opening its station; the happiness and highness meters are hidden. Collapsed, the header shrinks to a sheet handle, so the collapsed sheet is handle, stock strip, and tabs.
 
 ## Empire pane
 
@@ -88,3 +88,7 @@ Functional text is 11px or larger and paragraphs 12px or larger everywhere in th
 ## Typeface
 
 The interface face is Bricolage Grotesque (500/600/700, variable optical size from Google Fonts), with DM Mono 500 for every figure: cash, rates, levels, counts, timers. Headings and the wordmark use the display optical size with tracking pulled in to -0.025em (wordmark -0.04em); body text stays at text size. Space Grotesk remains only as the fallback in the stack. Placeholder dashes for empty values are intentional and the detector's em-dash rule is ignored for this project.
+
+## Desktop conveniences
+
+With a fine pointer the map hint reads DRAG TO PAN · SCROLL TO ZOOM · SPACE PAUSES · 1 2 4 SET SPEED. Space toggles pause, 1/2/4 set speed, and Escape collapses the sheet, all ignored while a field, the start guide or a dialog has focus.
