@@ -122,3 +122,6 @@ The online kiosk's available-jar count is a shelf-edge display set into the coun
 ## Station row
 
 The seven stations form one segmented control in a shallow glass trough, like the tray tabs: a 22px line icon (ID badge, seed, plant, shears, jar, receipt, bag) over the level in DM Mono, the station name for assistive tech only, and a single glass pill on the selected station. The circled up-arrow badge sits on the icon's shoulder when an upgrade is affordable, matching the map signs; the bottleneck's icon turns gold; locked stations fade. No thumbnails in the strip; the selected station's portrait sits below it.
+## Bottleneck line
+
+Above the station strip, the bottleneck is one quiet tappable row on a faint gold tint: a gold dot, "Bottleneck: Pickup · 0.2/s", and a chevron. The whole row selects that station (or resumes 1× while paused); the old separate View station button is the chevron.
