@@ -72,3 +72,7 @@ Each Growth store row includes a native expandable Store projects section with a
 ## Bottom bar
 
 The tray's six tabs are icon-led: a 22px line icon in the HUD's 1.6 stroke above a short label, six equal columns, the pressed tab keeping the glass pill. Attention dots sit on the icon's shoulder, never inside the label. Below 400px the Employees tab reads Staff; its pane title stays Employees. Happiness and Live highness share one row with fixed-length meters. Collapsed, the header shrinks to a sheet handle (the toggle button restyled), so the collapsed sheet is handle, mood row, and tabs.
+
+## Empire pane
+
+On phones the Empire pane may use 48dvh (44dvh on short screens) because managing stores needs more room than a station upgrade. Its Today / Growth / Daily / Events switcher is a slim 36px segmented control on an opaque sticky band, secondary to the tray tabs. Headings carry the hierarchy at 19px; paragraphs sit within 4–10px of what they describe; store levels and rates use DM Mono tabular numerals. Goals are single rows with the reward button beside the progress bar. The daily track shows all seven days in one strip. The events explanation lives in a How events work disclosure, like How stores work.
