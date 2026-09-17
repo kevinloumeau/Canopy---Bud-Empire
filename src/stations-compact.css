@@ -1,0 +1,52 @@
+/* Stations pane on phones: one production line of six cards, a compact portrait row, and a tight upgrade block, so the whole pane fits without scrolling. */
+@media(max-width:779px){
+ body[data-active-tray=factory] .sheet>[data-pane=factory]{max-height:min(46dvh,420px);overflow-y:auto}
+ .flow-guide{padding:0 2px 6px;font-size:12px}
+ .flow-guide button{min-height:30px;padding:3px 9px}
+
+ /* Six cards in a row: icon, name, level. The bottleneck keeps its gold text; the word Slow is dropped for width. */
+ .sheet .machine-nav{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;padding:2px 0 8px;margin-bottom:6px}
+ .sheet .machine-nav button{grid-template-columns:minmax(0,1fr);grid-template-rows:44px auto auto;grid-template-areas:"thumb" "name" "status";row-gap:1px;column-gap:0;justify-items:center;min-height:0;height:auto;padding:5px 2px 6px;border-radius:11px}
+ .sheet .machine-nav button .machine-thumb{width:40px;height:44px;object-fit:contain;object-position:center bottom}
+ .sheet .machine-nav .station-card-name{font-size:11px;white-space:nowrap;text-align:center;line-height:1.2}
+ .sheet .machine-nav button>em{font-size:11px;line-height:1.2;text-align:center;padding:0;white-space:nowrap}
+ .sheet .machine-nav button.is-bottleneck em{white-space:nowrap}
+ .sheet .machine-nav .slow-tag{display:none}
+ .sheet .machine-nav button.is-bottleneck .station-card-name{color:#efcf8d}
+ .sheet .machine-nav button.can-upgrade::after{right:3px;bottom:auto;top:4px;width:9px;height:12px}
+ .sheet .machine-nav button small{display:none}
+
+ /* Selected station: smaller portrait, details clamped to what matters. */
+ .selected-line{grid-template-columns:60px minmax(0,1fr) 110px;gap:8px;padding:6px 0 4px;align-items:center}
+ #upgradePreview{width:60px;height:74px}
+ .selected-line .machine-info h1{margin:0 0 3px}
+ .selected-line #machineNumber{display:none}
+ .selected-line #stationStatus{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin-top:4px;line-height:1.4}
+ .selected-line .buy{height:42px}
+
+ /* Upgrade block and training row, tightened. */
+ .station-upgrade{padding:6px 4px 2px}
+ .station-upgrade .upgrade-summary{display:none}
+ .station-upgrade .upgrade-funding{margin:0 0 4px}
+ .station-upgrade progress{margin-top:4px;height:7px}
+ .upgrade-hint{min-height:0;margin:5px 0 6px}
+ /* Training already lives in the Staff tab; the Stations pane keeps only upgrades on phones. */
+ .station-training-actions{display:none}
+ .station-upgrade .next-appearance{display:none}
+}
+@media(max-width:360px){
+ .sheet .machine-nav{gap:3px}
+ .sheet .machine-nav button .machine-thumb{width:36px;height:40px}
+ .sheet .machine-nav button{grid-template-rows:40px auto auto;padding-inline:1px}
+ .sheet .machine-nav .station-card-name{font-size:10.5px}
+ .selected-line{grid-template-columns:54px minmax(0,1fr) 100px}
+ #upgradePreview{width:54px;height:66px}
+}
+@media(max-width:779px) and (max-height:760px){
+ .selected-line #stationStatus{display:none}
+ .selected-line{padding:2px 0 2px}
+ .selected-line .buy{height:38px}
+ .station-upgrade{padding:2px 4px 0}
+ .station-upgrade progress{margin:2px 0 0;height:6px}
+ .upgrade-hint{margin:3px 0 0}
+}
