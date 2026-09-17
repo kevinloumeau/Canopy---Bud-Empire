@@ -90,3 +90,15 @@
 .sheet .machine-nav button.is-bottleneck .station-card-name{color:#efcf8d}
 .sheet .machine-nav button.is-locked{opacity:.45}
 @media(hover:hover){.sheet .machine-nav button:not([aria-pressed=true]):hover{background:#dce9be10;filter:none}}
+
+/* Icon-led strip: a line icon over the level, name for assistive tech, and the upgrade arrow back on the icon's shoulder. */
+.sheet .machine-nav button{grid-template-rows:22px auto;grid-template-areas:"icon" "status";row-gap:4px;padding:8px 0 7px;min-height:54px}
+.sheet .machine-nav .station-icon{grid-area:icon;width:22px;height:22px;color:#d3e0cb;opacity:.85}
+.sheet .machine-nav button[aria-pressed=true] .station-icon{color:#f6faed;opacity:1}
+.sheet .machine-nav button.is-bottleneck .station-icon{color:#efcf8d;opacity:1}
+.sheet .machine-nav .station-card-name{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.sheet .machine-nav button>em{grid-area:status}
+.sheet .machine-nav button.can-upgrade::after{content:'';display:block;position:absolute;top:4px;left:calc(50% + 7px);right:auto;bottom:auto;width:11px;height:11px;border-radius:0;background:#c5e89e;box-shadow:none;
+ mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='8.7' fill='none' stroke='black' stroke-width='1.6'/%3E%3Cpath d='m10 5-4 4.5h2.5V15h3V9.5H14L10 5Z' fill='black'/%3E%3C/svg%3E") center/contain no-repeat;
+ -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='8.7' fill='none' stroke='black' stroke-width='1.6'/%3E%3Cpath d='m10 5-4 4.5h2.5V15h3V9.5H14L10 5Z' fill='black'/%3E%3C/svg%3E") center/contain no-repeat}
+@media(prefers-reduced-motion:no-preference){.sheet .machine-nav button.can-upgrade::after{animation:upgrade-arrow-float 1.8s ease-in-out infinite}}

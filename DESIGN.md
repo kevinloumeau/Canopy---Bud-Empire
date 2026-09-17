@@ -121,4 +121,4 @@ The online kiosk's available-jar count is a shelf-edge display set into the coun
 
 ## Station row
 
-The seven stations form one segmented control in a shallow glass trough, like the tray tabs and Empire switcher: name (11px, 600) over level (11px DM Mono), no frames or dots, a single glass pill on the selected station. An affordable upgrade tints the level green; the bottleneck tints the name gold; locked stations fade. No thumbnails in the strip; the selected station's portrait sits below it.
+The seven stations form one segmented control in a shallow glass trough, like the tray tabs: a 22px line icon (ID badge, seed, plant, shears, jar, receipt, bag) over the level in DM Mono, the station name for assistive tech only, and a single glass pill on the selected station. The circled up-arrow badge sits on the icon's shoulder when an upgrade is affordable, matching the map signs; the bottleneck's icon turns gold; locked stations fade. No thumbnails in the strip; the selected station's portrait sits below it.
