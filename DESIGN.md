@@ -84,3 +84,7 @@ One list, then one screen at a time. The Today / Growth / Daily / Events switche
 ## Legibility floor
 
 Functional text is 11px or larger and paragraphs 12px or larger everywhere in the sheet and HUD; the stock strip drops its labels on phones under 480px rather than shrinking them (labels stay for assistive tech). Primary action green is #55733e so cream labels clear 4.5:1. Faint lime and gold glows are part of the game's light (tab badges, the hot delivery counter, the claimable milestone, live upgrade buttons, the selected marker); keep them at low alpha on dark glass. The sheet, HUD and toast carry a soft dark-teal elevation shadow. Sticky bands inside the sheet (Empire back bar, branch tabs, shop header) use the sheet's own glass at 90% with blur, never an opaque box. The daily track abbreviates the two largest rewards ($1.3K, $2.5K) so all seven days fit one row.
+
+## Typeface
+
+The interface face is Bricolage Grotesque (500/600/700, variable optical size from Google Fonts), with DM Mono 500 for every figure: cash, rates, levels, counts, timers. Headings and the wordmark use the display optical size with tracking pulled in to -0.025em (wordmark -0.04em); body text stays at text size. Space Grotesk remains only as the fallback in the stack. Placeholder dashes for empty values are intentional and the detector's em-dash rule is ignored for this project.

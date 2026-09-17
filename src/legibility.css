@@ -51,3 +51,8 @@
 .branch-sticky-header{box-shadow:none;border-bottom:1px solid #e3f6d91a}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.empire-back,.branch-sticky-header,.shop-browser .shop-browser-header{background:#213a2e}}
 @media(prefers-reduced-transparency:reduce){.empire-back,.branch-sticky-header,.shop-browser .shop-browser-header{background:#213a2e;-webkit-backdrop-filter:none;backdrop-filter:none}}
+
+/* Bricolage Grotesque: let headings use the display optical size and pull tracking in slightly; body stays at text size. */
+body{font-optical-sizing:auto}
+h1,h2,.guide-card h2,.empire-screen h2,.machine-info h1,.canopy-brand b{font-variation-settings:'opsz' 48;letter-spacing:-.025em}
+.canopy-brand b{letter-spacing:-.04em}
