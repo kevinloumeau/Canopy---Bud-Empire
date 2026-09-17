@@ -1,0 +1,224 @@
+/* Browser adaptation of Liquid Glass for the menu's control layer. */
+:root{
+ --menu-glass:rgba(26,48,38,.82);
+ --menu-edge:rgba(228,249,225,.25);
+ --menu-control:rgba(215,239,207,.09);
+ --menu-text:#f0f5e8;
+ --menu-muted:#cad8c3;
+}
+.sheet{
+ background:linear-gradient(145deg,rgba(209,232,204,.13),rgba(30,53,42,.08) 42%),var(--menu-glass);
+ -webkit-backdrop-filter:blur(24px) saturate(135%);
+ backdrop-filter:blur(24px) saturate(135%);
+ border:1px solid var(--menu-edge);border-radius:26px;
+ box-shadow:inset 0 1px 0 #f3ffe52b,inset 0 -1px 0 #e5f7d910,0 16px 42px #081b2850;
+ color:var(--menu-text);padding-inline:12px;
+}
+.sheet .panel-header{min-height:46px;padding:4px 7px;gap:12px}
+.sheet .panel-header>b{font-size:15px;letter-spacing:-.02em}
+.sheet .panel-header button{border-radius:50%;width:32px;height:32px;background:#ecffe60d;box-shadow:inset 0 1px 0 #edffe51c;color:var(--menu-text)}
+.sheet>[data-pane]{scrollbar-width:thin;scrollbar-color:#c1d7b74d transparent;padding-inline:2px}
+.sheet .tray-tabs{
+ margin:8px 0 10px;padding:4px;gap:2px;background:#0c231c65;
+ border:0;border-radius:24px;box-shadow:inset 0 1px 2px #05180f40;
+}
+.sheet .tray-tabs button{border:0!important;border-radius:20px;min-height:42px;padding:6px 3px;background:transparent;color:var(--menu-muted);font-size:11px;font-weight:600}
+.sheet .tray-tabs button[aria-pressed=true]{background:linear-gradient(155deg,#e3f5db38,#c4e5b41a);box-shadow:inset 0 1px 0 #f1ffe752,inset 0 0 0 1px #e4fbd31c,0 3px 8px #08180f24;color:#f6faed}
+.sheet .machine-nav button{background:#dcefd40a;border:1px solid #d6efd21f;border-radius:13px;box-shadow:none;color:var(--menu-text)}
+.sheet .machine-nav button[aria-pressed=true]{background:linear-gradient(140deg,#badb9d33,#d3eacb12);border-color:#d2ebb964;box-shadow:inset 0 1px 0 #f3ffe635}
+.sheet .machine-nav button>em{color:var(--menu-muted)}
+.sheet button{transition:background-color .16s ease,box-shadow .16s ease,transform .16s ease}
+.sheet .buy,.sheet .employee-card button,.sheet .shop-upgrade button,.sheet .station-training,.sheet .flower-actions button,.sheet .flow-guide button,
+.sheet [data-pane="orders"] .dispatch-option button{
+ background:linear-gradient(145deg,#c9e4b82b,#c6dfb60a),#608149;
+ color:#f8fbed;border:1px solid #d9f1c445;border-radius:14px;
+ box-shadow:inset 0 1px 0 #efffdf40,0 3px 9px #0b1c1626;
+}
+.sheet #buyMachineMax,.sheet .employee-train-actions button:last-child,.sheet #stationTrainingMax{
+ background:linear-gradient(150deg,#ecffe51a,#d7edc907);border-color:#def2d330;
+}
+.sheet button:disabled,.sheet #buyMachineMax:disabled,.sheet [data-pane="orders"] .dispatch-option button:disabled{
+ background:#c8dfc009!important;color:#b2c1ad!important;border-color:#d2e8c51c!important;box-shadow:none;opacity:1;
+}
+.sheet .employee-card,.sheet .shop-upgrade,.sheet .flower-card{border-color:#d8ead21f;background:transparent}
+.sheet .employee-card small,.sheet .station-status,.sheet .flower-heading,.sheet .flower-copy p,.sheet .shop-copy small{color:var(--menu-muted)}
+.sheet progress{background:#d1e6c51a;border-radius:8px;overflow:hidden}
+.sheet progress::-webkit-progress-bar{background:#d1e6c51a}
+.sheet progress::-webkit-progress-value{background:#b9d797;border-radius:8px}
+.sheet :focus-visible{outline:2px solid #d7f2b8;outline-offset:3px}
+.sheet ::selection{background:#c5e4a9;color:#1d3326}
+@media(hover:hover){.sheet button:not(:disabled):hover{filter:brightness(1.1)}}
+.sheet button:not(:disabled):active{transform:scale(.975)}
+@media(max-width:779px){
+ .sheet{left:7px;right:7px;bottom:7px;border-radius:24px;padding-inline:9px;padding-bottom:env(safe-area-inset-bottom,0px)}
+ .sheet .tray-tabs{margin-bottom:7px}
+ .sheet .machine-nav button{grid-template-columns:39px minmax(0,1fr);column-gap:4px;padding-inline:4px}
+ .sheet .machine-nav button .machine-thumb{width:39px}
+ .sheet .employee-card{grid-template-columns:24px minmax(0,1fr) 162px;gap:6px}
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.sheet{background:#243a2e}}
+@media(prefers-reduced-transparency:reduce){.sheet{background:#243a2e;-webkit-backdrop-filter:none;backdrop-filter:none}}
+@media(prefers-contrast:more){.sheet{background:#182e23;border-color:#e1efd6}.sheet button{border-color:#afc89e}.sheet button:disabled{color:#cad7c1!important}}
+@media(prefers-reduced-motion:reduce){.sheet button{transition:none}.sheet button:not(:disabled):active{transform:none}}
+
+/* The HUD shares the menu material, with a quieter surface for live metrics. */
+.hud{
+ background:linear-gradient(140deg,#d7edd214,#d7edd200 65%),rgba(23,44,34,.88);
+ -webkit-backdrop-filter:blur(20px) saturate(125%);
+ backdrop-filter:blur(20px) saturate(125%);
+ border-bottom:1px solid #e3f6d922;
+ box-shadow:inset 0 1px 0 #edffe51c,0 5px 18px #091d1720;
+}
+.hud .factory-info{border-top-color:#d8ecd322}
+.hud .stat{border-color:#d8ecd326}
+.hud .speed-controls button{border:1px solid transparent;border-radius:13px;color:#d2dfc8;background:transparent;transition:background-color .16s ease,box-shadow .16s ease}
+.hud .speed-controls button[aria-pressed=true]{
+ background:linear-gradient(145deg,#e1f5d635,#bedbaf12);
+ border-color:#e0f5cd35;color:#f7fbed;
+ box-shadow:inset 0 1px 0 #f0ffe747,0 2px 6px #0c1d1524;
+}
+.hud .speed-controls button:focus-visible{outline:2px solid #d7f2b8;outline-offset:2px}
+.hud #stockStatus .stock-item[role=button]{border-radius:10px}
+.hud #stockStatus .stock-item[role=button]:hover{background:#e1f5d611}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.hud{background:#20362a}}
+@media(prefers-reduced-transparency:reduce){.hud{background:#20362a;-webkit-backdrop-filter:none;backdrop-filter:none}}
+@media(prefers-contrast:more){.hud{background:#182e23;border-color:#dcebd2}}
+@media(prefers-reduced-motion:reduce){.hud .speed-controls button{transition:none}}
+
+/* Two-row phone header; keep all live information without a third band. */
+@media(max-width:700px){
+ .hud{display:grid;grid-template-columns:24px repeat(11,minmax(0,1fr));gap:8px 4px;height:auto;padding:9px 10px 8px}
+ .hud .canopy-brand{grid-column:1;grid-row:1;margin:0}
+ .hud .canopy-brand span,.hud .canopy-brand svg{width:22px;height:26px}
+ .hud .canopy-name{display:none}
+ .hud .factory-info{display:contents}
+ .hud .factory-info .customer-info{grid-column:2/8;grid-row:1;gap:10px;justify-content:flex-start;padding-left:4px;font-size:8px}
+ .hud .factory-info .customer-info b{font-size:11px}
+ .hud>.stat{grid-column:8/11;grid-row:1;min-width:0;margin:0;padding-left:7px}
+ .hud>.stat.output{grid-column:11/13;padding-left:5px}
+ .hud .stat small{font-size:7px;letter-spacing:.04em}
+ .hud .stat strong{font-size:11px}
+ .hud .factory-info .speed-controls{grid-column:1/5;grid-row:2;justify-self:start;gap:0}
+ .hud .factory-info .speed-controls button{min-width:25px;min-height:30px;padding:0 2px;font-size:11px}
+ .hud .factory-info #stockStatus{grid-column:5/13;grid-row:2;gap:3px;align-self:center}
+ .hud .stock-item{gap:2px;justify-content:flex-start}
+ .hud .stock-item svg{width:13px;height:17px}
+ .hud .stock-item small{font-size:7px}
+ .hud .stock-item b{font-size:10px}
+ .map-controls{top:112px}
+}
+@media(max-width:700px){
+ .hud .factory-info #stockStatus{grid-column:1/9;grid-row:2}
+ .hud .factory-info .speed-controls{grid-column:9/13;grid-row:2;justify-self:end}
+}
+/* Notifications share the menu glass, with a gentle arrival and quiet exit. */
+.toast{
+ background:linear-gradient(140deg,#d7edd21c,#d7edd200 70%),rgba(26,48,38,.9);
+ color:var(--menu-text);
+ border:1px solid var(--menu-edge);
+ border-radius:18px;
+ padding:12px 18px;
+ font:600 13px/1.45 'Space Grotesk',sans-serif;
+ letter-spacing:.015em;
+ -webkit-backdrop-filter:blur(24px) saturate(135%);
+ backdrop-filter:blur(24px) saturate(135%);
+ box-shadow:inset 0 1px 0 #edffe52e,0 8px 28px #091d1738;
+ transform:translate(-50%,-6px);
+ transition:opacity 240ms ease,transform 320ms cubic-bezier(.22,1,.36,1);
+}
+.toast.show{transform:translate(-50%,0);transition-duration:280ms,420ms}
+.toast.is-upgrade::before{color:#c8e7ad}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.toast{background:#243a2e}}
+@media(prefers-reduced-transparency:reduce){.toast{background:#243a2e;-webkit-backdrop-filter:none;backdrop-filter:none}}
+@media(prefers-contrast:more){.toast{background:#182e23;border-color:#e1efd6}}
+@media(prefers-reduced-motion:reduce){.toast,.toast.show{transform:translate(-50%,0);transition:opacity 120ms linear}}
+/* Affordability changes reveal a quiet, floating upgrade cue. */
+@keyframes upgrade-arrow-float{
+ 0%,100%{transform:translateY(0)}
+ 50%{transform:translateY(-3px)}
+}
+.sheet .machine-nav button.can-upgrade::after{
+ animation:upgrade-arrow-float 1.8s ease-in-out infinite;
+}
+@media(prefers-reduced-motion:reduce){
+ .sheet .machine-nav button.can-upgrade::after{animation:none;transform:none}
+}
+/* An inset arrow on the station plaque keeps affordability in the map itself. */
+.world .marker.station-sign{padding-right:21px}
+.world .marker.station-sign::after{
+ content:'';display:block;position:absolute;left:auto;right:5px;top:calc(50% - 6px);
+ width:10px;height:13px;background:currentColor;opacity:0;pointer-events:none;
+ transform:none;transition:opacity 180ms ease;
+ mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 20'%3E%3Cpath d='M8 2 2 9h4v7h4V9h4L8 2Z' fill='none' stroke='black' stroke-width='1.8' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+.world .marker.station-sign.can-upgrade::after{
+ opacity:1;animation:upgrade-arrow-float 1.8s ease-in-out infinite;
+}
+@media(prefers-reduced-motion:reduce){
+ .world .marker.station-sign.can-upgrade::after{animation:none}
+}
+/* Keep the smaller affordability cue beside the second-line level. */
+.world .marker.station-sign{padding-right:6px}
+.world .marker.station-sign::after{
+ width:7px;height:9px;left:calc(50% + var(--level-arrow-offset, 17px));right:auto;
+ top:auto;bottom:4px;
+}
+/* Reserve an inset badge column so the level cue stays within the plaque. */
+.world .marker.station-sign{padding-right:20px}
+.world .marker.station-sign::after{
+ left:auto;right:4px;bottom:3px;width:13px;height:13px;
+ mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='8.7' fill='none' stroke='black' stroke-width='1.2'/%3E%3Cpath d='m10 5-4 4.5h2.5V15h3V9.5H14L10 5Z' fill='none' stroke='black' stroke-width='1.2' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+/* Place the inset upgrade badge before the level label. */
+.world .marker.station-sign{padding-left:20px;padding-right:6px}
+.world .marker.station-sign::after{left:4px;right:auto}
+/* Name and badge share the left edge; only the level reserves icon space. */
+.world .marker.station-sign{padding:3px 6px;text-align:left;white-space:normal}
+.station-sign-name{display:block;font-weight:700}
+.station-sign-level{display:block;padding-left:17px;white-space:nowrap}
+.world .marker.station-sign::after{left:6px;bottom:3px}
+/* Scale the badge and its animation with the label, reserving a full row. */
+.world .marker.station-sign{padding:.3em .55em;line-height:1.25}
+.world .marker.station-sign .station-sign-name{line-height:1.25}
+.world .marker.station-sign .station-sign-level{padding-left:1.55em;line-height:1.5;margin-top:.12em}
+.world .marker.station-sign::after{
+ left:.55em;bottom:.49em;top:auto;width:1.05em;height:1.05em;
+}
+@keyframes station-sign-arrow-float{
+ 0%,100%{transform:translateY(0)}
+ 50%{transform:translateY(-.12em)}
+}
+.world .marker.station-sign.can-upgrade::after{animation:station-sign-arrow-float 1.8s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.world .marker.station-sign.can-upgrade::after{animation:none}}
+.customer-mood{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:8px 14px;border-top:1px solid #d8ecd322;color:var(--menu-muted);font-size:11px}
+.customer-mood span{display:flex;justify-content:space-between;gap:8px}
+.customer-mood b{color:var(--menu-text);font-variant-numeric:tabular-nums}
+.customer-mood meter{display:block;width:100%;height:5px;margin-top:5px;appearance:none;border:0;border-radius:3px;background:#dce9be15}
+.customer-mood meter::-webkit-meter-bar{background:#dce9be15;border:0;border-radius:3px}
+.customer-mood meter::-webkit-meter-optimum-value{background:#b1ce8c;border-radius:3px}
+.customer-mood meter::-moz-meter-bar{background:#b1ce8c;border-radius:3px}
+.customer-mood #highnessMeter::-webkit-meter-optimum-value{background:#baa1cf}
+.customer-mood #highnessMeter::-moz-meter-bar{background:#baa1cf}
+/* A geometric chevron avoids the font glyph's off-center baseline. */
+.sheet .panel-header #panelToggle{display:grid;place-items:center;padding:0;font-size:0;line-height:1}
+.sheet .panel-header #panelToggle::after{
+ content:'';display:block;width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;
+ transform:translateY(-2px) rotate(45deg);
+}
+.sheet .panel-header #panelToggle[aria-expanded=false]::after{transform:translateY(2px) rotate(225deg)}
+.gesture-hint{opacity:1;transition:opacity 600ms ease;pointer-events:none}
+.gesture-hint.is-hidden{opacity:0}
+@media(prefers-reduced-motion:reduce){.gesture-hint{transition:none}}
+/* Optically center the chevron independently of button grid tracks. */
+.sheet .panel-header #panelToggle{position:relative}
+.sheet .panel-header #panelToggle::after{
+ position:absolute;left:50%;top:50%;margin:0;
+ transform:translate(-50%,-75%) rotate(45deg);
+}
+.sheet .panel-header #panelToggle[aria-expanded=false]::after{transform:translate(-50%,-25%) rotate(225deg)}
+
+.customer-mood{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.customer-mood span{flex-wrap:wrap;gap:2px 6px}
+@media(max-width:480px){.customer-mood{font-size:10px;padding:8px 10px}.customer-mood span{display:grid;gap:2px}}
+
+.customer-mood{grid-template-columns:repeat(2,minmax(0,1fr))}

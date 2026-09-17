@@ -1,0 +1,617 @@
+{
+  "method": "Actual simulate(.05), 1x; starts at all stations Lv10, staff3, one kiosk, security5. No online sales or branch purchases. Invest scenario buys cheapest bottleneck equipment, employee or global boost every minute when affordable.",
+  "scenarios": [
+    {
+      "product": "Flower",
+      "invest": false,
+      "result": [
+        {
+          "hour": 1,
+          "cash": 24211,
+          "earned": 24211,
+          "served": 1089,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "boosts": 0,
+          "bottleneck": 5
+        },
+        {
+          "hour": 2,
+          "cash": 48598,
+          "earned": 48598,
+          "served": 2180,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "boosts": 0,
+          "bottleneck": 5
+        },
+        {
+          "hour": 3,
+          "cash": 72985,
+          "earned": 72985,
+          "served": 3272,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "boosts": 0,
+          "bottleneck": 5
+        },
+        {
+          "hour": 4,
+          "cash": 97329,
+          "earned": 97329,
+          "served": 4362,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "boosts": 0,
+          "bottleneck": 5
+        }
+      ]
+    },
+    {
+      "product": "Flower",
+      "invest": true,
+      "result": [
+        {
+          "hour": 1,
+          "cash": 556,
+          "earned": 24682,
+          "served": 1105,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            22
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            11
+          ],
+          "boosts": 3,
+          "bottleneck": 5
+        },
+        {
+          "hour": 2,
+          "cash": 3173,
+          "earned": 49583,
+          "served": 2220,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            26
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            12
+          ],
+          "boosts": 4,
+          "bottleneck": 5
+        },
+        {
+          "hour": 3,
+          "cash": 3790,
+          "earned": 74525,
+          "served": 3337,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            28
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            13
+          ],
+          "boosts": 5,
+          "bottleneck": 5
+        },
+        {
+          "hour": 4,
+          "cash": 3248,
+          "earned": 99527,
+          "served": 4456,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            30
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            14
+          ],
+          "boosts": 5,
+          "bottleneck": 5
+        }
+      ]
+    },
+    {
+      "product": "Pre-rolls",
+      "invest": false,
+      "result": [
+        {
+          "hour": 1,
+          "cash": 35974,
+          "earned": 35974,
+          "served": 1120,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "boosts": 0,
+          "bottleneck": 5
+        },
+        {
+          "hour": 2,
+          "cash": 72168,
+          "earned": 72168,
+          "served": 2241,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "boosts": 0,
+          "bottleneck": 5
+        },
+        {
+          "hour": 3,
+          "cash": 108310,
+          "earned": 108310,
+          "served": 3361,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "boosts": 0,
+          "bottleneck": 5
+        },
+        {
+          "hour": 4,
+          "cash": 144495,
+          "earned": 144495,
+          "served": 4482,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "boosts": 0,
+          "bottleneck": 5
+        }
+      ]
+    },
+    {
+      "product": "Pre-rolls",
+      "invest": true,
+      "result": [
+        {
+          "hour": 1,
+          "cash": 2936,
+          "earned": 36569,
+          "served": 1133,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            23
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            12
+          ],
+          "boosts": 4,
+          "bottleneck": 5
+        },
+        {
+          "hour": 2,
+          "cash": 2779,
+          "earned": 73514,
+          "served": 2277,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            28
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            13
+          ],
+          "boosts": 5,
+          "bottleneck": 5
+        },
+        {
+          "hour": 3,
+          "cash": 3843,
+          "earned": 110423,
+          "served": 3420,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            31
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            14
+          ],
+          "boosts": 5,
+          "bottleneck": 5
+        },
+        {
+          "hour": 4,
+          "cash": 608,
+          "earned": 147411,
+          "served": 4567,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            33
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            15
+          ],
+          "boosts": 5,
+          "bottleneck": 5
+        }
+      ]
+    },
+    {
+      "product": "Edibles",
+      "invest": false,
+      "result": [
+        {
+          "hour": 1,
+          "cash": 52126,
+          "earned": 52126,
+          "served": 1053,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "boosts": 0,
+          "bottleneck": 5
+        },
+        {
+          "hour": 2,
+          "cash": 104494,
+          "earned": 104494,
+          "served": 2108,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "boosts": 0,
+          "bottleneck": 5
+        },
+        {
+          "hour": 3,
+          "cash": 156876,
+          "earned": 156876,
+          "served": 3163,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "boosts": 0,
+          "bottleneck": 5
+        },
+        {
+          "hour": 4,
+          "cash": 209270,
+          "earned": 209270,
+          "served": 4218,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "boosts": 0,
+          "bottleneck": 5
+        }
+      ]
+    },
+    {
+      "product": "Edibles",
+      "invest": true,
+      "result": [
+        {
+          "hour": 1,
+          "cash": 1173,
+          "earned": 53212,
+          "served": 1075,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            26
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            13
+          ],
+          "boosts": 4,
+          "bottleneck": 5
+        },
+        {
+          "hour": 2,
+          "cash": 10859,
+          "earned": 107138,
+          "served": 2161,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            30
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            14
+          ],
+          "boosts": 5,
+          "bottleneck": 5
+        },
+        {
+          "hour": 3,
+          "cash": 14327,
+          "earned": 161130,
+          "served": 3248,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            33
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            15
+          ],
+          "boosts": 5,
+          "bottleneck": 5
+        },
+        {
+          "hour": 4,
+          "cash": 19344,
+          "earned": 215296,
+          "served": 4339,
+          "lines": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            35
+          ],
+          "staff": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            15
+          ],
+          "boosts": 6,
+          "bottleneck": 5
+        }
+      ]
+    }
+  ]
+}

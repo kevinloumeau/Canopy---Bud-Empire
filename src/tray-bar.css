@@ -1,0 +1,69 @@
+/* Bottom bar refinement: icon-led tabs, a one-line mood strip, and a collapsed state that is only a handle. */
+:root{--tray-tab-ink:#d3e0cb;--tray-tab-active:#f6faed;--tray-badge:#e9c96a}
+
+/* Six equal tabs: drawn icon above a short label, sharing the HUD's 1.6 stroke. */
+.sheet .tray-tabs{
+ display:grid;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:2px;
+ margin:6px 0 4px;padding:4px;
+}
+.sheet .tray-tabs button{
+ position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+ min-height:54px;padding:6px 0 5px!important;
+ color:var(--tray-tab-ink);font-size:10.5px!important;font-weight:600;letter-spacing:0;line-height:1;
+ -webkit-user-select:none;user-select:none;
+}
+.sheet .tray-tabs .tray-icon{display:block;width:22px;height:22px;flex:0 0 22px;opacity:.82;transition:opacity .16s ease,transform .2s cubic-bezier(.2,.8,.2,1)}
+.sheet .tray-tabs .tray-label{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheet .tray-tabs button[aria-pressed=true]{color:var(--tray-tab-active)}
+.sheet .tray-tabs button[aria-pressed=true] .tray-icon{opacity:1;transform:translateY(-1px)}
+.sheet .tray-tabs button:not(:disabled):active .tray-icon{transform:scale(.9)}
+@media(hover:hover){.sheet .tray-tabs button:not([aria-pressed=true]):hover .tray-icon{opacity:1}}
+@media(max-width:420px){.sheet .tray-tabs button{font-size:10px!important;letter-spacing:-.01em}}
+/* Narrow phones cannot fit "Employees" in a sixth of the bar; the pane title still reads Employees. */
+.sheet .tray-tabs .tray-label-short{display:none}
+@media(max-width:400px){.sheet .tray-tabs .tray-label-long{display:none}.sheet .tray-tabs .tray-label-short{display:inline}}
+
+/* Attention dot sits on the icon's shoulder instead of inside the label, so labels never shift. */
+.sheet .tray-tabs .tray-badge{
+ position:absolute;top:7px;left:calc(50% + 6px);width:8px;height:8px;border-radius:50%;
+ background:var(--tray-badge);box-shadow:0 0 0 2px #1d3428,0 0 8px #e9c96a66;font-size:0;
+}
+.sheet .tray-tabs .tray-badge[hidden]{display:none}
+@media(prefers-reduced-motion:no-preference){
+ .sheet .tray-tabs .tray-badge{animation:tray-badge-in .4s cubic-bezier(.16,1,.3,1) both}
+ @keyframes tray-badge-in{from{transform:scale(0)}to{transform:scale(1)}}
+}
+
+/* Mood strip: label, value and a fixed-length meter share one line, so the strip costs a single row. */
+.sheet .customer-mood{
+ display:flex!important;justify-content:space-between;align-items:center;gap:12px!important;
+ padding:7px 10px 5px!important;border-top:1px solid #d8ecd31c;font-size:10.5px!important;
+}
+.sheet .customer-mood>div{display:flex;align-items:center;gap:8px;min-width:0}
+.sheet .customer-mood span{display:flex!important;flex:0 0 auto;gap:5px!important;align-items:baseline;white-space:nowrap}
+.sheet .customer-mood b{font-size:11.5px}
+.sheet .customer-mood meter{flex:0 0 auto;width:52px;height:4px;margin:0}
+@media(min-width:780px){.sheet .customer-mood meter{width:72px}}
+@media(max-width:350px){.sheet .customer-mood meter{width:36px}.sheet .customer-mood{gap:8px!important}}
+
+/* Collapsed: the title is redundant with the pressed tab, so the header shrinks to a sheet handle. */
+.sheet.collapsed .panel-header{min-height:0;padding:4px 0 0;justify-content:center}
+.sheet.collapsed #panelTitle{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.sheet.collapsed .panel-header #panelToggle{
+ width:72px;height:22px;border-radius:11px;background:transparent;box-shadow:none;
+}
+.sheet.collapsed .panel-header #panelToggle::after{
+ width:36px;height:4px;border:0;border-radius:2px;background:#cfe0c6;opacity:.55;
+ transform:translate(-50%,-50%) rotate(0deg);
+}
+@media(hover:hover){.sheet.collapsed .panel-header #panelToggle:hover::after{opacity:.9}}
+.sheet.collapsed .customer-mood{border-top:0;padding-top:4px!important}
+
+/* Desktop floating panel keeps the same bar with slightly roomier tabs. */
+@media(min-width:780px){
+ .sheet .tray-tabs button{min-height:56px;font-size:11px!important}
+ .sheet .tray-tabs .tray-icon{width:23px;height:23px}
+}
+@media(prefers-reduced-motion:reduce){
+ .sheet .tray-tabs .tray-icon{transition:none}
+}
