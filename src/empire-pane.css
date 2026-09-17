@@ -142,3 +142,12 @@
 .store-list .branch-toggle .branch-name{white-space:nowrap}
 .sheet .empire-screen .store-list .branch-toggle{grid-template-columns:max-content minmax(0,1fr) 10px}
 .store-list .branch-toggle strong{white-space:normal;line-height:1.35;justify-self:end}
+
+/* Scoreboard: five lifetime figures in a tight grid at the top of the records. */
+.scoreboard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px;padding:10px 0 14px;border-bottom:1px solid #c1d7b71f}
+.scoreboard .score{display:grid;gap:2px;min-width:0}
+.scoreboard small{font-size:11px;letter-spacing:.01em;color:#aebfa8;font-family:inherit;white-space:nowrap}
+.scoreboard b{font:600 16px 'DM Mono',monospace;letter-spacing:-.03em;color:#e8f2d7;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scoreboard .score:first-child{grid-column:1/-1}
+.scoreboard .score:first-child b{font-size:22px;color:#dcefc0}
+@media(min-width:780px){.scoreboard{grid-template-columns:repeat(5,minmax(0,1fr))}.scoreboard .score:first-child{grid-column:auto}.scoreboard .score:first-child b{font-size:16px}}

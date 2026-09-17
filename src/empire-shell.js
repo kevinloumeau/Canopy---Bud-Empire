@@ -1,7 +1,7 @@
 // Empire navigation shell: one list, then one screen at a time.
 // Reparents the existing Empire controls (main.js and operations-ui.js keep rendering them by id)
 // into three screens: Home (rewards strip + store list), Store (one branch), Details (records).
-export function mountEmpireShell({fit}){
+export function mountEmpireShell({fit,getState,format}){
  const pane=document.querySelector('[data-pane=empire]'),$=id=>document.getElementById(id);
  const section=name=>pane.querySelector('[data-empire-section="'+name+'"]');
  const el=(tag,cls,html)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(html!=null)n.innerHTML=html;return n;};
@@ -34,6 +34,14 @@ export function mountEmpireShell({fit}){
 
  // Details: records and long-cycle rewards, each under its own heading.
  const detailsBar=backBar('Empire','Rewards & records');screens.details.append(detailsBar.bar);
+ // Scoreboard: the lifetime figures that left the HUD, at the top of the records.
+ const board=el('section','scoreboard');board.setAttribute('aria-label','Lifetime figures');
+ const stats=[['Lifetime revenue','revenue'],['Customers served','served'],['Deliveries','deliveries'],['Trophies','trophies'],['Prestige rank','prestige']];
+ board.innerHTML=stats.map(([label,key])=>'<div class="score"><small>'+label+'</small><b data-score="'+key+'">—</b></div>').join('');
+ screens.details.append(board);
+ let boardSig='';
+ function syncBoard(){if(!getState)return;const s=getState();const values={revenue:format?format(s.lifetime||0):String(Math.round(s.lifetime||0)),served:(s.sold||0).toLocaleString(),deliveries:(s.onlineCompleted||0).toLocaleString(),trophies:String((s.empire&&s.empire.trophies)||0),prestige:String((s.empire&&s.empire.prestige)||0)};const sig=Object.values(values).join('|');if(sig===boardSig)return;boardSig=sig;stats.forEach(([,key])=>{board.querySelector('[data-score="'+key+'"]').textContent=values[key];});}
+ setInterval(()=>{if(current==='details')syncBoard();},500);
  const nextSteps=today.querySelector('h2:not(.empire-section-heading)');
  screens.details.append(
   group(null,[$('careerName'),$('careerDetail'),$('careerProgress'),$('careerBonus'),$('careerClaim')]),
@@ -48,7 +56,7 @@ export function mountEmpireShell({fit}){
 
  // Navigation.
  let current='home';
- function show(name){current=name;Object.keys(screens).forEach(k=>screens[k].hidden=k!==name);pane.dataset.empireScreen=name;pane.scrollTop=0;if(name!=='store')closeBranches();if(fit)fit();}
+ function show(name){current=name;if(name==='details')syncBoard();Object.keys(screens).forEach(k=>screens[k].hidden=k!==name);pane.dataset.empireScreen=name;pane.scrollTop=0;if(name!=='store')closeBranches();if(fit)fit();}
  function closeBranches(){articles.forEach((article,i)=>{const body=$('branchBody'+i),nav=article.querySelector('.operation-tabs');if(body)body.hidden=true;if(nav)nav.hidden=true;toggles[i].setAttribute('aria-expanded','false');});}
  function openStore(i){articles.forEach((article,j)=>{const body=$('branchBody'+j),nav=article.querySelector('.operation-tabs');if(body)body.hidden=j!==i;if(nav)nav.hidden=j!==i;toggles[j].setAttribute('aria-expanded',String(j===i));});storeBar.heading.textContent=toggles[i].querySelector('.branch-name').textContent;show('store');}
  toggles.forEach((toggle,i)=>{toggle.onclick=()=>openStore(i);toggle.removeAttribute('aria-expanded');toggle.setAttribute('aria-haspopup','false');});

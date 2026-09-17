@@ -6,6 +6,7 @@ import {mountOperations} from './operations-ui.js';
 import {mountEmpireShell} from './empire-shell.js';
 import {mountStartGuide} from './start-guide.js';
 import {mountSettings} from './settings.js';
+import {requestCap,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assignManager, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, affordableImprovement, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent } from './progression.js';
 (function () {
@@ -253,11 +254,10 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
   function storageCost(){return Math.round(250*Math.pow(1.7,state.storageLevel))}
   function upgradeStorage(){if(state.storageLevel>=20||state.money<storageCost())return;state.money-=storageCost();state.storageLevel++;save();renderUI();notify('STORAGE EXPANDED · '+storageCapacity()+' per stage','upgrade')}
   function onlineSize(){return 4+(state.onlineCompleted%5)*3}
-  // Web requests arrive slowly at first (one per ~45s) and speed up with completed orders, up to one per 5s.
-  function onlineRequestCap(){return 12+Math.min(28,Math.floor(state.onlineCompleted/10))}
-  function onlineRequestRate(){return state.lines[4]?Math.min(.2,(1+state.onlineCompleted/20)/45):0}
-  function accrueOnlineRequests(seconds){state.onlineRequests=Math.min(onlineRequestCap(),state.onlineRequests+onlineRequestRate()*seconds)}
-  function onlineRequestsReady(){return Math.floor(state.onlineRequests)}
+  // Web requests arrive slowly at first and speed up with completed orders; the maths lives in deliveries.js.
+  function onlineRequestCap(){return requestCap(state.onlineCompleted)}
+  function accrueOnlineRequests(seconds){accrueRequests(state,seconds)}
+  function onlineRequestsReady(){return requestsReady(state)}
   function onlineBatch(limit,jarBudget){
     var jars=jarBudget===undefined?state.stock[3]:jarBudget,count=0,used=0,reward=0;limit=Math.min(limit,onlineRequestsReady());
     if(state.lines[4])while(count<limit){var need=4+((state.onlineCompleted+count)%5)*3;if(jars<need)break;jars-=need;used+=need;reward+=need*onlineValue(state.onlineCompleted+count);count++}
@@ -265,7 +265,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
   }
   function sendOnlineOrders(limit,automatic){
     var batch=onlineBatch(limit);if(!batch.count)return;
-    state.stock[3]-=batch.jars;state.onlineCompleted+=batch.count;state.onlineRequests=Math.max(0,state.onlineRequests-batch.count);
+    state.stock[3]-=batch.jars;state.onlineCompleted+=batch.count;consumeRequests(state,batch.count);
     queueDeliveryWave(batch.count);
     recordEvent(state.empire,'online',batch.count);add(batch.reward);if(!automatic)notifyDispatch(batch);burst({x:-10.7,z:1.5,y:7.05},'#dbc38b');renderUI();save();
   }
@@ -1926,7 +1926,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     $('fulfillOnlineBatch').disabled=batch.count<10;$('onlineBatchLabel').textContent='Send 10';$('onlineBatchReward').textContent=fmt(quote.reward);$('onlineBatchInfo').textContent=quote.jars+' jars total';
     $('onlineMaxOption').hidden=!maxUnlocked;$('fulfillOnlineMax').disabled=!maxBatch.count;$('onlineMaxLabel').textContent='Send max ('+maxBatch.count+')';$('onlineMaxReward').textContent=fmt(maxBatch.reward);$('onlineMaxInfo').textContent=maxBatch.jars+' jars total';
 
-    $('onlineTitle').textContent='Web order #'+String(state.onlineCompleted+1).padStart(3,'0');$('onlineNeed').textContent=onlineSize()+' jars · '+STRAINS[menuChoice(state.onlineCompleted)].name;$('onlineReward').textContent=fmt(onlineSize()*onlineValue());$('onlineStock').textContent=onlineRequestsReady()+' request'+(onlineRequestsReady()===1?'':'s')+' waiting · '+state.stock[3]+' jars available · '+customers.filter(function(c){return c.ordered&&!c.bag}).length+' walk-in bags held';$('dispatchHint').textContent=onlineRequestsReady()<1?'Waiting for the next web request. Requests arrive faster as you complete orders.':state.stock[3]<onlineSize()?'Waiting for '+(onlineSize()-state.stock[3])+' more packed jars. Walk-in pickups stay reserved.':'Ready for drone delivery. Walk-in pickups stay reserved.';$('fulfillOnline').disabled=!state.lines[4]||state.stock[3]<onlineSize()||onlineRequestsReady()<1;var webItem=$('stockCountOnline').closest('.stock-item'),webCount=onlineRequestsReady();$('stockCountOnline').textContent=webCount;webItem.dataset.heat=webCount>=6?'3':webCount>=3?'2':webCount>=1?'1':'0';$('stockCountOnline').classList.toggle('stock-full',webCount>=onlineRequestCap());webItem.title=webCount+' deliver'+(webCount===1?'y':'ies')+' requested · '+onlineRequestCap()+' max';$('onlineBadge').hidden=$('fulfillOnline').disabled;if(!maxUnlocked)$('dispatchHint').textContent+=' Send max unlocks at Packing Lv 10.';
+    $('onlineTitle').textContent='Web order #'+String(state.onlineCompleted+1).padStart(3,'0');$('onlineNeed').textContent=onlineSize()+' jars · '+STRAINS[menuChoice(state.onlineCompleted)].name;$('onlineReward').textContent=fmt(onlineSize()*onlineValue());$('onlineStock').textContent=onlineRequestsReady()+' request'+(onlineRequestsReady()===1?'':'s')+' waiting · '+state.stock[3]+' jars available · '+customers.filter(function(c){return c.ordered&&!c.bag}).length+' walk-in bags held';$('dispatchHint').textContent=onlineRequestsReady()<1?'Waiting for the next web request. Requests arrive faster as you complete orders.':state.stock[3]<onlineSize()?'Waiting for '+(onlineSize()-state.stock[3])+' more packed jars. Walk-in pickups stay reserved.':'Ready for drone delivery. Walk-in pickups stay reserved.';$('fulfillOnline').disabled=!state.lines[4]||state.stock[3]<onlineSize()||onlineRequestsReady()<1;var webItem=$('stockCountOnline').closest('.stock-item'),webCount=onlineRequestsReady();$('stockCountOnline').textContent=webCount;webItem.dataset.heat=String(requestHeat(webCount));$('stockCountOnline').classList.toggle('stock-full',webCount>=onlineRequestCap());webItem.title=webCount+' deliver'+(webCount===1?'y':'ies')+' requested · '+onlineRequestCap()+' max';$('onlineBadge').hidden=$('fulfillOnline').disabled;if(!maxUnlocked)$('dispatchHint').textContent+=' Send max unlocks at Packing Lv 10.';
     renderCustomerRatings();
     var waiting=customers.filter(function(c){return !c.ordered&&c.phase!=='leaving'}).length;$('queueCount').textContent=waiting+'/'+queueLimit();$('queueCount').classList.toggle('queue-full',waiting>=queueLimit());firstTimeHints(waiting);$('queueCount').parentElement.title=waiting>=queueLimit()?'Line is full · new customers walk away. Upgrade the order desk or its employees to add places.':'Customers waiting to order';$('pickupCount').textContent=customers.filter(function(c){return c.phase==='pickup'||c.phase==='toPickup'}).length;$('servedCount').textContent=state.sold.toLocaleString();state.stock.forEach(function(n,i){$('stockCount'+i).textContent=n;$('stockCount'+i).title=i===4?n+' / '+readyCapacity()+' packed orders ready for walk-in pickup':n+' / '+storageCapacity()+(n>=storageCapacity()?' · Storage full':'');$('stockCount'+i).classList.toggle('stock-full',n>=(i===4?readyCapacity():storageCapacity()))});var order=milestone(state.contract);
     if(order){$('orderName').textContent=state.lifetime>=order.goal?'ORDER READY TO CLAIM':order.name;$('orderProgress').textContent=fmt(Math.min(state.lifetime,order.goal))+' / '+fmt(order.goal);$('orderFill').style.width=Math.min(100,state.lifetime/order.goal*100)+'%';$('claimReward').textContent='+'+fmt(order.reward);$('claim').disabled=state.lifetime<order.goal}
@@ -2105,7 +2105,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
   $('careerClaim').onclick=function(){var reward=claimCareer(state);if(reward){save();renderUI();notify('CAREER MILESTONE · +'+fmt(reward)+' · +5% sale value','upgrade')}};
   STORES.forEach(function(store,i){$('branchBuy'+i).onclick=function(){if(buyStore(state,i)){save();renderUI();notify(store.name+' upgraded · +'+fmt(state.empire.network.stores[i].incomeGain)+'/s','upgrade')}}});
   $('eventAction').onclick=function(){var e=eventStatus(state.empire);if(!e.joined){if(joinEvent(state.empire))notify('EVENT JOINED · '+e.copy)}else{var reward=claimEvent(state);if(reward)notify('EVENT COMPLETE · +'+fmt(reward),'upgrade')}save();renderUI()};
-  var empireShell=mountEmpireShell({fit:fitControls});
+  var empireShell=mountEmpireShell({fit:fitControls,getState:function(){return state},format:fmt});
   var startGuide=mountStartGuide({showTray:showTray,collapse:function(){showTray('factory')},fit:fitControls});var guideReplay=document.createElement('button');guideReplay.type='button';guideReplay.className='guide-replay';guideReplay.textContent='Replay the start guide';guideReplay.onclick=function(){startGuide.open()};document.querySelector('.shop-reset').prepend(guideReplay);mountSettings();
   Array.prototype.forEach.call(document.querySelectorAll('[data-empire-view]'),function(button){button.onclick=function(){var view=button.getAttribute('data-empire-view');Array.prototype.forEach.call(document.querySelectorAll('[data-empire-view]'),function(b){b.setAttribute('aria-pressed',String(b===button))});Array.prototype.forEach.call(document.querySelectorAll('[data-empire-section]'),function(section){section.hidden=section.getAttribute('data-empire-section')!==view});document.querySelector('[data-pane=empire]').scrollTop=0;fitControls()}});
 

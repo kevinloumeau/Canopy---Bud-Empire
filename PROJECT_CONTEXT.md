@@ -161,3 +161,7 @@ Security is the first card in the Stations row and the map's Security marker ope
 ## One-time nudges
 
 `state.hints` records three one-time toasts: the first web order request (points to Deliveries), the first full production shelf (points to Storage in the Shop), and the first full customer line (points to the order desk). Older saves get all three unseen. Desktop users also get keyboard shortcuts (Space pause, 1/2/4 speed, Escape collapses the sheet) and a pointer-aware map hint.
+
+## Deliveries module and scoreboard
+
+Delivery-request maths moved to `src/deliveries.js` (cap, rate, accrue, ready, consume, heat) with unit tests in `tests/deliveries.test.js`; `main.js` calls those functions. The Rewards & records screen opens with a scoreboard of lifetime revenue, customers served, deliveries completed, trophies and prestige rank, read from state through the Empire shell.
