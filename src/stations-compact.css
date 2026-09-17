@@ -76,3 +76,17 @@
 .sheet .machine-nav button.can-upgrade::after{content:'';position:absolute;top:5px;right:5px;bottom:auto;left:auto;width:6px;height:6px;border-radius:50%;background:#c5e89e;mask:none;-webkit-mask:none;animation:none;box-shadow:0 0 6px #c5e89e66}
 .sheet .machine-nav button.is-locked{opacity:.55}
 @media(min-width:780px){.sheet .machine-nav button{min-height:54px;padding:10px 2px 9px}}
+
+/* Frameless strip: one glass pill for the selected station and nothing else drawn. Affordable upgrades tint the level;
+   the bottleneck tints the name. */
+.sheet .machine-nav{gap:0;padding:2px 0 6px;margin-bottom:4px;background:#0c231c40;border-radius:16px}
+.sheet .machine-nav button{background:transparent;border-color:transparent;box-shadow:none;border-radius:14px;padding:8px 0 7px;min-height:50px;row-gap:2px}
+.sheet .machine-nav button[aria-pressed=true]{background:linear-gradient(155deg,#e3f5db38,#c4e5b41a);border-color:transparent;box-shadow:inset 0 1px 0 #f1ffe752,inset 0 0 0 1px #e4fbd31c}
+.sheet .machine-nav .station-card-name{font-size:11px;font-weight:600;color:#d3e0cb}
+.sheet .machine-nav button[aria-pressed=true] .station-card-name{color:#f6faed}
+.sheet .machine-nav button>em{font:500 11px 'DM Mono',monospace;color:#9fb59a}
+.sheet .machine-nav button.can-upgrade>em{color:#c5e89e}
+.sheet .machine-nav button.can-upgrade::after{display:none}
+.sheet .machine-nav button.is-bottleneck .station-card-name{color:#efcf8d}
+.sheet .machine-nav button.is-locked{opacity:.45}
+@media(hover:hover){.sheet .machine-nav button:not([aria-pressed=true]):hover{background:#dce9be10;filter:none}}

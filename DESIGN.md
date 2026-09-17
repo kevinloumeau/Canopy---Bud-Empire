@@ -121,4 +121,4 @@ The online kiosk's available-jar count is a shelf-edge display set into the coun
 
 ## Station row
 
-The seven station cards are a quiet strip: name (11px, 600) over level (11px DM Mono), 52px tall, faint frames, the selected card as the glass pill, the bottleneck's name in gold, and a 6px green dot at the top-right when an upgrade is affordable. No thumbnails in the strip; the selected station's portrait sits below it.
+The seven stations form one segmented control in a shallow glass trough, like the tray tabs and Empire switcher: name (11px, 600) over level (11px DM Mono), no frames or dots, a single glass pill on the selected station. An affordable upgrade tints the level green; the bottleneck tints the name gold; locked stations fade. No thumbnails in the strip; the selected station's portrait sits below it.
