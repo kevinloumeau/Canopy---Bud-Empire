@@ -23,13 +23,12 @@
 @media(max-width:360px){.daily-track span{font-size:11px}.daily-track b{font-size:11px}.daily-track li{padding-inline:3px}}
 .sheet .customer-mood{font-size:11px!important}
 
-/* Stock strip: labels at 11px where they fit; phones show icon and count only (the title and label stay for assistive tech). */
-.sheet #stockStatus .stock-item small{font-size:11px;letter-spacing:.01em}
-@media(max-width:480px){
- .sheet #stockStatus .stock-item small{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
- .sheet #stockStatus .stock-item{position:relative;gap:5px;padding:2px 5px}
- .sheet #stockStatus .stock-item b{font-size:13px}
-}
+/* Stock strip: icon and count only on every size (the sheet is never wide enough for six labels); labels stay for assistive tech via title and sr-only text. */
+.sheet #stockStatus .stock-item small{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.sheet #stockStatus .stock-item{position:relative;flex:0 0 auto;gap:6px;padding:4px 8px}
+.sheet #stockStatus .stock-item b{font-size:13px}
+.sheet #stockStatus .stock-online{margin-left:6px;padding:4px 12px 4px 11px}
+.sheet #stockStatus{gap:2px;padding:8px 4px 4px}
 
 /* Contrast: a deeper action green so cream labels clear 4.5:1. */
 .sheet .buy,.sheet .employee-card button,.sheet .shop-upgrade button,.sheet .station-training,.sheet .flower-actions button,.sheet .flow-guide button,

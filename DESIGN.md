@@ -75,7 +75,7 @@ One row on every size: the leaf mark (with wordmark on desktop), cash as the her
 
 ## Bottom bar
 
-The tray's six tabs are icon-led: a 22px line icon in the HUD's 1.6 stroke above a short label, six equal columns, the pressed tab keeping the glass pill. Attention dots sit on the icon's shoulder, never inside the label. The staff tab reads Staff on every size, as does its pane title. Above the tabs sits the stock strip, Seeds through Ready with icon, label and mono count, each item opening its station; the happiness and highness meters are hidden. Collapsed, the header shrinks to a sheet handle, so the collapsed sheet is handle, stock strip, and tabs.
+The tray's six tabs are icon-led: a 22px line icon in the HUD's 1.6 stroke above a short label, six equal columns, the pressed tab keeping the glass pill. Attention dots sit on the icon's shoulder, never inside the label. The staff tab reads Staff on every size, as does its pane title. Above the tabs sits the stock strip, Seeds through Ready plus Delivery, each an icon and mono count (labels are for assistive tech only, since the sheet is never wide enough for six), each item opening its station; the happiness and highness meters are hidden. Collapsed, the header shrinks to a sheet handle, so the collapsed sheet is handle, stock strip, and tabs.
 
 ## Empire pane
 
@@ -117,4 +117,4 @@ Each floor carries soft occlusion bands: a gradient along the base of the rear a
 
 ## Kiosk display
 
-The online kiosk's available-jar count is a shelf-edge display set into the counter's front face: a dark green panel with a mint hairline, N AVAILABLE in Bricolage (mint, turning light green when an order can ship), and a slim fill line beneath toward the next order size. Nothing floats above the counter. In the stock strip the Delivery item keeps 8px clear of Ready and 10-12px inner padding.
+The online kiosk's available-jar count is a shelf-edge display set into the counter's front face: a dark green panel with a mint hairline, N AVAILABLE in Bricolage (mint, turning light green when an order can ship), and a slim fill line beneath toward the next order size. Nothing floats above the counter. In the stock strip every item has 8px of inner padding and the Delivery item keeps 6px clear of Ready with 11-12px inside its frame.
