@@ -114,3 +114,7 @@ Canvas lettering (ORDER, PICKUP, ONLINE ORDERS, stock pins) uses Bricolage Grote
 ## Ambient occlusion and glass
 
 Each floor carries soft occlusion bands: a gradient along the base of the rear and left walls, a faint flat shade across the area beneath the mezzanine above, and a band fading inward from that mezzanine's fascia. Transfer tubes have a feathered outer body and two-weight edge lines (a wide faint pass under a thin brighter one) so their edges read as glass rather than ink.
+
+## Kiosk display
+
+The online kiosk's available-jar count is a shelf-edge display set into the counter's front face: a dark green panel with a mint hairline, N AVAILABLE in Bricolage (mint, turning light green when an order can ship), and a slim fill line beneath toward the next order size. Nothing floats above the counter. In the stock strip the Delivery item keeps 8px clear of Ready and 10-12px inner padding.

@@ -1092,7 +1092,15 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     ctx.shadowColor='#ffe8b6';ctx.shadowBlur=unit*.1;ctx.fillStyle='#fff5d9';ctx.font='600 '+Math.max(7,unit*.235)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('ONLINE ORDERS',0,0,unit*2.3);ctx.restore();
     var status=project(x+.85,1.5,z-.49);ellipse(status.x,status.y,unit*.065,unit*.065,state.stock[3]>=onlineSize()?'#b7e394':'#d7b775');
     
-    var stockPin=project(x,1.25,z+.3);ctx.fillStyle='#b9e2d7';ctx.font='600 '+Math.max(8,unit*.22)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText(state.stock[3]+' available',stockPin.x,stockPin.y-unit*.12);ctx.fillStyle='#20392d';ctx.fillRect(stockPin.x-unit*.55,stockPin.y,unit*1.1,unit*.12);ctx.fillStyle='#a9d2c8';ctx.fillRect(stockPin.x-unit*.55,stockPin.y,unit*1.1*Math.min(1,state.stock[3]/onlineSize()),unit*.12);
+    // Shelf-edge display set into the counter front: packed jars available, with a fill line toward the next order.
+    var faceZ=z+.9,ready=state.stock[3]>=onlineSize();
+    drawBox(x,faceZ+.02,.34,1.9,.04,.5,['#1d3a2c','#12281e','#183224']);
+    worldLine([[x-.93,.36,faceZ+.045],[x+.93,.36,faceZ+.045],[x+.93,.82,faceZ+.045],[x-.93,.82,faceZ+.045],[x-.93,.36,faceZ+.045]],'#a9d2c855',.02);
+    var disp=project(x,.66,faceZ+.05),dAxis=project(x+1,.66,faceZ+.05);
+    ctx.save();ctx.translate(disp.x,disp.y);ctx.transform(1,(dAxis.y-disp.y)/(dAxis.x-disp.x),0,1,0,0);
+    ctx.shadowColor=ready?'#b7e394':'#9ed6c8';ctx.shadowBlur=unit*.09;ctx.fillStyle=ready?'#c9f0b0':'#b9e2d7';ctx.font='600 '+Math.max(7,unit*.2)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(state.stock[3]+' AVAILABLE',0,0,unit*1.7);ctx.restore();
+    worldLine([[x-.78,.45,faceZ+.05],[x+.78,.45,faceZ+.05]],'#0d1f17',.07);
+    var fill=Math.min(1,state.stock[3]/onlineSize());if(fill>0)worldLine([[x-.78,.45,faceZ+.05],[x-.78+1.56*fill,.45,faceZ+.05]],ready?'#b7e394':'#a9d2c8',.05);
     // Its own feed branch carries packed jars from the packing station.
     transferTube([[-4.55,-.9,1],[-7.4,-.9,1],[-7.4,1.5,1.5],[-9.05,1.5,1.5]],3);
   }
