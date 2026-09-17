@@ -21,5 +21,6 @@
 @media(hover:hover){.modal .settings-row:hover{color:#fff}.modal .settings-close:hover{background:#ecffe61a}}
 /* The Shop tab keeps its links for now but they are no longer the way in. */
 .shop-reset{display:none}
-/* Phones: lighting lives in Settings, so the pill stays four speeds plus the gear. */
-@media(max-width:480px){.hud .speed-controls #lightToggle{display:none}}
+/* Pill order on every size: 1× 2× 4× · day/night · settings. */
+.hud .speed-controls #lightToggle{order:5}
+.hud .speed-controls #settingsOpen{order:6}

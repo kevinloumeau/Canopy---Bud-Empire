@@ -93,3 +93,8 @@ body[data-store-view=branch] #stockStatus{display:none!important}
  .sheet #stockStatus .stock-online[data-heat="3"] svg{animation:web-hover 1.6s ease-in-out infinite}
  @keyframes web-hover{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
 }
+
+/* Speed as play glyphs in one fixed box: one, two, or three overlapping triangles. */
+.hud .speed-controls [data-speed] svg{display:block;width:18px;height:16px}
+.hud .speed-controls [data-speed]{min-width:30px;padding:0 4px}
+@media(max-width:480px){.hud .speed-controls button{min-width:28px;padding:0 3px}.hud .speed-controls #lightToggle,.hud .speed-controls #settingsOpen{min-width:28px}}

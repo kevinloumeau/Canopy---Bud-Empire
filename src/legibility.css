@@ -2,6 +2,7 @@
 
 /* Type floor. */
 .hud .factory-info .customer-info{font-size:11px}
+@media(max-width:480px){.hud .factory-info .customer-info{font-size:0;gap:0}.hud .factory-info .customer-info b{font-size:12.5px}}
 .hud .canopy-name small{font-size:10px;letter-spacing:1.2px}
 .sheet small{letter-spacing:.02em}
 .sheet .machine-nav button>em,.sheet .machine-nav .station-card-name{font-size:11px}
