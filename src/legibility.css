@@ -88,3 +88,16 @@ h1,h2,.guide-card h2,.empire-screen h2,.machine-info h1,.canopy-brand b{font-var
 .world .marker.station-sign:after{background:currentColor}
 .world .marker.station-sign.locked{opacity:.6}
 @media(prefers-reduced-transparency:reduce){.world .marker.station-sign{-webkit-backdrop-filter:none;backdrop-filter:none;background:#152d21}}
+
+/* Installed on a home screen: the sheet runs to the bottom edge so the home-indicator area is glass, not gap,
+   and the top bar drops its backdrop blur (WebKit rasterises blurred text softly in standalone mode). */
+@media (display-mode: standalone) {
+ .sheet{left:0;right:0;bottom:0;border-radius:26px 26px 0 0;border-bottom:0;padding-bottom:max(6px,calc(env(safe-area-inset-bottom,0px) - 4px))}
+ .sheet .tray-tabs{margin-bottom:2px}
+ .hud{-webkit-backdrop-filter:none;backdrop-filter:none;background:#20362a;transform:translateZ(0)}
+ .hud>.stat strong,.hud .customer-info b{transform:translateZ(0)}
+}
+@supports (-webkit-touch-callout:none){
+ /* iOS: promote the bar to its own layer so text stays crisp over the animating canvas. */
+ .hud{transform:translateZ(0);will-change:transform}
+}
