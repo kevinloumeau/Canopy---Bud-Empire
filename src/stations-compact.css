@@ -1,14 +1,14 @@
-/* Stations pane on phones: one production line of six cards, a compact portrait row, and a tight upgrade block, so the whole pane fits without scrolling. */
+/* Stations pane on phones: one production line of seven cards, a compact portrait row, and a tight upgrade block, so the whole pane fits without scrolling. */
 @media(max-width:779px){
  body[data-active-tray=factory] .sheet>[data-pane=factory]{max-height:min(46dvh,420px);overflow-y:auto}
  .flow-guide{padding:0 2px 6px;font-size:12px}
  .flow-guide button{min-height:30px;padding:3px 9px}
 
  /* Six cards in a row: icon, name, level. The bottleneck keeps its gold text; the word Slow is dropped for width. */
- .sheet .machine-nav{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;padding:2px 0 8px;margin-bottom:6px}
- .sheet .machine-nav button{grid-template-columns:minmax(0,1fr);grid-template-rows:44px auto auto;grid-template-areas:"thumb" "name" "status";row-gap:1px;column-gap:0;justify-items:center;min-height:0;height:auto;padding:5px 2px 6px;border-radius:11px}
+ .sheet .machine-nav{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;padding:2px 0 8px;margin-bottom:6px}
+ .sheet .machine-nav button{grid-template-columns:minmax(0,1fr);grid-template-rows:44px auto auto;grid-template-areas:"thumb" "name" "status";row-gap:1px;column-gap:0;justify-items:center;min-height:0;height:auto;padding:5px 0 6px;border-radius:11px;min-width:0}
  .sheet .machine-nav button .machine-thumb{width:40px;height:44px;object-fit:contain;object-position:center bottom}
- .sheet .machine-nav .station-card-name{font-size:11px;white-space:nowrap;text-align:center;line-height:1.2}
+ .sheet .machine-nav .station-card-name{font-size:11px;letter-spacing:-.02em;white-space:nowrap;text-align:center;line-height:1.2;overflow:visible}
  .sheet .machine-nav button>em{font-size:11px;line-height:1.2;text-align:center;padding:0;white-space:nowrap}
  .sheet .machine-nav button.is-bottleneck em{white-space:nowrap}
  .sheet .machine-nav .slow-tag{display:none}
@@ -35,7 +35,8 @@
  .station-upgrade .next-appearance{display:none}
 }
 @media(max-width:360px){
- .sheet .machine-nav{gap:3px}
+ .sheet .machine-nav{gap:2px}
+ .sheet .machine-nav .station-card-name{letter-spacing:-.03em}
  .sheet .machine-nav button .machine-thumb{width:36px;height:40px}
  .sheet .machine-nav button{grid-template-rows:40px auto auto;padding-inline:1px}
  .sheet .machine-nav .station-card-name{font-size:10.5px}
@@ -49,4 +50,17 @@
  .station-upgrade{padding:2px 4px 0}
  .station-upgrade progress{margin:2px 0 0;height:6px}
  .upgrade-hint{margin:3px 0 0}
+}
+
+/* Desktop: the same seven-card production row, with a little more room per card. */
+@media(min-width:780px){
+ .sheet .machine-nav{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;padding:4px 0 10px;margin-bottom:8px}
+ .sheet .machine-nav button{grid-template-columns:minmax(0,1fr);grid-template-rows:48px auto auto;grid-template-areas:"thumb" "name" "status";row-gap:2px;column-gap:0;justify-items:center;min-height:0;height:auto;padding:6px 0 7px;border-radius:12px;min-width:0}
+ .sheet .machine-nav button .machine-thumb{width:42px;height:48px;object-fit:contain;object-position:center bottom}
+ .sheet .machine-nav .station-card-name{font-size:11px;letter-spacing:-.02em;white-space:nowrap;text-align:center;line-height:1.2}
+ .sheet .machine-nav button>em{font-size:11px;line-height:1.2;text-align:center;padding:0;white-space:nowrap}
+ .sheet .machine-nav .slow-tag{display:none}
+ .sheet .machine-nav button.is-bottleneck .station-card-name{color:#efcf8d}
+ .sheet .machine-nav button.can-upgrade::after{right:3px;bottom:auto;top:4px;width:9px;height:12px}
+ .sheet .machine-nav button small{display:none}
 }

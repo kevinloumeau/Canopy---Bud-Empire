@@ -149,3 +149,7 @@ Web orders are now demand-limited. `state.onlineRequests` accrues while the orde
 ## Start guide (September 17, 2026)
 
 A five-step first-run walkthrough (`src/start-guide.js`, `src/start-guide.css`) opens 600ms after loading when no `shift-save` existed at startup and `shift-guide-seen` is unset. Steps: welcome, station cards, cash and rate, the delivery counter, the Empire tab; each later step spotlights its target with a ring cut out of a dim overlay, and steps that point at the sheet switch the tray to Stations first. Skip or Escape closes it; finishing or skipping writes `shift-guide-seen`. The Shop tab's bottom row has a Replay the start guide button. Copy is deliberately light and cheeky.
+
+## Security station (September 17, 2026)
+
+Security is the first card in the Stations row and the map's Security marker opens it. It is a door station backed by the existing `idStaff` ID-checker training rather than a seventh production line: selecting it swaps the station panel to Security (level, seconds per check, +% check speed, tier names Unstaffed door / Door staff / Seasoned doorman / Head of security) and routes the Hire/Train and Max buttons to `trainIdChecker`. The Staff tab's ID-checker training remains and the two stay in sync. The station row is now seven vertical cards on every size.
