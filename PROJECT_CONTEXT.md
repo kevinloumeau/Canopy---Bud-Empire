@@ -157,3 +157,7 @@ Security is the first card in the Stations row and the map's Security marker ope
 ## Installable web app (September 17, 2026)
 
 `public/manifest.webmanifest` (standalone, portrait, relative start URL so it works under the GitHub Pages path), PNG icons at 192/512 plus an Apple touch icon rasterized from the leaf mark, and Apple/mobile web-app meta tags make the game installable to a phone home screen. `public/sw.js` is a small service worker: hashed `/assets/` files and icons are cache-first, the page is network-first with an offline fallback, and old caches are dropped on activate. It is registered only outside localhost so the dev server never serves stale code.
+
+## One-time nudges
+
+`state.hints` records three one-time toasts: the first web order request (points to Deliveries), the first full production shelf (points to Storage in the Shop), and the first full customer line (points to the order desk). Older saves get all three unseen. Desktop users also get keyboard shortcuts (Space pause, 1/2/4 speed, Escape collapses the sheet) and a pointer-aware map hint.
