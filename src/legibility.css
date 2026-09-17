@@ -61,3 +61,8 @@ h1,h2,.guide-card h2,.empire-screen h2,.machine-info h1,.canopy-brand b{font-var
 .selected-line{grid-template-columns:80px minmax(0,1fr) 112px;align-items:center}
 #upgradePreview{display:block;width:80px;height:100px;object-fit:contain;object-position:center bottom;margin:0}
 @media(max-width:380px){.selected-line{grid-template-columns:64px minmax(0,1fr) 96px}#upgradePreview{width:64px;height:80px}}
+
+/* Toasts hang off the measured HUD, and the full-queue figure warns in the same gold as full storage. */
+.toast{top:calc(var(--hud-height,60px) + 10px + env(safe-area-inset-top,0px))}
+.hud .customer-info b.queue-full{color:#e9cd91;text-decoration:underline dotted;text-underline-offset:3px}
+.sheet #stockStatus .stock-online b.stock-full{text-decoration:underline dotted;text-underline-offset:3px}
