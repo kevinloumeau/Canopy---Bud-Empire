@@ -129,3 +129,7 @@ Above the station strip, the bottleneck is one quiet tappable row on a faint gol
 ## Staff pane
 
 On phones the seven staff rows fit without scrolling: a 20px icon, name over its level/speed line, and two compact buttons under Train and Max column headings, each showing only its gain and price (32px, 28px on short screens). The intro sentence is hidden on phones; the pane may use 48dvh.
+
+## Shop grid
+
+Shop upgrades are cards, not a list: icon and two-line title, one or two lines of effect, a mono level line, and a full-width button. Desktop shows two columns with Upgrade and price; phones show three columns with price-only buttons (the label stays for assistive tech), hide the recommendation row and the Affordable filter, and let the pane use 52dvh, so each category's six cards fit without scrolling.
