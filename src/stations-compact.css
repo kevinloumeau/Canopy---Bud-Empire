@@ -64,3 +64,15 @@
  .sheet .machine-nav button.can-upgrade::after{right:3px;bottom:auto;top:4px;width:9px;height:12px}
  .sheet .machine-nav button small{display:none}
 }
+
+/* Calmer row: no thumbnails in the strip (the selected station shows its portrait below), name over level,
+   a small dot for "can upgrade" instead of an arrow, and quieter frames. */
+.sheet .machine-nav button{grid-template-rows:auto auto;grid-template-areas:"name" "status";row-gap:3px;min-height:52px;padding:9px 2px 8px;background:#dcefd406;border-color:#d6efd214;border-radius:11px}
+.sheet .machine-nav button .machine-thumb{display:none}
+.sheet .machine-nav .station-card-name{font-size:11px;font-weight:600}
+.sheet .machine-nav button>em{font:500 11px 'DM Mono',monospace;color:#b7c9b1;letter-spacing:-.01em}
+.sheet .machine-nav button[aria-pressed=true]{background:linear-gradient(140deg,#badb9d33,#d3eacb12);border-color:#d2ebb964}
+.sheet .machine-nav button[aria-pressed=true]>em{color:#e8f2d7}
+.sheet .machine-nav button.can-upgrade::after{content:'';position:absolute;top:5px;right:5px;bottom:auto;left:auto;width:6px;height:6px;border-radius:50%;background:#c5e89e;mask:none;-webkit-mask:none;animation:none;box-shadow:0 0 6px #c5e89e66}
+.sheet .machine-nav button.is-locked{opacity:.55}
+@media(min-width:780px){.sheet .machine-nav button{min-height:54px;padding:10px 2px 9px}}

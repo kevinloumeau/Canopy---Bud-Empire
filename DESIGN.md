@@ -118,3 +118,7 @@ Each floor carries soft occlusion bands: a gradient along the base of the rear a
 ## Kiosk display
 
 The online kiosk's available-jar count is a shelf-edge display set into the counter's front face: a dark green panel with a mint hairline, N AVAILABLE in Bricolage (mint, turning light green when an order can ship), and a slim fill line beneath toward the next order size. Nothing floats above the counter. In the stock strip every item has 8px of inner padding and the Delivery item keeps 6px clear of Ready with 11-12px inside its frame.
+
+## Station row
+
+The seven station cards are a quiet strip: name (11px, 600) over level (11px DM Mono), 52px tall, faint frames, the selected card as the glass pill, the bottleneck's name in gold, and a 6px green dot at the top-right when an upgrade is affordable. No thumbnails in the strip; the selected station's portrait sits below it.
