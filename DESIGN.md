@@ -92,3 +92,7 @@ The interface face is Bricolage Grotesque (500/600/700, variable optical size fr
 ## Desktop conveniences
 
 With a fine pointer the map hint reads DRAG TO PAN · SCROLL TO ZOOM · SPACE PAUSES · 1 2 4 SET SPEED. Space toggles pause, 1/2/4 set speed, and Escape collapses the sheet, all ignored while a field, the start guide or a dialog has focus.
+
+## Settings
+
+A gear at the end of the speed pill opens a small glass dialog: Sound, Lighting, Start guide (replay) and, set apart below a rule, Start over in a warm terracotta. Rows are full-width buttons showing the current value on the right. On phones the day/night toggle leaves the HUD pill and lives here. The Shop tab's old footer links are hidden; their controls remain in the DOM and the dialog proxies to them.
