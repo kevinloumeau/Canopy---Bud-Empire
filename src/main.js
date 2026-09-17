@@ -354,8 +354,6 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     function halo(x,y,z,r,a,color){var p=project(x,y,z),g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,unit*r);g.addColorStop(0,tint(color,a));g.addColorStop(1,tint(color,0));ellipse(p.x,p.y,unit*r,unit*r,g)}
     function bulb(x,y,z,i){var p=project(x,y,z),flicker=motionPreference.matches?1:.85+.15*Math.sin(now*.004+i*1.7);halo(x,y,z,.42,.5*flicker,'#ffdf9e');ellipse(p.x,p.y,unit*.06,unit*.06,'#fff6dc')}
     var warm='#ffd98f',cool='#cfeebb';
-    // Globe pendants and the pools they throw on each floor.
-    [[0,[[-2,3],[6.6,1.2]]],[4.7,[[-4.7,-1.5],[3.7,-1.5]]],[9.4,[[-3.9,-4.8],[3.9,-4.8]]]].forEach(function(f){f[1].forEach(function(q){halo(q[0],f[0]+2.92,q[1],1.35,.55,'#ffe2a5');pool(q[0],f[0]+.03,q[1],2.3,.3,warm)})});
     // Work lights over every station; the grow room glows cool.
     machinePos.forEach(function(q,i){pool(q.x,q.y+.04,q.z+.9,2,.24,i===1?cool:warm)});
     // Shop-floor downlights, the lit entrance, and the online kiosk sign.
@@ -1391,16 +1389,8 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
         drawBox(2.4,-5.8,0,.16,1.7,2.9,green);plant(7,-3,0,1.4);
       }
       if(fi===2)plant(4.4,-5.6,0,.75);
-      // Warm globe pendants, oak trims, and planted wall panels.
+      // Oak trims and planted wall panels.
       worldLine([[left+.2,2.95,rear+.18],[fi===0?8.95:right-.2,2.95,rear+.18]],'#b7986a',.11);
-      (fi===0?[[-2,3],[6.6,1.2]]:fi===1?[[-4.7,-1.5],[3.7,-1.5]]:[[-3.9,-4.8],[3.9,-4.8]]).forEach(function(position){
-        var px=position[0],pz=position[1];
-        worldLine([[px,4.35,pz],[px,3.15,pz]],'#38473c',.025);
-        var lamp=project(px,2.92,pz);glow(lamp.x,lamp.y,unit*1.05,'#ffe2a557');
-        ellipse(lamp.x,lamp.y,unit*.19,unit*.22,'#fff3d0');
-        drawBox(px,pz,3.14,.14,.14,.12,['#e4c785','#94743d','#bf9c58']);
-        lightPool(px,.025,pz,1.65,false);
-      });
       // Concealed strips along the wall trim and the exposed mezzanine fascia.
       warmStrip([[left+.35,2.87,rear+.25],[fi===0?8.6:right-.35,2.87,rear+.25]],fi===2);
       if(fi>0)warmStrip([[left+.2,-.08,front+.025],[right-.2,-.08,front+.025]],false);

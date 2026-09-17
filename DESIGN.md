@@ -5,7 +5,7 @@ Mode: Experience. The user’s latest reference is a warmly lit, multi-floor off
 - Three stepped, open interior floors retain all six stations at their existing elevations.
 - Remove the front facade, awning, solid building cores, exterior garden island, and greenhouse roof frame. Keep rear forest-green walls and short side returns.
 - Stone ground and grow floors, a timber processing mezzanine, dark metal posts and balustrades, black-framed glass, wood shelving, retail displays, lounge seating, and potted plants.
-- Two open stair flights with warm illuminated treads and landing connections link the floors.
+- Two open stair flights with warm illuminated treads and landing connections link the floors. There are no hanging pendant lamps; light comes from concealed strips, string bulbs and station work lights.
 - Warm wall strips, contact shading, subtle material gradients, and a muted dark green backdrop create the evening architectural mood.
 - Light stone interface panels preserve clear contrast. Queue, compact speed controls, upgrade progress, saves, selection, and pan/zoom remain functional.
 - Responsive fit includes the complete base island. Station elevation remains shared by render, markers, hit testing, selection, and rewards.
@@ -105,4 +105,4 @@ On phones the queue reads as icon plus figure only; the word ordering appears fr
 
 ## Night lighting
 
-At night the shade is a deep blue at darkness + .04, and a lighting pass is drawn above it so the shop reads as lit rather than dimmed: halos on the six globe pendants with warm pools beneath, a work light over every station (cool over the grow room), shop-floor downlights, a lit entrance, the mint glow of the online kiosk sign, strings of small flickering bulbs along the mezzanine and top-floor fascias, a warm wash behind the top-floor shelving, a cool wash on the planted wall, and pools on the stair treads. Flicker respects reduced motion.
+At night the shade is a deep blue at darkness + .04, and a lighting pass is drawn above it so the shop reads as lit rather than dimmed: a work light over every station (cool over the grow room), shop-floor downlights, a lit entrance, the mint glow of the online kiosk sign, strings of small flickering bulbs along the mezzanine and top-floor fascias, a warm wash behind the top-floor shelving, a cool wash on the planted wall, and pools on the stair treads. Flicker respects reduced motion.
