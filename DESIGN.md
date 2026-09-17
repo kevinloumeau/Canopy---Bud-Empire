@@ -105,4 +105,4 @@ On phones the queue reads as icon plus figure only; the word ordering appears fr
 
 ## Night lighting
 
-At night the shade is a deep blue at darkness + .04, and a lighting pass is drawn above it so the shop reads as lit rather than dimmed: a work light over every station (cool over the grow room), shop-floor downlights, a lit entrance, the mint glow of the online kiosk sign, strings of small flickering bulbs along the mezzanine and top-floor fascias, a warm wash behind the top-floor shelving, a cool wash on the planted wall, and pools on the stair treads. Flicker respects reduced motion.
+At night the shade is a deep blue at darkness + .04, and a lighting pass is drawn above it so the shop reads as lit rather than dimmed: a work light over every station (cool over the grow room), shop-floor downlights, a lit entrance, the mint glow of the online kiosk sign, stronger fascia strip glows along the mezzanine and top floor (no string bulbs), a warm wash behind the top-floor shelving, a cool wash on the planted wall, and pools on the stair treads. Flicker respects reduced motion.

@@ -352,7 +352,6 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     function tint(hex,a){var n=parseInt(hex.slice(1),16);return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')'}
     function pool(x,y,z,r,a,color){var p=project(x,y,z),g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,unit*r);g.addColorStop(0,tint(color,a));g.addColorStop(.55,tint(color,a*.35));g.addColorStop(1,tint(color,0));ellipse(p.x,p.y,unit*r,unit*r*.55,g)}
     function halo(x,y,z,r,a,color){var p=project(x,y,z),g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,unit*r);g.addColorStop(0,tint(color,a));g.addColorStop(1,tint(color,0));ellipse(p.x,p.y,unit*r,unit*r,g)}
-    function bulb(x,y,z,i){var p=project(x,y,z),flicker=motionPreference.matches?1:.85+.15*Math.sin(now*.004+i*1.7);halo(x,y,z,.42,.5*flicker,'#ffdf9e');ellipse(p.x,p.y,unit*.06,unit*.06,'#fff6dc')}
     var warm='#ffd98f',cool='#cfeebb';
     // Work lights over every station; the grow room glows cool.
     machinePos.forEach(function(q,i){pool(q.x,q.y+.04,q.z+.9,2,.24,i===1?cool:warm)});
@@ -360,8 +359,8 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     [[-4,4],[4,4],[0,7.5]].forEach(function(q){pool(q[0],.03,q[1],2.2,.26,warm)});
     pool(-9.1,.04,10.41,1.7,.32,warm);halo(-9.1,2.4,10.41,.9,.35,'#ffe2a5');
     pool(-10.7,7.09,1.5,1.6,.34,cool);halo(-10.7,9.2,1.5,1.3,.45,'#bfe9d8');
-    // String lights along the mezzanine and top-floor fascias.
-    var i=0,x;for(x=-8.4;x<=8.5;x+=1.2)bulb(x,4.62,3.1,i++);for(x=-5.9;x<=6;x+=1.2)bulb(x,9.32,-.25,i++);
+    // Fascia strips glow a little stronger at night in place of any hanging bulbs.
+    [[4.7,3.05,-8.8,8.8],[9.4,-.3,-6.3,6.3]].forEach(function(f){var a=project(f[2],f[0]-.06,f[1]),b=project(f[3],f[0]-.06,f[1]);var g=ctx.createLinearGradient(a.x,a.y,b.x,b.y);g.addColorStop(0,tint('#ffd98f',0));g.addColorStop(.12,tint('#ffd98f',.22));g.addColorStop(.88,tint('#ffd98f',.22));g.addColorStop(1,tint('#ffd98f',0));ctx.save();ctx.strokeStyle=g;ctx.lineWidth=unit*.42;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.restore()});
     // A warm wash behind the top-floor shelving and the mezzanine planted wall.
     var w=project(.6,11,-6.7),g=ctx.createRadialGradient(w.x,w.y,0,w.x,w.y,unit*3.4);g.addColorStop(0,tint('#ffd98f',.2));g.addColorStop(1,tint('#ffd98f',0));ellipse(w.x,w.y,unit*3.4,unit*1.2,g);
     var v=project(7.9,5.9,-6.5),gv=ctx.createRadialGradient(v.x,v.y,0,v.x,v.y,unit*1.8);gv.addColorStop(0,tint('#cfeebb',.22));gv.addColorStop(1,tint('#cfeebb',0));ellipse(v.x,v.y,unit*1.8,unit*1.4,gv);
@@ -1801,7 +1800,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
       machinePos.forEach(function(p,i){var half=stationTier(i)===0?.8:1.3,y=p.y+1.1,z=p.z+(stationTier(i)===0?.84:1.26);warmStrip([[p.x-half,y,z],[p.x+half,y,z]],i===1)});
       [[-4,3.6,5.35,'ORDER',2.55],[4,3.6,5.35,'PICKUP',2.55],[-10.7,9.6,.86,'ONLINE ORDERS',3.15]].forEach(function(sign){var p=project(sign[0],sign[1],sign[2]),axis=project(sign[0]+1,sign[1],sign[2]);glow(p.x,p.y,unit*1.4,'#ffda8a38');ctx.save();ctx.translate(p.x,p.y);ctx.transform(1,(axis.y-p.y)/(axis.x-p.x),0,1,0,0);ctx.shadowColor='#ffdca0';ctx.shadowBlur=unit*.13;ctx.fillStyle='#fff0cf';ctx.font='600 '+Math.max(7,unit*.235)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(sign[3],0,0,sign[4]*unit*.64);ctx.restore()});
       ctx.restore();
-      [[ -2,2.92,3],[6.6,2.92,1.2],[-4.7,7.62,-1.5],[3.7,7.62,-1.5],[-3.9,12.32,-4.8],[3.9,12.32,-4.8]].forEach(function(p){var lamp=project(p[0],p[1],p[2]);glow(lamp.x,lamp.y,unit*.85,'#ffe0a23b');ellipse(lamp.x,lamp.y,unit*.1,unit*.12,'#fff0cb')})}
+    }
     for(var i=particles.length-1;i>=0;i--){var p=particles[i];p.life-=frameDelta*1.5;if(!motionPreference.matches){p.x+=p.vx*frameDelta;p.z+=p.vz*frameDelta;p.y+=p.vy*frameDelta;}p.vy-=frameDelta*5;var screen=project(p.x,p.y,p.z),size=Math.max(2,unit*.1);ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.fillRect(screen.x-size/2,screen.y-size/2,size,size);ctx.globalAlpha=1;if(p.life<=0)particles.splice(i,1)}
     drawDeliveryDrones(frameDelta,now);
     updateMarkers();requestAnimationFrame(render);
