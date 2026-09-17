@@ -346,6 +346,31 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     ctx.globalAlpha=.85;worldLine(points,cool?'#e7f6d0':'#ffe8b4',.052);
     ctx.globalAlpha=1;worldLine(points,cool?'#f3fbe7':'#fff5da',.018);ctx.restore();
   }
+  // Night: everything that glows is redrawn above the shade so the shop reads as lit, not dimmed.
+  function nightLights(now){
+    var saved=sceneElevation;sceneElevation=0;
+    function tint(hex,a){var n=parseInt(hex.slice(1),16);return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')'}
+    function pool(x,y,z,r,a,color){var p=project(x,y,z),g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,unit*r);g.addColorStop(0,tint(color,a));g.addColorStop(.55,tint(color,a*.35));g.addColorStop(1,tint(color,0));ellipse(p.x,p.y,unit*r,unit*r*.55,g)}
+    function halo(x,y,z,r,a,color){var p=project(x,y,z),g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,unit*r);g.addColorStop(0,tint(color,a));g.addColorStop(1,tint(color,0));ellipse(p.x,p.y,unit*r,unit*r,g)}
+    function bulb(x,y,z,i){var p=project(x,y,z),flicker=motionPreference.matches?1:.85+.15*Math.sin(now*.004+i*1.7);halo(x,y,z,.42,.5*flicker,'#ffdf9e');ellipse(p.x,p.y,unit*.06,unit*.06,'#fff6dc')}
+    var warm='#ffd98f',cool='#cfeebb';
+    // Globe pendants and the pools they throw on each floor.
+    [[0,[[-2,3],[6.6,1.2]]],[4.7,[[-4.7,-1.5],[3.7,-1.5]]],[9.4,[[-3.9,-4.8],[3.9,-4.8]]]].forEach(function(f){f[1].forEach(function(q){halo(q[0],f[0]+2.92,q[1],1.35,.55,'#ffe2a5');pool(q[0],f[0]+.03,q[1],2.3,.3,warm)})});
+    // Work lights over every station; the grow room glows cool.
+    machinePos.forEach(function(q,i){pool(q.x,q.y+.04,q.z+.9,2,.24,i===1?cool:warm)});
+    // Shop-floor downlights, the lit entrance, and the online kiosk sign.
+    [[-4,4],[4,4],[0,7.5]].forEach(function(q){pool(q[0],.03,q[1],2.2,.26,warm)});
+    pool(-9.1,.04,10.41,1.7,.32,warm);halo(-9.1,2.4,10.41,.9,.35,'#ffe2a5');
+    pool(-10.7,7.09,1.5,1.6,.34,cool);halo(-10.7,9.2,1.5,1.3,.45,'#bfe9d8');
+    // String lights along the mezzanine and top-floor fascias.
+    var i=0,x;for(x=-8.4;x<=8.5;x+=1.2)bulb(x,4.62,3.1,i++);for(x=-5.9;x<=6;x+=1.2)bulb(x,9.32,-.25,i++);
+    // A warm wash behind the top-floor shelving and the mezzanine planted wall.
+    var w=project(.6,11,-6.7),g=ctx.createRadialGradient(w.x,w.y,0,w.x,w.y,unit*3.4);g.addColorStop(0,tint('#ffd98f',.2));g.addColorStop(1,tint('#ffd98f',0));ellipse(w.x,w.y,unit*3.4,unit*1.2,g);
+    var v=project(7.9,5.9,-6.5),gv=ctx.createRadialGradient(v.x,v.y,0,v.x,v.y,unit*1.8);gv.addColorStop(0,tint('#cfeebb',.22));gv.addColorStop(1,tint('#cfeebb',0));ellipse(v.x,v.y,unit*1.8,unit*1.4,gv);
+    // Stair treads.
+    for(var st=0;st<8;st++)pool(9.2,.6+st*1.15,4.6-st*.75,.55,.22,warm);
+    sceneElevation=saved;
+  }
   function lightPool(x,y,z,r,cool){
     var p=project(x,y,z);glow(p.x,p.y,unit*r,cool?'#d8efae30':'#ffdc9138');
   }
@@ -1778,7 +1803,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
         for(var n=0;n<5;n++){var q=project(8+n*.5,3.2,6);ellipse(q.x,q.y,unit*.16,unit*.23,color);}
       }});
     }
-    jobs.sort(function(a,b){return a.depth-b.depth});jobs.forEach(function(job){job.draw()});var nightShade=visualLight().darkness;if(nightShade>0){ctx.fillStyle='rgba(16,27,50,'+nightShade+')';ctx.fillRect(0,0,width,height);[-4,4].forEach(function(x){var light=project(x,2,4),gradient=ctx.createRadialGradient(light.x,light.y,0,light.x,light.y,unit*2);gradient.addColorStop(0,'#ffdc9c38');gradient.addColorStop(1,'#ffdc9c00');ellipse(light.x,light.y,unit*2,unit*1.4,gradient)})}
+    jobs.sort(function(a,b){return a.depth-b.depth});jobs.forEach(function(job){job.draw()});var nightShade=visualLight().darkness;if(nightShade>0){ctx.fillStyle='rgba(14,24,46,'+(nightShade+.04)+')';ctx.fillRect(0,0,width,height);nightLights(now)}
     if(nightShade>0){
       // Emissive accents sit above the night tint, while their surrounding materials stay dark.
       ctx.save();ctx.globalAlpha=Math.min(1,nightShade/.34);

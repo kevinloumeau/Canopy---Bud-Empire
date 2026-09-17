@@ -102,3 +102,7 @@ A gear at the end of the speed pill opens a small glass dialog: Sound, Lighting,
 The return report is a card over the map in the start guide's language (dimmed world, glass card, one primary button), shown whenever a report exists and dismissed with its button or Escape. Returning no longer switches the tray; the player lands where they left off.
 
 On phones the queue reads as icon plus figure only; the word ordering appears from 481px up.
+
+## Night lighting
+
+At night the shade is a deep blue at darkness + .04, and a lighting pass is drawn above it so the shop reads as lit rather than dimmed: halos on the six globe pendants with warm pools beneath, a work light over every station (cool over the grow room), shop-floor downlights, a lit entrance, the mint glow of the online kiosk sign, strings of small flickering bulbs along the mezzanine and top-floor fascias, a warm wash behind the top-floor shelving, a cool wash on the planted wall, and pools on the stair treads. Flicker respects reduced motion.
