@@ -110,3 +110,7 @@ At night the shade is a deep blue at darkness + .04, and a lighting pass is draw
 ## Scene lettering and plaques
 
 Canvas lettering (ORDER, PICKUP, ONLINE ORDERS, stock pins) uses Bricolage Grotesque with a sans fallback so the world and interface share one voice. Station plaques are small glass tags: 11px Bricolage name, 10.5px DM Mono level, 9px radius, dark green glass at 82% with a hairline and a soft offset shadow; the selected plaque fills with its tier colour.
+
+## Ambient occlusion and glass
+
+Each floor carries soft occlusion bands: a gradient along the base of the rear and left walls, a faint flat shade across the area beneath the mezzanine above, and a band fading inward from that mezzanine's fascia. Transfer tubes have a feathered outer body and two-weight edge lines (a wide faint pass under a thin brighter one) so their edges read as glass rather than ink.
