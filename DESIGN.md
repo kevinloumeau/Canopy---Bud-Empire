@@ -71,7 +71,7 @@ Each Growth store row includes a native expandable Store projects section with a
 
 ## Top bar
 
-One row on every size: the leaf mark (with wordmark on desktop), cash as the hero in DM Mono with the income rate as a small +$/s suffix, the customer queue as one figure with a people icon, and a single glass pill: three speed glyphs (one, two, three overlapping play triangles in an equal 18px box), then day/night, then a sliders icon for Settings. There is no pause button; Space still pauses on desktop and the game pauses when hidden. Cash and rate labels exist for screen readers only; picking-up and served totals are hidden; the stock row left the header. Map overlays hang off the measured `--hud-height`.
+One row on every size: the leaf mark (with wordmark on desktop) alone on the left; cash as the hero in DM Mono with the income rate as a small +$/s suffix, centred in the bar on desktop and next to the mark on phones; the customer queue as one figure with a people icon, and a single glass pill: three speed glyphs (one, two, three overlapping play triangles in an equal 18px box), then day/night, then a sliders icon for Settings. There is no pause button; Space still pauses on desktop and the game pauses when hidden. Cash and rate labels exist for screen readers only; picking-up and served totals are hidden; the stock row left the header. Map overlays hang off the measured `--hud-height`.
 
 ## Bottom bar
 

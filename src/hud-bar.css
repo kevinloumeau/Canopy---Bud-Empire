@@ -98,3 +98,13 @@ body[data-store-view=branch] #stockStatus{display:none!important}
 .hud .speed-controls [data-speed] svg{display:block;width:18px;height:16px}
 .hud .speed-controls [data-speed]{min-width:30px;padding:0 4px}
 @media(max-width:480px){.hud .speed-controls button{min-width:28px;padding:0 3px}.hud .speed-controls #lightToggle,.hud .speed-controls #settingsOpen{min-width:28px}}
+
+/* Desktop: the wordmark stands alone on the left; cash and rate sit in the middle of the bar, clear of the logo. */
+@media(min-width:701px){
+ .hud .canopy-brand{margin-right:0}
+ .hud>.stat{margin-left:auto}
+ .hud>.stat.output{margin-left:-4px;margin-right:auto}
+ .hud .customer-info{margin-left:0}
+ .hud>.stat strong{font-size:24px}
+ .hud>.stat.output strong{font-size:13px}
+}
