@@ -43,8 +43,10 @@ export function mountEmpireShell({fit,getState,format}){
  function syncBoard(){if(!getState)return;const s=getState();const values={revenue:format?format(s.lifetime||0):String(Math.round(s.lifetime||0)),served:(s.sold||0).toLocaleString(),deliveries:(s.onlineCompleted||0).toLocaleString(),trophies:String((s.empire&&s.empire.trophies)||0),prestige:String((s.empire&&s.empire.prestige)||0)};const sig=Object.values(values).join('|');if(sig===boardSig)return;boardSig=sig;stats.forEach(([,key])=>{board.querySelector('[data-score="'+key+'"]').textContent=values[key];});}
  setInterval(()=>{if(current==='details')syncBoard();},500);
  const nextSteps=today.querySelector('h2:not(.empire-section-heading)');
+ const shopMilestone=document.querySelector('.shop-milestone');
  screens.details.append(
   group(null,[$('careerName'),$('careerDetail'),$('careerProgress'),$('careerBonus'),$('careerClaim')]),
+  group(null,[shopMilestone]),
   group(null,Array.from(section('daily').children)),
   group(null,Array.from(section('events').children)),
   group(null,[nextSteps,$('nextInvestment'),$('shortGoals')]),
@@ -53,6 +55,7 @@ export function mountEmpireShell({fit,getState,format}){
   group(null,[growth.querySelector('.depth-panel')])
  );
  pane.append(screens.home,screens.store,screens.details);
+ const orderBadge=$('orderBadge'),empireTab=document.querySelector('[data-tray=empire]');if(orderBadge&&empireTab)empireTab.append(orderBadge);
 
  // Navigation.
  let current='home';
@@ -68,11 +71,11 @@ export function mountEmpireShell({fit,getState,format}){
  if(window.ResizeObserver)new ResizeObserver(measure).observe(storeBar.bar);
 
  // Rewards strip mirrors the existing claim buttons; collecting clicks them.
- const sources=[['Daily','dailyClaim'],['Milestone','careerClaim'],['Event','eventAction'],['Goal','goalClaim0'],['Goal','goalClaim1'],['Goal','goalClaim2']];
+ const sources=[['Daily','dailyClaim'],['Milestone','careerClaim'],['Bonus','claim'],['Event','eventAction'],['Goal','goalClaim0'],['Goal','goalClaim1'],['Goal','goalClaim2']];
  const amount=text=>{const m=/\$[\d.,]+[KMB]?/.exec(text);return m?m[0]:'';};
  let signature='';
  function sync(){
-  const ready=sources.map(([kind,id])=>{const b=$(id);return b&&!b.disabled&&!b.hidden&&/^Collect\s/.test(b.textContent)?{kind,button:b,amount:amount(b.textContent)}:null;}).filter(Boolean);
+  const ready=sources.map(([kind,id])=>{const b=$(id);return b&&!b.disabled&&!b.hidden&&/^Collect\b/.test(b.textContent.trim())?{kind,button:b,amount:amount(b.textContent)}:null;}).filter(Boolean);
   const daily=$('dailyTime')?/in (\d+h \d+m)/.exec($('dailyTime').textContent):null,event=$('eventTime')?/in (\d+h \d+m)/.exec($('eventTime').textContent):null;
   const next=ready.length?'':'Nothing to collect'+(daily?' · daily reward in '+daily[1]:'')+(event?' · event in '+event[1]:'');
   const sig=ready.map(r=>r.kind+r.amount).join('|')+'#'+next;
@@ -81,7 +84,7 @@ export function mountEmpireShell({fit,getState,format}){
   strip.classList.toggle('has-rewards',ready.length>0);collectAll.hidden=ready.length<2;quiet.textContent=next;quiet.hidden=!next;
   $('empireMoreHint').textContent=ready.length?ready.length+' ready':'';
  }
- collectAll.onclick=()=>{sources.forEach(([,id])=>{const b=$(id);if(b&&!b.disabled&&/^Collect\s/.test(b.textContent))b.click();});sync();};
+ collectAll.onclick=()=>{sources.forEach(([,id])=>{const b=$(id);if(b&&!b.disabled&&/^Collect\b/.test(b.textContent.trim()))b.click();});sync();};
  pane.addEventListener('click',()=>requestAnimationFrame(sync));
  setInterval(sync,250);sync();measure();
  return {show,openStore,sync};

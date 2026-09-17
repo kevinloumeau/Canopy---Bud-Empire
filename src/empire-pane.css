@@ -151,3 +151,17 @@
 .scoreboard .score:first-child{grid-column:1/-1}
 .scoreboard .score:first-child b{font-size:22px;color:#dcefc0}
 @media(min-width:780px){.scoreboard{grid-template-columns:repeat(5,minmax(0,1fr))}.scoreboard .score:first-child{grid-column:auto}.scoreboard .score:first-child b{font-size:16px}}
+
+/* Milestone bonus, moved from the Shop: the same row language as the career milestone. */
+.empire-group .shop-milestone{display:grid;grid-template-columns:32px minmax(0,1fr) auto;grid-template-areas:"icon copy button" "meter meter meter";gap:6px 10px;align-items:center;padding:0;margin:0;border:0;background:transparent}
+.empire-group .shop-milestone .shop-symbol{grid-area:icon;width:28px;height:28px;color:#b7d197}
+.empire-group .shop-milestone .shop-symbol svg{width:28px;height:28px}
+.empire-group .shop-milestone .shop-copy{grid-area:copy;display:grid;gap:2px;min-width:0}
+.empire-group .shop-milestone .shop-copy h2{font-size:12px;font-weight:500;color:#aebfa8;margin:0;letter-spacing:0}
+.empire-group .shop-milestone .shop-copy strong{font-size:14px;font-weight:650;color:#f0f4e8;line-height:1.2}
+.empire-group .shop-milestone .shop-copy small{font:500 11px 'DM Mono',monospace;color:#c6d8bf;letter-spacing:0}
+.sheet .empire-group .shop-milestone #claim{grid-area:button;display:grid;justify-items:center;gap:1px;min-width:92px;min-height:44px;padding:6px 12px;border-radius:12px;background:linear-gradient(145deg,#c9e4b820,#c6dfb608),#55733e;color:#f8fbed;border:1px solid #d9f1c445}
+.sheet .empire-group .shop-milestone #claim b{font:600 13px 'DM Mono',monospace}
+.sheet .empire-group .shop-milestone #claim:disabled{background:#223f31;color:#b6c8af;border-color:#75936b55}
+.empire-group .shop-milestone .shop-meter{grid-area:meter;height:6px;border-radius:4px;background:#142c22;overflow:hidden;margin-top:2px}
+.empire-group .shop-milestone .shop-meter i{display:block;height:100%;background:#b6d690;border-radius:4px}
