@@ -29,3 +29,33 @@ html,body{background:#15291f}.hud{background:#11251fee;border-color:#b4d2b327}.b
 .world .marker:after{height:9px;background:#c5deb282;left:50%;transform:translateX(-50%)}
 .world .marker.selected{background:#d0e6b6;border-color:#e2efcc;color:#203b2a;border-radius:7px;font-weight:700}
 .world .marker:not(.selected){background:#183528ed;border-color:#809a705c}
+.speed-controls{position:absolute;z-index:11;top:calc(72px + env(safe-area-inset-top,0px));left:12px;display:flex;align-items:center;gap:3px;padding:3px;background:#112b20;border-radius:10px;box-shadow:0 4px 14px #07160d40;color:#cadfc0}
+.speed-controls>span{display:flex;align-items:center;padding:0 5px}
+.speed-controls svg{display:block;width:17px;height:17px;flex-shrink:0}
+.speed-controls button{display:grid;place-items:center;min-width:32px;min-height:32px;padding:0 5px;border:0;border-radius:6px;background:transparent;color:#cadfc0;font-size:.8125rem;font-weight:600;cursor:pointer;font-variant-numeric:tabular-nums}
+.speed-controls button[aria-pressed=true]{background:#c7e39f;color:#193622}
+.speed-controls button:hover:not([aria-pressed=true]){background:#31503b}
+.speed-controls button:focus-visible{outline:2px solid #f2db9e;outline-offset:2px}
+.world .mission{top:calc(134px + env(safe-area-inset-top,0px))}
+.map-controls{top:calc(186px + env(safe-area-inset-top,0px))}
+@media(min-width:780px){.speed-controls{left:24px}}
+.shop-reset{margin:16px 4px 0;padding-top:8px;border-top:1px solid #34513e}
+.shop-reset button{min-height:44px;padding:0 4px;border:0;background:transparent;color:#adc4b1;font-size:.875rem;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.shop-reset button:hover{color:#edf2e5}
+.shop-reset button:focus-visible{outline:2px solid #c7e39f;outline-offset:2px;border-radius:3px}
+.machine-nav button em{font-size:.9375rem;font-weight:700;font-style:normal;color:var(--station-tier,#c4e7a8);margin-top:6px}
+.machine-nav progress{display:block;width:calc(100% - 12px);height:6px;margin:7px 6px 5px;border:0;border-radius:4px;overflow:hidden;appearance:none;background:#0b2117;color:var(--station-tier,#c7e39f)}
+progress::-webkit-progress-bar{background:#0b2117;border-radius:4px}
+progress::-webkit-progress-value{background:var(--station-tier,#c7e39f);border-radius:4px}
+progress::-moz-progress-bar{background:var(--station-tier,#c7e39f);border-radius:4px}
+.machine-nav .level-funding{display:block;min-height:28px;padding:0 4px;font-size:.75rem;line-height:1.2;color:#bbd1b5}
+.machine-nav button.can-upgrade .level-funding{color:#dcf0bc}
+.station-upgrade{padding:14px 4px 4px}
+.upgrade-summary,.upgrade-funding{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.upgrade-summary strong{font-size:1rem;color:#eef3e4}.upgrade-summary>span{font-size:.875rem;font-weight:600}
+.upgrade-funding{margin-top:10px;font-size:.875rem;color:#bfd0b5;flex-wrap:wrap;gap:4px 10px}.upgrade-funding b{color:#e1eccf;font-variant-numeric:tabular-nums}
+.station-upgrade progress{display:block;width:100%;height:9px;border:0;appearance:none;background:#0b2117;border-radius:5px;overflow:hidden;margin-top:7px;color:#c7e39f}
+.station-upgrade p{font-size:.875rem;line-height:1.45;margin:9px 0 0;color:#d7e8c2}
+.station-upgrade .next-appearance{color:#adc4b1;font-size:.8125rem;margin-top:4px}
+.world .marker{font-size:.75rem;padding:6px 8px;color:var(--station-tier,#d0e6b6)}
+.world .marker.selected{color:#203b2a;background:var(--station-tier,#d0e6b6)}

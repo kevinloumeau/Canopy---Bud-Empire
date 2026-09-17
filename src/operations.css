@@ -1,0 +1,42 @@
+.operation-tabs{display:flex;gap:4px;margin:0 0 14px}
+.sheet .empire-content .operation-tabs button{flex:1;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;padding:8px 2px;font-size:11px}
+.sheet .empire-content .operation-tabs button[aria-pressed=true]{border-color:#c3dca5;color:#e3d1a6}
+.op-pane[hidden]{display:none}
+.op-pane h4,.operations-today h4{font-size:13px;margin:18px 0 10px;color:#f0f4e8}
+.op-pane label{display:block;margin:10px 0 5px;font-size:12px;color:#d6e3cd}
+.op-pane select{display:block;width:100%;min-height:44px;padding:8px;border:1px solid #a1b991;border-radius:8px;background:#20392d;color:#f0f4e8;font:inherit;font-size:12px;color-scheme:dark}
+.op-pane select:focus-visible,.operation-details summary:focus-visible{outline:2px solid #e3d1a6;outline-offset:2px}
+.operation-stats,.operation-row,.shelf-row,.journal-entry,.flagship-check{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0}
+.operation-stats{font-size:12px;padding-top:0}
+.operation-row,.shelf-row{border-bottom:1px solid #c1d7b722;font-size:12px}
+.operation-row>span,.shelf-row>div:first-child{min-width:0;flex:1}
+.operation-row small,.shelf-row small{display:block;color:#cbdcc5;font-size:11px;line-height:1.45;margin-top:4px}
+.sheet .empire-content .operation-row button{flex-shrink:0;max-width:125px;padding:8px;font-size:11px}
+.shelf-stepper{display:flex;align-items:center;gap:8px;font-variant-numeric:tabular-nums}
+.sheet .empire-content .shelf-stepper button{width:44px;padding:5px;font-size:17px}
+.shelf-stepper span{min-width:18px;text-align:center}
+.empire-content .operation-hint{font-size:11px;color:#cbdcc5;line-height:1.45;margin:8px 0 12px}
+.operation-details{border-top:1px solid #c1d7b733;margin-top:14px}
+.operation-details>summary{display:list-item;min-height:48px;align-content:center;cursor:pointer;font-size:13px;font-weight:600;color:#e3d1a6}
+.operation-details>summary>span{float:right;font-size:11px;color:#cbdcc5;font-weight:400}
+.sheet .empire-content .operation-primary{width:100%;margin-top:10px;background:#c3dca522}
+.operation-muted{font-weight:400;font-size:11px;color:#cbdcc5;display:block;margin-top:4px}
+.relationship{color:#e3d1a6;font-size:12px;margin:12px 0}
+.opening-task{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;font-size:12px;padding:0 0 12px}
+.opening-task progress{grid-column:1/-1;margin:0}
+.opening-task[hidden]{display:none}
+.sheet .empire-content .opening-task button{font-size:11px;padding:6px 9px}
+.route{display:grid;grid-template-columns:1fr auto;gap:6px;font-size:11px;margin:12px 0}
+.route progress,.flagship-check progress{grid-column:1/-1;margin:0;width:100%}
+.journal-entry{font-size:12px;color:#b6c8af;padding:7px 0}
+.journal-entry.discovered{color:#f0f4e8}
+.journal-entry small{font-size:10px}
+.flagship-check{display:grid;grid-template-columns:1fr auto;font-size:12px}
+
+.op-pane small,.operations-today small{font-family:inherit;letter-spacing:normal;font-weight:400}
+/* Keep a branch's identity and local navigation together under the Empire tabs. */
+.branch-sticky-header{position:sticky;top:var(--empire-tabs-height,61px);z-index:1;background:#20392d;box-shadow:0 1px #c1d7b733}
+.branch-sticky-header .operation-tabs{margin-top:0;margin-bottom:0;padding-bottom:4px}
+.branch-sticky-header .operation-tabs[hidden]{display:none!important}
+.branch-body{padding-top:10px}
+.branch-toggle{scroll-margin-top:calc(var(--empire-tabs-height,61px) + 2px)}
