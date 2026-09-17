@@ -125,3 +125,7 @@ The seven stations form one segmented control in a shallow glass trough, like th
 ## Bottleneck line
 
 Above the station strip, the bottleneck is one quiet tappable row on a faint gold tint: a gold dot, "Bottleneck: Pickup · 0.2/s", and a chevron. The whole row selects that station (or resumes 1× while paused); the old separate View station button is the chevron.
+
+## Staff pane
+
+On phones the seven staff rows fit without scrolling: a 20px icon, name over its level/speed line, and two compact Train / Max buttons (32px, 28px on short screens). The intro sentence is hidden on phones; the pane may use 48dvh.
