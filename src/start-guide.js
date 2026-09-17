@@ -2,9 +2,9 @@
 const SEEN_KEY='shift-guide-seen';
 const STEPS=[
  {title:'Welcome to the grind',text:'You own a very small dispensary with very big dreams. Seeds go in, happy customers come out, cash piles up. Let’s make it rain.',cta:'Show me'},
- {title:'Stations are your crew',text:'Seeds → Grow → Harvest → Pack → Orders → Pickup. Tap a card to upgrade it. Cash is tight right now, so no wild spending. Yet.',target:'.machine-nav',tray:'factory'},
+ {title:'Stations are your crew',text:'Security, then Seeds → Grow → Harvest → Pack → Orders → Pickup. The slowest one is your bottleneck and it’s already selected. Feed that first; the rest can wait.',target:'.machine-nav',tray:'factory'},
  {title:'Cash does the heavy lifting',text:'Every sale lands up here. That little +$/s is your engine. Bigger stations, bigger engine. It’s basically physics.',target:'.hud > .stat'},
- {title:'The drones are coming',text:'Web orders stack up in this counter. The more that wait, the louder it gets. Send them from Deliveries and pocket the bonus.',target:'.stock-online',tray:'factory'},
+ {title:'The drones are coming',text:'Web orders stack up in this counter and pay a third more than walk-ins. The packing bar keeps jars aside for them, so send them from Deliveries whenever it lights up.',target:'.stock-online',tray:'factory'},
  {title:'Then build the empire',text:'Milestones, daily rewards, more stores across town. All of it lives in Empire. Now go. The plants aren’t going to grow themselves. Well, they are. Go anyway.',target:'[data-tray=empire]',cta:'Let’s grow'}
 ];
 export function mountStartGuide({showTray,collapse,fit}){

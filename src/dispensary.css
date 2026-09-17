@@ -59,3 +59,6 @@ progress::-moz-progress-bar{background:var(--station-tier,#c7e39f);border-radius
 .station-upgrade .next-appearance{color:#adc4b1;font-size:.8125rem;margin-top:4px}
 .world .marker{font-size:.75rem;padding:6px 8px;color:var(--station-tier,#d0e6b6)}
 .world .marker.selected{color:#203b2a;background:var(--station-tier,#d0e6b6)}
+
+/* Wide screens: non-selected station pills step back so the scene reads first. */
+@media(min-width:780px){.world .marker:not(.selected){opacity:.72}.world .marker:not(.selected):hover,.world .marker:not(.selected):focus-visible{opacity:1}.world .marker{padding:5px 7px}}

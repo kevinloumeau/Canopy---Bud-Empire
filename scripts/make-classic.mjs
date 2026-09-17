@@ -11,3 +11,11 @@ if (compatible === html) {
 }
 
 await writeFile(file, compatible);
+
+// Stamp the service worker cache with this build's script hash so each deploy activates a fresh cache and drops the old one.
+const hash = (compatible.match(/assets\/shift-([^".]+)\.js/) || [])[1];
+if (hash) {
+  const swFile = new URL('../dist/sw.js', import.meta.url);
+  const sw = await readFile(swFile, 'utf8');
+  await writeFile(swFile, sw.replace("const CACHE = 'canopy-v1';", `const CACHE = 'canopy-${hash}';`));
+}

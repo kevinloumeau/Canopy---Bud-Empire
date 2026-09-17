@@ -35,7 +35,8 @@ export function mountOperations({getState,format,changed,visit,mainFlow}){
  return {showTab,render(){const state=getState(),p=state.empire,n=p.network;
   $('dayPhase').textContent=atmosphere(n).name;$('mainBottleneck').textContent=mainFlow(false);
   BRANCH_NAMES.forEach((_,i)=>{const s=n.stores[i],owned=p.stores[i].level>0;
-   for(let j=1;j<4;j++)$('opTab'+i+j).disabled=!owned;
+   // Unopened stores show only Overview; the management tabs appear once the store exists.
+   for(let j=1;j<4;j++){$('opTab'+i+j).disabled=!owned;$('opTab'+i+j).hidden=!owned;}if(!owned&&selected[i])showTab(i,0);
    const g=openingStatus(p,i);$('openingLabel'+i).textContent=g.title;$('openingProgress'+i).value=g.progress/g.target*100;$('openingClaim'+i).textContent=s.opening===3?'Established':format(g.reward);$('openingClaim'+i).disabled=!g.ready||!owned;$('openingLabel'+i).parentElement.hidden=!owned;
    $('harvestCount'+i).textContent=Math.floor(s.raw)+'/120 harvest';$('shelfCount'+i).textContent=shelfUsed(s)+'/'+shelfCapacity(p,i)+' shelf spaces';$('recipe'+i).value=String(s.recipe);Array.from($('recipe'+i).options).forEach((o,j)=>o.disabled=!n.recipes[j]);
    $('craftStatus'+i).textContent=LINES[s.recipe].seconds+'s / item · '+s.sold+' sold';

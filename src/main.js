@@ -8,6 +8,7 @@ import {mountStartGuide} from './start-guide.js';
 import {mountSettings} from './settings.js';
 import {requestCap,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
+import * as economy from './economy.js';
 import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assignManager, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, affordableImprovement, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent } from './progression.js';
 (function () {
   'use strict';
@@ -45,11 +46,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
   var firstRun=false;try{firstRun=!localStorage.getItem('shift-save')}catch(e){}
   var securitySelected=false;
   var state=load(),selected=0,toastTimer,dispatchSummary=null;
-  state.empire=migrateProgression(state.empire);state.empire.activeStore=selectedStore(state.empire);
-  // One-time kiosk preview grant for an existing local game; never deduct cash.
-  try{if(localStorage.getItem('shift-save')&&!localStorage.getItem('shift-kiosk-preview-granted')){
-    state.kiosk=true;localStorage.setItem('shift-kiosk-preview-granted','1');
-  }}catch(e){}
+  state.empire=migrateProgression(state.empire);state.empire.activeStore=selectedStore(state.empire);state.empire.retailBoost=retailBoost();
   function visualLight(){return state.lightMode?{night:state.lightMode==='night',darkness:state.lightMode==='night'?.34:0}:atmosphere(state.empire.network)}
   var lightToggle=document.createElement('button');lightToggle.id='lightToggle';lightToggle.type='button';lightToggle.onclick=function(){state.lightMode=visualLight().darkness>.15?'day':'night';save();renderUI()};document.querySelector('.speed-controls').appendChild(lightToggle);
   var speedButtons=Array.prototype.slice.call(document.querySelectorAll('[data-speed]'));
@@ -66,23 +63,31 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
       localStorage.setItem('shift-save',JSON.stringify(state));saveFailed=false;return true;
     }catch(e){if(!saveFailed)notify('SAVE UNAVAILABLE · keep this window open to retain progress');saveFailed=true;return false}
   }
-  function offlineReward(seconds){return state.gameSpeed===0?0:(Math.min(production(),flowerValue()/arrivalInterval())+branchRate(state.empire))*Math.min(14400,Math.max(0,seconds))}
+  // Demand ceiling counts whole baskets, so offline pay and reward scaling track real sales.
+  function incomeRate(){return Math.min(production(),flowerValue()*basketSize()/arrivalInterval())+branchRate(state.empire)}
+  function offlineReward(seconds){return state.gameSpeed===0?0:incomeRate()*Math.min(14400,Math.max(0,seconds))}
+  // Daily, goal and event payouts grow with the shop so they are still worth a tap hours in.
+  function rewardScale(){return economy.rewardScale(incomeRate())}
   function collectOffline(elapsed){
     var away=elapsed===undefined?Math.max(0,(Date.now()-state.lastSeen)/1000):elapsed;
     var seconds=Math.min(14400,away);if(state.gameSpeed!==0)accrueOnlineRequests(seconds);
-    var rates=[Math.min(production(),flowerValue()/arrivalInterval())].concat(STORES.map(function(_,i){return storeRate(state.empire,i)}));
+    var rates=[Math.min(production(),flowerValue()*basketSize()/arrivalInterval())].concat(STORES.map(function(_,i){return storeRate(state.empire,i)}));
     var earnings=rates.map(function(rate){return state.gameSpeed===0?0:rate*seconds});
     var reward=earnings.reduce(function(a,b){return a+b},0);
     if(reward>=1)add(reward);
-    if(seconds>=60)state.empire.returnReport={seconds:away,earnings:earnings,goals:[0,1,2].filter(function(i){var g=goalStatus(state.empire,i);return g.progress>=g.target}).length};
+    if(seconds>=60)state.empire.returnReport={seconds:away,earnings:earnings,goals:[0,1,2].filter(function(i){var g=goalStatus(state.empire,i,rewardScale());return g.progress>=g.target}).length};
     save();return reward>=1?reward:0;
   }
 
   function menuStrains(){return state.menuStrains.filter(function(i){return state.strains[i]>0})}
   function menuChoice(sequence){var menu=menuStrains();return menu[sequence%menu.length]}
+  // Regulars reach for the everyday strain and collectors for a boutique one when the menu offers it.
+  function strainFor(c){var preferred=economy.preferredStrain(c.kind,menuStrains(),state.strains);return preferred===null?menuChoice(c.id):preferred}
+  // Satisfaction tips: patience stretches with Queue comfort, and Lasting effects sweeten every happy sale.
+  function customerSaleBonus(c){var bonus=satisfyCustomer(state.empire,-1,c.kind,c.strain===0?'everyday':'boutique',c.waitSeconds||0,1+state.comfortLevel*.15);if(bonus>1)bonus+=state.durationLevel*.03;return bonus*(c.eventGuest&&c.strain>0?1.25:1)}
   function format(){return FORMATS[state.productMenu.active]}
   var playSound=makeSound();
-  function flowerValue(index){if(index===undefined){var menu=menuStrains();return menu.reduce(function(total,i){return total+flowerValue(i)},0)/menu.length}var i=index;return Math.round(STRAINS[i].price*(1+Math.max(0,state.strains[i]-1)*.1)*saleMultiplier(state.empire)*format().value)}
+  function flowerValue(index){if(index===undefined){var menu=menuStrains();return menu.reduce(function(total,i){return total+flowerValue(i)},0)/menu.length}var i=index;return Math.round(STRAINS[i].price*(1+Math.max(0,state.strains[i]-1)*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*format().value)}
   function onlineValue(sequence){return Math.round(flowerValue(menuChoice(sequence===undefined?state.onlineCompleted:sequence))*4/3*(1+state.onlineBonusLevel*.05))}
   function strainCost(i){return state.strains[i]?Math.round(Math.max(250,STRAINS[i].unlock*.35)*Math.pow(1.85,state.strains[i]-1)):STRAINS[i].unlock}
   function buyStrain(i){
@@ -101,7 +106,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     if($('formatBenefit')){var f=format();$('formatBenefit').textContent=[['Standard value','Steady demand'],['+45% value','Faster pickup','Slower packing'],['+120% value','Lower demand','Slower packing']][state.productMenu.active].join(' · ');$('formatBenefit').title=f.detail;}
     if($('prestigeStart')){var offer=prestigeOffer(state);$('prestigeStart').disabled=!offer.eligible;$('prestigeStatus').textContent='Rank '+offer.rank+' · '+(1+offer.rank*.2).toFixed(1)+'× base sales';$('prestigeStart').textContent=offer.rank>=19?'Maximum prestige':'Reopen · '+fmt(offer.target);$('soundToggle').textContent=state.sound?'Sound on':'Sound off';$('soundToggle').setAttribute('aria-pressed',String(state.sound));}
 
-    $('flowerSummary').textContent=menuStrains().length+(menuStrains().length===1?' strain · ':' strains · ')+fmt(flowerValue())+'/pickup';
+    var boutiqueOnMenu=menuStrains().some(function(i){return i>0});$('flowerSummary').textContent=menuStrains().length+(menuStrains().length===1?' strain · ':' strains · ')+fmt(flowerValue())+'/pickup · '+(state.empire.reputation>=20&&!boutiqueOnMenu?'collectors want a boutique strain':menuStrains().indexOf(0)<0?'regulars want Meadow Mint':'regulars take Meadow Mint, collectors the rest');
     STRAINS.forEach(function(strain,i){
       var level=state.strains[i],active=state.menuStrains.indexOf(i)>=0,price=strainCost(i);
       $('flowerLevel'+i).textContent=level?'Level '+level+' / 10':'Not unlocked';
@@ -114,15 +119,14 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     });
   }
   function fmt(n){if(n<1000)return '$'+Math.floor(n).toLocaleString();var units=[['T',1e12],['B',1e9],['M',1e6],['K',1e3]];for(var i=0;i<units.length;i++)if(n>=units[i][1])return '$'+(n/units[i][1]).toFixed(n/units[i][1]>=100?0:n/units[i][1]>=10?1:2)+units[i][0]}
-  function capacity(i){return state.lines[i]>0?(1+(state.lines[i]-1)*.4)*(1+state.staff[i]*.3)*state.multiplier:0}
-  var STATION_TIERS=['Starter','Established','Advanced','Premium','Signature','Elite','Flagship'];
-  var TIER_COLORS=['#b4c5a0','#92d5a4','#8ad6d9','#efd18c','#afbfdb','#c5a7cd','#f2e6bf'];
-  var TIER_LEVELS=[1,10,20,30,50,75,100];
-  function stationTier(i){var tier=0;for(var n=1;n<TIER_LEVELS.length;n++)if(state.lines[i]>=TIER_LEVELS[n])tier=n;return tier}
-  function nextCapacity(i){return (1+state.lines[i]*.4)*(1+state.staff[i]*.3)*state.multiplier}
+  function capacity(i){return economy.capacity(state.lines[i],state.staff[i],state.multiplier)}
+  var STATION_TIERS=economy.STATION_TIERS,TIER_COLORS=economy.TIER_COLORS,TIER_LEVELS=economy.TIER_LEVELS;
+  function stationTier(i){return economy.stationTier(state.lines[i])}
+  function retailBoost(){return economy.retailBoost(state.lines)}
+  function nextCapacity(i){return economy.capacity(state.lines[i]+1,state.staff[i],state.multiplier)}
   function isOpen(i){return i===0||state.lines[i-1]>0}
-  // Customers buy a basket of bags that grows with the order desk, so the counters move items, not just people.
-  function basketSize(){return 1+Math.floor(Math.max(0,state.lines[4]-1)/2)}
+  // Customers buy a basket of bags that grows with the order desk and doubles per retail tier, so the counters move items, not just people.
+  function basketSize(){return economy.basketSize(state.lines)}
   function stationThroughput(i){
     if(!state.lines[i])return 0;
     if(i<4)return capacity(i)/[2,3,2,2][i]/(i===3?format().packing:1);
@@ -130,7 +134,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     return (i===4?Math.min(capacity(i)/2,service+kioskCount()/kioskServiceDuration()):service)*basketSize();
   }
   function production(){return Math.min.apply(null,LINES.map(function(_,i){return stationThroughput(i)}))*flowerValue()}
-  function batchSize(i){return 1+(state.lines[i]-1)*.4}
+  function batchSize(i){return economy.batchSize(state.lines[i])}
   function cycleSpeed(i){return (1+state.staff[i]*.3)*state.multiplier/(i===3?format().packing:1)}
   var batchRemainder=[0,0,0,0];
   var readyWork=0;
@@ -138,8 +142,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
   function queueLimit(){return Math.min(20,Math.min(12,6+Math.floor(Math.max(0,state.lines[4]-1)/2)+Math.floor(state.staff[4]/2))+state.queueLevel*2)}
   function counterServiceDuration(i,serviceCapacity){
     // Both equipment and training shorten the handoff, with gentler gains at high levels.
-    var rate=serviceCapacity===undefined?capacity(i):serviceCapacity;
-    return (1.4+Math.max(1.2/Math.pow(rate,.15),[2,3][i-4]/rate))*(i===5?format().service:1);
+    return economy.counterServiceDuration(i,serviceCapacity===undefined?capacity(i):serviceCapacity,format().service);
   }
   function advanceCounterService(c,i,dt){
     if(c.serviceStation!==i){c.serviceStation=i;c.serviceElapsed=0}
@@ -148,7 +151,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     return work[i]>=1;
   }
   function simulate(dt){
-    accrueOnlineRequests(dt);
+    state.empire.retailBoost=retailBoost();accrueOnlineRequests(dt);
     add(branchRate(state.empire)*dt);tickBranches(state.empire,dt);var operationResult=tickOperations(state,dt);if(operationResult.revenue)add(operationResult.revenue);if(operationResult.deliveries){state.onlineCompleted+=operationResult.deliveries;recordEvent(state.empire,'online',operationResult.deliveries)}
     arrival+=dt;
     if(arrival>=arrivalInterval()&&customers.filter(function(c){return !c.ordered&&c.phase!=='leaving'}).length<queueLimit()){
@@ -159,12 +162,13 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     customers=customers.filter(function(c){return c.phase!=='leaving'||c.t<1});
     if(state.lines[5]){
       var pickups=customers.filter(function(c){return c.ordered&&!c.bag}).sort(function(a,b){return (a.pickupTicket||a.id)-(b.pickupTicket||b.id)}).slice(0,1).filter(function(c){return c.phase==='pickup'&&!c.walking&&Math.hypot(c.x-4,c.z-6.4)<.01});
-      if(pickups.length&&state.stock[4]>0){var served=advanceCounterService(pickups[0],5,dt)?1:0;if(served>0){work[5]=0;var bags=Math.max(1,Math.min(pickups[0].bags||1,state.stock[4]));pickups[0].bags=bags;state.stock[4]-=bags;state.sold+=bags;playSound('sale',state.sound);recordEvent(state.empire,'pickup',served);add(pickups.slice(0,served).reduce(function(total,c){return total+(c.salePrice||flowerValue())*(c.bags||1)*satisfyCustomer(state.empire,-1,c.kind,c.strain===0?'everyday':'boutique',c.waitSeconds||0)*(c.eventGuest&&c.strain>0?1.25:1)},0));pickups.slice(0,served).forEach(function(c){c.phase='leaving';c.t=0;c.bag=true;c.effectAge=0;recentPickupRatings.push(customerRatings(c).highness);if(recentPickupRatings.length>20)recentPickupRatings.shift()});burst(machinePos[5],colors.acid)}}else work[5]=0;
+      if(pickups.length&&state.stock[4]>0){var served=advanceCounterService(pickups[0],5,dt)?1:0;if(served>0){work[5]=0;var bags=Math.max(1,Math.min(pickups[0].bags||1,state.stock[4]));pickups[0].bags=bags;state.stock[4]-=bags;state.sold+=bags;playSound('sale',state.sound);recordEvent(state.empire,'pickup',served);add(pickups.slice(0,served).reduce(function(total,c){return total+(c.salePrice||flowerValue())*(c.bags||1)*customerSaleBonus(c)},0));pickups.slice(0,served).forEach(function(c){c.phase='leaving';c.t=0;c.bag=true;c.effectAge=0;recentPickupRatings.push(customerRatings(c).highness);if(recentPickupRatings.length>20)recentPickupRatings.shift()});burst(machinePos[5],colors.acid)}}else work[5]=0;
     }
-    // Prepare pickup bags independently of the number of customers collecting.
-    if(state.lines[4]&&state.stock[3]>0&&state.stock[4]<readyCapacity()){
+    // Prepare pickup bags independently of the number of customers collecting, but never from jars a waiting web order needs.
+    var spareJars=state.stock[3]-reservedJars();
+    if(state.lines[4]&&spareJars>0&&state.stock[4]<readyCapacity()){
       readyWork+=dt*capacity(4)/2;
-      var bags=Math.min(Math.floor(readyWork),state.stock[3],readyCapacity()-state.stock[4]);
+      var bags=Math.min(Math.floor(readyWork),spareJars,readyCapacity()-state.stock[4]);
       if(bags>0){readyWork-=bags;state.stock[3]-=bags;state.stock[4]+=bags}
     }else readyWork=Math.min(readyWork,.9);
     if(state.lines[4]){
@@ -172,7 +176,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
       var waitingPickups=customers.filter(function(c){return c.ordered&&!c.bag}),reserved=waitingPickups.reduce(function(n,c){return n+(c.bags||1)},0),available=Math.max(0,state.stock[4]-reserved);
       if(queue.length&&waitingPickups.length<pickupLimit()&&available>0){
         var count=advanceCounterService(queue[0],4,dt)?1:0;
-        for(var j=0;j<count;j++){queue[j].bags=Math.max(1,Math.min(basketSize(),available));available-=queue[j].bags;queue[j].strain=menuChoice(queue[j].id);queue[j].salePrice=flowerValue(queue[j].strain);queue[j].ordered=true;queue[j].pickupTicket=++pickupQueueSequence;queue[j].phase='toPickup';queue[j].t=0}if(count)work[4]=0;
+        for(var j=0;j<count;j++){queue[j].bags=Math.max(1,Math.min(basketSize(),available));available-=queue[j].bags;queue[j].strain=strainFor(queue[j]);queue[j].salePrice=flowerValue(queue[j].strain);queue[j].ordered=true;queue[j].pickupTicket=++pickupQueueSequence;queue[j].phase='toPickup';queue[j].t=0}if(count)work[4]=0;
       }else work[4]=0;
     }
     if(state.kiosk)for(var kioskIndex=0;kioskIndex<kioskCount();kioskIndex++){
@@ -181,7 +185,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
       var kioskReserved=customers.filter(function(c){return c.ordered&&!c.bag}).length;
       if(kioskCustomer&&kioskReserved<pickupLimit()&&state.stock[4]>kioskReserved){
         kioskCustomer.orderTime=(kioskCustomer.orderTime||0)+dt;
-        if(kioskCustomer.orderTime>=kioskServiceDuration()){kioskCustomer.strain=menuChoice(kioskCustomer.id);kioskCustomer.salePrice=flowerValue(kioskCustomer.strain);kioskCustomer.ordered=true;kioskCustomer.pickupTicket=++pickupQueueSequence;kioskCustomer.phase='toPickup'}
+        if(kioskCustomer.orderTime>=kioskServiceDuration()){kioskCustomer.strain=strainFor(kioskCustomer);kioskCustomer.salePrice=flowerValue(kioskCustomer.strain);kioskCustomer.ordered=true;kioskCustomer.pickupTicket=++pickupQueueSequence;kioskCustomer.phase='toPickup'}
       }
     }
     for(var i=3;i>=0;i--){
@@ -201,7 +205,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     }
     if(autoDroneReady(state.autoDrone,dt,state.lines[4]>0&&state.stock[3]>=onlineSize()&&onlineRequestsReady()>0))sendOnlineOrders(autoDroneLimit(state.autoDrone),true);
   }
-  function staffCost(i){return Math.floor(20*Math.pow(1.6,state.staff[i]))}
+  function staffCost(i){return economy.staffCost(state.staff[i])}
   function idTrainingQuote(limit){
     var levels=0,total=0;
     while(levels<limit&&state.idStaff+levels<10000){
@@ -241,28 +245,30 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
   function buyThirdKiosk(){if(!state.secondKiosk||state.thirdKiosk||state.money<100000)return;state.money-=100000;state.thirdKiosk=true;save();renderUI();notify('THIRD KIOSK OPEN','upgrade')}
   function buySecondKiosk(){if(!state.kiosk||state.secondKiosk||state.money<50000)return;state.money-=50000;state.secondKiosk=true;save();renderUI();notify('SECOND KIOSK OPEN','upgrade')}
   function kioskRoute(index){var z=6.8-(index||0)*1.8;return [{x:-8.95,z:z},{x:-8.45,z:z},{x:-8.45,z:9.65},{x:-10.5,z:9.65},{x:-11.7,z:9.3},{x:-12.4,z:7.8}]}
-  var COMPONENTS=[{key:'trafficLevel',name:'Customer traffic',base:750,max:8},{key:'pickupLevel',name:'Pickup waiting area',base:1200,max:4},{key:'readyLevel',name:'Ready-bag storage',base:600,max:8},{key:'curingLevel',name:'Curing equipment',base:1800,max:8},{key:'durationLevel',name:'Lasting effects',base:2400,max:8},{key:'kioskSpeedLevel',name:'Kiosk software',base:3000,max:8},{key:'onlineBonusLevel',name:'Premium packaging',base:2200,max:8},{key:'comfortLevel',name:'Queue comfort',base:1400,max:8},{key:'scannerLevel',name:'ID scanner',base:1600,max:8}];
+  var COMPONENTS=[{key:'trafficLevel',name:'Floor flow',base:750,max:8},{key:'pickupLevel',name:'Pickup waiting area',base:1200,max:4},{key:'readyLevel',name:'Ready-bag storage',base:600,max:8},{key:'curingLevel',name:'Curing equipment',base:1800,max:8},{key:'durationLevel',name:'Lasting effects',base:2400,max:8},{key:'kioskSpeedLevel',name:'Kiosk software',base:3000,max:8},{key:'onlineBonusLevel',name:'Premium packaging',base:2200,max:8},{key:'comfortLevel',name:'Queue comfort',base:1400,max:8},{key:'scannerLevel',name:'ID scanner',base:1600,max:8}];
   function kioskServiceDuration(){return .8+1.2/(1+state.kioskSpeedLevel*.15)}
   function securityDuration(){return .9/((1+state.idStaff*.3)*(1+state.scannerLevel*.12))}
   function arrivalInterval(){return (atmosphere(state.empire.network).night?1.2:.9)/(1+state.trafficLevel*.15)/format().demand}
   function pickupLimit(){return 4+state.pickupLevel*2}
-  function readyCapacity(){return 100+state.readyLevel*50}
+  function readyCapacity(){return economy.readyCapacity(state.readyLevel,state.lines)}
   function componentCost(i){return Math.round(COMPONENTS[i].base*Math.pow(1.8,state[COMPONENTS[i].key]))}
   function upgradeComponent(i){var c=COMPONENTS[i],price=componentCost(i);if(state[c.key]>=c.max||state.money<price)return;state.money-=price;state[c.key]++;save();renderUI();notify(c.name.toUpperCase()+' · LEVEL '+state[c.key],'upgrade')}
-  function renderComponents(){COMPONENTS.forEach(function(c,i){var level=state[c.key],max=level>=c.max;var benefits=[Math.round(60/arrivalInterval())+' → '+Math.round(60/(.9/(1+(level+1)*.15)))+' arrivals / min',pickupLimit()+' → '+(pickupLimit()+2)+' picking up',readyCapacity()+' → '+(readyCapacity()+50)+' ready bags','+'+(level*4)+' → +'+((level+1)*4)+' highness points',Math.round((1+level*.3)*100)+'% → '+Math.round((1+(level+1)*.3)*100)+' effect duration','+'+(level*15)+'% → +'+((level+1)*15)+'% kiosk speed','+'+(level*5)+'% → +'+((level+1)*5)+'% online value',Math.round(100/(1+level*.2))+'% → '+Math.round(100/(1+(level+1)*.2))+'% wait penalty','+'+(level*12)+'% → +'+((level+1)*12)+'% check speed'];$('componentBenefit'+i).textContent=max?['More frequent arrivals',pickupLimit()+' picking up',readyCapacity()+' ready bags','+32 highness points','340% effect duration','+120% kiosk speed','+40% online value','38% wait penalty','+96% check speed'][i]:benefits[i];$('componentLevel'+i).textContent='Level '+level+' / '+c.max+(max?' · Maximum':state.money<componentCost(i)?' · '+fmt(componentCost(i)-state.money)+' to go':'');$('componentPrice'+i).textContent=max?'MAX':fmt(componentCost(i));$('componentBuy'+i).disabled=max||state.money<componentCost(i)});if(shopBrowser)shopBrowser.render()}
+  function renderComponents(){COMPONENTS.forEach(function(c,i){var level=state[c.key],max=level>=c.max;var benefits=['+'+(level*10)+'% → +'+((level+1)*10)+'% walking speed',pickupLimit()+' → '+(pickupLimit()+2)+' picking up',readyCapacity()+' → '+economy.readyCapacity(level+1,state.lines)+' ready bags','+'+(level*3)+'% → +'+((level+1)*3)+'% sale value','+'+(level*3)+'% → +'+((level+1)*3)+'% happy tips','+'+(level*15)+'% → +'+((level+1)*15)+'% kiosk speed','+'+(level*5)+'% → +'+((level+1)*5)+'% online value',Math.round(economy.patience('hurried',level))+'s → '+Math.round(economy.patience('hurried',level+1))+'s patience','+'+(level*12)+'% → +'+((level+1)*12)+'% check speed'];$('componentBenefit'+i).textContent=max?['+80% walking speed',pickupLimit()+' picking up',readyCapacity()+' ready bags','+24% sale value','+24% happy tips','+120% kiosk speed','+40% online value',Math.round(economy.patience('hurried',level))+'s patience','+96% check speed'][i]:benefits[i];$('componentLevel'+i).textContent='Level '+level+' / '+c.max+(max?' · Maximum':state.money<componentCost(i)?' · '+fmt(componentCost(i)-state.money)+' to go':'');$('componentPrice'+i).textContent=max?'MAX':fmt(componentCost(i));$('componentBuy'+i).disabled=max||state.money<componentCost(i)});if(shopBrowser)shopBrowser.render()}
   function queueCost(){return Math.round(150*Math.pow(1.8,state.queueLevel))}
   function upgradeQueue(){if(queueLimit()>=20||state.money<queueCost())return;state.money-=queueCost();state.queueLevel++;save();renderUI();notify('LINE EXPANDED · '+queueLimit()+' customers','upgrade')}
-  function storageCapacity(){return 100+state.storageLevel*100}
+  function storageCapacity(){return economy.storageCapacity(state.storageLevel,state.lines)}
   function storageCost(){return Math.round(250*Math.pow(1.7,state.storageLevel))}
   function upgradeStorage(){if(state.storageLevel>=20||state.money<storageCost())return;state.money-=storageCost();state.storageLevel++;save();renderUI();notify('STORAGE EXPANDED · '+storageCapacity()+' per stage','upgrade')}
-  function onlineSize(){return 4+(state.onlineCompleted%5)*3}
+  function onlineSize(){return economy.onlineSize(state.onlineCompleted,state.lines)}
+  // Jars held back from bag prep so the next web order can leave as soon as it is requested.
+  function reservedJars(){return state.lines[4]&&onlineRequestsReady()>0?onlineSize():0}
   // Web requests arrive slowly at first and speed up with completed orders; the maths lives in deliveries.js.
   function onlineRequestCap(){return requestCap(state.onlineCompleted)}
   function accrueOnlineRequests(seconds){accrueRequests(state,seconds)}
   function onlineRequestsReady(){return requestsReady(state)}
   function onlineBatch(limit,jarBudget){
     var jars=jarBudget===undefined?state.stock[3]:jarBudget,count=0,used=0,reward=0;limit=Math.min(limit,onlineRequestsReady());
-    if(state.lines[4])while(count<limit){var need=4+((state.onlineCompleted+count)%5)*3;if(jars<need)break;jars-=need;used+=need;reward+=need*onlineValue(state.onlineCompleted+count);count++}
+    if(state.lines[4])while(count<limit){var need=economy.onlineSize(state.onlineCompleted+count,state.lines);if(jars<need)break;jars-=need;used+=need;reward+=need*onlineValue(state.onlineCompleted+count);count++}
     return {count:count,jars:used,reward:reward};
   }
   function sendOnlineOrders(limit,automatic){
@@ -286,12 +292,12 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
   }
   function fulfillOnline(){sendOnlineOrders(1)}
 
-  function cost(i){return Math.floor(LINES[i].base*Math.pow(1.16,state.lines[i]))}
+  function cost(i){return economy.stationCost(LINES[i].base,state.lines[i])}
   function maxStationUpgrade(i){
     var levels=0,total=0,level=state.lines[i];
     if(!isOpen(i))return {levels:0,cost:0};
     while(level+levels<10000){
-      var price=Math.floor(LINES[i].base*Math.pow(1.16,level+levels));
+      var price=economy.stationCost(LINES[i].base,level+levels);
       if(!Number.isFinite(price)||total+price>state.money)break;
       total+=price;levels++;
     }
@@ -337,7 +343,9 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
       var ys=points.map(function(p){return p.y}),lo=Math.min.apply(null,ys),hi=Math.max.apply(null,ys),shade=ctx.createLinearGradient(0,lo,0,Math.max(lo+1,hi));
       shade.addColorStop(0,fill);shade.addColorStop(1,shadeColor(fill,.9));ctx.fillStyle=shade;
     }else ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=Math.max(.4,Math.min(1,unit*.021));ctx.lineJoin='round';ctx.stroke()}}
-  function drawBox(x,z,y,w,d,h,palette){var p=palette||[colors.oliveTop,colors.oliveLeft,colors.oliveRight],b0=project(x-w/2,y,z-d/2),b1=project(x+w/2,y,z-d/2),b2=project(x+w/2,y,z+d/2),b3=project(x-w/2,y,z+d/2),t0=project(x-w/2,y+h,z-d/2),t1=project(x+w/2,y+h,z-d/2),t2=project(x+w/2,y+h,z+d/2),t3=project(x-w/2,y+h,z+d/2);poly(Math.cos(angle)>=0?[b3,b2,t2,t3]:[b0,b1,t1,t0],p[1],w<.1||d<.04?null:'#ffffff28');poly(Math.sin(angle)>=0?[b2,b1,t1,t2]:[b3,b0,t0,t3],p[2],w<.1||d<.04?null:'#ffffff28');poly([t0,t1,t2,t3],p[0],w<.1||d<.04?null:'#ffffff28')}
+  function drawBox(x,z,y,w,d,h,palette){var p=palette||[colors.oliveTop,colors.oliveLeft,colors.oliveRight],b0=project(x-w/2,y,z-d/2),b1=project(x+w/2,y,z-d/2),b2=project(x+w/2,y,z+d/2),b3=project(x-w/2,y,z+d/2),t0=project(x-w/2,y+h,z-d/2),t1=project(x+w/2,y+h,z-d/2),t2=project(x+w/2,y+h,z+d/2),t3=project(x-w/2,y+h,z+d/2);poly(Math.cos(angle)>=0?[b3,b2,t2,t3]:[b0,b1,t1,t0],p[1],w<.1||d<.04?null:'#ffffff28');poly(Math.sin(angle)>=0?[b2,b1,t1,t2]:[b3,b0,t0,t3],p[2],w<.1||d<.04?null:'#ffffff28');poly([t0,t1,t2,t3],w>=.6&&d>=.6&&/^#[0-9a-f]{6}$/i.test(p[0])?litTop([t0,t1,t2,t3],p[0]):p[0],w<.1||d<.04?null:'#ffffff28')}
+  // Soft key light from the upper right: wide top surfaces pick up a gentle left-to-right lift.
+  function litTop(points,fill){var xs=points.map(function(q){return q.x}),lo=Math.min.apply(null,xs),hi=Math.max.apply(null,xs),g=ctx.createLinearGradient(lo,0,Math.max(lo+1,hi),0);g.addColorStop(0,shadeColor(fill,.955));g.addColorStop(.5,fill);g.addColorStop(1,shadeColor(fill,1.045));return g}
   // Ambient shadow: a soft band on a floor plane, dark along one edge and fading away from it.
   function shadowBand(x0,x1,zNear,zFar,y,alpha){var a=project((x0+x1)/2,y,zNear),b=project((x0+x1)/2,y,zFar),g=ctx.createLinearGradient(a.x,a.y,b.x,b.y);g.addColorStop(0,'rgba(14,28,20,'+alpha+')');g.addColorStop(1,'rgba(14,28,20,0)');poly([project(x0,y,zNear),project(x1,y,zNear),project(x1,y,zFar),project(x0,y,zFar)],g)}
   function shadowBandX(z0,z1,xNear,xFar,y,alpha){var a=project(xNear,y,(z0+z1)/2),b=project(xFar,y,(z0+z1)/2),g=ctx.createLinearGradient(a.x,a.y,b.x,b.y);g.addColorStop(0,'rgba(14,28,20,'+alpha+')');g.addColorStop(1,'rgba(14,28,20,0)');poly([project(xNear,y,z0),project(xNear,y,z1),project(xFar,y,z1),project(xFar,y,z0)],g)}
@@ -362,6 +370,10 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     machinePos.forEach(function(q,i){pool(q.x,q.y+.04,q.z+.9,2,.24,i===1?cool:warm)});
     // Shop-floor downlights, the lit entrance, and the online kiosk sign.
     [[-4,4],[4,4],[0,7.5]].forEach(function(q){pool(q[0],.03,q[1],2.2,.26,warm)});
+    // Counters and the grow rack keep their own light at night so the interior stays legible.
+    pool(-4,.03,6.4,2.6,.34,warm);pool(4,.03,6.4,2.6,.34,warm);pool(0,9.44,-6.2,2.6,.3,'#cfe6ff');halo(0,11.4,-6.2,2.2,.16,'#cfe6ff');
+    // Purple grow pendants on the top floor.
+    [-3.9,-1.3,1.3,3.9].forEach(function(lx){pool(lx,9.44,-3.55,1.8,.36,'#c98bff');halo(lx,11.8,-3.55,1.1,.3,'#d9a8ff')});
     pool(-9.1,.04,10.41,1.7,.32,warm);halo(-9.1,2.4,10.41,.9,.35,'#ffe2a5');
     pool(-10.7,7.09,1.5,1.6,.34,cool);halo(-10.7,9.2,1.5,1.3,.45,'#bfe9d8');
     // Fascia strips glow a little stronger at night in place of any hanging bulbs.
@@ -385,7 +397,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     }else ctx.fillStyle=fill;ctx.fill();
   }
   var shadeCache=new Map();
-  function shadeColor(hex,factor){var key=hex+':'+factor;if(shadeCache.has(key))return shadeCache.get(key);var result='#'+[1,3,5].map(function(i){return Math.round(parseInt(hex.slice(i,i+2),16)*factor).toString(16).padStart(2,'0')}).join('');shadeCache.set(key,result);return result}
+  function shadeColor(hex,factor){var key=hex+':'+factor;if(shadeCache.has(key))return shadeCache.get(key);var result='#'+[1,3,5].map(function(i){return Math.min(255,Math.round(parseInt(hex.slice(i,i+2),16)*factor)).toString(16).padStart(2,'0')}).join('');shadeCache.set(key,result);return result}
   function landscapeTree(x,z,size){
     var root=project(x,.06,z);ellipse(root.x+unit*.45,root.y+unit*.12,unit*size*.9,unit*size*.38,'#31544225');
     worldLine([[x,0,z],[x,2.1*size,z]],'#977550',.15);
@@ -458,6 +470,8 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     ellipse(top.x,top.y-unit*.075,r*1.06,r*.46,'#ddc893');
     if(unit>=24){ctx.strokeStyle='#f4e6bb80';ctx.lineWidth=unit*.012;ctx.beginPath();ctx.ellipse(top.x,top.y-unit*.084,r*.78,r*.29,0,Math.PI,Math.PI*2);ctx.stroke()}
   }
+  // Glass: translucent tint plus a diagonal sheen so panes read as glazing rather than flat film.
+  function glassPane(points,tint){poly(points,tint);var xs=points.map(function(q){return q.x}),ys=points.map(function(q){return q.y}),x0=Math.min.apply(null,xs),x1=Math.max.apply(null,xs),y0=Math.min.apply(null,ys),y1=Math.max.apply(null,ys),g=ctx.createLinearGradient(x0,y0,x1,y1);g.addColorStop(0,'rgba(255,255,255,.14)');g.addColorStop(.32,'rgba(255,255,255,.02)');g.addColorStop(.5,'rgba(255,255,255,.08)');g.addColorStop(.68,'rgba(255,255,255,0)');poly(points,g)}
   function worldLine(points,color,weight){ctx.beginPath();points.forEach(function(p,i){var q=project(p[0],p[1],p[2]);if(i)ctx.lineTo(q.x,q.y);else ctx.moveTo(q.x,q.y)});ctx.strokeStyle=color;ctx.lineWidth=Math.max(.65,unit*weight);ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke()}
   function carton(x,z,y,size){
     drawBox(x,z,y,size,size*.75,size*.65,['#e5bc80','#a57c4f','#c99c65']);
@@ -711,7 +725,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     if(expressive)hair=pickColor(['#ac83b5','#648f9c','#bf819d','#aaad72'],311);
     function point(dx,y){return{x:p.x+dx*u,y:p.y-(y+bob)*u}}
     function shape(coords,color){poly(coords.map(function(q){return point(q[0],q[1])}),color)}
-    function block(dx,y,w,h,r,color){var q=point(dx,y);ctx.beginPath();ctx.roundRect(q.x,q.y,w*u,h*u,r*u);ctx.fillStyle=color;ctx.fill()}
+    function block(dx,y,w,h,r,color){var q=point(dx,y);ctx.beginPath();ctx.roundRect(q.x,q.y,w*u,h*u,r*u);if(h>=.25&&/^#[0-9a-f]{6}$/i.test(color)){var g=ctx.createLinearGradient(q.x,q.y,q.x,q.y+h*u);g.addColorStop(0,shadeColor(color,1.06));g.addColorStop(1,shadeColor(color,.9));ctx.fillStyle=g}else ctx.fillStyle=color;ctx.fill()}
     function limb(coords,color,w){ctx.beginPath();coords.forEach(function(q,i){var v=point(q[0],q[1]);if(i)ctx.lineTo(v.x,v.y);else ctx.moveTo(v.x,v.y)});ctx.lineWidth=w*u;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle=color;ctx.stroke()}
     ellipse(p.x,p.y+u*.025,u*.32,u*.085,'#071d2025');
     // Flat, elongated silhouettes with geometric shoes and a restrained walking stride.
@@ -810,7 +824,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
   }
   function moveToIdCheck(c,dt){
     var queue=customers.filter(function(q){return q.idChecked===false}),index=queue.indexOf(c);
-    var startX=c.x,startZ=c.z,budget=dt*2.8;
+    var startX=c.x,startZ=c.z,budget=dt*economy.walkSpeed(state.trafficLevel);
     c.phase='idCheck';
     if(index===0&&c.idApproach){
       while(c.idApproach.length&&budget>0){
@@ -840,7 +854,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
   }
   function moveQueuedCustomer(c,dt){
     if(c.idChecked===false){moveToIdCheck(c,dt);return}
-    var kind=c.phase==='leaving'?'exit':c.ordered?'pickup':c.kiosk?'kiosk':'order',route=kind==='kiosk'?kioskRoute(c.kioskIndex):queueRoute(c.ordered),budget=dt*2.8,startX=c.x,startZ=c.z;
+    var kind=c.phase==='leaving'?'exit':c.ordered?'pickup':c.kiosk?'kiosk':'order',route=kind==='kiosk'?kioskRoute(c.kioskIndex):queueRoute(c.ordered),budget=dt*economy.walkSpeed(state.trafficLevel),startX=c.x,startZ=c.z;
     if(c.routeKind!==kind){
       c.routeKind=kind;c.laneDistance=null;
       c.waypoints=(kind==='order'||kind==='kiosk')?[route[route.length-1]]:kind==='pickup'?(c.kiosk?[{x:-8,z:6.8-(c.kioskIndex||0)*1.8},{x:-7.1,z:5.3},{x:-1.3,z:5.3},{x:-.25,z:6.4},{x:-.25,z:9.65},{x:1.9,z:9.65},{x:1.9,z:9.6}]:[{x:-1.3,z:6.4},{x:-.25,z:6.4},{x:-.25,z:9.65},{x:1.9,z:9.65},{x:1.9,z:9.6}]):[{x:4,z:5.5},{x:8.1,z:6.5},{x:11.15,z:6.5},{x:11.15,z:-4.3},{x:10.25,z:-5.6},{x:10.25,z:-8.1},{x:7,z:-8.1},{x:-10.5,z:-8.1}];
@@ -1058,10 +1072,12 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     var x=-10.7,z=1.5,oak=['#cbb085','#7f6a4b','#ac9168'],green=['#86a795','#3e6250','#648a70'];
     // Cantilevered launch deck, attached to the rear sign supports.
     var padZ=z-2.25,steel=['#526659','#253b30','#3a5142'];
+    // A tie beam under the deck meets the mezzanine edge so the cantilever reads as attached.
     [-1.2,1.2].forEach(function(dx){
       drawBox(x+dx,z-1.05,.02,.12,.14,3.04,steel);
       worldLine([[x+dx,2.05,z-1.05],[x+dx,2.96,padZ-.65]],'#304638',.09);
     });
+    drawBox(x+.85,padZ,2.86,1.9,.14,.1,steel);
     drawBox(x,padZ,2.96,3.25,2.6,.16,steel);
     drawBox(x,padZ,3.12,3.04,2.38,.025,['#779080','#779080','#779080']);
     var ring=[];for(var r=0;r<=40;r++){var a=r/40*Math.PI*2;ring.push([x+Math.cos(a)*.85,3.15,padZ+Math.sin(a)*.85])}worldLine(ring,'#e5d8ab',.045);
@@ -1072,11 +1088,12 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     drawBox(x,z,-.24,4.4,3.8,.24,oak);
     drawPerson(x-.6,z-1.4,now,7,false,true,false);
     drawBox(x,z,.05,2.9,1.8,.95,green);drawBox(x,z,1,3.1,2,.14,['#ede4cb','#a79c81','#d2c5a5']);
-    for(var n=0;n<3;n++)jar(x-1+n*.5,z-.3,1.15);
+    // Packed boxes waiting for dispatch, the same packs that ride the tube, kept clear of the sign posts.
+    for(var n=0;n<3;n++)transportItem(x-.62+n*.42,1.15,z-.3,3);
     warmStrip([[x-1.45,.18,z+.84],[x+1.45,.18,z+.84]],false);
     // Shipping carton, tape dispenser, label printer, and a small order monitor.
-    carton(x+.65,z+.12,1.15,.7);
-    drawBox(x+.65,z+.12,1.61,.13,.54,.025,['#efddb0','#b8a075','#d9c493']);
+    carton(x+.8,z+.2,1.15,.7);
+    drawBox(x+.8,z+.2,1.61,.13,.54,.025,['#efddb0','#b8a075','#d9c493']);
     drawBox(x-1,z+.5,1.15,.4,.35,.25,['#e8e4d4','#929c8b','#bac6b2']);
     drawBox(x-.9,z+.75,1.25,.23,.32,.025,['#faf6e5','#faf6e5','#faf6e5']);
     drawBox(x+.85,z-.6,1.15,.75,.14,.6,green);
@@ -1098,9 +1115,10 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     var faceZ=z+.9,pending=onlineRequestsReady(),needed=pending?onlineBatch(pending,Infinity).jars:0,ready=pending>0&&state.stock[3]>=onlineSize();
     drawBox(x,faceZ+.02,.34,1.9,.04,.5,['#1d3a2c','#12281e','#183224']);
     worldLine([[x-.93,.36,faceZ+.045],[x+.93,.36,faceZ+.045],[x+.93,.82,faceZ+.045],[x-.93,.82,faceZ+.045],[x-.93,.36,faceZ+.045]],'#a9d2c855',.02);
-    var disp=project(x,.66,faceZ+.05),dAxis=project(x+1,.66,faceZ+.05);
+    // The readout is measured against the frame's projected width so it always sits inside the black surround.
+    var disp=project(x,.62,faceZ+.05),dAxis=project(x+1,.62,faceZ+.05),frameWidth=Math.abs(project(x+.93,.62,faceZ+.05).x-project(x-.93,.62,faceZ+.05).x)*.86;
     ctx.save();ctx.translate(disp.x,disp.y);ctx.transform(1,(dAxis.y-disp.y)/(dAxis.x-disp.x),0,1,0,0);
-    ctx.shadowColor=ready?'#b7e394':'#9ed6c8';ctx.shadowBlur=unit*.09;ctx.fillStyle=ready?'#c9f0b0':'#b9e2d7';ctx.font='600 '+Math.max(7,unit*.2)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(pending+(pending===1?' ORDER':' ORDERS')+' · '+state.stock[3]+' JARS',0,0,unit*1.72);ctx.restore();
+    ctx.shadowColor=ready?'#b7e394':'#9ed6c8';ctx.shadowBlur=unit*.07;ctx.fillStyle=ready?'#c9f0b0':'#b9e2d7';ctx.font='600 '+Math.max(6,unit*.16)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(pending+(pending===1?' ORDER':' ORDERS')+' · '+state.stock[3]+' JARS',0,0,frameWidth);ctx.restore();
     worldLine([[x-.78,.45,faceZ+.05],[x+.78,.45,faceZ+.05]],'#0d1f17',.07);
     var fill=pending?Math.min(1,state.stock[3]/Math.max(1,needed)):0;if(fill>0)worldLine([[x-.78,.45,faceZ+.05],[x-.78+1.56*fill,.45,faceZ+.05]],ready?'#b7e394':'#a9d2c8',.05);
     // Its own feed branch carries packed jars from the packing station.
@@ -1141,6 +1159,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     }
     // Layered backlit merchandise bays on each floor.
     var bx=fi===0?6:fi===1?3:-4.6;
+    if(fi!==1){
     drawBox(bx,rear+.35,.1,2.3,.55,2.6,oak);
     for(var row=0;row<3;row++){
       drawBox(bx,rear+.65,.48+row*.72,2.35,.7,.07,brass);
@@ -1151,11 +1170,14 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
         drawBox(bx-.95+product*.38,rear+.798,.65+row*.72,.15,.012,.1,['#f4efd8','#f4efd8','#f4efd8']);
       }
     }
+    }
     // A playful arch boutique on the open side wall of the processing floor.
     if(fi===1){
-      var az=1.2,ax=-8.75;
-      for(var alcove=0;alcove<2;alcove++){
-        var zz=az-alcove*2.4,shape=[];
+      // The arch alcove sits at the rear of the side wall; the front of that wall carries the stairs to the online-orders deck.
+      // One arch alcove at the rear of the side wall; the deck stairs occupy the front of it.
+      var ax=-8.75;
+      for(var alcove=0;alcove<1;alcove++){
+        var zz=-4.85,shape=[];
         shape.push(project(ax,.15,zz-1));shape.push(project(ax,2.3,zz-1));
         for(var arc=0;arc<=16;arc++){var t=Math.PI-arc/16*Math.PI;shape.push(project(ax,2.3+Math.sin(t),zz+Math.cos(t)))}
         shape.push(project(ax,.15,zz+1));poly(shape,'#d3a888','#62796f');
@@ -1164,10 +1186,10 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
         frame.push([ax,.15,zz+1]);worldLine(frame,'#859c94',.13);
         for(var shelf=0;shelf<3;shelf++){
           drawBox(ax+.25,zz,.5+shelf*.7,.55,1.8,.08,['#ecdbc1','#a58d72','#cfb79a']);
-          // Eighteen display positions represent the current packed-jar capacity.
-          var filledSlots=Math.min(18,state.stock[3]/storageCapacity()*18);
+          // Nine display positions represent the current packed-jar capacity.
+          var filledSlots=Math.min(9,state.stock[3]/storageCapacity()*9);
           for(var item=0;item<3;item++){
-            var slot=shelf*6+alcove*3+item,fill=Math.max(0,Math.min(1,filledSlots-slot));
+            var slot=shelf*3+item,fill=Math.max(0,Math.min(1,filledSlots-slot));
             if(fill>0){ctx.save();ctx.globalAlpha=fill;jar(ax+.27,zz-.6+item*.6,.59+shelf*.7);ctx.restore()}
           }
         }
@@ -1217,18 +1239,31 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     }
     ctx.drawImage(groundCache.surface,0,0,width,height);
     function paintGround(){
-        var retailTier=Math.min(stationTier(4),stationTier(5));
-        drawBox(0,floor.z,-.24,floor.w,floor.d,.24,retailTier>=2?['#cecdb8','#858879','#aaa995']:['#d7bc91','#8e7859','#b8a07a']);
-        if(retailTier>=1)for(var tileX=-10;tileX<=10;tileX+=2)for(var tileZ=-6;tileZ<10;tileZ+=2){groundPatch(tileX,tileZ,1.97,1.97,(tileX+tileZ)%4===0?'#dcd6bd':'#d1cbb2')}
+        // One continuous oak plank floor: long boards run front to back, with staggered end joints and a faint grain.
+        var rear=floor.z-floor.d/2,front=floor.z+floor.d/2,left=-floor.w/2,right=floor.w/2;
+        drawBox(0,floor.z,-.24,floor.w,floor.d,.24,['#c9a97e','#7f6446','#a68a62']);
+        for(var board=0;board<Math.ceil(floor.w/.9);board++){
+          var bx=left+board*.9,shade=board%3===0?'#00000009':board%3===1?'#ffffff0a':'#00000004';
+          poly([project(bx,.012,rear),project(Math.min(right,bx+.9),.012,rear),project(Math.min(right,bx+.9),.012,front),project(bx,.012,front)],shade);
+          worldLine([[bx,.015,rear],[bx,.015,front]],'#6d543a30',.016);
+          for(var joint=rear+((board%3)*.8);joint<front;joint+=2.4)worldLine([[bx,.016,joint],[Math.min(right,bx+.9),.016,joint]],'#6d543a2a',.014);
+          for(var grain=0;grain<3;grain++)worldLine([[bx+.2+grain*.25,.014,rear+.3+grain*1.1],[bx+.22+grain*.25,.014,front-.4-grain*.7]],'#ffffff08',.01);
+        }
     }
   }
+
   function drawTower(now){
     sceneElevation=0;
-    ctx.fillStyle='#424b43';ctx.fillRect(0,0,width,height);
+    // Backdrop: a gently lit sky-to-ground gradient, a halo behind the shop and a vignette at the edges.
+    var sky=ctx.createLinearGradient(0,0,0,height);sky.addColorStop(0,'#3a433c');sky.addColorStop(.5,'#4a544a');sky.addColorStop(1,'#333b34');ctx.fillStyle=sky;ctx.fillRect(0,0,width,height);
+    var halo=project(0,0,1);glow(halo.x,halo.y-unit*4,unit*24,'#98a88626');
+    var vignette=ctx.createRadialGradient(width/2,height/2,0,width/2,height/2,Math.max(width,height)*.8);vignette.addColorStop(0,'rgba(18,26,20,0)');vignette.addColorStop(.4,'rgba(18,26,20,.05)');vignette.addColorStop(.7,'rgba(18,26,20,.22)');vignette.addColorStop(1,'rgba(18,26,20,.48)');ctx.fillStyle=vignette;ctx.fillRect(0,0,width,height);
     var stone=['#c9c7b5','#737c70','#9fa796'],wood=['#bc9d73','#6f5943','#998063'],green=['#698775','#314b40','#496a56'],metal=['#414440','#191e1c','#2b302d'];
-    var shade=project(1,0,1);glow(shade.x,shade.y,unit*16,'#d7c39118');
-    poly([project(-13,-.5,-8),project(14,-.5,-8),project(16,-.5,12),project(-9,-.5,12)],'#17231d45');
-    drawBox(0,1,-.32,26,20,.32,stone);
+    // Contact shadow: one soft radial pool under the slab, biased toward the front-left, with no polygon edges to read as lines.
+    var pool=project(0,-.33,1),shadowGradient=ctx.createRadialGradient(pool.x-unit*1.4,pool.y+unit*1.2,0,pool.x-unit*1.4,pool.y+unit*1.2,unit*23);
+    shadowGradient.addColorStop(0,'rgba(12,22,17,.36)');shadowGradient.addColorStop(.45,'rgba(12,22,17,.2)');shadowGradient.addColorStop(.75,'rgba(12,22,17,.07)');shadowGradient.addColorStop(1,'rgba(12,22,17,0)');
+    ellipse(pool.x-unit*1.4,pool.y+unit*1.2,unit*23,unit*12.6,shadowGradient);
+    drawBox(0,1,-.32,26,20,.32,['#b8b4a1','#68695d','#8e8c7b']);
     // Rear circulation is painted before the building so people pass behind its walls.
     customers.forEach(function(c){if(customerBehindBuilding(c)){var v=Object.assign({},c,{x:c.renderX===undefined?c.x:c.renderX,z:c.renderZ===undefined?c.z:c.renderZ});drawCustomer(v,now)}});
     // Three open rooms. Only the rear and short side walls remain in the cutaway.
@@ -1242,21 +1277,33 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
         var canopyX=0,canopyZ=-1.35;
         [-1.7,1.7].forEach(function(dx){worldLine([[canopyX+dx,9.15,canopyZ],[canopyX+dx,8.83,canopyZ]],'#8c9570',.035)});
         drawBox(canopyX,canopyZ,8.72,4.6,1.05,.14,['#64764e','#394d35','#4c613e']);
-        // Overlapping foliage hides the support and forms an irregular, full crown.
-        for(var crown=0;crown<38;crown++){
-          var cx=canopyX-2.45+(crown%13)*.4,cz=canopyZ-.54+Math.floor(crown/13)*.48;
-          var cy=8.82+Math.sin(crown*2.3)*.1,q=project(cx,cy,cz);
-          ellipse(q.x,q.y,unit*(.27+(crown%3)*.04),unit*.17,['#668649','#7f9d52','#526f3e','#95ad62'][crown%4]);
+        // Trailing pothos: curved, drooping stems with heart-shaped leaves; back rows darker, front rows lighter.
+        var swayT=sceneTime*.0009;
+        function vineLeaf(q,dir,size,fill,vein){
+          ctx.beginPath();ctx.moveTo(q.x,q.y);
+          ctx.quadraticCurveTo(q.x+dir*size*1.15,q.y-size*.5,q.x+dir*size*.85,q.y+size*.4);
+          ctx.quadraticCurveTo(q.x+dir*size*.3,q.y+size*.95,q.x,q.y+size*.12);
+          ctx.closePath();ctx.fillStyle=fill;ctx.fill();
+          ctx.beginPath();ctx.moveTo(q.x+dir*size*.08,q.y+size*.08);ctx.lineTo(q.x+dir*size*.62,q.y+size*.3);ctx.strokeStyle=vein;ctx.lineWidth=Math.max(.5,size*.07);ctx.stroke();
         }
-        for(var vine=0;vine<25;vine++){
-          var dx=-2.3+vine*.19,vz=canopyZ+.4+(vine%3)*.11;
-          var length=.65+(1-Math.abs(dx)/2.7)*.85+(Math.sin(vine*2.4)+1)*.21;
-          worldLine([[canopyX+dx,8.8,vz],[canopyX+dx+.08,8.25,vz+.05],[canopyX+dx-.12,8.8-length,vz+.13]],'#4f703d',.033);
-          for(var leaf=0;leaf<9;leaf++){
-            var h=8.78-leaf*length/9,side=leaf%2?-1:1;
-            var q=project(canopyX+dx+Math.sin(leaf*.8+vine)*.08+side*.09,h,vz+.1);
-            ellipse(q.x,q.y,unit*(.12-leaf*.003),unit*.085,['#9cb765','#789b4f','#567b3f','#87a858'][(leaf+vine)%4]);
+        var rows=[{z:canopyZ-.32,stem:'#3c5531',leaves:['#4f6f3c','#5a7d44','#466636'],vein:'#6d8a55'},{z:canopyZ+.08,stem:'#496a3a',leaves:['#6b9250','#7aa257','#5f8648'],vein:'#a3c17e'},{z:canopyZ+.42,stem:'#557a42',leaves:['#8bb463','#9cc46e','#7ea65a','#b9d284'],vein:'#dbe9b0'}];
+        rows.forEach(function(row,ri){
+          for(var vine=0;vine<14;vine++){
+            var dx=-2.2+vine*.335+(ri%2)*.16,seed=vine*3.1+ri*7.7;
+            var length=.75+(1-Math.abs(dx)/2.6)*1.05+(Math.sin(seed)+1)*.28;
+            var sway=Math.sin(swayT+seed)*.05,points=[],nodes=7;
+            for(var n=0;n<=nodes;n++){var t=n/nodes;points.push([canopyX+dx+Math.sin(t*3.4+seed)*.14*t+sway*t,8.82-length*t*(1-.08*t),row.z+t*.22+(n%2)*.02])}
+            worldLine(points,row.stem,.034);worldLine(points.slice(0,3),row.stem,.05);
+            for(var n=1;n<=nodes;n++){
+              var t=n/nodes,side=(n+vine)%2?-1:1,q=project(points[n][0],points[n][1],points[n][2]);
+              vineLeaf(q,side,unit*(.25-t*.08)*(ri===0?.9:1),row.leaves[(n+vine+ri)%row.leaves.length],row.vein);
+            }
           }
+        });
+        // Dense crown of larger leaves along the trough so the stems read as spilling over its edge.
+        for(var crown=0;crown<22;crown++){
+          var cx=canopyX-2.35+crown*.225,q=project(cx,8.74+Math.sin(crown*1.7)*.05,canopyZ+.5+(crown%2)*.1);
+          vineLeaf(q,crown%2?-1:1,unit*(.26+(crown%3)*.03),['#86ae5f','#98be6b','#729b52'][crown%3],'#d6e6ad');
         }
         sceneElevation=floor.y;
       }
@@ -1279,16 +1326,31 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
         drawBox(0,front+.035,-.27,floor.w,.18,.045,metal);
         for(var grain=0;grain<3;grain++)worldLine([[left+.1,-.18+grain*.044,front+.1],[right-.1,-.18+grain*.044,front+.1]],'#d0ac793c',.012);
       }
-      if(fi===0){
-        // Pale tile borders frame an oak aisle and the customer service zone.
-        drawBox(0,6.5,.002,15.6,7,.018,['#dce0ca','#bcc5b1','#ccd5bf']);
-        for(var grout=0;grout<31;grout++)worldLine([[-7.7+grout*.5,.025,3],[-7.7+grout*.5,.025,10]],'#a6b7a126',.014);
-        for(var row=0;row<15;row++)worldLine([[-7.8,.025,3+row*.5],[7.8,.025,3+row*.5]],'#a6b7a126',.014);
-      }
       // Material seams, a rear forest-green wall, and warm recessed strip lighting.
-      for(var seam=left+.8;seam<right;seam+=.9)worldLine([[seam,.015,rear],[seam,.015,front]],fi===1?'#71593b18':'#72796c12',.014);
-      drawBox(fi===0?-1.225:0,rear,0,fi===0?20.55:floor.w,.2,3.9,fi===0?['#f1ebd8','#c0bba8','#ddd8c3']:green);
-      drawBox(left,rear+1.7,0,.18,3.6,3.9,fi===0?['#f1ebd8','#c0bba8','#ddd8c3']:green);
+      if(fi>0)for(var seam=left+.8;seam<right;seam+=.9)worldLine([[seam,.015,rear],[seam,.015,front]],fi===1?'#71593b18':'#72796c12',.014);
+      var wallFinish=fi===0?['#f1ebd8','#c0bba8','#ddd8c3']:green;
+      drawBox(fi===0?-1.225:0,rear,0,fi===0?20.55:floor.w,.2,3.9,wallFinish);
+      drawBox(left,rear+1.7,0,.18,3.6,3.9,wallFinish);
+      if(fi===2){
+        // Grow room: forest-green walls with dark timber slats to dado height and a clerestory band that lets the light in.
+        var slatTop=2.2,sillY=2.42,headY=3.42,frame=['#3b433d','#1c2320','#2a322d'];
+        for(var slat=left+.3;slat<right-.15;slat+=.24){worldLine([[slat,.05,rear+.11],[slat,slatTop,rear+.11]],'#5b7a68',.05);worldLine([[slat+.075,.05,rear+.11],[slat+.075,slatTop,rear+.11]],'#22382d',.018)}
+        for(var sideSlat=rear+.25;sideSlat<rear+3.45;sideSlat+=.24){worldLine([[left+.1,.05,sideSlat],[left+.1,slatTop,sideSlat]],'#4d6a58',.05);worldLine([[left+.1,.05,sideSlat+.075],[left+.1,slatTop,sideSlat+.075]],'#22382d',.018)}
+        drawBox(0,rear+.14,slatTop,floor.w-.3,.1,.09,['#c8ab7c','#7d6748','#a58a5f']);drawBox(left+.11,rear+1.85,slatTop,.1,3.3,.09,['#c8ab7c','#7d6748','#a58a5f']);
+        function clerestory(points,mullions){
+          var sky=ctx.createLinearGradient(0,points[3].y,0,points[0].y);sky.addColorStop(0,'#d9e6e4');sky.addColorStop(1,'#eef1e2');poly(points,sky);
+          glassPane(points,'#c8dde033');mullions.forEach(function(line){worldLine(line,'#26302a',.055)});
+        }
+        var rearMullions=[];for(var mx=left+.5+1.6;mx<right-.5;mx+=1.6)rearMullions.push([[mx,sillY,rear+.12],[mx,headY,rear+.12]]);
+        clerestory([project(left+.5,sillY,rear+.12),project(right-.5,sillY,rear+.12),project(right-.5,headY,rear+.12),project(left+.5,headY,rear+.12)],rearMullions);
+        clerestory([project(left+.11,sillY,rear+.45),project(left+.11,sillY,rear+3.3),project(left+.11,headY,rear+3.3),project(left+.11,headY,rear+.45)],[[[left+.11,sillY,rear+1.4],[left+.11,headY,rear+1.4]],[[left+.11,sillY,rear+2.35],[left+.11,headY,rear+2.35]]]);
+        drawBox(0,rear+.13,sillY-.09,floor.w-.9,.14,.09,frame);drawBox(0,rear+.13,headY,floor.w-.9,.14,.08,frame);
+        drawBox(left+.12,rear+1.875,sillY-.09,.14,2.95,.09,frame);drawBox(left+.12,rear+1.875,headY,.14,2.95,.08,frame);
+        // Daylight from the clerestory washes the top of the plaster and the floor beneath it.
+        var daylight=project(0,headY,rear+.3);glow(daylight.x,daylight.y,unit*6,'#e9f0d81c');
+      }
+      // Ambient occlusion: the floor darkens softly where it meets the rear and side walls.
+      shadowBand(fi===0?-11.5:left+.2,fi===0?9.05:right-.2,rear+.1,rear+1.6,.012,fi===0?.14:.22);shadowBandX(rear+.1,rear+3.5,left+.18,left+1.3,.012,.14);
       if(fi===0){
         // Half-height glazed tile wainscot, beneath the existing cream plaster.
         drawBox(-1.225,rear+.125,.06,20.37,.055,1.72,['#537867','#244a3d','#365e4c']);
@@ -1308,46 +1370,59 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
       if(fi===1){poly([project(-6.5,.016,rear+.2),project(6.5,.016,rear+.2),project(6.5,.016,-.3),project(-6.5,.016,-.3)],'rgba(14,28,20,.07)');shadowBand(-6.5,6.5,-.3,-1.9,.017,.12)}
       if(fi!==0){
       // Black-framed glass along the rear-right corner, not across the open front.
-      poly([project(right,0,rear),project(right,0,rear+3),project(right,3.8,rear+3),project(right,3.8,rear)],'#adc7b21b');
-      for(var mull=0;mull<4;mull++)worldLine([[right,0,rear+mull],[right,3.8,rear+mull]],'#263a32',.065);
-      worldLine([[right,3.8,rear],[right,3.8,rear+3]],'#252b28',.07);
+      glassPane([project(right,0,rear),project(right,0,rear+3),project(right,3.8,rear+3),project(right,3.8,rear)],'#adc7b21b');
+      for(var mull=0;mull<4;mull++)worldLine([[right,0,rear+mull],[right,3.8,rear+mull]],'#263a32',.04);
+      worldLine([[right,3.8,rear],[right,3.8,rear+3]],'#252b28',.045);
       }
       if(fi===2){
         var artX=left+.13,artZ=rear+1.8;
-        drawBox(artX,artZ,1.35,.1,1.25,1.6,wood);
-        drawBox(artX+.06,artZ,1.44,.025,1.07,1.42,['#e4dbc0','#c2b69a','#ded4b7']);
-        worldLine([[artX+.08,1.62,artZ],[artX+.08,2.65,artZ]],'#476746',.035);
-        for(var leaf=0;leaf<4;leaf++)[-1,1].forEach(function(dir){var y=1.8+leaf*.22;poly([project(artX+.08,y,artZ),project(artX+.08,y+.17,artZ+dir*.3),project(artX+.08,y+.04,artZ+dir*.36),project(artX+.08,y-.025,artZ+dir*.13)],'#718b52')});
+        drawBox(artX,artZ,.55,.1,1.25,1.5,wood);
+        drawBox(artX+.06,artZ,.64,.025,1.07,1.32,['#e4dbc0','#c2b69a','#ded4b7']);
+        worldLine([[artX+.08,.8,artZ],[artX+.08,1.8,artZ]],'#476746',.035);
+        for(var leaf=0;leaf<4;leaf++)[-1,1].forEach(function(dir){var y=.98+leaf*.2;poly([project(artX+.08,y,artZ),project(artX+.08,y+.17,artZ+dir*.3),project(artX+.08,y+.04,artZ+dir*.36),project(artX+.08,y-.025,artZ+dir*.13)],'#718b52')});
       }
       if(fi===1){
-        // Side-wall displays face into the room: oak shelves on black steel uprights.
-        var sideX=left+.24,sideZ=rear+1.8;
-        [-1.3,1.3].forEach(function(dz){drawBox(sideX,sideZ+dz,.35,.09,.08,2.85,metal)});
-        [.62,1.55].forEach(function(y,row){
-          drawBox(sideX+.19,sideZ,y,.58,2.8,.12,wood);
-          worldLine([[sideX+.49,y+.12,sideZ-1.3],[sideX+.49,y+.12,sideZ+1.3]],'#ecd8a1',.025);
-          for(var item=0;item<4;item++){
-            var iz=sideZ-1.02+item*.67;
-            if((item+row+fi)%3===0)plant(sideX+.2,iz,y+.12,.43);
-            else if(row===0)jar(sideX+.2,iz,y+.12);
-            else carton(sideX+.2,iz,y+.12,.36);
-          }
-        });
-        // Two framed botanical studies above the shelves, oriented to the side wall.
-        [-.68,.68].forEach(function(dz,index){
-          var fz=sideZ+dz;
-          drawBox(sideX,fz,2.32,.11,1.02,.96,wood);
-          drawBox(sideX+.063,fz,2.39,.025,.88,.81,['#e4dbc0','#c2b69a','#ded4b7']);
-          var fx=sideX+.084;
-          worldLine([[fx,2.48,fz],[fx,3.09,fz]],'#476746',.026);
-          for(var leaf=0;leaf<3;leaf++){
-            var ly=2.59+leaf*.17;
-            [-1,1].forEach(function(dir){poly([project(fx,ly,fz),project(fx,ly+.13,fz+dir*.23),project(fx,ly+.03,fz+dir*.28),project(fx,ly-.035,fz+dir*.1)],(index+leaf)%2?'#789257':'#567849')});
-          }
-        });
       }
-      // Built-in timber shelving with jars, cartons, and plants.
       var shelfX=fi===0?-6:fi===1?-5:0;
+      if(fi===2){
+        // Grow room: an open black-steel propagation rack with seedling trays under cool grow-light bars.
+        var rackZ=rear+.62,rackW=4.6,rackD=.95,tierY=[.42,1.18,1.94],rackFrame=['#3a403c','#1a1f1c','#282e2a'];
+        [-1,1].forEach(function(sx){[-1,1].forEach(function(sz){drawBox(shelfX+sx*rackW/2,rackZ+sz*rackD/2,0,.08,.08,2.62,rackFrame)})});
+        tierY.forEach(function(y,tier){
+          drawBox(shelfX,rackZ,y,rackW,rackD,.05,['#56605a','#2b322e','#3e4641']);
+          for(var wire=0;wire<9;wire++)worldLine([[shelfX-rackW/2+.2+wire*.52,y+.052,rackZ-rackD/2+.05],[shelfX-rackW/2+.2+wire*.52,y+.052,rackZ+rackD/2-.05]],'#7c877f',.014);
+          for(var tray=0;tray<4;tray++){
+            var tx=shelfX-1.65+tray*1.1,grown=(tray+tier)%3;
+            drawBox(tx,rackZ,y+.05,.92,.66,.16,['#2f3733','#171c1a','#232927']);
+            drawBox(tx,rackZ,y+.19,.82,.56,.03,['#4a3a2c','#2d231b','#3a2d22']);
+            for(var cell=0;cell<6;cell++){
+              var cx=tx-.3+(cell%3)*.3,cz=rackZ-.13+Math.floor(cell/3)*.26,q=project(cx,y+.22,cz),leafR=unit*(.045+grown*.03);
+              worldLine([[cx,y+.21,cz],[cx,y+.3+grown*.09,cz]],'#6f9a4e',.02);
+              ellipse(q.x-leafR*.7,q.y-unit*(.07+grown*.08),leafR,leafR*.6,grown===2?'#8fb95c':'#7aa652');ellipse(q.x+leafR*.7,q.y-unit*(.09+grown*.08),leafR,leafR*.6,grown?'#9cc265':'#6f9a4e');
+            }
+          }
+          // Grow-light bar under the tier above (and a top bar), with a cool wash on the trays below.
+          var barY=y+.7;drawBox(shelfX,rackZ,barY,rackW-.3,.14,.05,['#f0f4f2','#9aa6a0','#c7d0ca']);
+          ctx.save();ctx.globalAlpha=.16;worldLine([[shelfX-rackW/2+.2,barY-.01,rackZ],[shelfX+rackW/2-.2,barY-.01,rackZ]],'#d8ecff',.34);ctx.restore();
+          var wash=project(shelfX,y+.25,rackZ);glow(wash.x,wash.y,unit*1.6,'#cfe6ff1c');
+        });
+        drawBox(shelfX,rackZ,2.62,rackW,rackD,.05,['#56605a','#2b322e','#3e4641']);
+        // A watering can and a stack of spare trays at the end of the rack.
+        drawBox(shelfX+rackW/2+.45,rackZ,0,.38,.3,.42,['#8fb0b7','#4d6d74','#6d9098']);worldLine([[shelfX+rackW/2+.6,.36,rackZ],[shelfX+rackW/2+.82,.5,rackZ-.06]],'#4d6d74',.04);
+        for(var spare=0;spare<3;spare++)drawBox(shelfX-rackW/2-.55,rackZ,spare*.1,.9,.62,.09,['#2f3733','#171c1a','#232927']);
+      }else if(fi===1){
+      // Mezzanine: storage shelving runs the whole back wall in four bays, oak shelves on black steel uprights.
+      [-6.6,-2.2,2.2,6.6].forEach(function(bayX,bay){
+        [-1,1].forEach(function(sx){[-1,1].forEach(function(sz){drawBox(bayX+sx*2.1,rear+.5+sz*.4,0,.08,.08,3.2,metal)})});
+        for(var shelf=0;shelf<3;shelf++){
+          drawBox(bayX,rear+.5,.6+shelf*.85,4.2,.85,.1,wood);
+          warmStrip([[bayX-2,.71+shelf*.85,rear+.91],[bayX+2,.71+shelf*.85,rear+.91]],false);
+          for(var item=0;item<5;item++){var kind=(item+shelf+bay)%4;if(kind===0)carton(bayX-1.6+item*.8,rear+.5,.71+shelf*.85,.4);else if(kind===2&&shelf===2)plant(bayX-1.6+item*.8,rear+.5,.71+shelf*.85,.4);else jar(bayX-1.6+item*.8,rear+.5,.71+shelf*.85)}
+        }
+        drawBox(bayX,rear+.5,3.2,4.25,.85,.06,metal);
+      });
+      }else{
+      // Built-in timber shelving with jars, cartons, and plants.
       drawBox(shelfX,rear+.12,.1,4.35,.18,3.25,['#c6a267','#82633e','#ac884f']);
       for(var shelf=0;shelf<3;shelf++){
         drawBox(shelfX,rear+.5,.6+shelf*.85,4.2,.85,.12,wood);
@@ -1357,6 +1432,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
       // Cabinet partitions occlude the shelf ends and products behind their faces.
       for(var cubby=4;cubby>=0;cubby--)drawBox(shelfX-2.1+cubby*1.05,rear+.55,.1,.06,.82,3.17,wood);
       [2.1,-2.1].forEach(function(dx){drawBox(shelfX+dx,rear+.5,0,.09,.86,3.3,wood)});
+      }
       if(fi===0){
         // Built-in product wall directly behind the service counters, under the mezzanine.
         var displayZ=-2.6;
@@ -1403,18 +1479,32 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
       if(fi===1){
         // Packing supplies and a softly lit interior work area.
         for(var box=0;box<4;box++)carton(5.5+(box%2)*.7,-4+Math.floor(box/2)*.7,0,.6);
-        drawBox(2.4,-5.8,0,.16,1.7,2.9,green);plant(7,-3,0,1.4);
+        plant(7,-3,0,1.4);
       }
-      if(fi===2)plant(4.4,-5.6,0,.75);
+      if(fi===2){
+        plant(4.4,-5.6,0,.75);
+        // Lighting gantry: a slim steel beam on two posts, with purple LED grow bars hung from it over the benches.
+        var beamY=3.75,beamZ=-3.55;
+        [-5.4,5.4].forEach(function(px){drawBox(px,beamZ,0,.12,.12,beamY,metal)});
+        drawBox(0,beamZ,beamY,10.9,.14,.12,metal);
+        [-3.9,-1.3,1.3,3.9].forEach(function(lx,li){
+          var barY=2.45+(li%2)*.12;
+          [-.8,.8].forEach(function(dx){worldLine([[lx+dx,beamY,beamZ],[lx+dx,barY+.12,beamZ]],'#2a302d',.022)});
+          drawBox(lx,beamZ,barY,2.1,.5,.13,['#3c4146','#1d2124','#2b3034']);
+          worldLine([[lx-1,barY-.005,beamZ-.12],[lx+1,barY-.005,beamZ-.12]],'#e7b8ff',.045);worldLine([[lx-1,barY-.005,beamZ+.12],[lx+1,barY-.005,beamZ+.12]],'#e7b8ff',.045);
+          ctx.save();ctx.globalAlpha=.22;worldLine([[lx-1,barY-.03,beamZ],[lx+1,barY-.03,beamZ]],'#c98bff',.5);ctx.restore();
+          var under=project(lx,barY-.1,beamZ);glow(under.x,under.y,unit*1.5,'#c47cff2e');
+          var floorWash=project(lx,.03,beamZ),washGradient=ctx.createRadialGradient(floorWash.x,floorWash.y,0,floorWash.x,floorWash.y,unit*1.9);washGradient.addColorStop(0,'rgba(190,120,255,.2)');washGradient.addColorStop(1,'rgba(190,120,255,0)');ellipse(floorWash.x,floorWash.y,unit*1.9,unit*1,washGradient);
+        });
+        // Drip irrigation: a slim line along the rear wall feeding the rack.
+        worldLine([[left+.4,1.05,rear+.2],[right-.4,1.05,rear+.2]],'#8ea6a0',.03);
+        for(var drip=0;drip<6;drip++)worldLine([[-2+drip*.8,1.05,rear+.2],[-2+drip*.8,.5,rear+.55]],'#8ea6a0',.02);
+      }
       // Oak trims and planted wall panels.
       worldLine([[left+.2,2.95,rear+.18],[fi===0?8.95:right-.2,2.95,rear+.18]],'#b7986a',.11);
       // Concealed strips along the wall trim and the exposed mezzanine fascia.
       warmStrip([[left+.35,2.87,rear+.25],[fi===0?8.6:right-.35,2.87,rear+.25]],fi===2);
       if(fi>0)warmStrip([[left+.2,-.08,front+.025],[right-.2,-.08,front+.025]],false);
-      if(fi===1){
-      drawBox(right-1.05,rear+.18,.4,1.45,.08,2.3,['#536b42','#2e4835','#405c3b']);
-      for(var leaf=0;leaf<18;leaf++){var lp=project(right-1.6+(leaf%3)*.47,.6+Math.floor(leaf/3)*.35,rear+.25);ellipse(lp.x,lp.y,unit*.22,unit*.18,leaf%3===0?'#86a85c':leaf%3===1?'#587e49':'#6c9550')}
-      }
       if(fi<2)retailDetails(fi,rear);
 
       // Short roller belts carry products directly between neighboring stations.
@@ -1433,6 +1523,22 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
       // Draw outgoing runs before the next slab, which naturally hides the buried section.
       if(fi===0)drawFloorTransfer(3,false);
       if(fi===1){
+        // Stairs to the online-orders deck: a short flight leaves the mezzanine past the end of the side wall, reaches a landing
+        // outside the building, then turns left and climbs forward to enter the deck from its rear edge, behind the counter.
+        sceneElevation=4.7;
+        var rise=2.35/10,rail='#252b28',post=['#3a403c','#1a1f1c','#282e2a'];
+        var f1Z=-2.3,f1Start=-7.2,f1Run=.42,landX=-9.6,landZ=-2.3,f2X=-9.6,f2Start=-1.41,f2Run=.38;
+        // Steel posts carry the outside section down to the ground slab.
+        [[landX-.62,landZ-.62],[landX-.62,f2Start+3*f2Run+.1]].forEach(function(pt){drawBox(pt[0],pt[1],-4.98,.1,.1,4.98+5*rise-.16,post)});
+        for(var t1=0;t1<4;t1++){var y1=(t1+1)*rise,x1=f1Start-t1*f1Run;drawBox(x1,f1Z,y1-.16,f1Run+.03,1.4,.16,wood);if(t1%2===0)warmStrip([[x1-.19,y1+.01,f1Z-.6],[x1-.19,y1+.01,f1Z+.6]],false)}
+        drawBox(landX,landZ,5*rise-.16,1.4,1.4,.16,wood);
+        for(var t2=0;t2<4;t2++){var y2=(6+t2)*rise,z2=f2Start+t2*f2Run;drawBox(f2X,z2,y2-.16,1.4,f2Run+.03,.16,wood);if(t2%2===1)warmStrip([[f2X-.6,y2+.01,z2+.17],[f2X+.6,y2+.01,z2+.17]],false)}
+        // Rails: both sides of the first flight, the rear and outer edges of the landing, and both sides of the second flight.
+        [-.72,.72].forEach(function(dz){worldLine([[f1Start+.22,.05,f1Z+dz],[f1Start+.22,.95,f1Z+dz],[f1Start-3*f1Run-.22,4*rise+.95,f1Z+dz]],rail,.06);worldLine([[f1Start-1.5*f1Run,2*rise,f1Z+dz],[f1Start-1.5*f1Run,2*rise+.95,f1Z+dz]],rail,.045)});
+        worldLine([[landX+.7,5*rise+.95,landZ-.7],[landX-.7,5*rise+.95,landZ-.7],[landX-.7,5*rise+.95,landZ+.7]],rail,.06);
+        [[landX+.7,landZ-.7],[landX-.7,landZ-.7],[landX-.7,landZ+.7]].forEach(function(pt){worldLine([[pt[0],5*rise,pt[1]],[pt[0],5*rise+.95,pt[1]]],rail,.045)});
+        [-.72,.72].forEach(function(dx){worldLine([[f2X+dx,5*rise+.95,landZ+.7],[f2X+dx,9*rise+.95,f2Start+3*f2Run+.2]],rail,.06);worldLine([[f2X+dx,9*rise,f2Start+3*f2Run+.2],[f2X+dx,9*rise+.95,f2Start+3*f2Run+.2]],rail,.045)});
+        sceneElevation=0;
         drawFloorTransfer(3,true);drawFloorTransfer(1,false);
         drawBox(-12.5,3,0,.14,.14,6.81,metal);
         // The inner support lands on the second-floor slab.
@@ -1516,7 +1622,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     // Glazed storefront bays continue the door frame behind the kiosk row.
     for(var bay=0;bay<4;bay++)(function(start,end){
       for(var strip=0;strip<6;strip++)(function(a,b){add(x,(a+b)/2,function(){
-        poly([project(x,.15,a),project(x,.15,b),project(x,3.3,b),project(x,3.3,a)],'#b9d9c51c');
+        glassPane([project(x,.15,a),project(x,.15,b),project(x,3.3,b),project(x,3.3,a)],'#b9d9c51c');
         drawBox(x,(a+b)/2,3.3,.18,Math.abs(b-a)+.01,.3,frame);
         drawBox(x,(a+b)/2,.08,.13,Math.abs(b-a)+.01,.08,frame);
       })})(start+(end-start)*strip/6,start+(end-start)*(strip+1)/6);
@@ -1524,7 +1630,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     })(8.8-bay*1.6,Math.max(2.5,7.2-bay*1.6));
     // Return glazing turns the corner and meets the existing mezzanine support.
     for(var pane=0;pane<6;pane++)(function(a,b){add((a+b)/2,2.5,function(){
-      poly([project(a,.15,2.5),project(b,.15,2.5),project(b,3.3,2.5),project(a,3.3,2.5)],'#b9d9c51c');
+      glassPane([project(a,.15,2.5),project(b,.15,2.5),project(b,3.3,2.5),project(a,3.3,2.5)],'#b9d9c51c');
       drawBox((a+b)/2,2.5,3.3,b-a+.01,.18,.3,frame);
       drawBox((a+b)/2,2.5,.08,b-a+.01,.13,.08,frame);
     })})(x+(-8.8-x)*pane/6,x+(-8.8-x)*(pane+1)/6);
@@ -1581,8 +1687,8 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     [[exitZ,exitZ+1.65,3.4],[exitZ+1.65,exitZ+3,3.4]].forEach(function(section){
       var back=section[0],front=section[1],top=section[2];
       add(glazingX,(back+front)/2,function(){
-        poly([project(glazingX,.06,back),project(glazingX,.06,front),project(glazingX,top,front),project(glazingX,top,back)],'#b5d7c12e');
-        worldLine([[glazingX,.06,back],[glazingX,.06,front],[glazingX,top,front],[glazingX,top,back],[glazingX,.06,back]],'#303c32',.065);
+        glassPane([project(glazingX,.06,back),project(glazingX,.06,front),project(glazingX,top,front),project(glazingX,top,back)],'#b5d7c12e');
+        worldLine([[glazingX,.06,back],[glazingX,.06,front],[glazingX,top,front],[glazingX,top,back],[glazingX,.06,back]],'#303c32',.045);
       });
     });
     jobs.push({depth:-Infinity,draw:function(){
@@ -1599,7 +1705,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     // Park the glass leaf along the side wall, clear of the entrance lanes.
     add(x-.14,z-1.9,function(){
       var hinge=[x-.14,0,z-1.1],end=[x-.14,0,z-2.75];
-      poly([project(hinge[0],.12,hinge[2]),project(end[0],.12,end[2]),project(end[0],3.17,end[2]),project(hinge[0],3.17,hinge[2])],'#b5d7c12e');
+      glassPane([project(hinge[0],.12,hinge[2]),project(end[0],.12,end[2]),project(end[0],3.17,end[2]),project(hinge[0],3.17,hinge[2])],'#b5d7c12e');
       worldLine([[hinge[0],.12,hinge[2]],[end[0],.12,end[2]],[end[0],3.17,end[2]],[hinge[0],3.17,hinge[2]],[hinge[0],.12,hinge[2]]],'#2b342e',.075);
       worldLine([[end[0],1.25,end[2]+.18],[end[0],1.85,end[2]+.18]],'#dfc58c',.065);
 
@@ -1872,7 +1978,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
   function updateMarkers(){
     var securityPos=project(-9.1,.62,10.41);
     securityMarker.style.transform='translate3d('+securityPos.x+'px,'+securityPos.y+'px,0) translate(-50%,-50%)';
-    securityMarker.style.fontSize=Math.max(8,Math.min(11,unit*.29))+'px';
+    securityMarker.style.fontSize=Math.max(8,Math.min(11,unit*.29))*(width>=780?.8:1)+'px';
     securityMarker.style.display=securityPos.x<-40||securityPos.x>width+40||securityPos.y<-30||securityPos.y>height+30?'none':'block';
     if($('buyAutoDrone')){var drone=state.autoDrone,dronePrice=drone.owned?BULK_DRONE_COST:AUTO_DRONE_COST;
       $('buyAutoDrone').disabled=drone.bulk||state.money<dronePrice;$('autoDronePrice').textContent=drone.bulk?'Installed':fmt(dronePrice);$('buyAutoDrone').querySelector('span').textContent=drone.owned?'Bulk upgrade':'Install';$('autoDroneBenefit').textContent=drone.owned?'Up to 10 ready orders every 10s':'Send a ready order every 10s';
@@ -1881,7 +1987,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
       $('autoDroneStatus').textContent=!drone.owned?'A ready order every 10s':!drone.enabled?'Manual dispatch':state.gameSpeed===0?'Paused':drone.remaining>.05?'Next check in '+Math.ceil(drone.remaining)+'s':state.stock[3]<onlineSize()?'Waiting for '+(onlineSize()-state.stock[3])+' jars':'Ready to launch';}
 
     if(shopBrowser)shopBrowser.render();
-    markerEls.forEach(function(el,i){var station=machinePos[i],pos=project(station.x,.63+station.y,station.z+1.23);el.style.transform='translate3d('+pos.x+'px,'+pos.y+'px,0) translate(-50%,-50%)';el.style.fontSize=Math.max(8,Math.min(11,unit*.29))+'px';el.style.display=pos.x<-40||pos.x>width+40||pos.y<-30||pos.y>height+30?'none':'block'})}
+    markerEls.forEach(function(el,i){var station=machinePos[i],pos=project(station.x,.63+station.y,station.z+1.23);el.style.transform='translate3d('+pos.x+'px,'+pos.y+'px,0) translate(-50%,-50%)';el.style.fontSize=Math.max(8,Math.min(11,unit*.29))*(width>=780?.8:1)+'px';el.style.display=pos.x<-40||pos.x>width+40||pos.y<-30||pos.y>height+30?'none':'block'})}
   function slowestStation(){
     var lowest=Infinity,result=0;
     LINES.forEach(function(_,i){var rate=stationThroughput(i);if(rate<lowest){lowest=rate;result=i}});return result;
@@ -1914,7 +2020,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     $('machineNumber').textContent=!open?'BUILD PREVIOUS STAGE':level?'STAGE 0'+(selected+1)+' · '+stationStatus(selected):'STAGE 0'+(selected+1)+' · NOT BUILT';
     $('machineName').textContent=line.name;$('machineLevel').textContent=level;$('machineRate').textContent=selected<4?batchSize(selected).toFixed(1)+' avg / batch · '+([2,3,2,2][selected]/cycleSpeed(selected)).toFixed(1)+'s':capacity(selected).toFixed(1)+'× service';
     var tier=stationTier(selected),next=nextCapacity(selected),gain=Math.round((next/capacity(selected)-1)*100);
-    $('stationStatus').textContent=stationStatus(selected)+(selected<4?' · '+batchSize(selected).toFixed(1)+' avg / batch, '+([2,3,2,2][selected]/cycleSpeed(selected)).toFixed(1)+'s cycles':' · '+(counterServiceDuration(selected)/Math.max(1,state.gameSpeed)).toFixed(2)+'s handoff')+(tier<6?' · New look at Lv '+TIER_LEVELS[tier+1]:' · Flagship');
+    $('stationStatus').textContent=stationStatus(selected)+(selected<4?' · '+batchSize(selected).toFixed(1)+' avg / batch, '+([2,3,2,2][selected]/cycleSpeed(selected)).toFixed(1)+'s cycles':' · '+(counterServiceDuration(selected)/Math.max(1,state.gameSpeed)).toFixed(2)+'s handoff')+(tier<6?' · Output ×2 at Lv '+TIER_LEVELS[tier+1]:' · Flagship');
     $('upgradeLevel').textContent='Lv '+level+' → '+(level+1);
     $('stationTier').textContent=STATION_TIERS[tier];$('stationTier').style.color=TIER_COLORS[tier];
     $('upgradeFunding').textContent=!open?'Build previous station':affordable?'Ready to upgrade':fmt(Math.max(0,price-state.money))+' to go';
@@ -1922,7 +2028,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     $('upgradeProgress').setAttribute('aria-valuetext',affordable?'Upgrade ready':fmt(Math.max(0,price-state.money))+' needed for level '+(level+1));
     $('upgradeBenefit').textContent=selected<4?'+'+gain+'% batch size':(counterServiceDuration(selected)/Math.max(1,state.gameSpeed)).toFixed(3)+'s → '+(counterServiceDuration(selected,next)/Math.max(1,state.gameSpeed)).toFixed(3)+'s handoff';
     var preview=$('upgradePreview'),source=machineTabs[selected].querySelector('canvas');if(preview&&typeof preview.getContext==='function'&&source){var pc=preview.getContext('2d');if(pc){pc.clearRect(0,0,80,100);pc.drawImage(source,0,0)}}
-    $('nextAppearance').textContent=tier<6?'New look at level '+TIER_LEVELS[tier+1]+' · '+STATION_TIERS[tier+1]:'Flagship equipment · upgrades keep increasing output';
+    $('nextAppearance').textContent=(tier?'Tier bonus ×'+economy.tierBoost(level)+' · ':'')+(tier<6?'Output ×2 and new look at level '+TIER_LEVELS[tier+1]+' · '+STATION_TIERS[tier+1]+(selected>=4?' · both counters at a tier double baskets':''):'Flagship equipment · upgrades keep increasing output');
     $('machineCost').textContent=fmt(price);$('buyMachine').disabled=!affordable;$('buyMachine').querySelector('span').textContent=!open?'LOCKED':level?'UPGRADE':'BUILD';
     var maxUpgrade=maxStationUpgrade(selected);
     $('buyMachineMax').disabled=!maxUpgrade.levels;
@@ -2019,8 +2125,8 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
   });
   // Short goals and management live in the existing tray; map gestures remain free.
   var today=document.querySelector('[data-empire-section="today"]');
-  today.innerHTML='<section id="returnSummary" hidden><h2>Welcome back</h2><p id="returnTime"></p><ul id="returnEarnings"></ul><p id="returnGoals"></p><button id="dismissReturn">Dismiss summary</button></section><h2>Next steps</h2><p id="nextInvestment"></p><div id="shortGoals"></div><section class="reputation"><h2 class="empire-section-heading">Reputation</h2><div class="reputation-summary"><strong id="reputationStatus"></strong><span id="reputationNext"></span></div><progress id="reputationProgress" max="60" value="0" aria-label="Customer reputation"></progress><details class="branch-help reputation-guide"><summary>Customer guide</summary><dl><dt>Regulars</dt><dd>Meadow Mint</dd><dt>Collectors</dt><dd>Boutique strains</dd><dt>Hurried</dt><dd>Wait ≤20 seconds</dd><dt>VIPs</dt><dd>Wait ≤15 seconds · double payment</dd></dl><dl><dt>Match</dt><dd>+1 loyalty · +15% tip</dd><dt>Miss</dt><dd>−1 loyalty</dd><dt>20 loyalty</dt><dd>Collectors unlock</dd><dt>60 loyalty</dt><dd>VIPs unlock · regular matches tip 35%</dd></dl><p>Branch loyalty adds up to 20% income.</p></details></section>';
-  [0,1,2].forEach(function(i){var row=document.createElement('div');row.className='short-goal';row.innerHTML='<h3 id="goalTitle'+i+'"></h3><progress id="goalProgress'+i+'" max="100" aria-label="Objective progress"></progress><p id="goalCount'+i+'"></p><button id="goalClaim'+i+'"></button>'; $('shortGoals').appendChild(row);$('goalClaim'+i).onclick=function(){var reward=claimGoal(state,i);if(reward){save();renderUI();notify('GOAL COMPLETE · +'+fmt(reward),'upgrade')}}});
+  today.innerHTML='<section id="returnSummary" hidden><h2>Welcome back</h2><p id="returnTime"></p><ul id="returnEarnings"></ul><p id="returnGoals"></p><button id="dismissReturn">Dismiss summary</button></section><h2>Next steps</h2><p id="nextInvestment"></p><div id="shortGoals"></div><section class="reputation"><h2 class="empire-section-heading">Reputation</h2><div class="reputation-summary"><strong id="reputationStatus"></strong><span id="reputationNext"></span></div><progress id="reputationProgress" max="60" value="0" aria-label="Customer reputation"></progress><details class="branch-help reputation-guide"><summary>Customer guide</summary><dl><dt>Regulars</dt><dd>Take Meadow Mint when it is on the menu</dd><dt>Collectors</dt><dd>Take the best boutique strain on the menu</dd><dt>Hurried</dt><dd>Whole visit ≤20 seconds · Queue comfort adds patience</dd><dt>VIPs</dt><dd>Whole visit ≤15 seconds · double payment</dd></dl><dl><dt>Match</dt><dd>+1 loyalty · +15% tip</dd><dt>Miss</dt><dd>−1 loyalty</dd><dt>20 loyalty</dt><dd>Collectors unlock</dd><dt>60 loyalty</dt><dd>VIPs unlock · regular matches tip 35%</dd></dl><p>Branch loyalty adds up to 20% income.</p></details></section>';
+  [0,1,2].forEach(function(i){var row=document.createElement('div');row.className='short-goal';row.innerHTML='<h3 id="goalTitle'+i+'"></h3><progress id="goalProgress'+i+'" max="100" aria-label="Objective progress"></progress><p id="goalCount'+i+'"></p><button id="goalClaim'+i+'"></button>'; $('shortGoals').appendChild(row);$('goalClaim'+i).onclick=function(){var reward=claimGoal(state,i,rewardScale());if(reward){save();renderUI();notify('GOAL COMPLETE · +'+fmt(reward),'upgrade')}}});
   $('dismissReturn').onclick=function(){state.empire.returnReport=null;save();renderUI()};
   STORES.forEach(function(store,i){
     var controls=document.createElement('div');controls.className='branch-management';
@@ -2082,7 +2188,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     $('returnSummary').hidden=!report;
     if(report){$('returnTime').textContent=duration(report.seconds*1000)+' away · estimated earnings (4-hour cap, 1× rate)';$('returnEarnings').innerHTML=report.earnings.map(function(n,i){return '<li><span>'+(['Main store'].concat(STORES.map(function(s){return s.name})))[i]+'</span><strong>'+fmt(n)+'</strong></li>'}).join('');$('returnGoals').textContent=report.goals+' goals ready to collect on return. Customer service and deliveries resume while playing.';}
     $('nextInvestment').textContent=investment?(state.money>=investment.cost?'Affordable now: ':'Next investment: ')+investment.name+' · '+fmt(investment.cost):'All branch investments complete. Keep growing your main store.';
-    [0,1,2].forEach(function(i){var g=goalStatus(p,i);$('goalTitle'+i).textContent=g.title;$('goalProgress'+i).value=g.progress/g.target*100;$('goalCount'+i).textContent=Math.floor(g.progress)+' / '+g.target+' · '+p.goalsCompleted+' goals completed';$('goalClaim'+i).textContent='Collect '+fmt(g.reward);$('goalClaim'+i).disabled=g.progress<g.target});
+    [0,1,2].forEach(function(i){var g=goalStatus(p,i,rewardScale());$('goalTitle'+i).textContent=g.title;$('goalProgress'+i).value=g.progress/g.target*100;$('goalCount'+i).textContent=Math.floor(g.progress)+' / '+g.target+' · '+p.goalsCompleted+' goals completed';$('goalClaim'+i).textContent='Collect '+fmt(g.reward);$('goalClaim'+i).disabled=g.progress<g.target});
     var reputationTarget=p.reputation<20?20:60;
     $('reputationStatus').textContent=p.reputation+' loyalty';
     $('reputationNext').textContent=p.reputation>=60?'VIPs unlocked':p.reputation>=20?'VIPs at 60':'Collectors at 20';
@@ -2097,7 +2203,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
   }
   function renderEmpire(){
     renderStoreView();renderManagement();operationsUI.render();
-    var p=state.empire,d=dailyStatus(p),e=eventStatus(p),m=CAREER[p.career];
+    var p=state.empire,d=dailyStatus(p,Date.now(),rewardScale()),e=eventStatus(p,Date.now(),rewardScale()),m=CAREER[p.career];
     $('empireBadge').hidden=!(d.available||(m&&state.lifetime>=m.goal)||(e.joined&&!e.claimed&&e.progress>=e.goal));
     $('careerName').textContent=m?m.name:'Bud empire complete';
     $('careerDetail').textContent=m?fmt(state.lifetime)+' / '+fmt(m.goal)+' lifetime revenue':'All six career milestones collected.';
@@ -2107,7 +2213,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     $('careerClaim').textContent=m?'Collect '+fmt(m.reward)+' + 5% sale bonus':'Career complete';
     $('branchSummary').textContent=(1+p.stores.filter(function(s){return s.level>0}).length)+'/4 open · '+fmt(branchRate(p)*state.gameSpeed)+'/s';
     STORES.forEach(function(store,i){var level=p.stores[i].level,locked=state.lifetime<store.goal,max=level>=10;
-      $('branchLevel'+i).textContent=level?'Lv '+level+'/10 · '+fmt(storeRate(p,i)*state.gameSpeed)+'/s':'Unopened · starts at '+fmt(store.rate)+'/s at 1×';
+      $('branchLevel'+i).textContent=level?'Lv '+level+'/10 · '+fmt(storeRate(p,i)*state.gameSpeed)+'/s':'Unopened · starts at '+fmt(store.rate*saleMultiplier(p)*Math.max(1,p.retailBoost||1))+'/s at 1×';
       $('branchHint'+i).textContent=locked?'Unlock at '+fmt(store.goal)+' revenue':max?'':'Next: +'+fmt(nextStoreRate(p,i)-storeRate(p,i))+'/s';$('branchHint'+i).hidden=max;$('branchBuy'+i).hidden=max;$('projectSummary'+i).parentElement.hidden=!level;
       $('projectSummary'+i).textContent='Projects · '+p.stores[i].projects.filter(Boolean).length+'/3';
       STORE_PROJECTS[i].forEach(function(name,j){
@@ -2133,10 +2239,10 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     $('eventAction').disabled=e.claimed||(e.joined?e.progress<e.goal:!e.open);
     $('eventTrophies').textContent=p.trophies+' event '+(p.trophies===1?'trophy':'trophies')+' · '+p.rewards.filter(Boolean).length+' / 3 scene keepsakes collected';
   }
-  $('dailyClaim').onclick=function(){var reward=claimDaily(state);if(reward){save();renderUI();notify('DAILY REWARD · +'+fmt(reward),'upgrade')}};
+  $('dailyClaim').onclick=function(){var reward=claimDaily(state,Date.now(),rewardScale());if(reward){save();renderUI();notify('DAILY REWARD · +'+fmt(reward),'upgrade')}};
   $('careerClaim').onclick=function(){var reward=claimCareer(state);if(reward){save();renderUI();notify('CAREER MILESTONE · +'+fmt(reward)+' · +5% sale value','upgrade')}};
   STORES.forEach(function(store,i){$('branchBuy'+i).onclick=function(){if(buyStore(state,i)){save();renderUI();notify(store.name+' upgraded · +'+fmt(state.empire.network.stores[i].incomeGain)+'/s','upgrade')}}});
-  $('eventAction').onclick=function(){var e=eventStatus(state.empire);if(!e.joined){if(joinEvent(state.empire))notify('EVENT JOINED · '+e.copy)}else{var reward=claimEvent(state);if(reward)notify('EVENT COMPLETE · +'+fmt(reward),'upgrade')}save();renderUI()};
+  $('eventAction').onclick=function(){var e=eventStatus(state.empire);if(!e.joined){if(joinEvent(state.empire))notify('EVENT JOINED · '+e.copy)}else{var reward=claimEvent(state,Date.now(),rewardScale());if(reward)notify('EVENT COMPLETE · +'+fmt(reward),'upgrade')}save();renderUI()};
   // The whole bottleneck line is the target; the button inside becomes its chevron.
   var flowGuide=document.querySelector('.flow-guide');if(flowGuide){flowGuide.setAttribute('role','button');flowGuide.setAttribute('tabindex','0');flowGuide.addEventListener('click',function(e){if(e.target!==$('flowAction'))$('flowAction').click()});flowGuide.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();$('flowAction').click()}});$('flowAction').setAttribute('tabindex','-1');$('flowAction').setAttribute('aria-hidden','true');}
   var empireShell=mountEmpireShell({fit:fitControls,getState:function(){return state},format:fmt});
@@ -2249,7 +2355,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
   if(state.empire.returnReport){renderUI()}
   syncMapView();if(!state.empire.returnReport&&state.empire.activeStore){showTray('empire');collapsePanel()}
   paintThumbnails();
-  fitControls();renderUI();ctx.fillStyle=colors.bg;ctx.fillRect(0,0,width,height);window.__shiftReady=true;finishLoading();if(firstRun&&!startGuide.seen())setTimeout(function(){startGuide.open()},600);requestAnimationFrame(render);setInterval(tick,50);setInterval(renderUI,250);setInterval(function(){if(!document.hidden)save()},5000);window.addEventListener('beforeunload',function(){if(!document.hidden)save()});window.addEventListener('pagehide',function(){if(!document.hidden)save()});
+  selected=slowestStation();fitControls();renderUI();ctx.fillStyle=colors.bg;ctx.fillRect(0,0,width,height);window.__shiftReady=true;finishLoading();if(firstRun&&!startGuide.seen())setTimeout(function(){startGuide.open()},600);requestAnimationFrame(render);setInterval(tick,50);setInterval(renderUI,250);setInterval(function(){if(!document.hidden)save()},5000);window.addEventListener('beforeunload',function(){if(!document.hidden)save()});window.addEventListener('pagehide',function(){if(!document.hidden)save()});
   document.addEventListener('visibilitychange',function(){tickTime=performance.now();tickRemainder=0;if(document.hidden){save()}else{collectOffline();if(state.empire.returnReport){renderUI()}renderUI()}});
 
   if(document.modelContext&&document.modelContext.registerTool){document.modelContext.registerTool({name:'read_factory_status',title:'Read factory status',description:'Read cash, production, and machine levels.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:function(){return{autoDrone:state.autoDrone,deliveryDrones:deliveryDrones.length,productMenu:state.productMenu,prestige:state.empire.prestige,contract:state.contract,viewedStore:state.empire.activeStore,branchLevels:state.empire.stores.map(function(s){return s.level}),branchProjects:state.empire.stores.map(function(s){return s.projects}),network:state.empire.network,reputation:state.empire.reputation,management:state.empire.stores,goalsCompleted:state.empire.goalsCompleted,branchIncome:branchRate(state.empire)*state.gameSpeed,cash:Math.floor(state.money),lifetime:Math.floor(state.lifetime),perSecond:production()*state.gameSpeed,gameSpeed:state.gameSpeed,paused:state.gameSpeed===0,lineLevels:state.lines,stock:state.stock,customersServed:state.sold,employeeLevels:state.staff,onlineCompleted:state.onlineCompleted,camera:{zoom:zoom,panX:panX,panY:panY,angle:angle},customers:customers.map(function(c){return{kind:c.kind,id:c.id,phase:c.phase,ordered:c.ordered,bag:c.bag}})}}});}

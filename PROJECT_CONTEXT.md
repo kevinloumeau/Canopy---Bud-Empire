@@ -169,3 +169,15 @@ Delivery-request maths moved to `src/deliveries.js` (cap, rate, accrue, ready, c
 ## Baskets (September 17, 2026)
 
 Customers now buy a basket of bags: `basketSize() = 1 + floor((ordersLevel - 1) / 2)`, so the order desk governs volume as well as queue places. Ordering reserves the basket (or whatever is available, at least one), pickup hands over and charges for the whole basket, and both counter stations' throughput is measured in bags per second (service rate × basket). This ends the previous situation where Pickup was always the bottleneck by an order of magnitude and plant upgrades only filled storage; Seeds, Grow, Harvest and Pack now take turns as the constraint. `state.sold` counts bags and the scoreboard says Bags sold. No save format change.
+
+## Economy review fixes (September 17, 2026)
+
+A headless simulation (actual `simulate(.05)` from a fresh save with a buy-the-bottleneck policy) showed income plateauing at ~$160/s after the first hour, reputation stuck at 3–5 for hours, web orders unavailable for the first ~15 minutes, and several Shop purchases with no economic effect. The fixes, all save-compatible:
+
+- `src/economy.js` holds the main-shop maths. Tiers (levels 10/20/30/50/75/100) now double output; the retail tier (lower of Orders/Pickup) doubles baskets, storage, ready bags, web-order size and branch income (`empire.retailBoost`, mirrored from the main shop each tick and migrated with a default of 1). Simulated income: ~$1.1K/s at 30 minutes, ~$3.3K/s at two hours, with reputation reaching the collector and VIP thresholds.
+- Customers take a strain that fits their type (`preferredStrain`); the Flower tab and Customer guide say so. Hurried/VIP patience is 20s/15s stretched by Queue comfort (+15% per level). Customer traffic became **Floor flow** (walking speed), Curing equipment adds sale value, Lasting effects adds happy-customer tips. Happiness/highness meters still respond.
+- Ready-bag prep leaves jars for the next waiting web order (`reservedJars`), so "Send 1" is available within the first minute.
+- Daily, goal and event rewards scale with current income (`rewardScale`, minimum 1×). Prestige is gated on $10M lifetime revenue (×3 per rank) instead of $1M cash. The demand ceiling used for offline pay and reward scaling now counts whole baskets.
+- Removed the one-time free kiosk grant that fired for every save on its second load. The bottleneck station is selected on load; the Shop's Recommended/Affordable row shows on phones; unopened stores hide Stock/People/Style; the Deliveries tab has one accessible name; the service-worker cache is stamped per build.
+
+Validation: 46 unit tests and the production/classic build pass; fresh-save, mid-game and reload flows were checked in the browser at 375px and desktop. Browser check suites (Playwright) were updated for the prestige gate but not run here (Playwright is not installed). Not published.

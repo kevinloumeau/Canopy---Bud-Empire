@@ -47,7 +47,7 @@ export function migrateProgression(raw, now=Date.now()) {
   const r=raw && typeof raw==='object' ? raw : {};
   const clock=num(r.clock, now);
   const event=r.event && typeof r.event==='object' ? r.event : {};
-  return {network:migrateOperations(r.network),version:4, prestige:num(r.prestige,0,19), clock, activeStore:num(r.activeStore,0,3), career:num(r.career,0,CAREER.length), daily:{
+  return {network:migrateOperations(r.network),version:4, retailBoost:Math.max(1,num(r.retailBoost,1,64)), prestige:num(r.prestige,0,19), clock, activeStore:num(r.activeStore,0,3), career:num(r.career,0,CAREER.length), daily:{
     day:num(r.daily?.day,0), streak:num(r.daily?.streak,0,7)
   }, stores:STORES.map((_,i)=>({level:num(r.stores?.[i]?.level,0,10),projects:[0,1,2].map(j=>r.stores?.[i]?.projects?.[j]===true), manager:MANAGERS.some(m=>m.id===r.stores?.[i]?.manager)&&!(Array.isArray(r.stores)?r.stores:[]).slice(0,i).some(s=>s?.manager===r.stores?.[i]?.manager)?r.stores[i].manager:'none', featured:PRODUCTS.includes(r.stores?.[i]?.featured)?r.stores[i].featured:'everyday', loyalty:num(r.stores?.[i]?.loyalty,0,1000), served:num(r.stores?.[i]?.served), serviceClock:num(r.stores?.[i]?.serviceClock,0,11)})),
   event:{slot:num(event.slot,0), joined:event.joined===true, progress:num(event.progress), claimed:event.claimed===true},
@@ -56,14 +56,16 @@ export function migrateProgression(raw, now=Date.now()) {
 export function selectedStore(p) {const i=p.activeStore;return Number.isInteger(i)&&i>0&&i<=STORES.length&&p.stores[i-1].level>0?i:0;}
 export function selectStore(p,i) {if(!Number.isInteger(i)||i<0||i>STORES.length||(i>0&&!p.stores[i-1].level))return false;p.activeStore=i;return true;}
 export function time(p, now=Date.now()) {p.clock=Math.max(p.clock,now);return p.clock;}
-export function dailyStatus(p, now=Date.now()) {
+// Fixed rewards scale with current income (scale >= 1) so they stay meaningful after the first hour.
+export function scaledReward(base,scale=1){return Math.round(base*Math.max(1,Number.isFinite(scale)?scale:1));}
+export function dailyStatus(p, now=Date.now(), scale=1) {
   const today=Math.floor(time(p,now)/DAY), available=today>p.daily.day;
   const next=p.daily.day===today-1 ? p.daily.streak%7+1 : 1;
   const day=available?next:Math.max(1,p.daily.streak);
-  return {available,day,reward:DAILY[day-1],remaining:(today+1)*DAY-p.clock};
+  return {available,day,reward:scaledReward(DAILY[day-1],scale),remaining:(today+1)*DAY-p.clock};
 }
-export function claimDaily(state, now=Date.now()) {
-  const p=state.empire, d=dailyStatus(p,now);if(!d.available)return 0;
+export function claimDaily(state, now=Date.now(), scale=1) {
+  const p=state.empire, d=dailyStatus(p,now,scale);if(!d.available)return 0;
   p.daily={day:Math.floor(p.clock/DAY),streak:d.day};state.money+=d.reward;return d.reward;
 }
 export function saleMultiplier(p) {return (1+p.career*.05)*(1+(p.prestige||0)*.2);}
@@ -72,7 +74,8 @@ export function claimCareer(state) {
   state.empire.career++;state.money+=m.reward;return m.reward;
 }
 export function storeCost(p,i) {return Math.round(STORES[i].price*Math.pow(1.75,p.stores[i].level));}
-export function storeRate(p,i) {const l=p.stores[i].level;return l?STORES[i].rate*l*(1+(l-1)*.15)*saleMultiplier(p)*(1+projectBonus(p,i))*managementMultiplier(p,i):0;}
+// p.retailBoost mirrors the main shop's retail tier (set by main.js) so branches keep pace with tiered baskets; it defaults to 1.
+export function storeRate(p,i) {const l=p.stores[i].level;return l?STORES[i].rate*l*(1+(l-1)*.15)*saleMultiplier(p)*(1+projectBonus(p,i))*managementMultiplier(p,i)*Math.max(1,p.retailBoost||1):0;}
 export function branchRate(p) {return STORES.reduce((sum,_,i)=>sum+storeRate(p,i),0);}
 export function buyStore(state,i) {
   if(!STORES[i])return false;
@@ -80,11 +83,11 @@ export function buyStore(state,i) {
   if(p.stores[i].level>=10 || state.lifetime<STORES[i].goal || state.money<cost)return false;
   const before=storeRate(p,i);state.money-=cost;p.stores[i].level++;p.network.stores[i].construction=6;p.network.stores[i].incomeGain=storeRate(p,i)-before;recordGoal(p,'invest',1);return true;
 }
-export function eventStatus(p, now=Date.now()) {
+export function eventStatus(p, now=Date.now(), scale=1) {
   const t=time(p,now),slot=Math.floor(t/HOUR), elapsed=t%HOUR;
   const definition=EVENTS[slot%EVENTS.length];
   const current=p.event.slot===slot;
-  return {...definition,slot,open:elapsed<20*60000,remaining:elapsed<20*60000?20*60000-elapsed:HOUR-elapsed,
+  return {...definition,reward:scaledReward(definition.reward,scale),slot,open:elapsed<20*60000,remaining:elapsed<20*60000?20*60000-elapsed:HOUR-elapsed,
     joined:current&&p.event.joined,progress:current?p.event.progress:0,claimed:current&&p.event.claimed};
 }
 export function joinEvent(p, now=Date.now()) {
@@ -96,8 +99,8 @@ export function recordEvent(p,kind,count,now=Date.now()) {
   const e=eventStatus(p,now);
   if(e.open&&e.joined&&!e.claimed&&e.kind===kind)p.event.progress=Math.min(e.goal,p.event.progress+count);
 }
-export function claimEvent(state, now=Date.now()) {
-  const p=state.empire,e=eventStatus(p,now);
+export function claimEvent(state, now=Date.now(), scale=1) {
+  const p=state.empire,e=eventStatus(p,now,scale);
   // Completed events remain claimable through the rest of their hourly window.
   if(!e.joined||e.claimed||e.progress<e.goal)return 0;
   p.event.claimed=true;p.trophies++;p.rewards[e.slot%3]=true;state.money+=e.reward;return e.reward;
@@ -131,9 +134,10 @@ export function managementMultiplier(p,i){
 }
 export function customerType(reputation,sequence){return reputation>=60&&sequence%7===6?'vip':reputation>=20&&sequence%3===2?'collector':sequence%2?'hurried':'regular';}
 export function customerNeed(type){return type==='vip'?'Service within 15 seconds':type==='collector'?'Boutique or exclusive product':type==='hurried'?'Service within 20 seconds':'Everyday product';}
-export function satisfyCustomer(p,i,type,product,seconds){
+// patienceScale stretches the 15s/20s speed thresholds (the main shop passes its Queue comfort bonus).
+export function satisfyCustomer(p,i,type,product,seconds,patienceScale=1){
   const store=i>=0?p.stores[i]:null;
-  const satisfied=type==='regular'?product==='everyday':type==='collector'?(product==='boutique'||product==='exclusive'&&exclusiveAvailable(p)):seconds<=(type==='vip'?15:20);
+  const satisfied=type==='regular'?product==='everyday':type==='collector'?(product==='boutique'||product==='exclusive'&&exclusiveAvailable(p)):seconds<=(type==='vip'?15:20)*Math.max(1,patienceScale);
   const key=store?'loyalty':'reputation',owner=store||p;
   owner[key]=Math.max(0,Math.min(1000,(owner[key]||0)+(satisfied?(store?.manager==='host'?2:1):-1)));
   return satisfied&&type==='vip'?2:satisfied?(1.15+(owner[key]>=60?.2:0)):1;
@@ -150,15 +154,15 @@ export function dispatchBulk(state,now=Date.now()){
   recordEvent(state.empire,'online',1,now);recordGoal(state.empire,'revenue',reward);return reward;
 }
 export function recordGoal(p,kind,count){if(Object.prototype.hasOwnProperty.call(p.counters,kind)&&Number.isFinite(count)&&count>0)p.counters[kind]=Math.min(Number.MAX_SAFE_INTEGER,p.counters[kind]+count);}
-export function goalStatus(p,i){
+export function goalStatus(p,i,scale=1){
   const g=p.goals[i],kind=i===0?'pickup':i===1?'online':g.round%2===0?'revenue':'invest';
   const target=kind==='pickup'?10+(g.round%3)*5:kind==='online'?2:kind==='invest'?1:500+(g.round%3)*250;
-  const reward=kind==='pickup'?150:kind==='online'?250:300;
+  const reward=scaledReward(kind==='pickup'?150:kind==='online'?250:300,scale);
   return {kind,target,reward,progress:Math.min(target,Math.max(0,p.counters[kind]-g.start)),title:kind==='pickup'?'Serve '+target+' customers':kind==='online'?'Complete 2 deliveries':kind==='invest'?'Improve a branch or build a project':'Earn $'+target};
 }
-export function claimGoal(state,i){
+export function claimGoal(state,i,scale=1){
   if(!Number.isInteger(i)||i<0||i>2)return 0;
-  const p=state.empire,g=goalStatus(p,i);if(g.progress<g.target)return 0;
+  const p=state.empire,g=goalStatus(p,i,scale);if(g.progress<g.target)return 0;
   state.money+=g.reward;p.goalsCompleted++;p.goals[i].round++;if(i===2&&p.goals[i].round%2===1&&(!p.stores.some(s=>s.level)||p.stores.every(s=>s.level===10&&s.projects.every(Boolean))))p.goals[i].round++;p.goals[i].start=p.counters[goalStatus(p,i).kind];return g.reward;
 }
 export function affordableImprovement(state,additional=[]){

@@ -166,7 +166,6 @@
 .shop-browser .shop-filter label{min-height:36px}
 @media(max-width:779px){
  body[data-active-tray=boosts] .sheet>[data-pane=boosts]{max-height:min(52dvh,460px);padding-bottom:2px}
- .shop-browser .shop-recommendation,.shop-browser .shop-filter{display:none}
  .shop-browser .shop-browser-header{padding-top:2px}
  .shop-browser .shop-categories{margin-bottom:6px}
  .shop-browser .shop-items{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
