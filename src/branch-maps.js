@@ -19,7 +19,8 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
   const eventKind=(experience.event?.slot||0)%3;
   const job=(x,z,draw)=>jobs.push({depth:depth({x,z}),draw});
   const patch=(x,z,w,d,color,y=.015)=>poly([p(x-w/2,y,z-d/2),p(x+w/2,y,z-d/2),p(x+w/2,y,z+d/2),p(x-w/2,y,z+d/2)],color);
-  function glow(x,y,z,size){const q=p(x,y,z),g=ctx.createRadialGradient(q.x,q.y,0,q.x,q.y,unit*size);g.addColorStop(0,lightColor+(day.night?'80':'45'));g.addColorStop(1,'#ffe2aa00');ellipse(q.x,q.y,unit*size,unit*size*.65,g);}
+  // Screen-blended light with a bright core and a long faint tail, so fixtures lift the ground they land on rather than tint it.
+  function glow(x,y,z,size){const q=p(x,y,z),g=ctx.createRadialGradient(q.x,q.y,0,q.x,q.y,unit*size),a=day.night?'8a':'45';g.addColorStop(0,lightColor+a);g.addColorStop(.3,lightColor+(day.night?'48':'24'));g.addColorStop(.65,lightColor+(day.night?'16':'0b'));g.addColorStop(1,lightColor+'00');ctx.save();ctx.globalCompositeOperation='screen';ellipse(q.x,q.y,unit*size,unit*size*.55,g);ctx.restore();}
   function planter(x,z,w=1.1,size=1.3,y=0){b(x,z,y,w,w,.55,wood);b(x,z,y+.55,w+.09,w+.09,.1,dark);if(style.plants===2){l([[x,y+.6,z],[x,y+.6+size,z]],'#79a67f',.18);l([[x-.3,y+size*.85,z],[x-.3,y+size*.5,z],[x+.3,y+size*.5,z],[x+.3,y+size,z]],'#79a67f',.13);}else plant(x,z,y+.6,size);if(projects[2]||style.plants===1){for(let k=0;k<5;k++){const xx=x-w*.35+k*w*.175,q=p(xx,y+.85+(k%2)*.12,z+w*.32);l([[xx,y+.63,z+w*.32],[xx,y+.85+(k%2)*.12,z+w*.32]],'#71925c',.025);ellipse(q.x,q.y,unit*.1,unit*.07,k%2?'#eccba1':'#c89388');}}}
   function tree(x,z,size=1){
     b(x,z,0,1.6,1.6,.28,cream);l([[x,.2,z],[x,3*size,z]],'#826243',.16);
@@ -401,5 +402,11 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     if(network.flagship)job(0,5.5,()=>{b(0,5.5,0,.6,.6,1.8,dark);b(0,5.5,1.8,1.1,.15,.8,brass);const q=p(0,2.2,5.6);ellipse(q.x,q.y,unit*.18,unit*.2,'#f0e4bb');});
   }
   jobs.sort((a,b)=>a.depth-b.depth);jobs.forEach(j=>j.draw());
-  if(day.darkness>0){ctx.fillStyle='rgba(15,26,48,'+day.darkness+')';ctx.fillRect(0,0,width,height);[-3,3].forEach(x=>glow(x,2,2,2.6));glow(0,3,8,2);if(district>0)glow(13,2,-6,1.8);}
+  if(day.darkness>0){
+    // Night multiplies the map with a cool navy, darker toward the frame edges, then the fixtures are added back as light.
+    const t=Math.min(1,day.darkness/.34),c=p(0,2,0),shade=ctx.createRadialGradient(c.x,c.y,unit*4,c.x,c.y,Math.max(width,height)*.72);
+    shade.addColorStop(0,'rgba(108,124,184,'+(t*.74)+')');shade.addColorStop(.55,'rgba(82,96,156,'+(t*.8)+')');shade.addColorStop(1,'rgba(58,70,124,'+(t*.86)+')');
+    ctx.save();ctx.globalCompositeOperation='multiply';ctx.fillStyle=shade;ctx.fillRect(0,0,width,height);ctx.globalCompositeOperation='source-over';ctx.fillStyle='rgba(20,30,62,'+(t*.09)+')';ctx.fillRect(0,0,width,height);ctx.restore();
+    [-3,3].forEach(x=>glow(x,2,2,2.6));glow(0,3,8,2);if(district>0)glow(13,2,-6,1.8);
+  }
 }

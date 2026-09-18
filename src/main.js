@@ -9,7 +9,7 @@ import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import * as economy from './economy.js';
-import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assignManager, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, affordableImprovement, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent } from './progression.js';
+import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, affordableImprovement, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent } from './progression.js';
 (function () {
   'use strict';
 
@@ -351,43 +351,120 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
   function shadowBand(x0,x1,zNear,zFar,y,alpha){var a=project((x0+x1)/2,y,zNear),b=project((x0+x1)/2,y,zFar),g=ctx.createLinearGradient(a.x,a.y,b.x,b.y);g.addColorStop(0,'rgba(14,28,20,'+alpha+')');g.addColorStop(1,'rgba(14,28,20,0)');poly([project(x0,y,zNear),project(x1,y,zNear),project(x1,y,zFar),project(x0,y,zFar)],g)}
   function shadowBandX(z0,z1,xNear,xFar,y,alpha){var a=project(xNear,y,(z0+z1)/2),b=project(xFar,y,(z0+z1)/2),g=ctx.createLinearGradient(a.x,a.y,b.x,b.y);g.addColorStop(0,'rgba(14,28,20,'+alpha+')');g.addColorStop(1,'rgba(14,28,20,0)');poly([project(xNear,y,z0),project(xNear,y,z1),project(xFar,y,z1),project(xFar,y,z0)],g)}
   function groundPatch(x,z,w,d,fill){poly([project(x-w/2,.015,z-d/2),project(x+w/2,.015,z-d/2),project(x+w/2,.015,z+d/2),project(x-w/2,.015,z+d/2)],fill)}
-  function glow(x,y,r,color){var g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color);g.addColorStop(1,'#00000000');ellipse(x,y,r,r*.6,g)}
+  // Emissive light. Every glow, pool, cone and wash is composited with 'screen' so it lifts the material it lands on
+  // instead of painting a translucent disc over it; light surfaces stay put, dark ones warm up.
+  function parseHex(hex){var n=parseInt(hex.slice(1,7),16);return [n>>16&255,n>>8&255,n&255,hex.length>7?parseInt(hex.slice(7,9),16)/255:1]}
+  function rgba(c,a){return 'rgba('+c[0]+','+c[1]+','+c[2]+','+Math.max(0,a)+')'}
+  // Bright core, quick roll-off and a long faint tail, closer to inverse-square than a linear fade.
+  function softRadial(x,y,r,c,a){var g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,rgba(c,a));g.addColorStop(.28,rgba(c,a*.52));g.addColorStop(.62,rgba(c,a*.16));g.addColorStop(1,rgba(c,0));return g}
+  function glow(x,y,r,color,ry){var c=parseHex(color);ctx.save();ctx.globalCompositeOperation='screen';ellipse(x,y,r,ry||r*.6,softRadial(x,y,r,c,c[3]));ctx.restore()}
+  // Linear gradient across a projected plane: p0->p1 is a line of constant value, p0->p3 the falloff direction. Keeps a wash
+  // aligned to world height on a slanted wall rather than to screen rows.
+  function planeGradient(p0,p1,p3,stops){var dx=p1.x-p0.x,dy=p1.y-p0.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len,t=(p3.x-p0.x)*nx+(p3.y-p0.y)*ny;var g=ctx.createLinearGradient(p0.x,p0.y,p0.x+nx*t,p0.y+ny*t);stops.forEach(function(st){g.addColorStop(st[0],st[1])});return g}
+  // Grazing light: a concealed strip washes down the wall plane beneath it and dies out before the floor.
+  function wallWash(x0,x1,z,yTop,yBottom,color,a){var c=parseHex(color),p0=project(x0,yTop,z),p1=project(x1,yTop,z),p2=project(x1,yBottom,z),p3=project(x0,yBottom,z);ctx.save();ctx.globalCompositeOperation='screen';poly([p0,p1,p2,p3],planeGradient(p0,p1,p3,[[0,rgba(c,a)],[.35,rgba(c,a*.42)],[1,rgba(c,0)]]));ctx.restore()}
+  // Volumetric cone: a wedge of light falling from a fixture to the surface below. Three nested wedges keep the edges feathered.
+  function lightCone(x,yTop,z,yBottom,topHalf,bottomHalf,color,a){
+    var top=project(x,yTop,z),base=project(x,yBottom,z),c=parseHex(color);
+    ctx.save();ctx.globalCompositeOperation='screen';
+    [[.62,1],[1,.55],[1.5,.25]].forEach(function(layer){
+      var tw=unit*topHalf*layer[0],bw=unit*bottomHalf*layer[0],g=ctx.createLinearGradient(0,top.y,0,base.y);
+      g.addColorStop(0,rgba(c,a*layer[1]));g.addColorStop(.5,rgba(c,a*layer[1]*.42));g.addColorStop(1,rgba(c,0));
+      ctx.beginPath();ctx.moveTo(top.x-tw,top.y);ctx.lineTo(top.x+tw,top.y);ctx.lineTo(base.x+bw,base.y);ctx.lineTo(base.x-bw,base.y);ctx.closePath();ctx.fillStyle=g;ctx.fill();
+    });
+    ctx.restore();
+  }
+  // World-space emitters: a floor pool (with a tighter hot spot) and a spherical halo around a fixture.
+  function poolLight(x,y,z,r,a,color){var p=project(x,y,z),c=parseHex(color);ctx.save();ctx.globalCompositeOperation='screen';ellipse(p.x,p.y,unit*r,unit*r*.5,softRadial(p.x,p.y,unit*r,c,a));ellipse(p.x,p.y,unit*r*.38,unit*r*.19,softRadial(p.x,p.y,unit*r*.38,c,a*.7));ctx.restore()}
+  function haloLight(x,y,z,r,a,color){var p=project(x,y,z),c=parseHex(color);ctx.save();ctx.globalCompositeOperation='screen';ellipse(p.x,p.y,unit*r,unit*r,softRadial(p.x,p.y,unit*r,c,a));ctx.restore()}
+  // Slow breathing for gas-discharge fixtures; still under reduced motion.
+  function lampPulse(now,seed){return motionPreference.matches?1:1+Math.sin(now*.0013+seed)*.035}
+  // Exterior fixtures, shared by the day pass and the night re-lighting pass: brass sconces on the entrance posts, a recessed
+  // strip under the entrance header, a hooded lamp over the exit and low bollards beside both approaches.
+  var exteriorFixtures={
+    sconces:[{x:-10.98,y:2.3,z:8.72},{x:-10.98,y:2.3,z:11.28}],
+    bollards:[{x:-12.2,z:11.55},{x:-12.75,z:6.2},{x:9.05,z:-8.45},{x:11.45,z:-8.45}],
+    exitLamp:{x:10.25,y:3.38,z:-7.34},
+    entryStrip:[[-10.9,3.27,8.85],[-10.9,3.27,11.15]]
+  };
+  function exteriorLightSpill(k){
+    exteriorFixtures.sconces.forEach(function(f){haloLight(f.x-.2,f.y-.06,f.z,.8,.26*k,'#ffe2a5');lightCone(f.x-.32,f.y-.12,f.z,.03,.14,.8,'#ffd98f',.08*k);poolLight(f.x-.6,.03,f.z,1.25,.2*k,'#ffd98f')});
+    exteriorFixtures.bollards.forEach(function(b){haloLight(b.x,.62,b.z,.42,.28*k,'#ffe2a5');poolLight(b.x,.03,b.z,1.1,.18*k,'#ffd98f')});
+    var e=exteriorFixtures.exitLamp;haloLight(e.x,e.y-.14,e.z,.7,.26*k,'#ffe2a5');lightCone(e.x,e.y-.12,e.z-.06,.03,.28,1.1,'#ffd98f',.09*k);poolLight(e.x,.03,e.z-.8,1.5,.22*k,'#ffd98f');
+    poolLight(-11.2,.03,10,1.5,.16*k,'#ffd98f');
+  }
+  // Recessed downlight in the slab over the ground-floor counters: a small trim ring and a long, faint cone onto the counter top.
+  function slabDownlight(x,z,slabY,topY){
+    var trim=project(x,slabY,z);ellipse(trim.x,trim.y,unit*.13,unit*.065,'#2a3330');ellipse(trim.x,trim.y,unit*.075,unit*.038,'#fff3d2');
+    lightCone(x,slabY-.01,z,topY,.12,1.25,'#ffe3a8',.055);
+    var top=project(x,topY+.01,z);glow(top.x,top.y,unit*1.35,'#ffe6b01e',unit*.62);
+  }
+  // Bench task lamp for mid-tier production stations: a slim arm from the rear corner with a hooded head over the work surface.
+  function benchLamp(x,z,cool){
+    var arm=['#3a4340','#1b201e','#2a302d'],head=['#c9c1a6','#6f6a57','#a49d84'];
+    worldLine([[x+1.28,1.3,z-.95],[x+1.28,2.32,z-.95],[x+.95,2.42,z-.6]],'#2a302d',.032);
+    drawBox(x+.9,z-.55,2.24,.36,.3,.14,head);
+    var bulb=project(x+.9,2.22,z-.55);ellipse(bulb.x,bulb.y,unit*.075,unit*.04,cool?'#eef8dc':'#fff3d2');
+    lightCone(x+.85,2.22,z-.5,1.3,.13,.7,cool?'#d8efae':'#ffe3a8',.09);
+    var spot=project(x+.6,1.31,z-.3);glow(spot.x,spot.y,unit*1.05,cool?'#e2f3cd28':'#ffe6b02a',unit*.5);
+  }
   // Small projected light sources; layered strokes avoid expensive full-scene bloom.
   function warmStrip(points,cool){
     ctx.save();worldLine(points,'#344338',.095);
-    ctx.globalAlpha=.12;worldLine(points,cool?'#d6edbe':'#ffcf83',.34);
-    ctx.globalAlpha=.28;worldLine(points,cool?'#e2f3cd':'#ffe3a4',.15);
-    ctx.globalAlpha=.85;worldLine(points,cool?'#e7f6d0':'#ffe8b4',.052);
+    ctx.globalCompositeOperation='screen';
+    ctx.globalAlpha=.06;worldLine(points,cool?'#d6edbe':'#ffcf83',.46);
+    ctx.globalAlpha=.11;worldLine(points,cool?'#d6edbe':'#ffcf83',.26);
+    ctx.globalAlpha=.24;worldLine(points,cool?'#e2f3cd':'#ffe3a4',.12);
+    ctx.globalCompositeOperation='source-over';
+    ctx.globalAlpha=.9;worldLine(points,cool?'#e7f6d0':'#ffe8b4',.052);
     ctx.globalAlpha=1;worldLine(points,cool?'#f3fbe7':'#fff5da',.018);ctx.restore();
+  }
+  // Night falls by multiplying the scene with a cool navy rather than fogging it: colours deepen, blacks stay black, and the
+  // edges of the frame go darker than the shop so the lit interior reads like a lantern. A trace of haze lifts the deepest shadows.
+  function nightShadeOverlay(darkness){
+    var t=Math.min(1,darkness/.34),saved=sceneElevation;sceneElevation=0;var c=project(0,4.5,0);sceneElevation=saved;
+    ctx.save();ctx.globalCompositeOperation='multiply';
+    var g=ctx.createRadialGradient(c.x,c.y,unit*5,c.x,c.y,Math.max(width,height)*.72);
+    g.addColorStop(0,'rgba(108,124,184,'+(t*.74)+')');g.addColorStop(.55,'rgba(82,96,156,'+(t*.8)+')');g.addColorStop(1,'rgba(58,70,124,'+(t*.86)+')');
+    ctx.fillStyle=g;ctx.fillRect(0,0,width,height);
+    ctx.globalCompositeOperation='source-over';ctx.fillStyle='rgba(20,30,62,'+(t*.09)+')';ctx.fillRect(0,0,width,height);
+    ctx.restore();
   }
   // Night: everything that glows is redrawn above the shade so the shop reads as lit, not dimmed.
   function nightLights(now){
     var saved=sceneElevation;sceneElevation=0;
     function tint(hex,a){var n=parseInt(hex.slice(1),16);return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')'}
-    function pool(x,y,z,r,a,color){var p=project(x,y,z),g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,unit*r);g.addColorStop(0,tint(color,a));g.addColorStop(.55,tint(color,a*.35));g.addColorStop(1,tint(color,0));ellipse(p.x,p.y,unit*r,unit*r*.55,g)}
-    function halo(x,y,z,r,a,color){var p=project(x,y,z),g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,unit*r);g.addColorStop(0,tint(color,a));g.addColorStop(1,tint(color,0));ellipse(p.x,p.y,unit*r,unit*r,g)}
-    var warm='#ffd98f',cool='#cfeebb';
-    // Work lights over every station; the grow room glows cool.
-    machinePos.forEach(function(q,i){pool(q.x,q.y+.04,q.z+.9,2,.24,i===1?cool:warm)});
+    ctx.save();ctx.globalCompositeOperation='screen';
+    var pool=poolLight,halo=haloLight,warm='#ffd98f',cool='#cfeebb';
+    // Street fixtures carry more of the load after dark.
+    exteriorLightSpill(1.2);
+    // Slab downlights over the retail counters, the vitrines and the island cases keep their own glow.
+    [4,5].forEach(function(i){var q=machinePos[i];lightCone(q.x,4.45,q.z,1.31,.12,1.25,'#ffe3a8',.09);halo(q.x+.65,1.6,q.z+.35,.55,.2,'#fff0c8')});
+    [[-4.85,8.9],[6.7,8.9]].forEach(function(q){halo(q[0],1.4,q[1]-.32,.9,.18,'#fff0c8')});
+    // Concealed strips wash the rear walls of every floor, so the architecture stays legible after dark.
+    [[-11.2,8.95,-6.9,3.6,1.3,.24],[-8.7,8.7,4.7-6.55,4.7+3.6,4.7+1.5,.26],[-6.2,6.2,9.4-6.7,9.4+3.6,9.4+1.7,.12]].forEach(function(w){wallWash(w[0],w[1],w[2],w[3],w[4],warm,w[5])});
+    // Work lights over every station; the grow room glows cool. A cone from each under-counter strip hangs in the night air.
+    machinePos.forEach(function(q,i){pool(q.x,q.y+.04,q.z+.9,2,.3,i===1?cool:warm);lightCone(q.x,q.y+1.1,q.z+1.26,q.y+.04,1.3,1.75,i===1?cool:warm,.1)});
     // Shop-floor downlights, the lit entrance, and the online kiosk sign.
     [[-4,2.5],[4,2.5],[0,6]].forEach(function(q){pool(q[0],.03,q[1],2.2,.26,warm)});
     // Counters and the grow rack keep their own light at night so the interior stays legible.
     pool(-4,.03,4.9,2.6,.34,warm);pool(4,.03,4.9,2.6,.34,warm);pool(0,9.44,-6.2,2.6,.3,'#cfe6ff');halo(0,11.4,-6.2,2.2,.16,'#cfe6ff');
-    // Purple grow pendants on the top floor.
-    [-3.75,-2.25,2.25,3.75].forEach(function(lx){pool(lx,9.44,-3,1.6,.34,'#c98bff');halo(lx,11.8,-3,1,.28,'#d9a8ff')});
+    // Purple grow pendants on the top floor, each with its own soft cone down to the bench.
+    [-3.75,-2.25,2.25,3.75].forEach(function(lx,li){var pulse=lampPulse(now,li*1.7);pool(lx,9.44,-3,1.6,.36*pulse,'#c98bff');halo(lx,12.65,-3,1,.3*pulse,'#d9a8ff');lightCone(lx,12.6,-3,9.44,.3,1.15,'#c98bff',.16*pulse)});
     pool(-9.1,.04,10.41,1.7,.32,warm);halo(-9.1,2.4,10.41,.9,.35,'#ffe2a5');
     pool(-10.7,7.09,1.5,1.6,.34,cool);halo(-10.7,9.2,1.5,1.3,.45,'#bfe9d8');
     // Fascia strips glow a little stronger at night in place of any hanging bulbs.
-    [[4.7,3.05,-8.8,8.8],[9.4,-.3,-6.3,6.3]].forEach(function(f){var a=project(f[2],f[0]-.06,f[1]),b=project(f[3],f[0]-.06,f[1]);var g=ctx.createLinearGradient(a.x,a.y,b.x,b.y);g.addColorStop(0,tint('#ffd98f',0));g.addColorStop(.12,tint('#ffd98f',.22));g.addColorStop(.88,tint('#ffd98f',.22));g.addColorStop(1,tint('#ffd98f',0));ctx.save();ctx.strokeStyle=g;ctx.lineWidth=unit*.42;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.restore()});
+    [[4.7,3.05,-8.8,8.8],[9.4,-.3,-6.3,6.3]].forEach(function(f){var a=project(f[2],f[0]-.06,f[1]),b=project(f[3],f[0]-.06,f[1]);var g=ctx.createLinearGradient(a.x,a.y,b.x,b.y);g.addColorStop(0,tint('#ffd98f',0));g.addColorStop(.12,tint('#ffd98f',.13));g.addColorStop(.88,tint('#ffd98f',.13));g.addColorStop(1,tint('#ffd98f',0));ctx.save();ctx.strokeStyle=g;ctx.lineWidth=unit*.34;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.restore()});
     // A warm wash behind the top-floor shelving and the mezzanine planted wall.
     var w=project(.6,11,-6.7),g=ctx.createRadialGradient(w.x,w.y,0,w.x,w.y,unit*3.4);g.addColorStop(0,tint('#ffd98f',.2));g.addColorStop(1,tint('#ffd98f',0));ellipse(w.x,w.y,unit*3.4,unit*1.2,g);
     var v=project(7.9,5.9,-6.5),gv=ctx.createRadialGradient(v.x,v.y,0,v.x,v.y,unit*1.8);gv.addColorStop(0,tint('#cfeebb',.22));gv.addColorStop(1,tint('#cfeebb',0));ellipse(v.x,v.y,unit*1.8,unit*1.4,gv);
     // Stair treads.
     for(var st=0;st<8;st++)pool(9.2,.6+st*1.15,4.6-st*.75,.55,.22,warm);
+    ctx.restore();
     sceneElevation=saved;
   }
   function lightPool(x,y,z,r,cool){
-    var p=project(x,y,z);glow(p.x,p.y,unit*r,cool?'#d8efae30':'#ffdc9138');
+    var p=project(x,y,z);glow(p.x,p.y,unit*r,cool?'#d8efae34':'#ffdc913c',unit*r*.5);glow(p.x,p.y,unit*r*.4,cool?'#eaf7cf2a':'#fff0c22e',unit*r*.2);
   }
 
   function ellipse(x,y,rx,ry,fill){
@@ -579,7 +656,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
   function drawStage(pos,i,now){
     now=motionPreference.matches?0:taskClocks[i];
     var x=pos.x,z=pos.z,active=stationWorking(i),stone=[['#d1e5c4','#6f9b7d','#a0c6a5'],['#7fd7b5','#236e62','#44ab89'],['#97e4e1','#28747f','#55b4b4'],['#ffe29a','#c3893f','#edbd62']][Math.min(3,stationTier(i))],dark=['#416859','#213b32','#315446'];
-    if(stationTier(i)===0){drawStarterStation(x,z,i);warmStrip([[x-.8,1.12,z+.84],[x+.8,1.12,z+.84]],i===1);return}
+    if(stationTier(i)===0){drawStarterStation(x,z,i);warmStrip([[x-.8,1.12,z+.84],[x+.8,1.12,z+.84]],i===1);if(i>=4)slabDownlight(x,z,4.45,1.13);return}
     var contact=project(x+.25,.015,z+.2);ellipse(contact.x,contact.y,unit*1.95,unit*.88,'#344d3b26');
     drawBox(x,z,.03,3.1,2.5,.3,dark);drawBox(x,z,.33,2.9,2.25,.8,stone);drawBox(x,z,1.13,3.2,2.5,.16,['#f4e7c0','#b6a37b','#d6c596']);drawBox(x,z,1.29,3.12,2.42,.035,['#f0e5cb','#b8aa8b','#d6c7a6']);
     for(var panel=0;panel<2;panel++){drawBox(x-.75+panel*1.5,z+1.135,.44,1.32,.04,.55,['#d0e3c9','#6b8f79','#a2bfa4']);drawBox(x-.75+panel*1.5,z+1.17,.75,.32,.045,.045,['#e3d6ac','#958d70','#c3b68f'])}
@@ -593,6 +670,8 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     if(i===4){drawBox(x-.7,z,1.3,.95,.7,.12,dark);drawBox(x-.7,z-.2,1.42,.95,.13,.7,['#d8e7df','#314c42','#426b57']);for(var n=0;n<3;n++)drawBox(x+.5+n*.22,z+n*.18,1.3+n*.16,.7,.55,.16,['#f2ead5','#b0a589','#d2c6aa'])}
 
     if(i===1&&active){var lit=project(x,1.38,z);glow(lit.x,lit.y,unit*2.1,'#e6efb047')}
+    if((i===2||i===3)&&stationTier(i)<3)benchLamp(x,z,false);
+    if(i>=4)slabDownlight(x,z,4.45,1.31);
     if(i===3){drawBox(x+1.05,z+.8,1.33,.5,.35,.16,['#9faf99','#465f4a','#70866b']);drawBox(x+1.05,z+.8,1.5,.35,.24,.025,['#c9ebaf','#8cac78','#b7d59d'])}
     if(i>=4){
       // Pale stone retail counters with oak fluting and a glass product vitrine.
@@ -611,7 +690,9 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
       worldLine([[x+.08,1.34,z+.78],[x+.08,2,z+.78],[x+1.22,2,z+.78],[x+1.22,1.34,z+.78]],'#2f3933',.035);
       }
       worldLine([[x-1.45,.39,z+1.16],[x+1.45,.39,z+1.16]],'#c0a466',.035);
-      if(i===4){jar(x+.4,z+.36,1.34);jar(x+.86,z+.36,1.34)}
+      if(i===4){jar(x+.4,z+.36,1.34);jar(x+.86,z+.36,1.34);
+        // Case lighting: an LED bar under the lid and a soft fill on the jars.
+        var caseFill=project(x+.65,1.58,z+.35);glow(caseFill.x,caseFill.y,unit*.62,'#fff0c82c',unit*.42);worldLine([[x+.14,1.95,z+.74],[x+1.16,1.95,z+.74]],'#fff2cc',.02)}
       else{
         // Low oak staging tray leaves a clear handoff area at the front.
         drawBox(x,z-.35,1.315,2.6,.72,.07,['#cdb38b','#92724e','#b2946c']);
@@ -639,9 +720,10 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
       drawBox(x,z+1.25,.56,.44,.025,.35,['#294a3c','#294a3c','#294a3c']);bagAppIcon(x,z+1.27,.59,.29);
     }
 
+    lightCone(x,1.1,z+1.26,.04,1.3,1.7,i===1?'#d8efae':'#ffdc91',.07);
     warmStrip([[x-1.3,1.1,z+1.26],[x+1.3,1.1,z+1.26]],i===1);
     warmStrip([[x-1.35,.14,z+1.18],[x+1.35,.14,z+1.18]],false);
-    if(stationTier(i)>=2){var pool=project(x,.08,z+1.35);glow(pool.x,pool.y,unit*1.45,'#f4d29528')}
+    if(stationTier(i)>=2){var pool=project(x,.08,z+1.35);glow(pool.x,pool.y,unit*1.45,'#f4d29528',unit*.7)}
 
     worldLine([[x-1.5,1.325,z+1.22],[x+1.5,1.325,z+1.22]],'#fff9df88',.018);
     worldLine([[x+1.55,1.325,z-1.12],[x+1.55,1.325,z+1.18]],'#fff9df55',.018);
@@ -671,6 +753,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     if(i<4){
       drawBox(x-1.35,z-.85,1.33,.065,.065,1.45,dark);
       drawBox(x-.8,z-.85,2.78,1.15,.22,.07,metal);
+      lightCone(x-.78,2.76,z-.73,1.33,.55,.9,'#ffe6a8',.12);
       worldLine([[x-1.3,2.77,z-.73],[x-.25,2.77,z-.73]],'#f9e9b7',.035);
     }else{
       drawBox(x-.85,z+1.17,.57,.62,.025,.36,dark);
@@ -1048,6 +1131,14 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
       ctx.strokeStyle='#6b8070';ctx.lineWidth=unit*.07;ctx.stroke();
     }
   }
+  // Lit sign face: text drawn in the sign's own plane with a bloom, at the exact spot the day pass uses.
+  // The night pass re-draws every registered face above the shade.
+  var signFaces=[];
+  function signText(x,y,z,label,widthUnits,size,color){
+    var p=project(x,y,z),axis=project(x+1,y,z);
+    ctx.save();ctx.translate(p.x,p.y);ctx.transform(1,(axis.y-p.y)/(axis.x-p.x),0,1,0,0);
+    ctx.shadowColor='#ffe8b6';ctx.shadowBlur=unit*.12;ctx.fillStyle=color||'#fff5d9';ctx.font='600 '+Math.max(7,unit*size)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,0,0,widthUnits*unit);ctx.restore();
+  }
   function archedServiceSign(x,label){
     var z=3.75,half=1.95,spring=2.7,rise=1.25;
     var oak=['#c7ad7e','#7d694b','#a38c64'];
@@ -1066,9 +1157,20 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     drawBox(x,z,y,w,.16,h,['#aa9568','#203f31','#2d503c']);
     warmStrip([[x-w/2+.03,y+h-.025,z+.095],[x+w/2-.03,y+h-.025,z+.095]],false);
     worldLine([[x-w/2+.07,y+.06,z+.09],[x+w/2-.07,y+.06,z+.09]],'#c9b77e',.025);
-    var p=project(x,y+h*.45,z+.1),axis=project(x+1,y+h*.45,z+.1),slope=(axis.y-p.y)/(axis.x-p.x);
-    ctx.save();ctx.translate(p.x,p.y);ctx.transform(1,slope,0,1,0,0);
-    ctx.shadowColor='#ffe8b6';ctx.shadowBlur=unit*.12;ctx.fillStyle='#fff5d9';ctx.font='600 '+Math.max(7,unit*.27)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,0,0,w*unit*.64);ctx.restore();
+    signText(x,y+h*.45,z+.1,label,w*.64,.27);
+    signFaces.push({x:x,y:y+h*.45,z:z+.1,label:label,width:w*.64,size:.27,halo:1.4});
+  }
+  // Backlit LED readout: the panel itself emits a teal glow, the text blooms over it. Drawn in the day pass and again above the night shade.
+  function onlineReadout(x,faceZ,pending,ready){
+    var tone=ready?'#9fe07a':'#7fd2c2',c=parseHex(tone);
+    ctx.save();ctx.globalCompositeOperation='screen';
+    var p0=project(x-.9,.4,faceZ+.048),p1=project(x+.9,.4,faceZ+.048),p2=project(x+.9,.8,faceZ+.048),p3=project(x-.9,.8,faceZ+.048);
+    poly([p0,p1,p2,p3],planeGradient(p3,p2,p0,[[0,rgba(c,.34)],[1,rgba(c,.16)]]));
+    ctx.restore();
+    var spill=project(x,.6,faceZ+.05);glow(spill.x,spill.y,unit*1.3,tone+'3a',unit*.6);
+    var disp=project(x,.62,faceZ+.05),dAxis=project(x+1,.62,faceZ+.05),frameWidth=Math.abs(project(x+.93,.62,faceZ+.05).x-project(x-.93,.62,faceZ+.05).x)*.86;
+    ctx.save();ctx.translate(disp.x,disp.y);ctx.transform(1,(dAxis.y-disp.y)/(dAxis.x-disp.x),0,1,0,0);
+    ctx.shadowColor=ready?'#b7e394':'#9ed6c8';ctx.shadowBlur=unit*.1;ctx.fillStyle=ready?'#d9f7c4':'#d2f2ea';ctx.font='600 '+Math.max(6,unit*.16)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(pending+(pending===1?' ORDER':' ORDERS')+' · '+state.stock[3]+' JARS',0,0,frameWidth);ctx.restore();
   }
   function onlinePackingCounter(now){
     var x=-10.7,z=1.5,oak=['#cbb085','#7f6a4b','#ac9168'],green=['#86a795','#3e6250','#648a70'];
@@ -1108,9 +1210,8 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     warmStrip([[x-1.48,2.88,z-.65],[x+1.48,2.88,z-.65]],false);
     drawBox(x,z-.674,2.31,2.97,.025,.51,['#355d49','#294836','#355d49']);
     worldLine([[x-1.4,2.29,z-.64],[x+1.4,2.29,z-.64]],'#ecd39c',.027);
-    var sign=project(x,2.55,z-.64),axis=project(x+1,2.55,z-.64);
-    ctx.save();ctx.translate(sign.x,sign.y);ctx.transform(1,(axis.y-sign.y)/(axis.x-sign.x),0,1,0,0);
-    ctx.shadowColor='#ffe8b6';ctx.shadowBlur=unit*.1;ctx.fillStyle='#fff5d9';ctx.font='600 '+Math.max(7,unit*.235)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('ONLINE ORDERS',0,0,unit*2.3);ctx.restore();
+    signText(x,2.55,z-.64,'ONLINE ORDERS',2.3,.235);
+    signFaces.push({x:x,y:2.55+sceneElevation,z:z-.64,label:'ONLINE ORDERS',width:2.3,size:.235,halo:1.4});
     var status=project(x+.85,1.5,z-.49);ellipse(status.x,status.y,unit*.065,unit*.065,state.stock[3]>=onlineSize()?'#b7e394':'#d7b775');
     
     // Shelf-edge display set into the counter front: orders waiting against jars on hand, with a fill line for how much of the queue can ship.
@@ -1118,9 +1219,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     drawBox(x,faceZ+.02,.34,1.9,.04,.5,['#1d3a2c','#12281e','#183224']);
     worldLine([[x-.93,.36,faceZ+.045],[x+.93,.36,faceZ+.045],[x+.93,.82,faceZ+.045],[x-.93,.82,faceZ+.045],[x-.93,.36,faceZ+.045]],'#a9d2c855',.02);
     // The readout is measured against the frame's projected width so it always sits inside the black surround.
-    var disp=project(x,.62,faceZ+.05),dAxis=project(x+1,.62,faceZ+.05),frameWidth=Math.abs(project(x+.93,.62,faceZ+.05).x-project(x-.93,.62,faceZ+.05).x)*.86;
-    ctx.save();ctx.translate(disp.x,disp.y);ctx.transform(1,(dAxis.y-disp.y)/(dAxis.x-disp.x),0,1,0,0);
-    ctx.shadowColor=ready?'#b7e394':'#9ed6c8';ctx.shadowBlur=unit*.07;ctx.fillStyle=ready?'#c9f0b0':'#b9e2d7';ctx.font='600 '+Math.max(6,unit*.16)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(pending+(pending===1?' ORDER':' ORDERS')+' · '+state.stock[3]+' JARS',0,0,frameWidth);ctx.restore();
+    onlineReadout(x,faceZ,pending,ready);
     worldLine([[x-.78,.45,faceZ+.05],[x+.78,.45,faceZ+.05]],'#0d1f17',.07);
     var fill=pending?Math.min(1,state.stock[3]/Math.max(1,needed)):0;if(fill>0)worldLine([[x-.78,.45,faceZ+.05],[x-.78+1.56*fill,.45,faceZ+.05]],ready?'#b7e394':'#a9d2c8',.05);
     // Its own feed branch carries packed jars from the packing station.
@@ -1248,12 +1347,13 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
       drawBox(lx,barZ,barY,.5,2.3,.13,['#3c4146','#1d2124','#2b3034']);
       worldLine([[lx-.12,barY-.005,barZ-1.1],[lx-.12,barY-.005,barZ+1.1]],'#e7b8ff',.045);worldLine([[lx+.12,barY-.005,barZ-1.1],[lx+.12,barY-.005,barZ+1.1]],'#e7b8ff',.045);
       ctx.save();ctx.globalAlpha=.22;worldLine([[lx,barY-.03,barZ-1.1],[lx,barY-.03,barZ+1.1]],'#c98bff',.5);ctx.restore();
-      var under=project(lx,barY-.1,barZ);glow(under.x,under.y,unit*1.4,'#c47cff2e');
-      var floorWash=project(lx,.03,barZ),washGradient=ctx.createRadialGradient(floorWash.x,floorWash.y,0,floorWash.x,floorWash.y,unit*1.7);washGradient.addColorStop(0,'rgba(190,120,255,.18)');washGradient.addColorStop(1,'rgba(190,120,255,0)');ellipse(floorWash.x,floorWash.y,unit*1.3,unit*1.6,washGradient);
+      var pulse=lampPulse(sceneTime,li*1.7),under=project(lx,barY-.1,barZ);glow(under.x,under.y,unit*1.4,'#c47cff30');
+      lightCone(lx,barY-.06,barZ,.03,.32,1.05,'#c98bff',.13*pulse);
+      var floorWash=project(lx,.03,barZ);glow(floorWash.x,floorWash.y,unit*1.7,'#be78ff26',unit*1.1);
     });
   }
   function drawTower(now){
-    sceneElevation=0;
+    sceneElevation=0;signFaces.length=0;
     // Backdrop: a gently lit sky-to-ground gradient, a halo behind the shop and a vignette at the edges.
     var sky=ctx.createLinearGradient(0,0,0,height);sky.addColorStop(0,'#3a433c');sky.addColorStop(.5,'#4a544a');sky.addColorStop(1,'#333b34');ctx.fillStyle=sky;ctx.fillRect(0,0,width,height);
     var halo=project(0,0,1);glow(halo.x,halo.y-unit*4,unit*24,'#98a88626');
@@ -1347,7 +1447,8 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
         drawBox(0,rear+.13,sillY-.09,floor.w-.9,.14,.09,frame);drawBox(0,rear+.13,headY,floor.w-.9,.14,.08,frame);
         drawBox(left+.12,rear+1.875,sillY-.09,.14,2.95,.09,frame);drawBox(left+.12,rear+1.875,headY,.14,2.95,.08,frame);
         // Daylight from the clerestory washes the top of the plaster and the floor beneath it.
-        var daylight=project(0,headY,rear+.3);glow(daylight.x,daylight.y,unit*6,'#e9f0d81c');
+        var daylight=project(0,headY,rear+.3),dayFactor=1-Math.min(1,visualLight().darkness/.34);
+        ctx.save();ctx.globalAlpha=dayFactor;glow(daylight.x,daylight.y,unit*6.5,'#e9f0d81c',unit*3.2);wallWash(left+.5,right-.5,rear+.2,headY,sillY-.9,'#eef4e2',.12);ctx.restore();
       }
       // Ambient occlusion: the floor darkens softly where it meets the rear and side walls.
       shadowBand(fi===0?-11.5:left+.2,fi===0?9.05:right-.2,rear+.1,rear+1.6,.012,fi===0?.14:.22);shadowBandX(rear+.1,rear+3.5,left+.18,left+1.3,.012,.14);
@@ -1362,7 +1463,8 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
         worldLine([[left+.08,1.96,rear+.2],[9.05-.08,1.96,rear+.2]],'#c6af79',.04);
       }
       worldLine([[left+.3,3.6,rear+.14],[fi===0?8.95:right-.3,3.6,rear+.14]],'#f5dfaa',.065);
-      var light=project(0,2.5,rear+.3);glow(light.x,light.y,unit*5,'#f7d58b20');
+      wallWash(left+.3,fi===0?8.95:right-.3,rear+.2,3.58,fi===2?1.9:1.5,'#f7d58b',.2);
+      var light=project(0,2.5,rear+.3);glow(light.x,light.y,unit*5,'#f7d58b18',unit*2.4);
       // Ambient occlusion where the floor meets the walls, and under the mezzanine above.
       shadowBand(left+.2,fi===0?9:right-.2,rear+.2,rear+1.9,.018,.2);
       shadowBandX(rear+.2,front-.2,left+.2,left+1.4,.018,.15);
@@ -1687,6 +1789,22 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
       worldLine([[exitX,.055,exitZ+1.1],[exitX,.055,exitZ-.1],[exitX-.28,.055,exitZ+.25]],'#d6c18a',.07);
       worldLine([[exitX,.055,exitZ-.1],[exitX+.28,.055,exitZ+.25]],'#d6c18a',.07);
     }});
+    // Exterior lighting: sconces on the outer faces of the door posts, a strip under the header, bollards on the approaches
+    // and a hooded lamp over the exit. Their spill is drawn once here and again above the night shade.
+    exteriorFixtures.sconces.forEach(function(f){add(f.x-.1,f.z,function(){
+      drawBox(f.x+.06,f.z,f.y-.14,.08,.22,.3,frame);drawBox(f.x-.12,f.z,f.y-.04,.26,.2,.14,brass);
+      var lamp=project(f.x-.14,f.y-.07,f.z);ellipse(lamp.x,lamp.y,unit*.075,unit*.045,'#fff3d2');
+    })});
+    exteriorFixtures.bollards.forEach(function(b){add(b.x,b.z,function(){
+      drawBox(b.x,b.z,0,.2,.2,.7,frame);drawBox(b.x,b.z,.5,.21,.21,.13,['#fff1c9','#d8c18b','#f2e0b1']);drawBox(b.x,b.z,.7,.24,.24,.05,brass);
+    })});
+    add(exitX,exitZ-.3,function(){
+      var e=exteriorFixtures.exitLamp;drawBox(e.x,e.z,e.y-.1,.5,.22,.16,brass);drawBox(e.x,e.z+.1,e.y-.02,.14,.1,.2,frame);
+      var lamp=project(e.x,e.y-.13,e.z-.02);ellipse(lamp.x,lamp.y,unit*.085,unit*.05,'#fff3d2');
+    });
+    add(x-.2,z,function(){warmStrip(exteriorFixtures.entryStrip,false)});
+    jobs.push({depth:depthOf({x:x-.3,z:z})+.05,draw:function(){exteriorLightSpill(.7)}});
+    jobs.push({depth:depthOf({x:exitX,z:exitZ-.3})+.05,draw:function(){var e=exteriorFixtures.exitLamp;haloLight(e.x,e.y-.14,e.z,.7,.18,'#ffe2a5')}});
     // Threshold and welcome mat lie on the actual customer approach.
     jobs.push({depth:-Infinity,draw:function(){groundPatch(x-.8,z,1.6,2,'#314d3d');drawBox(x,z,.025,.34,2.5,.06,brass)}});
     [z-1.2,z+1.2].forEach(function(edge){add(x,edge,function(){drawBox(x,edge,.04,.26,.26,3.26,frame);drawBox(x,edge,0,.3,.3,.18,brass)})});
@@ -1736,6 +1854,8 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
         drawBox(x,z,y,.78,2.05,.085,wood);
         worldLine([[x+.39,y+.086,z-.96],[x+.39,y+.086,z+.96]],'#ddc593',.025);
         for(var item=0;item<3;item++)merchandise(x,z-.65+item*.65,y+.085,(row+item)%3,['#527e60','#b28b64','#75999a'][item]);
+        // Under-shelf strip on the row above lights the merchandise on this one.
+        if(row<2){worldLine([[x+.34,y+.585,z-.92],[x+.34,y+.585,z+.92]],'#ffe9b8',.016);var shelfGlow=project(x+.2,y+.3,z);glow(shelfGlow.x,shelfGlow.y,unit*.75,'#ffe6b01c',unit*.4)}
       }
       drawBox(x-.31,z,2.0,.08,2.05,.14,frame);
     }});
@@ -1892,6 +2012,8 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
         drawBox(x,z,.86,width+.14,1.48,.09,stone);
         drawBox(x,z-.32,.95,width-.1,.55,.36,oak);
         var jars=Math.max(3,Math.round(width/.5));for(var n=0;n<jars;n++)jar(x-(jars-1)*.25+n*.5,z-.32,1.32);
+        // Case lighting inside the island vitrine: a lid strip along the back edge and a soft fill over the jars.
+        var caseFill=project(x,1.45,z-.32);glow(caseFill.x,caseFill.y,unit*.95,'#fff0c826',unit*.42);worldLine([[x-half+.12,1.83,z-.68],[x+half-.12,1.83,z-.68]],'#fff2cc',.02);
         for(var n=0;n<Math.max(2,Math.round(width/.9));n++)transportItem(x-half+.45+n*.55,.95,z+.3,3);
         pickupBag(x+half-.45,z+.3,.95);
         for(var tag=0;tag<Math.round(width/.65);tag++)drawBox(x-half+.35+tag*.6,z+.66,1.05,.2,.012,.12,['#f7f2de','#d4cab3','#e9dfc9']);
@@ -1929,13 +2051,14 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
         for(var n=0;n<5;n++){var q=project(8+n*.5,3.2,6);ellipse(q.x,q.y,unit*.16,unit*.23,color);}
       }});
     }
-    jobs.sort(function(a,b){return a.depth-b.depth});jobs.forEach(function(job){job.draw()});var nightShade=visualLight().darkness;if(nightShade>0){ctx.fillStyle='rgba(14,24,46,'+(nightShade+.04)+')';ctx.fillRect(0,0,width,height);nightLights(now)}
+    jobs.sort(function(a,b){return a.depth-b.depth});jobs.forEach(function(job){job.draw()});var nightShade=visualLight().darkness;if(nightShade>0){nightShadeOverlay(nightShade);nightLights(now)}
     if(nightShade>0){
       // Emissive accents sit above the night tint, while their surrounding materials stay dark.
       ctx.save();ctx.globalAlpha=Math.min(1,nightShade/.34);
       [[-9,9,4.62,3.075],[-6.5,6.5,9.32,-.275]].forEach(function(edge){warmStrip([[edge[0]+.2,edge[2],edge[3]],[edge[1]-.2,edge[2],edge[3]]],false)});
       machinePos.forEach(function(p,i){var half=stationTier(i)===0?.8:1.3,y=p.y+1.1,z=p.z+(stationTier(i)===0?.84:1.26);warmStrip([[p.x-half,y,z],[p.x+half,y,z]],i===1)});
-      [[-4,3.6,5.35,'ORDER',2.55],[4,3.6,5.35,'PICKUP',2.55],[-10.7,9.6,.86,'ONLINE ORDERS',3.15]].forEach(function(sign){var p=project(sign[0],sign[1],sign[2]),axis=project(sign[0]+1,sign[1],sign[2]);glow(p.x,p.y,unit*1.4,'#ffda8a38');ctx.save();ctx.translate(p.x,p.y);ctx.transform(1,(axis.y-p.y)/(axis.x-p.x),0,1,0,0);ctx.shadowColor='#ffdca0';ctx.shadowBlur=unit*.13;ctx.fillStyle='#fff0cf';ctx.font='600 '+Math.max(7,unit*.235)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(sign[3],0,0,sign[4]*unit*.64);ctx.restore()});
+      signFaces.forEach(function(sign){var p=project(sign.x,sign.y,sign.z);glow(p.x,p.y,unit*sign.halo,'#ffda8a40',unit*sign.halo*.7);signText(sign.x,sign.y,sign.z,sign.label,sign.width,sign.size,'#fff3d6')});
+      sceneElevation=7.05;var nightPending=onlineRequestsReady();onlineReadout(-10.7,2.4,nightPending,nightPending>0&&state.stock[3]>=onlineSize());sceneElevation=0;
       ctx.restore();
     }
     for(var i=particles.length-1;i>=0;i--){var p=particles[i];p.life-=frameDelta*1.5;if(!motionPreference.matches){p.x+=p.vx*frameDelta;p.z+=p.vz*frameDelta;p.y+=p.vy*frameDelta;}p.vy-=frameDelta*5;var screen=project(p.x,p.y,p.z),size=Math.max(2,unit*.1);ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.fillRect(screen.x-size/2,screen.y-size/2,size,size);ctx.globalAlpha=1;if(p.life<=0)particles.splice(i,1)}
@@ -1980,7 +2103,13 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
         ellipse(rotor.x,rotor.y,unit*.075,unit*.045,'#294c3b');
       });
       drawBox(x,z,y,.66,.5,.22,['#e5e8d0','#587766','#91ac98']);
-      var light=project(x+.25,y+.15,z+.26);ellipse(light.x,light.y,unit*.045,unit*.045,'#bde887');
+      // Navigation lights: red to port, green to starboard, and a white strobe on the tail that flashes twice a second.
+      var phase=motionPreference.matches?0:now*.002+slot*1.3,strobe=motionPreference.matches?1:((phase%1)<.12||((phase+.2)%1)<.12?1:0),beacon=motionPreference.matches?1:.55+Math.sin(phase*Math.PI*2)*.45;
+      [[-.55,-.42,'#ff5a4a',beacon],[.55,-.42,'#5cff8a',beacon],[.05,.3,'#ffffff',strobe]].forEach(function(nav){
+        var q=project(x+nav[0],y+.2,z+nav[1]),c=parseHex(nav[2]);
+        ellipse(q.x,q.y,unit*.04,unit*.04,nav[3]>.5?nav[2]:'#3d4a44');
+        if(nav[3]>0){ctx.save();ctx.globalCompositeOperation='screen';ellipse(q.x,q.y,unit*.3,unit*.3,softRadial(q.x,q.y,unit*.3,c,.55*nav[3]));ctx.restore()}
+      });
       ctx.restore();
     }
   }
@@ -2152,11 +2281,9 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
   $('dismissReturn').onclick=function(){state.empire.returnReport=null;save();renderUI()};
   STORES.forEach(function(store,i){
     var controls=document.createElement('div');controls.className='branch-management';
-    controls.innerHTML='<div class="branch-facts"><span class="specialty">'+['Exclusive strains','Boutique products','Bulk deliveries'][i]+'</span><span id="branchLoyalty'+i+'"></span></div><details class="branch-settings"><summary>Product &amp; manager</summary><div class="branch-choices"><div><label for="featured'+i+'">Feature</label><select id="featured'+i+'">'+PRODUCTS.map(function(f){return '<option value="'+f+'">'+({everyday:'Everyday',exclusive:'River Mist',boutique:'Boutique',express:'Express'})[f]+'</option>'}).join('')+'</select><p id="featuredEffect'+i+'" class="choice-effect"></p></div><div><label for="manager'+i+'">Manager</label><select id="manager'+i+'">'+MANAGERS.map(function(m){return '<option value="'+m.id+'">'+m.name+'</option>'}).join('')+'</select><p id="managerEffect'+i+'" class="choice-effect"></p></div></div>'+(i===2?'<button id="bulkDispatch">Dispatch 30 jars</button><p id="bulkDetail"></p>':'')+'<details class="branch-help"><summary>Store details</summary><p>'+SPECIALTIES[i]+'</p><p id="branchExpansion'+i+'"></p><p id="branchCustomers'+i+'"></p><p>One store per specialist. Reassigning moves them.</p></details></details>';
+    controls.innerHTML='<div class="branch-facts"><span class="specialty">'+['Exclusive strains','Boutique products','Bulk deliveries'][i]+'</span><span id="branchLoyalty'+i+'"></span></div>'+(i===2?'<button id="bulkDispatch">Dispatch 30 jars</button><p id="bulkDetail"></p>':'')+'<details class="branch-help"><summary>Store details</summary><p>'+SPECIALTIES[i]+'</p><p id="branchExpansion'+i+'"></p><p id="branchCustomers'+i+'"></p></details>';
 
     $('branchBuy'+i).closest('article').insertBefore(controls,$('projectSummary'+i).parentElement);
-    $('featured'+i).onchange=function(){setFeatured(state.empire,i,this.value);save();renderUI()};
-    $('manager'+i).onchange=function(){assignManager(state.empire,i,this.value);save();renderUI()};
   });
   function expandBranch(index){
     STORES.forEach(function(_,i){var open=i===index;$('branchToggle'+i).setAttribute('aria-expanded',String(open));$('branchBody'+i).hidden=!open;var nav=$('branchToggle'+i).parentElement.querySelector('.operation-tabs');if(nav)nav.hidden=!open;});
@@ -2170,7 +2297,6 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     body.appendChild($('branchHint'+i));heading.remove();
     while(article.firstChild)body.appendChild(article.firstChild);
     article.appendChild(toggle);article.appendChild(body);
-    var settings=body.querySelector('.branch-settings'),fields=document.createElement('div');fields.className='branch-settings';settings.querySelector(':scope > summary').remove();while(settings.firstChild)fields.appendChild(settings.firstChild);settings.replaceWith(fields);
     toggle.onclick=function(){var open=toggle.getAttribute('aria-expanded')!=='true';expandBranch(open?i:-1);if(open)requestAnimationFrame(function(){toggle.scrollIntoView({block:'start'})})};
   });
   $('bulkDispatch').onclick=function(){var reward=dispatchBulk(state);if(reward){queueDeliveryWave(1);notify('BULK DELIVERY · +'+fmt(reward),'upgrade');save();renderUI()}};
@@ -2217,7 +2343,7 @@ import { MANAGERS, PRODUCTS, SPECIALTIES, exclusiveAvailable, setFeatured, assig
     $('reputationNext').textContent=p.reputation>=60?'VIPs unlocked':p.reputation>=20?'VIPs at 60':'Collectors at 20';
     $('reputationProgress').max=reputationTarget;$('reputationProgress').value=Math.min(p.reputation,reputationTarget);
     $('reputationProgress').setAttribute('aria-valuetext',p.reputation+' loyalty. '+(p.reputation>=60?'VIPs unlocked':p.reputation>=20?'Collectors unlocked. VIPs at 60.':'Collectors at 20.'));
-    STORES.forEach(function(_,i){var store=p.stores[i];$('featured'+i).value=store.featured;$('featured'+i).disabled=!store.level;$('featured'+i).querySelector('[value="exclusive"]').disabled=!exclusiveAvailable(p);$('manager'+i).value=store.manager;$('manager'+i).disabled=!store.level;$('managerEffect'+i).textContent=({none:'Standard team',grower:'+30% exclusive income',host:'2× loyalty gains',dispatcher:'Faster service · +25% bulk'})[store.manager];$('featuredEffect'+i).textContent=({everyday:'For regulars',exclusive:'Collectors · +15% income',boutique:i===1&&store.level>=2?'Collectors · +40% income':'For collectors',express:'Faster service'})[store.featured];$('featured'+i).closest('.branch-management').hidden=!store.level;
+    STORES.forEach(function(_,i){var store=p.stores[i];$('branchLoyalty'+i).closest('.branch-management').hidden=!store.level;
       $('branchLoyalty'+i).textContent=store.loyalty+' loyalty';$('branchLoyalty'+i).title=store.loyalty>=60?'VIP following':store.loyalty>=20?'Collectors unlocked':'Collectors unlock at 20';$('branchCustomers'+i).textContent=store.served+' served · '+(store.loyalty>=60?'VIP following':store.loyalty>=20?'Collectors unlocked':'Collectors at 20 loyalty');
       $('branchExpansion'+i).textContent=store.level<3?'Display wing at level 3':store.level<5?'Specialist employee at level 5':store.level<7?'Terrace at level 7':'All expansions built';
     });
