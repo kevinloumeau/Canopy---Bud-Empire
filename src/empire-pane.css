@@ -95,8 +95,8 @@
 .empire-screen button:focus-visible{outline:2px solid #e3d1a6;outline-offset:2px}
 @media(hover:hover){.empire-screen button:not(:disabled):hover{filter:brightness(1.12)}}
 
-/* Back bar: sticky, opaque, and the anchor the branch tabs stick beneath. */
-.empire-back{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:8px;min-height:44px;margin:0 0 8px;padding:2px 8px 2px 4px;border-radius:14px;background:#0c231c40}
+/* Back bar: sticky, opaque, and the anchor the branch tabs stick beneath. Solid, not glass — scrolled content must not show through. */
+.empire-back{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:8px;min-height:44px;margin:0 0 8px;padding:2px 8px 2px 4px;border-radius:14px;background:#213a2e}
 .sheet .empire-screen .empire-back-button{display:inline-flex;align-items:center;gap:2px;min-height:40px;padding:0 10px 0 4px;border:0;border-radius:20px;background:transparent;color:#d6e6ca;font-size:12px;font-weight:600}
 .empire-back-icon{display:grid;place-items:center;width:24px;height:24px}
 .empire-back-icon svg{width:18px;height:18px}

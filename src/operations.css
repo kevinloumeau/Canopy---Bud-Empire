@@ -40,8 +40,8 @@
 .flagship-check{display:grid;grid-template-columns:1fr auto;font-size:12px}
 
 .op-pane small,.operations-today small{font-family:inherit;letter-spacing:normal;font-weight:400}
-/* Keep a branch's identity and local navigation together under the Empire tabs. */
-.branch-sticky-header{position:sticky;top:var(--empire-tabs-height,61px);z-index:1;background:transparent;box-shadow:none}
+/* Keep a branch's identity and local navigation together under the Empire tabs. Opaque, like the back bar above it — scrolled content must not show through. */
+.branch-sticky-header{position:sticky;top:var(--empire-tabs-height,61px);z-index:1;background:#213a2e;box-shadow:none}
 .branch-sticky-header .operation-tabs{margin-top:0;margin-bottom:0;padding-bottom:4px}
 .branch-sticky-header .operation-tabs[hidden]{display:none!important}
 .branch-body{padding-top:10px}

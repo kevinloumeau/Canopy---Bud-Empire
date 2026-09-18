@@ -383,7 +383,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   // strip under the entrance header, a hooded lamp over the exit and low bollards beside both approaches.
   var exteriorFixtures={
     sconces:[{x:-10.98,y:2.3,z:8.72},{x:-10.98,y:2.3,z:11.28}],
-    bollards:[{x:-12.2,z:11.55},{x:-12.75,z:6.2},{x:9.05,z:-8.45},{x:11.45,z:-8.45}],
+    // Entrance bollards stay on the far side of the approach so arriving guests always pass in front of them.
+    bollards:[{x:-12.8,z:10.35},{x:-12.75,z:6.2},{x:9.05,z:-8.45},{x:11.45,z:-8.45}],
     exitLamp:{x:10.25,y:3.38,z:-7.34},
     entryStrip:[[-10.9,3.27,8.85],[-10.9,3.27,11.15]]
   };
@@ -2522,7 +2523,6 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   var offline=collectOffline();if(offline>=1){setTimeout(function(){notify('WHILE AWAY +'+fmt(offline))},500)}
   function fitControls(){document.documentElement.style.setProperty('--hud-height',document.querySelector('.hud').getBoundingClientRect().height+'px');document.documentElement.style.setProperty('--dock-height',$('sheet').getBoundingClientRect().height+'px');resize()}
   if(window.ResizeObserver){new ResizeObserver(fitControls).observe($('sheet'))}
-  var empireViews=document.querySelector('.empire-views');function measureEmpireViews(){var h=empireViews.getBoundingClientRect().height;if(h)document.querySelector('[data-pane="empire"]').style.setProperty('--empire-tabs-height',h+'px')}if(window.ResizeObserver)new ResizeObserver(measureEmpireViews).observe(empireViews);measureEmpireViews();
   window.addEventListener('resize',fitControls);
   // Desktop conveniences: the hint names the pointer, and speed and tabs have keys when no field has focus.
   if(!window.matchMedia('(pointer:coarse)').matches){$('gestureHint').textContent='DRAG TO PAN · SCROLL TO ZOOM · SPACE PAUSES · 1 2 4 SET SPEED'}
