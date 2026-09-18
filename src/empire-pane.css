@@ -96,7 +96,7 @@
 @media(hover:hover){.empire-screen button:not(:disabled):hover{filter:brightness(1.12)}}
 
 /* Back bar: sticky, opaque, and the anchor the branch tabs stick beneath. */
-.empire-back{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:8px;min-height:44px;margin:-6px -9px 6px;padding:2px 9px;background:#213a2e;border-bottom:1px solid #c1d7b71f}
+.empire-back{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:8px;min-height:44px;margin:0 0 8px;padding:2px 8px 2px 4px;border-radius:14px;background:#0c231c40}
 .sheet .empire-screen .empire-back-button{display:inline-flex;align-items:center;gap:2px;min-height:40px;padding:0 10px 0 4px;border:0;border-radius:20px;background:transparent;color:#d6e6ca;font-size:12px;font-weight:600}
 .empire-back-icon{display:grid;place-items:center;width:24px;height:24px}
 .empire-back-icon svg{width:18px;height:18px}
@@ -165,3 +165,18 @@
 .sheet .empire-group .shop-milestone #claim:disabled{background:#223f31;color:#b6c8af;border-color:#75936b55}
 .empire-group .shop-milestone .shop-meter{grid-area:meter;height:6px;border-radius:4px;background:#142c22;overflow:hidden;margin-top:2px}
 .empire-group .shop-milestone .shop-meter i{display:block;height:100%;background:#b6d690;border-radius:4px}
+
+/* Store rows: level pips + income figure, or a lock with the opening price. */
+.branch-toggle strong{display:inline-flex;align-items:center;gap:12px;white-space:nowrap}
+.branch-toggle .store-level{display:inline-flex;align-items:center;gap:7px}
+.branch-toggle .store-pips{display:inline-grid;grid-auto-flow:column;gap:2px}
+.branch-toggle .store-pips i{display:block;width:5px;height:12px;border-radius:2px;background:#ffffff1a}
+.branch-toggle .store-pips i.on{background:#b6d690;box-shadow:0 0 5px #b6d69055}
+.branch-toggle .store-level b{font:600 12px 'DM Mono',monospace;color:#e6efd8}
+.branch-toggle .store-income{display:inline-flex;align-items:center;gap:4px;padding:3px 9px 3px 6px;border-radius:999px;background:#e3c07a1a;color:#f2d99a;font:600 12px 'DM Mono',monospace}
+.branch-toggle .store-income svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.branch-toggle .store-income.muted{background:#ffffff0c;color:#a9b9a5}
+.branch-toggle .store-locked{display:inline-flex;align-items:center;gap:5px;color:#d9e4cf;font:600 12px 'DM Mono',monospace}
+.branch-toggle .store-locked.is-locked{color:#9fb59a}
+.branch-toggle .store-locked svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:400px){.branch-toggle .store-pips{display:none}}

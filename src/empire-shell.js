@@ -42,14 +42,12 @@ export function mountEmpireShell({fit,getState,format}){
  let boardSig='';
  function syncBoard(){if(!getState)return;const s=getState();const values={revenue:format?format(s.lifetime||0):String(Math.round(s.lifetime||0)),served:(s.sold||0).toLocaleString(),deliveries:(s.onlineCompleted||0).toLocaleString(),trophies:String((s.empire&&s.empire.trophies)||0),prestige:String((s.empire&&s.empire.prestige)||0)};const sig=Object.values(values).join('|');if(sig===boardSig)return;boardSig=sig;stats.forEach(([,key])=>{board.querySelector('[data-score="'+key+'"]').textContent=values[key];});}
  setInterval(()=>{if(current==='details')syncBoard();},500);
- const nextSteps=today.querySelector('h2:not(.empire-section-heading)');
  const shopMilestone=document.querySelector('.shop-milestone');
  screens.details.append(
   group(null,[$('careerName'),$('careerDetail'),$('careerProgress'),$('careerBonus'),$('careerClaim')]),
   group(null,[shopMilestone]),
   group(null,Array.from(section('daily').children)),
   group(null,Array.from(section('events').children)),
-  group(null,[nextSteps,$('nextInvestment'),$('shortGoals')]),
   group(null,[today.querySelector('.reputation')]),
   group(null,[today.querySelector('.operations-today')]),
   group(null,[growth.querySelector('.depth-panel')])

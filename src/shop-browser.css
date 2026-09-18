@@ -1,7 +1,13 @@
-.shop-browser .shop-browser-header{position:sticky;top:0;z-index:2;background:#20392d;padding:6px 0 0}
-.shop-browser .shop-categories{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
-.shop-browser .shop-categories button{min-width:0;min-height:44px;padding:6px 2px;border:1px solid transparent;border-radius:7px;background:transparent;color:#bacbb2;font:inherit;font-size:11px}
-.shop-browser .shop-categories button[aria-pressed=true]{background:#496044;border-color:#8ba67d;color:#f0f4e5}
+.shop-browser .shop-browser-header{padding:2px 0 8px;background:transparent}
+.shop-browser .shop-categories{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;padding:3px;background:#0c231c40;border-radius:17px}
+/* Category tabs mirror the station strip: one translucent rail, borderless items, icon over a mono label, selected item lit. */
+.shop-browser .shop-categories button{display:grid;grid-template-rows:22px auto;justify-items:center;row-gap:4px;min-width:0;min-height:54px;padding:8px 0 7px;border:0;border-radius:14px;background:transparent;color:#d3e0cb;font:inherit;box-shadow:none}
+.shop-browser .shop-categories button .shop-category-icon{width:22px;height:22px;opacity:.85}
+.shop-browser .shop-categories button em{font:500 11px 'DM Mono',monospace;font-style:normal;color:#9fb59a;line-height:1.2}
+.shop-browser .shop-categories button[aria-pressed=true]{background:linear-gradient(155deg,#e3f5db38,#c4e5b41a);box-shadow:inset 0 1px 0 #f1ffe752,inset 0 0 0 1px #e4fbd31c;color:#f6faed}
+.shop-browser .shop-categories button[aria-pressed=true] .shop-category-icon{opacity:1}
+.shop-browser .shop-categories button[aria-pressed=true] em{color:#e8f2d7}
+@media(hover:hover){.shop-browser .shop-categories button:not([aria-pressed=true]):hover{background:#dce9be10}}
 .shop-browser .shop-filter{display:flex;justify-content:space-between;align-items:center;color:#bdcdb5;font-size:12px;padding:0 5px}
 .shop-filter label{display:flex;gap:6px;align-items:center;min-height:44px;cursor:pointer}
 .shop-filter input{accent-color:#aacb85;width:16px;height:16px}

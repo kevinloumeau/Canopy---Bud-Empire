@@ -24,3 +24,26 @@
 /* Pill order on every size: 1× 2× 4× · day/night · settings. */
 .hud .speed-controls #lightToggle{order:5}
 .hud .speed-controls #settingsOpen{order:6}
+
+/* Goals popover: a flag beside the customer count opens the Next steps list. */
+.hud .customer-info #goalsOpen{pointer-events:auto;position:relative;display:inline-grid;place-items:center;width:30px;height:30px;margin-left:8px;padding:0;border:1px solid #dce9be22;border-radius:10px;background:#dce9be0f;color:#d2dfc8;cursor:pointer;flex:0 0 auto}
+.hud .customer-info #goalsOpen svg{width:15px;height:15px}
+.hud .customer-info #goalsOpen.has-ready{color:#f2d99a;border-color:#e3c07a55;background:#e3c07a1c}
+.hud .customer-info #goalsOpen #goalsBadge{position:absolute;top:-6px;right:-6px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#e7c77f;color:#25331f;font-size:10px;font-weight:700;line-height:16px;text-align:center}
+@media(hover:hover){.hud .customer-info #goalsOpen:hover{background:#dce9be1c}}
+.hud .customer-info #goalsOpen:focus-visible{outline:2px solid #d7f2b8;outline-offset:2px}
+.goals-dropdown{position:fixed;z-index:45;width:min(360px,calc(100vw - 16px));max-height:min(70vh,560px);overflow:auto;padding:12px 14px 10px;border:1px solid #e4f9e133;border-radius:16px;color:#f0f5e8;background:linear-gradient(145deg,#d1e8cc14,#1e352a08 42%),rgba(26,48,38,.97);box-shadow:inset 0 1px 0 #f3ffe52b,0 14px 30px #00000066;text-align:left}
+.goals-dropdown::before{content:'';position:absolute;top:-7px;left:var(--caret,calc(100% - 22px));width:12px;height:12px;transform:translateX(-50%) rotate(45deg);border-left:1px solid #e4f9e133;border-top:1px solid #e4f9e133;background:#22392d;border-radius:2px}
+.goals-dropdown .settings-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.goals-dropdown .settings-head h2{margin:0;font-size:16px;letter-spacing:-.02em}
+.goals-dropdown #nextInvestment{margin:0 0 8px;color:#e2c586;font-size:12.5px}
+.goals-dropdown .short-goal{padding:9px 0;border-top:1px solid #ffffff12;border-bottom:0}
+.goals-dropdown .short-goal:last-child{padding-bottom:2px}
+.goals-dropdown .short-goal h3{margin:0 0 5px;font-size:14px}
+.goals-dropdown .short-goal progress{display:block;width:100%;height:6px;margin:0;accent-color:#b6d690;border:0;border-radius:4px;overflow:hidden;background:#142c22}
+.goals-dropdown .short-goal progress::-webkit-progress-bar{background:#142c22}
+.goals-dropdown .short-goal progress::-webkit-progress-value{background:#b6d690}
+.goals-dropdown .short-goal p{margin:5px 0 0;color:#bccbb7;font-size:12px}
+.goals-dropdown .short-goal button{margin-top:6px;min-height:38px;padding:0 14px;font:inherit;font-size:13px;font-weight:700;letter-spacing:.01em;cursor:pointer;background:linear-gradient(145deg,#c9e4b82b,#c6dfb60a),#608149;color:#f8fbed;border:1px solid #d9f1c445;border-radius:12px;box-shadow:inset 0 1px 0 #efffdf40,0 3px 9px #0b1c1626}
+.goals-dropdown .short-goal button:disabled{background:#2a3d30;color:#8ea18c;border-color:#ffffff14;box-shadow:none;cursor:default}
+@media(hover:hover){.goals-dropdown .short-goal button:not(:disabled):hover{background:linear-gradient(145deg,#d6ecc63a,#c6dfb612),#6b8f52}}

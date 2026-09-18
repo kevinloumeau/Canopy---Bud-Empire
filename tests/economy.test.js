@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {stationTier,tierBoost,retailBoost,batchSize,capacity,stationCost,staffCost,basketSize,storageCapacity,readyCapacity,onlineSize,counterServiceDuration,patience,walkSpeed,preferredStrain,rewardScale} from '../src/economy.js';
+import {counterLanes,stationTier,tierBoost,retailBoost,batchSize,capacity,stationCost,staffCost,basketSize,storageCapacity,readyCapacity,onlineSize,counterServiceDuration,patience,walkSpeed,preferredStrain,rewardScale} from '../src/economy.js';
 import {migrateProgression,satisfyCustomer,dailyStatus,claimDaily,eventStatus,claimEvent,goalStatus,claimGoal,recordGoal,storeRate,buyStore,STORES} from '../src/progression.js';
 
 test('tiers double output at 10/20/30/50/75/100 and per-level gains stay linear between them',()=>{
@@ -62,3 +62,5 @@ test('branch income follows the main shop retail tier and survives migration',()
   s.empire.retailBoost=8;assert.equal(storeRate(s.empire,0),base*8);
   assert.equal(migrateProgression(s.empire).retailBoost,8);assert.equal(migrateProgression({retailBoost:0}).retailBoost,1);assert.equal(migrateProgression({retailBoost:Infinity}).retailBoost,1);
 });
+
+test('counters gain a service lane every five levels',()=>{assert.deepEqual([0,1,5,6,10,11,29,30,31].map(counterLanes),[1,1,1,2,2,3,6,6,7])});
