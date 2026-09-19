@@ -227,3 +227,78 @@ Validation: 64 unit tests and the classic build pass. Desktop and phone previews
 The selected station now puts a larger, crisply rendered equipment illustration beside a compact current/next comparison, with Upgrade and Max beneath. Production shows units per batch; service shows handoff time; Security shows ID-check time. Adaptive decimal precision makes small service gains visible instead of repeating the same rounded value. Preview framing excludes overhead light fixtures and caches artwork until its visual state changes. The live shop renderer, economy, save format and counter-expansion placement remain intact.
 
 Validation: classic production build and 64 unit tests passed. Isolated production checks covered all seven station selections and individual purchases at 390×844, all seven layout variants at 1055×998 and 320×640, desktop Max, disabled purchase states, tier artwork and exact cash/level/counter persistence after reload. Desktop and phone screenshots were inspected; short screens scroll to remaining controls and counter expansion. No browser errors. No publication.
+
+## Construction-site props (September 19, 2026)
+
+The unfinished delivery counter's cartons now rest on the dust sheet and stack directly on their lids. They draw in front of the rear sign uprights. Loose timber forms an aligned, strapped bundle on the deck instead of rising like steps; the small worktop block also rests on its actual surface. Crossed yellow-and-black construction tape spans the bottom stair entrance until the delivery pad is purchased. All details use the existing world projection and lighting, with no save or gameplay changes.
+
+Validation: classic build passed. Isolated desktop and phone previews verified the geometry, day/night appearance, pan/zoom and the $7,500 delivery-pad transition. Purchasing clears the tape and site props, preserves station levels and leaves the expected cash balance. The player's save was not used.
+
+## Grow-room exhaust fan (September 19, 2026)
+
+A large metal exhaust fan is mounted on the left section of the grow room's rear wall. Four curved blades turn behind a fixed wire grille, once every 26 seconds at normal speed. Housing, mounting screws and rotor share the wall's isometric projection and existing day/night lighting. Animation follows the existing simulation clock, pause, speed and reduced-motion preference; offscreen drawing is skipped. No economy or save changes.
+
+Validation: classic production build and diff checks passed. An isolated preview verified desktop and phone rendering, zoom, day/night appearance, moving blade pixels while running, unchanged pixels while paused and under reduced motion, and no browser errors.
+
+## Order-counter lighting and signs (September 19, 2026)
+
+Expanded order counters now use their actual narrow strip-light positions in both daytime and nighttime passes. Nighttime spill and shade cutouts follow each individual desk instead of the original wide counter. All overhead signs read “ORDER”; the small numbered plaques on the counter fronts are also removed. Counter capacity, staffing and customer routing are unchanged.
+
+Validation: classic production build and diff checks passed. Isolated desktop and phone previews verified the three-counter layout, day/night alignment, unnumbered signs and zoom, with no browser errors.
+
+## Staff-row overlap repair (September 19, 2026)
+
+Staff names now sit above wrapping level/speed badges at every viewport. Train and Max retain separate columns, and their headings share the exact button widths. Rows retain their content height and 44px purchase targets; short panes scroll to the remaining staff. The conflicting phone-only workaround was removed, keeping the layout rules together in `sheet-height.css`. Training mechanics and save data are unchanged.
+
+Validation: classic production build, diff check and scoped layout scan passed. Isolated previews at 1055×998, 1440×1000, 390×844 and 320×640 found no overlapping or clipped staff content and zero heading/button alignment offset. Individual training, Max, the final row on a short phone, and exact cash/security/staff persistence after reload were verified with no browser errors.
+
+## Visual delivery-pad setup (September 19, 2026)
+
+The unbuilt Deliveries tab now fills its available height with a large preview of the finished launch deck, packing counter and courier. It uses the existing Canvas artwork, rendered once per product/menu change without altering ownership, progress or the map camera. The courier drawing is shared with live deliveries. Three short illustrated benefits replace the paragraph: one drone included, automatic dispatch and +33% per unit. Funding and a full-width Build action anchor the bottom. On phones the artwork sits beside the benefits; short screens scroll to the purchase control. The old striped construction card is removed. Built delivery controls and purchase economics are unchanged.
+
+Validation: classic production build, all 64 unit tests and diff checks passed. Isolated desktop and 390/320px phone previews verified layout, scroll reachability, 40% funding at $3,000, insufficient-funds protection, and the ready state. The purchase charged exactly $7,500, enabled automation, revealed dispatch controls and persisted after reload. Live parcel drones rendered correctly after sending orders; no browser errors occurred.
+
+## Expanded-counter selection (September 19, 2026)
+
+Selecting Orders now traces each installed compact counter at its actual dimensions, in the same depth order as the furniture. Expanded counters no longer inherit the original wide desk outline or its tier-based side extension. The single-counter outline and progression remain unchanged.
+
+Validation: classic production build and diff checks passed. Isolated desktop and phone previews verified three- and two-counter highlights, deselection by choosing Pickup, and alignment while zoomed, with no browser errors.
+
+## Orbiting station border (September 19, 2026)
+
+The gold bottleneck border in the station strip now has two opposite breaks that travel along its rounded perimeter on a 16-second circuit. The gaps were subsequently halved to 3% of the perimeter each for a subtler effect, verified at desktop and phone sizes. An SVG stroke follows each card's dimensions while the existing glow and labels stay still. Motion pauses when the card is offscreen, the panel is collapsed or the page is hidden; the operating system's reduced-motion preference keeps both breaks stationary. No save or gameplay changes.
+
+Validation: classic production build and diff checks passed. Desktop and 390px phone previews verified border fit, changing dash offset, keyboard selection, collapsed-panel pausing and reduced-motion behavior, with no browser errors.
+
+When the bottleneck moves between stations, its border now inherits the outgoing stroke position through a matching negative animation delay. The 16-second rotation continues without restarting. Production build and desktop/phone upgrade checks passed, including Pickup → Orders at 38.75% of the circuit and Orders → Pickup at 64.375%, with both positions carried forward and no browser errors.
+
+## Upgrade-badge wave (September 19, 2026)
+
+Affordable upgrade badges now hop and shimmy in a traveling wave from Security through Pickup, staggered by 160ms with a quiet beat in each 3.6-second cycle. The gold bottleneck badge participates, and map badges use the same station order with smaller movement. Icons, labels and card positions remain stable; the orbiting gold border is retained. A shared visibility observer pauses offscreen motion, collapsed panes pause their badges, and reduced motion keeps the cues static. No economy or save changes.
+
+Validation: classic production build and diff checks passed. Desktop and 390px phone previews verified distinct animation phases, all seven badge delays, matching map cues, the preserved orbiting border, collapsed-panel pausing and reduced-motion behavior, with no browser errors.
+
+The Deliveries “Flower packed” total now displays whole ounces, rounded down, without fractions or decimals. Inventory retains its exact eighth-ounce units. The production build passed, and desktop/phone previews confirmed that 1,999 packed units display as “249 oz”.
+
+## Empire records cleanup (September 19, 2026)
+
+Removed Business flow, Collection journal and Flagship status from Rewards & records, including their markup, update handlers, empty group and unused presentation styles. Store management, rewards, reputation, New beginnings and saved progression remain intact. The obsolete browser-check step for those removed panels was retired.
+
+Validation: production build, all 64 unit tests and diff checks passed. Desktop and phone previews confirmed all three sections are absent, no empty group remains, and Rewards & records / Riverside navigation still works without browser errors.
+
+## New beginnings redesign (September 19, 2026)
+
+New beginnings now opens into a visual current-to-next rank and sales-multiplier comparison. The permanent +20% base-sales bonus, lifetime-revenue progress and amount remaining explain the reward and its gate. Keep / Restart rows clarify carryover before a full-width “Reopen at rank N” action. The $10M initial threshold is explicitly a lifetime-revenue requirement, not a purchase price. Existing thresholds, reset mechanics and confirmation remain; the confirm action reads “Reopen from scratch.” Maximum rank shows only the earned 4.8× multiplier and a disabled completed-state action.
+
+Validation: production build, all 64 unit tests and scoped design scan passed. Desktop and 390/320px phone checks covered 25% funding, revenue-based eligibility, confirmation cancellation with unchanged cash/rank/lifetime revenue and restored focus, maximum rank and overflow. The finish review approved the supplied layouts, then scored the maximum-rank SVG visibility and accessible-description corrections resolved. No browser errors occurred.
+
+## Illustrated, always-open customer guide (September 19, 2026)
+
+The Empire reputation guide is now a permanent section, following the user's request to remove its collapse control. Three illustrated customer profiles reuse the live shop's Canvas characters and Meadow Mint jar artwork. Preferences and visit limits sit below the portraits, followed by compact Match/Miss rewards, the 60-loyalty VIP unlock, and the branch-income benefit. Queue comfort updates both displayed visit limits; reaching 60 loyalty updates the base tip and unlock label. Portraits paint once and restore the shared rendering context and camera. No gameplay or save-format changes.
+
+Validation: classic production build and 64 unit tests passed. Desktop (1280×960), phone (390×844), and narrow phone (320×640) rendering verified, with no guide horizontal overflow. The guide remains visible without a disclosure control; saved cash/reputation and upgraded patience values were checked in an isolated preview. Screenshots: `.impeccable/review/customer-guide/`. Not published.
+
+Following feedback that the solid header backing was jarring, Empire back controls now sit outside a separate scrolling body. Their transparent background blends directly into the existing panel; content is clipped below the header instead of hidden behind a colored block. Rewards & records and store screens retain their fixed pane height, scroll reset on navigation, and pinned branch tabs. Production build, 64 tests, and desktop/phone scrolling and back-navigation checks passed. Current screenshots: `artifacts/compact-notifications/`.
+
+
+Notifications now use a compact 12px treatment, tighter padding, a 14px upgrade icon, and a subtler shadow. Single-line messages are approximately 33px high; long messages wrap within the viewport (360px maximum width). Existing message content, status announcements, dismissal timing, and pointer pass-through are preserved. Production build, scoped design scans, and desktop/390px/320px checks passed, including actual upgrade feedback and a long-message fixture. No gameplay or save changes.

@@ -37,7 +37,7 @@
  .selected-line{padding:10px 2px 6px}
  #upgradePreview{width:104px;height:120px}
  .station-upgrade{padding-top:8px}
- /* Staff: seven rows in the space, without a scrollbar. */
+ /* Staff rows use the available height, with scrolling when their content needs more room. */
  .sheet .employee-list{gap:5px;padding-bottom:4px;max-height:none}
  .sheet .employee-card{padding-block:6px}
  .sheet .employee-intro{margin-bottom:4px}
@@ -55,7 +55,7 @@ html body .sheet>[data-pane=factory]{display:flex;flex-direction:column}
 [data-pane="factory"] .selected-line{flex:1;align-content:center;min-height:0}
 [data-pane="factory"] .station-upgrade{margin-top:auto}
 html body .sheet>[data-pane=employees]{display:flex;flex-direction:column}
-[data-pane="employees"] .employee-list{flex:1;display:grid;grid-auto-rows:1fr;align-content:stretch;max-height:none;min-height:0}
+.sheet [data-pane="employees"] .employee-list{flex:1 0 auto;display:grid;grid-auto-rows:minmax(min-content,1fr);align-content:stretch;max-height:none;min-height:0}
 [data-pane="employees"] .employee-card{align-items:center}
 /* Tall phone-width windows: the station portrait grows into the spare hero space. */
 @media(max-width:779px) and (min-height:860px){
@@ -63,14 +63,26 @@ html body .sheet>[data-pane=employees]{display:flex;flex-direction:column}
  #upgradePreview{width:96px;height:118px}
 }
 
-/* Staff rows: name with level and speed as small pills beside it. */
-.sheet .employee-card>div:not(.employee-number):not(.employee-train-actions){display:grid;grid-template-columns:76px minmax(0,1fr);align-items:center;column-gap:6px;min-width:0}
-.sheet .employee-card>div>b{font-size:12.5px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sheet .employee-card small{display:grid;grid-template-columns:48px auto;gap:4px;margin:0;white-space:nowrap;overflow:visible;font-size:10px;line-height:1}
-.sheet .employee-card small span{text-align:center;padding:3px 7px;border-radius:999px;background:#ffffff0d;border:1px solid #ffffff14;color:#cddcc4;font-family:inherit;letter-spacing:0}
+/* Staff: names and wrapping stats share one column; purchase columns keep their own space. */
+.sheet>[data-pane=employees]{--staff-action-width:84px;--staff-action-gap:6px;--staff-icon-width:28px;--staff-column-gap:8px}
+.sheet .employee-card{grid-template-columns:var(--staff-icon-width) minmax(0,1fr) calc(var(--staff-action-width)*2 + var(--staff-action-gap));column-gap:var(--staff-column-gap)}
+.sheet .employee-card>div:not(.employee-number):not(.employee-train-actions){display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:5px;min-width:0}
+.sheet .employee-card>div>b{font-size:12.5px;line-height:1.2;white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
+.sheet .employee-card small{display:flex;flex-wrap:wrap;align-items:flex-start;gap:4px;margin:0;max-width:100%;white-space:normal;overflow:visible;font-size:10px;line-height:1.2}
+.sheet .employee-card small span{max-width:100%;text-align:center;padding:3px 6px;border-radius:999px;background:#ffffff0d;border:1px solid #ffffff14;color:#cddcc4;font-family:inherit;letter-spacing:0;overflow-wrap:anywhere}
 .sheet .employee-card small span:first-child{color:#f0dfb0;border-color:#f0dfb033;background:#f0dfb012}
-.sheet .employee-card small span:last-child{justify-self:start}
-@media(max-width:400px){.sheet .employee-card>div:not(.employee-number):not(.employee-train-actions){grid-template-columns:64px minmax(0,1fr)}.sheet .employee-card>div>b{font-size:11.5px}.sheet .employee-card small{grid-template-columns:42px auto}}
+.sheet .employee-train-actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--staff-action-gap);min-width:0}
+.sheet .employee-train-actions button{min-width:0;min-height:44px;padding:5px 6px}
+.sheet .employee-columns{grid-template-columns:minmax(0,1fr) repeat(2,var(--staff-action-width));gap:var(--staff-action-gap);padding-inline:6px;flex-shrink:0}
+.sheet .employee-columns span{min-width:0}
+@media(max-width:779px){
+ .sheet>[data-pane=employees]{--staff-action-width:78px;--staff-action-gap:5px;--staff-icon-width:22px}
+ .sheet .employee-card{padding-block:7px}
+ .sheet .employee-card>div>b{font-size:12px}
+ .sheet .employee-card small span{padding:2px 4px}
+ .sheet .employee-columns{padding-inline:4px}
+}
+@media(max-width:360px){.sheet>[data-pane=employees]{--staff-column-gap:6px}}
 
 /* The map runs full height behind the glass sheet instead of stopping at its top edge; the gesture hint moves up with it. */
 @media(max-width:779px){
@@ -88,8 +100,18 @@ html body .sheet>[data-pane=employees]{display:flex;flex-direction:column}
 
 /* The station holding everything back is unmistakable: gold ring on its card and map label, and its upgrade badge
    inverted (solid gold disc, arrow cut out) instead of the outline arrow everyone else gets. */
-.sheet .machine-nav button.is-bottleneck{background:linear-gradient(160deg,#efcf8d1f,#efcf8d08);box-shadow:inset 0 0 0 1.5px #efcf8d99,0 0 14px -4px #efcf8d66}
-.sheet .machine-nav button.is-bottleneck[aria-pressed=true]{box-shadow:inset 0 0 0 1.5px #efcf8d,0 0 16px -4px #efcf8d88}
+.sheet .machine-nav button.is-bottleneck{background:linear-gradient(160deg,#efcf8d1f,#efcf8d08);box-shadow:0 0 14px -4px #efcf8d66}
+.sheet .machine-nav button.is-bottleneck[aria-pressed=true]{box-shadow:0 0 16px -4px #efcf8d88}
+/* Two equal gaps follow the rounded perimeter without rotating the card or its contents. */
+.sheet .machine-nav .station-orbit{display:none;position:absolute;inset:-1px;width:calc(100% + 2px);height:calc(100% + 2px);pointer-events:none;fill:none;color:#efcf8d;opacity:.6}
+.sheet .machine-nav button.is-bottleneck .station-orbit{display:block}
+.sheet .machine-nav button[aria-pressed=true] .station-orbit{opacity:1}
+.station-orbit rect{width:calc(100% - 2px);height:calc(100% - 2px);stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-dasharray:47 3 47 3;stroke-dashoffset:0}
+@keyframes station-border-orbit{to{stroke-dashoffset:-100}}
+@media(prefers-reduced-motion:no-preference){
+ .is-bottleneck .station-orbit rect{animation:station-border-orbit 16s linear var(--station-orbit-delay,0s) infinite;animation-play-state:paused}
+ body:not([data-page-hidden=true]) .sheet:not(.collapsed) .machine-nav button.station-motion-visible .station-orbit rect{animation-play-state:running}
+}
 .sheet .machine-nav button.is-bottleneck .station-card-name,.sheet .machine-nav button.is-bottleneck>em{color:#f3d98f}
 .sheet .machine-nav button.is-bottleneck::after{content:'';display:block;position:absolute;top:5px;left:calc(50% + 6px);right:auto;bottom:auto;width:13px;height:13px;border-radius:0;background:#efcf8d;box-shadow:0 0 8px #efcf8d66;animation:none;transform:none;
  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill-rule='evenodd' d='M10 .8a9.2 9.2 0 1 0 0 18.4A9.2 9.2 0 0 0 10 .8Zm0 4.2-4.2 4.7h2.6V15h3.2V9.7h2.6L10 5Z' fill='black'/%3E%3C/svg%3E") center/contain no-repeat;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill-rule='evenodd' d='M10 .8a9.2 9.2 0 1 0 0 18.4A9.2 9.2 0 0 0 10 .8Zm0 4.2-4.2 4.7h2.6V15h3.2V9.7h2.6L10 5Z' fill='black'/%3E%3C/svg%3E") center/contain no-repeat}

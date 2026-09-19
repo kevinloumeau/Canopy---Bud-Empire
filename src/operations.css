@@ -8,9 +8,9 @@
 .sheet .empire-content .operation-tabs button[aria-pressed=true] em{color:#e8f2d7}
 @media(hover:hover){.sheet .empire-content .operation-tabs button:not([aria-pressed=true]):hover{background:#dce9be10}}
 .op-pane[hidden]{display:none}
-.op-pane h4,.operations-today h4{font-size:13px;margin:18px 0 10px;color:#f0f4e8}
+.op-pane h4{font-size:13px;margin:18px 0 10px;color:#f0f4e8}
 .operation-details summary:focus-visible{outline:2px solid #e3d1a6;outline-offset:2px}
-.operation-stats,.operation-row,.shelf-row,.journal-entry,.flagship-check{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0}
+.operation-stats,.operation-row,.shelf-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0}
 .operation-stats{font-size:12px;padding-top:0}
 .operation-row,.shelf-row{border-bottom:1px solid #c1d7b722;font-size:12px}
 .operation-row>span,.shelf-row>div:first-child{min-width:0;flex:1}
@@ -44,13 +44,9 @@
 .opening-task[hidden]{display:none}
 .sheet .empire-content .opening-task button{font-size:11px;padding:6px 9px}
 .route{display:grid;grid-template-columns:1fr auto;gap:6px;font-size:11px;margin:12px 0}
-.route progress,.flagship-check progress{grid-column:1/-1;margin:0;width:100%}
-.journal-entry{font-size:12px;color:#b6c8af;padding:7px 0}
-.journal-entry.discovered{color:#f0f4e8}
-.journal-entry small{font-size:10px}
-.flagship-check{display:grid;grid-template-columns:1fr auto;font-size:12px}
+.route progress{grid-column:1/-1;margin:0;width:100%}
 
-.op-pane small,.operations-today small{font-family:inherit;letter-spacing:normal;font-weight:400}
+.op-pane small{font-family:inherit;letter-spacing:normal;font-weight:400}
 /* Keep a branch's identity and local navigation together under the Empire tabs. Opaque, like the back bar above it — scrolled content must not show through. */
 .branch-sticky-header{position:sticky;top:var(--empire-tabs-height,52px);z-index:1;background:#213a2e;box-shadow:none}
 .branch-sticky-header .operation-tabs{margin-top:0;margin-bottom:0;padding-bottom:4px}

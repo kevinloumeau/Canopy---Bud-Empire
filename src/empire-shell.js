@@ -52,26 +52,24 @@ export function mountEmpireShell({fit,getState,format}){
   group(null,Array.from(section('daily').children)),
   group(null,Array.from(section('events').children)),
   group(null,[today.querySelector('.reputation')]),
-  group(null,[today.querySelector('.operations-today')]),
   group(null,[growth.querySelector('.depth-panel')])
  );
+ // Keep the back controls outside the scrolling content so their background can be the panel itself.
+ const scrollers={};
+ ['store','details'].forEach(name=>{const screen=screens[name],body=el('div','empire-screen-body');while(screen.children.length>1)body.append(screen.children[1]);screen.append(body);scrollers[name]=body;});
  pane.append(screens.home,screens.store,screens.details);
  const storesUI=mountEmpireStores({getState,format});
  const orderBadge=$('orderBadge'),empireTab=document.querySelector('[data-tray=empire]');if(orderBadge&&empireTab)empireTab.append(orderBadge);
 
  // Navigation.
  let current='home';
- function show(name){current=name;if(name==='details')syncBoard();Object.keys(screens).forEach(k=>screens[k].hidden=k!==name);pane.dataset.empireScreen=name;pane.scrollTop=0;if(name!=='store')closeBranches();if(fit)fit();}
+ function show(name){current=name;if(name==='details')syncBoard();Object.keys(screens).forEach(k=>screens[k].hidden=k!==name);pane.dataset.empireScreen=name;pane.scrollTop=0;if(scrollers[name])scrollers[name].scrollTop=0;if(name!=='store')closeBranches();if(fit)fit();}
  function closeBranches(){articles.forEach((article,i)=>{const body=$('branchBody'+i),nav=article.querySelector('.operation-tabs');if(body)body.hidden=true;if(nav)nav.hidden=true;toggles[i].setAttribute('aria-expanded','false');});}
  function openStore(i){articles.forEach((article,j)=>{const body=$('branchBody'+j),nav=article.querySelector('.operation-tabs');if(body)body.hidden=j!==i;if(nav)nav.hidden=j!==i;toggles[j].setAttribute('aria-expanded',String(j===i));});storeBar.heading.textContent=toggles[i].querySelector('.branch-name').textContent;show('store');}
  toggles.forEach((toggle,i)=>{toggle.onclick=()=>openStore(i);toggle.removeAttribute('aria-expanded');toggle.setAttribute('aria-haspopup','false');});
  // main.js still opens a branch body directly (Manage on the map, bottleneck shortcuts); follow it.
  if(window.MutationObserver){const watcher=new MutationObserver(()=>{const open=articles.findIndex((_,i)=>$('branchBody'+i)&&!$('branchBody'+i).hidden);if(open>=0&&(current!=='store'||storeBar.heading.textContent!==toggles[open].querySelector('.branch-name').textContent)){openStore(open);}});articles.forEach((_,i)=>{const body=$('branchBody'+i);if(body)watcher.observe(body,{attributes:true,attributeFilter:['hidden']});});}
  const todayView=pane.querySelector('[data-empire-view=today]');if(todayView)todayView.addEventListener('click',()=>{if(current!=='home')show('home');});
- // Sticky branch tabs sit under the back bar instead of the removed section switcher.
- const measure=()=>{const h=storeBar.bar.getBoundingClientRect().height;if(h)pane.style.setProperty('--empire-tabs-height',h+'px');};
- if(window.ResizeObserver)new ResizeObserver(measure).observe(storeBar.bar);
-
  // Rewards strip mirrors the existing claim buttons; collecting clicks them.
  const sources=[['Daily','dailyClaim'],['Milestone','careerClaim'],['Bonus','claim'],['Event','eventAction'],['Goal','goalClaim0'],['Goal','goalClaim1'],['Goal','goalClaim2']];
  const amount=text=>{const m=/\$[\d.,]+[KMB]?/.exec(text);return m?m[0]:'';};
@@ -90,6 +88,6 @@ export function mountEmpireShell({fit,getState,format}){
  }
  collectAll.onclick=()=>{sources.forEach(([,id])=>{const b=$(id);if(b&&!b.disabled&&/^Collect\b/.test(b.textContent.trim()))b.click();});sync();};
  pane.addEventListener('click',()=>requestAnimationFrame(sync));
- setInterval(sync,250);sync();measure();
+ setInterval(sync,250);sync();
  return {show,openStore,sync};
 }

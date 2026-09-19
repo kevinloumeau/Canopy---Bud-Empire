@@ -99,7 +99,6 @@
 .sheet .machine-nav button.can-upgrade::after{content:'';display:block;position:absolute;top:4px;left:calc(50% + 7px);right:auto;bottom:auto;width:11px;height:11px;border-radius:0;background:#c5e89e;box-shadow:none;
  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='8.7' fill='none' stroke='black' stroke-width='1.6'/%3E%3Cpath d='m10 5-4 4.5h2.5V15h3V9.5H14L10 5Z' fill='black'/%3E%3C/svg%3E") center/contain no-repeat;
  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='8.7' fill='none' stroke='black' stroke-width='1.6'/%3E%3Cpath d='m10 5-4 4.5h2.5V15h3V9.5H14L10 5Z' fill='black'/%3E%3C/svg%3E") center/contain no-repeat}
-@media(prefers-reduced-motion:no-preference){.sheet .machine-nav button.can-upgrade::after{animation:upgrade-arrow-float 1.8s ease-in-out infinite}}
 
 /* Bottleneck line: one quiet tappable row with a gold marker and a chevron, not a sentence plus a button. */
 /* Bottleneck card: amber accent, station icon, eyebrow + name, and a solid fix button. */

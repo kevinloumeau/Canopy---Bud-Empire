@@ -93,9 +93,7 @@ body[data-store-view=branch] .customer-mood{display:none}
 
 .reputation-summary{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:13px;font-variant-numeric:tabular-nums}
 .reputation-summary span{font-size:12px;color:#cbdcc5}
-.reputation-guide dl{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:9px 14px;margin:10px 0 18px}
-.reputation-guide dt{color:#f0f4e8;font-weight:600}
-.reputation-guide dd{margin:0;color:#cbdcc5}
+
 
 /* A store list with a single working area, rather than three repeated forms. */
 .empire-branch{display:block;padding:0;border-top:1px solid #c1d7b733}

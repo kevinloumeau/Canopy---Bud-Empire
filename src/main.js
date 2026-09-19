@@ -5,7 +5,7 @@ import {manageDialog} from './dialog-focus.js';
 import {AUTO_DRONE_COST,BULK_DRONE_COST,buyAutoDrone,buyBulkDrone,autoDroneLimit,migrateAutoDrone,autoDroneReady} from './auto-drone.js';
 import {FORMATS,BOOST_MAX,boostCost,migrateMenu,chooseFormat,milestone,prestigeOffer,elapsedSteps,makeSound} from './depth.js';
 import {mountShopBrowser} from './shop-browser.js';
-import {tickOperations,atmosphere,branchBottleneck,neighborhood} from './operations.js';
+import {tickOperations,atmosphere,neighborhood} from './operations.js';
 import {mountOperations} from './operations-ui.js';
 import {mountEmpireShell} from './empire-shell.js';
 import {mountStartGuide} from './start-guide.js';
@@ -226,7 +226,22 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   function renderFlowers(){
     FORMATS.forEach(function(f,i){var b=$('format'+i);if(!b)return;b.setAttribute('aria-pressed',String(state.productMenu.active===i));b.disabled=!state.productMenu.unlocked[i]&&state.money<f.cost;b.querySelector('small').textContent=state.productMenu.unlocked[i]?(state.productMenu.active===i?'Featured':'Feature'):fmt(f.cost)});
     if($('formatBenefit')){var f=format();$('formatBenefit').textContent=[['Standard value','Steady demand'],['+45% value','Faster pickup','Slower packing'],['+120% value','Lower demand','Slower packing']][state.productMenu.active].join(' · ');$('formatBenefit').title=f.detail;}
-    if($('prestigeStart')){var offer=prestigeOffer(state);$('prestigeStart').disabled=!offer.eligible;$('prestigeStatus').textContent='Rank '+offer.rank+' · '+(1+offer.rank*.2).toFixed(1)+'× base sales';$('prestigeStart').textContent=offer.rank>=19?'Maximum prestige':'Reopen · '+fmt(offer.target);$('soundToggle').textContent=state.sound?'Sound on':'Sound off';$('soundToggle').setAttribute('aria-pressed',String(state.sound));}
+    if($('prestigeStart')){
+      var offer=prestigeOffer(state),maxRank=offer.rank>=19,earned=Math.max(0,state.lifetime),current=(1+offer.rank*.2).toFixed(1);
+      $('prestigeStatus').textContent='Rank '+offer.rank;
+      $('prestigeCurrentRank').textContent='Rank '+offer.rank;$('prestigeCurrentRate').textContent=current+'×';
+      $('prestigeNextRank').textContent='Rank '+(offer.rank+1);$('prestigeNextRate').textContent=offer.multiplier.toFixed(1)+'×';
+      $('prestigeComparison').classList.toggle('is-max',maxRank);$('prestigeComparison').setAttribute('aria-label',maxRank?'Maximum rank '+offer.rank+', '+current+' times base sales':'Rank '+offer.rank+' to rank '+(offer.rank+1)+': '+current+' to '+offer.multiplier.toFixed(1)+' times base sales');
+      $('prestigeNext').hidden=maxRank;$('prestigeArrow').toggleAttribute('hidden',maxRank);
+      $('prestigeGain').textContent=maxRank?'Maximum permanent bonus':'+20% base sales · permanent';
+      $('prestigeFunding').hidden=maxRank;$('prestigeRevenue').textContent=fmt(earned)+' / '+fmt(offer.target);
+      $('prestigeProgress').value=Math.min(100,earned/offer.target*100);$('prestigeProgress').setAttribute('aria-valuetext',fmt(earned)+' of '+fmt(offer.target)+' lifetime revenue');
+      $('prestigeFundingStatus').textContent=offer.eligible?'Ready to reopen':fmt(Math.max(0,offer.target-earned))+' to unlock';
+      $('prestigeStart').disabled=!offer.eligible;$('prestigeStart').textContent=maxRank?'Maximum rank reached':'Reopen at rank '+(offer.rank+1);
+      if(maxRank)$('prestigeStart').removeAttribute('aria-describedby');else $('prestigeStart').setAttribute('aria-describedby','prestigeFundingStatus prestigeCarryover');
+      $('prestigeCarryover').hidden=maxRank;
+      $('soundToggle').textContent=state.sound?'Sound on':'Sound off';$('soundToggle').setAttribute('aria-pressed',String(state.sound));
+    }
 
     renderStrainMenu();
   }
@@ -474,7 +489,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   function renderDispatchDesk(shippable){
     var waiting=onlineRequestsReady(),jars=state.stock[3],key=waiting+'|'+jars+'|'+shippable+'|'+state.productMenu.active;
     if(key===dispatchKey)return;dispatchKey=key;
-    $('deliveryWaiting').textContent=waiting;$('deliveryJars').textContent=state.productMenu.active===0?weightLabel(jars):jars.toLocaleString();$('deliveryJarsLabel').textContent=(state.productMenu.active===0?'flower':unitWord(2))+' packed';$('deliveryShippable').textContent=shippable;
+    $('deliveryWaiting').textContent=waiting;$('deliveryJars').textContent=state.productMenu.active===0?Math.floor(jars/8).toLocaleString()+' oz':jars.toLocaleString();$('deliveryJarsLabel').textContent=(state.productMenu.active===0?'flower':unitWord(2))+' packed';$('deliveryShippable').textContent=shippable;
     $('deliveryShippable').parentElement.classList.toggle('is-live',shippable>0);
     // The stack shows up to two more receipts peeking out behind the one on top.
     $('receiptStack').dataset.depth=String(Math.max(0,Math.min(2,waiting-1)));$('receiptStack').classList.toggle('is-idle',!waiting);
@@ -627,6 +642,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     ctx.globalAlpha=.9;worldLine(points,cool?'#e7f6d0':'#ffe8b4',.052);
     ctx.globalAlpha=1;worldLine(points,cool?'#f3fbe7':'#fff5da',.018);ctx.restore();
   }
+  function orderCounterStrip(x,z){return [[x-.95,1.11,z+1.12],[x+.95,1.11,z+1.12]]}
   // Night falls by multiplying the scene with a cool navy rather than fogging it: colours deepen, blacks stay black, and the
   // edges of the frame go darker than the shop so the lit interior reads like a lantern. The shade is built on its own
   // surface with every light pool cut out of it, so lit floor keeps its true daytime colour instead of a grey screen blob;
@@ -654,7 +670,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     // Beams are stacked in three widths so their sides feather instead of cutting a hard wedge in the shade.
     function beam(x,yTop,z,yBottom,topHalf,bottomHalf,a){var top=project(x,yTop,z),base=project(x,yBottom,z);[[.6,1],[1,.5],[1.5,.22]].forEach(function(layer){var tw=unit*topHalf*layer[0],bw=unit*bottomHalf*layer[0],g=ctx.createLinearGradient(0,top.y,0,base.y);g.addColorStop(0,rgba(white,a*layer[1]*.3));g.addColorStop(1,rgba(white,a*layer[1]));ctx.beginPath();ctx.moveTo(top.x-tw,top.y);ctx.lineTo(top.x+tw,top.y);ctx.lineTo(base.x+bw,base.y);ctx.lineTo(base.x-bw,base.y);ctx.closePath();ctx.fillStyle=g;ctx.fill()})}
     // Station work lights and the strip under each counter front.
-    machinePos.forEach(function(q){cut(q.x,q.y+.04,q.z+.9,2.1,.62);beam(q.x,q.y+1.1,q.z+1.26,q.y+.04,1.1,1.7,.16)});
+    machinePos.forEach(function(q,i){if(i===4&&state.orderCounters>1)return;cut(q.x,q.y+.04,q.z+.9,2.1,.62);beam(q.x,q.y+1.1,q.z+1.26,q.y+.04,1.1,1.7,.16)});
+    if(state.orderCounters>1)orderCounterPositions(state.orderCounters).forEach(function(q){var strip=orderCounterStrip(q.x,q.z);cut(q.x,.04,q.z+.9,1.4,.62);beam(q.x,strip[0][1],strip[0][2],.04,.95,1.2,.16)});
     // Retail counters, shop-floor downlights, and the island vitrines.
     orderCounterPositions(state.orderCounters).forEach(function(p){cut(p.x,.03,4.9,state.orderCounters>1?1.3:2.7,.7)});cut(4,.03,4.9,2.7,.7);
     [[-4,2.5],[4,2.5],[0,6]].forEach(function(q){cut(q[0],.03,q[1],2.3,.5)});
@@ -683,7 +700,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     // Concealed strips wash the rear walls of every floor, so the architecture stays legible after dark.
     [[-11.2,8.95,-6.9,3.6,1.3,.24],[-8.7,8.7,4.7-6.55,4.7+3.6,4.7+1.5,.26],[-6.2,6.2,9.4-6.7,9.4+3.6,9.4+1.7,.12]].forEach(function(w){wallWash(w[0],w[1],w[2],w[3],w[4],warm,w[5])});
     // Work lights over every station; the grow room glows cool. A cone from each under-counter strip hangs in the night air.
-    machinePos.forEach(function(q,i){pool(q.x,q.y+.04,q.z+.9,2,.2,i===1?cool:warm);lightCone(q.x,q.y+1.1,q.z+1.26,q.y+.04,1.3,1.75,i===1?cool:warm,.08)});
+    machinePos.forEach(function(q,i){if(i===4&&state.orderCounters>1)return;pool(q.x,q.y+.04,q.z+.9,2,.2,i===1?cool:warm);lightCone(q.x,q.y+1.1,q.z+1.26,q.y+.04,1.3,1.75,i===1?cool:warm,.08)});
+    if(state.orderCounters>1)orderCounterPositions(state.orderCounters).forEach(function(q){var strip=orderCounterStrip(q.x,q.z);pool(q.x,.04,q.z+.9,1.4,.2,warm);lightCone(q.x,strip[0][1],strip[0][2],.04,.95,1.2,warm,.08)});
     // Shop-floor downlights, the lit entrance, and the online kiosk sign.
     [[-4,2.5],[4,2.5],[0,6]].forEach(function(q){pool(q[0],.03,q[1],2.2,.16,warm)});
     // Counters and the grow rack keep their own light at night so the interior stays legible.
@@ -790,6 +808,15 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   // Glass: translucent tint plus a diagonal sheen so panes read as glazing rather than flat film.
   function glassPane(points,tint){poly(points,tint);var xs=points.map(function(q){return q.x}),ys=points.map(function(q){return q.y}),x0=Math.min.apply(null,xs),x1=Math.max.apply(null,xs),y0=Math.min.apply(null,ys),y1=Math.max.apply(null,ys),g=ctx.createLinearGradient(x0,y0,x1,y1);g.addColorStop(0,'rgba(255,255,255,.14)');g.addColorStop(.32,'rgba(255,255,255,.02)');g.addColorStop(.5,'rgba(255,255,255,.08)');g.addColorStop(.68,'rgba(255,255,255,0)');poly(points,g)}
   function worldLine(points,color,weight){ctx.beginPath();points.forEach(function(p,i){var q=project(p[0],p[1],p[2]);if(i)ctx.lineTo(q.x,q.y);else ctx.moveTo(q.x,q.y)});ctx.strokeStyle=color;ctx.lineWidth=Math.max(.65,unit*weight);ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke()}
+  function constructionTape(a,b){
+    // A vertical ribbon in world space stays attached to the stair posts when the camera moves.
+    function point(t,lift){return project(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t+lift,a[2]+(b[2]-a[2])*t)}
+    var edge=[point(0,-.065),point(1,-.065),point(1,.065),point(0,.065)];
+    ctx.save();poly(edge,'#ebcb59','#74652e');
+    ctx.beginPath();edge.forEach(function(p,i){if(i)ctx.lineTo(p.x,p.y);else ctx.moveTo(p.x,p.y)});ctx.closePath();ctx.clip();
+    for(var stripe=-1;stripe<9;stripe++){var t=stripe/8;poly([point(t,-.065),point(t+.055,-.065),point(t+.11,.065),point(t+.055,.065)],'#30372b')}
+    ctx.restore();
+  }
   function carton(x,z,y,size){
     drawBox(x,z,y,size,size*.75,size*.65,['#e5bc80','#a57c4f','#c99c65']);
     drawBox(x,z,y+size*.65,size*.16,size*.76,.018,['#f0d6a6','#c6aa77','#d7bb85']);
@@ -892,7 +919,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       [.57,.86].forEach(function(y){worldLine([[x-1,y,z+1.045],[x+1,y,z+1.045]],'#cbd0ad',.016)});
       drawBox(x+1.02,z,.29,.055,2.03,.84,oak);
       drawBox(x,z,1.14,2.22,2.2,.17,stone);
-      warmStrip([[x-.95,1.11,z+1.12],[x+.95,1.11,z+1.12]],false);
+      warmStrip(orderCounterStrip(x,z),false);
       // Each desk has a till facing its employee and a separate customer payment pad.
       drawBox(x-.36,z-.24,1.31,.7,.52,.1,['#577765','#243c30','#3d5846']);
       drawBox(x-.36,z-.38,1.41,.7,.12,.5,['#bdd0bd','#2f5040','#496b56']);
@@ -900,9 +927,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       drawBox(x+.52,z+.64,1.31,.4,.36,.07,['#53735e','#294936','#365541']);
       drawBox(x+.52,z+.65,1.385,.25,.24,.015,['#cbe2ba','#cbe2ba','#cbe2ba']);
       jar(x+.61,z-.35,1.31);
-      drawBox(x,z+1.12,.67,.38,.04,.29,['#d6bc85','#d6bc85','#d6bc85']);
-      signText(x,.82,z+1.15,String(p.index+1),.3,.19,'#284737');
       slabDownlight(x,z,4.45,1.31);
+      if(selected===4)selectionRing(p,true);
       var wait=project(x,.025,4.9);ellipse(wait.x,wait.y,unit*.32,unit*.12,active?'#dcc89170':'#b2bc9340');
     });
   }
@@ -1464,9 +1490,9 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     ctx.save();ctx.translate(disp.x,disp.y);ctx.transform(1,(dAxis.y-disp.y)/(dAxis.x-disp.x),0,1,0,0);
     ctx.shadowColor=ready?'#b7e394':'#9ed6c8';ctx.shadowBlur=unit*.1;ctx.fillStyle=ready?'#d9f7c4':'#d2f2ea';ctx.font='600 '+Math.max(6,unit*.16)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(pending+(pending===1?' ORDER':' ORDERS')+' · '+state.stock[3]+' JARS',0,0,frameWidth);ctx.restore();
   }
-  function onlinePackingCounter(now){
+  function onlinePackingCounter(now,previewOnly){
     var x=-10.7,z=1.5,oak=['#cbb085','#7f6a4b','#ac9168'],green=['#86a795','#3e6250','#648a70'];
-    if(!deliveryBuilt()){onlineCounterSite(now,x,z,oak);return}
+    if(!deliveryBuilt()&&!previewOnly){onlineCounterSite(now,x,z,oak);return}
     // Cantilevered launch deck, attached to the rear sign supports.
     var padZ=z-2.25,steel=['#526659','#253b30','#3a5142'];
     // A tie beam under the deck meets the mezzanine edge so the cantilever reads as attached.
@@ -1504,7 +1530,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     drawBox(x,z-.674,2.31,2.97,.025,.51,['#355d49','#294836','#355d49']);
     worldLine([[x-1.4,2.29,z-.64],[x+1.4,2.29,z-.64]],'#ecd39c',.027);
     signText(x,2.55,z-.64,'ONLINE ORDERS',2.3,.235);
-    signFaces.push({x:x,y:2.55+sceneElevation,z:z-.64,label:'ONLINE ORDERS',width:2.3,size:.235,halo:1.4});
+    if(!previewOnly)signFaces.push({x:x,y:2.55+sceneElevation,z:z-.64,label:'ONLINE ORDERS',width:2.3,size:.235,halo:1.4});
     var status=project(x+.85,1.5,z-.49);ellipse(status.x,status.y,unit*.065,unit*.065,state.stock[3]>=onlineSize()?'#b7e394':'#d7b775');
     
     // Shelf-edge display set into the counter front: orders waiting against jars on hand, with a fill line for how much of the queue can ship.
@@ -1512,11 +1538,11 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     drawBox(x,faceZ+.02,.34,1.9,.04,.5,['#1d3a2c','#12281e','#183224']);
     worldLine([[x-.93,.36,faceZ+.045],[x+.93,.36,faceZ+.045],[x+.93,.82,faceZ+.045],[x-.93,.82,faceZ+.045],[x-.93,.36,faceZ+.045]],'#a9d2c855',.02);
     // The readout is measured against the frame's projected width so it always sits inside the black surround.
-    onlineReadout(x,faceZ,pending,ready);
+    if(previewOnly)signText(x,.62,faceZ+.05,'DISPATCH',1.5,.16,'#cce8c4');else onlineReadout(x,faceZ,pending,ready);
     worldLine([[x-.78,.45,faceZ+.05],[x+.78,.45,faceZ+.05]],'#0d1f17',.07);
     var fill=pending?Math.min(1,state.stock[3]/Math.max(1,needed)):0;if(fill>0)worldLine([[x-.78,.45,faceZ+.05],[x-.78+1.56*fill,.45,faceZ+.05]],ready?'#b7e394':'#a9d2c8',.05);
     // Its own feed branch carries packed jars from the packing station.
-    transferTube([[-4.55,-.9,1],[-7.4,-.9,1],[-7.4,1.5,1.5],[-9.05,1.5,1.5]],3);
+    if(!previewOnly)transferTube([[-4.55,-.9,1],[-7.4,-.9,1],[-7.4,1.5,1.5],[-9.05,1.5,1.5]],3);
   }
   // Before the delivery pad is bought the mezzanine corner is a building site: bare deck, taped-off perimeter,
   // a sheeted counter, stacked materials and an unlit COMING SOON board where the sign will go.
@@ -1536,16 +1562,21 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     drawBox(x,z,-.24,4.4,3.8,.24,oak);
     // Counter carcass in raw plywood under a dust sheet, sawhorse and materials beside it.
     drawBox(x,z,.05,2.9,1.8,.95,ply);drawBox(x,z+.05,.98,3.2,2.05,.12,sheet);drawBox(x-.3,z+.3,1.1,2.2,1.2,.05,sheet);
-    drawBox(x+1.5,z+.9,.02,.5,.9,.7,['#b59a6e','#6e5a3c','#93794f']);drawBox(x+1.5,z+.9,.7,.7,1,.06,['#d9c39a','#8a7250','#b89a6c']);
-    for(var n=0;n<3;n++)drawBox(x-1.55,z+.5+n*.28,.02+n*.12,.6,.22,.12,n%2?['#d9c39a','#8a7250','#b89a6c']:['#c9b48a','#7c6646','#a88a5e']);
-    carton(x-1.5,z-.55,.02,.5);carton(x-1.5,z-.55,.5,.44);
-    drawBox(x+.9,z-.4,1.12,.3,.5,.25,['#8e8f87','#4d4f49','#6c6e67']);
+    drawBox(x+1.5,z+.9,.02,.5,.9,.7,['#b59a6e','#6e5a3c','#93794f']);drawBox(x+1.5,z+.9,.72,.7,1,.06,ply);
+    // Flat, aligned boards rest on the deck in front of the counter, held together by two straps.
+    for(var n=0;n<3;n++)drawBox(x-1.14,z+1.26,.02+n*.08,1.12,.46,.08,n%2?ply:['#c9b48a','#7c6646','#a88a5e']);
+    [-.32,.32].forEach(function(dx){drawBox(x-1.14+dx,z+1.26,.26,.045,.47,.012,steel);drawBox(x-1.14+dx,z+1.498,.02,.045,.012,.24,steel)});
     // Sign board mounted, but unlit and blank: a paper notice hangs across it.
     [-1.48,1.48].forEach(function(dx){drawBox(x+dx,z-.78,1.13,.1,.12,1.75,oak)});
     drawBox(x,z-.78,2.25,3.15,.18,.65,oak);
     drawBox(x,z-.674,2.31,2.97,.025,.51,['#26382f','#1b2a22','#26382f']);
     drawBox(x,z-.66,2.36,2.2,.02,.4,['#efe7cf','#c8bf9f','#e2d9bd']);
     signText(x,2.55,z-.64,'COMING SOON',1.9,.2,'#5a5d4c');
+    // Loose worktop props draw after the rear sign uprights so those posts cannot cut through the cartons.
+    // The first carton sits on the dust sheet; the smaller one sits on its taped lid.
+    var cartonBase=1.15,cartonSize=.54;
+    carton(x-.77,z+.08,cartonBase,cartonSize);carton(x-.8,z+.07,cartonBase+cartonSize*.65+.018,.44);
+    drawBox(x+.95,z-.55,1.1,.3,.5,.25,['#8e8f87','#4d4f49','#6c6e67']);
   }
   function retailDetails(fi,rear){
     var oak=['#cfb184','#836949','#b09266'],stone=['#e2dfd0','#969c8e','#c3c8b8'],brass=['#d7c28b','#8c774c','#b7a16c'];
@@ -1656,6 +1687,37 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     }
   }
 
+  function drawGrowExhaustFan(x,z,y){
+    var faceZ=z+.13,center=project(x,y,faceZ);
+    if(center.x+unit*1.5<0||center.x-unit*1.5>width||center.y+unit*1.6<0||center.y-unit*1.6>height)return;
+    // The housing and rotor share the rear wall's plane, including its isometric shear.
+    poly([project(x-1.25,y-1.26,z-.02),project(x+1.3,y-1.26,z-.02),project(x+1.3,y+1.18,z-.02),project(x-1.25,y+1.18,z-.02)],'#15241c48');
+    drawBox(x,z,y-1.18,2.36,.24,2.36,['#a8b6a6','#647a6c','#7f9686']);
+    var across=project(x+1,y,faceZ),down=project(x,y-1,faceZ);
+    ctx.save();ctx.transform(across.x-center.x,across.y-center.y,down.x-center.x,down.y-center.y,center.x,center.y);
+    ctx.fillStyle='#718779';ctx.fillRect(-1.1,-1.1,2.2,2.2);
+    var metal=ctx.createLinearGradient(-1,-1,1,1);metal.addColorStop(0,'#d6dfcf');metal.addColorStop(.45,'#93a99a');metal.addColorStop(1,'#526b5c');
+    ctx.beginPath();ctx.arc(0,0,1.055,0,Math.PI*2);ctx.fillStyle=metal;ctx.fill();
+    ctx.beginPath();ctx.arc(0,0,.96,0,Math.PI*2);ctx.fillStyle='#1d3028';ctx.fill();
+    ctx.beginPath();ctx.arc(0,.035,.88,0,Math.PI*2);ctx.fillStyle='#30483a';ctx.fill();
+    // One revolution per 26 seconds at 1x; sceneTime already respects pause and reduced motion.
+    ctx.save();ctx.rotate(sceneTime*Math.PI*2/26000);
+    for(var blade=0;blade<4;blade++){
+      ctx.save();ctx.rotate(blade*Math.PI/2);
+      ctx.beginPath();ctx.moveTo(.12,-.07);ctx.bezierCurveTo(.32,-.48,.71,-.64,.87,-.31);ctx.bezierCurveTo(1.01,-.03,.76,.38,.56,.34);ctx.bezierCurveTo(.39,.3,.38,.08,.12,.09);ctx.closePath();
+      var finish=ctx.createLinearGradient(.15,-.42,.7,.3);finish.addColorStop(0,'#d0ddca');finish.addColorStop(.48,'#a6baa5');finish.addColorStop(1,'#668676');ctx.fillStyle=finish;ctx.fill();
+      ctx.beginPath();ctx.moveTo(.25,-.1);ctx.bezierCurveTo(.47,-.39,.73,-.47,.84,-.3);ctx.strokeStyle='#e1ead466';ctx.lineWidth=.022;ctx.stroke();ctx.restore();
+    }
+    ctx.restore();
+    // Fixed wire guard: sparse enough that the slow-moving blades remain readable.
+    ctx.strokeStyle='#bac9b37a';ctx.lineWidth=.014;
+    [.38,.65,.9].forEach(function(r){ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.stroke()});
+    for(var spoke=0;spoke<8;spoke++){var a=spoke*Math.PI/4;ctx.beginPath();ctx.moveTo(Math.cos(a)*.18,Math.sin(a)*.18);ctx.lineTo(Math.cos(a)*.95,Math.sin(a)*.95);ctx.stroke()}
+    ctx.beginPath();ctx.arc(0,0,.2,0,Math.PI*2);ctx.fillStyle=metal;ctx.fill();
+    ctx.beginPath();ctx.arc(-.035,-.035,.07,0,Math.PI*2);ctx.fillStyle='#dce6d2';ctx.fill();
+    [-1,1].forEach(function(sx){[-1,1].forEach(function(sy){ctx.beginPath();ctx.arc(sx*1.015,sy*1.015,.035,0,Math.PI*2);ctx.fillStyle='#394f42';ctx.fill();ctx.beginPath();ctx.moveTo(sx*1.015-.017,sy*1.015);ctx.lineTo(sx*1.015+.017,sy*1.015);ctx.strokeStyle='#c8d4c1';ctx.lineWidth=.009;ctx.stroke()})});
+    ctx.restore();
+  }
   // Grow-room lighting gantry, drawn after the benches so the bars always sit above them.
   function drawGrowGantry(part){
     // Lighting gantry: posts are painted before the benches so their feet sit behind the counters; the beam and bars come after.
@@ -1915,6 +1977,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       worldLine([[left+.2,2.95,rear+.18],[fi===0?8.95:right-.2,2.95,rear+.18]],'#b7986a',.11);
       // Concealed strips along the wall trim and the exposed mezzanine fascia.
       warmStrip([[left+.35,2.87,rear+.25],[fi===0?8.6:right-.35,2.87,rear+.25]],fi===2);
+      if(fi===2)drawGrowExhaustFan(-4.4,rear+.24,2.4);
       if(fi>0)warmStrip([[left+.2,-.08,front+.025],[right-.2,-.08,front+.025]],false);
       if(fi<2)retailDetails(fi,rear);
 
@@ -1926,7 +1989,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       // Staff positions: most stand behind their bench; the grow-room pair stand where the gantry and rack do not hide them.
       var staffSpots={0:{dx:-2.45,dz:.45,front:true,facing:1},1:{dx:-2.45,dz:.45,front:true,facing:1}};
       if(fi===2)drawGrowGantry('posts');
-      floor.ids.forEach(function(i){if(i===4){drawOrderCounterBank(now);if(selected===4)selectionRing(machinePos[4]);return}if(i===5)drawCounterDivider();var p=machinePos[i],spot=staffSpots[i]||{dx:-.95,dz:-1.65,front:false},gait=spot.facing?{amount:0,phase:0,facing:spot.facing}:undefined;if(!spot.front)drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait);drawStage(p,i,now);if(spot.front)drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait);if(selected===i)selectionRing(p)});
+      floor.ids.forEach(function(i){if(i===4){drawOrderCounterBank(now);if(selected===4&&state.orderCounters===1)selectionRing(machinePos[4]);return}if(i===5)drawCounterDivider();var p=machinePos[i],spot=staffSpots[i]||{dx:-.95,dz:-1.65,front:false},gait=spot.facing?{amount:0,phase:0,facing:spot.facing}:undefined;if(!spot.front)drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait);drawStage(p,i,now);if(spot.front)drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait);if(selected===i)selectionRing(p)});
       if(fi===2)drawGrowGantry();
       // Thin mezzanine guard rails stop short of the workstation fronts.
       if(fi>0){
@@ -1953,6 +2016,11 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
         worldLine([[landX+.7,5*rise+.95,landZ-.7],[landX-.7,5*rise+.95,landZ-.7],[landX-.7,5*rise+.95,landZ+.7]],rail,.06);
         [[landX+.7,landZ-.7],[landX-.7,landZ-.7],[landX-.7,landZ+.7]].forEach(function(pt){worldLine([[pt[0],5*rise,pt[1]],[pt[0],5*rise+.95,pt[1]]],rail,.045)});
         [-.72,.72].forEach(function(dx){worldLine([[f2X+dx,5*rise+.95,landZ+.7],[f2X+dx,9*rise+.95,f2Start+3*f2Run+.2]],rail,.06);worldLine([[f2X+dx,9*rise,f2Start+3*f2Run+.2],[f2X+dx,9*rise+.95,f2Start+3*f2Run+.2]],rail,.045)});
+        if(!deliveryBuilt()){
+          var entryX=f1Start+.23;
+          constructionTape([entryX,.92,f1Z-.74],[entryX,.48,f1Z+.74]);
+          constructionTape([entryX,.48,f1Z-.74],[entryX,.92,f1Z+.74]);
+        }
         sceneElevation=0;
         drawFloorTransfer(3,true);drawFloorTransfer(1,false);
         drawBox(-12.5,3,0,.14,.14,6.81,metal);
@@ -1977,7 +2045,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     // Slim structural posts support the open mezzanines.
     [[-8.8,-5.7,9.1],[8.8,-5.7,4.5],[6.3,-6.7,9.2]].forEach(function(p){drawBox(p[0],p[1],0,.16,.16,p[2],metal)});
     // Enclosed gravity transfers bridge each floor without crossing the stairs.
-    orderCounterPositions(state.orderCounters).forEach(function(p,index){archedServiceSign(p.x,state.orderCounters>1?'ORDER '+(index+1):'ORDER',state.orderCounters>1)});archedServiceSign(4,'PICKUP');
+    orderCounterPositions(state.orderCounters).forEach(function(p){archedServiceSign(p.x,'ORDER',state.orderCounters>1)});archedServiceSign(4,'PICKUP');
     // Street-level queue markings and low entry planters retain the service route.
     var waiting=customers.filter(function(c){return !c.ordered&&c.phase!=='leaving'}).length;
     for(var place=0;place<Math.min(12,queueLimit());place++){var row=Math.floor(place/4),slot=place%4;groundPatch(-4-(row%2?3-slot:slot)*.7,6.1+row*1.2,.3,.06,place<waiting?'#dfcb99':'#7d8f78')}
@@ -2234,19 +2302,20 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     [-8.7,8.7].forEach(function(x){add(x,7,function(){drawBox(x,7,0,.95,.95,.6,cream);plant(x,7,.6,1.1)})});
     add(-8,9,function(){drawBox(-8,9,.12,2,.7,.18,sage);drawBox(-8,9,.3,2,.65,.45,rose);drawBox(-8,8.7,.65,2,.12,.55,rose)});
   }
-  function selectionRing(pos){
+  function selectionRing(pos,compactCounter){
     var x=pos.x,z=pos.z,edge='#c1e6a1';
-    if(stationTier(selected)===0){
+    if(!compactCounter&&stationTier(selected)===0){
       var rim=[[x-1.04,1.29,z-.84],[x+1.04,1.29,z-.84],[x+1.04,1.29,z+.84],[x-1.04,1.29,z+.84]];
       poly(rim.map(function(p){return project(p[0],p[1],p[2])}),'#c5edaa16');worldLine(rim.concat([rim[0]]),edge,.04);return;
     }
     // Trace the counter's actual top and exposed faces instead of a floor halo.
-    var top=[[x-1.62,1.325,z-1.26],[x+1.62,1.325,z-1.26],[x+1.62,1.325,z+1.26],[x-1.62,1.325,z+1.26]];
+    var topX=compactCounter?1.12:1.62,topZ=compactCounter?1.11:1.26,baseX=compactCounter?1.06:1.55,baseZ=compactCounter?1.08:1.26;
+    var top=[[x-topX,1.325,z-topZ],[x+topX,1.325,z-topZ],[x+topX,1.325,z+topZ],[x-topX,1.325,z+topZ]];
     poly(top.map(function(p){return project(p[0],p[1],p[2])}),'#c5edaa16');
     worldLine(top.concat([top[0]]),edge,.04);
-    worldLine([[x-1.55,1.3,z+1.26],[x-1.55,.04,z+1.26],[x+1.55,.04,z+1.26],[x+1.55,1.3,z+1.26]],edge,.04);
-    worldLine([[x+1.55,.04,z+1.26],[x+1.55,.04,z-1.25],[x+1.55,1.3,z-1.25]],'#c1e6a18c',.03);
-    if(stationTier(selected)>=2){
+    worldLine([[x-baseX,1.3,z+topZ],[x-baseX,.04,z+baseZ],[x+baseX,.04,z+baseZ],[x+baseX,1.3,z+topZ]],edge,.04);
+    worldLine([[x+baseX,.04,z+baseZ],[x+baseX,.04,z-baseZ],[x+baseX,1.3,z-topZ]],'#c1e6a18c',.03);
+    if(!compactCounter&&stationTier(selected)>=2){
       var side=[[x+1.53,1.32,z-1.125],[x+2.35,1.32,z-1.125],[x+2.35,1.32,z+.525],[x+1.53,1.32,z+.525]];
       worldLine(side.concat([side[0]]),edge,.035);
       worldLine([[x+2.35,1.32,z+.525],[x+2.35,.04,z+.525],[x+1.6,.04,z+.525]],'#c1e6a18c',.03);
@@ -2385,7 +2454,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       // Emissive accents sit above the night tint, while their surrounding materials stay dark.
       ctx.save();ctx.globalAlpha=Math.min(1,nightShade/.34);
       [[-9,9,4.62,3.075],[-6.5,6.5,9.32,-.275]].forEach(function(edge){warmStrip([[edge[0]+.2,edge[2],edge[3]],[edge[1]-.2,edge[2],edge[3]]],false)});
-      machinePos.forEach(function(p,i){var half=stationTier(i)===0?.8:1.3,y=p.y+1.1,z=p.z+(stationTier(i)===0?.84:1.26);warmStrip([[p.x-half,y,z],[p.x+half,y,z]],i===1)});
+      machinePos.forEach(function(p,i){if(i===4&&state.orderCounters>1)return;var half=stationTier(i)===0?.8:1.3,y=p.y+1.1,z=p.z+(stationTier(i)===0?.84:1.26);warmStrip([[p.x-half,y,z],[p.x+half,y,z]],i===1)});
+      if(state.orderCounters>1)orderCounterPositions(state.orderCounters).forEach(function(p){warmStrip(orderCounterStrip(p.x,p.z),false)});
       signFaces.forEach(function(sign){var p=project(sign.x,sign.y,sign.z);glow(p.x,p.y,unit*sign.halo,'#ffda8a40',unit*sign.halo*.7);signText(sign.x,sign.y,sign.z,sign.label,sign.width,sign.size,'#fff3d6')});
       if(deliveryBuilt()){sceneElevation=7.05;var nightPending=onlineRequestsReady();onlineReadout(-10.7,2.4,nightPending,nightPending>0&&state.stock[3]>=onlineSize());sceneElevation=0}
       ctx.restore();
@@ -2417,10 +2487,15 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
         if(load>.65){ctx.save();ctx.globalAlpha*=(load-.65)/.35;carton(x,z,10.2,.62);ctx.restore()}
         ctx.restore();continue;
       }
+      drawCourierDrone(x,y,z,now,slot,drone.orders);
+      ctx.restore();
+    }
+  }
+  function drawCourierDrone(x,y,z,now,slot,orders){
       carton(x,z,y-.9,.62);
-      if(drone.orders>1){
+      if(orders>1){
         var cargoLabel=project(x,y-.55,z+.36);
-        ctx.fillStyle='#f5efd7';ctx.font='600 '+Math.max(9,unit*.23)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText('×'+drone.orders,cargoLabel.x,cargoLabel.y);
+        ctx.fillStyle='#f5efd7';ctx.font='600 '+Math.max(9,unit*.23)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText('×'+orders,cargoLabel.x,cargoLabel.y);
       }
       worldLine([[x-.2,y-.35,z],[x-.2,y-.04,z]],'#d8c89e',.035);
       worldLine([[x+.2,y-.35,z],[x+.2,y-.04,z]],'#d8c89e',.035);
@@ -2441,8 +2516,6 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
         ellipse(q.x,q.y,unit*.04,unit*.04,nav[3]>.5?nav[2]:'#3d4a44');
         if(nav[3]>0){ctx.save();ctx.globalCompositeOperation='screen';ellipse(q.x,q.y,unit*.3,unit*.3,softRadial(q.x,q.y,unit*.3,c,.55*nav[3]));ctx.restore()}
       });
-      ctx.restore();
-    }
   }
   function burst(worldPos,color){if(motionPreference.matches)return;for(var i=0;i<12;i++)particles.push({x:worldPos.x,y:1.4+(worldPos.y||0),z:worldPos.z,vx:(Math.random()-.5)*1.8,vz:(Math.random()-.5)*1.8,vy:1.6+Math.random()*1.8,life:1,color:color||colors.acid})}
 
@@ -2567,7 +2640,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     var maxUnlocked=state.lines[3]>=10,maxBatch=onlineBatch(maxUnlocked?Infinity:10);
     $('fulfillOnlineMax').disabled=!maxBatch.count;$('onlineMaxLabel').textContent=maxBatch.count?'Send '+maxBatch.count+(maxBatch.count===1?' order':' orders'):'Nothing to send';$('onlineMaxReward').textContent=maxBatch.count?fmt(maxBatch.reward):'';$('onlineMaxInfo').textContent=maxBatch.count?qtyLabel(maxBatch.jars)+(maxUnlocked?'':' · up to 10 per launch until Pack Lv 10'):(onlineRequestsReady()?'Needs '+qtyLabel(onlineSize())+' packed':'No requests waiting');
 
-    var built=deliveryBuilt();$('deliverySite').style.display=built?'none':'';$('buildDelivery').disabled=state.money<AUTO_DRONE_COST;$('deliveryFunding').value=Math.min(100,state.money/AUTO_DRONE_COST*100);$('deliveryFundingText').textContent=state.money>=AUTO_DRONE_COST?'Ready to build':fmt(state.money)+' saved · '+fmt(AUTO_DRONE_COST-state.money)+' to go';['.online-card','#dispatchHint','.auto-drone-control','.dispatch-stats'].forEach(function(sel){document.querySelector('[data-pane="orders"] '+sel).style.display=built?'':'none'});
+    var built=deliveryBuilt();if(!built&&activeTray==='orders')paintDeliveryPreview();$('deliverySite').style.display=built?'none':'';$('buildDelivery').disabled=state.money<AUTO_DRONE_COST;$('deliveryFunding').value=Math.min(100,state.money/AUTO_DRONE_COST*100);$('deliveryFundingText').textContent=state.money>=AUTO_DRONE_COST?'Ready to build':fmt(state.money)+' saved · '+fmt(AUTO_DRONE_COST-state.money)+' to go';['.online-card','#dispatchHint','.auto-drone-control','.dispatch-stats'].forEach(function(sel){document.querySelector('[data-pane="orders"] '+sel).style.display=built?'':'none'});
     $('onlineTitle').textContent='#'+String(state.onlineCompleted+1).padStart(3,'0');$('onlineNeed').textContent=qtyLabel(onlineSize())+(state.productMenu.active===0?' ':' · ')+STRAINS[menuChoice(state.onlineCompleted)].name;$('receiptUnit').textContent=fmt(onlineValue())+' / '+unitShort();$('receiptFormat').textContent=format().name;$('receiptTotal').textContent=fmt(onlineSize()*onlineValue());var heldBags=customers.filter(function(c){return c.ordered&&!c.bag}).length;$('onlineStock').textContent=heldBags?heldBags+' walk-in bag'+(heldBags===1?'':'s')+' reserved first':'';renderDispatchDesk(maxBatch.count);$('dispatchHint').textContent=onlineRequestsReady()<1?'Waiting for the next web request. Requests arrive faster as you complete orders, and with Web marketing in the Shop.':state.stock[3]<onlineSize()?'Waiting for '+qtyLabel(onlineSize()-state.stock[3])+' more to be packed. Walk-in pickups stay reserved.':'';
     // The caption under the send button doubles as the hint line, so the card never changes height.
     if($('dispatchHint').textContent){$('onlineMaxInfo').textContent=$('dispatchHint').textContent;$('onlineMaxInfo').classList.add('is-hint')}else $('onlineMaxInfo').classList.remove('is-hint');var webItem=$('stockCountOnline').closest('.stock-item'),webCount=onlineRequestsReady();$('stockCountOnline').textContent=webCount;webItem.dataset.heat=String(requestHeat(webCount));$('stockCountOnline').classList.toggle('stock-full',webCount>=onlineRequestCap());webItem.title=webCount+' deliver'+(webCount===1?'y':'ies')+' requested · '+onlineRequestCap()+' max';$('onlineBadge').hidden=$('fulfillOnlineMax').disabled;
@@ -2581,10 +2654,38 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     var slowNow=slowestStation();
     markerEls.forEach(function(el,i){var locked=!isOpen(i);el.classList.toggle('selected',!securitySelected&&i===selected);el.classList.toggle('locked',locked);el.classList.toggle('is-bottleneck',i===slowNow&&!locked);el.classList.add('station-sign');el.classList.toggle('can-upgrade',!locked&&state.money>=cost(i));if(el.dataset.level!==String(state.lines[i])){el.innerHTML='<span class=station-sign-name>'+shortNames[i]+'</span><span class=station-sign-level>Lv '+state.lines[i]+'</span>';el.dataset.level=String(state.lines[i]);updateMarkers.key=null;}el.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);el.setAttribute('aria-label',LINES[i].name+(locked?', locked':', level '+state.lines[i]));el.setAttribute('aria-pressed',String(!securitySelected&&i===selected))});
     var securityCard=document.querySelector('[data-security]');if(securityCard){var idPriceNow=Math.floor(20*Math.pow(1.6,state.idStaff));securityCard.setAttribute('aria-pressed',String(securitySelected));securityCard.classList.toggle('can-upgrade',state.idStaff<10000&&state.money>=idPriceNow);securityCard.querySelector('em').textContent='Lv '+state.idStaff;securityCard.setAttribute('aria-label','Security, level '+state.idStaff);securityCard.style.setProperty('--station-tier',TIER_COLORS[state.idStaff>=25?3:state.idStaff>=10?2:1])}
-    machineTabs.forEach(function(tab,i){var locked=!isOpen(i),available=!locked&&state.money>=cost(i);tab.classList.toggle('is-bottleneck',i===slow);tab.title=i===slow?'Slowest station · improve this to raise capacity':'';tab.setAttribute('aria-pressed',String(!securitySelected&&i===selected));tab.classList.toggle('is-locked',locked);tab.classList.toggle('can-upgrade',available);tab.querySelector('em').innerHTML=locked?'Locked':'Lv '+state.lines[i]+(i===slow?'<span class="slow-tag"> · Slow</span>':'');tab.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);var progress=Math.min(100,state.lines[i]/100*100),progressText=state.lines[i]>=100?'Flagship equipment reached':'Level '+state.lines[i]+' of 100 toward flagship equipment';tab.querySelector('progress').value=progress;tab.querySelector('progress').setAttribute('aria-label',LINES[i].name+' equipment progress');tab.querySelector('progress').setAttribute('aria-valuetext',progressText);tab.querySelector('progress').title=progressText;tab.querySelector('.level-funding').textContent=progressText;tab.setAttribute('aria-label',LINES[i].name+(i===slow?', slowest station':'')+', level '+state.lines[i]+', '+STATION_TIERS[stationTier(i)]+(available?', upgrade ready':''))});
+    updateStationOrbit(slow);
+    machineTabs.forEach(function(tab,i){var locked=!isOpen(i),available=!locked&&state.money>=cost(i);tab.title=i===slow?'Slowest station · improve this to raise capacity':'';tab.setAttribute('aria-pressed',String(!securitySelected&&i===selected));tab.classList.toggle('is-locked',locked);tab.classList.toggle('can-upgrade',available);tab.querySelector('em').innerHTML=locked?'Locked':'Lv '+state.lines[i]+(i===slow?'<span class="slow-tag"> · Slow</span>':'');tab.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);var progress=Math.min(100,state.lines[i]/100*100),progressText=state.lines[i]>=100?'Flagship equipment reached':'Level '+state.lines[i]+' of 100 toward flagship equipment';tab.querySelector('progress').value=progress;tab.querySelector('progress').setAttribute('aria-label',LINES[i].name+' equipment progress');tab.querySelector('progress').setAttribute('aria-valuetext',progressText);tab.querySelector('progress').title=progressText;tab.querySelector('.level-funding').textContent=progressText;tab.setAttribute('aria-label',LINES[i].name+(i===slow?', slowest station':'')+', level '+state.lines[i]+', '+STATION_TIERS[stationTier(i)]+(available?', upgrade ready':''))});
     updateCommerceControls();
   }
   var machineTabs=Array.prototype.slice.call(document.querySelectorAll('[data-machine]'));var securityTab=document.querySelector('[data-security]');if(securityTab)securityTab.onclick=selectSecurity;
+  var stationOrbitIndex=-1,stationOrbitOffset=0;
+  function updateStationOrbit(index){
+    if(index===stationOrbitIndex)return;
+    var previous=machineTabs[stationOrbitIndex];
+    if(previous&&previous.getClientRects().length){
+      var offset=parseFloat(getComputedStyle(previous.querySelector('.station-orbit rect')).strokeDashoffset);
+      if(Number.isFinite(offset))stationOrbitOffset=offset;
+    }
+    // Start the next card at the outgoing border's exact position on the 16-second circuit.
+    var next=machineTabs[index];
+    if(next)next.style.setProperty('--station-orbit-delay',(stationOrbitOffset*.16)+'s');
+    machineTabs.forEach(function(tab,i){tab.classList.toggle('is-bottleneck',i===index)});
+    stationOrbitIndex=index;
+  }
+  var stationMotionObserver=typeof IntersectionObserver==='function'?new IntersectionObserver(function(entries){entries.forEach(function(entry){entry.target.classList.toggle('station-motion-visible',entry.isIntersecting)})}):null;
+  machineTabs.forEach(function(tab){
+    var orbit=document.createElementNS('http://www.w3.org/2000/svg','svg'),rim=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    orbit.setAttribute('class','station-orbit');orbit.setAttribute('aria-hidden','true');orbit.setAttribute('focusable','false');
+    rim.setAttribute('x','1');rim.setAttribute('y','1');rim.setAttribute('rx','13');rim.setAttribute('pathLength','100');
+    orbit.appendChild(rim);tab.appendChild(orbit);
+  });
+  [securityTab].concat(machineTabs).forEach(function(tab,i){
+    [tab,i===0?securityMarker:markerEls[i-1]].forEach(function(el){
+      if(!el)return;el.style.setProperty('--upgrade-wave-delay',(i*.16).toFixed(2)+'s');
+      if(stationMotionObserver)stationMotionObserver.observe(el);else el.classList.add('station-motion-visible');
+    });
+  });
   machineTabs.forEach(function(tab,i){var progress=document.createElement('progress');progress.max=100;progress.value=0;progress.setAttribute('aria-label',LINES[i].name+' equipment progress');tab.appendChild(progress);var label=document.createElement('span');label.className='level-funding';tab.appendChild(label);tab.onclick=function(){selectMachine(Number(tab.getAttribute('data-machine')))}});
   var trayTabs=Array.prototype.slice.call(document.querySelectorAll('[data-tray]'));
   var activeTray='factory',panelOpen=true;
@@ -2631,6 +2732,50 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     $('upgradeBenefit').setAttribute('aria-label',label+': '+(unbuilt?'not built':formatValue(before))+(maxed?'':', next level '+formatValue(after))+'. '+gainText);
     $('upgradeBenefit').classList.toggle('is-maxed',maxed);
   }
+  function paintDeliveryPreview(){
+    var preview=$('deliveryPreview'),key=[state.productMenu.active,state.menuStrains.join(',')].join('|');
+    if(!preview||preview.dataset.art===key)return;
+    // Reuse the finished deck and courier artwork without buying anything or advancing the live scene.
+    var art=document.createElement('canvas');art.width=900;art.height=900;
+    var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle,savedElevation=sceneElevation;
+    try{
+      ctx=art.getContext('2d');unit=100;angle=.57;sceneElevation=0;
+      var anchor=rotate(-10.7,1.5);centerX=450-anchor.x*unit;centerY=720-anchor.z*unit*.5;
+      onlinePackingCounter(0,true);drawCourierDrone(-10.7,4.6,-.75,0,0,1);
+      var pixels=ctx.getImageData(0,0,900,900).data,left=900,right=0,top=900,bottom=0;
+      for(var y=0;y<900;y++)for(var x=0;x<900;x++)if(pixels[(y*900+x)*4+3]>180){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y)}
+      var pc=preview.getContext('2d');pc.clearRect(0,0,preview.width,preview.height);
+      if(right>=left&&bottom>=top){var w=right-left+1,h=bottom-top+1,scale=Math.min((preview.width-40)/w,(preview.height-40)/h);pc.drawImage(art,left,top,w,h,(preview.width-w*scale)/2,(preview.height-h*scale)/2,w*scale,h*scale)}
+      preview.dataset.art=key;
+    }finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle;sceneElevation=savedElevation}
+  }
+  function paintCustomerGuide(){
+    var guide=document.querySelector('.reputation-guide');if(!guide||guide.dataset.painted)return;
+    // The guide borrows the shop's characters once; it never advances their live animation or camera.
+    var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle,savedElevation=sceneElevation;
+    try{
+      unit=106;centerX=90;centerY=232;angle=.57;sceneElevation=0;
+      guide.querySelectorAll('canvas').forEach(function(portrait,i){
+        ctx=portrait.getContext('2d');if(!ctx)return;
+        ctx.clearRect(0,0,portrait.width,portrait.height);
+        drawPerson(0,0,0,[18,13,12][i],false,false,false,{amount:0,phase:0,facing:.3});
+      });
+      guide.dataset.painted='true';
+    }finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle;sceneElevation=savedElevation}
+  }
+  function customerGuideMarkup(){
+    function icon(path){return '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+path+'</svg>'}
+    var clock=icon('<circle cx="16" cy="18" r="10"/><path d="M16 12v6l4 2M12 3h8M16 3v5M24 7l3 3"/>');
+    var crown=icon('<path d="m4 9 6 5 6-9 6 9 6-5-3 17H7ZM9 22h14"/>');
+    return '<h3 id="customerGuideTitle">Customer guide</h3><ul class="customer-lineup">'+
+      '<li class="guide-customer"><div class="guide-portrait"><canvas width="180" height="260" aria-hidden="true"></canvas><span class="guide-flower" aria-hidden="true">'+strainArt(0,false)+'</span></div><h4>Regulars</h4><strong class="guide-preference">Meadow Mint</strong><span class="guide-caption">On the menu</span></li>'+
+      '<li class="guide-customer"><div class="guide-portrait"><canvas width="180" height="260" aria-hidden="true"></canvas><span class="guide-cue">'+clock+'</span></div><h4>Hurried</h4><strong class="guide-time" id="guideHurriedTime">≤20s</strong><span class="guide-caption">Whole visit</span></li>'+
+      '<li class="guide-customer guide-vip"><div class="guide-portrait"><canvas width="180" height="260" aria-hidden="true"></canvas><span class="guide-cue">'+crown+'</span></div><h4>VIPs</h4><strong class="guide-time" id="guideVipTime">≤15s</strong><span class="guide-caption">Whole visit<br>Reserve flower<br><b>2× pay</b></span></li></ul>'+
+      '<p class="guide-comfort">'+clock+'<span id="guideComfort">Queue comfort adds time to both visit limits.</span></p>'+
+      '<div class="guide-outcomes"><div>'+icon('<circle cx="16" cy="16" r="12"/><path d="m10 16 4 4 8-8"/>')+'<div><h4>Match</h4><strong>+1 <span>loyalty</span></strong><small id="guideMatchTip">+15% base tip</small></div></div><div>'+icon('<circle cx="16" cy="16" r="12"/><path d="m12 12 8 8m0-8-8 8"/>')+'<div><h4>Miss</h4><strong>−1 <span>loyalty</span></strong><small>Preference or time</small></div></div></div>'+
+      '<div class="guide-unlock">'+crown+'<div><strong id="guideVipUnlock">VIPs at 60 loyalty</strong><span>35% base tips on regular matches</span></div></div>'+
+      '<p class="guide-branch">'+icon('<path d="M5 14h22v14H5ZM3 14l3-9h20l3 9M12 28V18h8v10M3 14c0 4 6 4 6 0 0 4 7 4 7 0 0 4 7 4 7 0 0 4 6 4 6 0"/>')+'<span>Branch loyalty <b>up to +20% income</b></span></p>';
+  }
   function paintUpgradePreview(index){
     var preview=$('upgradePreview');if(!preview)return;
     var key=[index,index<0?state.idStaff:stationTier(index),state.menuStrains.join(','),state.productMenu.active].join('|');
@@ -2666,7 +2811,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   });
   // Short goals and management live in the existing tray; map gestures remain free.
   var today=document.querySelector('[data-empire-section="today"]');
-  today.innerHTML='<section id="returnSummary" hidden><h2>Welcome back</h2><p id="returnTime"></p><ul id="returnEarnings"></ul><p id="returnGoals"></p><button id="dismissReturn">Dismiss summary</button></section><h2>Next steps</h2><p id="nextInvestment"></p><div id="shortGoals"></div><section class="reputation"><h2 class="empire-section-heading">Reputation</h2><div class="reputation-summary"><strong id="reputationStatus"></strong><span id="reputationNext"></span></div><progress id="reputationProgress" max="60" value="0" aria-label="Customer reputation"></progress><details class="branch-help reputation-guide"><summary>Customer guide</summary><dl><dt>Regulars</dt><dd>Take Meadow Mint when it is on the menu</dd><dt>Hurried</dt><dd>Whole visit ≤20 seconds · Queue comfort adds patience</dd><dt>VIPs</dt><dd>Whole visit ≤15 seconds · double payment</dd></dl><dl><dt>Match</dt><dd>+1 loyalty · +15% tip</dd><dt>Miss</dt><dd>−1 loyalty</dd><dt>60 loyalty</dt><dd>VIPs unlock · regular matches tip 35%</dd></dl><p>Branch loyalty adds up to 20% income.</p></details></section>';
+  today.innerHTML='<section id="returnSummary" hidden><h2>Welcome back</h2><p id="returnTime"></p><ul id="returnEarnings"></ul><p id="returnGoals"></p><button id="dismissReturn">Dismiss summary</button></section><h2>Next steps</h2><p id="nextInvestment"></p><div id="shortGoals"></div><section class="reputation"><h2 class="empire-section-heading">Reputation</h2><div class="reputation-summary"><strong id="reputationStatus"></strong><span id="reputationNext"></span></div><progress id="reputationProgress" max="60" value="0" aria-label="Customer reputation"></progress><section class="reputation-guide" aria-labelledby="customerGuideTitle">'+customerGuideMarkup()+'</section></section>';
+  paintCustomerGuide();
   [0,1,2].forEach(function(i){var row=document.createElement('div');row.className='short-goal';row.innerHTML='<h3 id="goalTitle'+i+'"></h3><progress id="goalProgress'+i+'" max="100" aria-label="Objective progress"></progress><p id="goalCount'+i+'"></p><button id="goalClaim'+i+'"></button>'; $('shortGoals').appendChild(row);$('goalClaim'+i).onclick=function(){var g=goalStatus(state.empire,i,rewardScale());if(g.kind==='online'&&!deliveryBuilt()&&g.progress<g.target){closeGoals();showTray('orders');return;}var reward=claimGoal(state,i,rewardScale());if(reward){save();renderUI();notify('GOAL COMPLETE · +'+fmt(reward),'upgrade')}}});
   $('dismissReturn').onclick=function(){state.empire.returnReport=null;save();renderUI()};
   STORES.forEach(function(store,i){
@@ -2698,10 +2844,14 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   var menuPanel=document.createElement('section');menuPanel.className='product-line';menuPanel.setAttribute('aria-labelledby','productLineTitle');menuPanel.innerHTML='<h2 id="productLineTitle">Sell as</h2><div class="format-options">'+FORMATS.map(function(f,i){return '<button id="format'+i+'" type="button"><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+productIcons[i]+'</svg><strong>'+f.name+'</strong><small></small></button>'}).join('')+'</div><p id="formatBenefit"></p>';
   $('strainDetail').after(menuPanel);
   FORMATS.forEach(function(_,i){$('format'+i).onclick=function(){if(chooseFormat(state,i)){save();renderUI();notify(FORMATS[i].name+' featured','upgrade')}}});
-  var prestigePanel=document.createElement('details');prestigePanel.className='depth-panel';prestigePanel.innerHTML='<summary>New beginnings</summary><p id="prestigeStatus"></p><p>Reopen from scratch for +20% permanent base sales per rank.</p><button id="prestigeStart" type="button"></button>';
+  var prestigePanel=document.createElement('details');prestigePanel.className='depth-panel prestige-panel';prestigePanel.innerHTML=
+    '<summary><svg class="prestige-sprout" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V11M12 14C3 14 3 7 3 7s9-1 9 7ZM12 11c0-8 9-9 9-9s0 9-9 9Z"/></svg><span>New beginnings</span><small id="prestigeStatus"></small><svg class="prestige-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></summary>'+
+    '<div class="prestige-body"><div class="prestige-rank-track" id="prestigeComparison" role="group"><div class="prestige-rank"><span id="prestigeCurrentRank"></span><strong id="prestigeCurrentRate"></strong><small>base sales</small></div><svg id="prestigeArrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h17m-6-6 6 6-6 6"/></svg><div class="prestige-rank is-next" id="prestigeNext"><span id="prestigeNextRank"></span><strong id="prestigeNextRate"></strong><small>base sales</small></div></div>'+
+    '<p class="prestige-gain" id="prestigeGain"></p><div class="prestige-funding" id="prestigeFunding"><div><span>Lifetime revenue</span><b id="prestigeRevenue"></b></div><progress id="prestigeProgress" max="100" value="0" aria-label="Lifetime revenue toward next rank"></progress><small id="prestigeFundingStatus"></small></div>'+
+    '<dl class="prestige-carryover" id="prestigeCarryover"><div><dt>Keep</dt><dd>Permanent rank bonus &amp; sound setting</dd></div><div><dt>Restart</dt><dd>Cash, stores &amp; all shop progress</dd></div></dl><button id="prestigeStart" type="button" aria-describedby="prestigeFundingStatus prestigeCarryover"></button></div>';
   document.querySelector('[data-empire-section="growth"]').append(prestigePanel);
   var soundButton=document.createElement('button');soundButton.id='soundToggle';soundButton.type='button';soundButton.onclick=function(){state.sound=!state.sound;playSound('upgrade',state.sound);save();renderUI()};document.querySelector('.shop-reset').prepend(soundButton);
-  var prestigeDialog=document.createElement('div');prestigeDialog.id='prestigeModal';prestigeDialog.className='modal-wrap';prestigeDialog.hidden=true;prestigeDialog.innerHTML='<div class="modal" role="dialog" aria-modal="true" aria-labelledby="prestigeTitle"><small>OPTIONAL PRESTIGE</small><h2 id="prestigeTitle">Reopen your empire?</h2><p id="prestigePreview"></p><p>Clears cash, stores, staff, stock, strains, reputation, collections, goals and events. Only your prestige rank and sound preference carry over.</p><div><button id="prestigeCancel">Keep playing</button><button id="prestigeConfirm">Reopen</button></div></div>';document.body.append(prestigeDialog);
+  var prestigeDialog=document.createElement('div');prestigeDialog.id='prestigeModal';prestigeDialog.className='modal-wrap';prestigeDialog.hidden=true;prestigeDialog.innerHTML='<div class="modal" role="dialog" aria-modal="true" aria-labelledby="prestigeTitle"><h2 id="prestigeTitle">Reopen your empire?</h2><p id="prestigePreview"></p><p>Clears cash, stores, staff, stock, strains, reputation, collections, goals and events. Only your prestige rank and sound preference carry over.</p><div><button id="prestigeCancel">Keep playing</button><button id="prestigeConfirm">Reopen from scratch</button></div></div>';document.body.append(prestigeDialog);
   $('prestigeStart').onclick=function(){var o=prestigeOffer(state);if(!o.eligible)return;$('prestigePreview').textContent='Next rank: '+o.multiplier.toFixed(1)+'× base main-shop and branch income.';prestigeDialog.hidden=false;$('prestigeCancel').focus()};
   $('prestigeCancel').onclick=function(){prestigeDialog.hidden=true;$('prestigeStart').focus()};
   prestigeDialog.addEventListener('keydown',function(e){if(e.key==='Escape')$('prestigeCancel').click();if(e.key==='Tab'){e.preventDefault();(document.activeElement===$('prestigeCancel')?$('prestigeConfirm'):$('prestigeCancel')).focus()}});
@@ -2709,7 +2859,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   var droneRow=document.createElement('div');droneRow.className='shop-upgrade';droneRow.innerHTML='<div class="shop-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="11" y="11" width="10" height="9" rx="2"/><path d="m11 12-5-5m15 5 5-5m-15 12-5 6m15-6 5 6M2 7h8m12 0h8M2 25h8m12 0h8M13 24h6"/></svg></div><div class="shop-copy"><h2>Auto drone</h2><strong id="autoDroneBenefit">Send a ready order every 10s</strong></div><button id="buyAutoDrone"><span>Install</span><b id="autoDronePrice"></b></button>';
   document.querySelector('[data-pane="boosts"]').append(droneRow);
   var droneControl=document.createElement('div');droneControl.className='auto-drone-control';droneControl.innerHTML='<span class="drone-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 10h6v4H9zM4 6h3M17 6h3M5.5 6v4h3.5M18.5 6v4H15M9 14l-3 4M15 14l3 4"/></svg></span><div><strong>Auto drone</strong><small id="autoDroneStatus"></small></div><button id="autoDroneToggle" type="button" class="drone-switch"></button><button id="autoDroneBulk" type="button" hidden></button>';document.querySelector('.dispatch-desk').append(droneControl);
-  var deliverySite=document.createElement('div');deliverySite.className='delivery-site';deliverySite.id='deliverySite';deliverySite.innerHTML='<div><strong>Build your delivery pad</strong><small>A rooftop launch deck and your first courier drone. Send packed stock across town for 33% more per unit, with automatic dispatch included.</small><progress id="deliveryFunding" max="100" value="0" aria-label="Cash toward delivery pad"></progress><small id="deliveryFundingText"></small></div><button id="buildDelivery" type="button"><span>Build</span><b>'+fmt(AUTO_DRONE_COST)+'</b></button>';document.querySelector('.dispatch-desk').prepend(deliverySite);$('buildDelivery').onclick=purchaseAutoDrone;
+  var deliverySite=document.createElement('div');deliverySite.className='delivery-site';deliverySite.id='deliverySite';deliverySite.innerHTML='<h2>Build your delivery pad</h2><div class="delivery-preview"><canvas id="deliveryPreview" width="600" height="720" role="img" aria-label="Preview of the finished rooftop launch deck, packing counter and courier drone carrying a parcel"></canvas></div><ul class="delivery-benefits"><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 10h7l1.5 3.5h-10zM8.5 10 5 7m10.5 3L19 7M8.5 13.5 5 17m10.5-3.5L19 17M2 7h6m8 0h6M2 17h6m8 0h6"/></svg><strong>1 drone</strong><span>included</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 8a8 8 0 0 0-14-3L3 8m0-5v5h5m-4 8a8 8 0 0 0 14 3l3-3m0 5v-5h-5"/></svg><strong>Auto</strong><span>dispatch</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 17 6-6 4 4 8-10m-6 0h6v6"/></svg><strong>+33%</strong><span>per unit</span></li></ul><div class="delivery-build"><div class="delivery-funding"><small id="deliveryFundingText"></small><progress id="deliveryFunding" max="100" value="0" aria-label="Cash toward delivery pad"></progress></div><button id="buildDelivery" type="button"><span>Build delivery pad</span><b>'+fmt(AUTO_DRONE_COST)+'</b></button></div>';document.querySelector('.dispatch-desk').prepend(deliverySite);$('buildDelivery').onclick=purchaseAutoDrone;
   function purchaseAutoDrone(){if(buyAutoDrone(state)){save();renderUI();notify('DELIVERY PAD BUILT · web orders open','upgrade')}}
   function purchaseBulkDrone(){if(buyBulkDrone(state)){save();renderUI();notify('Bulk auto drone installed','upgrade')}}
   $('buyAutoDrone').onclick=function(){if(state.autoDrone.owned)purchaseBulkDrone();else purchaseAutoDrone()};
@@ -2731,11 +2881,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   })();
   $('expandOrderCounter').onclick=expandOrderCounters;$('buyOrderCounter').onclick=expandOrderCounters;
   var shopBrowser=mountShopBrowser({getState:function(){return state},components:COMPONENTS,kiosks:kioskCount,queueLimit:queueLimit,recommend:function(open){var r=recommendation();if(open){actOnRecommendation();return ''}return r.name+' · '+(r.kind==='component'?'in Customers · ':'upgrade ')+fmt(r.price)}});
-  var operationsUI=mountOperations({getState:function(){return state},format:fmt,changed:function(message){save();renderUI();if(message)notify(message,'upgrade')},visit:function(i,manage){visitStore(i+1,!manage);if(manage)manageViewedStore()},mainFlow:function(open){
-    var station=slowestStation(),reason='Capacity';
-    if(state.stock[1]>20&&state.stock[2]<2){station=2;reason='Harvest backlog'}else if(state.stock[2]>20&&state.stock[3]<2){station=3;reason='Packing backlog'}else if(state.stock[4]>20&&customers.some(function(c){return c.ordered&&!c.bag})){station=5;reason='Pickup queue'}else if(state.stock[0]<1){station=0;reason='Seed supply'}else if(state.stock[1]<1){station=1;reason='Growing'}else if(state.stock[2]<1){station=2;reason='Harvesting'}else if(state.stock[3]<1){station=3;reason='Packing stock'}else if(state.stock[4]<1){station=4;reason='Preparing orders'}
-    if(open)selectMachine(station);return 'Main shop · '+reason+' · '+LINES[station].name.toLowerCase();
-  }});
+  var operationsUI=mountOperations({getState:function(){return state},format:fmt,changed:function(message){save();renderUI();if(message)notify(message,'upgrade')},visit:function(i,manage){visitStore(i+1,!manage);if(manage)manageViewedStore()}});
   function renderManagement(){
     var p=state.empire,report=p.returnReport,investment=recommendation();
     $('returnSummary').hidden=!report;
@@ -2748,6 +2894,11 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     $('reputationNext').textContent=p.reputation>=60?'VIPs unlocked':'VIPs at 60';
     $('reputationProgress').max=reputationTarget;$('reputationProgress').value=Math.min(p.reputation,reputationTarget);
     $('reputationProgress').setAttribute('aria-valuetext',p.reputation+' loyalty. '+(p.reputation>=60?'VIPs unlocked':'VIPs at 60.'));
+    $('guideHurriedTime').textContent='≤'+Number(economy.patience('hurried',state.comfortLevel).toFixed(2))+'s';
+    $('guideVipTime').textContent='≤'+Number(economy.patience('vip',state.comfortLevel).toFixed(2))+'s';
+    $('guideComfort').textContent=state.comfortLevel?'Queue comfort adds '+(state.comfortLevel*15)+'% to both visit limits.':'Queue comfort adds time to both visit limits.';
+    $('guideMatchTip').textContent='+'+(p.reputation>=60?'35':'15')+'% base tip';
+    $('guideVipUnlock').textContent=p.reputation>=60?'VIPs unlocked · 60 loyalty':'VIPs at 60 loyalty';
     STORES.forEach(function(_,i){var store=p.stores[i];$('branchLoyalty'+i).closest('.branch-management').hidden=!store.level;
       $('branchLoyalty'+i).textContent=store.loyalty+' loyalty';$('branchLoyalty'+i).title=store.loyalty>=60?'VIP following':'VIPs follow at 60';
       var expansion=store.level<3?'Display wing at level 3':store.level<5?'Specialist employee at level 5':store.level<7?'Terrace at level 7':'All expansions built';
@@ -2958,7 +3109,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   syncMapView();if(!state.empire.returnReport&&state.empire.activeStore){showTray('empire');collapsePanel()}
   paintThumbnails();
   selected=slowestStation();fitControls();renderUI();ctx.fillStyle=colors.bg;ctx.fillRect(0,0,width,height);window.__shiftReady=true;finishLoading();if(firstRun&&!startGuide.seen())setTimeout(function(){startGuide.open()},600);requestAnimationFrame(render);setInterval(tick,50);setInterval(function(){renderUI(true)},250);setInterval(function(){if(!document.hidden)save()},5000);window.addEventListener('beforeunload',function(){if(!document.hidden)save()});window.addEventListener('pagehide',function(){if(!document.hidden)save()});
-  document.addEventListener('visibilitychange',function(){tickTime=performance.now();tickRemainder=0;if(document.hidden){save()}else{collectOffline();if(state.empire.returnReport){renderUI()}renderUI()}});
+  document.body.dataset.pageHidden=String(document.hidden);
+  document.addEventListener('visibilitychange',function(){document.body.dataset.pageHidden=String(document.hidden);tickTime=performance.now();tickRemainder=0;if(document.hidden){save()}else{collectOffline();if(state.empire.returnReport){renderUI()}renderUI()}});
 
   if(document.modelContext&&document.modelContext.registerTool){document.modelContext.registerTool({name:'read_factory_status',title:'Read factory status',description:'Read cash, production, and machine levels.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:function(){return{orderCounters:state.orderCounters,reservedWalkInBags:customers.filter(function(c){return c.ordered&&!c.bag}).reduce(function(n,c){return n+(c.bags||1)},0),orderCounterPositions:orderCounterPositions(state.orderCounters),autoDrone:state.autoDrone,deliveryDrones:deliveryDrones.length,productMenu:state.productMenu,prestige:state.empire.prestige,contract:state.contract,viewedStore:state.empire.activeStore,branchLevels:state.empire.stores.map(function(s){return s.level}),branchProjects:state.empire.stores.map(function(s){return s.projects}),network:state.empire.network,reputation:state.empire.reputation,management:state.empire.stores,goalsCompleted:state.empire.goalsCompleted,branchIncome:branchRate(state.empire)*state.gameSpeed,cash:Math.floor(state.money),lifetime:Math.floor(state.lifetime),perSecond:production()*state.gameSpeed,gameSpeed:state.gameSpeed,paused:state.gameSpeed===0,lineLevels:state.lines,stock:state.stock,customersServed:state.sold,employeeLevels:state.staff,onlineCompleted:state.onlineCompleted,camera:{zoom:zoom,panX:panX,panY:panY,angle:angle},customers:customers.map(function(c){return{kind:c.kind,id:c.id,phase:c.phase,ordered:c.ordered,bag:c.bag,bags:c.bags||0,orderCounter:c.orderCounter,x:c.x,z:c.z,serviceElapsed:c.serviceElapsed||0}})}}});}
 })();

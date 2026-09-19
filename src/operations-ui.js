@@ -1,6 +1,6 @@
-import {BRANCH_NAMES,LINES,STAFF,REGULARS,COSMETICS,atmosphere,staffLevel,shelfCapacity,shelfUsed,allocateShelf,developProduct,chooseRecipe,customize,importHarvest,transferReason,sendTransfer,deliveryReason,dispatchDelivery,upgradeFleet,expandArea,openingStatus,claimOpening,storyStatus,fulfillStory,journal,flagshipStatus,claimFlagship,branchBottleneck,neighborhood} from './operations.js';
+import {BRANCH_NAMES,LINES,STAFF,REGULARS,COSMETICS,staffLevel,shelfCapacity,shelfUsed,allocateShelf,developProduct,chooseRecipe,customize,importHarvest,transferReason,sendTransfer,deliveryReason,dispatchDelivery,upgradeFleet,expandArea,openingStatus,claimOpening,storyStatus,fulfillStory,neighborhood} from './operations.js';
 import {PRODUCTS,MANAGERS,exclusiveAvailable,setFeatured,assignManager} from './progression.js';
-export function mountOperations({getState,format,changed,visit,mainFlow}){
+export function mountOperations({getState,format,changed,visit}){
  const $=id=>document.getElementById(id),selected=[0,0,0];
  const act=(fn,message)=>{const result=fn();if(result)changed(message);return result;};
  // Pills replace repetitive dropdowns for short option lists: one tap picks the value, no open/close step.
@@ -38,12 +38,7 @@ export function mountOperations({getState,format,changed,visit,mainFlow}){
   Object.keys(COSMETICS).forEach(key=>onPill('style'+i+key,value=>act(()=>customize(getState().empire,i,key,Number(value)),'Store style updated')));
   $('previewStyle'+i).onclick=()=>visit(i,false);
  });
- const today=document.querySelector('[data-empire-section=today]'),extension=document.createElement('div');extension.className='operations-today';extension.innerHTML='<details class="operation-details"><summary>Business flow <span id="dayPhase"></span></summary><div class="operation-row"><span id="mainBottleneck"></span><button id="mainBottleneckAction">Improve</button></div>'+BRANCH_NAMES.map((name,i)=>'<div class="operation-row"><span>'+name+'<small id="branchBottleneck'+i+'"></small></span><button id="fixBottleneck'+i+'"></button></div>').join('')+'</details><details class="operation-details"><summary>Collection journal <span id="journalCount"></span></summary><div id="journalEntries"></div></details><details class="operation-details"><summary>Flagship status <span id="flagshipCount"></span></summary><div id="flagshipChecks"></div><button class="operation-primary" id="claimFlagship">Earn flagship status</button></details>';
- today.appendChild(extension);$('claimFlagship').onclick=()=>act(()=>claimFlagship(getState()),'Flagship status earned');$('mainBottleneckAction').onclick=()=>mainFlow(true);
- BRANCH_NAMES.forEach((_,i)=>$('fixBottleneck'+i).onclick=()=>{const p=getState().empire,b=branchBottleneck(p,i);const target=b.name==='Supply'?0:i;visit(target,true);showTab(target,b.tab==='stock'?1:0);});
- let journalCache='',flagCache='';
  return {showTab,render(){const state=getState(),p=state.empire,n=p.network;
-  $('dayPhase').textContent=atmosphere(n).name;$('mainBottleneck').textContent=mainFlow(false);
   BRANCH_NAMES.forEach((_,i)=>{const s=n.stores[i],owned=p.stores[i].level>0;
    // Unopened stores show only Overview; the management tabs appear once the store exists.
    for(let j=1;j<4;j++){$('opTab'+i+j).disabled=!owned;$('opTab'+i+j).hidden=!owned;}if(!owned&&selected[i])showTab(i,0);
@@ -60,10 +55,6 @@ export function mountOperations({getState,format,changed,visit,mainFlow}){
    const mgr=MANAGERS.find(m=>m.id===p.stores[i].manager);$('managerSummary'+i).textContent=(p.stores[i].manager==='none'?'No manager assigned.':mgr.name+' is managing · '+mgr.detail+'.')+' One store per specialist — assigning below moves them from elsewhere.';
    const story=storyStatus(p,i);$('storyTitle'+i).textContent=story.title;$('relationship'+i).textContent=['New face','Acquaintance','Friend','Regular'][s.relationship]+' · '+s.relationship+'/3';$('storyNeed'+i).textContent=s.relationship===3?'Story complete':story.need+' '+LINES[story.line].name;$('storyServe'+i).disabled=!story.ready;$('storyServe'+i).hidden=s.relationship===3;$('storyHint'+i).textContent=s.relationship===3?'Returns to the shop as a familiar face':s.storyWait>0?'Returns in '+Math.ceil(s.storyWait)+'s':format(story.reward)+' · +5 loyalty';
    Object.keys(COSMETICS).forEach(key=>setPill('style'+i+key,String(s.cosmetics[key])));$('neighborhood'+i).textContent='Neighborhood: '+['Quiet block','New neighbors','Lively street','Local destination'][neighborhood(p,i)];
-   const b=branchBottleneck(p,i);$('branchBottleneck'+i).textContent=b.name;$('fixBottleneck'+i).textContent=b.action;
   });
-  const entries=journal(state),found=entries.filter(e=>e.found).length;$('journalCount').textContent=found+'/'+entries.length;
-  const signature=entries.map(e=>Number(e.found)).join('');if(signature!==journalCache){journalCache=signature;$('journalEntries').innerHTML=['Strains','Products','Regulars','Milestones','Souvenirs'].map(group=>'<h4>'+group+'</h4>'+entries.filter(e=>e.group===group).map(e=>'<div class="journal-entry '+(e.found?'discovered':'')+'"><span>'+e.name+'</span><small>'+(e.found?'Found':'Undiscovered')+'</small></div>').join('')).join('');}
-  const flagship=flagshipStatus(state),flagSignature=JSON.stringify(flagship);$('flagshipCount').textContent=flagship.claimed?'Earned':flagship.checks.filter(c=>c.value>=c.total).length+'/4';if(flagSignature!==flagCache){flagCache=flagSignature;$('flagshipChecks').innerHTML=flagship.checks.map(c=>'<div class="flagship-check"><span>'+c.name+'</span><strong>'+c.value+'/'+c.total+'</strong><progress aria-label="'+c.name+'" max="'+c.total+'" value="'+c.value+'"></progress></div>').join('');}$('claimFlagship').disabled=flagship.claimed||!flagship.ready;$('claimFlagship').textContent=flagship.claimed?'Flagship earned':'Earn flagship status';
  }};
 }

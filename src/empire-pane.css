@@ -55,6 +55,46 @@
 #nextInvestment{margin-bottom:6px}
 #returnSummary{padding-bottom:16px;margin-bottom:16px}
 .reputation-summary{margin-top:8px}
+.reputation-guide{font-size:12px;color:#cbdcc5;margin-top:18px}
+.reputation-guide>h3{font-size:14px;font-weight:650;color:#f0f4e8;margin:0 0 14px}
+.reputation-guide .customer-lineup{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;list-style:none;padding:0;margin:4px 0 18px}
+.reputation-guide .guide-customer{min-width:0;text-align:center;color:#cbdcc5}
+.reputation-guide .guide-portrait{position:relative;height:132px;margin-bottom:9px}
+.reputation-guide .guide-portrait::before{content:'';position:absolute;inset:20px 4px 5px;border-radius:50% 50% 12px 12px;background:#c3dca514}
+.reputation-guide .guide-vip .guide-portrait::before{background:#efce8417}
+.reputation-guide .guide-portrait canvas{position:relative;display:block;height:132px;width:92px;max-width:100%;margin:auto;object-fit:contain}
+.reputation-guide .guide-cue{position:absolute;right:2px;top:6px;width:30px;height:30px;color:#c3dca5}
+.reputation-guide .guide-vip .guide-cue{color:#efce84}
+.reputation-guide svg{display:block;flex-shrink:0;width:24px;height:24px}
+.reputation-guide .guide-cue svg{width:100%;height:100%}
+.reputation-guide .guide-flower{position:absolute;right:0;bottom:1px;width:34px;height:46px}
+.reputation-guide .guide-flower svg{width:100%;height:100%}
+.reputation-guide .guide-customer h4{margin:0 0 6px;font-size:14px;font-weight:700;color:#f0f4e8}
+.reputation-guide .guide-time,.reputation-guide .guide-preference{display:flex;align-items:center;justify-content:center;min-height:38px;line-height:1.2;color:#c3dca5}
+.reputation-guide .guide-time{font:500 20px 'DM Mono',monospace;letter-spacing:-.02em;white-space:nowrap}
+.reputation-guide .guide-preference{font-size:14px;font-weight:650}
+.reputation-guide .guide-vip .guide-time,.reputation-guide .guide-vip b{color:#efce84}
+.reputation-guide .guide-vip b{white-space:nowrap}
+.reputation-guide .guide-caption{display:block;font-size:12px;line-height:1.5}
+.reputation-guide .guide-comfort,.reputation-guide .guide-branch{display:flex;align-items:center;gap:9px;font-size:12px;line-height:1.4;margin:0;color:#cbdcc5}
+.reputation-guide .guide-comfort svg{width:19px;height:19px;color:#b7d197}
+.reputation-guide .guide-outcomes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:18px 0;padding:16px 0;border-block:1px solid #c1d7b733}
+.reputation-guide .guide-outcomes>div{display:flex;align-items:flex-start;gap:9px;min-width:0}
+.reputation-guide .guide-outcomes svg{color:#c3dca5;margin-top:2px}
+.reputation-guide .guide-outcomes>div:last-child svg{color:#d7b898}
+.reputation-guide .guide-outcomes h4{font-size:12px;font-weight:500;margin:0 0 3px;color:#cbdcc5}
+.reputation-guide .guide-outcomes strong{display:block;font-size:21px;line-height:1.2;color:#f0f4e8}
+.reputation-guide .guide-outcomes strong span{font-size:12px;font-weight:500}
+.reputation-guide .guide-outcomes small{display:block;margin-top:4px;font-family:inherit;font-size:11px;letter-spacing:0;line-height:1.4;color:#cbdcc5}
+.reputation-guide .guide-unlock{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:12px;background:#efce8412;color:#efce84}
+.reputation-guide .guide-unlock svg{width:32px;height:32px}
+.reputation-guide .guide-unlock strong,.reputation-guide .guide-unlock span{display:block;line-height:1.4}
+.reputation-guide .guide-unlock strong{font-size:14px}
+.reputation-guide .guide-unlock span{font-size:12px;color:#cbdcc5;margin-top:3px}
+.reputation-guide .guide-branch{margin-top:15px}
+.reputation-guide .guide-branch svg{color:#b7d197}
+.reputation-guide .guide-branch b{color:#c3dca5;font-weight:600}
+@media(max-width:380px){.reputation-guide .customer-lineup{gap:4px}.reputation-guide .guide-portrait,.reputation-guide .guide-portrait canvas{height:110px}.reputation-guide .guide-customer h4{font-size:13px}.reputation-guide .guide-time{font-size:17px}.reputation-guide .guide-preference{font-size:13px}.reputation-guide .guide-cue{width:25px;height:25px}.reputation-guide .guide-outcomes{gap:10px}.reputation-guide .guide-outcomes>div{gap:6px}.reputation-guide .guide-outcomes svg{width:20px;height:20px}}
 
 /* Daily: the whole week in one row, so the streak reads as a calendar strip. */
 .daily-track{grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin:14px 0 12px}
@@ -95,8 +135,12 @@
 .empire-screen button:focus-visible{outline:2px solid #e3d1a6;outline-offset:2px}
 @media(hover:hover){.empire-screen button:not(:disabled):hover{filter:brightness(1.12)}}
 
-/* Back bar: sticky, opaque, and the anchor the branch tabs stick beneath. Solid, not glass — scrolled content must not show through. */
-.empire-back{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:8px;min-height:44px;margin:0 0 8px;padding:2px 8px 2px 4px;border-radius:14px;background:#213a2e}
+/* Content scrolls below the transparent back header, so no masking block is needed. */
+.sheet>[data-pane=empire][data-empire-screen=details],.sheet>[data-pane=empire][data-empire-screen=store]{overflow:hidden;padding-bottom:0}
+.empire-screen[data-screen=details],.empire-screen[data-screen=store]{height:100%;display:flex;flex-direction:column;min-height:0}
+.empire-screen[data-screen][hidden]{display:none}
+.empire-screen-body{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;margin-inline:-9px;padding:0 9px 4px;scrollbar-width:thin;scrollbar-color:#c1d7b74d transparent}
+.empire-back{flex-shrink:0;display:flex;align-items:center;gap:8px;min-height:44px;margin:0 0 8px;padding:2px 8px 2px 4px;border-bottom:1px solid #c1d7b71f;background:transparent}
 .sheet .empire-screen .empire-back-button{display:inline-flex;align-items:center;gap:2px;min-height:40px;padding:0 10px 0 4px;border:0;border-radius:20px;background:transparent;color:#d6e6ca;font-size:12px;font-weight:600}
 .empire-back-icon{display:grid;place-items:center;width:24px;height:24px}
 .empire-back-icon svg{width:18px;height:18px}
@@ -132,12 +176,12 @@
 .empire-group:last-child{border-bottom:0}
 .empire-group>h2:first-child{margin-top:0}
 .empire-group .reputation>h2{margin-top:0;padding-top:0;border-top:0}
-.empire-group .operations-today .operation-details:first-child{border-top:0;margin-top:0}
 .empire-group .depth-panel{margin:0}
 
 /* Store screen: the branch's sticky tabs sit under the back bar. */
 [data-empire-screen=store] .empire-branch{border-top:0}
 [data-empire-screen=store] .branch-sticky-header .branch-toggle{display:none}
+[data-empire-screen=store] .branch-sticky-header{top:0}
 .store-list .branch-toggle .branch-name{white-space:nowrap}
 .sheet .empire-screen .store-list .branch-toggle{grid-template-columns:max-content minmax(0,1fr) 10px}
 .store-list .branch-toggle strong{white-space:normal;line-height:1.35;justify-self:end}
@@ -179,3 +223,42 @@
 .branch-toggle .store-locked.is-locked{color:#9fb59a}
 .branch-toggle .store-locked svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 @media(max-width:400px){.branch-toggle .store-pips{display:none}}
+
+/* A permanent rank upgrade: compare the reward before committing to a fresh run. */
+.sheet .empire-content .prestige-panel{border:0;margin:0}
+.sheet .prestige-panel>summary{display:flex;align-items:center;gap:9px;min-height:48px;padding:10px 0;list-style:none;color:#e8d29c;font-size:14px;font-weight:600}
+.prestige-panel>summary::-webkit-details-marker{display:none}
+.prestige-panel>summary>span{flex:1;min-width:0}
+.sheet .prestige-panel>summary>small{font:500 11px 'DM Mono',monospace;color:#c5d5bc;white-space:nowrap}
+.prestige-panel svg{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.prestige-sprout{width:23px;height:23px}
+.prestige-chevron{width:14px;height:14px;transition:transform 160ms ease-out}
+.prestige-panel[open] .prestige-chevron{transform:rotate(90deg)}
+.prestige-body{display:grid;gap:16px;padding:8px 0 4px}
+.prestige-rank-track{display:grid;grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr);gap:12px;align-items:center}
+.prestige-rank{display:grid;justify-items:center;gap:4px;min-width:0;padding:14px 6px;color:#c5d5bc}
+.prestige-rank.is-next{background:#c4dc9f12;border-radius:12px;color:#d6e9b8}
+.prestige-rank>span{font-size:12px;font-weight:600}
+.sheet .prestige-rank>strong{font:700 38px/1 'Bricolage Grotesque',sans-serif;letter-spacing:-.025em;color:#f1f4e5;font-variant-numeric:tabular-nums}
+.sheet .prestige-rank.is-next>strong{color:#d6e9b8}
+.prestige-rank>small{font-size:11px}
+#prestigeArrow{width:24px;height:24px;color:#b4c49e}
+.prestige-rank-track.is-max{grid-template-columns:1fr}
+.sheet .prestige-panel .prestige-gain{margin:0;text-align:center;font-size:13px;font-weight:600;line-height:1.4;color:#d6e9b8}
+.prestige-funding{display:grid;gap:7px;padding-top:14px;border-top:1px solid #c1d7b726}
+.prestige-funding>div{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap;font-size:12px;color:#c5d5bc}
+.prestige-funding b{font:500 12px 'DM Mono',monospace;color:#e9eddf;white-space:nowrap}
+.sheet .prestige-funding progress{display:block;width:100%;height:5px;margin:0;border:0;border-radius:3px;overflow:hidden;background:#122b20;accent-color:#c4dc9f}
+.prestige-funding progress::-webkit-progress-bar{background:#122b20}
+.prestige-funding progress::-webkit-progress-value{background:#c4dc9f}
+.prestige-funding>small{font-size:11px;color:#c5d5bc}
+.prestige-carryover{display:grid;gap:8px;margin:0;font-size:11px;line-height:1.45}
+.prestige-carryover>div{display:grid;grid-template-columns:48px minmax(0,1fr);gap:8px}
+.prestige-carryover dt{color:#e8d29c;font-weight:600}
+.prestige-carryover dd{margin:0;color:#c5d5bc}
+.sheet .empire-content #prestigeStart{width:100%;max-width:none;min-height:48px;margin:0;padding:12px;border:0;border-radius:12px;background:#c4dc9f;color:#213827;font:700 13px 'Bricolage Grotesque',sans-serif;cursor:pointer}
+.sheet .empire-content #prestigeStart:disabled{background:#324a37;color:#b5c5a9;opacity:1;cursor:default}
+.prestige-panel [hidden]{display:none!important}
+.prestige-panel>summary:focus-visible,#prestigeStart:focus-visible{outline:2px solid #e8d29c;outline-offset:3px}
+@media(hover:hover){.sheet .empire-content #prestigeStart:not(:disabled):hover{background:#d6e9b8}}
+@media(prefers-reduced-motion:reduce){.prestige-chevron{transition:none}}

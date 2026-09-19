@@ -29,18 +29,9 @@
 @media(hover:hover){#storyAction:hover{background:#d4e8b6}.story-entry:hover b,#nextInvestmentLink:hover #nextInvestment{color:#fff5d9}}
 .sheet .flow-copy{min-width:0}.sheet .flow-guide #flowText{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.3}
 .sheet #flowText b{white-space:normal}
-.delivery-site #deliveryFundingText{color:#d1dfc4;line-height:1.5}
-.delivery-site{align-items:center}
 .sheet .flow-label,.sheet .menu-board-summary small,.sheet .buyer small,.sheet .strain-stats small,.sheet .dispatch-stat small,.sheet .receipt-note{font-size:11px;letter-spacing:.015em}
 .sheet .menu-board .product-line .format-options small{font-size:11px}
 .world .station-sign .station-sign-name{font-size:11px}
-@media(max-width:779px){
- .sheet .employee-card>div:not(.employee-number):not(.employee-train-actions){display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0}
- .sheet .employee-card small{display:flex;flex-wrap:wrap;gap:3px;font-size:11px;overflow:hidden;max-width:100%;line-height:1.2}
- .sheet .employee-card small span{padding:1px 3px}
- .sheet .employee-card>div>b{font-size:12px}
- .sheet .employee-list{min-height:350px;flex:none}
-}
 .modal.settings{max-height:calc(100dvh - 32px);overflow:auto}
 .modal .settings-close{width:44px;height:44px}
 /* A little more playfield, with a stable tray height across all six tabs. */
@@ -136,4 +127,26 @@
  .sheet .upgrade-comparison{font-size:17px;gap:4px}
  .sheet .selected-line .station-buy-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
  .sheet .selected-line .station-buy-actions .buy{justify-content:center}
+}
+
+/* Affordable badges take turns: a small wind-up, hop and shimmy, then a quiet beat. */
+.sheet .machine-nav button::after{--upgrade-hop:3px}
+.world .marker.station-sign::after{--upgrade-hop:.12em}
+@keyframes upgrade-badge-wave{
+ 0%,32%,100%{transform:translateY(0) rotate(0) scale(1)}
+ 6%{transform:translateY(.5px) rotate(0) scale(1.08,.93)}
+ 13%{transform:translateY(calc(-1 * var(--upgrade-hop))) rotate(-16deg) scale(1.05)}
+ 20%{transform:translateY(calc(-.4 * var(--upgrade-hop))) rotate(12deg) scale(1.02)}
+ 26%{transform:translateY(.4px) rotate(-4deg) scale(1.04,.97)}
+}
+@media(prefers-reduced-motion:no-preference){
+ .sheet .machine-nav button.can-upgrade::after,.world .marker.station-sign.can-upgrade::after{
+  animation:upgrade-badge-wave 3.6s ease-in-out var(--upgrade-wave-delay,0s) infinite;
+  animation-play-state:paused;transform-origin:50% 65%;
+ }
+ body:not([data-page-hidden=true]) .sheet:not(.collapsed) .machine-nav button.can-upgrade.station-motion-visible::after,
+ body:not([data-page-hidden=true]) .world .marker.station-sign.can-upgrade.station-motion-visible::after{animation-play-state:running}
+}
+@media(prefers-reduced-motion:reduce){
+ .sheet .machine-nav button.can-upgrade::after,.world .marker.station-sign.can-upgrade::after{animation:none;transform:none}
 }
