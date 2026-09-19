@@ -1,0 +1,76 @@
+/* Story and assistance share the established forest-green interface. */
+.goals-dropdown{max-height:min(82dvh,660px);scrollbar-color:#91ab7b #20372b;scrollbar-width:thin}
+.goals-dropdown #goalsClose{width:44px;height:44px;flex:0 0 auto;border:0;border-radius:10px;background:transparent;color:#eff5e5;font-family:inherit;font-size:24px;cursor:pointer}
+.shop-story{padding:8px 0 14px}
+.story-heading{display:flex;align-items:baseline;gap:12px}
+.story-heading h3{flex:1;margin:0;color:#f0f5e8;font-size:20px;line-height:1.15;letter-spacing:-.025em;text-wrap:balance}
+.story-heading>span{color:#c3d4b6;font:11px 'DM Mono',monospace;white-space:nowrap}
+.story-path{display:flex;gap:5px;margin:15px 0}
+.story-path i{height:4px;flex:1;border-radius:3px;background:#78976a35}
+.story-path i.done{background:#bddb9c}.story-path i.current{background:#e6c987}
+.shop-story>p{margin:0 0 16px;color:#cbdcc1;font-size:13px;line-height:1.55}
+.story-task{display:flex;gap:14px;align-items:baseline;color:#e8efd9;font-size:12px;line-height:1.45}
+.story-task>span{flex:1}.story-task b{font:12px 'DM Mono',monospace;white-space:nowrap;color:#e8d29c}
+.shop-story progress,#deliveryFunding{display:block;width:100%;height:5px;margin:8px 0 12px;border:0;border-radius:4px;overflow:hidden;background:#102c22;accent-color:#c4dc9f}
+.shop-story progress::-webkit-progress-bar,#deliveryFunding::-webkit-progress-bar{background:#102c22}
+.shop-story progress::-webkit-progress-value,#deliveryFunding::-webkit-progress-value{background:#c4dc9f}
+#storyAction{width:100%;min-height:44px;padding:10px 14px;border:0;border-radius:10px;color:#1e3628;background:#c4dc9f;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.story-history{margin-top:12px}.story-history summary,.story-goals summary{min-height:44px;align-content:center;color:#d3e2c8;font-size:13px;cursor:pointer}
+.story-history ol{padding:0 0 0 20px;margin:4px 0}.story-history li{padding:7px 0;font-size:12px;color:#bad49f}.story-history p{margin:4px 0;color:#c5d5bc;line-height:1.45}
+#nextInvestmentLink{display:block;width:100%;min-height:44px;padding:12px 0;border:0;border-block:1px solid #d7e5c924;border-radius:0;background:transparent;text-align:left;cursor:pointer}
+.goals-dropdown #nextInvestment{margin:0;line-height:1.5;font-size:12px;color:#e8d29c}
+.story-goals summary{font-weight:700}.story-goals summary span{float:right;color:#e8d29c;font-size:12px}
+.goals-dropdown .short-goal button{min-height:44px;background:#55733e}
+.story-entry{display:flex;align-items:center;gap:10px;width:100%;padding:0 0 10px;margin:0 0 10px;border:0;border-bottom:1px solid #d7e5c921;border-radius:0;background:transparent;color:#d1dfc4;text-align:left;cursor:pointer;font:inherit}
+.story-entry>svg{width:24px;height:24px;flex:0 0 auto;color:#e8d29c}
+.story-entry>span:nth-child(2){flex:1;min-width:0}.story-entry small{display:block;font-size:11px;color:#bbcfad}.story-entry b{display:block;margin-top:3px;color:#eef3e3;font-size:13px;font-weight:600;line-height:1.3}
+.story-entry .story-entry-count{font:11px 'DM Mono',monospace;color:#d1dfc4}
+.story-entry>span:last-child{font-size:22px}.story-entry:focus-visible,#storyAction:focus-visible,#nextInvestmentLink:focus-visible,#goalsClose:focus-visible{outline:2px solid #e8d29c;outline-offset:3px}
+@media(hover:hover){#storyAction:hover{background:#d4e8b6}.story-entry:hover b,#nextInvestmentLink:hover #nextInvestment{color:#fff5d9}}
+.sheet .flow-copy{min-width:0}.sheet .flow-guide #flowText{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.3}
+.sheet #flowText b{white-space:normal}
+.delivery-site #deliveryFundingText{color:#d1dfc4;line-height:1.5}
+.delivery-site{align-items:center}
+.sheet .flow-label,.sheet .menu-board-summary small,.sheet .buyer small,.sheet .strain-stats small,.sheet .dispatch-stat small,.sheet .receipt-note{font-size:11px;letter-spacing:.015em}
+.sheet .menu-board .product-line .format-options small{font-size:11px}
+.world .station-sign .station-sign-name{font-size:11px}
+@media(max-width:779px){
+ .sheet .employee-card>div:not(.employee-number):not(.employee-train-actions){display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0}
+ .sheet .employee-card small{display:flex;flex-wrap:wrap;gap:3px;font-size:11px;overflow:hidden;max-width:100%;line-height:1.2}
+ .sheet .employee-card small span{padding:1px 3px}
+ .sheet .employee-card>div>b{font-size:12px}
+ .sheet .employee-list{min-height:350px;flex:none}
+}
+.modal.settings{max-height:calc(100dvh - 32px);overflow:auto}
+.modal .settings-close{width:44px;height:44px}
+/* A little more playfield, with a stable tray height across all six tabs. */
+@media(max-width:779px) and (min-height:641px){html body .sheet{max-height:58dvh}html body .sheet>[data-pane]{height:min(38dvh,340px)}}
+@media(prefers-reduced-motion:reduce){.story-entry,.shop-story *{animation:none;transition:none}}
+
+.hud>.stat.output #rate[data-paused=true]::before{content:none}
+@media(max-width:779px){.world .station-sign:not(.selected) .station-sign-level{display:none}.world .station-sign:not(.selected){padding-block:5px}}
+@media(max-width:779px){
+ .sheet>[data-pane=factory]>*{flex-shrink:0}
+ .sheet>[data-pane=factory] .selected-line{flex:0 0 auto;min-height:132px;padding-block:8px}
+ .sheet #stationStatus{grid-template-columns:repeat(2,minmax(0,1fr));justify-content:stretch;min-height:53px}
+ .sheet #stationStatus .stat small{display:inline;font-size:11px}
+ .sheet #stationStatus .status-chip{font-size:11px}
+}
+/* Keep every control on screen even when cash, rates and the queue reach more digits. */
+@media(max-width:480px){
+ .hud{display:grid!important;grid-template-columns:22px minmax(0,1fr) auto auto;column-gap:6px;row-gap:2px;min-height:52px}
+ .hud .canopy-brand{grid-column:1;grid-row:1/3;align-self:center}
+ .hud .canopy-brand span,.hud .canopy-brand svg{width:22px;height:22px}
+ .hud>.stat{grid-column:2;grid-row:1;align-self:end;max-width:100%}
+ .hud>.stat strong{font-size:17px}
+ .hud>.stat.output{grid-column:2;grid-row:2;align-self:start;margin:0;padding:0}
+ .hud>.stat.output strong{font-size:10.5px;white-space:nowrap}
+ .hud .factory-info .customer-info{grid-column:3;grid-row:1/3;margin:0;padding:0}
+ .hud .factory-info .speed-controls{grid-column:4;grid-row:1/3;justify-self:end}
+}
+@media(max-width:360px){
+ .hud{padding-inline:8px;column-gap:4px}
+ .hud>.stat strong{font-size:14px}
+ .hud .customer-info>span:first-child::before{display:none}
+ .hud .customer-info #goalsOpen{margin-left:4px}
+}

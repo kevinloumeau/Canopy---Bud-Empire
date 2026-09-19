@@ -2,6 +2,7 @@
 // Reparents the existing Empire controls (main.js and operations-ui.js keep rendering them by id)
 // into three screens: Home (rewards strip + store list), Store (one branch), Details (records).
 import {mountEmpireStores} from './empire-stores.js';
+import {manageDialog} from './dialog-focus.js';
 export function mountEmpireShell({fit,getState,format}){
  const pane=document.querySelector('[data-pane=empire]'),$=id=>document.getElementById(id);
  const section=name=>pane.querySelector('[data-empire-section="'+name+'"]');
@@ -27,7 +28,8 @@ export function mountEmpireShell({fit,getState,format}){
  const summary=$('returnSummary');if(summary){const overlay=el('div','return-overlay');overlay.hidden=true;const card=el('div','return-card');card.append(summary);overlay.append(card);document.body.append(overlay);
   const reflect=()=>{overlay.hidden=summary.hidden;if(!summary.hidden){const b=$('dismissReturn');if(b)b.focus({preventScroll:true});}};
   if(window.MutationObserver)new MutationObserver(reflect).observe(summary,{attributes:true,attributeFilter:['hidden']});reflect();
-  overlay.addEventListener('keydown',e=>{if(e.key==='Escape'){const b=$('dismissReturn');if(b)b.click();}});}
+  card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-label','Welcome back');
+  manageDialog(overlay,()=>{const b=$('dismissReturn');if(b)b.click();});}
 
  // Store: back bar, then the branch's own sticky tabs and body.
  const storeBar=backBar('Stores');screens.store.append(storeBar.bar);
@@ -42,7 +44,7 @@ export function mountEmpireShell({fit,getState,format}){
  screens.details.append(board);
  let boardSig='';
  function syncBoard(){if(!getState)return;const s=getState();const values={revenue:format?format(s.lifetime||0):String(Math.round(s.lifetime||0)),served:(s.sold||0).toLocaleString(),deliveries:(s.onlineCompleted||0).toLocaleString(),trophies:String((s.empire&&s.empire.trophies)||0),prestige:String((s.empire&&s.empire.prestige)||0)};const sig=Object.values(values).join('|');if(sig===boardSig)return;boardSig=sig;stats.forEach(([,key])=>{board.querySelector('[data-score="'+key+'"]').textContent=values[key];});}
- setInterval(()=>{if(current==='details')syncBoard();},500);
+ setInterval(()=>{if(!document.hidden&&current==='details')syncBoard();},500);
  const shopMilestone=document.querySelector('.shop-milestone');
  screens.details.append(
   group(null,[$('careerName'),$('careerDetail'),$('careerProgress'),$('careerBonus'),$('careerClaim')]),
@@ -75,6 +77,7 @@ export function mountEmpireShell({fit,getState,format}){
  const amount=text=>{const m=/\$[\d.,]+[KMB]?/.exec(text);return m?m[0]:'';};
  let signature='';
  function sync(){
+  if(document.hidden)return;
   storesUI.sync();
   const ready=sources.map(([kind,id])=>{const b=$(id);return b&&!b.disabled&&!b.hidden&&/^Collect\b/.test(b.textContent.trim())?{kind,button:b,amount:amount(b.textContent)}:null;}).filter(Boolean);
   const daily=$('dailyTime')?/in (\d+h \d+m)/.exec($('dailyTime').textContent):null,event=$('eventTime')?/in (\d+h \d+m)/.exec($('eventTime').textContent):null;

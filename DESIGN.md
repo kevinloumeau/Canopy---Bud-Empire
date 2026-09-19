@@ -143,3 +143,13 @@ On phones the seven staff rows fit without scrolling: a 20px icon, name over its
 ## Shop grid
 
 Shop upgrades are cards, not a list: icon and two-line title, one or two lines of effect, a mono level line, and a full-width button. Desktop shows two columns with Upgrade and price; phones show three equal-height columns with the full two-line effect, no level line, price-only buttons on a shared baseline (the label stays for assistive tech), hide the recommendation row and the Affordable filter, and let the pane use 52dvh, so each category's six cards fit without scrolling. Copy is never truncated.
+
+## Experience refinement — September 19, 2026
+
+The following phone sizing supersedes the earlier pane-specific height allowances: the tray stays consistent across tabs, using at most 58dvh on taller phones, with its pane capped at the smaller of 38dvh and 340px. Details scroll inside the pane; station sections do not shrink into each other. Station status uses two columns. Staff names and status share two lines beside their buttons. Under 481px, cash sits above its rate; the queue, story trigger and speed/settings controls fit alongside, including at 320px. Unselected map plaques show their name only; selected plaques retain their level.
+
+The Goals trigger opens **Shop story and goals**: one current chapter with a concise premise, progress and an action into existing gameplay. Earned chapters and repeatable Shift goals sit behind separate disclosures. Seven chapters follow the shop from its first ten bags through station and menu growth to a branch network with regular customers. Empire home includes a story entry. Use the existing forest-green glass, cream type and restrained gold accents; no new currency or reward layer accompanies this narrative.
+
+Guidance is consistent: the next investment points to the current production bottleneck, while unavailable deliveries explain the $7,500 delivery pad and show funding progress. Full bottleneck comparisons wrap instead of truncating. Functional captions in the Flower and Deliveries panes use an 11px minimum.
+
+Existing scene motion carries the extra character: employees have distinct task rhythms, shears articulate, watering produces droplets, customers lean gently into turns, bags swing and settle after pickup, and service rings advance smoothly. Do not add a lighter-animation mode. Existing OS reduced-motion support and pause/speed controls remain in effect. Settings now includes Game pause/resume. Dialogs contain keyboard focus and restore the opener; focused controls retain native Space activation.

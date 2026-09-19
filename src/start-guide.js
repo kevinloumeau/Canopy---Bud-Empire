@@ -1,11 +1,12 @@
 // First-run walkthrough: five short coach marks over the live game. Seen once, replayable from the Shop tab.
+import {manageDialog} from './dialog-focus.js';
 const SEEN_KEY='shift-guide-seen';
 const STEPS=[
- {title:'Welcome to the grind',text:'You own a very small dispensary with very big dreams. Seeds go in, happy customers come out, cash piles up. Let’s make it rain.',cta:'Show me'},
+ {title:'A little shop. A big beginning.',text:'The lights are on and your first customers are on their way. Your crew grows, packs and sells automatically. Start small; give the neighborhood a reason to come back.',cta:'Show me'},
  {title:'Stations are your crew',text:'Security, then Seeds → Grow → Harvest → Pack → Orders → Pickup. The slowest one is your bottleneck and it’s already selected. Feed that first; the rest can wait.',target:'.machine-nav',tray:'factory'},
- {title:'Cash does the heavy lifting',text:'Every sale lands up here. That little +$/s is your engine. Bigger stations, bigger engine. It’s basically physics.',target:'.hud > .stat'},
- {title:'The drones are coming',text:'Web orders stack up in this counter and pay a third more than walk-ins. The packing bar keeps jars aside for them, so send them from Deliveries whenever it lights up.',target:'.stock-online',tray:'factory'},
- {title:'Then build the empire',text:'Milestones, daily rewards, more stores across town. All of it lives in Empire. Now go. The plants aren’t going to grow themselves. Well, they are. Go anyway.',target:'[data-tray=empire]',cta:'Let’s grow'}
+ {title:'Let the first sales come in',text:'Cash arrives when customers collect their bags. The rate beside it estimates your sales capacity; a new shop needs a moment to fill its shelves. Save toward the recommended upgrade.',target:'.hud > .stat'},
+ {title:'A rooftop route, when you’re ready',text:'Build the $7,500 delivery pad in Deliveries to unlock web requests and an automatic courier drone. Orders pay a third more per unit. Until then, focus on your walk-in customers.',target:'.stock-online',tray:'factory'},
+ {title:'Every shop has a story',text:'Follow your next chapter from the flag beside the queue or from Empire. Meet your regulars, open new neighborhoods, and collect rewards along the way.',target:'[data-tray=empire]',cta:'Let’s grow'}
 ];
 export function mountStartGuide({showTray,collapse,fit}){
  const root=document.createElement('div');root.className='start-guide';root.hidden=true;
@@ -38,5 +39,6 @@ export function mountStartGuide({showTray,collapse,fit}){
  $('.guide-next').onclick=()=>step<STEPS.length-1?show(step+1):close();
  $('.guide-skip').onclick=close;
  root.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+ manageDialog(root,close);
  return {open,close,seen(){try{return !!localStorage.getItem(SEEN_KEY);}catch(e){return true;}}};
 }

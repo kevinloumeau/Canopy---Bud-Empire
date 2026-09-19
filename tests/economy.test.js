@@ -51,7 +51,9 @@ test('fixed rewards scale with income but never shrink, and the scale is applied
   assert.equal(dailyStatus(s.empire,now).reward,150);assert.equal(dailyStatus(s.empire,now,10).reward,1500);
   assert.equal(claimDaily(s,now,10),1500);assert.equal(s.money,1500);assert.equal(claimDaily(s,now,10),0);
   const e=eventStatus(s.empire,now,3);assert.equal(e.reward,eventStatus(s.empire,now).reward*3);
-  assert.equal(goalStatus(s.empire,0,4).reward,600);recordGoal(s.empire,'pickup',10);assert.equal(claimGoal(s,0,4),600);
+  const scaledGoal=goalStatus(s.empire,0,4);assert.equal(scaledGoal.reward,600);
+  recordGoal(s.empire,'pickup',10);assert.equal(claimGoal(s,0,4),0,'the scaled target is not met by ten pickups');
+  recordGoal(s.empire,'pickup',scaledGoal.target-10);assert.equal(claimGoal(s,0,4),600);
   assert.equal(goalStatus(s.empire,0,0.5).reward,150);
 });
 
