@@ -1,3 +1,4 @@
+import {migrateOrderCounters,orderCounterPositions,orderCounterCost,buyOrderCounter,ORDER_QUEUE_GATE,assignOrderCounter,atOrderCounter,orderAvailability} from './order-counters.js';
 import {migrateJourney,advanceJourney,CHAPTERS} from './journey.js';
 import {mountJourney} from './journey-ui.js';
 import {manageDialog} from './dialog-focus.js';
@@ -25,7 +26,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   var STRAINS=[{name:'Meadow Mint',price:18,unlock:0,color:'#aacb85'},{name:'Amber Bloom',price:26,unlock:1500,color:'#ddbc75'},{name:'Violet Haze',price:38,unlock:12000,color:'#baa1cf'},{name:'Midnight Orchid',price:56,unlock:65000,color:'#8ebcbb'}];
   // Contract progression is defined in depth.js, including post-city milestones.
   var $=function(id){return document.getElementById(id)};
-  function fresh(){return{money:30,lifetime:0,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),productMenu:migrateMenu(),sound:false,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[1,1,1,1,1,1],stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
+  function fresh(){return{money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),productMenu:migrateMenu(),sound:false,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[1,1,1,1,1,1],stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
   function readSave(){
     for(var key of ['shift-save','shift-save-backup']){
       try{var raw=localStorage.getItem(key);if(!raw)continue;var value=JSON.parse(raw);if(value&&typeof value==='object'&&!Array.isArray(value))return value}catch(e){}
@@ -39,7 +40,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     next.strains=STRAINS.map(function(_,i){return Math.floor(finite(old.strains&&old.strains[i],i===0?1:0,i===0?1:0,10))});
     next.activeStrain=Math.floor(finite(old.activeStrain,0,0,STRAINS.length-1));if(!next.strains[next.activeStrain])next.activeStrain=0;
     next.menuStrains=STRAINS.map(function(_,i){return i}).filter(function(i){return next.strains[i]>0&&(!Array.isArray(old.menuStrains)||old.menuStrains.indexOf(i)>=0)});if(!next.menuStrains.length)next.menuStrains=[0];next.strainTrend=strains.migrateTrend(old.strainTrend,STRAINS.length);next.vipBuzz=finite(old.vipBuzz,0,0,strains.VIP_BUZZ_SECONDS);
-    next.journey=migrateJourney(old.journey);
+    next.journey=migrateJourney(old.journey);next.orderCounters=migrateOrderCounters(old.orderCounters);
     next.money=finite(old.money,30,0,Number.MAX_SAFE_INTEGER);
     next.lifetime=finite(old.lifetime,0,0,Number.MAX_SAFE_INTEGER);
     next.sold=Math.floor(finite(old.sold,0,0,Number.MAX_SAFE_INTEGER));
@@ -184,7 +185,9 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     var perkLine='<p class="strain-perk'+(tier?' is-unlocked':'')+'"><b>'+(tier?'★ '+perk.name:'☆ '+perk.name)+'</b> · '+(tier?perk.effect[tier-1]+(tier<2?' · level 10 doubles it':''):perk.locked)+'</p>';
     var heroHtml='<div class="strain-hero'+(level?'':' is-locked')+(active?' is-on-menu':'')+(i===trend?' is-trending':'')+'" style="--strain:'+strain.color+'">'+
       '<div class="strain-hero-art">'+strainArt(i,!level)+'</div>'+
-      '<div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">'+look.kind+' · </span>'+strains.TYPES[type]+(level?' · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>'+level+' / 10':' · Locked')+'</small><h2>'+strain.name+'</h2><p>'+(level?look.buyers:'Unlock to put it on the menu. '+look.buyers)+'</p><div class="strain-stats">'+stats+'</div>'+traits+perkLine+'</div>'+
+      '<div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">'+look.kind+' · </span>'+strains.TYPES[type]+(level?' · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>'+level+' / 10':' · Locked')+'</small><h2>'+strain.name+'</h2><p>'+(level?look.buyers:'Unlock to put it on the menu. '+look.buyers)+'</p></div>'+
+      '<div class="strain-stats">'+stats+'</div>'+
+      '<div class="strain-hero-details">'+traits+perkLine+'</div>'+
       '<div class="strain-hero-actions">'+(level?'<button type="button" id="flowerSelect" aria-pressed="'+active+'">'+(active?'On menu ✓':'Add to menu')+'</button>':'')+'<button type="button" id="flowerBuy" class="is-primary">'+(maxed?'Fully upgraded':(level?'Upgrade':'Unlock')+' · '+fmt(price))+'</button></div>'+
     '</div>';
     var heroKey=heroHtml+'|'+(maxed||state.money<price)+'|'+(active&&menu.length===1);
@@ -239,7 +242,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   function stationThroughput(i){
     if(!state.lines[i])return 0;
     if(i<4)return capacity(i)/[2,3,2,2][i]/(i===3?format().packing:1);
-    var service=economy.counterLanes(state.lines[i])/counterServiceDuration(i);
+    var service=economy.counterLanes(state.lines[i])*(i===4?state.orderCounters:1)/counterServiceDuration(i);
     return (i===4?Math.min(capacity(i)/2,service+kioskCount()/kioskServiceDuration()):service)*basketSize();
   }
   function production(){return Math.min.apply(null,LINES.map(function(_,i){return stationThroughput(i)}))*flowerValue()}
@@ -303,21 +306,26 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       var bags=Math.min(Math.floor(readyWork),spareJars,readyCapacity()-state.stock[4]);
       if(bags>0){readyWork-=bags;state.stock[3]-=bags;state.stock[4]+=bags}
     }else readyWork=Math.min(readyWork,.9);
+    assignOrderCounter(customers,state.orderCounters);
+    work[4]=0;
     if(state.lines[4]){
-      var queue=customers.filter(function(c){return !c.kiosk&&!c.ordered&&c.phase!=='leaving'}).slice(0,1).filter(function(c){return c.phase==='ordering'&&!c.walking&&Math.hypot(c.x+4,c.z-4.9)<.01});
-      var waitingPickups=customers.filter(function(c){return c.ordered&&!c.bag}),reserved=waitingPickups.reduce(function(n,c){return n+(c.bags||1)},0),available=Math.max(0,state.stock[4]-reserved);
-      if(queue.length&&waitingPickups.length<pickupLimit()&&available>0){
-        var count=advanceCounterService(queue[0],4,dt)?1:0;
-        for(var j=0;j<count;j++){queue[j].bags=Math.max(1,Math.min(basketSize()*(queue[j].kind==='vip'?strains.VIP_BASKET:1),available));available-=queue[j].bags;queue[j].strain=strainFor(queue[j]);queue[j].salePrice=flowerValue(queue[j].strain);queue[j].ordered=true;queue[j].pickupTicket=++pickupQueueSequence;queue[j].phase='toPickup';queue[j].t=0}if(count)work[4]=0;
-      }else work[4]=0;
+      customers.filter(function(c){return atOrderCounter(c,state.orderCounters)}).forEach(function(c){
+        var available=orderAvailability(customers,state.stock[4],pickupLimit());
+        if(available.places<1||available.bags<1)return;
+        if(advanceCounterService(c,4,dt)){
+          c.bags=Math.min(basketSize()*(c.kind==='vip'?strains.VIP_BASKET:1),available.bags);
+          c.strain=strainFor(c);c.salePrice=flowerValue(c.strain);c.ordered=true;
+          c.pickupTicket=++pickupQueueSequence;c.phase='toPickup';c.t=0;
+        }
+      });
     }
     if(state.kiosk)for(var kioskIndex=0;kioskIndex<kioskCount();kioskIndex++){
       var kioskX=-8.95,kioskZ=6.8-kioskIndex*1.8;
       var kioskCustomer=customers.find(function(c){return c.kiosk&&(c.kioskIndex||0)===kioskIndex&&!c.ordered&&c.phase==='kiosk'&&Math.hypot(c.x-kioskX,c.z-kioskZ)<.15});
-      var kioskReserved=customers.filter(function(c){return c.ordered&&!c.bag}).length;
-      if(kioskCustomer&&kioskReserved<pickupLimit()&&state.stock[4]>kioskReserved){
+      var kioskAvailable=orderAvailability(customers,state.stock[4],pickupLimit());
+      if(kioskCustomer&&kioskAvailable.places>0&&kioskAvailable.bags>0){
         kioskCustomer.orderTime=(kioskCustomer.orderTime||0)+dt;
-        if(kioskCustomer.orderTime>=kioskServiceDuration()){kioskCustomer.strain=strainFor(kioskCustomer);kioskCustomer.bags=kioskCustomer.kind==='vip'?strains.VIP_BASKET:1;kioskCustomer.salePrice=flowerValue(kioskCustomer.strain);kioskCustomer.ordered=true;kioskCustomer.pickupTicket=++pickupQueueSequence;kioskCustomer.phase='toPickup'}
+        if(kioskCustomer.orderTime>=kioskServiceDuration()){kioskCustomer.strain=strainFor(kioskCustomer);kioskCustomer.bags=Math.min(kioskCustomer.kind==='vip'?strains.VIP_BASKET:1,kioskAvailable.bags);kioskCustomer.salePrice=flowerValue(kioskCustomer.strain);kioskCustomer.ordered=true;kioskCustomer.pickupTicket=++pickupQueueSequence;kioskCustomer.phase='toPickup'}
       }
     }
     for(var i=3;i>=0;i--){
@@ -367,6 +375,26 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     burst(machinePos[i],'#b6e58c');notify(LINES[i].name+' EMPLOYEE · +'+batch.levels+' LEVEL'+(batch.levels===1?'':'S'),'upgrade');renderUI();save();
   }
   function upgradeStaff(i){if(!state.lines[i])return;var price=staffCost(i);if(state.money<price)return;state.money-=price;state.staff[i]++;burst(machinePos[i],'#b6e58c');notify('EMPLOYEE LEVEL '+state.staff[i]+' · +30% BASE SPEED','upgrade');renderUI();save()}
+  function expandOrderCounters(){
+    if(!buyOrderCounter(state))return;
+    selectMachine(4);tierFlashes[4]=1;burst(machinePos[4],'#e6d3a0');
+    renderUI();save();notify(state.orderCounters+' ORDER COUNTERS OPEN · employee included','upgrade');
+  }
+  function renderOrderCounters(){
+    var count=state.orderCounters,price=orderCounterCost(count),complete=price===null;
+    $('orderCounterExpansion').hidden=securitySelected||selected!==4;
+    $('orderCounterStatus').textContent=count+' / 3';
+    $('orderCounterDetail').textContent=complete?'All staffed':'Staff included';
+    var slots=$('orderCounterSlots');
+    if(slots.dataset.count!==String(count)){
+      slots.dataset.count=String(count);slots.setAttribute('aria-label',count+' of 3 staffed counters open. Orders training improves the whole team.');
+      slots.innerHTML=[0,1,2].map(function(i){return '<span class="order-counter-slot'+(i<count?' is-open':i===count?' is-next':'')+'" aria-hidden="true"><svg viewBox="0 0 40 36" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g class="counter-worker"><circle cx="20" cy="8" r="4"/><path d="M12 21v-3a8 8 0 0 1 16 0v3"/></g><path class="counter-top" d="M5 21h30v4H5z"/><path class="counter-front" d="M8 25h24v9H8z"/><path d="M13 28v3m7-3v3m7-3v3"/></svg><em>'+(i+1)+'</em></span>'}).join('');
+    }
+    ['expandOrderCounter','buyOrderCounter'].forEach(function(id){var button=$(id);button.disabled=complete||state.money<price;button.querySelector('span').textContent=complete?'Fully expanded':'Open counter '+(count+1);button.querySelector('b').textContent=complete?'3 / 3':fmt(price);button.setAttribute('aria-label',complete?'All three order counters open':'Open order counter '+(count+1)+' with employee for '+fmt(price));});
+    $('expandOrderCounter').hidden=complete;
+    $('orderCounterShopCount').textContent=count+' → '+Math.min(3,count+1)+' staffed counters';
+    $('orderCounterShopInfo').textContent=complete?'Three counters open. Train Orders to speed up the team.':'Employee included. Take more orders at the same time.';
+  }
   function buyKiosk(){if(state.kiosk||state.money<25000)return;state.money-=25000;state.kiosk=true;save();renderUI();notify('SELF-ORDER KIOSK OPEN · customers can use kiosk or counter','upgrade')}
   function kioskCount(){return state.kiosk?(state.thirdKiosk?3:state.secondKiosk?2:1):0}
   function chooseKiosk(){
@@ -389,16 +417,17 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   function pickupLimit(){return 4+state.pickupLevel*2}
   function readyCapacity(){return economy.readyCapacity(state.readyLevel,state.lines)}
   function componentCost(i){var L=state[COMPONENTS[i].key];return Math.round(COMPONENTS[i].base*Math.pow(1.8,Math.min(L,8))*Math.pow(2.15,Math.max(0,L-8)))}
-  function upgradeComponent(i){var c=COMPONENTS[i],price=componentCost(i);if(state[c.key]>=c.max||state.money<price)return;state.money-=price;state[c.key]++;save();renderUI();notify(c.name.toUpperCase()+' · LEVEL '+state[c.key],'upgrade')}
+  function componentUnlocked(i){return COMPONENTS[i].key!=='kioskSpeedLevel'||state.kiosk}
+  function upgradeComponent(i){var c=COMPONENTS[i],price=componentCost(i);if(!componentUnlocked(i)||state[c.key]>=c.max||state.money<price)return;state.money-=price;state[c.key]++;save();renderUI();notify(c.name.toUpperCase()+' · LEVEL '+state[c.key],'upgrade')}
   function renderComponents(){
     var describe=[function(l){return '+'+(l*10)+'% walking speed'},function(l){return (4+l*2)+' picking up'},function(l){return economy.readyCapacity(l,state.lines)+' ready bags'},function(l){return '+'+(l*3)+'% sale value'},function(l){return '+'+(l*3)+'% happy tips'},function(l){return '+'+(l*15)+'% kiosk speed'},function(l){return '+'+(l*5)+'% online value'},function(l){return Math.round(economy.patience('hurried',l))+'s patience'},function(l){return '+'+(l*12)+'% check speed'},function(l){return (requestRate(state.onlineCompleted,1,l)*60).toFixed(1)+' requests / min · '+requestCap(state.onlineCompleted,l)+' waiting'},
       function(l){return '+'+(l*6)+'% seed batch'},function(l){return '+'+(l*6)+'% grow batch'},function(l){return '+'+(l*6)+'% harvest batch'},function(l){return '+'+(l*6)+'% pack speed'},
       function(l){return '+'+(l*4)+'% counter speed'},function(l){return '+'+(l*4)+'% foot traffic'},function(l){return '+'+(l*3)+'% happy tips'},function(l){return '+'+(l*4)+'% basket size'},
       function(l){return '+'+(l*.25).toFixed(2).replace(/\.?0+$/,'')+'% THC'},function(l){return '-'+(l*3)+'% grow penalty'},function(l){return '+'+(l*2)+'% boutique value'},function(l){return '+'+(35+l*2)+'% trend bonus'},
       function(l){return (10*(1-l*.03)).toFixed(1)+'s drone interval'},function(l){return (10+l)+' orders per bulk run'},function(l){return (l*4)+'% repeat buyers'}];
-    COMPONENTS.forEach(function(c,i){var level=state[c.key],max=level>=c.max;
-      $('componentBenefit'+i).textContent=max?describe[i](level):describe[i](level).replace(/ (walking speed|picking up|ready bags|sale value|happy tips|kiosk speed|online value|patience|check speed|waiting|seed batch|grow batch|harvest batch|pack speed|counter speed|foot traffic|basket size|THC|grow penalty|boutique value|trend bonus|drone interval|orders per bulk run|repeat buyers)$/,'')+' → '+describe[i](level+1);
-      $('componentLevel'+i).textContent='Level '+level+' / '+c.max+(max?' · Maximum':state.money<componentCost(i)?' · '+fmt(componentCost(i)-state.money)+' to go':'');$('componentPrice'+i).textContent=max?'MAX':fmt(componentCost(i));$('componentBuy'+i).disabled=max||state.money<componentCost(i)});
+    COMPONENTS.forEach(function(c,i){var level=state[c.key],max=level>=c.max,locked=!componentUnlocked(i),button=$('componentBuy'+i);
+      $('componentBenefit'+i).textContent=locked?'Install a kiosk first':max?describe[i](level):describe[i](level).replace(/ (walking speed|picking up|ready bags|sale value|happy tips|kiosk speed|online value|patience|check speed|waiting|seed batch|grow batch|harvest batch|pack speed|counter speed|foot traffic|basket size|THC|grow penalty|boutique value|trend bonus|drone interval|orders per bulk run|repeat buyers)$/,'')+' → '+describe[i](level+1);
+      $('componentLevel'+i).textContent='Level '+level+' / '+c.max+(max?' · Maximum':state.money<componentCost(i)?' · '+fmt(componentCost(i)-state.money)+' to go':'');$('componentPrice'+i).textContent=max?'MAX':fmt(componentCost(i));button.disabled=locked||max||state.money<componentCost(i);button.querySelector('span').textContent=locked?'Locked':'Upgrade';button.setAttribute('aria-describedby','componentBenefit'+i)});
     if(shopBrowser)shopBrowser.render()}
   function queueCost(){return Math.round(150*Math.pow(1.8,state.queueLevel))}
   function upgradeQueue(){if(queueLimit()>=QUEUE_MAX||state.money<queueCost())return;state.money-=queueCost();state.queueLevel++;save();renderUI();notify('LINE EXPANDED · '+queueLimit()+' customers','upgrade')}
@@ -627,7 +656,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     // Station work lights and the strip under each counter front.
     machinePos.forEach(function(q){cut(q.x,q.y+.04,q.z+.9,2.1,.62);beam(q.x,q.y+1.1,q.z+1.26,q.y+.04,1.1,1.7,.16)});
     // Retail counters, shop-floor downlights, and the island vitrines.
-    cut(-4,.03,4.9,2.7,.7);cut(4,.03,4.9,2.7,.7);
+    orderCounterPositions(state.orderCounters).forEach(function(p){cut(p.x,.03,4.9,state.orderCounters>1?1.3:2.7,.7)});cut(4,.03,4.9,2.7,.7);
     [[-4,2.5],[4,2.5],[0,6]].forEach(function(q){cut(q[0],.03,q[1],2.3,.5)});
     [[-4.85,8.9],[6.7,8.9]].forEach(function(q){cut(q[0],.03,q[1]-.3,1.6,.42)});
     // Grow pendants: tighter, brighter cores under each lamp so the benches read as lit rather than tinted.
@@ -649,7 +678,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     // Street fixtures carry more of the load after dark.
     exteriorLightSpill(1.2);
     // Slab downlights over the retail counters, the vitrines and the island cases keep their own glow.
-    [4,5].forEach(function(i){var q=machinePos[i];lightCone(q.x,4.45,q.z,1.31,.12,1.25,'#ffe3a8',.09);halo(q.x+.65,1.6,q.z+.35,.55,.2,'#fff0c8')});
+    orderCounterPositions(state.orderCounters).concat([machinePos[5]]).forEach(function(q){lightCone(q.x,4.45,q.z,1.31,.12,1.25,'#ffe3a8',.09);halo(q.x+.65,1.6,q.z+.35,.55,.2,'#fff0c8')});
     [[-4.85,8.9],[6.7,8.9]].forEach(function(q){halo(q[0],1.4,q[1]-.32,.9,.18,'#fff0c8')});
     // Concealed strips wash the rear walls of every floor, so the architecture stays legible after dark.
     [[-11.2,8.95,-6.9,3.6,1.3,.24],[-8.7,8.7,4.7-6.55,4.7+3.6,4.7+1.5,.26],[-6.2,6.2,9.4-6.7,9.4+3.6,9.4+1.7,.12]].forEach(function(w){wallWash(w[0],w[1],w[2],w[3],w[4],warm,w[5])});
@@ -658,7 +687,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     // Shop-floor downlights, the lit entrance, and the online kiosk sign.
     [[-4,2.5],[4,2.5],[0,6]].forEach(function(q){pool(q[0],.03,q[1],2.2,.16,warm)});
     // Counters and the grow rack keep their own light at night so the interior stays legible.
-    pool(-4,.03,4.9,2.6,.22,warm);pool(4,.03,4.9,2.6,.22,warm);pool(0,9.44,-6.2,2.6,.2,'#cfe6ff');halo(0,11.4,-6.2,2.2,.16,'#cfe6ff');
+    orderCounterPositions(state.orderCounters).forEach(function(p){pool(p.x,.03,4.9,state.orderCounters>1?1.3:2.6,.22,warm)});pool(4,.03,4.9,2.6,.22,warm);pool(0,9.44,-6.2,2.6,.2,'#cfe6ff');halo(0,11.4,-6.2,2.2,.16,'#cfe6ff');
     // Purple grow pendants on the top floor, each with its own soft cone down to the bench.
     [-3.75,-2.25,2.25,3.75].forEach(function(lx,li){var pulse=lampPulse(now,li*1.7);pool(lx,9.44,-3,1.6,.3*pulse,'#c98bff');halo(lx,12.65,-3,1,.34*pulse,'#d9a8ff');lightCone(lx,12.6,-3,9.44,.3,1.15,'#c98bff',.2*pulse)});
     pool(-9.1,.04,10.41,1.7,.32,warm);halo(-9.1,2.4,10.41,.9,.35,'#ffe2a5');
@@ -844,11 +873,38 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
 
   }
   function drawCounterDivider(){
+        if(state.orderCounters===3){drawBox(1,2.5,.03,2,.28,1.04,['#6b8972','#284939','#3d614c']);drawBox(1,2.5,1.07,2.12,.4,.11,['#e0d4b4','#a99c7b','#c5ba9a']);return}
         // A low tiled divider links the counters without crossing the customer lanes.
         drawBox(.3,2.5,.03,3.5,.28,1.04,['#6b8972','#284939','#3d614c']);
         for(var tile=0;tile<15;tile++){var tx=-1.38+tile*.24;worldLine([[tx,.09,2.65],[tx,1.05,2.65]],'#d4d6b7',.016)}
         [.38,.72].forEach(function(y){worldLine([[-1.45,y,2.65],[2.05,y,2.65]],'#d4d6b7',.016)});
         drawBox(.3,2.5,1.07,3.62,.4,.11,['#e0d4b4','#a99c7b','#c5ba9a']);
+  }
+  function drawOrderCounterBank(now){
+    orderCounterPositions(state.orderCounters).map(function(p,index){return {x:p.x,z:p.z,index:index}}).sort(function(a,b){return depthOf(a)-depthOf(b)}).forEach(function(p){
+      var active=customers.some(function(c){return c.orderCounter===p.index&&atOrderCounter(c,state.orderCounters)&&c.serviceElapsed>0});
+      drawPerson(p.x-.35,p.z-1.5,now,4,false,true,false,{amount:0,phase:0,facing:.3,identity:4+p.index*23,taskOffset:p.index*1.7,workActivity:active?1:0});
+      if(state.orderCounters===1){drawStage(p,4,now);return}
+      var x=p.x,z=p.z,stone=['#f8f3e5','#bfc3b4','#dfe2d5'],tile=['#5e8c70','#244b3a','#3a6951'],oak=['#cfb085','#82613f','#a88960'];
+      drawBox(x,z,.03,2.12,2.16,.25,['#425046','#222d25','#324137']);
+      drawBox(x,z,.28,2.02,2.06,.86,tile);
+      for(var seam=0;seam<8;seam++)worldLine([[x-.94+seam*.27,.3,z+1.04],[x-.94+seam*.27,1.14,z+1.04]],'#cbd0ad',.016);
+      [.57,.86].forEach(function(y){worldLine([[x-1,y,z+1.045],[x+1,y,z+1.045]],'#cbd0ad',.016)});
+      drawBox(x+1.02,z,.29,.055,2.03,.84,oak);
+      drawBox(x,z,1.14,2.22,2.2,.17,stone);
+      warmStrip([[x-.95,1.11,z+1.12],[x+.95,1.11,z+1.12]],false);
+      // Each desk has a till facing its employee and a separate customer payment pad.
+      drawBox(x-.36,z-.24,1.31,.7,.52,.1,['#577765','#243c30','#3d5846']);
+      drawBox(x-.36,z-.38,1.41,.7,.12,.5,['#bdd0bd','#2f5040','#496b56']);
+      drawBox(x-.36,z-.305,1.52,.53,.02,.28,['#b6d29d','#b6d29d','#b6d29d']);
+      drawBox(x+.52,z+.64,1.31,.4,.36,.07,['#53735e','#294936','#365541']);
+      drawBox(x+.52,z+.65,1.385,.25,.24,.015,['#cbe2ba','#cbe2ba','#cbe2ba']);
+      jar(x+.61,z-.35,1.31);
+      drawBox(x,z+1.12,.67,.38,.04,.29,['#d6bc85','#d6bc85','#d6bc85']);
+      signText(x,.82,z+1.15,String(p.index+1),.3,.19,'#284737');
+      slabDownlight(x,z,4.45,1.31);
+      var wait=project(x,.025,4.9);ellipse(wait.x,wait.y,unit*.32,unit*.12,active?'#dcc89170':'#b2bc9340');
+    });
   }
   function drawStarterStation(x,z,i){
     var wood=['#c5a478','#806244','#a1835b'],metal=['#435749','#24382d','#324b3b'];
@@ -863,10 +919,10 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     if(i===4){drawBox(x-.25,z,1.28,.65,.5,.08,metal);drawBox(x-.25,z-.16,1.36,.65,.1,.45,metal);drawBox(x+.55,z+.2,1.28,.4,.35,.06,wood)}
     if(i===5){pickupBag(x-.35,z,1.28);pickupBag(x+.35,z,1.28)}
   }
-  function drawStage(pos,i,now){
+  function drawStage(pos,i,now,previewOnly){
     now=motionPreference.matches?0:taskClocks[i];
     var x=pos.x,z=pos.z,active=stationWorking(i),stone=[['#d1e5c4','#6f9b7d','#a0c6a5'],['#7fd7b5','#236e62','#44ab89'],['#97e4e1','#28747f','#55b4b4'],['#ffe29a','#c3893f','#edbd62']][Math.min(3,stationTier(i))],dark=['#416859','#213b32','#315446'];
-    if(stationTier(i)===0){drawStarterStation(x,z,i);warmStrip([[x-.8,1.12,z+.84],[x+.8,1.12,z+.84]],i===1);if(i>=4)slabDownlight(x,z,4.45,1.13);return}
+    if(stationTier(i)===0){drawStarterStation(x,z,i);warmStrip([[x-.8,1.12,z+.84],[x+.8,1.12,z+.84]],i===1);if(i>=4&&!previewOnly)slabDownlight(x,z,4.45,1.13);return}
     var contact=project(x+.25,.015,z+.2);ellipse(contact.x,contact.y,unit*1.95,unit*.88,'#344d3b26');
     drawBox(x,z,.03,3.1,2.5,.3,dark);drawBox(x,z,.33,2.9,2.25,.8,stone);drawBox(x,z,1.13,3.2,2.5,.16,['#f4e7c0','#b6a37b','#d6c596']);drawBox(x,z,1.29,3.12,2.42,.035,['#f0e5cb','#b8aa8b','#d6c7a6']);
     for(var panel=0;panel<2;panel++){drawBox(x-.75+panel*1.5,z+1.135,.44,1.32,.04,.55,['#d0e3c9','#6b8f79','#a2bfa4']);drawBox(x-.75+panel*1.5,z+1.17,.75,.32,.045,.045,['#e3d6ac','#958d70','#c3b68f'])}
@@ -881,7 +937,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
 
     if(i===1&&active){var lit=project(x,1.38,z);glow(lit.x,lit.y,unit*2.1,'#e6efb047')}
     if((i===2||i===3)&&stationTier(i)<3)benchLamp(x,z,false);
-    if(i>=4)slabDownlight(x,z,4.45,1.31);
+    if(i>=4&&!previewOnly)slabDownlight(x,z,4.45,1.31);
     if(i===3){drawBox(x+1.05,z+.8,1.33,.5,.35,.16,['#9faf99','#465f4a','#70866b']);drawBox(x+1.05,z+.8,1.5,.35,.24,.025,['#c9ebaf','#8cac78','#b7d59d'])}
     if(i>=4){
       // Pale stone retail counters with oak fluting and a glass product vitrine.
@@ -1005,7 +1061,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     var step=Math.sin(phase)*amount,bob=reduced?0:(Math.cos(phase*2)*.022*amount+Math.sin(now*.0018+id)*.009);
     var facing=gait?gait.facing:.3;
     // Stable per-customer choices keep colors consistent while walking.
-    function pickColor(palette,salt){var n=Math.imul(id+1,salt)>>>0;n=Math.imul(n^(n>>>16),0x45d9f3b)>>>0;return palette[((n^(n>>>16))>>>0)%palette.length]}
+    function pickColor(palette,salt){var n=Math.imul((gait&&gait.identity!==undefined?gait.identity:id)+1,salt)>>>0;n=Math.imul(n^(n>>>16),0x45d9f3b)>>>0;return palette[((n^(n>>>16))>>>0)%palette.length]}
     var style=id%20,skin=pickColor(['#e9b28e','#bd8158','#754b32','#f0c9a0','#a66b48','#d6a17d','#604333'],127);
     var hair=pickColor(['#282521','#b66c38','#211f20','#d9b775','#513b28','#795340','#9c8773','#c3beb0'],311);
     var shirt=employee?'#e5e8cf':pickColor(['#8eb7be','#c96b60','#315d6b','#daa951','#587c85','#b45d65','#718b68','#dddcc9','#ce865b','#775d88','#496a59','#b899a6','#8192b3','#bc784d','#9ba97a','#4b5059'],733);
@@ -1054,8 +1110,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     }
     if(employee){shape([[-.14,1.3],[.14,1.3],[.19,.73],[-.19,.73]],seedTech?'#7a9c66':'#527e60');limb([[-.14,1.34],[-.12,1.16]],'#a9bb92',.035);limb([[.14,1.34],[.12,1.16]],'#a9bb92',.035);block(-.09,1.01,.18,.12,.015,'#41674f')}
     if(employee&&id<6){
-      var cycle=reduced?.5:(1-Math.cos(taskClocks[id]*[.004,.0022,.006,.0035,.003,.003][id]))*.5;
-      var activity=reduced?(stationWorking(id)?1:0):taskActivity[id];
+      var cycle=reduced?.5:(1-Math.cos(taskClocks[id]*[.004,.0022,.006,.0035,.003,.003][id]+(gait&&gait.taskOffset||0)))*.5;
+      var activity=gait&&gait.workActivity!==undefined?gait.workActivity:reduced?(stationWorking(id)?1:0):taskActivity[id];
       var handY=.79+activity*(.43+cycle*.15),handX=.28+activity*(-.16+cycle*.12);
       limb([[-.24,1.27],[-.28,1.04+activity*.09],[-.28+activity*.23,.79+activity*.43]],skin,.105);
       limb([[.24,1.27],[.275+activity*.055,1.04+activity*.09],[handX,handY]],skin,.105);
@@ -1089,7 +1145,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     if(bag){var bx=x+.48,bz=z+.1,by=.55+(reduced?0:Math.sin(phase-.65)*amount*.055+(gait&&gait.pickupAge!==undefined?.14*Math.exp(-gait.pickupAge*5):0));drawBox(bx,bz,by,.38,.3,.48,['#ead3a1','#9c8052','#c6aa75']);worldLine([[bx-.12,by+.48,bz],[bx-.12,by+.59,bz],[bx+.12,by+.59,bz],[bx+.12,by+.48,bz]],'#bd9f67',.03);drawBox(bx,bz+.16,by+.16,.2,.018,.22,['#496f50','#496f50','#496f50']);bagAppIcon(bx,bz+.18,by+.16,.22)}
   }
   function queueRoute(ordered){
-    var x=ordered?4:-4,d=-1;
+    if(!ordered)return [ORDER_QUEUE_GATE,{x:-4,z:7.3},{x:-6.1,z:7.3},{x:-6.1,z:state.kiosk?9.05:10},{x:-7.4,z:state.kiosk?9.05:10},{x:-8.7,z:state.kiosk?9.05:10},{x:-10.5,z:state.kiosk?9.05:10},{x:-11.7,z:9.3},{x:-12.4,z:7.8}];
+    var x=4,d=-1;
     var route=[{x:x,z:4.9},{x:x+d*2.1,z:4.9},{x:x+d*2.1,z:6.1},{x:x,z:6.1},{x:x,z:7.3},{x:x+d*2.1,z:7.3},{x:x+d*2.1,z:ordered?8.1:state.kiosk?9.05:10}];
     if(!ordered)route=route.concat(state.kiosk?[{x:-7.4,z:9.05},{x:-8.7,z:9.05},{x:-10.5,z:9.05},{x:-11.4,z:8.7},{x:-12.05,z:7.8}]:[{x:-7.4,z:10},{x:-8.7,z:10},{x:-10.5,z:10},{x:-11.7,z:9.3},{x:-12.4,z:7.8}]);return route;
   }
@@ -1099,7 +1156,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     return route[route.length-1];
   }
   function customerQueue(c){
-    var queue=customers.filter(function(q){return q.idChecked!==false&&q.phase!=='leaving'&&q.ordered===c.ordered&&(c.ordered||!!q.kiosk===!!c.kiosk)});
+    var queue=customers.filter(function(q){return q.idChecked!==false&&q.phase!=='leaving'&&q.ordered===c.ordered&&(c.ordered||!!q.kiosk===!!c.kiosk)&&(q.ordered||q.kiosk||q.orderCounter==null)});
     if(c.ordered)queue.sort(function(a,b){return (a.pickupTicket||a.id)-(b.pickupTicket||b.id)});
     return queue;
   }
@@ -1151,6 +1208,11 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   }
   function moveQueuedCustomer(c,dt){
     if(c.idChecked===false){moveToIdCheck(c,dt);return}
+    if(!c.ordered&&c.orderCounter!=null){
+      var startX=c.x,startZ=c.z,budget=dt*economy.walkSpeed(state.trafficLevel);
+      while(c.waypoints.length&&budget>0){var point=c.waypoints[0],dx=point.x-c.x,dz=point.z-c.z,distance=Math.hypot(dx,dz),step=Math.min(distance,budget);if(distance>.0001){c.x+=dx/distance*step;c.z+=dz/distance*step}budget-=step;if(distance<=step+.0001)c.waypoints.shift();else break}
+      c.phase='ordering';c.walking=Math.hypot(c.x-startX,c.z-startZ)>.001;return;
+    }
     var kind=c.phase==='leaving'?'exit':c.ordered?'pickup':c.kiosk?'kiosk':'order',route=kind==='kiosk'?kioskRoute(c.kioskIndex):queueRoute(c.ordered),budget=dt*economy.walkSpeed(state.trafficLevel),startX=c.x,startZ=c.z;
     if(c.routeKind!==kind){
       c.routeKind=kind;c.laneDistance=null;
@@ -1207,7 +1269,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     if(c.eventGuest||c.kind==='vip'){var guest=project(c.x,.02,c.z);ellipse(guest.x,guest.y,unit*.48,unit*.22,'#dac18b80');}
     if(c.kind==='vip'){var vip=project(c.x,2.6,c.z);ctx.fillStyle='#f0cf7f';ctx.font='bold '+Math.max(9,unit*.25)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText('VIP',vip.x,vip.y)}
     drawPerson(c.x,c.z,now,c.id,moving,false,c.bag,{phase:c.walkPhase||0,amount:c.walkAmount||0,facing:c.facing===undefined?.3:c.facing,lean:c.turnLean||0,pickupAge:c.effectAge});
-    if((c.phase==='ordering'&&Math.hypot(c.x+4,c.z-4.9)<.2)||c.phase==='pickup'||c.phase==='toPickup'){var p=project(c.x,2.05,c.z);ellipse(p.x,p.y,unit*.2,unit*.18,c.ordered?'#c4e8a7':'#f0dfb0');ctx.fillStyle='#24412f';ctx.font='bold '+Math.max(8,unit*.22)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText(c.ordered?'✓':'…',p.x,p.y+unit*.075);var serviceIndex=c.ordered?5:4;if(!moving&&c.serviceStation===serviceIndex&&c.serviceElapsed>0){var serviceProgress=motionPreference.matches?Math.min(1,c.serviceElapsed*economy.counterLanes(state.lines[serviceIndex])/counterServiceDuration(serviceIndex)):(c.serviceVisual||0);ctx.beginPath();ctx.arc(p.x,p.y,Math.max(5,unit*.26),-Math.PI/2,-Math.PI/2+Math.PI*2*serviceProgress);ctx.strokeStyle=c.ordered?'#d5f3ad':'#f3d294';ctx.lineWidth=Math.max(1.5,unit*.06);ctx.lineCap='round';ctx.stroke();}}
+    if(atOrderCounter(c,state.orderCounters)||c.phase==='pickup'||c.phase==='toPickup'){var p=project(c.x,2.05,c.z);ellipse(p.x,p.y,unit*.2,unit*.18,c.ordered?'#c4e8a7':'#f0dfb0');ctx.fillStyle='#24412f';ctx.font='bold '+Math.max(8,unit*.22)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText(c.ordered?'✓':'…',p.x,p.y+unit*.075);var serviceIndex=c.ordered?5:4;if(!moving&&c.serviceStation===serviceIndex&&c.serviceElapsed>0){var serviceProgress=motionPreference.matches?Math.min(1,c.serviceElapsed*economy.counterLanes(state.lines[serviceIndex])/counterServiceDuration(serviceIndex)):(c.serviceVisual||0);ctx.beginPath();ctx.arc(p.x,p.y,Math.max(5,unit*.26),-Math.PI/2,-Math.PI/2+Math.PI*2*serviceProgress);ctx.strokeStyle=c.ordered?'#d5f3ad':'#f3d294';ctx.lineWidth=Math.max(1.5,unit*.06);ctx.lineCap='round';ctx.stroke();}}
     if(c.thought)drawThought(c);
   }
   function drawThought(c){
@@ -1369,8 +1431,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     ctx.save();ctx.translate(p.x,p.y);ctx.transform(1,(axis.y-p.y)/(axis.x-p.x),0,1,0,0);
     ctx.shadowColor='#ffe8b6';ctx.shadowBlur=unit*.12;ctx.fillStyle=color||'#fff5d9';ctx.font='600 '+Math.max(7,unit*size)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,0,0,widthUnits*unit);ctx.restore();
   }
-  function archedServiceSign(x,label){
-    var z=3.75,half=1.95,spring=2.7,rise=1.25;
+  function archedServiceSign(x,label,compact){
+    var z=3.75,half=compact?1.16:1.95,spring=compact?2.45:2.7,rise=compact?.72:1.25;
     var oak=['#c7ad7e','#7d694b','#a38c64'];
     [-1,1].forEach(function(side){
       drawBox(x+side*half,z,.015,.42,.5,.15,oak);
@@ -1382,7 +1444,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       arch.push([x+Math.cos(t)*half,spring+Math.sin(t)*rise,z]);
     }
     worldLine(arch,'#6a654e',.2);worldLine(arch,'#bda979',.12);warmStrip(arch.map(function(p){return [p[0],p[1]-.07,p[2]+.07]}),false);
-    var y=3.35,w=2.55,h=.55;
+    var y=compact?2.72:3.35,w=compact?1.76:2.55,h=compact?.43:.55;
     var halo=project(x,y+h*.5,z);glow(halo.x,halo.y,unit*1.65,'#ffdb9460');
     drawBox(x,z,y,w,.16,h,['#aa9568','#203f31','#2d503c']);
     warmStrip([[x-w/2+.03,y+h-.025,z+.095],[x+w/2-.03,y+h-.025,z+.095]],false);
@@ -1864,7 +1926,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       // Staff positions: most stand behind their bench; the grow-room pair stand where the gantry and rack do not hide them.
       var staffSpots={0:{dx:-2.45,dz:.45,front:true,facing:1},1:{dx:-2.45,dz:.45,front:true,facing:1}};
       if(fi===2)drawGrowGantry('posts');
-      floor.ids.forEach(function(i){if(i===5)drawCounterDivider();var p=machinePos[i],spot=staffSpots[i]||{dx:-.95,dz:-1.65,front:false},gait=spot.facing?{amount:0,phase:0,facing:spot.facing}:undefined;if(!spot.front)drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait);drawStage(p,i,now);if(spot.front)drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait);if(selected===i)selectionRing(p)});
+      floor.ids.forEach(function(i){if(i===4){drawOrderCounterBank(now);if(selected===4)selectionRing(machinePos[4]);return}if(i===5)drawCounterDivider();var p=machinePos[i],spot=staffSpots[i]||{dx:-.95,dz:-1.65,front:false},gait=spot.facing?{amount:0,phase:0,facing:spot.facing}:undefined;if(!spot.front)drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait);drawStage(p,i,now);if(spot.front)drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait);if(selected===i)selectionRing(p)});
       if(fi===2)drawGrowGantry();
       // Thin mezzanine guard rails stop short of the workstation fronts.
       if(fi>0){
@@ -1915,10 +1977,10 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     // Slim structural posts support the open mezzanines.
     [[-8.8,-5.7,9.1],[8.8,-5.7,4.5],[6.3,-6.7,9.2]].forEach(function(p){drawBox(p[0],p[1],0,.16,.16,p[2],metal)});
     // Enclosed gravity transfers bridge each floor without crossing the stairs.
-    archedServiceSign(-4,'ORDER');archedServiceSign(4,'PICKUP');
+    orderCounterPositions(state.orderCounters).forEach(function(p,index){archedServiceSign(p.x,state.orderCounters>1?'ORDER '+(index+1):'ORDER',state.orderCounters>1)});archedServiceSign(4,'PICKUP');
     // Street-level queue markings and low entry planters retain the service route.
     var waiting=customers.filter(function(c){return !c.ordered&&c.phase!=='leaving'}).length;
-    for(var place=0;place<Math.min(12,queueLimit());place++){var row=Math.floor(place/4),slot=place%4;groundPatch(-4-(row%2?3-slot:slot)*.7,4.9+row*1.2,.3,.06,place<waiting?'#dfcb99':'#7d8f78')}
+    for(var place=0;place<Math.min(12,queueLimit());place++){var row=Math.floor(place/4),slot=place%4;groundPatch(-4-(row%2?3-slot:slot)*.7,6.1+row*1.2,.3,.06,place<waiting?'#dfcb99':'#7d8f78')}
 
   }
   function addIllustratedDetails(jobs){
@@ -2449,14 +2511,14 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     if(securitySelected){renderSecuritySelection()}else{
     $('machineNumber').textContent=!open?'BUILD PREVIOUS STAGE':level?'STAGE 0'+(selected+1)+' · '+stationStatus(selected):'STAGE 0'+(selected+1)+' · NOT BUILT';
     $('machineName').textContent=line.name;$('machineLevel').textContent=level;$('machineRate').textContent=selected<4?batchSize(selected).toFixed(1)+' avg / batch · '+([2,3,2,2][selected]/cycleSpeed(selected)).toFixed(1)+'s':capacity(selected).toFixed(1)+'× service';
-    var tier=stationTier(selected),next=nextCapacity(selected),gain=Math.round((next/capacity(selected)-1)*100);
+    var tier=stationTier(selected),next=nextCapacity(selected);
     // Stat strip: a colour-coded status chip, then icon tiles instead of a sentence.
     var statusText=stationStatus(selected),statusTone=/full/i.test(statusText)?'stop':/waiting/i.test(statusText)?'wait':'go',statusWord=/full/i.test(statusText)?'Full':/waiting/i.test(statusText)?'Waiting':selected<4?'Producing':'Serving';
     var tierFrom=TIER_LEVELS[tier],tierTo=tier<6?TIER_LEVELS[tier+1]:null,tierPct=tierTo?Math.round((level-tierFrom)/(tierTo-tierFrom)*100):100;
     var ICON_BATCH='<svg viewBox="0 0 24 24"><path d="M4 8h16v11H4zM4 8l3-4h10l3 4M12 4v4"/></svg>',ICON_CLOCK='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg>',ICON_TIER='<svg viewBox="0 0 24 24"><path d="M12 3l2.4 5.2 5.6.7-4.1 3.9 1.1 5.7L12 15.8 7 18.5l1.1-5.7L4 8.9l5.6-.7z"/></svg>',ICON_LANES='<svg viewBox="0 0 24 24"><path d="M5 5v14M12 5v14M19 5v14"/></svg>';
     var tiles=selected<4?
       '<span class="stat" title="Units finished each time the station completes a batch">'+ICON_BATCH+'<b>'+(selected===3?qtyShort(Math.round(batchSize(selected))):compactCount(batchSize(selected)))+'</b><small>per batch</small></span><span class="stat" title="Time to complete one batch">'+ICON_CLOCK+'<b>every '+secondsLabel([2,3,2,2][selected]/cycleSpeed(selected))+'</b></span>':
-      '<span class="stat" title="Time to serve one customer">'+ICON_CLOCK+'<b>'+secondsLabel(counterServiceDuration(selected)/Math.max(1,state.gameSpeed))+'</b><small>per customer</small></span><span class="stat" title="Customers served at once">'+ICON_LANES+'<b>'+economy.counterLanes(level)+'</b><small>'+(economy.counterLanes(level)===1?'lane':'lanes')+'</small></span>';
+      '<span class="stat" title="Time to serve one customer">'+ICON_CLOCK+'<b>'+secondsLabel(counterServiceDuration(selected)/economy.counterLanes(level)/Math.max(1,state.gameSpeed))+'</b><small>per customer</small></span><span class="stat" title="Individually staffed counters">'+ICON_LANES+'<b>'+(selected===4?state.orderCounters:1)+'</b><small>'+((selected===4?state.orderCounters:1)===1?'counter':'counters')+'</small></span>';
     var tierTile=tierTo?'<span class="stat tier" title="Output doubles at level '+tierTo+'">'+ICON_TIER+'<b>×2</b><small>at Lv '+tierTo+'</small><i class="tier-bar"><i style="width:'+tierPct+'%"></i></i></span>':'<span class="stat tier">'+ICON_TIER+'<b>Flagship</b><small>top tier</small></span>';
     var statusHtml='<span class="status-chip" data-tone="'+statusTone+'" title="'+statusText.replace(/"/g,'')+'"><i></i>'+statusWord+'</span>'+tiles+tierTile;
     if($('stationStatus').dataset.html!==statusHtml){$('stationStatus').innerHTML=statusHtml;$('stationStatus').dataset.html=statusHtml}
@@ -2466,8 +2528,11 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     $('upgradeProgress').value=Math.min(100,state.money/price*100);
     $('upgradeProgress').setAttribute('aria-valuetext',affordable?'Upgrade ready':fmt(Math.max(0,price-state.money))+' needed for level '+(level+1));
     var lanesNow=economy.counterLanes(level),lanesNext=economy.counterLanes(level+1);
-    $('upgradeBenefit').textContent=selected<4?'+'+gain+'% batch size':lanesNext>lanesNow?lanesNow+' → '+lanesNext+' service lanes':secondsLabel(counterServiceDuration(selected)/Math.max(1,state.gameSpeed))+' → '+secondsLabel(counterServiceDuration(selected,next)/Math.max(1,state.gameSpeed))+' handoff · next lane at Lv '+(level+5-((level-1)%5));
-    var preview=$('upgradePreview'),source=machineTabs[selected].querySelector('canvas');if(preview&&typeof preview.getContext==='function'&&source){var pc=preview.getContext('2d');if(pc){pc.clearRect(0,0,80,100);pc.drawImage(source,0,0)}}
+    if(selected<4){
+      var batchBoost=selected<3?1+state[['seedBatchLevel','growBatchLevel','harvestBatchLevel'][selected]]*.06:1;
+      renderUpgradeComparison('Units per batch',level?batchSize(selected):0,economy.batchSize(level+1)*batchBoost,false,!level,false);
+    }else renderUpgradeComparison('Seconds per handoff',counterServiceDuration(selected)/lanesNow/Math.max(1,state.gameSpeed),counterServiceDuration(selected,next)/lanesNext/Math.max(1,state.gameSpeed),true,!level,false);
+    paintUpgradePreview(selected);
     $('nextAppearance').textContent=(tier?'Tier bonus ×'+economy.tierBoost(level)+' · ':'')+(tier<6?'Output ×2 and new look at level '+TIER_LEVELS[tier+1]+' · '+STATION_TIERS[tier+1]+(selected>=4?' · both counters at a tier double baskets':''):'Flagship equipment · upgrades keep increasing output');
     $('machineCost').textContent=fmt(price);$('buyMachine').disabled=!affordable;$('buyMachine').querySelector('span').textContent=!open?'LOCKED':level?'UPGRADE':'BUILD';
     var maxUpgrade=maxStationUpgrade(selected);
@@ -2478,8 +2543,9 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     $('buyMachine').style.setProperty('--funded',Math.min(100,state.money/price*100)+'%');
     $('upgradeHint').textContent=!open?'Build '+LINES[selected-1].name.toLowerCase()+' first.':!affordable?fmt(price-state.money)+' to go · customer sales earn cash automatically.':level?selected<4?'Larger batches per cycle. Train employees to shorten each cycle.':'Upgrade for faster '+['','','','','order preparation','customer service'][selected]+'.':'Build this stage to extend your line.';
     $('upgradeHint').classList.toggle('ready',affordable);
-    if(selected===4&&level)$('upgradeHint').textContent+=' Baskets: '+qtyLabel(basketSize())+' per customer (+1 every 2 desk levels). Queue: '+queueLimit()+' customers · every 2 desk or employee upgrades adds a place (max 12).';
+    if(selected===4&&level)$('upgradeHint').textContent+=' Training applies to all '+state.orderCounters+' counters. Baskets: '+qtyLabel(basketSize())+' per customer (+1 every 2 desk levels). Queue: '+queueLimit()+' customers · every 2 desk or employee upgrades adds a place (max 12).';
     }
+    renderOrderCounters();
     securityMarker.classList.add('station-sign');securityMarker.classList.toggle('selected',securitySelected);securityMarker.classList.toggle('can-upgrade',state.idStaff<10000&&state.money>=Math.floor(20*Math.pow(1.6,state.idStaff)));if(securityMarker.dataset.level!==String(state.idStaff)){securityMarker.innerHTML='<span class=station-sign-name>Security</span><span class=station-sign-level>Lv '+state.idStaff+'</span>';securityMarker.dataset.level=String(state.idStaff);updateMarkers.key=null;}securityMarker.style.setProperty('--station-tier',TIER_COLORS[state.idStaff>=25?3:state.idStaff>=10?2:1]);securityMarker.setAttribute('aria-label','Security, level '+state.idStaff+'. Open security station');securityMarker.setAttribute('aria-pressed',String(securitySelected));
     var idPrice=Math.floor(20*Math.pow(1.6,state.idStaff)),idMax=idTrainingQuote(10000);
     $('idEmployeeInfo').innerHTML='<span>Lv '+state.idStaff+'</span><span>'+(securityDuration()).toFixed(2)+'s / check</span>';
@@ -2536,19 +2602,52 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     if(!h.queue&&waiting>=queueLimit()&&state.lines[4]>0){h.queue=true;notify('LINE IS FULL · upgrade the order desk for more places');save()}
   }
   function renderSecuritySelection(){
-    var lvl=state.idStaff,price=Math.floor(20*Math.pow(1.6,lvl)),maxed=lvl>=10000,affordable=!maxed&&state.money>=price,quote=idTrainingQuote(10000),gain=Math.round(.3/(1+lvl*.3)*100);
+    var lvl=state.idStaff,price=Math.floor(20*Math.pow(1.6,lvl)),maxed=lvl>=10000,affordable=!maxed&&state.money>=price,quote=idTrainingQuote(10000);
     $('machineNumber').textContent='DOOR · '+(lvl?'CHECKING IDS':'NO GUARD YET');$('machineName').textContent='SECURITY';$('machineLevel').textContent=lvl;$('machineRate').textContent=securityDuration().toFixed(2)+'s / check';
     $('stationStatus').dataset.html='';$('stationStatus').textContent='Checks IDs at the door before customers join the line. Faster checks keep the queue moving'+(state.scannerLevel?' · scanner +'+Math.round(state.scannerLevel*12)+'%':'')+'.';
-    $('upgradeLevel').textContent=maxed?'Lv '+lvl:'Lv '+lvl+' → '+(lvl+1);$('upgradeBenefit').textContent=maxed?'Fully trained':'+'+gain+'% check speed';
+    $('upgradeLevel').textContent=maxed?'Lv '+lvl:'Lv '+lvl+' → '+(lvl+1);
+    renderUpgradeComparison('Seconds per ID check',securityDuration(),.9/((1+(lvl+1)*.3)*(1+state.scannerLevel*.12)),true,false,maxed);
     $('stationTier').textContent=lvl>=25?'Head of security':lvl>=10?'Seasoned doorman':lvl?'Door staff':'Unstaffed door';$('stationTier').style.color=lvl>=25?TIER_COLORS[3]:lvl>=10?TIER_COLORS[2]:TIER_COLORS[1];
     $('upgradeFunding').textContent=maxed?'Fully trained':affordable?'Ready to train':fmt(Math.max(0,price-state.money))+' to go';
     $('upgradeProgress').value=maxed?100:Math.min(100,state.money/price*100);$('upgradeProgress').setAttribute('aria-valuetext',affordable?'Training ready':fmt(Math.max(0,price-state.money))+' needed for level '+(lvl+1));
-    var preview=$('upgradePreview'),source=document.querySelector('[data-security] canvas');if(preview&&typeof preview.getContext==='function'&&source){var pc=preview.getContext('2d');if(pc){pc.clearRect(0,0,80,100);pc.drawImage(source,0,0)}}
+    paintUpgradePreview(-1);
     $('nextAppearance').textContent='Scanner upgrades in the Shop speed up every check.';
     $('machineCost').textContent=maxed?'—':fmt(price);$('buyMachine').disabled=!affordable;$('buyMachine').querySelector('span').textContent=lvl?'TRAIN':'HIRE';
     $('buyMachineMax').disabled=!quote.levels;$('machineMaxLabel').textContent='MAX'+(quote.levels?' +'+quote.levels+' LV':'');$('machineMaxCost').textContent=quote.levels?fmt(quote.cost):'—';$('buyMachineMax').setAttribute('aria-label','Train security by '+quote.levels+' levels for '+fmt(quote.cost));
     $('buyMachine').style.setProperty('--funded',Math.min(100,state.money/price*100)+'%');
     $('upgradeHint').textContent=maxed?'Nobody gets past this door.':!affordable?fmt(price-state.money)+' to go · customer sales earn cash automatically.':lvl?'Shorter ID checks let more customers join the line.':'Hire a doorman so ID checks stop holding up the line.';$('upgradeHint').classList.toggle('ready',affordable);
+  }
+  // Keep exact improvements visible even when the usual compact time label rounds them away.
+  function renderUpgradeComparison(label,before,after,isTime,unbuilt,maxed){
+    var digits=isTime?2:1;
+    if(!unbuilt&&!maxed)while(digits<5&&before.toFixed(digits)===after.toFixed(digits))digits++;
+    var formatValue=function(value){return value.toLocaleString('en-US',{minimumFractionDigits:isTime?digits:0,maximumFractionDigits:digits})};
+    var gain=isTime?(1-after/before)*100:(after/before-1)*100;
+    var gainText=maxed?'Fully trained':unbuilt?'Ready to build':(isTime?'':'+')+(gain<.1?'<0.1':gain<10?gain.toFixed(1):Math.round(gain))+'% '+(isTime?'less time':'more output');
+    $('upgradeMetricLabel').textContent=label;
+    $('upgradeBefore').textContent=unbuilt?'—':formatValue(before);
+    $('upgradeAfter').textContent=maxed?formatValue(before):formatValue(after);
+    $('upgradeGain').textContent=gainText;
+    $('upgradeBenefit').setAttribute('aria-label',label+': '+(unbuilt?'not built':formatValue(before))+(maxed?'':', next level '+formatValue(after))+'. '+gainText);
+    $('upgradeBenefit').classList.toggle('is-maxed',maxed);
+  }
+  function paintUpgradePreview(index){
+    var preview=$('upgradePreview');if(!preview)return;
+    var key=[index,index<0?state.idStaff:stationTier(index),state.menuStrains.join(','),state.productMenu.active].join('|');
+    if(preview.dataset.art===key)return;
+    // Render at native resolution, then frame the opaque equipment rather than its overhead light pool.
+    var art=document.createElement('canvas');art.width=480;art.height=600;
+    var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;
+    try{
+      ctx=art.getContext('2d');unit=90;centerX=240;centerY=480;angle=.57;
+      if(index<0){drawBox(0,0,-.24,2.6,2.6,.24,['#cbb085','#7f6a4b','#ac9168']);drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5']);drawPerson(-.55,-.45,0,7,false,true,false)}
+      else drawStage({x:0,z:0},index,0,true);
+      var pixels=ctx.getImageData(0,0,art.width,art.height).data,left=480,right=0,top=600,bottom=0;
+      for(var y=0;y<600;y++)for(var x=0;x<480;x++)if(pixels[(y*480+x)*4+3]>180){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y)}
+      var pc=preview.getContext('2d');pc.clearRect(0,0,preview.width,preview.height);
+      if(right>=left&&bottom>=top){var w=right-left+1,h=bottom-top+1,scale=Math.min((preview.width-24)/w,(preview.height-24)/h);pc.drawImage(art,left,top,w,h,(preview.width-w*scale)/2,(preview.height-h*scale)/2,w*scale,h*scale)}
+      preview.dataset.art=key;
+    }finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
   }
   function paintSecurityThumbnail(){var card=document.querySelector('[data-security] canvas');if(!card)return;var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;ctx=card.getContext('2d');if(ctx){ctx.clearRect(0,0,80,100);unit=25;centerX=40;centerY=97;angle=.57;drawBox(0,0,-.24,2.6,2.6,.24,['#cbb085','#7f6a4b','#ac9168']);drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5']);drawPerson(-.55,-.45,0,7,false,true,false)}ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
   function paintThumbnails(){paintSecurityThumbnail();var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;machineTabs.forEach(function(tab,i){ctx=tab.querySelector('canvas').getContext('2d');if(!ctx)return;ctx.clearRect(0,0,80,100);unit=25;centerX=40;centerY=97;angle=.57;drawStage({x:0,z:0},i,0)});ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
@@ -2630,6 +2729,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     var pane=document.querySelector('[data-pane="boosts"]'),anchor=pane.querySelector('.shop-milestone')||null;
     COMPONENTS.forEach(function(c,i){if(document.getElementById('componentBuy'+i))return;var card=document.createElement('div');card.className='shop-upgrade shop-feature';card.innerHTML='<div class="shop-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+icons[c.key]+'</svg></div><div class="shop-copy"><h2>'+c.name+'</h2><strong id="componentBenefit'+i+'"></strong><small>'+blurbs[c.key]+'</small><small id="componentLevel'+i+'"></small></div><button id="componentBuy'+i+'"><span>Upgrade</span><b id="componentPrice'+i+'"></b></button>';pane.insertBefore(card,anchor)});
   })();
+  $('expandOrderCounter').onclick=expandOrderCounters;$('buyOrderCounter').onclick=expandOrderCounters;
   var shopBrowser=mountShopBrowser({getState:function(){return state},components:COMPONENTS,kiosks:kioskCount,queueLimit:queueLimit,recommend:function(open){var r=recommendation();if(open){actOnRecommendation();return ''}return r.name+' · '+(r.kind==='component'?'in Customers · ':'upgrade ')+fmt(r.price)}});
   var operationsUI=mountOperations({getState:function(){return state},format:fmt,changed:function(message){save();renderUI();if(message)notify(message,'upgrade')},visit:function(i,manage){visitStore(i+1,!manage);if(manage)manageViewedStore()},mainFlow:function(open){
     var station=slowestStation(),reason='Capacity';
@@ -2800,7 +2900,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     var r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
     if(zoom<1.7)zoomAt(2.2,x,y);else{zoom=1;panX=0;panY=0;applyCamera()}
   });
-  canvas.addEventListener('pointerup',function(e){mapHintActivity();if(!gestureMoved&&Object.keys(touches).length===1&&state.empire.activeStore){var br=canvas.getBoundingClientRect(),f=BRANCH_THEMES[state.empire.activeStore-1].focus,q=project(f.x,f.y,f.z);if(Math.hypot(e.clientX-br.left-q.x,e.clientY-br.top-q.y)<Math.max(45,unit*3))manageViewedStore()}else if(!gestureMoved&&Object.keys(touches).length===1){var rect=canvas.getBoundingClientRect(),best=-1,distance=60;machinePos.forEach(function(pos,i){var p=project(pos.x,1.4+(pos.y||0),pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=i;distance=d}});var online=project(-10.7,8.45,1.5),od=Math.hypot(e.clientX-rect.left-online.x,e.clientY-rect.top-online.y);if(od<distance){showTray('orders');renderUI()}else if(best>=0)selectMachine(best)}delete touches[e.pointerId];if(Object.keys(touches).length)gestureMoved=true;else gestureOrigin=null});
+  canvas.addEventListener('pointerup',function(e){mapHintActivity();if(!gestureMoved&&Object.keys(touches).length===1&&state.empire.activeStore){var br=canvas.getBoundingClientRect(),f=BRANCH_THEMES[state.empire.activeStore-1].focus,q=project(f.x,f.y,f.z);if(Math.hypot(e.clientX-br.left-q.x,e.clientY-br.top-q.y)<Math.max(45,unit*3))manageViewedStore()}else if(!gestureMoved&&Object.keys(touches).length===1){var rect=canvas.getBoundingClientRect(),best=-1,distance=60;machinePos.forEach(function(pos,i){var p=project(pos.x,1.4+(pos.y||0),pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=i;distance=d}});orderCounterPositions(state.orderCounters).forEach(function(pos){var p=project(pos.x,1.4,pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=4;distance=d}});var online=project(-10.7,8.45,1.5),od=Math.hypot(e.clientX-rect.left-online.x,e.clientY-rect.top-online.y);if(od<distance){showTray('orders');renderUI()}else if(best>=0)selectMachine(best)}delete touches[e.pointerId];if(Object.keys(touches).length)gestureMoved=true;else gestureOrigin=null});
   function cancelPointer(e){mapHintActivity();delete touches[e.pointerId];gestureMoved=true}
   canvas.addEventListener('pointercancel',cancelPointer);canvas.addEventListener('lostpointercapture',cancelPointer);
   canvas.addEventListener('wheel',function(e){mapHintActivity();e.preventDefault();var r=canvas.getBoundingClientRect();zoomAt(zoom*Math.exp(-e.deltaY*.0015),e.clientX-r.left,e.clientY-r.top)},{passive:false});
@@ -2860,5 +2960,5 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   selected=slowestStation();fitControls();renderUI();ctx.fillStyle=colors.bg;ctx.fillRect(0,0,width,height);window.__shiftReady=true;finishLoading();if(firstRun&&!startGuide.seen())setTimeout(function(){startGuide.open()},600);requestAnimationFrame(render);setInterval(tick,50);setInterval(function(){renderUI(true)},250);setInterval(function(){if(!document.hidden)save()},5000);window.addEventListener('beforeunload',function(){if(!document.hidden)save()});window.addEventListener('pagehide',function(){if(!document.hidden)save()});
   document.addEventListener('visibilitychange',function(){tickTime=performance.now();tickRemainder=0;if(document.hidden){save()}else{collectOffline();if(state.empire.returnReport){renderUI()}renderUI()}});
 
-  if(document.modelContext&&document.modelContext.registerTool){document.modelContext.registerTool({name:'read_factory_status',title:'Read factory status',description:'Read cash, production, and machine levels.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:function(){return{autoDrone:state.autoDrone,deliveryDrones:deliveryDrones.length,productMenu:state.productMenu,prestige:state.empire.prestige,contract:state.contract,viewedStore:state.empire.activeStore,branchLevels:state.empire.stores.map(function(s){return s.level}),branchProjects:state.empire.stores.map(function(s){return s.projects}),network:state.empire.network,reputation:state.empire.reputation,management:state.empire.stores,goalsCompleted:state.empire.goalsCompleted,branchIncome:branchRate(state.empire)*state.gameSpeed,cash:Math.floor(state.money),lifetime:Math.floor(state.lifetime),perSecond:production()*state.gameSpeed,gameSpeed:state.gameSpeed,paused:state.gameSpeed===0,lineLevels:state.lines,stock:state.stock,customersServed:state.sold,employeeLevels:state.staff,onlineCompleted:state.onlineCompleted,camera:{zoom:zoom,panX:panX,panY:panY,angle:angle},customers:customers.map(function(c){return{kind:c.kind,id:c.id,phase:c.phase,ordered:c.ordered,bag:c.bag}})}}});}
+  if(document.modelContext&&document.modelContext.registerTool){document.modelContext.registerTool({name:'read_factory_status',title:'Read factory status',description:'Read cash, production, and machine levels.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:function(){return{orderCounters:state.orderCounters,reservedWalkInBags:customers.filter(function(c){return c.ordered&&!c.bag}).reduce(function(n,c){return n+(c.bags||1)},0),orderCounterPositions:orderCounterPositions(state.orderCounters),autoDrone:state.autoDrone,deliveryDrones:deliveryDrones.length,productMenu:state.productMenu,prestige:state.empire.prestige,contract:state.contract,viewedStore:state.empire.activeStore,branchLevels:state.empire.stores.map(function(s){return s.level}),branchProjects:state.empire.stores.map(function(s){return s.projects}),network:state.empire.network,reputation:state.empire.reputation,management:state.empire.stores,goalsCompleted:state.empire.goalsCompleted,branchIncome:branchRate(state.empire)*state.gameSpeed,cash:Math.floor(state.money),lifetime:Math.floor(state.lifetime),perSecond:production()*state.gameSpeed,gameSpeed:state.gameSpeed,paused:state.gameSpeed===0,lineLevels:state.lines,stock:state.stock,customersServed:state.sold,employeeLevels:state.staff,onlineCompleted:state.onlineCompleted,camera:{zoom:zoom,panX:panX,panY:panY,angle:angle},customers:customers.map(function(c){return{kind:c.kind,id:c.id,phase:c.phase,ordered:c.ordered,bag:c.bag,bags:c.bags||0,orderCounter:c.orderCounter,x:c.x,z:c.z,serviceElapsed:c.serviceElapsed||0}})}}});}
 })();

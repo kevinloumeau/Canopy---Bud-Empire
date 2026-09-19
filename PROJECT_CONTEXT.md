@@ -193,3 +193,37 @@ Two independent reviewers examined the current game. The resulting improvements 
 - Shared dialog focus handling contains keyboard focus, restores the opener and marks the background inert. Space retains native button activation. Shop and drone DOM updates use the existing 250ms UI cadence instead of every Canvas frame; map geometry is cached, hidden-page interface refreshes are skipped, and paused rendering is throttled while interactions invalidate immediately.
 
 Validation: all 59 unit tests and the Safari-targeted classic production build pass. Dedicated production-preview fixtures exercised starter and established progress at 1440×1000 and 390×844, with additional 320×740 layout checks. Tests covered story actions, delivery prerequisites and reserved stock, upgrades, staff, branches, panels, pause, lighting, fixed-orientation pan/zoom and exact paused reload persistence for money, levels, staff, story, selected store and drone settings. Live customers were observed ordering before receiving bags; native Space, modal Tab/Shift+Tab and Escape were checked. Actual iPhone/Safari hardware was not tested. Not published.
+
+## Staffed order-counter expansion (September 19, 2026)
+
+Orders now has a separate two-step expansion: $2,500 opens a second staffed counter, and $12,500 opens a third. Purchase from the Orders station or Shop > Service > Order counters. Each purchase includes the employee; existing Orders training improves the whole team. The scene changes into separate tiled counters, each with its own employee, till, payment pad, illuminated arch and customer position. All counter surfaces open Orders upgrades when tapped.
+
+One FIFO waiting line assigns customers to free counters; each counter runs its own service timer before the customer joins the existing pickup queue. Existing station-level service efficiency is retained, now described as efficiency instead of physical lanes. Staffed counters and self-order kiosks share a bag reservation budget that counts complete baskets, preventing parallel orders from reserving the same stock. Bag preparation, pickup limits and security still constrain throughput.
+
+The new `orderCounters` field migrates to 1 for older saves and clamps to 1–3. It persists with the existing save; reset/prestige uses the fresh default of 1. Expansion preserves station levels and employee training. New pure helpers and regression tests live in `src/order-counters.js`, `tests/order-counters.test.js` and `tests/order-counters-check.js`.
+
+Validation: 64 unit tests and the classic production build pass. Desktop (1440×1000) and phone (390×844) production-browser checks verified both prices, the three-counter cap, shared training, station upgrades, panel navigation, zoom/recenter and visible expansion controls. A paused reload preserved cash, station levels, staff and all three counters exactly. Live gameplay observed three simultaneous customers at distinct order counters, order-before-pickup and reservations within available stock. Day/night desktop and phone layouts were visually inspected. No publication.
+
+## Menu layout repair (September 19, 2026)
+
+The narrow Menu panel no longer truncates signature perks or hides traits in a horizontal strip. Strain details use a full-width row below the jar and statistics; descriptions, format benefits and help remain accessible. Format names and prices occupy separate grid rows, with a stacked icon layout and full-width statistics at the smallest phone widths. Only Menu markup and styles changed; the shared tray dimensions, game rules and saves are preserved.
+
+Validation: the classic production build, layout scan and diff checks pass. An isolated preview exercised upgrade/unlock, format switching and reload persistence, with text bounds checked at 1055×998, 1440×1000, 390×844 and 320×640. Visual checks covered the supplied panel scale, long strain details, wrapped names and narrow format buttons. Short panels scroll vertically. No publication.
+
+## Kiosk software prerequisite (September 19, 2026)
+
+Kiosk software requires an installed self-order kiosk. Both the purchase handler and disabled control enforce the prerequisite, with “Install a kiosk first” on the locked card. Installation unlocks software immediately; existing software levels in older saves are retained. Hardware and software occupy the first two Service cards and stay side by side even when hardware is maxed. Other completed upgrades still sort to the end.
+
+Validation: 64 unit tests and the classic production build pass. `tests/kiosk-software-check.js` passed against isolated production previews at 1055×998 and 390×844, covering a direct purchase-handler bypass attempt, installation, software pricing, three-kiosk adjacency and cash preservation. Reload retained purchased kiosks and software. No publication.
+
+## Visual counter controls (September 19, 2026)
+
+Per the user's correction, counter expansion now sits below the Orders equipment controls, statistics and funding bar. Three counter-and-staff icons replace the explanatory paragraph, showing open, next and future slots. Visible copy is limited to the counter count, next price and “Staff included.” At the three-counter cap the station expansion button is hidden and the row shows “All staffed.” This supersedes the earlier requirement to put expansion first on phones; primary equipment upgrades now appear before it and the counter row scrolls into view.
+
+Validation: 64 unit tests and the classic build pass. Desktop and phone previews exercised expansion, visual slot changes, both purchase paths, the cap, training and station upgrades; the updated browser regression returned success at 1055×998. Phone checks at 390×844 confirmed the main upgrade appears first and the completed counter row is fully reachable without horizontal overflow. Reload preserved cash, counters, equipment and training exactly. No publication.
+
+## Visual station upgrade layout (September 19, 2026)
+
+The selected station now puts a larger, crisply rendered equipment illustration beside a compact current/next comparison, with Upgrade and Max beneath. Production shows units per batch; service shows handoff time; Security shows ID-check time. Adaptive decimal precision makes small service gains visible instead of repeating the same rounded value. Preview framing excludes overhead light fixtures and caches artwork until its visual state changes. The live shop renderer, economy, save format and counter-expansion placement remain intact.
+
+Validation: classic production build and 64 unit tests passed. Isolated production checks covered all seven station selections and individual purchases at 390×844, all seven layout variants at 1055×998 and 320×640, desktop Max, disabled purchase states, tier artwork and exact cash/level/counter persistence after reload. Desktop and phone screenshots were inspected; short screens scroll to remaining controls and counter expansion. No browser errors. No publication.

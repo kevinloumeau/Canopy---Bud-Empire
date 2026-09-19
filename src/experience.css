@@ -74,3 +74,66 @@
  .hud .customer-info>span:first-child::before{display:none}
  .hud .customer-info #goalsOpen{margin-left:4px}
 }
+.order-counter-expansion{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:16px;flex-shrink:0;margin:12px 0 4px;padding:12px 0 4px;border-top:1px solid #b9c9a626}
+.order-counter-expansion[hidden]{display:none}
+.order-counter-visual{min-width:0;max-width:220px}
+.order-counter-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.order-counter-heading strong{font-size:12px;color:#e7eed1}
+.order-counter-heading small{font:500 11px 'DM Mono',monospace;color:#c2d0b5}
+.order-counter-slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.order-counter-slot{display:grid;justify-items:center;gap:2px;color:#92a18d}
+.order-counter-slot svg{display:block;width:40px;max-width:100%;height:36px}
+.order-counter-slot em{font:500 10px 'DM Mono',monospace;font-style:normal;line-height:1.2}
+.order-counter-slot .counter-worker{opacity:.3}
+.order-counter-slot:not(.is-open) .counter-front{stroke-dasharray:3 3}
+.order-counter-slot.is-open{color:#c1dc9e}
+.order-counter-slot.is-open .counter-worker{opacity:1}
+.order-counter-slot.is-open .counter-worker circle{fill:#d6dec2;stroke:#d6dec2}
+.order-counter-slot.is-open .counter-top{fill:#c1dc9e}
+.order-counter-slot.is-open .counter-front{fill:#57713f66}
+.order-counter-slot.is-next{color:#e5cf92}
+.order-counter-action{display:grid;justify-items:center;gap:5px}
+.order-counter-action>small{font-size:11px;line-height:1.3;color:#c2d0b5}
+.order-counter-expansion button{display:grid;gap:3px;flex-shrink:0;min-height:48px;padding:8px 12px;border:0;border-radius:12px;background:#55733e;color:#f4f3db;cursor:pointer}
+.order-counter-expansion button[hidden]{display:none}
+.order-counter-expansion button span{font:600 11px 'Bricolage Grotesque',sans-serif}
+.order-counter-expansion button b{font:500 13px 'DM Mono',monospace}
+.order-counter-expansion button:disabled{background:#324934;color:#b8c6ab;cursor:default}
+.order-counter-expansion button:focus-visible{outline:2px solid #e8d59f;outline-offset:3px}
+@media(max-width:480px){.order-counter-expansion{gap:10px}.order-counter-expansion button{padding-inline:10px}}
+
+/* Equipment first, its next-level effect beside it, and purchases on their own row. */
+.sheet>[data-pane=factory] .selected-line{grid-template-columns:128px minmax(0,1fr);gap:12px 16px;flex:0 0 auto;align-items:center;align-content:start;min-height:0;padding:16px 0 12px}
+.sheet .selected-line #upgradePreview{width:128px;height:120px;max-width:100%;object-fit:contain;object-position:center;align-self:center}
+.sheet .selected-line .machine-info,.sheet .selected-line .machine-info>div{min-width:0;width:100%}
+.sheet .selected-line h1{font-size:14px;line-height:1.25;margin:0 0 6px;overflow-wrap:anywhere}
+.sheet .selected-line #upgradeLevel{display:block;font:500 12px 'DM Mono',monospace;color:#c5d3ba;line-height:1.4}
+.sheet .selected-line #upgradeBenefit{margin:12px 0 0;line-height:1.3;color:#e7eed1}
+.sheet #upgradeMetricLabel{display:block;font:500 11px 'Bricolage Grotesque',sans-serif;letter-spacing:0;color:#c5d3ba}
+.sheet .upgrade-comparison{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:4px;font:500 22px 'DM Mono',monospace;line-height:1.15;font-variant-numeric:tabular-nums}
+.sheet .upgrade-comparison>span{color:#c5d3ba}.sheet .upgrade-comparison>b{color:#d4e9b3;font-weight:500}
+.sheet .upgrade-comparison svg{width:18px;height:18px;flex:none;color:#9db788}
+.sheet #upgradeGain{display:block;margin-top:4px;color:#c1dd9f;font-size:12px;font-weight:600}
+.sheet #upgradeBenefit.is-maxed .upgrade-comparison>span,.sheet #upgradeBenefit.is-maxed .upgrade-comparison>svg{display:none}
+.sheet .selected-line .station-buy-actions{grid-column:1/-1;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:8px;width:100%}
+.sheet .selected-line .station-buy-actions .buy{display:flex;flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 8px;height:auto;min-height:48px;padding:10px 12px;border-radius:12px}
+.sheet .selected-line .station-buy-actions .buy span{font-size:11px;line-height:1.3}.sheet .selected-line .station-buy-actions .buy b{font-size:16px;line-height:1.3}
+.sheet .selected-line .station-buy-actions #buyMachineMax{flex-direction:column;justify-content:center;gap:2px;padding:6px 8px}
+.sheet .selected-line .station-buy-actions #buyMachineMax b{font-size:14px}
+.sheet .selected-line .station-buy-actions .buy:focus-visible{outline:2px solid #e8d59f;outline-offset:3px}
+.sheet>[data-pane=factory] .station-upgrade{margin-top:8px}
+@media(max-width:779px){
+ .sheet>[data-pane=factory] .selected-line{grid-template-columns:104px minmax(0,1fr);gap:8px 12px;padding:12px 0}
+ .sheet .selected-line #upgradePreview{width:104px;height:104px}
+ .sheet .selected-line #upgradeBenefit{margin-top:8px}
+ .sheet .upgrade-comparison{font-size:19px;gap:6px}
+ .sheet .selected-line .station-buy-actions .buy{min-height:44px;padding:8px 10px}
+ .sheet .selected-line .station-buy-actions #buyMachineMax{padding:4px 8px}
+}
+@media(max-width:360px){
+ .sheet>[data-pane=factory] .selected-line{grid-template-columns:84px minmax(0,1fr);column-gap:8px}
+ .sheet .selected-line #upgradePreview{width:84px;height:100px}
+ .sheet .upgrade-comparison{font-size:17px;gap:4px}
+ .sheet .selected-line .station-buy-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .sheet .selected-line .station-buy-actions .buy{justify-content:center}
+}

@@ -17,7 +17,8 @@ export function basketSize(lines){return (1+Math.floor(Math.max(0,lines[4]-1)/2)
 export function storageCapacity(level,lines){return (100+level*100)*retailBoost(lines);}
 export function readyCapacity(level,lines){return (100+level*50)*retailBoost(lines);}
 export function onlineSize(completed,lines){return (4+(completed%5)*3)*retailBoost(lines);}
-// Counters open an extra service lane every five levels, so their levels keep paying off past the handoff floor.
+// Legacy service-efficiency multiplier: every five levels speeds up each handoff.
+// Physical staffed order counters are purchased separately in order-counters.js.
 export function counterLanes(level){return 1+Math.floor(Math.max(0,(level||0)-1)/5);}
 // Both equipment and training shorten the handoff, with gentler gains at high levels; 1.4s is the physical floor per lane.
 export function counterServiceDuration(station,rate,serviceFactor=1){return (1.4+Math.max(1.2/Math.pow(rate,.15),[2,3][station-4]/rate))*(station===5?serviceFactor:1);}

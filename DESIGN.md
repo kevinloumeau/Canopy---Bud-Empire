@@ -153,3 +153,17 @@ The Goals trigger opens **Shop story and goals**: one current chapter with a con
 Guidance is consistent: the next investment points to the current production bottleneck, while unavailable deliveries explain the $7,500 delivery pad and show funding progress. Full bottleneck comparisons wrap instead of truncating. Functional captions in the Flower and Deliveries panes use an 11px minimum.
 
 Existing scene motion carries the extra character: employees have distinct task rhythms, shears articulate, watering produces droplets, customers lean gently into turns, bags swing and settle after pickup, and service rings advance smoothly. Do not add a lighter-animation mode. Existing OS reduced-motion support and pause/speed controls remain in effect. Settings now includes Game pause/resume. Dialogs contain keyboard focus and restore the opener; focused controls retain native Space activation.
+
+## Order-counter expansion
+
+The Orders station offers **Open counter 2** ($2,500), then **Open counter 3** ($12,500), below its regular equipment controls and funding details. Three counter-and-staff icons show open, next and future slots. Keep copy to the count, next purchase and “Staff included.” At three counters, all slots light up and the purchase button disappears. Main station upgrades take priority; the expansion row is reachable by scrolling on phones. The same purchase remains in Shop > Service.
+
+One counter retains the original station appearance. Expansion replaces it with two, then three separate narrow counters in the existing ground-floor ordering area: green tile, pale stone tops, oak side panels, individual tills and payment pads, numbered illuminated arches, and one worker behind each desk. Workers use the existing Orders animation with distinct timing and appearance. The middle original position stays fixed; new positions occupy the space to its left and right. Their customer spots connect to the existing queue and pickup circulation. Lighting and interaction targets use the same camera projection as the rest of the scene.
+
+## Menu panel fit
+
+Narrow panels use their vertical space for complete strain details: traits and signature perks wrap across the full card width, and descriptions, format benefits and the menu guide remain available. Keep one vertical pane scroll; do not turn traits into a clipped horizontal strip. The Sell as label sits above three full-width format choices, each with its price or status below its name. At phone widths of 360px or less, format icons sit above their labels and strain statistics span the full card. Preserve the shared tray height across tabs.
+
+## Visual station upgrades
+
+The selected station uses two rows: a tightly framed equipment illustration beside its name, level and numerical before/after comparison; then a wider Upgrade button beside compact Max. This supersedes the earlier three-column preview/details/actions layout. Production compares units per batch; Orders and Pickup compare seconds per handoff; Security compares seconds per ID check. A short percentage describes the immediate gain. Time precision increases when needed so small upgrades do not appear unchanged. Render the existing Canvas equipment at high resolution, cache by visual state, and exclude overhead light fixtures from the preview framing. Keep status, funding and staffed-counter expansion below. Narrow layouts retain vertical pane scrolling.

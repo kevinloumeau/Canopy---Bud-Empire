@@ -1,5 +1,5 @@
 /* Menu tab: a menu board. Pick a strain from the jar row, act on it in the hero below, and choose the format last. */
-.menu-board{display:grid;gap:10px;padding:0 4px 6px;container-type:inline-size}
+.menu-board{display:grid;gap:8px;padding:0 4px 6px;container-type:inline-size}
 
 /* Head: the average take per pickup, then who-buys-what as glyph tiles. */
 .menu-board-head{display:flex;align-items:flex-start;gap:8px}
@@ -12,7 +12,7 @@
 .buyer .bud{grid-row:1;position:relative;display:grid;place-items:center;width:20px;height:20px;font-style:normal}
 .buyer .bud svg{width:20px;height:20px;filter:drop-shadow(0 1px 1px #0006)}
 .buyer .bud em{position:absolute;right:-6px;bottom:-4px;font-style:normal;font-size:9px;line-height:1;padding:1px 3px;border-radius:999px;background:#2a2f2a;color:#efcf8d;border:1px solid #efcf8d66}
-.buyer small{grid-column:1/3;grid-row:2;font-size:9px;letter-spacing:.05em;text-transform:uppercase;font-weight:600;color:#9fb09a;white-space:nowrap}
+.buyer small{grid-column:1/-1;grid-row:2;font-size:9px;letter-spacing:.05em;text-transform:uppercase;font-weight:600;color:#9fb09a;white-space:nowrap}
 .buyer b{grid-row:1;font:600 11px 'DM Mono',monospace;color:#f3d98f;font-variant-numeric:tabular-nums}
 .buyer.is-unmet{border-color:#efcf8d55;background:#efcf8d12}
 .buyer.is-unmet .bud{width:18px;height:18px;border-radius:50%;background:#efcf8d;color:#2a2a1c;font-size:12px;font-weight:700}
@@ -20,12 +20,14 @@
 .buyer.is-buzz{border-color:#f0cf7f55;background:#f0cf7f14}
 .buyer.is-buzz>svg{fill:#f3d98f;color:#f3d98f}
 .buyer.is-trend>svg{fill:#e88a4a;color:#e88a4a}
+.buyer.is-trend{grid-template-columns:auto auto auto}
+.buyer.is-trend .bud{margin-right:5px}
 .buyer.is-trend.is-live{border-color:#efcf8d66;background:#efcf8d12}
 .buyer.is-trend b{margin-left:2px}
 
 /* Strain row: four jars. The selected one lifts, on-menu jars carry their strain colour, locked jars sit in the dark. */
 .strain-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
-.strain-nav button{position:relative;display:grid;grid-template-rows:auto auto auto auto;justify-items:center;gap:3px;min-width:0;padding:8px 4px 9px;border:1px solid #d8ead21f;border-radius:14px;background:#ffffff08;color:#e2e9d7;font-family:inherit;cursor:pointer;transition:transform .18s ease,border-color .18s ease,background .18s ease}
+.strain-nav button{position:relative;display:grid;grid-template-rows:auto 1fr auto auto;justify-items:center;gap:3px;min-width:0;padding:8px 4px 9px;border:1px solid #d8ead21f;border-radius:14px;background:#ffffff08;color:#e2e9d7;font-family:inherit;cursor:pointer;transition:transform .18s ease,border-color .18s ease,background .18s ease}
 .strain-nav button:hover{background:#ffffff10}
 .strain-nav button:focus-visible{outline:2px solid #e5d3a0;outline-offset:2px}
 .strain-nav button[aria-selected=true]{border-color:color-mix(in srgb,var(--strain) 70%,#ffffff 0%);background:color-mix(in srgb,var(--strain) 14%,#ffffff05);transform:translateY(-2px);box-shadow:0 8px 20px -12px var(--strain)}
@@ -44,11 +46,11 @@
 .strain-hero.is-trending{border-color:#efcf8d66;box-shadow:inset 0 0 0 1px #efcf8d22}
 
 /* Traits: what the strain does to the shop, then its signature perk. */
-.strain-traits{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:4px}
-.strain-traits li{font-size:10.5px;line-height:1.3;padding:4px 8px;border-radius:999px;background:#ffffff0c;border:1px solid #ffffff12;color:#cddcc4}
+.strain-traits{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px}
+.strain-traits li{max-width:100%;box-sizing:border-box;overflow-wrap:anywhere;font-size:11px;line-height:1.4;padding:3px 8px;border-radius:999px;background:#ffffff0c;border:1px solid #ffffff12;color:#cddcc4}
 .strain-traits li.is-cost{color:#e9c9a0;border-color:#e9c9a033}
 .strain-traits li.is-trend{color:#f3d98f;border-color:#efcf8d55;background:#efcf8d14}
-.strain-perk{margin:6px 0 0;font-size:11px;line-height:1.4;color:#a9b8a3}
+.strain-perk{margin:8px 0 0;font-size:11.5px;line-height:1.5;overflow-wrap:anywhere;color:#a9b8a3}
 .strain-perk b{color:#c7b98a;font-weight:600}
 .strain-perk.is-unlocked{color:#cddcc4}
 .strain-perk.is-unlocked b{color:var(--strain)}
@@ -69,22 +71,23 @@
 .strain-hero .strain-pips i{width:6px;height:6px}
 
 /* Hero: large jar, name and buyers, three stat tiles, two actions. */
-.strain-hero{display:grid;grid-template-columns:82px minmax(0,1fr);grid-template-areas:"art info" "actions actions";gap:6px 14px;align-items:start;padding:14px 12px 12px;border-radius:16px;border:1px solid color-mix(in srgb,var(--strain) 30%,#d8ead21f);background:linear-gradient(160deg,color-mix(in srgb,var(--strain) 12%,transparent),transparent 55%),#ffffff06}
+.strain-hero{display:grid;grid-template-columns:72px minmax(0,1fr);grid-template-areas:"art info" "art stats" "details details" "actions actions";gap:8px 12px;align-items:center;padding:10px;border-radius:16px;border:1px solid color-mix(in srgb,var(--strain) 30%,#d8ead21f);background:linear-gradient(160deg,color-mix(in srgb,var(--strain) 12%,transparent),transparent 55%),#ffffff06}
 .strain-hero.is-locked{border-color:#d8ead21f;background:#ffffff05}
-.strain-hero-art{grid-area:art;width:82px;height:102px;filter:drop-shadow(0 10px 14px #0006)}
+.strain-hero-art{grid-area:art;width:72px;height:90px;filter:drop-shadow(0 10px 14px #0006)}
 .strain-hero-art svg{width:100%;height:100%}
 .strain-hero-info{grid-area:info;min-width:0;display:grid;gap:4px}
+.strain-hero-details{grid-area:details;min-width:0}
 .strain-kind-short{display:none}
-.strain-kind{font-size:10px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;color:var(--strain)}
+.strain-kind{font-size:11px;line-height:1.4;letter-spacing:.04em;text-transform:uppercase;font-weight:600;color:var(--strain)}
 .strain-hero.is-locked .strain-kind{color:#c7b98a}
 .strain-hero h2{margin:0;font-size:18px;line-height:1.15;letter-spacing:-.02em;color:#f3f6e8;font-family:inherit;font-weight:600}
 .strain-hero-info p{margin:0;font-size:11.5px;line-height:1.45;color:#bdcdb5}
-.strain-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:6px}
+.strain-stats{grid-area:stats;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;min-width:0;margin:0}
 .strain-stats span{display:grid;gap:1px;padding:7px 8px 6px;border-radius:10px;background:#0f1a14b0;border:1px solid #ffffff10;min-width:0}
 .strain-stats b{font:600 14px 'DM Mono',monospace;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:#f3f6e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .strain-stats small{font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:#9fb09a;font-weight:600}
-.strain-hero-actions{grid-area:actions;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:6px}
-.strain-hero-actions button{min-height:46px;padding:8px 12px;border:1px solid #789167;border-radius:12px;background:#2f4a36;color:#edf3df;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s ease,border-color .15s ease}
+.strain-hero-actions{grid-area:actions;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:0}
+.strain-hero-actions button{min-height:44px;padding:8px 12px;border:1px solid #789167;border-radius:12px;background:#2f4a36;color:#edf3df;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s ease,border-color .15s ease}
 .strain-hero-actions button:hover:not(:disabled){background:#3a5a42}
 .strain-hero-actions button:focus-visible{outline:2px solid #e5d3a0;outline-offset:2px}
 .strain-hero-actions button:disabled{opacity:.5;cursor:default}
@@ -93,63 +96,46 @@
 .strain-hero-actions .is-primary:hover:not(:disabled){background:linear-gradient(180deg,#a9c07a,#86a35e)}
 .strain-hero-actions .is-primary:disabled{background:#3a4a3a;border-color:#5a6a56;color:#c4cfbb;opacity:.7}
 
-/* Format picker: one compact row under the hero, label and buttons inline, so it reads as a secondary switch. */
-.menu-board .product-line{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:8px;margin:0;padding:0}
-.menu-board .product-line h2{margin:0;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#9fb09a}
-.menu-board .product-line .format-options{gap:4px}
-.menu-board .product-line .format-options button{display:grid;grid-template-columns:18px minmax(0,1fr) auto;grid-template-rows:auto;align-items:center;column-gap:5px;min-height:36px;padding:5px 8px;border-radius:10px}
-.menu-board .product-line .format-options svg{grid-row:1;width:18px;height:18px}
-.menu-board .product-line .format-options strong{font-size:11px;white-space:nowrap}
-.menu-board .product-line .format-options small{font-size:9px;color:#9fb09a}
-.menu-board .product-line #formatBenefit{grid-column:1/3;margin:0;font-size:10.5px}
+/* Format picker: names and prices have separate rows; the group uses the full panel width. */
+.menu-board .product-line{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;margin:0;padding:0}
+.menu-board .product-line h2{margin:0;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#9fb09a}
+.menu-board .product-line .format-options{gap:6px}
+.menu-board .product-line .format-options button{display:grid;grid-template-columns:20px minmax(0,1fr);grid-template-rows:auto auto;align-items:center;align-content:center;column-gap:6px;row-gap:3px;min-width:0;min-height:56px;padding:8px;border-radius:10px;text-align:left}
+.menu-board .product-line .format-options svg{grid-column:1;grid-row:1/3;width:20px;height:24px}
+.menu-board .product-line .format-options strong{grid-column:2;grid-row:1;min-width:0;font-size:12px;line-height:1.25;white-space:normal;overflow-wrap:anywhere}
+.menu-board .product-line .format-options small{grid-column:2;grid-row:2;min-width:0;font-size:11px;line-height:1.25;color:#bdcdb5;overflow-wrap:anywhere}
+.menu-board .product-line #formatBenefit{margin:0;font-size:11px;line-height:1.45}
 
 /* Guide: short, collapsed by default. */
 .menu-board .strain-guide{margin:0}
 .menu-board .strain-guide summary{min-height:36px}
 
+/* At the narrowest phone widths, place icons above the text instead of squeezing words beside them. */
+@media (max-width:360px){
+  .strain-hero{grid-template-areas:"art info" "stats stats" "details details" "actions actions"}
+  .menu-board .product-line .format-options button{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;justify-items:center;row-gap:4px;min-height:84px;padding:8px 4px;text-align:center}
+  .menu-board .product-line .format-options svg{grid-column:1;grid-row:1}
+  .menu-board .product-line .format-options strong{grid-column:1;grid-row:2}
+  .menu-board .product-line .format-options small{grid-column:1;grid-row:3}
+}
+
 @container (max-width:400px){
-  .menu-board{gap:6px}
-  .strain-hero-info>p:not(.strain-perk){display:none}
-  .strain-kind{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .strain-kind-tier,.strain-kind-long{display:none}
   .strain-kind-short{display:inline}
-  .strain-traits{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:3px}
-  .strain-traits::-webkit-scrollbar{display:none}
-  .strain-traits li{flex:0 0 auto;font-size:9.5px;padding:3px 7px}
   .buyer{padding:4px 7px 3px 6px;column-gap:4px}
-  .buyer small{display:none}
   .buyer .bud{width:18px;height:18px}
   .buyer .bud svg{width:18px;height:18px}
   .buyer>svg{width:16px;height:16px}
-  .menu-board-summary{min-height:40px;padding:4px 10px;min-width:0}
+  .menu-board-summary{min-height:44px;padding:6px 8px;min-width:0}
   .menu-board-summary b{font-size:14px}
-  .strain-hero{gap:4px 10px;padding:8px 8px 8px}
-  .strain-hero-art{width:56px;height:70px}
-  .strain-hero h2{font-size:15px}
-  .strain-stats{margin-top:4px}
-  .strain-traits{margin-top:4px}
-  .strain-perk{margin-top:4px;font-size:10px}
-  .strain-hero-actions{margin-top:4px;gap:6px}
-  .strain-hero-actions button{min-height:38px;font-size:12px}
-  .menu-board .product-line #formatBenefit,.menu-board .strain-guide{display:none}
   .strain-nav{gap:4px}
-  .strain-nav button{padding:7px 2px 8px;border-radius:12px}
-  .strain-card-art{width:34px;height:42px}
-  .strain-nav button{gap:2px;padding:6px 2px 7px}
-  .strain-nav b{font-size:9.5px;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .strain-nav button{gap:3px;padding:8px 3px;border-radius:12px}
+  .strain-card-art{width:36px;height:45px}
   .strain-nav b .type-glyph{display:none}
   .strain-pips{display:none}
-  .strain-perk{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .strain-hero{grid-template-columns:68px minmax(0,1fr);gap:6px 10px;padding:12px 10px 10px}
-  .strain-hero-art{width:68px;height:85px}
-  .strain-hero h2{font-size:16px}
-  .strain-stats{gap:4px}
-  .strain-stats span{padding:6px 6px 5px}
-  .strain-stats b{font-size:12.5px}
-  .strain-stats small{font-size:9px}
 }
 @container (min-width:560px){
-  .strain-hero{grid-template-columns:96px minmax(0,1fr) auto;grid-template-areas:"art info actions";align-items:center}
+  .strain-hero{grid-template-columns:96px minmax(0,1fr) auto;grid-template-areas:"art info actions" "art stats actions" "details details details";align-items:center}
   .strain-hero-art{width:96px;height:120px}
   .strain-hero-actions{grid-template-columns:1fr;min-width:170px;margin-top:0}
 }

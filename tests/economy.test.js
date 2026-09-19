@@ -65,4 +65,4 @@ test('branch income follows the main shop retail tier and survives migration',()
   assert.equal(migrateProgression(s.empire).retailBoost,8);assert.equal(migrateProgression({retailBoost:0}).retailBoost,1);assert.equal(migrateProgression({retailBoost:Infinity}).retailBoost,1);
 });
 
-test('counters gain a service lane every five levels',()=>{assert.deepEqual([0,1,5,6,10,11,29,30,31].map(counterLanes),[1,1,1,2,2,3,6,6,7])});
+test('counter service efficiency improves every five levels',()=>{assert.deepEqual([0,1,5,6,10,11,29,30,31].map(counterLanes),[1,1,1,2,2,3,6,6,7])});

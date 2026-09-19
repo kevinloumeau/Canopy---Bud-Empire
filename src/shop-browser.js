@@ -4,9 +4,9 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
   const pane=document.querySelector('[data-pane="boosts"]');
   pane.classList.add('shop-browser');
   const categories=['Production','Service','Customers','Products','Online'];
-  // Six upgrades per shelf: Production, Service, Customers, Products, Online.
+  // Keep related upgrades on the same shelf; the Service shelf includes counter expansion.
   const definitions=[['upgradeStorage',0],['boost',0],['componentBuy10',0],['componentBuy11',0],['componentBuy12',0],['componentBuy13',0],
-    ['buyKiosk',1],['componentBuy1',1],['componentBuy2',1],['componentBuy5',1],['componentBuy8',1],['componentBuy14',1],
+    ['buyKiosk',1],['componentBuy5',1],['buyOrderCounter',1],['componentBuy1',1],['componentBuy2',1],['componentBuy8',1],['componentBuy14',1],
     ['upgradeQueue',2],['componentBuy0',2],['componentBuy7',2],['componentBuy15',2],['componentBuy16',2],['componentBuy17',2],
     ['componentBuy3',3],['componentBuy4',3],['componentBuy18',3],['componentBuy19',3],['componentBuy20',3],['componentBuy21',3],
     ['buyAutoDrone',4],['componentBuy9',4],['componentBuy6',4],['componentBuy22',4],['componentBuy23',4],['componentBuy24',4]];
@@ -39,13 +39,14 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
       let level,max;
       if(row.id.startsWith('componentBuy')){const c=components[Number(row.id.replace('componentBuy',''))];level=state[c.key];max=c.max}
       else if(row.id==='buyAutoDrone'){level=state.autoDrone.bulk?2:state.autoDrone.owned?1:0;max=2}
+      else if(row.id==='buyOrderCounter'){level=state.orderCounters;max=3}
       else if(row.id==='buyKiosk'){level=kiosks();max=3}
       else if(row.id==='upgradeStorage'){level=state.storageLevel;max=20}
       else if(row.id==='upgradeQueue'){level=queueLimit();max=30}
       else {level=state.globalLevel;max=BOOST_MAX}
-      // Maxed-out upgrades stay in the grid, greyed, and sink to the end of their category.
-      const isDone=level>=max;row.node.classList.toggle('is-maxed',isDone);order.push({row,isDone});
-      row.badge.textContent=row.id==='buyAutoDrone'?(isDone?'Bulk installed · controls in Deliveries':level===1?'Single installed · bulk available':'One-time upgrade'):row.id==='upgradeQueue'?level+'/30 places':row.id==='buyKiosk'?level+'/3 installed':'Lv '+level+(Number.isFinite(max)?'/'+max:'');
+      // Keep kiosk hardware and software together; other completed upgrades sink to the end.
+      const isDone=level>=max,kioskPair=row.id==='buyKiosk'||row.id==='componentBuy5';row.node.classList.toggle('is-maxed',isDone);order.push({row,isDone:isDone&&!kioskPair});
+      row.badge.textContent=row.id==='buyAutoDrone'?(isDone?'Bulk installed · controls in Deliveries':level===1?'Single installed · bulk available':'One-time upgrade'):row.id==='buyOrderCounter'?level+'/3 staffed':row.id==='upgradeQueue'?level+'/30 places':row.id==='buyKiosk'?level+'/3 installed':'Lv '+level+(Number.isFinite(max)?'/'+max:'');
       row.node.hidden=row.category!==category||(!isDone&&affordable&&row.button.disabled);
       if(row.category===category){if(isDone)done++;else if(!row.node.hidden)count++}
     });
