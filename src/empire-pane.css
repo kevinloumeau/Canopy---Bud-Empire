@@ -137,7 +137,6 @@
 
 /* Store screen: the branch's sticky tabs sit under the back bar. */
 [data-empire-screen=store] .empire-branch{border-top:0}
-[data-empire-screen=store] .branch-sticky-header{top:var(--empire-tabs-height,44px)}
 [data-empire-screen=store] .branch-sticky-header .branch-toggle{display:none}
 .store-list .branch-toggle .branch-name{white-space:nowrap}
 .sheet .empire-screen .store-list .branch-toggle{grid-template-columns:max-content minmax(0,1fr) 10px}

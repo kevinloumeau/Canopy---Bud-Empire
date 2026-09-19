@@ -1,0 +1,266 @@
+/* Empire stores: cards on the home list, a hero-led store screen. Same forest-green glass, cream text, DM Mono figures. */
+
+/* ---- Home: store cards ---- */
+[data-empire-screen] .store-list{display:grid;gap:8px;margin:8px 0 0;border-top:0}
+.sheet .empire-screen .store-list .branch-toggle.store-card{
+ display:grid;grid-template-columns:38px minmax(0,1fr) 12px;grid-template-areas:"icon copy chev" "icon meta chev" "icon meter chev";
+ column-gap:12px;row-gap:7px;align-items:center;min-height:0;padding:12px 10px 12px 12px;
+ border:0;border-radius:16px;background:linear-gradient(160deg,#dce9be12,#dce9be06);box-shadow:inset 0 0 0 1px #c1d7b722;
+}
+.sheet .empire-screen .store-card::after{grid-area:chev;grid-row:1/-1;width:7px;height:7px;opacity:.7}
+.store-card.has-ready{box-shadow:inset 0 0 0 1px #c1d7b73a,0 0 0 1px #b6d69014}
+.store-card.is-locked{opacity:.86}
+@media(hover:hover){.sheet .empire-screen .store-card:hover{filter:none;background:linear-gradient(160deg,#dce9be1c,#dce9be0a)}}
+
+.store-icon{position:relative;display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:#dce9be14;color:#d3e6c0;box-shadow:inset 0 0 0 1px #c1d7b722}
+.store-icon svg{width:22px;height:22px}
+.store-card .store-icon{grid-area:icon;grid-row:1/-1;align-self:start}
+.store-card.is-locked .store-icon{color:#9fb59a}
+.store-dot{position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#e3d1a6;box-shadow:0 0 0 2px #213a2e,0 0 8px #e3d1a680}
+.store-dot[hidden]{display:none}
+
+.store-card .store-copy{grid-area:copy;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name status" "detail detail";align-items:center;gap:2px 8px;min-width:0}
+.store-card .branch-name{grid-area:name}
+.store-card .store-status{grid-area:status}
+.store-card .store-detail{grid-area:detail}
+.store-card .branch-name{font-size:15px;font-weight:700;letter-spacing:-.01em;color:#f0f4e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.store-card .store-detail{font-size:11.5px;line-height:1.35;color:#aebfa8;font-family:inherit;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.store-card .store-meta{grid-area:meta;display:flex;align-items:center;gap:8px;min-width:0}
+.sheet .empire-screen .store-list .store-card strong{display:inline-flex;align-items:center;gap:8px;justify-self:start;flex:0 1 auto;min-width:0;overflow:hidden;white-space:nowrap;line-height:1.2;text-align:left}
+/* Unopened stores: the chip and the store screen carry the price, so the projected rate stays off the card. */
+.store-card .store-income.muted{display:none}
+.store-card .store-locked{overflow:hidden;text-overflow:ellipsis}
+.store-card .store-level{gap:6px}
+.store-card .store-pips i{width:4px;height:11px}
+.store-card .store-income{padding:3px 8px 3px 6px;font-size:11.5px}
+.store-card .store-locked{font-size:11.5px}
+.store-status{flex:none;padding:4px 9px;border-radius:999px;font:600 11px 'DM Mono',monospace;letter-spacing:0;color:#a9b9a5;background:#ffffff0c;white-space:nowrap}
+.store-status:empty{display:none}
+.store-status.is-ready{background:#55733e;color:#f8fbed;box-shadow:0 0 0 1px #d9f1c445,0 0 12px #b6d69033}
+.store-status.is-ready.is-gold{background:#e3d1a6;color:#2c2a1a;box-shadow:0 0 0 1px #f3e6c655,0 0 12px #e3d1a640}
+.store-status.is-locked{background:transparent;color:#9fb59a;padding-inline:0}
+.store-status.is-max{color:#c6d8bf}
+.store-meter{grid-area:meter;display:block;height:4px;border-radius:2px;background:#142c22;overflow:hidden}
+.store-meter i{display:block;height:100%;border-radius:2px;background:#b6d690;transition:width .4s ease}
+.store-meter[hidden]{display:none}
+@media(max-width:400px){.store-card .store-detail{font-size:11px}}
+
+/* Heading and summary above the cards. */
+[data-empire-screen] .empire-section-heading{font-size:16px}
+[data-empire-screen] #branchSummary{margin:0 0 2px;font:500 11.5px 'DM Mono',monospace;color:#aebfa8;letter-spacing:0}
+
+/* ---- Store screen ---- */
+/* The hero replaces the old scattered rows; these keep rendering (main.js writes them) but no longer show. */
+.op-pane .branch-management,.op-pane>.branch-actions,.op-pane>[id^=branchHint]{display:none!important}
+
+.store-hero{margin:2px 0 12px;padding:14px 14px 12px;border-radius:16px;background:linear-gradient(160deg,#dce9be14,#dce9be06);box-shadow:inset 0 0 0 1px #c1d7b722}
+.store-hero.is-ready{box-shadow:inset 0 0 0 1px #c1d7b73a,0 0 0 1px #b6d69014}
+.hero-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.hero-copy{display:grid;gap:2px;min-width:0}
+.hero-tag{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#e3d1a6}
+.hero-detail{font-size:12px;line-height:1.4;color:#cbdcc5}
+.store-hero.is-locked .store-icon{color:#9fb59a}
+
+.hero-level{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:6px 10px;margin-bottom:12px}
+.hero-level .store-pips{display:inline-grid;grid-auto-flow:column;gap:3px}
+.hero-level .store-pips i{display:block;width:6px;height:14px;border-radius:2px;background:#ffffff1a}
+.hero-level .store-pips i.on{background:#b6d690;box-shadow:0 0 5px #b6d69055}
+.hero-lock{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#ffffff0c;color:#c6d8bf}
+.hero-lock svg{width:16px;height:16px}
+.hero-level-copy{display:grid;gap:1px;min-width:0}
+.hero-level-copy b{font-size:13px;font-weight:650;color:#f0f4e8;line-height:1.25}
+.hero-level-copy small{font-size:11.5px;color:#aebfa8;font-family:inherit;letter-spacing:0;line-height:1.35}
+.hero-meter{grid-column:1/-1;display:block;height:5px;border-radius:3px;background:#142c22;overflow:hidden}
+.hero-meter i{display:block;height:100%;border-radius:3px;background:#b6d690}
+
+.hero-income{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 6px;margin-bottom:12px}
+.hero-income b{font:600 26px 'DM Mono',monospace;letter-spacing:-.03em;color:#e8f2d7;font-variant-numeric:tabular-nums;line-height:1}
+.hero-income b.is-next{font-size:16px;color:#dcefc0}
+.hero-income span{font-size:11px;color:#aebfa8}
+.hero-arrow{font-style:normal;font-size:14px;color:#b6d690;margin:0 4px}
+.store-hero.is-locked .hero-income b,.store-hero.is-closed .hero-income b{color:#c6d8bf}
+
+.hero-actions{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:8px}
+.sheet .empire-screen .hero-actions button{min-height:48px;border-radius:12px;font-size:13px;font-weight:700;padding-inline:10px;max-width:none;width:100%}
+.sheet .empire-screen .hero-actions [id^=branchBuy]{background:linear-gradient(145deg,#c9e4b820,#c6dfb608),#55733e;color:#f8fbed;border:1px solid #d9f1c445;font-variant-numeric:tabular-nums}
+.sheet .empire-screen .store-hero.is-ready .hero-actions [id^=branchBuy]:not(:disabled){box-shadow:0 0 0 1px #d9f1c455,0 0 16px #b6d69040,0 3px 10px #0b1c1626}
+.sheet .empire-screen .hero-actions [id^=branchBuy]:disabled{background:#223f31;color:#b6c8af;border-color:#75936b55;box-shadow:none}
+.sheet .empire-screen .hero-actions [id^=branchVisit]{background:transparent;border-color:#9eb9944d;color:#d4e4c6}
+.sheet .empire-screen .hero-actions [id^=branchVisit][aria-pressed=true]{color:#e3d1a6;border-color:#e3d1a655}
+.sheet .empire-screen .hero-actions [id^=branchBuy][hidden]{display:none}
+.sheet .empire-screen .hero-actions [id^=branchBuy][hidden]+[id^=branchVisit]{grid-column:1/-1}
+/* Nothing to visit before a store exists: the Open button takes the full row. */
+.store-hero.is-locked [id^=branchVisit],.store-hero.is-closed [id^=branchVisit]{display:none}
+.store-hero.is-locked .hero-actions,.store-hero.is-closed .hero-actions{grid-template-columns:minmax(0,1fr)}
+.hero-hint{margin:10px 0 0;font-size:11.5px;line-height:1.4;color:#aebfa8}
+.hero-hint[hidden]{display:none}
+
+/* Section cards share one surface; titles carry a mono counter on the right. */
+.store-section-title{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:0 0 8px;font-size:13px;font-weight:650;letter-spacing:-.005em;color:#f0f4e8}
+.store-section-count{font:500 11px 'DM Mono',monospace;color:#aebfa8;letter-spacing:0}
+
+.store-opening{margin:0 0 12px;padding:12px 14px;border-radius:14px;background:#e3d1a60d;box-shadow:inset 0 0 0 1px #e3d1a62e}
+.store-opening.is-ready{background:#e3d1a61a;box-shadow:inset 0 0 0 1px #e3d1a655}
+.store-opening[hidden]{display:none}
+.store-opening .opening-task{padding:0;gap:6px 10px}
+.store-opening .opening-task>span{font-size:13px;color:#f0f4e8}
+.sheet .empire-screen .store-opening .opening-task button{min-height:36px;padding:6px 12px;border-radius:10px;font:600 12px 'DM Mono',monospace;letter-spacing:0}
+.sheet .empire-screen .store-opening.is-ready .opening-task button:not(:disabled){background:#e3d1a6;border-color:#e3d1a6;color:#2c2a1a;box-shadow:0 0 12px #e3d1a640}
+.store-opening .opening-task progress{margin:4px 0 0;height:5px;accent-color:#e3d1a6}
+.store-opening .opening-task progress::-webkit-progress-value{background:#e3d1a6}
+.store-opening .opening-task progress::-moz-progress-bar{background:#e3d1a6}
+
+.store-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 12px}
+.store-stats[hidden]{display:none}
+.store-stat{display:grid;gap:2px;min-width:0;padding:10px 10px 9px;border-radius:12px;background:#dce9be0d;box-shadow:inset 0 0 0 1px #c1d7b71a}
+.store-stat small{font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:#aebfa8;font-family:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.store-stat b{font:600 17px 'DM Mono',monospace;letter-spacing:-.02em;color:#e8f2d7;font-variant-numeric:tabular-nums;line-height:1.15}
+.store-stat span{font-size:11px;line-height:1.3;color:#c6d8bf}
+
+.store-bulk{margin:0 0 12px;padding:12px 14px;border-radius:14px;background:#dce9be0d;box-shadow:inset 0 0 0 1px #c1d7b71a}
+.store-bulk-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
+.store-bulk-row #bulkDetail{margin:0;font-size:11.5px;line-height:1.4;color:#c6d8bf}
+.sheet .empire-screen .store-bulk-row button{min-height:40px;border-radius:10px;font-size:12px;white-space:nowrap}
+
+/* Projects: always visible, three rows with a mark that reads installed / open / locked at a glance. */
+.branch-body .branch-projects{margin:0 0 6px;padding:12px 14px 2px;border:0;border-radius:14px;background:#dce9be0d;box-shadow:inset 0 0 0 1px #c1d7b71a}
+.branch-projects summary.store-section-title{display:flex;list-style:none;min-height:0;cursor:default;pointer-events:none;color:#f0f4e8;font-size:13px;font-weight:650}
+.branch-projects summary::-webkit-details-marker{display:none}
+.branch-projects.has-ready summary.store-section-title::after{content:'Ready';font:600 11px 'DM Mono',monospace;color:#b6d690;letter-spacing:0}
+.branch-projects>.empire-note{margin:-4px 0 4px;font-size:11.5px;color:#aebfa8}
+.branch-project{grid-template-columns:26px minmax(0,1fr) auto;gap:10px;padding:11px 0;border-top:1px solid #c1d7b71a}
+.branch-project>div{min-width:0}
+.branch-project h4{font-size:13px;margin:0 0 2px;color:#f0f4e8}
+.branch-project strong{font:500 11px 'DM Mono',monospace;color:#c6d8bf;letter-spacing:0;line-height:1.35;white-space:normal}
+.project-mark{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#ffffff0c;color:transparent;box-shadow:inset 0 0 0 1px #c1d7b72a}
+.project-mark svg{width:15px;height:15px}
+.branch-project.is-installed .project-mark{background:#b6d690;color:#203728;box-shadow:none}
+.branch-project.is-ready .project-mark{box-shadow:inset 0 0 0 1px #b6d69080}
+.branch-project.is-locked h4{color:#c6d8bf}
+.branch-project.is-locked .project-mark{opacity:.5}
+.sheet .empire-screen .branch-project button{min-width:88px;min-height:36px;padding:6px 10px;border-radius:10px;font:600 11.5px 'DM Mono',monospace;letter-spacing:0;white-space:nowrap}
+.sheet .empire-screen .branch-project.is-ready button{background:#55733e;color:#f8fbed;border-color:#d9f1c445;box-shadow:0 0 12px #b6d69030}
+.sheet .empire-screen .branch-project.is-installed button:disabled{background:transparent;border-color:transparent;color:#b6d690;opacity:1;min-width:0;padding-inline:4px}
+.sheet .empire-screen .branch-project.is-locked button:disabled{background:transparent;border-color:#c1d7b72a;color:#9fb59a;opacity:1}
+
+@media(min-width:780px){
+ .sheet .empire-screen .store-list .branch-toggle.store-card{padding:12px 14px 12px 14px}
+ .hero-actions{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+}
+
+/* ---- Shared panel surface for the Stock / People / Style tabs ---- */
+.store-panel{margin:0 0 12px;padding:12px 14px;border-radius:14px;background:#dce9be0d;box-shadow:inset 0 0 0 1px #c1d7b71a}
+.store-panel>.store-section-title{margin:0 0 6px}
+/* The card title already names the choice; the pill label would repeat it. */
+.stock-featured .pill-label,.stock-make .pill-label{display:none}
+.stock-featured .pill-field,.stock-make .pill-field{margin-top:4px}
+.store-panel .pill-field{margin:8px 0 0}
+.store-panel .pill-field .pill-label{font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:#aebfa8;margin-bottom:6px}
+.sheet .empire-screen .store-panel .pill-group button{min-height:38px;padding:7px 10px;border-radius:10px;background:#1c3328;border-color:#a1b99140;font-size:12px}
+.sheet .empire-screen .store-panel .pill-group button[aria-pressed=true]{background:linear-gradient(155deg,#e3f5db38,#c4e5b41a);border-color:#c1d7b74d;color:#f6faed;box-shadow:inset 0 1px 0 #f1ffe752}
+.store-panel .choice-effect,.store-panel .operation-hint{margin:8px 0 0;font-size:11.5px;color:#aebfa8}
+.op-pane .operation-stats[hidden]{display:none}
+.person-copy .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* Stock: supply meters, then the two choices, then shelves and logistics. */
+.supply-strip{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:2px 0 12px}
+.supply-tile{display:grid;gap:3px;min-width:0;padding:10px 12px 11px;border-radius:12px;background:linear-gradient(160deg,#dce9be14,#dce9be06);box-shadow:inset 0 0 0 1px #c1d7b722}
+.supply-tile small{font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:#aebfa8;font-family:inherit}
+.supply-tile b{font:600 17px 'DM Mono',monospace;letter-spacing:-.02em;color:#e8f2d7;font-variant-numeric:tabular-nums;line-height:1.15}
+.supply-meter{display:block;height:4px;margin-top:4px;border-radius:2px;background:#142c22;overflow:hidden}
+.supply-meter i{display:block;height:100%;border-radius:2px;background:#b6d690;transition:width .4s ease}
+.stock-make .operation-hint{margin-top:8px}
+.stock-shelves .shelf-list{margin-top:2px}
+.stock-shelves .shelf-row{padding:11px 0;border-top:1px solid #c1d7b71a;border-bottom:0;gap:10px}
+.stock-shelves .shelf-row:first-child{border-top:0;padding-top:6px}
+.stock-shelves .shelf-row strong{font-size:13px;font-weight:650;color:#f0f4e8}
+.stock-shelves .shelf-row small{margin-top:3px;font:500 11px 'DM Mono',monospace;color:#c6d8bf;letter-spacing:0}
+.stock-shelves .shelf-row.is-locked strong{color:#c6d8bf}
+.line-meter{display:block;height:3px;margin-top:7px;max-width:150px;border-radius:2px;background:#142c22;overflow:hidden}
+.line-meter i{display:block;height:100%;border-radius:2px;background:#e3d1a6}
+.line-meter[hidden]{display:none}
+.stock-shelves .shelf-stepper{gap:0;padding:2px;border-radius:11px;background:#0c231c40}
+.sheet .empire-screen .stock-shelves .shelf-stepper button{width:38px;min-height:34px;padding:0;border:0;border-radius:9px;background:transparent;font:600 17px 'DM Mono',monospace;color:#e8f2d7;box-shadow:none}
+.sheet .empire-screen .stock-shelves .shelf-stepper button:disabled{background:transparent;color:#6f8a73;opacity:1}
+@media(hover:hover){.sheet .empire-screen .stock-shelves .shelf-stepper button:not(:disabled):hover{background:#dce9be14;filter:none}}
+.stock-shelves .shelf-stepper span{min-width:28px;font:600 13px 'DM Mono',monospace;color:#f0f4e8}
+.sheet .empire-screen .stock-shelves .shelf-unlock{min-height:36px;padding:6px 10px;border-radius:10px;font:600 11.5px 'DM Mono',monospace;letter-spacing:0;white-space:nowrap}
+.sheet .empire-screen .stock-shelves .shelf-unlock:not(:disabled){background:#55733e;color:#f8fbed;border-color:#d9f1c445}
+.stock-logistics{margin-top:0;border-top:0;padding-bottom:12px}
+.stock-logistics>summary.store-section-title{display:flex;list-style:none;min-height:40px;align-items:center;margin:0;padding:0 0 0 22px;position:relative;cursor:pointer;color:#f0f4e8;font-size:13px;font-weight:650}
+.stock-logistics>summary::-webkit-details-marker{display:none}
+.stock-logistics>summary::before{content:'';position:absolute;left:4px;top:50%;width:7px;height:7px;margin-top:-5px;border-right:1.5px solid #cbdcc5;border-bottom:1.5px solid #cbdcc5;transform:rotate(-45deg);transition:transform .2s ease}
+.stock-logistics[open]>summary::before{transform:rotate(45deg);margin-top:-7px}
+.stock-logistics>summary>span{float:none;margin-left:auto;font:500 11px 'DM Mono',monospace;color:#aebfa8;letter-spacing:0}
+.logistics-group{padding:10px 0 4px;border-top:1px solid #c1d7b71a;margin-top:8px}
+.logistics-title{margin:0 0 4px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:#e3d1a6;font-weight:600}
+.logistics-group .operation-row{padding:9px 0;border-bottom:0;font-size:12px}
+.sheet .empire-screen .logistics-group .operation-row button{min-height:36px;padding:6px 10px;border-radius:10px;font:600 11.5px 'DM Mono',monospace;letter-spacing:0;max-width:150px}
+.sheet .empire-screen .logistics-group .operation-primary{width:100%;max-width:none;margin-top:10px;min-height:42px;border-radius:12px;background:linear-gradient(145deg,#c9e4b820,#c6dfb608),#55733e;color:#f8fbed;border:1px solid #d9f1c445;font-size:13px;font-weight:700}
+.sheet .empire-screen .logistics-group .operation-primary:disabled{background:#223f31;color:#b6c8af;border-color:#75936b55}
+.logistics-group .route{margin:8px 0;padding:8px 10px;border-radius:10px;background:#dce9be0a}
+.logistics-group .route small{font:500 11px 'DM Mono',monospace;color:#e3d1a6}
+
+/* People: who runs the store, the three specialists, and the regular's story. */
+.person-avatar{display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:50%;background:#dce9be14;box-shadow:inset 0 0 0 1px #c1d7b722;color:#e8f2d7;font:650 14px/1 'Bricolage Grotesque',sans-serif}
+.person-avatar svg{width:20px;height:20px;color:#c6d8bf}
+.person-avatar.is-regular{background:#e3d1a61a;box-shadow:inset 0 0 0 1px #e3d1a640;color:#f2e4c2}
+.manager-current{display:flex;align-items:center;gap:12px;padding:4px 0 8px}
+.manager-current .person-avatar{width:40px;height:40px;background:#55733e;box-shadow:none;color:#f8fbed}
+.manager-current.is-none .person-avatar{background:#dce9be14;box-shadow:inset 0 0 0 1px #c1d7b722}
+.manager-copy{display:grid;gap:2px;min-width:0}
+.manager-copy b{font-size:14px;font-weight:650;color:#f0f4e8;line-height:1.2}
+.manager-copy small{font-size:11.5px;color:#aebfa8;line-height:1.35}
+.people-manager .operation-hint{margin:0;padding-top:8px;border-top:1px solid #c1d7b71a}
+.people-team .person-row{display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:8px 12px;padding:11px 0;border-top:1px solid #c1d7b71a;border-bottom:0}
+.people-team .person-row:nth-of-type(1){border-top:0;padding-top:6px}
+.people-team .person-row.is-here{background:linear-gradient(90deg,#b6d6900d,transparent);margin:0 -14px;padding-inline:14px}
+.person-copy{display:grid;gap:3px;min-width:0}
+.person-name{display:flex;align-items:center;gap:8px;min-width:0}
+.person-name>strong{font-size:13px;font-weight:650;color:#f0f4e8;line-height:1.2}
+.person-copy>small{display:block;margin:0;font-size:11.5px;line-height:1.4;color:#aebfa8}
+.person-copy>small:nth-of-type(2){color:#c6d8bf}
+.person-level{display:flex;align-items:center;gap:7px;margin:0 0 1px;white-space:nowrap}
+.person-level .store-pips{display:inline-grid;grid-auto-flow:column;gap:2px}
+.person-level .store-pips i{display:block;width:5px;height:10px;border-radius:2px;background:#ffffff1a}
+.person-level .store-pips i.on{background:#b6d690;box-shadow:0 0 5px #b6d69055}
+.person-level b{font:500 11px 'DM Mono',monospace;color:#c6d8bf;letter-spacing:0}
+.person-where{font:600 10.5px 'DM Mono',monospace;font-style:normal;letter-spacing:.02em;text-transform:uppercase;padding:2px 7px;border-radius:999px;background:#ffffff0c;color:#aebfa8}
+.person-row.is-here .person-where{background:#b6d69022;color:#dcefc0}
+.sheet .empire-screen .people-team .person-row button{min-width:88px;min-height:36px;padding:6px 10px;border-radius:10px;font-size:11.5px;font-weight:650;white-space:nowrap}
+.sheet .empire-screen .people-team .person-row.is-here button:disabled{background:transparent;border-color:transparent;color:#b6d690;opacity:1;min-width:0;padding-inline:4px}
+.regular-head{display:flex;align-items:center;gap:12px;padding:2px 0 10px}
+.regular-copy{display:grid;gap:1px;min-width:0}
+.regular-copy b{font-size:14px;font-weight:650;color:#f0f4e8;line-height:1.2}
+.regular-copy small{font-size:11.5px;color:#aebfa8}
+.regular-track{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #c1d7b71a}
+.regular-pips{display:inline-grid;grid-auto-flow:column;gap:4px}
+.regular-pips i{display:block;width:22px;height:6px;border-radius:3px;background:#ffffff1a}
+.regular-pips i.on{background:#e3d1a6;box-shadow:0 0 6px #e3d1a655}
+.people-regular .relationship{margin:0;font:500 11.5px 'DM Mono',monospace;color:#e3d1a6;letter-spacing:0}
+.people-regular>p{margin:2px 0 0;font-size:13px;color:#f0f4e8}
+.people-regular .regular-request{padding:10px 0 4px;border-bottom:0;font-size:12px;color:#cbdcc5}
+.sheet .empire-screen .people-regular .regular-request button{min-height:36px;padding:6px 12px;border-radius:10px;font-size:11.5px;font-weight:650;white-space:nowrap}
+.sheet .empire-screen .people-regular .regular-request button:not(:disabled){background:#e3d1a6;border-color:#e3d1a6;color:#2c2a1a;box-shadow:0 0 12px #e3d1a640}
+.people-regular .operation-hint{margin-top:2px}
+.people-regular.is-complete .regular-pips i{background:#e3d1a6}
+
+/* Style: option tiles with a swatch or glyph, the neighborhood as a chip, one primary preview. */
+.style-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:2px 0 12px}
+.style-head .operation-hint{margin:0;font-size:12px;color:#cbdcc5}
+.style-neighborhood{margin:0!important;padding:5px 10px;border-radius:999px;background:#e3d1a61a;color:#f2e4c2;font:600 11px 'DM Mono',monospace!important;letter-spacing:0;white-space:nowrap}
+.style-look .style-field{margin:10px 0 0;padding-top:10px;border-top:1px solid #c1d7b71a}
+.style-look .style-field:first-of-type{border-top:0;padding-top:0;margin-top:2px}
+.style-look .pill-group{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.sheet .empire-screen .style-look .pill-group button{display:grid;justify-items:center;gap:6px;min-height:58px;padding:9px 6px 8px;font-size:11.5px;font-weight:600}
+.style-look .pill-swatch{width:18px;height:18px;margin:0;box-shadow:inset 0 0 0 1px #00000030,0 0 0 2px #ffffff10}
+.sheet .empire-screen .style-look .pill-group button[aria-pressed=true] .pill-swatch{box-shadow:inset 0 0 0 1px #00000030,0 0 0 2px #f6faed}
+.pill-glyph{display:grid;place-items:center;width:20px;height:20px;color:#c6d8bf}
+.pill-glyph svg{width:20px;height:20px}
+.sheet .empire-screen .style-look .pill-group button[aria-pressed=true] .pill-glyph{color:#f6faed}
+.sheet .empire-screen .style-preview{width:100%;max-width:none;min-height:46px;margin:2px 0 6px;border-radius:12px;background:transparent;border-color:#9eb9944d;color:#d4e4c6;font-size:13px;font-weight:700}
+@media(max-width:360px){.style-look .pill-group{gap:4px}.sheet .empire-screen .style-look .pill-group button{padding-inline:3px;font-size:11px}}
+/* Choice grids: four products as 2×2, three recipes in one row, so the sets read as complete. */
+.stock-featured .pill-group{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.stock-make .pill-group{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.sheet .empire-screen .stock-make .pill-group button{padding-inline:6px;font-size:11.5px;line-height:1.2}

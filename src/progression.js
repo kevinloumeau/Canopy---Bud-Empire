@@ -132,19 +132,19 @@ export function managementMultiplier(p,i){
   const s=p.stores[i],f=s.featured;
   return (1+(i===1&&s.level>=2&&f==='boutique'?.4:0)+(f==='exclusive'&&exclusiveAvailable(p)?.15:0)+(s.manager==='grower'&&f==='exclusive'&&exclusiveAvailable(p)?.3:0))*(1+Math.min(100,s.loyalty||0)*.002)*(1+(p.network?staffLevel(p.network,s.manager):0)*.02);
 }
-export function customerType(reputation,sequence){return reputation>=60&&sequence%7===6?'vip':reputation>=20&&sequence%3===2?'collector':sequence%2?'hurried':'regular';}
-export function customerNeed(type){return type==='vip'?'Service within 15 seconds':type==='collector'?'Boutique or exclusive product':type==='hurried'?'Service within 20 seconds':'Everyday product';}
+export function customerType(reputation,sequence){return reputation>=60&&sequence%7===6?'vip':sequence%2?'hurried':'regular';}
+export function customerNeed(type){return type==='vip'?'Service within 15 seconds':type==='hurried'?'Service within 20 seconds':'Everyday product';}
 // patienceScale stretches the 15s/20s speed thresholds (the main shop passes its Queue comfort bonus).
 export function satisfyCustomer(p,i,type,product,seconds,patienceScale=1){
   const store=i>=0?p.stores[i]:null;
-  const satisfied=type==='regular'?product==='everyday':type==='collector'?(product==='boutique'||product==='exclusive'&&exclusiveAvailable(p)):seconds<=(type==='vip'?15:20)*Math.max(1,patienceScale);
+  const satisfied=type==='regular'?product==='everyday':seconds<=(type==='vip'?15:20)*Math.max(1,patienceScale);
   const key=store?'loyalty':'reputation',owner=store||p;
   owner[key]=Math.max(0,Math.min(1000,(owner[key]||0)+(satisfied?(store?.manager==='host'?2:1):-1)));
   return satisfied&&type==='vip'?2:satisfied?(1.15+(owner[key]>=60?.2:0)):1;
 }
 export function tickBranches(p,seconds){
   p.stores.forEach((s,i)=>{if(!s.level)return;s.serviceClock+=seconds;
-    while(s.serviceClock>=12){s.serviceClock-=12;const e=eventStatus(p),active=e.open&&e.joined&&!e.claimed;const type=active&&s.served%4===3?'collector':customerType(s.loyalty,s.served);s.served++;satisfyCustomer(p,i,type,s.featured,Math.max(8,30-s.level*2-(s.manager==='dispatcher'?10:0)-(s.featured==='express'?8:0)));}
+    while(s.serviceClock>=12){s.serviceClock-=12;const e=eventStatus(p),active=e.open&&e.joined&&!e.claimed;const type=active&&s.served%4===3?'vip':customerType(s.loyalty,s.served);s.served++;satisfyCustomer(p,i,type,s.featured,Math.max(8,30-s.level*2-(s.manager==='dispatcher'?10:0)-(s.featured==='express'?8:0)));}
   });
 }
 export function bulkReward(p){return Math.round(30*32*(1+p.stores[2].level*.1)*(p.stores[2].manager==='dispatcher'?1.25:1));}
@@ -156,9 +156,12 @@ export function dispatchBulk(state,now=Date.now()){
 export function recordGoal(p,kind,count){if(Object.prototype.hasOwnProperty.call(p.counters,kind)&&Number.isFinite(count)&&count>0)p.counters[kind]=Math.min(Number.MAX_SAFE_INTEGER,p.counters[kind]+count);}
 export function goalStatus(p,i,scale=1){
   const g=p.goals[i],kind=i===0?'pickup':i===1?'online':g.round%2===0?'revenue':'invest';
-  const target=kind==='pickup'?10+(g.round%3)*5:kind==='online'?2:kind==='invest'?1:500+(g.round%3)*250;
+  // Targets cycle for variety but grow with income (scale) so goals keep demanding more as the empire grows, not just cycling forever at starter size.
+  const growth=1+Math.log2(Math.max(1,Number.isFinite(scale)?scale:1));
+  const base=kind==='pickup'?10+(g.round%3)*5:kind==='online'?2:kind==='invest'?1:500+(g.round%3)*250;
+  const target=Math.max(1,Math.round(base*growth));
   const reward=scaledReward(kind==='pickup'?150:kind==='online'?250:300,scale);
-  return {kind,target,reward,progress:Math.min(target,Math.max(0,p.counters[kind]-g.start)),title:kind==='pickup'?'Serve '+target+' customers':kind==='online'?'Complete 2 deliveries':kind==='invest'?'Improve a branch or build a project':'Earn $'+target};
+  return {kind,target,reward,progress:Math.min(target,Math.max(0,p.counters[kind]-g.start)),title:kind==='pickup'?'Serve '+target+' customers':kind==='online'?'Complete '+target+' deliveries':kind==='invest'?(target>1?'Improve '+target+' branches or projects':'Improve a branch or build a project'):'Earn $'+target};
 }
 export function claimGoal(state,i,scale=1){
   if(!Number.isInteger(i)||i<0||i>2)return 0;

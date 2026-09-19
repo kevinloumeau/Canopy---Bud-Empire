@@ -39,9 +39,9 @@ test('customer types pick a matching strain when the menu offers one',()=>{
   const levels=[1,1,0,1];
   assert.equal(preferredStrain('regular',[0,1,3],levels),0);
   assert.equal(preferredStrain('hurried',[1,3],levels),null);
-  assert.equal(preferredStrain('collector',[0,1,3],levels),3);
+  assert.equal(preferredStrain('vip',[0,1,3],levels),3);
   assert.equal(preferredStrain('vip',[0],levels),null);
-  assert.equal(preferredStrain('collector',[0,2],levels),null);
+  assert.equal(preferredStrain('regular',[2],levels),null);
 });
 
 test('fixed rewards scale with income but never shrink, and the scale is applied on claim',()=>{

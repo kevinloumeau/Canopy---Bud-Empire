@@ -1,6 +1,6 @@
 // Offline shell for Canopy: Bud Empire. Hashed assets are cached first; the page itself is network-first so deploys land.
 // The build stamps CACHE with the script hash (scripts/make-classic.mjs) so old asset caches are dropped on activate.
-const CACHE = 'canopy-COhsMIBQ';
+const CACHE = 'canopy-v1';
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', event => {
   event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));

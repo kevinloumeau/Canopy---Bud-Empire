@@ -46,7 +46,8 @@ body[data-store-view=branch] #customerStatus{display:none}
 .sheet #stockStatus .stock-item svg{width:18px;height:20px;flex-shrink:0}
 .sheet #stockStatus .stock-item>span{display:grid;gap:1px;line-height:1.1}
 .sheet #stockStatus .stock-item small{font-size:9px;letter-spacing:.03em;color:#9fb59a;font-family:inherit}
-.sheet #stockStatus .stock-item b{font:600 12.5px 'DM Mono',monospace;color:#e8f2d7;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.sheet #stockStatus .stock-item b{font:600 12.5px 'DM Mono',monospace;color:#e8f2d7;font-variant-numeric:tabular-nums;letter-spacing:-.02em;white-space:nowrap}
+.sheet #stockStatus .stock-item b small{font-size:9px;font-weight:600;letter-spacing:.02em;margin-left:2px;color:#a9b8a3;text-decoration:none}
 .sheet #stockStatus .stock-item b.stock-full{color:#e9cd91;text-decoration:underline dotted;text-underline-offset:3px}
 @media(hover:hover){.sheet #stockStatus .stock-item:hover{background:#e1f5d611}}
 .sheet #stockStatus .stock-item:focus-visible{outline:2px solid #d7f2b8;outline-offset:2px}

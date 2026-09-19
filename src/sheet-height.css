@@ -1,0 +1,107 @@
+/* Every tab opens the sheet to the same height: the visible pane gets one fixed height and scrolls inside it,
+   overriding the per-tab max-heights so switching tabs never moves the tray or the map. Loaded last on purpose. */
+@media(max-width:779px){
+ .sheet{max-height:64dvh}
+ html body .sheet>[data-pane]{height:min(50dvh,400px);max-height:none}
+}
+@media(max-height:640px) and (max-width:779px){
+ .sheet{max-height:60dvh}
+ html body .sheet>[data-pane]{height:min(46dvh,380px)}
+}
+@media(min-width:780px){
+ html body .sheet>[data-pane]{height:min(calc(100dvh - 258px),540px);max-height:none}
+}
+
+/* Fit each pane to that height: overflowing tabs are compacted, short tabs stretch their main block. */
+
+/* Empire: rewards in one row, tighter heading, two-line store cards, help and "more" side by side. */
+.sheet .empire-screen .reward-strip{display:flex;align-items:center;gap:6px;margin:0 0 8px}
+.sheet .empire-screen .reward-chips{flex:1;flex-wrap:nowrap;overflow-x:auto;margin:0;scrollbar-width:none}
+.sheet .empire-screen .reward-chips::-webkit-scrollbar{display:none}
+.sheet .empire-screen .reward-chip{flex:0 0 auto;min-height:40px;padding:4px 10px}
+.sheet .empire-screen .reward-collect{width:auto;flex:0 0 auto;min-height:40px;padding:0 12px}
+.sheet .empire-screen .empire-section-heading{margin:0 0 2px;padding-top:0;border-top:0;font-size:14px}
+.sheet .empire-screen .store-list{gap:6px;margin-top:6px}
+.sheet .empire-screen .store-list .branch-toggle.store-card{row-gap:3px;padding:8px 8px 8px 10px;border-radius:13px}
+.sheet .empire-screen .store-card .store-detail{display:none}
+.sheet .empire-screen .store-icon{width:32px;height:32px;border-radius:10px}
+.sheet .empire-screen .store-icon svg{width:18px;height:18px}
+.sheet .empire-screen .empire-more{margin-top:8px;min-height:44px}
+.sheet .empire-screen .branch-help summary{min-height:36px;padding:6px 0}
+
+/* Deliveries and Stations: give the main card the spare room on wide sheets. */
+@media(min-width:780px){
+ html body .sheet>[data-pane=orders]{display:flex;flex-direction:column}
+ .sheet .machine-nav button{grid-template-rows:64px auto auto;padding:10px 0 9px}
+ .sheet .machine-nav button .machine-thumb{width:56px;height:64px}
+ .selected-line{padding:10px 2px 6px}
+ #upgradePreview{width:104px;height:120px}
+ .station-upgrade{padding-top:8px}
+ /* Staff: seven rows in the space, without a scrollbar. */
+ .sheet .employee-list{gap:5px;padding-bottom:4px;max-height:none}
+ .sheet .employee-card{padding-block:6px}
+ .sheet .employee-intro{margin-bottom:4px}
+}
+
+@media(max-width:779px){
+ /* Phones: the collapsible help is reachable from the branch cards themselves; the footer stays one row. */
+ .sheet .empire-screen .branch-help{display:none}
+ .sheet .empire-screen .empire-more{min-height:40px;margin-top:6px}
+ .sheet .empire-screen .store-list .branch-toggle.store-card{padding:7px 8px 7px 10px}
+}
+
+/* Stations and Staff: whatever room is left goes into the main block, not a blank strip at the bottom. */
+html body .sheet>[data-pane=factory]{display:flex;flex-direction:column}
+[data-pane="factory"] .selected-line{flex:1;align-content:center;min-height:0}
+[data-pane="factory"] .station-upgrade{margin-top:auto}
+html body .sheet>[data-pane=employees]{display:flex;flex-direction:column}
+[data-pane="employees"] .employee-list{flex:1;display:grid;grid-auto-rows:1fr;align-content:stretch;max-height:none;min-height:0}
+[data-pane="employees"] .employee-card{align-items:center}
+/* Tall phone-width windows: the station portrait grows into the spare hero space. */
+@media(max-width:779px) and (min-height:860px){
+ .selected-line{grid-template-columns:96px minmax(0,1fr) 110px;gap:12px}
+ #upgradePreview{width:96px;height:118px}
+}
+
+/* Staff rows: name with level and speed as small pills beside it. */
+.sheet .employee-card>div:not(.employee-number):not(.employee-train-actions){display:grid;grid-template-columns:76px minmax(0,1fr);align-items:center;column-gap:6px;min-width:0}
+.sheet .employee-card>div>b{font-size:12.5px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet .employee-card small{display:grid;grid-template-columns:48px auto;gap:4px;margin:0;white-space:nowrap;overflow:visible;font-size:10px;line-height:1}
+.sheet .employee-card small span{text-align:center;padding:3px 7px;border-radius:999px;background:#ffffff0d;border:1px solid #ffffff14;color:#cddcc4;font-family:inherit;letter-spacing:0}
+.sheet .employee-card small span:first-child{color:#f0dfb0;border-color:#f0dfb033;background:#f0dfb012}
+.sheet .employee-card small span:last-child{justify-self:start}
+@media(max-width:400px){.sheet .employee-card>div:not(.employee-number):not(.employee-train-actions){grid-template-columns:64px minmax(0,1fr)}.sheet .employee-card>div>b{font-size:11.5px}.sheet .employee-card small{grid-template-columns:42px auto}}
+
+/* The map runs full height behind the glass sheet instead of stopping at its top edge; the gesture hint moves up with it. */
+@media(max-width:779px){
+ .world{bottom:0}
+ .gesture-hint{bottom:calc(var(--dock-height,250px) + 10px)}
+}
+
+/* Station strip: icon, name, level. Taller cards use the room the pane already has. */
+.sheet .machine-nav button{grid-template-rows:24px auto auto;grid-template-areas:"icon" "name" "status";row-gap:3px;padding:10px 2px 9px;min-height:76px}
+.sheet .machine-nav .station-icon{width:24px;height:24px}
+.sheet .machine-nav .station-card-name{position:static;width:auto;height:auto;overflow:hidden;clip:auto;grid-area:name;font-size:10.5px;font-weight:600;letter-spacing:-.01em;line-height:1.2;text-align:center;white-space:nowrap;text-overflow:ellipsis;max-width:100%}
+.sheet .machine-nav button>em{grid-area:status}
+.sheet .machine-nav button.can-upgrade::after{top:6px}
+@media(max-width:400px){.sheet .machine-nav .station-card-name{font-size:9.5px;letter-spacing:-.02em}.sheet .machine-nav button{padding-inline:1px}}
+
+/* The station holding everything back is unmistakable: gold ring on its card and map label, and its upgrade badge
+   inverted (solid gold disc, arrow cut out) instead of the outline arrow everyone else gets. */
+.sheet .machine-nav button.is-bottleneck{background:linear-gradient(160deg,#efcf8d1f,#efcf8d08);box-shadow:inset 0 0 0 1.5px #efcf8d99,0 0 14px -4px #efcf8d66}
+.sheet .machine-nav button.is-bottleneck[aria-pressed=true]{box-shadow:inset 0 0 0 1.5px #efcf8d,0 0 16px -4px #efcf8d88}
+.sheet .machine-nav button.is-bottleneck .station-card-name,.sheet .machine-nav button.is-bottleneck>em{color:#f3d98f}
+.sheet .machine-nav button.is-bottleneck::after{content:'';display:block;position:absolute;top:5px;left:calc(50% + 6px);right:auto;bottom:auto;width:13px;height:13px;border-radius:0;background:#efcf8d;box-shadow:0 0 8px #efcf8d66;animation:none;transform:none;
+ mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill-rule='evenodd' d='M10 .8a9.2 9.2 0 1 0 0 18.4A9.2 9.2 0 0 0 10 .8Zm0 4.2-4.2 4.7h2.6V15h3.2V9.7h2.6L10 5Z' fill='black'/%3E%3C/svg%3E") center/contain no-repeat;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill-rule='evenodd' d='M10 .8a9.2 9.2 0 1 0 0 18.4A9.2 9.2 0 0 0 10 .8Zm0 4.2-4.2 4.7h2.6V15h3.2V9.7h2.6L10 5Z' fill='black'/%3E%3C/svg%3E") center/contain no-repeat}
+.sheet .machine-nav button.is-bottleneck:not(.can-upgrade)::after{background:#efcf8d99;box-shadow:none}
+.world .marker.is-bottleneck:not(.selected){border-color:#efcf8d;box-shadow:0 0 0 1px #efcf8d66,0 3px 12px #0005,0 0 14px -2px #efcf8d80;color:#f3d98f}
+.world .marker.station-sign.is-bottleneck::after{opacity:1;background:#efcf8d;animation:none;
+ mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill-rule='evenodd' d='M10 .8a9.2 9.2 0 1 0 0 18.4A9.2 9.2 0 0 0 10 .8Zm0 4.2-4.2 4.7h2.6V15h3.2V9.7h2.6L10 5Z' fill='black'/%3E%3C/svg%3E") center/contain no-repeat;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill-rule='evenodd' d='M10 .8a9.2 9.2 0 1 0 0 18.4A9.2 9.2 0 0 0 10 .8Zm0 4.2-4.2 4.7h2.6V15h3.2V9.7h2.6L10 5Z' fill='black'/%3E%3C/svg%3E") center/contain no-repeat}
+.world .marker.station-sign.is-bottleneck:not(.can-upgrade)::after{background:#efcf8d99}
+.world .marker.station-sign.is-bottleneck.selected::after{background:#3b4a2a}
+
+/* Station chips keep their labels on phones so the numbers read as sentences: "1k per batch · every 0.04s". */
+@media(max-width:779px){
+ .sheet #stationStatus .stat small{display:inline;font-size:9.5px;color:#aab99f}
+ .sheet #stationStatus .stat b{min-width:0}
+}

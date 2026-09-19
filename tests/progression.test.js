@@ -83,13 +83,13 @@ test('specialties, featured products and unique managers change only eligible br
  assert.doesNotThrow(()=>migrateProgression({stores:{0:{manager:'host'}}}));
  const duplicate=migrateProgression({stores:[{manager:'host'},{manager:'host'}]});assert.equal(duplicate.stores[1].manager,'none');
 });
-test('customer preferences reward matches, unlock collectors and VIPs and honor service time',async()=>{
+test('customer preferences reward matches, unlock VIPs and honor service time',async()=>{
  const {customerType,satisfyCustomer,tickBranches}=await import('../src/progression.js');const p=fresh().empire;
- assert.notEqual(customerType(0,2),'collector');assert.equal(customerType(20,2),'collector');
+ assert.equal(customerType(20,2),'regular');assert.equal(customerType(60,6),'vip');assert.equal(customerType(59,6),'regular');
  for(let i=0;i<20;i++)assert.equal(satisfyCustomer(p,-1,'regular','everyday',50),1.15);
- assert.equal(p.reputation,20);assert.equal(satisfyCustomer(p,-1,'collector','everyday',5),1);assert.equal(p.reputation,19);
+ assert.equal(p.reputation,20);assert.equal(satisfyCustomer(p,-1,'regular','boutique',5),1);assert.equal(p.reputation,19);
  assert.equal(satisfyCustomer(p,-1,'hurried','boutique',21),1);assert.equal(satisfyCustomer(p,-1,'hurried','everyday',20),1.15);
- p.reputation=59;assert.ok(Math.abs(satisfyCustomer(p,-1,'collector','boutique',60)-1.35)<1e-9);
+ p.reputation=59;assert.ok(Math.abs(satisfyCustomer(p,-1,'regular','everyday',60)-1.35)<1e-9);
  const b=p.stores[0];b.level=7;b.manager='host';tickBranches(p,12);assert.equal(b.served,1);assert.equal(b.loyalty,2);
  const saved=migrateProgression(JSON.parse(JSON.stringify(p)));assert.equal(saved.reputation,60);assert.equal(saved.stores[0].loyalty,2);
 });

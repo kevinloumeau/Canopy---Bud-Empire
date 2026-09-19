@@ -73,9 +73,7 @@ body[data-store-view=branch] .customer-mood{display:none}
 .branch-management{grid-column:1/-1;min-width:0}
 .branch-management .specialty{color:#e3d1a6;font-weight:650}
 .branch-management summary{min-height:44px;align-content:center;cursor:pointer}
-.branch-management label{display:block;margin:14px 0 5px;color:#f0f4e8}
-.branch-management select{width:100%;min-height:44px;border:1px solid #a1b991;border-radius:8px;background:#20392d;color:#f0f4e8;padding:8px;font:inherit;color-scheme:dark}
-.branch-management select:focus-visible,.branch-management summary:focus-visible{outline:2px solid #e3d1a6;outline-offset:2px}
+.branch-management summary:focus-visible{outline:2px solid #e3d1a6;outline-offset:2px}
 .short-goal{padding:18px 0;border-bottom:1px solid #c1d7b733}
 #returnSummary{padding-bottom:22px;margin-bottom:24px;border-bottom:1px solid #c1d7b733}
 #returnEarnings{list-style:none;padding:0;margin:16px 0}
@@ -86,11 +84,6 @@ body[data-store-view=branch] .customer-mood{display:none}
 
 /* Keep branch decisions visible and explanations optional. */
 .branch-facts{display:flex;align-items:baseline;justify-content:space-between;gap:12px;font-size:12px;color:#cbdcc5}
-.branch-choices{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
-.branch-choices>div{min-width:0}
-.branch-choices label{font-size:12px;margin:8px 0 5px}
-.branch-choices select{font-size:12px;padding-inline:7px}
-.branch-choices .choice-effect{font-size:11px;line-height:1.4;margin:6px 0 10px}
 .branch-help{font-size:12px;color:#cbdcc5}
 .branch-help summary{min-height:44px;align-content:center;cursor:pointer}
 .branch-help p{font-size:12px;margin:4px 0 10px}
@@ -121,7 +114,6 @@ body[data-store-view=branch] .customer-mood{display:none}
 .branch-body .branch-projects{margin-top:6px;padding-top:0}
 .branch-body .branch-projects summary{color:#cbdcc5;font-size:12px}
 .branch-body .branch-help summary{min-height:38px}
-.branch-body .branch-choices label{margin-top:0}
 .branch-toggle{scroll-margin-top:65px}
 
 .sheet .empire-content .branch-body .branch-actions button[hidden]+button{flex:0 0 auto;min-width:106px}

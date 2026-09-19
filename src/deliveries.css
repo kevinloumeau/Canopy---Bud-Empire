@@ -1,0 +1,90 @@
+/* Deliveries as a dispatch desk: what is waiting, what can ship, one big send, and the drone tucked underneath. */
+.dispatch-desk{display:flex;flex-direction:column;gap:8px;padding:0 4px 4px;height:100%;box-sizing:border-box}
+
+/* Three numbers. The shippable one lights up when there is something to send. */
+.dispatch-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.dispatch-stat{display:grid;gap:1px;padding:8px 10px 7px;border-radius:12px;background:#0f1a14b0;border:1px solid #ffffff10;min-width:0}
+.dispatch-stat b{font:600 17px 'DM Mono',monospace;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:#f3f6e8;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dispatch-stat small{font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;font-weight:600;color:#9fb09a;font-family:inherit}
+.dispatch-stat.is-live{border-color:#b6d69055;background:linear-gradient(160deg,#b6d69018,#0f1a14b0)}
+.dispatch-stat.is-live b{color:#d4eebc}
+
+/* Order card: the next order and the send buttons, primary first. */
+[data-pane="orders"] .dispatch-desk .online-card::before{content:'';position:absolute;left:0;right:0;top:0;height:16px;background:linear-gradient(#1f2f26d9,#1f2f2600);z-index:3;pointer-events:none}
+[data-pane="orders"] .dispatch-desk .online-card{display:grid;grid-template-columns:minmax(0,300px) minmax(160px,220px);justify-content:center;gap:10px 28px;align-items:center;align-content:start;margin:0;padding:0 14px 10px;overflow:hidden;position:relative;border-radius:14px;background:#ffffff06;border:1px solid #d8ead21f;flex:1 0 auto;min-height:max-content;container-type:inline-size}
+/* The next order as a thermal receipt: cream paper, mono type, dotted rules, torn edges and a barcode. */
+.receipt-stack{--receipt-mask:linear-gradient(#000,#000) top/100% 8px no-repeat,radial-gradient(circle at 6px 100%,transparent 3.5px,#000 4px) bottom/12px 8px repeat-x,linear-gradient(#000,#000) center/100% calc(100% - 14px) no-repeat;position:relative;width:min(100%,300px);justify-self:center;align-self:start;margin:-40px 0 0 0}
+[data-pane="orders"] .online-card>.receipt-stack{margin:-40px 0 0;padding:0}
+.receipt-stack::before,.receipt-stack::after{content:'';position:absolute;inset:0;border-radius:3px;background:#e6e1d1;-webkit-mask:var(--receipt-mask);mask:var(--receipt-mask);opacity:0;transform-origin:50% 100%;transition:opacity .25s ease,transform .25s ease;pointer-events:none}
+.receipt-stack[data-depth="1"]::before,.receipt-stack[data-depth="2"]::before{opacity:1;transform:translate(7px,4px) rotate(1.6deg)}
+.receipt-stack[data-depth="2"]::after{opacity:1;background:#d9d4c3;transform:translate(-8px,7px) rotate(-2deg)}
+.receipt-stack .receipt{position:relative;z-index:1;transition:opacity .3s ease}
+.receipt-stack.is-idle .receipt{opacity:.55}
+.receipt-stack .receipt.is-arriving{animation:receipt-in .45s cubic-bezier(.2,.8,.3,1)}
+.receipt-stack .receipt.is-leaving{position:absolute;inset:0;z-index:2;pointer-events:none;animation:receipt-out .6s cubic-bezier(.5,0,.85,.4) forwards}
+@keyframes receipt-in{from{transform:translateY(-30%)}to{transform:none}}
+@keyframes receipt-out{0%{transform:none;opacity:1}100%{transform:translate(-14%,-125%) rotate(-6deg);opacity:.2}}
+@media(prefers-reduced-motion:reduce){.receipt-stack .receipt.is-arriving,.receipt-stack .receipt.is-leaving{animation:none}.receipt-stack .receipt.is-leaving{display:none}}
+[data-pane="orders"] .online-card .online-details.receipt{display:grid;gap:3px;margin:0!important;width:100%;padding:48px 12px 12px;border-radius:3px;background:#f4f0e3;color:#2b3128;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0;box-shadow:0 8px 18px -10px #000c;
+  -webkit-mask:radial-gradient(circle at 6px 0,transparent 3.5px,#000 4px) top/12px 8px repeat-x,radial-gradient(circle at 6px 100%,transparent 3.5px,#000 4px) bottom/12px 8px repeat-x,linear-gradient(#000,#000) center/100% calc(100% - 14px) no-repeat;mask:radial-gradient(circle at 6px 0,transparent 3.5px,#000 4px) top/12px 8px repeat-x,radial-gradient(circle at 6px 100%,transparent 3.5px,#000 4px) bottom/12px 8px repeat-x,linear-gradient(#000,#000) center/100% calc(100% - 14px) no-repeat}
+.receipt-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:4px 0 5px;margin-bottom:1px;border-bottom:1px dashed #2b312855;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#5c6455}
+.receipt-head b{font-weight:600;color:#2b3128;letter-spacing:0}
+.receipt-line{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.receipt-line>span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:#2b3128;background:radial-gradient(circle,#2b312855 .8px,transparent 1px) bottom/4px 2px repeat-x;padding-bottom:2px}
+.receipt-line>span:last-child{color:#5c6455;white-space:nowrap}
+.receipt-total{display:flex;justify-content:space-between;align-items:baseline;margin-top:3px;padding-top:5px;border-top:1px dashed #2b312855;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#5c6455}
+.receipt-total b{font-size:18px;letter-spacing:-.02em;color:#1f261c;font-weight:600}
+.receipt-note{margin:1px 0 0;font-size:9.5px;color:#7a836f}
+.receipt-note:empty{display:none}
+.receipt-barcode{height:14px;margin-top:4px;background:repeating-linear-gradient(90deg,#1f261c 0 2px,transparent 2px 4px,#1f261c 4px 5px,transparent 5px 8px,#1f261c 8px 11px,transparent 11px 13px);opacity:.85}
+[data-pane="orders"] .online-card .online-details.receipt small{font-family:inherit}
+[data-pane="orders"] .online-card>.dispatch-actions,[data-pane="orders"] .online-card>.dispatch-actions:has(#onlineMaxOption){display:grid;grid-template-columns:minmax(0,1fr);gap:8px;align-self:center;justify-self:stretch;justify-content:normal;align-items:center;margin:0;width:100%;min-width:0}
+.dispatch-option{display:grid;gap:4px;text-align:center;min-width:0}
+.dispatch-option[hidden]{display:none}
+.dispatch-option>small{font-size:10px;color:#9fb09a;font-family:inherit;letter-spacing:0}
+.sheet [data-pane="orders"] .dispatch-option button{display:grid;gap:2px;width:100%;min-height:72px;padding:8px 10px;border-radius:12px;border:1px solid #789167;background:#2f4a36;color:#edf3df;font-family:inherit}
+.sheet [data-pane="orders"] .dispatch-option button span{font-size:12px;font-weight:600}
+.sheet [data-pane="orders"] .dispatch-option button strong{font:600 16px 'DM Mono',monospace;letter-spacing:-.02em}
+.sheet [data-pane="orders"] .dispatch-option button strong:empty{display:none}
+.sheet [data-pane="orders"] .dispatch-option.is-primary button{background:linear-gradient(180deg,#9db56f,#7c9a55);border-color:#b7cf8e;color:#1d2a1a}
+.sheet [data-pane="orders"] .dispatch-option.is-primary button strong{color:#1d2a1a}
+.sheet [data-pane="orders"] .dispatch-option button:disabled{opacity:.45;background:#2a3a2e;border-color:#4a5a4a;color:#c4cfbb}
+.sheet [data-pane="orders"] .dispatch-option.is-primary button:disabled strong{color:#c4cfbb}
+/* The hint is folded into the send button's caption; the separate line stays in the DOM for the render code but never shows. */
+.online-reserved{display:none!important}
+.dispatch-option>small{display:block;min-height:14px;line-height:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}
+.dispatch-option>small.is-hint{color:#c7b98a}
+
+/* Auto drone: a compact card with a real switch, bulk upgrade beside it. */
+.dispatch-desk .auto-drone-control{display:grid;grid-template-columns:auto minmax(0,1fr) 52px auto;align-items:center;gap:10px 12px;margin:0;padding:10px 12px;border:1px solid #d8ead21f;border-bottom:1px solid #d8ead21f;border-radius:14px;background:#ffffff05}
+.dispatch-desk .auto-drone-control>.drone-glyph{grid-column:1;order:0}
+.dispatch-desk .auto-drone-control>div{grid-column:2;order:0;gap:2px}
+.dispatch-desk .auto-drone-control>#autoDroneToggle{grid-column:3;order:0}
+.dispatch-desk .auto-drone-control>#autoDroneBulk{grid-column:4;order:0;justify-self:end}
+.dispatch-desk .auto-drone-control strong{font-size:12.5px}
+.dispatch-desk .auto-drone-control small{font-size:10.5px;color:#9fb09a;font-family:inherit;letter-spacing:0}
+.drone-glyph{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:#ffffff0a;color:#cddcc4}
+.drone-glyph svg{width:20px;height:20px}
+.dispatch-desk .auto-drone-control button{min-height:34px;min-width:0;padding:6px 10px;border-radius:10px;font-size:11px}
+.dispatch-desk .drone-switch{position:relative;width:52px!important;min-width:52px!important;max-width:52px;box-sizing:border-box;justify-self:center;padding:0!important;color:transparent!important;border-radius:999px!important;background:#2a3a2e!important;border-color:#4a5a4a!important;overflow:hidden}
+.dispatch-desk .drone-switch::before{content:'';position:absolute;top:4px;left:4px;width:26px;height:26px;border-radius:50%;background:#c4cfbb;transition:transform .18s ease,background .18s ease}
+.dispatch-desk .drone-switch[aria-pressed=true]{background:#7c9a55!important;border-color:#b7cf8e!important}
+.dispatch-desk .drone-switch[aria-pressed=true]::before{transform:translateX(18px);background:#f3f6e8}
+.dispatch-desk .drone-switch:not([aria-pressed]){width:auto!important;max-width:none;color:#edf3df!important;padding:6px 10px!important}
+.dispatch-desk .drone-switch:not([aria-pressed])::before{display:none}
+.dispatch-desk #autoDroneBulk[aria-pressed=true]{background:#496044}
+.dispatch-desk .delivery-site{margin:0}
+
+@media(max-width:400px){
+  .dispatch-stat b{font-size:15px}
+  .dispatch-desk .auto-drone-control{grid-template-columns:auto minmax(0,1fr) auto;row-gap:6px}
+  .dispatch-desk .auto-drone-control>#autoDroneBulk{grid-column:2/4;justify-self:start}
+}
+
+/* Narrow desks stack the send button under the receipt. */
+@container (max-width:560px){
+  [data-pane="orders"] .dispatch-desk .online-card{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);align-content:stretch}
+  [data-pane="orders"] .online-card>.dispatch-actions,[data-pane="orders"] .online-card>.dispatch-actions:has(#onlineMaxOption){align-self:start;margin:22px 0 4px}
+  [data-pane="orders"] .online-card>.dispatch-actions,[data-pane="orders"] .online-card>.dispatch-actions:has(#onlineMaxOption){width:min(100%,300px);justify-self:center}
+  .sheet [data-pane="orders"] .dispatch-option button{min-height:56px}
+}

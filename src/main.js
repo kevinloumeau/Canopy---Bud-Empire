@@ -9,6 +9,7 @@ import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import * as economy from './economy.js';
+import * as strains from './strains.js';
 import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, affordableImprovement, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent } from './progression.js';
 (function () {
   'use strict';
@@ -21,7 +22,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   var STRAINS=[{name:'Meadow Mint',price:18,unlock:0,color:'#aacb85'},{name:'Amber Bloom',price:26,unlock:1500,color:'#ddbc75'},{name:'Violet Haze',price:38,unlock:12000,color:'#baa1cf'},{name:'Midnight Orchid',price:56,unlock:65000,color:'#8ebcbb'}];
   // Contract progression is defined in depth.js, including post-city milestones.
   var $=function(id){return document.getElementById(id)};
-  function fresh(){return{money:30,lifetime:0,lightMode:null,autoDrone:migrateAutoDrone(),productMenu:migrateMenu(),sound:false,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[1,1,1,1,1,1],stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1}}
+  function fresh(){return{money:30,lifetime:0,lightMode:null,autoDrone:migrateAutoDrone(),productMenu:migrateMenu(),sound:false,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[1,1,1,1,1,1],stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
   function readSave(){
     for(var key of ['shift-save','shift-save-backup']){
       try{var raw=localStorage.getItem(key);if(!raw)continue;var value=JSON.parse(raw);if(value&&typeof value==='object'&&!Array.isArray(value))return value}catch(e){}
@@ -30,11 +31,11 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   }
   function finite(value,fallback,min,max){var n=Number(value);return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback}
   function load(){try{var old=readSave(),next=Object.assign(fresh(),old);
-    ['trafficLevel','pickupLevel','readyLevel','curingLevel','durationLevel','kioskSpeedLevel','onlineBonusLevel','comfortLevel','scannerLevel','webLevel'].forEach(function(key){next[key]=Math.floor(finite(old[key],0,0,key==='pickupLevel'?4:8))});
+    ['trafficLevel','pickupLevel','readyLevel','curingLevel','durationLevel','kioskSpeedLevel','onlineBonusLevel','comfortLevel','scannerLevel','webLevel','seedBatchLevel','growBatchLevel','harvestBatchLevel','packSpeedLevel','serviceLevel','signLevel','loyaltyLevel','basketLevel','terpeneLevel','breedingLevel','displayLevel','trendLevel','fleetLevel','cargoLevel','repeatLevel'].forEach(function(key){next[key]=Math.floor(finite(old[key],0,0,key==='pickupLevel'?12:20))});
     next.idStaff=Math.floor(finite(old.idStaff,0,0,10000));
     next.strains=STRAINS.map(function(_,i){return Math.floor(finite(old.strains&&old.strains[i],i===0?1:0,i===0?1:0,10))});
     next.activeStrain=Math.floor(finite(old.activeStrain,0,0,STRAINS.length-1));if(!next.strains[next.activeStrain])next.activeStrain=0;
-    next.menuStrains=STRAINS.map(function(_,i){return i}).filter(function(i){return next.strains[i]>0&&(!Array.isArray(old.menuStrains)||old.menuStrains.indexOf(i)>=0)});if(!next.menuStrains.length)next.menuStrains=[0];
+    next.menuStrains=STRAINS.map(function(_,i){return i}).filter(function(i){return next.strains[i]>0&&(!Array.isArray(old.menuStrains)||old.menuStrains.indexOf(i)>=0)});if(!next.menuStrains.length)next.menuStrains=[0];next.strainTrend=strains.migrateTrend(old.strainTrend,STRAINS.length);next.vipBuzz=finite(old.vipBuzz,0,0,strains.VIP_BUZZ_SECONDS);
     next.money=finite(old.money,30,0,Number.MAX_SAFE_INTEGER);
     next.lifetime=finite(old.lifetime,0,0,Number.MAX_SAFE_INTEGER);
     next.sold=Math.floor(finite(old.sold,0,0,Number.MAX_SAFE_INTEGER));
@@ -81,13 +82,127 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
 
   function menuStrains(){return state.menuStrains.filter(function(i){return state.strains[i]>0})}
   function menuChoice(sequence){var menu=menuStrains();return menu[sequence%menu.length]}
-  // Regulars reach for the everyday strain and collectors for a boutique one when the menu offers it.
-  function strainFor(c){var preferred=economy.preferredStrain(c.kind,menuStrains(),state.strains);return preferred===null?menuChoice(c.id):preferred}
+  // Regulars reach for the everyday strain; VIPs take the reserve when the menu offers one.
+  function strainFor(c){if(c.kind==='vip'){var reserve=strains.reserveStrain(menuStrains(),state.strains);if(reserve!==null)return reserve}var preferred=economy.preferredStrain(c.kind,menuStrains(),state.strains);return preferred===null?menuChoice(c.id):preferred}
   // Satisfaction tips: patience stretches with Queue comfort, and Lasting effects sweeten every happy sale.
-  function customerSaleBonus(c){var bonus=satisfyCustomer(state.empire,-1,c.kind,c.strain===0?'everyday':'boutique',c.waitSeconds||0,1+state.comfortLevel*.15);if(bonus>1)bonus+=state.durationLevel*.03;return bonus*(c.eventGuest&&c.strain>0?1.25:1)}
+  function customerSaleBonus(c){var bonus=satisfyCustomer(state.empire,-1,c.kind,c.strain===0?'everyday':'boutique',c.waitSeconds||0,1+state.comfortLevel*.15);if(bonus>1)bonus+=state.durationLevel*.03;
+    // Strain identity: potency tips, the everyday and VIP perks, and Violet Haze's word of mouth on happy boutique sales.
+    bonus*=strains.tipFactor(c.kind,strainPotency(c.strain||0));if(bonus>1)bonus*=1+state.loyaltyLevel*.03;
+    if(c.strain===0)bonus*=strains.everydayBonus(state.strains);
+    // VIPs: served their reserve they pay the Orchid premium, boost reputation and start a buzz; offered only everyday flower they snub the shop.
+    if(c.kind==='vip'){if(c.strain>0){bonus*=strains.vipBonus(state.strains);state.empire.reputation=Math.min(1000,state.empire.reputation+strains.VIP_REPUTATION);state.vipBuzz=strains.VIP_BUZZ_SECONDS;burst({x:4,z:4.9,y:1.6},'#f0cf7f')}else{bonus=1;state.empire.reputation=Math.max(0,state.empire.reputation-strains.VIP_SNUB_REPUTATION)}}
+    if(bonus>1&&c.strain>0)state.empire.reputation=Math.min(1000,state.empire.reputation+strains.reputationBonus(state.strains));
+    return bonus*(c.eventGuest&&c.strain>0?1.25:1)}
+  // Flower menu: one jar illustration per strain, a row of cards to pick from, and a hero for the chosen strain.
+  var STRAIN_LOOKS=[
+    {kind:'Everyday',buyers:'Regulars always order this one.',pistil:'#d9c46a',frost:false,shape:'round'},
+    {kind:'Boutique',buyers:'VIPs order the most potent boutique strain on the menu.',pistil:'#e0803f',frost:false,shape:'cone'},
+    {kind:'Boutique',buyers:'VIPs order the most potent boutique strain on the menu.',pistil:'#ead3f2',frost:true,shape:'fluffy'},
+    {kind:'Boutique',buyers:'VIPs order the most potent boutique strain on the menu.',pistil:'#9fe0c9',frost:true,shape:'dense'}
+  ];
+  // A glass jar with the strain's bud inside. Calyx blobs stack in three tones of the strain colour; pistils and frost differ per strain.
+  function strainArt(i,locked){
+    var c=STRAINS[i].color,look=STRAIN_LOOKS[i],dark=shadeColor(c,.66),mid=shadeColor(c,.86),light=shadeColor(c,1.18),g='';
+    var layouts={
+      round:[[32,46,11,9,0],[24,40,9,8,-25],[40,40,9,8,25],[32,36,10,9,0],[26,31,8,7,-20],[38,31,8,7,20],[32,27,8,8,0]],
+      cone:[[32,47,11,8,0],[25,42,8,8,-20],[39,42,8,8,20],[32,38,9,9,0],[27,32,7,8,-15],[37,32,7,8,15],[32,26,6,9,0],[32,20,4,6,0]],
+      fluffy:[[30,46,12,9,0],[22,40,9,9,-30],[42,41,9,9,30],[32,37,11,10,0],[25,30,8,8,-20],[39,30,8,8,20],[32,25,9,8,0],[28,20,5,5,0],[37,21,5,5,0]],
+      dense:[[32,47,12,8,0],[24,42,8,7,-20],[40,42,8,7,20],[32,39,10,8,0],[26,33,8,7,-15],[38,33,8,7,15],[32,28,9,8,0],[32,22,6,6,0]]
+    }[look.shape];
+    layouts.forEach(function(b,k){var tone=k%3===0?mid:k%3===1?dark:c;g+='<ellipse cx="'+b[0]+'" cy="'+b[1]+'" rx="'+b[2]+'" ry="'+b[3]+'" transform="rotate('+b[4]+' '+b[0]+' '+b[1]+')" fill="'+tone+'"/>'});
+    // Highlights along the upper-left edge of the front calyxes.
+    [[26,34],[36,29],[30,24],[34,42]].forEach(function(q){g+='<ellipse cx="'+q[0]+'" cy="'+q[1]+'" rx="3.2" ry="1.6" transform="rotate(-30 '+q[0]+' '+q[1]+')" fill="'+light+'" opacity=".8"/>'});
+    [[22,38],[41,35],[29,44],[38,45],[33,31],[26,27]].forEach(function(q,k){g+='<path d="M'+q[0]+' '+q[1]+'c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="'+look.pistil+'" stroke-width="1.4" stroke-linecap="round" opacity=".9"/>'});
+    if(look.frost)[[24,36],[38,38],[30,30],[36,26],[27,42],[34,47],[40,31]].forEach(function(q){g+='<circle cx="'+q[0]+'" cy="'+q[1]+'" r="1.1" fill="#ffffff" opacity=".85"/>'});
+    var leaf='<path d="M32 52c-6-2-12-8-14-16 8 1 12 7 14 16Zm0 0c6-2 12-8 14-16-8 1-12 7-14 16Z" fill="'+dark+'"/>';
+    return '<svg class="strain-art'+(locked?' is-locked':'')+'" viewBox="0 0 64 80" aria-hidden="true">'+
+      '<defs><linearGradient id="jar'+i+'" x1="0" x2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".22"/><stop offset=".35" stop-color="#ffffff" stop-opacity=".04"/><stop offset=".8" stop-color="#ffffff" stop-opacity=".02"/><stop offset="1" stop-color="#ffffff" stop-opacity=".18"/></linearGradient></defs>'+
+      '<ellipse cx="32" cy="74" rx="20" ry="3.5" fill="#0b1a12" opacity=".35"/>'+
+      '<rect x="12" y="14" width="40" height="58" rx="9" fill="#1c2b23"/>'+
+      leaf+g+
+      '<rect x="12" y="14" width="40" height="58" rx="9" fill="url(#jar'+i+')"/>'+
+      '<rect x="12.6" y="14.6" width="38.8" height="56.8" rx="8.6" fill="none" stroke="#dfe9dc" stroke-opacity=".55" stroke-width="1.2"/>'+
+      '<path d="M17 24v34" stroke="#ffffff" stroke-opacity=".45" stroke-width="2.2" stroke-linecap="round"/>'+
+      '<rect x="14" y="60" width="36" height="7" rx="2" fill="'+c+'"/><rect x="14" y="60" width="36" height="7" rx="2" fill="#000" opacity=".12"/>'+
+      '<rect x="9" y="8" width="46" height="10" rx="3.5" fill="#3b3a33"/><rect x="9" y="8" width="46" height="4" rx="2" fill="#5a584c"/>'+
+      (locked?'<rect x="12" y="14" width="40" height="58" rx="9" fill="#101a15" opacity=".62"/><path d="M26 44v-6a6 6 0 0 1 12 0v6" fill="none" stroke="#dfe9dc" stroke-width="2.2"/><rect x="23" y="43" width="18" height="13" rx="2.5" fill="#dfe9dc"/>':'')+
+    '</svg>';
+  }
+  // A thumbnail bud in the strain's colours for legend tiles.
+  function strainBud(i){var c=STRAINS[i].color,d=shadeColor(c,.7),l=shadeColor(c,1.2);return '<svg viewBox="0 0 20 20" aria-hidden="true"><ellipse cx="10" cy="14" rx="6" ry="4.5" fill="'+d+'"/><ellipse cx="6.5" cy="10.5" rx="4.2" ry="3.6" fill="'+c+'"/><ellipse cx="13.5" cy="10.5" rx="4.2" ry="3.6" fill="'+c+'"/><ellipse cx="10" cy="7" rx="4" ry="3.8" fill="'+l+'"/><ellipse cx="10" cy="11.5" rx="3.6" ry="3" fill="'+c+'"/></svg>'}
+  // Sun for sativa, moon for indica, a half disc for hybrid.
+  function typeGlyph(type,large){var cls='type-glyph'+(large?' is-large':'');if(type===strains.SATIVA)return '<svg class="'+cls+'" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>';if(type===strains.INDICA)return '<svg class="'+cls+'" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 3a8.5 8.5 0 1 0 6.5 13.5A9 9 0 0 1 14.5 3Z"/></svg>';return '<svg class="'+cls+'" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 4a8 8 0 0 1 0 16Z"/></svg>'}
+  var flowerFocus=0;
+  function strainPotency(i){return strains.potency(i,state.strains[i])+state.terpeneLevel*.25}
+  function trendBoost(i){return i===state.strainTrend.index?1.35+state.trendLevel*.02:1}
+  function displayBoost(i){return i>0?1+state.displayLevel*.02:1}
+  function thcLabel(i){var v=strainPotency(i);return (Math.round(v*10)/10).toFixed(v%1?1:0)+'%'}
+  function buildStrainMenu(){
+    $('strainNav').innerHTML=STRAINS.map(function(strain,i){return '<button type="button" role="tab" id="strainTab'+i+'" style="--strain:'+strain.color+'"><span class="strain-card-art"></span><b>'+typeGlyph(strains.STRAIN_TYPE[i])+strain.name+'</b><small></small><em class="strain-pips" aria-hidden="true">'+Array.from({length:10},function(){return '<i></i>'}).join('')+'</em></button>'}).join('');
+    STRAINS.forEach(function(_,i){$('strainTab'+i).onclick=function(){flowerFocus=i;renderFlowers()}});
+    flowerFocus=menuStrains()[0]||0;
+  }
+  function renderStrainMenu(){
+    if(!$('strainNav'))return;
+    if(!$('strainNav').children.length)buildStrainMenu();
+    var menu=menuStrains(),trend=state.strainTrend.index,trendLeft=Math.max(0,Math.ceil(state.strainTrend.remaining)),trendClock=Math.floor(trendLeft/60)+':'+('0'+trendLeft%60).slice(-2);
+    var reserve=strains.reserveStrain(menu,state.strains),buzzLeft=Math.ceil(state.vipBuzz||0);
+    $('flowerSummary').textContent=fmt(flowerValue());
+    // Live modifiers as tiles: VIP buzz, the type peaking right now, and the trending strain.
+    var FLAME='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 4 5 5.5 5 11a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5.2 1.6 1 2.5 2 2.5 0-4 .5-6.5 1-9Z"/></svg>';
+    var STAR='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.7 6 6.5.6-4.9 4.3 1.5 6.4L12 16.4l-5.8 3.4 1.5-6.4L2.8 9.1l6.5-.6Z"/></svg>';
+    var night=atmosphere(state.empire.network).night,peak=strains.peakType(night);
+    var legend=(buzzLeft>0?'<span class="buyer is-buzz" style="--strain:#f0cf7f" title="VIP buzz · +30% traffic">'+STAR+'<b>'+buzzLeft+'s</b><small>Buzz</small></span>':'')+
+      '<span class="buyer is-time'+(night?' is-night':'')+'" title="'+(night?'Night: indicas sell +15%, sativas −9%':'Day: sativas sell +15%, indicas −9%')+'">'+typeGlyph(peak,true)+'<b>+15%</b><small>'+strains.TYPES[peak]+'</small></span>'+
+      '<span class="buyer is-trend'+(menu.indexOf(trend)>=0?' is-live':'')+'" style="--strain:'+STRAINS[trend].color+'" title="Trending · '+STRAINS[trend].name+' · +35% price while on the menu'+(menu.indexOf(trend)>=0?'':state.strains[trend]?' · add it to the menu':' · unlock it')+'">'+FLAME+'<i class="bud">'+strainBud(trend)+(menu.indexOf(trend)>=0?'':'<em>'+(state.strains[trend]?'+':'🔒')+'</em>')+'</i><b class="trend-clock"></b><small>Trending</small></span>';
+    if($('flowerBuyers').dataset.html!==legend){$('flowerBuyers').innerHTML=legend;$('flowerBuyers').dataset.html=legend}
+    STRAINS.forEach(function(strain,i){
+      var level=state.strains[i],active=state.menuStrains.indexOf(i)>=0,tab=$('strainTab'+i),art=tab.querySelector('.strain-card-art');
+      var artKey=(level?'u':'l');if(art.dataset.key!==artKey){art.innerHTML=strainArt(i,!level);art.dataset.key=artKey}
+      tab.classList.toggle('is-on-menu',active);tab.classList.toggle('is-locked',!level);tab.classList.toggle('is-trending',i===trend);tab.setAttribute('aria-selected',String(flowerFocus===i));tab.tabIndex=flowerFocus===i?0:-1;
+      tab.querySelector('small').textContent=!level?fmt(strain.unlock):active?'On menu':'Off menu';
+      Array.prototype.forEach.call(tab.querySelectorAll('.strain-pips i'),function(pip,k){pip.classList.toggle('is-filled',k<level)});
+    });
+    var i=flowerFocus,strain=STRAINS[i],look=STRAIN_LOOKS[i],level=state.strains[i],active=state.menuStrains.indexOf(i)>=0,price=strainCost(i),maxed=level>=10,detail=$('strainDetail');
+    var isNight=atmosphere(state.empire.network).night,type=strains.STRAIN_TYPE[i],timeNow=strains.timeFactor(type,isNight);
+    var nextValue=Math.round(strain.price*(1+level*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*format().value*trendBoost(i)*displayBoost(i)*timeNow);
+    var stats=level?
+      '<span><b>'+fmt(flowerValue(i))+'</b><small>per '+unitWord(1)+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+(maxed?'Max':'+'+fmt(nextValue-flowerValue(i)))+'</b><small>'+(maxed?'level 10':'next level')+'</small></span>':
+      '<span><b>'+fmt(Math.round(strain.price*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*format().value*timeNow))+'</b><small>per '+unitWord(1)+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+fmt(strain.unlock)+'</b><small>to unlock</small></span>';
+    var growPct=Math.round((1-strains.strainGrowFactor(i,Math.max(1,level)))*100),tipVip=Math.round((strains.tipFactor('vip',strains.potency(i,level)+state.terpeneLevel*.25)-1)*100),tier=strains.perkTier(level),perk=strains.PERKS[i];
+    var traits='<ul class="strain-traits">'+
+      '<li'+(growPct?' class="is-cost"':'')+'>'+(growPct?'Grow room −'+growPct+'%'+(level<10?' · masters with levels':''):'Easy to grow')+'</li>'+
+      '<li>VIP tips +'+tipVip+'%</li>'+
+      (type===strains.HYBRID?'<li>'+typeGlyph(type)+'Hybrid · steady day and night</li>':'<li class="'+(timeNow>1?'is-live':'is-cost')+'">'+typeGlyph(type)+strains.TYPES[type]+' · '+(timeNow>1?'+15% right now':'−9% until '+(type===strains.SATIVA?'morning':'evening'))+'</li>')+
+      (i===trend?'<li class="is-trend">Trending · +'+Math.round((trendBoost(i)-1)*100)+'% price · <span class="trend-clock"></span></li>':'')+
+      (i===reserve?'<li class="is-vip">★ VIP reserve · double baskets</li>':'')+
+    '</ul>';
+    var perkLine='<p class="strain-perk'+(tier?' is-unlocked':'')+'"><b>'+(tier?'★ '+perk.name:'☆ '+perk.name)+'</b> · '+(tier?perk.effect[tier-1]+(tier<2?' · level 10 doubles it':''):perk.locked)+'</p>';
+    var heroHtml='<div class="strain-hero'+(level?'':' is-locked')+(active?' is-on-menu':'')+(i===trend?' is-trending':'')+'" style="--strain:'+strain.color+'">'+
+      '<div class="strain-hero-art">'+strainArt(i,!level)+'</div>'+
+      '<div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">'+look.kind+' · </span>'+strains.TYPES[type]+(level?' · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>'+level+' / 10':' · Locked')+'</small><h2>'+strain.name+'</h2><p>'+(level?look.buyers:'Unlock to put it on the menu. '+look.buyers)+'</p><div class="strain-stats">'+stats+'</div>'+traits+perkLine+'</div>'+
+      '<div class="strain-hero-actions">'+(level?'<button type="button" id="flowerSelect" aria-pressed="'+active+'">'+(active?'On menu ✓':'Add to menu')+'</button>':'')+'<button type="button" id="flowerBuy" class="is-primary">'+(maxed?'Fully upgraded':(level?'Upgrade':'Unlock')+' · '+fmt(price))+'</button></div>'+
+    '</div>';
+    var heroKey=heroHtml+'|'+(maxed||state.money<price)+'|'+(active&&menu.length===1);
+    Array.prototype.forEach.call(document.querySelectorAll('.menu-board .trend-clock'),function(el){el.textContent=trendClock});
+    if(detail.dataset.key===heroKey)return;
+    detail.innerHTML=heroHtml;detail.dataset.key=heroKey;
+    Array.prototype.forEach.call(detail.querySelectorAll('.trend-clock'),function(el){el.textContent=trendClock});
+    if(level){var sel=$('flowerSelect');sel.disabled=active&&menu.length===1;sel.title=sel.disabled?'Keep at least one strain on the menu':active?'Remove from menu':'Add to menu';sel.onclick=function(){selectStrain(i)}}
+    var buy=$('flowerBuy');buy.disabled=maxed||state.money<price;buy.onclick=function(){buyStrain(i)};
+  }
   function format(){return FORMATS[state.productMenu.active]}
+  // Sales units follow the format: flower is sold by weight (one packed unit is an eighth), pre-rolls by the joint, edibles by the piece.
+  function unitWord(n){var f=state.productMenu.active;return f===1?(n===1?'joint':'joints'):f===2?(n===1?'edible':'edibles'):(n===1?'eighth':'eighths')}
+  function unitShort(){var f=state.productMenu.active;return f===1?'joint':f===2?'edible':'⅛'}
+  function weightLabel(n){var oz=Math.floor(n/8),rem=n%8,frac=['','⅛','¼','⅜','½','⅝','¾','⅞'][rem];return (oz?oz.toLocaleString():'')+frac+(oz||rem?' oz':'0 oz')}
+  function qtyLabel(n){return state.productMenu.active===0?weightLabel(n):n.toLocaleString()+' '+unitWord(n)}
+  // One compact number style for every HUD counter: 24000 → 24k, 3000 → 3k, 1250 → 1.3k.
+  function compactCount(n){return n>=100000?Math.round(n/1000)+'k':n>=1000?(Math.round(n/100)/10).toFixed(n%1000?1:0).replace(/\.0$/,'')+'k':Math.round(n*10)/10+''}
+  function secondsLabel(t){return (t>=10?Math.round(t):t>=1?t.toFixed(1):t.toFixed(2))+'s'}
+  function qtyShort(n){var f=state.productMenu.active;if(f===0){var oz=n/8;return (oz>=1000?(oz/1000).toFixed(oz>=10000?0:1)+'k':oz>=10?Math.round(oz):Math.round(oz*10)/10)+' oz'}return (n>=1000?(n/1000).toFixed(n>=10000?0:1)+'k':n)+(f===1?' jt':' ed')}
   var playSound=makeSound();
-  function flowerValue(index){if(index===undefined){var menu=menuStrains();return menu.reduce(function(total,i){return total+flowerValue(i)},0)/menu.length}var i=index;return Math.round(STRAINS[i].price*(1+Math.max(0,state.strains[i]-1)*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*format().value)}
+  function flowerValue(index){if(index===undefined){var menu=menuStrains();return menu.reduce(function(total,i){return total+flowerValue(i)},0)/menu.length}var i=index;return Math.round(STRAINS[i].price*(1+Math.max(0,state.strains[i]-1)*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*format().value*trendBoost(i)*displayBoost(i)*strains.timeFactor(strains.STRAIN_TYPE[i],atmosphere(state.empire.network).night))}
   function onlineValue(sequence){return Math.round(flowerValue(menuChoice(sequence===undefined?state.onlineCompleted:sequence))*4/3*(1+state.onlineBonusLevel*.05))}
   function strainCost(i){return state.strains[i]?Math.round(Math.max(250,STRAINS[i].unlock*.35)*Math.pow(1.85,state.strains[i]-1)):STRAINS[i].unlock}
   function buyStrain(i){
@@ -106,17 +221,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     if($('formatBenefit')){var f=format();$('formatBenefit').textContent=[['Standard value','Steady demand'],['+45% value','Faster pickup','Slower packing'],['+120% value','Lower demand','Slower packing']][state.productMenu.active].join(' · ');$('formatBenefit').title=f.detail;}
     if($('prestigeStart')){var offer=prestigeOffer(state);$('prestigeStart').disabled=!offer.eligible;$('prestigeStatus').textContent='Rank '+offer.rank+' · '+(1+offer.rank*.2).toFixed(1)+'× base sales';$('prestigeStart').textContent=offer.rank>=19?'Maximum prestige':'Reopen · '+fmt(offer.target);$('soundToggle').textContent=state.sound?'Sound on':'Sound off';$('soundToggle').setAttribute('aria-pressed',String(state.sound));}
 
-    var boutiqueOnMenu=menuStrains().some(function(i){return i>0});$('flowerSummary').textContent=menuStrains().length+(menuStrains().length===1?' strain · ':' strains · ')+fmt(flowerValue())+'/pickup · '+(state.empire.reputation>=20&&!boutiqueOnMenu?'collectors want a boutique strain':menuStrains().indexOf(0)<0?'regulars want Meadow Mint':'regulars take Meadow Mint, collectors the rest');
-    STRAINS.forEach(function(strain,i){
-      var level=state.strains[i],active=state.menuStrains.indexOf(i)>=0,price=strainCost(i);
-      $('flowerLevel'+i).textContent=level?'Level '+level+' / 10':'Not unlocked';
-      $('flowerValue'+i).textContent=fmt(flowerValue(i))+' / pickup · '+(i*9+Math.max(0,level-1)*3)+' potency'+(level&&level<10?' → '+fmt(Math.round(strain.price*(1+level*.1))):'');
-      $('flowerBuy'+i).disabled=level>=10||state.money<price;
-      $('flowerBuy'+i).textContent=level>=10?'Fully upgraded':(level?'Upgrade ':'Unlock ')+fmt(price);
-      $('flowerSelect'+i).hidden=!level;$('flowerSelect'+i).disabled=active&&state.menuStrains.length===1;
-      $('flowerSelect'+i).textContent=active?'On menu ✓':'Add to menu';$('flowerSelect'+i).setAttribute('aria-pressed',String(active));$('flowerSelect'+i).setAttribute('aria-label',(active?'Remove ':'Add ')+strain.name+(active?' from menu':' to menu'));$('flowerSelect'+i).title=active&&state.menuStrains.length===1?'Keep at least one strain on the menu':active?'Remove from menu':'Add to menu';$('flowerBuy'+i).setAttribute('aria-label',(level?'Upgrade ':'Unlock ')+strain.name+' · '+fmt(price));
-      $('flowerCard'+i).classList.toggle('is-active',active);
-    });
+    renderStrainMenu();
   }
   function fmt(n){if(n<1000)return '$'+Math.floor(n).toLocaleString();var units=[['T',1e12],['B',1e9],['M',1e6],['K',1e3]];for(var i=0;i<units.length;i++)if(n>=units[i][1])return '$'+(n/units[i][1]).toFixed(n/units[i][1]>=100?0:n/units[i][1]>=10?1:2)+units[i][0]}
   function capacity(i){return economy.capacity(state.lines[i],state.staff[i],state.multiplier)}
@@ -126,7 +231,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   function nextCapacity(i){return economy.capacity(state.lines[i]+1,state.staff[i],state.multiplier)}
   function isOpen(i){return i===0||state.lines[i-1]>0}
   // Customers buy a basket of bags that grows with the order desk and doubles per retail tier, so the counters move items, not just people.
-  function basketSize(){return economy.basketSize(state.lines)}
+  function basketSize(){return Math.max(1,Math.round(economy.basketSize(state.lines)*(1+state.basketLevel*.04)))}
   function stationThroughput(i){
     if(!state.lines[i])return 0;
     if(i<4)return capacity(i)/[2,3,2,2][i]/(i===3?format().packing:1);
@@ -134,16 +239,36 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     return (i===4?Math.min(capacity(i)/2,service+kioskCount()/kioskServiceDuration()):service)*basketSize();
   }
   function production(){return Math.min.apply(null,LINES.map(function(_,i){return stationThroughput(i)}))*flowerValue()}
-  function batchSize(i){return economy.batchSize(state.lines[i])}
-  function cycleSpeed(i){return (1+state.staff[i]*.3)*state.multiplier/(i===3?format().packing:1)}
+  function batchSize(i){return economy.batchSize(state.lines[i])*(i<3?1+state[['seedBatchLevel','growBatchLevel','harvestBatchLevel'][i]]*.06:1)}
+  function cycleSpeed(i){return (1+state.staff[i]*.3)*state.multiplier/(i===3?format().packing:1)*(i===1?growFactorNow():i===3?strains.packBonus(state.strains)*(1+state.packSpeedLevel*.06):1)}
+  // Breeding bench claws back part of the boutique grow penalty on top of strain mastery.
+  function growFactorNow(){var g=strains.growFactor(menuStrains(),state.strains);return 1-(1-g)*(1-state.breedingLevel*.03)}
   var batchRemainder=[0,0,0,0];
   var readyWork=0;
   var work=[0,0,0,0,0,0],customers=[],arrival=0,customerId=0,pickupQueueSequence=0;
   var QUEUE_MAX=30;
+  // Occasional thought bubbles: three-beat emoji stories about why someone came in, what the wait feels like, or the plan once the bag is in hand.
+  var THOUGHTS={
+    waiting:['💼😩🛋️','🎮🌙🍕','👵🍪❓','🧘☁️😌','🌧️📺☕','🎂🎈🎉','💍❓😬','👶😱🌙','🧾💸😅','🌮🌮🌮','🐈📦🤔','🎸🔥🎤','📝💔🍦','🚲🌅😎','🏃💨🥵','🧦🧦❓','🦆🍞🌅','📚😵🧠','🍕🍕😴'],
+    pickup:['⏳😐⏳','🕰️👀🛍️','🍔🍟⏳','🧮💰🤞','🎧🎶😌','📱🔋😬','🥪🚗🏠','☕☕☕','🐢🐢🐢','🤔🍫🍿','⏰💭🛋️'],
+    leaving:['🛋️🍕📺','🌅🏖️😎','🎮🌙🍿','🛁🕯️🎶','🍳🥞😋','🐕🛋️💤','🎨🖌️🌈','🎸🔊🚗','🌌🔭🤯','🍪🥛🌙','📺🐧😂','🧺🧦🙃','🍦🍦😁','🎳🍟🌙']
+  };
+  function thoughtPool(c){return c.bag?THOUGHTS.leaving:c.ordered?THOUGHTS.pickup:THOUGHTS.waiting}
+  var thoughtTimer=4;
+  function tickThoughts(dt){
+    var reduced=motionPreference.matches,active=0;
+    customers.forEach(function(c){if(c.thought){c.thought.age+=dt;if(c.thought.age>=c.thought.duration)c.thought=null;else active++}c.thoughtCooldown=Math.max(0,(c.thoughtCooldown||0)-dt)});
+    thoughtTimer-=dt;if(thoughtTimer>0||active>=3)return;
+    // One bubble at a time on a loose cadence: pick someone on screen who is not mid-exit and has not just had a thought.
+    var eligible=customers.filter(function(c){return !c.thought&&!c.thoughtCooldown&&!customerBehindBuilding(c)&&(c.phase!=='leaving'||c.t<.5)});
+    thoughtTimer=5+Math.random()*7;if(!eligible.length)return;
+    var c=eligible[Math.floor(Math.random()*eligible.length)],pool=thoughtPool(c);
+    c.thought={text:pool[Math.floor(Math.random()*pool.length)],age:0,duration:reduced?5:4.4};c.thoughtCooldown=20+Math.random()*15;
+  }
   function queueLimit(){return Math.min(QUEUE_MAX,Math.min(12,6+Math.floor(Math.max(0,state.lines[4]-1)/2)+Math.floor(state.staff[4]/2))+state.queueLevel*2)}
   function counterServiceDuration(i,serviceCapacity){
     // Both equipment and training shorten the handoff, with gentler gains at high levels.
-    return economy.counterServiceDuration(i,serviceCapacity===undefined?capacity(i):serviceCapacity,format().service);
+    return economy.counterServiceDuration(i,serviceCapacity===undefined?capacity(i):serviceCapacity,format().service)/(1+state.serviceLevel*.04);
   }
   function advanceCounterService(c,i,dt){
     if(c.serviceStation!==i){c.serviceStation=i;c.serviceElapsed=0}
@@ -154,12 +279,14 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   function simulate(dt){
     state.empire.retailBoost=retailBoost();accrueOnlineRequests(dt);
     add(branchRate(state.empire)*dt);tickBranches(state.empire,dt);var operationResult=tickOperations(state,dt);if(operationResult.revenue)add(operationResult.revenue);if(operationResult.deliveries){state.onlineCompleted+=operationResult.deliveries;recordEvent(state.empire,'online',operationResult.deliveries)}
-    arrival+=dt;
+    arrival+=dt;state.vipBuzz=Math.max(0,(state.vipBuzz||0)-dt);
+    if(strains.tickTrend(state.strainTrend,dt,STRAINS.length,state.sold+customerId)){var trending=STRAINS[state.strainTrend.index];notify(trending.name.toUpperCase()+' IS TRENDING · +35% for 8 min'+(state.strains[state.strainTrend.index]?'':' · unlock it to cash in'),'upgrade');renderUI()}
     if(arrival>=arrivalInterval()&&customers.filter(function(c){return !c.ordered&&c.phase!=='leaving'}).length<queueLimit()){
       var activeEvent=eventStatus(state.empire);var eventGuest=activeEvent.joined&&activeEvent.open&&!activeEvent.claimed&&customerId%4===3;
-      arrival=0;customers.push({eventGuest:eventGuest,kind:eventGuest||atmosphere(state.empire.network).night&&state.empire.reputation>=20&&customerId%2===0?'collector':customerType(state.empire.reputation,customerId),id:customerId++,phase:'entering',idChecked:false,idCheckTime:0,kiosk:state.kiosk&&customerId%2===0&&customers.filter(function(c){return c.kiosk&&!c.ordered}).length<kioskCount()+4,kioskIndex:chooseKiosk(),t:0,bag:false,ordered:false,x:-12.4,z:-10});
+      arrival=0;customers.push({eventGuest:eventGuest,kind:eventGuest?'vip':customerType(state.empire.reputation,customerId),id:customerId++,phase:'entering',idChecked:false,idCheckTime:0,kiosk:state.kiosk&&customerId%2===0&&customers.filter(function(c){return c.kiosk&&!c.ordered}).length<kioskCount()+4,kioskIndex:chooseKiosk(),t:0,bag:false,ordered:false,x:-12.4,z:-10});
     }
     customers.forEach(function(c){moveQueuedCustomer(c,dt);if(!c.walking&&c.phase!=='leaving')c.waitSeconds=(c.waitSeconds||0)+dt;if(c.bag)c.effectAge=(c.effectAge||0)+dt});
+    tickThoughts(dt);
     customers=customers.filter(function(c){return c.phase!=='leaving'||c.t<1});
     if(state.lines[5]){
       var pickups=customers.filter(function(c){return c.ordered&&!c.bag}).sort(function(a,b){return (a.pickupTicket||a.id)-(b.pickupTicket||b.id)}).slice(0,1).filter(function(c){return c.phase==='pickup'&&!c.walking&&Math.hypot(c.x-4,c.z-4.9)<.01});
@@ -177,7 +304,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       var waitingPickups=customers.filter(function(c){return c.ordered&&!c.bag}),reserved=waitingPickups.reduce(function(n,c){return n+(c.bags||1)},0),available=Math.max(0,state.stock[4]-reserved);
       if(queue.length&&waitingPickups.length<pickupLimit()&&available>0){
         var count=advanceCounterService(queue[0],4,dt)?1:0;
-        for(var j=0;j<count;j++){queue[j].bags=Math.max(1,Math.min(basketSize(),available));available-=queue[j].bags;queue[j].strain=strainFor(queue[j]);queue[j].salePrice=flowerValue(queue[j].strain);queue[j].ordered=true;queue[j].pickupTicket=++pickupQueueSequence;queue[j].phase='toPickup';queue[j].t=0}if(count)work[4]=0;
+        for(var j=0;j<count;j++){queue[j].bags=Math.max(1,Math.min(basketSize()*(queue[j].kind==='vip'?strains.VIP_BASKET:1),available));available-=queue[j].bags;queue[j].strain=strainFor(queue[j]);queue[j].salePrice=flowerValue(queue[j].strain);queue[j].ordered=true;queue[j].pickupTicket=++pickupQueueSequence;queue[j].phase='toPickup';queue[j].t=0}if(count)work[4]=0;
       }else work[4]=0;
     }
     if(state.kiosk)for(var kioskIndex=0;kioskIndex<kioskCount();kioskIndex++){
@@ -186,7 +313,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       var kioskReserved=customers.filter(function(c){return c.ordered&&!c.bag}).length;
       if(kioskCustomer&&kioskReserved<pickupLimit()&&state.stock[4]>kioskReserved){
         kioskCustomer.orderTime=(kioskCustomer.orderTime||0)+dt;
-        if(kioskCustomer.orderTime>=kioskServiceDuration()){kioskCustomer.strain=strainFor(kioskCustomer);kioskCustomer.salePrice=flowerValue(kioskCustomer.strain);kioskCustomer.ordered=true;kioskCustomer.pickupTicket=++pickupQueueSequence;kioskCustomer.phase='toPickup'}
+        if(kioskCustomer.orderTime>=kioskServiceDuration()){kioskCustomer.strain=strainFor(kioskCustomer);kioskCustomer.bags=kioskCustomer.kind==='vip'?strains.VIP_BASKET:1;kioskCustomer.salePrice=flowerValue(kioskCustomer.strain);kioskCustomer.ordered=true;kioskCustomer.pickupTicket=++pickupQueueSequence;kioskCustomer.phase='toPickup'}
       }
     }
     for(var i=3;i>=0;i--){
@@ -204,7 +331,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
         if(i>0)state.stock[i-1]-=amount;state.stock[i]+=amount;
       }
     }
-    if(autoDroneReady(state.autoDrone,dt,state.lines[4]>0&&state.stock[3]>=onlineSize()&&onlineRequestsReady()>0))sendOnlineOrders(autoDroneLimit(state.autoDrone),true);
+    if(autoDroneReady(state.autoDrone,dt,state.lines[4]>0&&state.stock[3]>=onlineSize()&&onlineRequestsReady()>0)){state.autoDrone.remaining*=1-state.fleetLevel*.03;sendOnlineOrders(autoDroneLimit(state.autoDrone)+(state.autoDrone.bulk&&state.autoDrone.mode==='bulk'?state.cargoLevel:0),true)}
   }
   function staffCost(i){return economy.staffCost(state.staff[i])}
   function idTrainingQuote(limit){
@@ -246,15 +373,29 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   function buyThirdKiosk(){if(!state.secondKiosk||state.thirdKiosk||state.money<100000)return;state.money-=100000;state.thirdKiosk=true;save();renderUI();notify('THIRD KIOSK OPEN','upgrade')}
   function buySecondKiosk(){if(!state.kiosk||state.secondKiosk||state.money<50000)return;state.money-=50000;state.secondKiosk=true;save();renderUI();notify('SECOND KIOSK OPEN','upgrade')}
   function kioskRoute(index){var z=6.8-(index||0)*1.8;return [{x:-8.95,z:z},{x:-8.45,z:z},{x:-8.45,z:9.65},{x:-10.5,z:9.65},{x:-11.7,z:9.3},{x:-12.4,z:7.8}]}
-  var COMPONENTS=[{key:'trafficLevel',name:'Floor flow',base:750,max:8},{key:'pickupLevel',name:'Pickup waiting area',base:1200,max:4},{key:'readyLevel',name:'Ready-bag storage',base:600,max:8},{key:'curingLevel',name:'Curing equipment',base:1800,max:8},{key:'durationLevel',name:'Lasting effects',base:2400,max:8},{key:'kioskSpeedLevel',name:'Kiosk software',base:3000,max:8},{key:'onlineBonusLevel',name:'Premium packaging',base:2200,max:8},{key:'comfortLevel',name:'Queue comfort',base:1400,max:8},{key:'scannerLevel',name:'ID scanner',base:1600,max:8},{key:'webLevel',name:'Web marketing',base:2500,max:8}];
+  // Twenty levels per line (twelve for the waiting area). The first eight climb gently; past that each level costs 2.15× the last, so the back half of every line is a late-game project rather than an afternoon.
+  var COMPONENTS=[{key:'trafficLevel',name:'Floor flow',base:750,max:20},{key:'pickupLevel',name:'Pickup waiting area',base:1200,max:12},{key:'readyLevel',name:'Ready-bag storage',base:600,max:20},{key:'curingLevel',name:'Curing equipment',base:1800,max:20},{key:'durationLevel',name:'Lasting effects',base:2400,max:20},{key:'kioskSpeedLevel',name:'Kiosk software',base:3000,max:20},{key:'onlineBonusLevel',name:'Premium packaging',base:2200,max:20},{key:'comfortLevel',name:'Queue comfort',base:1400,max:20},{key:'scannerLevel',name:'ID scanner',base:1600,max:20},{key:'webLevel',name:'Web marketing',base:2500,max:20},
+    {key:'seedBatchLevel',name:'Seed trays',base:900,max:20},{key:'growBatchLevel',name:'Grow lights',base:1500,max:20},{key:'harvestBatchLevel',name:'Trim robots',base:2000,max:20},{key:'packSpeedLevel',name:'Auto-baggers',base:2600,max:20},
+    {key:'serviceLevel',name:'Express lanes',base:1800,max:20},{key:'signLevel',name:'Street signage',base:1000,max:20},{key:'loyaltyLevel',name:'Loyalty cards',base:2100,max:20},{key:'basketLevel',name:'Bigger baskets',base:2400,max:20},
+    {key:'terpeneLevel',name:'Terpene lab',base:2800,max:20},{key:'breedingLevel',name:'Breeding bench',base:3200,max:20},{key:'displayLevel',name:'Display cases',base:2600,max:20},{key:'trendLevel',name:'Trend scout',base:3000,max:20},
+    {key:'fleetLevel',name:'Drone fleet',base:4000,max:20},{key:'cargoLevel',name:'Cargo bays',base:3500,max:20},{key:'repeatLevel',name:'Repeat buyers',base:2200,max:20}];
   function kioskServiceDuration(){return .8+1.2/(1+state.kioskSpeedLevel*.15)}
   function securityDuration(){return .9/((1+state.idStaff*.3)*(1+state.scannerLevel*.12))}
-  function arrivalInterval(){return (atmosphere(state.empire.network).night?1.2:.9)/(1+state.trafficLevel*.15)/format().demand}
+  function arrivalInterval(){return (atmosphere(state.empire.network).night?1.2:.9)/(1+state.trafficLevel*.15)/format().demand/strains.trafficFactor(menuStrains(),state.strainTrend.index)/strains.buzzFactor(state.vipBuzz)/(1+state.signLevel*.04)}
   function pickupLimit(){return 4+state.pickupLevel*2}
   function readyCapacity(){return economy.readyCapacity(state.readyLevel,state.lines)}
-  function componentCost(i){return Math.round(COMPONENTS[i].base*Math.pow(1.8,state[COMPONENTS[i].key]))}
+  function componentCost(i){var L=state[COMPONENTS[i].key];return Math.round(COMPONENTS[i].base*Math.pow(1.8,Math.min(L,8))*Math.pow(2.15,Math.max(0,L-8)))}
   function upgradeComponent(i){var c=COMPONENTS[i],price=componentCost(i);if(state[c.key]>=c.max||state.money<price)return;state.money-=price;state[c.key]++;save();renderUI();notify(c.name.toUpperCase()+' · LEVEL '+state[c.key],'upgrade')}
-  function renderComponents(){COMPONENTS.forEach(function(c,i){var level=state[c.key],max=level>=c.max;var benefits=['+'+(level*10)+'% → +'+((level+1)*10)+'% walking speed',pickupLimit()+' → '+(pickupLimit()+2)+' picking up',readyCapacity()+' → '+economy.readyCapacity(level+1,state.lines)+' ready bags','+'+(level*3)+'% → +'+((level+1)*3)+'% sale value','+'+(level*3)+'% → +'+((level+1)*3)+'% happy tips','+'+(level*15)+'% → +'+((level+1)*15)+'% kiosk speed','+'+(level*5)+'% → +'+((level+1)*5)+'% online value',Math.round(economy.patience('hurried',level))+'s → '+Math.round(economy.patience('hurried',level+1))+'s patience','+'+(level*12)+'% → +'+((level+1)*12)+'% check speed',(requestRate(state.onlineCompleted,1,level)*60).toFixed(1)+' → '+(requestRate(state.onlineCompleted,1,level+1)*60).toFixed(1)+' requests / min · '+requestCap(state.onlineCompleted,level)+' → '+requestCap(state.onlineCompleted,level+1)+' waiting'];$('componentBenefit'+i).textContent=max?['+80% walking speed',pickupLimit()+' picking up',readyCapacity()+' ready bags','+24% sale value','+24% happy tips','+120% kiosk speed','+40% online value',Math.round(economy.patience('hurried',level))+'s patience','+96% check speed',(requestRate(state.onlineCompleted,1,level)*60).toFixed(1)+' requests / min · '+requestCap(state.onlineCompleted,level)+' waiting'][i]:benefits[i];$('componentLevel'+i).textContent='Level '+level+' / '+c.max+(max?' · Maximum':state.money<componentCost(i)?' · '+fmt(componentCost(i)-state.money)+' to go':'');$('componentPrice'+i).textContent=max?'MAX':fmt(componentCost(i));$('componentBuy'+i).disabled=max||state.money<componentCost(i)});if(shopBrowser)shopBrowser.render()}
+  function renderComponents(){
+    var describe=[function(l){return '+'+(l*10)+'% walking speed'},function(l){return (4+l*2)+' picking up'},function(l){return economy.readyCapacity(l,state.lines)+' ready bags'},function(l){return '+'+(l*3)+'% sale value'},function(l){return '+'+(l*3)+'% happy tips'},function(l){return '+'+(l*15)+'% kiosk speed'},function(l){return '+'+(l*5)+'% online value'},function(l){return Math.round(economy.patience('hurried',l))+'s patience'},function(l){return '+'+(l*12)+'% check speed'},function(l){return (requestRate(state.onlineCompleted,1,l)*60).toFixed(1)+' requests / min · '+requestCap(state.onlineCompleted,l)+' waiting'},
+      function(l){return '+'+(l*6)+'% seed batch'},function(l){return '+'+(l*6)+'% grow batch'},function(l){return '+'+(l*6)+'% harvest batch'},function(l){return '+'+(l*6)+'% pack speed'},
+      function(l){return '+'+(l*4)+'% counter speed'},function(l){return '+'+(l*4)+'% foot traffic'},function(l){return '+'+(l*3)+'% happy tips'},function(l){return '+'+(l*4)+'% basket size'},
+      function(l){return '+'+(l*.25).toFixed(2).replace(/\.?0+$/,'')+'% THC'},function(l){return '-'+(l*3)+'% grow penalty'},function(l){return '+'+(l*2)+'% boutique value'},function(l){return '+'+(35+l*2)+'% trend bonus'},
+      function(l){return (10*(1-l*.03)).toFixed(1)+'s drone interval'},function(l){return (10+l)+' orders per bulk run'},function(l){return (l*4)+'% repeat buyers'}];
+    COMPONENTS.forEach(function(c,i){var level=state[c.key],max=level>=c.max;
+      $('componentBenefit'+i).textContent=max?describe[i](level):describe[i](level).replace(/ (walking speed|picking up|ready bags|sale value|happy tips|kiosk speed|online value|patience|check speed|waiting|seed batch|grow batch|harvest batch|pack speed|counter speed|foot traffic|basket size|THC|grow penalty|boutique value|trend bonus|drone interval|orders per bulk run|repeat buyers)$/,'')+' → '+describe[i](level+1);
+      $('componentLevel'+i).textContent='Level '+level+' / '+c.max+(max?' · Maximum':state.money<componentCost(i)?' · '+fmt(componentCost(i)-state.money)+' to go':'');$('componentPrice'+i).textContent=max?'MAX':fmt(componentCost(i));$('componentBuy'+i).disabled=max||state.money<componentCost(i)});
+    if(shopBrowser)shopBrowser.render()}
   function queueCost(){return Math.round(150*Math.pow(1.8,state.queueLevel))}
   function upgradeQueue(){if(queueLimit()>=QUEUE_MAX||state.money<queueCost())return;state.money-=queueCost();state.queueLevel++;save();renderUI();notify('LINE EXPANDED · '+queueLimit()+' customers','upgrade')}
   function storageCapacity(){return economy.storageCapacity(state.storageLevel,state.lines)}
@@ -265,7 +406,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   function reservedJars(){return state.lines[4]&&onlineRequestsReady()>0?onlineSize():0}
   // Web requests arrive slowly at first and speed up with completed orders; the maths lives in deliveries.js.
   function onlineRequestCap(){return requestCap(state.onlineCompleted,state.webLevel)}
-  function accrueOnlineRequests(seconds){accrueRequests(state,seconds)}
+  function deliveryBuilt(){return state.autoDrone.owned}
+  function accrueOnlineRequests(seconds){if(deliveryBuilt())accrueRequests(state,seconds)}
   function onlineRequestsReady(){return requestsReady(state)}
   function onlineBatch(limit,jarBudget){
     var jars=jarBudget===undefined?state.stock[3]:jarBudget,count=0,used=0,reward=0;limit=Math.min(limit,onlineRequestsReady());
@@ -275,8 +417,10 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   function sendOnlineOrders(limit,automatic){
     var batch=onlineBatch(limit);if(!batch.count)return;
     state.stock[3]-=batch.jars;state.onlineCompleted+=batch.count;consumeRequests(state,batch.count);
+    // Repeat buyers: a share of fulfilled orders come straight back as new requests.
+    if(state.repeatLevel)state.onlineRequests=Math.min(onlineRequestCap(),state.onlineRequests+batch.count*state.repeatLevel*.04);
     queueDeliveryWave(batch.count);
-    recordEvent(state.empire,'online',batch.count);add(batch.reward);if(!automatic)notifyDispatch(batch);burst({x:-10.7,z:1.5,y:7.05},'#dbc38b');renderUI();save();
+    recordEvent(state.empire,'online',batch.count);add(batch.reward);if(!automatic)notifyDispatch(batch);burst({x:-10.7,z:1.5,y:7.05},'#dbc38b');slideReceipts(batch.count);renderUI();save();
   }
   // Rapid dispatches share a short loading window, never a growing launch queue.
   function queueDeliveryWave(count){
@@ -284,14 +428,31 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     var age=wave.length?wave[0].age:0;
     for(var n=0;n<count;n++){
       if(wave.length<5){
-        var drone={age:age,delay:0,slot:wave.length,orders:1};
+        // Couriers in a wave lift off one after another, not as a block.
+        var drone={age:age,delay:wave.length*.42,slot:wave.length,orders:1};
         wave.push(drone);deliveryDrones.push(drone);
       }else{
         var carrier=wave.reduce(function(a,b){return a.orders<=b.orders?a:b});carrier.orders++;
       }
     }
   }
-  function fulfillOnline(){sendOnlineOrders(1)}
+  // Dispatch desk: the three numbers that matter, and the backlog as a row of parcels (lit ones can ship now).
+  var dispatchKey='';
+  function renderDispatchDesk(shippable){
+    var waiting=onlineRequestsReady(),jars=state.stock[3],key=waiting+'|'+jars+'|'+shippable+'|'+state.productMenu.active;
+    if(key===dispatchKey)return;dispatchKey=key;
+    $('deliveryWaiting').textContent=waiting;$('deliveryJars').textContent=state.productMenu.active===0?weightLabel(jars):jars.toLocaleString();$('deliveryJarsLabel').textContent=(state.productMenu.active===0?'flower':unitWord(2))+' packed';$('deliveryShippable').textContent=shippable;
+    $('deliveryShippable').parentElement.classList.toggle('is-live',shippable>0);
+    // The stack shows up to two more receipts peeking out behind the one on top.
+    $('receiptStack').dataset.depth=String(Math.max(0,Math.min(2,waiting-1)));$('receiptStack').classList.toggle('is-idle',!waiting);
+  }
+  // Sent orders fly off the stack; the next receipt settles into place underneath.
+  function slideReceipts(count){
+    if(motionPreference.matches)return;
+    var stack=$('receiptStack'),front=stack.querySelector('.receipt:not(.is-leaving)');if(!front||!stack.offsetParent)return;
+    for(var k=0;k<Math.min(3,count);k++){(function(k){var ghost=front.cloneNode(true);ghost.classList.remove('is-arriving');ghost.classList.add('is-leaving');ghost.style.animationDelay=(k*110)+'ms';Array.prototype.forEach.call(ghost.querySelectorAll('[id]'),function(el){el.removeAttribute('id')});stack.appendChild(ghost);var done=function(){ghost.remove()};ghost.addEventListener('animationend',done);setTimeout(done,900+k*110)})(k)}
+    front.classList.remove('is-arriving');void front.offsetWidth;front.classList.add('is-arriving');
+  }
 
   function cost(i){return economy.stationCost(LINES[i].base,state.lines[i])}
   function maxStationUpgrade(i){
@@ -334,8 +495,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
 
   function resize(){var rect=world.getBoundingClientRect();dpr=Math.min(window.devicePixelRatio||1,2);width=Math.max(1,Math.round(rect.width));height=Math.max(1,Math.round(rect.height));canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);canvas.style.width=width+'px';canvas.style.height=height+'px';ctx.setTransform(dpr,0,0,dpr,0,0);applyCamera()}
   function cameraFrame(){
-    if(state.empire.activeStore){var right=width>=780?450:0,low=25,top=document.querySelector('.hud').getBoundingClientRect().bottom+82,space=Math.max(130,height-top-low),area=Math.max(260,width-right);return{x:area*.5,y:top+space*.61,unit:Math.min((area-35)/38,space/25)}}
-    var bottom=0,top=Math.min(160,height*.26),space=Math.max(120,height-top-bottom);return{x:width*.5,y:top+space*.65,unit:Math.min((width-40)/33,space/28)}}
+    if(state.empire.activeStore){var right=width>=780?450:0,low=25,top=document.querySelector('.hud').getBoundingClientRect().bottom+82,space=Math.max(130,visibleHeight()-top-low),area=Math.max(260,width-right);return{x:area*.5,y:top+space*.61,unit:Math.min((area-35)/38,space/25)}}
+    var visible=visibleHeight(),bottom=0,top=Math.min(160,visible*.26),space=Math.max(120,visible-top-bottom);return{x:width*.5,y:top+space*.66,unit:Math.min((width-40)/33,space/28)*1.18}}
   function applyCamera(){var frame=cameraFrame();panX=Math.max(-width*1.6,Math.min(width*1.6,panX));panY=Math.max(-height*1.6,Math.min(height*1.6,panY));centerX=frame.x+panX;centerY=frame.y+panY;unit=frame.unit*zoom;if(state.empire.activeStore)updateBranchMarker()}
   function zoomAt(next,x,y){next=Math.max(.65,Math.min(4,next));var ratio=next/zoom,frame=cameraFrame();panX=x-(x-centerX)*ratio-frame.x;panY=y-(y-centerY)*ratio-frame.y;zoom=next;applyCamera()}
   function rotate(x,z){var c=Math.cos(angle),s=Math.sin(angle);return{x:x*c-z*s,z:x*s+z*c}}
@@ -344,7 +505,20 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       var ys=points.map(function(p){return p.y}),lo=Math.min.apply(null,ys),hi=Math.max.apply(null,ys),shade=ctx.createLinearGradient(0,lo,0,Math.max(lo+1,hi));
       shade.addColorStop(0,fill);shade.addColorStop(1,shadeColor(fill,.9));ctx.fillStyle=shade;
     }else ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=Math.max(.4,Math.min(1,unit*.021));ctx.lineJoin='round';ctx.stroke()}}
-  function drawBox(x,z,y,w,d,h,palette){var p=palette||[colors.oliveTop,colors.oliveLeft,colors.oliveRight],b0=project(x-w/2,y,z-d/2),b1=project(x+w/2,y,z-d/2),b2=project(x+w/2,y,z+d/2),b3=project(x-w/2,y,z+d/2),t0=project(x-w/2,y+h,z-d/2),t1=project(x+w/2,y+h,z-d/2),t2=project(x+w/2,y+h,z+d/2),t3=project(x-w/2,y+h,z+d/2);poly(Math.cos(angle)>=0?[b3,b2,t2,t3]:[b0,b1,t1,t0],p[1],w<.1||d<.04?null:'#ffffff28');poly(Math.sin(angle)>=0?[b2,b1,t1,t2]:[b3,b0,t0,t3],p[2],w<.1||d<.04?null:'#ffffff28');poly([t0,t1,t2,t3],w>=.6&&d>=.6&&/^#[0-9a-f]{6}$/i.test(p[0])?litTop([t0,t1,t2,t3],p[0]):p[0],w<.1||d<.04?null:'#ffffff28')}
+  // Key light sits high on the upper right, so every free-standing object throws a soft shadow down and to the left. The
+  // shadow is the convex hull of the footprint and the footprint displaced by the object's height, faded along its length.
+  var SHADOW_DX=-.46,SHADOW_DY=.2;
+  function convexHull(pts){pts=pts.slice().sort(function(a,b){return a.x-b.x||a.y-b.y});function cross(o,a,b){return (a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x)}var lower=[],upper=[];pts.forEach(function(q){while(lower.length>=2&&cross(lower[lower.length-2],lower[lower.length-1],q)<=0)lower.pop();lower.push(q)});for(var i=pts.length-1;i>=0;i--){var q=pts[i];while(upper.length>=2&&cross(upper[upper.length-2],upper[upper.length-1],q)<=0)upper.pop();upper.push(q)}return lower.slice(0,-1).concat(upper.slice(0,-1))}
+  function castShadow(base,h,alpha){
+    var dx=h*unit*SHADOW_DX,dy=h*unit*SHADOW_DY,shifted=base.map(function(q){return{x:q.x+dx,y:q.y+dy}}),hull=convexHull(base.concat(shifted));
+    var c={x:(base[0].x+base[2].x)/2,y:(base[0].y+base[2].y)/2},g=ctx.createLinearGradient(c.x,c.y,c.x+dx,c.y+dy);
+    g.addColorStop(0,'rgba(14,28,20,'+alpha+')');g.addColorStop(1,'rgba(14,28,20,'+(alpha*.25)+')');
+    poly(hull,g);
+  }
+  function drawBox(x,z,y,w,d,h,palette){var p=palette||[colors.oliveTop,colors.oliveLeft,colors.oliveRight],b0=project(x-w/2,y,z-d/2),b1=project(x+w/2,y,z-d/2),b2=project(x+w/2,y,z+d/2),b3=project(x-w/2,y,z+d/2);
+    // Furniture-sized boxes resting on a floor or counter cast; slabs, walls, rails and trim do not.
+    if(h>=.2&&h<=3.2&&w>=.15&&d>=.15&&w<=5&&d<=5&&y>=-.05&&y<=1.6)castShadow([b0,b1,b2,b3],h,.13);
+    var t0=project(x-w/2,y+h,z-d/2),t1=project(x+w/2,y+h,z-d/2),t2=project(x+w/2,y+h,z+d/2),t3=project(x-w/2,y+h,z+d/2);poly(Math.cos(angle)>=0?[b3,b2,t2,t3]:[b0,b1,t1,t0],p[1],w<.1||d<.04?null:'#ffffff28');poly(Math.sin(angle)>=0?[b2,b1,t1,t2]:[b3,b0,t0,t3],p[2],w<.1||d<.04?null:'#ffffff28');poly([t0,t1,t2,t3],w>=.6&&d>=.6&&/^#[0-9a-f]{6}$/i.test(p[0])?litTop([t0,t1,t2,t3],p[0]):p[0],w<.1||d<.04?null:'#ffffff28')}
   // Soft key light from the upper right: wide top surfaces pick up a gentle left-to-right lift.
   function litTop(points,fill){var xs=points.map(function(q){return q.x}),lo=Math.min.apply(null,xs),hi=Math.max.apply(null,xs),g=ctx.createLinearGradient(lo,0,Math.max(lo+1,hi),0);g.addColorStop(0,shadeColor(fill,.955));g.addColorStop(.5,fill);g.addColorStop(1,shadeColor(fill,1.045));return g}
   // Ambient shadow: a soft band on a floor plane, dark along one edge and fading away from it.
@@ -421,15 +595,46 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     ctx.globalAlpha=1;worldLine(points,cool?'#f3fbe7':'#fff5da',.018);ctx.restore();
   }
   // Night falls by multiplying the scene with a cool navy rather than fogging it: colours deepen, blacks stay black, and the
-  // edges of the frame go darker than the shop so the lit interior reads like a lantern. A trace of haze lifts the deepest shadows.
-  function nightShadeOverlay(darkness){
-    var t=Math.min(1,darkness/.34),saved=sceneElevation;sceneElevation=0;var c=project(0,4.5,0);sceneElevation=saved;
-    ctx.save();ctx.globalCompositeOperation='multiply';
-    var g=ctx.createRadialGradient(c.x,c.y,unit*5,c.x,c.y,Math.max(width,height)*.72);
-    g.addColorStop(0,'rgba(108,124,184,'+(t*.74)+')');g.addColorStop(.55,'rgba(82,96,156,'+(t*.8)+')');g.addColorStop(1,'rgba(58,70,124,'+(t*.86)+')');
+  // edges of the frame go darker than the shop so the lit interior reads like a lantern. The shade is built on its own
+  // surface with every light pool cut out of it, so lit floor keeps its true daytime colour instead of a grey screen blob;
+  // the colour temperature of each fixture is added afterwards in nightLights.
+  var shadeSurface=null;
+  function nightShadeOverlay(darkness,now){
+    var t=Math.min(1,darkness/.34),saved=sceneElevation;sceneElevation=0;var c=project(0,4.5,0);
+    var pw=Math.ceil(width*dpr),ph=Math.ceil(height*dpr);
+    if(!shadeSurface)shadeSurface=document.createElement('canvas');
+    if(shadeSurface.width!==pw||shadeSurface.height!==ph){shadeSurface.width=pw;shadeSurface.height=ph}
+    var main=ctx;ctx=shadeSurface.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,width,height);
+    var g=ctx.createRadialGradient(c.x,c.y,unit*4,c.x,c.y,Math.max(width,height)*.7);
+    g.addColorStop(0,'rgb(104,118,172)');g.addColorStop(.5,'rgb(70,84,138)');g.addColorStop(1,'rgb(38,48,96)');
     ctx.fillStyle=g;ctx.fillRect(0,0,width,height);
-    ctx.globalCompositeOperation='source-over';ctx.fillStyle='rgba(20,30,62,'+(t*.09)+')';ctx.fillRect(0,0,width,height);
-    ctx.restore();
+    ctx.globalCompositeOperation='destination-out';nightCutouts(now);ctx.globalCompositeOperation='source-over';
+    ctx=main;
+    ctx.save();ctx.globalCompositeOperation='multiply';ctx.globalAlpha=t*.9;ctx.drawImage(shadeSurface,0,0,width,height);ctx.restore();
+    ctx.save();ctx.fillStyle='rgba(16,24,56,'+(t*.05)+')';ctx.fillRect(0,0,width,height);ctx.restore();
+    sceneElevation=saved;
+  }
+  // Holes in the shade: a soft floor pool under every fixture, sized like the visible light pool but with a hotter core.
+  function nightCutouts(now){
+    var white=[255,255,255,1];
+    function cut(x,y,z,r,a){var p=project(x,y,z);ellipse(p.x,p.y,unit*r,unit*r*.5,softRadial(p.x,p.y,unit*r,white,a));ellipse(p.x,p.y,unit*r*.45,unit*r*.22,softRadial(p.x,p.y,unit*r*.45,white,a*.6))}
+    // Beams are stacked in three widths so their sides feather instead of cutting a hard wedge in the shade.
+    function beam(x,yTop,z,yBottom,topHalf,bottomHalf,a){var top=project(x,yTop,z),base=project(x,yBottom,z);[[.6,1],[1,.5],[1.5,.22]].forEach(function(layer){var tw=unit*topHalf*layer[0],bw=unit*bottomHalf*layer[0],g=ctx.createLinearGradient(0,top.y,0,base.y);g.addColorStop(0,rgba(white,a*layer[1]*.3));g.addColorStop(1,rgba(white,a*layer[1]));ctx.beginPath();ctx.moveTo(top.x-tw,top.y);ctx.lineTo(top.x+tw,top.y);ctx.lineTo(base.x+bw,base.y);ctx.lineTo(base.x-bw,base.y);ctx.closePath();ctx.fillStyle=g;ctx.fill()})}
+    // Station work lights and the strip under each counter front.
+    machinePos.forEach(function(q){cut(q.x,q.y+.04,q.z+.9,2.1,.62);beam(q.x,q.y+1.1,q.z+1.26,q.y+.04,1.1,1.7,.16)});
+    // Retail counters, shop-floor downlights, and the island vitrines.
+    cut(-4,.03,4.9,2.7,.7);cut(4,.03,4.9,2.7,.7);
+    [[-4,2.5],[4,2.5],[0,6]].forEach(function(q){cut(q[0],.03,q[1],2.3,.5)});
+    [[-4.85,8.9],[6.7,8.9]].forEach(function(q){cut(q[0],.03,q[1]-.3,1.6,.42)});
+    // Grow pendants: tighter, brighter cores under each lamp so the benches read as lit rather than tinted.
+    [-3.75,-2.25,2.25,3.75].forEach(function(lx,li){var pulse=lampPulse(now,li*1.7);cut(lx,9.44,-3,1.7,.66*pulse);beam(lx,12.6,-3,9.44,.3,1.2,.3*pulse)});
+    cut(0,9.44,-6.2,2.6,.4);
+    // Entrance, the online kiosk on the mezzanine, exterior fixtures and the stair.
+    cut(-9.1,.04,10.41,1.8,.6);if(deliveryBuilt())cut(-10.7,7.09,1.5,1.7,.6);
+    exteriorFixtures.sconces.forEach(function(f){cut(f.x-.6,.03,f.z,1.3,.5)});
+    exteriorFixtures.bollards.forEach(function(b){cut(b.x,.03,b.z,1.1,.45)});
+    var e=exteriorFixtures.exitLamp;cut(e.x,.03,e.z-.8,1.5,.5);cut(-11.2,.03,10,1.5,.4);
+    for(var st=0;st<8;st++)cut(9.2,.6+st*1.15,4.6-st*.75,.6,.4);
   }
   // Night: everything that glows is redrawn above the shade so the shop reads as lit, not dimmed.
   function nightLights(now){
@@ -445,15 +650,15 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     // Concealed strips wash the rear walls of every floor, so the architecture stays legible after dark.
     [[-11.2,8.95,-6.9,3.6,1.3,.24],[-8.7,8.7,4.7-6.55,4.7+3.6,4.7+1.5,.26],[-6.2,6.2,9.4-6.7,9.4+3.6,9.4+1.7,.12]].forEach(function(w){wallWash(w[0],w[1],w[2],w[3],w[4],warm,w[5])});
     // Work lights over every station; the grow room glows cool. A cone from each under-counter strip hangs in the night air.
-    machinePos.forEach(function(q,i){pool(q.x,q.y+.04,q.z+.9,2,.3,i===1?cool:warm);lightCone(q.x,q.y+1.1,q.z+1.26,q.y+.04,1.3,1.75,i===1?cool:warm,.1)});
+    machinePos.forEach(function(q,i){pool(q.x,q.y+.04,q.z+.9,2,.2,i===1?cool:warm);lightCone(q.x,q.y+1.1,q.z+1.26,q.y+.04,1.3,1.75,i===1?cool:warm,.08)});
     // Shop-floor downlights, the lit entrance, and the online kiosk sign.
-    [[-4,2.5],[4,2.5],[0,6]].forEach(function(q){pool(q[0],.03,q[1],2.2,.26,warm)});
+    [[-4,2.5],[4,2.5],[0,6]].forEach(function(q){pool(q[0],.03,q[1],2.2,.16,warm)});
     // Counters and the grow rack keep their own light at night so the interior stays legible.
-    pool(-4,.03,4.9,2.6,.34,warm);pool(4,.03,4.9,2.6,.34,warm);pool(0,9.44,-6.2,2.6,.3,'#cfe6ff');halo(0,11.4,-6.2,2.2,.16,'#cfe6ff');
+    pool(-4,.03,4.9,2.6,.22,warm);pool(4,.03,4.9,2.6,.22,warm);pool(0,9.44,-6.2,2.6,.2,'#cfe6ff');halo(0,11.4,-6.2,2.2,.16,'#cfe6ff');
     // Purple grow pendants on the top floor, each with its own soft cone down to the bench.
-    [-3.75,-2.25,2.25,3.75].forEach(function(lx,li){var pulse=lampPulse(now,li*1.7);pool(lx,9.44,-3,1.6,.36*pulse,'#c98bff');halo(lx,12.65,-3,1,.3*pulse,'#d9a8ff');lightCone(lx,12.6,-3,9.44,.3,1.15,'#c98bff',.16*pulse)});
+    [-3.75,-2.25,2.25,3.75].forEach(function(lx,li){var pulse=lampPulse(now,li*1.7);pool(lx,9.44,-3,1.6,.3*pulse,'#c98bff');halo(lx,12.65,-3,1,.34*pulse,'#d9a8ff');lightCone(lx,12.6,-3,9.44,.3,1.15,'#c98bff',.2*pulse)});
     pool(-9.1,.04,10.41,1.7,.32,warm);halo(-9.1,2.4,10.41,.9,.35,'#ffe2a5');
-    pool(-10.7,7.09,1.5,1.6,.34,cool);halo(-10.7,9.2,1.5,1.3,.45,'#bfe9d8');
+    if(deliveryBuilt()){pool(-10.7,7.09,1.5,1.6,.34,cool);halo(-10.7,9.2,1.5,1.3,.45,'#bfe9d8')}
     // Fascia strips glow a little stronger at night in place of any hanging bulbs.
     [[4.7,3.05,-8.8,8.8],[9.4,-.3,-6.3,6.3]].forEach(function(f){var a=project(f[2],f[0]-.06,f[1]),b=project(f[3],f[0]-.06,f[1]);var g=ctx.createLinearGradient(a.x,a.y,b.x,b.y);g.addColorStop(0,tint('#ffd98f',0));g.addColorStop(.12,tint('#ffd98f',.13));g.addColorStop(.88,tint('#ffd98f',.13));g.addColorStop(1,tint('#ffd98f',0));ctx.save();ctx.strokeStyle=g;ctx.lineWidth=unit*.34;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.restore()});
     // A warm wash behind the top-floor shelving and the mezzanine planted wall.
@@ -813,6 +1018,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     function block(dx,y,w,h,r,color){var q=point(dx,y);ctx.beginPath();ctx.roundRect(q.x,q.y,w*u,h*u,r*u);if(h>=.25&&/^#[0-9a-f]{6}$/i.test(color)){var g=ctx.createLinearGradient(q.x,q.y,q.x,q.y+h*u);g.addColorStop(0,shadeColor(color,1.06));g.addColorStop(1,shadeColor(color,.9));ctx.fillStyle=g}else ctx.fillStyle=color;ctx.fill()}
     function limb(coords,color,w){ctx.beginPath();coords.forEach(function(q,i){var v=point(q[0],q[1]);if(i)ctx.lineTo(v.x,v.y);else ctx.moveTo(v.x,v.y)});ctx.lineWidth=w*u;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle=color;ctx.stroke()}
     ellipse(p.x,p.y+u*.025,u*.32,u*.085,'#071d2025');
+    // Cast shadow stretching down-left from the feet, matching the key light used for furniture.
+    ctx.save();ctx.translate(p.x+u*.34,p.y+u*.14);ctx.rotate(-.42);var sg=ctx.createLinearGradient(-u*.45,0,u*.45,0);sg.addColorStop(0,'rgba(14,28,20,.16)');sg.addColorStop(1,'rgba(14,28,20,.03)');ctx.beginPath();ctx.ellipse(0,0,u*.5,u*.12,0,0,Math.PI*2);ctx.fillStyle=sg;ctx.fill();ctx.restore();
     // Flat, elongated silhouettes with geometric shoes and a restrained walking stride.
     [-1,1].forEach(function(side){var stride=step*side*.13,fx=side*.11+stride,fy=.065+Math.max(0,side*step)*.055;
       limb([[side*.105,.76],[side*.11+stride*.4,.4],[fx,fy+.04]],expressive?skin:pants,.14);
@@ -975,7 +1182,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     var happiness=Math.max(15,Math.min(100,96-(c.waitSeconds||0)*1.2/(1+state.comfortLevel*.2)+(c.bag?18:0)));
     var strain=c.strain===undefined?menuChoice(c.id):c.strain;
     var tolerance=.8+(c.id%5)*.1;
-    var potency=strain*9+Math.max(0,state.strains[strain]-1)*3;
+    var potency=(strainPotency(strain)-strains.THC_BASE)*54/16.5;
     var advice=Math.min(15,state.staff[4]*1.5);
     var boost=c.bag?(potency+advice+state.curingLevel*4)/tolerance:0;
     var decay=c.bag?(c.effectAge||0)*.8/(1+state.durationLevel*.3):0;
@@ -997,6 +1204,24 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     if(c.kind==='vip'){var vip=project(c.x,2.6,c.z);ctx.fillStyle='#f0cf7f';ctx.font='bold '+Math.max(9,unit*.25)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText('VIP',vip.x,vip.y)}
     drawPerson(c.x,c.z,now,c.id,moving,false,c.bag,{phase:c.walkPhase||0,amount:c.walkAmount||0,facing:c.facing===undefined?.3:c.facing});
     if((c.phase==='ordering'&&Math.hypot(c.x+4,c.z-4.9)<.2)||c.phase==='pickup'||c.phase==='toPickup'){var p=project(c.x,2.05,c.z);ellipse(p.x,p.y,unit*.2,unit*.18,c.ordered?'#c4e8a7':'#f0dfb0');ctx.fillStyle='#24412f';ctx.font='bold '+Math.max(8,unit*.22)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText(c.ordered?'✓':'…',p.x,p.y+unit*.075)}
+    if(c.thought)drawThought(c);
+  }
+  function drawThought(c){
+    var t=c.thought,reduced=motionPreference.matches,fade=Math.min(1,(t.duration-t.age)/.5);
+    var pop=reduced?1:Math.min(1,t.age/.32),scale=pop<1?1-Math.pow(1-pop,3)*.6+Math.sin(pop*Math.PI)*.12:1;
+    var drift=reduced?0:Math.sin(t.age*2.2+c.id)*.03,head=project(c.x,2.05,c.z),cloud=project(c.x+.58,2.72+drift,c.z),u=unit*scale;
+    ctx.save();ctx.globalAlpha*=fade*Math.min(1,pop*1.6);
+    // Two rising puffs lead from the temple to the cloud.
+    ellipse(head.x+(cloud.x-head.x)*.22,head.y+(cloud.y-head.y)*.28,u*.055,u*.05,'#ffffff');
+    ellipse(head.x+(cloud.x-head.x)*.5,head.y+(cloud.y-head.y)*.62,u*.09,u*.08,'#ffffff');
+    var w=u*1.42,h=u*.6,cx=cloud.x,cy=cloud.y-h*.35;
+    ctx.shadowColor='rgba(20,40,30,.18)';ctx.shadowBlur=u*.12;ctx.shadowOffsetY=u*.04;
+    // One combined path so the overlapping lobes cast a single soft shadow.
+    ctx.beginPath();[[-.36,-.02,.3,.24],[-.06,-.1,.34,.28],[.28,-.04,.3,.25],[-.22,.1,.3,.2],[.14,.1,.32,.21],[0,0,.55,.2]].forEach(function(b){ctx.moveTo(cx+b[0]*w+b[2]*w,cy+b[1]*h);ctx.ellipse(cx+b[0]*w,cy+b[1]*h,b[2]*w,b[3]*h*1.6,0,0,Math.PI*2)});
+    ctx.fillStyle='#ffffff';ctx.fill();ctx.shadowColor='transparent';
+    ctx.fillStyle='#1c2a24';ctx.font=Math.max(11,u*.34)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(t.text,cx,cy+u*.01);
+    ctx.restore();
   }
   function drawFloor(){
     ctx.fillStyle='#ecdac3';ctx.fillRect(0,0,width,height);
@@ -1175,6 +1400,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   }
   function onlinePackingCounter(now){
     var x=-10.7,z=1.5,oak=['#cbb085','#7f6a4b','#ac9168'],green=['#86a795','#3e6250','#648a70'];
+    if(!deliveryBuilt()){onlineCounterSite(now,x,z,oak);return}
     // Cantilevered launch deck, attached to the rear sign supports.
     var padZ=z-2.25,steel=['#526659','#253b30','#3a5142'];
     // A tie beam under the deck meets the mezzanine edge so the cantilever reads as attached.
@@ -1225,6 +1451,35 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     var fill=pending?Math.min(1,state.stock[3]/Math.max(1,needed)):0;if(fill>0)worldLine([[x-.78,.45,faceZ+.05],[x-.78+1.56*fill,.45,faceZ+.05]],ready?'#b7e394':'#a9d2c8',.05);
     // Its own feed branch carries packed jars from the packing station.
     transferTube([[-4.55,-.9,1],[-7.4,-.9,1],[-7.4,1.5,1.5],[-9.05,1.5,1.5]],3);
+  }
+  // Before the delivery pad is bought the mezzanine corner is a building site: bare deck, taped-off perimeter,
+  // a sheeted counter, stacked materials and an unlit COMING SOON board where the sign will go.
+  function onlineCounterSite(now,x,z,oak){
+    var padZ=z-2.25,steel=['#526659','#253b30','#3a5142'],ply=['#d9c39a','#8a7250','#b89a6c'],sheet=['#d8dad2','#9a9f97','#bfc3ba'],hazard=['#e8c85a','#8c7420','#c6a93f'];
+    [-1.2,1.2].forEach(function(dx){drawBox(x+dx,z-1.05,.02,.12,.14,3.04,steel);worldLine([[x+dx,2.05,z-1.05],[x+dx,2.96,padZ-.65]],'#304638',.09)});
+    drawBox(x+.85,padZ,2.86,1.9,.14,.1,steel);
+    drawBox(x,padZ,2.96,3.25,2.6,.16,steel);
+    // Deck plates still being laid: two down, one leaning, the rest stacked.
+    drawBox(x-.8,padZ+.6,3.12,1.4,1.1,.025,['#779080','#779080','#779080']);drawBox(x+.7,padZ+.6,3.12,1.4,1.1,.025,['#779080','#779080','#779080']);
+    drawBox(x+.9,padZ-.55,3.12,1.1,.9,.16,['#6e8676','#3c5246','#55695c']);
+    // Barrier posts with tape around the deck edge.
+    var posts=[[-1.45,-1.15],[1.45,-1.15],[1.45,1.15],[-1.45,1.15]];
+    posts.forEach(function(q){drawBox(x+q[0],padZ+q[1],3.12,.09,.09,.62,hazard);drawBox(x+q[0],padZ+q[1],3.12,.22,.22,.04,['#2b2f2a','#15181a','#202422'])});
+    for(var k=0;k<4;k++){var a=posts[k],b=posts[(k+1)%4];worldLine([[x+a[0],3.62,padZ+a[1]],[x+b[0],3.62,padZ+b[1]]],'#e8c85a',.035);worldLine([[x+a[0],3.5,padZ+a[1]],[x+b[0],3.5,padZ+b[1]]],'#1a1c19',.035)}
+    var cone=project(x-.9,3.12,padZ-.7);drawBox(x-.9,padZ-.7,3.12,.28,.28,.03,['#e2622f','#8f3a1a','#c24d24']);drawBox(x-.9,padZ-.7,3.15,.14,.14,.42,['#ee7a3f','#9c4020','#d3612f']);drawBox(x-.9,padZ-.7,3.3,.16,.16,.06,['#f4f0e4','#b9b4a6','#dcd7c8']);
+    drawBox(x,z,-.24,4.4,3.8,.24,oak);
+    // Counter carcass in raw plywood under a dust sheet, sawhorse and materials beside it.
+    drawBox(x,z,.05,2.9,1.8,.95,ply);drawBox(x,z+.05,.98,3.2,2.05,.12,sheet);drawBox(x-.3,z+.3,1.1,2.2,1.2,.05,sheet);
+    drawBox(x+1.5,z+.9,.02,.5,.9,.7,['#b59a6e','#6e5a3c','#93794f']);drawBox(x+1.5,z+.9,.7,.7,1,.06,['#d9c39a','#8a7250','#b89a6c']);
+    for(var n=0;n<3;n++)drawBox(x-1.55,z+.5+n*.28,.02+n*.12,.6,.22,.12,n%2?['#d9c39a','#8a7250','#b89a6c']:['#c9b48a','#7c6646','#a88a5e']);
+    carton(x-1.5,z-.55,.02,.5);carton(x-1.5,z-.55,.5,.44);
+    drawBox(x+.9,z-.4,1.12,.3,.5,.25,['#8e8f87','#4d4f49','#6c6e67']);
+    // Sign board mounted, but unlit and blank: a paper notice hangs across it.
+    [-1.48,1.48].forEach(function(dx){drawBox(x+dx,z-.78,1.13,.1,.12,1.75,oak)});
+    drawBox(x,z-.78,2.25,3.15,.18,.65,oak);
+    drawBox(x,z-.674,2.31,2.97,.025,.51,['#26382f','#1b2a22','#26382f']);
+    drawBox(x,z-.66,2.36,2.2,.02,.4,['#efe7cf','#c8bf9f','#e2d9bd']);
+    signText(x,2.55,z-.64,'COMING SOON',1.9,.2,'#5a5d4c');
   }
   function retailDetails(fi,rear){
     var oak=['#cfb184','#836949','#b09266'],stone=['#e2dfd0','#969c8e','#c3c8b8'],brass=['#d7c28b','#8c774c','#b7a16c'];
@@ -2052,14 +2307,14 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
         for(var n=0;n<5;n++){var q=project(8+n*.5,3.2,6);ellipse(q.x,q.y,unit*.16,unit*.23,color);}
       }});
     }
-    jobs.sort(function(a,b){return a.depth-b.depth});jobs.forEach(function(job){job.draw()});var nightShade=visualLight().darkness;if(nightShade>0){nightShadeOverlay(nightShade);nightLights(now)}
+    jobs.sort(function(a,b){return a.depth-b.depth});jobs.forEach(function(job){job.draw()});var nightShade=visualLight().darkness;if(nightShade>0){nightShadeOverlay(nightShade,now);nightLights(now)}
     if(nightShade>0){
       // Emissive accents sit above the night tint, while their surrounding materials stay dark.
       ctx.save();ctx.globalAlpha=Math.min(1,nightShade/.34);
       [[-9,9,4.62,3.075],[-6.5,6.5,9.32,-.275]].forEach(function(edge){warmStrip([[edge[0]+.2,edge[2],edge[3]],[edge[1]-.2,edge[2],edge[3]]],false)});
       machinePos.forEach(function(p,i){var half=stationTier(i)===0?.8:1.3,y=p.y+1.1,z=p.z+(stationTier(i)===0?.84:1.26);warmStrip([[p.x-half,y,z],[p.x+half,y,z]],i===1)});
       signFaces.forEach(function(sign){var p=project(sign.x,sign.y,sign.z);glow(p.x,p.y,unit*sign.halo,'#ffda8a40',unit*sign.halo*.7);signText(sign.x,sign.y,sign.z,sign.label,sign.width,sign.size,'#fff3d6')});
-      sceneElevation=7.05;var nightPending=onlineRequestsReady();onlineReadout(-10.7,2.4,nightPending,nightPending>0&&state.stock[3]>=onlineSize());sceneElevation=0;
+      if(deliveryBuilt()){sceneElevation=7.05;var nightPending=onlineRequestsReady();onlineReadout(-10.7,2.4,nightPending,nightPending>0&&state.stock[3]>=onlineSize());sceneElevation=0}
       ctx.restore();
     }
     for(var i=particles.length-1;i>=0;i--){var p=particles[i];p.life-=frameDelta*1.5;if(!motionPreference.matches){p.x+=p.vx*frameDelta;p.z+=p.vz*frameDelta;p.y+=p.vy*frameDelta;}p.vy-=frameDelta*5;var screen=project(p.x,p.y,p.z),size=Math.max(2,unit*.1);ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.fillRect(screen.x-size/2,screen.y-size/2,size,size);ctx.globalAlpha=1;if(p.life<=0)particles.splice(i,1)}
@@ -2075,7 +2330,9 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       var slot=drone.slot||0,side=slot%2?1:-1,lane=Math.ceil(slot/2);
       var spread=1;
       if(motionPreference.matches){lift=0;travel=0;}
-      var x=-10.7-travel*20+(slot%3-1)*.72,z=-.75+travel*5+Math.floor(slot/3)*.62,y=11.10+lift*2.4+travel*7;
+      // Each slot fans out on its own heading and bobs on its own phase so a bulk launch reads as separate aircraft.
+      var bob=motionPreference.matches?0:Math.sin(t*2.1+slot*1.9)*.07*Math.min(1,lift+travel);
+      var x=-10.7-travel*(20+slot*1.6)+(slot%3-1)*.72,z=-.75+travel*(5-(slot%2?1.2:0)+Math.floor(slot/3)*.9)+Math.floor(slot/3)*.62,y=11.10+lift*(2.4+slot*.18)+travel*7+bob;
       ctx.save();ctx.globalAlpha=motionPreference.matches?Math.min(1,t/.25,(7.5-t)/.7):Math.min(1,(7.5-t)/.7);
       // A taped parcel hangs beneath a compact four-rotor courier.
       if(t<2&&!motionPreference.matches){
@@ -2119,10 +2376,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   var markerEls=LINES.map(function(line,i){var b=document.createElement('button');b.className='marker';b.textContent=line.name;b.onclick=function(){selectMachine(i)};$('markers').appendChild(b);return b});
   var securityMarker=document.createElement('button');securityMarker.className='marker';securityMarker.onclick=function(){selectSecurity()};$('markers').appendChild(securityMarker);
   function updateMarkers(){
-    var securityPos=project(-9.1,.62,10.41);
-    securityMarker.style.transform='translate3d('+securityPos.x+'px,'+securityPos.y+'px,0) translate(-50%,-50%)';
-    securityMarker.style.fontSize=Math.max(8,Math.min(11,unit*.29))*(width>=780?.8:1)+'px';
-    securityMarker.style.display=securityPos.x<-40||securityPos.x>width+40||securityPos.y<-30||securityPos.y>height+30?'none':'block';
+    var securityPos=project(-9.1,.62,10.41),labelSize=Math.max(8,Math.min(10,unit*.24))*(width>=780?.85:1)+'px';
+    securityMarker.style.fontSize=labelSize;
     if($('buyAutoDrone')){var drone=state.autoDrone,dronePrice=drone.owned?BULK_DRONE_COST:AUTO_DRONE_COST;
       $('buyAutoDrone').disabled=drone.bulk||state.money<dronePrice;$('autoDronePrice').textContent=drone.bulk?'Installed':fmt(dronePrice);$('buyAutoDrone').querySelector('span').textContent=drone.owned?'Bulk upgrade':'Install';$('autoDroneBenefit').textContent=drone.owned?'Up to 10 ready orders every 10s':'Send a ready order every 10s';
       $('autoDroneToggle').disabled=!drone.owned&&state.money<AUTO_DRONE_COST;$('autoDroneToggle').textContent=!drone.owned?'Install '+fmt(AUTO_DRONE_COST):drone.enabled?'On':'Off';if(drone.owned)$('autoDroneToggle').setAttribute('aria-pressed',String(drone.enabled));else $('autoDroneToggle').removeAttribute('aria-pressed');$('autoDroneToggle').setAttribute('aria-label',drone.owned?'Automatic drone dispatch':('Install auto drone for '+fmt(AUTO_DRONE_COST)));
@@ -2130,7 +2385,14 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       $('autoDroneStatus').textContent=!drone.owned?'A ready order every 10s':!drone.enabled?'Manual dispatch':state.gameSpeed===0?'Paused':drone.remaining>.05?'Next check in '+Math.ceil(drone.remaining)+'s':state.stock[3]<onlineSize()?'Waiting for '+(onlineSize()-state.stock[3])+' jars':'Ready to launch';}
 
     if(shopBrowser)shopBrowser.render();
-    markerEls.forEach(function(el,i){var station=machinePos[i],pos=project(station.x,.63+station.y,station.z+1.23);el.style.transform='translate3d('+pos.x+'px,'+pos.y+'px,0) translate(-50%,-50%)';el.style.fontSize=Math.max(8,Math.min(11,unit*.29))*(width>=780?.8:1)+'px';el.style.display=pos.x<-40||pos.x>width+40||pos.y<-30||pos.y>height+30?'none':'block'})}
+    var labels=[{el:securityMarker,x:securityPos.x,y:securityPos.y}];
+    markerEls.forEach(function(el,i){var station=machinePos[i],pos=project(station.x,.63+station.y,station.z+1.23);el.style.fontSize=labelSize;labels.push({el:el,x:pos.x,y:pos.y})});
+    labels.forEach(function(l){l.el.style.display=l.x<-40||l.x>width+40||l.y<-30||l.y>height+30?'none':'block';l.w=l.el.offsetWidth;l.h=l.el.offsetHeight});
+    // Keep labels from stacking: later (lower) labels slide down until they clear any earlier one they overlap.
+    var gap=4;labels.sort(function(a,b){return a.y-b.y});
+    for(var pass=0;pass<2;pass++)for(var i=1;i<labels.length;i++){var a=labels[i];if(a.el.style.display==='none')continue;for(var j=0;j<i;j++){var b=labels[j];if(b.el.style.display==='none')continue;
+      if(Math.abs(a.x-b.x)<(a.w+b.w)/2+gap&&Math.abs(a.y-b.y)<(a.h+b.h)/2+gap)a.y=b.y+(a.h+b.h)/2+gap}}
+    labels.forEach(function(l){l.el.style.transform='translate3d('+l.x+'px,'+l.y+'px,0) translate(-50%,-50%)'})}
   function slowestStation(){
     var lowest=Infinity,result=0;
     LINES.forEach(function(_,i){var rate=stationThroughput(i);if(rate<lowest){lowest=rate;result=i}});return result;
@@ -2141,7 +2403,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       if(i>0&&state.stock[i-1]<1)return 'Waiting for '+['seeds','plants','harvest'][i-1];
       return 'Producing in batches';
     }
-    if(i===4)return state.stock[4]>=readyCapacity()?'Ready storage full':state.stock[3]<1?'Waiting for packed jars':'Preparing pickup bags';
+    if(i===4)return state.stock[4]>=readyCapacity()?'Ready storage full':state.stock[3]<1?'Waiting for packed '+unitWord(2):'Preparing pickup bags';
     if(state.stock[4]<1)return 'Waiting for ready bags';
     return customers.some(function(c){return c.ordered&&!c.bag&&c.phase==='pickup'&&Math.hypot(c.x-4,c.z-4.9)<.15})?'Serving a customer':'Waiting for a customer at the counter';
   }
@@ -2149,14 +2411,17 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     renderEmpire();
     renderFlowers();renderComponents();
     var night=visualLight().darkness>.15;lightToggle.setAttribute('aria-label',night?'Switch to daytime lighting':'Switch to nighttime lighting');lightToggle.setAttribute('aria-pressed',String(night));lightToggle.title=night?'Night lighting · switch to day':'Day lighting · switch to night';var lightIcon=night?'<path d="M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10Z"/>':'<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/>';if(lightToggle.dataset.mode!==String(night)){lightToggle.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+lightIcon+'</svg>';lightToggle.dataset.mode=String(night)}
-    var slow=slowestStation(),shortNames=['Seeds','Grow','Harvest','Pack','Orders','Pickup'],footTraffic=basketSize()/arrivalInterval(),trafficBound=slow>=4&&footTraffic<stationThroughput(slow);
+    var slow=slowestStation(),shortNames=['Seeds','Grow','Harvest','Pack','Orders','Pickup'],trafficBound=isTrafficBound(slow);
     var flowIconSource=trafficBound?null:machineTabs[slow]&&machineTabs[slow].querySelector('.station-icon');
     if(flowIconSource&&$('flowIcon').dataset.station!==String(slow)){$('flowIcon').innerHTML=flowIconSource.outerHTML;$('flowIcon').dataset.station=String(slow)}
     if(trafficBound&&$('flowIcon').dataset.station!=='traffic'){$('flowIcon').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="2"/><circle cx="17" cy="6" r="2"/><path d="M7 21v-6l-2-3 3-4h2l2 3h3M15 21v-5l-2-3 2-4h2l3 3"/></svg>';$('flowIcon').dataset.station='traffic'}
     $('flowLabel').textContent=state.gameSpeed===0?'Paused':'Bottleneck';
-    $('flowText').innerHTML=(trafficBound?'Foot traffic':shortNames[slow])+' <b>· '+(trafficBound?footTraffic:stationThroughput(slow)).toFixed(1)+'/s</b>';
-    $('flowText').title='Estimated throughput includes production batches, counter handoff time, and installed kiosks. Walking, security checks, and customer demand can reduce actual sales.';
-    var fixPrice=trafficBound?(state.trafficLevel<8?componentCost(0):0):cost(slow),canFix=fixPrice>0&&state.money>=fixPrice;
+    // Say why it is the bottleneck: how far behind the next-slowest station it runs, not a bare rate.
+    var rates=LINES.map(function(_,i){return state.lines[i]?stationThroughput(i):Infinity}),slowRate=rates[slow],others=rates.filter(function(r,i){return i!==slow&&isFinite(r)}),nextRate=others.length?Math.min.apply(null,others):null,nextName=nextRate!==null?shortNames[rates.indexOf(nextRate)]:'';
+    var behind=nextRate?Math.round((1-slowRate/nextRate)*100):0,footTraffic=basketSize()/arrivalInterval();
+    $('flowText').innerHTML=trafficBound?'Foot traffic <b>· '+Math.round((1-footTraffic/slowRate)*100)+'% under counter capacity</b>':shortNames[slow]+' <b>· '+(behind>0?behind+'% slower than '+nextName:'slowest station')+'</b>';
+    $('flowText').title=(trafficBound?'Customers arrive at '+footTraffic.toFixed(1)+'/s but the counters can serve '+slowRate.toFixed(1)+'/s. ':shortNames[slow]+' moves '+slowRate.toFixed(1)+'/s; '+nextName+' can do '+(nextRate||0).toFixed(1)+'/s, so everything queues here. ')+'Estimates include batches, handoff time and kiosks.';
+    var fixPrice=trafficBound?(state.trafficLevel<COMPONENTS[0].max?componentCost(0):0):cost(slow),canFix=fixPrice>0&&state.money>=fixPrice;
     $('flowAction').textContent=state.gameSpeed===0?'Resume':trafficBound?(fixPrice?'Floor flow · '+fmt(fixPrice):'Open Shop'):canFix?'Fix · '+fmt(fixPrice):'Needs '+fmt(fixPrice);$('flowAction').dataset.mode=state.gameSpeed===0||!canFix?'view':'fix';
     var line=LINES[selected],open=isOpen(selected),level=state.lines[selected],price=cost(selected),affordable=open&&state.money>=price;
     $('money').textContent=fmt(state.money);$('rate').textContent=state.gameSpeed===0?'Paused':fmt((state.empire.activeStore?storeRate(state.empire,state.empire.activeStore-1):production()+branchRate(state.empire))*state.gameSpeed)+'/s';document.querySelector('.stat.output small').textContent=state.empire.activeStore?'BRANCH INCOME':'CAPACITY';
@@ -2170,8 +2435,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     var tierFrom=TIER_LEVELS[tier],tierTo=tier<6?TIER_LEVELS[tier+1]:null,tierPct=tierTo?Math.round((level-tierFrom)/(tierTo-tierFrom)*100):100;
     var ICON_BATCH='<svg viewBox="0 0 24 24"><path d="M4 8h16v11H4zM4 8l3-4h10l3 4M12 4v4"/></svg>',ICON_CLOCK='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg>',ICON_TIER='<svg viewBox="0 0 24 24"><path d="M12 3l2.4 5.2 5.6.7-4.1 3.9 1.1 5.7L12 15.8 7 18.5l1.1-5.7L4 8.9l5.6-.7z"/></svg>',ICON_LANES='<svg viewBox="0 0 24 24"><path d="M5 5v14M12 5v14M19 5v14"/></svg>';
     var tiles=selected<4?
-      '<span class="stat">'+ICON_BATCH+'<b>'+batchSize(selected).toFixed(1)+'</b><small>per batch</small></span><span class="stat">'+ICON_CLOCK+'<b>'+([2,3,2,2][selected]/cycleSpeed(selected)).toFixed(1)+'s</b><small>cycle</small></span>':
-      '<span class="stat">'+ICON_CLOCK+'<b>'+(counterServiceDuration(selected)/Math.max(1,state.gameSpeed)).toFixed(1)+'s</b><small>handoff</small></span><span class="stat">'+ICON_LANES+'<b>'+economy.counterLanes(level)+'</b><small>'+(economy.counterLanes(level)===1?'lane':'lanes')+'</small></span>';
+      '<span class="stat" title="Units finished each time the station completes a batch">'+ICON_BATCH+'<b>'+(selected===3?qtyShort(Math.round(batchSize(selected))):compactCount(batchSize(selected)))+'</b><small>per batch</small></span><span class="stat" title="Time to complete one batch">'+ICON_CLOCK+'<b>every '+secondsLabel([2,3,2,2][selected]/cycleSpeed(selected))+'</b></span>':
+      '<span class="stat" title="Time to serve one customer">'+ICON_CLOCK+'<b>'+secondsLabel(counterServiceDuration(selected)/Math.max(1,state.gameSpeed))+'</b><small>per customer</small></span><span class="stat" title="Customers served at once">'+ICON_LANES+'<b>'+economy.counterLanes(level)+'</b><small>'+(economy.counterLanes(level)===1?'lane':'lanes')+'</small></span>';
     var tierTile=tierTo?'<span class="stat tier" title="Output doubles at level '+tierTo+'">'+ICON_TIER+'<b>×2</b><small>at Lv '+tierTo+'</small><i class="tier-bar"><i style="width:'+tierPct+'%"></i></i></span>':'<span class="stat tier">'+ICON_TIER+'<b>Flagship</b><small>top tier</small></span>';
     var statusHtml='<span class="status-chip" data-tone="'+statusTone+'" title="'+statusText.replace(/"/g,'')+'"><i></i>'+statusWord+'</span>'+tiles+tierTile;
     if($('stationStatus').dataset.html!==statusHtml){$('stationStatus').innerHTML=statusHtml;$('stationStatus').dataset.html=statusHtml}
@@ -2193,16 +2458,16 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     $('buyMachine').style.setProperty('--funded',Math.min(100,state.money/price*100)+'%');
     $('upgradeHint').textContent=!open?'Build '+LINES[selected-1].name.toLowerCase()+' first.':!affordable?fmt(price-state.money)+' to go · customer sales earn cash automatically.':level?selected<4?'Larger batches per cycle. Train employees to shorten each cycle.':'Upgrade for faster '+['','','','','order preparation','customer service'][selected]+'.':'Build this stage to extend your line.';
     $('upgradeHint').classList.toggle('ready',affordable);
-    if(selected===4&&level)$('upgradeHint').textContent+=' Baskets: '+basketSize()+' bag'+(basketSize()===1?'':'s')+' per customer (+1 every 2 desk levels). Queue: '+queueLimit()+' customers · every 2 desk or employee upgrades adds a place (max 12).';
+    if(selected===4&&level)$('upgradeHint').textContent+=' Baskets: '+qtyLabel(basketSize())+' per customer (+1 every 2 desk levels). Queue: '+queueLimit()+' customers · every 2 desk or employee upgrades adds a place (max 12).';
     }
     securityMarker.classList.add('station-sign');securityMarker.classList.toggle('selected',securitySelected);securityMarker.classList.toggle('can-upgrade',state.idStaff<10000&&state.money>=Math.floor(20*Math.pow(1.6,state.idStaff)));securityMarker.innerHTML='<span class=station-sign-name>Security</span><span class=station-sign-level>Lv '+state.idStaff+'</span>';securityMarker.style.setProperty('--station-tier',TIER_COLORS[state.idStaff>=25?3:state.idStaff>=10?2:1]);securityMarker.setAttribute('aria-label','Security, level '+state.idStaff+'. Open security station');securityMarker.setAttribute('aria-pressed',String(securitySelected));
     var idPrice=Math.floor(20*Math.pow(1.6,state.idStaff)),idMax=idTrainingQuote(10000);
-    $('idEmployeeInfo').textContent='Lv '+state.idStaff+' · '+(securityDuration()).toFixed(2)+'s / check';
+    $('idEmployeeInfo').innerHTML='<span>Lv '+state.idStaff+'</span><span>'+(securityDuration()).toFixed(2)+'s / check</span>';
     $('trainIdChecker').disabled=state.money<idPrice||state.idStaff>=10000;
     $('trainIdChecker').querySelector('span').textContent='+'+Math.round(.3/(1+state.idStaff*.3)*100)+'%';$('trainIdChecker').querySelector('b').textContent=fmt(idPrice);
     $('trainIdCheckerMax').disabled=!idMax.levels;$('trainIdCheckerMax').querySelector('span').textContent=idMax.levels?'+'+idMax.levels+' lv':'Maxed';$('trainIdCheckerMax').querySelector('b').textContent=idMax.levels?fmt(idMax.cost):'—';
     LINES.forEach(function(line,i){var quote=maxStaffTraining(i),button=$('staffMax'+i);button.disabled=!quote.levels;button.querySelector('span').textContent=quote.levels?'+'+quote.levels+' lv':'Maxed';button.querySelector('b').textContent=quote.levels?fmt(quote.cost):'—';button.setAttribute('aria-label','Train '+line.name+' employee by '+quote.levels+' levels for '+fmt(quote.cost))});
-    staffButtons.forEach(function(button,i){button.disabled=!state.lines[i]||state.money<staffCost(i);button.querySelector('b').textContent=fmt(staffCost(i));button.querySelector('span').textContent='+'+Math.round(.3/(1+state.staff[i]*.3)*100)+'%';$('employeeInfo'+i).textContent='Lv '+state.staff[i]+' · '+(1+state.staff[i]*.3).toFixed(1)+'× speed';button.title=state.money<staffCost(i)?fmt(staffCost(i)-state.money)+' more needed':'Train '+shortNames[i]+' employee';button.setAttribute('aria-label','Train '+shortNames[i]+' employee, '+button.querySelector('span').textContent+', '+fmt(staffCost(i)));});
+    staffButtons.forEach(function(button,i){button.disabled=!state.lines[i]||state.money<staffCost(i);button.querySelector('b').textContent=fmt(staffCost(i));button.querySelector('span').textContent='+'+Math.round(.3/(1+state.staff[i]*.3)*100)+'%';$('employeeInfo'+i).innerHTML='<span>Lv '+state.staff[i]+'</span><span>'+(1+state.staff[i]*.3).toFixed(1)+'× speed'+'</span>';button.title=state.money<staffCost(i)?fmt(staffCost(i)-state.money)+' more needed':'Train '+shortNames[i]+' employee';button.setAttribute('aria-label','Train '+shortNames[i]+' employee, '+button.querySelector('span').textContent+', '+fmt(staffCost(i)));});
     var installedKiosks=kioskCount(),nextKioskPrice=[25000,50000,100000][installedKiosks];
     $('kioskCountLabel').textContent=installedKiosks+' / 3 installed';
     $('buyKiosk').disabled=installedKiosks===3||state.money<nextKioskPrice;
@@ -2211,20 +2476,24 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     $('buyKiosk').querySelector('span').textContent=installedKiosks===3?'Maximum':installedKiosks===0?'Install kiosk':'Add kiosk '+(installedKiosks+1);
 
     $('queueCapacity').textContent=queueLimit()>=QUEUE_MAX?QUEUE_MAX+' customers · maximum':queueLimit()+' → '+Math.min(QUEUE_MAX,queueLimit()+2)+' customers';$('queueUpgradeInfo').textContent=queueLimit()>=QUEUE_MAX?'All waiting places unlocked.':state.money<queueCost()?fmt(queueCost()-state.money)+' more to expand':'Two extra waiting places';$('queuePrice').textContent=queueLimit()>=QUEUE_MAX?'MAX':fmt(queueCost());$('upgradeQueue').disabled=queueLimit()>=QUEUE_MAX||state.money<queueCost();
-    $('storageCapacity').textContent=storageCapacity()+' → '+(storageCapacity()+100)+' per stage';$('storageUsage').textContent=state.stock[3]+' / '+storageCapacity()+' jars'+(state.storageLevel<20&&state.money<storageCost()?' · '+fmt(storageCost()-state.money)+' to expand':' stored');$('storageFill').max=storageCapacity();$('storageFill').value=state.stock[3];$('storagePrice').textContent=state.storageLevel>=20?'MAX':fmt(storageCost());$('upgradeStorage').disabled=state.storageLevel>=20||state.money<storageCost();if(state.storageLevel>=20)$('storageCapacity').textContent=storageCapacity()+' per stage · maximum';
-    var batch=onlineBatch(10),quote=onlineBatch(10,Infinity),maxUnlocked=state.lines[3]>=10,maxBatch=onlineBatch(Infinity);
-    $('fulfillOnlineBatch').disabled=batch.count<10;$('onlineBatchLabel').textContent='Send 10';$('onlineBatchReward').textContent=fmt(quote.reward);$('onlineBatchInfo').textContent=quote.jars+' jars total';
-    $('onlineMaxOption').hidden=!maxUnlocked;$('fulfillOnlineMax').disabled=!maxBatch.count;$('onlineMaxLabel').textContent='Send max ('+maxBatch.count+')';$('onlineMaxReward').textContent=fmt(maxBatch.reward);$('onlineMaxInfo').textContent=maxBatch.jars+' jars total';
+    $('storageCapacity').textContent=qtyLabel(storageCapacity())+' → '+qtyLabel(storageCapacity()+100)+' per stage';$('storageUsage').textContent=qtyLabel(state.stock[3])+' / '+qtyLabel(storageCapacity())+(state.storageLevel<20&&state.money<storageCost()?' · '+fmt(storageCost()-state.money)+' to expand':' stored');$('storageFill').max=storageCapacity();$('storageFill').value=state.stock[3];$('storagePrice').textContent=state.storageLevel>=20?'MAX':fmt(storageCost());$('upgradeStorage').disabled=state.storageLevel>=20||state.money<storageCost();if(state.storageLevel>=20)$('storageCapacity').textContent=storageCapacity()+' per stage · maximum';
+    // One send: everything shippable, or up to ten at a time until the packing bar reaches level 10.
+    var maxUnlocked=state.lines[3]>=10,maxBatch=onlineBatch(maxUnlocked?Infinity:10);
+    $('fulfillOnlineMax').disabled=!maxBatch.count;$('onlineMaxLabel').textContent=maxBatch.count?'Send '+maxBatch.count+(maxBatch.count===1?' order':' orders'):'Nothing to send';$('onlineMaxReward').textContent=maxBatch.count?fmt(maxBatch.reward):'';$('onlineMaxInfo').textContent=maxBatch.count?qtyLabel(maxBatch.jars)+(maxUnlocked?'':' · up to 10 per launch until Pack Lv 10'):(onlineRequestsReady()?'Needs '+qtyLabel(onlineSize())+' packed':'No requests waiting');
 
-    $('onlineTitle').textContent='Web order #'+String(state.onlineCompleted+1).padStart(3,'0');$('onlineNeed').textContent=onlineSize()+' jars · '+STRAINS[menuChoice(state.onlineCompleted)].name;$('onlineReward').textContent=fmt(onlineSize()*onlineValue());$('onlineStock').textContent=onlineRequestsReady()+' request'+(onlineRequestsReady()===1?'':'s')+' waiting · '+state.stock[3]+' jars available · '+customers.filter(function(c){return c.ordered&&!c.bag}).length+' walk-in bags held';$('dispatchHint').textContent=onlineRequestsReady()<1?'Waiting for the next web request. Requests arrive faster as you complete orders, and with Web marketing in the Shop.':state.stock[3]<onlineSize()?'Waiting for '+(onlineSize()-state.stock[3])+' more packed jars. Walk-in pickups stay reserved.':'Ready for drone delivery. Walk-in pickups stay reserved.';$('fulfillOnline').disabled=!state.lines[4]||state.stock[3]<onlineSize()||onlineRequestsReady()<1;var webItem=$('stockCountOnline').closest('.stock-item'),webCount=onlineRequestsReady();$('stockCountOnline').textContent=webCount;webItem.dataset.heat=String(requestHeat(webCount));$('stockCountOnline').classList.toggle('stock-full',webCount>=onlineRequestCap());webItem.title=webCount+' deliver'+(webCount===1?'y':'ies')+' requested · '+onlineRequestCap()+' max';$('onlineBadge').hidden=$('fulfillOnline').disabled;if(!maxUnlocked)$('dispatchHint').textContent+=' Send max unlocks at Packing Lv 10.';
+    var built=deliveryBuilt();$('deliverySite').style.display=built?'none':'';$('buildDelivery').disabled=state.money<AUTO_DRONE_COST;['.online-card','#dispatchHint','.auto-drone-control','.dispatch-stats'].forEach(function(sel){document.querySelector('[data-pane="orders"] '+sel).style.display=built?'':'none'});
+    $('onlineTitle').textContent='#'+String(state.onlineCompleted+1).padStart(3,'0');$('onlineNeed').textContent=qtyLabel(onlineSize())+(state.productMenu.active===0?' ':' · ')+STRAINS[menuChoice(state.onlineCompleted)].name;$('receiptUnit').textContent=fmt(onlineValue())+' / '+unitShort();$('receiptFormat').textContent=format().name;$('receiptTotal').textContent=fmt(onlineSize()*onlineValue());var heldBags=customers.filter(function(c){return c.ordered&&!c.bag}).length;$('onlineStock').textContent=heldBags?heldBags+' walk-in bag'+(heldBags===1?'':'s')+' reserved first':'';renderDispatchDesk(maxBatch.count);$('dispatchHint').textContent=onlineRequestsReady()<1?'Waiting for the next web request. Requests arrive faster as you complete orders, and with Web marketing in the Shop.':state.stock[3]<onlineSize()?'Waiting for '+qtyLabel(onlineSize()-state.stock[3])+' more to be packed. Walk-in pickups stay reserved.':'';
+    // The caption under the send button doubles as the hint line, so the card never changes height.
+    if($('dispatchHint').textContent){$('onlineMaxInfo').textContent=$('dispatchHint').textContent;$('onlineMaxInfo').classList.add('is-hint')}else $('onlineMaxInfo').classList.remove('is-hint');var webItem=$('stockCountOnline').closest('.stock-item'),webCount=onlineRequestsReady();$('stockCountOnline').textContent=webCount;webItem.dataset.heat=String(requestHeat(webCount));$('stockCountOnline').classList.toggle('stock-full',webCount>=onlineRequestCap());webItem.title=webCount+' deliver'+(webCount===1?'y':'ies')+' requested · '+onlineRequestCap()+' max';$('onlineBadge').hidden=$('fulfillOnlineMax').disabled;
     renderCustomerRatings();
-    var waiting=customers.filter(function(c){return !c.ordered&&c.phase!=='leaving'}).length;$('queueCount').textContent=waiting+'/'+queueLimit();$('queueCount').classList.toggle('queue-full',waiting>=queueLimit());firstTimeHints(waiting);$('queueCount').parentElement.title=waiting>=queueLimit()?'Line is full · new customers walk away. Upgrade the order desk or its employees to add places.':'Customers waiting to order';$('pickupCount').textContent=customers.filter(function(c){return c.phase==='pickup'||c.phase==='toPickup'}).length;$('servedCount').textContent=state.sold.toLocaleString();state.stock.forEach(function(n,i){$('stockCount'+i).textContent=n;$('stockCount'+i).title=i===4?n+' / '+readyCapacity()+' packed orders ready for walk-in pickup':n+' / '+storageCapacity()+(n>=storageCapacity()?' · Storage full':'');$('stockCount'+i).classList.toggle('stock-full',n>=(i===4?readyCapacity():storageCapacity()))});var order=milestone(state.contract);
+    var waiting=customers.filter(function(c){return !c.ordered&&c.phase!=='leaving'}).length;$('queueCount').textContent=waiting+'/'+queueLimit();$('queueCount').classList.toggle('queue-full',waiting>=queueLimit());firstTimeHints(waiting);$('queueCount').parentElement.title=waiting>=queueLimit()?'Line is full · new customers walk away. Upgrade the order desk or its employees to add places.':'Customers waiting to order';$('pickupCount').textContent=customers.filter(function(c){return c.phase==='pickup'||c.phase==='toPickup'}).length;$('servedCount').textContent=state.sold.toLocaleString();state.stock.forEach(function(n,i){var packed=i===3,oz=state.productMenu.active===0,v=packed&&oz?n/8:n;$('stockCount'+i).innerHTML=compactCount(v)+(packed?'<small>'+(oz?'oz':state.productMenu.active===1?'jt':'ed')+'</small>':'');$('stockCount'+i).title=i===4?n+' / '+readyCapacity()+' packed orders ready for walk-in pickup':i===3?qtyLabel(n)+' packed of '+qtyLabel(storageCapacity())+(n>=storageCapacity()?' · Storage full':''):n+' / '+storageCapacity()+(n>=storageCapacity()?' · Storage full':'');$('stockCount'+i).classList.toggle('stock-full',n>=(i===4?readyCapacity():storageCapacity()))});var order=milestone(state.contract);
     if(order){$('orderName').textContent=state.lifetime>=order.goal?'ORDER READY TO CLAIM':order.name;$('orderProgress').textContent=fmt(Math.min(state.lifetime,order.goal))+' / '+fmt(order.goal);$('orderFill').style.width=Math.min(100,state.lifetime/order.goal*100)+'%';$('claimReward').textContent='+'+fmt(order.reward);$('claim').disabled=state.lifetime<order.goal}
     else{$('orderName').textContent='ALL ORDERS FILLED';$('orderProgress').textContent='COMPLETE';$('orderFill').style.width='100%';$('claimReward').textContent='✓';$('claim').disabled=true}
     $('orderBadge').hidden=!order||state.lifetime<order.goal;
     $('boostPreview').textContent=state.multiplier.toFixed(2)+'× → '+(state.multiplier*1.25).toFixed(2)+'× all stations';
     var boostPrice=boostCost(state.globalLevel);$('boostCost').textContent=state.globalLevel>=BOOST_MAX?'MAX':fmt(boostPrice);$('boost').disabled=state.globalLevel>=BOOST_MAX||state.money<boostPrice;
-    markerEls.forEach(function(el,i){var locked=!isOpen(i);el.classList.toggle('selected',i===selected);el.classList.toggle('locked',locked);el.classList.add('station-sign');el.classList.toggle('can-upgrade',!locked&&state.money>=cost(i));el.innerHTML='<span class=station-sign-name>'+shortNames[i]+'</span><span class=station-sign-level>Lv '+state.lines[i]+'</span>';el.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);el.setAttribute('aria-label',LINES[i].name+(locked?', locked':', level '+state.lines[i]));el.setAttribute('aria-pressed',String(i===selected))});
+    var slowNow=slowestStation();
+    markerEls.forEach(function(el,i){var locked=!isOpen(i);el.classList.toggle('selected',i===selected);el.classList.toggle('locked',locked);el.classList.toggle('is-bottleneck',i===slowNow&&!locked);el.classList.add('station-sign');el.classList.toggle('can-upgrade',!locked&&state.money>=cost(i));el.innerHTML='<span class=station-sign-name>'+shortNames[i]+'</span><span class=station-sign-level>Lv '+state.lines[i]+'</span>';el.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);el.setAttribute('aria-label',LINES[i].name+(locked?', locked':', level '+state.lines[i]));el.setAttribute('aria-pressed',String(i===selected))});
     var securityCard=document.querySelector('[data-security]');if(securityCard){var idPriceNow=Math.floor(20*Math.pow(1.6,state.idStaff));securityCard.setAttribute('aria-pressed',String(securitySelected));securityCard.classList.toggle('can-upgrade',state.idStaff<10000&&state.money>=idPriceNow);securityCard.querySelector('em').textContent='Lv '+state.idStaff;securityCard.setAttribute('aria-label','Security, level '+state.idStaff);securityCard.style.setProperty('--station-tier',TIER_COLORS[state.idStaff>=25?3:state.idStaff>=10?2:1])}
     machineTabs.forEach(function(tab,i){var locked=!isOpen(i),available=!locked&&state.money>=cost(i);tab.classList.toggle('is-bottleneck',i===slow);tab.title=i===slow?'Slowest station · improve this to raise capacity':'';tab.setAttribute('aria-pressed',String(!securitySelected&&i===selected));tab.classList.toggle('is-locked',locked);tab.classList.toggle('can-upgrade',available);tab.querySelector('em').innerHTML=locked?'Locked':'Lv '+state.lines[i]+(i===slow?'<span class="slow-tag"> · Slow</span>':'');tab.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);var progress=Math.min(100,state.lines[i]/100*100),progressText=state.lines[i]>=100?'Flagship equipment reached':'Level '+state.lines[i]+' of 100 toward flagship equipment';tab.querySelector('progress').value=progress;tab.querySelector('progress').setAttribute('aria-label',LINES[i].name+' equipment progress');tab.querySelector('progress').setAttribute('aria-valuetext',progressText);tab.querySelector('progress').title=progressText;tab.querySelector('.level-funding').textContent=progressText;tab.setAttribute('aria-label',LINES[i].name+(i===slow?', slowest station':'')+', level '+state.lines[i]+', '+STATION_TIERS[stationTier(i)]+(available?', upgrade ready':''))});
   }
@@ -2232,7 +2501,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   machineTabs.forEach(function(tab,i){var progress=document.createElement('progress');progress.max=100;progress.value=0;progress.setAttribute('aria-label',LINES[i].name+' equipment progress');tab.appendChild(progress);var label=document.createElement('span');label.className='level-funding';tab.appendChild(label);tab.onclick=function(){selectMachine(Number(tab.getAttribute('data-machine')))}});
   var trayTabs=Array.prototype.slice.call(document.querySelectorAll('[data-tray]'));
   var activeTray='factory',panelOpen=true;
-  function showTray(name){document.body.dataset.activeTray=name;if(state.empire.activeStore&&name!=='empire')visitStore(0,false);activeTray=name;panelOpen=true;$('sheet').classList.remove('collapsed');$('panelToggle').setAttribute('aria-expanded','true');$('panelToggle').textContent='⌄';var titles={factory:'Stations',employees:'Staff',orders:'Deliveries',boosts:'Shop',flowers:'Flower',empire:'Empire'};$('panelTitle').textContent=titles[name];trayTabs.forEach(function(t){t.setAttribute('aria-pressed',String(t.getAttribute('data-tray')===name))});Array.prototype.forEach.call(document.querySelectorAll('[data-pane]'),function(p){p.hidden=p.getAttribute('data-pane')!==name});fitControls()}
+  function showTray(name){document.body.dataset.activeTray=name;if(state.empire.activeStore&&name!=='empire')visitStore(0,false);activeTray=name;panelOpen=true;$('sheet').classList.remove('collapsed');$('panelToggle').setAttribute('aria-expanded','true');$('panelToggle').textContent='⌄';var titles={factory:'Stations',employees:'Staff',orders:'Deliveries',boosts:'Shop',flowers:'Menu',empire:'Empire'};$('panelTitle').textContent=titles[name];trayTabs.forEach(function(t){t.setAttribute('aria-pressed',String(t.getAttribute('data-tray')===name))});Array.prototype.forEach.call(document.querySelectorAll('[data-pane]'),function(p){p.hidden=p.getAttribute('data-pane')!==name});fitControls()}
   function collapsePanel(){panelOpen=false;$('sheet').classList.add('collapsed');$('panelToggle').setAttribute('aria-expanded','false');$('panelToggle').textContent='⌃';fitControls()}
   trayTabs.forEach(function(tab){tab.onclick=function(){var name=tab.getAttribute('data-tray');if(name===activeTray&&panelOpen)collapsePanel();else showTray(name)}});
   $('panelToggle').onclick=function(){if(panelOpen)collapsePanel();else showTray(activeTray)};
@@ -2277,12 +2546,12 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   });
   // Short goals and management live in the existing tray; map gestures remain free.
   var today=document.querySelector('[data-empire-section="today"]');
-  today.innerHTML='<section id="returnSummary" hidden><h2>Welcome back</h2><p id="returnTime"></p><ul id="returnEarnings"></ul><p id="returnGoals"></p><button id="dismissReturn">Dismiss summary</button></section><h2>Next steps</h2><p id="nextInvestment"></p><div id="shortGoals"></div><section class="reputation"><h2 class="empire-section-heading">Reputation</h2><div class="reputation-summary"><strong id="reputationStatus"></strong><span id="reputationNext"></span></div><progress id="reputationProgress" max="60" value="0" aria-label="Customer reputation"></progress><details class="branch-help reputation-guide"><summary>Customer guide</summary><dl><dt>Regulars</dt><dd>Take Meadow Mint when it is on the menu</dd><dt>Collectors</dt><dd>Take the best boutique strain on the menu</dd><dt>Hurried</dt><dd>Whole visit ≤20 seconds · Queue comfort adds patience</dd><dt>VIPs</dt><dd>Whole visit ≤15 seconds · double payment</dd></dl><dl><dt>Match</dt><dd>+1 loyalty · +15% tip</dd><dt>Miss</dt><dd>−1 loyalty</dd><dt>20 loyalty</dt><dd>Collectors unlock</dd><dt>60 loyalty</dt><dd>VIPs unlock · regular matches tip 35%</dd></dl><p>Branch loyalty adds up to 20% income.</p></details></section>';
+  today.innerHTML='<section id="returnSummary" hidden><h2>Welcome back</h2><p id="returnTime"></p><ul id="returnEarnings"></ul><p id="returnGoals"></p><button id="dismissReturn">Dismiss summary</button></section><h2>Next steps</h2><p id="nextInvestment"></p><div id="shortGoals"></div><section class="reputation"><h2 class="empire-section-heading">Reputation</h2><div class="reputation-summary"><strong id="reputationStatus"></strong><span id="reputationNext"></span></div><progress id="reputationProgress" max="60" value="0" aria-label="Customer reputation"></progress><details class="branch-help reputation-guide"><summary>Customer guide</summary><dl><dt>Regulars</dt><dd>Take Meadow Mint when it is on the menu</dd><dt>Hurried</dt><dd>Whole visit ≤20 seconds · Queue comfort adds patience</dd><dt>VIPs</dt><dd>Whole visit ≤15 seconds · double payment</dd></dl><dl><dt>Match</dt><dd>+1 loyalty · +15% tip</dd><dt>Miss</dt><dd>−1 loyalty</dd><dt>60 loyalty</dt><dd>VIPs unlock · regular matches tip 35%</dd></dl><p>Branch loyalty adds up to 20% income.</p></details></section>';
   [0,1,2].forEach(function(i){var row=document.createElement('div');row.className='short-goal';row.innerHTML='<h3 id="goalTitle'+i+'"></h3><progress id="goalProgress'+i+'" max="100" aria-label="Objective progress"></progress><p id="goalCount'+i+'"></p><button id="goalClaim'+i+'"></button>'; $('shortGoals').appendChild(row);$('goalClaim'+i).onclick=function(){var reward=claimGoal(state,i,rewardScale());if(reward){save();renderUI();notify('GOAL COMPLETE · +'+fmt(reward),'upgrade')}}});
   $('dismissReturn').onclick=function(){state.empire.returnReport=null;save();renderUI()};
   STORES.forEach(function(store,i){
     var controls=document.createElement('div');controls.className='branch-management';
-    controls.innerHTML='<div class="branch-facts"><span class="specialty">'+['Exclusive strains','Boutique products','Bulk deliveries'][i]+'</span><span id="branchLoyalty'+i+'"></span></div>'+(i===2?'<button id="bulkDispatch">Dispatch 30 jars</button><p id="bulkDetail"></p>':'')+'<details class="branch-help"><summary>Store details</summary><p>'+SPECIALTIES[i]+'</p><p id="branchExpansion'+i+'"></p><p id="branchCustomers'+i+'"></p></details>';
+    controls.innerHTML='<div class="branch-facts"><span class="specialty">'+['Exclusive strains','Boutique products','Bulk deliveries'][i]+'</span><span id="branchLoyalty'+i+'"></span></div>'+(i===2?'<button id="bulkDispatch">Dispatch '+qtyLabel(30)+'</button><p id="bulkDetail"></p>':'')+'<p class="operation-hint" id="storeDetails'+i+'"></p>';
 
     $('branchBuy'+i).closest('article').insertBefore(controls,$('projectSummary'+i).parentElement);
   });
@@ -2306,9 +2575,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     '<path d="m5 23 17-17 5 5-17 17Z M8 20l5 5m7-17 5 5M7 7c-3-3 3-3 0-6"/>',
     '<rect x="5" y="5" width="22" height="22" rx="4"/><path d="M5 16h22M16 5v22M9 10h3m8 0h3M9 21h3m8 0h3"/>'
   ];
-  var menuPanel=document.createElement('section');menuPanel.className='product-line';menuPanel.setAttribute('aria-labelledby','productLineTitle');menuPanel.innerHTML='<h2 id="productLineTitle">Product line</h2><div class="format-options">'+FORMATS.map(function(f,i){return '<button id="format'+i+'" type="button"><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+productIcons[i]+'</svg><strong>'+f.name+'</strong><small></small></button>'}).join('')+'</div><p id="formatBenefit"></p>';
-  document.querySelector('[data-pane="flowers"]').prepend(menuPanel);
-  var flowerHelp=$('flowerSummary').nextElementSibling;if(flowerHelp){var flowerGuide=document.createElement('details');flowerGuide.className='strain-guide';flowerGuide.innerHTML='<summary>Strain guide</summary>';flowerHelp.before(flowerGuide);flowerGuide.append(flowerHelp)}
+  var menuPanel=document.createElement('section');menuPanel.className='product-line';menuPanel.setAttribute('aria-labelledby','productLineTitle');menuPanel.innerHTML='<h2 id="productLineTitle">Sell as</h2><div class="format-options">'+FORMATS.map(function(f,i){return '<button id="format'+i+'" type="button"><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+productIcons[i]+'</svg><strong>'+f.name+'</strong><small></small></button>'}).join('')+'</div><p id="formatBenefit"></p>';
+  $('strainDetail').after(menuPanel);
   FORMATS.forEach(function(_,i){$('format'+i).onclick=function(){if(chooseFormat(state,i)){save();renderUI();notify(FORMATS[i].name+' featured','upgrade')}}});
   var prestigePanel=document.createElement('details');prestigePanel.className='depth-panel';prestigePanel.innerHTML='<summary>New beginnings</summary><p id="prestigeStatus"></p><p>Reopen from scratch for +20% permanent base sales per rank.</p><button id="prestigeStart" type="button"></button>';
   document.querySelector('[data-empire-section="growth"]').append(prestigePanel);
@@ -2320,13 +2588,28 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   $('prestigeConfirm').onclick=function(){var offer=prestigeOffer(state);if(!offer.eligible)return;var rank=offer.rank+1,sound=state.sound;resetRun(rank,sound);prestigeDialog.hidden=true;save();showTray('factory');renderUI();notify('Prestige '+rank+' · permanent sales bonus','upgrade')};
   var droneRow=document.createElement('div');droneRow.className='shop-upgrade';droneRow.innerHTML='<div class="shop-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="11" y="11" width="10" height="9" rx="2"/><path d="m11 12-5-5m15 5 5-5m-15 12-5 6m15-6 5 6M2 7h8m12 0h8M2 25h8m12 0h8M13 24h6"/></svg></div><div class="shop-copy"><h2>Auto drone</h2><strong id="autoDroneBenefit">Send a ready order every 10s</strong></div><button id="buyAutoDrone"><span>Install</span><b id="autoDronePrice"></b></button>';
   document.querySelector('[data-pane="boosts"]').append(droneRow);
-  var droneControl=document.createElement('div');droneControl.className='auto-drone-control';droneControl.innerHTML='<div><strong>Auto drone</strong><small id="autoDroneStatus"></small></div><button id="autoDroneToggle" type="button"></button><button id="autoDroneBulk" type="button" hidden></button>';document.querySelector('[data-pane="orders"]').prepend(droneControl);
-  function purchaseAutoDrone(){if(buyAutoDrone(state)){save();renderUI();notify('Auto drone installed','upgrade')}}
+  var droneControl=document.createElement('div');droneControl.className='auto-drone-control';droneControl.innerHTML='<span class="drone-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 10h6v4H9zM4 6h3M17 6h3M5.5 6v4h3.5M18.5 6v4H15M9 14l-3 4M15 14l3 4"/></svg></span><div><strong>Auto drone</strong><small id="autoDroneStatus"></small></div><button id="autoDroneToggle" type="button" class="drone-switch"></button><button id="autoDroneBulk" type="button" hidden></button>';document.querySelector('.dispatch-desk').append(droneControl);
+  var deliverySite=document.createElement('div');deliverySite.className='delivery-site';deliverySite.id='deliverySite';deliverySite.innerHTML='<div><strong>Delivery pad under construction</strong><small>Build the launch deck and courier drone to start taking web orders. They pay a third more than walk-ins and ship straight from packing.</small></div><button id="buildDelivery" type="button"><span>Build</span><b>'+fmt(AUTO_DRONE_COST)+'</b></button>';document.querySelector('.dispatch-desk').prepend(deliverySite);$('buildDelivery').onclick=purchaseAutoDrone;
+  function purchaseAutoDrone(){if(buyAutoDrone(state)){save();renderUI();notify('DELIVERY PAD BUILT · web orders open','upgrade')}}
   function purchaseBulkDrone(){if(buyBulkDrone(state)){save();renderUI();notify('Bulk auto drone installed','upgrade')}}
   $('buyAutoDrone').onclick=function(){if(state.autoDrone.owned)purchaseBulkDrone();else purchaseAutoDrone()};
   $('autoDroneBulk').onclick=function(){if(!state.autoDrone.bulk){purchaseBulkDrone();return}state.autoDrone.mode=state.autoDrone.mode==='bulk'?'single':'bulk';save();renderUI()};
-  $('autoDroneToggle').onclick=function(){if(!state.autoDrone.owned){purchaseAutoDrone();return}state.autoDrone.enabled=!state.autoDrone.enabled;save();renderUI()};
-  var shopBrowser=mountShopBrowser({getState:function(){return state},components:COMPONENTS,kiosks:kioskCount,queueLimit:queueLimit,recommend:function(open){var i=slowestStation();if(open)selectMachine(i);return ['Seeds','Grow','Harvest','Pack','Orders','Pickup'][i]+' · upgrade '+fmt(cost(i))}});
+  // The switch flips on any press-and-release anywhere on it: pointer capture means the release always lands on the
+  // button even though the knob slides under the pointer, and the click event is ignored so nothing double-fires.
+  function flipAutoDrone(){if(!state.autoDrone.owned){purchaseAutoDrone();return}state.autoDrone.enabled=!state.autoDrone.enabled;save();renderUI()}
+  (function(toggle){var pressed=false;
+    toggle.addEventListener('pointerdown',function(e){if(e.button&&e.button!==0)return;pressed=true;try{toggle.setPointerCapture(e.pointerId)}catch(err){}});
+    toggle.addEventListener('pointerup',function(e){if(!pressed)return;pressed=false;try{toggle.releasePointerCapture(e.pointerId)}catch(err){}flipAutoDrone()});
+    toggle.addEventListener('pointercancel',function(){pressed=false});
+    toggle.addEventListener('click',function(e){if(e.detail!==0)e.preventDefault();else flipAutoDrone()});
+  })($('autoDroneToggle'));
+  // Cards for the second wave of upgrades are generated from the table; the originals stay in the HTML.
+  (function(){var icons={seedBatchLevel:'<path d="M6 26h20M9 26V14h14v12M12 14V8h8v6M16 8V4"/>',growBatchLevel:'<path d="M6 6h20M8 6v4h16V6M12 10v4m8-4v4M9 28h14l-1-8H10Z"/>',harvestBatchLevel:'<path d="M8 8l16 16M8 24 24 8M8 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm0 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>',packSpeedLevel:'<path d="M4 10h18v14H4zM22 14h5l2 3v7h-7M8 24a2 2 0 1 0 4 0m10 0a2 2 0 1 0 4 0"/>',serviceLevel:'<path d="M4 24h24M6 24V12h20v12M12 12V7h8v5M4 16h24"/>',signLevel:'<path d="M16 28V10M8 10h16l3 4-3 4H8Z"/>',loyaltyLevel:'<path d="M4 9h24v14H4zM4 14h24M9 19h6"/>',basketLevel:'<path d="M5 12h22l-2 14H7ZM10 12l3-7m9 7-3-7M12 17v5m4-5v5m4-5v5"/>',terpeneLevel:'<path d="M12 4h8M14 4v8L6 26h20L18 12V4M10 20h12"/>',breedingLevel:'<path d="M16 28V14M16 14c-6 0-9-4-9-9 6 0 9 4 9 9Zm0 0c6 0 9-4 9-9-6 0-9 4-9 9ZM6 28h20"/>',displayLevel:'<path d="M5 10h22v16H5zM5 18h22M9 10V6h14v4"/>',trendLevel:'<path d="M4 24 12 15l5 5 11-11M20 9h8v8"/>',fleetLevel:'<path d="M12 12h8v6h-8zM4 8h5M23 8h5M6 8v4h6M26 8v4h-6M12 18l-3 6M20 18l3 6"/>',cargoLevel:'<path d="M4 10h24v14H4zM4 16h24M12 10v14m8-14v14"/>',repeatLevel:'<path d="M6 14a10 10 0 0 1 17-6l3 3M26 6v6h-6M26 18a10 10 0 0 1-17 6l-3-3M6 26v-6h6"/>'};
+    var blurbs={seedBatchLevel:'Deeper trays start more seedlings per cycle.',growBatchLevel:'Brighter lights fatten every grow batch.',harvestBatchLevel:'Robots trim more flower per pass.',packSpeedLevel:'Machines bag flower faster than hands can.',serviceLevel:'Both counters hand off customers quicker.',signLevel:'Street signs pull more walk-ins through the door.',loyaltyLevel:'Happy customers tip more when they carry your card.',basketLevel:'Customers take a little more home each visit.',terpeneLevel:'Raises the THC of every strain on the menu.',breedingLevel:'Breeds boutique strains that grow closer to everyday speed.',displayLevel:'Boutique flower sells for more in lit cases.',trendLevel:'Spots trends early so the trending strain pays out more.',fleetLevel:'More couriers on the pad: shorter gaps between launches.',cargoLevel:'Bulk runs carry extra orders per launch.',repeatLevel:'A share of web customers order again right away.'};
+    var pane=document.querySelector('[data-pane="boosts"]'),anchor=pane.querySelector('.shop-milestone')||null;
+    COMPONENTS.forEach(function(c,i){if(document.getElementById('componentBuy'+i))return;var card=document.createElement('div');card.className='shop-upgrade shop-feature';card.innerHTML='<div class="shop-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+icons[c.key]+'</svg></div><div class="shop-copy"><h2>'+c.name+'</h2><strong id="componentBenefit'+i+'"></strong><small>'+blurbs[c.key]+'</small><small id="componentLevel'+i+'"></small></div><button id="componentBuy'+i+'"><span>Upgrade</span><b id="componentPrice'+i+'"></b></button>';pane.insertBefore(card,anchor)});
+  })();
+  var shopBrowser=mountShopBrowser({getState:function(){return state},components:COMPONENTS,kiosks:kioskCount,queueLimit:queueLimit,recommend:function(open){var r=recommendation();if(open){actOnRecommendation();return ''}return r.name+' · '+(r.kind==='component'?'in Customers · ':'upgrade ')+fmt(r.price)}});
   var operationsUI=mountOperations({getState:function(){return state},format:fmt,changed:function(message){save();renderUI();if(message)notify(message,'upgrade')},visit:function(i,manage){visitStore(i+1,!manage);if(manage)manageViewedStore()},mainFlow:function(open){
     var station=slowestStation(),reason='Capacity';
     if(state.stock[1]>20&&state.stock[2]<2){station=2;reason='Harvest backlog'}else if(state.stock[2]>20&&state.stock[3]<2){station=3;reason='Packing backlog'}else if(state.stock[4]>20&&customers.some(function(c){return c.ordered&&!c.bag})){station=5;reason='Pickup queue'}else if(state.stock[0]<1){station=0;reason='Seed supply'}else if(state.stock[1]<1){station=1;reason='Growing'}else if(state.stock[2]<1){station=2;reason='Harvesting'}else if(state.stock[3]<1){station=3;reason='Packing stock'}else if(state.stock[4]<1){station=4;reason='Preparing orders'}
@@ -2341,15 +2624,17 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     [0,1,2].forEach(function(i){var g=goalStatus(p,i,rewardScale());$('goalTitle'+i).textContent=g.title;$('goalProgress'+i).value=g.progress/g.target*100;$('goalCount'+i).textContent=Math.floor(g.progress)+' / '+g.target+' · '+p.goalsCompleted+' goals completed';$('goalClaim'+i).textContent='Collect '+fmt(g.reward);$('goalClaim'+i).disabled=g.progress<g.target});
     var reputationTarget=p.reputation<20?20:60;
     $('reputationStatus').textContent=p.reputation+' loyalty';
-    $('reputationNext').textContent=p.reputation>=60?'VIPs unlocked':p.reputation>=20?'VIPs at 60':'Collectors at 20';
+    $('reputationNext').textContent=p.reputation>=60?'VIPs unlocked':'VIPs at 60';
     $('reputationProgress').max=reputationTarget;$('reputationProgress').value=Math.min(p.reputation,reputationTarget);
-    $('reputationProgress').setAttribute('aria-valuetext',p.reputation+' loyalty. '+(p.reputation>=60?'VIPs unlocked':p.reputation>=20?'Collectors unlocked. VIPs at 60.':'Collectors at 20.'));
+    $('reputationProgress').setAttribute('aria-valuetext',p.reputation+' loyalty. '+(p.reputation>=60?'VIPs unlocked':'VIPs at 60.'));
     STORES.forEach(function(_,i){var store=p.stores[i];$('branchLoyalty'+i).closest('.branch-management').hidden=!store.level;
-      $('branchLoyalty'+i).textContent=store.loyalty+' loyalty';$('branchLoyalty'+i).title=store.loyalty>=60?'VIP following':store.loyalty>=20?'Collectors unlocked':'Collectors unlock at 20';$('branchCustomers'+i).textContent=store.served+' served · '+(store.loyalty>=60?'VIP following':store.loyalty>=20?'Collectors unlocked':'Collectors at 20 loyalty');
-      $('branchExpansion'+i).textContent=store.level<3?'Display wing at level 3':store.level<5?'Specialist employee at level 5':store.level<7?'Terrace at level 7':'All expansions built';
+      $('branchLoyalty'+i).textContent=store.loyalty+' loyalty';$('branchLoyalty'+i).title=store.loyalty>=60?'VIP following':'VIPs follow at 60';
+      var expansion=store.level<3?'Display wing at level 3':store.level<5?'Specialist employee at level 5':store.level<7?'Terrace at level 7':'All expansions built';
+      var customers=store.served+' served · '+(store.loyalty>=60?'VIP following':'VIPs at 60 loyalty');
+      $('storeDetails'+i).textContent=SPECIALTIES[i]+' · '+expansion+' · '+customers;
     });
     $('bulkDispatch').disabled=p.stores[2].level<2||state.stock[3]<30;
-    $('bulkDetail').textContent=(p.stores[2].level<2?'Unlocks at level 2 · ':'')+fmt(bulkReward(p))+' reward · '+state.stock[3]+'/30 shared jars';
+    $('bulkDetail').textContent=(p.stores[2].level<2?'Unlocks at level 2 · ':'')+fmt(bulkReward(p))+' reward · '+qtyLabel(state.stock[3])+' of '+qtyLabel(30)+' shared';
   }
   function renderEmpire(){
     renderStoreView();renderManagement();operationsUI.render();
@@ -2385,7 +2670,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     $('dailyTime').textContent='Next daily reset in '+duration(d.remaining)+' · midnight UTC';
     $('dailyClaim').textContent=d.available?'Collect '+fmt(d.reward):'Collected today';$('dailyClaim').disabled=!d.available;
     DAILY.forEach(function(reward,i){var el=$('dailyDay'+i);el.classList.toggle('current',i===d.day-1);el.classList.toggle('collected',i<d.day-1||(!d.available&&i===d.day-1));el.setAttribute('aria-label','Day '+(i+1)+', '+fmt(reward)+(i===d.day-1?(d.available?', ready to collect':', collected'):''));});
-    $('eventName').textContent=e.name;$('eventDescription').textContent=e.copy+' Earn '+fmt(e.reward)+' and a trophy. Event collectors visit every fourth arrival and tip 25% extra for boutique products. Exclusive reward: '+['market lantern','vendor display','harvest planter'][e.slot%3]+' for every branch.';
+    $('eventName').textContent=e.name;$('eventDescription').textContent=e.copy+' Earn '+fmt(e.reward)+' and a trophy. Event VIPs visit every fourth arrival and tip 25% extra on boutique flower. Exclusive reward: '+['market lantern','vendor display','harvest planter'][e.slot%3]+' for every branch.';
     $('eventTime').textContent=(e.open?'Ends in ':e.joined&&e.progress>=e.goal&&!e.claimed?'Claim before next event in ':'Next event in ')+duration(e.remaining);
     $('eventProgress').value=Math.min(100,e.progress/e.goal*100);
     $('eventCount').textContent=e.claimed?'Reward collected':e.joined?e.progress+' / '+e.goal+(e.open?' completed':e.progress>=e.goal?' · Complete':' · Event ended'):'Join to start counting progress';
@@ -2496,7 +2781,6 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   $('centerView').onclick=function(){mapHintActivity();zoom=1;panX=0;panY=0;applyCamera()};
   var staffButtons=Array.prototype.slice.call(document.querySelectorAll('[data-staff]'));
   staffButtons.forEach(function(button){button.onclick=function(){upgradeStaff(Number(button.getAttribute('data-staff')))}});
-  STRAINS.forEach(function(_,i){$('flowerBuy'+i).onclick=function(){buyStrain(i)};$('flowerSelect'+i).onclick=function(){selectStrain(i)}});
   COMPONENTS.forEach(function(_,i){$('componentBuy'+i).onclick=function(){upgradeComponent(i)}});
   var webStock=document.querySelector('#stockStatus .stock-online');webStock.setAttribute('role','button');webStock.setAttribute('tabindex','0');webStock.setAttribute('aria-label','Open deliveries');webStock.onclick=function(){showTray('orders')};webStock.onkeydown=function(event){if(event.key==='Enter'||event.key===' '){event.preventDefault();showTray('orders')}};
   Array.prototype.forEach.call(document.querySelectorAll('#stockStatus .stock-item:not(.stock-online)'),function(item,i){
@@ -2510,18 +2794,25 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
 
   $('upgradeQueue').onclick=upgradeQueue;
   // The card's button fixes the bottleneck when affordable (or opens the Shop for foot traffic); otherwise it just shows the station.
-  $('flowAction').onclick=function(){if(state.gameSpeed===0)return setGameSpeed(1);var slow=slowestStation();if(basketSize()/arrivalInterval()<stationThroughput(slow)&&slow>=4){showTray('boosts');if(shopBrowser&&shopBrowser.show)shopBrowser.show(2);renderUI();return}selectMachine(slow);if(state.money>=cost(slow))buySelected()};
+  // The counters are only "traffic bound" while Floor flow can still be bought; once it is maxed the fix is the station itself.
+  function isTrafficBound(slow){return slow>=4&&state.trafficLevel<COMPONENTS[0].max&&basketSize()/arrivalInterval()<stationThroughput(slow)}
+  // The single answer to "what should I upgrade next?": the counters are only starved of customers if Floor flow can still be
+  // bought, in which case Floor flow is the fix; otherwise it is the slowest station itself.
+  function recommendation(){var slow=slowestStation();if(isTrafficBound(slow))return{kind:'component',index:0,name:'Floor flow',price:componentCost(0)};return{kind:'station',index:slow,name:['Seeds','Grow','Harvest','Pack','Orders','Pickup'][slow],price:cost(slow)}}
+  function actOnRecommendation(){var r=recommendation();if(r.kind==='component'){showTray('boosts');if(shopBrowser&&shopBrowser.show)shopBrowser.show(2);renderUI();var card=$('componentBuy'+r.index).parentElement;card.classList.remove('is-recommended');void card.offsetWidth;card.classList.add('is-recommended');if(card.scrollIntoView)card.scrollIntoView({block:'nearest'});return}if(activeTray!=='factory')showTray('factory');selectMachine(r.index);if(state.money>=cost(r.index))buySelected()}
+  $('flowAction').onclick=function(){if(state.gameSpeed===0)return setGameSpeed(1);actOnRecommendation()};
   LINES.forEach(function(_,i){$('staffMax'+i).onclick=function(){trainStaffMax(i)}});
   $('trainIdChecker').onclick=function(){trainIdChecker(1)};
   $('trainIdCheckerMax').onclick=function(){trainIdChecker(10000)};
-  $('fulfillOnline').onclick=fulfillOnline;
-  $('fulfillOnlineBatch').onclick=function(){if(onlineBatch(10).count===10)sendOnlineOrders(10)};
-  $('fulfillOnlineMax').onclick=function(){if(state.lines[3]>=10)sendOnlineOrders(Infinity)};
+  $('fulfillOnlineMax').onclick=function(){sendOnlineOrders(state.lines[3]>=10?Infinity:10)};
   window.addEventListener('resize',resize);$('buyMachine').onclick=buySelected;$('buyMachineMax').onclick=buySelectedMax;$('upgradeStorage').onclick=upgradeStorage;$('boost').onclick=boostAll;$('claim').onclick=claimOrder;$('resetOpen').onclick=function(){$('resetModal').hidden=false};$('resetCancel').onclick=function(){$('resetModal').hidden=true};$('resetConfirm').onclick=function(){resetRun(0,state.sound)};function resetRun(rank,sound){state=fresh();state.empire.prestige=rank;state.sound=sound;readyWork=0;work=[0,0,0,0,0,0];batchRemainder=[0,0,0,0];customers=[];arrival=0;customerId=0;deliveryDrones=[];particles=[];taskClocks.fill(0);taskActivity.fill(0);cropGrowth=[.15,.4,.7,.95];tierFlashes.fill(0);recentPickupRatings=[];animationTime=0;sceneTime=0;crateTime=0;render.last=undefined;save();$('resetModal').hidden=true;notify('FACTORY RESET');syncMapView();paintThumbnails();renderUI()};
 
   function finishLoading(){requestAnimationFrame(function(){requestAnimationFrame(function(){$('loading').hidden=true})})}
   var offline=collectOffline();if(offline>=1){setTimeout(function(){notify('WHILE AWAY +'+fmt(offline))},500)}
-  function fitControls(){document.documentElement.style.setProperty('--hud-height',document.querySelector('.hud').getBoundingClientRect().height+'px');document.documentElement.style.setProperty('--dock-height',$('sheet').getBoundingClientRect().height+'px');resize()}
+  // The canvas runs full height behind the sheet; the camera frames the building in the strip above it.
+  var dockHeight=0;
+  function fitControls(){document.documentElement.style.setProperty('--hud-height',document.querySelector('.hud').getBoundingClientRect().height+'px');dockHeight=$('sheet').getBoundingClientRect().height;document.documentElement.style.setProperty('--dock-height',dockHeight+'px');resize()}
+  function visibleHeight(){return width>=780?height:Math.max(200,height-dockHeight)}
   if(window.ResizeObserver){new ResizeObserver(fitControls).observe($('sheet'))}
   window.addEventListener('resize',fitControls);
   // Desktop conveniences: the hint names the pointer, and speed and tabs have keys when no field has focus.

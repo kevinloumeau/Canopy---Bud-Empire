@@ -25,10 +25,10 @@ export function counterServiceDuration(station,rate,serviceFactor=1){return (1.4
 export function patience(type,comfortLevel){return (type==='vip'?15:20)*(1+Math.max(0,comfortLevel||0)*.15);}
 // Customers walk a little faster with each Floor flow level, closing the gap between counter capacity and real sales.
 export function walkSpeed(trafficLevel){return 2.8*(1+Math.max(0,trafficLevel||0)*.1);}
-// Regulars want the everyday strain; collectors and VIPs reach for the priciest boutique strain on the menu.
+// Regulars want the everyday strain; VIPs reach for the priciest boutique strain on the menu.
 export function preferredStrain(type,menu,levels){
   const boutique=menu.filter(i=>i>0&&levels[i]>0);
-  if(type==='collector'||type==='vip'){if(boutique.length)return boutique[boutique.length-1];}
+  if(type==='vip'){if(boutique.length)return boutique[boutique.length-1];}
   else if(menu.indexOf(0)>=0&&levels[0]>0)return 0;
   return null;
 }

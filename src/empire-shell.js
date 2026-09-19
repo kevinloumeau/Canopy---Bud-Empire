@@ -1,6 +1,7 @@
 // Empire navigation shell: one list, then one screen at a time.
 // Reparents the existing Empire controls (main.js and operations-ui.js keep rendering them by id)
 // into three screens: Home (rewards strip + store list), Store (one branch), Details (records).
+import {mountEmpireStores} from './empire-stores.js';
 export function mountEmpireShell({fit,getState,format}){
  const pane=document.querySelector('[data-pane=empire]'),$=id=>document.getElementById(id);
  const section=name=>pane.querySelector('[data-empire-section="'+name+'"]');
@@ -53,6 +54,7 @@ export function mountEmpireShell({fit,getState,format}){
   group(null,[growth.querySelector('.depth-panel')])
  );
  pane.append(screens.home,screens.store,screens.details);
+ const storesUI=mountEmpireStores({getState,format});
  const orderBadge=$('orderBadge'),empireTab=document.querySelector('[data-tray=empire]');if(orderBadge&&empireTab)empireTab.append(orderBadge);
 
  // Navigation.
@@ -73,6 +75,7 @@ export function mountEmpireShell({fit,getState,format}){
  const amount=text=>{const m=/\$[\d.,]+[KMB]?/.exec(text);return m?m[0]:'';};
  let signature='';
  function sync(){
+  storesUI.sync();
   const ready=sources.map(([kind,id])=>{const b=$(id);return b&&!b.disabled&&!b.hidden&&/^Collect\b/.test(b.textContent.trim())?{kind,button:b,amount:amount(b.textContent)}:null;}).filter(Boolean);
   const daily=$('dailyTime')?/in (\d+h \d+m)/.exec($('dailyTime').textContent):null,event=$('eventTime')?/in (\d+h \d+m)/.exec($('eventTime').textContent):null;
   const next=ready.length?'':'Nothing to collect'+(daily?' · daily reward in '+daily[1]:'')+(event?' · event in '+event[1]:'');
