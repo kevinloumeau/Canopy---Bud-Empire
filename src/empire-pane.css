@@ -2,10 +2,10 @@
 
 /* Managing an empire needs more sheet than upgrading a station; give this pane extra height on phones. */
 @media(max-width:779px){
- body[data-active-tray=empire] .sheet>[data-pane=empire]{max-height:48dvh}
+ body[data-active-tray=empire] .sheet>[data-pane=empire]{max-height:48vh;max-height:48dvh}
 }
 @media(max-height:640px) and (max-width:779px){
- body[data-active-tray=empire] .sheet>[data-pane=empire]{max-height:44dvh}
+ body[data-active-tray=empire] .sheet>[data-pane=empire]{max-height:44vh;max-height:44dvh}
 }
 
 /* Section switcher: a slim segmented control so it reads as secondary to the tray tabs below. */

@@ -1,6 +1,6 @@
 /* Stations pane on phones: one production line of seven cards, a compact portrait row, and a tight upgrade block, so the whole pane fits without scrolling. */
 @media(max-width:779px){
- body[data-active-tray=factory] .sheet>[data-pane=factory]{max-height:min(46dvh,420px);overflow-y:auto}
+ body[data-active-tray=factory] .sheet>[data-pane=factory]{max-height:min(46vh,420px);max-height:min(46dvh,420px);overflow-y:auto}
  .flow-guide{padding:0 2px 6px;font-size:12px}
  .flow-guide button{min-height:30px;padding:3px 9px}
 
@@ -120,7 +120,7 @@
 
 /* Staff pane: seven compact rows that fit without scrolling. */
 @media(max-width:779px){
- body[data-active-tray=employees] .sheet>[data-pane=employees]{max-height:min(48dvh,430px);padding-bottom:2px}
+ body[data-active-tray=employees] .sheet>[data-pane=employees]{max-height:min(48vh,430px);max-height:min(48dvh,430px);padding-bottom:2px}
  .sheet .employee-intro{display:none}
  .sheet [data-pane="employees"] .employee-list{padding:2px 2px 4px;gap:0}
  .sheet .employee-card{grid-template-columns:22px minmax(0,1fr) auto;gap:8px;padding:3px 2px;border-top:1px solid #c1d7b71a;align-items:center}
@@ -170,7 +170,7 @@
 .shop-browser .shop-categories button{min-height:50px;border-radius:14px}
 .shop-browser .shop-filter label{min-height:36px}
 @media(max-width:779px){
- body[data-active-tray=boosts] .sheet>[data-pane=boosts]{max-height:min(52dvh,460px);padding-bottom:2px}
+ body[data-active-tray=boosts] .sheet>[data-pane=boosts]{max-height:min(52vh,460px);max-height:min(52dvh,460px);padding-bottom:2px}
  .shop-browser .shop-browser-header{padding-top:2px}
  .shop-browser .shop-categories{margin-bottom:6px}
  .shop-browser .shop-items{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}

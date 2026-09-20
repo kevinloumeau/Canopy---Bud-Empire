@@ -1,7 +1,7 @@
 :root{--acid:#b6e58c;--ink:#10251d;--paper:#edf2e5;--muted:#b1c5b6}
 .sheet{display:flex;flex-direction:column;overflow:hidden;border-radius:18px 18px 0 0;padding-bottom:env(safe-area-inset-bottom,0px)}
 .panel-header{display:flex;align-items:center;justify-content:space-between;min-height:44px;padding:0 5px;flex-shrink:0}.panel-header>b{font-size:1rem}.panel-header button{width:44px;height:44px;border:0;background:transparent;color:#d0e6b6;font-size:1.5rem;cursor:pointer}
-.sheet>[data-pane]{overflow-y:auto;overscroll-behavior:contain;max-height:38dvh;min-height:0;padding-bottom:12px}
+.sheet>[data-pane]{overflow-y:auto;overscroll-behavior:contain;max-height:38vh;max-height:38dvh;min-height:0;padding-bottom:12px}
 .sheet.collapsed>[data-pane]{display:none!important}.sheet .tray-tabs{flex-shrink:0;border-top:1px solid #42614b;border-bottom:0;margin-top:4px;border-radius:0}.sheet .tray-tabs button{min-height:52px;font-size:.875rem;border-bottom:0;border-top:0}.sheet .tray-tabs button[aria-pressed=true]{border-top-color:#b6e58c;background:#294a34}.sheet .employee-list{max-height:none}.sheet .tray-heading{padding-top:4px}.gesture-hint{right:12px;text-align:center}.shop-status h3{font-size:.875rem;margin:8px 0}
 html,body{background:#15291f}.hud{background:#11251fee;border-color:#b4d2b327}.brand{letter-spacing:.12em}.brand span{background:#bee5a3;color:#173a28;border-radius:50%;transform:none}
 .hud .stat{border-color:#b4d2b327}.icon{background:#213b2d;border-color:#65826b55}.mission{background:#1a382ae0;border-color:#99c09f50;color:#e2ecdb}.mission.ready{color:#d0eeb6;border-color:#a1cd7b}

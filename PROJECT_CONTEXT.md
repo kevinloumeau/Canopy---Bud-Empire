@@ -302,3 +302,17 @@ Following feedback that the solid header backing was jarring, Empire back contro
 
 
 Notifications now use a compact 12px treatment, tighter padding, a 14px upgrade icon, and a subtler shadow. Single-line messages are approximately 33px high; long messages wrap within the viewport (360px maximum width). Existing message content, status announcements, dismissal timing, and pointer pass-through are preserved. Production build, scoped design scans, and desktop/390px/320px checks passed, including actual upgrade feedback and a long-message fixture. No gameplay or save changes.
+
+## Black-scene recovery (September 20, 2026)
+
+A review found the world canvas could stay opaque black for the whole session while the simulation and HTML controls kept running. If the map measured under 40px wide when `resize()` ran (first paint before layout, a background tab, a collapsed split view), `cameraFrame()` produced a negative `unit`, every glow radius went negative, `createRadialGradient` threw `IndexSizeError`, and the thrown frame never re-armed `requestAnimationFrame`. The camera unit is now clamped to a positive minimum for both the main shop and branch maps, and the frame loop retries after a failed frame (logging once) instead of stopping. No economy, save or layout changes.
+
+Validation: 64 unit tests and the classic production build pass. In a dev preview, forcing the map to 20px wide produced no error and the scene repainted fully once the width was restored; the same steps before the fix reproduced the black canvas. All six tabs and the desktop layout rendered normally afterwards. Not published.
+
+## Review follow-ups (September 20, 2026)
+
+The pickup “held” count now appears only when at least one customer is waiting for a bag, sits above-right of the PICKUP sign, clear of the Pickup station marker, and has a dark rounded backing for legibility. The map gesture hint follows the active pointer at runtime and drops the keyboard shortcuts on maps narrower than 560px; it is set after the first layout pass instead of before it. The two off-screen readback canvases for station and delivery previews are created with `willReadFrequently`.
+
+Safari compatibility: every `ctx.roundRect` call (customer glasses, product blocks, the held pill) now goes through an `arcTo` path helper, since Safari 14–15 lacks `roundRect` and one thrown frame previously blanked the scene. Every `dvh` height declaration is preceded by an equivalent `vh` fallback across nine stylesheets, and the Menu tab’s `color-mix()` strain tints have plain-color fallbacks, so Safari before 15.4/16.2 keeps a sized app root, capped sheets and readable strain cards. Modern browsers keep the newer values.
+
+Validation: 64 unit tests and the classic build pass; the built CSS retains all 24 `vh` fallbacks and the built JS contains no `roundRect`. Headless Chrome captures at 463×933 and 1280×900 with fresh and developed saves showed the hint copy per size, the held pill in place, Staff/Deliveries/Empire/Menu unchanged, pause preserved across tab switches, and no page errors. Not published.

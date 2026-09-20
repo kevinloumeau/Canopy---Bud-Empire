@@ -1,5 +1,5 @@
 /* Story and assistance share the established forest-green interface. */
-.goals-dropdown{max-height:min(82dvh,660px);scrollbar-color:#91ab7b #20372b;scrollbar-width:thin}
+.goals-dropdown{max-height:min(82vh,660px);max-height:min(82dvh,660px);scrollbar-color:#91ab7b #20372b;scrollbar-width:thin}
 .goals-dropdown #goalsClose{width:44px;height:44px;flex:0 0 auto;border:0;border-radius:10px;background:transparent;color:#eff5e5;font-family:inherit;font-size:24px;cursor:pointer}
 .shop-story{padding:8px 0 14px}
 .story-heading{display:flex;align-items:baseline;gap:12px}
@@ -32,10 +32,10 @@
 .sheet .flow-label,.sheet .menu-board-summary small,.sheet .buyer small,.sheet .strain-stats small,.sheet .dispatch-stat small,.sheet .receipt-note{font-size:11px;letter-spacing:.015em}
 .sheet .menu-board .product-line .format-options small{font-size:11px}
 .world .station-sign .station-sign-name{font-size:11px}
-.modal.settings{max-height:calc(100dvh - 32px);overflow:auto}
+.modal.settings{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow:auto}
 .modal .settings-close{width:44px;height:44px}
 /* A little more playfield, with a stable tray height across all six tabs. */
-@media(max-width:779px) and (min-height:641px){html body .sheet{max-height:58dvh}html body .sheet>[data-pane]{height:min(38dvh,340px)}}
+@media(max-width:779px) and (min-height:641px){html body .sheet{max-height:58vh;max-height:58dvh}html body .sheet>[data-pane]{height:min(38vh,340px);height:min(38dvh,340px)}}
 @media(prefers-reduced-motion:reduce){.story-entry,.shop-story *{animation:none;transition:none}}
 
 .hud>.stat.output #rate[data-paused=true]::before{content:none}

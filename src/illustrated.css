@@ -30,7 +30,7 @@ button:focus-visible{outline:2px solid #2c617d;outline-offset:3px}
 .machine-nav button[aria-pressed=true]{color:#2f4d36}
 .world .marker,.world .marker.selected{min-height:24px;padding:3px 5px;font-size:.75rem;font-weight:600;line-height:1.1;box-shadow:none}
 .world .marker:after{height:5px}
-@media(min-width:780px){.world{inset:0 450px 0 0}.sheet{left:auto;right:16px;bottom:16px;transform:none;width:418px;max-height:calc(100dvh - 144px);border:1.5px solid #343c31;border-radius:12px}.sheet>[data-pane]{max-height:calc(100dvh - 258px)}.machine-nav button{flex:0 0 87px}.mission{max-width:calc(100% - 100px);top:126px}.map-controls{top:186px}}
+@media(min-width:780px){.world{inset:0 450px 0 0}.sheet{left:auto;right:16px;bottom:16px;transform:none;width:418px;max-height:calc(100vh - 144px);max-height:calc(100dvh - 144px);border:1.5px solid #343c31;border-radius:12px}.sheet>[data-pane]{max-height:calc(100vh - 258px);max-height:calc(100dvh - 258px)}.machine-nav button{flex:0 0 87px}.mission{max-width:calc(100% - 100px);top:126px}.map-controls{top:186px}}
 /* Stacked modern dispensary: forest green, mint glazing, and limestone. */
 :root{--acid:#315d46;--paper:#f2f2df}
 html,body,.world{background:#b7dccc}
@@ -328,5 +328,5 @@ button:focus-visible{outline:2px solid #d0e6a7;outline-offset:3px}
 }
 /* Leave a little more room for the map on phones. */
 @media(max-width:779px){
- .sheet>[data-pane]{max-height:32dvh}
+ .sheet>[data-pane]{max-height:32vh;max-height:32dvh}
 }

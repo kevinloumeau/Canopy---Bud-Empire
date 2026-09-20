@@ -30,7 +30,7 @@
 .strain-nav button{position:relative;display:grid;grid-template-rows:auto 1fr auto auto;justify-items:center;gap:3px;min-width:0;padding:8px 4px 9px;border:1px solid #d8ead21f;border-radius:14px;background:#ffffff08;color:#e2e9d7;font-family:inherit;cursor:pointer;transition:transform .18s ease,border-color .18s ease,background .18s ease}
 .strain-nav button:hover{background:#ffffff10}
 .strain-nav button:focus-visible{outline:2px solid #e5d3a0;outline-offset:2px}
-.strain-nav button[aria-selected=true]{border-color:color-mix(in srgb,var(--strain) 70%,#ffffff 0%);background:color-mix(in srgb,var(--strain) 14%,#ffffff05);transform:translateY(-2px);box-shadow:0 8px 20px -12px var(--strain)}
+.strain-nav button[aria-selected=true]{border-color:var(--strain);background:#ffffff14;border-color:color-mix(in srgb,var(--strain) 70%,#ffffff 0%);background:color-mix(in srgb,var(--strain) 14%,#ffffff05);transform:translateY(-2px);box-shadow:0 8px 20px -12px var(--strain)}
 .strain-nav button.is-on-menu::after{content:'';position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--strain);box-shadow:0 0 0 2px #1a2a20,0 0 8px var(--strain)}
 .strain-nav button.is-locked{color:#9aa896}
 .strain-nav button.is-locked b{color:#b3bfaf}
@@ -71,7 +71,7 @@
 .strain-hero .strain-pips i{width:6px;height:6px}
 
 /* Hero: large jar, name and buyers, three stat tiles, two actions. */
-.strain-hero{display:grid;grid-template-columns:72px minmax(0,1fr);grid-template-areas:"art info" "art stats" "details details" "actions actions";gap:8px 12px;align-items:center;padding:10px;border-radius:16px;border:1px solid color-mix(in srgb,var(--strain) 30%,#d8ead21f);background:linear-gradient(160deg,color-mix(in srgb,var(--strain) 12%,transparent),transparent 55%),#ffffff06}
+.strain-hero{display:grid;grid-template-columns:72px minmax(0,1fr);grid-template-areas:"art info" "art stats" "details details" "actions actions";gap:8px 12px;align-items:center;padding:10px;border-radius:16px;border:1px solid #d8ead23a;background:#ffffff06;border:1px solid color-mix(in srgb,var(--strain) 30%,#d8ead21f);background:linear-gradient(160deg,color-mix(in srgb,var(--strain) 12%,transparent),transparent 55%),#ffffff06}
 .strain-hero.is-locked{border-color:#d8ead21f;background:#ffffff05}
 .strain-hero-art{grid-area:art;width:72px;height:90px;filter:drop-shadow(0 10px 14px #0006)}
 .strain-hero-art svg{width:100%;height:100%}
@@ -91,7 +91,7 @@
 .strain-hero-actions button:hover:not(:disabled){background:#3a5a42}
 .strain-hero-actions button:focus-visible{outline:2px solid #e5d3a0;outline-offset:2px}
 .strain-hero-actions button:disabled{opacity:.5;cursor:default}
-.strain-hero-actions button[aria-pressed=true]{background:color-mix(in srgb,var(--strain) 22%,#2f4a36);border-color:color-mix(in srgb,var(--strain) 60%,#789167)}
+.strain-hero-actions button[aria-pressed=true]{background:#3a5a42;border-color:#789167;background:color-mix(in srgb,var(--strain) 22%,#2f4a36);border-color:color-mix(in srgb,var(--strain) 60%,#789167)}
 .strain-hero-actions .is-primary{background:linear-gradient(180deg,#9db56f,#7c9a55);border-color:#b7cf8e;color:#1d2a1a}
 .strain-hero-actions .is-primary:hover:not(:disabled){background:linear-gradient(180deg,#a9c07a,#86a35e)}
 .strain-hero-actions .is-primary:disabled{background:#3a4a3a;border-color:#5a6a56;color:#c4cfbb;opacity:.7}

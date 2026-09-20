@@ -1,15 +1,15 @@
 /* Every tab opens the sheet to the same height: the visible pane gets one fixed height and scrolls inside it,
    overriding the per-tab max-heights so switching tabs never moves the tray or the map. Loaded last on purpose. */
 @media(max-width:779px){
- .sheet{max-height:64dvh}
- html body .sheet>[data-pane]{height:min(50dvh,400px);max-height:none}
+ .sheet{max-height:64vh;max-height:64dvh}
+ html body .sheet>[data-pane]{height:min(50vh,400px);height:min(50dvh,400px);max-height:none}
 }
 @media(max-height:640px) and (max-width:779px){
- .sheet{max-height:60dvh}
- html body .sheet>[data-pane]{height:min(46dvh,380px)}
+ .sheet{max-height:60vh;max-height:60dvh}
+ html body .sheet>[data-pane]{height:min(46vh,380px);height:min(46dvh,380px)}
 }
 @media(min-width:780px){
- html body .sheet>[data-pane]{height:min(calc(100dvh - 258px),540px);max-height:none}
+ html body .sheet>[data-pane]{height:min(calc(100vh - 258px),540px);height:min(calc(100dvh - 258px),540px);max-height:none}
 }
 
 /* Fit each pane to that height: overflowing tabs are compacted, short tabs stretch their main block. */

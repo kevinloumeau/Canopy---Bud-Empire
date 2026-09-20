@@ -10,7 +10,7 @@ html,body{background:#202226}
 .world .run:active{transform:scale(.93);background:#755b1c}.world .run span{color:#ffd56c;font-size:.875rem}.world .run b{font-size:.8125rem}
 .gesture-hint{text-align:left;left:12px;right:86px;bottom:14px;font-size:.75rem;opacity:.65;color:#d5dde4}
 .marker{border-color:#ffffff50;background:#19212bdd;box-shadow:0 3px 8px #0003}.marker.selected{background:#eabb42;color:#241c08;border-color:#ffdc75}.marker.locked{opacity:.65}
-.sheet{left:0;right:0;bottom:0;width:auto;padding:0 10px calc(10px + var(--safe-bottom));border:0;border-top:1px solid #555960;border-radius:0;background:#111317;box-shadow:0 -5px 20px #0005;max-height:60dvh}
+.sheet{left:0;right:0;bottom:0;width:auto;padding:0 10px calc(10px + var(--safe-bottom));border:0;border-top:1px solid #555960;border-radius:0;background:#111317;box-shadow:0 -5px 20px #0005;max-height:60vh;max-height:60dvh}
 .tray-tabs{display:grid;grid-template-columns:repeat(3,1fr);margin:0 -10px 0;background:#0b0d10;border-bottom:1px solid #33373d}
 .tray-tabs button{min-height:38px;padding:7px 4px;border:0;border-bottom:2px solid transparent;background:transparent;color:#a7afb9;text-transform:uppercase;font-size:.75rem;font-weight:700;letter-spacing:.06em;cursor:pointer}
 .tray-tabs button[aria-pressed=true]{background:#25292f;color:#fff;border-bottom-color:var(--acid)}
