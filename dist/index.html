@@ -11,14 +11,63 @@
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
   <meta name="description" content="Canopy: Bud Empire — grow, harvest, and build your dispensary in a cozy idle game." />
+  <link rel="canonical" href="https://kevinloumeau.github.io/Canopy---Bud-Empire/" />
+  <meta name="rating" content="mature" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Canopy: Bud Empire" />
+  <meta property="og:url" content="https://kevinloumeau.github.io/Canopy---Bud-Empire/" />
+  <meta property="og:title" content="Canopy: Bud Empire — a cozy dispensary idle game" />
+  <meta property="og:description" content="Grow the goods, welcome the neighborhood, build your empire. A mobile-first idle game inside a living, isometric dispensary. Free, in your browser." />
+  <meta property="og:image" content="https://kevinloumeau.github.io/Canopy---Bud-Empire/social-card.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="An isometric cutaway of a multi-floor dispensary: grow lights upstairs, packing benches, three staffed order counters and a customer queue." />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Canopy: Bud Empire — a cozy dispensary idle game" />
+  <meta name="twitter:description" content="Grow the goods, welcome the neighborhood, build your empire. A mobile-first idle game inside a living, isometric dispensary. Free, in your browser." />
+  <meta name="twitter:image" content="https://kevinloumeau.github.io/Canopy---Bud-Empire/social-card.jpg" />
+  <meta name="twitter:image:alt" content="An isometric cutaway of a multi-floor dispensary: grow lights upstairs, packing benches, three staffed order counters and a customer queue." />
+  <!-- Analytics: uncomment after creating the site in Plausible (cookieless, no consent banner needed).
+  <script defer data-domain="kevinloumeau.github.io" src="https://plausible.io/js/script.js"></script> -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2048%2048%22%20fill%3D%22none%22%3E%3Crect%20width%3D%2248%22%20height%3D%2248%22%20rx%3D%2211%22%20fill%3D%22%2320372b%22%2F%3E%3Cpath%20d%3D%22M24%2038V24%22%20stroke%3D%22%23dce9be%22%20stroke-width%3D%222.5%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M24%2031C14%2032%2011%2026%2012%2021c8-1%2013%203%2012%2010Z%22%20fill%3D%22%23a8c884%22%2F%3E%3Cpath%20d%3D%22M24%2027c-1-9%204-14%2012-14%201%208-3%2014-12%2014Z%22%20fill%3D%22%23dce9be%22%2F%3E%3C%2Fsvg%3E" />
   <title>Canopy: Bud Empire</title>
-  <script defer src="./assets/shift-BjXA3kwm.js"></script>
-  <link rel="stylesheet" href="./assets/shift-9gCOpmTl.css">
+  <script>try{if(localStorage.getItem("canopy-age-ok")==="1")document.documentElement.className+=" age-ok"}catch(e){}</script>
+  <script defer src="./assets/shift-De74X8kl.js"></script>
+  <link rel="stylesheet" href="./assets/shift-C2UkGiBx.css">
 </head>
 <body>
+  <div class="age-gate" id="ageGate">
+    <div class="age-card" role="dialog" aria-modal="true" aria-labelledby="ageTitle" aria-describedby="ageBody">
+      <svg class="age-mark" viewBox="0 0 48 48" fill="none" aria-hidden="true"><rect width="48" height="48" rx="11" fill="#17251d"/><path d="M24 38V24" stroke="#dce9be" stroke-width="2.5" stroke-linecap="round"/><path d="M24 31C14 32 11 26 12 21c8-1 13 3 12 10Z" fill="#a8c884"/><path d="M24 27c-1-9 4-14 12-14 1 8-3 14-12 14Z" fill="#dce9be"/></svg>
+      <p class="age-eyebrow">Canopy · Bud Empire</p>
+      <h1 id="ageTitle">Are you 21 or older?</h1>
+      <p id="ageBody">Canopy is a work of fiction about running a dispensary. Nothing here is for sale, and no real product is involved.</p>
+      <div class="age-actions">
+        <button type="button" id="ageYes">Yes, I am 21 or older</button>
+        <button type="button" class="ghost" id="ageNo">No</button>
+      </div>
+      <p class="age-fine">Your answer is kept on this device only.</p>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var gate = document.getElementById('ageGate');
+      if (!gate || document.documentElement.classList.contains('age-ok')) return;
+      var card = gate.querySelector('.age-card');
+      document.getElementById('ageYes').addEventListener('click', function () {
+        try { localStorage.setItem('canopy-age-ok', '1'); } catch (e) {}
+        document.documentElement.className += ' age-ok';
+      });
+      document.getElementById('ageNo').addEventListener('click', function () {
+        card.innerHTML = '<p class="age-eyebrow">Canopy \u00b7 Bud Empire</p>' +
+          '<h1>Come back another time.</h1>' +
+          '<p>Canopy is made for players 21 and over. Thanks for stopping by.</p>';
+      });
+      document.getElementById('ageYes').focus();
+    })();
+  </script>
   <main class="app">
     <header class="hud">
       <div class="brand canopy-brand" aria-label="Canopy: Bud Empire"><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none"><path d="M24 38V24" stroke="#dce9be" stroke-width="2.5" stroke-linecap="round"/><path d="M24 31C14 32 11 26 12 21c8-1 13 3 12 10Z" fill="#a8c884"/><path d="M24 27c-1-9 4-14 12-14 1 8-3 14-12 14Z" fill="#dce9be"/></svg></span><div class="canopy-name"><b>canopy</b><small>BUD EMPIRE</small></div></div>

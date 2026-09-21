@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  <a href="https://shift-idle-factory.loumeau-kevin.chatgpt.site"><strong>Play the hosted build</strong></a>
+  <a href="https://kevinloumeau.github.io/Canopy---Bud-Empire/"><strong>Play the hosted build</strong></a>
   &nbsp;·&nbsp; <a href="#run-locally">Run locally</a>
   &nbsp;·&nbsp; <a href="#a-neighborhood-of-your-own">Explore the stores</a>
   &nbsp;·&nbsp; <a href="docs/GUIDE.md">Game & developer guide</a>
@@ -102,7 +102,7 @@ The build targets Safari 14 and converts Vite's entry to a deferred classic scri
 
 The world is drawn with **Canvas 2D**. Plain JavaScript runs production, customer routing, the economy and branch operations; HTML controls keep management separate from the scene. **Vite** handles local development and production builds.
 
-Progress saves automatically in your browser. Older saves migrate forward, and a welcome-back report summarizes up to four hours of estimated earnings at normal speed. Pause also stops offline earnings.
+Progress saves automatically in your browser. Older saves migrate forward, and a welcome-back report summarizes up to four hours of estimated earnings at normal speed after 15 minutes or more away (shorter breaks show a toast). Pause also stops offline earnings.
 
 <details>
 <summary><strong>Saves, installation and offline behavior</strong></summary>
@@ -176,5 +176,5 @@ The project began as SHIFT, then GROVE, before becoming Canopy. Its package name
 <p align="center">
   <img src="public/canopy-mark.svg" alt="" width="40"><br>
   <strong>Plant the first seed. See what grows.</strong><br>
-  <sub><a href="https://shift-idle-factory.loumeau-kevin.chatgpt.site">Play</a> · <a href="#run-locally">Build</a> · <a href="docs/GUIDE.md">Explore the guide</a></sub>
+  <sub><a href="https://kevinloumeau.github.io/Canopy---Bud-Empire/">Play</a> · <a href="#run-locally">Build</a> · <a href="docs/GUIDE.md">Explore the guide</a></sub>
 </p>

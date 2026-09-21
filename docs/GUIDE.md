@@ -120,6 +120,6 @@ The older `tests/*-check.cjs` suites use Playwright and installed Chrome. Playwr
 
 This project was imported from [Create Idle Factory Game](https://chatgpt.com/c/6aa999cd-b2ac-83ea-b9fb-ae1c53590c6d) on September 15, 2026. Earlier names were SHIFT and GROVE; the package name, `shift-save` key and hosting identity remain for compatibility.
 
-The [existing hosted game](https://shift-idle-factory.loumeau-kevin.chatgpt.site) may differ from this checkout. Local changes are not automatically published. Preserve the existing Site in `.openai/hosting.json`; do not create a replacement Site when deploying updates.
+The [existing hosted game](https://kevinloumeau.github.io/Canopy---Bud-Empire/) may differ from this checkout. Local changes are not automatically published. Preserve the existing Site in `.openai/hosting.json`; do not create a replacement Site when deploying updates.
 
 For future work, open this folder as the Codex project and read `PROJECT_CONTEXT.md` first. Preserve Canvas 2D, the classic Safari build, fixed orientation, pan/zoom and existing saves. Keep the main shop playable while extending its systems.

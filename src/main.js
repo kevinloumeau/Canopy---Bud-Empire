@@ -5,6 +5,8 @@ import {manageDialog} from './dialog-focus.js';
 import {AUTO_DRONE_COST,BULK_DRONE_COST,buyAutoDrone,buyBulkDrone,autoDroneLimit,migrateAutoDrone,autoDroneReady} from './auto-drone.js';
 import {FORMATS,BOOST_MAX,boostCost,migrateMenu,chooseFormat,milestone,prestigeOffer,elapsedSteps} from './depth.js';
 import {makeSound} from './sfx.js';
+import {installQuietDom} from './quiet-dom.js';
+installQuietDom();
 import {mountShopBrowser} from './shop-browser.js';
 import {tickOperations,atmosphere,neighborhood} from './operations.js';
 import {mountOperations} from './operations-ui.js';
@@ -82,7 +84,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     var earnings=rates.map(function(rate){return state.gameSpeed===0?0:rate*seconds});
     var reward=earnings.reduce(function(a,b){return a+b},0);
     if(reward>=1)add(reward);
-    if(seconds>=60)state.empire.returnReport={seconds:away,earnings:earnings,goals:[0,1,2].filter(function(i){var g=goalStatus(state.empire,i,rewardScale());return g.progress>=g.target}).length};
+    // Short breaks get the toast only; the full report is for real absences.
+    if(seconds>=900)state.empire.returnReport={seconds:away,earnings:earnings,goals:[0,1,2].filter(function(i){var g=goalStatus(state.empire,i,rewardScale());return g.progress>=g.target}).length};
     save();return reward>=1?reward:0;
   }
 
