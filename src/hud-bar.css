@@ -109,3 +109,11 @@ body[data-store-view=branch] #stockStatus{display:none!important}
  .hud>.stat strong{font-size:24px}
  .hud>.stat.output strong{font-size:13px}
 }
+
+/* Touch: the drawn HUD controls stay compact, but their hit areas reach 44px tall (Apple HIG minimum) via an invisible
+   pseudo-element. Map station markers get the same treatment in illustrated.css's :before, widened here. */
+@media(pointer:coarse){
+ .hud .speed-controls button,#goalsOpen{position:relative}
+ .hud .speed-controls button::before,#goalsOpen::before{content:'';position:absolute;left:-2px;right:-2px;top:50%;height:44px;transform:translateY(-50%)}
+ .world .marker:before{height:44px;width:max(100%,44px)}
+}

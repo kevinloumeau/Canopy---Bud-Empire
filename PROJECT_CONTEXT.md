@@ -316,3 +316,11 @@ The pickup “held” count now appears only when at least one customer is waiti
 Safari compatibility: every `ctx.roundRect` call (customer glasses, product blocks, the held pill) now goes through an `arcTo` path helper, since Safari 14–15 lacks `roundRect` and one thrown frame previously blanked the scene. Every `dvh` height declaration is preceded by an equivalent `vh` fallback across nine stylesheets, and the Menu tab’s `color-mix()` strain tints have plain-color fallbacks, so Safari before 15.4/16.2 keeps a sized app root, capped sheets and readable strain cards. Modern browsers keep the newer values.
 
 Validation: 64 unit tests and the classic build pass; the built CSS retains all 24 `vh` fallbacks and the built JS contains no `roundRect`. Headless Chrome captures at 463×933 and 1280×900 with fresh and developed saves showed the hint copy per size, the held pill in place, Staff/Deliveries/Empire/Menu unchanged, pause preserved across tab switches, and no page errors. Not published.
+
+## Gradient reuse and touch targets (September 20, 2026)
+
+Profiling a developed shop at phone size showed the scene creating about 3,300 linear and 740 radial `CanvasGradient` objects per frame: `poly()` shaded every hex-filled polygon with a new vertical gradient, `ellipse()` every hex-filled ellipse with a new radial one, and `litTop()`/`softRadial()` added more. Gradients are now reused through a per-context cache keyed by colour and quarter-pixel geometry (`cachedGradient`), with the hex-colour regex memoised. Per-frame creations fell to roughly 310 linear and 10 radial; headless p90 frame time dropped from 33ms to 17ms and the rendered scene is pixel-identical. The cache clears itself past 12,000 entries so moving objects cannot leak.
+
+On coarse pointers the HUD speed, lighting, settings and story buttons and the map station markers now expose 44px-tall hit areas through invisible pseudo-elements; drawn sizes and mouse behaviour are unchanged.
+
+Validation: 64 unit tests and the classic build pass. CDP probes confirmed the draw-call reduction, unchanged rendering, `(pointer:coarse)` switching the hint to “PINCH TO ZOOM”, and taps 20px above or below each control still landing on it under touch emulation but not with a mouse. Not published.
