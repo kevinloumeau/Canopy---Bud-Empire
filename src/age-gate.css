@@ -1,0 +1,21 @@
+/* One-time 21+ confirmation. Painted before the game so the shop is never visible first. */
+.age-gate{position:fixed;inset:0;z-index:9000;display:grid;place-items:center;padding:24px;
+  background:radial-gradient(120% 90% at 50% 0%,#2b4536 0%,#1b2b22 55%,#16211a 100%);
+  color:#e8f0dd;font-family:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif}
+html.age-ok .age-gate{display:none}
+.age-card{width:min(420px,100%);text-align:center;background:#20372b;border:1px solid #38543f;
+  border-radius:18px;padding:32px 24px 24px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.age-mark{display:block;margin:0 auto 14px;width:52px;height:52px}
+.age-eyebrow{margin:0 0 10px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#a8c884}
+.age-card h1{margin:0 0 12px;font-size:24px;line-height:1.2;font-weight:700;color:#f2f7e9}
+.age-card p{margin:0;font-size:14px;line-height:1.55;color:#c3d3b4}
+.age-actions{display:grid;gap:10px;margin:22px 0 16px}
+.age-actions button{font:inherit;font-size:15px;font-weight:600;padding:13px 18px;border-radius:11px;
+  border:1px solid transparent;background:#a8c884;color:#17251d;cursor:pointer;min-height:48px}
+.age-actions button:hover{background:#b9d795}
+.age-actions button.ghost{background:transparent;border-color:#3f5c49;color:#c3d3b4;font-weight:500}
+.age-actions button.ghost:hover{background:#26402f}
+.age-actions button:focus-visible{outline:2px solid #dce9be;outline-offset:2px}
+.age-fine{font-size:12px;color:#8ba37c}
+@media (prefers-reduced-motion:no-preference){.age-card{animation:age-rise .32s ease-out both}}
+@keyframes age-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
