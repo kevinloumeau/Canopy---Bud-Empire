@@ -344,3 +344,9 @@ Strain cards are shorter: every name breaks onto two lines so the four cards mat
 The in-scene “N held” pill is gone; the count now appears in the Pickup station status chip (“Waiting · 3 held”) and its tooltip. Settings keeps Sound, Start guide and Start over only — pause and lighting already live on the HUD.
 
 Validation: 64 unit tests and the classic build pass. Phone (390×844) and desktop (1280×900) captures checked the hero card, the four cards with price tags, the Amber Bloom hero fully in view after a tap, and no page errors. Not published.
+
+## Delivery-pad button always visible (September 20, 2026)
+
+On phones the unbuilt Deliveries card no longer forces a 310px minimum height or a 180px preview; the preview shrinks to 120px so the Build action fits a 390×844 pane without scrolling. As a guarantee on shorter panes, the funding bar and Build button stick to the pane's bottom edge with a solid backing and a soft upward fade. Desktop layout, purchase logic and the built delivery controls are unchanged.
+
+Validation: 64 unit tests and the classic build pass. Captures at 390×844 show the button in place; at 320×640 it stays pinned and legible with no content bleeding through. Not published.
