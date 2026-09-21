@@ -39,7 +39,10 @@
 @media(prefers-reduced-motion:reduce){.story-entry,.shop-story *{animation:none;transition:none}}
 
 .hud>.stat.output #rate[data-paused=true]::before{content:none}
-@media(max-width:779px){.world .station-sign:not(.selected) .station-sign-level{display:none}.world .station-sign:not(.selected){padding-block:5px}}
+@media(max-width:779px){.world .station-sign:not(.selected) .station-sign-level{display:none}.world .station-sign:not(.selected){padding-block:5px}
+ /* Without the level line the badge has no column of its own, so it moves to the right of the name (transform stays free for the hop). */
+ .world .marker.station-sign.can-upgrade:not(.selected){padding-right:1.75em}
+ .world .marker.station-sign:not(.selected)::after{left:auto;right:.45em;bottom:auto;top:calc(50% - .525em)}}
 @media(max-width:779px){
  .sheet>[data-pane=factory]>*{flex-shrink:0}
  .sheet>[data-pane=factory] .selected-line{flex:0 0 auto;min-height:132px;padding-block:8px}

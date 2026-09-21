@@ -134,6 +134,22 @@
   .strain-nav b .type-glyph{display:none}
   .strain-pips{display:none}
 }
+/* Browsers without container queries (Safari before 16) get the same compact strain layout from the viewport instead. */
+@supports not (container-type:inline-size){@media(max-width:430px){
+  .strain-kind-tier,.strain-kind-long{display:none}
+  .strain-kind-short{display:inline}
+  .buyer{padding:4px 7px 3px 6px;column-gap:4px}
+  .buyer .bud{width:18px;height:18px}
+  .buyer .bud svg{width:18px;height:18px}
+  .buyer>svg{width:16px;height:16px}
+  .menu-board-summary{min-height:44px;padding:6px 8px;min-width:0}
+  .menu-board-summary b{font-size:14px}
+  .strain-nav{gap:4px}
+  .strain-nav button{gap:3px;padding:8px 3px;border-radius:12px}
+  .strain-card-art{width:36px;height:45px}
+  .strain-nav b .type-glyph{display:none}
+  .strain-pips{display:none}
+}}
 @container (min-width:560px){
   .strain-hero{grid-template-columns:96px minmax(0,1fr) auto;grid-template-areas:"art info actions" "art stats actions" "details details details";align-items:center}
   .strain-hero-art{width:96px;height:120px}

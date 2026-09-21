@@ -565,8 +565,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   function convexHull(pts){pts=pts.slice().sort(function(a,b){return a.x-b.x||a.y-b.y});function cross(o,a,b){return (a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x)}var lower=[],upper=[];pts.forEach(function(q){while(lower.length>=2&&cross(lower[lower.length-2],lower[lower.length-1],q)<=0)lower.pop();lower.push(q)});for(var i=pts.length-1;i>=0;i--){var q=pts[i];while(upper.length>=2&&cross(upper[upper.length-2],upper[upper.length-1],q)<=0)upper.pop();upper.push(q)}return lower.slice(0,-1).concat(upper.slice(0,-1))}
   function castShadow(base,h,alpha){
     var dx=h*unit*SHADOW_DX,dy=h*unit*SHADOW_DY,shifted=base.map(function(q){return{x:q.x+dx,y:q.y+dy}}),hull=convexHull(base.concat(shifted));
-    var c={x:(base[0].x+base[2].x)/2,y:(base[0].y+base[2].y)/2},g=ctx.createLinearGradient(c.x,c.y,c.x+dx,c.y+dy);
-    g.addColorStop(0,'rgba(14,28,20,'+alpha+')');g.addColorStop(1,'rgba(14,28,20,'+(alpha*.25)+')');
+    var c={x:(base[0].x+base[2].x)/2,y:(base[0].y+base[2].y)/2},g=cachedGradient('c|'+alpha+'|'+q4(c.x)+'|'+q4(c.y)+'|'+q4(dx)+'|'+q4(dy),function(){var g=ctx.createLinearGradient(c.x,c.y,c.x+dx,c.y+dy);g.addColorStop(0,'rgba(14,28,20,'+alpha+')');g.addColorStop(1,'rgba(14,28,20,'+(alpha*.25)+')');return g});
     poly(hull,g);
   }
   function drawBox(x,z,y,w,d,h,palette){var p=palette||[colors.oliveTop,colors.oliveLeft,colors.oliveRight],b0=project(x-w/2,y,z-d/2),b1=project(x+w/2,y,z-d/2),b2=project(x+w/2,y,z+d/2),b3=project(x-w/2,y,z+d/2);
@@ -576,8 +575,9 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   // Soft key light from the upper right: wide top surfaces pick up a gentle left-to-right lift.
   function litTop(points,fill){var lo=points[0].x,hi=lo;for(var k=1;k<points.length;k++){var px=points[k].x;if(px<lo)lo=px;else if(px>hi)hi=px}hi=Math.max(lo+1,hi);return cachedGradient(fill+'|h|'+q4(lo)+'|'+q4(hi),function(){var g=ctx.createLinearGradient(lo,0,hi,0);g.addColorStop(0,shadeColor(fill,.955));g.addColorStop(.5,fill);g.addColorStop(1,shadeColor(fill,1.045));return g})}
   // Ambient shadow: a soft band on a floor plane, dark along one edge and fading away from it.
-  function shadowBand(x0,x1,zNear,zFar,y,alpha){var a=project((x0+x1)/2,y,zNear),b=project((x0+x1)/2,y,zFar),g=ctx.createLinearGradient(a.x,a.y,b.x,b.y);g.addColorStop(0,'rgba(14,28,20,'+alpha+')');g.addColorStop(1,'rgba(14,28,20,0)');poly([project(x0,y,zNear),project(x1,y,zNear),project(x1,y,zFar),project(x0,y,zFar)],g)}
-  function shadowBandX(z0,z1,xNear,xFar,y,alpha){var a=project(xNear,y,(z0+z1)/2),b=project(xFar,y,(z0+z1)/2),g=ctx.createLinearGradient(a.x,a.y,b.x,b.y);g.addColorStop(0,'rgba(14,28,20,'+alpha+')');g.addColorStop(1,'rgba(14,28,20,0)');poly([project(xNear,y,z0),project(xNear,y,z1),project(xFar,y,z1),project(xFar,y,z0)],g)}
+  function bandGradient(a,b,alpha){return cachedGradient('b|'+alpha+'|'+q4(a.x)+'|'+q4(a.y)+'|'+q4(b.x)+'|'+q4(b.y),function(){var g=ctx.createLinearGradient(a.x,a.y,b.x,b.y);g.addColorStop(0,'rgba(14,28,20,'+alpha+')');g.addColorStop(1,'rgba(14,28,20,0)');return g})}
+  function shadowBand(x0,x1,zNear,zFar,y,alpha){var a=project((x0+x1)/2,y,zNear),b=project((x0+x1)/2,y,zFar),g=bandGradient(a,b,alpha);poly([project(x0,y,zNear),project(x1,y,zNear),project(x1,y,zFar),project(x0,y,zFar)],g)}
+  function shadowBandX(z0,z1,xNear,xFar,y,alpha){var a=project(xNear,y,(z0+z1)/2),b=project(xFar,y,(z0+z1)/2),g=bandGradient(a,b,alpha);poly([project(xNear,y,z0),project(xNear,y,z1),project(xFar,y,z1),project(xFar,y,z0)],g)}
   function groundPatch(x,z,w,d,fill){poly([project(x-w/2,.015,z-d/2),project(x+w/2,.015,z-d/2),project(x+w/2,.015,z+d/2),project(x-w/2,.015,z+d/2)],fill)}
   // Emissive light. Every glow, pool, cone and wash is composited with 'screen' so it lifts the material it lands on
   // instead of painting a translucent disc over it; light surfaces stay put, dark ones warm up.

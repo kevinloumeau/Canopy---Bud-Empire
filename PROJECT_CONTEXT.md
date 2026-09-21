@@ -324,3 +324,13 @@ Profiling a developed shop at phone size showed the scene creating about 3,300 l
 On coarse pointers the HUD speed, lighting, settings and story buttons and the map station markers now expose 44px-tall hit areas through invisible pseudo-elements; drawn sizes and mouse behaviour are unchanged.
 
 Validation: 64 unit tests and the classic build pass. CDP probes confirmed the draw-call reduction, unchanged rendering, `(pointer:coarse)` switching the hint to “PINCH TO ZOOM”, and taps 20px above or below each control still landing on it under touch emulation but not with a mouse. Not published.
+
+## Marker badges, offline fonts and remaining gradients (September 20, 2026)
+
+On phones the unselected station markers hide their level line, which left the upgrade badge sitting on the first letter of the name. Below 780px the badge now moves to the right of the name (positioned with `top`/`right`, leaving `transform` to the hop animation) and the plaque reserves room for it; the selected two-line plaque and desktop markers are unchanged.
+
+`castShadow`, `shadowBand` and `shadowBandX` now reuse gradients through the same `cachedGradient` helper, bringing per-frame gradient creation in a developed shop to roughly 180 linear and 10 radial (from about 4,000).
+
+The service worker keeps Google Fonts in a separate `canopy-fonts` cache that survives deploys: the `@import` stylesheet (an opaque no-cors response) and the woff2 files are served cache-first and refreshed in the background, so an installed shop keeps Bricolage Grotesque and DM Mono offline. The compact strain layout for narrow panes has a viewport-based fallback for browsers without container queries. `.claude/launch.json` gains a `canopy-preview` entry serving `dist/` on port 4181.
+
+Validation: 64 unit tests and the classic build pass. Phone captures show badges beside every marker name. The production build on `canopy.localhost:4181` registered the worker, cached the stylesheet plus two font files after one revisit, and reloaded fully offline with all 11 font faces loaded and the scene drawn. Not published.
