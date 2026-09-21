@@ -374,3 +374,9 @@ Measured on a developed shop, the 250ms `renderUI` tick recreated about 1,900 DO
 The full-screen welcome-back report now needs at least 15 minutes away instead of 60 seconds; shorter breaks keep the “WHILE AWAY +$…” toast. README updated.
 
 Validation: 68 unit tests and the classic build pass. In the dev preview, shop category and strain switches, station selection, a purchase (level and price advanced), the Empire store card and Settings all updated correctly through the guards, with no page errors. Not published.
+
+## Telemetry funnel (September 20, 2026)
+
+Following the launch plan's “instrument before launch day”, `src/telemetry.js` adds provider-agnostic funnel events that stay queued until analytics is switched on: `session_start` with days since first visit, `return_day` once per calendar day (the D1/D7 retention signal), `session_alive` marks at 1/5/15/30 minutes, `age_gate` (from the inline gate via `window.canopyEvents`), `guide_step` / `guide_complete` / `guide_skip`, `first_upgrade`, `station_level_10/25/50/100`, `delivery_pad_built`, `chapter_complete`, `store_opened` and `prestige`. Once-per-device markers persist in `canopy-tracked`; `canopy-telemetry=off|debug` switches a device. No user id or cookie is involved. The intro now waits for the 21+ gate to be accepted and never opens for a “No”.
+
+Validation: 73 unit tests (five new for telemetry: day counting, once-per-device persistence, off switch, queue draining, Plausible stub) and the classic build pass. A fresh headless profile with a capturing `canopyTrack` produced `session_start → age_gate → guide_step 1 → guide_step 2 → guide_skip → first_upgrade` in order; the “No” path showed the exit card and no intro. Not published from this session.

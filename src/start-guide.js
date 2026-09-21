@@ -8,7 +8,7 @@ const STEPS=[
  {title:'A rooftop route, when you’re ready',text:'Build the $7,500 delivery pad in Deliveries to unlock web requests and an automatic courier drone. Orders pay a third more per unit. Until then, focus on your walk-in customers.',target:'.stock-online',tray:'factory'},
  {title:'Every shop has a story',text:'Follow your next chapter from the flag beside the queue or from Empire. Meet your regulars, open new neighborhoods, and collect rewards along the way.',target:'[data-tray=empire]',cta:'Let’s grow'}
 ];
-export function mountStartGuide({showTray,collapse,fit,paintHero,sound}){
+export function mountStartGuide({showTray,collapse,fit,paintHero,sound,report}){
  const root=document.createElement('div');root.className='start-guide';root.hidden=true;
  root.innerHTML='<div class="guide-dim"></div><div class="guide-ring" hidden></div>'+
   '<section class="guide-card" role="dialog" aria-modal="true" aria-labelledby="guideTitle">'+
@@ -18,7 +18,7 @@ export function mountStartGuide({showTray,collapse,fit,paintHero,sound}){
  document.body.append(root);
  const $=s=>root.querySelector(s),ring=$('.guide-ring'),dots=$('.guide-dots');
  dots.innerHTML=STEPS.map(()=>'<i></i>').join('');
- let step=-1,raf=0,lastTarget=null;
+ let step=-1,raf=0,lastTarget=null,finished=false;
  function place(){
   const target=lastTarget&&document.querySelector(lastTarget);
   if(!target){ring.hidden=true;return;}
@@ -28,7 +28,7 @@ export function mountStartGuide({showTray,collapse,fit,paintHero,sound}){
  }
  function track(){place();raf=requestAnimationFrame(track);}
  function show(i){
-  step=i;const s=STEPS[i];
+  step=i;const s=STEPS[i];if(report)report('guide_step',{step:i+1});
   if(s.tray&&showTray)showTray(s.tray);
   $('#guideTitle').textContent=s.title;$('#guideText').textContent=s.text;
   root.classList.toggle('is-hero',!!s.hero);$('.guide-hero').hidden=!s.hero;$('.guide-eyebrow').hidden=!s.eyebrow;$('.guide-eyebrow').textContent=s.eyebrow||'';
@@ -40,9 +40,9 @@ export function mountStartGuide({showTray,collapse,fit,paintHero,sound}){
   lastTarget=s.target||null;root.dataset.step=String(i);root.classList.toggle('is-spotlight',!!s.target);
   if(fit)fit();requestAnimationFrame(place);$('.guide-next').focus({preventScroll:true});
  }
- function open(){root.hidden=false;document.body.classList.add('guide-open');cancelAnimationFrame(raf);track();show(0);}
- function close(){root.hidden=true;document.body.classList.remove('guide-open');cancelAnimationFrame(raf);try{localStorage.setItem(SEEN_KEY,'1');}catch(e){}if(collapse)collapse();}
- $('.guide-next').onclick=()=>{if(sound)sound(STEPS[step].hero?'open':'tap');step<STEPS.length-1?show(step+1):close();};
+ function open(){finished=false;root.hidden=false;document.body.classList.add('guide-open');cancelAnimationFrame(raf);track();show(0);}
+ function close(){if(report&&!root.hidden)report(finished?'guide_complete':'guide_skip',{step:step+1});root.hidden=true;document.body.classList.remove('guide-open');cancelAnimationFrame(raf);try{localStorage.setItem(SEEN_KEY,'1');}catch(e){}if(collapse)collapse();}
+ $('.guide-next').onclick=()=>{if(sound)sound(STEPS[step].hero?'open':'tap');if(step<STEPS.length-1)show(step+1);else{finished=true;close();}};
  $('.guide-skip').onclick=close;
  root.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
  manageDialog(root,close);

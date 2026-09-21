@@ -123,3 +123,7 @@ This project was imported from [Create Idle Factory Game](https://chatgpt.com/c/
 The [existing hosted game](https://kevinloumeau.github.io/Canopy---Bud-Empire/) may differ from this checkout. Local changes are not automatically published. Preserve the existing Site in `.openai/hosting.json`; do not create a replacement Site when deploying updates.
 
 For future work, open this folder as the Codex project and read `PROJECT_CONTEXT.md` first. Preserve Canvas 2D, the classic Safari build, fixed orientation, pan/zoom and existing saves. Keep the main shop playable while extending its systems.
+
+## Telemetry
+
+`src/telemetry.js` records a short funnel — `session_start` (with `day` since first visit and `returning`), `return_day` (once per calendar day, the D1/D7 signal), `session_alive` at 1/5/15/30 minutes, `age_gate`, `guide_step` / `guide_complete` / `guide_skip`, `first_upgrade`, `station_level_10/25/50/100`, `delivery_pad_built`, `chapter_complete`, `store_opened` and `prestige`. Properties are small enums or numbers; there is no user id or cookie. Events go to `window.plausible` (queued in its stub until the snippet in `index.html` is uncommented) and to `window.canopyTrack` if a page defines one. `localStorage['canopy-telemetry']='off'` silences a device; `'debug'` logs each event to the console. Per-device markers live in `canopy-first-seen`, `canopy-return-day` and `canopy-tracked`.

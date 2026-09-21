@@ -78,9 +78,11 @@
       var card = gate.querySelector('.age-card');
       document.getElementById('ageYes').addEventListener('click', function () {
         try { localStorage.setItem('canopy-age-ok', '1'); } catch (e) {}
+        (window.canopyEvents = window.canopyEvents || []).push(['age_gate', { answer: 'yes' }]);
         document.documentElement.className += ' age-ok';
       });
       document.getElementById('ageNo').addEventListener('click', function () {
+        (window.canopyEvents = window.canopyEvents || []).push(['age_gate', { answer: 'no' }]);
         card.innerHTML = '<p class="age-eyebrow">Canopy \u00b7 Bud Empire</p>' +
           '<h1>Come back another time.</h1>' +
           '<p>Canopy is made for players 21 and over. Thanks for stopping by.</p>';
