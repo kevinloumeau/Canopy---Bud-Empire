@@ -334,3 +334,13 @@ On phones the unselected station markers hide their level line, which left the u
 The service worker keeps Google Fonts in a separate `canopy-fonts` cache that survives deploys: the `@import` stylesheet (an opaque no-cors response) and the woff2 files are served cache-first and refreshed in the background, so an installed shop keeps Bricolage Grotesque and DM Mono offline. The compact strain layout for narrow panes has a viewport-based fallback for browsers without container queries. `.claude/launch.json` gains a `canopy-preview` entry serving `dist/` on port 4181.
 
 Validation: 64 unit tests and the classic build pass. Phone captures show badges beside every marker name. The production build on `canopy.localhost:4181` registered the worker, cached the stylesheet plus two font files after one revisit, and reloaded fully offline with all 11 font faces loaded and the scene drawn. Not published.
+
+## Intro hero, menu cards and settings trim (September 20, 2026)
+
+Per the user's feedback: the start guide's first frame is now a hero card. A stage built from the shop's own Canvas pieces (counter, three jars, plants, two customers, the courier drone) is painted once by `paintIntroArt` into the card's header under a warm glow with drifting sparkles, above a “Canopy · Day one” eyebrow, “Your shop opens today.”, three Grow / Sell / Expand beats using the tray icons, and a full-width “Open the shop” action. Motion stops under reduced motion; later steps are unchanged.
+
+Strain cards are shorter: every name breaks onto two lines so the four cards match, the jar art is 36×45, and locked strains show their unlock price as a kraft-coloured hanging price tag with a notch and hole. The strain hero is tighter (64px art, smaller gaps and chips, single-line stat labels “eighth / THC / next lv”), and tapping a card scrolls the hero fully into view, so the busiest card fits a 390×844 pane.
+
+The in-scene “N held” pill is gone; the count now appears in the Pickup station status chip (“Waiting · 3 held”) and its tooltip. Settings keeps Sound, Start guide and Start over only — pause and lighting already live on the HUD.
+
+Validation: 64 unit tests and the classic build pass. Phone (390×844) and desktop (1280×900) captures checked the hero card, the four cards with price tags, the Amber Bloom hero fully in view after a tap, and no page errors. Not published.

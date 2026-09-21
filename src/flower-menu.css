@@ -27,30 +27,34 @@
 
 /* Strain row: four jars. The selected one lifts, on-menu jars carry their strain colour, locked jars sit in the dark. */
 .strain-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
-.strain-nav button{position:relative;display:grid;grid-template-rows:auto 1fr auto auto;justify-items:center;gap:3px;min-width:0;padding:8px 4px 9px;border:1px solid #d8ead21f;border-radius:14px;background:#ffffff08;color:#e2e9d7;font-family:inherit;cursor:pointer;transition:transform .18s ease,border-color .18s ease,background .18s ease}
+.strain-nav button{position:relative;display:grid;grid-template-rows:auto auto auto auto;align-content:start;justify-items:center;gap:2px;min-width:0;padding:7px 4px 7px;border:1px solid #d8ead21f;border-radius:14px;background:#ffffff08;color:#e2e9d7;font-family:inherit;cursor:pointer;transition:transform .18s ease,border-color .18s ease,background .18s ease}
 .strain-nav button:hover{background:#ffffff10}
 .strain-nav button:focus-visible{outline:2px solid #e5d3a0;outline-offset:2px}
 .strain-nav button[aria-selected=true]{border-color:var(--strain);background:#ffffff14;border-color:color-mix(in srgb,var(--strain) 70%,#ffffff 0%);background:color-mix(in srgb,var(--strain) 14%,#ffffff05);transform:translateY(-2px);box-shadow:0 8px 20px -12px var(--strain)}
 .strain-nav button.is-on-menu::after{content:'';position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--strain);box-shadow:0 0 0 2px #1a2a20,0 0 8px var(--strain)}
 .strain-nav button.is-locked{color:#9aa896}
 .strain-nav button.is-locked b{color:#b3bfaf}
-.strain-card-art{display:block;width:44px;height:55px}
+.strain-card-art{display:block;width:36px;height:45px}
 .strain-card-art svg{width:100%;height:100%}
-.strain-nav b{font-size:11px;line-height:1.2;text-align:center;letter-spacing:-.01em;font-weight:600;color:#eef2df;overflow-wrap:anywhere}
+.strain-nav b{font-size:11px;line-height:1.2;min-height:2.4em;text-align:center;letter-spacing:-.01em;font-weight:600;color:#eef2df;overflow-wrap:anywhere}
 .strain-nav small{font:600 10px 'DM Mono',monospace;letter-spacing:0;color:#bdcdb5}
 .strain-nav .is-on-menu small{color:var(--strain)}
 .strain-nav .is-locked small{color:#c7b98a}
+/* Locked strains wear a hanging price tag: notched left edge, punched hole, kraft-paper colour. */
+.strain-nav small.price-tag{position:relative;margin-top:1px;padding:2px 7px 2px 12px;border-radius:3px 6px 6px 3px;background:#e9c87a;color:#2b2416;font-size:10px;line-height:1.3;clip-path:polygon(0 50%,7px 0,100% 0,100% 100%,7px 100%)}
+.strain-nav small.price-tag::before{content:'';position:absolute;left:6px;top:50%;width:3px;height:3px;border-radius:50%;background:#1a2a20;transform:translateY(-50%)}
+.strain-nav .is-locked:hover small.price-tag{background:#f2d58a}
 
 /* Trending: a flame badge on the card, and a live chip in the legend. */
 .strain-nav button.is-trending::before{content:'🔥';position:absolute;top:4px;left:6px;font-size:12px;line-height:1;filter:drop-shadow(0 1px 2px #0008)}
 .strain-hero.is-trending{border-color:#efcf8d66;box-shadow:inset 0 0 0 1px #efcf8d22}
 
 /* Traits: what the strain does to the shop, then its signature perk. */
-.strain-traits{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px}
-.strain-traits li{max-width:100%;box-sizing:border-box;overflow-wrap:anywhere;font-size:11px;line-height:1.4;padding:3px 8px;border-radius:999px;background:#ffffff0c;border:1px solid #ffffff12;color:#cddcc4}
+.strain-traits{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:3px}
+.strain-traits li{max-width:100%;box-sizing:border-box;overflow-wrap:anywhere;font-size:10.5px;line-height:1.35;padding:2px 7px;border-radius:999px;background:#ffffff0c;border:1px solid #ffffff12;color:#cddcc4}
 .strain-traits li.is-cost{color:#e9c9a0;border-color:#e9c9a033}
 .strain-traits li.is-trend{color:#f3d98f;border-color:#efcf8d55;background:#efcf8d14}
-.strain-perk{margin:8px 0 0;font-size:11.5px;line-height:1.5;overflow-wrap:anywhere;color:#a9b8a3}
+.strain-perk{margin:5px 0 0;font-size:11px;line-height:1.4;overflow-wrap:anywhere;color:#a9b8a3}
 .strain-perk b{color:#c7b98a;font-weight:600}
 .strain-perk.is-unlocked{color:#cddcc4}
 .strain-perk.is-unlocked b{color:var(--strain)}
@@ -71,23 +75,23 @@
 .strain-hero .strain-pips i{width:6px;height:6px}
 
 /* Hero: large jar, name and buyers, three stat tiles, two actions. */
-.strain-hero{display:grid;grid-template-columns:72px minmax(0,1fr);grid-template-areas:"art info" "art stats" "details details" "actions actions";gap:8px 12px;align-items:center;padding:10px;border-radius:16px;border:1px solid #d8ead23a;background:#ffffff06;border:1px solid color-mix(in srgb,var(--strain) 30%,#d8ead21f);background:linear-gradient(160deg,color-mix(in srgb,var(--strain) 12%,transparent),transparent 55%),#ffffff06}
+.strain-hero{display:grid;grid-template-columns:64px minmax(0,1fr);grid-template-areas:"art info" "art stats" "details details" "actions actions";gap:6px 10px;align-items:center;padding:8px 10px 10px;border-radius:16px;border:1px solid #d8ead23a;background:#ffffff06;border:1px solid color-mix(in srgb,var(--strain) 30%,#d8ead21f);background:linear-gradient(160deg,color-mix(in srgb,var(--strain) 12%,transparent),transparent 55%),#ffffff06}
 .strain-hero.is-locked{border-color:#d8ead21f;background:#ffffff05}
-.strain-hero-art{grid-area:art;width:72px;height:90px;filter:drop-shadow(0 10px 14px #0006)}
+.strain-hero-art{grid-area:art;width:64px;height:80px;filter:drop-shadow(0 10px 14px #0006)}
 .strain-hero-art svg{width:100%;height:100%}
-.strain-hero-info{grid-area:info;min-width:0;display:grid;gap:4px}
+.strain-hero-info{grid-area:info;min-width:0;display:grid;gap:2px}
 .strain-hero-details{grid-area:details;min-width:0}
 .strain-kind-short{display:none}
 .strain-kind{font-size:11px;line-height:1.4;letter-spacing:.04em;text-transform:uppercase;font-weight:600;color:var(--strain)}
 .strain-hero.is-locked .strain-kind{color:#c7b98a}
-.strain-hero h2{margin:0;font-size:18px;line-height:1.15;letter-spacing:-.02em;color:#f3f6e8;font-family:inherit;font-weight:600}
-.strain-hero-info p{margin:0;font-size:11.5px;line-height:1.45;color:#bdcdb5}
+.strain-hero h2{margin:0;font-size:17px;line-height:1.15;letter-spacing:-.02em;color:#f3f6e8;font-family:inherit;font-weight:600}
+.strain-hero-info p{margin:0;font-size:11px;line-height:1.4;color:#bdcdb5}
 .strain-stats{grid-area:stats;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;min-width:0;margin:0}
-.strain-stats span{display:grid;gap:1px;padding:7px 8px 6px;border-radius:10px;background:#0f1a14b0;border:1px solid #ffffff10;min-width:0}
-.strain-stats b{font:600 14px 'DM Mono',monospace;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:#f3f6e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.strain-stats small{font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:#9fb09a;font-weight:600}
+.strain-stats span{display:grid;gap:0;padding:5px 6px 4px;border-radius:10px;background:#0f1a14b0;border:1px solid #ffffff10;min-width:0}
+.strain-stats b{font:600 13px 'DM Mono',monospace;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:#f3f6e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.strain-stats small{font-size:8.5px;letter-spacing:.03em;text-transform:uppercase;color:#9fb09a;font-weight:600;white-space:nowrap}
 .strain-hero-actions{grid-area:actions;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:0}
-.strain-hero-actions button{min-height:44px;padding:8px 12px;border:1px solid #789167;border-radius:12px;background:#2f4a36;color:#edf3df;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s ease,border-color .15s ease}
+.strain-hero-actions button{min-height:42px;padding:6px 12px;border:1px solid #789167;border-radius:12px;background:#2f4a36;color:#edf3df;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s ease,border-color .15s ease}
 .strain-hero-actions button:hover:not(:disabled){background:#3a5a42}
 .strain-hero-actions button:focus-visible{outline:2px solid #e5d3a0;outline-offset:2px}
 .strain-hero-actions button:disabled{opacity:.5;cursor:default}

@@ -25,6 +25,32 @@
 .guide-next{border:1px solid #d9f1c445;background:linear-gradient(145deg,#c9e4b820,#c6dfb608),#55733e;color:#f8fbed;box-shadow:0 3px 9px #0b1c1626}
 .guide-actions button:focus-visible{outline:2px solid #e3d1a6;outline-offset:2px}
 @media(hover:hover){.guide-next:hover{filter:brightness(1.1)}.guide-skip:hover{color:#f0f5e8}}
+/* First frame: a lit stage of the shop's own artwork above the welcome, three beats, one big door-opening action. */
+.start-guide.is-hero .guide-card{padding:0 0 16px;overflow:hidden;background:linear-gradient(180deg,#2c4a38 0%,rgba(26,48,38,.96) 46%)}
+.guide-hero{position:relative;height:180px;margin:0 0 4px;overflow:hidden;background:radial-gradient(120% 90% at 50% 100%,#f0d89a4d 0%,#9dc47a1f 38%,transparent 70%),linear-gradient(180deg,#1d3a2c,#28483a)}
+.guide-hero::before{content:'';position:absolute;inset:auto 0 0;height:60%;background:radial-gradient(60% 100% at 50% 100%,#ffe6a83a,transparent 70%);pointer-events:none}
+.guide-hero::after{content:'';position:absolute;inset:0;background:
+ radial-gradient(1.5px 1.5px at 12% 22%,#fff8d9cc,transparent 60%),radial-gradient(1.5px 1.5px at 84% 16%,#fff8d9aa,transparent 60%),
+ radial-gradient(1px 1px at 30% 10%,#fff8d999,transparent 60%),radial-gradient(1.5px 1.5px at 66% 28%,#fff8d9bb,transparent 60%),
+ radial-gradient(1px 1px at 92% 44%,#fff8d988,transparent 60%),radial-gradient(1px 1px at 6% 52%,#fff8d977,transparent 60%);
+ animation:guide-sparkle 3.2s ease-in-out infinite alternate;pointer-events:none}
+.guide-hero-art{position:absolute;left:50%;bottom:0;width:380px;height:190px;transform:translateX(-50%);animation:guide-float 4.2s ease-in-out infinite}
+@keyframes guide-float{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}
+@keyframes guide-sparkle{from{opacity:.45}to{opacity:1}}
+.start-guide.is-hero .guide-dots,.start-guide.is-hero h2,.start-guide.is-hero #guideText,.guide-eyebrow,.guide-beats,.start-guide.is-hero .guide-actions{margin-left:18px;margin-right:18px}
+.start-guide.is-hero .guide-dots{margin-top:14px;margin-bottom:10px}
+.guide-card .guide-eyebrow{margin:0 18px 5px;font:600 11px/1.2 'DM Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#e3d1a6}
+.guide-eyebrow[hidden]{display:none}
+.start-guide.is-hero h2{font-size:26px;line-height:1.08;letter-spacing:-.025em}
+.start-guide.is-hero #guideText{margin-bottom:12px}
+.guide-beats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;list-style:none;padding:0;margin-top:0;margin-bottom:14px}
+.guide-beats[hidden]{display:none}
+.guide-beats li{display:flex;align-items:center;justify-content:center;gap:6px;min-height:36px;border-radius:10px;background:#e4f5dd12;border:1px solid #e4f9e11f;font-size:12px;font-weight:700;color:#e8f0dd}
+.guide-beats svg{width:16px;height:16px;color:#c9e29c}
+.start-guide.is-hero .guide-actions{flex-direction:row-reverse;justify-content:space-between}
+.start-guide.is-hero .guide-next{flex:1;min-height:50px;font-size:15px;box-shadow:0 6px 18px #0b1c1640,inset 0 1px 0 #ffffff22}
+.start-guide.is-hero .guide-skip{flex:0 0 auto}
+@media(prefers-reduced-motion:reduce){.guide-hero-art,.guide-hero::after{animation:none}}
 /* Steps that point at the sheet lift the card so the target stays visible. */
 .start-guide[data-step="1"] .guide-card,.start-guide[data-step="3"] .guide-card,.start-guide[data-step="4"] .guide-card{top:calc(var(--hud-height,60px) + 18px)}
 .start-guide[data-step="2"] .guide-card{top:calc(var(--hud-height,60px) + 26px)}

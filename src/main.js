@@ -143,8 +143,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   function displayBoost(i){return i>0?1+state.displayLevel*.02:1}
   function thcLabel(i){var v=strainPotency(i);return (Math.round(v*10)/10).toFixed(v%1?1:0)+'%'}
   function buildStrainMenu(){
-    $('strainNav').innerHTML=STRAINS.map(function(strain,i){return '<button type="button" role="tab" id="strainTab'+i+'" style="--strain:'+strain.color+'"><span class="strain-card-art"></span><b>'+typeGlyph(strains.STRAIN_TYPE[i])+strain.name+'</b><small></small><em class="strain-pips" aria-hidden="true">'+Array.from({length:10},function(){return '<i></i>'}).join('')+'</em></button>'}).join('');
-    STRAINS.forEach(function(_,i){$('strainTab'+i).onclick=function(){flowerFocus=i;renderFlowers()}});
+    $('strainNav').innerHTML=STRAINS.map(function(strain,i){return '<button type="button" role="tab" id="strainTab'+i+'" style="--strain:'+strain.color+'"><span class="strain-card-art"></span><b>'+typeGlyph(strains.STRAIN_TYPE[i])+strain.name.replace(' ','<br>')+'</b><small></small><em class="strain-pips" aria-hidden="true">'+Array.from({length:10},function(){return '<i></i>'}).join('')+'</em></button>'}).join('');
+    STRAINS.forEach(function(_,i){$('strainTab'+i).onclick=function(){flowerFocus=i;renderFlowers();var hero=document.querySelector('.strain-hero');if(hero&&hero.scrollIntoView)hero.scrollIntoView({block:'nearest',behavior:motionPreference.matches?'auto':'smooth'})}});
     flowerFocus=menuStrains()[0]||0;
   }
   function renderStrainMenu(){
@@ -165,15 +165,15 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       var level=state.strains[i],active=state.menuStrains.indexOf(i)>=0,tab=$('strainTab'+i),art=tab.querySelector('.strain-card-art');
       var artKey=(level?'u':'l');if(art.dataset.key!==artKey){art.innerHTML=strainArt(i,!level);art.dataset.key=artKey}
       tab.classList.toggle('is-on-menu',active);tab.classList.toggle('is-locked',!level);tab.classList.toggle('is-trending',i===trend);tab.setAttribute('aria-selected',String(flowerFocus===i));tab.tabIndex=flowerFocus===i?0:-1;
-      tab.querySelector('small').textContent=!level?fmt(strain.unlock):active?'On menu':'Off menu';
+      var tag=tab.querySelector('small');tag.textContent=!level?fmt(strain.unlock):active?'On menu':'Off menu';tag.classList.toggle('price-tag',!level);
       Array.prototype.forEach.call(tab.querySelectorAll('.strain-pips i'),function(pip,k){pip.classList.toggle('is-filled',k<level)});
     });
     var i=flowerFocus,strain=STRAINS[i],look=STRAIN_LOOKS[i],level=state.strains[i],active=state.menuStrains.indexOf(i)>=0,price=strainCost(i),maxed=level>=10,detail=$('strainDetail');
     var isNight=atmosphere(state.empire.network).night,type=strains.STRAIN_TYPE[i],timeNow=strains.timeFactor(type,isNight);
     var nextValue=Math.round(strain.price*(1+level*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*format().value*trendBoost(i)*displayBoost(i)*timeNow);
     var stats=level?
-      '<span><b>'+fmt(flowerValue(i))+'</b><small>per '+unitWord(1)+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+(maxed?'Max':'+'+fmt(nextValue-flowerValue(i)))+'</b><small>'+(maxed?'level 10':'next level')+'</small></span>':
-      '<span><b>'+fmt(Math.round(strain.price*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*format().value*timeNow))+'</b><small>per '+unitWord(1)+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+fmt(strain.unlock)+'</b><small>to unlock</small></span>';
+      '<span><b>'+fmt(flowerValue(i))+'</b><small>'+unitWord(1)+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+(maxed?'Max':'+'+fmt(nextValue-flowerValue(i)))+'</b><small>'+(maxed?'level 10':'next lv')+'</small></span>':
+      '<span><b>'+fmt(Math.round(strain.price*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*format().value*timeNow))+'</b><small>'+unitWord(1)+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+fmt(strain.unlock)+'</b><small>unlock</small></span>';
     var growPct=Math.round((1-strains.strainGrowFactor(i,Math.max(1,level)))*100),tipVip=Math.round((strains.tipFactor('vip',strains.potency(i,level)+state.terpeneLevel*.25)-1)*100),tier=strains.perkTier(level),perk=strains.PERKS[i];
     var traits='<ul class="strain-traits">'+
       '<li'+(growPct?' class="is-cost"':'')+'>'+(growPct?'Grow room −'+growPct+'%'+(level<10?' · masters with levels':''):'Easy to grow')+'</li>'+
@@ -2348,7 +2348,6 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       updateBranchMarker();requestAnimationFrame(render);return;
     }
     drawTower(now);
-    var held=customers.filter(function(c){return c.ordered&&!c.bag}).length;if(held>0){var heldPin=project(machinePos[5].x+3.1,2.35-sceneElevation,machinePos[5].z-1.7),heldSize=Math.max(8,unit*.22),heldText=held+' held';ctx.font='600 '+heldSize+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';var heldW=ctx.measureText(heldText).width+heldSize*1.1,heldH=heldSize*1.5;ctx.fillStyle='rgba(18,28,22,.78)';ctx.beginPath();roundedRectPath(heldPin.x-heldW/2,heldPin.y-heldH/2,heldW,heldH,heldH/2);ctx.fill();ctx.fillStyle='#ead49b';ctx.fillText(heldText,heldPin.x,heldPin.y);ctx.textBaseline='alphabetic'}
     tierFlashes.forEach(function(life,i){if(life<=0)return;tierFlashes[i]=Math.max(0,life-frameDelta);var station=machinePos[i];ctx.save();ctx.globalAlpha=life*.8;for(var n=0;n<5;n++){var q=project(station.x-1.3+n*.65,station.y+1.6+(motionPreference.matches?0:(1-life)*.5),station.z+.7),r=unit*.09*life;ctx.strokeStyle='#f6e3ae';ctx.lineWidth=Math.max(.7,unit*.025);ctx.beginPath();ctx.moveTo(q.x-r,q.y);ctx.lineTo(q.x+r,q.y);ctx.moveTo(q.x,q.y-r);ctx.lineTo(q.x,q.y+r);ctx.stroke()}ctx.restore()});
     var speed=state.lines.some(function(n){return n>0})?Math.min(.07,.02+production()*.00002):0;
     crateTime=(crateTime+frameDelta*speed*1.4)%1;
@@ -2564,8 +2563,9 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       return 'Producing in batches';
     }
     if(i===4)return state.stock[4]>=readyCapacity()?'Ready storage full':state.stock[3]<1?'Waiting for packed '+unitWord(2):'Preparing pickup bags';
-    if(state.stock[4]<1)return 'Waiting for ready bags';
-    return customers.some(function(c){return c.ordered&&!c.bag&&c.phase==='pickup'&&Math.hypot(c.x-4,c.z-4.9)<.15})?'Serving a customer':'Waiting for a customer at the counter';
+    var held=customers.filter(function(c){return c.ordered&&!c.bag}).length,heldNote=held>1?' · '+held+' orders held':held===1?' · 1 order held':'';
+    if(state.stock[4]<1)return 'Waiting for ready bags'+heldNote;
+    return (customers.some(function(c){return c.ordered&&!c.bag&&c.phase==='pickup'&&Math.hypot(c.x-4,c.z-4.9)<.15})?'Serving a customer':'Waiting for a customer at the counter')+heldNote;
   }
   function renderUI(periodic){
     if(document.hidden)return;
@@ -2595,7 +2595,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     $('machineName').textContent=line.name;$('machineLevel').textContent=level;$('machineRate').textContent=selected<4?batchSize(selected).toFixed(1)+' avg / batch · '+([2,3,2,2][selected]/cycleSpeed(selected)).toFixed(1)+'s':capacity(selected).toFixed(1)+'× service';
     var tier=stationTier(selected),next=nextCapacity(selected);
     // Stat strip: a colour-coded status chip, then icon tiles instead of a sentence.
-    var statusText=stationStatus(selected),statusTone=/full/i.test(statusText)?'stop':/waiting/i.test(statusText)?'wait':'go',statusWord=/full/i.test(statusText)?'Full':/waiting/i.test(statusText)?'Waiting':selected<4?'Producing':'Serving';
+    var statusText=stationStatus(selected),statusTone=/full/i.test(statusText)?'stop':/waiting/i.test(statusText)?'wait':'go',statusWord=/full/i.test(statusText)?'Full':/waiting/i.test(statusText)?'Waiting':selected<4?'Producing':'Serving',heldMatch=/(\d+) orders? held/.exec(statusText);if(heldMatch)statusWord+=' · '+heldMatch[1]+' held';
     var tierFrom=TIER_LEVELS[tier],tierTo=tier<6?TIER_LEVELS[tier+1]:null,tierPct=tierTo?Math.round((level-tierFrom)/(tierTo-tierFrom)*100):100;
     var ICON_BATCH='<svg viewBox="0 0 24 24"><path d="M4 8h16v11H4zM4 8l3-4h10l3 4M12 4v4"/></svg>',ICON_CLOCK='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg>',ICON_TIER='<svg viewBox="0 0 24 24"><path d="M12 3l2.4 5.2 5.6.7-4.1 3.9 1.1 5.7L12 15.8 7 18.5l1.1-5.7L4 8.9l5.6-.7z"/></svg>',ICON_LANES='<svg viewBox="0 0 24 24"><path d="M5 5v14M12 5v14M19 5v14"/></svg>';
     var tiles=selected<4?
@@ -2756,6 +2756,28 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       var pc=preview.getContext('2d');pc.clearRect(0,0,preview.width,preview.height);
       if(right>=left&&bottom>=top){var w=right-left+1,h=bottom-top+1,scale=Math.min((preview.width-40)/w,(preview.height-40)/h);pc.drawImage(art,left,top,w,h,(preview.width-w*scale)/2,(preview.height-h*scale)/2,w*scale,h*scale)}
       preview.dataset.art=key;
+    }finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle;sceneElevation=savedElevation}
+  }
+  // Intro hero: a small stage built from the shop's own pieces (counter, jars, plants, two customers, the courier drone),
+  // painted once into the start guide's canvas. It never touches the live scene or camera.
+  function paintIntroArt(target){
+    if(!target||target.dataset.art)return;
+    var art=document.createElement('canvas');art.width=1000;art.height=700;
+    var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle,savedElevation=sceneElevation;
+    try{
+      ctx=art.getContext('2d',{willReadFrequently:true});unit=88;angle=.57;sceneElevation=0;centerX=500;centerY=470;
+      drawBox(0,0,-.22,7.2,4.2,.22,['#cbb085','#7f6a4b','#ac9168']);
+      plant(-2.9,.9,0,1.05,0,1);plant(2.9,.9,0,1.05,1,1);plant(-2.2,-1.3,0,.8,2,1);
+      drawBox(0,-.4,0,2.6,.95,1,['#ede4cb','#a79c81','#d2c5a5']);
+      jar(-.8,-.4,1,0);jar(0,-.4,1,1);jar(.8,-.4,1,2);
+      drawPerson(-1.55,1.15,0,18,false,false,true,{amount:0,phase:0,facing:.35});
+      drawPerson(1.7,1.3,0,13,false,false,false,{amount:0,phase:0,facing:-.3});
+      drawCourierDrone(.9,3.3,-.6,0,0,1);
+      var pixels=ctx.getImageData(0,0,art.width,art.height).data,left=art.width,right=0,top=art.height,bottom=0;
+      for(var y=0;y<art.height;y++)for(var x=0;x<art.width;x++)if(pixels[(y*art.width+x)*4+3]>180){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y)}
+      var pc=target.getContext('2d');pc.clearRect(0,0,target.width,target.height);
+      if(right>=left&&bottom>=top){var w=right-left+1,h=bottom-top+1,scale=Math.min((target.width-24)/w,(target.height-16)/h);pc.drawImage(art,left,top,w,h,(target.width-w*scale)/2,target.height-h*scale-6,w*scale,h*scale)}
+      target.dataset.art='1';
     }finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle;sceneElevation=savedElevation}
   }
   function paintCustomerGuide(){
@@ -2990,7 +3012,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     if(destination==='flowers')return showTray('flowers');showTray('empire');if(destination==='empire'){empireShell.show('home');return;}
     var i=destination==='regulars'?state.empire.network.stores.findIndex(function(b){return !b.relationship}):0;empireShell.openStore(Math.max(0,i));if(destination==='mara'||destination==='regulars'){var people=$('opTab'+Math.max(0,i)+'2');if(people)people.click();}
   }});
-  var startGuide=mountStartGuide({showTray:showTray,collapse:function(){showTray('factory')},fit:fitControls});var guideReplay=document.createElement('button');guideReplay.type='button';guideReplay.className='guide-replay';guideReplay.textContent='Replay the start guide';guideReplay.onclick=function(){startGuide.open()};document.querySelector('.shop-reset').prepend(guideReplay);mountSettings({getState:function(){return state},setSpeed:setGameSpeed});
+  var startGuide=mountStartGuide({showTray:showTray,collapse:function(){showTray('factory')},fit:fitControls,paintHero:paintIntroArt});var guideReplay=document.createElement('button');guideReplay.type='button';guideReplay.className='guide-replay';guideReplay.textContent='Replay the start guide';guideReplay.onclick=function(){startGuide.open()};document.querySelector('.shop-reset').prepend(guideReplay);mountSettings({getState:function(){return state},setSpeed:setGameSpeed});
   manageDialog($('resetModal'),function(){$('resetModal').hidden=true});manageDialog(prestigeDialog,function(){prestigeDialog.hidden=true});
   Array.prototype.forEach.call(document.querySelectorAll('[data-empire-view]'),function(button){button.onclick=function(){var view=button.getAttribute('data-empire-view');Array.prototype.forEach.call(document.querySelectorAll('[data-empire-view]'),function(b){b.setAttribute('aria-pressed',String(b===button))});Array.prototype.forEach.call(document.querySelectorAll('[data-empire-section]'),function(section){section.hidden=section.getAttribute('data-empire-section')!==view});document.querySelector('[data-pane=empire]').scrollTop=0;fitControls()}});
 
