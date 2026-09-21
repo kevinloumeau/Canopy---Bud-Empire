@@ -15,7 +15,7 @@ The six tray tabs are **Stations**, **Staff**, **Menu**, **Deliveries**, **Shop*
 
 Drag to pan, scroll or pinch to zoom, and use the center-map button to reset the view. The location button switches between owned stores. Tap a station in the scene to open its upgrades.
 
-The HUD offers 1×, 2× and 4× speeds, day/night lighting and Settings. Settings contains pause/resume, sound, guide replay and reset. On desktop, **Space** pauses or resumes, **1 / 2 / 4** set speed, and **Escape** dismisses an overlay or collapses the tray. Focused buttons retain native keyboard activation.
+The HUD offers 1×, 2× and 4× speeds, day/night lighting and Settings. Settings contains sound, guide replay and reset. Sound effects are synthesised in the browser (no audio files): a register ding on each sale, a door chime as customers arrive, taps on tabs and speed changes, arpeggios for upgrades and construction, a whoosh when a courier drone leaves, a sparkle for rewards and a bonk when you cannot afford something. New games start with sound on; existing saves keep their setting. On desktop, **Space** pauses or resumes, **1 / 2 / 4** set speed, and **Escape** dismisses an overlay or collapses the tray. Focused buttons retain native keyboard activation.
 
 ## Staffed order counters
 

@@ -8,7 +8,7 @@ const STEPS=[
  {title:'A rooftop route, when you’re ready',text:'Build the $7,500 delivery pad in Deliveries to unlock web requests and an automatic courier drone. Orders pay a third more per unit. Until then, focus on your walk-in customers.',target:'.stock-online',tray:'factory'},
  {title:'Every shop has a story',text:'Follow your next chapter from the flag beside the queue or from Empire. Meet your regulars, open new neighborhoods, and collect rewards along the way.',target:'[data-tray=empire]',cta:'Let’s grow'}
 ];
-export function mountStartGuide({showTray,collapse,fit,paintHero}){
+export function mountStartGuide({showTray,collapse,fit,paintHero,sound}){
  const root=document.createElement('div');root.className='start-guide';root.hidden=true;
  root.innerHTML='<div class="guide-dim"></div><div class="guide-ring" hidden></div>'+
   '<section class="guide-card" role="dialog" aria-modal="true" aria-labelledby="guideTitle">'+
@@ -42,7 +42,7 @@ export function mountStartGuide({showTray,collapse,fit,paintHero}){
  }
  function open(){root.hidden=false;document.body.classList.add('guide-open');cancelAnimationFrame(raf);track();show(0);}
  function close(){root.hidden=true;document.body.classList.remove('guide-open');cancelAnimationFrame(raf);try{localStorage.setItem(SEEN_KEY,'1');}catch(e){}if(collapse)collapse();}
- $('.guide-next').onclick=()=>step<STEPS.length-1?show(step+1):close();
+ $('.guide-next').onclick=()=>{if(sound)sound(STEPS[step].hero?'open':'tap');step<STEPS.length-1?show(step+1):close();};
  $('.guide-skip').onclick=close;
  root.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
  manageDialog(root,close);
