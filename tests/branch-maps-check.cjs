@@ -8,11 +8,11 @@ const fs=require('node:fs');
   page.on('pageerror',e=>errors.push(e.message));
   await context.addInitScript(()=>{
    Object.defineProperty(document,'modelContext',{value:{registerTool:t=>window.factoryTool=t}});
-   if(!localStorage.getItem('test-seeded')){localStorage.setItem('shift-save',JSON.stringify({money:50000000,lifetime:5000000,lines:[10,11,12,13,14,15],staff:[1,2,3,4,5,6],stock:[80,80,80,80,80],gameSpeed:0,sold:77,onlineCompleted:4,lastSeen:Date.now(),empire:{stores:[{level:2},{level:4},{level:6}],career:2}}));localStorage.setItem('shift-kiosk-preview-granted','1');localStorage.setItem('test-seeded','1')}
+   if(!localStorage.getItem('test-seeded')){localStorage.setItem('shift-save',JSON.stringify({money:50000000,lifetime:5000000,lines:[10,11,12,13,14,15],staff:[1,2,3,4,5,6],stock:[80,80,80,80,80],gameSpeed:0,sold:77,onlineCompleted:4,lastSeen:Date.now(),empire:{stores:[{level:2},{level:4},{level:6},{level:3}],career:2}}));localStorage.setItem('shift-kiosk-preview-granted','1');localStorage.setItem('test-seeded','1')}
   });
   await page.goto(process.env.GAME_URL||'http://127.0.0.1:4173');await page.waitForFunction(()=>window.__shiftReady);
   const status=()=>page.evaluate(()=>window.factoryTool.execute());const original=await status();
-  for(let i=1;i<=3;i++){
+  for(let i=1;i<=4;i++){
    if(await page.locator('#locationToggle').getAttribute('aria-expanded')!=='true')await page.locator('#locationToggle').click();await page.locator('#storeButton'+i).click();await page.waitForTimeout(300);
    assert.equal((await status()).viewedStore,i);assert.deepEqual((await status()).lineLevels,original.lineLevels);
    assert.equal(await page.locator('#markers').isVisible(),false);assert.equal(await page.locator('#branchMapMarker').isVisible(),true);

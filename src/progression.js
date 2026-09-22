@@ -12,13 +12,17 @@ export const DAILY = [150, 250, 400, 600, 900, 1300, 2500];
 export const STORES = [
   {name:'Riverside', price:5000, goal:5000, rate:2, detail:'A neighborhood shop with a steady local following.'},
   {name:'Old Town', price:30000, goal:50000, rate:9, detail:'A boutique destination for the historic district.'},
-  {name:'City Center', price:150000, goal:250000, rate:35, detail:'Your flagship in the heart of the city.'}
+  {name:'City Center', price:150000, goal:250000, rate:35, detail:'Your flagship in the heart of the city.'},
+  {name:'Desert Oasis', price:750000, goal:1200000, rate:120, detail:'A destination courtyard shop on the desert highway.'},
+  {name:'Alpine', price:4000000, goal:6000000, rate:400, detail:'A mountain lodge retreat among the pines.'}
 ];
 // Optional investments keep branch levels and special projects independent.
 export const STORE_PROJECTS = [
   ['Riverwalk showcases', 'Cedar checkout', 'Pollinator planters'],
   ['Brass vitrines', 'Boutique checkout', 'Heritage flower boxes'],
-  ['Flagship showcases', 'Concierge checkout', 'Atrium planting']
+  ['Flagship showcases', 'Concierge checkout', 'Atrium planting'],
+  ['Courtyard showcases', 'Adobe checkout', 'Cactus garden'],
+  ['Timber showcases', 'Lodge checkout', 'Waterfall garden']
 ];
 export const PROJECT_LEVELS = [2,4,7];
 export const PROJECT_BONUSES = [.2,.3,.5];
@@ -53,11 +57,11 @@ export function migrateProgression(raw, now=Date.now()) {
   const r=raw && typeof raw==='object' ? raw : {};
   const clock=num(r.clock, now);
   const event=r.event && typeof r.event==='object' ? r.event : {};
-  return {network:migrateOperations(r.network),version:4, retailBoost:Math.max(1,num(r.retailBoost,1,64)), prestige:num(r.prestige,0,19), clock, activeStore:num(r.activeStore,0,3), career:num(r.career,0,CAREER.length), daily:{
+  return {network:migrateOperations(r.network),version:4, retailBoost:Math.max(1,num(r.retailBoost,1,64)), prestige:num(r.prestige,0,19), clock, activeStore:num(r.activeStore,0,STORES.length), career:num(r.career,0,CAREER.length), daily:{
     day:num(r.daily?.day,0), streak:num(r.daily?.streak,0,7)
   }, stores:STORES.map((_,i)=>({level:num(r.stores?.[i]?.level,0,10),projects:[0,1,2].map(j=>r.stores?.[i]?.projects?.[j]===true), manager:MANAGERS.some(m=>m.id===r.stores?.[i]?.manager)&&!(Array.isArray(r.stores)?r.stores:[]).slice(0,i).some(s=>s?.manager===r.stores?.[i]?.manager)?r.stores[i].manager:'none', featured:PRODUCTS.includes(r.stores?.[i]?.featured)?r.stores[i].featured:'everyday', loyalty:num(r.stores?.[i]?.loyalty,0,1000), served:num(r.stores?.[i]?.served), serviceClock:num(r.stores?.[i]?.serviceClock,0,11)})),
   event:{slot:num(event.slot,0), joined:event.joined===true, progress:num(event.progress), claimed:event.claimed===true},
-  trophies:num(r.trophies), rewards:[0,1,2].map(i=>r.rewards?.[i]===true), reputation:num(r.reputation,0,1000), counters:Object.fromEntries(['pickup','online','invest','revenue'].map(k=>[k,num(r.counters?.[k])])), goals:[0,1,2].map(i=>({round:num(r.goals?.[i]?.round),start:num(r.goals?.[i]?.start)})), goalsCompleted:num(r.goalsCompleted), returnReport:r.returnReport&&Array.isArray(r.returnReport.earnings)?{seconds:num(r.returnReport.seconds),earnings:[0,1,2,3].map(i=>num(r.returnReport.earnings[i])),goals:num(r.returnReport.goals,0,3)}:null};
+  trophies:num(r.trophies), rewards:[0,1,2].map(i=>r.rewards?.[i]===true), reputation:num(r.reputation,0,1000), counters:Object.fromEntries(['pickup','online','invest','revenue'].map(k=>[k,num(r.counters?.[k])])), goals:[0,1,2].map(i=>({round:num(r.goals?.[i]?.round),start:num(r.goals?.[i]?.start)})), goalsCompleted:num(r.goalsCompleted), returnReport:r.returnReport&&Array.isArray(r.returnReport.earnings)?{seconds:num(r.returnReport.seconds),earnings:[...Array(STORES.length+1)].map((_,i)=>num(r.returnReport.earnings[i])),goals:num(r.returnReport.goals,0,3)}:null};
 }
 export function selectedStore(p) {const i=p.activeStore;return Number.isInteger(i)&&i>0&&i<=STORES.length&&p.stores[i-1].level>0?i:0;}
 export function selectStore(p,i) {if(!Number.isInteger(i)||i<0||i>STORES.length||(i>0&&!p.stores[i-1].level))return false;p.activeStore=i;return true;}
@@ -124,7 +128,9 @@ export const MANAGERS = [
 export const SPECIALTIES = [
   'River Mist exclusive strain · level 2 supplies every branch',
   'Boutique products · +40% branch income when featured from level 2',
-  'Bulk delivery desk · dispatch 30 packed jars from level 2'
+  'Bulk delivery desk · dispatch 30 packed jars from level 2',
+  'Rooftop lounge · desert visitors travel for the view',
+  'Fireside terrace · lodge guests linger through the snow'
 ];
 export function exclusiveAvailable(p){return p.stores[0].level>=2;}
 export function featureAvailable(p,product){return PRODUCTS.includes(product)&&(product!=='exclusive'||exclusiveAvailable(p));}

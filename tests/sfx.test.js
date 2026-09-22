@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {makeSound} from '../src/sfx.js';
+import {makeSound,AMBIENT_MIN_GAP} from '../src/sfx.js';
 
 // A stub Web Audio graph that records what each cue builds, so a broken cue fails here instead of being swallowed in the browser.
 function stubAudio(){
@@ -25,7 +25,7 @@ function withBrowser(fn){
  try{return fn(log);}finally{delete globalThis.window;delete globalThis.document;}
 }
 
-const KINDS=['tap','sale','coin','upgrade','denied','chime','whoosh','sparkle','build','open'];
+const KINDS=['tap','sale','coin','upgrade','denied','whoosh','sparkle','build','open'];
 
 test('every cue builds and starts an audio graph without throwing',()=>{
  withBrowser(log=>{
@@ -56,4 +56,18 @@ test('unlock primes the context only while sound is on',()=>{
 test('missing Web Audio is harmless',()=>{
  globalThis.window={};globalThis.document={hidden:false};
  try{assert.doesNotThrow(()=>makeSound()('sale',true));}finally{delete globalThis.window;delete globalThis.document;}
+});
+
+test('simulation-driven cues stay rare so a busy shop is not a constant jingle',()=>{
+ assert.ok(AMBIENT_MIN_GAP>=8000,'sale and whoosh each wait at least eight seconds between plays');
+ withBrowser(log=>{
+  const play=makeSound();
+  for(let i=0;i<50;i++){play('sale',true);play('whoosh',true);}
+  const once=makeSound();once('sale',true);once('whoosh',true);
+  assert.equal(log.oscillators,2*(2+1),'fifty rapid sales and drone launches play each cue exactly once');
+ });
+});
+
+test('customers walk in silently: there is no door chime cue',()=>{
+ withBrowser(log=>{makeSound()('chime',true);assert.equal(log.oscillators,0);});
 });

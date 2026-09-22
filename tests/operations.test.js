@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {migrateProgression,storeRate,buyStore,buyProject} from '../src/progression.js';
 import {migrateOperations,allocateShelf,chooseRecipe,developProduct,customize,sendTransfer,transferReason,tickOperations,dispatchDelivery,upgradeFleet,expandArea,openingStatus,claimOpening,storyStatus,fulfillStory,staffLevel,journal,flagshipStatus,claimFlagship,atmosphere,neighborhood,importHarvest} from '../src/operations.js';
-const state=()=>({money:10000000,lifetime:5000000,stock:[0,0,40,80,0],strains:[1,1,1,1],onlineCompleted:0,empire:migrateProgression({stores:[{level:7},{level:7},{level:7}]})});
+const state=()=>({money:10000000,lifetime:5000000,stock:[0,0,40,80,0],strains:[1,1,1,1],onlineCompleted:0,empire:migrateProgression({stores:[{level:7},{level:7},{level:7},{level:7},{level:7}]})});
 const advance=(s,seconds)=>{let revenue=0,deliveries=0;for(let t=0;t<seconds;t++){const result=tickOperations(s,1);revenue+=result.revenue;deliveries+=result.deliveries;}return {revenue,deliveries};};
 test('operation migration preserves valid saves and rejects malformed jobs and settings',()=>{
  const n=migrateOperations({fleet:Infinity,time:-1,recipes:[false,true],staff:{grower:{xp:Infinity}},jobs:[{kind:'transfer',from:99,to:1}],stores:[{raw:Infinity,stock:[-1,NaN,4],shelves:[500,500,500],cosmetics:{plants:90}}]});
@@ -35,7 +35,7 @@ test('grand opening tasks sequence specialty actions and cannot double claim',()
  const s=state(),p=s.empire,n=p.network;assert.equal(claimOpening(s,0),false);n.stores[0].harvested=10;assert.equal(openingStatus(p,0).ready,true);const cash=s.money;claimOpening(s,0);assert.equal(s.money,cash+250);assert.equal(claimOpening(s,0),false);n.stores[0].sent=1;claimOpening(s,0);n.stores[0].relationship=1;claimOpening(s,0);assert.equal(n.stores[0].opening,3);assert.equal(claimOpening(s,0),false);
 });
 test('flagship requires quality, the complete journal, openings and reputation instead of cash',()=>{
- const s=state(),p=s.empire,n=p.network;assert.equal(claimFlagship(s),false);p.reputation=60;p.rewards=[true,true,true];p.stores.forEach((b,i)=>{b.projects=[true,true,false];b.loyalty=60;n.stores[i].opening=3;n.stores[i].relationship=1;});n.discoveries=[1,1,1];assert.equal(journal(s).length,23);assert.equal(flagshipStatus(s).ready,true);assert.equal(claimFlagship(s),true);assert.equal(claimFlagship(s),false);assert.equal(migrateProgression(p).network.flagship,true);
+ const s=state(),p=s.empire,n=p.network;assert.equal(claimFlagship(s),false);p.reputation=60;p.rewards=[true,true,true];p.stores.forEach((b,i)=>{b.projects=[true,true,false];b.loyalty=60;n.stores[i].opening=3;n.stores[i].relationship=1;});n.discoveries=[1,1,1];assert.equal(journal(s).length,31);assert.equal(flagshipStatus(s).ready,true);assert.equal(claimFlagship(s),true);assert.equal(claimFlagship(s),false);assert.equal(migrateProgression(p).network.flagship,true);
 });
 test('day/night changes with simulated time and major purchases record real income gains',()=>{
  const s=state(),p=s.empire;assert.equal(atmosphere(p.network).name,'Day');p.network.time=400;assert.equal(atmosphere(p.network).night,true);assert.equal(tickOperations(s,0).revenue,0);assert.equal(p.network.time,400);

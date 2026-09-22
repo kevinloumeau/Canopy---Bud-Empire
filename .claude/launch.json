@@ -36,6 +36,18 @@
         "--strictPort"
       ],
       "port": 5177
+    },
+    {
+      "name": "canopy-dev-desert",
+      "runtimeExecutable": "node_modules/.bin/vite",
+      "runtimeArgs": [
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "5199",
+        "--strictPort"
+      ],
+      "port": 5199
     }
   ]
 }

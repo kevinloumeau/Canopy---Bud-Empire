@@ -1,9 +1,12 @@
 // Sound effects: a small synthesised kit (no audio files), so the build stays self-contained and offline.
-// Every cue is short, quiet and throttled per kind; the chime and the upgrade arpeggio are the loudest at roughly -20 dBFS.
+// Every cue is short, quiet and throttled per kind; the upgrade arpeggio is the loudest at roughly -20 dBFS.
 // The sale cue is deliberately the softest: it fires on every pickup, so it is a low, muted tap rather than a ding.
+// Customers walk in silently. Cues driven by the simulation rather than by a tap (sale, whoosh) are rate-limited to one every several
+// seconds: customers arrive faster than once a second, so per-event playback turns into a constant jingle.
 // makeSound() returns play(kind, enabled). Mobile browsers only start audio inside a user gesture, so main.js also
 // calls play.unlock() on the first pointer or key event to create and resume the context while sound is on.
-const THROTTLE={tap:60,sale:450,upgrade:200,denied:250,chime:2200,whoosh:600,sparkle:400,build:400,open:1000,coin:90};
+const THROTTLE={tap:60,sale:9000,upgrade:200,denied:250,whoosh:12000,sparkle:400,build:400,open:1000,coin:90};
+export const AMBIENT_MIN_GAP=Math.min(THROTTLE.sale,THROTTLE.whoosh);
 export function makeSound(){
  let context=null,master=null,noise=null;const last={};
  function ensure(){
@@ -41,8 +44,6 @@ export function makeSound(){
   upgrade(){[[523,0],[659,.07],[784,.14]].forEach(([f,at])=>note('triangle',f,.07,.22,at));note('sine',1568,.03,.3,.2);},
   // Can't afford: a low two-tone bonk.
   denied(){note('square',196,.035,.12,0,170);note('square',147,.03,.16,.1,130);},
-  // Door chime when a customer walks in.
-  chime(){note('sine',1319,.05,.5,0);note('sine',1047,.045,.6,.16);},
   // Courier drone leaving: a short rotor whoosh and rising hum.
   whoosh(){hiss(.09,.5,0,300,2400,.8);note('sawtooth',180,.02,.45,0,420);},
   // Rewards, goals and events: a quick sparkle.

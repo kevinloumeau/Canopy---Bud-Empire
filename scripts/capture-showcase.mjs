@@ -50,7 +50,7 @@ const showcase = (extra = {}) => ({
   kiosk: true, secondKiosk: true, queueLevel: 3, storageLevel: 3, webLevel: 3, comfortLevel: 2, signLevel: 2,
   seedBatchLevel: 2, growBatchLevel: 2, harvestBatchLevel: 2, packSpeedLevel: 2, serviceLevel: 2,
   gameSpeed: 1, lastSeen: Date.now(),
-  empire: { stores: [{ level: 7, projects: [true, true, false] }, { level: 7, projects: [true, false, false] }, { level: 7, projects: [true, false, false] }] },
+  empire: { stores: [{ level: 7, projects: [true, true, false] }, { level: 7, projects: [true, false, false] }, { level: 7, projects: [true, false, false] }, { level: 7, projects: [true, false, false] }, { level: 7, projects: [true, false, false] }] },
   ...extra
 });
 const seed = save => `try{localStorage.setItem('shift-save',${JSON.stringify(JSON.stringify(save))});localStorage.setItem('canopy-age-ok','1');localStorage.setItem('shift-guide-seen','1');localStorage.setItem('canopy-telemetry','off');}catch(e){}`;

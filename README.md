@@ -40,14 +40,18 @@ Each branch has its own architecture, projects, people and operations. They shar
 
 <table>
   <tr>
-    <td width="33%"><a href="docs/assets/riverside.jpg"><img src="docs/assets/riverside.jpg" alt="Riverside's cedar shop with its loft and glasshouse, the footbridge over the river, and the far-bank boathouse." width="100%"></a></td>
-    <td width="33%"><a href="docs/assets/old-town.jpg"><img src="docs/assets/old-town.jpg" alt="Old Town's three-storey brick boutique on a market square, with the bakery next door, clock tower and fountain." width="100%"></a></td>
-    <td width="33%"><a href="docs/assets/city-center.jpg"><img src="docs/assets/city-center.jpg" alt="City Center's glass flagship under its tower, with the office block next door, reflecting pool, street and metro entrance." width="100%"></a></td>
+    <td width="20%"><a href="docs/assets/riverside.jpg"><img src="docs/assets/riverside.jpg" alt="Riverside's cedar shop with its loft and glasshouse, the footbridge over the river, and the far-bank boathouse." width="100%"></a></td>
+    <td width="20%"><a href="docs/assets/old-town.jpg"><img src="docs/assets/old-town.jpg" alt="Old Town's three-storey brick boutique on a market square, with the bakery next door, clock tower and fountain." width="100%"></a></td>
+    <td width="20%"><a href="docs/assets/city-center.jpg"><img src="docs/assets/city-center.jpg" alt="City Center's glass flagship under its tower, with the office block next door, reflecting pool, street and metro entrance." width="100%"></a></td>
+    <td width="20%"><a href="docs/assets/desert-oasis.jpg"><img src="docs/assets/desert-oasis.jpg" alt="Desert Oasis's adobe courtyard shop with a rooftop lounge and glass grow room, saguaros and palms in gravel gardens, and a parking court." width="100%"></a></td>
+    <td width="20%"><a href="docs/assets/alpine.jpg"><img src="docs/assets/alpine.jpg" alt="Alpine's stone-and-timber lodge among pines, with a glass conservatory under a roof terrace, a fireside pergola patio and a waterfall garden." width="100%"></a></td>
   </tr>
   <tr>
     <td valign="top"><strong>Riverside</strong><br><sub>Cedar, river light and a neighborhood pace. Cultivation and supply operations.</sub></td>
     <td valign="top"><strong>Old Town</strong><br><sub>Brick, brass and botanical displays. A boutique home for specialty products.</sub></td>
     <td valign="top"><strong>City Center</strong><br><sub>Glass, rooftop greenery and a busy plaza. Flagship growth and city deliveries.</sub></td>
+    <td valign="top"><strong>Desert Oasis</strong><br><sub>Adobe, bougainvillea and big desert sky. A rooftop lounge destination on the highway.</sub></td>
+    <td valign="top"><strong>Alpine</strong><br><sub>Stone, timber and pine air. A fireside lodge retreat above the tree line.</sub></td>
   </tr>
 </table>
 

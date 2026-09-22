@@ -5,8 +5,8 @@ const start=21000*DAY;
 const fresh=()=>({money:1000000,lifetime:1000000,empire:migrateProgression(undefined,start)});
 test('legacy and malformed progression fields migrate without unlocking rewards',()=>{
  const p=migrateProgression({career:Infinity,stores:[{level:-2},{level:Infinity},{level:99}],daily:{streak:'7'},event:null},start);
- assert.equal(p.career,0);assert.deepEqual(p.stores.map(s=>s.level),[0,0,10]);assert.equal(p.daily.streak,0);
- assert.deepEqual(migrateProgression(undefined,start).stores.map(s=>s.level),[0,0,0]);
+ assert.equal(p.career,0);assert.deepEqual(p.stores.map(s=>s.level),[0,0,10,0,0]);assert.equal(p.daily.streak,0);
+ assert.deepEqual(migrateProgression(undefined,start).stores.map(s=>s.level),[0,0,0,0,0]);
 });
 test('daily claims are once per UTC day, cycle after day seven, and reset after a missed day',()=>{
  const s=fresh(), initial=s.money;
