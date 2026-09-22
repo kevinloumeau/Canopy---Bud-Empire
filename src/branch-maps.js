@@ -28,9 +28,14 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
   function glow(x,y,z,size,color=lightColor){if(api.night)fixtures.push({x,y,z,size});const q=p(x,y,z),g=api.ctx.createRadialGradient(q.x,q.y,0,q.x,q.y,unit*size),a='45';g.addColorStop(0,color+a);g.addColorStop(.3,color+'24');g.addColorStop(.65,color+'0b');g.addColorStop(1,color+'00');api.ctx.save();api.ctx.globalCompositeOperation='screen';ellipse(q.x,q.y,unit*size,unit*size*.55,g);api.ctx.restore();}
   function planter(x,z,w=1.1,size=1.3,y=0){b(x,z,y,w,w,.55,wood);b(x,z,y+.55,w+.09,w+.09,.1,dark);if(style.plants===2){l([[x,y+.6,z],[x,y+.6+size,z]],'#79a67f',.18);l([[x-.3,y+size*.85,z],[x-.3,y+size*.5,z],[x+.3,y+size*.5,z],[x+.3,y+size,z]],'#79a67f',.13);}else plant(x,z,y+.6,size);if(projects[2]||style.plants===1){for(let k=0;k<5;k++){const xx=x-w*.35+k*w*.175,q=p(xx,y+.85+(k%2)*.12,z+w*.32);l([[xx,y+.63,z+w*.32],[xx,y+.85+(k%2)*.12,z+w*.32]],'#71925c',.025);ellipse(q.x,q.y,unit*.1,unit*.07,k%2?'#eccba1':'#c89388');}}}
   function tree(x,z,size=1){
+    // Soft canopy shadow pooling down-left of the trunk, matching the key light everything else obeys.
+    {const sh=p(x,.02,z);ellipse(sh.x-unit*.5*size,sh.y+unit*.12,unit*1.35*size,unit*.5*size,'#141f1826');}
     b(x,z,0,1.6,1.6,.28,cream);l([[x,.2,z],[x,3*size,z]],'#826243',.16);
     [-1,1].forEach(s=>l([[x,1.6*size,z],[x+s*.6*size,2.8*size,z+s*.25]],'#826243',.085));
-    for(let i=0;i<14;i++){const a=i*2.4,q=p(x+Math.cos(a)*(.5+i%3*.2)*size,2.8*size+(i%4)*.28,z+Math.sin(a)*.7*size);ellipse(q.x,q.y,unit*.64*size,unit*.47*size,['#648768','#88a675','#a2b780'][i%3]);}
+    // Wobbled canopy lobes with a few pointed leaves breaking the rim, instead of a cluster of perfect ovals.
+    const blob=api.blob||((bx,by,rx,ry,f)=>ellipse(bx,by,rx,ry,f));
+    for(let i=0;i<14;i++){const a=i*2.4,q=p(x+Math.cos(a)*(.5+i%3*.2)*size,2.8*size+(i%4)*.28,z+Math.sin(a)*.7*size);blob(q.x,q.y,unit*.64*size,unit*.47*size,['#648768','#88a675','#a2b780'][i%3],x*5.3+z*2.7+i,.16);}
+    if(api.leaf&&unit>=9)for(let i=0;i<6;i++){const a=i*1.05+x,q=p(x+Math.cos(a)*1.05*size,3.4*size+(i%3)*.3,z+Math.sin(a)*.85*size);api.leaf(q.x,q.y,unit*.28*size,a+.6,['#88a675','#a2b780'][i%2]);}
   }
   function bench(x,z,w=2.8,y=0){
     if(style.layout===1&&y===0){display(x,z,0,wood);return;}
@@ -131,8 +136,10 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
   function windowGrid(plane,at,a0,a1,y0,rows,cols,ph,pw,gapY,colors,seed=0){
     const span=a1-a0,step=(span-cols*pw)/(cols+1);
     for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
-      const s=a0+step+c*(pw+step),e=s+pw,y=y0+r*(ph+gapY),lit=colors[(r*7+c*3+seed)%colors.length];
-      poly(plane==='z'?[p(s,y,at),p(e,y,at),p(e,y+ph,at),p(s,y+ph,at)]:[p(at,y,s),p(at,y,e),p(at,y+ph,e),p(at,y+ph,s)],lit);
+      const s=a0+step+c*(pw+step),e=s+pw,y=y0+r*(ph+gapY),tone=colors[(r*7+c*3+seed)%colors.length];
+      const paint=()=>poly(plane==='z'?[p(s,y,at),p(e,y,at),p(e,y+ph,at),p(s,y+ph,at)]:[p(at,y,s),p(at,y,e),p(at,y+ph,e),p(at,y+ph,s)],tone);
+      // Warm panes register as emitters, so occupied windows keep glowing (and bloom) after dark.
+      if(api.lit&&parseInt(tone.slice(1,3),16)>=224)api.lit(paint,'pane');else paint();
     }
   }
   function shutters(x,z,y,w,h,color){[-1,1].forEach(s=>{b(x+s*(w/2+.17),z,y,.26,.08,h,color);for(let k=0;k<4;k++)l([[x+s*(w/2+.06),y+.15+k*(h-.3)/3,z+.05],[x+s*(w/2+.28),y+.15+k*(h-.3)/3,z+.05]],'#00000022',.02);});}
@@ -248,12 +255,25 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
   // Square lantern heads on short posts, the boardwalk's path lighting.
   function lanternPost(x,z,y=0){b(x,z,y,.14,.14,.85,dark);b(x,z,y+.85,.34,.34,.06,dark);b(x,z,y+.91,.26,.26,.3,['#ffefc4','#e0b76a','#f2cf8a']);b(x,z,y+1.21,.38,.38,.07,dark);glow(x,y+1.05,z,.7,'#ffc978');}
   // A dense, layered shrub: clustered leaf ellipses in three greens.
-  function bush(x,z,y,size=1){for(let i=0;i<9;i++){const a=i*2.2,q=p(x+Math.cos(a)*.35*size,y+.25*size+(i%3)*.16*size,z+Math.sin(a)*.3*size);ellipse(q.x,q.y,unit*.36*size,unit*.27*size,['#4f7a55','#6d9a62','#8fb478'][i%3]);}}
+  function bush(x,z,y,size=1){const blob=api.blob||((bx,by,rx,ry,f)=>ellipse(bx,by,rx,ry,f));
+    {const sh=p(x,y+.02,z);ellipse(sh.x-unit*.14*size,sh.y+unit*.05,unit*.52*size,unit*.2*size,'#141f1822');}for(let i=0;i<9;i++){const a=i*2.2,q=p(x+Math.cos(a)*.35*size,y+.25*size+(i%3)*.16*size,z+Math.sin(a)*.3*size);blob(q.x,q.y,unit*.36*size,unit*.27*size,['#4f7a55','#6d9a62','#8fb478'][i%3],x*4.1+z*6.3+i,.18);}}
+  // Seeded meadow scatter: sparse grass-blade tufts and occasional wildflower dots over a lawn slab. Drawn right
+  // after the slab, so paths and buildings painted later simply cover the tufts beneath them.
+  function meadow(x,z,w,d,n,seed,y=0,tones=['#5d7a54','#78946a','#87a473']){
+    if(!api.leaf||!api.noise||unit<7)return;
+    const ctx=api.ctx;
+    for(let i=0;i<n;i++){
+      const rx=x-w/2+api.noise(seed,i)*w,rz=z-d/2+api.noise(seed+40,i)*d,q=p(rx,y,rz);
+      if(api.noise(seed+80,i)<.1){ctx.fillStyle=['#d8d2a4','#cfdba8','#d8bfc6'][i%3];ctx.beginPath();ctx.arc(q.x,q.y-unit*.03,Math.max(.7,unit*.026),0,Math.PI*2);ctx.fill();}
+      else{const tone=tones[i%tones.length],len=unit*(.12+api.noise(seed+120,i)*.08);
+        api.leaf(q.x,q.y,len,-Math.PI/2-.4,tone);api.leaf(q.x,q.y,len*.85,-Math.PI/2+.45,tone);}
+    }
+  }
   // A dark timber planter box with a layered shrub, the boardwalk's edge planting.
   function planterBox(x,z,y=0,size=.9){b(x,z,y,.95,.95,.55,dark);b(x,z,y+.55,1.02,1.02,.06,dark);bush(x,z,y+.5,size*.75);}
   // Mediterranean dressing: climbing roses, potted cypresses and terracotta flower pots.
   function roseVine(x,z,y,length){vine(x,z,y,length);for(let i=0;i<7;i++){const q=p(x+(i%2?.16:-.12),y-i*length/7-.1,z+.01);ellipse(q.x,q.y,unit*.07,unit*.07,i%3?'#e5a2b0':'#f2d3da');}}
-  function cypress(x,z,size=1,y=0){b(x,z,y,.7,.7,.55,['#c98a63','#8a5638','#ad6f4b']);for(let i=0;i<7;i++){const t=i/6,q=p(x,y+.55+t*2.6*size,z);ellipse(q.x,q.y,unit*(.42-t*.3)*size,unit*(.36-t*.22)*size,['#3f6a48','#4f7c55','#5d8a5f'][i%3]);}}
+  function cypress(x,z,size=1,y=0){b(x,z,y,.7,.7,.55,['#c98a63','#8a5638','#ad6f4b']);const blob=api.blob||((bx,by,rx,ry,f)=>ellipse(bx,by,rx,ry,f));for(let i=0;i<7;i++){const t=i/6,q=p(x,y+.55+t*2.6*size,z);blob(q.x,q.y,unit*(.42-t*.3)*size,unit*(.36-t*.22)*size,['#3f6a48','#4f7c55','#5d8a5f'][i%3],x*4.7+z*3.9+i,.15);}}
   function flowerPot(x,z,size=1,y=0){b(x,z,y,.6*size,.6*size,.5*size,['#c98a63','#8a5638','#ad6f4b']);const c=p(x,y+.5*size,z);ellipse(c.x,c.y,unit*.36*size,unit*.22*size,'#5f8a5a');for(let i=0;i<6;i++){const a=i*1.05,q=p(x+Math.cos(a)*.2*size,y+.62*size+(i%2)*.08,z+Math.sin(a)*.18*size);ellipse(q.x,q.y,unit*.07*size,unit*.06*size,['#f2d3da','#e5a2b0','#f4e7b0'][i%3]);}}
   function lavenderBox(x,z,y=0){b(x,z,y,1.3,.6,.5,wood);for(let i=0;i<8;i++){const q=p(x-.5+i*.14,y+.72+(i%3)*.08,z+(i%2)*.18-.09);ellipse(q.x,q.y,unit*.07,unit*.16,i%2?'#a68ec9':'#8c74b4');l([[x-.5+i*.14,y+.5,z+(i%2)*.18-.09],[x-.5+i*.14,y+.68,z+(i%2)*.18-.09]],'#6f8a5f',.02);}}
   function oliveTree(x,z,y=0){b(x,z,y,.8,.8,.6,['#c98a63','#8a5638','#ad6f4b']);l([[x,y+.6,z],[x,y+1.5,z]],'#7a6a4e',.08);for(let i=0;i<8;i++){const a=i*2.4,q=p(x+Math.cos(a)*.35,y+1.5+(i%3)*.18,z+Math.sin(a)*.3);ellipse(q.x,q.y,unit*.3,unit*.22,['#8ea37e','#a9b98f','#7b8f6c'][i%3]);}}
@@ -302,6 +322,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     wood=['#cf9f62','#8a5f33','#b07f42'];dark=['#2f4237','#172620','#243529'];
     const stone=['#b9bba8','#6f7466','#9a9d8c'],grass=['#8aa07a','#4a6150','#6a8262'];
     b(-2.25,0,-.65,36.5,25,.5,grass);
+    meadow(-2.25,0,36.5,25,190,7,-.15);
     // Far bank: a gravel promenade with lamps and benches, a boathouse with racked kayaks, and a small fishing dock.
     patch(-17.7,0,1.5,25,'#b3ae93',-.14);
     for(let z=-11.5;z<12.5;z+=1.6)l([[-18.45,-.13,z],[-16.95,-.13,z+.3]],'#8e8a7233',.02);
@@ -759,6 +780,10 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     // Bougainvillea drapes in magenta over pergolas and walls.
     function bougainvillea(x,z,y,length){vine(x,z,y,length);for(let i=0;i<9;i++){const q=p(x+(i%2?.18:-.14),y-i*length/9-.06,z+.02);ellipse(q.x,q.y,unit*.09,unit*.08,i%3?'#d84f8c':'#ef7fb0');}}
     b(0,.5,-.55,34,25,.55,sand);
+    // Wind-scattered pebbles and darker scour patches, so the open sand reads as ground rather than fill.
+    if(api.noise)for(let i=0;i<170;i++){const rx=-17+api.noise(19,i)*34,rz=.5-12.5+api.noise(59,i)*25,q=p(rx,0,rz);
+      if(api.noise(99,i)<.18)ellipse(q.x,q.y,unit*(.16+api.noise(139,i)*.22),unit*.06,'#c4ad8033');
+      else ellipse(q.x,q.y,unit*(.028+api.noise(139,i)*.03),unit*.02,i%3?'#b79b6f':'#e2cfa2');}
     // A sun-washed gravel forecourt with paved walkways to the door.
     gravelBed(-12.5,-3,7,10);gravelBed(11,9,10,6);gravelBed(-4,10.5,12,3.5);
     for(let r=0;r<7;r++)for(let c=0;c<12;c++)patch(-5.5+c*1.05,3.1+r*1.05,.96,.96,(r+c)%3?'#d3bd8f':'#e0cda0',.016);
@@ -869,14 +894,20 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     wood=['#8a6a48','#54402c','#6f5439'];dark=['#33402f','#1c261a','#283321'];
     // A conifer: stacked, tapering foliage tiers over a short trunk, in deep pine greens.
     function pine(x,z,s=1,y=0){
+      {const sh=p(x,y+.02,z);ellipse(sh.x-unit*.35*s,sh.y+unit*.08,unit*.95*s,unit*.34*s,'#141f1824');}
       l([[x,y,z],[x,y+.8*s,z]],'#5c4632',.12*s);
-      for(let i=0;i<5;i++){const t=i/4,q=p(x,y+.7*s+t*2.5*s,z);ellipse(q.x,q.y,unit*(.95-t*.62)*s,unit*(.6-t*.36)*s,['#2f5a40','#3f7050','#51825c','#3a684a'][i%4]);}
+      const blob=api.blob||((bx,by,rx,ry,f)=>ellipse(bx,by,rx,ry,f));
+      for(let i=0;i<5;i++){const t=i/4,q=p(x,y+.7*s+t*2.5*s,z),rx=unit*(.95-t*.62)*s,ry=unit*(.6-t*.36)*s,tone=['#2f5a40','#3f7050','#51825c','#3a684a'][i%4];
+        blob(q.x,q.y,rx,ry,tone,x*3.3+z*5.7+i,.2);
+        // Drooping branch tips off each tier's rim, so the stack reads as boughs rather than discs.
+        if(api.leaf&&unit>=8)[-1,1].forEach(k=>api.leaf(q.x+k*rx*.7,q.y+ry*.2,rx*.5,k>0?.5:Math.PI-.5,tone));
+      }
       const tip=p(x,y+3.45*s,z);ellipse(tip.x,tip.y,unit*.14*s,unit*.2*s,'#51825c');
     }
     function boulder(x,z,s=1,y=0){
       const q=p(x,y+.3*s,z);
       ellipse(q.x,q.y+unit*.24*s,unit*.68*s,unit*.24*s,'#1a241c2e');
-      ellipse(q.x,q.y,unit*.62*s,unit*.44*s,'#7e7a6a');
+      (api.blob||ellipse)(q.x,q.y,unit*.62*s,unit*.44*s,'#7e7a6a',x*6.1+z*4.9,.1);
       ellipse(q.x-unit*.15*s,q.y-unit*.12*s,unit*.42*s,unit*.28*s,'#98937f');
       ellipse(q.x+unit*.2*s,q.y-unit*.02*s,unit*.3*s,unit*.2*s,'#aba590');
       ellipse(q.x-unit*.05*s,q.y-unit*.26*s,unit*.22*s,unit*.13*s,'#bdb7a2');
@@ -888,6 +919,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
       [[a[0],a[2]],[c[0],c[2]]].forEach(([bx,bz])=>{const q=p(bx,.02,bz);ellipse(q.x,q.y,unit*.24,unit*.1,'#1a241c33');});
     }
     b(0,.5,-.55,34,25,.55,grass);
+    meadow(0,.5,34,25,190,11,0,['#55744e','#6c8a60','#7c9a6a']);
     // The tree line along the rear edge is painted first: everything built later stands in front of it.
     [[-16.2,-9.3,1.3],[-14,-9.6,1.05],[-11.3,-9.2,1.2],[-8.3,-9.5,.9],[-5.6,-9.8,1.1],[1.6,-9.7,1],[5.9,-9.9,.85],[12.4,-9.4,1.25],[15.8,-8.6,1]].forEach(([x,z,sz])=>pine(x,z,sz));
     // The dirt drive hugs the left edge from the road up to the rear parking; log kerbs hold its bends.

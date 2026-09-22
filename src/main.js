@@ -150,7 +150,13 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     '</svg>';
   }
   // A thumbnail bud in the strain's colours for legend tiles.
-  function strainBud(i){var c=STRAINS[i].color,d=shadeColor(c,.7),l=shadeColor(c,1.2);return '<svg viewBox="0 0 20 20" aria-hidden="true"><ellipse cx="10" cy="14" rx="6" ry="4.5" fill="'+d+'"/><ellipse cx="6.5" cy="10.5" rx="4.2" ry="3.6" fill="'+c+'"/><ellipse cx="13.5" cy="10.5" rx="4.2" ry="3.6" fill="'+c+'"/><ellipse cx="10" cy="7" rx="4" ry="3.8" fill="'+l+'"/><ellipse cx="10" cy="11.5" rx="3.6" ry="3" fill="'+c+'"/></svg>'}
+  function strainBud(i){var c=STRAINS[i].color,d=shadeColor(c,.7),l=shadeColor(c,1.2),pk=(STRAIN_LOOKS[i]||{}).pistil||'#e8a25f';return '<svg viewBox="0 0 20 20" aria-hidden="true">'+
+    '<path d="M10 17.5C6.4 16.2 4.8 13.4 5.7 10.4C8.7 11.9 10 14.1 10 17.5Z" fill="'+d+'"/>'+
+    '<path d="M10 17.5C13.6 16.2 15.2 13.4 14.3 10.4C11.3 11.9 10 14.1 10 17.5Z" fill="'+c+'"/>'+
+    '<path d="M9.6 13.8C6.8 12.6 5.8 10.2 6.8 7.6C9.1 9.1 9.9 11.1 9.6 13.8Z" fill="'+c+'"/>'+
+    '<path d="M10.4 13.8C13.2 12.6 14.2 10.2 13.2 7.6C10.9 9.1 10.1 11.1 10.4 13.8Z" fill="'+c+'"/>'+
+    '<path d="M10 12.4C8.3 10 8.4 7 10 4.6C11.6 7 11.7 10 10 12.4Z" fill="'+l+'"/>'+
+    '<path d="M8 8.4c-1-.8-1.2-2-.6-3.1M12.1 8.9c1-.8 1.3-2 .7-3.1" fill="none" stroke="'+pk+'" stroke-width="1" stroke-linecap="round"/></svg>'}
   // Sun for sativa, moon for indica, a half disc for hybrid.
   function typeGlyph(type,large){var cls='type-glyph'+(large?' is-large':'');if(type===strains.SATIVA)return '<svg class="'+cls+'" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>';if(type===strains.INDICA)return '<svg class="'+cls+'" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 3a8.5 8.5 0 1 0 6.5 13.5A9 9 0 0 1 14.5 3Z"/></svg>';return '<svg class="'+cls+'" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 4a8 8 0 0 1 0 16Z"/></svg>'}
   var flowerFocus=0;
@@ -709,15 +715,58 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   function drawBox(x,z,y,w,d,h,palette){var p=palette||[colors.oliveTop,colors.oliveLeft,colors.oliveRight],b0=project(x-w/2,y,z-d/2),b1=project(x+w/2,y,z-d/2),b2=project(x+w/2,y,z+d/2),b3=project(x-w/2,y,z+d/2);
     // Furniture-sized boxes resting on a floor or counter cast; slabs, walls, rails and trim do not.
-    if(h>=.2&&h<=3.2&&w>=.15&&d>=.15&&w<=5&&d<=5&&y>=-.05&&y<=1.6)castShadow([b0,b1,b2,b3],h,.13);
+    var furniture=h>=.2&&h<=3.2&&w>=.15&&d>=.15&&w<=5&&d<=5&&y>=-.05&&y<=1.6;
+    // Repeated furniture stops sharing pixel-identical fills: a tint nudge seeded by a coarse floor cell, so one
+    // machine's parts stay matched while its twin across the room drifts a shade. Quantized to keep the shade and
+    // gradient caches small; architecture keeps exact colours so adjacent slabs join seamlessly.
+    if(furniture&&isHexColor(p[0])&&isHexColor(p[1])&&isHexColor(p[2])){
+      var tint=1+(seedNoise(Math.round(x/2)*3.7,Math.round(z/2)*2.9)-.5)*.06;tint=Math.round(tint*50)/50;
+      if(tint!==1)p=[shadeColor(p[0],tint),shadeColor(p[1],tint),shadeColor(p[2],tint)]}
+    if(furniture)castShadow([b0,b1,b2,b3],h,.13);
     // Tall architecture gets a short contact shadow at its base: grounding without long streaks into interiors.
     else if(h>3.2&&h<=15&&w>=.5&&d>=.5&&w<=20&&d<=20&&y>=-.2&&y<=.1)castShadow([b0,b1,b2,b3],1.1,.09);
     var t0=project(x-w/2,y+h,z-d/2),t1=project(x+w/2,y+h,z-d/2),t2=project(x+w/2,y+h,z+d/2),t3=project(x-w/2,y+h,z+d/2);
     var f1=Math.cos(angle)>=0?[b3,b2,t2,t3]:[b0,b1,t1,t0],f2=Math.sin(angle)>=0?[b2,b1,t1,t2]:[b3,b0,t0,t3],deep=h>=.45&&w>=.2&&d>=.2;
-    poly(f1,deep&&isHexColor(p[1])?litSide(f1,p[1]):p[1],w<.1||d<.04?null:'#ffffff28');poly(f2,deep&&isHexColor(p[2])?litSide(f2,p[2]):p[2],w<.1||d<.04?null:'#ffffff28');poly([t0,t1,t2,t3],w>=.6&&d>=.6&&isHexColor(p[0])?litTop([t0,t1,t2,t3],p[0]):p[0],w<.1||d<.04?null:'#ffffff28',isHexColor(p[0]));
-    // Material grain on the big surfaces only: walls taller than a person, and slab tops the size of a room.
+    poly(f1,deep&&isHexColor(p[1])?litSide(f1,p[1]):p[1]);poly(f2,deep&&isHexColor(p[2])?litSide(f2,p[2]):p[2]);
+    var topPts=[t0,t1,t2,t3],tcx=(t0.x+t1.x+t2.x+t3.x)/4,tcy=(t0.y+t1.y+t2.y+t3.y)/4;
+    // Furniture tops get a bevel: the rim a shade lighter than the inset surface, so edges read rounded, not razor.
+    var bevel=furniture&&w>=.3&&d>=.3&&h>=.15&&isHexColor(p[0])&&unit>=14;
+    if(bevel){
+      // The rim is lit directionally — dim on the shadow side, bright toward the key light — so it reads as a
+      // rounded lip rather than an outline ring, especially on pale counter tops.
+      var rimLo=Math.min(t0.x,t1.x,t2.x,t3.x),rimHi=Math.max(t0.x,t1.x,t2.x,t3.x),rimBase=p[0];
+      poly(topPts,cachedGradient(rimBase+'|r|'+q4(rimLo)+'|'+q4(rimHi),function(){var g=ctx.createLinearGradient(rimLo,0,rimHi,0);g.addColorStop(0,shadeColor(rimBase,.94));g.addColorStop(.55,shadeColor(rimBase,1.03));g.addColorStop(1,shadeColor(rimBase,1.14));return g}),null,true);
+      var bpx=Math.max(1,Math.min(2.4,unit*.05));
+      var inner=topPts.map(function(q){var dx=q.x-tcx,dy=q.y-tcy,len=Math.hypot(dx,dy)||1,f=Math.max(0,1-bpx/len);return{x:tcx+dx*f,y:tcy+dy*f}});
+      poly(inner,w>=.6&&d>=.6?litTop(inner,p[0]):p[0]);
+      // Faint stone veining on large pale slab tops (service counters, benches) once close enough to read it.
+      var lum=(parseInt(p[0].slice(1,3),16)*.3+parseInt(p[0].slice(3,5),16)*.59+parseInt(p[0].slice(5,7),16)*.11);
+      if(unit>=22&&lum>=210&&w*d>=1.2){
+        var vseed=Math.round(x*13.7+z*7.1);
+        ctx.save();ctx.beginPath();ctx.moveTo(inner[0].x,inner[0].y);ctx.lineTo(inner[1].x,inner[1].y);ctx.lineTo(inner[2].x,inner[2].y);ctx.lineTo(inner[3].x,inner[3].y);ctx.closePath();ctx.clip();
+        ctx.strokeStyle='rgba(140,150,142,.13)';ctx.lineWidth=Math.max(.5,unit*.013);ctx.lineCap='round';
+        for(var vein=0;vein<2;vein++){
+          var u1=.15+seedNoise(vseed,vein)*.7,u2=.15+seedNoise(vseed,vein+7)*.7;
+          var vs={x:inner[0].x+(inner[3].x-inner[0].x)*u1,y:inner[0].y+(inner[3].y-inner[0].y)*u1};
+          var ve={x:inner[1].x+(inner[2].x-inner[1].x)*u2,y:inner[1].y+(inner[2].y-inner[1].y)*u2};
+          ctx.beginPath();ctx.moveTo(vs.x,vs.y);ctx.quadraticCurveTo((vs.x+ve.x)/2,(vs.y+ve.y)/2+(seedNoise(vseed,vein+13)-.5)*unit*.3,ve.x,ve.y);ctx.stroke();
+        }
+        ctx.restore();
+      }
+    }else poly(topPts,w>=.6&&d>=.6&&isHexColor(p[0])?litTop(topPts,p[0]):p[0],null,isHexColor(p[0]));
+    // Instead of tracing the whole wireframe, only the top edges facing the key light (upper right) catch a
+    // highlight; the dark side is defined by shading and contact shadows alone.
+    if(!(w<.1||d<.04)&&h>=.1){
+      ctx.beginPath();
+      for(var e=0;e<4;e++){var ea=topPts[e],eb=topPts[(e+1)%4];if((ea.x+eb.x)/2-tcx-((ea.y+eb.y)/2-tcy)>0){ctx.moveTo(ea.x,ea.y);ctx.lineTo(eb.x,eb.y)}}
+      ctx.strokeStyle='#ffffff30';ctx.lineWidth=Math.max(.4,Math.min(1,unit*.021));ctx.lineCap='round';ctx.stroke();
+    }
+    // Material grain: full strength on walls taller than a person and room-sized slab tops, fainter on mid-size
+    // furniture faces, so nothing large reads as flat vector fill.
     if(h>=1.6&&(w>=1.4||d>=1.4)){var tex=surfaceTexture();poly(f1,tex);poly(f2,tex)}
-    if(w>=6&&d>=6)poly([t0,t1,t2,t3],surfaceTexture())}
+    else if(h>=.8&&(w>=.8||d>=.8)){var mid=surfaceTexture();ctx.save();ctx.globalAlpha*=.55;poly(f1,mid);poly(f2,mid);ctx.restore()}
+    if(w>=6&&d>=6)poly(topPts,surfaceTexture());
+    else if(w>=2.5&&d>=2.5){ctx.save();ctx.globalAlpha*=.5;poly(topPts,surfaceTexture());ctx.restore()}}
   // Vertical falloff on box sides: lit at the top edge, settling darker toward the ground.
   // A neutral mottled grain tile, overlaid at low alpha on large faces so walls and ground read as material
   // rather than flat vector fill. The pattern is anchored to the world (translated and scaled with the camera),
@@ -753,7 +802,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // so the floors do not turn into a grid of glowing lines; spill (glows and cones) stays out of the buffer entirely,
   // since the light map already lifts what it lands on. `draw(k)` receives the strength, for painters that set their
   // own layer alphas.
-  var nightScene=false,emissiveCtx=null,litDepth=0,EMISSIVE_WEIGHT={face:1,strip:.18};
+  var nightScene=false,emissiveCtx=null,litDepth=0,EMISSIVE_WEIGHT={face:1,strip:.18,pane:.26};
   function lit(draw,kind){
     kind=kind||'face';litDepth++;draw(1);litDepth--;
     if(nightScene&&litDepth===0&&kind!=='spill'){var scene=ctx,weight=EMISSIVE_WEIGHT[kind];ctx=emissiveCtx;ctx.save();ctx.globalAlpha=scene.globalAlpha*weight;litDepth++;draw(weight);litDepth--;ctx.restore();ctx=scene}
@@ -993,12 +1042,39 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       ctx.fillStyle=cachedGradient(fill+'|e|'+q4(x)+'|'+q4(y)+'|'+q4(rx)+'|'+q4(ry),function(){var g=ctx.createRadialGradient(x-rx*.3,y-ry*.4,0,x,y,Math.max(rx,ry));g.addColorStop(0,fill);g.addColorStop(.6,fill);g.addColorStop(1,shadeColor(fill,.79));return g});
     }else ctx.fillStyle=fill;ctx.fill();
   }
+  // Deterministic 0..1 noise from a world identity, so organic wobble is stable frame to frame and while panning.
+  function seedNoise(a,b){var n=Math.sin(a*127.1+(b||0)*311.7)*43758.5453;return n-Math.floor(n)}
+  // A hand-drawn ellipse: eight seeded lobes joined by quadratics, for foliage, soil and other soft silhouettes.
+  // Shading and occlusion match ellipse(); amp is the radius wobble (default ±14%).
+  function blobEllipse(x,y,rx,ry,fill,seed,amp){
+    amp=amp===undefined?.14:amp;
+    if(occluding()&&rx>=unit*.04&&isHexColor(fill))occludeEllipse(x,y,rx,ry);
+    var pts=new Array(8);
+    for(var i=0;i<8;i++){var a=i*Math.PI/4,k=1+(seedNoise(seed,i)-.5)*2*amp;pts[i]={x:x+Math.cos(a)*rx*k,y:y+Math.sin(a)*ry*k}}
+    ctx.beginPath();ctx.moveTo((pts[7].x+pts[0].x)/2,(pts[7].y+pts[0].y)/2);
+    for(var j=0;j<8;j++){var n=pts[(j+1)%8];ctx.quadraticCurveTo(pts[j].x,pts[j].y,(pts[j].x+n.x)/2,(pts[j].y+n.y)/2)}
+    ctx.closePath();
+    if(isHexColor(fill)&&rx>unit*.11){
+      ctx.fillStyle=cachedGradient(fill+'|e|'+q4(x)+'|'+q4(y)+'|'+q4(rx)+'|'+q4(ry),function(){var g=ctx.createRadialGradient(x-rx*.3,y-ry*.4,0,x,y,Math.max(rx,ry)*(1+amp));g.addColorStop(0,fill);g.addColorStop(.6,fill);g.addColorStop(1,shadeColor(fill,.79));return g});
+    }else ctx.fillStyle=fill;ctx.fill();
+  }
+  // A pointed leaf or calyx in screen space: two quadratics from base to tip, fat in the middle.
+  function leafShape(px,py,len,ang,fill){
+    var ca=Math.cos(ang),sa=Math.sin(ang),tx=px+ca*len,ty=py+sa*len,mx=px+ca*len*.45,my=py+sa*len*.45,wx=-sa*len*.36,wy=ca*len*.36;
+    ctx.beginPath();ctx.moveTo(px,py);ctx.quadraticCurveTo(mx+wx,my+wy,tx,ty);ctx.quadraticCurveTo(mx-wx,my-wy,px,py);
+    ctx.fillStyle=fill;ctx.fill();
+  }
   var shadeCache=new Map();
   function shadeColor(hex,factor){var key=hex+':'+factor;if(shadeCache.has(key))return shadeCache.get(key);var result='#'+[1,3,5].map(function(i){return Math.min(255,Math.round(parseInt(hex.slice(i,i+2),16)*factor)).toString(16).padStart(2,'0')}).join('');shadeCache.set(key,result);return result}
   function landscapeTree(x,z,size){
     var root=project(x,.06,z);ellipse(root.x+unit*.45,root.y+unit*.12,unit*size*.9,unit*size*.38,'#31544225');
     worldLine([[x,0,z],[x,2.1*size,z]],'#977550',.15);
-    [[-.45,2.15,.72],[.45,2.35,.83],[0,2.85,.9]].forEach(function(c){var p=project(x+c[0]*size,c[1]*size,z);ellipse(p.x,p.y,unit*c[2]*size,unit*c[2]*size*1.08,c[0]<0?'#82b64f':c[0]>0?'#a6cf67':'#b8dc78')});
+    // The canopy is three wobbled lobes rather than perfect circles, with a few pointed leaves escaping the rim.
+    var seed=x*7.3+z*3.1;
+    [[-.45,2.15,.72],[.45,2.35,.83],[0,2.85,.9]].forEach(function(c,k){var p=project(x+c[0]*size,c[1]*size,z);blobEllipse(p.x,p.y,unit*c[2]*size,unit*c[2]*size*1.08,c[0]<0?'#82b64f':c[0]>0?'#a6cf67':'#b8dc78',seed+k*5,.13)});
+    if(unit>=10){var crown=project(x,2.85*size,z),cr=unit*.9*size;
+      for(var leaf=0;leaf<5;leaf++){var a=-2.5+leaf*1.25+(seedNoise(seed,leaf+20)-.5)*.7;
+        leafShape(crown.x+Math.cos(a)*cr*.88,crown.y+Math.sin(a)*cr*.95,cr*(.3+seedNoise(seed,leaf+30)*.15),a+(seedNoise(seed,leaf+40)-.5)*.6,leaf%2?'#a6cf67':'#8cc058')}}
   }
   function visibleStrain(slot){var menu=menuStrains();return menu[Math.abs(slot)%menu.length]}
   function stationWorking(i){return state.lines[i]>0&&(i<4?(i===0||state.stock[i-1]>0)&&state.stock[i]<storageCapacity():work[i]>0)}
@@ -1013,16 +1089,19 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     plant(x,z,y,.2+growth*[.95,.78,1.1,.7][strain],strain,growth);
   }
   function flowerBud(x,z,y,strain,size){
-    var p=project(x,y,z),r=unit*(size||.13),color=STRAINS[strain].color;
-    ellipse(p.x-r*.35,p.y+r*.1,r*.65,r*.8,shadeColor(color,.8));
-    ellipse(p.x+r*.35,p.y,r*.65,r*.85,color);
-    ellipse(p.x,p.y-r*.5,r*.6,r*.75,color);
-    worldLine([[x-.025,y+.035,z],[x+.035,y+.1,z]],strain===1?'#f0d4a0':'#e4d3b0',.018);
+    var p=project(x,y,z),r=unit*(size||.13),color=STRAINS[strain].color,dark=shadeColor(color,.8),light=shadeColor(color,1.16);
+    // Stacked calyxes narrowing toward the tip, so buds read as flowers rather than oval clusters.
+    [[-.38,.62,-.5,1.15,dark],[.38,.58,.5,1.2,color],[-.2,.28,-.26,1.05,color],[.22,.24,.3,1,color],[0,.12,0,1.1,light]].forEach(function(c){
+      leafShape(p.x+c[0]*r,p.y+c[1]*r,r*c[3]*1.2,-Math.PI/2+c[2],c[4])});
+    if(r>=2.6){var pistil=(STRAIN_LOOKS[strain]||{}).pistil||'#e8a25f';
+      ctx.strokeStyle=pistil;ctx.lineWidth=Math.max(.5,r*.13);ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(p.x-r*.3,p.y-r*.25);ctx.quadraticCurveTo(p.x-r*.62,p.y-r*.5,p.x-r*.5,p.y-r*.78);
+      ctx.moveTo(p.x+r*.32,p.y-r*.4);ctx.quadraticCurveTo(p.x+r*.62,p.y-r*.56,p.x+r*.52,p.y-r*.9);ctx.stroke()}
   }
   function plant(x,z,y,size,strain,growth){
     var base=project(x,y,z),rim=project(x,y+.38,z),r=unit*.3;
     poly([{x:rim.x-r,y:rim.y},{x:rim.x+r,y:rim.y},{x:base.x+r*.72,y:base.y},{x:base.x-r*.72,y:base.y}],'#b67d59');
-    ellipse(base.x,base.y,r*.72,r*.24,'#8b583f');ellipse(rim.x,rim.y,r*1.1,r*.48,'#e8b38a');ellipse(rim.x,rim.y,r*.84,r*.32,'#46382c');
+    ellipse(base.x,base.y,r*.72,r*.24,'#8b583f');ellipse(rim.x,rim.y,r*1.1,r*.48,'#e8b38a');blobEllipse(rim.x,rim.y,r*.84,r*.32,'#46382c',x*5.1+z*7.7,.1);
     var sway=motionPreference.matches?0:Math.sin(sceneTime*.0013+x+z)*.045;
     var top=project(x+sway,y+.45+size,z);
     ctx.beginPath();ctx.moveTo(rim.x,rim.y);ctx.lineTo(top.x,top.y);ctx.strokeStyle='#86b96b';ctx.lineWidth=Math.max(1,unit*.045);ctx.stroke();
@@ -1134,7 +1213,11 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function stationDetails(x,z,i,now){
     var brass=['#d6c18a','#8c784d','#b7a16a'],metal=['#d9e5da','#708f80','#a2baaa'];
     if(i===0){
-      for(var row=0;row<2;row++)for(var col=0;col<3;col++){var sx=x-.72+col*.72,sz=z-.37+row*.72;drawBox(sx,sz,1.42,.54,.5,.08,['#5c4e37','#353b2b','#434c34']);var q=project(sx,1.54,sz);ellipse(q.x,q.y,unit*.07,unit*.05,'#c6d988');worldLine([[sx,1.52,sz],[sx+.07,1.69,sz]],'#85b867',.03)}
+      for(var row=0;row<2;row++)for(var col=0;col<3;col++){var sx=x-.72+col*.72,sz=z-.37+row*.72;drawBox(sx,sz,1.42,.54,.5,.08,['#5c4e37','#353b2b','#434c34']);var q=project(sx,1.54,sz);
+        // A sprout with two pointed cotyledons rather than a dot on a stick.
+        worldLine([[sx,1.5,sz],[sx+.03,1.64,sz]],'#85b867',.026);
+        leafShape(q.x,q.y-unit*.1,unit*.1,Math.PI*1.22,'#c6d988');
+        leafShape(q.x+unit*.01,q.y-unit*.11,unit*.11,-Math.PI*.28,'#a9cc6e')}
       drawBox(x-1.23,z-.72,1.33,.33,.12,.52,['#ebd8ab','#ae9970','#d0b98a']);
       drawBox(x+1.12,z+.52,1.33,.4,.4,.46,metal);
       worldLine([[x+1.28,1.6,z+.5],[x+1.57,1.78,z+.55]],'#bdd3bd',.06);
@@ -1901,7 +1984,11 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     ellipse(canopy.x,canopy.y,unit*.11,unit*.055,'#b7a16d');
     worldLine([[x,soffitY-.02,z],[x,globeY+.3,z]],'#c9ab6a',.028);
     glow(g.x,g.y,unit*.85,'#ffe9bb60',unit*.85);
-    litEllipse(g.x,g.y,unit*.31,unit*.31,'#fff7e0');litEllipse(g.x-unit*.09,g.y-unit*.1,unit*.11,unit*.09,'#ffffffb0');
+    // A frosted sphere rather than a flat disc: amber rim, cream body, an upper-left bloom and a small specular.
+    litEllipse(g.x,g.y,unit*.31,unit*.31,'#e9cd9c');
+    litEllipse(g.x-unit*.025,g.y-unit*.035,unit*.275,unit*.27,'#fff3d2');
+    litEllipse(g.x-unit*.08,g.y-unit*.1,unit*.165,unit*.15,'#fffdf0');
+    litEllipse(g.x-unit*.105,g.y-unit*.125,unit*.065,unit*.05,'#ffffff');
     var floor=project(x,.02,z);glow(floor.x,floor.y,unit*1.3,'#ffe6b022',unit*.6);
   }
   function archedServiceSign(x,label,compact){
@@ -2225,6 +2312,12 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(nt<1){ctx.save();ctx.globalAlpha=1-nt;glow(halo.x,halo.y-unit*4,unit*24,'#98a88626');ctx.restore()}
     if(nt>0){ctx.save();ctx.globalAlpha=nt;glow(halo.x,halo.y-unit*4,unit*22,'#4b6a6a34');ctx.restore()}
     var vignette=ctx.createRadialGradient(width/2,height/2,0,width/2,height/2,Math.max(width,height)*.8);vignette.addColorStop(0,'rgba(18,26,20,0)');vignette.addColorStop(.4,'rgba(18,26,20,.05)');vignette.addColorStop(.7,'rgba(18,26,20,.22)');vignette.addColorStop(1,'rgba(18,26,20,.48)');ctx.fillStyle=vignette;ctx.fillRect(0,0,width,height);
+    // Depth in the void: a vast soft lift toward the key light's corner and a cooler settle low on the left,
+    // anchored to the world so they drift with the pan, so the field behind the diorama reads as atmosphere.
+    var lift=project(15,7,-9),liftC=parseHex(mixHex('#93a184','#31404b',nt));
+    ellipse(lift.x,lift.y,unit*27,unit*16,softRadial(lift.x,lift.y,unit*27,liftC,.09));
+    var settle=project(-17,0,13),settleC=parseHex(mixHex('#1e2b24','#0c1216',nt));
+    ellipse(settle.x,settle.y,unit*21,unit*13,softRadial(settle.x,settle.y,unit*21,settleC,.14));
     var stone=['#c9c7b5','#737c70','#9fa796'],wood=['#bc9d73','#6f5943','#998063'],green=['#698775','#314b40','#496a56'],metal=['#414440','#191e1c','#2b302d'];
     // Contact shadow: one soft radial pool under the slab, biased toward the front-left, with no polygon edges to read as lines.
     var pool=project(0,-.33,1),shadowGradient=ctx.createRadialGradient(pool.x-unit*1.4,pool.y+unit*1.2,0,pool.x-unit*1.4,pool.y+unit*1.2,unit*23);
@@ -2300,7 +2393,10 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
           var a=outline[edge],b=outline[(edge+1)%outline.length];
           if((b[0]===a[0]&&b[1]>a[1])||(b[1]===a[1]&&b[0]<a[0]))poly([project(a[0],-.24,a[1]),project(b[0],-.24,b[1]),project(b[0],0,b[1]),project(a[0],0,a[1])],b[0]===a[0]?finish[2]:finish[1]);
         }
-        poly(outline.map(function(p){return project(p[0],0,p[1])}),finish[0]);
+        var slabTop=outline.map(function(p){return project(p[0],0,p[1])});
+        poly(slabTop,finish[0]);
+        // The same material grain the walls carry, so the wide slab tops don't read as flat vector fill.
+        ctx.save();ctx.globalAlpha*=.75;poly(slabTop,surfaceTexture());ctx.restore();
       }
       if(fi>0){
         // Warm oak fascia with a slim black steel edge beneath each mezzanine.
@@ -2804,13 +2900,18 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
 
     function post(x,z){jobs.push({depth:depthOf({x:x,z:z}),draw:function(){
       var base=project(x,.05,z),cap=project(x,.85,z);
+      // The post's cast shadow leans down-left with the key light before its brass base goes down.
+      ellipse(base.x-unit*.17,base.y+unit*.055,unit*.24,unit*.07,'#14201824');
       ellipse(base.x,base.y,unit*.2,unit*.09,'#8a805b');
       worldLine([[x,.06,z],[x,.85,z]],'#c5b382',.065);ellipse(cap.x,cap.y,unit*.095,unit*.08,'#eddaad');
     }})}
     function rope(x1,z1,x2,z2){
       for(var segment=0;segment<12;segment++)(function(t0,t1){
         var x0=x1+(x2-x1)*t0,z0=z1+(z2-z1)*t0,x=x1+(x2-x1)*t1,z=z1+(z2-z1)*t1;
-        jobs.push({depth:depthOf({x:(x0+x)/2,z:(z0+z)/2}),draw:function(){worldLine([[x0,.77-.34*t0*(1-t0),z0],[x,.77-.34*t1*(1-t1),z]],'#365846',.07)}});
+        jobs.push({depth:depthOf({x:(x0+x)/2,z:(z0+z)/2}),draw:function(){
+          // The rope's soft shadow lies on the floor, displaced down-left like every other cast shadow.
+          worldLine([[x0-.14,.012,z0+.08],[x-.14,.012,z+.08]],'#1420181c',.06);
+          worldLine([[x0,.77-.62*t0*(1-t0),z0],[x,.77-.62*t1*(1-t1),z]],'#365846',.07)}});
       })(segment/12,(segment+1)/12);
     }
     // Rails that meet share one post.
@@ -3101,9 +3202,10 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     sceneTime=motionPreference.matches?0:now;
     if(state.empire.activeStore){
       sceneElevation=0;
-      drawBranchMap({get ctx(){return ctx},width:width,height:height,unit:unit,project:project,box:drawBox,line:worldLine,poly:poly,ellipse:ellipse,plant:plant,jar:jar,carton:carton,person:drawPerson,depth:depthOf,backdrop:branchBackdrop,night:nightAmount()>0?branchNight:null},state.empire.activeStore-1,state.empire.stores[state.empire.activeStore-1].level,motionPreference.matches?0:now,state.empire.stores[state.empire.activeStore-1].projects,{lighting:visualLight(),store:state.empire.stores[state.empire.activeStore-1],event:eventStatus(state.empire),rewards:state.empire.rewards,network:state.empire.network,neighborhood:neighborhood(state.empire,state.empire.activeStore-1)});
+      drawBranchMap({get ctx(){return ctx},width:width,height:height,unit:unit,project:project,box:drawBox,line:worldLine,poly:poly,ellipse:ellipse,blob:blobEllipse,leaf:leafShape,noise:seedNoise,lit:lit,plant:plant,jar:jar,carton:carton,person:drawPerson,depth:depthOf,backdrop:branchBackdrop,night:nightAmount()>0?branchNight:null},state.empire.activeStore-1,state.empire.stores[state.empire.activeStore-1].level,motionPreference.matches?0:now,state.empire.stores[state.empire.activeStore-1].projects,{lighting:visualLight(),store:state.empire.stores[state.empire.activeStore-1],event:eventStatus(state.empire),rewards:state.empire.rewards,network:state.empire.network,neighborhood:neighborhood(state.empire,state.empire.activeStore-1)});
       // Main-store effects expire while visiting a branch rather than replaying on return.
       particles.forEach(function(p){p.life-=frameDelta*1.5});particles=particles.filter(function(p){return p.life>0});deliveryDrones.forEach(function(d){d.age+=frameDelta});deliveryDrones=deliveryDrones.filter(function(d){return d.age<d.delay+7.5});
+      atmosphereFinish(nightAmount());
       glCompose(now);updateBranchMarker();requestAnimationFrame(render);return;
     }
     drawTower(now);
@@ -3233,7 +3335,17 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     }
     for(var i=particles.length-1;i>=0;i--){var p=particles[i];p.life-=frameDelta*1.5;if(!motionPreference.matches){p.x+=p.vx*frameDelta;p.z+=p.vz*frameDelta;p.y+=p.vy*frameDelta;}p.vy-=frameDelta*5;var screen=project(p.x,p.y,p.z),size=Math.max(2,unit*.1);ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.fillRect(screen.x-size/2,screen.y-size/2,size,size);ctx.globalAlpha=1;if(p.life<=0)particles.splice(i,1)}
     drawTickets(frameDelta);drawConfetti(wallDelta);
+    atmosphereFinish(nightT);
     glCompose(now);updateMarkers();requestAnimationFrame(render);
+  }
+  // A final pass over the composed frame: at day a faint warm wash from the key light's corner ties the palette
+  // together, and a whisper of world-anchored grain keeps large flat fills reading as material at every zoom.
+  function atmosphereFinish(nightT){
+    if(nightT<1){
+      var sun=cachedGradient('sun|'+q4(width)+'|'+q4(height),function(){var g=ctx.createLinearGradient(width,0,width*.25,height*.8);g.addColorStop(0,'rgba(255,233,190,.075)');g.addColorStop(.5,'rgba(255,233,190,.02)');g.addColorStop(1,'rgba(255,233,190,0)');return g});
+      ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=1-nightT;ctx.fillStyle=sun;ctx.fillRect(0,0,width,height);ctx.restore();
+    }
+    ctx.save();ctx.globalAlpha=.05;ctx.fillStyle=surfaceTexture();ctx.fillRect(0,0,width,height);ctx.restore();
   }
   function drawDeliveryDrones(dt,now){
     for(var i=deliveryDrones.length-1;i>=0;i--){

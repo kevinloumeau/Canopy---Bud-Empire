@@ -192,3 +192,19 @@ Page-only additions, kept to the page:
 - **Facts row.** Beneath the hero actions, DM Mono .8rem uppercase lime items with a 6px lime dot and soft halo — the mono label register the sheet already uses (BOTTLENECK, GROW ROOM).
 
 Buttons on the page are 46px tall (54px large, 40px in the top bar) at 16/18/13px radii; `--radius-sm` (18px) is the crop radius. The install section pairs a smaller 3°-tilted phone frame with the real home-screen icon on a glass tile, and the chapter list is titles only in two columns. Nothing here changes the game's own rules.
+
+## Organic graphics language
+
+The renderer's geometry is softened everywhere rather than per prop, all seeded deterministically (`seedNoise` of a world identity) so nothing shimmers between frames or while panning:
+
+- **Light-aware edges, not wireframes.** `drawBox` no longer outlines every face; only the top edges facing the key light catch a `#ffffff30` highlight, and the dark sides are defined by the gradient shading and contact shadows.
+- **Bevelled furniture.** Furniture-scale boxes draw their top as a slightly lighter rim with the surface inset ~1–2px, so counters and machines read rounded. The same size gate drives a quantized per-floor-cell tint nudge (±3%), so one machine's parts match while its twin across the room drifts a shade; architecture keeps exact colours.
+- **Blob silhouettes.** `blobEllipse` (eight seeded lobes joined by quadratics, same radial shading and night occlusion as `ellipse`) replaces perfect ovals for foliage, soil, boulders and canopies; `leafShape` draws pointed leaves and calyxes. Trees carry escaping rim leaves; buds are stacked calyx teardrops with curling pistils (canvas `flowerBud` and the `strainBud` SVG thumbnail alike). Branch scenes reach these through `api.blob` / `api.leaf` / `api.noise`.
+- **Material everywhere.** The mottled grain tile now also covers mid-size furniture faces and the upper floor slabs at reduced alpha; queue ropes sag on a deeper catenary.
+- **Grounding and atmosphere.** Branch trees, pines and bushes cast soft down-left contact shadows; branch lawns get a seeded meadow scatter (grass tufts, occasional wildflower dots) and the desert gets pebbles and scour patches, drawn right after the ground slab so structures painted later cover them. The main map's backdrop carries two vast world-anchored tone shifts (a lift toward the key light, a cooler settle low-left), and `atmosphereFinish` ends every frame — main map and branches — with a faint warm screen-blended wash from the key light's corner at day plus a whisper of world-anchored grain.
+
+All of it costs roughly what the old wireframe strokes did (~3.5ms software-rendered frames at 1440×900).
+
+A close-zoom pass adds: queue ropes and stanchions cast soft down-left floor shadows; the furniture bevel rim is lit directionally (dim on the shadow side, bright toward the key light) so pale counter tops read as rounded lips, not rings; large pale slab tops carry two faint seeded stone veins once `unit ≥ 22`; the globe pendants are shaded spheres (amber rim, cream body, upper-left bloom, small specular) instead of flat discs; and the Seeds bench trays sprout twin pointed cotyledons.
+
+Branch buildings' warm window panes (tones from `#e0`) register as dim emitters through `api.lit(paint,'pane')` at emissive weight .26, so occupied windows keep a soft interior glow — with bloom, without whiting out — after dark, while dark panes go properly black under the night multiply.
