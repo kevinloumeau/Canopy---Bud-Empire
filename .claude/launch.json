@@ -7,11 +7,10 @@
       "runtimeArgs": [
         "--host",
         "127.0.0.1",
-        "--port",
-        "5174",
         "--strictPort"
       ],
-      "port": 5174
+      "port": 5174,
+      "autoPort": true
     },
     {
       "name": "canopy-preview",
@@ -25,6 +24,18 @@
         "--strictPort"
       ],
       "port": 4181
+    },
+    {
+      "name": "welcome-dev",
+      "runtimeExecutable": "node_modules/.bin/vite",
+      "runtimeArgs": [
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "5177",
+        "--strictPort"
+      ],
+      "port": 5177
     }
   ]
 }

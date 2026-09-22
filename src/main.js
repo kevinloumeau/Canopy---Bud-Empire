@@ -1,9 +1,10 @@
 import {migrateOrderCounters,orderCounterPositions,orderCounterCost,buyOrderCounter,ORDER_QUEUE_GATE,assignOrderCounter,atOrderCounter,orderAvailability} from './order-counters.js';
+import {LOUNGE_TIERS,LOUNGE_MAX,migrateLounge,loungeTier,loungeUpgradeCost,loungeSeats,loungeSessionSeconds,buyLoungeTier,wantsLounge,loungeAdmission,loungeTake,loungeRate,loungeCurrentRate} from './lounge.js';
 import {migrateJourney,advanceJourney,CHAPTERS} from './journey.js';
 import {mountJourney} from './journey-ui.js';
 import {manageDialog} from './dialog-focus.js';
 import {AUTO_DRONE_COST,BULK_DRONE_COST,buyAutoDrone,buyBulkDrone,autoDroneLimit,migrateAutoDrone,autoDroneReady} from './auto-drone.js';
-import {FORMATS,BOOST_MAX,boostCost,migrateMenu,chooseFormat,milestone,prestigeOffer,elapsedSteps} from './depth.js';
+import {FORMATS,wantedFormat,strainForFormat,formatPremium,BOOST_MAX,boostCost,migrateMenu,chooseFormat,strainFormat,dominantFormat,menuFormatFactor,milestone,prestigeOffer,elapsedSteps} from './depth.js';
 import {makeSound} from './sfx.js';
 import {installQuietDom} from './quiet-dom.js';
 import {createTelemetry} from './telemetry.js';
@@ -18,7 +19,7 @@ import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requ
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import * as economy from './economy.js';
 import * as strains from './strains.js';
-import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent } from './progression.js';
+import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent } from './progression.js';
 (function () {
   'use strict';
 
@@ -30,7 +31,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   var STRAINS=[{name:'Meadow Mint',price:18,unlock:0,color:'#aacb85'},{name:'Amber Bloom',price:26,unlock:1500,color:'#ddbc75'},{name:'Violet Haze',price:38,unlock:12000,color:'#baa1cf'},{name:'Midnight Orchid',price:56,unlock:65000,color:'#8ebcbb'}];
   // Contract progression is defined in depth.js, including post-city milestones.
   var $=function(id){return document.getElementById(id)};
-  function fresh(){return{money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),productMenu:migrateMenu(),sound:true,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[1,1,1,1,1,1],stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
+  // A new shop starts as seven construction sites: the door and six stations are raised for free during the intro, then the sign flips.
+  function fresh(){return{money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),productMenu:migrateMenu(),sound:true,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
   function readSave(){
     for(var key of ['shift-save','shift-save-backup']){
       try{var raw=localStorage.getItem(key);if(!raw)continue;var value=JSON.parse(raw);if(value&&typeof value==='object'&&!Array.isArray(value))return value}catch(e){}
@@ -38,7 +40,9 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     return {};
   }
   function finite(value,fallback,min,max){var n=Number(value);return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback}
-  function load(){try{var old=readSave(),next=Object.assign(fresh(),old);
+  function load(){try{var old=readSave(),next=Object.assign(fresh(),old);if(!Object.keys(old).length)return fresh();
+    // Saves from before the construction intro have no `shopOpen`; they are open shops with every station standing.
+    next.shopOpen=old.shopOpen!==false;next.doorBuilt=next.shopOpen||old.doorBuilt===true;
     ['trafficLevel','pickupLevel','readyLevel','curingLevel','durationLevel','kioskSpeedLevel','onlineBonusLevel','comfortLevel','scannerLevel','webLevel','seedBatchLevel','growBatchLevel','harvestBatchLevel','packSpeedLevel','serviceLevel','signLevel','loyaltyLevel','basketLevel','terpeneLevel','breedingLevel','displayLevel','trendLevel','fleetLevel','cargoLevel','repeatLevel'].forEach(function(key){next[key]=Math.floor(finite(old[key],0,0,key==='pickupLevel'?12:20))});
     next.idStaff=Math.floor(finite(old.idStaff,0,0,10000));
     next.strains=STRAINS.map(function(_,i){return Math.floor(finite(old.strains&&old.strains[i],i===0?1:0,i===0?1:0,10))});
@@ -52,16 +56,19 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     next.contract=Math.floor(finite(old.contract,0,0,21));next.productMenu=migrateMenu(old.productMenu);next.sound=old.sound!==false;next.lightMode=['day','night'].includes(old.lightMode)?old.lightMode:null;next.autoDrone=migrateAutoDrone(old.autoDrone);
     next.globalLevel=Math.floor(finite(old.globalLevel,0,0,500));
     next.multiplier=Math.pow(1.25,next.globalLevel);
-    next.lastSeen=finite(old.lastSeen,Date.now(),0,Date.now());next.lines=LINES.map(function(_,i){return Math.floor(finite(old.lines&&old.lines[i],1,1,10000))});next.storageLevel=Math.min(20,Math.max(0,Math.floor(Number(old.storageLevel)||0)));next.stock=Array.from({length:5},function(_,i){return Math.floor(finite(old.stock&&old.stock[i],0,0,i===4?100+next.readyLevel*50:100+next.storageLevel*100))});next.staff=LINES.map(function(_,i){return Math.floor(finite(old.staff&&old.staff[i],0,0,10000))});next.kiosk=old.kiosk===true;next.secondKiosk=next.kiosk&&old.secondKiosk===true;next.thirdKiosk=next.secondKiosk&&old.thirdKiosk===true;next.queueLevel=Math.min(7,Math.max(0,Math.floor(Number(old.queueLevel)||0)));next.theme='dispensary';next.gameSpeed=[0,1,2,4].indexOf(old.gameSpeed)>=0?old.gameSpeed:1;return next}catch(e){return fresh()}}
+    next.lastSeen=finite(old.lastSeen,Date.now(),0,Date.now());next.lines=LINES.map(function(_,i){return Math.floor(finite(old.lines&&old.lines[i],1,next.shopOpen?1:0,10000))});next.storageLevel=Math.min(20,Math.max(0,Math.floor(Number(old.storageLevel)||0)));next.stock=Array.from({length:5},function(_,i){return Math.floor(finite(old.stock&&old.stock[i],0,0,i===4?100+next.readyLevel*50:100+next.storageLevel*100))});next.staff=LINES.map(function(_,i){return Math.floor(finite(old.staff&&old.staff[i],0,0,10000))});next.kiosk=old.kiosk===true;next.lounge=migrateLounge(old.lounge);next.loungeSessions=Math.floor(finite(old.loungeSessions,0,0,1e9));next.loungeEarned=finite(old.loungeEarned,0,0,1e15);next.secondKiosk=next.kiosk&&old.secondKiosk===true;next.thirdKiosk=next.secondKiosk&&old.thirdKiosk===true;next.queueLevel=Math.min(7,Math.max(0,Math.floor(Number(old.queueLevel)||0)));next.theme='dispensary';next.gameSpeed=[0,1,2,4].indexOf(old.gameSpeed)>=0?old.gameSpeed:1;return next}catch(e){return fresh()}}
   var firstRun=false;try{firstRun=!localStorage.getItem('shift-save')}catch(e){}
-  var securitySelected=false;
+  var securitySelected=false,loungeSelected=false;
   var state=load(),selected=0,toastTimer,dispatchSummary=null;
+  state.productMenu.active=dominantFormat(state.productMenu,state.menuStrains.filter(function(i){return state.strains[i]>0}));
   state.empire=migrateProgression(state.empire);state.empire.activeStore=selectedStore(state.empire);state.empire.retailBoost=retailBoost();advanceJourney(state);
   function visualLight(){return state.lightMode?{night:state.lightMode==='night',darkness:state.lightMode==='night'?.34:0}:atmosphere(state.empire.network)}
   var lightToggle=document.createElement('button');lightToggle.id='lightToggle';lightToggle.type='button';lightToggle.onclick=function(){state.lightMode=visualLight().darkness>.15?'day':'night';save();renderUI()};document.querySelector('.speed-controls').appendChild(lightToggle);
   var speedButtons=Array.prototype.slice.call(document.querySelectorAll('[data-speed]'));
   function setGameSpeed(value){if([0,1,2,4].indexOf(value)<0)return;if(state.gameSpeed!==value)playSound('tap',state.sound);state.gameSpeed=value;renderUI();save();notify(value===0?'GAME PAUSED':'GAME SPEED · '+value+'×')}
-  speedButtons.forEach(function(button){button.onclick=function(){setGameSpeed(Number(button.getAttribute('data-speed')))}});
+  // The 1× button doubles as pause: pressed again at normal speed it stops the clock, and pressed while paused it resumes.
+  var speedOne=speedButtons.filter(function(b){return b.getAttribute('data-speed')==='1'})[0],PLAY_GLYPH=speedOne.innerHTML,PAUSE_GLYPH='<svg viewBox="0 0 18 16" fill="currentColor" aria-hidden="true"><path d="M5 3.5h3v9H5zM10 3.5h3v9h-3z"></path></svg>';
+  speedButtons.forEach(function(button){button.onclick=function(){var value=Number(button.getAttribute('data-speed'));setGameSpeed(value===1&&state.gameSpeed===1?0:value)}});
   var tickTime=performance.now(),tickRemainder=0;
   function tick(){var now=performance.now(),seconds=(now-tickTime)/1000;tickTime=now;if(document.hidden){tickRemainder=0;return}var elapsed=elapsedSteps(seconds+tickRemainder,state.gameSpeed);if(elapsed.offline){tickRemainder=0;collectOffline(elapsed.offline)}else{tickRemainder=Math.max(0,seconds+tickRemainder-Math.floor((seconds+tickRemainder+1e-8)/.05)*.05);for(var step=0;step<elapsed.steps;step++)simulate(.05)}}
   var saveFailed=false;
@@ -86,14 +93,17 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     var reward=earnings.reduce(function(a,b){return a+b},0);
     if(reward>=1)add(reward);
     // Short breaks get the toast only; the full report is for real absences.
-    if(seconds>=900)state.empire.returnReport={seconds:away,earnings:earnings,goals:[0,1,2].filter(function(i){var g=goalStatus(state.empire,i,rewardScale());return g.progress>=g.target}).length};
+    if(seconds>=900&&state.shopOpen)state.empire.returnReport={seconds:away,earnings:earnings,goals:[0,1,2].filter(function(i){var g=goalStatus(state.empire,i,rewardScale());return g.progress>=g.target}).length};
     save();return reward>=1?reward:0;
   }
 
   function menuStrains(){return state.menuStrains.filter(function(i){return state.strains[i]>0})}
   function menuChoice(sequence){var menu=menuStrains();return menu[sequence%menu.length]}
   // Regulars reach for the everyday strain; VIPs take the reserve when the menu offers one.
-  function strainFor(c){if(c.kind==='vip'){var reserve=strains.reserveStrain(menuStrains(),state.strains);if(reserve!==null)return reserve}var preferred=economy.preferredStrain(c.kind,menuStrains(),state.strains);return preferred===null?menuChoice(c.id):preferred}
+  // A VIP takes the reserve strain however it is sold; everyone else takes a menu strain in the format they came for
+  // when there is one (see `wantedFormat`), and pays the format premium only when they got their way.
+  function strainFor(c){if(c.kind==='vip'){var reserve=strains.reserveStrain(menuStrains(),state.strains);if(reserve!==null)return reserve}var preferred=economy.preferredStrain(c.kind,menuStrains(),state.strains);return strainForFormat(state.productMenu,menuStrains(),preferred===null?menuChoice(c.id):preferred,wantedFormat(state.productMenu,c.id),c.id)}
+  function salePriceFor(c,strain){var f=formatOf(strain);if(c.kind==='vip')return flowerValue(strain);return Math.round(flowerValue(strain)/f.value*formatPremium(state.productMenu,strain,wantedFormat(state.productMenu,c.id)))}
   // Satisfaction tips: patience stretches with Queue comfort, and Lasting effects sweeten every happy sale.
   function customerSaleBonus(c){var bonus=satisfyCustomer(state.empire,-1,c.kind,c.strain===0?'everyday':'boutique',c.waitSeconds||0,1+state.comfortLevel*.15);if(bonus>1)bonus+=state.durationLevel*.03;
     // Strain identity: potency tips, the everyday and VIP perks, and Violet Haze's word of mouth on happy boutique sales.
@@ -175,10 +185,10 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     });
     var i=flowerFocus,strain=STRAINS[i],look=STRAIN_LOOKS[i],level=state.strains[i],active=state.menuStrains.indexOf(i)>=0,price=strainCost(i),maxed=level>=10,detail=$('strainDetail');
     var isNight=atmosphere(state.empire.network).night,type=strains.STRAIN_TYPE[i],timeNow=strains.timeFactor(type,isNight);
-    var nextValue=Math.round(strain.price*(1+level*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*format().value*trendBoost(i)*displayBoost(i)*timeNow);
+    var nextValue=Math.round(strain.price*(1+level*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatOf(i).value*trendBoost(i)*displayBoost(i)*timeNow);
     var stats=level?
-      '<span><b>'+fmt(flowerValue(i))+'</b><small>'+unitWord(1)+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+(maxed?'Max':'+'+fmt(nextValue-flowerValue(i)))+'</b><small>'+(maxed?'level 10':'next lv')+'</small></span>':
-      '<span><b>'+fmt(Math.round(strain.price*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*format().value*timeNow))+'</b><small>'+unitWord(1)+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+fmt(strain.unlock)+'</b><small>unlock</small></span>';
+      '<span><b>'+fmt(flowerValue(i))+'</b><small>'+unitWord(1,strainFormat(state.productMenu,i))+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+(maxed?'Max':'+'+fmt(nextValue-flowerValue(i)))+'</b><small>'+(maxed?'level 10':'next lv')+'</small></span>':
+      '<span><b>'+fmt(Math.round(strain.price*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatOf(i).value*timeNow))+'</b><small>'+unitWord(1,strainFormat(state.productMenu,i))+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+fmt(strain.unlock)+'</b><small>unlock</small></span>';
     var growPct=Math.round((1-strains.strainGrowFactor(i,Math.max(1,level)))*100),tipVip=Math.round((strains.tipFactor('vip',strains.potency(i,level)+state.terpeneLevel*.25)-1)*100),tier=strains.perkTier(level),perk=strains.PERKS[i];
     var traits='<ul class="strain-traits">'+
       '<li'+(growPct?' class="is-cost"':'')+'>'+(growPct?'Grow room −'+growPct+'%'+(level<10?' · masters with levels':''):'Easy to grow')+'</li>'+
@@ -193,22 +203,29 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       '<div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">'+look.kind+' · </span>'+strains.TYPES[type]+(level?' · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>'+level+' / 10':' · Locked')+'</small><h2>'+strain.name+'</h2><p>'+(level?look.buyers:'Unlock to put it on the menu. '+look.buyers)+'</p></div>'+
       '<div class="strain-stats">'+stats+'</div>'+
       '<div class="strain-hero-details">'+traits+perkLine+'</div>'+
+      (level?'<div class="product-line strain-format"><h2>Sell as</h2><div class="format-options">'+FORMATS.map(function(f,k){var own=strainFormat(state.productMenu,i)===k,unlocked=state.productMenu.unlocked[k];return '<button type="button" class="strain-format-pill" data-format="'+k+'" aria-pressed="'+own+'"'+(!unlocked&&state.money<f.cost?' disabled':'')+' title="'+f.detail+'"><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+productIcons[k]+'</svg><strong>'+f.name+'</strong><small>'+(own?'Selling':unlocked?'Switch':fmt(f.cost))+'</small></button>'}).join('')+'</div><p class="format-benefit">'+[['Standard value','Half the door wants it'],['+45% value for the 3 in 10 who want it','Faster pickup','Slower packing'],['+120% value for the 1 in 5 who want it','Lower demand','Slower packing']][strainFormat(state.productMenu,i)].join(' · ')+'</p></div>':'')+
       '<div class="strain-hero-actions">'+(level?'<button type="button" id="flowerSelect" aria-pressed="'+active+'">'+(active?'On menu ✓':'Add to menu')+'</button>':'')+'<button type="button" id="flowerBuy" class="is-primary">'+(maxed?'Fully upgraded':(level?'Upgrade':'Unlock')+' · '+fmt(price))+'</button></div>'+
     '</div>';
-    var heroKey=heroHtml+'|'+(maxed||state.money<price)+'|'+(active&&menu.length===1);
+    var heroKey=heroHtml+'|'+(maxed||state.money<price)+'|'+(active&&menu.length===1)+'|'+state.productMenu.formats.join(',')+'|'+state.productMenu.unlocked.join(',');
     Array.prototype.forEach.call(document.querySelectorAll('.menu-board .trend-clock'),function(el){el.textContent=trendClock});
     if(detail.dataset.key===heroKey)return;
     detail.innerHTML=heroHtml;detail.dataset.key=heroKey;
     Array.prototype.forEach.call(detail.querySelectorAll('.trend-clock'),function(el){el.textContent=trendClock});
     if(level){var sel=$('flowerSelect');sel.disabled=active&&menu.length===1;sel.title=sel.disabled?'Keep at least one strain on the menu':active?'Remove from menu':'Add to menu';sel.onclick=function(){selectStrain(i)}}
     var buy=$('flowerBuy');buy.disabled=maxed||state.money<price;buy.onclick=function(){buyStrain(i)};
+    Array.prototype.forEach.call(detail.querySelectorAll('.strain-format-pill'),function(pill){pill.onclick=function(){chooseStrainFormat(i,Number(pill.dataset.format))}});
   }
+  // Every strain sells in its own format. `format()` is the one most of the menu uses (units and legacy readouts);
+  // `formatOf(i)` is a strain's own; `formatFactor(p)` is the menu mix's mean for a property such as demand.
   function format(){return FORMATS[state.productMenu.active]}
+  function formatOf(i){return FORMATS[strainFormat(state.productMenu,i)]}
+  function formatFactor(property){return menuFormatFactor(state.productMenu,menuStrains(),property)}
+  function syncDominantFormat(){state.productMenu.active=dominantFormat(state.productMenu,menuStrains())}
   // Sales units follow the format: flower is sold by weight (one packed unit is an eighth), pre-rolls by the joint, edibles by the piece.
-  function unitWord(n){var f=state.productMenu.active;return f===1?(n===1?'joint':'joints'):f===2?(n===1?'edible':'edibles'):(n===1?'eighth':'eighths')}
+  function unitWord(n,formatIndex){var f=formatIndex===undefined?state.productMenu.active:formatIndex;return f===1?(n===1?'joint':'joints'):f===2?(n===1?'edible':'edibles'):(n===1?'eighth':'eighths')}
   function unitShort(){var f=state.productMenu.active;return f===1?'joint':f===2?'edible':'⅛'}
-  function weightLabel(n){var oz=Math.floor(n/8),rem=n%8,frac=['','⅛','¼','⅜','½','⅝','¾','⅞'][rem];return (oz?oz.toLocaleString():'')+frac+(oz||rem?' oz':'0 oz')}
-  function qtyLabel(n){return state.productMenu.active===0?weightLabel(n):n.toLocaleString()+' '+unitWord(n)}
+  function weightLabel(n){var oz=Math.floor(n/8),rem=n%8,frac=['','⅛','¼','⅜','½','⅝','¾','⅞'][rem];return (oz?abbr(oz):'')+(oz>=1000?'':frac)+(oz||rem?' oz':'0 oz')}
+  function qtyLabel(n){return state.productMenu.active===0?weightLabel(n):abbr(n)+' '+unitWord(n)}
   // One compact number style for every HUD counter: 24000 → 24k, 3000 → 3k, 1250 → 1.3k.
   function compactCount(n){return n>=100000?Math.round(n/1000)+'k':n>=1000?(Math.round(n/100)/10).toFixed(n%1000?1:0).replace(/\.0$/,'')+'k':Math.round(n*10)/10+''}
   function secondsLabel(t){return (t>=10?Math.round(t):t>=1?t.toFixed(1):t.toFixed(2))+'s'}
@@ -219,7 +236,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   function trackStationLevel(i){var lv=state.lines[i];[10,25,50,100].forEach(function(m){if(lv>=m)telemetry.once('station_level_'+m,{station:LINES[i].name})})}
   // Browsers only start audio inside a gesture: the first tap or key press primes the context while sound is on.
   ['pointerdown','keydown'].forEach(function(type){window.addEventListener(type,function prime(){playSound.unlock(state.sound)},{passive:true})});
-  function flowerValue(index){if(index===undefined){var menu=menuStrains();return menu.reduce(function(total,i){return total+flowerValue(i)},0)/menu.length}var i=index;return Math.round(STRAINS[i].price*(1+Math.max(0,state.strains[i]-1)*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*format().value*trendBoost(i)*displayBoost(i)*strains.timeFactor(strains.STRAIN_TYPE[i],atmosphere(state.empire.network).night))}
+  function flowerValue(index){if(index===undefined){var menu=menuStrains();return menu.reduce(function(total,i){return total+flowerValue(i)},0)/menu.length}var i=index;return Math.round(STRAINS[i].price*(1+Math.max(0,state.strains[i]-1)*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatOf(i).value*trendBoost(i)*displayBoost(i)*strains.timeFactor(strains.STRAIN_TYPE[i],atmosphere(state.empire.network).night))}
   function onlineValue(sequence){return Math.round(flowerValue(menuChoice(sequence===undefined?state.onlineCompleted:sequence))*4/3*(1+state.onlineBonusLevel*.05))}
   function strainCost(i){return state.strains[i]?Math.round(Math.max(250,STRAINS[i].unlock*.35)*Math.pow(1.85,state.strains[i]-1)):STRAINS[i].unlock}
   function buyStrain(i){
@@ -231,11 +248,9 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     if(!state.strains[i])return;
     var index=state.menuStrains.indexOf(i);
     if(index>=0){if(state.menuStrains.length===1)return;state.menuStrains.splice(index,1)}else state.menuStrains.push(i);
-    save();renderUI();notify(STRAINS[i].name.toUpperCase()+(index>=0?' · REMOVED FROM MENU':' · ADDED TO MENU'));
+    syncDominantFormat();save();renderUI();notify(STRAINS[i].name.toUpperCase()+(index>=0?' · REMOVED FROM MENU':' · ADDED TO MENU'));
   }
   function renderFlowers(){
-    FORMATS.forEach(function(f,i){var b=$('format'+i);if(!b)return;b.setAttribute('aria-pressed',String(state.productMenu.active===i));b.disabled=!state.productMenu.unlocked[i]&&state.money<f.cost;b.querySelector('small').textContent=state.productMenu.unlocked[i]?(state.productMenu.active===i?'Featured':'Feature'):fmt(f.cost)});
-    if($('formatBenefit')){var f=format();$('formatBenefit').textContent=[['Standard value','Steady demand'],['+45% value','Faster pickup','Slower packing'],['+120% value','Lower demand','Slower packing']][state.productMenu.active].join(' · ');$('formatBenefit').title=f.detail;}
     if($('prestigeStart')){
       var offer=prestigeOffer(state),maxRank=offer.rank>=19,earned=Math.max(0,state.lifetime),current=(1+offer.rank*.2).toFixed(1);
       $('prestigeStatus').textContent='Rank '+offer.rank;
@@ -266,19 +281,65 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   function basketSize(){return Math.max(1,Math.round(economy.basketSize(state.lines)*(1+state.basketLevel*.04)))}
   function stationThroughput(i){
     if(!state.lines[i])return 0;
-    if(i<4)return capacity(i)/[2,3,2,2][i]/(i===3?format().packing:1);
-    var service=economy.counterLanes(state.lines[i])*(i===4?state.orderCounters:1)/counterServiceDuration(i);
+    if(i<4)return capacity(i)/[2,3,2,2][i]/(i===3?formatFactor('packing'):1);
+    var service=(i===4?state.orderCounters:1)/economy.customerHandoff(i,state.lines[i],counterServiceDuration(i));
     return (i===4?Math.min(capacity(i)/2,service+kioskCount()/kioskServiceDuration()):service)*basketSize();
   }
   function production(){return Math.min.apply(null,LINES.map(function(_,i){return stationThroughput(i)}))*flowerValue()}
   function batchSize(i){return economy.batchSize(state.lines[i])*(i<3?1+state[['seedBatchLevel','growBatchLevel','harvestBatchLevel'][i]]*.06:1)}
-  function cycleSpeed(i){return (1+state.staff[i]*.3)*state.multiplier/(i===3?format().packing:1)*(i===1?growFactorNow():i===3?strains.packBonus(state.strains)*(1+state.packSpeedLevel*.06):1)}
+  function cycleSpeed(i){return (1+state.staff[i]*.3)*state.multiplier/(i===3?formatFactor('packing'):1)*(i===1?growFactorNow():i===3?strains.packBonus(state.strains)*(1+state.packSpeedLevel*.06):1)}
   // Breeding bench claws back part of the boutique grow penalty on top of strain mastery.
   function growFactorNow(){var g=strains.growFactor(menuStrains(),state.strains);return 1-(1-g)*(1-state.breedingLevel*.03)}
   var batchRemainder=[0,0,0,0];
   var readyWork=0;
   var work=[0,0,0,0,0,0],customers=[],arrival=0,customerId=0,pickupQueueSequence=0;
+  // The pickup line is first come, first served: a ticket is issued when a customer reaches the line's tail, not when
+  // they order, so a counter customer already in line is not held at the tail for a kiosk customer still walking over.
+  function pickupOrder(c){return c.pickupTicket||Infinity}
   var QUEUE_MAX=30;
+  // Everyone still to order holds a place in the line — except guests who have gone through the curtain.
+  function inOrderFlow(c){return !c.ordered&&c.phase!=='leaving'&&c.phase!=='toLounge'&&c.phase!=='lounge'}
+  // The smoking lounge behind the back-wall shelving. Guests bound for it are let in at the curtain while a seat and a
+  // spare packed jar are free (otherwise they wait on the rope), sit out a session unseen, then leave by the back door
+  // on to the exit lane and out through the exit.
+  // The curtain is past the mezzanine's left edge; the back door opens on to the exit lane between the cream column
+  // and the merch cabinet, so leaving guests step straight on to the mat.
+  // The right wall sits so that the merch cabinet standing against it is flush with the mezzanine's edge above (x 9).
+  // The back door sits half behind the cream column from this camera, so a guest fades in out of sight behind it and
+  // steps out from behind it.
+  // Up to seven guests wait for a seat at the curtains: the first on the carpet, the rest in a line along the lounge's
+  // front wall to the right of the door, clear of the carpet's stanchions.
+  var LOUNGE_DOOR={x:-9.85,z:-.45},LOUNGE_EXIT={x:8.57,z:-3.3},LOUNGE_RIGHT=8.25,LOUNGE_ROPE=7;
+  function loungeWaitSpot(place){return place<=0?LOUNGE_DOOR:{x:LOUNGE_DOOR.x+1.3+(place-1)*.65,z:LOUNGE_DOOR.z+.1}}
+  function loungeSeated(){return customers.filter(function(c){return c.phase==='lounge'}).length}
+  function loungeWaiting(){return customers.filter(function(c){return c.phase==='toLounge'&&!c.waypoints.length}).sort(function(a,b){return a.id-b.id})}
+  function loungeSpareJars(){return state.stock[3]-reservedJars()}
+  // A guest steps through the gap in the drapes and fades as they go (`loungeFade` 1 → 0 over the last half unit),
+  // and fades back in at the back door on the way out.
+  function enterLounge(c){
+    var take=loungeTake(state.lounge,flowerValue(strainFor(c)));
+    state.stock[3]-=1;add(take.total);state.loungeSessions++;state.loungeEarned+=take.total;c.loungeLeft=loungeSessionSeconds(state.lounge);c.phase='lounge';c.walking=false;c.loungeTake=take.total;
+    c.loungeFade=1;c.fadeFromZ=c.z;c.facing=-.3;
+    recordEvent(state.empire,'pickup',1);playSound('coin',state.sound);
+    if(!motionPreference.matches)tickets.push({x:LOUNGE_DOOR.x,y:2.1,z:LOUNGE_DOOR.z,life:1,text:fmt(take.cover)});
+  }
+  function leaveLounge(c){
+    c.phase='leaving';c.t=0;c.routeKind='exit';c.x=LOUNGE_EXIT.x;c.z=LOUNGE_EXIT.z;c.renderX=c.x;c.renderZ=c.z;c.facing=.6;c.loungeFadeIn=0;
+    c.waypoints=[{x:9.7,z:-4.3},{x:11.15,z:-4.6},{x:10.25,z:-5.6},{x:10.25,z:-8.1},{x:7,z:-8.1},{x:-10.5,z:-8.1}];
+  }
+  function tickLounge(dt){
+    var curtainTarget=loungeCurtainTarget();loungeCurtain+=(curtainTarget-loungeCurtain)*(1-Math.exp(-dt*(curtainTarget>loungeCurtain?10:8)));
+    var exitTarget=loungeExitCurtainTarget();loungeExitCurtain+=(exitTarget-loungeExitCurtain)*(1-Math.exp(-dt*(exitTarget>loungeExitCurtain?10:8)));
+    customers.forEach(function(c){
+      if(c.phase==='lounge'){
+        if(c.loungeFade>0){c.loungeFade=Math.max(0,c.loungeFade-dt/.8);c.z=c.fadeFromZ+(LOUNGE_FRONT-.2-c.fadeFromZ)*(1-c.loungeFade);c.x=LOUNGE_DOOR.x;c.walking=c.loungeFade>0}
+        c.loungeLeft-=dt;if(c.loungeLeft<=0)leaveLounge(c);
+      }else if(c.loungeFadeIn!==undefined&&c.loungeFadeIn<1)c.loungeFadeIn=Math.min(1,c.loungeFadeIn+dt/.3);
+    });
+    // The rope: the first guest waiting at the curtain goes in as soon as a seat and a jar are free.
+    var waiting=loungeWaiting();
+    if(waiting.length&&loungeAdmission(state.lounge,loungeSeated(),loungeSpareJars()).admit)enterLounge(waiting[0]);
+  }
   // Occasional thought bubbles: three-beat emoji stories about why someone came in, what the wait feels like, or the plan once the bag is in hand.
   var THOUGHTS={
     waiting:['💼😩🛋️','🎮🌙🍕','👵🍪❓','🧘☁️😌','🌧️📺☕','🎂🎈🎉','💍❓😬','👶😱🌙','🧾💸😅','🌮🌮🌮','🐈📦🤔','🎸🔥🎤','📝💔🍦','🚲🌅😎','🏃💨🥵','🧦🧦❓','🦆🍞🌅','📚😵🧠','🍕🍕😴'],
@@ -292,7 +353,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     customers.forEach(function(c){if(c.thought){c.thought.age+=dt;if(c.thought.age>=c.thought.duration)c.thought=null;else active++}c.thoughtCooldown=Math.max(0,(c.thoughtCooldown||0)-dt)});
     thoughtTimer-=dt;if(thoughtTimer>0||active>=3)return;
     // One bubble at a time on a loose cadence: pick someone on screen who is not mid-exit and has not just had a thought.
-    var eligible=customers.filter(function(c){return !c.thought&&!c.thoughtCooldown&&!customerBehindBuilding(c)&&(c.phase!=='leaving'||c.t<.5)});
+    var eligible=customers.filter(function(c){return !c.thought&&!c.thoughtCooldown&&c.phase!=='lounge'&&!customerBehindBuilding(c)&&(c.phase!=='leaving'||c.t<.5)});
     thoughtTimer=5+Math.random()*7;if(!eligible.length)return;
     var c=eligible[Math.floor(Math.random()*eligible.length)],pool=thoughtPool(c);
     c.thought={text:pool[Math.floor(Math.random()*pool.length)],age:0,duration:reduced?5:4.4};c.thoughtCooldown=20+Math.random()*15;
@@ -300,12 +361,12 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   function queueLimit(){return Math.min(QUEUE_MAX,Math.min(12,6+Math.floor(Math.max(0,state.lines[4]-1)/2)+Math.floor(state.staff[4]/2))+state.queueLevel*2)}
   function counterServiceDuration(i,serviceCapacity){
     // Both equipment and training shorten the handoff, with gentler gains at high levels.
-    return economy.counterServiceDuration(i,serviceCapacity===undefined?capacity(i):serviceCapacity,format().service)/(1+state.serviceLevel*.04);
+    return economy.counterServiceDuration(i,serviceCapacity===undefined?capacity(i):serviceCapacity,formatFactor('service'))/(1+state.serviceLevel*.04);
   }
   function advanceCounterService(c,i,dt){
     if(c.serviceStation!==i){c.serviceStation=i;c.serviceElapsed=0}
     c.serviceElapsed+=dt;
-    work[i]=Math.min(1,c.serviceElapsed*economy.counterLanes(state.lines[i])/counterServiceDuration(i));
+    work[i]=Math.min(1,c.serviceElapsed/economy.customerHandoff(i,state.lines[i],counterServiceDuration(i)));
     return work[i]>=1;
   }
   function simulate(dt){
@@ -313,15 +374,18 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     add(branchRate(state.empire)*dt);tickBranches(state.empire,dt);var operationResult=tickOperations(state,dt);if(operationResult.revenue)add(operationResult.revenue);if(operationResult.deliveries){state.onlineCompleted+=operationResult.deliveries;recordEvent(state.empire,'online',operationResult.deliveries)}
     arrival+=dt;state.vipBuzz=Math.max(0,(state.vipBuzz||0)-dt);
     if(strains.tickTrend(state.strainTrend,dt,STRAINS.length,state.sold+customerId)){var trending=STRAINS[state.strainTrend.index];notify(trending.name.toUpperCase()+' IS TRENDING · +35% for 8 min'+(state.strains[state.strainTrend.index]?'':' · unlock it to cash in'),'upgrade');renderUI()}
-    if(arrival>=arrivalInterval()&&customers.filter(function(c){return !c.ordered&&c.phase!=='leaving'}).length<queueLimit()){
+    // Nobody walks in until the sign flips; stations that are already standing still stock the shelves.
+    if(state.shopOpen&&arrival>=arrivalInterval()&&customers.filter(inOrderFlow).length<queueLimit()){
       var activeEvent=eventStatus(state.empire);var eventGuest=activeEvent.joined&&activeEvent.open&&!activeEvent.claimed&&customerId%4===3;
-      arrival=0;playSound('chime',state.sound);customers.push({eventGuest:eventGuest,kind:eventGuest?'vip':customerType(state.empire.reputation,customerId),id:customerId++,phase:'entering',idChecked:false,idCheckTime:0,kiosk:state.kiosk&&customerId%2===0&&customers.filter(function(c){return c.kiosk&&!c.ordered}).length<kioskCount()+4,kioskIndex:chooseKiosk(),t:0,bag:false,ordered:false,x:-12.4,z:-10});
+      var arrivingKind=eventGuest?'vip':customerType(state.empire.reputation,customerId),lounge=wantsLounge(state.lounge,customerId,arrivingKind);
+      arrival=0;playSound('chime',state.sound);customers.push({eventGuest:eventGuest,kind:arrivingKind,id:customerId++,phase:'entering',idChecked:false,idCheckTime:0,lounge:lounge,kiosk:!lounge&&state.kiosk&&customerId%2===0&&customers.filter(function(c){return c.kiosk&&!c.ordered}).length<kioskCount()+4,kioskIndex:chooseKiosk(),t:0,bag:false,ordered:false,x:-12.4,z:-10});
     }
-    customers.forEach(function(c){moveQueuedCustomer(c,dt);if(!c.walking&&c.phase!=='leaving')c.waitSeconds=(c.waitSeconds||0)+dt;if(c.bag)c.effectAge=(c.effectAge||0)+dt});
+    tickLounge(dt);
+    customers.forEach(function(c){moveQueuedCustomer(c,dt);if(!c.walking&&c.phase!=='leaving'&&c.phase!=='lounge')c.waitSeconds=(c.waitSeconds||0)+dt;if(c.bag)c.effectAge=(c.effectAge||0)+dt});
     tickThoughts(dt);
     customers=customers.filter(function(c){return c.phase!=='leaving'||c.t<1});
     if(state.lines[5]){
-      var pickups=customers.filter(function(c){return c.ordered&&!c.bag}).sort(function(a,b){return (a.pickupTicket||a.id)-(b.pickupTicket||b.id)}).slice(0,1).filter(function(c){return c.phase==='pickup'&&!c.walking&&Math.hypot(c.x-4,c.z-4.9)<.01});
+      var pickups=customers.filter(function(c){return c.ordered&&!c.bag}).sort(function(a,b){return pickupOrder(a)-pickupOrder(b)}).slice(0,1).filter(function(c){return c.phase==='pickup'&&!c.walking&&Math.hypot(c.x-4,c.z-4.9)<.01});
       if(pickups.length&&state.stock[4]>0){var served=advanceCounterService(pickups[0],5,dt)?1:0;if(served>0){work[5]=0;var bags=Math.max(1,Math.min(pickups[0].bags||1,state.stock[4]));pickups[0].bags=bags;state.stock[4]-=bags;state.sold+=bags;playSound('sale',state.sound);recordEvent(state.empire,'pickup',served);add(pickups.slice(0,served).reduce(function(total,c){return total+(c.salePrice||flowerValue())*(c.bags||1)*customerSaleBonus(c)},0));pickups.slice(0,served).forEach(function(c){c.phase='leaving';c.t=0;c.bag=true;c.effectAge=0;recentPickupRatings.push(customerRatings(c).highness);if(recentPickupRatings.length>20)recentPickupRatings.shift()});burst(machinePos[5],colors.acid)}}else work[5]=0;
     }
     // Prepare pickup bags independently of the number of customers collecting, but never from jars a waiting web order needs.
@@ -339,8 +403,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
         if(available.places<1||available.bags<1)return;
         if(advanceCounterService(c,4,dt)){
           c.bags=Math.min(basketSize()*(c.kind==='vip'?strains.VIP_BASKET:1),available.bags);
-          c.strain=strainFor(c);c.salePrice=flowerValue(c.strain);c.ordered=true;
-          c.pickupTicket=++pickupQueueSequence;c.phase='toPickup';c.t=0;
+          c.strain=strainFor(c);c.salePrice=salePriceFor(c,c.strain);c.ordered=true;
+          c.phase='toPickup';c.t=0;
         }
       });
     }
@@ -350,7 +414,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       var kioskAvailable=orderAvailability(customers,state.stock[4],pickupLimit());
       if(kioskCustomer&&kioskAvailable.places>0&&kioskAvailable.bags>0){
         kioskCustomer.orderTime=(kioskCustomer.orderTime||0)+dt;
-        if(kioskCustomer.orderTime>=kioskServiceDuration()){kioskCustomer.strain=strainFor(kioskCustomer);kioskCustomer.bags=Math.min(kioskCustomer.kind==='vip'?strains.VIP_BASKET:1,kioskAvailable.bags);kioskCustomer.salePrice=flowerValue(kioskCustomer.strain);kioskCustomer.ordered=true;kioskCustomer.pickupTicket=++pickupQueueSequence;kioskCustomer.phase='toPickup'}
+        if(kioskCustomer.orderTime>=kioskServiceDuration()){kioskCustomer.strain=strainFor(kioskCustomer);kioskCustomer.bags=Math.min(kioskCustomer.kind==='vip'?strains.VIP_BASKET:1,kioskAvailable.bags);kioskCustomer.salePrice=salePriceFor(kioskCustomer,kioskCustomer.strain);kioskCustomer.ordered=true;kioskCustomer.phase='toPickup'}
       }
     }
     for(var i=3;i>=0;i--){
@@ -373,7 +437,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   function staffCost(i){return economy.staffCost(state.staff[i])}
   function idTrainingQuote(limit){
     var levels=0,total=0;
-    while(levels<limit&&state.idStaff+levels<10000){
+    // Training stops once a check is as quick as it gets.
+    while(levels<limit&&state.idStaff+levels<10000&&rawSecurityDuration(state.idStaff+levels)>economy.ID_CHECK_FLOOR){
       var price=Math.floor(20*Math.pow(1.6,state.idStaff+levels));
       if(!Number.isFinite(price)||total+price>state.money)break;
       total+=price;levels++;
@@ -407,7 +472,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   }
   function renderOrderCounters(){
     var count=state.orderCounters,price=orderCounterCost(count),complete=price===null;
-    $('orderCounterExpansion').hidden=securitySelected||selected!==4;
+    $('orderCounterExpansion').hidden=securitySelected||loungeSelected||selected!==4;
     $('orderCounterStatus').textContent=count+' / 3';
     $('orderCounterDetail').textContent=complete?'All staffed':'Staff included';
     var slots=$('orderCounterSlots');
@@ -429,7 +494,11 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   }
   function buyThirdKiosk(){if(!state.secondKiosk||state.thirdKiosk||state.money<100000)return;state.money-=100000;state.thirdKiosk=true;save();renderUI();notify('THIRD KIOSK OPEN','upgrade')}
   function buySecondKiosk(){if(!state.kiosk||state.secondKiosk||state.money<50000)return;state.money-=50000;state.secondKiosk=true;save();renderUI();notify('SECOND KIOSK OPEN','upgrade')}
-  function kioskRoute(index){var z=6.8-(index||0)*1.8;return [{x:-8.95,z:z},{x:-8.45,z:z},{x:-8.45,z:9.65},{x:-10.5,z:9.65},{x:-11.7,z:9.3},{x:-12.4,z:7.8}]}
+  // Every line's tail leaves the shop the same way: past the doorman, across the threshold and out along the storefront.
+  // A customer cleared at the ID desk joins their lane at the first of these points.
+  var ENTRY_TAIL=[{x:-9.7,z:8.15},{x:-10.3,z:8.75},{x:-10.9,z:9.3},{x:-11.7,z:9.3},{x:-12.4,z:7.8}];
+  function laneJoinIndex(route){return route.length-ENTRY_TAIL.length}
+  function kioskRoute(index){var z=6.8-(index||0)*1.8;return [{x:-8.95,z:z},{x:-8.45,z:z},{x:-8.45,z:7.7}].concat(ENTRY_TAIL)}
   // Twenty levels per line (twelve for the waiting area). The first eight climb gently; past that each level costs 2.15× the last, so the back half of every line is a late-game project rather than an afternoon.
   var COMPONENTS=[{key:'trafficLevel',name:'Floor flow',base:750,max:20},{key:'pickupLevel',name:'Pickup waiting area',base:1200,max:12},{key:'readyLevel',name:'Ready-bag storage',base:600,max:20},{key:'curingLevel',name:'Curing equipment',base:1800,max:20},{key:'durationLevel',name:'Lasting effects',base:2400,max:20},{key:'kioskSpeedLevel',name:'Kiosk software',base:3000,max:20},{key:'onlineBonusLevel',name:'Premium packaging',base:2200,max:20},{key:'comfortLevel',name:'Queue comfort',base:1400,max:20},{key:'scannerLevel',name:'ID scanner',base:1600,max:20},{key:'webLevel',name:'Web marketing',base:2500,max:20},
     {key:'seedBatchLevel',name:'Seed trays',base:900,max:20},{key:'growBatchLevel',name:'Grow lights',base:1500,max:20},{key:'harvestBatchLevel',name:'Trim robots',base:2000,max:20},{key:'packSpeedLevel',name:'Auto-baggers',base:2600,max:20},
@@ -437,15 +506,16 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     {key:'terpeneLevel',name:'Terpene lab',base:2800,max:20},{key:'breedingLevel',name:'Breeding bench',base:3200,max:20},{key:'displayLevel',name:'Display cases',base:2600,max:20},{key:'trendLevel',name:'Trend scout',base:3000,max:20},
     {key:'fleetLevel',name:'Drone fleet',base:4000,max:20},{key:'cargoLevel',name:'Cargo bays',base:3500,max:20},{key:'repeatLevel',name:'Repeat buyers',base:2200,max:20}];
   function kioskServiceDuration(){return .8+1.2/(1+state.kioskSpeedLevel*.15)}
-  function securityDuration(){return .9/((1+state.idStaff*.3)*(1+state.scannerLevel*.12))}
-  function arrivalInterval(){return (atmosphere(state.empire.network).night?1.2:.9)/(1+state.trafficLevel*.15)/format().demand/strains.trafficFactor(menuStrains(),state.strainTrend.index)/strains.buzzFactor(state.vipBuzz)/(1+state.signLevel*.04)}
+  function rawSecurityDuration(level){return .9/((1+level*.3)*(1+state.scannerLevel*.12))}
+  function securityDuration(){return Math.max(economy.ID_CHECK_FLOOR,rawSecurityDuration(state.idStaff))}
+  function arrivalInterval(){return (atmosphere(state.empire.network).night?1.2:.9)/(1+state.trafficLevel*.15)/formatFactor('demand')/strains.trafficFactor(menuStrains(),state.strainTrend.index)/strains.buzzFactor(state.vipBuzz)/(1+state.signLevel*.04)}
   function pickupLimit(){return 4+state.pickupLevel*2}
   function readyCapacity(){return economy.readyCapacity(state.readyLevel,state.lines)}
   function componentCost(i){var L=state[COMPONENTS[i].key];return Math.round(COMPONENTS[i].base*Math.pow(1.8,Math.min(L,8))*Math.pow(2.15,Math.max(0,L-8)))}
   function componentUnlocked(i){return COMPONENTS[i].key!=='kioskSpeedLevel'||state.kiosk}
   function upgradeComponent(i){var c=COMPONENTS[i],price=componentCost(i);if(!componentUnlocked(i)||state[c.key]>=c.max||state.money<price)return;state.money-=price;state[c.key]++;save();renderUI();notify(c.name.toUpperCase()+' · LEVEL '+state[c.key],'upgrade')}
   function renderComponents(){
-    var describe=[function(l){return '+'+(l*10)+'% walking speed'},function(l){return (4+l*2)+' picking up'},function(l){return economy.readyCapacity(l,state.lines)+' ready bags'},function(l){return '+'+(l*3)+'% sale value'},function(l){return '+'+(l*3)+'% happy tips'},function(l){return '+'+(l*15)+'% kiosk speed'},function(l){return '+'+(l*5)+'% online value'},function(l){return Math.round(economy.patience('hurried',l))+'s patience'},function(l){return '+'+(l*12)+'% check speed'},function(l){return (requestRate(state.onlineCompleted,1,l)*60).toFixed(1)+' requests / min · '+requestCap(state.onlineCompleted,l)+' waiting'},
+    var describe=[function(l){return '+'+Math.round((economy.walkSpeed(l)/2.8-1)*100)+'% walking speed'},function(l){return (4+l*2)+' picking up'},function(l){return economy.readyCapacity(l,state.lines)+' ready bags'},function(l){return '+'+(l*3)+'% sale value'},function(l){return '+'+(l*3)+'% happy tips'},function(l){return '+'+(l*15)+'% kiosk speed'},function(l){return '+'+(l*5)+'% online value'},function(l){return Math.round(economy.patience('hurried',l))+'s patience'},function(l){return '+'+(l*12)+'% check speed'},function(l){return (requestRate(state.onlineCompleted,1,l)*60).toFixed(1)+' requests / min · '+requestCap(state.onlineCompleted,l)+' waiting'},
       function(l){return '+'+(l*6)+'% seed batch'},function(l){return '+'+(l*6)+'% grow batch'},function(l){return '+'+(l*6)+'% harvest batch'},function(l){return '+'+(l*6)+'% pack speed'},
       function(l){return '+'+(l*4)+'% counter speed'},function(l){return '+'+(l*4)+'% foot traffic'},function(l){return '+'+(l*3)+'% happy tips'},function(l){return '+'+(l*4)+'% basket size'},
       function(l){return '+'+(l*.25).toFixed(2).replace(/\.?0+$/,'')+'% THC'},function(l){return '-'+(l*3)+'% grow penalty'},function(l){return '+'+(l*2)+'% boutique value'},function(l){return '+'+(35+l*2)+'% trend bonus'},
@@ -499,7 +569,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   function renderDispatchDesk(shippable){
     var waiting=onlineRequestsReady(),jars=state.stock[3],key=waiting+'|'+jars+'|'+shippable+'|'+state.productMenu.active;
     if(key===dispatchKey)return;dispatchKey=key;
-    $('deliveryWaiting').textContent=waiting;$('deliveryJars').textContent=state.productMenu.active===0?Math.floor(jars/8).toLocaleString()+' oz':jars.toLocaleString();$('deliveryJarsLabel').textContent=(state.productMenu.active===0?'flower':unitWord(2))+' packed';$('deliveryShippable').textContent=shippable;
+    $('deliveryWaiting').textContent=waiting;$('deliveryJars').textContent=state.productMenu.active===0?abbr(Math.floor(jars/8))+' oz':abbr(jars);$('deliveryJarsLabel').textContent=(state.productMenu.active===0?'flower':unitWord(2))+' packed';$('deliveryShippable').textContent=shippable;
     $('deliveryShippable').parentElement.classList.toggle('is-live',shippable>0);
     // The stack shows up to two more receipts peeking out behind the one on top.
     $('receiptStack').dataset.depth=String(Math.max(0,Math.min(2,waiting-1)));$('receiptStack').classList.toggle('is-idle',!waiting);
@@ -523,7 +593,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     }
     return {levels:levels,cost:total};
   }
-  function buySelectedMax(){
+  function buySelectedMax(){if(loungeSelected)return upgradeLounge();if(securitySelected&&!state.doorBuilt)return buildStation('door');if(!securitySelected&&!state.lines[selected])return buildStation(selected);
     if(securitySelected)return trainIdChecker(10000);
     var batch=maxStationUpgrade(selected);if(!batch.levels)return;
     var oldTier=stationTier(selected);state.money-=batch.cost;state.lines[selected]+=batch.levels;telemetry.once('first_upgrade',{station:LINES[selected].name});trackStationLevel(selected);if(stationTier(selected)>oldTier)tierFlashes[selected]=1;
@@ -543,20 +613,64 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   var world=$('world'),canvas=document.createElement('canvas'),ctx=canvas.getContext('2d',{alpha:false});
   if(!ctx){$('loadStatus').textContent='CANVAS COULD NOT START';$('loadRetry').hidden=false;return}
   world.insertBefore(canvas,world.firstChild);canvas.setAttribute('aria-hidden','true');
+  var screenCtx=ctx;
   var dpr=1,width=1,height=1,angle=.57,zoom=1,panX=0,panY=0,centerX=0,centerY=0,unit=32;
   var colors={bg:'#202226',floorTop:'#303238',floorLeft:'#1c1f23',floorRight:'#272a30',grid:'#41444a',beltEdge:'#111419',belt:'#313943',slat:'#5b6470',oliveTop:'#f4f5ec',oliveLeft:'#a9b6be',oliveRight:'#d5dce0',darkTop:'#56616a',darkLeft:'#252e36',darkRight:'#3b4650',metalTop:'#eef2f3',metalLeft:'#8b9ba8',metalRight:'#becbd4',acid:'#f5c344',orange:'#ff7628',boxTop:'#d3a36c',boxLeft:'#8e6741',boxRight:'#b17f50'};
-  var machinePos=[{x:-3,z:-3,y:9.4},{x:3,z:-3,y:9.4},{x:3,z:1,y:4.7},{x:-3,z:1,y:4.7},{x:-4,z:2.5,y:0},{x:4,z:2.5,y:0}];
+  var machinePos=[{x:-3,z:-3,y:9.4},{x:3,z:-3,y:9.4},{x:3,z:-.3,y:4.7},{x:-3,z:-.3,y:4.7},{x:-4,z:2.5,y:0},{x:4,z:2.5,y:0}];
+  // The front-of-house display case along the front-right of the shop floor, planters built into both ends.
+  var DISPLAY_CASE={x:8,z:8.9,width:5.2};
+  // The back-wall shelving stands just behind the counters; the smoking lounge is the room behind it (z −7 → −1.76).
+  var DISPLAY_Z=-1.6,LOUNGE_FRONT=DISPLAY_Z+.65;
   var sceneElevation=0;
   var beltNodes=[[-5,-3.2],[0,-3.2],[5,-3.2],[5.4,0],[5,3.2],[0,3.2],[-5,3.2],[-5.4,0]];
   var tierFlashes=[0,0,0,0,0,0],crateTime=0,particles=[],deliveryDrones=[],sceneTime=0,animationTime=0;
+  // Rise-in progress (1 → 0) for a freshly built station; index 6 is the security door.
+  var buildRise=[0,0,0,0,0,0,0,0];
+  // Grand-opening confetti: paper pieces in the shop's own palette, drifting down over the whole building in world space.
+  var confetti=[],CONFETTI_COLORS=['#f0d89a','#f6efdd','#b6e58c','#9dc47a','#e6c95a','#e8823a','#d3e0cb'];
+  function celebrateOpening(){
+    if(motionPreference.matches)return;
+    tierFlashes.fill(1);burst({x:-10.65,z:10},'#f0d89a');burst({x:4,z:4.9},'#b6e58c');
+    for(var i=0;i<170;i++)confetti.push({x:-12+Math.random()*20,z:-10+Math.random()*21,y:13+Math.random()*7,vy:-(2.6+Math.random()*2.2),vx:(Math.random()-.5)*.5,vz:(Math.random()-.5)*.5,phase:Math.random()*Math.PI*2,sway:.5+Math.random()*.8,rot:Math.random()*Math.PI,rotV:(Math.random()-.5)*9,color:CONFETTI_COLORS[i%CONFETTI_COLORS.length],life:3.4+Math.random()*1.6,w:.14+Math.random()*.1,h:.08+Math.random()*.04});
+    render.invalidated=true;
+  }
+  function drawConfetti(dt){
+    if(!confetti.length)return;
+    var savedElevation=sceneElevation;sceneElevation=0;ctx.save();
+    for(var i=confetti.length-1;i>=0;i--){var c=confetti[i];c.life-=dt;if(c.life<=0){confetti.splice(i,1);continue}
+      c.y+=c.vy*dt;c.x+=(c.vx+Math.sin(c.phase+c.y*1.7)*c.sway)*dt;c.z+=c.vz*dt;c.rot+=c.rotV*dt;
+      var p=project(c.x,c.y,c.z);ctx.globalAlpha=Math.min(1,c.life*1.4);ctx.fillStyle=c.color;
+      ctx.setTransform(dpr,0,0,dpr,0,0);ctx.translate(p.x,p.y);ctx.rotate(c.rot);ctx.scale(1,.3+.7*Math.abs(Math.cos(c.rot*1.4+c.phase)));
+      ctx.fillRect(-c.w*unit/2,-c.h*unit/2,c.w*unit,c.h*unit)}
+    ctx.restore();sceneElevation=savedElevation;render.invalidated=true;
+  }
   var motionPreference=window.matchMedia('(prefers-reduced-motion: reduce)');
 
   function resize(){var rect=world.getBoundingClientRect(),oldWidth=width,oldHeight=height,oldDpr=dpr;dpr=Math.min(window.devicePixelRatio||1,2);width=Math.max(1,Math.round(rect.width));height=Math.max(1,Math.round(rect.height));if(oldWidth!==width||oldHeight!==height||oldDpr!==dpr){canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);}canvas.style.width=width+'px';canvas.style.height=height+'px';ctx.setTransform(dpr,0,0,dpr,0,0);applyCamera()}
   function cameraFrame(){
-    if(state.empire.activeStore){var right=width>=780?450:0,low=25,top=document.querySelector('.hud').getBoundingClientRect().bottom+82,space=Math.max(130,visibleHeight()-top-low),area=Math.max(260,width-right);return{x:area*.5,y:top+space*.61,unit:Math.max(1,Math.min((area-35)/38,space/25))}}
+    if(state.empire.activeStore){
+      // A branch plot fills the viewport: its measured projected extents (see BRANCH_THEMES[].frame) fit the width or the
+      // height under the HUD, whichever binds. On desktop the tray floats over the bottom-right, where the plot's near
+      // corner lands, so a little more room is kept under the plot there.
+      var fit=BRANCH_THEMES[state.empire.activeStore-1].frame,wide=width>=780,top=document.querySelector('.hud').getBoundingClientRect().bottom+16,low=wide?64:16,space=Math.max(130,visibleHeight()-top-low),area=Math.max(260,width-(wide?56:24)),u=Math.max(1,Math.min(area/fit.w,space/fit.h));
+      return{x:width*.5-fit.cx*u,y:top+space*.5-fit.cy*u,unit:u}}
     var visible=visibleHeight(),bottom=0,top=Math.min(160,visible*.26),space=Math.max(120,visible-top-bottom);return{x:width*.5,y:top+space*.66,unit:Math.max(1,Math.min((width-40)/33,space/28))*1.18}}
   function applyCamera(){render.invalidated=true;var frame=cameraFrame();panX=Math.max(-width*1.6,Math.min(width*1.6,panX));panY=Math.max(-height*1.6,Math.min(height*1.6,panY));centerX=frame.x+panX;centerY=frame.y+panY;unit=frame.unit*zoom;if(state.empire.activeStore)updateBranchMarker()}
   function zoomAt(next,x,y){next=Math.max(.65,Math.min(4,next));var ratio=next/zoom,frame=cameraFrame();panX=x-(x-centerX)*ratio-frame.x;panY=y-(y-centerY)*ratio-frame.y;zoom=next;applyCamera()}
+  // Desktop keyboard panning: arrows or WASD glide the camera while held. Direction is the way the view moves, so the
+  // content slides the other way. Velocity eases toward the held direction, so a tap nudges and a hold coasts to speed,
+  // and the render loop steps it on wall time so panning runs at any game speed, including paused.
+  var PAN_KEYS={ArrowUp:[0,1],KeyW:[0,1],ArrowDown:[0,-1],KeyS:[0,-1],ArrowLeft:[1,0],KeyA:[1,0],ArrowRight:[-1,0],KeyD:[-1,0]},KEY_PAN_SPEED=640,heldPanKeys={},keyPan={vx:0,vy:0,at:undefined};
+  function keyboardPan(wallNow){
+    var tx=0,ty=0;for(var code in heldPanKeys){tx+=PAN_KEYS[code][0];ty+=PAN_KEYS[code][1]}
+    var len=Math.hypot(tx,ty);if(!len&&!keyPan.vx&&!keyPan.vy){keyPan.at=undefined;return}
+    if(len){tx=tx/len*KEY_PAN_SPEED;ty=ty/len*KEY_PAN_SPEED}
+    var dt=keyPan.at===undefined?0:Math.min(.1,Math.max(0,(wallNow-keyPan.at)/1000)),ease=1-Math.exp(-dt*14);keyPan.at=wallNow;
+    keyPan.vx+=(tx-keyPan.vx)*ease;keyPan.vy+=(ty-keyPan.vy)*ease;
+    if(!len&&Math.hypot(keyPan.vx,keyPan.vy)<3){keyPan.vx=0;keyPan.vy=0}
+    panX+=keyPan.vx*dt;panY+=keyPan.vy*dt;applyCamera();
+  }
+  function releasePanKeys(){for(var code in heldPanKeys)delete heldPanKeys[code]}
   function rotate(x,z){var c=Math.cos(angle),s=Math.sin(angle);return{x:x*c-z*s,z:x*s+z*c}}
   function project(x,y,z){var r=rotate(x,z);return{x:centerX+r.x*unit,y:centerY+r.z*unit*.5-(y+sceneElevation)*unit,depth:r.z}}
   // Gradients are rebuilt identically every frame while the camera is still, so reuse them per context, keyed by colour
@@ -565,7 +679,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   function cachedGradient(key,make){if(gradientCtx!==ctx){gradientCtx=ctx;gradientMap=gradientCaches.get(ctx);if(!gradientMap){gradientMap=new Map();gradientCaches.set(ctx,gradientMap)}}var g=gradientMap.get(key);if(g)return g;if(gradientMap.size>=12000)gradientMap.clear();g=make();gradientMap.set(key,g);return g}
   function isHexColor(fill){if(typeof fill!=='string')return false;var hit=hexCache.get(fill);if(hit===undefined){hit=/^#[0-9a-f]{6}$/i.test(fill);hexCache.set(fill,hit)}return hit}
   function q4(v){return Math.round(v*4)}
-  function poly(points,fill,stroke){ctx.beginPath();ctx.moveTo(points[0].x,points[0].y);for(var i=1;i<points.length;i++)ctx.lineTo(points[i].x,points[i].y);ctx.closePath();if(isHexColor(fill)){
+  function poly(points,fill,stroke,opaque){if(occluding()&&(opaque||isHexColor(fill)))occludePoly(points);ctx.beginPath();ctx.moveTo(points[0].x,points[0].y);for(var i=1;i<points.length;i++)ctx.lineTo(points[i].x,points[i].y);ctx.closePath();if(isHexColor(fill)){
       var lo=points[0].y,hi=lo;for(var k=1;k<points.length;k++){var py=points[k].y;if(py<lo)lo=py;else if(py>hi)hi=py}hi=Math.max(lo+1,hi);
       ctx.fillStyle=cachedGradient(fill+'|v|'+q4(lo)+'|'+q4(hi),function(){var shade=ctx.createLinearGradient(0,lo,0,hi);shade.addColorStop(0,fill);shade.addColorStop(1,shadeColor(fill,.9));return shade});
     }else ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=Math.max(.4,Math.min(1,unit*.021));ctx.lineJoin='round';ctx.stroke()}}
@@ -581,7 +695,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   function drawBox(x,z,y,w,d,h,palette){var p=palette||[colors.oliveTop,colors.oliveLeft,colors.oliveRight],b0=project(x-w/2,y,z-d/2),b1=project(x+w/2,y,z-d/2),b2=project(x+w/2,y,z+d/2),b3=project(x-w/2,y,z+d/2);
     // Furniture-sized boxes resting on a floor or counter cast; slabs, walls, rails and trim do not.
     if(h>=.2&&h<=3.2&&w>=.15&&d>=.15&&w<=5&&d<=5&&y>=-.05&&y<=1.6)castShadow([b0,b1,b2,b3],h,.13);
-    var t0=project(x-w/2,y+h,z-d/2),t1=project(x+w/2,y+h,z-d/2),t2=project(x+w/2,y+h,z+d/2),t3=project(x-w/2,y+h,z+d/2);poly(Math.cos(angle)>=0?[b3,b2,t2,t3]:[b0,b1,t1,t0],p[1],w<.1||d<.04?null:'#ffffff28');poly(Math.sin(angle)>=0?[b2,b1,t1,t2]:[b3,b0,t0,t3],p[2],w<.1||d<.04?null:'#ffffff28');poly([t0,t1,t2,t3],w>=.6&&d>=.6&&isHexColor(p[0])?litTop([t0,t1,t2,t3],p[0]):p[0],w<.1||d<.04?null:'#ffffff28')}
+    var t0=project(x-w/2,y+h,z-d/2),t1=project(x+w/2,y+h,z-d/2),t2=project(x+w/2,y+h,z+d/2),t3=project(x-w/2,y+h,z+d/2);poly(Math.cos(angle)>=0?[b3,b2,t2,t3]:[b0,b1,t1,t0],p[1],w<.1||d<.04?null:'#ffffff28');poly(Math.sin(angle)>=0?[b2,b1,t1,t2]:[b3,b0,t0,t3],p[2],w<.1||d<.04?null:'#ffffff28');poly([t0,t1,t2,t3],w>=.6&&d>=.6&&isHexColor(p[0])?litTop([t0,t1,t2,t3],p[0]):p[0],w<.1||d<.04?null:'#ffffff28',isHexColor(p[0]))}
   // Soft key light from the upper right: wide top surfaces pick up a gentle left-to-right lift.
   function litTop(points,fill){var lo=points[0].x,hi=lo;for(var k=1;k<points.length;k++){var px=points[k].x;if(px<lo)lo=px;else if(px>hi)hi=px}hi=Math.max(lo+1,hi);return cachedGradient(fill+'|h|'+q4(lo)+'|'+q4(hi),function(){var g=ctx.createLinearGradient(lo,0,hi,0);g.addColorStop(0,shadeColor(fill,.955));g.addColorStop(.5,fill);g.addColorStop(1,shadeColor(fill,1.045));return g})}
   // Ambient shadow: a soft band on a floor plane, dark along one edge and fading away from it.
@@ -597,14 +711,37 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   // Rounded-rectangle path for browsers without ctx.roundRect (Safari before 16).
   function roundedRectPath(x,y,w,h,r){r=Math.max(0,Math.min(r,w/2,h/2));ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
   function softRadial(x,y,r,c,a){return cachedGradient('s|'+c[0]+','+c[1]+','+c[2]+'|'+a+'|'+q4(x)+'|'+q4(y)+'|'+q4(r),function(){var g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,rgba(c,a));g.addColorStop(.28,rgba(c,a*.52));g.addColorStop(.62,rgba(c,a*.16));g.addColorStop(1,rgba(c,0));return g})}
-  function glow(x,y,r,color,ry){var c=parseHex(color);ctx.save();ctx.globalCompositeOperation='screen';ellipse(x,y,r,ry||r*.6,softRadial(x,y,r,c,c[3]));ctx.restore()}
+  // Everything that emits declares itself as it is drawn. `lit(draw)` paints an emitter into the scene and, after dark,
+  // paints it again into an emissive buffer that runs alongside the scene. Every opaque surface drawn afterwards paints
+  // black over that buffer (see poly, ellipse, worldLine and the limbs and blocks of drawPerson), so an emitter behind
+  // a wall, a counter or a guest is hidden in the buffer exactly as it is in the scene. The buffer is added over the
+  // night light map and blurred for the bloom. Night is carried by points of light, not lines: lamp faces go in at
+  // full strength; the concealed strips under every shelf, fascia, counter front and stair tread go in as faint trim
+  // so the floors do not turn into a grid of glowing lines; spill (glows and cones) stays out of the buffer entirely,
+  // since the light map already lifts what it lands on. `draw(k)` receives the strength, for painters that set their
+  // own layer alphas.
+  var nightScene=false,emissiveCtx=null,litDepth=0,EMISSIVE_WEIGHT={face:1,strip:.18};
+  function lit(draw,kind){
+    kind=kind||'face';litDepth++;draw(1);litDepth--;
+    if(nightScene&&litDepth===0&&kind!=='spill'){var scene=ctx,weight=EMISSIVE_WEIGHT[kind];ctx=emissiveCtx;ctx.save();ctx.globalAlpha=scene.globalAlpha*weight;litDepth++;draw(weight);litDepth--;ctx.restore();ctx=scene}
+  }
+  // Black over the emissive buffer for an opaque surface just drawn in the scene: a polygon, an ellipse or a stroke.
+  function occludePoly(points){var e=emissiveCtx;e.globalAlpha=ctx.globalAlpha;e.beginPath();e.moveTo(points[0].x,points[0].y);for(var i=1;i<points.length;i++)e.lineTo(points[i].x,points[i].y);e.closePath();e.fillStyle='#000';e.fill()}
+  function occludeEllipse(x,y,rx,ry){var e=emissiveCtx;e.globalAlpha=ctx.globalAlpha;e.beginPath();e.ellipse(x,y,rx,ry,0,0,Math.PI*2);e.fillStyle='#000';e.fill()}
+  function occludeStroke(q,w){var e=emissiveCtx;e.globalAlpha=ctx.globalAlpha;e.beginPath();for(var i=0;i<q.length;i++){if(i)e.lineTo(q[i].x,q[i].y);else e.moveTo(q[i].x,q[i].y)}e.strokeStyle='#000';e.lineWidth=w;e.lineCap='round';e.lineJoin='round';e.stroke()}
+  function occluding(){return nightScene&&litDepth===0}
+  function litEllipse(x,y,rx,ry,fill){lit(function(){ellipse(x,y,rx,ry,fill)})}
+  function litLine(points,color,weight){lit(function(){worldLine(points,color,weight)})}
+  function litBox(x,z,y,w,d,h,palette){lit(function(){drawBox(x,z,y,w,d,h,palette)})}
+  function glow(x,y,r,color,ry){lit(function(){var c=parseHex(color);ctx.save();ctx.globalCompositeOperation='screen';ellipse(x,y,r,ry||r*.6,softRadial(x,y,r,c,c[3]));ctx.restore()},'spill')}
   // Linear gradient across a projected plane: p0->p1 is a line of constant value, p0->p3 the falloff direction. Keeps a wash
   // aligned to world height on a slanted wall rather than to screen rows.
   function planeGradient(p0,p1,p3,stops){var dx=p1.x-p0.x,dy=p1.y-p0.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len,t=(p3.x-p0.x)*nx+(p3.y-p0.y)*ny;var g=ctx.createLinearGradient(p0.x,p0.y,p0.x+nx*t,p0.y+ny*t);stops.forEach(function(st){g.addColorStop(st[0],st[1])});return g}
   // Grazing light: a concealed strip washes down the wall plane beneath it and dies out before the floor.
   function wallWash(x0,x1,z,yTop,yBottom,color,a){var c=parseHex(color),p0=project(x0,yTop,z),p1=project(x1,yTop,z),p2=project(x1,yBottom,z),p3=project(x0,yBottom,z);ctx.save();ctx.globalCompositeOperation='screen';poly([p0,p1,p2,p3],planeGradient(p0,p1,p3,[[0,rgba(c,a)],[.35,rgba(c,a*.42)],[1,rgba(c,0)]]));ctx.restore()}
   // Volumetric cone: a wedge of light falling from a fixture to the surface below. Three nested wedges keep the edges feathered.
-  function lightCone(x,yTop,z,yBottom,topHalf,bottomHalf,color,a){
+  function lightCone(x,yTop,z,yBottom,topHalf,bottomHalf,color,a){lit(function(){coneShape(x,yTop,z,yBottom,topHalf,bottomHalf,color,a)},'spill')}
+  function coneShape(x,yTop,z,yBottom,topHalf,bottomHalf,color,a){
     var top=project(x,yTop,z),base=project(x,yBottom,z),c=parseHex(color);
     ctx.save();ctx.globalCompositeOperation='screen';
     [[.62,1],[1,.55],[1.5,.25]].forEach(function(layer){
@@ -624,10 +761,13 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   var exteriorFixtures={
     sconces:[{x:-10.98,y:2.3,z:8.72},{x:-10.98,y:2.3,z:11.28}],
     // Entrance bollards stay on the far side of the approach so arriving guests always pass in front of them.
-    bollards:[{x:-12.8,z:10.35},{x:-12.75,z:6.2},{x:9.05,z:-8.45},{x:11.45,z:-8.45}],
+    bollards:[{x:-12.8,z:10.35},{x:-12.75,z:6.2},{x:9.05,z:-8.45},{x:11.3,z:-8.9}],
     exitLamp:{x:10.25,y:3.38,z:-7.34},
     entryStrip:[[-10.9,3.27,8.85],[-10.9,3.27,11.15]]
   };
+  function drawBollard(b){
+    drawBox(b.x,b.z,0,.2,.2,.7,['#414843','#171e1a','#2b342e']);litBox(b.x,b.z,.5,.21,.21,.13,['#fff1c9','#d8c18b','#f2e0b1']);drawBox(b.x,b.z,.7,.24,.24,.05,['#d8c18b','#8d7950','#b7a16d']);
+  }
   function exteriorLightSpill(k){
     exteriorFixtures.sconces.forEach(function(f){haloLight(f.x-.2,f.y-.06,f.z,.8,.26*k,'#ffe2a5');lightCone(f.x-.32,f.y-.12,f.z,.03,.14,.8,'#ffd98f',.08*k);poolLight(f.x-.6,.03,f.z,1.25,.2*k,'#ffd98f')});
     exteriorFixtures.bollards.forEach(function(b){haloLight(b.x,.62,b.z,.42,.28*k,'#ffe2a5');poolLight(b.x,.03,b.z,1.1,.18*k,'#ffd98f')});
@@ -635,8 +775,12 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     poolLight(-11.2,.03,10,1.5,.16*k,'#ffd98f');
   }
   // Recessed downlight in the slab over the ground-floor counters: a small trim ring and a long, faint cone onto the counter top.
+  // The counters' soffit downlights paint with the ground floor (under the mezzanine slab) even though the counters
+  // themselves are drawn later as depth-sorted jobs; the jobs skip them.
+  var suppressDownlights=false;
   function slabDownlight(x,z,slabY,topY){
-    var trim=project(x,slabY,z);ellipse(trim.x,trim.y,unit*.13,unit*.065,'#2a3330');ellipse(trim.x,trim.y,unit*.075,unit*.038,'#fff3d2');
+    if(suppressDownlights)return;
+    var trim=project(x,slabY,z);ellipse(trim.x,trim.y,unit*.13,unit*.065,'#2a3330');litEllipse(trim.x,trim.y,unit*.075,unit*.038,'#fff3d2');
     lightCone(x,slabY-.01,z,topY,.12,1.25,'#ffe3a8',.055);
     var top=project(x,topY+.01,z);glow(top.x,top.y,unit*1.35,'#ffe6b01e',unit*.62);
   }
@@ -645,97 +789,163 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     var arm=['#3a4340','#1b201e','#2a302d'],head=['#c9c1a6','#6f6a57','#a49d84'];
     worldLine([[x+1.28,1.3,z-.95],[x+1.28,2.32,z-.95],[x+.95,2.42,z-.6]],'#2a302d',.032);
     drawBox(x+.9,z-.55,2.24,.36,.3,.14,head);
-    var bulb=project(x+.9,2.22,z-.55);ellipse(bulb.x,bulb.y,unit*.075,unit*.04,cool?'#eef8dc':'#fff3d2');
+    var bulb=project(x+.9,2.22,z-.55);litEllipse(bulb.x,bulb.y,unit*.075,unit*.04,cool?'#eef8dc':'#fff3d2');
     lightCone(x+.85,2.22,z-.5,1.3,.13,.7,cool?'#d8efae':'#ffe3a8',.09);
     var spot=project(x+.6,1.31,z-.3);glow(spot.x,spot.y,unit*1.05,cool?'#e2f3cd28':'#ffe6b02a',unit*.5);
   }
   // Small projected light sources; layered strokes avoid expensive full-scene bloom.
-  function warmStrip(points,cool){
-    ctx.save();worldLine(points,'#344338',.095);
+  function warmStrip(points,cool,kind){lit(function(k){stripShape(points,cool,k)},kind||'strip')}
+  function stripShape(points,cool,k){
+    ctx.save();if(k>=1)worldLine(points,'#344338',.095);
     ctx.globalCompositeOperation='screen';
-    ctx.globalAlpha=.06;worldLine(points,cool?'#d6edbe':'#ffcf83',.46);
-    ctx.globalAlpha=.11;worldLine(points,cool?'#d6edbe':'#ffcf83',.26);
-    ctx.globalAlpha=.24;worldLine(points,cool?'#e2f3cd':'#ffe3a4',.12);
+    ctx.globalAlpha=.06*k;worldLine(points,cool?'#d6edbe':'#ffcf83',.46);
+    ctx.globalAlpha=.11*k;worldLine(points,cool?'#d6edbe':'#ffcf83',.26);
+    ctx.globalAlpha=.24*k;worldLine(points,cool?'#e2f3cd':'#ffe3a4',.12);
     ctx.globalCompositeOperation='source-over';
-    ctx.globalAlpha=.9;worldLine(points,cool?'#e7f6d0':'#ffe8b4',.052);
-    ctx.globalAlpha=1;worldLine(points,cool?'#f3fbe7':'#fff5da',.018);ctx.restore();
+    ctx.globalAlpha=.9*k;worldLine(points,cool?'#e7f6d0':'#ffe8b4',.052);
+    ctx.globalAlpha=k;worldLine(points,cool?'#f3fbe7':'#fff5da',.018);ctx.restore();
   }
   function orderCounterStrip(x,z){return [[x-.95,1.11,z+1.12],[x+.95,1.11,z+1.12]]}
-  // Night falls by multiplying the scene with a cool navy rather than fogging it: colours deepen, blacks stay black, and the
-  // edges of the frame go darker than the shop so the lit interior reads like a lantern. The shade is built on its own
-  // surface with every light pool cut out of it, so lit floor keeps its true daytime colour instead of a grey screen blob;
-  // the colour temperature of each fixture is added afterwards in nightLights.
-  var shadeSurface=null;
-  function nightShadeOverlay(darkness,now){
-    var t=Math.min(1,darkness/.34),saved=sceneElevation;sceneElevation=0;var c=project(0,4.5,0);
-    var pw=Math.ceil(width*dpr),ph=Math.ceil(height*dpr);
-    if(!shadeSurface)shadeSurface=document.createElement('canvas');
-    if(shadeSurface.width!==pw||shadeSurface.height!==ph){shadeSurface.width=pw;shadeSurface.height=ph}
-    var main=ctx;ctx=shadeSurface.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,width,height);
-    var g=ctx.createRadialGradient(c.x,c.y,unit*4,c.x,c.y,Math.max(width,height)*.7);
-    g.addColorStop(0,'rgb(104,118,172)');g.addColorStop(.5,'rgb(70,84,138)');g.addColorStop(1,'rgb(38,48,96)');
+  // ---- Night --------------------------------------------------------------------------------------------------------
+  // Night is one deferred light map rather than a stack of overlays. The diorama is painted on its own surface, and a
+  // single map holding the ambient (a deep, cool ink that darkens toward the frame) plus every fixture added into it as
+  // coloured light is multiplied over that surface alone: lit floor keeps its real colour, overlapping fixtures sum
+  // instead of stacking discs, the unlit world goes properly dark, and the backdrop is left alone. Each floor gets
+  // a broad room fill so the building glows like a lantern while the street stays dark. Above the map: light in the
+  // air (one cone and halo per fixture), the emitters themselves at full brightness, a real bloom of those emitters
+  // blurred at half resolution, and dust drifting through the beams. The backdrop behind is only deepened, never lit.
+  var nightSurfaces={};
+  function nightSurface(name,w,h){var c=nightSurfaces[name];if(!c){c=document.createElement('canvas');nightSurfaces[name]=c}if(c.width!==w||c.height!==h){c.width=w;c.height=h}return c}
+  var canvasBlur=typeof CanvasRenderingContext2D!=='undefined'&&'filter' in CanvasRenderingContext2D.prototype;
+  function nightAmount(){return Math.min(1,visualLight().darkness/.34)}
+  function mixHex(a,b,t){var A=parseHex(a),B=parseHex(b);return 'rgb('+Math.round(A[0]+(B[0]-A[0])*t)+','+Math.round(A[1]+(B[1]-A[1])*t)+','+Math.round(A[2]+(B[2]-A[2])*t)+')'}
+  // The diorama paints onto a transparent surface after dark so its alpha can mask the light map.
+  function beginNightScene(){var pw=Math.ceil(width*dpr),ph=Math.ceil(height*dpr),s=nightSurface('scene',pw,ph),e=nightSurface('emissive',pw,ph);emissiveCtx=e.getContext('2d');emissiveCtx.setTransform(dpr,0,0,dpr,0,0);emissiveCtx.globalCompositeOperation='source-over';emissiveCtx.globalAlpha=1;emissiveCtx.clearRect(0,0,width,height);nightScene=true;litDepth=0;ctx=s.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.clearRect(0,0,width,height)}
+  function endNightScene(){nightScene=false;if(ctx===screenCtx)return;var s=nightSurfaces.scene;ctx=screenCtx;ctx.drawImage(s,0,0,width,height)}
+  // Every night fixture in one place. `emit(kind,args)` receives pools (light on a surface), beams (a wedge from a
+  // fixture down to a surface), halos (a sphere of light at a fixture head) and washes (grazing light down a wall).
+  // The light map paints them all; the air pass draws only the beams and halos.
+  var WARM='#ffd98f',COOL='#cfeebb',GROW='#c98bff',MINT='#bfe9d8';
+  function nightFixtures(now,emit){
+    function pool(){emit('pool',arguments)}function halo(){emit('halo',arguments)}function beam(){emit('beam',arguments)}function wash(){emit('wash',arguments)}
+    var counters=orderCounterPositions(state.orderCounters),many=state.orderCounters>1,e=exteriorFixtures.exitLamp;
+    // Street: sconces on the door posts, bollards on the approaches, the hooded lamp over the exit, the lit threshold.
+    exteriorFixtures.sconces.forEach(function(f){halo(f.x-.2,f.y-.06,f.z,.9,.55,WARM);beam(f.x-.32,f.y-.12,f.z,.03,.14,.9,.3,WARM);pool(f.x-.6,.03,f.z,1.5,.7,WARM)});
+    exteriorFixtures.bollards.forEach(function(b){halo(b.x,.62,b.z,.5,.55,WARM);pool(b.x,.03,b.z,1.3,.6,WARM)});
+    halo(e.x,e.y-.14,e.z,.8,.55,WARM);beam(e.x,e.y-.12,e.z-.06,.03,.28,1.2,.3,WARM);pool(e.x,.03,e.z-.8,1.7,.65,WARM);
+    pool(-11.2,.03,10,1.7,.5,WARM);pool(-9.1,.04,9.91,1.9,.7,WARM);halo(-9.1,2.4,9.91,.9,.45,'#ffe2a5');
+    // The glazed storefront and marquee spill onto the sidewalk along the whole entrance wall.
+    pool(-12.3,.03,4.6,2.4,.3,'#ffe3a8');pool(-12.3,.03,8.2,2.4,.32,'#ffe3a8');
+    // Shop floor: slab downlights over the counters, the retail counters, floor downlights, the vitrine, the lounge door.
+    counters.concat([machinePos[5]]).forEach(function(q){beam(q.x,4.45,q.z,1.31,.12,1.3,.28,WARM);pool(q.x,1.32,q.z,1.6,.55,'#ffe3a8');halo(q.x+.65,1.6,q.z+.35,.6,.25,'#fff0c8')});
+    counters.forEach(function(p){pool(p.x,.03,4.9,many?1.5:2.9,.65,WARM)});pool(4,.03,4.9,2.9,.65,WARM);
+    [-5.3,-2.7,7.4].forEach(function(gx){pool(gx,.03,1,2.3,.55,'#ffe9bb');halo(gx,3.4,1,1.1,.4,'#ffe9bb')});
+    pool(DISPLAY_CASE.x,.03,DISPLAY_CASE.z-.3,2.6,.45,'#fff0c8');halo(DISPLAY_CASE.x,1.4,DISPLAY_CASE.z-.32,1.5,.3,'#fff0c8');
+    if(state.kiosk)for(var k=0;k<kioskCount();k++){halo(-9.45,1.85,6.8-k*1.8,.8,.45,'#dfeccc');pool(-9.1,.03,6.8-k*1.8,1.2,.4,'#dfeccc')}
+    if(state.lounge>0){pool(LOUNGE_DOOR.x,.03,LOUNGE_DOOR.z,1.7,.45,'#ffb8cf');halo(LOUNGE_SIDE.x+.2,1.4,LOUNGE_SIDE.z0+.42,1.2,.5,'#ff8fb8')}
+    // Work lights over every station (cool over the grow room) and the strip under each counter front.
+    machinePos.forEach(function(q,i){if(i===4&&many)return;var c=i===1?COOL:WARM;pool(q.x,q.y+.04,q.z+.9,2.3,.65,c);beam(q.x,q.y+1.1,q.z+1.26,q.y+.04,1.1,1.7,.2,c)});
+    if(many)counters.forEach(function(q){var strip=orderCounterStrip(q.x,q.z);pool(q.x,.04,q.z+.9,1.6,.6,WARM);beam(q.x,strip[0][1],strip[0][2],.04,.95,1.2,.2,WARM)});
+    // Concealed strips wash the rear walls of every floor so the architecture stays legible after dark.
+    wash(-11.2,8.95,-6.9,3.6,1.3,.4,WARM);wash(-8.7,8.7,4.7-6.55,4.7+3.6,4.7+1.5,.42,WARM);wash(-6.2,6.2,9.4-6.7,9.4+3.6,9.4+1.7,.24,GROW);
+    // Mezzanine: the online kiosk sign and the planted wall.
+    if(deliveryBuilt()){pool(-10.7,7.09,1.5,1.9,.7,MINT);halo(-10.7,9.2,1.5,1.5,.55,MINT)}
+    halo(7.9,5.9,-6.5,1.9,.28,COOL);
+    // Grow room: purple pendants over the benches, cool light on the rack and a warm wash behind the shelving.
+    growLightBars().forEach(function(lx,li){var pulse=lampPulse(now,li*1.7);pool(lx,9.44,-3,1.9,.75*pulse,GROW);halo(lx,12.65,-3,1.2,.55*pulse,'#d9a8ff');beam(lx,12.6,-3,9.44,.3,1.3,.5*pulse,GROW)});
+    pool(0,9.44,-6.2,2.9,.45,'#cfe6ff');halo(0,11.4,-6.2,2.3,.22,'#cfe6ff');halo(.6,11,-6.7,3.4,.3,WARM);
+    // Stair treads.
+    for(var st=0;st<8;st++)pool(9.2,.6+st*1.15,4.6-st*.75,.65,.45,WARM);
+  }
+  // The light map: ambient ink, a room fill per floor, then every fixture as light; masked to the diorama's own alpha
+  // and multiplied over it in one draw, so nothing is tinted twice and the sky stays untouched.
+  function nightLightMap(t,now){
+    var ms=dpr*.5,map=nightSurface('light',Math.ceil(width*ms),Math.ceil(height*ms)),saved=sceneElevation;sceneElevation=0;
+    ctx=map.getContext('2d');ctx.setTransform(ms,0,0,ms,0,0);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
+    var c=project(0,4.5,0),g=ctx.createRadialGradient(c.x,c.y,unit*3,c.x,c.y,Math.max(width,height)*.75);
+    g.addColorStop(0,mixHex('#ffffff','#4a5680',t));g.addColorStop(.45,mixHex('#ffffff','#2b355e',t));g.addColorStop(1,mixHex('#ffffff','#121838',t));
     ctx.fillStyle=g;ctx.fillRect(0,0,width,height);
-    ctx.globalCompositeOperation='destination-out';nightCutouts(now);ctx.globalCompositeOperation='source-over';
-    ctx=main;
-    ctx.save();ctx.globalCompositeOperation='multiply';ctx.globalAlpha=t*.9;ctx.drawImage(shadeSurface,0,0,width,height);ctx.restore();
-    ctx.save();ctx.fillStyle='rgba(16,24,56,'+(t*.05)+')';ctx.fillRect(0,0,width,height);ctx.restore();
+    ctx.save();ctx.globalCompositeOperation='screen';
+    // Room fills: the shop floor and mezzanine in the warm of their strips, the grow room in the purple of its pendants.
+    [[0,.03,1.5,13,.34,'#ffe3b8'],[0,4.73,-1,10,.3,'#ffe0b0'],[0,9.43,-3,8.5,.3,'#d0a6ff']].forEach(function(f){var p=project(f[0],f[1],f[2]),cc=parseHex(f[5]);ellipse(p.x,p.y,unit*f[3],unit*f[3]*.5,softRadial(p.x,p.y,unit*f[3],cc,f[4]*t))});
+    ctx.restore();
+    nightFixtures(now,function(kind,a){
+      if(kind==='pool')poolLight(a[0],a[1],a[2],a[3],a[4]*t,a[5]);
+      else if(kind==='halo')haloLight(a[0],a[1],a[2],a[3],a[4]*t,a[5]);
+      else if(kind==='beam')lightCone(a[0],a[1],a[2],a[3],a[4],a[5],a[7],a[6]*t);
+      else wallWash(a[0],a[1],a[2],a[3],a[4],a[6],a[5]*t);
+    });
+    ctx.globalCompositeOperation='destination-in';ctx.drawImage(nightSurfaces.scene,0,0,width,height);ctx.globalCompositeOperation='source-over';
+    ctx=screenCtx;sceneElevation=saved;
+    ctx.save();ctx.globalCompositeOperation='multiply';ctx.drawImage(map,0,0,width,height);ctx.restore();
+  }
+  // Light in the air: one soft cone and one halo per fixture, plus the grow room's humid glow.
+  function nightAir(t,now){
+    var saved=sceneElevation;sceneElevation=0;ctx.save();ctx.globalAlpha=t;
+    nightFixtures(now,function(kind,a){
+      if(kind==='beam')lightCone(a[0],a[1],a[2],a[3],a[4],a[5],a[7],a[6]*.45);
+      else if(kind==='halo')haloLight(a[0],a[1],a[2],a[3]*1.15,a[4]*.32,a[5]);
+    });
+    var haze=project(0,11,-3);glow(haze.x,haze.y,unit*7.5,'#b47cff14',unit*3.2);
+    ctx.restore();sceneElevation=saved;
+  }
+  // The emissive buffer added over the map at full strength, then the signs, marquee, kiosk readout and neon, which
+  // are drawn as text and so never enter the buffer.
+  function nightEmitters(now){
+    ctx.save();ctx.globalCompositeOperation='lighter';ctx.drawImage(nightSurfaces.emissive,0,0,width,height);ctx.restore();
+    var saved=sceneElevation;sceneElevation=0;
+    signFaces.forEach(function(sign){var p=project(sign.x,sign.y,sign.z);glow(p.x,p.y,unit*sign.halo,'#ffda8a40',unit*sign.halo*.7);signText(sign.x,sign.y,sign.z,sign.label,sign.width,sign.size,'#fff3d6')});
+    drawMarquee(true);
+    if(deliveryBuilt()){sceneElevation=7.05;var pending=onlineRequestsReady();onlineReadout(-10.7,2.4,pending,pending>0&&state.stock[3]>=onlineSize());sceneElevation=0}
+    if(state.lounge>0)loungeNeon(true);
     sceneElevation=saved;
   }
-  // Holes in the shade: a soft floor pool under every fixture, sized like the visible light pool but with a hotter core.
-  function nightCutouts(now){
-    var white=[255,255,255,1];
-    function cut(x,y,z,r,a){var p=project(x,y,z);ellipse(p.x,p.y,unit*r,unit*r*.5,softRadial(p.x,p.y,unit*r,white,a));ellipse(p.x,p.y,unit*r*.45,unit*r*.22,softRadial(p.x,p.y,unit*r*.45,white,a*.6))}
-    // Beams are stacked in three widths so their sides feather instead of cutting a hard wedge in the shade.
-    function beam(x,yTop,z,yBottom,topHalf,bottomHalf,a){var top=project(x,yTop,z),base=project(x,yBottom,z);[[.6,1],[1,.5],[1.5,.22]].forEach(function(layer){var tw=unit*topHalf*layer[0],bw=unit*bottomHalf*layer[0],g=ctx.createLinearGradient(0,top.y,0,base.y);g.addColorStop(0,rgba(white,a*layer[1]*.3));g.addColorStop(1,rgba(white,a*layer[1]));ctx.beginPath();ctx.moveTo(top.x-tw,top.y);ctx.lineTo(top.x+tw,top.y);ctx.lineTo(base.x+bw,base.y);ctx.lineTo(base.x-bw,base.y);ctx.closePath();ctx.fillStyle=g;ctx.fill()})}
-    // Station work lights and the strip under each counter front.
-    machinePos.forEach(function(q,i){if(i===4&&state.orderCounters>1)return;cut(q.x,q.y+.04,q.z+.9,2.1,.62);beam(q.x,q.y+1.1,q.z+1.26,q.y+.04,1.1,1.7,.16)});
-    if(state.orderCounters>1)orderCounterPositions(state.orderCounters).forEach(function(q){var strip=orderCounterStrip(q.x,q.z);cut(q.x,.04,q.z+.9,1.4,.62);beam(q.x,strip[0][1],strip[0][2],.04,.95,1.2,.16)});
-    // Retail counters, shop-floor downlights, and the island vitrines.
-    orderCounterPositions(state.orderCounters).forEach(function(p){cut(p.x,.03,4.9,state.orderCounters>1?1.3:2.7,.7)});cut(4,.03,4.9,2.7,.7);
-    [[-4,2.5],[4,2.5],[0,6]].forEach(function(q){cut(q[0],.03,q[1],2.3,.5)});
-    [[-4.85,8.9],[6.7,8.9]].forEach(function(q){cut(q[0],.03,q[1]-.3,1.6,.42)});
-    // Grow pendants: tighter, brighter cores under each lamp so the benches read as lit rather than tinted.
-    [-3.75,-2.25,2.25,3.75].forEach(function(lx,li){var pulse=lampPulse(now,li*1.7);cut(lx,9.44,-3,1.7,.66*pulse);beam(lx,12.6,-3,9.44,.3,1.2,.3*pulse)});
-    cut(0,9.44,-6.2,2.6,.4);
-    // Entrance, the online kiosk on the mezzanine, exterior fixtures and the stair.
-    cut(-9.1,.04,10.41,1.8,.6);if(deliveryBuilt())cut(-10.7,7.09,1.5,1.7,.6);
-    exteriorFixtures.sconces.forEach(function(f){cut(f.x-.6,.03,f.z,1.3,.5)});
-    exteriorFixtures.bollards.forEach(function(b){cut(b.x,.03,b.z,1.1,.45)});
-    var e=exteriorFixtures.exitLamp;cut(e.x,.03,e.z-.8,1.5,.5);cut(-11.2,.03,10,1.5,.4);
-    for(var st=0;st<8;st++)cut(9.2,.6+st*1.15,4.6-st*.75,.6,.4);
+  // Bloom: the emitters drawn again at half resolution, blurred, and added back so every light source glows.
+  function nightBloom(t,now,emitters){
+    if(!canvasBlur)return;
+    var s=.5,bw=Math.ceil(width*s),bh=Math.ceil(height*s),sharp=nightSurface('bloomA',bw,bh),soft=nightSurface('bloomB',bw,bh);
+    ctx=sharp.getContext('2d');ctx.setTransform(s,0,0,s,0,0);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.clearRect(0,0,width,height);
+    emitters(now);
+    ctx=soft.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,bw,bh);ctx.filter='blur('+Math.max(3,Math.min(12,unit*s*.28)).toFixed(1)+'px)';ctx.drawImage(sharp,0,0);ctx.filter='none';
+    ctx=screenCtx;ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.6*t;ctx.drawImage(soft,0,0,width,height);ctx.restore();
   }
-  // Night: everything that glows is redrawn above the shade so the shop reads as lit, not dimmed.
-  function nightLights(now){
-    var saved=sceneElevation;sceneElevation=0;
-    function tint(hex,a){var n=parseInt(hex.slice(1),16);return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')'}
+  // Dust drifting down through the pendants' beams and the street lamps' cones; still under reduced motion.
+  var MOTES=(function(){var s=[],seed=99;function r(){seed=(seed*48271)%2147483647;return seed/2147483647}for(var i=0;i<44;i++)s.push({a:r(),b:r(),c:r(),phase:r()*6.28,rate:.6+r()*.8});return s})();
+  function nightMotes(t,now){
+    var hosts=[],e=exteriorFixtures.exitLamp,still=motionPreference.matches,saved=sceneElevation;sceneElevation=0;
+    growLightBars().forEach(function(lx){hosts.push({x:lx,z:-3,y0:9.7,y1:12.4,rx:.9,rz:1,c:'#eed6ff'})});
+    exteriorFixtures.sconces.forEach(function(f){hosts.push({x:f.x-.45,z:f.z,y0:.3,y1:f.y-.25,rx:.35,rz:.4,c:'#ffe9bd'})});
+    hosts.push({x:e.x,z:e.z-.45,y0:.3,y1:e.y-.3,rx:.5,rz:.4,c:'#ffe9bd'});
     ctx.save();ctx.globalCompositeOperation='screen';
-    var pool=poolLight,halo=haloLight,warm='#ffd98f',cool='#cfeebb';
-    // Street fixtures carry more of the load after dark.
-    exteriorLightSpill(1.2);
-    // Slab downlights over the retail counters, the vitrines and the island cases keep their own glow.
-    orderCounterPositions(state.orderCounters).concat([machinePos[5]]).forEach(function(q){lightCone(q.x,4.45,q.z,1.31,.12,1.25,'#ffe3a8',.09);halo(q.x+.65,1.6,q.z+.35,.55,.2,'#fff0c8')});
-    [[-4.85,8.9],[6.7,8.9]].forEach(function(q){halo(q[0],1.4,q[1]-.32,.9,.18,'#fff0c8')});
-    // Concealed strips wash the rear walls of every floor, so the architecture stays legible after dark.
-    [[-11.2,8.95,-6.9,3.6,1.3,.24],[-8.7,8.7,4.7-6.55,4.7+3.6,4.7+1.5,.26],[-6.2,6.2,9.4-6.7,9.4+3.6,9.4+1.7,.12]].forEach(function(w){wallWash(w[0],w[1],w[2],w[3],w[4],warm,w[5])});
-    // Work lights over every station; the grow room glows cool. A cone from each under-counter strip hangs in the night air.
-    machinePos.forEach(function(q,i){if(i===4&&state.orderCounters>1)return;pool(q.x,q.y+.04,q.z+.9,2,.2,i===1?cool:warm);lightCone(q.x,q.y+1.1,q.z+1.26,q.y+.04,1.3,1.75,i===1?cool:warm,.08)});
-    if(state.orderCounters>1)orderCounterPositions(state.orderCounters).forEach(function(q){var strip=orderCounterStrip(q.x,q.z);pool(q.x,.04,q.z+.9,1.4,.2,warm);lightCone(q.x,strip[0][1],strip[0][2],.04,.95,1.2,warm,.08)});
-    // Shop-floor downlights, the lit entrance, and the online kiosk sign.
-    [[-4,2.5],[4,2.5],[0,6]].forEach(function(q){pool(q[0],.03,q[1],2.2,.16,warm)});
-    // Counters and the grow rack keep their own light at night so the interior stays legible.
-    orderCounterPositions(state.orderCounters).forEach(function(p){pool(p.x,.03,4.9,state.orderCounters>1?1.3:2.6,.22,warm)});pool(4,.03,4.9,2.6,.22,warm);pool(0,9.44,-6.2,2.6,.2,'#cfe6ff');halo(0,11.4,-6.2,2.2,.16,'#cfe6ff');
-    // Purple grow pendants on the top floor, each with its own soft cone down to the bench.
-    [-3.75,-2.25,2.25,3.75].forEach(function(lx,li){var pulse=lampPulse(now,li*1.7);pool(lx,9.44,-3,1.6,.3*pulse,'#c98bff');halo(lx,12.65,-3,1,.34*pulse,'#d9a8ff');lightCone(lx,12.6,-3,9.44,.3,1.15,'#c98bff',.2*pulse)});
-    pool(-9.1,.04,10.41,1.7,.32,warm);halo(-9.1,2.4,10.41,.9,.35,'#ffe2a5');
-    if(deliveryBuilt()){pool(-10.7,7.09,1.5,1.6,.34,cool);halo(-10.7,9.2,1.5,1.3,.45,'#bfe9d8')}
-    // Fascia strips glow a little stronger at night in place of any hanging bulbs.
-    [[4.7,3.05,-8.8,8.8],[9.4,-.3,-6.3,6.3]].forEach(function(f){var a=project(f[2],f[0]-.06,f[1]),b=project(f[3],f[0]-.06,f[1]);var g=ctx.createLinearGradient(a.x,a.y,b.x,b.y);g.addColorStop(0,tint('#ffd98f',0));g.addColorStop(.12,tint('#ffd98f',.13));g.addColorStop(.88,tint('#ffd98f',.13));g.addColorStop(1,tint('#ffd98f',0));ctx.save();ctx.strokeStyle=g;ctx.lineWidth=unit*.34;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.restore()});
-    // A warm wash behind the top-floor shelving and the mezzanine planted wall.
-    var w=project(.6,11,-6.7),g=ctx.createRadialGradient(w.x,w.y,0,w.x,w.y,unit*3.4);g.addColorStop(0,tint('#ffd98f',.2));g.addColorStop(1,tint('#ffd98f',0));ellipse(w.x,w.y,unit*3.4,unit*1.2,g);
-    var v=project(7.9,5.9,-6.5),gv=ctx.createRadialGradient(v.x,v.y,0,v.x,v.y,unit*1.8);gv.addColorStop(0,tint('#cfeebb',.22));gv.addColorStop(1,tint('#cfeebb',0));ellipse(v.x,v.y,unit*1.8,unit*1.4,gv);
-    // Stair treads.
-    for(var st=0;st<8;st++)pool(9.2,.6+st*1.15,4.6-st*.75,.55,.22,warm);
-    ctx.restore();
+    MOTES.forEach(function(m,i){var h=hosts[i%hosts.length],tm=still?0:now*.00009*m.rate;
+      var fall=(m.a+tm*.35)%1,y=h.y1-fall*(h.y1-h.y0),x=h.x+Math.sin(tm*2.3+m.phase)*h.rx*(.3+m.b*.7),z=h.z+Math.cos(tm*1.7+m.phase*1.6)*h.rz*(.3+m.c*.7);
+      var p=project(x,y,z);ctx.globalAlpha=t*Math.sin(fall*Math.PI)*(.45+.25*Math.sin(tm*6+m.phase));ctx.fillStyle=h.c;ctx.beginPath();ctx.arc(p.x,p.y,Math.max(.9,unit*.026),0,Math.PI*2);ctx.fill()});
+    ctx.restore();sceneElevation=saved;
+  }
+  // Branch maps: the same sky and light map, from the flat theme colour and the fixtures the branch registers.
+  function branchBackdrop(color){
+    var nt=nightAmount();render.nightT=nt;
+    var sky=ctx.createLinearGradient(0,0,0,height);sky.addColorStop(0,mixHex(color,'#131b1e',nt*.85));sky.addColorStop(1,mixHex(color,'#0e1417',nt*.9));
+    ctx.fillStyle=sky;ctx.fillRect(0,0,width,height);
+    if(nt>0){var halo=project(0,0,1);ctx.save();ctx.globalAlpha=nt;glow(halo.x,halo.y-unit*3,unit*20,'#4b6a6a30');ctx.restore();beginNightScene()}
+  }
+  function branchNight(fixtures,color,focus){
+    var t=render.nightT||0;if(!(t>0))return;
+    endNightScene();
+    var ms=dpr*.5,map=nightSurface('light',Math.ceil(width*ms),Math.ceil(height*ms)),saved=sceneElevation;sceneElevation=0;
+    ctx=map.getContext('2d');ctx.setTransform(ms,0,0,ms,0,0);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
+    var c=project(0,2,0),g=ctx.createRadialGradient(c.x,c.y,unit*3,c.x,c.y,Math.max(width,height)*.75);
+    g.addColorStop(0,mixHex('#ffffff','#4a5680',t));g.addColorStop(.45,mixHex('#ffffff','#2b355e',t));g.addColorStop(1,mixHex('#ffffff','#121838',t));
+    ctx.fillStyle=g;ctx.fillRect(0,0,width,height);
+    var room=project(focus.x,.03,focus.z),rc=parseHex('#ffe3b8');ctx.save();ctx.globalCompositeOperation='screen';ellipse(room.x,room.y,unit*12,unit*6,softRadial(room.x,room.y,unit*12,rc,.3*t));ctx.restore();
+    fixtures.forEach(function(f){poolLight(f.x,.03,f.z,f.size*1.7,.6*t,color);haloLight(f.x,f.y,f.z,f.size*.9,.5*t,color)});
+    ctx.globalCompositeOperation='destination-in';ctx.drawImage(nightSurfaces.scene,0,0,width,height);ctx.globalCompositeOperation='source-over';
+    ctx=screenCtx;ctx.save();ctx.globalCompositeOperation='multiply';ctx.drawImage(map,0,0,width,height);ctx.restore();
+    ctx.save();ctx.globalAlpha=t;fixtures.forEach(function(f){haloLight(f.x,f.y,f.z,f.size,.3,color)});ctx.restore();
+    function emitters(){fixtures.forEach(function(f){var q=project(f.x,f.y,f.z);ellipse(q.x,q.y,unit*Math.min(.16,f.size*.14),unit*Math.min(.12,f.size*.1),'#fff3d2')})}
+    ctx.save();ctx.globalAlpha=t;ctx.globalCompositeOperation='lighter';ctx.drawImage(nightSurfaces.emissive,0,0,width,height);ctx.restore();
+    ctx.save();ctx.globalAlpha=t;emitters();ctx.restore();
+    nightBloom(t,sceneTime,function(){ctx.drawImage(nightSurfaces.emissive,0,0,width,height);emitters()});
     sceneElevation=saved;
   }
   function lightPool(x,y,z,r,cool){
@@ -743,6 +953,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   }
 
   function ellipse(x,y,rx,ry,fill){
+    if(occluding()&&rx>=unit*.04&&isHexColor(fill))occludeEllipse(x,y,rx,ry);
     ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);
     if(isHexColor(fill)&&rx>unit*.11){
       ctx.fillStyle=cachedGradient(fill+'|e|'+q4(x)+'|'+q4(y)+'|'+q4(rx)+'|'+q4(ry),function(){var g=ctx.createRadialGradient(x-rx*.3,y-ry*.4,0,x,y,Math.max(rx,ry));g.addColorStop(0,fill);g.addColorStop(.6,fill);g.addColorStop(1,shadeColor(fill,.79));return g});
@@ -797,7 +1008,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       var foot=project(x+.28,y+.05,z+.27),canopy=project(x,y+.55+size*.45,z);
       var wash=ctx.createRadialGradient(foot.x,foot.y,0,foot.x,foot.y,unit*(size+.6));wash.addColorStop(0,'#ffdc9652');wash.addColorStop(.5,'#e6e3a51d');wash.addColorStop(1,'#e6e3a500');
       poly([foot,{x:canopy.x-unit*size*.38,y:canopy.y-unit*size*.35},{x:canopy.x+unit*size*.38,y:canopy.y-unit*size*.35}],wash);
-      ellipse(foot.x,foot.y,unit*.105,unit*.055,'#3c493d');ellipse(foot.x,foot.y-unit*.015,unit*.055,unit*.028,'#fff1c9');glow(foot.x,foot.y,unit*.5,'#ffe0a13d');
+      ellipse(foot.x,foot.y,unit*.105,unit*.055,'#3c493d');litEllipse(foot.x,foot.y-unit*.015,unit*.055,unit*.028,'#fff1c9');glow(foot.x,foot.y,unit*.5,'#ffe0a13d');
     }
 
   }
@@ -824,7 +1035,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   }
   // Glass: translucent tint plus a diagonal sheen so panes read as glazing rather than flat film.
   function glassPane(points,tint){poly(points,tint);var xs=points.map(function(q){return q.x}),ys=points.map(function(q){return q.y}),x0=Math.min.apply(null,xs),x1=Math.max.apply(null,xs),y0=Math.min.apply(null,ys),y1=Math.max.apply(null,ys),g=ctx.createLinearGradient(x0,y0,x1,y1);g.addColorStop(0,'rgba(255,255,255,.14)');g.addColorStop(.32,'rgba(255,255,255,.02)');g.addColorStop(.5,'rgba(255,255,255,.08)');g.addColorStop(.68,'rgba(255,255,255,0)');poly(points,g)}
-  function worldLine(points,color,weight){ctx.beginPath();points.forEach(function(p,i){var q=project(p[0],p[1],p[2]);if(i)ctx.lineTo(q.x,q.y);else ctx.moveTo(q.x,q.y)});ctx.strokeStyle=color;ctx.lineWidth=Math.max(.65,unit*weight);ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke()}
+  function worldLine(points,color,weight){var w=Math.max(.65,unit*weight),q=new Array(points.length);ctx.beginPath();for(var i=0;i<points.length;i++){var v=project(points[i][0],points[i][1],points[i][2]);q[i]=v;if(i)ctx.lineTo(v.x,v.y);else ctx.moveTo(v.x,v.y)}ctx.strokeStyle=color;ctx.lineWidth=w;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();if(weight>=.05&&occluding()&&isHexColor(color))occludeStroke(q,w)}
   function constructionTape(a,b){
     // A vertical ribbon in world space stays attached to the stair posts when the camera moves.
     function point(t,lift){return project(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t+lift,a[2]+(b[2]-a[2])*t)}
@@ -842,7 +1053,11 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   }
   function bagAppIcon(x,z,y,size){
     // Exact two-leaf Canopy mark, projected onto the bag's front face.
-    var o=project(x-size/2,y+size,z),a=project(x+size/2,y+size,z),b=project(x-size/2,y,z);
+    leafMark(project(x-size/2,y+size,z),project(x+size/2,y+size,z),project(x-size/2,y,z));
+  }
+  // The same mark laid flat on a horizontal surface (a folded tee's top), size units on a side.
+  function leafMarkFlat(x,z,y,size){leafMark(project(x-size/2,y,z-size/2),project(x+size/2,y,z-size/2),project(x-size/2,y,z+size/2))}
+  function leafMark(o,a,b){
     ctx.save();ctx.transform((a.x-o.x)/48,(a.y-o.y)/48,(b.x-o.x)/48,(b.y-o.y)/48,o.x,o.y);
     ctx.beginPath();ctx.moveTo(24,38);ctx.lineTo(24,24);ctx.strokeStyle='#dce9be';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.stroke();
     ctx.beginPath();ctx.moveTo(24,31);ctx.bezierCurveTo(14,32,11,26,12,21);ctx.bezierCurveTo(20,20,25,24,24,31);ctx.closePath();ctx.fillStyle='#a8c884';ctx.fill();
@@ -864,18 +1079,16 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     objectShadow(x,z,y,.6,.46);
     var fabric=[color,shadeColor(color,.68),shadeColor(color,.85)];
     if(kind===0){
-      // Folded tees: two soft stacks, a neck fold, and a small cream leaf tag.
+      // Folded tees: two soft stacks, a neck fold, and the Canopy leaf printed on the chest.
       for(var layer=0;layer<2;layer++)drawBox(x,z,y+layer*.085,.58,.42,.075,layer?fabric:['#e8dfbf','#a59c80','#c6bca0']);
       worldLine([[x-.07,y+.163,z-.12],[x,y+.163,z-.06],[x+.07,y+.163,z-.12]],'#dfdfbf',.022);
-      worldLine([[x+.12,y+.164,z+.06],[x+.12,y+.164,z+.16]],'#e6edcc',.018);
-      worldLine([[x+.07,y+.164,z+.08],[x+.12,y+.164,z+.12],[x+.17,y+.164,z+.07]],'#e6edcc',.024);
+      leafMarkFlat(x+.1,z+.08,y+.166,.24);
     }else if(kind===1){
-      // Cap crown and projecting brim sit directly on the shelf.
+      // Cap crown and projecting brim sit directly on the shelf, the Canopy leaf on the crown's front.
       drawBox(x,z+.14,y,.51,.42,.035,fabric);
       var q=project(x,y+.14,z-.035);
       ellipse(q.x,q.y,unit*.22,unit*.19,color);
-      worldLine([[x,y+.15,z+.13],[x,y+.27,z+.08]],'#e6edcc',.026);
-      worldLine([[x-.055,y+.2,z+.13],[x,y+.23,z+.1],[x+.055,y+.2,z+.13]],'#e6edcc',.026);
+      bagAppIcon(x,z+.12,y+.09,.2);
     }else{
       // Canvas tote with visible handles and a leaf print.
       drawBox(x,z,y,.43,.24,.4,['#e6d8b5','#a49470','#c7b68d']);
@@ -895,7 +1108,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     if(i===1){
       // The overhead strip is gone; the gantry's purple bars light this bench. Only the small monitor remains.
       drawBox(x+1.5,z+.5,1.67,.09,.36,.45,metal);
-      var screen=project(x+1.57,1.94,z+.68);ctx.fillStyle='#294b40';ctx.fillRect(screen.x-unit*.12,screen.y,unit*.22,unit*.17);ctx.fillStyle='#bbe697';ctx.fillRect(screen.x-unit*.09,screen.y+unit*.05,unit*.13,unit*.04);
+      var screen=project(x+1.57,1.94,z+.68);lit(function(){ctx.fillStyle='#294b40';ctx.fillRect(screen.x-unit*.12,screen.y,unit*.22,unit*.17);ctx.fillStyle='#bbe697';ctx.fillRect(screen.x-unit*.09,screen.y+unit*.05,unit*.13,unit*.04)});
     }
     if(i===2){
       drawBox(x+.68,z+.76,1.33,.85,.47,.045,['#b3cab6','#6b8c79','#91ac98']);
@@ -910,30 +1123,32 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     if(i===4){
       // The screen faces the same way as its counter, so it stays attached during pan/zoom.
       drawBox(x-.7,z-.115,1.53,.73,.025,.43,['#b8d9ad','#183f36','#244f40']);
-      for(var row=0;row<3;row++)drawBox(x-.79,z-.096,1.6+row*.105,.37-row*.07,.012,.024,['#c9e6a9','#c9e6a9','#c9e6a9']);
+      for(var row=0;row<3;row++)litBox(x-.79,z-.096,1.6+row*.105,.37-row*.07,.012,.024,['#c9e6a9','#c9e6a9','#c9e6a9']);
       drawBox(x+.96,z+.56,1.33,.5,.4,.24,metal);drawBox(x+.96,z+.56,1.57,.28,.48,.018,['#f4ead3','#cabfa8','#e1d8c1']);
       drawBox(x-.7,z+.47,1.33,.78,.3,.04,['#526e60','#304d40','#3c5c49']);
     }
 
   }
   function drawCounterDivider(){
-        if(state.orderCounters===3){drawBox(1,2.5,.03,2,.28,1.04,['#6b8972','#284939','#3d614c']);drawBox(1,2.5,1.07,2.12,.4,.11,['#e0d4b4','#a99c7b','#c5ba9a']);return}
-        // A low tiled divider links the counters without crossing the customer lanes.
-        drawBox(.3,2.5,.03,3.5,.28,1.04,['#6b8972','#284939','#3d614c']);
-        for(var tile=0;tile<15;tile++){var tx=-1.38+tile*.24;worldLine([[tx,.09,2.65],[tx,1.05,2.65]],'#d4d6b7',.016)}
-        [.38,.72].forEach(function(y){worldLine([[-1.45,y,2.65],[2.05,y,2.65]],'#d4d6b7',.016)});
-        drawBox(.3,2.5,1.07,3.62,.4,.11,['#e0d4b4','#a99c7b','#c5ba9a']);
+    // A low tiled divider links the counters without crossing the customer lanes, centred in the gap between the
+    // right-hand order desk and the pickup counter (the desks narrow when the order bank expands, so the gap moves).
+    var count=state.orderCounters,orderEdge=Math.max.apply(null,orderCounterPositions(count).map(function(p){return p.x+(count===1?1.46:1.01)})),pickupEdge=4-1.46;
+    var cx=(orderEdge+pickupEdge)/2,width=count===3?2:3.5,seams=Math.floor(width/.24);
+    drawBox(cx,2.5,.03,width,.28,1.04,['#6b8972','#284939','#3d614c']);
+    for(var tile=0;tile<seams;tile++){var tx=cx-width/2+.07+tile*.24;worldLine([[tx,.09,2.65],[tx,1.05,2.65]],'#d4d6b7',.016)}
+    [.38,.72].forEach(function(y){worldLine([[cx-width/2,y,2.65],[cx+width/2,y,2.65]],'#d4d6b7',.016)});
+    drawBox(cx,2.5,1.07,width+.12,.4,.11,['#e0d4b4','#a99c7b','#c5ba9a']);
   }
-  function drawOrderCounterBank(now){
+  function drawOrderCounterBank(now,only){
     orderCounterPositions(state.orderCounters).map(function(p,index){return {x:p.x,z:p.z,index:index}}).sort(function(a,b){return depthOf(a)-depthOf(b)}).forEach(function(p){
+      if(only!==undefined&&p.index!==only)return;
       var active=customers.some(function(c){return c.orderCounter===p.index&&atOrderCounter(c,state.orderCounters)&&c.serviceElapsed>0});
-      drawPerson(p.x-.35,p.z-1.5,now,4,false,true,false,{amount:0,phase:0,facing:.3,identity:4+p.index*23,taskOffset:p.index*1.7,workActivity:active?1:0});
+      if(state.lines[4]>0)drawPerson(p.x-.35,p.z-1.5,now,4,false,true,false,{amount:0,phase:0,facing:.3,identity:4+p.index*23,taskOffset:p.index*1.7,workActivity:active?1:0});
       if(state.orderCounters===1){drawStage(p,4,now);return}
-      var x=p.x,z=p.z,stone=['#f8f3e5','#bfc3b4','#dfe2d5'],tile=['#5e8c70','#244b3a','#3a6951'],oak=['#cfb085','#82613f','#a88960'];
+      var x=p.x,z=p.z,stone=['#f8f3e5','#bfc3b4','#dfe2d5'],walnut=['#8d6a45','#4a3120','#6e5034'],oak=['#cfb085','#82613f','#a88960'];
       drawBox(x,z,.03,2.12,2.16,.25,['#425046','#222d25','#324137']);
-      drawBox(x,z,.28,2.02,2.06,.86,tile);
-      for(var seam=0;seam<8;seam++)worldLine([[x-.94+seam*.27,.3,z+1.04],[x-.94+seam*.27,1.14,z+1.04]],'#cbd0ad',.016);
-      [.57,.86].forEach(function(y){worldLine([[x-1,y,z+1.045],[x+1,y,z+1.045]],'#cbd0ad',.016)});
+      drawBox(x,z,.28,2.02,2.06,.86,walnut);
+      for(var flute=0;flute<11;flute++)drawBox(x-.9+flute*.18,z+1.035,.32,.105,.075,.78,['#a8865c','#7f5f3f','#5e4229']);
       drawBox(x+1.02,z,.29,.055,2.03,.84,oak);
       drawBox(x,z,1.14,2.22,2.2,.17,stone);
       warmStrip(orderCounterStrip(x,z),false);
@@ -962,7 +1177,36 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     if(i===4){drawBox(x-.25,z,1.28,.65,.5,.08,metal);drawBox(x-.25,z-.16,1.36,.65,.1,.45,metal);drawBox(x+.55,z+.2,1.28,.4,.35,.06,wood)}
     if(i===5){pickupBag(x-.35,z,1.28);pickupBag(x+.35,z,1.28)}
   }
+  // An orange cone with a reflective band: the universal sign that something is not finished yet.
+  function trafficCone(x,z,y,size){
+    size=size||.3;var base=project(x,y,z),apex=project(x,y+size*1.45,z),r=unit*size*.34;
+    drawBox(x,z,y,size*.78,size*.78,.025,['#d9572d','#8a3418','#b8451f']);
+    ellipse(base.x,base.y-unit*.02,r,r*.45,'#c24a22');
+    poly([{x:base.x-r,y:base.y-unit*.02},{x:apex.x,y:apex.y},{x:base.x+r,y:base.y-unit*.02}],'#ea7a3a');
+    var band=project(x,y+size*.62,z),br=r*.6;poly([{x:band.x-br,y:band.y},{x:band.x-br*.78,y:band.y-unit*size*.16},{x:band.x+br*.78,y:band.y-unit*size*.16},{x:band.x+br,y:band.y}],'#f6efe1');
+  }
+  // A construction site the size of the future station: gravel pad, chalk outline, a faint ghost of what will stand here,
+  // yellow stakes joined by striped tape, cones and a lumber pile. Static on purpose; the tap is the animation.
+  function drawConstructionSite(x,z,w,d,ghost){
+    var stake=['#e6c95a','#8b7423','#c9ab3e'],timber=['#cfae7c','#8a6b45','#b08e62'];
+    drawBox(x,z,0,w,d,.06,['#bdb9a8','#7c7868','#9d9988']);
+    ctx.save();ctx.setLineDash([Math.max(2,unit*.14),Math.max(2,unit*.1)]);worldLine([[x-w/2+.2,.075,z-d/2+.2],[x+w/2-.2,.075,z-d/2+.2],[x+w/2-.2,.075,z+d/2-.2],[x-w/2+.2,.075,z+d/2-.2],[x-w/2+.2,.075,z-d/2+.2]],'#f4efd9b0',.03);ctx.restore();
+    if(ghost){ctx.save();ctx.globalAlpha=.24;ghost();ctx.restore()}
+    var hx=w/2-.12,hz=d/2-.12,corners=[[x-hx,z-hz],[x+hx,z-hz],[x+hx,z+hz],[x-hx,z+hz]];
+    corners.forEach(function(c){drawBox(c[0],c[1],.06,.1,.1,.72,stake)});
+    for(var e=0;e<4;e++){var a=corners[e],b=corners[(e+1)%4];constructionTape([a[0],.58,a[1]],[b[0],.58,b[1]])}
+    drawBox(x-w*.18,z+d*.12,.06,1.15,.22,.07,timber);drawBox(x-w*.18+.08,z+d*.12-.2,.13,1.05,.2,.07,timber);drawBox(x-w*.18-.05,z+d*.12-.08,.2,.95,.2,.07,timber);
+    trafficCone(x+w*.3,z+d*.28,.06);trafficCone(x-w*.34,z-d*.24,.06,.24);
+    // A hard hat waiting on the pile.
+    var hat=project(x-w*.18+.15,.32,z+d*.12-.1);ellipse(hat.x,hat.y,unit*.14,unit*.07,'#e4bf3f');ellipse(hat.x,hat.y-unit*.045,unit*.1,unit*.085,'#f0cd52');
+  }
   function drawStage(pos,i,now,previewOnly){
+    if(!previewOnly&&!state.lines[i]){drawConstructionSite(pos.x,pos.z,3.1,2.5,function(){drawStarterStation(pos.x,pos.z,i)});return}
+    var rise=previewOnly?0:buildRise[i]||0,lift=rise*rise*1.1;
+    if(rise>0){ctx.save();ctx.globalAlpha=.15+.85*(1-rise);sceneElevation-=lift}
+    try{drawStageBuilt(pos,i,now,previewOnly)}finally{if(rise>0){sceneElevation+=lift;ctx.restore()}}
+  }
+  function drawStageBuilt(pos,i,now,previewOnly){
     now=motionPreference.matches?0:taskClocks[i];
     var x=pos.x,z=pos.z,active=stationWorking(i),stone=[['#d1e5c4','#6f9b7d','#a0c6a5'],['#7fd7b5','#236e62','#44ab89'],['#97e4e1','#28747f','#55b4b4'],['#ffe29a','#c3893f','#edbd62']][Math.min(3,stationTier(i))],dark=['#416859','#213b32','#315446'];
     if(stationTier(i)===0){drawStarterStation(x,z,i);warmStrip([[x-.8,1.12,z+.84],[x+.8,1.12,z+.84]],i===1);if(i>=4&&!previewOnly)slabDownlight(x,z,4.45,1.13);return}
@@ -983,25 +1227,24 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     if(i>=4&&!previewOnly)slabDownlight(x,z,4.45,1.31);
     if(i===3){drawBox(x+1.05,z+.8,1.33,.5,.35,.16,['#9faf99','#465f4a','#70866b']);drawBox(x+1.05,z+.8,1.5,.35,.24,.025,['#c9ebaf','#8cac78','#b7d59d'])}
     if(i>=4){
-      // Pale stone retail counters with oak fluting and a glass product vitrine.
-      drawBox(x,z,.34,2.92,2.24,.79,['#386552','#173e32','#255240']);
-      for(var tile=0;tile<13;tile++)worldLine([[x-1.4+tile*.23,.36,z+1.135],[x-1.4+tile*.23,1.1,z+1.135]],'#d9d7b8',.018);
-      [.38,.73,1.08].forEach(function(y){worldLine([[x-1.44,y,z+1.14],[x+1.44,y,z+1.14]],'#d9d7b8',.018)});
+      // Stone-topped retail counters on a dark plinth, fluted walnut across the front and the side return. The plinth
+      // goes down first — its full-footprint top face would otherwise paint over the lower front of the body in this
+      // projection and leave the counter looking like a black slab.
+      drawBox(x,z,.3,3.02,2.32,.09,['#3b433d','#1e2521','#2c3530']);
+      drawBox(x,z,.34,2.92,2.24,.79,['#8d6a45','#4a3120','#6e5034']);
+      for(var flute=0;flute<16;flute++)drawBox(x-1.35+flute*.18,z+1.125,.38,.105,.075,.7,['#a8865c','#7f5f3f','#5e4229']);
       worldLine([[x-1.5,.22,z+1.3],[x+1.5,.22,z+1.3]],'#c4a76b',.06);
-      // Oak slats on the side return retain the green tile across the front.
-      drawBox(x+1.47,z,.34,.055,2.22,.8,['#b78a59','#755033','#9d7146']);
-      for(var slat=0;slat<12;slat++)drawBox(x+1.505,z-1.02+slat*.18,.38,.075,.105,.7,['#c9a16d','#7b5638','#b18a58']);
-      drawBox(x,z,.3,3.02,2.32,.09,['#353a35','#181e1b','#252c27']);
+      drawBox(x+1.47,z,.34,.055,2.22,.8,['#8d6a45','#4f3521','#6e5034']);
+      for(var slat=0;slat<12;slat++)drawBox(x+1.505,z-1.02+slat*.18,.38,.075,.105,.7,['#a8865c','#5e4229','#8a6844']);
       drawBox(x,z,1.095,3.19,2.47,.065,['#b68b5c','#765138','#9c724a']);
       drawBox(x,z,1.14,3.22,2.5,.17,['#fcfaf0','#bfc3ba','#e1e4db']);
       worldLine([[x-1.2,1.316,z-.8],[x-.65,1.316,z-.3],[x-.85,1.316,z+.3]],'#999f9335',.016);
       if(i===4){drawBox(x+.65,z+.35,1.34,1.15,.85,.65,['#d7ebe524','#99c6b629','#b8dfcf35']);
       worldLine([[x+.08,1.34,z+.78],[x+.08,2,z+.78],[x+1.22,2,z+.78],[x+1.22,1.34,z+.78]],'#2f3933',.035);
       }
-      worldLine([[x-1.45,.39,z+1.16],[x+1.45,.39,z+1.16]],'#c0a466',.035);
       if(i===4){jar(x+.4,z+.36,1.34);jar(x+.86,z+.36,1.34);
         // Case lighting: an LED bar under the lid and a soft fill on the jars.
-        var caseFill=project(x+.65,1.58,z+.35);glow(caseFill.x,caseFill.y,unit*.62,'#fff0c82c',unit*.42);worldLine([[x+.14,1.95,z+.74],[x+1.16,1.95,z+.74]],'#fff2cc',.02)}
+        var caseFill=project(x+.65,1.58,z+.35);glow(caseFill.x,caseFill.y,unit*.62,'#fff0c82c',unit*.42);litLine([[x+.14,1.95,z+.74],[x+1.16,1.95,z+.74]],'#fff2cc',.02)}
       else{
         // Low oak staging tray leaves a clear handoff area at the front.
         drawBox(x,z-.35,1.315,2.6,.72,.07,['#cdb38b','#92724e','#b2946c']);
@@ -1037,7 +1280,13 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     worldLine([[x-1.5,1.325,z+1.22],[x+1.5,1.325,z+1.22]],'#fff9df88',.018);
     worldLine([[x+1.55,1.325,z-1.12],[x+1.55,1.325,z+1.18]],'#fff9df55',.018);
     drawStationLevel(x,z,i);
-    var p=project(x+1.25,1.44,z+1);ellipse(p.x,p.y,unit*.1,unit*.07,active?'#a7ed96':'#69786f');
+    // Status lamp on the front corner of the counters only: green while the counter is free, grey while a customer is
+    // being served, so a lit lamp always means "come here". The production stations upstairs carry no lamp.
+    if(i>=4){
+      var lit=!active,lamp=project(x+1.25,1.44,z+1);
+      ellipse(lamp.x,lamp.y,unit*.115,unit*.08,lit?'#3f7a55':'#4d5650');(lit?litEllipse:ellipse)(lamp.x,lamp.y-unit*.01,unit*.085,unit*.06,lit?'#a7ed96':'#7d8780');
+      if(lit)glow(lamp.x,lamp.y,unit*.4,'#9ff59f55',unit*.26);
+    }
   }
   function premiumEquipment(x,z,i,now){
     var tier=stationTier(i);if(tier<2)return;
@@ -1063,7 +1312,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       drawBox(x-1.35,z-.85,1.33,.065,.065,1.45,dark);
       drawBox(x-.8,z-.85,2.78,1.15,.22,.07,metal);
       lightCone(x-.78,2.76,z-.73,1.33,.55,.9,'#ffe6a8',.12);
-      worldLine([[x-1.3,2.77,z-.73],[x-.25,2.77,z-.73]],'#f9e9b7',.035);
+      litLine([[x-1.3,2.77,z-.73],[x-.25,2.77,z-.73]],'#f9e9b7',.035);
     }else{
       drawBox(x-.85,z+1.17,.57,.62,.025,.36,dark);
       for(var row=0;row<3;row++)worldLine([[x-1.07,.64+row*.085,z+1.19],[x-.65+row*.035,.64+row*.085,z+1.19]],'#cce3a5',.022);
@@ -1071,9 +1320,6 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   }
   function drawStationLevel(x,z,i){
     var tier=Math.min(3,stationTier(i)),color=TIER_COLORS[stationTier(i)],level=state.lines[i];
-    // Each pair of levels lights another indicator before the next ten-level milestone.
-    var lamps=level>=30?5:Math.floor((level%10)/2)+1;
-    for(var n=0;n<5;n++){var p=project(x-.56+n*.28,.99,z+1.17);ellipse(p.x,p.y,unit*.06,unit*.045,n<lamps?color:'#45614f')}
     if(tier<2)return;
     drawBox(x,z+1.2,1.12,3.1,.055,.09,[color,color,color]);
     var equipment=['#c0d5bd','#4e715c','#8cae94'];
@@ -1118,8 +1364,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     if(expressive)hair=pickColor(['#ac83b5','#648f9c','#bf819d','#aaad72'],311);
     function point(dx,y){var lean=reduced?0:gait?Math.max(-.045,Math.min(.045,gait.lean||0)):0;return{x:p.x+(dx+lean*Math.max(0,y-.15))*u,y:p.y-(y+bob)*u}}
     function shape(coords,color){poly(coords.map(function(q){return point(q[0],q[1])}),color)}
-    function block(dx,y,w,h,r,color){var q=point(dx,y);ctx.beginPath();roundedRectPath(q.x,q.y,w*u,h*u,r*u);if(h>=.25&&/^#[0-9a-f]{6}$/i.test(color)){var g=ctx.createLinearGradient(q.x,q.y,q.x,q.y+h*u);g.addColorStop(0,shadeColor(color,1.06));g.addColorStop(1,shadeColor(color,.9));ctx.fillStyle=g}else ctx.fillStyle=color;ctx.fill()}
-    function limb(coords,color,w){ctx.beginPath();coords.forEach(function(q,i){var v=point(q[0],q[1]);if(i)ctx.lineTo(v.x,v.y);else ctx.moveTo(v.x,v.y)});ctx.lineWidth=w*u;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle=color;ctx.stroke()}
+    function block(dx,y,w,h,r,color){var q=point(dx,y);if(occluding()){var scene=ctx;ctx=emissiveCtx;ctx.globalAlpha=scene.globalAlpha;ctx.beginPath();roundedRectPath(q.x,q.y,w*u,h*u,r*u);ctx.fillStyle='#000';ctx.fill();ctx=scene}ctx.beginPath();roundedRectPath(q.x,q.y,w*u,h*u,r*u);if(h>=.25&&/^#[0-9a-f]{6}$/i.test(color)){var g=ctx.createLinearGradient(q.x,q.y,q.x,q.y+h*u);g.addColorStop(0,shadeColor(color,1.06));g.addColorStop(1,shadeColor(color,.9));ctx.fillStyle=g}else ctx.fillStyle=color;ctx.fill()}
+    function limb(coords,color,w){var q=coords.map(function(c){return point(c[0],c[1])});ctx.beginPath();q.forEach(function(v,i){if(i)ctx.lineTo(v.x,v.y);else ctx.moveTo(v.x,v.y)});ctx.lineWidth=w*u;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle=color;ctx.stroke();if(occluding())occludeStroke(q,w*u)}
     ellipse(p.x,p.y+u*.025,u*.32,u*.085,'#071d2025');
     // Cast shadow stretching down-left from the feet, matching the key light used for furniture.
     ctx.save();ctx.translate(p.x+u*.34,p.y+u*.14);ctx.rotate(-.42);var sg=ctx.createLinearGradient(-u*.45,0,u*.45,0);sg.addColorStop(0,'rgba(14,28,20,.16)');sg.addColorStop(1,'rgba(14,28,20,.03)');ctx.beginPath();ctx.ellipse(0,0,u*.5,u*.12,0,0,Math.PI*2);ctx.fillStyle=sg;ctx.fill();ctx.restore();
@@ -1187,11 +1433,18 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     if(!employee&&(style===3||style===6)){var mouth=point(.075,1.4);ellipse(mouth.x,mouth.y,u*.034,u*.018,'#b96356')}
     if(bag){var bx=x+.48,bz=z+.1,by=.55+(reduced?0:Math.sin(phase-.65)*amount*.055+(gait&&gait.pickupAge!==undefined?.14*Math.exp(-gait.pickupAge*5):0));drawBox(bx,bz,by,.38,.3,.48,['#ead3a1','#9c8052','#c6aa75']);worldLine([[bx-.12,by+.48,bz],[bx-.12,by+.59,bz],[bx+.12,by+.59,bz],[bx+.12,by+.48,bz]],'#bd9f67',.03);drawBox(bx,bz+.16,by+.16,.2,.018,.22,['#496f50','#496f50','#496f50']);bagAppIcon(bx,bz+.18,by+.16,.22)}
   }
+  // The order line snakes through three full-width rows of the rope pen in front of the order desk (z 7.0, 8.15 and
+  // 9.3, between x −6.5 and −2.0, the gate at the right-hand end — a little back and to the right of the ID desk)
+  // before its tail runs through the entry corridor in front of the ID desk and the doorman (never along the wall
+  // beside them), crosses the threshold at z ≈ 9 and continues outside along the storefront.
+  // The pen's rows grow with the line: 2.4 wide for the starter line of six, full width (4.5) from twenty places.
+  var ORDER_ROWS=[7.0,8.15,9.3],ORDER_PEN_RIGHT=-2.0,PICKUP_AISLE_Z=5.5;
+  function orderPen(){return {right:ORDER_PEN_RIGHT,left:ORDER_PEN_RIGHT-Math.min(4.5,1.5+queueLimit()*.15)}}
   function queueRoute(ordered){
-    if(!ordered)return [ORDER_QUEUE_GATE,{x:-4,z:7.3},{x:-6.1,z:7.3},{x:-6.1,z:state.kiosk?9.05:10},{x:-7.4,z:state.kiosk?9.05:10},{x:-8.7,z:state.kiosk?9.05:10},{x:-10.5,z:state.kiosk?9.05:10},{x:-11.7,z:9.3},{x:-12.4,z:7.8}];
+    var ORDER_PEN=orderPen();
+    if(!ordered)return [ORDER_QUEUE_GATE,{x:ORDER_PEN.right,z:ORDER_ROWS[0]},{x:ORDER_PEN.left,z:ORDER_ROWS[0]},{x:ORDER_PEN.left,z:ORDER_ROWS[1]},{x:ORDER_PEN.right,z:ORDER_ROWS[1]},{x:ORDER_PEN.right,z:ORDER_ROWS[2]},{x:ORDER_PEN.left,z:ORDER_ROWS[2]},{x:-7.4,z:ORDER_ROWS[2]},{x:-8.2,z:8.6}].concat(ENTRY_TAIL);
     var x=4,d=-1;
-    var route=[{x:x,z:4.9},{x:x+d*2.1,z:4.9},{x:x+d*2.1,z:6.1},{x:x,z:6.1},{x:x,z:7.3},{x:x+d*2.1,z:7.3},{x:x+d*2.1,z:ordered?8.1:state.kiosk?9.05:10}];
-    if(!ordered)route=route.concat(state.kiosk?[{x:-7.4,z:9.05},{x:-8.7,z:9.05},{x:-10.5,z:9.05},{x:-11.4,z:8.7},{x:-12.05,z:7.8}]:[{x:-7.4,z:10},{x:-8.7,z:10},{x:-10.5,z:10},{x:-11.7,z:9.3},{x:-12.4,z:7.8}]);return route;
+    return [{x:x,z:4.9},{x:x+d*2.1,z:4.9},{x:x+d*2.1,z:6.1},{x:x,z:6.1},{x:x,z:7.3},{x:x+d*2.1,z:7.3},{x:x+d*2.1,z:8.1}];
   }
   function routeLength(route){var n=0;for(var i=1;i<route.length;i++)n+=Math.hypot(route[i].x-route[i-1].x,route[i].z-route[i-1].z);return n}
   function routePoint(route,distance){
@@ -1199,8 +1452,10 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     return route[route.length-1];
   }
   function customerQueue(c){
-    var queue=customers.filter(function(q){return q.idChecked!==false&&q.phase!=='leaving'&&q.ordered===c.ordered&&(c.ordered||!!q.kiosk===!!c.kiosk)&&(q.ordered||q.kiosk||q.orderCounter==null)});
-    if(c.ordered)queue.sort(function(a,b){return (a.pickupTicket||a.id)-(b.pickupTicket||b.id)});
+    // Lounge guests are not in any line: counting them left the order customers behind them waiting at the lane join,
+    // beside the ID desk, for as long as the guest was on the rope or inside.
+    var queue=customers.filter(function(q){return q.idChecked!==false&&q.phase!=='leaving'&&q.phase!=='toLounge'&&q.phase!=='lounge'&&q.ordered===c.ordered&&(c.ordered||!!q.kiosk===!!c.kiosk)&&(q.ordered||q.kiosk||q.orderCounter==null)});
+    if(c.ordered)queue.sort(function(a,b){return pickupOrder(a)-pickupOrder(b)});
     return queue;
   }
   function customerQueueDistance(c){
@@ -1218,54 +1473,73 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     if(c.phase==='leaving')return{x:-10.5,z:-8.1};
     return routePoint(c.kiosk&&!c.ordered?kioskRoute(c.kioskIndex):queueRoute(c.ordered),customerQueueDistance(c));
   }
+  // The doorman's line is one route from the desk back out through the door and along the street, everyone 0.7
+  // apart: the next customer is already on the approach while the head is being checked, so the desk is never idle
+  // waiting for someone to walk up from the door, and a well-staffed door clears people as fast as they arrive.
+  var ID_ROUTE=[{x:-10.05,z:9.35},{x:-10.6,z:9.6},{x:-11.7,z:9.3},{x:-12.4,z:7.8},{x:-12.4,z:-10}];
   function moveToIdCheck(c,dt){
     var queue=customers.filter(function(q){return q.idChecked===false}),index=queue.indexOf(c);
     var startX=c.x,startZ=c.z,budget=dt*economy.walkSpeed(state.trafficLevel);
     c.phase='idCheck';
-    if(index===0&&c.idApproach){
-      while(c.idApproach.length&&budget>0){
-        var point=c.idApproach[0],dx=point.x-c.x,dz=point.z-c.z,distance=Math.hypot(dx,dz),step=Math.min(distance,budget);
-        if(distance>.001){c.x+=dx/distance*step;c.z+=dz/distance*step}budget-=step;
-        if(distance<=step+.001)c.idApproach.shift();else break;
-      }
-      c.walking=Math.hypot(c.x-startX,c.z-startZ)>.001;
-      if(!c.idApproach.length&&!c.walking){
-        c.idCheckTime+=dt;
-        if(c.idCheckTime>=securityDuration()){
-          c.idChecked=true;c.phase='entering';
-          var route=c.kiosk?kioskRoute(c.kioskIndex):queueRoute(false),join=c.kiosk?2:route.length-4;
-          // Step around the back of the booth rather than through it before joining the line.
-          c.routeKind=c.kiosk?'kiosk':'order';c.laneDistance=routeLength(route.slice(0,join+1));c.waypoints=[{x:-10,z:8.7},{x:-8.3,z:8.7},route[join]];
+    if(c.idDistance===undefined)c.idDistance=routeLength(ID_ROUTE);
+    c.idDistance=Math.max(index*.7,c.idDistance-budget);
+    var pos=routePoint(ID_ROUTE,c.idDistance);c.x=pos.x;c.z=pos.z;
+    c.walking=Math.hypot(c.x-startX,c.z-startZ)>.001;
+    // The doorman starts the check as the head comes up the last half-stride, so a quick door clears a customer every
+    // tick or two and never caps the shop's flow.
+    if(index===0&&c.idDistance<=.35){
+      c.idCheckTime+=dt;
+      if(c.idCheckTime>=securityDuration()){
+        c.idChecked=true;c.phase='entering';
+        // A lounge guest heads for the curtain only while the rope there is short; otherwise they shop like anyone
+        // else, so the rope never backs up through the kiosks to the door.
+        if(c.lounge&&loungeSeats(state.lounge)>0&&loungeWaiting().length+customers.filter(function(q){return q.phase==='toLounge'&&q.waypoints.length}).length<LOUNGE_ROPE){
+          // Past the doorman, along the kiosk row and back to the curtain.
+          c.phase='toLounge';c.routeKind='lounge';c.waypoints=[{x:-10.05,z:8.5},{x:-9.7,z:8.15},{x:-8.2,z:8.6},{x:-7.95,z:7.6},{x:-7.95,z:2.2},{x:LOUNGE_DOOR.x,z:2.2},LOUNGE_DOOR];return;
         }
+        c.lounge=false;
+        var route=c.kiosk?kioskRoute(c.kioskIndex):queueRoute(false),join=laneJoinIndex(route);
+        // Step down the desk's door side and join the lane in the corridor in front of it, clear of the doorman.
+        c.routeKind=c.kiosk?'kiosk':'order';c.laneDistance=routeLength(route.slice(0,join+1));c.waypoints=[{x:-10.05,z:8.5},route[join]];
       }
-      return;
-    }
-    var waitingIndex=index-(queue[0]&&queue[0].idApproach?1:0),targetZ=7.1-Math.max(0,waitingIndex)*.85,ahead=queue[index-1];
-    if(ahead&&!ahead.idApproach)targetZ=Math.min(targetZ,ahead.z-.85);
-    var dx=-12.4-c.x,dz=targetZ-c.z,distance=Math.hypot(dx,dz),step=Math.min(distance,budget);
-    if(distance>.001){c.x+=dx/distance*step;c.z+=dz/distance*step}
-    c.walking=step>.001;
-    if(index===0&&!c.walking&&Math.hypot(c.x+12.4,c.z-7.1)<.01){
-      c.idApproach=[{x:-12.4,z:7.8},{x:-11.7,z:9.3},{x:-10.6,z:9.7},{x:-10,z:9.8}];
     }
   }
   function moveQueuedCustomer(c,dt){
     if(c.idChecked===false){moveToIdCheck(c,dt);return}
+    if(c.phase==='lounge'){if(!(c.loungeFade>0))c.walking=false;return}
+    if(c.phase==='toLounge'){
+      var loungeStartX=c.x,loungeStartZ=c.z,loungeBudget=dt*economy.walkSpeed(state.trafficLevel);
+      if(!c.waypoints.length){
+        // Waiting on the rope: shuffle back along the approach, one place per guest ahead.
+        var place=loungeWaiting().indexOf(c),spot=loungeWaitSpot(place);
+        var wdx=spot.x-c.x,wdz=spot.z-c.z,wd=Math.hypot(wdx,wdz),ws=Math.min(wd,loungeBudget);if(wd>.001){c.x+=wdx/wd*ws;c.z+=wdz/wd*ws}
+      }else while(c.waypoints.length&&loungeBudget>0){var lp=c.waypoints[0],ldx=lp.x-c.x,ldz=lp.z-c.z,ld=Math.hypot(ldx,ldz),ls=Math.min(ld,loungeBudget);if(ld>.0001){c.x+=ldx/ld*ls;c.z+=ldz/ld*ls}loungeBudget-=ls;if(ld<=ls+.0001)c.waypoints.shift();else break}
+      c.walking=Math.hypot(c.x-loungeStartX,c.z-loungeStartZ)>.001;return;
+    }
     if(!c.ordered&&c.orderCounter!=null){
       var startX=c.x,startZ=c.z,budget=dt*economy.walkSpeed(state.trafficLevel);
       while(c.waypoints.length&&budget>0){var point=c.waypoints[0],dx=point.x-c.x,dz=point.z-c.z,distance=Math.hypot(dx,dz),step=Math.min(distance,budget);if(distance>.0001){c.x+=dx/distance*step;c.z+=dz/distance*step}budget-=step;if(distance<=step+.0001)c.waypoints.shift();else break}
       c.phase='ordering';c.walking=Math.hypot(c.x-startX,c.z-startZ)>.001;return;
     }
+    if(c.phase==='leaving'&&c.loungeFadeIn!==undefined&&c.loungeFadeIn<1){c.walking=false;return}
     var kind=c.phase==='leaving'?'exit':c.ordered?'pickup':c.kiosk?'kiosk':'order',route=kind==='kiosk'?kioskRoute(c.kioskIndex):queueRoute(c.ordered),budget=dt*economy.walkSpeed(state.trafficLevel),startX=c.x,startZ=c.z;
+    // A guest out of the lounge is in no hurry: they amble to the door at a fixed slow pace, whatever Floor flow does
+    // for everyone else (a third of the base walking speed).
+    if(c.lounge&&kind==='exit'&&c.z>-7.4)budget=dt*economy.walkSpeed(0)/3;
     if(c.routeKind!==kind){
       c.routeKind=kind;c.laneDistance=null;
-      c.waypoints=(kind==='order'||kind==='kiosk')?[route[route.length-1]]:kind==='pickup'?(c.kiosk?[{x:-8,z:6.8-(c.kioskIndex||0)*1.8},{x:-7.1,z:3.8},{x:-1.3,z:3.8},{x:-.25,z:4.9},{x:-.25,z:8.15},{x:1.9,z:8.15},{x:1.9,z:8.1}]:[{x:-1.3,z:4.9},{x:-.25,z:4.9},{x:-.25,z:8.15},{x:1.9,z:8.15},{x:1.9,z:8.1}]):[{x:4,z:4},{x:8.1,z:5},{x:11.15,z:5},{x:11.15,z:-4.3},{x:10.25,z:-5.6},{x:10.25,z:-8.1},{x:7,z:-8.1},{x:-10.5,z:-8.1}];
+      // To the pickup line: kiosk customers cross the floor along z 5.5, the aisle between the customers ordering at
+      // the counters (z 4.9) and the head of the order line (z 6.1); counter customers step back into the same aisle
+      // rather than walking along the counter front through the other customers. Everyone then goes down the middle
+      // walkway to the line's tail.
+      var toPickup=[{x:-.25,z:PICKUP_AISLE_Z},{x:-.25,z:8.15},{x:1.9,z:8.15},{x:1.9,z:8.1}];
+      c.waypoints=(kind==='order'||kind==='kiosk')?[route[route.length-1]]:kind==='pickup'?(c.kiosk?[{x:-8,z:6.8-(c.kioskIndex||0)*1.8},{x:-7.4,z:PICKUP_AISLE_Z}].concat(toPickup):[{x:c.x,z:PICKUP_AISLE_Z}].concat(toPickup)):[{x:4,z:4},{x:8.1,z:5},{x:11.15,z:5},{x:11.15,z:-4.3},{x:10.25,z:-5.6},{x:10.25,z:-8.1},{x:7,z:-8.1},{x:-10.5,z:-8.1}];
     }
     while(c.waypoints.length&&budget>0){var point=c.waypoints[0],dx=point.x-c.x,dz=point.z-c.z,distance=Math.hypot(dx,dz),step=Math.min(distance,budget);if(distance>.0001){c.x+=dx/distance*step;c.z+=dz/distance*step}budget-=step;if(distance<=step+.0001)c.waypoints.shift();else break}
     if(!c.waypoints.length){
       if(kind==='exit')c.t=1;
       else{
-        if(c.laneDistance===null)c.laneDistance=routeLength(route);
+        if(c.laneDistance===null){c.laneDistance=routeLength(route);if(kind==='pickup'&&!c.pickupTicket)c.pickupTicket=++pickupQueueSequence}
         var target=customerQueueDistance(c);
         // Follow the person ahead, not just the final empty queue slot.
         var queue=customerQueue(c),ahead=queue[queue.indexOf(c)-1];
@@ -1285,7 +1559,9 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   }
   function customerBehindBuilding(c){
     var x=c.renderX===undefined?c.x:c.renderX,z=c.renderZ===undefined?c.z:c.renderZ;
-    return z < -7.5 || (x < -11.5 && z < 7.5);
+    // Behind the rear wall, or outside along the storefront. The exit vestibule past the wall's end (x ≥ 9) stays
+    // depth-sorted so leaving guests pass in front of the bollards there.
+    return (z < -7.5 && x < 9) || (x < -11.5 && z < 7.5);
   }
   function customerRatings(c){
     var happiness=Math.max(15,Math.min(100,96-(c.waitSeconds||0)*1.2/(1+state.comfortLevel*.2)+(c.bag?18:0)));
@@ -1306,6 +1582,13 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       $(key+'Value').textContent=sample.length?value+'%':'—';$(key+'Meter').value=value;
       $(key+'Meter').setAttribute('aria-valuetext',sample.length?value+' percent':key==='pickupRating'?'No pickups yet':'No customers yet');
     });
+  }
+  // Guests slipping through the lounge drapes fade out; guests coming out of its back door fade in.
+  function drawFadedCustomer(c,now){
+    var t=c.phase==='lounge'?Math.max(0,Math.min(1,(c.loungeFade||0)/.2)):c.loungeFadeIn!==undefined?Math.max(0,Math.min(1,c.loungeFadeIn)):1,alpha=t*t*(3-2*t);
+    if(alpha<=0)return;
+    if(alpha>=1){drawCustomer(c,now);return}
+    ctx.save();ctx.globalAlpha=alpha;drawCustomer(c,now);ctx.restore();
   }
   function drawCustomer(c,now){
     var moving=c.walking;
@@ -1341,7 +1624,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     for(var row=0;row<6;row++)for(var col=0;col<4;col++){var px=-8.35+col*2.25;groundPatch(px,-7.3+row*1.53,2.21,1.47,(row+col)%3?'#c7ad8066':'#e2c59466');worldLine([[px-.8,.026,-7.05+row*1.53],[px+.65,.026,-7.05+row*1.53]],'#7e65472a',.015)}
     for(var paving=0;paving<20;paving++){groundPatch(-14.2+(paving%10)*2.85,7.7+Math.floor(paving/10)*1.45,2.77,1.38,paving%3?'#c1b9a49c':'#d4c8ac9c')}
     groundPatch(0,6.87,18.5,.15,'#eee0be99');
-    var waiting=customers.filter(function(c){return !c.ordered&&c.phase!=='leaving'}).length;
+    var waiting=customers.filter(inOrderFlow).length;
     for(var place=0;place<queueLimit();place++){var qx=-4-place*.9;groundPatch(qx,7.4,.72,.82,place<waiting?'#dfd49646':'#efe4c216');groundPatch(qx,7.89,.45,.06,place<waiting?'#ece0a6':'#b5bda260')}
     groundPatch(-4,7.4,.78,.06,'#f0d996');
     for(var plank=-8.5;plank<9;plank+=.65)groundPatch(plank,4.4,.018,4.6,'#604b3525');
@@ -1401,6 +1684,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   function conveyorRun(x1,x2,z,y,stage){
     var length=Math.abs(x2-x1),mid=(x1+x2)/2,forward=x2>x1?1:-1;
     var steel=['#758d80','#344a40','#536c5b'];
+    // The stands first: they are under the belt, so its body goes over them.
+    [x1+.2*forward,x2-.2*forward].forEach(function(x){drawBox(x,z,.06,.1,.5,Math.max(.1,y-.25),steel)});
     drawBox(mid,z,y-.18,length,.7,.16,steel);
     drawBox(mid,z,y-.01,length,.5,.035,['#334b40','#24382f','#2a4035']);
     [-.36,.36].forEach(function(dz){worldLine([[x1,y+.09,z+dz],[x2,y+.09,z+dz]],'#b6c7ad',.055)});
@@ -1409,7 +1694,6 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       var t=(slat*.23+phase*.7)%length,x=x1+forward*t;
       worldLine([[x,y+.03,z-.24],[x,y+.03,z+.24]],'#75927a',.035);
     }
-    [x1+.2*forward,x2-.2*forward].forEach(function(x){drawBox(x,z,.06,.1,.5,Math.max(.1,y-.25),steel)});
     for(var pack=0;pack<2;pack++){
       var px=x1+(x2-x1)*((phase+pack*.5)%1);
       transportItem(px,y+.08,z,stage);
@@ -1450,8 +1734,9 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     [points[0],points[points.length-1]].forEach(function(p){var q=project(p[0],p[1],p[2]);ellipse(q.x,q.y,unit*.37,unit*.28,'#c3b789');ellipse(q.x,q.y,unit*.27,unit*.2,'#345e5066')});
   }
   function drawFloorTransfer(stage,upper){
-    var port=stage===1?[5.4,9.4,-2]:[-.6,4.7,1];
-    var route=stage===1?[[4.55,10.85,-3],[5.4,10.85,-3],[5.4,10.85,-2],[5.4,6.15,-2],[5.4,6.15,1],[4.55,6.15,1]]:[[-1.45,6.15,1],[-.6,6.15,1],[-.6,1.55,1],[4,1.55,1],[4,1.55,1.35]];
+    // The pack tube drops through the mezzanine at x 0.1, clear of the menu board's price column on the wall behind.
+    var port=stage===1?[5.4,9.4,-2]:[.1,4.7,-.3];
+    var route=stage===1?[[4.55,10.85,-3],[5.4,10.85,-3],[5.4,10.85,-2],[5.4,6.15,-2],[5.4,6.15,-.3],[4.55,6.15,-.3]]:[[-1.45,6.15,-.3],[.1,6.15,-.3],[.1,1.55,-.3],[4,1.55,-.3],[4,1.55,1.35]];
     var p=project(port[0],port[1],port[2]);
     if(upper)floorPort(port[0],port[1],port[2]);
     ctx.save();ctx.beginPath();
@@ -1474,6 +1759,117 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     ctx.save();ctx.translate(p.x,p.y);ctx.transform(1,(axis.y-p.y)/(axis.x-p.x),0,1,0,0);
     ctx.shadowColor='#ffe8b6';ctx.shadowBlur=unit*.12;ctx.fillStyle=color||'#fff5d9';ctx.font='600 '+Math.max(7,unit*size)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,0,0,widthUnits*unit);ctx.restore();
   }
+  // Flat lettering on a wall plane: along x (the default) or along z (`alongZ`) for signs on the side walls. No halo.
+  // Split-flap menu board built into the first two shelving bays: an oak surround in the shelves' own timber, a black
+  // reveal, and four rows of twenty-one letter flaps — the strains on the menu with their current price. A letter that
+  // changes flips over, cycling through the alphabet for a moment and rippling left to right, the way a Solari board
+  // rolls; on load the whole board flips in from blank. Letters are only drawn once a flap is wide enough to read.
+  // The board stops at y 2.62: from the default view the mezzanine fascia hides the back wall above about 2.65.
+  var FLAP_COLS=21,FLAP_ROWS=4,FLAP_ALPHABET='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$ ',flapCells=[],flapSweepAt=0;
+  // Every now and then — 40 s to two minutes apart — the board refreshes itself for fun: every flap in turn, letter by
+  // letter along each row, rolls through the alphabet and lands back on what it showed.
+  function scheduleFlapSweep(now){flapSweepAt=now+40000+Math.random()*80000}
+  function flapLines(){
+    var lines=[];
+    menuStrains().slice(0,FLAP_ROWS).forEach(function(i){
+      var value=Math.round(flowerValue(i)),name=STRAINS[i].name.toUpperCase().slice(0,15),price=value<10000?'$'+value:fmt(value);
+      while(name.length<FLAP_COLS-price.length)name+=' ';
+      lines.push(name+price);
+    });
+    while(lines.length<FLAP_ROWS)lines.push('');
+    return lines.map(function(line){while(line.length<FLAP_COLS)line+=' ';return line.slice(0,FLAP_COLS)});
+  }
+  function drawMenuBoard(x,z,y0,width,height,now,timber){
+    // Set flush into the back wall: the black flap panel sits on the wall's face inside a slim oak trim that stands
+    // only a hair proud of it, so nothing overhangs the letters from this camera. The sill and jambs go down before
+    // the panel, the head after it, since its lip is in front of the panel's top edge.
+    var bar=.07,depth=.1,zMid=z+.16+depth/2,ix=width-bar*2,ih=height-bar*2,iy=y0+bar;
+    drawBox(x,zMid,y0,width,depth,bar,timber);
+    drawBox(x-width/2+bar/2,zMid,iy,bar,depth,ih,timber);
+    drawBox(x+width/2-bar/2,zMid,iy,bar,depth,ih,timber);
+    drawBox(x,z+.16,iy,ix,.05,ih,['#1a1e20','#0b0e10','#131617']);
+    var lines=flapLines(),reduced=motionPreference.matches,padX=.1,padY=.06;
+    if(!flapSweepAt)scheduleFlapSweep(now);
+    var sweep=!reduced&&now>=flapSweepAt&&flapCells.length===FLAP_COLS*FLAP_ROWS;
+    if(sweep)scheduleFlapSweep(now);
+    var cellW=(ix-padX*2)/FLAP_COLS,pitch=(ih-padY*2)/FLAP_ROWS,cellH=pitch*.82;
+    var mid=iy+ih/2,p=project(x,mid,z+.215),axis=project(x+1,mid,z+.215),ux=axis.x-p.x;
+    var cw=cellW*ux*.9,ch=cellH*unit,letters=cw>=4;
+    ctx.save();ctx.translate(p.x,p.y);ctx.transform(1,(axis.y-p.y)/(axis.x-p.x),0,1,0,0);
+    if(letters){ctx.font='800 '+(ch*1.02)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle'}
+    for(var row=0;row<FLAP_ROWS;row++){
+      var v=-(iy+ih-padY-pitch*(row+.5)-mid)*unit;
+      for(var col=0;col<FLAP_COLS;col++){
+        var index=row*FLAP_COLS+col,target=lines[row][col],cell=flapCells[index]||(flapCells[index]={ch:' ',flip:0,to:' '});
+        if(cell.ch!==target&&!cell.flip){cell.flip=now+col*18;cell.to=target}
+        else if(sweep&&!cell.flip){cell.flip=now+index*16;cell.to=cell.ch}
+        var shown=cell.ch,flipping=false;
+        if(cell.flip){var t=(now-cell.flip)/420;if(t>=1||reduced){cell.ch=cell.to;cell.flip=0;shown=cell.ch}else if(t>0){flipping=true;shown=FLAP_ALPHABET[Math.floor(now/55+index)%FLAP_ALPHABET.length]}}
+        var u=(col-(FLAP_COLS-1)/2)*cellW*ux;
+        ctx.fillStyle='#363c3e';ctx.fillRect(u-cw/2,v-ch/2,cw,ch/2);
+        ctx.fillStyle='#2b3133';ctx.fillRect(u-cw/2,v,cw,ch/2);
+        if(letters&&shown!==' '){ctx.fillStyle=flipping?'#b9b2a0':'#efe4c8';ctx.fillText(shown,u,v)}
+        ctx.fillStyle=flipping?'#5a6264':'#0d1113';ctx.fillRect(u-cw/2,v-.5,cw,Math.max(1,ch*.05));
+      }
+    }
+    ctx.restore();
+    drawBox(x,zMid,y0+height-bar,width,depth,bar,timber);
+  }
+  function wallText(x,y,z,label,maxWidth,size,color,alongZ,weight){
+    var p=project(x,y,z),axis=alongZ?project(x,y,z-1):project(x+1,y,z);
+    ctx.save();ctx.translate(p.x,p.y);ctx.transform(1,(axis.y-p.y)/(axis.x-p.x),0,1,0,0);
+    ctx.fillStyle=color;ctx.font=(weight||'800')+' '+Math.max(5,unit*size)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,0,0,maxWidth);ctx.restore();
+  }
+  // Marquee lightbox over the storefront glazing: a slim steel fascia carrying two full-length backlit bars — a cream bar
+  // with forest-green block lettering above, a solid green bar with cream lettering below, a hairline between them and
+  // the cream carried over the top — the way a modern dispensary fascia reads. It runs the length of the entrance wall
+  // between the door's pilaster and a rear one. `emissive` redraws only the lit bars and lettering, for the pass above
+  // the night tint. The rear pilaster is drawn separately, sorted at its own depth, because the kiosk row stands in
+  // front of it.
+  // The fascia is as deep as the door header, sits directly on the glazing's top rail, and starts flush with the outer
+  // edge of the door's front post so the sign reads as one piece with the entrance.
+  // The return is as slim as the corner window's rail and runs to the steel post, which closes its end.
+  // The corner is a clean L: the return's box starts on the wall run's face plane (never inside it), the two top faces
+  // meet at that plane, and both rows of panels stop a hairline short of the shared vertical edge so a thin steel line
+  // marks the corner exactly like the dividers between panels. The return dies into the steel post, drawn over it.
+  // The marquee runs straight along the storefront between two pilasters; there is no return round the corner, so
+  // the floor behind the last bay stays open for the lounge's forecourt.
+  var MARQUEE={x:-10.65,zFront:11.07,zRear:2.59,y0:3.6,y1:4.4,depth:.26,pilaster:11.2,rearPilaster:2.46,
+    top:['FLOWER','PRE-ROLLS','EDIBLES','HOUSE GROWN'],bottom:['OPEN 7 DAYS','WALK-IN','PICKUP','DELIVERY']};
+  function drawMarquee(emissive){
+    var m=MARQUEE,steel=['#33372f','#14181a','#23292a'],cream='#f4e7bd',green='#1f4a37',ink='#193b2b';
+    var face=m.x+m.depth/2,segments=m.top.length,len=(m.zFront-m.zRear)/segments;
+    var seam=.02,rowH=(m.y1-m.y0-seam)/2,botY0=m.y0,botY1=botY0+rowH,topY0=botY1+seam,topY1=m.y1;
+    function bar(y0,y1,fill){
+      var q=[project(face,y0,m.zFront),project(face,y0,m.zRear),project(face,y1,m.zRear),project(face,y1,m.zFront)];
+      if(emissive&&fill===cream){var mid=project(face,(y0+y1)/2,(m.zFront+m.zRear)/2);glow(mid.x,mid.y,Math.abs(q[1].x-q[0].x)*.55,'#ffe9b03a',unit*rowH*1.3)}
+      poly(q,fill);
+    }
+    if(!emissive){
+      // The fascia and the door's pilaster flush with its front end.
+      drawBox(m.x,(m.zFront+m.zRear)/2,m.y0,m.depth,m.zFront-m.zRear,m.y1-m.y0,steel);
+      drawBox(m.x,m.pilaster,0,m.depth,m.depth,m.y1,steel);
+    }
+    bar(topY0,topY1,cream);bar(botY0,botY1,green);
+    for(var i=0;i<segments;i++){
+      var z0=m.zFront-i*len,z1=m.zFront-(i+1)*len;
+      // A hairline divider between neighbouring words on both bars.
+      if(i)worldLine([[face+.005,m.y0,z0],[face+.005,m.y1,z0]],'#14181a',.022);
+      var maxW=Math.abs(project(face,0,z1).x-project(face,0,z0).x)*.7;
+      wallText(face+.01,(topY0+topY1)/2,(z0+z1)/2,m.top[i],maxW,rowH*.46,ink,true);
+      wallText(face+.01,(botY0+botY1)/2,(z0+z1)/2,m.bottom[i],maxW,rowH*.4,cream,true);
+    }
+  }
+  function drawMarqueeRearPilaster(){var m=MARQUEE;drawBox(m.x,m.rearPilaster,0,m.depth,m.depth,m.y1,['#33372f','#14181a','#23292a'])}
+  // Frosted globe pendants on slim brass rods under the mezzanine soffit, a soft pool on the floor beneath each.
+  function globePendant(x,z,soffitY){
+    var globeY=soffitY-1.05,canopy=project(x,soffitY-.02,z),g=project(x,globeY,z);
+    ellipse(canopy.x,canopy.y,unit*.11,unit*.055,'#b7a16d');
+    worldLine([[x,soffitY-.02,z],[x,globeY+.3,z]],'#c9ab6a',.028);
+    glow(g.x,g.y,unit*.85,'#ffe9bb60',unit*.85);
+    litEllipse(g.x,g.y,unit*.31,unit*.31,'#fff7e0');litEllipse(g.x-unit*.09,g.y-unit*.1,unit*.11,unit*.09,'#ffffffb0');
+    var floor=project(x,.02,z);glow(floor.x,floor.y,unit*1.3,'#ffe6b022',unit*.6);
+  }
   function archedServiceSign(x,label,compact){
     var z=3.75,half=compact?1.16:1.95,spring=compact?2.45:2.7,rise=compact?.72:1.25;
     var oak=['#c7ad7e','#7d694b','#a38c64'];
@@ -1486,11 +1882,11 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       var t=Math.PI-step*Math.PI/32;
       arch.push([x+Math.cos(t)*half,spring+Math.sin(t)*rise,z]);
     }
-    worldLine(arch,'#6a654e',.2);worldLine(arch,'#bda979',.12);warmStrip(arch.map(function(p){return [p[0],p[1]-.07,p[2]+.07]}),false);
+    worldLine(arch,'#6a654e',.2);worldLine(arch,'#bda979',.12);warmStrip(arch.map(function(p){return [p[0],p[1]-.07,p[2]+.07]}),false,'face');
     var y=compact?2.72:3.35,w=compact?1.76:2.55,h=compact?.43:.55;
     var halo=project(x,y+h*.5,z);glow(halo.x,halo.y,unit*1.65,'#ffdb9460');
     drawBox(x,z,y,w,.16,h,['#aa9568','#203f31','#2d503c']);
-    warmStrip([[x-w/2+.03,y+h-.025,z+.095],[x+w/2-.03,y+h-.025,z+.095]],false);
+    warmStrip([[x-w/2+.03,y+h-.025,z+.095],[x+w/2-.03,y+h-.025,z+.095]],false,'face');
     worldLine([[x-w/2+.07,y+.06,z+.09],[x+w/2-.07,y+.06,z+.09]],'#c9b77e',.025);
     signText(x,y+h*.45,z+.1,label,w*.64,.27);
     signFaces.push({x:x,y:y+h*.45,z:z+.1,label:label,width:w*.64,size:.27,halo:1.4});
@@ -1537,7 +1933,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     drawBox(x-1,z+.5,1.15,.4,.35,.25,['#e8e4d4','#929c8b','#bac6b2']);
     drawBox(x-.9,z+.75,1.25,.23,.32,.025,['#faf6e5','#faf6e5','#faf6e5']);
     drawBox(x+.85,z-.6,1.15,.75,.14,.6,green);
-    drawBox(x+.85,z-.515,1.28,.58,.025,.35,['#badabb','#badabb','#badabb']);
+    litBox(x+.85,z-.515,1.28,.58,.025,.35,['#badabb','#badabb','#badabb']);
     for(var n=0;n<2;n++)carton(x+1.6,z-.8+n*.6,.02,.48);
     // Oak-framed fascia integrated into the packing counter's rear uprights.
     [-1.48,1.48].forEach(function(dx){drawBox(x+dx,z-.78,1.13,.1,.12,1.75,oak)});
@@ -1595,27 +1991,41 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     carton(x-.77,z+.08,cartonBase,cartonSize);carton(x-.8,z+.07,cartonBase+cartonSize*.65+.018,.44);
     drawBox(x+.95,z-.55,1.1,.3,.5,.25,['#8e8f87','#4d4f49','#6c6e67']);
   }
-  function retailDetails(fi,rear){
+  // A guest coming out of the lounge's back door is behind the cream column from this camera until they have walked
+  // clear of it (x 9.5), so until then they are painted here, just before the column, rather than as a sorted job.
+  function leaverBehindColumn(c){return c.lounge&&c.phase==='leaving'&&c.x<9.5&&c.z>-4.6}
+  function retailDetails(fi,rear,now){
     var oak=['#cfb184','#836949','#b09266'],stone=['#e2dfd0','#969c8e','#c3c8b8'],brass=['#d7c28b','#8c774c','#b7a16c'];
     if(fi===0){
+      customers.forEach(function(c){
+        if(!leaverBehindColumn(c))return;
+        var v=Object.assign({},c,{x:c.renderX===undefined?c.x:c.renderX,z:c.renderZ===undefined?c.z:c.renderZ});
+        if(c.loungeFadeIn!==undefined&&c.loungeFadeIn<1)drawGuestThroughDrapes(v,now,true);else drawFadedCustomer(v,now);
+      });
       // Cream columns with forest-green tile bases and brass wall sconces.
-      [-10.8,9.8].forEach(function(cx){
+      [9.8].forEach(function(cx){
         var cz=-1.8;
-        drawBox(cx,cz,0,.75,.7,4.25,['#f2edda','#c1bdac','#e1ddca']);
+        // Tiled base, its cap, then the shaft rising from the cap, so the cap reads as a lip around the shaft's foot
+        // rather than a slab painted across it.
         drawBox(cx,cz,.08,.78,.73,1.65,['#37634d','#153c2d','#25523b']);
         for(var tile=0;tile<5;tile++)worldLine([[cx-.36+tile*.18,.1,cz+.375],[cx-.36+tile*.18,1.72,cz+.375]],'#d7d7b4',.016);
         for(var grout=0;grout<5;grout++)worldLine([[cx-.38,.1+grout*.4,cz+.38],[cx+.38,.1+grout*.4,cz+.38]],'#d7d7b4',.016);
+        // The same grid continues around the right face.
+        for(var tile=0;tile<4;tile++)worldLine([[cx+.395,.1,cz-.27+tile*.18],[cx+.395,1.72,cz-.27+tile*.18]],'#d7d7b4',.016);
+        for(var grout=0;grout<5;grout++)worldLine([[cx+.395,.1+grout*.4,cz-.365],[cx+.395,.1+grout*.4,cz+.365]],'#d7d7b4',.016);
         drawBox(cx,cz+.01,1.73,.8,.76,.12,['#e1dbc0','#b5b29d','#d8d2b8']);
+        drawBox(cx,cz,1.85,.75,.7,2.4,['#f2edda','#c1bdac','#e1ddca']);
         var lamp=project(cx,2.6,cz+.42);ellipse(lamp.x,lamp.y,unit*.17,unit*.3,'#c4aa70');ellipse(lamp.x,lamp.y,unit*.12,unit*.24,'#fff2c8');
       });
     }
-    // Layered backlit merchandise bays on each floor.
+    // A layered backlit merchandise bay on the top floor's rear wall. The ground floor's, seen through the stair
+    // flight beside the cream column, is gone.
     var bx=fi===0?6:fi===1?3:-4.6;
-    if(fi!==1){
+    if(fi===2){
     drawBox(bx,rear+.35,.1,2.3,.55,2.6,oak);
     for(var row=0;row<3;row++){
       drawBox(bx,rear+.65,.48+row*.72,2.35,.7,.07,brass);
-      worldLine([[bx-1.05,.57+row*.72,rear+.97],[bx+1.05,.57+row*.72,rear+.97]],'#ffe6ae',.028);
+      litLine([[bx-1.05,.57+row*.72,rear+.97],[bx+1.05,.57+row*.72,rear+.97]],'#ffe6ae',.028);
       for(var product=0;product<6;product++){
         var color=['#92ad8b','#d5bd8c','#b1c6c1'][product%3];
         drawBox(bx-.95+product*.38,rear+.66,.56+row*.72,.25,.25,.27+(product%2)*.12,[color,'#65765e',color]);
@@ -1657,15 +2067,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       }
     }
     if(fi===0){
-      // Richly varied moss behind the lounge, with a small botanical light motif.
-      drawBox(-9.7,-1.1,.8,.16,3.1,2.35,['#a68d62','#3a5740','#527d47']);
-      for(var moss=0;moss<36;moss++){
-        var mp=project(-9.58,1+(moss%6)*.36,-2.45+Math.floor(moss/6)*.5);
-        ellipse(mp.x,mp.y,unit*(.14+(moss%3)*.035),unit*.18,['#7ea558','#527d46','#a0b86a'][moss%3]);
-      }
-      // A rounded terracotta display plinth offers a splash of color.
-      var pedestal=project(7.4,.7,3.1);drawBox(7.4,3.1,0,1.15,1.1,.7,['#dba588','#966955','#be8b70']);
-      ellipse(pedestal.x,pedestal.y,unit*.68,unit*.33,'#e8ba91');plant(7.4,3.1,.72,.75);
+      // A rounded terracotta display plinth offers a splash of color; it sorts with the counters and customers.
+      sceneJobs.push({depth:depthOf({x:9.85,z:2.9}),draw:function(){sceneElevation=0;drawBox(9.85,2.9,0,1.15,1.1,.7,['#dba588','#966955','#be8b70']);plant(9.85,2.9,.72,.75)}});
     }
     // Hanging planters and fine trails sit against the back wall, leaving sightlines open.
     for(var basket=0;basket<2;basket++){
@@ -1694,13 +2097,21 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
         // One continuous oak plank floor: long boards run front to back, with staggered end joints and a faint grain.
         var rear=floor.z-floor.d/2,front=floor.z+floor.d/2,left=-floor.w/2,right=floor.w/2;
         drawBox(0,floor.z,-.24,floor.w,floor.d,.24,['#c9a97e','#7f6446','#a68a62']);
-        for(var board=0;board<Math.ceil(floor.w/.9);board++){
-          var bx=left+board*.9,shade=board%3===0?'#00000009':board%3===1?'#ffffff0a':'#00000004';
-          poly([project(bx,.012,rear),project(Math.min(right,bx+.9),.012,rear),project(Math.min(right,bx+.9),.012,front),project(bx,.012,front)],shade);
-          worldLine([[bx,.015,rear],[bx,.015,front]],'#6d543a30',.016);
-          for(var joint=rear+((board%3)*.8);joint<front;joint+=2.4)worldLine([[bx,.016,joint],[Math.min(right,bx+.9),.016,joint]],'#6d543a2a',.014);
-          for(var grain=0;grain<3;grain++)worldLine([[bx+.2+grain*.25,.014,rear+.3+grain*1.1],[bx+.22+grain*.25,.014,front-.4-grain*.7]],'#ffffff08',.01);
+        // Herringbone oak: columns of boards laid at alternating 45° angles, three tones of the same plank, fine joints.
+        ctx.save();ctx.beginPath();[project(left,.012,rear),project(right,.012,rear),project(right,.012,front),project(left,.012,front)].forEach(function(q,i){i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y)});ctx.closePath();ctx.clip();
+        var colW=1.15,step=.56,tones=['#00000009','#ffffff0b','#00000004'];
+        for(var col=0,x0=left;x0<right;col++,x0+=colW){
+          var x1=Math.min(right,x0+colW),dir=col%2?-1:1,k=0;
+          // Strips z = dir·x + b: the b range that spans the whole column differs by direction.
+          var bMin=(dir>0?rear-x1:rear+x0)-step,bMax=(dir>0?front-x0:front+x1)+step;
+          for(var b=bMin;b<bMax;b+=step,k++){
+            var za=dir*x0+b,zb=dir*x1+b;
+            poly([project(x0,.012,za),project(x1,.012,zb),project(x1,.012,zb+step),project(x0,.012,za+step)],tones[(k+col)%3]);
+            worldLine([[x0,.014,za],[x1,.014,zb]],'#6d543a2e',.014);
+          }
+          worldLine([[x1,.015,rear],[x1,.015,front]],'#6d543a22',.012);
         }
+        ctx.restore();
     }
   }
 
@@ -1735,40 +2146,76 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     [-1,1].forEach(function(sx){[-1,1].forEach(function(sy){ctx.beginPath();ctx.arc(sx*1.015,sy*1.015,.035,0,Math.PI*2);ctx.fillStyle='#394f42';ctx.fill();ctx.beginPath();ctx.moveTo(sx*1.015-.017,sy*1.015);ctx.lineTo(sx*1.015+.017,sy*1.015);ctx.strokeStyle='#c8d4c1';ctx.lineWidth=.009;ctx.stroke()})});
     ctx.restore();
   }
+  // The purple grow bars over the top-floor benches are bought in the Shop (the Grow lights component): none until the
+  // first level, then the two over the Grow bench, a third over Seeds, and all four from level three.
+  function growLightBars(){var level=state.growBatchLevel||0;return level<=0?[]:level===1?[2.25,3.75]:level===2?[-2.25,2.25,3.75]:[-3.75,-2.25,2.25,3.75]}
   // Grow-room lighting gantry, drawn after the benches so the bars always sit above them.
   function drawGrowGantry(part){
     // Lighting gantry: posts are painted before the benches so their feet sit behind the counters; the beam and bars come after.
-    var beamY=3.85,beamZ=-3.55,metal=['#414440','#191e1c','#2b302d'];
+    var beamY=3.85,beamZ=-3.55,metal=['#414440','#191e1c','#2b302d'],bars=growLightBars();
+    if(!bars.length)return;
     if(part==='posts'){[-5.4,5.4].forEach(function(px){drawBox(px,beamZ,0,.12,.12,beamY,metal)});return}
     drawBox(0,beamZ,beamY,10.9,.14,.12,metal);
     // Two bars per bench, hung across the beam so they run front to back over the Seeds and Grow stations.
-    [-3.75,-2.25,2.25,3.75].forEach(function(lx,li){
+    bars.forEach(function(lx,li){
       var barY=3.25,barZ=beamZ+.55;
       [-.85,.85].forEach(function(dz){worldLine([[lx,beamY,beamZ],[lx,barY+.12,barZ+dz]],'#2a302d',.022)});
       drawBox(lx,barZ,barY,.5,2.3,.13,['#3c4146','#1d2124','#2b3034']);
-      worldLine([[lx-.12,barY-.005,barZ-1.1],[lx-.12,barY-.005,barZ+1.1]],'#e7b8ff',.045);worldLine([[lx+.12,barY-.005,barZ-1.1],[lx+.12,barY-.005,barZ+1.1]],'#e7b8ff',.045);
-      ctx.save();ctx.globalAlpha=.22;worldLine([[lx,barY-.03,barZ-1.1],[lx,barY-.03,barZ+1.1]],'#c98bff',.5);ctx.restore();
+      litLine([[lx-.12,barY-.005,barZ-1.1],[lx-.12,barY-.005,barZ+1.1]],'#e7b8ff',.045);litLine([[lx+.12,barY-.005,barZ-1.1],[lx+.12,barY-.005,barZ+1.1]],'#e7b8ff',.045);
+      ctx.save();ctx.globalAlpha=.22;litLine([[lx,barY-.03,barZ-1.1],[lx,barY-.03,barZ+1.1]],'#c98bff',.5);ctx.restore();
       var pulse=lampPulse(sceneTime,li*1.7),under=project(lx,barY-.1,barZ);glow(under.x,under.y,unit*1.4,'#c47cff30');
       lightCone(lx,barY-.06,barZ,.03,.32,1.05,'#c98bff',.13*pulse);
       var floorWash=project(lx,.03,barZ);glow(floorWash.x,floorWash.y,unit*1.7,'#be78ff26',unit*1.1);
     });
   }
+  // A wall in the grow room's style: forest-green plaster with dark timber slats to dado height under a timber rail.
+  // `alongZ` runs it along z with its face toward +x from the plane x; otherwise along x with its face toward +z.
+  function drawSlattedWall(alongZ,plane,a0,a1,height,finish){
+    var slatTop=2.2,face=plane+.1,rail=['#c8ab7c','#7d6748','#a58a5f'];
+    if(alongZ)drawBox(plane,(a0+a1)/2,0,.18,a1-a0,height,finish);else drawBox((a0+a1)/2,plane,0,a1-a0,.18,height,finish);
+    for(var t=a0+.25;t<a1-.1;t+=.24){
+      worldLine(alongZ?[[face,.05,t],[face,slatTop,t]]:[[t,.05,face],[t,slatTop,face]],'#4d6a58',.05);
+      worldLine(alongZ?[[face,.05,t+.075],[face,slatTop,t+.075]]:[[t+.075,.05,face],[t+.075,slatTop,face]],'#22382d',.018);
+    }
+    if(alongZ)drawBox(plane+.02,(a0+a1)/2,slatTop,.1,a1-a0,.09,rail);else drawBox((a0+a1)/2,plane+.02,slatTop,a1-a0,.1,.09,rail);
+  }
+  var sceneJobs=[];
   function drawTower(now){
     sceneElevation=0;signFaces.length=0;
-    // Backdrop: a gently lit sky-to-ground gradient, a halo behind the shop and a vignette at the edges.
-    var sky=ctx.createLinearGradient(0,0,0,height);sky.addColorStop(0,'#3a433c');sky.addColorStop(.5,'#4a544a');sky.addColorStop(1,'#333b34');ctx.fillStyle=sky;ctx.fillRect(0,0,width,height);
-    var halo=project(0,0,1);glow(halo.x,halo.y-unit*4,unit*24,'#98a88626');
+    // Backdrop: the same quiet studio gradient day and night, a halo behind the shop and a vignette at the edges. After
+    // dark the gradient deepens and cools and the halo turns into the building's own spill, while the diorama is
+    // painted on its own surface so the night light map can be multiplied over the building alone.
+    var nt=nightAmount();render.nightT=nt;
+    var sky=ctx.createLinearGradient(0,0,0,height);sky.addColorStop(0,mixHex('#3a433c','#131b1e',nt));sky.addColorStop(.5,mixHex('#4a544a','#1a2427',nt));sky.addColorStop(1,mixHex('#333b34','#0e1417',nt));ctx.fillStyle=sky;ctx.fillRect(0,0,width,height);
+    var halo=project(0,0,1);
+    if(nt<1){ctx.save();ctx.globalAlpha=1-nt;glow(halo.x,halo.y-unit*4,unit*24,'#98a88626');ctx.restore()}
+    if(nt>0){ctx.save();ctx.globalAlpha=nt;glow(halo.x,halo.y-unit*4,unit*22,'#4b6a6a34');ctx.restore()}
     var vignette=ctx.createRadialGradient(width/2,height/2,0,width/2,height/2,Math.max(width,height)*.8);vignette.addColorStop(0,'rgba(18,26,20,0)');vignette.addColorStop(.4,'rgba(18,26,20,.05)');vignette.addColorStop(.7,'rgba(18,26,20,.22)');vignette.addColorStop(1,'rgba(18,26,20,.48)');ctx.fillStyle=vignette;ctx.fillRect(0,0,width,height);
     var stone=['#c9c7b5','#737c70','#9fa796'],wood=['#bc9d73','#6f5943','#998063'],green=['#698775','#314b40','#496a56'],metal=['#414440','#191e1c','#2b302d'];
     // Contact shadow: one soft radial pool under the slab, biased toward the front-left, with no polygon edges to read as lines.
     var pool=project(0,-.33,1),shadowGradient=ctx.createRadialGradient(pool.x-unit*1.4,pool.y+unit*1.2,0,pool.x-unit*1.4,pool.y+unit*1.2,unit*23);
     shadowGradient.addColorStop(0,'rgba(12,22,17,.36)');shadowGradient.addColorStop(.45,'rgba(12,22,17,.2)');shadowGradient.addColorStop(.75,'rgba(12,22,17,.07)');shadowGradient.addColorStop(1,'rgba(12,22,17,0)');
     ellipse(pool.x-unit*1.4,pool.y+unit*1.2,unit*23,unit*12.6,shadowGradient);
-    drawBox(0,1,-.32,26,20,.32,['#b8b4a1','#68695d','#8e8c7b']);
-    // Rear circulation is painted before the building so people pass behind its walls.
-    customers.forEach(function(c){if(customerBehindBuilding(c)){var v=Object.assign({},c,{x:c.renderX===undefined?c.x:c.renderX,z:c.renderZ===undefined?c.z:c.renderZ});drawCustomer(v,now)}});
+    if(nt>0)beginNightScene();
+    // Ground slab: the same on-screen margin past the wood floor on every edge. The floor is 23 × 17 around z = 1.5;
+    // 1.5 units of overhang along x and 1.95 along z project to matching ~1.1-unit bands in this isometric view.
+    drawBox(0,1.5,-.32,26,20.9,.32,['#bfbcab','#68695d','#8e8c7b']);
+    // The margin reads as a perimeter sidewalk: scored concrete panels with a darker kerb band along the outer edge.
+    for(var jx=-11.5;jx<13;jx+=1.5)worldLine([[jx,.006,-8.95],[jx,.006,11.95]],'#a3a08f',.02);
+    for(var jz=-7.5;jz<11.95;jz+=1.5)worldLine([[-13,.006,jz],[13,.006,jz]],'#a3a08f',.02);
+    groundPatch(0,-8.95+.17,26,.34,'#aca997');groundPatch(0,11.95-.17,26,.34,'#aca997');
+    groundPatch(-13+.17,1.5,.34,20.9,'#aca997');groundPatch(13-.17,1.5,.34,20.9,'#aca997');
+    worldLine([[-13,.02,-8.95],[13,.02,-8.95],[13,.02,11.95],[-13,.02,11.95],[-13,.02,-8.95]],'#8f8c7b',.03);
+    // Rear circulation is painted before the building so people pass behind its walls. The entrance bollards go down
+    // first of all, so guests queuing outside always stand in front of them.
+    exteriorFixtures.bollards.filter(function(b){return b.x<=-11.5}).forEach(drawBollard);
+    customers.forEach(function(c){if(c.phase!=='lounge'&&customerBehindBuilding(c)){var v=Object.assign({},c,{x:c.renderX===undefined?c.x:c.renderX,z:c.renderZ===undefined?c.z:c.renderZ});drawFadedCustomer(v,now)}});
     // Three open rooms. Only the rear and short side walls remain in the cutaway.
-    [{y:0,z:1.5,w:23,d:17,ids:[4,5]},{y:4.7,z:-1.8,w:18,d:9.7,ids:[3,2]},{y:9.4,z:-3.6,w:13,d:6.6,ids:[0,1]}].forEach(function(floor,fi){
+    // Depth-sorted overlays (customers, islands, the entrance, the ground-floor counters) are collected here while the
+    // floors paint and drawn by the frame after them, so a guest walking behind a counter is hidden by it and one in
+    // front stands on it.
+    sceneJobs=[];var jobs=sceneJobs;
+    [{y:0,z:1.5,w:23,d:17,ids:[4,5]},{y:4.7,z:-2.55,w:18,d:8.2,ids:[3,2]},{y:9.4,z:-3.6,w:13,d:6.6,ids:[0,1]}].forEach(function(floor,fi){
       sceneElevation=floor.y;
       var rear=floor.z-floor.d/2,front=floor.z+floor.d/2,left=-floor.w/2,right=floor.w/2;
       if(fi===2){
@@ -1808,7 +2255,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
         }
         sceneElevation=floor.y;
       }
-      if(fi===0)drawCachedGround(floor);
+      if(fi===0){drawCachedGround(floor);drawSideAislePlanter()}
 
       else{
         // One continuous floor outline includes the stair landing, with no internal slab edge.
@@ -1829,9 +2276,13 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       }
       // Material seams, a rear forest-green wall, and warm recessed strip lighting.
       if(fi>0)for(var seam=left+.8;seam<right;seam+=.9)worldLine([[seam,.015,rear],[seam,.015,front]],fi===1?'#71593b18':'#72796c12',.014);
-      var wallFinish=fi===0?['#f1ebd8','#c0bba8','#ddd8c3']:green;
+      var wallFinish=green;
       drawBox(fi===0?-1.225:0,rear,0,fi===0?20.55:floor.w,.2,3.9,wallFinish);
-      drawBox(left,rear+1.7,0,.18,3.6,3.9,wallFinish);
+      if(fi===2)drawBox(left,rear+1.7,0,.18,3.6,3.9,wallFinish);
+      // The mezzanine's left stub, behind the jar shelf, is in the grow room's wall style. It rises exactly to the top
+      // floor's level (4.7 above the mezzanine) and turns along the rear wall to meet the top floor's left-rear corner,
+      // so the two are joined.
+      if(fi===1){drawSlattedWall(true,left,rear,rear+3.5,4.7,green);drawSlattedWall(false,rear,left,-6.5,4.7,green)}
       if(fi===2){
         // Grow room: forest-green walls with dark timber slats to dado height and a clerestory band that lets the light in.
         var slatTop=2.2,sillY=2.42,headY=3.42,frame=['#3b433d','#1c2320','#2a322d'];
@@ -1869,7 +2320,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       // Ambient occlusion where the floor meets the walls, and under the mezzanine above.
       shadowBand(left+.2,fi===0?9:right-.2,rear+.2,rear+1.9,.018,.2);
       shadowBandX(rear+.2,front-.2,left+.2,left+1.4,.018,.15);
-      if(fi===0){poly([project(-9,.016,rear+.2),project(9,.016,rear+.2),project(9,.016,3.05),project(-9,.016,3.05)],'rgba(14,28,20,.07)');shadowBand(-9,9,3.05,1.3,.017,.12)}
+      if(fi===0){poly([project(-9,.016,rear+.2),project(9,.016,rear+.2),project(9,.016,1.55),project(-9,.016,1.55)],'rgba(14,28,20,.07)');shadowBand(-9,9,1.55,1.3,.017,.12)}
       if(fi===1){poly([project(-6.5,.016,rear+.2),project(6.5,.016,rear+.2),project(6.5,.016,-.3),project(-6.5,.016,-.3)],'rgba(14,28,20,.07)');shadowBand(-6.5,6.5,-.3,-1.9,.017,.12)}
       if(fi!==0){
       // Black-framed glass along the rear-right corner, not across the open front.
@@ -1905,8 +2356,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
             }
           }
           // Grow-light bar under the tier above (and a top bar), with a cool wash on the trays below.
-          var barY=y+.7;drawBox(shelfX,rackZ,barY,rackW-.3,.14,.05,['#f0f4f2','#9aa6a0','#c7d0ca']);
-          ctx.save();ctx.globalAlpha=.16;worldLine([[shelfX-rackW/2+.2,barY-.01,rackZ],[shelfX+rackW/2-.2,barY-.01,rackZ]],'#d8ecff',.34);ctx.restore();
+          var barY=y+.7;litBox(shelfX,rackZ,barY,rackW-.3,.14,.05,['#f0f4f2','#9aa6a0','#c7d0ca']);
+          ctx.save();ctx.globalAlpha=.16;litLine([[shelfX-rackW/2+.2,barY-.01,rackZ],[shelfX+rackW/2-.2,barY-.01,rackZ]],'#d8ecff',.34);ctx.restore();
           var wash=project(shelfX,y+.25,rackZ);glow(wash.x,wash.y,unit*1.6,'#cfe6ff1c');
         });
         drawBox(shelfX,rackZ,2.62,rackW,rackD,.05,['#56605a','#2b322e','#3e4641']);
@@ -1938,18 +2389,26 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       }
       if(fi===0){
         // Built-in product wall directly behind the service counters, under the mezzanine.
-        var displayZ=-2.6;
+        var displayZ=DISPLAY_Z;
+        // The lounge's walls go down first: the shelving unit stands in front of the wall's end.
+        drawLoungeFront(now);
         drawBox(0,displayZ,0,13.4,.32,3.95,green);
         drawBox(0,displayZ+.22,.04,13.4,.75,.62,wood);
+        // The bay uprights go down before the goods, so what stands beside them is never cut by them.
+        for(var divider=0;divider<6;divider++)if(divider!==1)drawBox(-6.5+divider*2.6,displayZ+.23,.65,.07,.8,3.16,['#c9a97e','#8a6d4b','#a68a62']);
         for(var bay=0;bay<5;bay++){
-          var bx=-5.2+bay*2.6;
+          var bx=-5.2+bay*2.6,boardRow=function(row){return bay<2&&(row===1||row===2)};
           drawBox(bx,displayZ+.61,.15,2.42,.05,.43,['#d1b58b','#957448','#b99b6e']);
           for(var batten=0;batten<10;batten++)drawBox(bx-1.1+batten*.245,displayZ+.65,.17,.1,.055,.38,['#caa16c','#805a39','#ac8151']);
           worldLine([[bx-.22,.46,displayZ+.65],[bx+.22,.46,displayZ+.65]],'#dec48c',.055);
+          // Every board of the bay goes down first, then the goods on each shelf, then the lit front edges — so no
+          // board above ever paints over the top of what stands on the shelf below it.
+          for(var row=0;row<4;row++)if(!boardRow(row)&&bay!==1)drawBox(bay===0?bx+1.3:bx,displayZ+.25,.7+row*.76,bay===0?5.15:2.55,.8,.1,wood);
+          if(bay===0)drawMenuBoard(bx+1.3,displayZ,1.38,5.1,1.24,now,wood);
           for(var row=0;row<4;row++){
             var sy=.7+row*.76;
-            drawBox(bx,displayZ+.25,sy,2.55,.8,.1,wood);
-            warmStrip([[bx-1.18,sy+.12,displayZ+.67],[bx+1.18,sy+.12,displayZ+.67]],false);if(stationTier(4)>=2){var shelfLight=project(bx,sy+.2,displayZ+.3);glow(shelfLight.x,shelfLight.y,unit*1.05,'#f4d2952a')}
+            if(boardRow(row))continue;
+            if(stationTier(4)>=2){var shelfLight=project(bx,sy+.2,displayZ+.3);glow(shelfLight.x,shelfLight.y,unit*1.05,'#f4d2952a')}
             for(var product=0;product<3;product++){
               var xx=bx-.78+product*.78;
               if(bay===1||bay===3)merchandise(xx,displayZ+.3,sy+.12,(row+product)%3,['#527e60','#b28b64','#75999a'][product]);
@@ -1957,13 +2416,10 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
               else jar(xx,displayZ+.3,sy+.12);
             }
           }
+          for(var row=0;row<4;row++){if(boardRow(row))continue;var sy=.7+row*.76;warmStrip([[bx-1.18,sy+.12,displayZ+.67],[bx+1.18,sy+.12,displayZ+.67]],false)}
         }
-        for(var divider=0;divider<6;divider++)drawBox(-6.5+divider*2.6,displayZ+.23,.65,.09,.82,3.16,metal);
         drawBox(0,displayZ+.22,3.8,13.45,.84,.16,wood);
-        // Ground-floor lounge and an open retail display area.
-        drawBox(-8,-.6,.1,3.2,1.3,.55,metal);drawBox(-8,-1.18,.65,3.2,.22,.65,green);
-        [-9,-7].forEach(function(x){drawBox(x,-.55,.67,.92,.95,.15,green)});
-        drawBox(-7.6,1.35,.1,1.6,.9,.55,wood);
+        drawExitCabinet();
       }
       if(fi===2){
         // Low L-shaped planter fitted into the left corner of the mezzanine.
@@ -1980,6 +2436,16 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
         });
       }
       if(fi===1){
+        // A long planter runs along the mezzanine's left edge in front of the deck stairs, in the same build as the
+        // top floor's corner planter: oak box, steel rim, soil and a row of plants.
+        var edgeX=left+.55,edgeZ=-.35;
+        drawBox(edgeX,edgeZ,0,.95,2.9,.56,wood);
+        drawBox(edgeX,edgeZ,.56,1.03,2.98,.075,metal);
+        drawBox(edgeX,edgeZ,.635,.78,2.7,.025,['#514633','#514633','#514633']);
+        [-1.05,-.35,.35,1.05].forEach(function(dz,n){var px=edgeX+(n%2?.12:-.1),pz=edgeZ+dz,h=.55+(n%3)*.1;
+          worldLine([[px,.65,pz],[px,.65+h,pz]],'#5e7e45',.035);
+          for(var leaf=0;leaf<5;leaf++){var angle=leaf*2.4+n,q=project(px+Math.cos(angle)*.22,.83+leaf*.1,pz+Math.sin(angle)*.18);ellipse(q.x,q.y,unit*.17,unit*.1,leaf%2?'#8eae64':'#64894e')}
+        });
         // Packing supplies and a softly lit interior work area.
         for(var box=0;box<4;box++)carton(5.5+(box%2)*.7,-4+Math.floor(box/2)*.7,0,.6);
         plant(7,-3,0,1.4);
@@ -1990,25 +2456,37 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
         worldLine([[left+.4,1.05,rear+.2],[right-.4,1.05,rear+.2]],'#8ea6a0',.03);
         for(var drip=0;drip<6;drip++)worldLine([[-2+drip*.8,1.05,rear+.2],[-2+drip*.8,.5,rear+.55]],'#8ea6a0',.02);
       }
-      // Oak trims and planted wall panels.
-      worldLine([[left+.2,2.95,rear+.18],[fi===0?8.95:right-.2,2.95,rear+.18]],'#b7986a',.11);
-      // Concealed strips along the wall trim and the exposed mezzanine fascia.
-      warmStrip([[left+.35,2.87,rear+.25],[fi===0?8.6:right-.35,2.87,rear+.25]],fi===2);
+      // Oak trims and planted wall panels, with concealed strips along the trim, on the upper floors; the ground
+      // floor's rear wall only shows beside the exit door, where it stays a plain green panel.
+      if(fi>0){
+        worldLine([[left+.2,2.95,rear+.18],[right-.2,2.95,rear+.18]],'#b7986a',.11);
+        warmStrip([[left+.35,2.87,rear+.25],[right-.35,2.87,rear+.25]],fi===2);
+      }
       if(fi===2)drawGrowExhaustFan(-4.4,rear+.24,2.4);
       if(fi>0)warmStrip([[left+.2,-.08,front+.025],[right-.2,-.08,front+.025]],false);
-      if(fi<2)retailDetails(fi,rear);
+      if(fi<2)retailDetails(fi,rear,now);
 
-      // Short roller belts carry products directly between neighboring stations.
-      if(fi===2)conveyorRun(-1.45,1.45,-3,1.35,0);
-      if(fi===1)conveyorRun(1.45,-1.45,1,1.35,2);
+      // Short roller belts carry products directly between neighboring stations, along their rear halves so the
+      // workers in front stand clear of them.
+      if(fi===2)conveyorRun(-1.45,1.45,-3.55,1.35,0);
+      if(fi===1)conveyorRun(1.45,-1.45,-.85,1.35,2);
       floor.ids.forEach(function(i){var p=machinePos[i];lightPool(p.x,.035,p.z+.9,1.65,i===1)});
       // Furniture stays visible in front of the back wall and shelving.
       // Staff positions: most stand behind their bench; the grow-room pair stand where the gantry and rack do not hide them.
-      var staffSpots={0:{dx:-2.45,dz:.45,front:true,facing:1},1:{dx:-2.45,dz:.45,front:true,facing:1}};
+      var staffSpots={0:{dx:-2.45,dz:.45,front:true,facing:1},1:{dx:-2.45,dz:.45,front:true,facing:1},5:{dx:1.05,dz:-1.55,front:false,facing:.35}};
       if(fi===2)drawGrowGantry('posts');
-      floor.ids.forEach(function(i){if(i===4){drawOrderCounterBank(now);if(selected===4&&state.orderCounters===1)selectionRing(machinePos[4]);return}if(i===5)drawCounterDivider();var p=machinePos[i],spot=staffSpots[i]||{dx:-.95,dz:-1.65,front:false},gait=spot.facing?{amount:0,phase:0,facing:spot.facing}:undefined;if(!spot.front)drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait);drawStage(p,i,now);if(spot.front)drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait);if(selected===i)selectionRing(p)});
+      function drawStation(i,only){if(i===4){drawOrderCounterBank(now,only);if(selected===4&&state.orderCounters===1)selectionRing(machinePos[4]);return}if(i===5)drawCounterDivider();var p=machinePos[i],spot=staffSpots[i]||{dx:-.95,dz:-1.65,front:false},gait=spot.facing?{amount:0,phase:0,facing:spot.facing}:undefined,staffed=state.lines[i]>0;if(staffed&&!spot.front)drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait);drawStage(p,i,now);if(staffed&&spot.front)drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait);if(selected===i)selectionRing(p)}
+      // The ground-floor counters sort with the customers; the upper stations paint with their floors.
+      floor.ids.forEach(fi===0?function(i){
+        var p=machinePos[i],desks=i===4?orderCounterPositions(state.orderCounters):[p];
+        if(state.lines[i]>0)desks.forEach(function(q){slabDownlight(q.x,1.45,4.45,1.31)});
+        desks.forEach(function(q,index){jobs.push({depth:depthOf(q),draw:function(){sceneElevation=0;suppressDownlights=true;try{drawStation(i,i===4?index:undefined)}finally{suppressDownlights=false}}})});
+      }:drawStation);
+      if(fi===0)[-5.3,-2.7,7.4].forEach(function(gx){globePendant(gx,1.0,4.45)});
       if(fi===2)drawGrowGantry();
-      // Thin mezzanine guard rails stop short of the workstation fronts.
+      // Thin mezzanine guard rails stop short of the workstation fronts. The top floor's transfer tube drops behind its
+      // front rail, so that run is painted first and the rail over it.
+      if(fi===2){sceneElevation=0;drawFloorTransfer(1,true);sceneElevation=floor.y}
       if(fi>0){
         var rz=front-.1;
         [-floor.w/2,-floor.w/2+2,floor.w/2-2,floor.w/2].forEach(function(x){worldLine([[x,0,rz],[x,.95,rz]],'#252b28',.055)});
@@ -2022,36 +2500,35 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
         // outside the building, then turns left and climbs forward to enter the deck from its rear edge, behind the counter.
         sceneElevation=4.7;
         var rise=2.35/10,rail='#252b28',post=['#3a403c','#1a1f1c','#282e2a'];
-        var f1Z=-2.3,f1Start=-7.2,f1Run=.42,landX=-9.6,landZ=-2.3,f2X=-9.6,f2Start=-1.41,f2Run=.38;
-        // Steel posts carry the outside section down to the ground slab.
-        [[landX-.62,landZ-.62],[landX-.62,f2Start+3*f2Run+.1]].forEach(function(pt){drawBox(pt[0],pt[1],-4.98,.1,.1,4.98+5*rise-.16,post)});
-        for(var t1=0;t1<4;t1++){var y1=(t1+1)*rise,x1=f1Start-t1*f1Run;drawBox(x1,f1Z,y1-.16,f1Run+.03,1.4,.16,wood);if(t1%2===0)warmStrip([[x1-.19,y1+.01,f1Z-.6],[x1-.19,y1+.01,f1Z+.6]],false)}
+        var f1Z=-2.3,f1Start=-7.2,f1Run=.78,landX=-10.25,landZ=-2.3,f2X=-10.25,f2Start=-1.41,f2Run=.38;
+        // The outside section hangs from the deck's own structure; no posts run down past the lounge's curtain.
+        for(var t1=0;t1<4;t1++){var y1=(t1+1)*rise,x1=f1Start-t1*f1Run;drawBox(x1,f1Z,y1-.16,f1Run+.03,1.4,.16,wood);if(t1%2===0)warmStrip([[x1-.37,y1+.01,f1Z-.6],[x1-.37,y1+.01,f1Z+.6]],false)}
         drawBox(landX,landZ,5*rise-.16,1.4,1.4,.16,wood);
         for(var t2=0;t2<4;t2++){var y2=(6+t2)*rise,z2=f2Start+t2*f2Run;drawBox(f2X,z2,y2-.16,1.4,f2Run+.03,.16,wood);if(t2%2===1)warmStrip([[f2X-.6,y2+.01,z2+.17],[f2X+.6,y2+.01,z2+.17]],false)}
         // Rails: both sides of the first flight, the rear and outer edges of the landing, and both sides of the second flight.
-        [-.72,.72].forEach(function(dz){worldLine([[f1Start+.22,.05,f1Z+dz],[f1Start+.22,.95,f1Z+dz],[f1Start-3*f1Run-.22,4*rise+.95,f1Z+dz]],rail,.06);worldLine([[f1Start-1.5*f1Run,2*rise,f1Z+dz],[f1Start-1.5*f1Run,2*rise+.95,f1Z+dz]],rail,.045)});
+        [-.72,.72].forEach(function(dz){worldLine([[f1Start+.4,.05,f1Z+dz],[f1Start+.4,.95,f1Z+dz],[f1Start-3*f1Run-.4,4*rise+.95,f1Z+dz]],rail,.06);worldLine([[f1Start-1.5*f1Run,2*rise,f1Z+dz],[f1Start-1.5*f1Run,2*rise+.95,f1Z+dz]],rail,.045)});
         worldLine([[landX+.7,5*rise+.95,landZ-.7],[landX-.7,5*rise+.95,landZ-.7],[landX-.7,5*rise+.95,landZ+.7]],rail,.06);
         [[landX+.7,landZ-.7],[landX-.7,landZ-.7],[landX-.7,landZ+.7]].forEach(function(pt){worldLine([[pt[0],5*rise,pt[1]],[pt[0],5*rise+.95,pt[1]]],rail,.045)});
         [-.72,.72].forEach(function(dx){worldLine([[f2X+dx,5*rise+.95,landZ+.7],[f2X+dx,9*rise+.95,f2Start+3*f2Run+.2]],rail,.06);worldLine([[f2X+dx,9*rise,f2Start+3*f2Run+.2],[f2X+dx,9*rise+.95,f2Start+3*f2Run+.2]],rail,.045)});
         if(!deliveryBuilt()){
-          var entryX=f1Start+.23;
+          var entryX=f1Start+.4;
           constructionTape([entryX,.92,f1Z-.74],[entryX,.48,f1Z+.74]);
           constructionTape([entryX,.48,f1Z-.74],[entryX,.92,f1Z+.74]);
         }
         sceneElevation=0;
         drawFloorTransfer(3,true);drawFloorTransfer(1,false);
         drawBox(-12.5,3,0,.14,.14,6.81,metal);
-        // The inner support lands on the second-floor slab.
-        drawBox(-8.9,3,4.7,.14,.14,2.11,metal);
+        // The inner support is a raking strut: the platform's inner-front corner hangs past the mezzanine's front
+        // edge, so it leans back to a shoe on the slab's front-left corner, in line with the side wall.
+        drawBox(-8.95,1.35,4.7,.34,.34,.14,metal);
+        worldLine([[-8.95,4.84,1.35],[-8.9,6.81,3]],'#252b28',.14);
         sceneElevation=7.05;onlinePackingCounter(now);sceneElevation=0;
       }
-      if(fi===2){
-        drawFloorTransfer(1,true);
-
-      }
     });
-    // Illuminated stair flights connect the open floors at the right-hand edge.
-    [{x:10,y:0,z:5},{x:7.8,y:4.7,z:1}].forEach(function(stair){
+    // Illuminated stair flights connect the open floors at the right-hand edge, each flush against the slab it climbs
+    // to: the lower flight's inner edge meets the mezzanine at x 9, the upper flight's meets the top floor at x 6.5.
+    // The upper flight is one straight run.
+    [{x:7.35,y:4.7,z:.45}].forEach(function(stair){
       for(var step=0;step<14;step++){
         var sy=stair.y+step*4.7/14,sz=stair.z-step*.43;
         drawBox(stair.x,sz,sy,1.7,.45,.16,wood);
@@ -2059,13 +2536,44 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       }
       [-.92,.92].forEach(function(dx){worldLine([[stair.x+dx,stair.y+.9,stair.z],[stair.x+dx,stair.y+5.6,stair.z-5.8]],'#252b28',.07)});
     });
-    // Slim structural posts support the open mezzanines.
-    [[-8.8,-5.7,9.1],[8.8,-5.7,4.5],[6.3,-6.7,9.2]].forEach(function(p){drawBox(p[0],p[1],0,.16,.16,p[2],metal)});
+    // The ground flight is a dog-leg: from the mezzanine landing it comes forward along the right edge for seven steps
+    // to a half landing, then turns and comes down toward the counters, its foot beside the pickup counter's planter.
+    (function(){
+      var x=9.85,rise=4.7/14,landZ=2.9,landY=6*rise,rail='#252b28',foot=6.525;
+      function tread(tx,tz,ty,w,d,lit,along){
+        drawBox(tx,tz,ty,w,d,.16,wood);
+        // The lit nose sits on the edge the step descends from: the front (+z) edge of the upper run, the inner (−x)
+        // edge of the lower run.
+        var a=along?[[tx-.21,ty+.17,tz-.72],[tx-.21,ty+.17,tz+.72]]:[[tx-.72,ty+.17,tz+.21],[tx+.72,ty+.17,tz+.21]];
+        if(lit){warmStrip(a,false);lightPool(tx,ty+.18,tz,.5,false)}else worldLine(a,'#d5be91',.025);
+      }
+      // Painter's order: the lower run lies beyond the landing (smaller x) and below it, so it goes down first, then
+      // the upper run behind, then the landing in front of both.
+      for(var m=0;m<6;m++)tread(foot+m*.45,landZ,m*rise,.45,1.7,m%2===1,true);
+      for(var step=7;step<14;step++)tread(x,5-step*.43,step*rise,1.7,.45,step%2===0,false);
+      drawBox(x,landZ,landY,1.7,1.7,.16,wood);
+      warmStrip([[x-.72,landY+.17,landZ+.64],[x+.72,landY+.17,landZ+.64]],false);
+      // Handrails: both sides of the upper run, the landing's outer and front edges, both sides of the lower run.
+      [-.92,.92].forEach(function(dx){worldLine([[x+dx,3.29,2.05],[x+dx,5.6,-.8]],rail,.07)});
+      worldLine([[x+.92,3.29,2.05],[x+.92,3.05,landZ+.85],[9,3.05,landZ+.85]],rail,.07);
+      [-.85,.85].forEach(function(dz){worldLine([[9,3.05,landZ+dz],[foot-.22,.9,landZ+dz]],rail,.07)});
+    })();
+    // Slim structural post for the left mezzanine, and the newel at the head of the upper flight on the right: it stands
+    // on the mezzanine (from the top of the lower flight, not below it) and rises to the top of the handrails.
+    drawBox(-8.8,-5.7,0,.16,.16,9.1,metal);
+    drawBox(8.27,-4.8,4.7,.16,.16,5.6,metal);
+    // A guard rail along the mezzanine's open right edge runs from the newel toward the lower flight and stops short
+    // of its top tread, leaving a gap to walk through; an end post closes the rail there.
+    worldLine([[8.93,5.6,-1.75],[8.93,5.6,-4.8],[8.27,5.6,-4.8]],'#252b28',.07);
+    [-1.75,-2.75,-3.75].forEach(function(bz){worldLine([[8.93,4.7,bz],[8.93,5.6,bz]],'#252b28',bz===-1.75?.07:.045)});
     // Enclosed gravity transfers bridge each floor without crossing the stairs.
-    orderCounterPositions(state.orderCounters).forEach(function(p){archedServiceSign(p.x,'ORDER',state.orderCounters>1)});archedServiceSign(4,'PICKUP');
+    // The arched service signs stand in front of the counters, which now sort as jobs, so they sort as jobs too.
+    orderCounterPositions(state.orderCounters).forEach(function(p){sceneJobs.push({depth:depthOf({x:p.x,z:3.75}),draw:function(){sceneElevation=0;archedServiceSign(p.x,'ORDER',state.orderCounters>1)}})});
+    sceneJobs.push({depth:depthOf({x:4,z:3.75}),draw:function(){sceneElevation=0;archedServiceSign(4,'PICKUP')}});
     // Street-level queue markings and low entry planters retain the service route.
-    var waiting=customers.filter(function(c){return !c.ordered&&c.phase!=='leaving'}).length;
-    for(var place=0;place<Math.min(12,queueLimit());place++){var row=Math.floor(place/4),slot=place%4;groundPatch(-4-(row%2?3-slot:slot)*.7,6.1+row*1.2,.3,.06,place<waiting?'#dfcb99':'#7d8f78')}
+    // One dash per standing place along the order line, as far as the doorman; lit while someone is on it.
+    var waiting=customers.filter(inOrderFlow).length,orderRoute=queueRoute(false),spacing=queueLimit()>20?.6:.75,inside=routeLength(orderRoute.slice(0,laneJoinIndex(orderRoute)+1));
+    for(var place=0;place<queueLimit();place++){var along=place*spacing;if(along>inside)break;var spot=routePoint(orderRoute,along),next=routePoint(orderRoute,along+.02),acrossX=Math.abs(next.x-spot.x)>=Math.abs(next.z-spot.z);groundPatch(spot.x,spot.z,acrossX?.06:.3,acrossX?.3:.06,place<waiting?'#dfcb99':'#7d8f78')}
 
   }
   function addIllustratedDetails(jobs){
@@ -2098,13 +2606,19 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     });
   }
   function addIdCheckStation(jobs,now){
-    var x=-9.1,z=9.8,steel=['#414843','#171e1a','#2b342e'],wood=['#bc9d73','#6f5943','#998063'];
+    // The desk sits wholly on the timber floor (front edge z 9.925 < 10), just inside the door.
+    var x=-9.1,z=9.3,steel=['#414843','#171e1a','#2b342e'],wood=['#bc9d73','#6f5943','#998063'];
     jobs.push({depth:depthOf({x:-12.4,z:7.1})-.01,draw:function(){
       groundPatch(-12.4,7.1,.65,.7,'#c7d6a754');
       worldLine([[-12.7,.04,7.45],[-12.1,.04,7.45]],'#e5d7ae',.05);
     }});
+    if(!state.doorBuilt){jobs.push({depth:depthOf({x:x,z:z}),draw:function(){drawConstructionSite(x,z,1.5,2.1,function(){drawBox(x,z,0,.64,1.25,.12,steel);drawBox(x,z,.12,.6,1.2,.85,wood);drawBox(x,z,.97,.78,1.38,.13,['#efe4c8','#a9a18c','#d4c7a6'])})}});return}
     jobs.push({depth:depthOf({x:x+.7,z:z}),draw:function(){drawPerson(x+.7,z,now,4,false,true,false)}});
     jobs.push({depth:depthOf({x:x,z:z}),draw:function(){
+      var rise=buildRise[6]||0,lift=rise*rise*1.1;if(rise>0){ctx.save();ctx.globalAlpha=.15+.85*(1-rise);sceneElevation-=lift}
+      try{drawIdDesk()}finally{if(rise>0){sceneElevation+=lift;ctx.restore()}}
+    }});
+    function drawIdDesk(){
       drawBox(x,z,0,.64,1.25,.12,steel);drawBox(x,z,.12,.6,1.2,.85,wood);
       drawBox(x,z,.97,.78,1.38,.13,['#efe4c8','#a9a18c','#d4c7a6']);
       drawBox(x-.12,z,1.1,.24,.32,.08,['#b7ccac','#527563','#88a488']);
@@ -2114,7 +2628,32 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       if(checkProgress>0)worldLine([[x-.29,1.115,z-.43],[x-.29,1.115,z-.43+checkProgress*.86]],'#c5e89e',.045);
       var light=project(x-.12,1.19,z);ellipse(light.x,light.y,unit*.055,unit*.035,checking?'#e9cf87':'#b7dd96');
       var label=project(x,.65,z+.61);ctx.save();ctx.fillStyle='#f2ecd5';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='600 '+(unit*.12)+'px "Bricolage Grotesque",sans-serif';ctx.fillText('ID CHECK',label.x,label.y,unit*.55);ctx.restore();
-    }});
+    }
+  }
+  // An exterior planter runs along the outside of the storefront, behind the glass: a low green blocker between the
+  // shop and the sidewalk queue. Its sides are the entrance's glazed green tile with cream seams (tall tiles, no
+  // course line) under the same steel rim as the mezzanine planters. It runs the whole side aisle, from the storefront
+  // bays back past the corner window, and the corner's tree grows out of it. It is painted with the ground floor, right
+  // after the boards, so the interior stands in front of it while it still fronts the outside queue.
+  function drawSideAislePlanter(){
+    var x=-10.65;
+    // The planter runs the glazed bays and a little past their rear pilaster, stopping well clear of the smoking
+    // lounge, whose left end stands in the aisle beyond (its wall would otherwise paint over the planter's end).
+    var px=x-.55,pz=3.8,len=3.6,tile=['#708b72','#2c4938','#4a6850'],metal=['#414440','#191e1c','#2b302d'];
+      drawBox(px,pz,0,.9,len,.56,tile);
+      var faceX=px+.465,endZ=pz+len/2+.015;
+      for(var sz=pz-len/2+.08;sz<pz+len/2-.04;sz+=.24)worldLine([[faceX,0,sz],[faceX,.56,sz]],'#ccd3b3',.015);
+      for(var sx=px-.45+.08;sx<px+.45-.04;sx+=.24)worldLine([[sx,0,endZ],[sx,.56,endZ]],'#ccd3b3',.015);
+      drawBox(px,pz,.56,.98,len+.08,.075,metal);drawBox(px,pz,.635,.72,len-.2,.025,['#514633','#514633','#514633']);
+      [-1.2,-.5,.2,.9,1.6].forEach(function(dz,n){var qx=px+(n%2?.1:-.1),qz=pz+dz,h=.5+(n%3)*.1;
+        worldLine([[qx,.65,qz],[qx,.65+h,qz]],'#5e7e45',.035);
+        for(var leaf=0;leaf<5;leaf++){var angle=leaf*2.4+n,q=project(qx+Math.cos(angle)*.2,.83+leaf*.09,qz+Math.sin(angle)*.17);ellipse(q.x,q.y,unit*.16,unit*.095,leaf%2?'#8eae64':'#64894e')}
+      });
+      // The tree: trunk out of the soil, two limbs, a loose crown.
+      var tx=px-.25,tz=2.35;
+      worldLine([[tx,.64,tz],[tx+.12,2.5,tz],[tx-.05,3.55,tz]],'#816747',.16);
+      [-1,1].forEach(function(side){worldLine([[tx+.12,2.1,tz],[tx+side*.85,3.2,tz]],'#816747',.085)});
+      for(var leaf=0;leaf<18;leaf++){var a=leaf*2.399,r=.35+(leaf%4)*.18,lp=project(tx+Math.cos(a)*r,2.7+(leaf%5)*.19,tz+Math.sin(a)*r*.6);ellipse(lp.x,lp.y,unit*.33,unit*.24,leaf%3===0?'#98b96e':leaf%3===1?'#587c4d':'#769852')}
   }
   function addEntryDoor(jobs){
     var x=-10.65,z=10,frame=['#414843','#171e1a','#2b342e'],brass=['#d8c18b','#8d7950','#b7a16d'];
@@ -2123,58 +2662,56 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     for(var bay=0;bay<4;bay++)(function(start,end){
       for(var strip=0;strip<6;strip++)(function(a,b){add(x,(a+b)/2,function(){
         glassPane([project(x,.15,a),project(x,.15,b),project(x,3.3,b),project(x,3.3,a)],'#b9d9c51c');
-        drawBox(x,(a+b)/2,3.3,.18,Math.abs(b-a)+.01,.3,frame);
         drawBox(x,(a+b)/2,.08,.13,Math.abs(b-a)+.01,.08,frame);
       })})(start+(end-start)*strip/6,start+(end-start)*(strip+1)/6);
       add(x,end,function(){drawBox(x,end,.08,.13,.13,3.25,frame)});
     })(8.8-bay*1.6,Math.max(2.5,7.2-bay*1.6));
-    // Return glazing turns the corner and meets the existing mezzanine support.
-    for(var pane=0;pane<6;pane++)(function(a,b){add((a+b)/2,2.5,function(){
-      glassPane([project(a,.15,2.5),project(b,.15,2.5),project(b,3.3,2.5),project(a,3.3,2.5)],'#b9d9c51c');
-      drawBox((a+b)/2,2.5,3.3,b-a+.01,.18,.3,frame);
-      drawBox((a+b)/2,2.5,.08,b-a+.01,.13,.08,frame);
-    })})(x+(-8.8-x)*pane/6,x+(-8.8-x)*(pane+1)/6);
+    // One continuous black transom bar runs under the marquee along the whole glazed run.
+    jobs.push({depth:depthOf({x:x,z:11.4})+.55,draw:function(){drawBox(x,(8.8+2.5)/2,3.3,.18,8.8-2.5,.3,frame)}});
+    // The marquee sorts after every glazing rail and the door header so nothing on the wall overpaints its panels.
+    jobs.push({depth:depthOf({x:x,z:11.4})+.6,draw:function(){drawMarquee(false)}});
+    jobs.push({depth:depthOf({x:MARQUEE.x,z:MARQUEE.rearPilaster}),draw:drawMarqueeRearPilaster});
     jobs.push({depth:-Infinity,draw:function(){var reflection=project(-10.25,.02,7.85);glow(reflection.x,reflection.y,unit*1.1,'#9adf7930')}});
     // A small neon leaf hangs on the glass above the kiosk row.
     add(x+.12,7.85,function(){
       var outline=[[0,.42],[-.18,.28],[-.51,.3],[-.34,.12],[-.67,-.08],[-.39,-.12],[-.52,-.5],[-.22,-.3],[0,-.78],[.22,-.3],[.52,-.5],[.39,-.12],[.67,-.08],[.34,.12],[.51,.3],[.18,.28],[0,.42]];
       var points=outline.map(function(p){return [x+.12,2.68-p[1]*.72,7.85+p[0]*.85]});
-      ctx.save();ctx.shadowColor='#a4ff70';ctx.shadowBlur=unit*.2;
+      lit(function(){ctx.save();ctx.shadowColor='#a4ff70';ctx.shadowBlur=unit*.2;
       worldLine(points,'#86eb7040',.09);worldLine(points,'#a6fa86',.035);
       worldLine([[x+.12,2.38,7.85],[x+.12,2.25,7.85]],'#a6fa86',.035);
-      ctx.shadowBlur=0;worldLine(points,'#e6ffd2',.012);ctx.restore();
+      ctx.shadowBlur=0;worldLine(points,'#e6ffd2',.012);ctx.restore()});
     });
-    // Matching short tiled returns flank the entrance without crossing the approach.
-    [{cx:x+1.22,cz:11.25},{cx:x,cz:7.53,turned:true}].forEach(function(wall){
-      if(wall.turned){
-        for(var section=0;section<10;section++)(function(center){add(wall.cx,center,function(){
-          drawBox(wall.cx,center,.03,.26,7/30,1.12,['#708b72','#2c4938','#4a6850']);
-          worldLine([[wall.cx+.145,.12,center-7/60],[wall.cx+.145,1.05,center-7/60]],'#ccd3b3',.015);
-          worldLine([[wall.cx+.145,.59,center-7/60],[wall.cx+.145,.59,center+7/60]],'#ccd3b3',.014);
-          drawBox(wall.cx,center,1.15,.38,7/30+.01,.1,['#e0d4b4','#a99c7b','#c5ba9a']);
-        })})(wall.cz-7/6+(section+.5)*7/30);
-        return;
-      }
-      add(wall.cx,wall.cz,function(){
-        var half=7/6;
-        if(wall.turned){
-          drawBox(wall.cx,wall.cz,.03,.26,half*2,1.12,['#708b72','#2c4938','#4a6850']);
-          for(var seam=0;seam<10;seam++){var sz=wall.cz-half+.08+seam*.24;worldLine([[wall.cx+.145,.12,sz],[wall.cx+.145,1.05,sz]],'#ccd3b3',.015)}
-          worldLine([[wall.cx+.145,.59,wall.cz-half],[wall.cx+.145,.59,wall.cz+half]],'#ccd3b3',.014);
-          drawBox(wall.cx,wall.cz,1.15,.38,half*2+.04,.1,['#e0d4b4','#a99c7b','#c5ba9a']);return;
-        }
-        drawBox(wall.cx,wall.cz,.03,half*2,.26,1.12,['#708b72','#2c4938','#4a6850']);
-        for(var seam=0;seam<10;seam++){var sx=wall.cx-half+.08+seam*.24;worldLine([[sx,.12,wall.cz+.145],[sx,1.05,wall.cz+.145]],'#ccd3b3',.015)}
-        worldLine([[wall.cx-half,.59,wall.cz+.145],[wall.cx+half,.59,wall.cz+.145]],'#ccd3b3',.014);
-        drawBox(wall.cx,wall.cz,1.15,half*2+.04,.38,.1,['#e0d4b4','#a99c7b','#c5ba9a']);
-      });
-    });
+    // Matching short tiled returns flank the entrance without crossing the approach; both stand straight on the slab.
+    var tileWall=['#708b72','#2c4938','#4a6850'],coping=['#e0d4b4','#a99c7b','#c5ba9a'];
+    // Along the side wall, in ten sections so the queue sorts against it.
+    for(var section=0;section<10;section++)(function(center,last){add(x,center,function(){
+      drawBox(x,center,0,.26,7/30,1.15,tileWall);
+      worldLine([[x+.145,0,center-7/60],[x+.145,1.15,center-7/60]],'#ccd3b3',.015);
+      worldLine([[x+.145,.575,center-7/60],[x+.145,.575,center+7/60]],'#ccd3b3',.014);
+      if(last)worldLine([[x-.13,.575,center+7/60+.015],[x+.13,.575,center+7/60+.015]],'#ccd3b3',.014);
+      drawBox(x,center,1.15,.38,7/30+.01,.1,coping);
+    })})(7.53-7/6+(section+.5)*7/30,section===9);
+    // Across the front, butted against the marquee's corner pilaster: it starts on the pilaster's front corner, shares
+    // its depth and front plane, and runs nine whole tiles; the coping is the wall's own footprint so every edge is
+    // flush. It is painted after the marquee job, so the pilaster's inner face (which the wall hides) cannot paint over
+    // the first tile, and its seams run the full height from the slab to the coping.
+    var pilasterFace=MARQUEE.x+MARQUEE.depth/2,wallX1=pilasterFace+9*.24,wallZ=MARQUEE.pilaster;
+    jobs.push({depth:depthOf({x:x,z:11.4})+.61,draw:function(){
+      var cx=(pilasterFace+wallX1)/2,w=wallX1-pilasterFace,fz=wallZ+MARQUEE.depth/2+.015;
+      drawBox(cx,wallZ,0,w,MARQUEE.depth,1.15,tileWall);
+      for(var seam=1;seam<9;seam++){var sx=pilasterFace+seam*.24;worldLine([[sx,0,fz],[sx,1.15,fz]],'#ccd3b3',.015)}
+      worldLine([[pilasterFace,.575,fz],[wallX1,.575,fz]],'#ccd3b3',.014);
+      // The course line turns the corner on to the wall's end.
+      worldLine([[wallX1+.015,.575,wallZ+MARQUEE.depth/2],[wallX1+.015,.575,wallZ-MARQUEE.depth/2]],'#ccd3b3',.014);
+      drawBox(cx,wallZ,1.15,w,MARQUEE.depth,.1,coping);
+    }});
     // Rear-wall exit replaces the greenery panel; customers approach beside the stairs.
     var exitX=10.25,exitZ=-7;
-    add(exitX-2.15,exitZ+.23,function(){
-      var sx=exitX-2.15,sz=exitZ+.23;
-      drawBox(sx,sz,2.2,1.2,.055,.38,['#b8b49a','#283e32','#355342']);
-      var label=project(sx,2.39,sz+.03),axis=project(sx+1,2.39,sz+.03);
+    add(exitX,exitZ+.14,function(){
+      // A plate centred on the door's header bar.
+      var sx=exitX,sz=exitZ+.13;
+      drawBox(sx,sz,3.4,1.2,.055,.38,['#b8b49a','#283e32','#355342']);
+      var label=project(sx,3.59,sz+.03),axis=project(sx+1,3.59,sz+.03);
       ctx.save();ctx.translate(label.x,label.y);ctx.transform((axis.x-label.x)/unit,(axis.y-label.y)/unit,0,1,0,0);
       ctx.fillStyle='#eee6ca';ctx.font='600 '+unit*.16+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('EXIT ONLY',0,0,unit*1.02);ctx.restore();
     });
@@ -2192,29 +2729,31 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       });
     });
     jobs.push({depth:-Infinity,draw:function(){
-      groundPatch(exitX,exitZ+.5,1.9,1.6,'#314d3d');
-      worldLine([[exitX,.055,exitZ+1.1],[exitX,.055,exitZ-.1],[exitX-.28,.055,exitZ+.25]],'#d6c18a',.07);
-      worldLine([[exitX,.055,exitZ-.1],[exitX+.28,.055,exitZ+.25]],'#d6c18a',.07);
+      // The mat lies in the exit lane just past the merch cabinet, its arrow pointing on to the door.
+      var matX=10.7,matZ=-4.35;
+      groundPatch(matX,matZ,1.4,1.9,'#314d3d');
+      worldLine([[matX,.055,matZ+.7],[matX,.055,matZ-.7],[matX-.28,.055,matZ-.35]],'#d6c18a',.07);
+      worldLine([[matX,.055,matZ-.7],[matX+.28,.055,matZ-.35]],'#d6c18a',.07);
     }});
     // Exterior lighting: sconces on the outer faces of the door posts, a strip under the header, bollards on the approaches
     // and a hooded lamp over the exit. Their spill is drawn once here and again above the night shade.
     exteriorFixtures.sconces.forEach(function(f){add(f.x-.1,f.z,function(){
       drawBox(f.x+.06,f.z,f.y-.14,.08,.22,.3,frame);drawBox(f.x-.12,f.z,f.y-.04,.26,.2,.14,brass);
-      var lamp=project(f.x-.14,f.y-.07,f.z);ellipse(lamp.x,lamp.y,unit*.075,unit*.045,'#fff3d2');
+      var lamp=project(f.x-.14,f.y-.07,f.z);litEllipse(lamp.x,lamp.y,unit*.075,unit*.045,'#fff3d2');
     })});
-    exteriorFixtures.bollards.forEach(function(b){add(b.x,b.z,function(){
-      drawBox(b.x,b.z,0,.2,.2,.7,frame);drawBox(b.x,b.z,.5,.21,.21,.13,['#fff1c9','#d8c18b','#f2e0b1']);drawBox(b.x,b.z,.7,.24,.24,.05,brass);
-    })});
+    // The exit bollards sort with everything else; the entrance pair is painted early, behind the outside queue.
+    exteriorFixtures.bollards.filter(function(b){return b.x>-11.5}).forEach(function(b){add(b.x,b.z,function(){drawBollard(b)})});
     add(exitX,exitZ-.3,function(){
       var e=exteriorFixtures.exitLamp;drawBox(e.x,e.z,e.y-.1,.5,.22,.16,brass);drawBox(e.x,e.z+.1,e.y-.02,.14,.1,.2,frame);
-      var lamp=project(e.x,e.y-.13,e.z-.02);ellipse(lamp.x,lamp.y,unit*.085,unit*.05,'#fff3d2');
+      var lamp=project(e.x,e.y-.13,e.z-.02);litEllipse(lamp.x,lamp.y,unit*.085,unit*.05,'#fff3d2');
     });
     add(x-.2,z,function(){warmStrip(exteriorFixtures.entryStrip,false)});
     jobs.push({depth:depthOf({x:x-.3,z:z})+.05,draw:function(){exteriorLightSpill(.7)}});
     jobs.push({depth:depthOf({x:exitX,z:exitZ-.3})+.05,draw:function(){var e=exteriorFixtures.exitLamp;haloLight(e.x,e.y-.14,e.z,.7,.18,'#ffe2a5')}});
     // Threshold and welcome mat lie on the actual customer approach.
     jobs.push({depth:-Infinity,draw:function(){groundPatch(x-.8,z,1.6,2,'#314d3d');drawBox(x,z,.025,.34,2.5,.06,brass)}});
-    [z-1.2,z+1.2].forEach(function(edge){add(x,edge,function(){drawBox(x,edge,.04,.26,.26,3.26,frame);drawBox(x,edge,0,.3,.3,.18,brass)})});
+    // The door posts run straight to the slab: a wider brass foot block read as a loose crate beside the ID desk.
+    [z-1.2,z+1.2].forEach(function(edge){add(x,edge,function(){drawBox(x,edge,0,.26,.26,3.3,frame)})});
     add(x,z,function(){
       drawBox(x,z,3.3,.26,2.66,.3,frame);
     });
@@ -2229,43 +2768,215 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   }
   function addQueueRails(jobs){
 
-    [-4,4].forEach(function(center){
-      var direction=-1,near=center-direction*.65,far=center+direction*2.75;
-      function post(x,z){jobs.push({depth:depthOf({x:x,z:z}),draw:function(){
-        var base=project(x,.05,z),cap=project(x,.85,z);
-        ellipse(base.x,base.y,unit*.2,unit*.09,'#8a805b');
-        worldLine([[x,.06,z],[x,.85,z]],'#c5b382',.065);ellipse(cap.x,cap.y,unit*.095,unit*.08,'#eddaad');
-      }})}
-      function rope(x1,z1,x2,z2){
-        for(var segment=0;segment<12;segment++)(function(t0,t1){
-          var x0=x1+(x2-x1)*t0,z0=z1+(z2-z1)*t0,x=x1+(x2-x1)*t1,z=z1+(z2-z1)*t1;
-          jobs.push({depth:depthOf({x:(x0+x)/2,z:(z0+z)/2}),draw:function(){worldLine([[x0,.77-.34*t0*(1-t0),z0],[x,.77-.34*t1*(1-t1),z]],'#365846',.07)}});
-        })(segment/12,(segment+1)/12);
-      }
-      // Two alternating dividers leave turning pockets matching queueRoute.
-      var z1=5.5,z2=6.7;
-      [[near,z1,center+direction*1.5,z1],[far,z2,center+direction*.6,z2],
-       [near,4.5,near,7.9],[far,4.5,far,7.9],
-       [near,7.9,center+direction*1.5,7.9]].forEach(function(r){post(r[0],r[1]);post(r[2],r[3]);rope(r[0],r[1],r[2],r[3])});
+    function post(x,z){jobs.push({depth:depthOf({x:x,z:z}),draw:function(){
+      var base=project(x,.05,z),cap=project(x,.85,z);
+      ellipse(base.x,base.y,unit*.2,unit*.09,'#8a805b');
+      worldLine([[x,.06,z],[x,.85,z]],'#c5b382',.065);ellipse(cap.x,cap.y,unit*.095,unit*.08,'#eddaad');
+    }})}
+    function rope(x1,z1,x2,z2){
+      for(var segment=0;segment<12;segment++)(function(t0,t1){
+        var x0=x1+(x2-x1)*t0,z0=z1+(z2-z1)*t0,x=x1+(x2-x1)*t1,z=z1+(z2-z1)*t1;
+        jobs.push({depth:depthOf({x:(x0+x)/2,z:(z0+z)/2}),draw:function(){worldLine([[x0,.77-.34*t0*(1-t0),z0],[x,.77-.34*t1*(1-t1),z]],'#365846',.07)}});
+      })(segment/12,(segment+1)/12);
+    }
+    // Rails that meet share one post.
+    function pen(rails){var posts={};rails.forEach(function(r){[[r[0],r[1]],[r[2],r[3]]].forEach(function(p){var key=p[0].toFixed(3)+','+p[1].toFixed(3);if(!posts[key]){posts[key]=true;post(p[0],p[1])}});rope(r[0],r[1],r[2],r[3])})}
+    // Pickup pen: two alternating dividers leave turning pockets matching queueRoute(true).
+    var near=4.65,far=1.25;
+    pen([[near,5.5,2.5,5.5],[far,6.7,3.4,6.7],[near,4.5,near,7.9],[far,4.5,far,7.9],[near,7.9,2.5,7.9]]);
+    // Order pen: three full-width rows, open at the top so the gate's customers walk straight on to any counter, and
+    // open at the bottom-left where the tail comes in from the door. Dividers sit between the rows of
+    // queueRoute(false), each leaving a pocket at the end the line turns through (right, left, right).
+    var ORDER_PEN=orderPen(),right=ORDER_PEN.right+.65,left=ORDER_PEN.left-.65,rows=ORDER_ROWS;
+    pen([[left,(ORDER_QUEUE_GATE.z+rows[0])/2,ORDER_PEN.right-.6,(ORDER_QUEUE_GATE.z+rows[0])/2],
+         [right,(rows[0]+rows[1])/2,ORDER_PEN.left+.6,(rows[0]+rows[1])/2],
+         [left,(rows[1]+rows[2])/2,ORDER_PEN.right-.6,(rows[1]+rows[2])/2],
+         [right,6.4,right,rows[2]],[left,(ORDER_QUEUE_GATE.z+rows[0])/2,left,(rows[1]+rows[2])/2]]);
+  }
+  // The smoking lounge's face. The shelving wall continues left into a speakeasy doorway — dark lacquer with brass
+  // mouldings, velvet curtains tied back to a narrow gap that shows a lamp-lit corner of the room, a neon LOUNGE sign on
+  // the header — and right to a plain end wall whose back door, under the stairs, lets guests out to the exit. Until
+  // the lounge is bought the doorway is boarded, the tube is dark and the site is taped like any other station.
+  // The smoking lounge. Its walls are the shop's forest-green plaster with the entrance's glazed green tile on the
+  // lower half (cream seams, a cream course on top), like the tiled returns and the column bases. The room is
+  // open-topped in the cutaway like every other room, so its left section (past the mezzanine's edge) shows its floor,
+  // sofas and lamps from above. A side wall closes the old forecourt between the storefront's rear pilaster and the
+  // lounge's front, and the neon LOUNGE blade hangs on that wall's inner face beside the curtain. Guests admitted at
+  // the curtain are painted here, behind the drapes, so they slip in between them as they fade.
+  var LOUNGE_SIDE={x:-10.65,z0:LOUNGE_FRONT,z1:2.5},LOUNGE_TILE=1.15;
+  // The drapes hang closed but for a sliver of lamplight; they draw apart as an admitted guest walks up, and close
+  // again over the guest's back as they step through. `loungeCurtain` is the open amount (0 closed, 1 drawn to the
+  // jambs), eased toward whatever the guests going in call for.
+  var loungeCurtain=0,loungeExitCurtain=0;
+  // The back door's drapes: drawn back as a guest's session runs out, held while they fade in on the threshold and
+  // take their first steps out, then closed behind them once they are a stride away.
+  function loungeExitCurtainTarget(){
+    var target=0;
+    customers.forEach(function(c){
+      if(c.phase==='lounge'&&c.loungeLeft<=.5&&!(c.loungeFade>0))target=1;
+      if(c.lounge&&c.phase==='leaving'){var d=Math.hypot(c.x-LOUNGE_EXIT.x,c.z-LOUNGE_EXIT.z);target=Math.max(target,d<.6?1:d<1.3?1-(d-.6)/.7:0)}
+    });
+    return target;
+  }
+  function loungeCurtainTarget(){
+    var target=0,admitting=loungeAdmission(state.lounge,loungeSeated(),loungeSpareJars()).admit;
+    customers.forEach(function(c){
+      // Drawn back as a guest who will be let straight in comes down the last stretch, held while they step through,
+      // then closed over them.
+      if(admitting&&c.phase==='toLounge'&&c.waypoints.length<=1&&c.z<1.6)target=1;
+      if(c.phase==='lounge'&&c.loungeFade>0){var p=1-c.loungeFade;target=Math.max(target,p<.4?1:p<.7?1-(p-.4)/.3:0)}
+    });
+    return target;
+  }
+  // Inner edge of each drape (top, waist, hem offsets from the door's centre) for an open amount.
+  function drapeEdges(open){
+    var closed=[.07,.07,.07],drawn=[.42,.56,.48];
+    return closed.map(function(v,i){return v+(drawn[i]-v)*open});
+  }
+  // A guest going in is clipped to the gap between the drapes as it stands — wide while they are drawn back, shut over
+  // the guest as they close — and fades out under them at the very end so nothing shows through the rest sliver.
+  // Where each pair of drapes hangs: across the entrance, or — wider and taller — on the right wall's outer face at
+  // the back door. `pt` maps an offset along the opening and a height to world space, `pr` projects it.
+  function drapeGeometry(exit){
+    var g=exit?{centre:LOUNGE_EXIT.z,plane:LOUNGE_RIGHT+.19,scale:1.35,top:2.78,open:loungeExitCurtain}:{centre:LOUNGE_DOOR.x,plane:LOUNGE_FRONT+.03,scale:1,top:2.48,open:loungeCurtain};
+    g.pt=function(u,y,lift){return exit?[g.plane+(lift||0),y,g.centre+u]:[g.centre+u,y,g.plane+(lift||0)]};
+    g.pr=function(u,y){var q=g.pt(u,y);return project(q[0],q[1],q[2])};
+    return g;
+  }
+  function drawGuestThroughDrapes(c,now,exit){
+    var g=drapeGeometry(exit),e=drapeEdges(g.open).map(function(v){return v*g.scale}),waist=g.top*.54;
+    var gap=[[-e[0],g.top],[e[0],g.top],[e[1],waist],[e[2],.04],[-e[2],.04],[-e[1],waist]].map(function(q){return g.pr(q[0],q[1])});
+    ctx.save();ctx.beginPath();ctx.moveTo(gap[0].x,gap[0].y);for(var i=1;i<gap.length;i++)ctx.lineTo(gap[i].x,gap[i].y);ctx.closePath();ctx.clip();
+    drawFadedCustomer(c,now);ctx.restore();
+  }
+  // Velvet drapes: straight and full when closed, gathered to the jambs when drawn, with folds and a hem.
+  // `exit` hangs the pair on the right wall's outer face, centred on the back door, instead of across the entrance.
+  function drawLoungeDrapes(alpha,open,exit){
+    var g=drapeGeometry(exit),e=drapeEdges(open===undefined?g.open:open).map(function(v){return v*g.scale}),pt=g.pt,pr=g.pr;
+    var wide=.68*g.scale,T=g.top,W=T*.54;
+    if(alpha<=0)return;if(alpha<1){ctx.save();ctx.globalAlpha=alpha}
+    [-1,1].forEach(function(side){
+      var outer=side*wide,top=side*e[0],waist=side*e[1],hem=side*e[2];
+      poly([pr(outer,T),pr(top,T),pr(waist,W),pr(hem,.04),pr(outer,.04)],'#5c1e30');
+      worldLine([pt(outer+(top-outer)*.35,T-.08,.005),pt(outer+(waist-outer)*.45,W,.005),pt(outer+(hem-outer)*.4,.1,.005)],'#7d3047',.05);
+      worldLine([pt(outer+(top-outer)*.7,T-.08,.005),pt(outer+(waist-outer)*.8,W,.005),pt(outer+(hem-outer)*.75,.1,.005)],'#43121f',.04);
+    });
+    if(alpha<1)ctx.restore();
+  }
+  function drawLoungeFront(now){
+    var z=DISPLAY_Z,fd=.81,zc=z+.245,face=z+.65,H=3.95,plaster=['#698775','#314b40','#496a56'],tile=['#708b72','#2c4938','#4a6850'],seam='#ccd3b3';
+    var velvet=['#6b2436','#3c1220','#8a3448'],darkWood=['#3a2a1e','#1e140e','#2c2016'],open=state.lounge>0,rise=buildRise[7]||0,dx=LOUNGE_DOOR.x;
+    var rx=LOUNGE_RIGHT,rface=rx+.16,roomZ=(-7+face)/2,roomD=face+7,side=LOUNGE_SIDE,sideZ=(side.z0+side.z1)/2,sideD=side.z1-side.z0;
+    // Tile band painted flat on a wall face — a change of finish, with no ledge on top (only the short half-walls at
+    // the entrance have a coping): the face colour from the slab to the band's top, seams every 0.24, a course line.
+    function tileFace(alongZ,a0,a1,at){
+      var f=at+.004,fill=alongZ?tile[2]:tile[1];
+      poly(alongZ?[project(f,0,a0),project(f,0,a1),project(f,LOUNGE_TILE,a1),project(f,LOUNGE_TILE,a0)]:[project(a0,0,f),project(a1,0,f),project(a1,LOUNGE_TILE,f),project(a0,LOUNGE_TILE,f)],fill);
+      f+=.004;
+      for(var s0=a0+.12;s0<a1-.06;s0+=.24)worldLine(alongZ?[[f,0,s0],[f,LOUNGE_TILE,s0]]:[[s0,0,f],[s0,LOUNGE_TILE,f]],seam,.015);
+      worldLine(alongZ?[[f,LOUNGE_TILE*.5,a0],[f,LOUNGE_TILE*.5,a1]]:[[a0,LOUNGE_TILE*.5,f],[a1,LOUNGE_TILE*.5,f]],seam,.014);
+    }
+    // The room seen from above, past the mezzanine's edge: a plum floor, a rug, two velvet sofas and lamp tables.
+    groundPatch(-10.1,roomZ,2.3,roomD,'#2a1b22');
+    groundPatch(-10.1,-4.1,1.5,2.3,'#4a2a35');
+    [[-5.85,1],[-2.35,-1]].forEach(function(sofa){var sz=sofa[0],dir=sofa[1];drawBox(-10.1,sz,0,1.6,.6,.5,velvet);drawBox(-10.1,sz-dir*.24,.45,1.6,.14,.42,velvet)});
+    drawBox(-10.1,-4.1,0,.9,.5,.4,darkWood);
+    [[-10.7,-6.6],[-10.7,-1.55],[-9.6,-4.1]].forEach(function(t){drawBox(t[0],t[1],0,.4,.4,.62,darkWood);var lamp=project(t[0],.92,t[1]);(open?litEllipse:ellipse)(lamp.x,lamp.y,unit*.16,unit*.1,open?'#f3c88a':'#6a5a4a');if(open)glow(lamp.x,lamp.y,unit*.8,'#ffb36a44')});
+    if(open){var spill=project(dx,.03,-1.3);glow(spill.x,spill.y,unit*.8,'#ff9ab83a',unit*.36)}
+    // A red carpet runs out from the curtain, with a short velvet rope on brass stanchions down its right-hand side;
+    // the posts and rope sort with the guests who wait on the carpet.
+    if(open){
+      groundPatch(dx,face+.95,1.1,1.9,'#7a1f2e');groundPatch(dx,face+.95,.96,1.78,'#8e2537');
+      worldLine([[dx-.55,.018,face+.02],[dx-.55,.018,face+1.9]],'#c9a45a',.03);worldLine([[dx+.55,.018,face+.02],[dx+.55,.018,face+1.9]],'#c9a45a',.03);
+      [[dx+.72,face+.25],[dx+.72,face+1.75]].forEach(function(pt){sceneJobs.push({depth:depthOf({x:pt[0],z:pt[1]}),draw:function(){
+        sceneElevation=0;var base=project(pt[0],.05,pt[1]),cap=project(pt[0],.95,pt[1]);
+        ellipse(base.x,base.y,unit*.17,unit*.08,'#8d7950');worldLine([[pt[0],.06,pt[1]],[pt[0],.92,pt[1]]],'#d8c18b',.055);ellipse(cap.x,cap.y,unit*.085,unit*.075,'#f0dfb1');
+      }})});
+      [.72].forEach(function(side){for(var seg=0;seg<8;seg++)(function(t0,t1){
+        var z0=face+.25+1.5*t0,z1=face+.25+1.5*t1;
+        sceneJobs.push({depth:depthOf({x:dx+side,z:(z0+z1)/2}),draw:function(){sceneElevation=0;worldLine([[dx+side,.84-.3*t0*(1-t0),z0],[dx+side,.84-.3*t1*(1-t1),z1]],'#8b1e34',.075)}});
+      })(seg/8,(seg+1)/8)});
+    }
+    // End walls at the floor's left edge and behind the exit corner, each with its tile band; the back door on the right
+    // wall opens on to the exit lane between the column and the merch cabinet.
+    drawBox(-11.34,roomZ,0,.32,roomD,H,plaster);
+    tileFace(true,-7,face,-11.18);
+    drawBox(rx,roomZ,0,.32,roomD,H,plaster);
+    tileFace(true,-7,face,rx+.16);
+    // The back door: a taller, wider opening than the entrance, dark inside so the drapes never open on to the wall's
+    // tiles, with the same velvet pair and pelmet over it.
+    var ez=LOUNGE_EXIT.z,eh=2.84,ew=.92;
+    poly([project(rface+.01,.02,ez-ew),project(rface+.01,.02,ez+ew),project(rface+.01,eh,ez+ew),project(rface+.01,eh,ez-ew)],'#0d1310');
+    worldLine([[rface+.02,.02,ez-ew],[rface+.02,eh,ez-ew],[rface+.02,eh,ez+ew],[rface+.02,.02,ez+ew]],'#171e1a',.07);
+    if(open){
+      drawLoungeDrapes(1,undefined,true);
+      drawBox(rface+.05,ez,eh-.1,.1,ew*2+.04,.14,['#4a1b29','#2b0d16','#3b1420']);
+    }else drawBox(rface+.03,ez,0,.05,ew*2-.3,eh-.24,darkWood);
+    // The side wall closing the forecourt on the storefront line, from the lounge's front to the rear pilaster.
+    drawBox(side.x,sideZ,0,.26,sideD,H,plaster);
+    tileFace(true,side.z0,side.z1,side.x+.13);
+    // Facade: jamb and header around the doorway, the wall to its right and past the shelving, tiled below.
+    if(rise>0){ctx.save();ctx.globalAlpha=.15+.85*(1-rise)}
+    drawBox(dx-.94,zc,0,.48,fd,H,plaster);drawBox(dx,zc,2.5,1.4,fd,H-2.5,plaster);drawBox((dx+.7-6.7)/2,zc,0,-6.7-(dx+.7),fd,H,plaster);drawBox((6.7+rx)/2,zc,0,rx-6.7,fd,H,plaster);
+    [[dx-1.18,dx-.7],[dx+.7,-6.7],[6.7,rx]].forEach(function(run){tileFace(false,run[0],run[1],face)});
+    worldLine([[dx-.74,.02,face+.02],[dx-.74,2.54,face+.02],[dx+.74,2.54,face+.02],[dx+.74,.02,face+.02]],'#171e1a',.07);
+    if(open){
+      drawLoungeDrapes(1,loungeCurtain);
+      drawBox(dx,face-.05,2.44,1.5,.1,.14,['#4a1b29','#2b0d16','#3b1420']);
+    }else{
+      // Boarded up: a plywood sheet with battens, a COMING SOON stencil and a strip of tape across the frame.
+      drawBox(dx,face-.04,0,1.36,.08,2.46,['#c9a874','#7d6240','#a9895c']);
+      [dx-.5,dx-.1,dx+.3].forEach(function(bx){worldLine([[bx,.1,face+.03],[bx,2.4,face+.03]],'#8a6b46',.03)});
+      wallText(dx,1.55,face+.04,'COMING SOON',unit*1.15,.17,'#5a4a35',false,'800');
+      constructionTape([dx-.75,1.05,face+.06],[dx+.75,.95,face+.06]);
+    }
+    // The neon blade on the side wall's inner face, beside the curtain: a glowing tube when open, dark over the hoarding.
+    drawBox(side.x+.145,side.z0+.42,.3,.03,.46,2.2,['#1a1216','#0e090c','#140d10']);
+    loungeNeon(open);
+    if(rise>0)ctx.restore();
+  }
+  // The neon LOUNGE blade's glow and letters, on the side wall's inner face beside the curtain; drawn with the lounge
+  // front by day and again above the night map.
+  function loungeNeon(open){
+    var bx=LOUNGE_SIDE.x+.135,bz=LOUNGE_SIDE.z0+.42;
+    if(open){var neon=project(bx+.03,1.4,bz);glow(neon.x,neon.y,unit*.62,'#ff8fb87a',unit*1.3)}
+    'LOUNGE'.split('').forEach(function(letter,i){var ly=2.28-i*.36;
+      if(open){ctx.save();ctx.shadowColor='#ff6fa8';ctx.shadowBlur=unit*.26;wallText(bx+.04,ly,bz,letter,unit*.44,.34,'#ff8fbf',true,'800');ctx.restore();wallText(bx+.042,ly,bz,letter,unit*.44,.34,'#fff4f8',true,'700')}
+      else wallText(bx+.04,ly,bz,letter,unit*.44,.34,'#5a4750',true,'800');
     });
   }
-  function addExitMerch(jobs){
-    var wood=['#d9b885','#896e49','#b69766'];
-    // Slim merch stand beside the exit lane, beyond the stair footprint.
-    jobs.push({depth:depthOf({x:9.65,z:-3.45}),draw:function(){
-      var x=9.65,z=-3.45,frame=['#4a5d50','#263b30','#354c3e'];
-      drawBox(x,z,.02,.78,2.05,.15,frame);
-      [-.94,.94].forEach(function(dz){drawBox(x-.31,z+dz,.17,.07,.07,1.82,frame)});
+  function drawExitCabinet(){
+    // Arched display cabinet in the corner between the lounge's right wall and the exit wall: an oak case with a
+    // fluted back, three lit glass shelves of merchandise behind a glazed arch, and oak spandrels that turn the
+    // rectangular case into a rounded niche. Its rear end sits against the rear wall beside the exit door.
+    // Painted with the ground floor, before the stair flight and the structural posts, so those stand in front of it.
+    (function(){
+      var x=8.66,z=-5.82,half=1.02,r=.98,spring=2.4,faceX=x+.34,cream=['#bc9d73','#6f5943','#998063'],oak=['#c9a56f','#7f6242','#a8875a'];
+      drawBox(x,z,.02,.74,half*2+.12,.18,cream);
+      drawBox(x-.24,z,.2,.16,half*2,spring+r-.1,oak);
+      for(var flute=0;flute<11;flute++){var fz=z-half+.12+flute*.18;worldLine([[x-.155,.26,fz],[x-.155,spring+r-.18,fz]],'#e3c890',.024);worldLine([[x-.155,.26,fz+.06],[x-.155,spring+r-.18,fz+.06]],'#6f5538',.012)}
+      [-1,1].forEach(function(side){drawBox(x,z+side*(half+.02),.2,.68,.08,spring+r-.1,cream)});
       for(var row=0;row<3;row++){
-        var y=.22+row*.59;
-        drawBox(x,z,y,.78,2.05,.085,wood);
-        worldLine([[x+.39,y+.086,z-.96],[x+.39,y+.086,z+.96]],'#ddc593',.025);
-        for(var item=0;item<3;item++)merchandise(x,z-.65+item*.65,y+.085,(row+item)%3,['#527e60','#b28b64','#75999a'][item]);
-        // Under-shelf strip on the row above lights the merchandise on this one.
-        if(row<2){worldLine([[x+.34,y+.585,z-.92],[x+.34,y+.585,z+.92]],'#ffe9b8',.016);var shelfGlow=project(x+.2,y+.3,z);glow(shelfGlow.x,shelfGlow.y,unit*.75,'#ffe6b01c',unit*.4)}
+        var y=.34+row*.68;
+        drawBox(x,z,y,.6,half*2-.12,.05,['#e9e6d8','#aeb0a2','#d0d1c1']);
+        worldLine([[x+.29,y+.05,z-half+.1],[x+.29,y+.05,z+half-.1]],'#e8f0e6',.014);
+        for(var item=0;item<3;item++)merchandise(x-.02,z-.64+item*.64,y+.05,(row+item)%3,['#527e60','#b28b64','#75999a'][item]);
+        litLine([[x+.22,y+.62,z-half+.12],[x+.22,y+.62,z+half-.12]],'#ffe9b8',.018);
+        var shelfGlow=project(x+.1,y+.3,z);glow(shelfGlow.x,shelfGlow.y,unit*.8,'#ffe6b01e',unit*.42);
       }
-      drawBox(x-.31,z,2.0,.08,2.05,.14,frame);
-    }});
+      // Glazed arch over the opening, then the spandrels and the cream rim.
+      var opening=[project(faceX,.2,z-r),project(faceX,spring,z-r)];
+      for(var t=0;t<=20;t++){var a=Math.PI-t/20*Math.PI;opening.push(project(faceX,spring+Math.sin(a)*r,z+Math.cos(a)*r))}
+      opening.push(project(faceX,.2,z+r));glassPane(opening,'#b9d9c51c');
+      var spandrel=[project(faceX,spring,z-half-.06),project(faceX,spring+r+.1,z-half-.06),project(faceX,spring+r+.1,z+half+.06),project(faceX,spring,z+half+.06)];
+      for(var t=0;t<=20;t++){var a=t/20*Math.PI;spandrel.push(project(faceX,spring+Math.sin(a)*r,z+Math.cos(a)*r))}
+      poly(spandrel,'#bc9d73');
+      var rim=[[faceX+.005,.2,z-r],[faceX+.005,spring,z-r]];
+      for(var t=0;t<=24;t++){var a=Math.PI-t/24*Math.PI;rim.push([faceX+.005,spring+Math.sin(a)*r,z+Math.cos(a)*r])}
+      rim.push([faceX+.005,.2,z+r]);
+      worldLine(rim,'#bc9d73',.11);worldLine(rim.map(function(q){return [q[0]+.004,q[1],q[2]]}),'#8a6d4b',.02);
+      drawBox(x,z,spring+r+.08,.76,half*2+.14,.1,cream);
+    })();
   }
   function addRoomDetails(jobs,now){
     var wood=['#d9b885','#896e49','#b69766'],sage=['#a1baa0','#4f725a','#799878'],cream=['#efe4c8','#a9b195','#d2d3b3'];
@@ -2340,19 +3051,23 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   }
   function depthOf(pos){return rotate(pos.x,pos.z).z}
   // A single failed frame (for example a zero-width canvas while the page is being laid out) must not stop the scene forever.
-  function render(wallNow){try{renderFrame(wallNow)}catch(e){if(!render.failed)console.error('Canopy frame failed; retrying',e);render.failed=true;render.invalidated=true;requestAnimationFrame(render)}}
+  function render(wallNow){var t0=performance.now();try{renderFrame(wallNow);render.frameMs=(render.frameMs||0)*.9+(performance.now()-t0)*.1;window.__canopyFrameMs=render.frameMs}catch(e){if(!render.failed)console.error('Canopy frame failed; retrying',e);ctx=screenCtx;sceneElevation=0;render.failed=true;render.invalidated=true;requestAnimationFrame(render)}}
   function renderFrame(wallNow){
     if(document.hidden){render.last=wallNow;requestAnimationFrame(render);return}
+    keyboardPan(wallNow);
     var frameInterval=state.gameSpeed===0?250:1000/60;
     if(!render.invalidated&&render.drawnAt!==undefined&&wallNow-render.drawnAt<frameInterval-1){requestAnimationFrame(render);return}
     render.drawnAt=wallNow;render.invalidated=false;
-    var frameDelta=Math.min(.1,Math.max(0,(wallNow-(render.last===undefined?wallNow:render.last))/1000))*state.gameSpeed;
-    render.last=wallNow;animationTime+=frameDelta*1000;for(var task=0;task<6;task++){var target=stationWorking(task)?1:0;taskActivity[task]+=(target-taskActivity[task])*(1-Math.exp(-frameDelta*5));taskClocks[task]+=frameDelta*1000*taskActivity[task]}
+    var wallDelta=Math.min(.1,Math.max(0,(wallNow-(render.last===undefined?wallNow:render.last))/1000)),frameDelta=wallDelta*state.gameSpeed;
+    render.last=wallNow;
+    // A freshly built station rises out of its site on wall time, so the reveal plays at the same pace at every game speed.
+    for(var site=0;site<buildRise.length;site++)if(buildRise[site]>0){buildRise[site]=motionPreference.matches?0:Math.max(0,buildRise[site]-wallDelta*1.7);render.invalidated=true}
+    animationTime+=frameDelta*1000;for(var task=0;task<6;task++){var target=stationWorking(task)?1:0;taskActivity[task]+=(target-taskActivity[task])*(1-Math.exp(-frameDelta*5));taskClocks[task]+=frameDelta*1000*taskActivity[task]}
     for(var slot=0;slot<4;slot++){var phase=(taskClocks[1]/9000+slot*.23)%1;var targetGrowth=state.stock[1]>=storageCapacity()?1:phase>.86?Math.max(0,(1-phase)/.14):Math.min(1,phase/.72);cropGrowth[slot]+=(targetGrowth-cropGrowth[slot])*(1-Math.exp(-frameDelta*4))}var now=animationTime;
     sceneTime=motionPreference.matches?0:now;
     if(state.empire.activeStore){
       sceneElevation=0;
-      drawBranchMap({ctx:ctx,width:width,height:height,unit:unit,project:project,box:drawBox,line:worldLine,poly:poly,ellipse:ellipse,plant:plant,jar:jar,carton:carton,person:drawPerson,depth:depthOf},state.empire.activeStore-1,state.empire.stores[state.empire.activeStore-1].level,motionPreference.matches?0:now,state.empire.stores[state.empire.activeStore-1].projects,{lighting:visualLight(),store:state.empire.stores[state.empire.activeStore-1],event:eventStatus(state.empire),rewards:state.empire.rewards,network:state.empire.network,neighborhood:neighborhood(state.empire,state.empire.activeStore-1)});
+      drawBranchMap({get ctx(){return ctx},width:width,height:height,unit:unit,project:project,box:drawBox,line:worldLine,poly:poly,ellipse:ellipse,plant:plant,jar:jar,carton:carton,person:drawPerson,depth:depthOf,backdrop:branchBackdrop,night:nightAmount()>0?branchNight:null},state.empire.activeStore-1,state.empire.stores[state.empire.activeStore-1].level,motionPreference.matches?0:now,state.empire.stores[state.empire.activeStore-1].projects,{lighting:visualLight(),store:state.empire.stores[state.empire.activeStore-1],event:eventStatus(state.empire),rewards:state.empire.rewards,network:state.empire.network,neighborhood:neighborhood(state.empire,state.empire.activeStore-1)});
       // Main-store effects expire while visiting a branch rather than replaying on return.
       particles.forEach(function(p){p.life-=frameDelta*1.5});particles=particles.filter(function(p){return p.life>0});deliveryDrones.forEach(function(d){d.age+=frameDelta});deliveryDrones=deliveryDrones.filter(function(d){return d.age<d.delay+7.5});
       updateBranchMarker();requestAnimationFrame(render);return;
@@ -2361,7 +3076,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     tierFlashes.forEach(function(life,i){if(life<=0)return;tierFlashes[i]=Math.max(0,life-frameDelta);var station=machinePos[i];ctx.save();ctx.globalAlpha=life*.8;for(var n=0;n<5;n++){var q=project(station.x-1.3+n*.65,station.y+1.6+(motionPreference.matches?0:(1-life)*.5),station.z+.7),r=unit*.09*life;ctx.strokeStyle='#f6e3ae';ctx.lineWidth=Math.max(.7,unit*.025);ctx.beginPath();ctx.moveTo(q.x-r,q.y);ctx.lineTo(q.x+r,q.y);ctx.moveTo(q.x,q.y-r);ctx.lineTo(q.x,q.y+r);ctx.stroke()}ctx.restore()});
     var speed=state.lines.some(function(n){return n>0})?Math.min(.07,.02+production()*.00002):0;
     crateTime=(crateTime+frameDelta*speed*1.4)%1;
-    var jobs=[];
+    var jobs=sceneJobs;
     customers.forEach(function(c){
       var blend=1-Math.exp(-frameDelta*20),oldX=c.renderX===undefined?c.x:c.renderX,oldZ=c.renderZ===undefined?c.z:c.renderZ;
       c.renderX=oldX+(c.x-oldX)*blend;c.renderZ=oldZ+(c.z-oldZ)*blend;
@@ -2373,9 +3088,13 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       var direction=distance>.001?Math.max(-1,Math.min(1,rotate(dx,dz).x/distance)):(c.facing===undefined?.3:c.facing);
       c.facing=(c.facing===undefined?direction:c.facing)+(direction-(c.facing===undefined?direction:c.facing))*(1-Math.exp(-frameDelta*8));
       c.turnLean=(c.turnLean||0)+((c.facing-previousFacing)*1.5-(c.turnLean||0))*(1-Math.exp(-frameDelta*12));
-      var serviceIndex=c.ordered?5:4,serviceTarget=c.serviceStation===serviceIndex?Math.min(1,(c.serviceElapsed||0)*economy.counterLanes(state.lines[serviceIndex])/counterServiceDuration(serviceIndex)):0;
+      var serviceIndex=c.ordered?5:4,serviceTarget=c.serviceStation===serviceIndex?Math.min(1,(c.serviceElapsed||0)/economy.customerHandoff(serviceIndex,state.lines[serviceIndex],counterServiceDuration(serviceIndex))):0;
       if(c.visualServiceStation!==serviceIndex){c.serviceVisual=0;c.visualServiceStation=serviceIndex;}c.serviceVisual=(c.serviceVisual||0)+(serviceTarget-(c.serviceVisual||0))*(1-Math.exp(-frameDelta*22));
-      var visual=Object.assign({},c,{x:c.renderX,z:c.renderZ});if(!customerBehindBuilding(c))jobs.push({depth:depthOf(visual),draw:function(){drawCustomer(visual,now)}})
+      var visual=Object.assign({},c,{x:c.renderX,z:c.renderZ});
+      if(c.phase==='lounge'){if(c.loungeFade>0)jobs.push({depth:depthOf(visual),draw:function(){drawGuestThroughDrapes(visual,now)}})}
+      else if(leaverBehindColumn(c)){}
+      else if(c.loungeFadeIn!==undefined&&c.loungeFadeIn<1)jobs.push({depth:depthOf(visual),draw:function(){drawGuestThroughDrapes(visual,now,true)}})
+      else if(!customerBehindBuilding(c))jobs.push({depth:depthOf(visual),draw:function(){drawFadedCustomer(visual,now)}})
     });
     if(state.kiosk)Array.from({length:kioskCount()},function(_,index){return index}).forEach(function(index){var dx=index*1.8;jobs.push({depth:depthOf({x:-9.6,z:6.8-dx}),draw:function(){
       function point(x,y,z){return [-9.75+(z-7.95),y,6.8-dx-(x-(-1.3+dx))]}
@@ -2384,77 +3103,79 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       function kl(points,color,w){worldLine(points.map(function(p){return point(p[0],p[1],p[2])}),color,w)}
       var steel=['#424d43','#202c24','#303f32'],oak=['#c6a071','#7c583a','#a27c50'];
       kb(-1.3+dx,7.95,0,.95,.7,.12,steel);kb(-1.3+dx,7.95,.12,.58,.46,1.25,oak);
-      kb(-1.3+dx,7.95,1.3,.85,.26,1.05,steel);kb(-1.3+dx,8.09,1.4,.69,.018,.85,['#dbe9c5','#dbe9c5','#dbe9c5']);
-      kl([[-1.55+dx,2.06,8.11],[-1.05+dx,2.06,8.11]],'#648355',.035);
-      kb(-1.3+dx,8.12,1.5,.45,.018,.16,['#71965f','#71965f','#71965f']);
-      kb(-1.3+dx,8.095,2.1,.73,.025,.19,['#355444','#263b31','#355444']);
+      // The head is as deep as the pedestal so the two front faces align and the head sits centred over the base.
+      kb(-1.3+dx,7.95,1.3,.85,.46,1.05,steel);kb(-1.3+dx,8.195,2.1,.73,.025,.19,['#355444','#263b31','#355444']);
       var serving=customers.find(function(c){return c.kiosk&&(c.kioskIndex||0)===index&&!c.ordered&&Math.hypot(c.x+8.95,c.z-(6.8-dx))<.15});
       var progress=serving?Math.min(1,(serving.orderTime||0)/.65):0;
-      kb(-1.3+dx,8.125,1.77,.47,.015,.06,['#a9bda1','#a9bda1','#a9bda1']);
-      if(progress>0)kb(-1.535+dx+progress*.235,8.14,1.77,.47*progress,.012,.06,['#527c46','#527c46','#527c46']);
-      var light=kp(-.98+dx,2.27,8.12);ellipse(light.x,light.y,unit*.035,unit*.035,serving?'#e7c480':'#b7dd96');
-      var label=kp(-1.3+dx,2.195,8.115),axis=kp(-.3+dx,2.195,8.115);
-      ctx.save();ctx.translate(label.x,label.y);
-      // Match both the angle and projected width of the kiosk face.
-      ctx.transform((axis.x-label.x)/unit,(axis.y-label.y)/unit,0,1,0,0);
-      ctx.beginPath();ctx.rect(-unit*.365,-unit*.095,unit*.73,unit*.19);ctx.clip();
-      ctx.fillStyle='#e8edcf';ctx.font='600 '+(unit*.1)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.fillText('SELF ORDER',0,0,unit*.59);ctx.restore();
+      // The backlit screen, its bars, the status light and the header label all emit, so they are registered together.
+      lit(function(){
+        kb(-1.3+dx,8.19,1.4,.69,.018,.85,['#dbe9c5','#dbe9c5','#dbe9c5']);
+        kl([[-1.55+dx,2.06,8.21],[-1.05+dx,2.06,8.21]],'#648355',.035);
+        kb(-1.3+dx,8.22,1.5,.45,.018,.16,['#71965f','#71965f','#71965f']);
+        kb(-1.3+dx,8.225,1.77,.47,.015,.06,['#a9bda1','#a9bda1','#a9bda1']);
+        if(progress>0)kb(-1.535+dx+progress*.235,8.24,1.77,.47*progress,.012,.06,['#527c46','#527c46','#527c46']);
+        var light=kp(-.98+dx,2.27,8.22);ellipse(light.x,light.y,unit*.035,unit*.035,serving?'#e7c480':'#b7dd96');
+        var label=kp(-1.3+dx,2.195,8.215),axis=kp(-.3+dx,2.195,8.215);
+        ctx.save();ctx.translate(label.x,label.y);
+        // Match both the angle and projected width of the kiosk face.
+        ctx.transform((axis.x-label.x)/unit,(axis.y-label.y)/unit,0,1,0,0);
+        ctx.beginPath();ctx.rect(-unit*.365,-unit*.095,unit*.73,unit*.19);ctx.clip();
+        ctx.fillStyle='#e8edcf';ctx.font='600 '+(unit*.1)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText('SELF ORDER',0,0,unit*.59);ctx.restore();
+      });
     }});});
     // Ground planters share guest depth sorting, so foliage occludes people behind it.
-    [{x:-10.35,z:5.9,compact:true},{x:10.85,z:9.3}].forEach(function(p){
+    [{x:-10.35,z:5.9,compact:true}].forEach(function(p){
       jobs.push({depth:depthOf(p),draw:function(){
         drawBox(p.x,p.z,0,p.compact?.45:.95,p.compact?.45:1,p.compact?.4:.65,['#bc9d73','#6f5943','#998063']);
         plant(p.x,p.z,p.compact?.4:.65,p.compact?.7:1.1);
       }});
     });
-    jobs.push({depth:depthOf({x:-11.45,z:1.05}),draw:function(){
-      // Botanical centerpiece in the open side aisle, away from the queue.
-      var tx=-11.45,tz=1.05;
-      var base=project(tx,0,tz),rim=project(tx,.4,tz),r=unit*.34;
-      poly([{x:rim.x-r,y:rim.y},{x:rim.x+r,y:rim.y},{x:base.x+r*.72,y:base.y},{x:base.x-r*.72,y:base.y}],'#a87855');
-      ellipse(rim.x,rim.y,r,unit*.12,'#d9aa7b');ellipse(rim.x,rim.y,r*.8,unit*.09,'#46382c');
-      worldLine([[tx,.4,tz],[tx+.12,2.5,tz],[tx-.05,3.55,tz]],'#816747',.16);
-      [-1,1].forEach(function(side){worldLine([[tx+.12,2.1,tz],[tx+side*.85,3.2,tz]],'#816747',.085)});
-      for(var leaf=0;leaf<18;leaf++){var a=leaf*2.399,r=.35+(leaf%4)*.18,lp=project(tx+Math.cos(a)*r,2.7+(leaf%5)*.19,tz+Math.sin(a)*r*.6);ellipse(lp.x,lp.y,unit*.33,unit*.24,leaf%3===0?'#98b96e':leaf%3===1?'#587c4d':'#769852')}
-
-    }});
-    // Front-of-house product displays: stepped oak islands under glass hoods, one each side of the line, with a planter on the outer corner.
-    function productIsland(x,z,width,planterSide){
+    // Front-of-house display: one long oak case along the front-right of the floor. A planter is built into each end
+    // of the plinth, and between them a glass hood covers a back riser of jars with products and merch on the deck.
+    function drawDisplayCase(x,z,width){
       jobs.push({depth:depthOf({x:x,z:z}),draw:function(){
-        var oak=['#cfb184','#836949','#b09266'],stone=['#e2dfd0','#969c8e','#c3c8b8'],brass=['#d7c28b','#8c774c','#b7a16c'],half=width/2;
+        var oak=['#cfb184','#836949','#b09266'],stone=['#e2dfd0','#969c8e','#c3c8b8'],brass=['#d7c28b','#8c774c','#b7a16c'],half=width/2,bed=.95,inner=half-bed;
         drawBox(x,z,0,width,1.35,.85,oak);
         for(var flute=0;flute<Math.floor(width/.185);flute++)worldLine([[x-half+.1+flute*.185,.08,z+.69],[x-half+.1+flute*.185,.78,z+.69]],'#6f593b35',.018);
         drawBox(x,z,.86,width+.14,1.48,.09,stone);
-        drawBox(x,z-.32,.95,width-.1,.55,.36,oak);
-        var jars=Math.max(3,Math.round(width/.5));for(var n=0;n<jars;n++)jar(x-(jars-1)*.25+n*.5,z-.32,1.32);
-        // Case lighting inside the island vitrine: a lid strip along the back edge and a soft fill over the jars.
-        var caseFill=project(x,1.45,z-.32);glow(caseFill.x,caseFill.y,unit*.95,'#fff0c826',unit*.42);worldLine([[x-half+.12,1.83,z-.68],[x+half-.12,1.83,z-.68]],'#fff2cc',.02);
-        for(var n=0;n<Math.max(2,Math.round(width/.9));n++)transportItem(x-half+.45+n*.55,.95,z+.3,3);
-        pickupBag(x+half-.45,z+.3,.95);
-        for(var tag=0;tag<Math.round(width/.65);tag++)drawBox(x-half+.35+tag*.6,z+.66,1.05,.2,.012,.12,['#f7f2de','#d4cab3','#e9dfc9']);
-        drawBox(x,z,.95,width+.05,1.4,.95,['#d9eee31d','#b3d4c41b','#c7e5d329']);
-        worldLine([[x-half,.96,z+.7],[x-half,1.9,z+.7],[x+half,1.9,z+.7],[x+half,.96,z+.7]],'#c7ddc6',.025);
-        worldLine([[x-half,1.9,z+.7],[x-half,1.9,z-.7],[x+half,1.9,z-.7],[x+half,1.9,z+.7]],'#c7ddc6',.02);
-        drawBox(x,z-.72,1.86,width+.1,.06,.05,brass);
-        worldLine([[x-half+.1,.9,z+.74],[x+half-.1,.9,z+.74]],'#ffdf9e',.035);
-        var glowPoint=project(x,1.1,z+.2);glow(glowPoint.x,glowPoint.y,unit*1.2,'#ffe6b022');
-      }});
-      // Planter corner piece: a cube planter with a leafy shrub on the island's outer corner.
-      var px=x+planterSide*(width/2+.5),pz=z+.35;
-      jobs.push({depth:depthOf({x:px,z:pz}),draw:function(){
-        drawBox(px,pz,0,.8,.8,.72,['#66806a','#31473a','#48604c']);drawBox(px,pz,.72,.86,.86,.06,['#c9a87e','#7f6446','#a68a62']);
-        var soil=project(px,.78,pz);ellipse(soil.x,soil.y,unit*.34,unit*.16,'#4a3b2e');
-        for(var leaf=0;leaf<9;leaf++){var a=leaf*2.399,r=.12+(leaf%3)*.11,q=project(px+Math.cos(a)*r,.85+(leaf%4)*.16,pz+Math.sin(a)*r*.7);ellipse(q.x,q.y,unit*.2,unit*.14,leaf%3===0?'#8fb45c':leaf%3===1?'#6b934f':'#a4c56a')}
+        // Built-in planters: a raised oak curb at each end with a bed of foliage set toward the front. The far (left)
+        // bed paints before the glass hood and the near (right) one after it, so foliage never sits behind the glass.
+        function planter(side){
+          var px=x+side*(half-bed/2),pz=z+.15;
+          drawBox(px,z,.95,bed-.1,1.25,.32,oak);drawBox(px,z,1.27,bed-.02,1.33,.05,['#a68a62','#7f6446','#a68a62']);
+          var soil=project(px,1.31,z);ellipse(soil.x,soil.y,unit*.4,unit*.26,'#4a3b2e');
+          [[0,0,.95],[-.22,.25,.7],[.2,-.28,.75],[.24,.24,.55],[-.24,-.2,.6]].forEach(function(stem,k){
+            var sx=px+stem[0],sz=pz+stem[1];worldLine([[sx,1.3,sz],[sx+.04,1.3+stem[2],sz]],'#5e7e45',.035);
+            for(var leaf=0;leaf<6;leaf++){var a=leaf*2.399+k,r=.14+(leaf%3)*.09,q=project(sx+Math.cos(a)*r,1.42+stem[2]*.55+leaf*.1,sz+Math.sin(a)*r*.7);ellipse(q.x,q.y,unit*.2,unit*.13,leaf%3===0?'#8fb45c':leaf%3===1?'#6b934f':'#a4c56a')}
+          });
+        }
+        planter(-1);
+        // The vitrine between the beds: jars on a back riser, products and merch on the deck, under a glass hood.
+        var vx0=x-inner,vx1=x+inner,vw=inner*2;
+        drawBox(x,z-.32,.95,vw-.1,.55,.36,oak);
+        var jars=Math.max(3,Math.round(vw/.5));for(var n=0;n<jars;n++)jar(x-(jars-1)*.25+n*.5,z-.32,1.32);
+        var caseFill=project(x,1.45,z-.32);glow(caseFill.x,caseFill.y,unit*1.1,'#fff0c826',unit*.42);litLine([[vx0+.12,1.83,z-.68],[vx1-.12,1.83,z-.68]],'#fff2cc',.02);
+        for(var n=0;n<Math.max(2,Math.round(vw/.9))-1;n++)transportItem(vx0+.45+n*.55,.95,z+.3,3);
+        pickupBag(vx1-.45,z+.3,.95);
+        // Merch: a stack of folded tees and a cap beside the bags.
+        [['#5f8a6e',0],['#e6d2a7',.07],['#3b4b42',.14]].forEach(function(tee){drawBox(vx1-1.05,z+.28,.95+tee[1],.42,.34,.07,[tee[0],tee[0],tee[0]])});
+        leafMarkFlat(vx1-1.0,z+.3,1.162,.2);
+        var cap=project(vx1-1.55,1.05,z+.3);ellipse(cap.x,cap.y,unit*.16,unit*.11,'#3b4b42');ellipse(cap.x,cap.y-unit*.06,unit*.13,unit*.1,'#5f8a6e');worldLine([[vx1-1.62,.98,z+.34],[vx1-1.42,.98,z+.36]],'#3b4b42',.03);
+        bagAppIcon(vx1-1.55,z+.42,1.0,.16);
+        for(var tag=0;tag<Math.round(vw/.65);tag++)drawBox(vx0+.35+tag*.6,z+.66,1.05,.2,.012,.12,['#f7f2de','#d4cab3','#e9dfc9']);
+        drawBox(x,z,.95,vw+.05,1.4,.95,['#d9eee31d','#b3d4c41b','#c7e5d329']);
+        worldLine([[vx0,.96,z+.7],[vx0,1.9,z+.7],[vx1,1.9,z+.7],[vx1,.96,z+.7]],'#c7ddc6',.025);
+        worldLine([[vx0,1.9,z+.7],[vx0,1.9,z-.7],[vx1,1.9,z-.7],[vx1,1.9,z+.7]],'#c7ddc6',.02);
+        drawBox(x,z-.72,1.86,vw+.1,.06,.05,brass);
+        litLine([[vx0+.1,.9,z+.74],[vx1-.1,.9,z+.74]],'#ffdf9e',.035);
+        var glowPoint=project(x,1.1,z+.2);glow(glowPoint.x,glowPoint.y,unit*1.5,'#ffe6b022');
+        planter(1);
       }});
     }
-    productIsland(-4.85,8.9,2.1,1);productIsland(6.7,8.9,2.1,-1);
-    addExitMerch(jobs);
+    drawDisplayCase(DISPLAY_CASE.x,DISPLAY_CASE.z,DISPLAY_CASE.width);
     addIdCheckStation(jobs,now);
     addEntryDoor(jobs);
-    jobs.push({depth:depthOf({x:-8.8,z:2.5})+.12,draw:function(){
-      drawBox(-8.8,2.5,0,.16,.16,4.5,['#414440','#191e1c','#2b302d']);
-    }});
     addQueueRails(jobs);
     var festival=eventStatus(state.empire);
     if(festival.joined&&festival.open&&!festival.claimed){
@@ -2467,19 +3188,17 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
         for(var n=0;n<5;n++){var q=project(8+n*.5,3.2,6);ellipse(q.x,q.y,unit*.16,unit*.23,color);}
       }});
     }
-    jobs.sort(function(a,b){return a.depth-b.depth});jobs.forEach(function(job){job.draw()});var nightShade=visualLight().darkness;if(nightShade>0){nightShadeOverlay(nightShade,now);nightLights(now)}
-    if(nightShade>0){
-      // Emissive accents sit above the night tint, while their surrounding materials stay dark.
-      ctx.save();ctx.globalAlpha=Math.min(1,nightShade/.34);
-      [[-9,9,4.62,3.075],[-6.5,6.5,9.32,-.275]].forEach(function(edge){warmStrip([[edge[0]+.2,edge[2],edge[3]],[edge[1]-.2,edge[2],edge[3]]],false)});
-      machinePos.forEach(function(p,i){if(i===4&&state.orderCounters>1)return;var half=stationTier(i)===0?.8:1.3,y=p.y+1.1,z=p.z+(stationTier(i)===0?.84:1.26);warmStrip([[p.x-half,y,z],[p.x+half,y,z]],i===1)});
-      if(state.orderCounters>1)orderCounterPositions(state.orderCounters).forEach(function(p){warmStrip(orderCounterStrip(p.x,p.z),false)});
-      signFaces.forEach(function(sign){var p=project(sign.x,sign.y,sign.z);glow(p.x,p.y,unit*sign.halo,'#ffda8a40',unit*sign.halo*.7);signText(sign.x,sign.y,sign.z,sign.label,sign.width,sign.size,'#fff3d6')});
-      if(deliveryBuilt()){sceneElevation=7.05;var nightPending=onlineRequestsReady();onlineReadout(-10.7,2.4,nightPending,nightPending>0&&state.stock[3]>=onlineSize());sceneElevation=0}
-      ctx.restore();
+    jobs.sort(function(a,b){return a.depth-b.depth});jobs.forEach(function(job){job.draw()});
+    drawDeliveryDrones(frameDelta,now);
+    var nightT=render.nightT||0;
+    if(nightT>0){
+      endNightScene();
+      nightLightMap(nightT,now);nightAir(nightT,now);
+      ctx.save();ctx.globalAlpha=nightT;nightEmitters(now);ctx.restore();
+      nightBloom(nightT,now,nightEmitters);nightMotes(nightT,now);
     }
     for(var i=particles.length-1;i>=0;i--){var p=particles[i];p.life-=frameDelta*1.5;if(!motionPreference.matches){p.x+=p.vx*frameDelta;p.z+=p.vz*frameDelta;p.y+=p.vy*frameDelta;}p.vy-=frameDelta*5;var screen=project(p.x,p.y,p.z),size=Math.max(2,unit*.1);ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.fillRect(screen.x-size/2,screen.y-size/2,size,size);ctx.globalAlpha=1;if(p.life<=0)particles.splice(i,1)}
-    drawDeliveryDrones(frameDelta,now);
+    drawTickets(frameDelta);drawConfetti(wallDelta);
     updateMarkers();requestAnimationFrame(render);
   }
   function drawDeliveryDrones(dt,now){
@@ -2531,14 +3250,30 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       var phase=motionPreference.matches?0:now*.002+slot*1.3,strobe=motionPreference.matches?1:((phase%1)<.12||((phase+.2)%1)<.12?1:0),beacon=motionPreference.matches?1:.55+Math.sin(phase*Math.PI*2)*.45;
       [[-.55,-.42,'#ff5a4a',beacon],[.55,-.42,'#5cff8a',beacon],[.05,.3,'#ffffff',strobe]].forEach(function(nav){
         var q=project(x+nav[0],y+.2,z+nav[1]),c=parseHex(nav[2]);
-        ellipse(q.x,q.y,unit*.04,unit*.04,nav[3]>.5?nav[2]:'#3d4a44');
-        if(nav[3]>0){ctx.save();ctx.globalCompositeOperation='screen';ellipse(q.x,q.y,unit*.3,unit*.3,softRadial(q.x,q.y,unit*.3,c,.55*nav[3]));ctx.restore()}
+        (nav[3]>.5?litEllipse:ellipse)(q.x,q.y,unit*.04,unit*.04,nav[3]>.5?nav[2]:'#3d4a44');
+        if(nav[3]>0)lit(function(){ctx.save();ctx.globalCompositeOperation='screen';ellipse(q.x,q.y,unit*.3,unit*.3,softRadial(q.x,q.y,unit*.3,c,.55*nav[3]));ctx.restore()},'spill')
       });
+  }
+  // Lounge cover tickets: a little stub that rises from the curtain and fades as the entry fee lands in the till.
+  var tickets=[];
+  function drawTickets(dt){
+    for(var i=tickets.length-1;i>=0;i--){
+      var t=tickets[i];t.life-=dt*.7;t.y+=dt*.55;if(t.life<=0){tickets.splice(i,1);continue}
+      var p=project(t.x,t.y,t.z),w=Math.max(28,unit*.95),h=Math.max(14,unit*.4),x0=p.x-w/2,y0=p.y-h/2,notch=w*.28;
+      ctx.save();ctx.globalAlpha=Math.min(1,t.life*2.5);
+      ctx.beginPath();roundedRectPath(x0,y0,w,h,h*.25);ctx.fillStyle='#f4e7bd';ctx.fill();ctx.strokeStyle='#8d7950';ctx.lineWidth=Math.max(1,unit*.018);ctx.stroke();
+      ctx.beginPath();ctx.setLineDash([Math.max(1,unit*.03),Math.max(1,unit*.03)]);ctx.moveTo(x0+notch,y0+h*.12);ctx.lineTo(x0+notch,y0+h*.88);ctx.strokeStyle='#8d795088';ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle='#1f4a37';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.font='800 '+Math.max(7,h*.5)+'px "Bricolage Grotesque",sans-serif';ctx.fillText('$',x0+notch/2,p.y+h*.02);
+      ctx.font='800 '+Math.max(8,h*.58)+'px "Bricolage Grotesque",sans-serif';ctx.fillText(t.text,x0+notch+(w-notch)/2,p.y+h*.02,w-notch-4);
+      ctx.restore();
+    }
   }
   function burst(worldPos,color){if(motionPreference.matches)return;for(var i=0;i<12;i++)particles.push({x:worldPos.x,y:1.4+(worldPos.y||0),z:worldPos.z,vx:(Math.random()-.5)*1.8,vz:(Math.random()-.5)*1.8,vy:1.6+Math.random()*1.8,life:1,color:color||colors.acid})}
 
-  var markerEls=LINES.map(function(line,i){var b=document.createElement('button');b.className='marker';b.textContent=line.name;b.onclick=function(){selectMachine(i)};$('markers').appendChild(b);return b});
-  var securityMarker=document.createElement('button');securityMarker.className='marker';securityMarker.onclick=function(){selectSecurity()};$('markers').appendChild(securityMarker);
+  var markerEls=LINES.map(function(line,i){var b=document.createElement('button');b.className='marker';b.dataset.marker=String(i);b.textContent=line.name;b.onclick=function(){if(!state.lines[i]&&isOpen(i))buildStation(i);else selectMachine(i)};$('markers').appendChild(b);return b});
+  var securityMarker=document.createElement('button');securityMarker.className='marker';securityMarker.dataset.marker='security';securityMarker.onclick=function(){if(!state.doorBuilt)buildStation('door');else selectSecurity()};$('markers').appendChild(securityMarker);
+  var loungeMarker=document.createElement('button');loungeMarker.className='marker';loungeMarker.dataset.marker='lounge';loungeMarker.onclick=selectLounge;$('markers').appendChild(loungeMarker);
   function updateCommerceControls(){
     if($('buyAutoDrone')){var drone=state.autoDrone,dronePrice=drone.owned?BULK_DRONE_COST:AUTO_DRONE_COST;
       $('buyAutoDrone').disabled=drone.bulk||state.money<dronePrice;$('autoDronePrice').textContent=drone.bulk?'Installed':fmt(dronePrice);$('buyAutoDrone').querySelector('span').textContent=drone.owned?'Bulk upgrade':'Install';$('autoDroneBenefit').textContent=drone.owned?'Up to 10 ready orders every 10s':'Send a ready order every 10s';
@@ -2549,11 +3284,11 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     if(shopBrowser)shopBrowser.render();
   }
   function updateMarkers(){
-    var key=[centerX,centerY,unit,width,height,state.idStaff,state.lines.join(),securitySelected,selected].join("|");
+    var key=[centerX,centerY,unit,width,height,state.idStaff,state.lines.join(),securitySelected,selected,state.lounge,loungeSelected].join("|");
     if(updateMarkers.key===key)return;updateMarkers.key=key;
-    var securityPos=project(-9.1,.62,10.41),labelSize=Math.max(8,Math.min(10,unit*.24))*(width>=780?.85:1)+'px';
-    securityMarker.style.fontSize=labelSize;
-    var labels=[{el:securityMarker,x:securityPos.x,y:securityPos.y}];
+    var securityPos=project(-9.1,.62,9.91),loungePos=project(LOUNGE_DOOR.x,1.5,DISPLAY_Z+.5),labelSize=Math.max(8,Math.min(10,unit*.24))*(width>=780?.85:1)+'px';
+    securityMarker.style.fontSize=labelSize;loungeMarker.style.fontSize=labelSize;
+    var labels=[{el:securityMarker,x:securityPos.x,y:securityPos.y},{el:loungeMarker,x:loungePos.x,y:loungePos.y}];
     markerEls.forEach(function(el,i){var station=machinePos[i],pos=project(station.x,.63+station.y,station.z+1.23);el.style.fontSize=labelSize;labels.push({el:el,x:pos.x,y:pos.y})});
     labels.forEach(function(l){l.el.style.display=l.x<-40||l.x>width+40||l.y<-30||l.y>height+30?'none':'block'});
     labels.forEach(function(l){l.w=l.el.offsetWidth;l.h=l.el.offsetHeight});
@@ -2595,50 +3330,58 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     var behind=nextRate?Math.round((1-slowRate/nextRate)*100):0,footTraffic=basketSize()/arrivalInterval();
     $('flowText').textContent=trafficBound?'Foot traffic · '+Math.round((1-footTraffic/slowRate)*100)+'% below capacity':behind>0?shortNames[slow]+' trails '+nextName+' by '+behind+'%':shortNames[slow]+' · slowest station';
     $('flowText').title=(trafficBound?'Customers arrive at '+footTraffic.toFixed(1)+'/s but the counters can serve '+slowRate.toFixed(1)+'/s. ':shortNames[slow]+' moves '+slowRate.toFixed(1)+'/s; '+nextName+' can do '+(nextRate||0).toFixed(1)+'/s, so everything queues here. ')+'Estimates include batches, handoff time and kiosks.';
-    var fixPrice=trafficBound?(state.trafficLevel<COMPONENTS[0].max?componentCost(0):0):cost(slow),canFix=fixPrice>0&&state.money>=fixPrice;
-    $('flowAction').textContent=state.gameSpeed===0?'Resume':trafficBound?(fixPrice?'Floor flow · '+fmt(fixPrice):'Open Shop'):canFix?'Fix · '+fmt(fixPrice):'Needs '+fmt(fixPrice);$('flowAction').dataset.mode=state.gameSpeed===0||!canFix?'view':'fix';
-    var line=LINES[selected],open=isOpen(selected),level=state.lines[selected],price=cost(selected),affordable=open&&state.money>=price;
+    var fix=trafficBound?trafficFix():null,fixPrice=trafficBound?(fix?fix.price:0):cost(slow),canFix=fixPrice>0&&state.money>=fixPrice;
+    $('flowAction').textContent=state.gameSpeed===0?'Resume':trafficBound?(fix?fix.name+' · '+fmt(fixPrice):'Open Shop'):canFix?'Fix · '+fmt(fixPrice):'Needs '+fmt(fixPrice);$('flowAction').dataset.mode=state.gameSpeed===0||!canFix?'view':'fix';
+    // While the shop is still a building site the guide row counts sites instead of naming a bottleneck.
+    if(!state.shopOpen){var raised=(state.doorBuilt?1:0)+state.lines.filter(function(n){return n>0}).length,nextSite=!state.doorBuilt?'Security':raised<7?shortNames[slow]:null;$('flowLabel').textContent='Under construction';$('flowText').textContent=raised+' of 7 sites raised'+(nextSite?' · next: '+nextSite:' · ready to open');$('flowText').title='Tap a site on the map to raise it. Customers arrive once the shop opens.';$('flowAction').textContent=nextSite?'Build '+nextSite:'Open the shop';$('flowAction').dataset.mode='fix'}
+    var line=LINES[selected],open=isOpen(selected),level=state.lines[selected],price=cost(selected),affordable=open&&(!level||state.money>=price);
     $('rate').dataset.paused=String(state.gameSpeed===0);$('money').textContent=fmt(state.money);$('rate').textContent=state.gameSpeed===0?'Paused':fmt((state.empire.activeStore?storeRate(state.empire,state.empire.activeStore-1):production()+branchRate(state.empire))*state.gameSpeed)+'/s';document.querySelector('.stat.output small').textContent=state.empire.activeStore?'BRANCH INCOME':'CAPACITY';
-    speedButtons.forEach(function(button){button.setAttribute('aria-pressed',String(Number(button.getAttribute('data-speed'))===state.gameSpeed))});
-    if(securitySelected){renderSecuritySelection()}else{
-    $('machineNumber').textContent=!open?'BUILD PREVIOUS STAGE':level?'STAGE 0'+(selected+1)+' · '+stationStatus(selected):'STAGE 0'+(selected+1)+' · NOT BUILT';
-    $('machineName').textContent=line.name;$('machineLevel').textContent=level;$('machineRate').textContent=selected<4?batchSize(selected).toFixed(1)+' avg / batch · '+([2,3,2,2][selected]/cycleSpeed(selected)).toFixed(1)+'s':capacity(selected).toFixed(1)+'× service';
+    var paused=state.gameSpeed===0;speedButtons.forEach(function(button){var value=Number(button.getAttribute('data-speed'));button.setAttribute('aria-pressed',String(value===state.gameSpeed||(value===1&&paused)))});
+    var glyph=paused?'pause':'play';if(speedOne.getAttribute('data-glyph')!==glyph){speedOne.setAttribute('data-glyph',glyph);speedOne.innerHTML=paused?PAUSE_GLYPH:PLAY_GLYPH}speedOne.setAttribute('aria-label',paused?'Paused. Resume normal speed':'Normal speed. Press again to pause');speedOne.title=paused?'Paused · press to resume':'Normal speed · press again to pause';speedOne.parentElement.setAttribute('data-paused',String(paused));
+    if(securitySelected){renderSecuritySelection()}else if(loungeSelected){renderLoungeSelection()}else{
+    $('machineNumber').textContent=!open?'BUILD PREVIOUS STAGE':level?'STAGE 0'+(selected+1)+' · '+stationStatus(selected):'STAGE 0'+(selected+1)+' · UNDER CONSTRUCTION';
+    $('machineName').textContent=line.name;$('machineLevel').textContent=level;$('machineRate').textContent=!level?'Under construction':selected<4?batchSize(selected).toFixed(1)+' avg / batch · '+([2,3,2,2][selected]/cycleSpeed(selected)).toFixed(1)+'s':capacity(selected).toFixed(1)+'× service';
     var tier=stationTier(selected),next=nextCapacity(selected);
     // Stat strip: a colour-coded status chip, then icon tiles instead of a sentence.
-    var statusText=stationStatus(selected),statusTone=/full/i.test(statusText)?'stop':/waiting/i.test(statusText)?'wait':'go',statusWord=/full/i.test(statusText)?'Full':/waiting/i.test(statusText)?'Waiting':selected<4?'Producing':'Serving',heldMatch=/(\d+) orders? held/.exec(statusText);if(heldMatch)statusWord+=' · '+heldMatch[1]+' held';
+    var statusText=level?stationStatus(selected):'Under construction',statusTone=!level?'wait':/full/i.test(statusText)?'stop':/waiting/i.test(statusText)?'wait':'go',statusWord=!level?'Site':/full/i.test(statusText)?'Full':/waiting/i.test(statusText)?'Waiting':selected<4?'Producing':'Serving',heldMatch=/(\d+) orders? held/.exec(statusText);if(heldMatch)statusWord+=' · '+heldMatch[1]+' held';
     var tierFrom=TIER_LEVELS[tier],tierTo=tier<6?TIER_LEVELS[tier+1]:null,tierPct=tierTo?Math.round((level-tierFrom)/(tierTo-tierFrom)*100):100;
     var ICON_BATCH='<svg viewBox="0 0 24 24"><path d="M4 8h16v11H4zM4 8l3-4h10l3 4M12 4v4"/></svg>',ICON_CLOCK='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg>',ICON_TIER='<svg viewBox="0 0 24 24"><path d="M12 3l2.4 5.2 5.6.7-4.1 3.9 1.1 5.7L12 15.8 7 18.5l1.1-5.7L4 8.9l5.6-.7z"/></svg>',ICON_LANES='<svg viewBox="0 0 24 24"><path d="M5 5v14M12 5v14M19 5v14"/></svg>';
-    var tiles=selected<4?
+    var tiles=!level?'<span class="stat" title="Nothing to measure until the station is built">'+(selected<4?ICON_BATCH:ICON_CLOCK)+'<b>—</b><small>'+(selected<4?'per batch':'per customer')+'</small></span><span class="stat" title="Raise the site to see its output">'+(selected<4?ICON_CLOCK:ICON_LANES)+'<b>—</b><small>'+(selected<4?'per cycle':'counters')+'</small></span>':selected<4?
       '<span class="stat" title="Units finished each time the station completes a batch">'+ICON_BATCH+'<b>'+(selected===3?qtyShort(Math.round(batchSize(selected))):compactCount(batchSize(selected)))+'</b><small>per batch</small></span><span class="stat" title="Time to complete one batch">'+ICON_CLOCK+'<b>every '+secondsLabel([2,3,2,2][selected]/cycleSpeed(selected))+'</b></span>':
-      '<span class="stat" title="Time to serve one customer">'+ICON_CLOCK+'<b>'+secondsLabel(counterServiceDuration(selected)/economy.counterLanes(level)/Math.max(1,state.gameSpeed))+'</b><small>per customer</small></span><span class="stat" title="Individually staffed counters">'+ICON_LANES+'<b>'+(selected===4?state.orderCounters:1)+'</b><small>'+((selected===4?state.orderCounters:1)===1?'counter':'counters')+'</small></span>';
+      '<span class="stat" title="Time to serve one customer">'+ICON_CLOCK+'<b>'+secondsLabel(economy.customerHandoff(selected,level,counterServiceDuration(selected))/Math.max(1,state.gameSpeed))+'</b><small>per customer</small></span><span class="stat" title="Individually staffed counters">'+ICON_LANES+'<b>'+(selected===4?state.orderCounters:1)+'</b><small>'+((selected===4?state.orderCounters:1)===1?'counter':'counters')+'</small></span>';
     var tierTile=tierTo?'<span class="stat tier" title="Output doubles at level '+tierTo+'">'+ICON_TIER+'<b>×2</b><small>at Lv '+tierTo+'</small><i class="tier-bar"><i style="width:'+tierPct+'%"></i></i></span>':'<span class="stat tier">'+ICON_TIER+'<b>Flagship</b><small>top tier</small></span>';
     var statusHtml='<span class="status-chip" data-tone="'+statusTone+'" title="'+statusText.replace(/"/g,'')+'"><i></i>'+statusWord+'</span>'+tiles+tierTile;
     if($('stationStatus').dataset.html!==statusHtml){$('stationStatus').innerHTML=statusHtml;$('stationStatus').dataset.html=statusHtml}
     $('upgradeLevel').textContent='Lv '+level+' → '+(level+1);
     $('stationTier').textContent=STATION_TIERS[tier];$('stationTier').style.color=TIER_COLORS[tier];
-    $('upgradeFunding').textContent=!open?'Build previous station':affordable?'Ready to upgrade':fmt(Math.max(0,price-state.money))+' to go';
-    $('upgradeProgress').value=Math.min(100,state.money/price*100);
-    $('upgradeProgress').setAttribute('aria-valuetext',affordable?'Upgrade ready':fmt(Math.max(0,price-state.money))+' needed for level '+(level+1));
+    $('upgradeFunding').textContent=!open?'Build previous station':!level?'Ready to build':affordable?'Ready to upgrade':fmt(Math.max(0,price-state.money))+' to go';
+    $('upgradeProgress').value=!level?100:Math.min(100,state.money/price*100);
+    $('upgradeProgress').setAttribute('aria-valuetext',!level?'Ready to build':affordable?'Upgrade ready':fmt(Math.max(0,price-state.money))+' needed for level '+(level+1));
     var lanesNow=economy.counterLanes(level),lanesNext=economy.counterLanes(level+1);
     if(selected<4){
       var batchBoost=selected<3?1+state[['seedBatchLevel','growBatchLevel','harvestBatchLevel'][selected]]*.06:1;
       renderUpgradeComparison('Units per batch',level?batchSize(selected):0,economy.batchSize(level+1)*batchBoost,false,!level,false);
-    }else renderUpgradeComparison('Seconds per handoff',counterServiceDuration(selected)/lanesNow/Math.max(1,state.gameSpeed),counterServiceDuration(selected,next)/lanesNext/Math.max(1,state.gameSpeed),true,!level,false);
+    }else renderUpgradeComparison('Seconds per handoff',economy.customerHandoff(selected,level,counterServiceDuration(selected))/Math.max(1,state.gameSpeed),economy.customerHandoff(selected,level+1,counterServiceDuration(selected,next))/Math.max(1,state.gameSpeed),true,!level,false);
     paintUpgradePreview(selected);
     $('nextAppearance').textContent=(tier?'Tier bonus ×'+economy.tierBoost(level)+' · ':'')+(tier<6?'Output ×2 and new look at level '+TIER_LEVELS[tier+1]+' · '+STATION_TIERS[tier+1]+(selected>=4?' · both counters at a tier double baskets':''):'Flagship equipment · upgrades keep increasing output');
-    $('machineCost').textContent=fmt(price);$('buyMachine').disabled=!affordable;$('buyMachine').querySelector('span').textContent=!open?'LOCKED':level?'UPGRADE':'BUILD';
-    var maxUpgrade=maxStationUpgrade(selected);
+    $('machineCost').textContent=level?fmt(price):'FREE';$('buyMachine').disabled=!affordable;$('buyMachine').querySelector('span').textContent=!open?'LOCKED':level?'UPGRADE':'BUILD';
+    var maxUpgrade=level?maxStationUpgrade(selected):{levels:0,cost:0};
     $('buyMachineMax').disabled=!maxUpgrade.levels;
     $('machineMaxLabel').textContent='MAX'+(maxUpgrade.levels?' +'+maxUpgrade.levels+' LV':'');
     $('machineMaxCost').textContent=maxUpgrade.levels?fmt(maxUpgrade.cost):'—';
     $('buyMachineMax').setAttribute('aria-label','Upgrade '+line.name+' by '+maxUpgrade.levels+' levels for '+fmt(maxUpgrade.cost));
-    $('buyMachine').style.setProperty('--funded',Math.min(100,state.money/price*100)+'%');
-    $('upgradeHint').textContent=!open?'Build '+LINES[selected-1].name.toLowerCase()+' first.':!affordable?fmt(price-state.money)+' to go · customer sales earn cash automatically.':level?selected<4?'Larger batches per cycle. Train employees to shorten each cycle.':'Upgrade for faster '+['','','','','order preparation','customer service'][selected]+'.':'Build this stage to extend your line.';
+    $('buyMachine').style.setProperty('--funded',(!level?100:Math.min(100,state.money/price*100))+'%');
+    $('upgradeHint').textContent=!open?'Build '+LINES[selected-1].name.toLowerCase()+' first.':!level?'Under construction · tap the site on the map, or Build here, to raise it.':!affordable?fmt(price-state.money)+' to go · customer sales earn cash automatically.':selected<4?'Larger batches per cycle. Train employees to shorten each cycle.':'Upgrade for faster '+['','','','','order preparation','customer service'][selected]+'.';
     $('upgradeHint').classList.toggle('ready',affordable);
     if(selected===4&&level)$('upgradeHint').textContent+=' Training applies to all '+state.orderCounters+' counters. Baskets: '+qtyLabel(basketSize())+' per customer (+1 every 2 desk levels). Queue: '+queueLimit()+' customers · every 2 desk or employee upgrades adds a place (max 12).';
     }
     renderOrderCounters();
-    securityMarker.classList.add('station-sign');securityMarker.classList.toggle('selected',securitySelected);securityMarker.classList.toggle('can-upgrade',state.idStaff<10000&&state.money>=Math.floor(20*Math.pow(1.6,state.idStaff)));if(securityMarker.dataset.level!==String(state.idStaff)){securityMarker.innerHTML='<span class=station-sign-name>Security</span><span class=station-sign-level>Lv '+state.idStaff+'</span>';securityMarker.dataset.level=String(state.idStaff);updateMarkers.key=null;}securityMarker.style.setProperty('--station-tier',TIER_COLORS[state.idStaff>=25?3:state.idStaff>=10?2:1]);securityMarker.setAttribute('aria-label','Security, level '+state.idStaff+'. Open security station');securityMarker.setAttribute('aria-pressed',String(securitySelected));
+    var doorSite=!state.doorBuilt,doorKey=doorSite?'site':String(state.idStaff);
+    securityMarker.classList.add('station-sign');securityMarker.classList.toggle('selected',securitySelected);securityMarker.classList.toggle('is-site',doorSite);securityMarker.classList.toggle('can-upgrade',!doorSite&&state.idStaff<10000&&state.money>=Math.floor(20*Math.pow(1.6,state.idStaff)));if(securityMarker.dataset.level!==doorKey){securityMarker.innerHTML='<span class=station-sign-name>Security</span><span class=station-sign-level>'+(doorSite?'Build':'Lv '+state.idStaff)+'</span>';securityMarker.dataset.level=doorKey;updateMarkers.key=null;}securityMarker.style.setProperty('--station-tier',TIER_COLORS[state.idStaff>=25?3:state.idStaff>=10?2:1]);securityMarker.setAttribute('aria-label',doorSite?'Security, under construction. Build the door':'Security, level '+state.idStaff+'. Open security station');securityMarker.setAttribute('aria-pressed',String(securitySelected));
+    var loungeLot=!state.lounge,loungePrice=loungeUpgradeCost(state.lounge),loungeKey=String(state.lounge)+'|'+(loungePrice!==null&&state.money>=loungePrice);
+    loungeMarker.classList.add('station-sign');loungeMarker.classList.toggle('selected',loungeSelected);loungeMarker.classList.toggle('is-lot',loungeLot);loungeMarker.classList.toggle('can-upgrade',loungePrice!==null&&state.money>=loungePrice);
+    if(loungeMarker.dataset.level!==loungeKey){loungeMarker.innerHTML='<span class=station-sign-name>Lounge</span><span class=station-sign-level>'+(loungeLot?'Open · '+fmt(loungePrice):'Lv '+state.lounge)+'</span>';loungeMarker.dataset.level=loungeKey;updateMarkers.key=null;}
+    loungeMarker.style.setProperty('--station-tier',TIER_COLORS[Math.min(3,state.lounge)]);loungeMarker.setAttribute('aria-label',loungeLot?'Smoking lounge, under construction. Opens for '+fmt(loungePrice):'Smoking lounge, level '+state.lounge+'. Open lounge station');loungeMarker.setAttribute('aria-pressed',String(loungeSelected));
     var idPrice=Math.floor(20*Math.pow(1.6,state.idStaff)),idMax=idTrainingQuote(10000);
     $('idEmployeeInfo').innerHTML='<span>Lv '+state.idStaff+'</span><span>'+(securityDuration()).toFixed(2)+'s / check</span>';
     $('trainIdChecker').disabled=state.money<idPrice||state.idStaff>=10000;
@@ -2664,20 +3407,22 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     // The caption under the send button doubles as the hint line, so the card never changes height.
     if($('dispatchHint').textContent){$('onlineMaxInfo').textContent=$('dispatchHint').textContent;$('onlineMaxInfo').classList.add('is-hint')}else $('onlineMaxInfo').classList.remove('is-hint');var webItem=$('stockCountOnline').closest('.stock-item'),webCount=onlineRequestsReady();$('stockCountOnline').textContent=webCount;webItem.dataset.heat=String(requestHeat(webCount));$('stockCountOnline').classList.toggle('stock-full',webCount>=onlineRequestCap());webItem.title=webCount+' deliver'+(webCount===1?'y':'ies')+' requested · '+onlineRequestCap()+' max';$('onlineBadge').hidden=$('fulfillOnlineMax').disabled;
     renderCustomerRatings();
-    var waiting=customers.filter(function(c){return !c.ordered&&c.phase!=='leaving'}).length;$('queueCount').textContent=waiting+'/'+queueLimit();$('queueCount').classList.toggle('queue-full',waiting>=queueLimit());firstTimeHints(waiting);$('queueCount').parentElement.title=waiting>=queueLimit()?'Line is full · new customers walk away. Upgrade the order desk or its employees to add places.':'Customers waiting to order';$('pickupCount').textContent=customers.filter(function(c){return c.phase==='pickup'||c.phase==='toPickup'}).length;$('servedCount').textContent=state.sold.toLocaleString();state.stock.forEach(function(n,i){var packed=i===3,oz=state.productMenu.active===0,v=packed&&oz?n/8:n;$('stockCount'+i).innerHTML=compactCount(v)+(packed?'<small>'+(oz?'oz':state.productMenu.active===1?'jt':'ed')+'</small>':'');$('stockCount'+i).title=i===4?n+' / '+readyCapacity()+' packed orders ready for walk-in pickup':i===3?qtyLabel(n)+' packed of '+qtyLabel(storageCapacity())+(n>=storageCapacity()?' · Storage full':''):n+' / '+storageCapacity()+(n>=storageCapacity()?' · Storage full':'');$('stockCount'+i).classList.toggle('stock-full',n>=(i===4?readyCapacity():storageCapacity()))});var order=milestone(state.contract);
+    var waiting=customers.filter(inOrderFlow).length;$('queueCount').textContent=waiting+'/'+queueLimit();$('queueCount').classList.toggle('queue-full',waiting>=queueLimit());firstTimeHints(waiting);$('queueCount').parentElement.title=waiting>=queueLimit()?'Line is full · new customers walk away. Upgrade the order desk or its employees to add places.':'Customers waiting to order';$('pickupCount').textContent=customers.filter(function(c){return c.phase==='pickup'||c.phase==='toPickup'}).length;$('servedCount').textContent=state.sold.toLocaleString();state.stock.forEach(function(n,i){var packed=i===3,oz=state.productMenu.active===0,v=packed&&oz?n/8:n;$('stockCount'+i).innerHTML=compactCount(v)+(packed?'<small>'+(oz?'oz':state.productMenu.active===1?'jt':'ed')+'</small>':'');$('stockCount'+i).title=i===4?n+' / '+readyCapacity()+' packed orders ready for walk-in pickup':i===3?qtyLabel(n)+' packed of '+qtyLabel(storageCapacity())+(n>=storageCapacity()?' · Storage full':''):n+' / '+storageCapacity()+(n>=storageCapacity()?' · Storage full':'');$('stockCount'+i).classList.toggle('stock-full',n>=(i===4?readyCapacity():storageCapacity()))});var order=milestone(state.contract);
     if(order){$('orderName').textContent=state.lifetime>=order.goal?'ORDER READY TO CLAIM':order.name;$('orderProgress').textContent=fmt(Math.min(state.lifetime,order.goal))+' / '+fmt(order.goal);$('orderFill').style.width=Math.min(100,state.lifetime/order.goal*100)+'%';$('claimReward').textContent='+'+fmt(order.reward);$('claim').disabled=state.lifetime<order.goal}
     else{$('orderName').textContent='ALL ORDERS FILLED';$('orderProgress').textContent='COMPLETE';$('orderFill').style.width='100%';$('claimReward').textContent='✓';$('claim').disabled=true}
     $('orderBadge').hidden=!order||state.lifetime<order.goal;
     $('boostPreview').textContent=state.multiplier.toFixed(2)+'× → '+(state.multiplier*1.25).toFixed(2)+'× all stations';
     var boostPrice=boostCost(state.globalLevel);$('boostCost').textContent=state.globalLevel>=BOOST_MAX?'MAX':fmt(boostPrice);$('boost').disabled=state.globalLevel>=BOOST_MAX||state.money<boostPrice;
     var slowNow=slowestStation();
-    markerEls.forEach(function(el,i){var locked=!isOpen(i);el.classList.toggle('selected',!securitySelected&&i===selected);el.classList.toggle('locked',locked);el.classList.toggle('is-bottleneck',i===slowNow&&!locked);el.classList.add('station-sign');el.classList.toggle('can-upgrade',!locked&&state.money>=cost(i));if(el.dataset.level!==String(state.lines[i])){el.innerHTML='<span class=station-sign-name>'+shortNames[i]+'</span><span class=station-sign-level>Lv '+state.lines[i]+'</span>';el.dataset.level=String(state.lines[i]);updateMarkers.key=null;}el.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);el.setAttribute('aria-label',LINES[i].name+(locked?', locked':', level '+state.lines[i]));el.setAttribute('aria-pressed',String(!securitySelected&&i===selected))});
-    var securityCard=document.querySelector('[data-security]');if(securityCard){var idPriceNow=Math.floor(20*Math.pow(1.6,state.idStaff));securityCard.setAttribute('aria-pressed',String(securitySelected));securityCard.classList.toggle('can-upgrade',state.idStaff<10000&&state.money>=idPriceNow);securityCard.querySelector('em').textContent='Lv '+state.idStaff;securityCard.setAttribute('aria-label','Security, level '+state.idStaff);securityCard.style.setProperty('--station-tier',TIER_COLORS[state.idStaff>=25?3:state.idStaff>=10?2:1])}
+    markerEls.forEach(function(el,i){var locked=!isOpen(i),site=!state.lines[i];el.classList.toggle('selected',!securitySelected&&!loungeSelected&&i===selected);el.classList.toggle('locked',locked);el.classList.toggle('is-site',site);el.classList.toggle('is-bottleneck',i===slowNow&&!locked&&!site);el.classList.add('station-sign');el.classList.toggle('can-upgrade',!locked&&!site&&state.money>=cost(i));if(el.dataset.level!==String(state.lines[i])){el.innerHTML='<span class=station-sign-name>'+shortNames[i]+'</span><span class=station-sign-level>'+(site?'Build':'Lv '+state.lines[i])+'</span>';el.dataset.level=String(state.lines[i]);updateMarkers.key=null;}el.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);el.setAttribute('aria-label',LINES[i].name+(locked?', locked':site?', under construction. Build it':', level '+state.lines[i]));el.setAttribute('aria-pressed',String(!securitySelected&&!loungeSelected&&i===selected))});
+    var loungeCard=document.querySelector('[data-lounge]');if(loungeCard){loungeCard.setAttribute('aria-pressed',String(loungeSelected));loungeCard.classList.toggle('is-lot',loungeLot);loungeCard.classList.toggle('can-upgrade',loungePrice!==null&&state.money>=loungePrice);loungeCard.querySelector('em').textContent=loungeLot?'Open':'Lv '+state.lounge;loungeCard.setAttribute('aria-label',loungeLot?'Smoking lounge, under construction':'Smoking lounge, level '+state.lounge);loungeCard.style.setProperty('--station-tier',TIER_COLORS[Math.min(3,state.lounge)])}
+    var securityCard=document.querySelector('[data-security]');if(securityCard){var idPriceNow=Math.floor(20*Math.pow(1.6,state.idStaff));securityCard.setAttribute('aria-pressed',String(securitySelected));securityCard.classList.toggle('is-site',doorSite);securityCard.classList.toggle('can-upgrade',!doorSite&&state.idStaff<10000&&state.money>=idPriceNow);securityCard.querySelector('em').textContent=doorSite?'Build':'Lv '+state.idStaff;securityCard.setAttribute('aria-label',doorSite?'Security, under construction':'Security, level '+state.idStaff);securityCard.style.setProperty('--station-tier',TIER_COLORS[state.idStaff>=25?3:state.idStaff>=10?2:1])}
     updateStationOrbit(slow);
-    machineTabs.forEach(function(tab,i){var locked=!isOpen(i),available=!locked&&state.money>=cost(i);tab.title=i===slow?'Slowest station · improve this to raise capacity':'';tab.setAttribute('aria-pressed',String(!securitySelected&&i===selected));tab.classList.toggle('is-locked',locked);tab.classList.toggle('can-upgrade',available);tab.querySelector('em').innerHTML=locked?'Locked':'Lv '+state.lines[i]+(i===slow?'<span class="slow-tag"> · Slow</span>':'');tab.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);var progress=Math.min(100,state.lines[i]/100*100),progressText=state.lines[i]>=100?'Flagship equipment reached':'Level '+state.lines[i]+' of 100 toward flagship equipment';tab.querySelector('progress').value=progress;tab.querySelector('progress').setAttribute('aria-label',LINES[i].name+' equipment progress');tab.querySelector('progress').setAttribute('aria-valuetext',progressText);tab.querySelector('progress').title=progressText;tab.querySelector('.level-funding').textContent=progressText;tab.setAttribute('aria-label',LINES[i].name+(i===slow?', slowest station':'')+', level '+state.lines[i]+', '+STATION_TIERS[stationTier(i)]+(available?', upgrade ready':''))});
+    machineTabs.forEach(function(tab,i){var locked=!isOpen(i),site=!state.lines[i],available=!locked&&!site&&state.money>=cost(i);tab.title=site?'Under construction':i===slow?'Slowest station · improve this to raise capacity':'';tab.setAttribute('aria-pressed',String(!securitySelected&&!loungeSelected&&i===selected));tab.classList.toggle('is-locked',locked);tab.classList.toggle('is-site',site);tab.classList.toggle('can-upgrade',available);tab.querySelector('em').innerHTML=locked?'Locked':site?'Build':'Lv '+state.lines[i]+(i===slow?'<span class="slow-tag"> · Slow</span>':'');tab.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);var progress=Math.min(100,state.lines[i]/100*100),progressText=site?'Under construction':state.lines[i]>=100?'Flagship equipment reached':'Level '+state.lines[i]+' of 100 toward flagship equipment';tab.querySelector('progress').value=progress;tab.querySelector('progress').setAttribute('aria-label',LINES[i].name+' equipment progress');tab.querySelector('progress').setAttribute('aria-valuetext',progressText);tab.querySelector('progress').title=progressText;tab.querySelector('.level-funding').textContent=progressText;tab.setAttribute('aria-label',LINES[i].name+(i===slow?', slowest station':'')+', level '+state.lines[i]+', '+STATION_TIERS[stationTier(i)]+(available?', upgrade ready':''))});
     updateCommerceControls();
   }
   var machineTabs=Array.prototype.slice.call(document.querySelectorAll('[data-machine]'));var securityTab=document.querySelector('[data-security]');if(securityTab)securityTab.onclick=selectSecurity;
+  var loungeTab=document.querySelector('[data-lounge]');if(loungeTab)loungeTab.onclick=selectLounge;
   var stationOrbitIndex=-1,stationOrbitOffset=0;
   function updateStationOrbit(index){
     if(index===stationOrbitIndex)return;
@@ -2708,27 +3453,155 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   machineTabs.forEach(function(tab,i){var progress=document.createElement('progress');progress.max=100;progress.value=0;progress.setAttribute('aria-label',LINES[i].name+' equipment progress');tab.appendChild(progress);var label=document.createElement('span');label.className='level-funding';tab.appendChild(label);tab.onclick=function(){selectMachine(Number(tab.getAttribute('data-machine')))}});
   var trayTabs=Array.prototype.slice.call(document.querySelectorAll('[data-tray]'));
   var activeTray='factory',panelOpen=true;
-  function showTray(name){if(document.body.dataset.activeTray!==name)playSound('tap',state.sound);document.body.dataset.activeTray=name;if(state.empire.activeStore&&name!=='empire')visitStore(0,false);activeTray=name;panelOpen=true;$('sheet').classList.remove('collapsed');$('panelToggle').setAttribute('aria-expanded','true');$('panelToggle').textContent='⌄';var titles={factory:'Stations',employees:'Staff',orders:'Deliveries',boosts:'Shop',flowers:'Menu',empire:'Empire'};$('panelTitle').textContent=titles[name];trayTabs.forEach(function(t){t.setAttribute('aria-pressed',String(t.getAttribute('data-tray')===name))});Array.prototype.forEach.call(document.querySelectorAll('[data-pane]'),function(p){p.hidden=p.getAttribute('data-pane')!==name});fitControls()}
-  function collapsePanel(){panelOpen=false;$('sheet').classList.add('collapsed');$('panelToggle').setAttribute('aria-expanded','false');$('panelToggle').textContent='⌃';fitControls()}
+  // The tray glides: a pane opens from nothing to its natural height and closes the same way, measured live so every
+  // breakpoint keeps its own pane height. The sheet's ResizeObserver reframes the map on each step, so the scene eases too.
+  var paneGlide=null;
+  function glidePane(pane,expand,done){
+    if(paneGlide){paneGlide.cancel();paneGlide=null}
+    var height=pane?pane.getBoundingClientRect().height:0;
+    if(!pane||!height||motionPreference.matches||typeof pane.animate!=='function'){if(done)done();return}
+    pane.style.overflow='hidden';
+    var from={height:'0px',opacity:0,transform:'translateY(6px)'},to={height:height+'px',opacity:1,transform:'none'};
+    var run=paneGlide=pane.animate(expand?[from,to]:[to,from],{duration:expand?480:320,easing:expand?'cubic-bezier(.2,.8,.2,1)':'cubic-bezier(.4,0,.6,1)'});
+    run.onfinish=function(){pane.style.overflow='';if(paneGlide===run)paneGlide=null;if(done)done();fitControls()};
+    run.oncancel=function(){pane.style.overflow='';if(paneGlide===run)paneGlide=null};
+  }
+  function showTray(name){if(document.body.dataset.activeTray!==name)playSound('tap',state.sound);document.body.dataset.activeTray=name;if(state.empire.activeStore&&name!=='empire')visitStore(0,false);activeTray=name;var wasCollapsed=$('sheet').classList.contains('collapsed');panelOpen=true;$('sheet').classList.remove('collapsed');$('panelToggle').setAttribute('aria-expanded','true');$('panelToggle').textContent='⌄';var titles={factory:'Stations',employees:'Staff',orders:'Deliveries',boosts:'Shop',flowers:'Menu',empire:'Empire'};$('panelTitle').textContent=titles[name];trayTabs.forEach(function(t){t.setAttribute('aria-pressed',String(t.getAttribute('data-tray')===name))});Array.prototype.forEach.call(document.querySelectorAll('[data-pane]'),function(p){p.hidden=p.getAttribute('data-pane')!==name});if(wasCollapsed)glidePane(document.querySelector('[data-pane="'+name+'"]'),true);else if(paneGlide){paneGlide.cancel();paneGlide=null}fitControls()}
+  function collapsePanel(){var sheet=$('sheet'),wasOpen=!sheet.classList.contains('collapsed');if(wasOpen&&sheet.classList.contains('tall')){settleSheet('collapsed');return}panelOpen=false;$('panelToggle').setAttribute('aria-expanded','false');$('panelToggle').textContent='⌃';if(!wasOpen){fitControls();return}
+    // The pane folds away first; the sheet only takes its collapsed shape once nothing is left to hide.
+    glidePane(document.querySelector('[data-pane]:not([hidden])'),false,function(){if(!panelOpen){sheet.classList.add('collapsed');fitControls()}});fitControls()}
   trayTabs.forEach(function(tab){tab.onclick=function(){var name=tab.getAttribute('data-tray');if(name===activeTray&&panelOpen)collapsePanel();else showTray(name)}});
   $('panelToggle').onclick=function(){if(panelOpen)collapsePanel();else showTray(activeTray)};
+  // Phones: the sheet has three heights. Its header is a grabber: pulled up past the half-open height the sheet fills
+  // the screen below the HUD ("tall"); pulled down it returns to half height, then collapses. While it follows the finger
+  // or glides between heights the open pane stretches to fill it (.fluid), and the map keeps its half-height framing
+  // rather than being squeezed into the strip a tall sheet leaves.
+  var sheetGlide=null,sheetDrag=null,sheetHalfHeight=0,suppressHeaderClick=false;
+  function phoneSheet(){return window.innerWidth<780}
+  function sheetTallHeight(){return Math.max(240,window.innerHeight-document.querySelector('.hud').getBoundingClientRect().bottom-14)}
+  function settleSheet(target){
+    var sheet=$('sheet'),from=sheet.getBoundingClientRect().height;
+    if(sheetGlide){sheetGlide.cancel();sheetGlide=null}
+    if(paneGlide){paneGlide.cancel();paneGlide=null}
+    sheet.style.height='';sheet.classList.add('fluid');
+    if(target==='collapsed'){panelOpen=false;$('panelToggle').setAttribute('aria-expanded','false');$('panelToggle').textContent='⌃';sheet.classList.remove('tall')}
+    else{if(!panelOpen){showTray(activeTray);if(paneGlide){paneGlide.cancel();paneGlide=null}}sheet.classList.toggle('tall',target==='tall')}
+    $('panelExpand').setAttribute('aria-pressed',String(target==='tall'));$('panelExpand').setAttribute('aria-label',target==='tall'?'Return this panel to half height':'Fill the screen with this panel');
+    // Measure the destination in its settled classes, then glide the sheet's height there with the pane stretching.
+    sheet.classList.remove('fluid');if(target==='collapsed')sheet.classList.add('collapsed');
+    var to=sheet.getBoundingClientRect().height;
+    if(target==='collapsed')sheet.classList.remove('collapsed');
+    function finish(){sheet.classList.remove('fluid');if(target==='collapsed')sheet.classList.add('collapsed');sheetGlide=null;fitControls()}
+    if(motionPreference.matches||typeof sheet.animate!=='function'||Math.abs(to-from)<2){finish();return}
+    sheet.classList.add('fluid');
+    var run=sheetGlide=sheet.animate([{height:from+'px'},{height:to+'px'}],{duration:360,easing:'cubic-bezier(.2,.8,.2,1)'});
+    run.onfinish=function(){if(sheetGlide===run)finish()};
+    run.oncancel=function(){if(sheetGlide===run){sheet.classList.remove('fluid');sheetGlide=null}};
+  }
+  $('panelExpand').onclick=function(){settleSheet($('sheet').classList.contains('tall')?'half':'tall')};
+  // A drag can start anywhere on the sheet that does not scroll: the header, the stats strip and the tab bar. Their
+  // buttons still take taps, because a press that moves less than 8px is left alone.
+  var sheetSurface=$('sheet');
+  sheetSurface.addEventListener('click',function(e){
+    if(suppressHeaderClick){e.stopPropagation();e.preventDefault();return}
+    // Collapsed, a tap on any bare part of the strip opens it; its buttons keep their own jobs.
+    if(sheetSurface.classList.contains('collapsed')&&phoneSheet()&&!e.target.closest('button,a,input,select,textarea,label'))showTray(activeTray);
+  },true);
+  sheetSurface.addEventListener('pointerdown',function(e){
+    if(!phoneSheet()||e.button!==0||sheetGlide||e.target.closest('[data-pane]'))return;
+    var sheet=$('sheet');
+    sheetDrag={id:e.pointerId,y:e.clientY,lastY:e.clientY,lastT:e.timeStamp,vy:0,height:sheet.getBoundingClientRect().height,moved:false,collapsed:sheet.classList.contains('collapsed'),tall:sheet.classList.contains('tall')};
+    // Bare surfaces capture the pointer at once so a fast pull that leaves the strip still counts, as does the collapsed
+    // handle, whose tap opens the sheet either way. Other buttons wait until the press has become a drag: capturing on
+    // pointerdown would retarget a tap's click from the button to the sheet.
+    if(!e.target.closest('button,a,input,select,textarea,label')||(sheetDrag.collapsed&&e.target.closest('#panelToggle')))try{sheetSurface.setPointerCapture(e.pointerId)}catch(err){}
+  });
+  sheetSurface.addEventListener('pointermove',function(e){
+    var d=sheetDrag;if(!d||e.pointerId!==d.id)return;
+    var dy=e.clientY-d.y,dt=Math.max(1,e.timeStamp-d.lastT);d.vy=d.vy*.6+((e.clientY-d.lastY)/dt)*.4;d.lastY=e.clientY;d.lastT=e.timeStamp;
+    if(!d.moved){if(Math.abs(dy)<8)return;d.moved=true;try{sheetSurface.setPointerCapture(e.pointerId)}catch(err){}}
+    if(d.collapsed)return;
+    var sheet=$('sheet');sheet.classList.add('fluid');
+    sheet.style.height=Math.max(120,Math.min(sheetTallHeight(),d.height-dy))+'px';
+  });
+  function endSheetDrag(e,cancelled){
+    var d=sheetDrag;if(!d||e.pointerId!==d.id)return;sheetDrag=null;
+    if(!d.moved)return;
+    suppressHeaderClick=true;setTimeout(function(){suppressHeaderClick=false},0);
+    var dy=e.clientY-d.y,half=sheetHalfHeight||d.height,tall=sheetTallHeight(),target;
+    if(cancelled)target=d.collapsed?'collapsed':d.tall?'tall':'half';
+    else if(d.collapsed)target=dy>-24?'collapsed':dy<-half*.6?'tall':'half';
+    else{var h=d.height-dy;
+      if(d.vy<-.5)target='tall';else if(d.vy>.5)target=d.tall&&h>half*.75?'half':'collapsed';
+      else target=h<half*.72?'collapsed':h>(half+tall)/2?'tall':'half'}
+    if(target==='collapsed'&&d.collapsed){$('sheet').style.height='';$('sheet').classList.remove('fluid');return}
+    settleSheet(target);
+  }
+  sheetSurface.addEventListener('pointerup',function(e){endSheetDrag(e,false)});
+  sheetSurface.addEventListener('pointercancel',function(e){endSheetDrag(e,true)});
 
   // Security is a door station: the ID checker's training shares the station panel.
   // One-time nudges for the moments the guide cannot cover: the first web order, the first full shelf, the first full line.
   function firstTimeHints(waiting){
-    var h=state.hints;if(!h||document.body.classList.contains('guide-open')||(firstRun&&startGuide&&!startGuide.seen())||$('toast').classList.contains('show'))return;
+    var h=state.hints;if(!h||!state.shopOpen||document.body.classList.contains('guide-open')||(firstRun&&startGuide&&!startGuide.seen())||$('toast').classList.contains('show'))return;
     if(!h.web&&onlineRequestsReady()>=1){h.web=true;notify('FIRST WEB ORDER · send it from Deliveries','upgrade');save();return}
     if(!h.storage&&state.stock.some(function(n,i){return i<4&&n>=storageCapacity()})){h.storage=true;notify('STORAGE FULL · expand it in the Shop');save();return}
     if(!h.queue&&waiting>=queueLimit()&&state.lines[4]>0){h.queue=true;notify('LINE IS FULL · upgrade the order desk for more places');save()}
   }
+  function renderLoungeSelection(){
+    var level=state.lounge,tier=loungeTier(level),next=LOUNGE_TIERS[level]||null,price=loungeUpgradeCost(level),maxed=!next,affordable=!maxed&&state.money>=price;
+    var seated=loungeSeated(),seats=loungeSeats(level),jar=flowerValue(),take=loungeTake(level,jar),waiting=loungeWaiting().length,nowRate=loungeCurrentRate(level,seated,jar)*state.gameSpeed;
+    $('machineNumber').textContent='BACK ROOM · '+(!tier?'UNDER CONSTRUCTION':seated>=seats?'FULL'+(waiting?' · '+waiting+' ON THE ROPE':''):seated?seated+' OF '+seats+' SEATED':'SEATS FREE');
+    $('machineName').textContent='SMOKING LOUNGE';$('machineLevel').textContent=level;$('machineRate').textContent=tier?fmt(nowRate)+'/s · '+fmt(take.total)+' / session':'Under construction';
+    var ICON_SEAT='<svg viewBox="0 0 24 24"><path d="M6 11V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v5M4 11h16v4H4zM6 15v5M18 15v5"/></svg>',ICON_GUESTS='<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M15 20c0-2.6 1.5-4.4 3.7-4.9 1.4.3 2.3 1.6 2.3 3.4"/></svg>',ICON_TICKET='<svg viewBox="0 0 24 24"><path d="M4 8a2 2 0 0 0 2-2h12a2 2 0 0 0 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 0-2 2H6a2 2 0 0 0-2-2v-3a2 2 0 0 0 0-4zM9 6v12"/></svg>',ICON_JAR='<svg viewBox="0 0 24 24"><path d="M8 4h8v3H8zM7 7h10v11a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2zM7 11h10"/></svg>',ICON_SESSIONS='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg>',ICON_RATE='<svg viewBox="0 0 24 24"><path d="M4 17l5-6 4 3 7-8M15 6h5v5"/></svg>',ICON_BANKED='<svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v4c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 10v4c0 1.7 3.1 3 7 3s7-1.3 7-3v-4M5 14v4c0 1.7 3.1 3 7 3s7-1.3 7-3v-4"/></svg>';
+    var chipTone=!tier?'wait':seated>=seats?'stop':seated?'go':'wait',chipWord=!tier?'Site':seated>=seats?'Full':seated?seated+' of '+seats+' seated':'Seats free';
+    var loungeHtml='<span class="status-chip" data-tone="'+chipTone+'"><i></i>'+chipWord+'</span>'+
+      (tier?'<span class="stat" title="What the lounge is making right now: '+seated+' of '+seats+' seats taken, each worth the '+fmt(take.total)+' take once per '+tier.session+'-second session">'+ICON_RATE+'<b>'+fmt(nowRate)+'/s</b><small>now</small></span>'+
+      '<span class="stat" title="Banked by the lounge since it opened: every cover and every jar sold at the lounge premium">'+ICON_BANKED+'<b>'+fmt(state.loungeEarned)+'</b><small>total</small></span>'+
+      '<span class="stat tier" title="One guest in '+tier.share+' through the door heads for the curtain; VIPs twice as often">'+ICON_GUESTS+'<b>1 in '+tier.share+'</b><small>guests</small></span>'+
+      '<span class="stat" title="Seats in the back room">'+ICON_SEAT+'<b>'+seats+'</b><small>seats</small></span>'+
+      '<span class="stat" title="Cover paid at the curtain">'+ICON_TICKET+'<b>'+fmt(tier.cover)+'</b><small>cover</small></span>'+
+      '<span class="stat" title="One packed jar per session at '+tier.spend+'× the counter price">'+ICON_JAR+'<b>'+fmt(take.spend)+'</b><small>jar ×'+tier.spend+'</small></span>'+
+      '<span class="stat" title="Sessions so far">'+ICON_SESSIONS+'<b>'+compactCount(state.loungeSessions)+'</b><small>sessions</small></span>':
+      '<span class="stat tier" title="Bought outright; every level adds seats and raises the take">'+ICON_TICKET+'<b>'+fmt(price)+'</b><small>to open</small></span>'+
+      '<span class="stat" title="Guests who go in skip the counters: cover at the curtain, one jar at a premium, out the back door">'+ICON_GUESTS+'<b>1 in '+LOUNGE_TIERS[0].share+'</b><small>guests</small></span>'+
+      '<span class="stat" title="Seats once open">'+ICON_SEAT+'<b>'+LOUNGE_TIERS[0].seats+'</b><small>seats</small></span>');
+    if($('stationStatus').dataset.html!==loungeHtml){$('stationStatus').innerHTML=loungeHtml;$('stationStatus').dataset.html=loungeHtml}
+    $('upgradeLevel').textContent=!tier?'Not open':maxed?'Lv '+level+' · '+tier.name:'Lv '+level+' → '+(level+1)+' · '+next.name;
+    renderUpgradeComparison('Seats',seats,next?next.seats:seats,false,!tier,maxed,{maxed:'Fully fitted',gain:function(before,after){return '+'+(after-before)+' seats · jar ×'+(next?next.spend:tier.spend)}});
+    $('stationTier').textContent=tier?tier.name:'Construction site';$('stationTier').style.color=TIER_COLORS[Math.min(3,level)];
+    $('upgradeFunding').textContent=maxed?'Fully fitted':affordable?(tier?'Ready to upgrade':'Ready to open'):fmt(Math.max(0,price-state.money))+' to go';
+    $('upgradeProgress').value=maxed?100:Math.min(100,state.money/price*100);$('upgradeProgress').setAttribute('aria-valuetext',maxed?'Fully fitted':affordable?'Ready':fmt(Math.max(0,price-state.money))+' needed for '+next.name);
+    paintUpgradePreview(-2);
+    $('nextAppearance').textContent=next?next.name+' · '+next.seats+' seats · 1 in '+next.share+' guests · jar ×'+next.spend:'Nothing left to fit in the back room.';
+    $('machineCost').textContent=maxed?'—':fmt(price);$('buyMachine').disabled=!affordable;$('buyMachine').querySelector('span').textContent=tier?'UPGRADE':'OPEN';$('buyMachine').style.setProperty('--funded',(maxed?100:Math.min(100,state.money/price*100))+'%');
+    $('buyMachineMax').disabled=true;$('machineMaxLabel').textContent='MAX';$('machineMaxCost').textContent='—';$('buyMachineMax').setAttribute('aria-label','The lounge is fitted one level at a time');
+    $('upgradeHint').textContent=maxed?'Every seat in the back room is spoken for.':!affordable?fmt(price-state.money)+' to go':tier?'+'+(next.seats-seats)+' seats · bigger take per session':'Open the curtain · every 4th guest slips in';$('upgradeHint').classList.toggle('ready',affordable);
+  }
   function renderSecuritySelection(){
-    var lvl=state.idStaff,price=Math.floor(20*Math.pow(1.6,lvl)),maxed=lvl>=10000,affordable=!maxed&&state.money>=price,quote=idTrainingQuote(10000);
-    $('machineNumber').textContent='DOOR · '+(lvl?'CHECKING IDS':'NO GUARD YET');$('machineName').textContent='SECURITY';$('machineLevel').textContent=lvl;$('machineRate').textContent=securityDuration().toFixed(2)+'s / check';
-    $('stationStatus').dataset.html='';$('stationStatus').textContent='Checks IDs at the door before customers join the line. Faster checks keep the queue moving'+(state.scannerLevel?' · scanner +'+Math.round(state.scannerLevel*12)+'%':'')+'.';
+    var lvl=state.idStaff,price=Math.floor(20*Math.pow(1.6,lvl)),maxed=lvl>=10000||rawSecurityDuration(lvl)<=economy.ID_CHECK_FLOOR,site=!state.doorBuilt,affordable=site||(!maxed&&state.money>=price),quote=site?{levels:0,cost:0}:idTrainingQuote(10000);
+    $('machineNumber').textContent='DOOR · '+(site?'UNDER CONSTRUCTION':lvl?'CHECKING IDS':'NO GUARD YET');$('machineName').textContent='SECURITY';$('machineLevel').textContent=lvl;$('machineRate').textContent=securityDuration().toFixed(2)+'s / check';
+    // Stat tiles, like the lounge card: a status chip, the check time, who is at the door, and the scanner's boost.
+    var atDoor=customers.filter(function(c){return c.phase==='idCheck'}).length,held=customers.filter(function(c){return c.phase==='idCheck'&&!c.walking}).length,checking=customers.some(function(c){return c.idChecked===false&&c.idCheckTime>0});
+    var ICON_CLOCK='<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 1.5M9 3h6M12 3v2.5"/></svg>',ICON_DOOR='<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M15 20c0-2.6 1.5-4.4 3.7-4.9 1.4.3 2.3 1.6 2.3 3.4"/></svg>',ICON_SCAN='<svg viewBox="0 0 24 24"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/></svg>';
+    var chipTone=site?'wait':!lvl?'stop':held>3?'stop':checking||atDoor?'go':'wait',chipWord=site?'Site':!lvl?'No guard':held>3?'Line at the door':checking?'Checking':atDoor?'Walking up':'Door clear';
+    var securityHtml='<span class="status-chip" data-tone="'+chipTone+'"><i></i>'+chipWord+'</span>'+
+      '<span class="stat" title="Seconds the doorman takes per ID check; training and the scanner both cut it">'+ICON_CLOCK+'<b>'+securityDuration().toFixed(2)+'s</b><small>per check</small></span>'+
+      '<span class="stat" title="Customers on the way to or waiting at the desk">'+ICON_DOOR+'<b>'+atDoor+'</b><small>at the door</small></span>'+
+      '<span class="stat" title="ID scanner from the Shop: each level checks 12% faster">'+ICON_SCAN+'<b>'+(state.scannerLevel?'+'+Math.round(state.scannerLevel*12)+'%':'—')+'</b><small>scanner</small></span>';
+    if($('stationStatus').dataset.html!==securityHtml){$('stationStatus').innerHTML=securityHtml;$('stationStatus').dataset.html=securityHtml}
+    if(site){
+      $('upgradeLevel').textContent='Not built';renderUpgradeComparison('Seconds per ID check',securityDuration(),securityDuration(),true,true,false);
+      $('stationTier').textContent='Construction site';$('stationTier').style.color=TIER_COLORS[0];$('upgradeFunding').textContent='Ready to build';$('upgradeProgress').value=100;$('upgradeProgress').setAttribute('aria-valuetext','Ready to build');
+      paintUpgradePreview(-1);$('nextAppearance').textContent='A staffed door station: ID checks before customers join the line.';
+      $('machineCost').textContent='FREE';$('buyMachine').disabled=false;$('buyMachine').querySelector('span').textContent='BUILD';$('buyMachine').style.setProperty('--funded','100%');
+      $('buyMachineMax').disabled=true;$('machineMaxLabel').textContent='MAX';$('machineMaxCost').textContent='—';$('buyMachineMax').setAttribute('aria-label','Build the door first');
+      $('upgradeHint').textContent='Under construction · tap the site by the entrance, or Build here, to raise the door.';$('upgradeHint').classList.add('ready');return;
+    }
     $('upgradeLevel').textContent=maxed?'Lv '+lvl:'Lv '+lvl+' → '+(lvl+1);
-    renderUpgradeComparison('Seconds per ID check',securityDuration(),.9/((1+(lvl+1)*.3)*(1+state.scannerLevel*.12)),true,false,maxed);
+    renderUpgradeComparison('Seconds per ID check',securityDuration(),Math.max(economy.ID_CHECK_FLOOR,rawSecurityDuration(lvl+1)),true,false,maxed);
     $('stationTier').textContent=lvl>=25?'Head of security':lvl>=10?'Seasoned doorman':lvl?'Door staff':'Unstaffed door';$('stationTier').style.color=lvl>=25?TIER_COLORS[3]:lvl>=10?TIER_COLORS[2]:TIER_COLORS[1];
-    $('upgradeFunding').textContent=maxed?'Fully trained':affordable?'Ready to train':fmt(Math.max(0,price-state.money))+' to go';
+    $('upgradeFunding').textContent=maxed?'As quick as a check gets':affordable?'Ready to train':fmt(Math.max(0,price-state.money))+' to go';
     $('upgradeProgress').value=maxed?100:Math.min(100,state.money/price*100);$('upgradeProgress').setAttribute('aria-valuetext',affordable?'Training ready':fmt(Math.max(0,price-state.money))+' needed for level '+(lvl+1));
     paintUpgradePreview(-1);
     $('nextAppearance').textContent='Scanner upgrades in the Shop speed up every check.';
@@ -2738,12 +3611,12 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     $('upgradeHint').textContent=maxed?'Nobody gets past this door.':!affordable?fmt(price-state.money)+' to go · customer sales earn cash automatically.':lvl?'Shorter ID checks let more customers join the line.':'Hire a doorman so ID checks stop holding up the line.';$('upgradeHint').classList.toggle('ready',affordable);
   }
   // Keep exact improvements visible even when the usual compact time label rounds them away.
-  function renderUpgradeComparison(label,before,after,isTime,unbuilt,maxed){
+  function renderUpgradeComparison(label,before,after,isTime,unbuilt,maxed,wording){
     var digits=isTime?2:1;
     if(!unbuilt&&!maxed)while(digits<5&&before.toFixed(digits)===after.toFixed(digits))digits++;
     var formatValue=function(value){return value.toLocaleString('en-US',{minimumFractionDigits:isTime?digits:0,maximumFractionDigits:digits})};
     var gain=isTime?(1-after/before)*100:(after/before-1)*100;
-    var gainText=maxed?'Fully trained':unbuilt?'Ready to build':(isTime?'':'+')+(gain<.1?'<0.1':gain<10?gain.toFixed(1):Math.round(gain))+'% '+(isTime?'less time':'more output');
+    var gainText=maxed?(wording&&wording.maxed||'Fully trained'):unbuilt?'Ready to build':wording&&wording.gain?wording.gain(before,after):(isTime?'':'+')+(gain<.1?'<0.1':gain<10?gain.toFixed(1):Math.round(gain))+'% '+(isTime?'less time':'more output');
     $('upgradeMetricLabel').textContent=label;
     $('upgradeBefore').textContent=unbuilt?'—':formatValue(before);
     $('upgradeAfter').textContent=maxed?formatValue(before):formatValue(after);
@@ -2819,14 +3692,15 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
   }
   function paintUpgradePreview(index){
     var preview=$('upgradePreview');if(!preview)return;
-    var key=[index,index<0?state.idStaff:stationTier(index),state.menuStrains.join(','),state.productMenu.active].join('|');
+    var key=[index,index===-2?state.lounge:index<0?state.idStaff:stationTier(index),state.menuStrains.join(','),state.productMenu.active].join('|');
     if(preview.dataset.art===key)return;
     // Render at native resolution, then frame the opaque equipment rather than its overhead light pool.
     var art=document.createElement('canvas');art.width=480;art.height=600;
     var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;
     try{
       ctx=art.getContext('2d',{willReadFrequently:true});unit=90;centerX=240;centerY=480;angle=.57;
-      if(index<0){drawBox(0,0,-.24,2.6,2.6,.24,['#cbb085','#7f6a4b','#ac9168']);drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5']);drawPerson(-.55,-.45,0,7,false,true,false)}
+      if(index===-2)drawLoungeThumb(state.lounge);
+      else if(index<0){drawBox(0,0,-.24,2.6,2.6,.24,['#cbb085','#7f6a4b','#ac9168']);drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5']);drawPerson(-.55,-.45,0,7,false,true,false)}
       else drawStage({x:0,z:0},index,0,true);
       var pixels=ctx.getImageData(0,0,art.width,art.height).data,left=480,right=0,top=600,bottom=0;
       for(var y=0;y<600;y++)for(var x=0;x<480;x++)if(pixels[(y*480+x)*4+3]>180){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y)}
@@ -2835,11 +3709,113 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
       preview.dataset.art=key;
     }finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
   }
-  function paintSecurityThumbnail(){var card=document.querySelector('[data-security] canvas');if(!card)return;var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;ctx=card.getContext('2d');if(ctx){ctx.clearRect(0,0,80,100);unit=25;centerX=40;centerY=97;angle=.57;drawBox(0,0,-.24,2.6,2.6,.24,['#cbb085','#7f6a4b','#ac9168']);drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5']);drawPerson(-.55,-.45,0,7,false,true,false)}ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
-  function paintThumbnails(){paintSecurityThumbnail();var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;machineTabs.forEach(function(tab,i){ctx=tab.querySelector('canvas').getContext('2d');if(!ctx)return;ctx.clearRect(0,0,80,100);unit=25;centerX=40;centerY=97;angle=.57;drawStage({x:0,z:0},i,0)});ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
-  function selectSecurity(){securitySelected=true;showTray('factory');renderUI();var card=document.querySelector('[data-security]');if(card&&card.scrollIntoView)card.scrollIntoView({block:'nearest',inline:'nearest'});if(navigator.vibrate)navigator.vibrate(8)}
-  function selectMachine(i){securitySelected=false;selected=i;showTray('factory');renderUI();if(machineTabs[i]&&machineTabs[i].scrollIntoView)machineTabs[i].scrollIntoView({block:'nearest',inline:'nearest'});if(navigator.vibrate)navigator.vibrate(8)}
-  function buySelected(){if(securitySelected)return trainIdChecker(1);var line=LINES[selected];if(!isOpen(selected))return notify('Build the previous stage first');var c=cost(selected);if(state.money<c)return notify('Need '+fmt(c-state.money)+' more');var oldTier=stationTier(selected);state.money-=c;state.lines[selected]++;telemetry.once('first_upgrade',{station:line.name});trackStationLevel(selected);if(stationTier(selected)>oldTier)tierFlashes[selected]=1;paintThumbnails();burst(machinePos[selected]);notify(line.name+' · LEVEL '+state.lines[selected],'upgrade');renderUI();save();if(navigator.vibrate)navigator.vibrate(18)}
+  function paintSecurityThumbnail(){var card=document.querySelector('[data-security] canvas');if(!card)return;var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;ctx=card.getContext('2d');if(ctx){ctx.clearRect(0,0,80,100);unit=25;centerX=40;centerY=97;angle=.57;if(!state.doorBuilt)drawConstructionSite(0,0,2.6,2.6,function(){drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5'])});else{drawBox(0,0,-.24,2.6,2.6,.24,['#cbb085','#7f6a4b','#ac9168']);drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5']);drawPerson(-.55,-.45,0,7,false,true,false)}}ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
+  // The lounge doorway in miniature, dressed for its tier. Every level keeps the lacquer jambs, the slab and the LOUNGE
+  // blade so the card still reads as the lounge; what changes is the colour of the neon, the drapes, the room glimpsed
+  // between them and the dressing out front — planters for the terrace, a rope for the booths, a doorman and a runner
+  // for the members' club. Unbought, the doorway is boarded and taped like any other site.
+  var LOUNGE_LOOKS=[
+    {neon:'#ff9fc6',glow:'#ff8fb84a',halo:'#ff7fb0',velvet:'#5c1e30',wall:['#2e1a24','#160c11','#22131b'],floor:'#2a1b22',gap:[.1,.32,.22]},
+    {neon:'#ffc46b',glow:'#ffb35a4a',halo:'#ff9d3c',velvet:'#5c1e30',wall:['#2c1d18','#150d0a','#211511'],floor:'#241a16',gap:[.2,.48,.42]},
+    {neon:'#c99bff',glow:'#b487ff4a',halo:'#a56cff',velvet:'#3a1a4a',wall:['#1e1830','#0e0b18','#171226'],floor:'#171226',gap:[.2,.48,.42]},
+    {neon:'#e4f5b0',glow:'#cfeb8f4a',halo:'#c7e87a',velvet:'#d3c7ab',wall:['#2c4258','#172736','#22354a'],floor:'#4e5c48',gap:[.22,.5,.44]},
+    {neon:'#ffb6a8',glow:'#ff9a8a4a',halo:'#ff8a78',velvet:'#5c1e30',wall:['#2e1a24','#160c11','#22131b'],floor:'#2a1b22',gap:[.02,.05,.035]},
+    {neon:'#9fe8d8',glow:'#7fdcc84a',halo:'#6fd8c4',velvet:'#1f4a4a',wall:['#173432','#0a1a19','#112826'],floor:'#142523',gap:[.2,.48,.42]},
+    {neon:'#ffb07a',glow:'#ff9a5c4a',halo:'#ff8c4a',velvet:'#5a2a1c',wall:['#3a2418','#1d110a','#2c1a11'],floor:'#2a1b13',gap:[.22,.5,.44]},
+    {neon:'#ffd98a',glow:'#ffc86a4a',halo:'#ffbe55',velvet:'#3a1522',wall:['#4a3020','#261710','#382317'],floor:'#3b1a24',gap:[.15,.42,.34]}
+  ];
+  function drawLoungeThumb(level){
+    var tier=migrateLounge(level===undefined?state.lounge:level),open=tier>0,look=LOUNGE_LOOKS[Math.max(0,tier-1)],face=.16;
+    var lacquer=tier>=5?['#2a2328','#130f12','#1f1a1e']:['#2e3a33','#151c18','#222b25'],brass=tier>=8?'#e2c47e':'#c9b077';
+    var plinth=tier>=8?['#ded8c9','#96907f','#bfb8a6']:tier===4?['#c9a874','#7d6240','#a9895c']:['#cbb085','#7f6a4b','#ac9168'];
+    drawBox(0,0,-.24,2.8,1.6,.24,plinth);
+    if(tier>=8)groundPatch(0,.48,.8,.66,'#8a2233');
+    if(open){
+      // The room behind the drapes: its back wall, floor and the tier's furniture, back to front.
+      drawBox(0,-.72,0,1.36,.06,1.75,look.wall);groundPatch(0,-.4,1.2,.7,look.floor);
+      if(tier===1){drawBox(0,-.55,0,1,.3,.45,['#6b2436','#3c1220','#8a3448']);var sconce=project(.42,1.25,-.7);litEllipse(sconce.x,sconce.y,unit*.045,unit*.03,'#ffd9b0');glow(sconce.x,sconce.y,unit*.32,'#ffb98a44')}
+      if(tier===2){
+        drawBox(0,-.7,.95,1.1,.1,.04,['#e2c47e','#8a7340','#c0a45e']);for(var b=0;b<3;b++)drawBox(-.3+b*.3,-.7,.99,.11,.11,.3,[['#e8a34a','#8a5a1c','#c9842f'],['#c9d9a8','#6f7f56','#a2b47f'],['#e8c470','#8f7130','#c9a44c']][b]);
+        drawBox(0,-.3,0,1.05,.32,.5,['#6e4a30','#3a2617','#553a26']);drawBox(0,-.3,.5,1.12,.38,.05,['#e9dcc0','#a08e6c','#c9b995']);
+        drawBox(.22,-.3,.55,.12,.12,.24,['#c8ecec','#6fa9b1','#9ad0d4']);var flame=project(.22,.86,-.3);litEllipse(flame.x,flame.y,unit*.04,unit*.07,'#ffe9a8');glow(flame.x,flame.y,unit*.36,'#ffb35a5a',unit*.3);
+      }
+      if(tier===3){
+        var disc=project(-.2,1.25,-.7);ellipse(disc.x,disc.y,unit*.17,unit*.17,'#0e0e12');ellipse(disc.x,disc.y,unit*.055,unit*.055,look.neon);
+        drawBox(-.5,-.55,0,.3,.3,.95,['#26262c','#111114','#1c1c21']);[.28,.66].forEach(function(h){var cone=project(-.5,h,-.4);ellipse(cone.x,cone.y,unit*.085,unit*.075,'#3b3b44');ellipse(cone.x,cone.y,unit*.035,unit*.03,'#6a5f8a')});
+        drawBox(.1,-.42,0,.9,.42,.6,['#2a2d33','#131518','#1e2126']);var platter=project(-.08,.61,-.42);ellipse(platter.x,platter.y,unit*.19,unit*.085,'#0e0e12');ellipse(platter.x,platter.y,unit*.06,unit*.027,look.neon);
+        drawBox(.36,-.42,.6,.26,.22,.05,['#3a3f48','#1a1d22','#2a2e35']);litLine([[-.34,.6,-.2],[.54,.6,-.2]],look.neon,.03);var wash=project(.1,.35,-.2);glow(wash.x,wash.y,unit*.5,'#b487ff40',unit*.3);
+      }
+      if(tier===4){
+        worldLine([[-.6,1.38,-.7],[-.3,1.3,-.7],[0,1.28,-.7],[.3,1.3,-.7],[.6,1.38,-.7]],'#2b3a33',.018);
+        [-.45,-.15,.15,.45].forEach(function(bx){var bulb=project(bx,1.27-Math.abs(bx)*.05,-.69);litEllipse(bulb.x,bulb.y,unit*.045,unit*.055,'#ffe9b0');glow(bulb.x,bulb.y,unit*.26,'#ffd98a44')});
+        drawBox(.2,-.42,0,.4,.4,.46,['#e8e2d2','#9c968a','#c4bfb0']);drawBox(-.36,-.5,0,.26,.26,.28,['#4a6b5a','#28403a','#3a564a']);drawBox(-.36,-.62,.28,.26,.05,.3,['#4a6b5a','#28403a','#3a564a']);
+      }
+      if(tier===5){drawBox(0,-.45,0,.1,.5,1.5,lacquer);drawBox(-.35,-.55,0,.5,.3,.42,['#6b2436','#3c1220','#8a3448']);drawBox(.35,-.55,0,.5,.3,.42,['#6b2436','#3c1220','#8a3448'])}
+      if(tier===6){
+        litLine([[-.5,1.28,-.7],[.5,1.28,-.7]],look.neon,.035);var shelf=project(0,1.1,-.7);glow(shelf.x,shelf.y,unit*.6,'#7fdcc848',unit*.3);
+        drawBox(0,-.3,0,1.1,.32,.5,['#5f8b7c','#2e4c43','#46705f']);worldLine([[-.55,.5,-.14],[.55,.5,-.14]],'#e2c47e',.03);
+        jar(0,-.3,.5,0);drawBox(-.34,-.28,.5,.1,.1,.16,['#e7f4f0','#9bbbb4','#c5ddd7']);drawBox(.34,-.28,.5,.1,.1,.16,['#e7f4f0','#9bbbb4','#c5ddd7']);
+      }
+      if(tier===7){
+        [-.36,.36].forEach(function(px){var pan=project(px,1.35,-.7);ellipse(pan.x,pan.y,unit*.1,unit*.1,'#c47a48');ellipse(pan.x,pan.y,unit*.06,unit*.06,'#8a4f2c')});
+        drawBox(0,-.4,0,1.05,.46,.34,['#e9dcc0','#9d8f72','#c7b995']);[-.28,.28].forEach(function(px){var plate=project(px,.35,-.4);ellipse(plate.x,plate.y,unit*.11,unit*.05,'#fbf8ee');ellipse(plate.x,plate.y,unit*.045,unit*.022,'#7a8a4a')});
+        worldLine([[0,1.75,-.4],[0,1.31,-.4]],'#3a2a1e',.02);drawBox(0,-.4,1.18,.34,.34,.13,['#d9905b','#8a4f2c','#b8703f']);var bulb=project(0,1.15,-.4);litEllipse(bulb.x,bulb.y,unit*.05,unit*.03,'#fff0c8');lightCone(0,1.15,-.4,.44,.12,.5,'#ffd7a0',.1);var table=project(0,.36,-.4);glow(table.x,table.y,unit*.6,'#ffcf9a55',unit*.3);
+      }
+      if(tier===8){
+        drawBox(0,-.5,0,1,.38,.4,['#6b2436','#3c1220','#8a3448']);drawBox(0,-.66,.4,1,.1,.42,['#6b2436','#3c1220','#8a3448']);
+        [-.45,.45].forEach(function(sx){var sconce=project(sx,1.3,-.7);litEllipse(sconce.x,sconce.y,unit*.045,unit*.03,'#ffe2a8');glow(sconce.x,sconce.y,unit*.34,'#ffc86a48')});
+      }
+    }else groundPatch(0,-.4,1.2,.7,'#2a1b22');
+    drawBox(-.95,0,0,.5,.32,2.6,lacquer);drawBox(.95,0,0,.5,.32,2.6,lacquer);drawBox(0,0,1.75,1.4,.32,.85,lacquer);
+    worldLine([[-.72,.02,face],[-.72,1.77,face],[.72,1.77,face],[.72,.02,face]],brass,tier>=8?.05:.035);
+    if(open){
+      // Drapes at the doorway, tied back to the tier's gap; the booths keep theirs drawn to a sliver of lamplight.
+      var g=look.gap,zd=face+.02;
+      [-1,1].forEach(function(s){poly([project(s*.7,1.73,zd),project(s*g[0],1.73,zd),project(s*g[1],.95,zd),project(s*g[2],.04,zd),project(s*.7,.04,zd)],look.velvet)});
+      if(tier===5){litLine([[0,.06,zd+.01],[0,1.7,zd+.01]],'#ffd2a8',.02);var leak=project(0,.9,zd);glow(leak.x,leak.y,unit*.4,'#ffb98a44',unit*.9)}
+      // Out front: a velvet rope for the booths and the club, planters for the terrace, a doorman for the club.
+      if(tier===5||tier>=8){
+        var rope=tier>=8?'#c9a24a':'#a8243c';
+        [-.62,.62].forEach(function(px){worldLine([[px,0,.62],[px,.62,.62]],'#d8b56a',.045);var knob=project(px,.66,.62);ellipse(knob.x,knob.y,unit*.05,unit*.04,'#e9cd87')});
+        var sag=[];for(var t=0;t<=1;t+=.125)sag.push([-.62+1.24*t,.58-.14*Math.sin(Math.PI*t),.62]);worldLine(sag,rope,.035);
+      }
+      if(tier===4){plant(-1.18,.52,0,.42);plant(1.18,.52,0,.42)}
+      if(tier>=8)drawPerson(1.12,.56,0,7,false,true,false);
+      var neon=project(0,2.2,face);glow(neon.x,neon.y,unit*.9,look.glow,unit*.5);ctx.save();ctx.shadowColor=look.halo;ctx.shadowBlur=unit*.2;wallText(0,2.2,face+.01,'LOUNGE',unit*1.2,.32,look.neon,false,'800');ctx.restore();wallText(0,2.2,face+.012,'LOUNGE',unit*1.2,.32,'#fff6ee',false,'600');
+    }
+    else{drawBox(0,.14,0,1.36,.08,1.72,['#c9a874','#7d6240','#a9895c']);constructionTape([-.75,.8,face+.06],[.75,.7,face+.06]);wallText(0,2.2,face+.01,'LOUNGE',unit*1.2,.32,'#4b3f45',false,'800')}
+  }
+  function paintLoungeThumbnail(){var card=document.querySelector('[data-lounge] canvas');if(!card)return;var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;ctx=card.getContext('2d');if(ctx){ctx.clearRect(0,0,80,100);unit=22;centerX=40;centerY=94;angle=.57;drawLoungeThumb()}ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
+  function paintThumbnails(){paintSecurityThumbnail();paintLoungeThumbnail();var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;machineTabs.forEach(function(tab,i){ctx=tab.querySelector('canvas').getContext('2d');if(!ctx)return;ctx.clearRect(0,0,80,100);unit=25;centerX=40;centerY=97;angle=.57;drawStage({x:0,z:0},i,0)});ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
+  function selectLounge(){securitySelected=false;loungeSelected=true;showTray('factory');renderUI();var card=document.querySelector('[data-lounge]');if(card&&card.scrollIntoView)card.scrollIntoView({block:'nearest',inline:'nearest'});if(navigator.vibrate)navigator.vibrate(8)}
+  // Each lounge tier is bought outright; the first one raises the doorway out of its hoarding.
+  function upgradeLounge(){
+    var price=loungeUpgradeCost(state.lounge);if(price===null)return;if(state.money<price)return notify('Need '+fmt(price-state.money)+' more');
+    var wasLot=!state.lounge;buyLoungeTier(state);var tier=loungeTier(state.lounge);
+    if(wasLot)buildRise[7]=1;burst({x:LOUNGE_DOOR.x,z:LOUNGE_DOOR.z},'#f0a7c8');playSound(wasLot?'build':'sparkle',state.sound);telemetry.send('lounge_tier',{tier:state.lounge});
+    notify(wasLot?'LOUNGE OPEN · '+tier.name:'LOUNGE · '+tier.name.toUpperCase(),'upgrade');paintThumbnails();updateMarkers.key=null;render.invalidated=true;renderUI();save();if(navigator.vibrate)navigator.vibrate(18);
+  }
+  function selectSecurity(){loungeSelected=false;securitySelected=true;showTray('factory');renderUI();var card=document.querySelector('[data-security]');if(card&&card.scrollIntoView)card.scrollIntoView({block:'nearest',inline:'nearest'});if(navigator.vibrate)navigator.vibrate(8)}
+  function selectMachine(i){securitySelected=false;loungeSelected=false;selected=i;showTray('factory');renderUI();if(machineTabs[i]&&machineTabs[i].scrollIntoView)machineTabs[i].scrollIntoView({block:'nearest',inline:'nearest'});if(navigator.vibrate)navigator.vibrate(8)}
+  // Construction: the door and each station are raised for free, in line order, with the intro explaining what each one does.
+  // Building never charges cash because a shop with no pickup counter cannot earn any.
+  var DOOR_POS={x:-9.1,z:9.3};
+  function isBuilt(key){return key==='door'?state.doorBuilt:state.lines[key]>0}
+  function buildStation(key){
+    if(isBuilt(key))return false;
+    if(key==='door'){state.doorBuilt=true;buildRise[6]=1;burst(DOOR_POS,'#f0d89a');securitySelected=true;loungeSelected=false;paintThumbnails()}
+    else{if(!isOpen(key)){notify('Build the previous stage first');return false}state.lines[key]=1;buildRise[key]=1;tierFlashes[key]=1;burst(machinePos[key],'#f0d89a');securitySelected=false;loungeSelected=false;selected=key;paintThumbnails()}
+    playSound('build',state.sound);updateMarkers.key=null;render.invalidated=true;renderUI();save();if(navigator.vibrate)navigator.vibrate(18);return true;
+  }
+  function openShop(){
+    if(state.shopOpen)return false;
+    if(!state.doorBuilt)buildStation('door');LINES.forEach(function(_,i){if(!state.lines[i])buildStation(i)});
+    state.shopOpen=true;arrival=arrivalInterval();telemetry.once('shop_opened');celebrateOpening();
+    notify('OPEN FOR BUSINESS');paintThumbnails();updateMarkers.key=null;renderUI();save();return true;
+  }
+  // Skipping or escaping the intro still leaves a working shop behind.
+  function finishConstruction(){if(!state.shopOpen)openShop()}
+  function buySelected(){if(loungeSelected)return upgradeLounge();if(securitySelected)return state.doorBuilt?trainIdChecker(1):buildStation('door');var line=LINES[selected];if(!isOpen(selected))return notify('Build the previous stage first');if(!state.lines[selected])return buildStation(selected);var c=cost(selected);if(state.money<c)return notify('Need '+fmt(c-state.money)+' more');var oldTier=stationTier(selected);state.money-=c;state.lines[selected]++;telemetry.once('first_upgrade',{station:line.name});trackStationLevel(selected);if(stationTier(selected)>oldTier)tierFlashes[selected]=1;paintThumbnails();burst(machinePos[selected]);notify(line.name+' · LEVEL '+state.lines[selected],'upgrade');renderUI();save();if(navigator.vibrate)navigator.vibrate(18)}
   function boostAll(){if(state.globalLevel>=BOOST_MAX)return;var c=boostCost(state.globalLevel);if(state.money<c)return notify('Need '+fmt(c-state.money)+' more');state.money-=c;state.globalLevel++;state.multiplier=Math.pow(1.25,state.globalLevel);burst({x:0,z:0},colors.orange);notify('ALL STAGES +25%','upgrade');renderUI();save()}
   function claimOrder(){var o=milestone(state.contract);if(!o||state.lifetime<o.goal)return;state.money+=o.reward;state.contract++;notify(fmt(o.reward)+' ORDER BONUS');renderUI();save()}
 
@@ -2882,9 +3858,8 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     '<path d="m5 23 17-17 5 5-17 17Z M8 20l5 5m7-17 5 5M7 7c-3-3 3-3 0-6"/>',
     '<rect x="5" y="5" width="22" height="22" rx="4"/><path d="M5 16h22M16 5v22M9 10h3m8 0h3M9 21h3m8 0h3"/>'
   ];
-  var menuPanel=document.createElement('section');menuPanel.className='product-line';menuPanel.setAttribute('aria-labelledby','productLineTitle');menuPanel.innerHTML='<h2 id="productLineTitle">Sell as</h2><div class="format-options">'+FORMATS.map(function(f,i){return '<button id="format'+i+'" type="button"><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+productIcons[i]+'</svg><strong>'+f.name+'</strong><small></small></button>'}).join('')+'</div><p id="formatBenefit"></p>';
-  $('strainDetail').after(menuPanel);
-  FORMATS.forEach(function(_,i){$('format'+i).onclick=function(){if(chooseFormat(state,i)){save();renderUI();notify(FORMATS[i].name+' featured','upgrade')}}});
+  // Each strain's card carries its own Sell-as pills (see renderFlowers); a format's unlock is paid once, for every strain.
+  function chooseStrainFormat(strain,index){if(chooseFormat(state,index,strain)){syncDominantFormat();save();renderUI();notify(STRAINS[strain].name.toUpperCase()+' · SOLD AS '+FORMATS[index].name.toUpperCase(),'upgrade')}}
   var prestigePanel=document.createElement('details');prestigePanel.className='depth-panel prestige-panel';prestigePanel.innerHTML=
     '<summary><svg class="prestige-sprout" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V11M12 14C3 14 3 7 3 7s9-1 9 7ZM12 11c0-8 9-9 9-9s0 9-9 9Z"/></svg><span>New beginnings</span><small id="prestigeStatus"></small><svg class="prestige-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></summary>'+
     '<div class="prestige-body"><div class="prestige-rank-track" id="prestigeComparison" role="group"><div class="prestige-rank"><span id="prestigeCurrentRank"></span><strong id="prestigeCurrentRate"></strong><small>base sales</small></div><svg id="prestigeArrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h17m-6-6 6 6-6 6"/></svg><div class="prestige-rank is-next" id="prestigeNext"><span id="prestigeNextRank"></span><strong id="prestigeNextRate"></strong><small>base sales</small></div></div>'+
@@ -2929,7 +3904,7 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     if(report){$('returnTime').textContent=duration(report.seconds*1000)+' away · estimated earnings (4-hour cap, 1× rate)';$('returnEarnings').innerHTML=report.earnings.map(function(n,i){return '<li><span>'+(['Main store'].concat(STORES.map(function(s){return s.name})))[i]+'</span><strong>'+fmt(n)+'</strong></li>'}).join('');$('returnGoals').textContent=report.goals+' goals ready to collect on return. Customer service and deliveries resume while playing.';}
     $('nextInvestment').textContent='Next improvement: '+investment.name+' · '+fmt(investment.price)+(state.money<investment.price?' ('+fmt(investment.price-state.money)+' to go)':' · ready');
     var goalsReady=[0,1,2].filter(function(i){var g=goalStatus(p,i,rewardScale());return g.progress>=g.target}).length;if($('goalsBadge')){$('goalsBadge').textContent=goalsReady;$('goalsBadge').hidden=!goalsReady;$('goalsOpen').classList.toggle('has-ready',goalsReady>0);if($('shiftGoalsReady'))$('shiftGoalsReady').textContent=goalsReady?goalsReady+' ready':''}
-    [0,1,2].forEach(function(i){var g=goalStatus(p,i,rewardScale());$('goalTitle'+i).textContent=g.title;$('goalProgress'+i).value=g.progress/g.target*100;$('goalCount'+i).textContent=Math.floor(g.progress)+' / '+g.target+' · '+p.goalsCompleted+' goals completed';$('goalClaim'+i).textContent='Collect '+fmt(g.reward);$('goalClaim'+i).disabled=g.progress<g.target;var gated=g.kind==='online'&&!deliveryBuilt()&&g.progress<g.target;if(gated){$('goalCount'+i).textContent='First build the delivery pad · '+fmt(AUTO_DRONE_COST);$('goalClaim'+i).textContent='View delivery pad';$('goalClaim'+i).disabled=false;}});
+    [0,1,2].forEach(function(i){var g=goalStatus(p,i,rewardScale());$('goalTitle'+i).textContent=g.title;$('goalProgress'+i).value=g.progress/g.target*100;$('goalCount'+i).textContent=(g.kind==='revenue'?fmt(g.progress)+' / '+fmt(g.target):abbr(g.progress)+' / '+abbr(g.target))+' · '+abbr(p.goalsCompleted)+' goals completed';$('goalClaim'+i).textContent='Collect '+fmt(g.reward);$('goalClaim'+i).disabled=g.progress<g.target;var gated=g.kind==='online'&&!deliveryBuilt()&&g.progress<g.target;if(gated){$('goalCount'+i).textContent='First build the delivery pad · '+fmt(AUTO_DRONE_COST);$('goalClaim'+i).textContent='View delivery pad';$('goalClaim'+i).disabled=false;}});
     var reputationTarget=p.reputation<20?20:60;
     $('reputationStatus').textContent=p.reputation+' loyalty';
     $('reputationNext').textContent=p.reputation>=60?'VIPs unlocked':'VIPs at 60';
@@ -3022,14 +3997,19 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
     if(destination==='flowers')return showTray('flowers');showTray('empire');if(destination==='empire'){empireShell.show('home');return;}
     var i=destination==='regulars'?state.empire.network.stores.findIndex(function(b){return !b.relationship}):0;empireShell.openStore(Math.max(0,i));if(destination==='mara'||destination==='regulars'){var people=$('opTab'+Math.max(0,i)+'2');if(people)people.click();}
   }});
-  var startGuide=mountStartGuide({showTray:showTray,collapse:function(){showTray('factory')},fit:fitControls,paintHero:paintIntroArt,sound:function(kind){playSound(kind,state.sound)},report:function(name,props){telemetry.send(name,props)}});var guideReplay=document.createElement('button');guideReplay.type='button';guideReplay.className='guide-replay';guideReplay.textContent='Replay the start guide';guideReplay.onclick=function(){startGuide.open()};document.querySelector('.shop-reset').prepend(guideReplay);mountSettings({getState:function(){return state},setSpeed:setGameSpeed});
+  var startGuide=mountStartGuide({showTray:showTray,collapse:function(){showTray('factory')},fit:fitControls,paintHero:paintIntroArt,sound:function(kind){playSound(kind,state.sound)},report:function(name,props){telemetry.send(name,props)},
+    // Construction steps: the guide asks whether a site is built, builds it on a tap, opens the shop at the end and, if
+    // skipped, finishes the job itself. On phones the sheet drops away so every site is on screen beneath the card.
+    isBuilt:isBuilt,build:buildStation,shopOpen:function(){return state.shopOpen},openShop:openShop,finish:finishConstruction,
+    sheet:function(){if(width<780)collapsePanel()},reserve:function(px){guideReserve=px;fitControls()},
+    select:function(key){loungeSelected=key==='lounge';securitySelected=key==='door';if(key!=='door'&&key!=='lounge')selected=key;renderUI()}});var guideReplay=document.createElement('button');guideReplay.type='button';guideReplay.className='guide-replay';guideReplay.textContent='Replay the start guide';guideReplay.onclick=function(){startGuide.open()};document.querySelector('.shop-reset').prepend(guideReplay);mountSettings({getState:function(){return state},setSpeed:setGameSpeed});
   manageDialog($('resetModal'),function(){$('resetModal').hidden=true});manageDialog(prestigeDialog,function(){prestigeDialog.hidden=true});
   Array.prototype.forEach.call(document.querySelectorAll('[data-empire-view]'),function(button){button.onclick=function(){var view=button.getAttribute('data-empire-view');Array.prototype.forEach.call(document.querySelectorAll('[data-empire-view]'),function(b){b.setAttribute('aria-pressed',String(b===button))});Array.prototype.forEach.call(document.querySelectorAll('[data-empire-section]'),function(section){section.hidden=section.getAttribute('data-empire-section')!==view});document.querySelector('[data-pane=empire]').scrollTop=0;fitControls()}});
 
   function syncMapView(){
     var id=state.empire.activeStore;document.body.dataset.storeView=id?'branch':'main';
     $('branchMapMarker').hidden=!id;
-    $('world').setAttribute('aria-label',id?BRANCH_THEMES[id-1].name+'. '+BRANCH_THEMES[id-1].description+' Drag to pan, pinch to zoom, or tap the counter to manage.':'Isometric dispensary. Drag to pan, pinch to zoom, and tap a station.');
+    $('world').setAttribute('aria-label',id?BRANCH_THEMES[id-1].name+'. '+BRANCH_THEMES[id-1].description+' Drag or use arrow keys to pan, pinch to zoom, or tap the counter to manage.':'Isometric dispensary. Drag or use arrow keys to pan, pinch to zoom, and tap a station.');
     renderStoreView();
   }
   function visitStore(id,collapse){
@@ -3114,50 +4094,75 @@ import { SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, d
 
   $('upgradeQueue').onclick=upgradeQueue;
   // The card's button fixes the bottleneck when affordable (or opens the Shop for foot traffic); otherwise it just shows the station.
-  // The counters are only "traffic bound" while Floor flow can still be bought; once it is maxed the fix is the station itself.
-  function isTrafficBound(slow){return slow>=4&&state.trafficLevel<COMPONENTS[0].max&&basketSize()/arrivalInterval()<stationThroughput(slow)}
-  // The single answer to "what should I upgrade next?": the counters are only starved of customers if Floor flow can still be
-  // bought, in which case Floor flow is the fix; otherwise it is the slowest station itself.
-  function recommendation(){var slow=slowestStation();if(isTrafficBound(slow))return{kind:'component',index:0,name:'Floor flow',price:componentCost(0)};return{kind:'station',index:slow,name:['Seeds','Grow','Harvest','Pack','Orders','Pickup'][slow],price:cost(slow)}}
+  // The counters are only "traffic bound" while an arrivals booster can still be bought; once both are maxed the fix is the station itself.
+  function isTrafficBound(slow){return slow>=4&&trafficFix()!==null&&basketSize()/arrivalInterval()<stationThroughput(slow)}
+  // Customers arrive too slowly for the counters. Floor flow (+15% arrivals a level) and Street signage (+4%) both bring
+  // more through the door: recommend whichever buys the most arrivals per dollar, and while only one of them is within
+  // reach — the cash in hand plus a minute and a half of income — that one, so a $174M line never heads the list
+  // when a $23M one does the same job.
+  function trafficFix(){
+    var options=[{index:0,gain:.15},{index:COMPONENTS.findIndex(function(c){return c.key==='signLevel'}),gain:.04}]
+      .filter(function(o){return state[COMPONENTS[o.index].key]<COMPONENTS[o.index].max})
+      .map(function(o){var price=componentCost(o.index);return{kind:'component',index:o.index,name:COMPONENTS[o.index].name,price:price,value:o.gain/price,reach:price<=state.money+incomeRate()*90?1:0}});
+    options.sort(function(a,b){return (b.reach-a.reach)||(b.value-a.value)});
+    return options[0]||null;
+  }
+  // The single answer to "what should I upgrade next?": the counters are only starved of customers if an arrivals booster can
+  // still be bought, in which case the better-value one is the fix; otherwise it is the slowest station itself.
+  function recommendation(){var slow=slowestStation();if(isTrafficBound(slow))return trafficFix();return{kind:'station',index:slow,name:['Seeds','Grow','Harvest','Pack','Orders','Pickup'][slow],price:cost(slow)}}
   function actOnRecommendation(){var r=recommendation();if(r.kind==='component'){showTray('boosts');if(shopBrowser&&shopBrowser.show)shopBrowser.show(2);renderUI();var card=$('componentBuy'+r.index).parentElement;card.classList.remove('is-recommended');void card.offsetWidth;card.classList.add('is-recommended');if(card.scrollIntoView)card.scrollIntoView({block:'nearest'});return}if(activeTray!=='factory')showTray('factory');selectMachine(r.index);if(state.money>=cost(r.index))buySelected()}
-  $('flowAction').onclick=function(){if(state.gameSpeed===0)return setGameSpeed(1);actOnRecommendation()};
+  $('flowAction').onclick=function(){if(state.gameSpeed===0)return setGameSpeed(1);if(!state.shopOpen){if(!state.doorBuilt)return buildStation('door');var next=state.lines.indexOf(0);return next<0?openShop():buildStation(next)}actOnRecommendation()};
   LINES.forEach(function(_,i){$('staffMax'+i).onclick=function(){trainStaffMax(i)}});
-  $('trainIdChecker').onclick=function(){trainIdChecker(1)};
+  $('trainIdChecker').onclick=function(){if(!state.doorBuilt)return buildStation('door');trainIdChecker(1)};
   $('trainIdCheckerMax').onclick=function(){trainIdChecker(10000)};
   $('fulfillOnlineMax').onclick=function(){sendOnlineOrders(state.lines[3]>=10?Infinity:10)};
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){updateMarkers.key=null;render.invalidated=true});
-  window.addEventListener('resize',resize);$('buyMachine').onclick=buySelected;$('buyMachineMax').onclick=buySelectedMax;$('upgradeStorage').onclick=upgradeStorage;$('boost').onclick=boostAll;$('claim').onclick=claimOrder;$('resetOpen').onclick=function(){$('resetModal').hidden=false};$('resetCancel').onclick=function(){$('resetModal').hidden=true};$('resetConfirm').onclick=function(){resetRun(0,state.sound)};function resetRun(rank,sound){if(rank>0)telemetry.send('prestige',{rank:rank});state=fresh();state.empire.prestige=rank;state.sound=sound;readyWork=0;work=[0,0,0,0,0,0];batchRemainder=[0,0,0,0];customers=[];arrival=0;customerId=0;deliveryDrones=[];particles=[];taskClocks.fill(0);taskActivity.fill(0);cropGrowth=[.15,.4,.7,.95];tierFlashes.fill(0);recentPickupRatings=[];animationTime=0;sceneTime=0;crateTime=0;render.last=undefined;save();$('resetModal').hidden=true;notify('FACTORY RESET');syncMapView();paintThumbnails();renderUI()};
+  window.addEventListener('resize',resize);$('buyMachine').onclick=buySelected;$('buyMachineMax').onclick=buySelectedMax;$('upgradeStorage').onclick=upgradeStorage;$('boost').onclick=boostAll;$('claim').onclick=claimOrder;$('resetOpen').onclick=function(){$('resetModal').hidden=false};$('resetCancel').onclick=function(){$('resetModal').hidden=true};$('resetConfirm').onclick=function(){resetRun(0,state.sound)};function resetRun(rank,sound){if(rank>0)telemetry.send('prestige',{rank:rank});state=fresh();state.empire.prestige=rank;state.sound=sound;
+    // A prestige reopens a standing shop; Start over goes back to the building site and replays the intro.
+    if(rank>0){state.lines=LINES.map(function(){return 1});state.doorBuilt=true;state.shopOpen=true}
+    syncDominantFormat();readyWork=0;work=[0,0,0,0,0,0];batchRemainder=[0,0,0,0];customers=[];arrival=0;customerId=0;deliveryDrones=[];particles=[];tickets=[];taskClocks.fill(0);taskActivity.fill(0);cropGrowth=[.15,.4,.7,.95];tierFlashes.fill(0);buildRise.fill(0);confetti=[];recentPickupRatings=[];animationTime=0;sceneTime=0;crateTime=0;render.last=undefined;securitySelected=false;loungeSelected=false;selected=0;updateMarkers.key=null;save();$('resetModal').hidden=true;notify(rank>0?'FACTORY RESET':'STARTING OVER');syncMapView();paintThumbnails();renderUI();if(!state.shopOpen)setTimeout(function(){startGuide.open()},400)};
 
   // The intro waits behind the 21+ gate; a visitor who answers No never sees it.
-  function openGuideAfterGate(){var root=document.documentElement,gate=$('ageGate');if(!gate||root.classList.contains('age-ok'))return setTimeout(function(){startGuide.open()},600);
-    if(!window.MutationObserver)return;new MutationObserver(function(_,observer){if(root.classList.contains('age-ok')){observer.disconnect();setTimeout(function(){startGuide.open()},350)}}).observe(root,{attributes:true,attributeFilter:['class']})}
+  // `resume` picks the intro up at the first unbuilt site when a half-built shop is reloaded.
+  function openGuideAfterGate(resume){var root=document.documentElement,gate=$('ageGate');if(!gate||root.classList.contains('age-ok'))return setTimeout(function(){startGuide.open({resume:resume})},600);
+    if(!window.MutationObserver)return;new MutationObserver(function(_,observer){if(root.classList.contains('age-ok')){observer.disconnect();setTimeout(function(){startGuide.open({resume:resume})},350)}}).observe(root,{attributes:true,attributeFilter:['class']})}
   function finishLoading(){requestAnimationFrame(function(){requestAnimationFrame(function(){$('loading').hidden=true})})}
   var offline=collectOffline();if(offline>=1){setTimeout(function(){notify('WHILE AWAY +'+fmt(offline))},500)}
   // The canvas runs full height behind the sheet; the camera frames the building in the strip above it.
   var dockHeight=0;
-  function fitControls(){document.documentElement.style.setProperty('--hud-height',document.querySelector('.hud').getBoundingClientRect().height+'px');dockHeight=$('sheet').getBoundingClientRect().height;document.documentElement.style.setProperty('--dock-height',dockHeight+'px');resize()}
-  function visibleHeight(){return width>=780?height:Math.max(200,height-dockHeight)}
+  function fitControls(){document.documentElement.style.setProperty('--hud-height',document.querySelector('.hud').getBoundingClientRect().height+'px');
+    var sheet=$('sheet');if(!phoneSheet())sheet.classList.remove('tall');
+    // A tall or gliding sheet keeps the last settled dock height, so the map is framed for the half-open sheet it sits behind.
+    if(!sheet.classList.contains('tall')&&!sheet.classList.contains('fluid')){dockHeight=sheet.getBoundingClientRect().height;if(!sheet.classList.contains('collapsed')&&!paneGlide)sheetHalfHeight=dockHeight}
+    document.documentElement.style.setProperty('--dock-height',dockHeight+'px');resize()}
+  // While the intro's card is docked over the collapsed tray, the map is framed above the card rather than the tray.
+  var guideReserve=0;
+  function visibleHeight(){return width>=780?height:Math.max(200,height-Math.max(dockHeight,guideReserve))}
   if(window.ResizeObserver){new ResizeObserver(fitControls).observe($('sheet'))}
   window.addEventListener('resize',fitControls);
   // Desktop conveniences: the hint names the pointer, and speed and tabs have keys when no field has focus.
   // Hint copy follows the active pointer, and drops the keyboard shortcuts where the map is too narrow to fit them.
   var coarsePointer=window.matchMedia('(pointer:coarse)');
-  function syncGestureHint(){var copy=coarsePointer.matches?'DRAG TO PAN · PINCH TO ZOOM':width<560?'DRAG TO PAN · SCROLL TO ZOOM':'DRAG TO PAN · SCROLL TO ZOOM · SPACE PAUSES · 1 2 4 SET SPEED';if($('gestureHint').textContent!==copy)$('gestureHint').textContent=copy}
+  function syncGestureHint(){var copy=coarsePointer.matches?'DRAG TO PAN · PINCH TO ZOOM':width<560?'DRAG TO PAN · SCROLL TO ZOOM':'DRAG OR ARROWS / WASD TO PAN · SCROLL TO ZOOM · SPACE PAUSES · 1 2 4 SET SPEED';if($('gestureHint').textContent!==copy)$('gestureHint').textContent=copy}
   if(coarsePointer.addEventListener)coarsePointer.addEventListener('change',syncGestureHint);window.addEventListener('resize',syncGestureHint);
   document.addEventListener('keydown',function(e){
     if(e.defaultPrevented||e.metaKey||e.ctrlKey||e.altKey)return;var t=e.target,tag=t&&t.tagName;if(tag==='INPUT'||tag==='SELECT'||tag==='TEXTAREA'||(t&&t.isContentEditable))return;
     if(document.querySelector('.start-guide:not([hidden])')||document.querySelector('.modal-wrap:not([hidden])'))return;
     if(e.key===' '&&t&&t.closest('button,a,summary,[role=button]'))return;
+    // Arrow keys still scroll a panel that has focus; WASD pans from anywhere outside a field.
+    if(PAN_KEYS[e.code]&&!(e.code.indexOf('Arrow')===0&&t&&t.closest('.sheet,.goals-dropdown'))){e.preventDefault();if(!heldPanKeys[e.code]){heldPanKeys[e.code]=true;mapHintActivity()}return}
     if(e.key===' '){e.preventDefault();setGameSpeed(state.gameSpeed===0?1:0)}
     else if(e.key==='1'||e.key==='2'||e.key==='4')setGameSpeed(Number(e.key));
     else if(e.key==='Escape'&&panelOpen)collapsePanel();
   });
+  document.addEventListener('keyup',function(e){if(heldPanKeys[e.code])delete heldPanKeys[e.code]});
+  window.addEventListener('blur',releasePanKeys);
   if(state.empire.returnReport){renderUI()}
   syncMapView();if(!state.empire.returnReport&&state.empire.activeStore){showTray('empire');collapsePanel()}
   paintThumbnails();
-  selected=slowestStation();fitControls();syncGestureHint();renderUI();telemetry.drain();telemetry.session({returning:!firstRun});telemetry.heartbeat();ctx.fillStyle=colors.bg;ctx.fillRect(0,0,width,height);window.__shiftReady=true;finishLoading();if(firstRun&&!startGuide.seen())openGuideAfterGate();requestAnimationFrame(render);setInterval(tick,50);setInterval(function(){renderUI(true)},250);setInterval(function(){if(!document.hidden)save()},5000);window.addEventListener('beforeunload',function(){if(!document.hidden)save()});window.addEventListener('pagehide',function(){if(!document.hidden)save()});
+  selected=slowestStation();fitControls();syncGestureHint();renderUI();telemetry.drain();telemetry.session({returning:!firstRun});telemetry.heartbeat();ctx.fillStyle=colors.bg;ctx.fillRect(0,0,width,height);window.__shiftReady=true;finishLoading();if(!state.shopOpen)openGuideAfterGate(!firstRun);else if(firstRun&&!startGuide.seen())openGuideAfterGate(false);requestAnimationFrame(render);setInterval(tick,50);setInterval(function(){renderUI(true)},250);setInterval(function(){if(!document.hidden)save()},5000);window.addEventListener('beforeunload',function(){if(!document.hidden)save()});window.addEventListener('pagehide',function(){if(!document.hidden)save()});
   document.body.dataset.pageHidden=String(document.hidden);
-  document.addEventListener('visibilitychange',function(){document.body.dataset.pageHidden=String(document.hidden);tickTime=performance.now();tickRemainder=0;if(document.hidden){save()}else{collectOffline();if(state.empire.returnReport){renderUI()}renderUI()}});
+  document.addEventListener('visibilitychange',function(){document.body.dataset.pageHidden=String(document.hidden);tickTime=performance.now();tickRemainder=0;if(document.hidden){releasePanKeys();save()}else{collectOffline();if(state.empire.returnReport){renderUI()}renderUI()}});
 
-  if(document.modelContext&&document.modelContext.registerTool){document.modelContext.registerTool({name:'read_factory_status',title:'Read factory status',description:'Read cash, production, and machine levels.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:function(){return{orderCounters:state.orderCounters,reservedWalkInBags:customers.filter(function(c){return c.ordered&&!c.bag}).reduce(function(n,c){return n+(c.bags||1)},0),orderCounterPositions:orderCounterPositions(state.orderCounters),autoDrone:state.autoDrone,deliveryDrones:deliveryDrones.length,productMenu:state.productMenu,prestige:state.empire.prestige,contract:state.contract,viewedStore:state.empire.activeStore,branchLevels:state.empire.stores.map(function(s){return s.level}),branchProjects:state.empire.stores.map(function(s){return s.projects}),network:state.empire.network,reputation:state.empire.reputation,management:state.empire.stores,goalsCompleted:state.empire.goalsCompleted,branchIncome:branchRate(state.empire)*state.gameSpeed,cash:Math.floor(state.money),lifetime:Math.floor(state.lifetime),perSecond:production()*state.gameSpeed,gameSpeed:state.gameSpeed,paused:state.gameSpeed===0,lineLevels:state.lines,stock:state.stock,customersServed:state.sold,employeeLevels:state.staff,onlineCompleted:state.onlineCompleted,camera:{zoom:zoom,panX:panX,panY:panY,angle:angle},customers:customers.map(function(c){return{kind:c.kind,id:c.id,phase:c.phase,ordered:c.ordered,bag:c.bag,bags:c.bags||0,orderCounter:c.orderCounter,x:c.x,z:c.z,serviceElapsed:c.serviceElapsed||0}})}}});}
+  if(document.modelContext&&document.modelContext.registerTool){document.modelContext.registerTool({name:'read_factory_status',title:'Read factory status',description:'Read cash, production, and machine levels.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:function(){return{orderCounters:state.orderCounters,reservedWalkInBags:customers.filter(function(c){return c.ordered&&!c.bag}).reduce(function(n,c){return n+(c.bags||1)},0),orderCounterPositions:orderCounterPositions(state.orderCounters),autoDrone:state.autoDrone,deliveryDrones:deliveryDrones.length,productMenu:state.productMenu,prestige:state.empire.prestige,contract:state.contract,viewedStore:state.empire.activeStore,branchLevels:state.empire.stores.map(function(s){return s.level}),branchProjects:state.empire.stores.map(function(s){return s.projects}),network:state.empire.network,reputation:state.empire.reputation,management:state.empire.stores,goalsCompleted:state.empire.goalsCompleted,branchIncome:branchRate(state.empire)*state.gameSpeed,cash:Math.floor(state.money),lifetime:Math.floor(state.lifetime),perSecond:production()*state.gameSpeed,gameSpeed:state.gameSpeed,paused:state.gameSpeed===0,lineLevels:state.lines,shopOpen:state.shopOpen,doorBuilt:state.doorBuilt,stock:state.stock,customersServed:state.sold,employeeLevels:state.staff,onlineCompleted:state.onlineCompleted,camera:{zoom:zoom,panX:panX,panY:panY,angle:angle},orderRoute:queueRoute(false),pickupRoute:queueRoute(true),lounge:{level:state.lounge,seats:loungeSeats(state.lounge),seated:loungeSeated(),waiting:loungeWaiting().length,sessions:state.loungeSessions,earned:state.loungeEarned,rate:loungeCurrentRate(state.lounge,loungeSeated(),flowerValue())*state.gameSpeed,nextCost:loungeUpgradeCost(state.lounge)},customers:customers.map(function(c){return{kind:c.kind,id:c.id,phase:c.phase,ordered:c.ordered,bag:c.bag,bags:c.bags||0,kiosk:!!c.kiosk,lounge:!!c.lounge,orderCounter:c.orderCounter,pickupTicket:c.pickupTicket||0,walking:!!c.walking,x:c.x,z:c.z,serviceElapsed:c.serviceElapsed||0}})}}});}
 })();

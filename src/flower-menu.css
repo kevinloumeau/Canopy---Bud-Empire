@@ -75,7 +75,7 @@
 .strain-hero .strain-pips i{width:6px;height:6px}
 
 /* Hero: large jar, name and buyers, three stat tiles, two actions. */
-.strain-hero{display:grid;grid-template-columns:64px minmax(0,1fr);grid-template-areas:"art info" "art stats" "details details" "actions actions";gap:6px 10px;align-items:center;padding:8px 10px 10px;border-radius:16px;border:1px solid #d8ead23a;background:#ffffff06;border:1px solid color-mix(in srgb,var(--strain) 30%,#d8ead21f);background:linear-gradient(160deg,color-mix(in srgb,var(--strain) 12%,transparent),transparent 55%),#ffffff06}
+.strain-hero{display:grid;grid-template-columns:64px minmax(0,1fr);grid-template-areas:"art info" "art stats" "details details" "format format" "actions actions";gap:6px 10px;align-items:center;padding:8px 10px 10px;border-radius:16px;border:1px solid #d8ead23a;background:#ffffff06;border:1px solid color-mix(in srgb,var(--strain) 30%,#d8ead21f);background:linear-gradient(160deg,color-mix(in srgb,var(--strain) 12%,transparent),transparent 55%),#ffffff06}
 .strain-hero.is-locked{border-color:#d8ead21f;background:#ffffff05}
 .strain-hero-art{grid-area:art;width:64px;height:80px;filter:drop-shadow(0 10px 14px #0006)}
 .strain-hero-art svg{width:100%;height:100%}
@@ -108,7 +108,13 @@
 .menu-board .product-line .format-options svg{grid-column:1;grid-row:1/3;width:20px;height:24px}
 .menu-board .product-line .format-options strong{grid-column:2;grid-row:1;min-width:0;font-size:12px;line-height:1.25;white-space:normal;overflow-wrap:anywhere}
 .menu-board .product-line .format-options small{grid-column:2;grid-row:2;min-width:0;font-size:11px;line-height:1.25;color:#bdcdb5;overflow-wrap:anywhere}
-.menu-board .product-line #formatBenefit{margin:0;font-size:11px;line-height:1.45}
+.menu-board .product-line #formatBenefit,.menu-board .product-line .format-benefit{margin:0;font-size:11px;line-height:1.45}
+/* Sell-as pills inside a strain's card: the strain's own format is pressed; a locked format shows its one-off unlock price. */
+.strain-hero .strain-format{grid-area:format;min-width:0;margin:2px 0 0}.strain-hero .strain-format .format-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.strain-hero .strain-format .format-options button{display:grid;grid-template-columns:20px minmax(0,1fr);grid-template-rows:auto auto;align-items:center;column-gap:6px;row-gap:2px;min-width:0;min-height:48px;padding:6px 8px;border-radius:10px;text-align:left}
+.strain-hero .strain-format .format-options svg{grid-column:1;grid-row:1/3;width:20px;height:24px}.strain-hero .strain-format .format-options strong{grid-column:2;grid-row:1;font-size:12px;line-height:1.2}.strain-hero .strain-format .format-options small{grid-column:2;grid-row:2;font-size:11px;line-height:1.2;color:#bdcdb5}
+.strain-hero .strain-format h2{margin:0 0 4px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#9fb09a}.strain-hero .strain-format .format-benefit{margin:4px 0 0;font-size:11px;line-height:1.4;color:#c9d6c2}
+.strain-hero .strain-format .format-options button[aria-pressed=true]{border-color:#a4cb89;box-shadow:inset 0 0 0 1px #a4cb8955}
 
 /* Guide: short, collapsed by default. */
 .menu-board .strain-guide{margin:0}
@@ -116,7 +122,7 @@
 
 /* At the narrowest phone widths, place icons above the text instead of squeezing words beside them. */
 @media (max-width:360px){
-  .strain-hero{grid-template-areas:"art info" "stats stats" "details details" "actions actions"}
+  .strain-hero{grid-template-areas:"art info" "stats stats" "details details" "format format" "actions actions"}
   .menu-board .product-line .format-options button{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;justify-items:center;row-gap:4px;min-height:84px;padding:8px 4px;text-align:center}
   .menu-board .product-line .format-options svg{grid-column:1;grid-row:1}
   .menu-board .product-line .format-options strong{grid-column:1;grid-row:2}
@@ -155,7 +161,7 @@
   .strain-pips{display:none}
 }}
 @container (min-width:560px){
-  .strain-hero{grid-template-columns:96px minmax(0,1fr) auto;grid-template-areas:"art info actions" "art stats actions" "details details details";align-items:center}
+  .strain-hero{grid-template-columns:96px minmax(0,1fr) auto;grid-template-areas:"art info actions" "art stats actions" "details details details" "format format format";align-items:center}
   .strain-hero-art{width:96px;height:120px}
   .strain-hero-actions{grid-template-columns:1fr;min-width:170px;margin-top:0}
 }

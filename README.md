@@ -9,6 +9,7 @@
 
 <p align="center">
   <a href="https://kevinloumeau.github.io/Canopy---Bud-Empire/"><strong>Play the hosted build</strong></a>
+  &nbsp;·&nbsp; <a href="https://kevinloumeau.github.io/Canopy---Bud-Empire/welcome/">Launch page</a>
   &nbsp;·&nbsp; <a href="#run-locally">Run locally</a>
   &nbsp;·&nbsp; <a href="#a-neighborhood-of-your-own">Explore the stores</a>
   &nbsp;·&nbsp; <a href="docs/GUIDE.md">Game & developer guide</a>
@@ -39,9 +40,9 @@ Each branch has its own architecture, projects, people and operations. They shar
 
 <table>
   <tr>
-    <td width="33%"><a href="docs/assets/riverside.jpg"><img src="docs/assets/riverside.jpg" alt="Riverside's cedar shop, riverwalk, pergola and waterside seating." width="100%"></a></td>
-    <td width="33%"><a href="docs/assets/old-town.jpg"><img src="docs/assets/old-town.jpg" alt="Old Town's brick boutique, arched windows and botanical mezzanine." width="100%"></a></td>
-    <td width="33%"><a href="docs/assets/city-center.jpg"><img src="docs/assets/city-center.jpg" alt="City Center's glass flagship, planted atrium and urban plaza." width="100%"></a></td>
+    <td width="33%"><a href="docs/assets/riverside.jpg"><img src="docs/assets/riverside.jpg" alt="Riverside's cedar shop with its loft and glasshouse, the footbridge over the river, and the far-bank boathouse." width="100%"></a></td>
+    <td width="33%"><a href="docs/assets/old-town.jpg"><img src="docs/assets/old-town.jpg" alt="Old Town's three-storey brick boutique on a market square, with the bakery next door, clock tower and fountain." width="100%"></a></td>
+    <td width="33%"><a href="docs/assets/city-center.jpg"><img src="docs/assets/city-center.jpg" alt="City Center's glass flagship under its tower, with the office block next door, reflecting pool, street and metro entrance." width="100%"></a></td>
   </tr>
   <tr>
     <td valign="top"><strong>Riverside</strong><br><sub>Cedar, river light and a neighborhood pace. Cultivation and supply operations.</sub></td>
@@ -58,13 +59,13 @@ Tap a station to see what the next level changes. Keep the map in view, open the
 | --- | --- |
 | **Stations** | Compare upgrades and improve the production chain. |
 | **Staff** | Train the team, from door security to pickup. |
-| **Menu** | Feature strains and develop new product formats. |
+| **Menu** | Feature strains and choose, per strain, whether it sells as flower, pre-rolls or edibles. |
 | **Deliveries** | Dispatch web orders and manage drone automation. |
 | **Shop** | Add equipment, storage, kiosks and customer comforts. |
 | **Empire** | Grow branches, meet regulars and collect rewards. |
 
-**Touch:** drag to pan, pinch to zoom, tap to manage.<br>
-**Desktop:** drag and scroll; <kbd>Space</kbd> pauses, <kbd>1</kbd> <kbd>2</kbd> <kbd>4</kbd> set speed, and <kbd>Esc</kbd> closes overlays. Focused controls retain their normal keyboard behavior.
+**Touch:** drag to pan, pinch to zoom, tap to manage. The 1× speed button pauses when pressed a second time, and resumes on the next press.<br>
+**Desktop:** drag and scroll, or hold the arrow keys or <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> to glide the map; <kbd>Space</kbd> pauses, <kbd>1</kbd> <kbd>2</kbd> <kbd>4</kbd> set speed, and <kbd>Esc</kbd> closes overlays. Focused controls retain their normal keyboard behavior, so the arrows still scroll a panel that has focus.
 
 <details>
 <summary><strong>See the phone interface</strong></summary>
@@ -107,7 +108,7 @@ Progress saves automatically in your browser. Older saves migrate forward, and a
 <details>
 <summary><strong>Saves, installation and offline behavior</strong></summary>
 
-- Progress uses `shift-save`, with `shift-save-backup` as a fallback. The guide uses `shift-guide-seen`.
+- Progress uses `shift-save`, with `shift-save-backup` as a fallback. The guide uses `shift-guide-seen`. A new shop starts as construction sites and the intro raises them one tap at a time before the shop opens; saves from before that change load as open shops.
 - Saves belong to a browser and origin. `localhost`, `127.0.0.1`, different ports and the hosted game have separate progress; cloning the repo does not transfer a save.
 - The web manifest, home-screen icons and production service worker support installation and an offline page fallback. The service worker is disabled on local development origins.
 - Offline earnings are estimates. The game does not invent completed deliveries or customer visits while you are away.
@@ -148,15 +149,20 @@ The unit suite covers economy, migration, progression, branches, strains, delive
 | [`src/main.js`](src/main.js) | Main shop, Canvas renderer, customers, input and saves |
 | [`src/economy.js`](src/economy.js) | Throughput, tiers, baskets and reward calculations |
 | [`src/order-counters.js`](src/order-counters.js) | Staffed expansion, queue assignment and reservations |
+| [`src/lounge.js`](src/lounge.js) | Smoking-lounge levels, admission and session pricing |
 | [`src/journey.js`](src/journey.js) | Story chapters and saved completion |
 | [`src/progression.js`](src/progression.js) | Branches, career, rewards, goals and events |
 | [`src/operations.js`](src/operations.js) | Stock, staff, transfers, regulars and customization |
 | [`src/branch-maps.js`](src/branch-maps.js) | The three neighborhood scenes |
 | [`src/strains.js`](src/strains.js) · [`src/depth.js`](src/depth.js) | Strains, product formats and prestige |
 | [`src/deliveries.js`](src/deliveries.js) · [`src/auto-drone.js`](src/auto-drone.js) | Web demand and automated dispatch |
+| [`welcome/`](welcome/) | The launch landing page, built as a second Vite page at `/welcome/` |
+| [`scripts/capture-showcase.mjs`](scripts/capture-showcase.mjs) · [`capture-live-panes.mjs`](scripts/capture-live-panes.mjs) | Headless-Chrome gameplay captures and live sheet markup from a seeded showcase save |
 | [`tests/`](tests/) | Unit tests and browser regression helpers |
 
 The recent browser helpers are [`experience-check.js`](tests/experience-check.js), [`order-counters-check.js`](tests/order-counters-check.js) and [`kiosk-software-check.js`](tests/kiosk-software-check.js). They are browser modules served through Vite and require their documented fixtures. They are not Node CLI scripts.
+
+[`construction-check.mjs`](tests/construction-check.mjs) is a Node script that drives installed Chrome over the DevTools protocol (no dependency) and walks the construction intro at phone and desktop sizes against a running server. [`queue-check.mjs`](tests/queue-check.mjs) uses the same harness on a seeded busy shop to check that the order line fills its rope pen and stays on the roped route, and that the pickup line is served first come, first served. [`lounge-check.mjs`](tests/lounge-check.mjs) does the same for the smoking lounge: admissions, seats, jar burn and the back-door exit.
 
 Older `tests/*-check.cjs` helpers use Playwright and installed Chrome; Playwright is not a package dependency. Set `PLAYWRIGHT_MODULE` and `GAME_URL` as needed, and review older selectors against the current interface. See the [developer guide](docs/GUIDE.md#testing).
 

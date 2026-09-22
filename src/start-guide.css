@@ -51,10 +51,54 @@
 .start-guide.is-hero .guide-next{flex:1;min-height:50px;font-size:15px;box-shadow:0 6px 18px #0b1c1640,inset 0 1px 0 #ffffff22}
 .start-guide.is-hero .guide-skip{flex:0 0 auto}
 @media(prefers-reduced-motion:reduce){.guide-hero-art,.guide-hero::after{animation:none}}
-/* Steps that point at the sheet lift the card so the target stays visible. */
-.start-guide[data-step="1"] .guide-card,.start-guide[data-step="3"] .guide-card,.start-guide[data-step="4"] .guide-card{top:calc(var(--hud-height,60px) + 18px)}
-.start-guide[data-step="2"] .guide-card{top:calc(var(--hud-height,60px) + 26px)}
-@media(min-width:780px){.guide-card,.start-guide[data-step] .guide-card{left:auto;right:420px;top:auto;bottom:40px;width:380px}}
+/* Construction steps: the tray is collapsed, so the card docks over it at the bottom and the whole map stays clear of it.
+   The ring around a site pulses until it is tapped, then settles green for the reveal. */
+@media(max-width:779px){.start-guide.is-site .guide-card,.start-guide.is-open .guide-card{top:auto;bottom:max(12px,calc(env(safe-area-inset-bottom,0px) + 8px))}}
+.start-guide.is-site .guide-dots,.start-guide.is-open .guide-dots{display:none}
+.start-guide.is-site .guide-card,.start-guide.is-open .guide-card{padding-top:16px}
+.start-guide.is-site h2{font-size:19px}
+.start-guide.is-site #guideText{margin-bottom:12px}
+/* The eyebrow's side margins belong to the hero (whose card has no padding); ordinary cards already pad. */
+.start-guide:not(.is-hero) .guide-card .guide-eyebrow{margin-left:0;margin-right:0}
+/* The tap hint is a paragraph inside the actions row: it sits flush left, on the buttons' centre line, in the site gold. */
+.guide-card .guide-tap{display:flex;align-items:center;gap:6px;margin:0 auto 0 0;padding:0;font-size:12px;line-height:1.25;font-weight:600;color:#f0dc9a}
+.guide-card .guide-tap[hidden]{display:none}
+.guide-tap svg{flex:0 0 auto;width:18px;height:18px;animation:guide-tap-nudge 1.6s ease-in-out infinite}
+@keyframes guide-tap-nudge{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px) rotate(-6deg)}}
+.start-guide.is-build .guide-ring{border-color:#f0d89a;cursor:pointer;animation:guide-site-pulse 1.5s ease-in-out infinite}
+@keyframes guide-site-pulse{0%,100%{outline:3px solid #f0d89a00;outline-offset:2px}50%{outline:3px solid #f0d89a99;outline-offset:7px}}
+.start-guide.is-built .guide-ring{border-color:#b6e58c;outline:3px solid #b6e58c66;outline-offset:6px;transition:border-color .2s,outline-color .2s}
+.start-guide.is-built .guide-next{background:#3f6b45;color:#dcefc0}
+.start-guide.is-open .guide-next{flex:1;min-height:50px;font-size:15px;box-shadow:0 6px 18px #0b1c1640,inset 0 1px 0 #ffffff22}
+.start-guide.is-open .guide-actions{flex-direction:row-reverse;justify-content:space-between}
+.guide-skip[hidden]{display:none}
+@media(prefers-reduced-motion:reduce){.guide-tap svg,.start-guide.is-build .guide-ring{animation:none}.start-guide.is-build .guide-ring{outline:3px solid #f0d89a80;outline-offset:5px}}
+
+/* Grand opening: the copy turns to the celebration, a plaque on two strings drops in, swings and flips from Closed to
+   Open, the world behind gets a warm flash (the scene rains confetti on its own), then the card lifts away. */
+.guide-sign{position:relative;width:188px;height:66px;margin:14px auto 12px;perspective:640px;animation:sign-drop 1.4s cubic-bezier(.2,.9,.3,1.1) both;transform-origin:50% -18px}
+.guide-sign[hidden]{display:none}
+.guide-actions[hidden]{display:none}
+.guide-sign-string{position:absolute;top:-18px;width:2px;height:20px;border-radius:1px;background:linear-gradient(#e3d1a655,#e3d1a6cc);left:38px;transform:rotate(9deg);transform-origin:50% 0}
+.guide-sign-string+.guide-sign-string{left:auto;right:38px;transform:rotate(-9deg)}
+.guide-plaque{position:absolute;inset:0;transform-style:preserve-3d;animation:sign-flip .8s cubic-bezier(.3,1.35,.45,1) .45s both}
+.guide-face{position:absolute;inset:0;display:grid;place-items:center;border-radius:14px;font:800 23px/1 'Bricolage Grotesque',sans-serif;letter-spacing:.16em;text-transform:uppercase;-webkit-backface-visibility:hidden;backface-visibility:hidden;box-shadow:0 10px 22px #0b1c1655,inset 0 1px 0 #ffffff26}
+.guide-face.is-closed{background:linear-gradient(160deg,#33301e,#241f12);color:#c6d8bf;border:2px solid #e6c95a55}
+.guide-face.is-open{background:linear-gradient(150deg,#f7e6b4,#e3d1a6 60%,#d8c28f);color:#1c3527;border:2px solid #fff3cf;transform:rotateY(180deg)}
+.guide-face.is-open::before,.guide-face.is-open::after{content:'✿';position:absolute;top:50%;font-size:14px;transform:translateY(-50%);color:#55733e}
+.guide-face.is-open::before{left:16px}.guide-face.is-open::after{right:16px}
+@keyframes sign-drop{0%{opacity:0;transform:translateY(-22px) rotate(-6deg)}22%{opacity:1;transform:translateY(0) rotate(6deg)}48%{transform:rotate(-4deg)}74%{transform:rotate(2.5deg)}100%{transform:rotate(0)}}
+@keyframes sign-flip{from{transform:rotateY(0)}to{transform:rotateY(180deg)}}
+.start-guide.is-opening .guide-eyebrow{color:#b6e58c}
+.start-guide.is-opening h2,.start-guide.is-opening #guideText{animation:guide-copy-swap .45s ease-out both}
+@keyframes guide-copy-swap{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.start-guide.is-opening .guide-card{box-shadow:inset 0 1px 0 #f3ffe52b,0 12px 28px #00000055,0 0 0 1px #f0d89a33,0 0 60px #f0d89a2e}
+.start-guide.is-opening .guide-dim{background:radial-gradient(75% 65% at 50% 42%,#f6e4b066 0%,#f0d89a22 45%,#f0d89a00 72%);animation:open-flash 1.3s ease-out both;pointer-events:none}
+@keyframes open-flash{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
+.start-guide.is-leaving .guide-card{animation:guide-out .42s cubic-bezier(.4,0,.8,.4) both}
+@keyframes guide-out{to{opacity:0;transform:translateY(-16px) scale(.97)}}
+@media(prefers-reduced-motion:reduce){.guide-sign,.guide-plaque,.start-guide.is-opening .guide-dim,.start-guide.is-leaving .guide-card,.start-guide.is-opening h2,.start-guide.is-opening #guideText{animation:none}}
+@media(min-width:780px){.guide-card,.start-guide[data-step] .guide-card{left:auto;right:420px;top:auto;bottom:40px;width:380px}.start-guide.is-site .guide-card,.start-guide.is-open .guide-card{left:24px;right:auto;top:calc(var(--hud-height,60px) + 18px);bottom:auto}}
 @media(prefers-reduced-motion:reduce){.guide-card{animation:none}.guide-ring{transition:none}}
 .shop-reset .guide-replay{margin-right:auto}
 

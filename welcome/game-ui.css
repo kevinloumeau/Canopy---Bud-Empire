@@ -1,0 +1,34 @@
+/* Generated: the game's own stylesheets for the live panes, loaded inside shadow roots so nothing leaks into the page. */
+@import url('../src/style.css');
+@import url('../src/ui.css');
+@import url('../src/factory-tray.css');
+@import url('../src/dispensary.css');
+@import url('../src/illustrated.css');
+@import url('../src/glass.css');
+@import url('../src/empire.css');
+@import url('../src/operations.css');
+@import url('../src/shop-browser.css');
+@import url('../src/tray-bar.css');
+@import url('../src/empire-pane.css');
+@import url('../src/empire-stores.css');
+@import url('../src/hud-bar.css');
+@import url('../src/legibility.css');
+@import url('../src/stations-compact.css');
+@import url('../src/flower-menu.css');
+@import url('../src/sheet-height.css');
+@import url('../src/deliveries.css');
+@import url('../src/experience.css');
+:host{--ink:#10110e;--panel:#1a1c17;--line:#34372f;--paper:#f0efe8;--acid:#d7ff43;--orange:#ff7a27;--muted:#969b8d;--safe-bottom:env(safe-area-inset-bottom,0px);--dock-height:330px;--muted:#a9afa0;--acid:#f5c344;--ink:#111317;--paper:#f2f4f5;--muted:#a8aeb6;--dock-height:250px;--acid:#b6e58c;--ink:#10251d;--paper:#edf2e5;--muted:#b1c5b6;--ink:#30332e;--paper:#f8f0dc;--acid:#315b75;--muted:#626953;--acid:#315d46;--paper:#f2f2df;--ink:#34483d;--paper:#fbfcf7;--acid:#568266;--paper:#e9eddf;--muted:#b7c5b4;--panel:#1e2d25;--line:#435649;--menu-glass:rgba(26,48,38,.82);
+ --menu-edge:rgba(228,249,225,.25);
+ --menu-control:rgba(215,239,207,.09);
+ --menu-text:#f0f5e8;
+ --menu-muted:#d0ddc9;--tray-tab-ink:#d3e0cb;--tray-tab-active:#f6faed;--tray-badge:#e9c96a}
+
+/* Landing-page overrides: the sheet is a specimen in the flow, not a tray pinned to the viewport. */
+:host{display:block;font-family:'Bricolage Grotesque','Space Grotesk',sans-serif;color:#f0f5e8;line-height:1.35}
+.live-sheet.sheet{position:relative!important;inset:auto!important;top:auto!important;left:auto!important;right:auto!important;bottom:auto!important;width:auto!important;max-width:none!important;min-height:0!important;max-height:none!important;height:auto!important;margin:0!important;transform:none!important;padding:12px 10px 10px!important;overflow:visible!important}
+.live-sheet.sheet>[data-pane]{height:auto!important;max-height:none!important;overflow:visible!important;padding-bottom:0!important}
+.live-sheet button:not(.machine-nav button):not(.store-card){pointer-events:none;opacity:.85}
+.live-sheet .machine-thumb{display:none!important}
+.live-sheet .flow-guide{cursor:default}
+.live-sheet .store-card.is-live-focus{outline:2px solid #a8c884;outline-offset:2px;background:linear-gradient(155deg,rgba(227,245,219,.14),rgba(196,229,180,.05))}

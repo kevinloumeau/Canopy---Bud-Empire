@@ -1,8 +1,9 @@
 // Sound effects: a small synthesised kit (no audio files), so the build stays self-contained and offline.
-// Every cue is short, quiet and throttled per kind; the register and chime are the loudest at roughly -20 dBFS.
+// Every cue is short, quiet and throttled per kind; the chime and the upgrade arpeggio are the loudest at roughly -20 dBFS.
+// The sale cue is deliberately the softest: it fires on every pickup, so it is a low, muted tap rather than a ding.
 // makeSound() returns play(kind, enabled). Mobile browsers only start audio inside a user gesture, so main.js also
 // calls play.unlock() on the first pointer or key event to create and resume the context while sound is on.
-const THROTTLE={tap:60,sale:140,upgrade:200,denied:250,chime:2200,whoosh:600,sparkle:400,build:400,open:1000,coin:90};
+const THROTTLE={tap:60,sale:450,upgrade:200,denied:250,chime:2200,whoosh:600,sparkle:400,build:400,open:1000,coin:90};
 export function makeSound(){
  let context=null,master=null,noise=null;const last={};
  function ensure(){
@@ -32,8 +33,8 @@ export function makeSound(){
  const CUES={
   // Soft UI tick for tabs and toggles.
   tap(){hiss(.05,.04,0,2400,1400,2);note('sine',1500,.02,.05,0);},
-  // Cash register: a bright double ding with a drawer click underneath.
-  sale(){hiss(.06,.05,0,3200,900,1.5);note('triangle',1760,.09,.18,0);note('triangle',2349,.08,.24,.07);note('sine',3520,.03,.16,.07);},
+  // A sale: the muted thump of a bag set on the counter and one soft, low note — no bell, no high harmonics.
+  sale(){hiss(.035,.07,0,700,220,1.2);note('sine',523,.03,.15,0);note('sine',784,.012,.12,.03);},
   // A single coin for repeated ticks such as offline earnings.
   coin(){note('triangle',2093,.06,.12,0);note('sine',3136,.03,.1,.03);},
   // Upgrade: a rising three-note arpeggio.

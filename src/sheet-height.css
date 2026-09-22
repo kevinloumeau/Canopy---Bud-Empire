@@ -90,6 +90,27 @@ html body .sheet>[data-pane=employees]{display:flex;flex-direction:column}
  .gesture-hint{bottom:calc(var(--dock-height,250px) + 10px)}
 }
 
+/* Pulling the sheet up. On phones the header is a grabber: dragged (or tapped with the double chevron) past its
+   half-open height the sheet fills the screen below the HUD, and the open pane stretches to whatever height the sheet
+   has while it follows the finger or glides between heights. */
+#panelExpand{display:none}
+/* Collapsed, the whole top strip is the handle: a full-width button, not just the pill drawn on it. */
+.sheet.collapsed .panel-header{padding:0}
+.sheet.collapsed .panel-header #panelToggle{width:100%;height:36px;border-radius:14px 14px 0 0}
+@media(max-width:779px){
+ .sheet .panel-header{position:relative;cursor:grab}
+ /* Drags may start from any part of the sheet that does not scroll; the browser must not claim those touches. */
+ .sheet .panel-header,.sheet #stockStatus,.sheet #stockStatus .stock-item,.sheet .customer-mood,.sheet .tray-tabs,.sheet .tray-tabs button{touch-action:none}
+ .sheet:not(.collapsed) .panel-header::before{content:'';position:absolute;top:3px;left:50%;width:36px;height:4px;margin-left:-18px;border-radius:2px;background:#cfe0c6;opacity:.4}
+ .sheet:not(.collapsed) #panelExpand{display:grid;place-items:center;margin-left:auto;padding:0}
+ .sheet .panel-header #panelExpand svg{width:18px;height:18px;transition:transform .25s ease}
+ .sheet .panel-header #panelExpand[aria-pressed=true] svg{transform:rotate(180deg)}
+ html body .sheet.tall{height:calc(100vh - var(--hud-height,60px) - 14px);height:calc(100dvh - var(--hud-height,60px) - 14px);max-height:none}
+ html body .sheet.fluid{max-height:none}
+ html body .sheet.tall>[data-pane],html body .sheet.fluid>[data-pane]{flex:1 1 auto;height:auto;max-height:none;min-height:0}
+}
+@media(prefers-reduced-motion:reduce){.sheet .panel-header #panelExpand svg{transition:none}}
+
 /* Station strip: icon, name, level. Taller cards use the room the pane already has. */
 .sheet .machine-nav button{grid-template-rows:24px auto auto;grid-template-areas:"icon" "name" "status";row-gap:3px;padding:10px 2px 9px;min-height:76px}
 .sheet .machine-nav .station-icon{width:24px;height:24px}

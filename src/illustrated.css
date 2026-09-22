@@ -240,11 +240,12 @@ button:focus-visible{outline:2px solid #d0e6a7;outline-offset:3px}
 .sheet [data-pane="employees"] .employee-list{overflow:visible;max-height:none;overscroll-behavior:auto}
 
 .station-training{display:block;width:100%;min-height:36px;margin:10px 0 0;border:1px solid #61795d;border-radius:8px;background:#2e4535;color:#dce8cf;font:inherit;font-size:11px;cursor:pointer}.station-training:disabled{opacity:.55;cursor:default}
-/* Controls float above a full-width game canvas instead of reserving a sidebar. */
+/* Controls float above a full-width game canvas instead of reserving a sidebar. The map controls take the top-left
+   corner under the brand: the sheet opens up the right-hand side and would cover a right-anchored stack. */
 @media(min-width:780px){
  .world{inset:0}
  .sheet{box-shadow:0 10px 32px #10201855}
- .map-controls{right:20px;top:140px}
+ .map-controls{left:20px;right:auto;top:140px}
 }
 
 .toast.is-upgrade{display:flex;align-items:center;gap:9px}

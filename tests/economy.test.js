@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {counterLanes,stationTier,tierBoost,retailBoost,batchSize,capacity,stationCost,staffCost,basketSize,storageCapacity,readyCapacity,onlineSize,counterServiceDuration,patience,walkSpeed,preferredStrain,rewardScale} from '../src/economy.js';
+import {customerHandoff,HANDOFF_FLOOR,counterLanes,stationTier,tierBoost,retailBoost,batchSize,capacity,stationCost,staffCost,basketSize,storageCapacity,readyCapacity,onlineSize,counterServiceDuration,patience,walkSpeed,preferredStrain,rewardScale} from '../src/economy.js';
 import {migrateProgression,satisfyCustomer,dailyStatus,claimDaily,eventStatus,claimEvent,goalStatus,claimGoal,recordGoal,storeRate,buyStore,STORES} from '../src/progression.js';
 
 test('tiers double output at 10/20/30/50/75/100 and per-level gains stay linear between them',()=>{
@@ -27,7 +27,12 @@ test('counter handoff keeps its 1.4s floor and the service format factor',()=>{
 
 test('queue comfort stretches patience, floor flow speeds walking, curing/duration are exposed as sale bonuses',()=>{
   assert.equal(patience('hurried',0),20);assert.equal(patience('vip',0),15);assert.ok(Math.abs(patience('hurried',1)-23)<1e-9);assert.ok(Math.abs(patience('vip',8)-33)<1e-9);
-  assert.ok(Math.abs(walkSpeed(0)-2.8)<1e-9);assert.ok(Math.abs(walkSpeed(8)-2.8*1.8)<1e-9);assert.ok(Math.abs(walkSpeed(undefined)-2.8)<1e-9);
+  assert.ok(Math.abs(walkSpeed(0)-2.8)<1e-9);assert.ok(walkSpeed(8)>2.8*1.7&&walkSpeed(8)<2.8*1.9);assert.ok(Math.abs(walkSpeed(undefined)-2.8)<1e-9);
+  // Floor flow's pace tops out: level 20 is under 2.2× and level 40 barely faster than 20, so the shop never blurs.
+  assert.ok(walkSpeed(20)<2.8*2.2&&walkSpeed(40)-walkSpeed(20)<.2);
+  // A handoff never drops below the floor however many lanes a counter runs.
+  assert.equal(customerHandoff(4,64,1.4),HANDOFF_FLOOR[4]);assert.equal(customerHandoff(5,64,1.4),HANDOFF_FLOOR[5]);
+  assert.ok(Math.abs(customerHandoff(4,1,3.4)-3.4)<1e-9);assert.ok(Math.abs(customerHandoff(4,6,3.4)-1.7)<1e-9);
   const p=migrateProgression({});
   assert.equal(satisfyCustomer(p,-1,'hurried','everyday',21),1);
   assert.ok(satisfyCustomer(p,-1,'hurried','everyday',21,1.15)>1);
@@ -55,6 +60,9 @@ test('fixed rewards scale with income but never shrink, and the scale is applied
   recordGoal(s.empire,'pickup',10);assert.equal(claimGoal(s,0,4),0,'the scaled target is not met by ten pickups');
   recordGoal(s.empire,'pickup',scaledGoal.target-10);assert.equal(claimGoal(s,0,4),600);
   assert.equal(goalStatus(s.empire,0,0.5).reward,150);
+  // A revenue goal is minutes of income, not seconds: the target tracks income and the bonus stays below it.
+  const revenue=goalStatus(s.empire,2,400);assert.equal(revenue.kind,'revenue');assert.equal(revenue.target,200000);assert.equal(revenue.reward,80000);
+  assert.ok(goalStatus(s.empire,2,4000).target/goalStatus(s.empire,2,400).target===10);
 });
 
 test('branch income follows the main shop retail tier and survives migration',()=>{

@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1a2e24" />
+  <title>Canopy: Bud Empire — a cozy dispensary idle game, free in your browser</title>
+  <meta name="description" content="Grow the goods, welcome the neighborhood, build your empire. Canopy: Bud Empire is a mobile-first idle game inside a living, isometric dispensary. Free, in your browser, no account." />
+  <link rel="canonical" href="https://kevinloumeau.github.io/Canopy---Bud-Empire/welcome/" />
+  <meta name="rating" content="mature" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Canopy: Bud Empire" />
+  <meta property="og:url" content="https://kevinloumeau.github.io/Canopy---Bud-Empire/welcome/" />
+  <meta property="og:title" content="Canopy: Bud Empire — a cozy dispensary idle game" />
+  <meta property="og:description" content="Grow the goods, welcome the neighborhood, build your empire. A mobile-first idle game inside a living, isometric dispensary. Free, in your browser." />
+  <meta property="og:image" content="https://kevinloumeau.github.io/Canopy---Bud-Empire/social-card.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="An isometric cutaway of a multi-floor dispensary: grow lights upstairs, packing benches, three staffed order counters and a customer queue." />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Canopy: Bud Empire — a cozy dispensary idle game" />
+  <meta name="twitter:description" content="Grow the goods, welcome the neighborhood, build your empire. Free, in your browser, no account." />
+  <meta name="twitter:image" content="https://kevinloumeau.github.io/Canopy---Bud-Empire/social-card.jpg" />
+  <link rel="icon" href="../canopy-icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=DM+Mono:wght@500&display=swap" />
+  <link rel="stylesheet" href="./welcome.css" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "VideoGame",
+    "name": "Canopy: Bud Empire",
+    "url": "https://kevinloumeau.github.io/Canopy---Bud-Empire/",
+    "description": "A mobile-first idle game inside a living, isometric dispensary. Grow, harvest, pack, take orders and build a neighborhood of stores.",
+    "genre": ["Idle", "Management", "Simulation"],
+    "applicationCategory": "Game",
+    "operatingSystem": "Web browser",
+    "playMode": "SinglePlayer",
+    "contentRating": "21+",
+    "image": "https://kevinloumeau.github.io/Canopy---Bud-Empire/social-card.jpg",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  }
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="top">
+    <a class="brand" href="../" aria-label="Canopy: Bud Empire, play the game">
+      <svg class="brand-mark" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M24 38V24" stroke="#dce9be" stroke-width="2.5" stroke-linecap="round"/><path d="M24 31C14 32 11 26 12 21c8-1 13 3 12 10Z" fill="#a8c884"/><path d="M24 27c-1-9 4-14 12-14 1 8-3 14-12 14Z" fill="#dce9be"/></svg>
+      <span class="brand-word">canopy<small>Bud Empire</small></span>
+    </a>
+    <nav class="top-nav" aria-label="Page sections">
+      <a href="#how">How it plays</a>
+      <a href="#neighborhood">Neighborhood</a>
+      <a href="#story">Story</a>
+      <a href="#install">Install</a>
+    </nav>
+    <a class="btn btn-primary btn-top" href="../">Play free</a>
+  </header>
+
+  <main id="main">
+    <!-- The pinned phone: the first viewport and the tour share one device. -->
+    <section class="tour" aria-labelledby="hero-title">
+      <div class="tour-copy">
+        <article class="step step-hero" data-screen="stations">
+          <h1 id="hero-title">A little shop.<br>Room to grow.</h1>
+          <p class="lede">Grow the goods. Welcome the neighborhood. Build your empire. Canopy is a cozy idle game set inside a living, isometric dispensary, and it plays right here in your browser.</p>
+          <div class="actions">
+            <a class="btn btn-primary btn-lg" href="../">Play free<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
+            <a class="btn btn-quiet btn-lg" href="#how">How it plays</a>
+          </div>
+          <ul class="facts" aria-label="Good to know">
+            <li>Free</li>
+            <li>No account</li>
+            <li>Phone or desktop</li>
+            <li>Saves on your device</li>
+          </ul>
+          <figure class="step-shot"><img src="./media/phone-stations-2.jpg" width="780" height="1688" alt="Canopy on a phone: the three-floor shop above the Stations sheet, with a bottleneck hint and an Upgrade button." fetchpriority="high" decoding="async"></figure>
+        </article>
+
+        <article class="step step-live" data-screen="stations-0" id="how">
+          <div class="live-pin" id="howPin">
+          <h2>Tap a station. Watch the shop keep up.</h2>
+          <p>Seven stations turn seeds into bags: Security at the door, Seeds, Grow, Harvest, Pack, Orders and Pickup. The game points at whichever one is holding the line up and shows what the next level changes. This is the shop's own upgrade sheet: keep scrolling to walk the line.</p>
+          <div class="live-stage"><div class="live-host" id="liveStations" aria-hidden="true"></div></div>
+          <p class="sr-only">A copy of the game's Stations sheet: the bottleneck row, the seven-station strip and the selected station's level, output and upgrade price.</p>
+          </div>
+          <div class="live-scroll" id="howScroll" aria-hidden="true"></div>
+        </article>
+
+        <article class="step step-menu" data-screen="menu-0" id="menuStep">
+          <div class="menu-pin" id="menuPin">
+          <h2>A menu with personality.</h2>
+          <p>Cultivate four strains and choose what to feature. Trends come and go, regulars have favorites, and VIPs tip for the good stuff. This is the shop's real menu: keep scrolling to pick each strain.</p>
+          <div class="menu-live" id="menuLive" aria-label="The shop menu, as it appears in the game">
+            <div class="menu-board">
+              <div class="menu-board-head"><div class="menu-board-summary"><b>$37</b><small>avg / order</small></div><p class="menu-buyers"><span class="buyer is-time" title="Day: sativas sell +15%, indicas −9%"><svg class="type-glyph is-large" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"></circle><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"></path></svg><b>+15%</b><small>Sativa</small></span><span class="buyer is-trend is-live" style="--strain:#ddbc75" title="Trending · Amber Bloom · +35% price while on the menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 4 5 5.5 5 11a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5.2 1.6 1 2.5 2 2.5 0-4 .5-6.5 1-9Z"></path></svg><i class="bud"><svg viewBox="0 0 20 20" aria-hidden="true"><ellipse cx="10" cy="14" rx="6" ry="4.5" fill="#9b8452"></ellipse><ellipse cx="6.5" cy="10.5" rx="4.2" ry="3.6" fill="#ddbc75"></ellipse><ellipse cx="13.5" cy="10.5" rx="4.2" ry="3.6" fill="#ddbc75"></ellipse><ellipse cx="10" cy="7" rx="4" ry="3.8" fill="#ffe28c"></ellipse><ellipse cx="10" cy="11.5" rx="3.6" ry="3" fill="#ddbc75"></ellipse></svg></i><b class="trend-clock">7:47</b><small>Trending</small></span></p></div>
+              <div class="strain-nav" role="tablist" aria-label="Strains"><button type="button" role="tab" data-tab="0" style="--strain:#aacb85" class="is-on-menu" aria-selected="true"><span class="strain-card-art"><svg class="strain-art" viewBox="0 0 64 80" aria-hidden="true"><defs><linearGradient id="jar0" x1="0" x2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".22"></stop><stop offset=".35" stop-color="#ffffff" stop-opacity=".04"></stop><stop offset=".8" stop-color="#ffffff" stop-opacity=".02"></stop><stop offset="1" stop-color="#ffffff" stop-opacity=".18"></stop></linearGradient></defs><ellipse cx="32" cy="74" rx="20" ry="3.5" fill="#0b1a12" opacity=".35"></ellipse><rect x="12" y="14" width="40" height="58" rx="9" fill="#1c2b23"></rect><path d="M32 52c-6-2-12-8-14-16 8 1 12 7 14 16Zm0 0c6-2 12-8 14-16-8 1-12 7-14 16Z" fill="#708658"></path><ellipse cx="32" cy="46" rx="11" ry="9" transform="rotate(0 32 46)" fill="#92af72"></ellipse><ellipse cx="24" cy="40" rx="9" ry="8" transform="rotate(-25 24 40)" fill="#708658"></ellipse><ellipse cx="40" cy="40" rx="9" ry="8" transform="rotate(25 40 40)" fill="#aacb85"></ellipse><ellipse cx="32" cy="36" rx="10" ry="9" transform="rotate(0 32 36)" fill="#92af72"></ellipse><ellipse cx="26" cy="31" rx="8" ry="7" transform="rotate(-20 26 31)" fill="#708658"></ellipse><ellipse cx="38" cy="31" rx="8" ry="7" transform="rotate(20 38 31)" fill="#aacb85"></ellipse><ellipse cx="32" cy="27" rx="8" ry="8" transform="rotate(0 32 27)" fill="#92af72"></ellipse><ellipse cx="26" cy="34" rx="3.2" ry="1.6" transform="rotate(-30 26 34)" fill="#c9f09d" opacity=".8"></ellipse><ellipse cx="36" cy="29" rx="3.2" ry="1.6" transform="rotate(-30 36 29)" fill="#c9f09d" opacity=".8"></ellipse><ellipse cx="30" cy="24" rx="3.2" ry="1.6" transform="rotate(-30 30 24)" fill="#c9f09d" opacity=".8"></ellipse><ellipse cx="34" cy="42" rx="3.2" ry="1.6" transform="rotate(-30 34 42)" fill="#c9f09d" opacity=".8"></ellipse><path d="M22 38c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#d9c46a" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M41 35c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#d9c46a" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M29 44c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#d9c46a" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M38 45c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#d9c46a" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M33 31c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#d9c46a" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M26 27c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#d9c46a" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><rect x="12" y="14" width="40" height="58" rx="9" fill="url(#jar0)"></rect><rect x="12.6" y="14.6" width="38.8" height="56.8" rx="8.6" fill="none" stroke="#dfe9dc" stroke-opacity=".55" stroke-width="1.2"></rect><path d="M17 24v34" stroke="#ffffff" stroke-opacity=".45" stroke-width="2.2" stroke-linecap="round"></path><rect x="14" y="60" width="36" height="7" rx="2" fill="#aacb85"></rect><rect x="14" y="60" width="36" height="7" rx="2" fill="#000" opacity=".12"></rect><rect x="9" y="8" width="46" height="10" rx="3.5" fill="#3b3a33"></rect><rect x="9" y="8" width="46" height="4" rx="2" fill="#5a584c"></rect></svg></span><b><svg class="type-glyph" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8"></circle><path d="M12 4a8 8 0 0 1 0 16Z"></path></svg>Meadow<br>Mint</b><small>On menu</small><em class="strain-pips" aria-hidden="true"><i class="is-filled"></i><i class="is-filled"></i><i class="is-filled"></i><i class="is-filled"></i><i></i><i></i><i></i><i></i><i></i><i></i></em></button><button type="button" role="tab" data-tab="1" style="--strain:#ddbc75" class="is-on-menu is-trending" aria-selected="false"><span class="strain-card-art"><svg class="strain-art" viewBox="0 0 64 80" aria-hidden="true"><defs><linearGradient id="jar1" x1="0" x2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".22"></stop><stop offset=".35" stop-color="#ffffff" stop-opacity=".04"></stop><stop offset=".8" stop-color="#ffffff" stop-opacity=".02"></stop><stop offset="1" stop-color="#ffffff" stop-opacity=".18"></stop></linearGradient></defs><ellipse cx="32" cy="74" rx="20" ry="3.5" fill="#0b1a12" opacity=".35"></ellipse><rect x="12" y="14" width="40" height="58" rx="9" fill="#1c2b23"></rect><path d="M32 52c-6-2-12-8-14-16 8 1 12 7 14 16Zm0 0c6-2 12-8 14-16-8 1-12 7-14 16Z" fill="#927c4d"></path><ellipse cx="32" cy="47" rx="11" ry="8" transform="rotate(0 32 47)" fill="#bea265"></ellipse><ellipse cx="25" cy="42" rx="8" ry="8" transform="rotate(-20 25 42)" fill="#927c4d"></ellipse><ellipse cx="39" cy="42" rx="8" ry="8" transform="rotate(20 39 42)" fill="#ddbc75"></ellipse><ellipse cx="32" cy="38" rx="9" ry="9" transform="rotate(0 32 38)" fill="#bea265"></ellipse><ellipse cx="27" cy="32" rx="7" ry="8" transform="rotate(-15 27 32)" fill="#927c4d"></ellipse><ellipse cx="37" cy="32" rx="7" ry="8" transform="rotate(15 37 32)" fill="#ddbc75"></ellipse><ellipse cx="32" cy="26" rx="6" ry="9" transform="rotate(0 32 26)" fill="#bea265"></ellipse><ellipse cx="32" cy="20" rx="4" ry="6" transform="rotate(0 32 20)" fill="#927c4d"></ellipse><ellipse cx="26" cy="34" rx="3.2" ry="1.6" transform="rotate(-30 26 34)" fill="#ffde8a" opacity=".8"></ellipse><ellipse cx="36" cy="29" rx="3.2" ry="1.6" transform="rotate(-30 36 29)" fill="#ffde8a" opacity=".8"></ellipse><ellipse cx="30" cy="24" rx="3.2" ry="1.6" transform="rotate(-30 30 24)" fill="#ffde8a" opacity=".8"></ellipse><ellipse cx="34" cy="42" rx="3.2" ry="1.6" transform="rotate(-30 34 42)" fill="#ffde8a" opacity=".8"></ellipse><path d="M22 38c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#e0803f" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M41 35c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#e0803f" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M29 44c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#e0803f" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M38 45c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#e0803f" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M33 31c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#e0803f" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M26 27c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#e0803f" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><rect x="12" y="14" width="40" height="58" rx="9" fill="url(#jar1)"></rect><rect x="12.6" y="14.6" width="38.8" height="56.8" rx="8.6" fill="none" stroke="#dfe9dc" stroke-opacity=".55" stroke-width="1.2"></rect><path d="M17 24v34" stroke="#ffffff" stroke-opacity=".45" stroke-width="2.2" stroke-linecap="round"></path><rect x="14" y="60" width="36" height="7" rx="2" fill="#ddbc75"></rect><rect x="14" y="60" width="36" height="7" rx="2" fill="#000" opacity=".12"></rect><rect x="9" y="8" width="46" height="10" rx="3.5" fill="#3b3a33"></rect><rect x="9" y="8" width="46" height="4" rx="2" fill="#5a584c"></rect></svg></span><b><svg class="type-glyph" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"></circle><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"></path></svg>Amber<br>Bloom</b><small>On menu</small><em class="strain-pips" aria-hidden="true"><i class="is-filled"></i><i class="is-filled"></i><i class="is-filled"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></em></button><button type="button" role="tab" data-tab="2" style="--strain:#baa1cf" class="is-on-menu" aria-selected="false"><span class="strain-card-art"><svg class="strain-art" viewBox="0 0 64 80" aria-hidden="true"><defs><linearGradient id="jar2" x1="0" x2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".22"></stop><stop offset=".35" stop-color="#ffffff" stop-opacity=".04"></stop><stop offset=".8" stop-color="#ffffff" stop-opacity=".02"></stop><stop offset="1" stop-color="#ffffff" stop-opacity=".18"></stop></linearGradient></defs><ellipse cx="32" cy="74" rx="20" ry="3.5" fill="#0b1a12" opacity=".35"></ellipse><rect x="12" y="14" width="40" height="58" rx="9" fill="#1c2b23"></rect><path d="M32 52c-6-2-12-8-14-16 8 1 12 7 14 16Zm0 0c6-2 12-8 14-16-8 1-12 7-14 16Z" fill="#7b6a89"></path><ellipse cx="30" cy="46" rx="12" ry="9" transform="rotate(0 30 46)" fill="#a08ab2"></ellipse><ellipse cx="22" cy="40" rx="9" ry="9" transform="rotate(-30 22 40)" fill="#7b6a89"></ellipse><ellipse cx="42" cy="41" rx="9" ry="9" transform="rotate(30 42 41)" fill="#baa1cf"></ellipse><ellipse cx="32" cy="37" rx="11" ry="10" transform="rotate(0 32 37)" fill="#a08ab2"></ellipse><ellipse cx="25" cy="30" rx="8" ry="8" transform="rotate(-20 25 30)" fill="#7b6a89"></ellipse><ellipse cx="39" cy="30" rx="8" ry="8" transform="rotate(20 39 30)" fill="#baa1cf"></ellipse><ellipse cx="32" cy="25" rx="9" ry="8" transform="rotate(0 32 25)" fill="#a08ab2"></ellipse><ellipse cx="28" cy="20" rx="5" ry="5" transform="rotate(0 28 20)" fill="#7b6a89"></ellipse><ellipse cx="37" cy="21" rx="5" ry="5" transform="rotate(0 37 21)" fill="#baa1cf"></ellipse><ellipse cx="26" cy="34" rx="3.2" ry="1.6" transform="rotate(-30 26 34)" fill="#dbbef4" opacity=".8"></ellipse><ellipse cx="36" cy="29" rx="3.2" ry="1.6" transform="rotate(-30 36 29)" fill="#dbbef4" opacity=".8"></ellipse><ellipse cx="30" cy="24" rx="3.2" ry="1.6" transform="rotate(-30 30 24)" fill="#dbbef4" opacity=".8"></ellipse><ellipse cx="34" cy="42" rx="3.2" ry="1.6" transform="rotate(-30 34 42)" fill="#dbbef4" opacity=".8"></ellipse><path d="M22 38c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#ead3f2" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M41 35c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#ead3f2" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M29 44c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#ead3f2" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M38 45c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#ead3f2" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M33 31c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#ead3f2" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M26 27c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#ead3f2" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><circle cx="24" cy="36" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="38" cy="38" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="30" cy="30" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="36" cy="26" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="27" cy="42" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="34" cy="47" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="40" cy="31" r="1.1" fill="#ffffff" opacity=".85"></circle><rect x="12" y="14" width="40" height="58" rx="9" fill="url(#jar2)"></rect><rect x="12.6" y="14.6" width="38.8" height="56.8" rx="8.6" fill="none" stroke="#dfe9dc" stroke-opacity=".55" stroke-width="1.2"></rect><path d="M17 24v34" stroke="#ffffff" stroke-opacity=".45" stroke-width="2.2" stroke-linecap="round"></path><rect x="14" y="60" width="36" height="7" rx="2" fill="#baa1cf"></rect><rect x="14" y="60" width="36" height="7" rx="2" fill="#000" opacity=".12"></rect><rect x="9" y="8" width="46" height="10" rx="3.5" fill="#3b3a33"></rect><rect x="9" y="8" width="46" height="4" rx="2" fill="#5a584c"></rect></svg></span><b><svg class="type-glyph" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8"></circle><path d="M12 4a8 8 0 0 1 0 16Z"></path></svg>Violet<br>Haze</b><small>On menu</small><em class="strain-pips" aria-hidden="true"><i class="is-filled"></i><i class="is-filled"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></em></button><button type="button" role="tab" data-tab="3" style="--strain:#8ebcbb" aria-selected="false"><span class="strain-card-art"><svg class="strain-art" viewBox="0 0 64 80" aria-hidden="true"><defs><linearGradient id="jar3" x1="0" x2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".22"></stop><stop offset=".35" stop-color="#ffffff" stop-opacity=".04"></stop><stop offset=".8" stop-color="#ffffff" stop-opacity=".02"></stop><stop offset="1" stop-color="#ffffff" stop-opacity=".18"></stop></linearGradient></defs><ellipse cx="32" cy="74" rx="20" ry="3.5" fill="#0b1a12" opacity=".35"></ellipse><rect x="12" y="14" width="40" height="58" rx="9" fill="#1c2b23"></rect><path d="M32 52c-6-2-12-8-14-16 8 1 12 7 14 16Zm0 0c6-2 12-8 14-16-8 1-12 7-14 16Z" fill="#5e7c7b"></path><ellipse cx="32" cy="47" rx="12" ry="8" transform="rotate(0 32 47)" fill="#7aa2a1"></ellipse><ellipse cx="24" cy="42" rx="8" ry="7" transform="rotate(-20 24 42)" fill="#5e7c7b"></ellipse><ellipse cx="40" cy="42" rx="8" ry="7" transform="rotate(20 40 42)" fill="#8ebcbb"></ellipse><ellipse cx="32" cy="39" rx="10" ry="8" transform="rotate(0 32 39)" fill="#7aa2a1"></ellipse><ellipse cx="26" cy="33" rx="8" ry="7" transform="rotate(-15 26 33)" fill="#5e7c7b"></ellipse><ellipse cx="38" cy="33" rx="8" ry="7" transform="rotate(15 38 33)" fill="#8ebcbb"></ellipse><ellipse cx="32" cy="28" rx="9" ry="8" transform="rotate(0 32 28)" fill="#7aa2a1"></ellipse><ellipse cx="32" cy="22" rx="6" ry="6" transform="rotate(0 32 22)" fill="#5e7c7b"></ellipse><ellipse cx="26" cy="34" rx="3.2" ry="1.6" transform="rotate(-30 26 34)" fill="#a8dedd" opacity=".8"></ellipse><ellipse cx="36" cy="29" rx="3.2" ry="1.6" transform="rotate(-30 36 29)" fill="#a8dedd" opacity=".8"></ellipse><ellipse cx="30" cy="24" rx="3.2" ry="1.6" transform="rotate(-30 30 24)" fill="#a8dedd" opacity=".8"></ellipse><ellipse cx="34" cy="42" rx="3.2" ry="1.6" transform="rotate(-30 34 42)" fill="#a8dedd" opacity=".8"></ellipse><path d="M22 38c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#9fe0c9" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M41 35c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#9fe0c9" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M29 44c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#9fe0c9" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M38 45c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#9fe0c9" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M33 31c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#9fe0c9" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M26 27c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#9fe0c9" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><circle cx="24" cy="36" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="38" cy="38" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="30" cy="30" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="36" cy="26" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="27" cy="42" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="34" cy="47" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="40" cy="31" r="1.1" fill="#ffffff" opacity=".85"></circle><rect x="12" y="14" width="40" height="58" rx="9" fill="url(#jar3)"></rect><rect x="12.6" y="14.6" width="38.8" height="56.8" rx="8.6" fill="none" stroke="#dfe9dc" stroke-opacity=".55" stroke-width="1.2"></rect><path d="M17 24v34" stroke="#ffffff" stroke-opacity=".45" stroke-width="2.2" stroke-linecap="round"></path><rect x="14" y="60" width="36" height="7" rx="2" fill="#8ebcbb"></rect><rect x="14" y="60" width="36" height="7" rx="2" fill="#000" opacity=".12"></rect><rect x="9" y="8" width="46" height="10" rx="3.5" fill="#3b3a33"></rect><rect x="9" y="8" width="46" height="4" rx="2" fill="#5a584c"></rect></svg></span><b><svg class="type-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 3a8.5 8.5 0 1 0 6.5 13.5A9 9 0 0 1 14.5 3Z"></path></svg>Midnight<br>Orchid</b><small>Off menu</small><em class="strain-pips" aria-hidden="true"><i class="is-filled"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></em></button></div>
+              <section class="strain-detail" aria-live="polite"><div class="strain-hero-slot" data-i="0"><div class="strain-hero is-on-menu" style="--strain:#aacb85"><div class="strain-hero-art"><svg class="strain-art" viewBox="0 0 64 80" aria-hidden="true"><defs><linearGradient id="jar0" x1="0" x2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".22"></stop><stop offset=".35" stop-color="#ffffff" stop-opacity=".04"></stop><stop offset=".8" stop-color="#ffffff" stop-opacity=".02"></stop><stop offset="1" stop-color="#ffffff" stop-opacity=".18"></stop></linearGradient></defs><ellipse cx="32" cy="74" rx="20" ry="3.5" fill="#0b1a12" opacity=".35"></ellipse><rect x="12" y="14" width="40" height="58" rx="9" fill="#1c2b23"></rect><path d="M32 52c-6-2-12-8-14-16 8 1 12 7 14 16Zm0 0c6-2 12-8 14-16-8 1-12 7-14 16Z" fill="#708658"></path><ellipse cx="32" cy="46" rx="11" ry="9" transform="rotate(0 32 46)" fill="#92af72"></ellipse><ellipse cx="24" cy="40" rx="9" ry="8" transform="rotate(-25 24 40)" fill="#708658"></ellipse><ellipse cx="40" cy="40" rx="9" ry="8" transform="rotate(25 40 40)" fill="#aacb85"></ellipse><ellipse cx="32" cy="36" rx="10" ry="9" transform="rotate(0 32 36)" fill="#92af72"></ellipse><ellipse cx="26" cy="31" rx="8" ry="7" transform="rotate(-20 26 31)" fill="#708658"></ellipse><ellipse cx="38" cy="31" rx="8" ry="7" transform="rotate(20 38 31)" fill="#aacb85"></ellipse><ellipse cx="32" cy="27" rx="8" ry="8" transform="rotate(0 32 27)" fill="#92af72"></ellipse><ellipse cx="26" cy="34" rx="3.2" ry="1.6" transform="rotate(-30 26 34)" fill="#c9f09d" opacity=".8"></ellipse><ellipse cx="36" cy="29" rx="3.2" ry="1.6" transform="rotate(-30 36 29)" fill="#c9f09d" opacity=".8"></ellipse><ellipse cx="30" cy="24" rx="3.2" ry="1.6" transform="rotate(-30 30 24)" fill="#c9f09d" opacity=".8"></ellipse><ellipse cx="34" cy="42" rx="3.2" ry="1.6" transform="rotate(-30 34 42)" fill="#c9f09d" opacity=".8"></ellipse><path d="M22 38c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#d9c46a" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M41 35c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#d9c46a" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M29 44c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#d9c46a" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M38 45c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#d9c46a" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M33 31c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#d9c46a" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M26 27c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#d9c46a" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><rect x="12" y="14" width="40" height="58" rx="9" fill="url(#jar0)"></rect><rect x="12.6" y="14.6" width="38.8" height="56.8" rx="8.6" fill="none" stroke="#dfe9dc" stroke-opacity=".55" stroke-width="1.2"></rect><path d="M17 24v34" stroke="#ffffff" stroke-opacity=".45" stroke-width="2.2" stroke-linecap="round"></path><rect x="14" y="60" width="36" height="7" rx="2" fill="#aacb85"></rect><rect x="14" y="60" width="36" height="7" rx="2" fill="#000" opacity=".12"></rect><rect x="9" y="8" width="46" height="10" rx="3.5" fill="#3b3a33"></rect><rect x="9" y="8" width="46" height="4" rx="2" fill="#5a584c"></rect></svg></div><div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">Everyday · </span>Hybrid · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>4 / 10</small><h2>Meadow Mint</h2><p>Regulars always order this one.</p></div><div class="strain-stats"><span><b>$23</b><small>eighth</small></span><span><b>15.5%</b><small>THC</small></span><span><b>+$2</b><small>next lv</small></span></div><div class="strain-hero-details"><ul class="strain-traits"><li>Easy to grow</li><li>VIP tips +2%</li><li><svg class="type-glyph" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8"></circle><path d="M12 4a8 8 0 0 1 0 16Z"></path></svg>Hybrid · steady day and night</li></ul><p class="strain-perk"><b>☆ House favourite</b> · Level 5: everyday sales pay more</p></div><div class="strain-hero-actions" aria-hidden="true"><button type="button" tabindex="-1" aria-pressed="true" title="Remove from menu">On menu ✓</button><button type="button" tabindex="-1" class="is-primary">Upgrade · $1.58K</button></div></div></div><div class="strain-hero-slot" data-i="1" hidden><div class="strain-hero is-on-menu is-trending" style="--strain:#ddbc75"><div class="strain-hero-art"><svg class="strain-art" viewBox="0 0 64 80" aria-hidden="true"><defs><linearGradient id="jar1" x1="0" x2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".22"></stop><stop offset=".35" stop-color="#ffffff" stop-opacity=".04"></stop><stop offset=".8" stop-color="#ffffff" stop-opacity=".02"></stop><stop offset="1" stop-color="#ffffff" stop-opacity=".18"></stop></linearGradient></defs><ellipse cx="32" cy="74" rx="20" ry="3.5" fill="#0b1a12" opacity=".35"></ellipse><rect x="12" y="14" width="40" height="58" rx="9" fill="#1c2b23"></rect><path d="M32 52c-6-2-12-8-14-16 8 1 12 7 14 16Zm0 0c6-2 12-8 14-16-8 1-12 7-14 16Z" fill="#927c4d"></path><ellipse cx="32" cy="47" rx="11" ry="8" transform="rotate(0 32 47)" fill="#bea265"></ellipse><ellipse cx="25" cy="42" rx="8" ry="8" transform="rotate(-20 25 42)" fill="#927c4d"></ellipse><ellipse cx="39" cy="42" rx="8" ry="8" transform="rotate(20 39 42)" fill="#ddbc75"></ellipse><ellipse cx="32" cy="38" rx="9" ry="9" transform="rotate(0 32 38)" fill="#bea265"></ellipse><ellipse cx="27" cy="32" rx="7" ry="8" transform="rotate(-15 27 32)" fill="#927c4d"></ellipse><ellipse cx="37" cy="32" rx="7" ry="8" transform="rotate(15 37 32)" fill="#ddbc75"></ellipse><ellipse cx="32" cy="26" rx="6" ry="9" transform="rotate(0 32 26)" fill="#bea265"></ellipse><ellipse cx="32" cy="20" rx="4" ry="6" transform="rotate(0 32 20)" fill="#927c4d"></ellipse><ellipse cx="26" cy="34" rx="3.2" ry="1.6" transform="rotate(-30 26 34)" fill="#ffde8a" opacity=".8"></ellipse><ellipse cx="36" cy="29" rx="3.2" ry="1.6" transform="rotate(-30 36 29)" fill="#ffde8a" opacity=".8"></ellipse><ellipse cx="30" cy="24" rx="3.2" ry="1.6" transform="rotate(-30 30 24)" fill="#ffde8a" opacity=".8"></ellipse><ellipse cx="34" cy="42" rx="3.2" ry="1.6" transform="rotate(-30 34 42)" fill="#ffde8a" opacity=".8"></ellipse><path d="M22 38c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#e0803f" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M41 35c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#e0803f" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M29 44c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#e0803f" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M38 45c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#e0803f" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M33 31c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#e0803f" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M26 27c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#e0803f" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><rect x="12" y="14" width="40" height="58" rx="9" fill="url(#jar1)"></rect><rect x="12.6" y="14.6" width="38.8" height="56.8" rx="8.6" fill="none" stroke="#dfe9dc" stroke-opacity=".55" stroke-width="1.2"></rect><path d="M17 24v34" stroke="#ffffff" stroke-opacity=".45" stroke-width="2.2" stroke-linecap="round"></path><rect x="14" y="60" width="36" height="7" rx="2" fill="#ddbc75"></rect><rect x="14" y="60" width="36" height="7" rx="2" fill="#000" opacity=".12"></rect><rect x="9" y="8" width="46" height="10" rx="3.5" fill="#3b3a33"></rect><rect x="9" y="8" width="46" height="4" rx="2" fill="#5a584c"></rect></svg></div><div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">Boutique · </span>Sativa · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>3 / 10</small><h2>Amber Bloom</h2><p>VIPs order the most potent boutique strain on the menu.</p></div><div class="strain-stats"><span><b>$48</b><small>eighth</small></span><span><b>19%</b><small>THC</small></span><span><b>+$4</b><small>next lv</small></span></div><div class="strain-hero-details"><ul class="strain-traits"><li class="is-cost">Grow room −7% · masters with levels</li><li>VIP tips +8%</li><li class="is-live"><svg class="type-glyph" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"></circle><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"></path></svg>Sativa · +15% right now</li><li class="is-trend">Trending · +35% price · <span class="trend-clock">7:46</span></li></ul><p class="strain-perk"><b>☆ Rolls easy</b> · Level 5: faster packing</p></div><div class="strain-hero-actions" aria-hidden="true"><button type="button" tabindex="-1" aria-pressed="true" title="Remove from menu">On menu ✓</button><button type="button" tabindex="-1" class="is-primary">Upgrade · $1.80K</button></div></div></div><div class="strain-hero-slot" data-i="2" hidden><div class="strain-hero is-on-menu" style="--strain:#baa1cf"><div class="strain-hero-art"><svg class="strain-art" viewBox="0 0 64 80" aria-hidden="true"><defs><linearGradient id="jar2" x1="0" x2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".22"></stop><stop offset=".35" stop-color="#ffffff" stop-opacity=".04"></stop><stop offset=".8" stop-color="#ffffff" stop-opacity=".02"></stop><stop offset="1" stop-color="#ffffff" stop-opacity=".18"></stop></linearGradient></defs><ellipse cx="32" cy="74" rx="20" ry="3.5" fill="#0b1a12" opacity=".35"></ellipse><rect x="12" y="14" width="40" height="58" rx="9" fill="#1c2b23"></rect><path d="M32 52c-6-2-12-8-14-16 8 1 12 7 14 16Zm0 0c6-2 12-8 14-16-8 1-12 7-14 16Z" fill="#7b6a89"></path><ellipse cx="30" cy="46" rx="12" ry="9" transform="rotate(0 30 46)" fill="#a08ab2"></ellipse><ellipse cx="22" cy="40" rx="9" ry="9" transform="rotate(-30 22 40)" fill="#7b6a89"></ellipse><ellipse cx="42" cy="41" rx="9" ry="9" transform="rotate(30 42 41)" fill="#baa1cf"></ellipse><ellipse cx="32" cy="37" rx="11" ry="10" transform="rotate(0 32 37)" fill="#a08ab2"></ellipse><ellipse cx="25" cy="30" rx="8" ry="8" transform="rotate(-20 25 30)" fill="#7b6a89"></ellipse><ellipse cx="39" cy="30" rx="8" ry="8" transform="rotate(20 39 30)" fill="#baa1cf"></ellipse><ellipse cx="32" cy="25" rx="9" ry="8" transform="rotate(0 32 25)" fill="#a08ab2"></ellipse><ellipse cx="28" cy="20" rx="5" ry="5" transform="rotate(0 28 20)" fill="#7b6a89"></ellipse><ellipse cx="37" cy="21" rx="5" ry="5" transform="rotate(0 37 21)" fill="#baa1cf"></ellipse><ellipse cx="26" cy="34" rx="3.2" ry="1.6" transform="rotate(-30 26 34)" fill="#dbbef4" opacity=".8"></ellipse><ellipse cx="36" cy="29" rx="3.2" ry="1.6" transform="rotate(-30 36 29)" fill="#dbbef4" opacity=".8"></ellipse><ellipse cx="30" cy="24" rx="3.2" ry="1.6" transform="rotate(-30 30 24)" fill="#dbbef4" opacity=".8"></ellipse><ellipse cx="34" cy="42" rx="3.2" ry="1.6" transform="rotate(-30 34 42)" fill="#dbbef4" opacity=".8"></ellipse><path d="M22 38c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#ead3f2" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M41 35c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#ead3f2" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M29 44c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#ead3f2" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M38 45c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#ead3f2" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M33 31c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#ead3f2" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M26 27c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#ead3f2" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><circle cx="24" cy="36" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="38" cy="38" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="30" cy="30" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="36" cy="26" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="27" cy="42" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="34" cy="47" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="40" cy="31" r="1.1" fill="#ffffff" opacity=".85"></circle><rect x="12" y="14" width="40" height="58" rx="9" fill="url(#jar2)"></rect><rect x="12.6" y="14.6" width="38.8" height="56.8" rx="8.6" fill="none" stroke="#dfe9dc" stroke-opacity=".55" stroke-width="1.2"></rect><path d="M17 24v34" stroke="#ffffff" stroke-opacity=".45" stroke-width="2.2" stroke-linecap="round"></path><rect x="14" y="60" width="36" height="7" rx="2" fill="#baa1cf"></rect><rect x="14" y="60" width="36" height="7" rx="2" fill="#000" opacity=".12"></rect><rect x="9" y="8" width="46" height="10" rx="3.5" fill="#3b3a33"></rect><rect x="9" y="8" width="46" height="4" rx="2" fill="#5a584c"></rect></svg></div><div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">Boutique · </span>Hybrid · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>2 / 10</small><h2>Violet Haze</h2><p>VIPs order the most potent boutique strain on the menu.</p></div><div class="strain-stats"><span><b>$42</b><small>eighth</small></span><span><b>22.5%</b><small>THC</small></span><span><b>+$4</b><small>next lv</small></span></div><div class="strain-hero-details"><ul class="strain-traits"><li class="is-cost">Grow room −14% · masters with levels</li><li>VIP tips +14%</li><li><svg class="type-glyph" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8"></circle><path d="M12 4a8 8 0 0 1 0 16Z"></path></svg>Hybrid · steady day and night</li><li class="is-vip">★ VIP reserve · double baskets</li></ul><p class="strain-perk"><b>☆ Word of mouth</b> · Level 5: boutique sales build reputation</p></div><div class="strain-hero-actions" aria-hidden="true"><button type="button" tabindex="-1" aria-pressed="true" title="Remove from menu">On menu ✓</button><button type="button" tabindex="-1" class="is-primary">Upgrade · $7.77K</button></div></div></div><div class="strain-hero-slot" data-i="3" hidden><div class="strain-hero" style="--strain:#8ebcbb"><div class="strain-hero-art"><svg class="strain-art" viewBox="0 0 64 80" aria-hidden="true"><defs><linearGradient id="jar3" x1="0" x2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".22"></stop><stop offset=".35" stop-color="#ffffff" stop-opacity=".04"></stop><stop offset=".8" stop-color="#ffffff" stop-opacity=".02"></stop><stop offset="1" stop-color="#ffffff" stop-opacity=".18"></stop></linearGradient></defs><ellipse cx="32" cy="74" rx="20" ry="3.5" fill="#0b1a12" opacity=".35"></ellipse><rect x="12" y="14" width="40" height="58" rx="9" fill="#1c2b23"></rect><path d="M32 52c-6-2-12-8-14-16 8 1 12 7 14 16Zm0 0c6-2 12-8 14-16-8 1-12 7-14 16Z" fill="#5e7c7b"></path><ellipse cx="32" cy="47" rx="12" ry="8" transform="rotate(0 32 47)" fill="#7aa2a1"></ellipse><ellipse cx="24" cy="42" rx="8" ry="7" transform="rotate(-20 24 42)" fill="#5e7c7b"></ellipse><ellipse cx="40" cy="42" rx="8" ry="7" transform="rotate(20 40 42)" fill="#8ebcbb"></ellipse><ellipse cx="32" cy="39" rx="10" ry="8" transform="rotate(0 32 39)" fill="#7aa2a1"></ellipse><ellipse cx="26" cy="33" rx="8" ry="7" transform="rotate(-15 26 33)" fill="#5e7c7b"></ellipse><ellipse cx="38" cy="33" rx="8" ry="7" transform="rotate(15 38 33)" fill="#8ebcbb"></ellipse><ellipse cx="32" cy="28" rx="9" ry="8" transform="rotate(0 32 28)" fill="#7aa2a1"></ellipse><ellipse cx="32" cy="22" rx="6" ry="6" transform="rotate(0 32 22)" fill="#5e7c7b"></ellipse><ellipse cx="26" cy="34" rx="3.2" ry="1.6" transform="rotate(-30 26 34)" fill="#a8dedd" opacity=".8"></ellipse><ellipse cx="36" cy="29" rx="3.2" ry="1.6" transform="rotate(-30 36 29)" fill="#a8dedd" opacity=".8"></ellipse><ellipse cx="30" cy="24" rx="3.2" ry="1.6" transform="rotate(-30 30 24)" fill="#a8dedd" opacity=".8"></ellipse><ellipse cx="34" cy="42" rx="3.2" ry="1.6" transform="rotate(-30 34 42)" fill="#a8dedd" opacity=".8"></ellipse><path d="M22 38c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#9fe0c9" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M41 35c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#9fe0c9" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M29 44c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#9fe0c9" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M38 45c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#9fe0c9" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M33 31c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#9fe0c9" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><path d="M26 27c1.5-1.5 3-1.5 4.5 0" fill="none" stroke="#9fe0c9" stroke-width="1.4" stroke-linecap="round" opacity=".9"></path><circle cx="24" cy="36" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="38" cy="38" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="30" cy="30" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="36" cy="26" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="27" cy="42" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="34" cy="47" r="1.1" fill="#ffffff" opacity=".85"></circle><circle cx="40" cy="31" r="1.1" fill="#ffffff" opacity=".85"></circle><rect x="12" y="14" width="40" height="58" rx="9" fill="url(#jar3)"></rect><rect x="12.6" y="14.6" width="38.8" height="56.8" rx="8.6" fill="none" stroke="#dfe9dc" stroke-opacity=".55" stroke-width="1.2"></rect><path d="M17 24v34" stroke="#ffffff" stroke-opacity=".45" stroke-width="2.2" stroke-linecap="round"></path><rect x="14" y="60" width="36" height="7" rx="2" fill="#8ebcbb"></rect><rect x="14" y="60" width="36" height="7" rx="2" fill="#000" opacity=".12"></rect><rect x="9" y="8" width="46" height="10" rx="3.5" fill="#3b3a33"></rect><rect x="9" y="8" width="46" height="4" rx="2" fill="#5a584c"></rect></svg></div><div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">Boutique · </span>Indica · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>1 / 10</small><h2>Midnight Orchid</h2><p>VIPs order the most potent boutique strain on the menu.</p></div><div class="strain-stats"><span><b>$51</b><small>eighth</small></span><span><b>26%</b><small>THC</small></span><span><b>+$5</b><small>next lv</small></span></div><div class="strain-hero-details"><ul class="strain-traits"><li class="is-cost">Grow room −25% · masters with levels</li><li>VIP tips +20%</li><li class="is-cost"><svg class="type-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 3a8.5 8.5 0 1 0 6.5 13.5A9 9 0 0 1 14.5 3Z"></path></svg>Indica · −9% until evening</li></ul><p class="strain-perk"><b>☆ Velvet rope</b> · Level 5: VIPs pay more</p></div><div class="strain-hero-actions" aria-hidden="true"><button type="button" tabindex="-1" aria-pressed="false" title="Add to menu">Add to menu</button><button type="button" tabindex="-1" class="is-primary">Upgrade · $22.8K</button></div></div></div></section>
+            </div>
+          </div>
+          </div>
+          <div class="menu-scroll" id="menuScroll" aria-hidden="true"></div>
+        </article>
+
+        <article class="step step-live" data-screen="deliveries" id="sendStep">
+          <div class="live-pin" id="sendPin">
+          <h2>Send it out.</h2>
+          <p>Web orders arrive as receipts. Build the delivery pad and a drone lifts off from the roof. Upgrade to bulk dispatch and it carries ten orders at a time, whenever the shelves can cover them. Scroll to send this one.</p>
+          <div class="live-stage live-stage-fly" id="flyStage"><div class="live-host" id="liveDeliveries" aria-hidden="true"></div>
+            <svg class="drone" id="drone" viewBox="0 0 64 44" aria-hidden="true">
+              <ellipse class="rotor" cx="11" cy="9" rx="10" ry="2.6"/><ellipse class="rotor" cx="53" cy="9" rx="10" ry="2.6"/>
+              <path class="arm" d="M14 10.5 26 15M50 10.5 38 15"/><circle cx="11" cy="9" r="1.6" fill="#8fa77a"/><circle cx="53" cy="9" r="1.6" fill="#8fa77a"/>
+              <rect x="23" y="13" width="18" height="8" rx="3" fill="#eef3e3"/><rect x="27" y="15" width="10" height="2" rx="1" fill="#a8c884"/>
+              <path class="arm" d="M32 21v5"/><rect x="25.5" y="26" width="13" height="11" rx="1.5" fill="#c98a4a"/><path d="M32 26v11M25.5 31.5h13" stroke="#8a5a2a" stroke-width="1.2"/>
+            </svg></div>
+          <p class="sr-only">A copy of the game's Deliveries sheet: orders waiting, flower packed, the next web-order receipt and its Send button, with the auto-drone switch.</p>
+          </div>
+          <div class="live-scroll live-scroll-short" id="sendScroll" aria-hidden="true"></div>
+        </article>
+
+        <article class="step step-live" data-screen="empire" id="empireStep">
+          <div class="live-pin" id="empirePin">
+          <h2>One shop becomes a neighborhood.</h2>
+          <p>Open Riverside, Old Town and City Center. Each branch has its own building, projects, stock, staff and a regular who remembers you. They share your cash and keep their own story. Scroll through the stores.</p>
+          <div class="live-stage"><div class="live-host" id="liveEmpire" aria-hidden="true"></div></div>
+          <p class="sr-only">A copy of the game's Empire sheet: the current story chapter, rewards ready to collect, and the three store cards with their level and income.</p>
+          </div>
+          <div class="live-scroll" id="empireScroll" aria-hidden="true"></div>
+        </article>
+
+        <article class="step step-live" data-screen="stations" id="nightStep">
+          <div class="live-pin" id="nightPin">
+          <h2>Lights down. Shop still open.</h2>
+          <p>Switch to night and the work lights, fascia strips and the kiosk sign take over. Pan, pinch and zoom around three floors of glass, timber and plants. It is live Canvas 2D, not a picture: the crew keeps moving while you look. Scroll to close up for the night.</p>
+          <div class="actions">
+            <a class="btn btn-primary" href="../">Open the shop<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
+          </div>
+          <figure class="detail detail-fade" style="--cx:0.000;--cy:0.154;--cw:1.000;--ch:0.740"><div class="detail-crop"><img src="./media/phone-stations-2.jpg" width="780" height="1688" alt="The shop by day." loading="lazy" decoding="async"><img class="fade-night" id="nightImg" src="./media/phone-night.jpg" width="780" height="1688" alt="The same shop at night: warm work lights over each station, lit stair treads and a moon icon in the top bar." loading="lazy" decoding="async"></div><figcaption>Night · scroll to turn the lights down</figcaption></figure>
+          </div>
+          <div class="live-scroll live-scroll-short" id="nightScroll" aria-hidden="true"></div>
+        </article>
+      </div>
+
+      <div class="tour-phone" aria-hidden="true">
+        <div class="phone">
+          <div class="phone-screen">
+            <img src="./media/phone-stations-2.jpg" width="780" height="1688" alt="" data-screen="stations" class="is-active" fetchpriority="high" decoding="async">
+            <img src="./media/phone-stations-0.jpg" width="780" height="1688" alt="" data-screen="stations-0" loading="lazy" decoding="async">
+            <img src="./media/phone-stations-1.jpg" width="780" height="1688" alt="" data-screen="stations-1" loading="lazy" decoding="async">
+            <img src="./media/phone-stations-2.jpg" width="780" height="1688" alt="" data-screen="stations-2" loading="lazy" decoding="async">
+            <img src="./media/phone-stations-3.jpg" width="780" height="1688" alt="" data-screen="stations-3" loading="lazy" decoding="async">
+            <img src="./media/phone-stations-4.jpg" width="780" height="1688" alt="" data-screen="stations-4" loading="lazy" decoding="async">
+            <img src="./media/phone-stations-5.jpg" width="780" height="1688" alt="" data-screen="stations-5" loading="lazy" decoding="async">
+            <img src="./media/phone-stations-6.jpg" width="780" height="1688" alt="" data-screen="stations-6" loading="lazy" decoding="async">
+            <img src="./media/phone-menu-0.jpg" width="780" height="1688" alt="" data-screen="menu-0" loading="lazy" decoding="async">
+            <img src="./media/phone-menu-1.jpg" width="780" height="1688" alt="" data-screen="menu-1" loading="lazy" decoding="async">
+            <img src="./media/phone-menu-2.jpg" width="780" height="1688" alt="" data-screen="menu-2" loading="lazy" decoding="async">
+            <img src="./media/phone-menu-3.jpg" width="780" height="1688" alt="" data-screen="menu-3" loading="lazy" decoding="async">
+            <img src="./media/phone-deliveries.jpg" width="780" height="1688" alt="" data-screen="deliveries" loading="lazy" decoding="async">
+            <img src="./media/phone-empire.jpg" width="780" height="1688" alt="" data-screen="empire" loading="lazy" decoding="async">
+            <img src="./media/phone-store-0.jpg" width="780" height="1688" alt="" data-screen="store-0" loading="lazy" decoding="async">
+            <img src="./media/phone-store-1.jpg" width="780" height="1688" alt="" data-screen="store-1" loading="lazy" decoding="async">
+            <img src="./media/phone-store-2.jpg" width="780" height="1688" alt="" data-screen="store-2" loading="lazy" decoding="async">
+            <img src="./media/phone-night.jpg" width="780" height="1688" alt="" data-screen="night" loading="lazy" decoding="async">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- The loop -->
+    <section class="loop" aria-labelledby="loop-title">
+      <div class="loop-head">
+        <h2 id="loop-title">From the first seed to the last handoff.</h2>
+        <p>Start with one shop and a simple loop. Reinvest in the slowest station and the building, the team and the neighborhood grow with you.</p>
+      </div>
+      <ol class="belt" aria-label="The production loop">
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V11M12 14C3 14 3 7 3 7s9-1 9 7ZM12 11c0-8 9-9 9-9s0 9-9 9Z"/></svg><b>Seeds</b><span>Start a batch</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 18V4m0 7L5 6m7 9 7-6M7 18h10l-1 4H8Z"/></svg><b>Grow</b><span>Under the lights</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Zm0 13a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM8 7l12 9M8 17l12-9"/></svg><b>Harvest</b><span>Cut and cure</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8v3H8zM6 6h12l-1 15H7zM9 10h6"/></svg><b>Pack</b><span>Jars to the shelf</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/></svg><b>Orders</b><span>Up to three counters</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8h12l1 13H5L6 8ZM9 8V6a3 3 0 0 1 6 0v2"/></svg><b>Pickup</b><span>Bags out the door</span></li>
+      </ol>
+    </section>
+
+    <!-- The neighborhood -->
+    <section class="stores" id="neighborhood" aria-labelledby="stores-title">
+      <div class="stores-head">
+        <h2 id="stores-title">A neighborhood of your own.</h2>
+        <p>Three branches, three buildings, three kinds of week. They share your cash while keeping their own management and progression.</p>
+      </div>
+      <div class="scenes">
+        <figure class="scene">
+          <img src="../docs/assets/riverside.jpg" width="1600" height="1200" alt="Riverside: a cedar shop on a planted riverwalk with a pergola, string lights, waterside seating and a moored canoe." loading="lazy" decoding="async">
+          <figcaption><b>Riverside</b><span>Cedar, river light and a neighborhood pace. Cultivation and supply.</span></figcaption>
+        </figure>
+        <figure class="scene">
+          <img src="../docs/assets/old-town.jpg" width="1600" height="1200" alt="Old Town: a brick boutique with arched windows, a botanical mezzanine, glass display cases and a striped awning." loading="lazy" decoding="async">
+          <figcaption><b>Old Town</b><span>Brick, brass and botanical displays. A boutique for specialty products.</span></figcaption>
+        </figure>
+        <figure class="scene">
+          <img src="../docs/assets/city-center.jpg" width="1600" height="1200" alt="City Center: a glass flagship with a planted atrium, rooftop gardens, a crosswalk and bicycles out front." loading="lazy" decoding="async">
+          <figcaption><b>City Center</b><span>Glass, rooftop greenery and a busy plaza. Flagship growth and city deliveries.</span></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- Wide shot with the game's own day/night switch -->
+    <section class="wide" aria-labelledby="wide-title">
+      <div class="wide-head">
+        <h2 id="wide-title">Bigger on a desk.</h2>
+        <p>On a laptop the sheet moves aside and the whole cutaway fills the window. Drag to pan, scroll to zoom, Space pauses, and 1, 2 and 4 set the speed.</p>
+        <div class="segmented" role="group" aria-label="Lighting">
+          <button type="button" class="seg is-on" data-light="day" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v2m0 12v2M4 12h2m12 0h2M6.3 6.3l1.4 1.4m8.6 8.6 1.4 1.4M6.3 17.7l1.4-1.4m8.6-8.6 1.4-1.4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/></svg>Day</button>
+          <button type="button" class="seg" data-light="night" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>Night</button>
+        </div>
+      </div>
+      <div class="wide-frame">
+        <img src="./media/desktop-day.jpg" width="1440" height="900" alt="Canopy on a desktop: the three-floor shop in daylight beside the Stations sheet." data-light="day" class="is-active" loading="lazy" decoding="async">
+        <img src="./media/desktop-night.jpg" width="1440" height="900" alt="The same desktop view at night, lit by station work lights and fascia strips." data-light="night" loading="lazy" decoding="async">
+      </div>
+    </section>
+
+    <!-- Story -->
+    <section class="story" id="story" aria-labelledby="story-title">
+      <div class="story-head">
+        <h2 id="story-title">Seven chapters. Three regulars. One block that learns your name.</h2>
+        <p>The story follows your shop from its first ten bags to a network of stores. Mara runs the riverwalk gardening club, Sol has a studio in Old Town, and Kit has one more route to ride. Fill their requests and passing visits turn into something you can count on.</p>
+      </div>
+      <ol class="chapters">
+        <li><span class="ch">Ch. 1</span><b>The first familiar faces</b></li>
+        <li><span class="ch">Ch. 2</span><b>A little room to grow</b></li>
+        <li><span class="ch">Ch. 3</span><b>More than the usual</b></li>
+        <li><span class="ch">Ch. 4</span><b>Roots by the river</b></li>
+        <li><span class="ch">Ch. 5</span><b>Someone knows your name</b></li>
+        <li><span class="ch">Ch. 6</span><b>Three corners of the city</b></li>
+        <li><span class="ch">Ch. 7</span><b>Built to belong</b></li>
+      </ol>
+    </section>
+
+    <!-- Install: the shop in your pocket -->
+    <section class="install" id="install" aria-labelledby="install-title">
+      <div class="install-grid">
+        <div class="install-copy">
+          <h2 id="install-title">Keep it in your pocket.</h2>
+          <p>Canopy is a web app. Add it to your home screen and it opens full-screen like any other game, keeps working offline after the first visit, and picks up where you left off.</p>
+          <dl class="how">
+            <div><dt><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3m-4 4 4-4 4 4M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/></svg>iPhone and iPad</dt><dd>In Safari, tap Share, then <b>Add to Home Screen</b>.</dd></div>
+            <div><dt><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2"/></svg>Android</dt><dd>In Chrome, open the menu, then <b>Install app</b>.</dd></div>
+            <div><dt><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v11H3zM8 20h8m-4-4v4"/></svg>Desktop</dt><dd>Just play in the browser. Chrome and Edge also offer an install icon in the address bar.</dd></div>
+          </dl>
+          <ul class="facts facts-install" aria-label="How saves work">
+            <li>Saves on this device, with a backup</li>
+            <li>Welcome-back report, up to four hours</li>
+            <li>No account, no server keeping score</li>
+          </ul>
+        </div>
+        <figure class="pocket">
+          <div class="pocket-stage">
+            <div class="pocket-phone"><img src="./media/phone-night.jpg" width="780" height="1688" alt="Canopy running full-screen on a phone at night." loading="lazy" decoding="async"></div>
+            <div class="pocket-icon"><img src="../icon-512.png" width="512" height="512" alt="The Canopy home-screen icon: a pale leaf on forest green." loading="lazy" decoding="async"><span>Canopy</span></div>
+          </div>
+          <figcaption>On the home screen, full-screen, offline after the first visit.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- Before you plant -->
+    <section class="notice" aria-label="Age and content notice">
+      <div class="notice-card">
+        <span class="age">21+</span>
+        <p><b>A work of fiction.</b> Canopy is a game about running an imaginary dispensary. Nothing here is for sale, and no real product is involved. The game asks players to confirm they are 21 or older before it opens.</p>
+      </div>
+    </section>
+
+    <!-- Close -->
+    <section class="close" aria-labelledby="close-title">
+      <svg class="close-mark" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M24 38V24" stroke="#dce9be" stroke-width="2.5" stroke-linecap="round"/><path d="M24 31C14 32 11 26 12 21c8-1 13 3 12 10Z" fill="#a8c884"/><path d="M24 27c-1-9 4-14 12-14 1 8-3 14-12 14Z" fill="#dce9be"/></svg>
+      <h2 id="close-title">Plant the first seed.<br>See what grows.</h2>
+      <div class="actions actions-center">
+        <a class="btn btn-primary btn-lg" href="../">Play free<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
+        <button type="button" class="btn btn-quiet btn-lg" id="shareBtn" data-url="https://kevinloumeau.github.io/Canopy---Bud-Empire/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1.5 1.5M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1.5-1.5"/></svg><span>Copy the link</span></button>
+      </div>
+      <p class="close-note">Send it to someone who likes to watch a little shop hum.</p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="foot-row">
+      <a class="brand brand-foot" href="../"><svg class="brand-mark" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M24 38V24" stroke="#dce9be" stroke-width="2.5" stroke-linecap="round"/><path d="M24 31C14 32 11 26 12 21c8-1 13 3 12 10Z" fill="#a8c884"/><path d="M24 27c-1-9 4-14 12-14 1 8-3 14-12 14Z" fill="#dce9be"/></svg><span class="brand-word">canopy<small>Bud Empire</small></span></a>
+      <nav class="foot-nav" aria-label="More">
+        <a href="../">Play</a>
+        <a href="https://github.com/kevinloumeau/Canopy---Bud-Empire/blob/main/docs/GUIDE.md">Game guide</a>
+        <a href="https://github.com/kevinloumeau/Canopy---Bud-Empire">Source on GitHub</a>
+      </nav>
+    </div>
+    <p class="foot-line">Plain JavaScript, Canvas 2D and Vite. Saves stay in your browser. Screenshots are actual gameplay from a developed save. 21+, fiction, nothing for sale.</p>
+  </footer>
+
+  <script type="module" src="./live.js"></script>
+  <script>
+    (function () {
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var doc = document.documentElement;
+      doc.classList.add('js');
+
+      // The pinned phone follows the step in view.
+      var screens = Array.prototype.slice.call(document.querySelectorAll('.phone-screen img'));
+      var steps = Array.prototype.slice.call(document.querySelectorAll('.tour .step'));
+      var activeStep = steps[0] || null;
+      function show(name) {
+        screens.forEach(function (img) { img.classList.toggle('is-active', img.getAttribute('data-screen') === name); });
+      }
+      window.canopyTour = { show: show, isActive: function (el) { return activeStep === el; } };
+      if ('IntersectionObserver' in window && steps.length) {
+        var seen = new Map();
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) { seen.set(e.target, e.intersectionRatio); });
+          var best = null, ratio = 0;
+          steps.forEach(function (s) { var r = seen.get(s) || 0; if (r > ratio) { ratio = r; best = s; } });
+          if (best) { activeStep = best; show(best.getAttribute('data-screen')); }
+        }, { rootMargin: '-35% 0px -35% 0px', threshold: [0, .25, .5, .75, 1] });
+        steps.forEach(function (s) { io.observe(s); });
+      }
+
+      // The real menu: scrolling through the step picks each strain in turn, and the phone follows.
+      var menuStep = document.getElementById('menuStep'), menuScroll = document.getElementById('menuScroll');
+      if (menuStep && menuScroll) {
+        var tabs = Array.prototype.slice.call(menuStep.querySelectorAll('.strain-nav button'));
+        var slots = Array.prototype.slice.call(menuStep.querySelectorAll('.strain-hero-slot'));
+        var selected = -1, menuTicking = false;
+        var select = function (i) {
+          if (i === selected) return;
+          selected = i;
+          tabs.forEach(function (b, k) { b.setAttribute('aria-selected', k === i ? 'true' : 'false'); });
+          slots.forEach(function (el, k) { el.hidden = k !== i; });
+          menuStep.setAttribute('data-screen', 'menu-' + i);
+          if (activeStep === menuStep) show('menu-' + i);
+        };
+        var menuPin = document.getElementById('menuPin');
+        var fitBoard = function () {
+          var vh = window.innerHeight || 1, h = menuPin.offsetHeight, want = window.innerWidth > 900 ? 84 : 72;
+          menuPin.style.top = Math.min(want, vh - h - 12) + 'px';
+        };
+        var menuTick = function () {
+          menuTicking = false;
+          fitBoard();
+          var r = menuScroll.getBoundingClientRect(), vh = window.innerHeight || 1;
+          var t = (vh * .82 - r.top) / r.height; t = t < 0 ? 0 : t > .999 ? .999 : t;
+          select(Math.floor(t * tabs.length));
+        };
+        var onMenuScroll = function () { if (!menuTicking) { menuTicking = true; requestAnimationFrame(menuTick); } };
+        window.addEventListener('scroll', onMenuScroll, { passive: true });
+        window.addEventListener('resize', onMenuScroll);
+        tabs.forEach(function (b, k) { b.addEventListener('click', function () { select(k); }); });
+        menuTick();
+      }
+
+      // Steps rise into place once, like the game's own sheet.
+      if (!reduce && 'IntersectionObserver' in window) {
+        var rise = Array.prototype.slice.call(document.querySelectorAll('.rise, .tour .step:not(.step-hero), .scene, .chapters li, .belt li'));
+        rise.forEach(function (el) { el.classList.add('will-rise'); });
+        var ro = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('is-risen'); ro.unobserve(e.target); } });
+        }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+        rise.forEach(function (el) { ro.observe(el); });
+      }
+
+      // Day / night, the game's own switch.
+      var segs = document.querySelectorAll('.segmented .seg');
+      var wideImgs = document.querySelectorAll('.wide-frame img');
+      Array.prototype.forEach.call(segs, function (btn) {
+        btn.addEventListener('click', function () {
+          var light = btn.getAttribute('data-light');
+          Array.prototype.forEach.call(segs, function (b) { var on = b === btn; b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+          Array.prototype.forEach.call(wideImgs, function (img) { img.classList.toggle('is-active', img.getAttribute('data-light') === light); });
+        });
+      });
+
+      // Copy the link, or share it where the browser can.
+      var share = document.getElementById('shareBtn');
+      if (share) {
+        var label = share.querySelector('span');
+        var url = share.getAttribute('data-url');
+        share.addEventListener('click', function () {
+          var done = function (text) { label.textContent = text; share.classList.add('is-done'); setTimeout(function () { label.textContent = 'Copy the link'; share.classList.remove('is-done'); }, 2200); };
+          if (navigator.share) {
+            navigator.share({ title: 'Canopy: Bud Empire', text: 'A cozy dispensary idle game, free in your browser.', url: url }).then(function () { done('Shared'); }).catch(function () {});
+          } else if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(function () { done('Copied'); }, function () { done(url); });
+          } else {
+            done(url);
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,5 +1,11 @@
 import {migrateOperations,staffLevel} from './operations.js';
 // Persistent empire systems. Rewards never count as earned revenue.
+// Counts and money alike are abbreviated past a thousand — 15.1K, 2.4M — everywhere the app shows a number.
+export function abbr(n){
+  n=Math.max(0,Number.isFinite(n)?n:0);if(n<1000)return String(Math.floor(n));
+  for(const [suffix,size] of [['T',1e12],['B',1e9],['M',1e6],['K',1e3]])if(n>=size){const v=n/size;return v.toFixed(v>=100?0:v>=10?1:2)+suffix;}
+  return String(Math.floor(n));
+}
 export const DAY = 86400000;
 export const HOUR = 3600000;
 export const DAILY = [150, 250, 400, 600, 900, 1300, 2500];
@@ -156,12 +162,15 @@ export function dispatchBulk(state,now=Date.now()){
 export function recordGoal(p,kind,count){if(Object.prototype.hasOwnProperty.call(p.counters,kind)&&Number.isFinite(count)&&count>0)p.counters[kind]=Math.min(Number.MAX_SAFE_INTEGER,p.counters[kind]+count);}
 export function goalStatus(p,i,scale=1){
   const g=p.goals[i],kind=i===0?'pickup':i===1?'online':g.round%2===0?'revenue':'invest';
-  // Targets cycle for variety but grow with income (scale) so goals keep demanding more as the empire grows, not just cycling forever at starter size.
-  const growth=1+Math.log2(Math.max(1,Number.isFinite(scale)?scale:1));
+  // Targets cycle for variety but grow with income (scale) so goals keep demanding more as the empire grows, not just
+  // cycling forever at starter size. Counts grow with the log of income; the revenue target grows with income itself
+  // (scale is income per second over four, so the target is 2–4 minutes of takings) and pays back a fraction of it,
+  // otherwise a late-game shop earns the target in seconds and collects more than it earned.
+  const linear=Math.max(1,Number.isFinite(scale)?scale:1),growth=1+Math.log2(linear);
   const base=kind==='pickup'?10+(g.round%3)*5:kind==='online'?2:kind==='invest'?1:500+(g.round%3)*250;
-  const target=Math.max(1,Math.round(base*growth));
-  const reward=scaledReward(kind==='pickup'?150:kind==='online'?250:300,scale);
-  return {kind,target,reward,progress:Math.min(target,Math.max(0,p.counters[kind]-g.start)),title:kind==='pickup'?'Serve '+target+' customers':kind==='online'?'Complete '+target+' deliveries':kind==='invest'?(target>1?'Improve '+target+' branches or projects':'Improve a branch or build a project'):'Earn $'+target};
+  const target=Math.max(1,Math.round(base*(kind==='revenue'?linear:growth)));
+  const reward=scaledReward(kind==='pickup'?150:kind==='online'?250:kind==='revenue'?200:300,scale);
+  return {kind,target,reward,progress:Math.min(target,Math.max(0,p.counters[kind]-g.start)),title:kind==='pickup'?'Serve '+abbr(target)+' customers':kind==='online'?'Complete '+abbr(target)+' deliveries':kind==='invest'?(target>1?'Improve '+target+' branches or projects':'Improve a branch or build a project'):'Earn $'+abbr(target)};
 }
 export function claimGoal(state,i,scale=1){
   if(!Number.isInteger(i)||i<0||i>2)return 0;

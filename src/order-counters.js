@@ -1,5 +1,6 @@
 export const ORDER_COUNTER_COSTS=[2500,12500];
-export const ORDER_QUEUE_GATE={x:-4,z:6.1};
+// The head of the order line waits here, at the right-hand end of the rope pen, until a counter is free.
+export const ORDER_QUEUE_GATE={x:-2,z:6.1};
 const POSITIONS=[{x:-4,z:2.5},{x:-6.6,z:2.5},{x:-1.4,z:2.5}];
 
 export function migrateOrderCounters(value){
@@ -12,7 +13,9 @@ export function buyOrderCounter(state){
   if(cost===null||!Number.isFinite(state.money)||state.money<cost)return false;
   state.money-=cost;state.orderCounters=count+1;return true;
 }
-export function waitingForCounter(c){return c.idChecked!==false&&!c.kiosk&&!c.ordered&&c.phase!=='leaving'&&c.orderCounter==null;}
+// Lounge guests never order at a counter; counting one as the head of the line froze every counter for as long as
+// they were on the rope or inside.
+export function waitingForCounter(c){return c.idChecked!==false&&!c.kiosk&&!c.ordered&&c.phase!=='leaving'&&c.phase!=='toLounge'&&c.phase!=='lounge'&&c.orderCounter==null;}
 // One shared FIFO line feeds independently staffed counters. A customer keeps
 // their assignment until ordering ends, including while approaching the desk.
 export function assignOrderCounter(customers,count){

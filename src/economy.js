@@ -24,8 +24,15 @@ export function counterLanes(level){return 1+Math.floor(Math.max(0,(level||0)-1)
 export function counterServiceDuration(station,rate,serviceFactor=1){return (1.4+Math.max(1.2/Math.pow(rate,.15),[2,3][station-4]/rate))*(station===5?serviceFactor:1);}
 // Hurried shoppers and VIPs judge their whole visit; Queue comfort stretches how long they stay cheerful.
 export function patience(type,comfortLevel){return (type==='vip'?15:20)*(1+Math.max(0,comfortLevel||0)*.15);}
-// Customers walk a little faster with each Floor flow level, closing the gap between counter capacity and real sales.
-export function walkSpeed(trafficLevel){return 2.8*(1+Math.max(0,trafficLevel||0)*.1);}
+// Customers walk a little faster with each Floor flow level, closing the gap between counter capacity and real sales —
+// with diminishing returns that top out at about 2.2× the base pace, so a fully upgraded shop never turns into a blur.
+export function walkSpeed(trafficLevel){return 2.8*(1+1.2*(1-Math.exp(-Math.max(0,trafficLevel||0)/7)));}
+// However many lanes a counter runs, one customer's handoff never drops below this: a second at the order desk, most
+// of one at pickup. Past that point the shop grows through more counters, kiosks, baskets and prices, not faster hands.
+export const HANDOFF_FLOOR={4:1,5:.7};
+export function customerHandoff(station,level,duration){return Math.max(HANDOFF_FLOOR[station]||0,duration/counterLanes(level));}
+// The doorman's floor: no ID check takes less than a quarter of a second.
+export const ID_CHECK_FLOOR=.25;
 // Regulars want the everyday strain; VIPs reach for the priciest boutique strain on the menu.
 export function preferredStrain(type,menu,levels){
   const boutique=menu.filter(i=>i>0&&levels[i]>0);

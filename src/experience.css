@@ -153,3 +153,30 @@
 @media(prefers-reduced-motion:reduce){
  .sheet .machine-nav button.can-upgrade::after,.world .marker.station-sign.can-upgrade::after{animation:none;transform:none}
 }
+
+/* Construction sites: a dashed kraft plaque on the map reading "Build", and a matching card in the Stations row. */
+.world .marker.station-sign.is-site,.world .marker.station-sign.is-site:not(.selected){border:1px dashed #e6c95acc;background:#2a2617ee;color:#f0dc8a}
+.world .marker.station-sign.is-site .station-sign-level{display:block;color:#f0dc8a;opacity:1}
+.world .marker.station-sign.is-site::after{opacity:1;background:#f0dc8a;animation:none;transform:none;
+ mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 20'%3E%3Cpath d='M3 17l6-6M9.5 5.5 12 3l3 3-2.5 2.5M6 6l4.5 4.5M4.5 7.5 7 5l4 4-2.5 2.5z' fill='none' stroke='black' stroke-width='1.8' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat}
+.world .marker.station-sign.is-site.selected{background:#e6c95a;color:#2a2617;border-style:solid}
+.world .marker.station-sign.is-site.selected .station-sign-level{color:#3d3616}
+.world .marker.station-sign.is-site.selected::after{background:#3d3616}
+.sheet .machine-nav button.is-site{border-style:dashed;border-color:#e6c95a66}
+.sheet .machine-nav button.is-site em,.sheet .machine-nav button.is-site.can-upgrade em{color:#f0dc8a}
+/* A lot for sale: the smoking lounge before it is bought reads like a construction site, in the lounge's own rose. */
+.world .marker.station-sign.is-lot,.world .marker.station-sign.is-lot:not(.selected){border:1px dashed #f0a7c8cc;background:#2a1a22ee;color:#f7c6da}
+.world .marker.station-sign.is-lot .station-sign-level{display:block;color:#f7c6da;opacity:1}
+.world .marker.station-sign.is-lot::after{background:#f0a7c8}
+.world .marker.station-sign.is-lot.selected{background:#f0a7c8;color:#2a1a22;border-style:solid}
+.world .marker.station-sign.is-lot.selected .station-sign-level{color:#4a2634}
+.world .marker.station-sign.is-lot.selected::after{background:#4a2634}
+.sheet .machine-nav button.is-lot{border-style:dashed;border-color:#f0a7c866}
+.sheet .machine-nav button.is-lot em,.sheet .machine-nav button.is-lot.can-upgrade em{color:#f7c6da}
+.sheet .machine-nav button.is-site .machine-thumb{opacity:.9}
+
+/* The tray glides: the pane's height is animated in script; the header and its chevron-to-handle ease alongside it. */
+.sheet .panel-header{transition:min-height .3s cubic-bezier(.22,.9,.24,1),padding .3s cubic-bezier(.22,.9,.24,1)}
+.sheet .panel-header #panelToggle{transition:width .3s cubic-bezier(.22,.9,.24,1),height .3s cubic-bezier(.22,.9,.24,1),background-color .16s ease,box-shadow .16s ease}
+.sheet .panel-header #panelToggle::after{transition:transform .3s cubic-bezier(.22,.9,.24,1),width .3s cubic-bezier(.22,.9,.24,1),height .3s cubic-bezier(.22,.9,.24,1),opacity .2s ease}
+@media(prefers-reduced-motion:reduce){.sheet .panel-header,.sheet .panel-header #panelToggle,.sheet .panel-header #panelToggle::after{transition:none}}

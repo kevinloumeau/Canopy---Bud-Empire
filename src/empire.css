@@ -55,7 +55,7 @@ body[data-store-view=branch] .customer-mood{display:none}
 .sheet .empire-content [id^=branchVisit]{background:transparent;border-color:#9eb9944d;color:#d4e4c6}
 .branch-map-marker{position:absolute;left:0;top:0;z-index:4;min-height:35px;padding:5px 9px;border:1px solid #8caa7d;border-radius:7px;background:#e1e8cf;color:#294333;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 3px 7px #15271d38}
 .branch-map-marker[hidden]{display:none}
-@media(min-width:780px){body[data-store-view=branch] .map-controls{right:460px;top:calc(var(--hud-height,110px) + 16px)}}
+/* The map controls stay on the right edge in branch views: the sheet floats over the full-width canvas, so there is no sidebar to clear. */
 @media(max-width:779px){.store-switcher{left:12px;top:calc(var(--hud-height,90px) + 9px)}}
 @media(max-width:380px){.store-switcher{gap:0}.store-switcher button[aria-pressed=true] .location-name{display:none}.store-switcher .location-manage{margin-left:0}}
 
@@ -80,7 +80,6 @@ body[data-store-view=branch] .customer-mood{display:none}
 #returnEarnings li{display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-variant-numeric:tabular-nums}
 #nextInvestment{color:#e3d1a6}
 
-@media(min-width:780px){body[data-active-tray=empire] .map-controls{right:460px;top:calc(var(--hud-height,110px) + 16px)}}
 
 /* Keep branch decisions visible and explanations optional. */
 .branch-facts{display:flex;align-items:baseline;justify-content:space-between;gap:12px;font-size:12px;color:#cbdcc5}
@@ -127,5 +126,7 @@ body[data-store-view=branch] .customer-mood{display:none}
 .map-controls #locationToggle>span{display:none}
 .map-controls .store-switcher #locationToggle .location-icon{width:23px;height:23px}
 .map-controls .location-options{left:auto;right:calc(100% + 8px);top:auto;bottom:0;width:232px;max-width:calc(100vw - 84px)}
+/* Desktop keeps the controls at the left edge, so the store menu opens toward the map instead of off-screen. */
+@media(min-width:780px){.map-controls .location-options{left:calc(100% + 8px);right:auto}}
 .map-controls .location-options button{width:auto;box-shadow:none;font-size:11px}
 .map-controls .location-options .location-manage{width:100%}

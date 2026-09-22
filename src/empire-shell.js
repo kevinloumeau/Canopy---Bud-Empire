@@ -1,3 +1,4 @@
+import {abbr} from './progression.js';
 // Empire navigation shell: one list, then one screen at a time.
 // Reparents the existing Empire controls (main.js and operations-ui.js keep rendering them by id)
 // into three screens: Home (rewards strip + store list), Store (one branch), Details (records).
@@ -43,7 +44,7 @@ export function mountEmpireShell({fit,getState,format}){
  board.innerHTML=stats.map(([label,key])=>'<div class="score"><small>'+label+'</small><b data-score="'+key+'">—</b></div>').join('');
  screens.details.append(board);
  let boardSig='';
- function syncBoard(){if(!getState)return;const s=getState();const values={revenue:format?format(s.lifetime||0):String(Math.round(s.lifetime||0)),served:(s.sold||0).toLocaleString(),deliveries:(s.onlineCompleted||0).toLocaleString(),trophies:String((s.empire&&s.empire.trophies)||0),prestige:String((s.empire&&s.empire.prestige)||0)};const sig=Object.values(values).join('|');if(sig===boardSig)return;boardSig=sig;stats.forEach(([,key])=>{board.querySelector('[data-score="'+key+'"]').textContent=values[key];});}
+ function syncBoard(){if(!getState)return;const s=getState();const values={revenue:format?format(s.lifetime||0):String(Math.round(s.lifetime||0)),served:abbr(s.sold||0),deliveries:abbr(s.onlineCompleted||0),trophies:String((s.empire&&s.empire.trophies)||0),prestige:String((s.empire&&s.empire.prestige)||0)};const sig=Object.values(values).join('|');if(sig===boardSig)return;boardSig=sig;stats.forEach(([,key])=>{board.querySelector('[data-score="'+key+'"]').textContent=values[key];});}
  setInterval(()=>{if(!document.hidden&&current==='details')syncBoard();},500);
  const shopMilestone=document.querySelector('.shop-milestone');
  screens.details.append(

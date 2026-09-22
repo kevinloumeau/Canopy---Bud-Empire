@@ -2,7 +2,7 @@
 // main.js keeps rendering the existing controls by id (branchToggle, branchLevel, branchBuy, branchVisit,
 // openingClaim, projectBuy, bulkDispatch); this module reparents them into a clearer structure and adds
 // derived, read-only figures (level, income now / after upgrade, affordability, unlock progress).
-import {STORES,STORE_PROJECTS,PROJECT_LEVELS,PROJECT_BONUSES,projectCost,storeCost,storeRate,nextStoreRate,saleMultiplier} from './progression.js';
+import {abbr,STORES,STORE_PROJECTS,PROJECT_LEVELS,PROJECT_BONUSES,projectCost,storeCost,storeRate,nextStoreRate,saleMultiplier} from './progression.js';
 import {openingStatus,LINES,STAFF,REGULARS,COSMETICS,shelfCapacity,shelfUsed,staffLevel} from './operations.js';
 import {MANAGERS} from './progression.js';
 
@@ -186,7 +186,7 @@ export function mountEmpireStores({getState,format}){
   if(d.lvl){
    const v=k=>h.stats.querySelector('[data-stat="'+k+'"]'),s=k=>h.stats.querySelector('[data-sub="'+k+'"]');
    set(v('loyalty'),String(d.store.loyalty));set(s('loyalty'),d.loyaltyNote);
-   set(v('served'),d.store.served.toLocaleString());set(s('served'),'customers');
+   set(v('served'),abbr(d.store.served));set(s('served'),'customers');
    set(v('next'),d.expansion?'Lv '+d.expansion[0]:'Built');set(s('next'),d.expansion?d.expansion[1]:'All expansions');
   }
   if(h.projects){h.projects.classList.toggle('has-ready',d.projectReady);
