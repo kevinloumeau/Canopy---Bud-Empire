@@ -3641,6 +3641,9 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function renderUI(periodic){
     if(document.hidden)return;
     if(!periodic)render.invalidated=true;
+    // Keeps the app's native tab bar in step with the selected tray and the badge dots. A no-op on the web, and
+    // it only crosses the bridge when something actually changed.
+    reportNativeTray();
     var chapters=advanceJourney(state);
     if(journeyUI){journeyUI.render();chapters.forEach(function(id){telemetry.send('chapter_complete',{chapter:id})});if(chapters.length&&!document.body.classList.contains('guide-open'))notify('CHAPTER COMPLETE · '+CHAPTERS.find(function(c){return c.id===chapters[chapters.length-1]}).title,'upgrade');}
     renderEmpire();
@@ -3791,6 +3794,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   machineTabs.forEach(function(tab,i){var progress=document.createElement('progress');progress.max=100;progress.value=0;progress.setAttribute('aria-label',LINES[i].name+' equipment progress');tab.appendChild(progress);var label=document.createElement('span');label.className='level-funding';tab.appendChild(label);tab.onclick=function(){selectMachine(Number(tab.getAttribute('data-machine')))}});
   var trayTabs=Array.prototype.slice.call(document.querySelectorAll('[data-tray]'));
   var activeTray='factory',panelOpen=true;
+  // Set only in the app, where a native tab bar mirrors this state (see below).
+  var reportNativeTray=function(){};
   // The tray glides: a pane opens from nothing to its natural height and closes the same way, measured live so every
   // breakpoint keeps its own pane height. The sheet's ResizeObserver reframes the map on each step, so the scene eases too.
   var paneGlide=null;
@@ -3809,6 +3814,31 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // The pane folds away first; the sheet only takes its collapsed shape once nothing is left to hide.
     glidePane(document.querySelector('[data-pane]:not([hidden])'),false,function(){if(!panelOpen){sheet.classList.add('collapsed');fitControls()}});fitControls()}
   trayTabs.forEach(function(tab){tab.onclick=function(){var name=tab.getAttribute('data-tray');if(name===activeTray&&panelOpen)collapsePanel();else showTray(name)}});
+  // In the app the tab bar is a native Liquid Glass bar rather than this strip (see CanopyViewController): the
+  // material only exists natively, and Apple puts it on the tab bar rather than in the content. The two halves
+  // keep each other honest — a tap there calls in here, and every tray change reports back out, because the game
+  // switches tabs on its own too (visiting a branch, opening a station).
+  var nativeTray=(function(){try{
+    var c=window.Capacitor,handler=window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.canopyTray;
+    return c&&c.isNativePlatform&&c.isNativePlatform()&&handler?handler:null;
+  }catch(e){return null}})();
+  if(nativeTray){
+    window.canopyNativeTray={select:function(name){
+      if(!name)return;
+      if(name===activeTray&&panelOpen)collapsePanel();else showTray(name);
+    }};
+    // The badge dots the native bar draws mirror the ones the web strip hides and shows.
+    var BADGE_FOR={orders:'onlineBadge',boosts:'orderBadge',empire:'empireBadge'};
+    var lastTrayReport='';
+    reportNativeTray=function(){
+      var badges=Object.keys(BADGE_FOR).filter(function(key){var el=$(BADGE_FOR[key]);return el&&!el.hidden});
+      var payload={active:activeTray,badges:badges},signature=payload.active+'|'+badges.join(',');
+      if(signature===lastTrayReport)return;
+      lastTrayReport=signature;
+      try{nativeTray.postMessage(payload)}catch(e){}
+    };
+    reportNativeTray();
+  }
   $('panelToggle').onclick=function(){if(panelOpen)collapsePanel();else showTray(activeTray)};
   // Phones: the sheet has three heights. Its header is a grabber: pulled up past the half-open height the sheet fills
   // the screen below the HUD ("tall"); pulled down it returns to half height, then collapses. While it follows the finger

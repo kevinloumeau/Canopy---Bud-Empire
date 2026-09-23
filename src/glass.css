@@ -215,3 +215,8 @@
 @media(max-width:480px){.customer-mood{font-size:10px;padding:8px 10px}.customer-mood span{display:grid;gap:2px}}
 
 .customer-mood{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+/* In the app the tab bar is native (CanopyViewController): Liquid Glass belongs on the functional layer and only
+   exists natively, so the page hides its own strip and leaves room for the bar floating over it. */
+.native .sheet .tray-tabs{display:none}
+.native .sheet{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 62px)}

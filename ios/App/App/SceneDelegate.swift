@@ -8,7 +8,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = scene as? UIWindowScene else { return }
 
         window = UIWindow(windowScene: windowScene)
-        window?.rootViewController = CAPBridgeViewController()
+        // The root controller is built here rather than loaded from Main.storyboard, so this is the line that
+        // decides the class — CanopyViewController adds the native Liquid Glass tab bar over the web view.
+        window?.rootViewController = CanopyViewController()
         window?.makeKeyAndVisible()
 
         SceneDelegateProxy.shared.scene(scene, willConnectTo: session, options: connectionOptions)
