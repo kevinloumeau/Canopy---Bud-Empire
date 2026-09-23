@@ -45,6 +45,11 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     private let firmHaptic = UIImpactFeedbackGenerator(style: .medium)
 
     private weak var tabBar: UIVisualEffectView?
+    /// Set when the web layout is wide enough that the sheet became a side panel; the bar then tracks the panel
+    /// instead of the window, so it stays under the thing it controls.
+    private var anchorLeading: NSLayoutConstraint?
+    private var anchorWidth: NSLayoutConstraint?
+    private var centredRules: [NSLayoutConstraint] = []
     private weak var tabRow: UIStackView?
     private var buttons: [UIButton] = []
     private var badgeDots: [UIView] = []
@@ -203,12 +208,15 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         // The fill is what it wants; the cap is what it must obey, so a phone is unchanged and a tablet centres.
         let fill = bar.widthAnchor.constraint(equalTo: view.safeAreaLayoutGuide.widthAnchor, constant: -20)
         fill.priority = .defaultHigh
-
-        NSLayoutConstraint.activate([
+        centredRules = [
             bar.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
             fill,
             bar.widthAnchor.constraint(lessThanOrEqualToConstant: 560),
-            bar.leadingAnchor.constraint(greaterThanOrEqualTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 10),
+            bar.leadingAnchor.constraint(greaterThanOrEqualTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 10)
+        ]
+        NSLayoutConstraint.activate(centredRules)
+
+        NSLayoutConstraint.activate([
             bar.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -4),
             bar.heightAnchor.constraint(equalToConstant: 60),
             row.topAnchor.constraint(equalTo: bar.contentView.topAnchor),
@@ -294,6 +302,29 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     /// only once the finger travels does this take over.
     func gestureRecognizer(_ gesture: UIGestureRecognizer,
                            shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { true }
+
+    /// Follows the web sheet when it becomes a side panel, and goes back to centred when it does not. The values
+    /// are CSS pixels, which are points here because the web view is not zoomed.
+    private func setAnchor(left: Double?, width: Double?) {
+        guard let bar = tabBar else { return }
+        guard let left, let width, width > 120 else {
+            guard anchorLeading != nil else { return }
+            anchorLeading?.isActive = false; anchorWidth?.isActive = false
+            anchorLeading = nil; anchorWidth = nil
+            NSLayoutConstraint.activate(centredRules)
+            return
+        }
+        if anchorLeading == nil {
+            NSLayoutConstraint.deactivate(centredRules)
+            let lead = bar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: left)
+            let wide = bar.widthAnchor.constraint(equalToConstant: width)
+            anchorLeading = lead; anchorWidth = wide
+            NSLayoutConstraint.activate([lead, wide])
+        } else {
+            anchorLeading?.constant = left
+            anchorWidth?.constant = width
+        }
+    }
 
     // MARK: - Standing down
 
@@ -392,6 +423,7 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         if let hidden = payload["hidden"] as? Bool {
             setBarHidden(hidden)
         }
+        setAnchor(left: payload["anchorLeft"] as? Double, width: payload["anchorWidth"] as? Double)
         if let badges = payload["badges"] as? [String] {
             for (index, tab) in tabs.enumerated() {
                 badgeDots[index].isHidden = !badges.contains(tab.key)

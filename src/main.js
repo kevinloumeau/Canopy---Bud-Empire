@@ -3864,8 +3864,17 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       // over either: during the guide it sits on top of the very buttons the step is asking to be pressed, and
       // the tabs it offers are not reachable yet anyway.
       var blocked=document.body.classList.contains('guide-open')||!document.documentElement.classList.contains('age-ok');
+      // On a wide screen the sheet stops being a bottom drawer and becomes a panel down one side, and a tab bar
+      // centred on the whole window would then float away from the thing it controls. Report where the panel
+      // actually is so the bar can sit under it. On a phone the sheet spans the window and this says nothing.
+      var anchor=null,sheetEl=document.querySelector('.sheet');
+      if(sheetEl){
+        var box=sheetEl.getBoundingClientRect();
+        if(box.width&&box.width<window.innerWidth-24)anchor={left:Math.round(box.left),width:Math.round(box.width)};
+      }
       var payload={active:activeTray,badges:badges,hidden:blocked};
-      var signature=payload.active+'|'+badges.join(',')+'|'+blocked;
+      if(anchor){payload.anchorLeft=anchor.left;payload.anchorWidth=anchor.width}
+      var signature=payload.active+'|'+badges.join(',')+'|'+blocked+'|'+(anchor?anchor.left+'x'+anchor.width:'full');
       if(signature===lastTrayReport)return;
       lastTrayReport=signature;
       try{nativeTray.postMessage(payload)}catch(e){}
@@ -3876,6 +3885,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       var watchChrome=new MutationObserver(function(){reportNativeTray()});
       watchChrome.observe(document.body,{attributes:true,attributeFilter:['class']});
       watchChrome.observe(document.documentElement,{attributes:true,attributeFilter:['class']});
+      window.addEventListener('resize',function(){reportNativeTray()});
+      window.addEventListener('orientationchange',function(){setTimeout(reportNativeTray,120)});
     }
     reportNativeTray();
   }
