@@ -30,8 +30,10 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         Tab(key: "empire",    title: "Empire",     symbol: "crown")
     ]
 
-    /// The shop's own palette, so the selected tab reads as Canopy rather than as system blue.
-    private let accent = UIColor(red: 0.71, green: 0.78, blue: 0.52, alpha: 1)      // #b6c885
+    /// The shop's own palette, so the selected tab reads as Canopy rather than as system blue — lightened from
+    /// the web tray's #b6c885, because here it sits on the brightened lozenge rather than on the dark sheet, and
+    /// at the tray's own value the selected label measured 3.3:1 against it. Same hue, enough lift to clear 4.5:1.
+    private let accent = UIColor(red: 0.84, green: 0.91, blue: 0.63, alpha: 1)      // #d6e8a1
     private let resting = UIColor(red: 0.86, green: 0.90, blue: 0.84, alpha: 0.92)
 
     private var buttons: [UIButton] = []
@@ -94,11 +96,16 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
             ])
 
             // Element two: the selection lozenge, which slides between tabs and merges with the body as it goes.
-            // Untinted it vanishes — two panes of the same material fuse into one and the selection stops
-            // reading — so it carries a little of the shop's green. That is the material's own tintColor rather
-            // than a layer painted over it, so it still refracts what is behind the bar.
+            //
+            // Its lift is neutral rather than green, on two counts from Apple's colour guidance. Background
+            // colour on Liquid Glass is reserved for primary actions — "to emphasize primary actions, apply
+            // color to the background rather than to symbols or text" — while a selected tab is the case where
+            // the symbol and text carry the colour, which they do below. And the shop's content is already
+            // green, so a green control over it is the overlap the guidance warns about: colourful apps should
+            // "prefer a monochromatic appearance for toolbars and tab bars". A plain brightening keeps the
+            // lozenge legible where untinted glass fused into invisibility, without colouring it.
             let lozengeGlass = UIGlassEffect(style: .regular)
-            lozengeGlass.tintColor = accent.withAlphaComponent(0.22)
+            lozengeGlass.tintColor = UIColor.white.withAlphaComponent(0.10)
             let lozenge = UIVisualEffectView(effect: lozengeGlass)
             lozenge.translatesAutoresizingMaskIntoConstraints = false
             lozenge.layer.cornerRadius = 22
