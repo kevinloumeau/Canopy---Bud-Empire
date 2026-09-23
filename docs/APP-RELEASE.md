@@ -41,8 +41,8 @@ has changed repeatedly and may change again.
 
 ## Phase 0 · Decisions only you can make
 
-- [ ] **you** — Enrol in the Apple Developer Program ($99/year). Identity verification takes days; start it first.
-- [ ] **you** — Choose the bundle ID. Permanent, never changeable. Suggested: `com.kevinloumeau.canopy`.
+- [x] **done** — Enrolled. The project signs automatically against team `X4JBDGN2QR`.
+- [x] **done** — Bundle ID settled as `com.kevinloumeau.canopy` and set in the project. Permanent from here.
 - [x] **done** — Xcode 27.1 installed with the iOS 27.1 simulator runtime.
 - [ ] **you** — Confirm whether you have an iPhone or iPad to test on. Not a blocker — the Simulator is good and I
       can drive it from here — but at least one real device before submitting is strongly advised.
@@ -71,7 +71,8 @@ has changed repeatedly and may change again.
 - [x] **done** — iPhone locked to portrait to match the manifest; iPad keeps every orientation.
 - [x] **done** — App icon: the game's sprout at 1024, full bleed and alpha-free as iOS requires, regenerable from
       `scripts/app-icon.html`. Verified masked correctly on the home screen.
-- [ ] **me** — Launch screen, and status bar styled to `#1f3529`.
+- [x] **done** — Launch screen matches the shop's own green, so the app no longer flashes white on the way in.
+      The status bar needed nothing: Capacitor keeps it light in both system appearances, checked either way.
 
 Capacitor rather than a web view of the live site, deliberately: it bundles the game inside the app, so it launches
 offline with no dependency on GitHub Pages staying up — and an app that works with the network off is the single
@@ -89,20 +90,46 @@ strongest answer to a Guideline 4.2 query.
       protects a save.
 - [ ] **you** — Install on a real device if you have one. The Simulator does not reproduce memory pressure,
       thermals or real storage eviction, which is exactly the risk area for the save.
-- [ ] **me** — Check frame rate on device-class hardware. 3.7ms/frame on a Mac says little about an older iPhone.
+- [ ] **you** — Check frame rate on real hardware. Still open, and the simulator cannot answer it: it
+      software-renders the canvas at 354ms a frame where the same build costs 5.5ms on this Mac, a 64x gap that
+      says nothing about a phone. What the simulator *can* show is that startup is not a problem — the page is
+      interactive 82ms in, complete at 314ms, and first paint lands at 1.14s.
 
 ## Phase 4 · Store listing
 
-- [ ] **me** — Screenshots at the sizes App Store Connect currently requires. The capture tooling in `scripts/`
-      already produces device-sized frames and needs only a preset.
+- [ ] **me** — Screenshots at the sizes App Store Connect currently requires. Convenient accident: the iPhone 18
+      Pro Max simulator renders at exactly 1320x2868, which *is* the 6.9-inch requirement, so its screenshots can
+      be submitted untouched. The 13-inch iPad set comes off the iPad Pro simulator the same way.
 - [ ] **me** — Short subtitle and full description.
 - [x] **done** — Privacy policy URL: `public/privacy.html`, live on the Pages site once main deploys.
 - [ ] **you** — Privacy nutrition labels. Canopy's answer is the simple one — **Data Not Collected** — which is
-      true only because the fonts are now bundled and no analytics provider is loaded.
+      true only because the fonts are now bundled and no analytics provider is loaded. The app's own
+      `PrivacyInfo.xcprivacy` already says the same thing in the form Apple checks automatically, so the two
+      answers will agree.
 - [ ] **you** — Age rating questionnaire. Answer honestly on drug references; expect the top tier (18+ since
       Apple's July 2025 overhaul). Comparable titles carry exactly that.
 - [ ] **me** — Draft review notes explaining that the game is fiction, sells nothing, and runs entirely offline —
       pre-empting both the 4.2 question and any concern about the subject matter.
+
+## Phase 4b · Things App Review checks that are already handled
+
+- [x] **done** — **Privacy manifest.** `PrivacyInfo.xcprivacy` ships in the app. Uploads without one draw an
+      ITMS-91053 notice. Capacitor's own frameworks each carry a manifest but declare nothing, because core does
+      not touch the required-reason APIs — the Preferences plugin does, keeping the save mirror in UserDefaults,
+      and it ships no manifest at all, so the reason (CA92.1, the app reading back what it wrote) is declared here
+      on its behalf. Everything else is empty, which is the honest answer and not merely a convenient one.
+- [x] **done** — **Export compliance.** `ITSAppUsesNonExemptEncryption` is false in Info.plist, which is accurate
+      for a game that makes no network requests, and saves being asked on every upload.
+- [x] **done** — **App size.** `cap sync` was copying the marketing site into the app: the launch page at
+      `/welcome/` and two dozen full-bleed screenshots the game has no way to reach. `npm run ios` now prunes it,
+      taking the web payload from 6.4 MB to 1.0 MB.
+- [x] **done** — **iPad.** The app ships universal, so it will be reviewed on an iPad. Both orientations render
+      correctly, and the native tab bar now follows the side panel instead of floating centre-screen.
+- [x] **done** — **Accessibility.** Dynamic Type on the tab labels (capped so six tabs still fit), the `.selected`
+      trait so VoiceOver announces the tab in the reader's own language, Reduce Motion honoured throughout and
+      offered as a switch of the game's own, and Increase Contrast confirmed to reach both the native bar and the
+      web sheet. **Reduce Transparency is the one gap** — the simulator never reports it however it is set, so the
+      rules that answer it are unverified until someone runs the app on a device.
 
 ## Phase 5 · Release
 
