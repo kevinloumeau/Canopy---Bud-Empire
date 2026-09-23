@@ -12,7 +12,7 @@ import WebKit
 ///
 /// State is shared both ways: a tap here drives the web app's `showTray`, and the web app posts back whenever it
 /// changes tab itself — which it does on its own, for instance when visiting a branch store.
-final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandler {
+final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandler, UIGestureRecognizerDelegate {
 
     private struct Tab {
         /// The web app's own `data-tray` value; the bridge speaks in these.
@@ -44,6 +44,7 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     private let lightHaptic = UIImpactFeedbackGenerator(style: .light)
     private let firmHaptic = UIImpactFeedbackGenerator(style: .medium)
 
+    private weak var tabRow: UIStackView?
     private var buttons: [UIButton] = []
     private var badgeDots: [UIView] = []
     private var selectedKey = "factory"
@@ -57,6 +58,9 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         webView?.configuration.userContentController.add(self, name: "canopyTray")
         webView?.configuration.userContentController.add(self, name: "canopyHaptic")
         installTabBar()
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(powerStateChanged),
+            name: .NSProcessInfoPowerStateDidChange, object: nil)
     }
 
     // MARK: - The bar
@@ -106,15 +110,21 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
 
             // Element two: the selection lozenge, which slides between tabs and merges with the body as it goes.
             //
-            // Its lift is neutral rather than green, on two counts from Apple's colour guidance. Background
-            // colour on Liquid Glass is reserved for primary actions — "to emphasize primary actions, apply
-            // color to the background rather than to symbols or text" — while a selected tab is the case where
-            // the symbol and text carry the colour, which they do below. And the shop's content is already
-            // green, so a green control over it is the overlap the guidance warns about: colourful apps should
-            // "prefer a monochromatic appearance for toolbars and tab bars". A plain brightening keeps the
-            // lozenge legible where untinted glass fused into invisibility, without colouring it.
+            // Neutral rather than green, on two counts from Apple's colour guidance. Background colour on Liquid
+            // Glass is reserved for primary actions — "to emphasize primary actions, apply color to the
+            // background rather than to symbols or text" — while a selected tab is the case where the symbol and
+            // text carry the colour, which they do below. And the shop's content is already green, so a green
+            // control over it is the overlap the guidance warns about for colourful apps.
+            //
+            // Darker rather than lighter, which is the part I had backwards: the system's own selected tab sinks
+            // a dimmer capsule into the bar instead of lifting a brighter one. It also reads better here, since
+            // the label sits light on top of it.
+            //
+            // `isInteractive` is what gives the material its own behaviour under a finger — the gel flex, and the
+            // lensing and chromatic fringing as it travels. Without it the lozenge is only a shape that moves.
             let lozengeGlass = UIGlassEffect(style: .regular)
-            lozengeGlass.tintColor = UIColor.white.withAlphaComponent(0.10)
+            lozengeGlass.isInteractive = true
+            lozengeGlass.tintColor = UIColor.black.withAlphaComponent(0.22)
             let lozenge = UIVisualEffectView(effect: lozengeGlass)
             lozenge.translatesAutoresizingMaskIntoConstraints = false
             lozenge.layer.cornerRadius = 22
@@ -134,6 +144,7 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         }
 
         let row = UIStackView()
+        tabRow = row
         row.accessibilityContainerType = .semanticGroup
         row.axis = .horizontal
         row.distribution = .fillEqually
@@ -195,7 +206,21 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
             row.trailingAnchor.constraint(equalTo: bar.contentView.trailingAnchor, constant: -4)
         ])
 
+        // Dragging along the bar moves the selection with the finger rather than only on lift. This is the
+        // gesture the material is built for: the lozenge stretches and lenses as it travels between tabs, which
+        // never happens if selection can only jump on a tap.
+        let scrub = UIPanGestureRecognizer(target: self, action: #selector(barScrubbed(_:)))
+        scrub.delegate = self
+        bar.addGestureRecognizer(scrub)
+
         paint()
+    }
+
+    @objc private func barScrubbed(_ gesture: UIPanGestureRecognizer) {
+        guard gesture.state == .began || gesture.state == .changed, let row = tabRow else { return }
+        let point = gesture.location(in: row)
+        guard let hit = buttons.first(where: { $0.frame.contains(point) }) else { return }
+        select(tabs[hit.tag])
     }
 
     /// Colour carries the selection. The guidance is to tint the label rather than fill the background for a
@@ -254,6 +279,33 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         moveLozenge(animated: false)
     }
 
+    /// The scrub runs alongside the buttons' own tracking: a plain tap still belongs to the button under it, and
+    /// only once the finger travels does this take over.
+    func gestureRecognizer(_ gesture: UIGestureRecognizer,
+                           shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { true }
+
+    // MARK: - Power
+
+    /// The shop renders continuously and people leave it running, so it is the kind of app Low Power Mode is
+    /// asking to ease off. The web side halves its frame rate when this is set; it decides what to do with the
+    /// fact, this only reports it.
+    ///
+    /// Pushed rather than polled, and re-pushed whenever the web app next speaks, because a value evaluated
+    /// before the page has loaded lands nowhere and there is no callback that tells us it is ready.
+    private var powerStatePushed = false
+
+    @objc private func powerStateChanged() {
+        powerStatePushed = false
+        pushPowerState()
+    }
+
+    private func pushPowerState() {
+        let saving = ProcessInfo.processInfo.isLowPowerModeEnabled
+        webView?.evaluateJavaScript("window.canopyPowerSaver=\(saving)") { [weak self] _, error in
+            if error == nil { self?.powerStatePushed = true }
+        }
+    }
+
     // MARK: - Haptics
 
     /// Plays one of the three weights the game asks for, then re-arms that generator: `prepare()` keeps the Taptic
@@ -270,9 +322,14 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     // MARK: - Native to web
 
     @objc private func tabTapped(_ sender: UIButton) {
-        let tab = tabs[sender.tag]
-        // The web tray's own tabs are hidden natively, so this tap would otherwise be the one control in the app
-        // that moves the whole screen without being felt.
+        select(tabs[sender.tag])
+    }
+
+    /// The one way a tab is chosen, by tap or by scrub.
+    private func select(_ tab: Tab) {
+        // The web tray's own tabs are hidden natively, so this would otherwise be the one control in the app that
+        // moves the whole screen without being felt. Landing on the tab already showing stays quiet — which also
+        // keeps a scrub from buzzing continuously while the finger sits still inside one tab.
         guard tab.key != selectedKey else { return }
         playHaptic("select")
         selectedKey = tab.key
@@ -290,6 +347,7 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
             return
         }
         guard message.name == "canopyTray" else { return }
+        if !powerStatePushed { pushPowerState() }
         if let active = payload["active"] as? String, tabs.contains(where: { $0.key == active }) {
             selectedKey = active
             paint(animated: true)

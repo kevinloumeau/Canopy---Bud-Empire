@@ -3383,7 +3383,10 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function renderFrame(wallNow){
     if(document.hidden){render.last=wallNow;requestAnimationFrame(render);return}
     keyboardPan(wallNow);
-    var frameInterval=state.gameSpeed===0?250:1000/60;
+    // Half rate in Low Power Mode. The shop is a thing people leave running for hours, so it is exactly the sort
+    // of app that mode is asking to ease off, and at this scale the drop reads as a slightly softer pan rather
+    // than as a stutter. The flag is set by the iOS bar; on the web it is never defined and this stays at 60.
+    var frameInterval=state.gameSpeed===0?250:(window.canopyPowerSaver?1000/30:1000/60);
     if(!render.invalidated&&render.drawnAt!==undefined&&wallNow-render.drawnAt<frameInterval-1){requestAnimationFrame(render);return}
     render.drawnAt=wallNow;render.invalidated=false;
     var wallDelta=Math.min(.1,Math.max(0,(wallNow-(render.last===undefined?wallNow:render.last))/1000)),frameDelta=wallDelta*state.gameSpeed;
