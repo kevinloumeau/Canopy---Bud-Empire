@@ -3850,11 +3850,23 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var lastTrayReport='';
     reportNativeTray=function(){
       var badges=Object.keys(BADGE_FOR).filter(function(key){var el=$(BADGE_FOR[key]);return el&&!el.hidden});
-      var payload={active:activeTray,badges:badges},signature=payload.active+'|'+badges.join(',');
+      // The opening walkthrough and the age gate both own the whole screen, and the bar has no business floating
+      // over either: during the guide it sits on top of the very buttons the step is asking to be pressed, and
+      // the tabs it offers are not reachable yet anyway.
+      var blocked=document.body.classList.contains('guide-open')||!document.documentElement.classList.contains('age-ok');
+      var payload={active:activeTray,badges:badges,hidden:blocked};
+      var signature=payload.active+'|'+badges.join(',')+'|'+blocked;
       if(signature===lastTrayReport)return;
       lastTrayReport=signature;
       try{nativeTray.postMessage(payload)}catch(e){}
     };
+    // The guide opens and closes without going through renderUI, so watch the classes that say so rather than
+    // waiting for the next frame that happens to redraw the tray.
+    if(window.MutationObserver){
+      var watchChrome=new MutationObserver(function(){reportNativeTray()});
+      watchChrome.observe(document.body,{attributes:true,attributeFilter:['class']});
+      watchChrome.observe(document.documentElement,{attributes:true,attributeFilter:['class']});
+    }
     reportNativeTray();
   }
   $('panelToggle').onclick=function(){if(panelOpen)collapsePanel();else showTray(activeTray)};

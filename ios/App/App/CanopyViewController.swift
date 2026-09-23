@@ -30,10 +30,10 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         Tab(key: "empire",    title: "Empire",     symbol: "crown")
     ]
 
-    /// The shop's own palette, so the selected tab reads as Canopy rather than as system blue — lightened from
-    /// the web tray's #b6c885, because here it sits on the brightened lozenge rather than on the dark sheet, and
-    /// at the tray's own value the selected label measured 3.3:1 against it. Same hue, enough lift to clear 4.5:1.
-    private let accent = UIColor(red: 0.84, green: 0.91, blue: 0.63, alpha: 1)      // #d6e8a1
+    /// The shop's own palette, so the selected tab reads as Canopy rather than as system blue. This is the web
+    /// tray's own value: it had to be lightened while the lozenge brightened the ground under it, and now that the
+    /// lozenge sinks instead there is room for the real one again.
+    private let accent = UIColor(red: 0.71, green: 0.78, blue: 0.52, alpha: 1)      // #b6c885
     private let resting = UIColor(red: 0.86, green: 0.90, blue: 0.84, alpha: 0.92)
 
     /// The game asks for haptics through `navigator.vibrate`, which WKWebView does not implement — so until these
@@ -44,6 +44,7 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     private let lightHaptic = UIImpactFeedbackGenerator(style: .light)
     private let firmHaptic = UIImpactFeedbackGenerator(style: .medium)
 
+    private weak var tabBar: UIVisualEffectView?
     private weak var tabRow: UIStackView?
     private var buttons: [UIButton] = []
     private var badgeDots: [UIView] = []
@@ -88,6 +89,7 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         // can stay light — the monochromatic pairing the material guidance asks for, just decided rather than
         // inferred.
         bar.overrideUserInterfaceStyle = .dark
+        tabBar = bar
         view.addSubview(bar)
 
         // Element one: the bar's own body, filling the container.
@@ -284,6 +286,32 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     func gestureRecognizer(_ gesture: UIGestureRecognizer,
                            shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { true }
 
+    // MARK: - Standing down
+
+    private var barHidden = false
+
+    /// The opening walkthrough and the age gate each take the whole screen, and the web app says so. The bar drops
+    /// out of the way rather than floating over them — during the guide it otherwise covers the very buttons the
+    /// step is pointing at.
+    ///
+    /// It leaves the accessibility tree at the same time: a control that has slid off screen should not still be
+    /// reachable by VoiceOver, and its tabs are not usable during either of these anyway.
+    private func setBarHidden(_ hidden: Bool) {
+        guard hidden != barHidden, let bar = tabBar else { return }
+        barHidden = hidden
+        bar.isUserInteractionEnabled = !hidden
+        bar.accessibilityElementsHidden = hidden
+
+        let settle = {
+            bar.alpha = hidden ? 0 : 1
+            // Far enough to clear the bar's own height and the inset below it.
+            bar.transform = hidden ? CGAffineTransform(translationX: 0, y: 96) : .identity
+        }
+        guard !UIAccessibility.isReduceMotionEnabled else { return settle() }
+        UIView.animate(withDuration: 0.3, delay: 0, options: [.beginFromCurrentState, .curveEaseInOut],
+                       animations: settle)
+    }
+
     // MARK: - Power
 
     /// The shop renders continuously and people leave it running, so it is the kind of app Low Power Mode is
@@ -351,6 +379,9 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         if let active = payload["active"] as? String, tabs.contains(where: { $0.key == active }) {
             selectedKey = active
             paint(animated: true)
+        }
+        if let hidden = payload["hidden"] as? Bool {
+            setBarHidden(hidden)
         }
         if let badges = payload["badges"] as? [String] {
             for (index, tab) in tabs.enumerated() {

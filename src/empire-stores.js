@@ -10,11 +10,17 @@ const svg=paths=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 const ICONS=[
  svg('<path d="M3 15c2-2 4-2 6 0s4 2 6 0 4-2 6 0M3 19c2-2 4-2 6 0s4 2 6 0 4-2 6 0M12 11V3M12 11c-3.3 0-5.5-2.2-5.5-5.5C9.8 5.5 12 7.7 12 11Zm0 0c3.3 0 5.5-2.2 5.5-5.5C14.2 5.5 12 7.7 12 11Z"/>'),
  svg('<path d="M4 21V9l8-6 8 6v12M3 21h18M9 21v-6a3 3 0 0 1 6 0v6M4 12h16"/>'),
- svg('<path d="M3 21h18M5 21V9h5v12M10 21V4h6v17M16 21v-8h3v8M7 12h1M7 15h1M12 8h2M12 11h2M12 14h2"/>')
+ svg('<path d="M3 21h18M5 21V9h5v12M10 21V4h6v17M16 21v-8h3v8M7 12h1M7 15h1M12 8h2M12 11h2M12 14h2"/>'),
+ // The last two are landscape rather than architecture. Three buildings in a row already run together at this
+ // size, and the adobe arch I drew first — dome, two windows, an arched door — read as a face, which is not a
+ // thing you can un-see once you have seen it. A saguaro and a pair of peaks pair with each other, say desert
+ // and mountain immediately, and cannot be mistaken for the three shopfronts above them.
+ svg('<path d="M3 21h18M12 21V7M12 15H9.5A1.5 1.5 0 0 1 8 13.5V11M12 12.5h2.5a1.5 1.5 0 0 0 1.5-1.5V9.5M19 5.6a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 0 1 3.4 0"/>'),
+ svg('<path d="M3 21h18M4 21l6-9 4 6M14 18l2.5-3.5L21 21M7.6 15.6h4.8"/>')
 ];
 const LOCK=svg('<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>');
 const CHECK=svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>');
-const SPECIALTY=['Exclusive strains','Boutique products','Bulk deliveries'];
+const SPECIALTY=['Exclusive strains','Boutique products','Bulk deliveries','Highway traffic','Resort visitors'];
 const STYLE_GLYPHS={
  plants:[svg('<path d="M12 21v-9M12 12c-4 0-7-3-7-7 4 0 7 3 7 7Zm0 0c4 0 7-3 7-7-4 0-7 3-7 7Z"/>'),svg('<circle cx="12" cy="9" r="2.5"/><path d="M12 3.5v3M12 11.5v3M6.5 9h3M14.5 9h3M8 5l2 2M14 11l2 2M16 5l-2 2M10 11l-2 2M12 14.5V21"/>'),svg('<path d="M12 21V4a2 2 0 0 0-4 0v0M8 21V12M12 8h3a2 2 0 0 1 0 4h-3M8 12H6a2 2 0 0 1 0-4h2M6 21h10"/>')],
  layout:[svg('<rect x="3" y="12" width="18" height="7" rx="2"/><path d="M6 12V8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4M3 19v2M21 19v2"/>'),svg('<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M9 10v10M15 10v10"/>')]
