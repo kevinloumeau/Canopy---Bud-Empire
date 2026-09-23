@@ -66,9 +66,47 @@ h1,h2,.guide-card h2,.empire-screen h2,.machine-info h1,.canopy-brand b{font-var
 
 /* Loading: the leaf mark on the game's own green, so the first frame already belongs to Canopy. */
 .loading{background:#20372b;color:#d3e0cb;font-family:inherit;letter-spacing:0}
-.loading-simple::before{content:'';display:block;width:64px;height:64px;margin:0 auto 14px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none'%3E%3Cpath d='M24 38V24' stroke='%23dce9be' stroke-width='2.5' stroke-linecap='round'/%3E%3Cpath d='M24 31C14 32 11 26 12 21c8-1 13 3 12 10Z' fill='%23a8c884'/%3E%3Cpath d='M24 27c-1-9 4-14 12-14 1 8-3 14-12 14Z' fill='%23dce9be'/%3E%3C/svg%3E") center/contain no-repeat}
 .loading-simple p{font-size:14px;color:#d3e0cb}
-@media(prefers-reduced-motion:no-preference){.loading-simple::before{animation:leaf-breathe 1.6s ease-in-out infinite}@keyframes leaf-breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}}
+
+/* The wait is short — the page is interactive about 80ms in and paints around a second — so the sprout is built to
+   read in one glance rather than reward study: a stem draws up out of the soil, two leaves unfurl after it, and a
+   few motes drift off before the whole thing fades and starts again. It is the game's own subject doing the one
+   thing the game is about, which beats a spinner that could belong to any app.
+   Inline in the markup rather than a background image, so it is already in the HTML and needs no second request
+   at the one moment the app has nothing else to show. */
+.loading-simple .sprout{display:block;width:78px;height:78px;margin:0 auto 16px;overflow:visible}
+.sprout-stem{fill:none;stroke:#dce9be;stroke-width:2.6;stroke-linecap:round;stroke-dasharray:32;stroke-dashoffset:0}
+.sprout-soil{fill:none;stroke:#7d9268;stroke-width:2.4;stroke-linecap:round;opacity:.6}
+.sprout-leaf{transform-box:fill-box}
+.sprout-leaf--left{fill:#a8c884;transform-origin:100% 55%}
+.sprout-leaf--right{fill:#dce9be;transform-origin:0% 100%}
+.sprout-mote{fill:#e9d79a;opacity:.5}
+/* The resting state above is the grown plant, so anything that switches the animation off — the system setting,
+   the game's own switch, or a browser that never runs it — is left with a finished sprout rather than bare soil. */
+@media(prefers-reduced-motion:no-preference){
+ .sprout{animation:sprout-cycle 2.2s ease-in-out infinite}
+ .sprout-plant{animation:sprout-sway 2.2s ease-in-out infinite}
+ .sprout-stem{stroke-dashoffset:32;animation:sprout-stem 2.2s ease-out infinite}
+ .sprout-leaf--left{animation:sprout-unfurl-left 2.2s ease-out infinite}
+ .sprout-leaf--right{animation:sprout-unfurl-right 2.2s ease-out infinite}
+ .sprout-mote{animation:sprout-mote 2.2s ease-in-out infinite}
+ .sprout-mote:nth-child(2){animation-delay:.1s}
+ .sprout-mote:nth-child(3){animation-delay:.2s}
+ @keyframes sprout-cycle{0%,84%{opacity:1}97%,100%{opacity:0}}
+ @keyframes sprout-stem{0%{stroke-dashoffset:32}40%,100%{stroke-dashoffset:0}}
+ @keyframes sprout-unfurl-left{0%,14%{transform:scale(.06) rotate(-14deg)}46%,100%{transform:scale(1) rotate(0)}}
+ @keyframes sprout-unfurl-right{0%,26%{transform:scale(.06) rotate(16deg)}58%,100%{transform:scale(1) rotate(0)}}
+ @keyframes sprout-sway{0%,48%{transform:rotate(0)}66%{transform:rotate(2.2deg)}84%{transform:rotate(-1.6deg)}100%{transform:rotate(0)}}
+ @keyframes sprout-mote{0%,50%{opacity:0;transform:translateY(3px)}72%{opacity:.85}86%,100%{opacity:0;transform:translateY(-12px)}}
+}
+/* The blanket still-mode rule collapses every animation to no duration, which would land these on their last
+   keyframe — and the cycle's last keyframe is invisible. Named here so the sprout simply stands there instead. */
+html.still .sprout,html.still .sprout-plant,html.still .sprout-stem,
+html.still .sprout-leaf,html.still .sprout-mote{animation:none!important}
+html.still .sprout{opacity:1}
+html.still .sprout-stem{stroke-dashoffset:0}
+html.still .sprout-leaf{transform:none}
+html.still .sprout-mote{opacity:.5}
 
 /* Station signs: quieter glass plaques in the interface face, so they sit in the scene instead of on it. */
 .world .marker.station-sign,.world .marker.station-sign:not(.selected){
