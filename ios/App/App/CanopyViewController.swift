@@ -197,9 +197,18 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
             ])
         }
 
+        // The bar fills the width of a phone and stops growing after that. Stretched across an iPad it put a
+        // hundred and forty points between neighbouring tabs, which reads as a row of scattered buttons rather
+        // than one control — and iPadOS floats its own tab bars centred rather than pinning them to both edges.
+        // The fill is what it wants; the cap is what it must obey, so a phone is unchanged and a tablet centres.
+        let fill = bar.widthAnchor.constraint(equalTo: view.safeAreaLayoutGuide.widthAnchor, constant: -20)
+        fill.priority = .defaultHigh
+
         NSLayoutConstraint.activate([
-            bar.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 10),
-            bar.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -10),
+            bar.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
+            fill,
+            bar.widthAnchor.constraint(lessThanOrEqualToConstant: 560),
+            bar.leadingAnchor.constraint(greaterThanOrEqualTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 10),
             bar.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -4),
             bar.heightAnchor.constraint(equalToConstant: 60),
             row.topAnchor.constraint(equalTo: bar.contentView.topAnchor),
