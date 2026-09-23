@@ -34,6 +34,10 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   var $=function(id){return document.getElementById(id)};
   // A new shop starts as seven construction sites: the door and six stations are raised for free during the intro, then the sign flips.
   function fresh(){return{money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),productMenu:migrateMenu(),sound:true,ambience:true,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),crosses:{done:[],active:null},vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
+  // Whether the web view arrived with no save at all, sampled before anything in the game can write one. The
+  // native recovery below depends on this: boot itself calls save(), so by the time it runs, local storage always
+  // looks populated and the question can no longer be asked.
+  var localStorageArrivedEmpty=(function(){try{return !localStorage.getItem('shift-save')&&!localStorage.getItem('shift-save-backup')}catch(e){return false}})();
   function readSave(){
     for(var key of ['shift-save','shift-save-backup']){
       try{var raw=localStorage.getItem(key);if(!raw)continue;var value=JSON.parse(raw);if(value&&typeof value==='object'&&!Array.isArray(value))return value}catch(e){}
@@ -76,7 +80,47 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   speedButtons.forEach(function(button){button.onclick=function(){var value=Number(button.getAttribute('data-speed'));setGameSpeed(value===1&&state.gameSpeed===1?0:value)}});
   var tickTime=performance.now(),tickRemainder=0;
   function tick(){var now=performance.now(),seconds=(now-tickTime)/1000;tickTime=now;if(document.hidden){tickRemainder=0;return}var elapsed=elapsedSteps(seconds+tickRemainder,state.gameSpeed);if(elapsed.offline){tickRemainder=0;collectOffline(elapsed.offline)}else{tickRemainder=Math.max(0,seconds+tickRemainder-Math.floor((seconds+tickRemainder+1e-8)/.05)*.05);for(var step=0;step<elapsed.steps;step++)simulate(.05)}}
+  // Native backstop. In the iOS app the game runs inside a web view whose local storage the system may evict when
+  // the device is short of space — and with no account and no server there would be nothing to restore from. So
+  // every save is mirrored into native preferences, which are part of the app's own data and survive that.
+  // On the web `window.Capacitor` is absent and every one of these is a no-op.
+  var NATIVE_KEY='shift-save';
+  function nativeStore(){
+    try{var c=window.Capacitor;return c&&c.isNativePlatform&&c.isNativePlatform()&&c.Plugins&&c.Plugins.Preferences||null}catch(e){return null}
+  }
+  // The mirror trails the real save by a moment: save() runs on a five-second autosave and on every purchase, and
+  // the native write is asynchronous, so coalesce them rather than queueing one per call.
+  // While a recovery is still being decided, nothing may be mirrored: boot writes a fresh save within the first
+  // second, and without this the brand-new shop would overwrite the very copy being recovered.
+  var mirrorPending=null,nativeRestorePending=localStorageArrivedEmpty;
+  function mirrorSaveToNative(serialized){
+    var store=nativeStore();if(!store||nativeRestorePending)return;
+    if(mirrorPending)clearTimeout(mirrorPending);
+    mirrorPending=setTimeout(function(){
+      mirrorPending=null;
+      try{store.set({key:NATIVE_KEY,value:serialized})}catch(e){/* The backstop is optional; the web view's own copy stands. */}
+    },1200);
+  }
+  // Recovery: if the web view has lost its storage but the native copy is still there, put it back and reload so
+  // the ordinary load path migrates it. Only fires when local storage is genuinely empty, so a normal launch and
+  // a deliberate Start over are both left alone.
+  function restoreFromNativeIfEmpty(){
+    var store=nativeStore();
+    if(!store||!localStorageArrivedEmpty){nativeRestorePending=false;return}
+    Promise.resolve(store.get({key:NATIVE_KEY})).then(function(result){
+      var raw=result&&result.value,parsed=null;
+      try{parsed=raw?JSON.parse(raw):null}catch(e){parsed=null}
+      // Nothing worth restoring: release the mirror so this session starts backing itself up as usual.
+      if(!parsed||typeof parsed!=='object'||Array.isArray(parsed)||!Array.isArray(parsed.lines)){nativeRestorePending=false;return}
+      localStorage.setItem('shift-save',raw);
+      // `importing` also stops the unload save, which would otherwise write this session's fresh shop back out.
+      importing=true;location.reload();
+    }).catch(function(){nativeRestorePending=false});
+  }
   var saveFailed=false,importing=false;
+  // Asked as early as it can be: after `importing` exists (the reload below sets it) and before boot has run far
+  // enough to matter, so a recovered shop replaces the fresh one almost immediately.
+  restoreFromNativeIfEmpty();
   function save(){
     // An import has already written the incoming shop and is reloading; the unload and interval saves that fire
     // on the way out would otherwise put the replaced shop straight back.
@@ -85,7 +129,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     try{
       var previous=localStorage.getItem('shift-save');
       if(previous){try{var parsed=JSON.parse(previous);if(parsed&&typeof parsed==='object'&&!Array.isArray(parsed))localStorage.setItem('shift-save-backup',previous)}catch(e){}}
-      localStorage.setItem('shift-save',JSON.stringify(state));saveFailed=false;return true;
+      var serialized=JSON.stringify(state);
+      localStorage.setItem('shift-save',serialized);saveFailed=false;mirrorSaveToNative(serialized);return true;
     }catch(e){if(!saveFailed)notify('SAVE UNAVAILABLE · keep this window open to retain progress');saveFailed=true;return false}
   }
   // Backup: the save is written to a file the player keeps, and read back from one. Nothing is uploaded and no
