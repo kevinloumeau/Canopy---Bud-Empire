@@ -37,6 +37,10 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     private var buttons: [UIButton] = []
     private var badgeDots: [UIView] = []
     private var selectedKey = "factory"
+    /// The lozenge that sits behind the selected tab. It is a glass element in its own right, so inside a
+    /// `UIGlassContainerEffect` it fuses with the bar's own glass rather than sitting on top of it.
+    private var bubble: UIVisualEffectView?
+    private var bubbleCentre: NSLayoutConstraint?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -47,16 +51,19 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     // MARK: - The bar
 
     private func installTabBar() {
-        let effect: UIVisualEffect
+        // A glass *container* rather than a single glass view: nested glass elements inside it are rendered as
+        // one combined shape, and `spacing` is the distance at which they begin to merge. That is what lets the
+        // selection lozenge fuse into the bar instead of floating as a separate pane on top of it.
+        let barEffect: UIVisualEffect
         if #available(iOS 26.0, *) {
-            // Regular rather than clear: the tabs carry labels, and regular is the variant that adjusts
-            // luminosity behind text to keep it legible over whatever the shop happens to be showing.
-            effect = UIGlassEffect(style: .regular)
+            let container = UIGlassContainerEffect()
+            container.spacing = 18
+            barEffect = container
         } else {
-            effect = UIBlurEffect(style: .systemThinMaterialDark)
+            barEffect = UIBlurEffect(style: .systemThinMaterialDark)
         }
 
-        let bar = UIVisualEffectView(effect: effect)
+        let bar = UIVisualEffectView(effect: barEffect)
         bar.translatesAutoresizingMaskIntoConstraints = false
         bar.layer.cornerRadius = 30
         bar.layer.cornerCurve = .continuous
@@ -67,6 +74,48 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         // inferred.
         bar.overrideUserInterfaceStyle = .dark
         view.addSubview(bar)
+
+        // Element one: the bar's own body, filling the container.
+        if #available(iOS 26.0, *) {
+            let body = UIVisualEffectView(effect: UIGlassEffect(style: .regular))
+            body.translatesAutoresizingMaskIntoConstraints = false
+            // Each nested element carries its own shape: the container combines them, it does not inherit the
+            // outer view's rounding, so without this the body renders as a hard rectangle.
+            body.layer.cornerRadius = 30
+            body.layer.cornerCurve = .continuous
+            body.clipsToBounds = true
+            body.overrideUserInterfaceStyle = .dark
+            bar.contentView.addSubview(body)
+            NSLayoutConstraint.activate([
+                body.topAnchor.constraint(equalTo: bar.contentView.topAnchor),
+                body.bottomAnchor.constraint(equalTo: bar.contentView.bottomAnchor),
+                body.leadingAnchor.constraint(equalTo: bar.contentView.leadingAnchor),
+                body.trailingAnchor.constraint(equalTo: bar.contentView.trailingAnchor)
+            ])
+
+            // Element two: the selection lozenge, which slides between tabs and merges with the body as it goes.
+            // Untinted it vanishes — two panes of the same material fuse into one and the selection stops
+            // reading — so it carries a little of the shop's green. That is the material's own tintColor rather
+            // than a layer painted over it, so it still refracts what is behind the bar.
+            let lozengeGlass = UIGlassEffect(style: .regular)
+            lozengeGlass.tintColor = accent.withAlphaComponent(0.22)
+            let lozenge = UIVisualEffectView(effect: lozengeGlass)
+            lozenge.translatesAutoresizingMaskIntoConstraints = false
+            lozenge.layer.cornerRadius = 22
+            lozenge.layer.cornerCurve = .continuous
+            lozenge.clipsToBounds = true
+            lozenge.overrideUserInterfaceStyle = .dark
+            bar.contentView.addSubview(lozenge)
+            bubble = lozenge
+            let centre = lozenge.centerXAnchor.constraint(equalTo: bar.contentView.leadingAnchor)
+            bubbleCentre = centre
+            NSLayoutConstraint.activate([
+                centre,
+                lozenge.centerYAnchor.constraint(equalTo: bar.contentView.centerYAnchor),
+                lozenge.heightAnchor.constraint(equalToConstant: 44),
+                lozenge.widthAnchor.constraint(equalToConstant: 62)
+            ])
+        }
 
         let row = UIStackView()
         row.axis = .horizontal
@@ -129,7 +178,7 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
 
     /// Colour carries the selection. The guidance is to tint the label rather than fill the background for a
     /// selected tab, and to keep background colour for a single primary action — which a tab bar does not have.
-    private func paint() {
+    private func paint(animated: Bool = false) {
         for (index, tab) in tabs.enumerated() {
             let chosen = tab.key == selectedKey
             buttons[index].tintColor = chosen ? accent : resting
@@ -137,6 +186,36 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
             buttons[index].accessibilityLabel = tab.title
             buttons[index].accessibilityValue = chosen ? "Selected" : nil
         }
+        moveLozenge(animated: animated)
+    }
+
+    /// Slides the lozenge under the selected tab. The glass container does the fusing; this only has to put it in
+    /// the right place, and give it the settling motion the material is meant to have.
+    private func moveLozenge(animated: Bool) {
+        guard let bubble, let centre = bubbleCentre,
+              let index = tabs.firstIndex(where: { $0.key == selectedKey }),
+              index < buttons.count else { return }
+        view.layoutIfNeeded()
+        let target = buttons[index].convert(buttons[index].bounds, to: bubble.superview).midX
+        guard centre.constant != target else { return }
+        centre.constant = target
+        // A tab change is a small, frequent move, so the bounce stays slight — and disappears entirely for anyone
+        // who has asked the system for less motion.
+        guard animated, !UIAccessibility.isReduceMotionEnabled else {
+            bubble.superview?.layoutIfNeeded()
+            return
+        }
+        // The older spring API rather than iOS 17's springDuration/bounce, so the deployment target is untouched.
+        UIView.animate(withDuration: 0.42, delay: 0, usingSpringWithDamping: 0.72, initialSpringVelocity: 0,
+                       options: [.allowUserInteraction, .beginFromCurrentState]) {
+            bubble.superview?.layoutIfNeeded()
+        }
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // The buttons have no width until the stack view has laid out, so the first placement happens here.
+        moveLozenge(animated: false)
     }
 
     // MARK: - Native to web
@@ -144,7 +223,7 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     @objc private func tabTapped(_ sender: UIButton) {
         let tab = tabs[sender.tag]
         selectedKey = tab.key
-        paint()
+        paint(animated: true)
         let escaped = tab.key.replacingOccurrences(of: "'", with: "")
         webView?.evaluateJavaScript("window.canopyNativeTray&&window.canopyNativeTray.select('\(escaped)')")
     }
@@ -155,7 +234,7 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         guard message.name == "canopyTray", let payload = message.body as? [String: Any] else { return }
         if let active = payload["active"] as? String, tabs.contains(where: { $0.key == active }) {
             selectedKey = active
-            paint()
+            paint(animated: true)
         }
         if let badges = payload["badges"] as? [String] {
             for (index, tab) in tabs.enumerated() {
