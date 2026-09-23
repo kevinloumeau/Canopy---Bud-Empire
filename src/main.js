@@ -33,7 +33,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // Contract progression is defined in depth.js, including post-city milestones.
   var $=function(id){return document.getElementById(id)};
   // A new shop starts as seven construction sites: the door and six stations are raised for free during the intro, then the sign flips.
-  function fresh(){return{money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),productMenu:migrateMenu(),sound:true,ambience:true,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),crosses:{done:[],active:null},vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
+  function fresh(){return{money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),productMenu:migrateMenu(),sound:true,ambience:true,stillMotion:false,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),crosses:{done:[],active:null},vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
   // Whether the web view arrived with no save at all, sampled before anything in the game can write one. The
   // native recovery below depends on this: boot itself calls save(), so by the time it runs, local storage always
   // looks populated and the question can no longer be asked.
@@ -58,7 +58,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     next.lifetime=finite(old.lifetime,0,0,Number.MAX_SAFE_INTEGER);
     next.sold=Math.floor(finite(old.sold,0,0,Number.MAX_SAFE_INTEGER));
     next.onlineCompleted=Math.floor(finite(old.onlineCompleted,0,0,Number.MAX_SAFE_INTEGER));next.onlineRequests=finite(old.onlineRequests,0,0,40);next.hints={web:!!(old.hints&&old.hints.web),storage:!!(old.hints&&old.hints.storage),queue:!!(old.hints&&old.hints.queue)};
-    next.contract=Math.floor(finite(old.contract,0,0,21));next.productMenu=migrateMenu(old.productMenu);next.sound=old.sound!==false;next.ambience=old.ambience!==false;next.lightMode=['day','night'].includes(old.lightMode)?old.lightMode:null;next.autoDrone=migrateAutoDrone(old.autoDrone);
+    next.contract=Math.floor(finite(old.contract,0,0,21));next.productMenu=migrateMenu(old.productMenu);next.sound=old.sound!==false;next.ambience=old.ambience!==false;next.stillMotion=old.stillMotion===true;next.lightMode=['day','night'].includes(old.lightMode)?old.lightMode:null;next.autoDrone=migrateAutoDrone(old.autoDrone);
     next.globalLevel=Math.floor(finite(old.globalLevel,0,0,500));
     next.crosses=(function(raw){var valid=['0-1','0-2','0-3','1-2','1-3','2-3'],r=raw&&typeof raw==='object'?raw:{};
       var done=(Array.isArray(r.done)?r.done:[]).filter(function(id,ix,arr){return valid.indexOf(id)>=0&&arr.indexOf(id)===ix});
@@ -857,7 +857,17 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       ctx.fillRect(-c.w*unit/2,-c.h*unit/2,c.w*unit,c.h*unit)}
     ctx.restore();sceneElevation=savedElevation;render.invalidated=true;
   }
-  var motionPreference=window.matchMedia('(prefers-reduced-motion: reduce)');
+  var systemStill=window.matchMedia('(prefers-reduced-motion: reduce)');
+  // Apple asks for motion to be optional. The system switch is honoured, and so is a switch of the game's own —
+  // a player who wants the shop to hold still has no other way to say so without turning motion off across their
+  // whole phone, and this is a game they may leave running in the corner of a room for hours.
+  //
+  // Kept as a `.matches` getter so every reading of it below is unchanged: there are three dozen of them through
+  // the renderer, and they should all keep asking the same question.
+  var motionPreference={get matches(){return systemStill.matches||!!(state&&state.stillMotion)}};
+  // The stylesheets ask the media query directly and cannot see the game's switch, so the class carries it to them.
+  function markStill(){var on=motionPreference.matches;if(document.documentElement.classList.contains('still')!==on)document.documentElement.classList.toggle('still',on)}
+  if(systemStill.addEventListener)systemStill.addEventListener('change',markStill);
   var dprCap=3;
 
   function resize(){var rect=world.getBoundingClientRect(),oldWidth=width,oldHeight=height,oldDpr=dpr;dpr=Math.min(window.devicePixelRatio||1,dprCap);width=Math.max(1,Math.round(rect.width));height=Math.max(1,Math.round(rect.height));if(oldWidth!==width||oldHeight!==height||oldDpr!==dpr){canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);}canvas.style.width=width+'px';canvas.style.height=height+'px';ctx.setTransform(dpr,0,0,dpr,0,0);applyCamera()}
@@ -4407,12 +4417,15 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(destination==='flowers')return showTray('flowers');showTray('empire');if(destination==='empire'){empireShell.show('home');return;}
     var i=destination==='regulars'?state.empire.network.stores.findIndex(function(b){return !b.relationship}):0;empireShell.openStore(Math.max(0,i));if(destination==='mara'||destination==='regulars'){var people=$('opTab'+Math.max(0,i)+'2');if(people)people.click();}
   }});
+  markStill();
   var startGuide=mountStartGuide({showTray:showTray,collapse:function(){showTray('factory')},fit:fitControls,paintHero:paintIntroArt,sound:function(kind){playSound(kind,state.sound)},report:function(name,props){telemetry.send(name,props)},
     // Construction steps: the guide asks whether a site is built, builds it on a tap, opens the shop at the end and, if
     // skipped, finishes the job itself. On phones the sheet drops away so every site is on screen beneath the card.
     isBuilt:isBuilt,build:buildStation,shopOpen:function(){return state.shopOpen},openShop:openShop,finish:finishConstruction,
     sheet:function(){if(width<780)collapsePanel()},reserve:function(px){guideReserve=px;fitControls()},
-    select:function(key){loungeSelected=key==='lounge';securitySelected=key==='door';if(key!=='door'&&key!=='lounge')selected=key;renderUI()}});var guideReplay=document.createElement('button');guideReplay.type='button';guideReplay.className='guide-replay';guideReplay.textContent='Replay the start guide';guideReplay.onclick=function(){startGuide.open()};document.querySelector('.shop-reset').prepend(guideReplay);mountSettings({getState:function(){return state},setSpeed:setGameSpeed});
+    select:function(key){loungeSelected=key==='lounge';securitySelected=key==='door';if(key!=='door'&&key!=='lounge')selected=key;renderUI()}});var guideReplay=document.createElement('button');guideReplay.type='button';guideReplay.className='guide-replay';guideReplay.textContent='Replay the start guide';guideReplay.onclick=function(){startGuide.open()};document.querySelector('.shop-reset').prepend(guideReplay);mountSettings({getState:function(){return state},setSpeed:setGameSpeed,
+      systemStill:function(){return systemStill.matches},
+      stillMotion:function(next){if(next===undefined)return !!state.stillMotion;state.stillMotion=!!next;markStill();render.invalidated=true;save();renderUI();return state.stillMotion}});
   manageDialog($('resetModal'),function(){$('resetModal').hidden=true});manageDialog(prestigeDialog,function(){prestigeDialog.hidden=true});
   Array.prototype.forEach.call(document.querySelectorAll('[data-empire-view]'),function(button){button.onclick=function(){var view=button.getAttribute('data-empire-view');Array.prototype.forEach.call(document.querySelectorAll('[data-empire-view]'),function(b){b.setAttribute('aria-pressed',String(b===button))});Array.prototype.forEach.call(document.querySelectorAll('[data-empire-section]'),function(section){section.hidden=section.getAttribute('data-empire-section')!==view});document.querySelector('[data-pane=empire]').scrollTop=0;fitControls()}});
 

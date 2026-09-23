@@ -270,3 +270,9 @@
 .regular-card .regular-portrait{width:52px;height:52px;flex:none;border-radius:50%;box-shadow:0 0 0 2px rgba(232,210,156,.35)}
 .regular-card h4{margin:0 0 4px}
 .regular-speech{margin:0;font-size:12.5px;line-height:1.45;color:#cfe0c6;font-style:italic}
+
+/* Motion is optional: the chevron still turns and the meters still fill, they just arrive rather than travel. */
+@media(prefers-reduced-motion:reduce){
+ .stock-logistics>summary::before{transition:none}
+ .store-meter i,.supply-meter i{transition:none}
+}

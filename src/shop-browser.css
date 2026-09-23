@@ -50,3 +50,9 @@
 /* The recommended card flashes when the bottleneck banner sends you here. */
 .shop-browser .shop-item.is-recommended{animation:shop-recommend 1.6s ease-out}
 @keyframes shop-recommend{0%{box-shadow:0 0 0 2px #efcf8d,0 0 18px #efcf8d80}100%{box-shadow:0 0 0 0 #efcf8d00}}
+
+/* The recommendation glow is an attention animation rather than feedback on something the player did, so with
+   motion reduced it becomes a plain ring that simply stays for a moment. */
+@media(prefers-reduced-motion:reduce){
+ .shop-browser .shop-item.is-recommended{animation:none;box-shadow:0 0 0 2px #efcf8d}
+}

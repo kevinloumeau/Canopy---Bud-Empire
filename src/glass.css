@@ -220,3 +220,11 @@
    exists natively, so the page hides its own strip and leaves room for the bar floating over it. */
 .native .sheet .tray-tabs{display:none}
 .native .sheet{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 62px)}
+
+/* The game's own reduce-motion switch. The stylesheets below ask the system media query directly and cannot see
+   it, so this carries the same answer to all of them at once: animations and transitions still happen, they just
+   arrive instead of travelling. Colour changes are left alone — they are feedback, not movement. */
+html.still *,html.still *::before,html.still *::after{
+ animation-duration:.001ms!important;animation-iteration-count:1!important;
+ transition-duration:.001ms!important;scroll-behavior:auto!important;
+}

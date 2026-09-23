@@ -1,6 +1,7 @@
 // Settings sheet: one gear in the HUD gathers sound, the start guide and reset. Pause and lighting stay on the HUD only.
 import {manageDialog} from './dialog-focus.js';
-export function mountSettings(){
+export function mountSettings(options){
+ const opts=options||{};
  const $=id=>document.getElementById(id);
  const native=(()=>{try{const c=window.Capacitor;return !!(c&&c.isNativePlatform&&c.isNativePlatform())}catch(e){return false}})();
  const gear=document.createElement('button');gear.type='button';gear.id='settingsOpen';gear.setAttribute('aria-label','Settings');gear.setAttribute('aria-haspopup','dialog');gear.title='Settings';
@@ -11,6 +12,8 @@ export function mountSettings(){
   '<div class="settings-list">'+
   '<button type="button" class="settings-row" data-proxy="soundToggle"><span>Sound</span><b data-mirror="soundToggle"></b></button>'+
   '<button type="button" class="settings-row" data-proxy="ambienceToggle"><span>Ambience</span><b data-mirror="ambienceToggle"></b></button>'+
+  // Motion belongs beside sound: both are things a player may want quiet without changing their whole phone.
+  '<button type="button" class="settings-row" data-still><span>Reduce motion<small>Holds the shop still</small></span><b data-mirror="still"></b></button>'+
   '<button type="button" class="settings-row" data-proxy="guide"><span>Start guide</span><b>Replay</b></button>'+
   // Backing up by hand is a web concern. Installed as an app the save is already held on the device twice — the
   // web view's storage and a native mirror beneath it — and iOS carries app data to a new phone in its own backup,
@@ -26,12 +29,24 @@ export function mountSettings(){
   const sound=$('soundToggle'),bed=$('ambienceToggle');
   wrap.querySelector('[data-mirror=soundToggle]').textContent=sound?(sound.textContent.replace('Sound ','')==='on'?'On':'Off'):'';
   wrap.querySelector('[data-mirror=ambienceToggle]').textContent=bed?(bed.textContent.replace('Ambience ','')==='on'?'On':'Off'):'';
+  // When the phone itself asks for reduced motion the game follows it and the row says so rather than pretending
+  // to be a switch that would not do anything.
+  const stillRow=wrap.querySelector('[data-still]'),fromSystem=opts.systemStill?opts.systemStill():false;
+  const still=fromSystem||(opts.stillMotion?opts.stillMotion():false);
+  stillRow.querySelector('[data-mirror=still]').textContent=fromSystem?'On · System':(still?'On':'Off');
+  stillRow.disabled=fromSystem;
+  stillRow.setAttribute('aria-pressed',String(still));
  }
  function open(){opener=document.activeElement;sync();wrap.hidden=false;closeButton.focus();}
  function close(){wrap.hidden=true;if(opener&&opener.focus)opener.focus();}
  gear.onclick=open;closeButton.onclick=close;
  wrap.addEventListener('click',e=>{if(e.target===wrap)close();});
  wrap.addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();close();}});
+ wrap.querySelector('[data-still]').onclick=()=>{
+  if(!opts.stillMotion)return;
+  opts.stillMotion(!opts.stillMotion());
+  sync();
+ };
  wrap.querySelectorAll('[data-proxy]').forEach(button=>button.onclick=()=>{
   const key=button.dataset.proxy;
   if(key==='guide'){close();const replay=document.querySelector('.guide-replay');if(replay)replay.click();return;}

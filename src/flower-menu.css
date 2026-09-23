@@ -187,3 +187,10 @@
 .journal-card button:disabled{opacity:.45;cursor:default}
 @media(hover:hover){.journal-card button:not(:disabled):hover{background:rgba(182,216,140,.26)}}
 .journal-card button:focus-visible{outline:2px solid #e8d29c;outline-offset:2px}
+
+/* The press and hover shifts on these are the kind of frequent, small motion the guidance asks to leave out when
+   motion is reduced. Colour still answers the press, so the button is no less responsive. */
+@media(prefers-reduced-motion:reduce){
+ .strain-nav button,.strain-hero-actions button{transition:border-color .18s ease,background .18s ease}
+ .strain-nav button:active,.strain-hero-actions button:active{transform:none}
+}
