@@ -1,5 +1,9 @@
 {
   "appId": "com.kevinloumeau.canopy",
   "appName": "Canopy",
-  "webDir": "dist"
+  "webDir": "dist",
+  "backgroundColor": "#20372b",
+  "ios": {
+    "backgroundColor": "#20372b"
+  }
 }
