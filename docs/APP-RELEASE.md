@@ -97,9 +97,10 @@ strongest answer to a Guideline 4.2 query.
 
 ## Phase 4 · Store listing
 
-- [ ] **me** — Screenshots at the sizes App Store Connect currently requires. Convenient accident: the iPhone 18
-      Pro Max simulator renders at exactly 1320x2868, which *is* the 6.9-inch requirement, so its screenshots can
-      be submitted untouched. The 13-inch iPad set comes off the iPad Pro simulator the same way.
+- [x] **done (iPhone)** — Four 6.9-inch screenshots in `docs/store/iphone-6.9/`, at exactly 1320x2868, which is
+      both the requirement and what the iPhone 18 Pro Max simulator renders, so they are submittable untouched.
+      Status bar set to Apple's own 9:41 marketing state. See `docs/store/README.md`.
+- [ ] **me** — The 13-inch iPad set (2064x2752), which App Store Connect asks for because the app ships universal.
 - [ ] **me** — Short subtitle and full description.
 - [x] **done** — Privacy policy URL: `public/privacy.html`, live on the Pages site once main deploys.
 - [ ] **you** — Privacy nutrition labels. Canopy's answer is the simple one — **Data Not Collected** — which is
