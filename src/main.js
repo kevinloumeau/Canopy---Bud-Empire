@@ -135,11 +135,14 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   // Backup: the save is written to a file the player keeps, and read back from one. Nothing is uploaded and no
   // account exists, so this is the only way a shop survives cleared site data, a new browser or a new device.
+  // Web only. In the app the save is already kept on the device twice over — the web view's own storage and the
+  // native mirror below it — and iOS carries app data to a new phone through its own backup, so Settings does not
+  // offer these there (see mountSettings). On the web nothing else protects a save, so they stay.
   function exportSave(){
     try{
       save();
-      var payload={game:'canopy-bud-empire',format:1,exported:new Date().toISOString(),state:state};
-      var blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+      var payload=JSON.stringify({game:'canopy-bud-empire',format:1,exported:new Date().toISOString(),state:state},null,2);
+      var blob=new Blob([payload],{type:'application/json'});
       var url=URL.createObjectURL(blob),link=document.createElement('a');
       link.href=url;link.download='canopy-save-'+new Date().toISOString().slice(0,10)+'.json';
       document.body.appendChild(link);link.click();link.remove();

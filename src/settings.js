@@ -2,6 +2,7 @@
 import {manageDialog} from './dialog-focus.js';
 export function mountSettings(){
  const $=id=>document.getElementById(id);
+ const native=(()=>{try{const c=window.Capacitor;return !!(c&&c.isNativePlatform&&c.isNativePlatform())}catch(e){return false}})();
  const gear=document.createElement('button');gear.type='button';gear.id='settingsOpen';gear.setAttribute('aria-label','Settings');gear.setAttribute('aria-haspopup','dialog');gear.title='Settings';
  gear.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h9m4 0h3M4 12h3m4 0h9M4 17h11m4 0h1"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="17" r="2"/></svg>';
  document.querySelector('.speed-controls').appendChild(gear);
@@ -11,9 +12,13 @@ export function mountSettings(){
   '<button type="button" class="settings-row" data-proxy="soundToggle"><span>Sound</span><b data-mirror="soundToggle"></b></button>'+
   '<button type="button" class="settings-row" data-proxy="ambienceToggle"><span>Ambience</span><b data-mirror="ambienceToggle"></b></button>'+
   '<button type="button" class="settings-row" data-proxy="guide"><span>Start guide</span><b>Replay</b></button>'+
-  '<button type="button" class="settings-row" data-proxy="exportSave"><span>Back up save<small>Downloads a file you keep</small></span><b>Export</b></button>'+
-  '<button type="button" class="settings-row" data-proxy="importSave"><span>Restore save<small>Replaces the shop in this browser</small></span><b>Import</b></button>'+
-  '</div><div class="settings-foot"><button type="button" class="settings-row settings-danger" data-proxy="resetOpen"><span>Start over</span><b>Reset everything</b></button><p class="settings-note">Canopy: Bud Empire · saves in this browser</p></div></div>';
+  // Backing up by hand is a web concern. Installed as an app the save is already held on the device twice — the
+  // web view's storage and a native mirror beneath it — and iOS carries app data to a new phone in its own backup,
+  // so offering a manual export there would be ceremony for something already handled.
+  (native?'':
+   '<button type="button" class="settings-row" data-proxy="exportSave"><span>Back up save<small>Downloads a file you keep</small></span><b>Export</b></button>'+
+   '<button type="button" class="settings-row" data-proxy="importSave"><span>Restore save<small>Replaces the shop in this browser</small></span><b>Import</b></button>')+
+  '</div><div class="settings-foot"><button type="button" class="settings-row settings-danger" data-proxy="resetOpen"><span>Start over</span><b>Reset everything</b></button><p class="settings-note">Canopy: Bud Empire · saves '+(native?'on this device':'in this browser')+'</p></div></div>';
  document.body.append(wrap);
  const modal=wrap.querySelector('.modal'),closeButton=wrap.querySelector('.settings-close');
  let opener=null;

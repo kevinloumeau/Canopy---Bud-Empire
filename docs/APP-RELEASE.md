@@ -81,8 +81,12 @@ strongest answer to a Guideline 4.2 query.
 
 - [x] **done** — Simulator: the age gate, the start guide and a live shop all render correctly, and the save
       survives a force-quit and a wiped web view.
-- [ ] **me** — Save export/import through the iOS file picker specifically; the desktop browser path is verified
-      but iOS presents a different picker.
+- [x] **done** — Manual save export/import is **web only**. In the app a web view has no download manager, so the
+      export button did nothing at all — silently, which is the worst outcome for a backup control. Rather than
+      rebuild it on the native share sheet, it is hidden in the app: the save is already held on the device twice
+      (web view storage plus the native mirror) and iOS carries app data to a new phone in its own backup, so a
+      manual export there is ceremony for something already handled. It remains on the web, where nothing else
+      protects a save.
 - [ ] **you** — Install on a real device if you have one. The Simulator does not reproduce memory pressure,
       thermals or real storage eviction, which is exactly the risk area for the save.
 - [ ] **me** — Check frame rate on device-class hardware. 3.7ms/frame on a Mac says little about an older iPhone.
