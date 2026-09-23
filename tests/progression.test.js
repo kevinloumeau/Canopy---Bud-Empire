@@ -8,13 +8,14 @@ test('legacy and malformed progression fields migrate without unlocking rewards'
  assert.equal(p.career,0);assert.deepEqual(p.stores.map(s=>s.level),[0,0,10,0,0]);assert.equal(p.daily.streak,0);
  assert.deepEqual(migrateProgression(undefined,start).stores.map(s=>s.level),[0,0,0,0,0]);
 });
-test('daily claims are once per UTC day, cycle after day seven, and reset after a missed day',()=>{
+test('daily claims are once per UTC day, cycle after day seven, and hold their place through a missed day',()=>{
  const s=fresh(), initial=s.money;
  for(let i=0;i<7;i++){assert.equal(claimDaily(s,start+i*DAY),DAILY[i]);assert.equal(claimDaily(s,start+i*DAY+1000),0)}
  assert.equal(s.money-initial,DAILY.reduce((a,b)=>a+b,0));assert.equal(s.lifetime,1000000);
- assert.equal(dailyStatus(s.empire,start+7*DAY).day,1);
- claimDaily(s,start+7*DAY);assert.equal(dailyStatus(s.empire,start+9*DAY).day,1);
- claimDaily(s,start+9*DAY);assert.equal(claimDaily(s,start+6*DAY),0);
+ assert.equal(dailyStatus(s.empire,start+7*DAY).day,1,'the track cycles back to day one after day seven');
+ // Being away is not a mistake: the day after a gap is the next day on the track, not day one again.
+ claimDaily(s,start+7*DAY);assert.equal(dailyStatus(s.empire,start+9*DAY).day,2,'a missed day costs that day, not the streak');
+ claimDaily(s,start+9*DAY);assert.equal(claimDaily(s,start+6*DAY),0,'a clock rollback still cannot claim again');
 });
 test('clock rollback and save/reload cannot duplicate a daily claim',()=>{
  const s=fresh();claimDaily(s,start+DAY);s.empire=migrateProgression(JSON.parse(JSON.stringify(s.empire)),start);
@@ -41,10 +42,14 @@ test('events count only matching actions after joining, and completed rewards su
  const cash=s.money;assert.equal(claimEvent(s,start+21*60000),e.reward);assert.equal(s.money,cash+e.reward);assert.equal(claimEvent(s,start+22*60000),0);
  assert.equal(p.trophies,1);assert.equal(eventStatus(p,start+HOUR).joined,false);
 });
-test('expired and paused-time events cannot gain progress or be rejoined in the same window',()=>{
+test('events take progress for their whole hour, cannot be rejoined in that hour, and reset on the next',()=>{
  const s=fresh(),p=s.empire,e=eventStatus(p,start);joinEvent(p,start);
- recordEvent(p,e.kind,1,start+100);recordEvent(p,e.kind,100,start+20*60000);
- assert.equal(p.event.progress,1);assert.equal(claimEvent(s,start+25*60000),0);assert.equal(joinEvent(p,start+25*60000),false);
+ recordEvent(p,e.kind,1,start+100);assert.equal(p.event.progress,1);
+ // Turning up late costs the attempt, not the chance: the window is the hour, not its first twenty minutes.
+ recordEvent(p,e.kind,e.goal+50,start+45*60000);assert.equal(p.event.progress,e.goal,'progress stops at the goal');
+ assert.equal(joinEvent(p,start+45*60000),false,'already joined this hour');
+ assert.ok(claimEvent(s,start+50*60000)>0,'a finished event pays out within its hour');
+ assert.equal(claimEvent(s,start+55*60000),0,'and pays only once');
  assert.equal(joinEvent(p,start+HOUR),true);assert.equal(p.event.progress,0);
 });
 
