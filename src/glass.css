@@ -49,8 +49,14 @@
 .sheet ::selection{background:#c5e4a9;color:#1d3326}
 @media(hover:hover){.sheet button:not(:disabled):hover{filter:brightness(1.1)}}
 .sheet button:not(:disabled):active{transform:scale(.975)}
+/* Inside the app the sheet floats a few pixels clear of a display whose own corners are far rounder than its own.
+   Corners nest rather than fight when the inner radius is the outer one less the gap — iPhone display radii run
+   about 47-55pt, so 44px against the 7px inset sits inside that range on every current size. The top corners are
+   mid-screen and keep the design's own 24px. */
+.native .sheet{border-radius:24px 24px 44px 44px}
 @media(max-width:779px){
  .sheet{left:7px;right:7px;bottom:7px;border-radius:24px;padding-inline:9px;padding-bottom:env(safe-area-inset-bottom,0px)}
+ .native .sheet{border-radius:24px 24px 44px 44px}
  .sheet .tray-tabs{margin-bottom:7px}
  .sheet .machine-nav button{grid-template-columns:39px minmax(0,1fr);column-gap:4px;padding-inline:4px}
  .sheet .machine-nav button .machine-thumb{width:39px}
