@@ -43,7 +43,7 @@ has changed repeatedly and may change again.
 
 - [ ] **you** — Enrol in the Apple Developer Program ($99/year). Identity verification takes days; start it first.
 - [ ] **you** — Choose the bundle ID. Permanent, never changeable. Suggested: `com.kevinloumeau.canopy`.
-- [ ] **you** — Install Xcode. Only Command Line Tools are present, and Xcode is a large download.
+- [x] **done** — Xcode 27.1 installed with the iOS 27.1 simulator runtime.
 - [ ] **you** — Confirm whether you have an iPhone or iPad to test on. Not a blocker — the Simulator is good and I
       can drive it from here — but at least one real device before submitting is strongly advised.
 
@@ -52,10 +52,9 @@ has changed repeatedly and may change again.
 - [x] **done** — **Fonts bundled.** Bricolage Grotesque and DM Mono were fetched from Google Fonts; they now ship
       in the repo (OFL, latin + latin-ext, 119 KB). The built game makes no external requests at all, which is
       what lets the privacy answers below say "no data collected" honestly.
-- [ ] **me** — **Make the save survive iOS.** This matters more on iOS than it would have on Android: WKWebView's
-      local storage can be evicted by the system under storage pressure, where Android WebView keeps it in app
-      data. Persisting the save through Capacitor Preferences (native user defaults) takes it out of WebView
-      storage entirely. The export/import already shipped is the manual safety net; this is the automatic one.
+- [x] **done** — **Save survives iOS.** WKWebView's local storage can be evicted under storage pressure, so every
+      save is mirrored into native preferences and a launch that finds the web view empty restores from it.
+      Verified on the simulator by deleting the LocalStorage directory between launches.
 - [ ] **me** — Safe areas: notch, Dynamic Island and home indicator. The HUD sits at the top edge and the tray at
       the bottom, so both need insets. `viewport-fit=cover` is already set.
 - [ ] **me** — Lock orientation to portrait to match the manifest, and confirm the canvas reflows on rotation
@@ -67,9 +66,10 @@ has changed repeatedly and may change again.
 
 ## Phase 2 · Wrap it
 
-- [ ] **me** — Add `@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`.
-- [ ] **me** — `npx cap init` with the bundle ID from Phase 0; point `webDir` at `dist`.
-- [ ] **me** — `npx cap add ios`, then wire `npm run build && npx cap sync` into one release script.
+- [x] **done** — Capacitor 8 added, iOS project created with **Swift Package Manager** rather than CocoaPods,
+      which avoids needing Homebrew and a newer Ruby. `npm run ios` builds and syncs; `npm run ios:open` also
+      opens Xcode. The app builds, launches and loads in the simulator.
+- [x] **done** — iPhone locked to portrait to match the manifest; iPad keeps every orientation.
 - [ ] **me** — App icon and launch screen from the existing 512px icon; status bar styled to `#1f3529`.
 
 Capacitor rather than a web view of the live site, deliberately: it bundles the game inside the app, so it launches
