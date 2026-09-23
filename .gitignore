@@ -6,3 +6,7 @@ node_modules/
 # iCloud Drive leaves conflict copies beside files it syncs ("index 2.html", "shift-abc 2.js").
 # They are byte-identical duplicates and have twice been committed by accident.
 * 2.*
+
+# Store screenshots are regenerated from the simulator each release (see docs/store/README.md).
+# They are 5.7-megapixel PNGs that git would keep forever, so the recipe is versioned and the images are not.
+docs/store/**/*.png
