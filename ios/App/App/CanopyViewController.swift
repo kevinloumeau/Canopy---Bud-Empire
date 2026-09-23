@@ -36,6 +36,14 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     private let accent = UIColor(red: 0.84, green: 0.91, blue: 0.63, alpha: 1)      // #d6e8a1
     private let resting = UIColor(red: 0.86, green: 0.90, blue: 0.84, alpha: 0.92)
 
+    /// The game asks for haptics through `navigator.vibrate`, which WKWebView does not implement — so until these
+    /// existed, every tap in the shop was silent on iOS. They are held rather than built per tap so `prepare()`
+    /// has somewhere to warm up; a generator created at the moment of the tap fires late enough to read as a
+    /// separate event from the touch rather than as part of it.
+    private let selectionHaptic = UISelectionFeedbackGenerator()
+    private let lightHaptic = UIImpactFeedbackGenerator(style: .light)
+    private let firmHaptic = UIImpactFeedbackGenerator(style: .medium)
+
     private var buttons: [UIButton] = []
     private var badgeDots: [UIView] = []
     private var selectedKey = "factory"
@@ -47,6 +55,7 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     override func viewDidLoad() {
         super.viewDidLoad()
         webView?.configuration.userContentController.add(self, name: "canopyTray")
+        webView?.configuration.userContentController.add(self, name: "canopyHaptic")
         installTabBar()
     }
 
@@ -125,6 +134,7 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         }
 
         let row = UIStackView()
+        row.accessibilityContainerType = .semanticGroup
         row.axis = .horizontal
         row.distribution = .fillEqually
         row.alignment = .fill
@@ -140,16 +150,21 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
             config.imagePadding = 3
             config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 2, bottom: 8, trailing: 2)
             config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 17, weight: .medium)
+            // The label tracks the reader's text size rather than sitting at a fixed 11pt. It is capped at 13:
+            // six tabs share the width of the screen, and past that the longest of them ("Deliveries") starts
+            // colliding with its neighbours no matter how it is shrunk. Beyond the cap the shrink-to-fit below
+            // takes over, so the text keeps growing in the reader's other apps without breaking the row here.
             config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
                 var out = attrs
-                out.font = .systemFont(ofSize: 11, weight: .semibold)
+                out.font = UIFontMetrics(forTextStyle: .caption2).scaledFont(
+                    for: .systemFont(ofSize: 11, weight: .semibold), maximumPointSize: 13)
                 return out
             }
             button.configuration = config
+            button.titleLabel?.adjustsFontSizeToFitWidth = true
+            button.titleLabel?.minimumScaleFactor = 0.82
             button.tag = index
             button.addTarget(self, action: #selector(tabTapped(_:)), for: .touchUpInside)
-            // A tab is a destination, not a verb, so it reads as a tab to VoiceOver rather than as a button.
-            button.accessibilityTraits = [.button]
             row.addArrangedSubview(button)
             buttons.append(button)
 
@@ -191,7 +206,9 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
             buttons[index].tintColor = chosen ? accent : resting
             buttons[index].configuration?.baseForegroundColor = chosen ? accent : resting
             buttons[index].accessibilityLabel = tab.title
-            buttons[index].accessibilityValue = chosen ? "Selected" : nil
+            // `.selected` rather than a spoken value: VoiceOver says "selected" itself, in the reader's own
+            // language, and a hardcoded English string here would not have translated.
+            buttons[index].accessibilityTraits = chosen ? [.button, .selected] : [.button]
         }
         moveLozenge(animated: animated)
     }
@@ -219,16 +236,45 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         }
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        selectionHaptic.prepare()
+    }
+
+    override func traitCollectionDidChange(_ previous: UITraitCollection?) {
+        super.traitCollectionDidChange(previous)
+        // The configuration's font is resolved once when it is built, so a text-size change has to ask for it again.
+        guard traitCollection.preferredContentSizeCategory != previous?.preferredContentSizeCategory else { return }
+        buttons.forEach { $0.setNeedsUpdateConfiguration() }
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         // The buttons have no width until the stack view has laid out, so the first placement happens here.
         moveLozenge(animated: false)
     }
 
+    // MARK: - Haptics
+
+    /// Plays one of the three weights the game asks for, then re-arms that generator: `prepare()` keeps the Taptic
+    /// Engine spun up for a moment, and the next tap in a shop is usually close behind. The system's own Haptics
+    /// switch is honoured by these generators, so there is nothing to check here.
+    private func playHaptic(_ kind: String) {
+        switch kind {
+        case "light": lightHaptic.impactOccurred();     lightHaptic.prepare()
+        case "firm":  firmHaptic.impactOccurred();      firmHaptic.prepare()
+        default:      selectionHaptic.selectionChanged(); selectionHaptic.prepare()
+        }
+    }
+
     // MARK: - Native to web
 
     @objc private func tabTapped(_ sender: UIButton) {
         let tab = tabs[sender.tag]
+        // The web tray's own tabs are hidden natively, so this tap would otherwise be the one control in the app
+        // that moves the whole screen without being felt.
+        guard tab.key != selectedKey else { return }
+        playHaptic("select")
         selectedKey = tab.key
         paint(animated: true)
         let escaped = tab.key.replacingOccurrences(of: "'", with: "")
@@ -238,7 +284,12 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     // MARK: - Web to native
 
     func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
-        guard message.name == "canopyTray", let payload = message.body as? [String: Any] else { return }
+        guard let payload = message.body as? [String: Any] else { return }
+        if message.name == "canopyHaptic" {
+            playHaptic(payload["kind"] as? String ?? "select")
+            return
+        }
+        guard message.name == "canopyTray" else { return }
         if let active = payload["active"] as? String, tabs.contains(where: { $0.key == active }) {
             selectedKey = active
             paint(animated: true)

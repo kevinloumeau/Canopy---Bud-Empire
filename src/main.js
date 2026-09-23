@@ -88,6 +88,21 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function nativeStore(){
     try{var c=window.Capacitor;return c&&c.isNativePlatform&&c.isNativePlatform()&&c.Plugins&&c.Plugins.Preferences||null}catch(e){return null}
   }
+  // Haptics. The web's only tactile API is `navigator.vibrate`, and WKWebView does not implement it, so on iOS
+  // every haptic the game asked for was landing on nothing. The native bar answers `canopyHaptic` with the Taptic
+  // Engine instead. On the web the vibrate call still stands, and where neither exists this is simply silent.
+  //
+  // The three weights are the ones the game was already asking for, named rather than measured in milliseconds:
+  // a selection tick for picking a station, a light tap for collecting, a firmer one for a purchase landing.
+  var HAPTIC_MS={select:8,light:12,firm:18};
+  function haptic(kind){
+    try{
+      var bridge=window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.canopyHaptic;
+      if(bridge){bridge.postMessage({kind:kind});return}
+    }catch(e){/* No bridge: fall through to the web API. */}
+    if(navigator.vibrate)navigator.vibrate(HAPTIC_MS[kind]||8);
+  }
+
   // The mirror trails the real save by a moment: save() runs on a five-second autosave and on every purchase, and
   // the native write is asynchronous, so coalesce them rather than queueing one per call.
   // While a recovery is still being decided, nothing may be mirrored: boot writes a fresh save within the first
@@ -748,7 +763,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var oldTier=stationTier(selected);state.money-=batch.cost;state.lines[selected]+=batch.levels;telemetry.once('first_upgrade',{station:LINES[selected].name});trackStationLevel(selected);if(stationTier(selected)>oldTier)tierFlashes[selected]=1;
     paintThumbnails();burst(machinePos[selected]);
     notify(LINES[selected].name+' · +'+batch.levels+' LEVEL'+(batch.levels===1?'':'S')+' · LEVEL '+state.lines[selected],'upgrade');
-    renderUI();save();if(navigator.vibrate)navigator.vibrate(18);
+    renderUI();save();haptic('firm');
   }
   function add(n){state.money+=n;state.lifetime+=n;recordGoal(state.empire,'revenue',n)}
   function notifyDispatch(batch){
@@ -823,7 +838,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     burst({x:trimSpark.x,y:trimSpark.y-1.4,z:trimSpark.z},'#f5d76e');
     if(!motionPreference.matches)tickets.push({x:trimSpark.x,y:trimSpark.y+.3,z:trimSpark.z,life:1,text:fmt(bonus)});
     trimSpark=null;trimSparkClock=55+Math.random()*45;
-    playSound('sparkle',state.sound);if(navigator.vibrate)navigator.vibrate(12);
+    playSound('sparkle',state.sound);haptic('light');
     save();renderUI();render.invalidated=true;
   }
   function celebrateOpening(){
@@ -4157,16 +4172,16 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   function paintLoungeThumbnail(){var card=document.querySelector('[data-lounge] canvas');if(!card)return;var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;ctx=card.getContext('2d');if(ctx){ctx.clearRect(0,0,80,100);unit=22;centerX=40;centerY=94;angle=.57;drawLoungeThumb()}ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
   function paintThumbnails(){paintSecurityThumbnail();paintLoungeThumbnail();var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;machineTabs.forEach(function(tab,i){ctx=tab.querySelector('canvas').getContext('2d');if(!ctx)return;ctx.clearRect(0,0,80,100);unit=25;centerX=40;centerY=97;angle=.57;drawStage({x:0,z:0},i,0)});ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
-  function selectLounge(){securitySelected=false;loungeSelected=true;showTray('factory');renderUI();var card=document.querySelector('[data-lounge]');if(card&&card.scrollIntoView)card.scrollIntoView({block:'nearest',inline:'nearest'});if(navigator.vibrate)navigator.vibrate(8)}
+  function selectLounge(){securitySelected=false;loungeSelected=true;showTray('factory');renderUI();var card=document.querySelector('[data-lounge]');if(card&&card.scrollIntoView)card.scrollIntoView({block:'nearest',inline:'nearest'});haptic('select')}
   // Each lounge tier is bought outright; the first one raises the doorway out of its hoarding.
   function upgradeLounge(){
     var price=loungeUpgradeCost(state.lounge);if(price===null)return;if(state.money<price)return notify('Need '+fmt(price-state.money)+' more');
     var wasLot=!state.lounge;buyLoungeTier(state);var tier=loungeTier(state.lounge);
     if(wasLot)buildRise[7]=1;burst({x:LOUNGE_DOOR.x,z:LOUNGE_DOOR.z},'#f0a7c8');playSound(wasLot?'build':'sparkle',state.sound);telemetry.send('lounge_tier',{tier:state.lounge});
-    notify(wasLot?'LOUNGE OPEN · '+tier.name:'LOUNGE · '+tier.name.toUpperCase(),'upgrade');paintThumbnails();updateMarkers.key=null;render.invalidated=true;renderUI();save();if(navigator.vibrate)navigator.vibrate(18);
+    notify(wasLot?'LOUNGE OPEN · '+tier.name:'LOUNGE · '+tier.name.toUpperCase(),'upgrade');paintThumbnails();updateMarkers.key=null;render.invalidated=true;renderUI();save();haptic('firm');
   }
-  function selectSecurity(){loungeSelected=false;securitySelected=true;showTray('factory');renderUI();var card=document.querySelector('[data-security]');if(card&&card.scrollIntoView)card.scrollIntoView({block:'nearest',inline:'nearest'});if(navigator.vibrate)navigator.vibrate(8)}
-  function selectMachine(i){securitySelected=false;loungeSelected=false;selected=i;showTray('factory');renderUI();if(machineTabs[i]&&machineTabs[i].scrollIntoView)machineTabs[i].scrollIntoView({block:'nearest',inline:'nearest'});if(navigator.vibrate)navigator.vibrate(8)}
+  function selectSecurity(){loungeSelected=false;securitySelected=true;showTray('factory');renderUI();var card=document.querySelector('[data-security]');if(card&&card.scrollIntoView)card.scrollIntoView({block:'nearest',inline:'nearest'});haptic('select')}
+  function selectMachine(i){securitySelected=false;loungeSelected=false;selected=i;showTray('factory');renderUI();if(machineTabs[i]&&machineTabs[i].scrollIntoView)machineTabs[i].scrollIntoView({block:'nearest',inline:'nearest'});haptic('select')}
   // Construction: the door and each station are raised for free, in line order, with the intro explaining what each one does.
   // Building never charges cash because a shop with no pickup counter cannot earn any.
   var DOOR_POS={x:-9.1,z:9.3};
@@ -4175,7 +4190,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(isBuilt(key))return false;
     if(key==='door'){state.doorBuilt=true;buildRise[6]=1;burst(DOOR_POS,'#f0d89a');securitySelected=true;loungeSelected=false;paintThumbnails()}
     else{if(!isOpen(key)){notify('Build the previous stage first');return false}state.lines[key]=1;buildRise[key]=1;tierFlashes[key]=1;burst(machinePos[key],'#f0d89a');securitySelected=false;loungeSelected=false;selected=key;paintThumbnails()}
-    playSound('build',state.sound);updateMarkers.key=null;render.invalidated=true;renderUI();save();if(navigator.vibrate)navigator.vibrate(18);return true;
+    playSound('build',state.sound);updateMarkers.key=null;render.invalidated=true;renderUI();save();haptic('firm');return true;
   }
   function openShop(){
     if(state.shopOpen)return false;
@@ -4185,7 +4200,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   // Skipping or escaping the intro still leaves a working shop behind.
   function finishConstruction(){if(!state.shopOpen)openShop()}
-  function buySelected(){if(loungeSelected)return upgradeLounge();if(securitySelected)return state.doorBuilt?trainIdChecker(1):buildStation('door');var line=LINES[selected];if(!isOpen(selected))return notify('Build the previous stage first');if(!state.lines[selected])return buildStation(selected);var c=cost(selected);if(state.money<c)return notify('Need '+fmt(c-state.money)+' more');var oldTier=stationTier(selected);state.money-=c;state.lines[selected]++;telemetry.once('first_upgrade',{station:line.name});trackStationLevel(selected);if(stationTier(selected)>oldTier)tierFlashes[selected]=1;paintThumbnails();burst(machinePos[selected]);notify(line.name+' · LEVEL '+state.lines[selected],'upgrade');renderUI();save();if(navigator.vibrate)navigator.vibrate(18)}
+  function buySelected(){if(loungeSelected)return upgradeLounge();if(securitySelected)return state.doorBuilt?trainIdChecker(1):buildStation('door');var line=LINES[selected];if(!isOpen(selected))return notify('Build the previous stage first');if(!state.lines[selected])return buildStation(selected);var c=cost(selected);if(state.money<c)return notify('Need '+fmt(c-state.money)+' more');var oldTier=stationTier(selected);state.money-=c;state.lines[selected]++;telemetry.once('first_upgrade',{station:line.name});trackStationLevel(selected);if(stationTier(selected)>oldTier)tierFlashes[selected]=1;paintThumbnails();burst(machinePos[selected]);notify(line.name+' · LEVEL '+state.lines[selected],'upgrade');renderUI();save();haptic('firm')}
   function boostAll(){if(state.globalLevel>=BOOST_MAX)return;var c=boostCost(state.globalLevel);if(state.money<c)return notify('Need '+fmt(c-state.money)+' more');state.money-=c;state.globalLevel++;state.multiplier=Math.pow(1.25,state.globalLevel);burst({x:0,z:0},colors.orange);notify('ALL STAGES +25%','upgrade');renderUI();save()}
   function claimOrder(){var o=milestone(state.contract);if(!o||state.lifetime<o.goal)return;state.money+=o.reward;state.contract++;notify(fmt(o.reward)+' ORDER BONUS');renderUI();save()}
 
