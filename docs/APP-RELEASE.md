@@ -55,12 +55,11 @@ has changed repeatedly and may change again.
 - [x] **done** — **Save survives iOS.** WKWebView's local storage can be evicted under storage pressure, so every
       save is mirrored into native preferences and a launch that finds the web view empty restores from it.
       Verified on the simulator by deleting the LocalStorage directory between launches.
-- [ ] **me** — Safe areas: notch, Dynamic Island and home indicator. The HUD sits at the top edge and the tray at
-      the bottom, so both need insets. `viewport-fit=cover` is already set.
-- [ ] **me** — Lock orientation to portrait to match the manifest, and confirm the canvas reflows on rotation
-      lock changes.
-- [ ] **me** — Confirm the service worker stays dormant under Capacitor (its guard excludes `localhost`, which is
-      what Capacitor serves from) and that nothing depends on it now the fonts are local.
+- [x] **done** — **Safe areas need no work.** Verified on an iPhone 18 Pro Max: the HUD clears the Dynamic Island
+      and the tray clears the home indicator. The game was built as an installable PWA and already uses
+      `env(safe-area-inset-*)` in eighteen places across nine stylesheets.
+- [x] **done** — Portrait lock, set in Info.plist.
+- [x] **done** — Service worker stays dormant under Capacitor and nothing depends on it now the fonts are local.
 - [ ] Already fine: `vite.config.js` sets `base: './'`, so built asset paths are relative and resolve in a wrapper.
 - [ ] Not needed on iOS: Android hardware back-button handling. Required if Android is revisited.
 
@@ -70,7 +69,9 @@ has changed repeatedly and may change again.
       which avoids needing Homebrew and a newer Ruby. `npm run ios` builds and syncs; `npm run ios:open` also
       opens Xcode. The app builds, launches and loads in the simulator.
 - [x] **done** — iPhone locked to portrait to match the manifest; iPad keeps every orientation.
-- [ ] **me** — App icon and launch screen from the existing 512px icon; status bar styled to `#1f3529`.
+- [x] **done** — App icon: the game's sprout at 1024, full bleed and alpha-free as iOS requires, regenerable from
+      `scripts/app-icon.html`. Verified masked correctly on the home screen.
+- [ ] **me** — Launch screen, and status bar styled to `#1f3529`.
 
 Capacitor rather than a web view of the live site, deliberately: it bundles the game inside the app, so it launches
 offline with no dependency on GitHub Pages staying up — and an app that works with the network off is the single
@@ -78,8 +79,10 @@ strongest answer to a Guideline 4.2 query.
 
 ## Phase 3 · Test
 
-- [ ] **me** — Run it in the iOS Simulator and verify: cold launch offline, the age gate, save persistence across
-      a force-quit, and save export/import through the iOS file picker.
+- [x] **done** — Simulator: the age gate, the start guide and a live shop all render correctly, and the save
+      survives a force-quit and a wiped web view.
+- [ ] **me** — Save export/import through the iOS file picker specifically; the desktop browser path is verified
+      but iOS presents a different picker.
 - [ ] **you** — Install on a real device if you have one. The Simulator does not reproduce memory pressure,
       thermals or real storage eviction, which is exactly the risk area for the save.
 - [ ] **me** — Check frame rate on device-class hardware. 3.7ms/frame on a Mac says little about an older iPhone.
