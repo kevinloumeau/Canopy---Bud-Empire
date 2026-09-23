@@ -9,14 +9,18 @@ export function mountSettings(){
  wrap.innerHTML='<div class="modal settings" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><div class="settings-head"><h2 id="settingsTitle">Settings</h2><button type="button" class="settings-close" aria-label="Close settings">×</button></div>'+
   '<div class="settings-list">'+
   '<button type="button" class="settings-row" data-proxy="soundToggle"><span>Sound</span><b data-mirror="soundToggle"></b></button>'+
+  '<button type="button" class="settings-row" data-proxy="ambienceToggle"><span>Ambience</span><b data-mirror="ambienceToggle"></b></button>'+
   '<button type="button" class="settings-row" data-proxy="guide"><span>Start guide</span><b>Replay</b></button>'+
+  '<button type="button" class="settings-row" data-proxy="exportSave"><span>Back up save<small>Downloads a file you keep</small></span><b>Export</b></button>'+
+  '<button type="button" class="settings-row" data-proxy="importSave"><span>Restore save<small>Replaces the shop in this browser</small></span><b>Import</b></button>'+
   '</div><div class="settings-foot"><button type="button" class="settings-row settings-danger" data-proxy="resetOpen"><span>Start over</span><b>Reset everything</b></button><p class="settings-note">Canopy: Bud Empire · saves in this browser</p></div></div>';
  document.body.append(wrap);
  const modal=wrap.querySelector('.modal'),closeButton=wrap.querySelector('.settings-close');
  let opener=null;
  function sync(){
-  const sound=$('soundToggle');
+  const sound=$('soundToggle'),bed=$('ambienceToggle');
   wrap.querySelector('[data-mirror=soundToggle]').textContent=sound?(sound.textContent.replace('Sound ','')==='on'?'On':'Off'):'';
+  wrap.querySelector('[data-mirror=ambienceToggle]').textContent=bed?(bed.textContent.replace('Ambience ','')==='on'?'On':'Off'):'';
  }
  function open(){opener=document.activeElement;sync();wrap.hidden=false;closeButton.focus();}
  function close(){wrap.hidden=true;if(opener&&opener.focus)opener.focus();}
@@ -27,6 +31,8 @@ export function mountSettings(){
   const key=button.dataset.proxy;
   if(key==='guide'){close();const replay=document.querySelector('.guide-replay');if(replay)replay.click();return;}
   if(key==='resetOpen'){close();const reset=$('resetOpen');if(reset)reset.click();return;}
+  // Backup actions open a file dialog or a download, so the sheet gets out of the way first.
+  if(key==='exportSave'||key==='importSave'){close();const action=$(key);if(action)action.click();return;}
   const target=$(key);if(target)target.click();setTimeout(sync,0);
  });
  manageDialog(wrap,close);

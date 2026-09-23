@@ -4,8 +4,8 @@ import {migrateJourney,advanceJourney,CHAPTERS} from './journey.js';
 import {mountJourney} from './journey-ui.js';
 import {manageDialog} from './dialog-focus.js';
 import {AUTO_DRONE_COST,BULK_DRONE_COST,buyAutoDrone,buyBulkDrone,autoDroneLimit,migrateAutoDrone,autoDroneReady} from './auto-drone.js';
-import {FORMATS,wantedFormat,strainForFormat,formatPremium,BOOST_MAX,boostCost,migrateMenu,chooseFormat,strainFormat,dominantFormat,menuFormatFactor,milestone,prestigeOffer,elapsedSteps} from './depth.js';
-import {makeSound} from './sfx.js';
+import {FORMATS,wantedFormat,strainForFormat,formatPremium,BOOST_MAX,boostCost,migrateMenu,chooseFormat,strainFormat,dominantFormat,menuFormatFactor,milestone,prestigeOffer,elapsedSteps,weeklySpecial,OFFLINE_SECONDS} from './depth.js';
+import {makeSound,makeAmbience} from './sfx.js';
 import {installQuietDom} from './quiet-dom.js';
 import {createTelemetry} from './telemetry.js';
 installQuietDom();
@@ -33,7 +33,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // Contract progression is defined in depth.js, including post-city milestones.
   var $=function(id){return document.getElementById(id)};
   // A new shop starts as seven construction sites: the door and six stations are raised for free during the intro, then the sign flips.
-  function fresh(){return{money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),productMenu:migrateMenu(),sound:true,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
+  function fresh(){return{money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),productMenu:migrateMenu(),sound:true,ambience:true,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),crosses:{done:[],active:null},vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
   function readSave(){
     for(var key of ['shift-save','shift-save-backup']){
       try{var raw=localStorage.getItem(key);if(!raw)continue;var value=JSON.parse(raw);if(value&&typeof value==='object'&&!Array.isArray(value))return value}catch(e){}
@@ -54,8 +54,12 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     next.lifetime=finite(old.lifetime,0,0,Number.MAX_SAFE_INTEGER);
     next.sold=Math.floor(finite(old.sold,0,0,Number.MAX_SAFE_INTEGER));
     next.onlineCompleted=Math.floor(finite(old.onlineCompleted,0,0,Number.MAX_SAFE_INTEGER));next.onlineRequests=finite(old.onlineRequests,0,0,40);next.hints={web:!!(old.hints&&old.hints.web),storage:!!(old.hints&&old.hints.storage),queue:!!(old.hints&&old.hints.queue)};
-    next.contract=Math.floor(finite(old.contract,0,0,21));next.productMenu=migrateMenu(old.productMenu);next.sound=old.sound!==false;next.lightMode=['day','night'].includes(old.lightMode)?old.lightMode:null;next.autoDrone=migrateAutoDrone(old.autoDrone);
+    next.contract=Math.floor(finite(old.contract,0,0,21));next.productMenu=migrateMenu(old.productMenu);next.sound=old.sound!==false;next.ambience=old.ambience!==false;next.lightMode=['day','night'].includes(old.lightMode)?old.lightMode:null;next.autoDrone=migrateAutoDrone(old.autoDrone);
     next.globalLevel=Math.floor(finite(old.globalLevel,0,0,500));
+    next.crosses=(function(raw){var valid=['0-1','0-2','0-3','1-2','1-3','2-3'],r=raw&&typeof raw==='object'?raw:{};
+      var done=(Array.isArray(r.done)?r.done:[]).filter(function(id,ix,arr){return valid.indexOf(id)>=0&&arr.indexOf(id)===ix});
+      var a=r.active&&typeof r.active==='object'&&valid.indexOf(r.active.pair)>=0&&done.indexOf(r.active.pair)<0?{pair:r.active.pair,remaining:finite(r.active.remaining,300,1,300)}:null;
+      return {done:done,active:a}})(old.crosses);
     next.multiplier=Math.pow(1.25,next.globalLevel);
     next.lastSeen=finite(old.lastSeen,Date.now(),0,Date.now());next.lines=LINES.map(function(_,i){return Math.floor(finite(old.lines&&old.lines[i],1,next.shopOpen?1:0,10000))});next.storageLevel=Math.min(20,Math.max(0,Math.floor(Number(old.storageLevel)||0)));next.stock=Array.from({length:5},function(_,i){return Math.floor(finite(old.stock&&old.stock[i],0,0,i===4?100+next.readyLevel*50:100+next.storageLevel*100))});next.staff=LINES.map(function(_,i){return Math.floor(finite(old.staff&&old.staff[i],0,0,10000))});next.kiosk=old.kiosk===true;next.lounge=migrateLounge(old.lounge);next.loungeSessions=Math.floor(finite(old.loungeSessions,0,0,1e9));next.loungeEarned=finite(old.loungeEarned,0,0,1e15);next.secondKiosk=next.kiosk&&old.secondKiosk===true;next.thirdKiosk=next.secondKiosk&&old.thirdKiosk===true;next.queueLevel=Math.min(7,Math.max(0,Math.floor(Number(old.queueLevel)||0)));next.theme='dispensary';next.gameSpeed=[0,1,2,4].indexOf(old.gameSpeed)>=0?old.gameSpeed:1;return next}catch(e){return fresh()}}
   var firstRun=false;try{firstRun=!localStorage.getItem('shift-save')}catch(e){}
@@ -72,8 +76,11 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   speedButtons.forEach(function(button){button.onclick=function(){var value=Number(button.getAttribute('data-speed'));setGameSpeed(value===1&&state.gameSpeed===1?0:value)}});
   var tickTime=performance.now(),tickRemainder=0;
   function tick(){var now=performance.now(),seconds=(now-tickTime)/1000;tickTime=now;if(document.hidden){tickRemainder=0;return}var elapsed=elapsedSteps(seconds+tickRemainder,state.gameSpeed);if(elapsed.offline){tickRemainder=0;collectOffline(elapsed.offline)}else{tickRemainder=Math.max(0,seconds+tickRemainder-Math.floor((seconds+tickRemainder+1e-8)/.05)*.05);for(var step=0;step<elapsed.steps;step++)simulate(.05)}}
-  var saveFailed=false;
+  var saveFailed=false,importing=false;
   function save(){
+    // An import has already written the incoming shop and is reloading; the unload and interval saves that fire
+    // on the way out would otherwise put the replaced shop straight back.
+    if(importing)return false;
     state.lastSeen=Date.now();
     try{
       var previous=localStorage.getItem('shift-save');
@@ -81,14 +88,53 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       localStorage.setItem('shift-save',JSON.stringify(state));saveFailed=false;return true;
     }catch(e){if(!saveFailed)notify('SAVE UNAVAILABLE · keep this window open to retain progress');saveFailed=true;return false}
   }
+  // Backup: the save is written to a file the player keeps, and read back from one. Nothing is uploaded and no
+  // account exists, so this is the only way a shop survives cleared site data, a new browser or a new device.
+  function exportSave(){
+    try{
+      save();
+      var payload={game:'canopy-bud-empire',format:1,exported:new Date().toISOString(),state:state};
+      var blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+      var url=URL.createObjectURL(blob),link=document.createElement('a');
+      link.href=url;link.download='canopy-save-'+new Date().toISOString().slice(0,10)+'.json';
+      document.body.appendChild(link);link.click();link.remove();
+      setTimeout(function(){URL.revokeObjectURL(url)},1000);
+      notify('SAVE EXPORTED · keep the file somewhere safe');
+    }catch(e){notify('EXPORT UNAVAILABLE')}
+  }
+  // A file is only written to storage once it parses and looks like a shop; the page then reloads so the normal
+  // `load()` path does the migrating and clamping, exactly as it would for any other save.
+  function importSaveFile(file){
+    if(!file)return;
+    var reader=new FileReader();
+    reader.onerror=function(){notify('IMPORT FAILED · could not read that file')};
+    reader.onload=function(){
+      var incoming;
+      try{
+        var parsed=JSON.parse(String(reader.result));
+        incoming=parsed&&parsed.state&&typeof parsed.state==='object'?parsed.state:parsed;
+        if(!incoming||typeof incoming!=='object'||Array.isArray(incoming)||!Array.isArray(incoming.lines)||!Number.isFinite(Number(incoming.money)))throw new Error('shape');
+      }catch(e){notify('IMPORT FAILED · not a Canopy save file');return}
+      if(!window.confirm('Load this save? It replaces the shop currently in this browser.'))return;
+      try{
+        var current=localStorage.getItem('shift-save');
+        if(current)localStorage.setItem('shift-save-backup',current);
+        localStorage.setItem('shift-save',JSON.stringify(incoming));
+      }catch(e){notify('IMPORT FAILED · storage unavailable');return}
+      // Reload rather than hot-swapping: every runtime array is rebuilt from scratch by the normal boot.
+      importing=true;location.reload();
+    };
+    reader.readAsText(file);
+  }
   // Demand ceiling counts whole baskets, so offline pay and reward scaling track real sales.
-  function incomeRate(){return Math.min(production(),flowerValue()*basketSize()/arrivalInterval())+branchRate(state.empire)}
-  function offlineReward(seconds){return state.gameSpeed===0?0:incomeRate()*Math.min(14400,Math.max(0,seconds))}
+  function branchRateNow(){return branchRate(state.empire)*(weeklyNow().branch||1)}
+  function incomeRate(){return Math.min(production(),flowerValue()*basketSize()/arrivalInterval())+branchRateNow()}
+  function offlineReward(seconds){return state.gameSpeed===0?0:incomeRate()*Math.min(OFFLINE_SECONDS,Math.max(0,seconds))}
   // Daily, goal and event payouts grow with the shop so they are still worth a tap hours in.
   function rewardScale(){return economy.rewardScale(incomeRate())}
   function collectOffline(elapsed){
     var away=elapsed===undefined?Math.max(0,(Date.now()-state.lastSeen)/1000):elapsed;
-    var seconds=Math.min(14400,away);if(state.gameSpeed!==0)accrueOnlineRequests(seconds);
+    var seconds=Math.min(OFFLINE_SECONDS,away);if(state.gameSpeed!==0)accrueOnlineRequests(seconds);
     var rates=[Math.min(production(),flowerValue()*basketSize()/arrivalInterval())].concat(STORES.map(function(_,i){return storeRate(state.empire,i)}));
     var earnings=rates.map(function(rate){return state.gameSpeed===0?0:rate*seconds});
     var reward=earnings.reduce(function(a,b){return a+b},0);
@@ -121,6 +167,42 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     {kind:'Boutique',buyers:'VIPs order the most potent boutique strain on the menu.',pistil:'#ead3f2',frost:true,shape:'fluffy'},
     {kind:'Boutique',buyers:'VIPs order the most potent boutique strain on the menu.',pistil:'#9fe0c9',frost:true,shape:'dense'}
   ];
+  // House crosses: six hybrids the breeding program can discover, one per pair of shelf strains. Each
+  // discovery permanently sweetens every sale (+2% flower value) and its bud joins the cultivar journal.
+  var CROSSES=[
+    {id:'0-1',parents:[0,1],name:'Golden Hour',color:'#c4c47d',pistil:'#e0b45f',lore:'Minty calm folded into amber warmth. The patio pour.'},
+    {id:'0-2',parents:[0,2],name:'Lavender Field',color:'#b8b3c0',pistil:'#dcc8ea',lore:'A meadow at dusk, sealed in a jar.'},
+    {id:'0-3',parents:[0,3],name:'Moonlit Meadow',color:'#9cc4a0',pistil:'#bfe6d2',lore:'Soft green days, deep quiet nights.'},
+    {id:'1-2',parents:[1,2],name:'Sunset Static',color:'#cbaea2',pistil:'#efc08a',lore:'Hums like neon at golden hour.'},
+    {id:'1-3',parents:[1,3],name:'Ember Orchid',color:'#c2b184',pistil:'#e8a25f',lore:'A slow burn that blooms after close.'},
+    {id:'2-3',parents:[2,3],name:'Twilight Velvet',color:'#a4aec5',pistil:'#c9d8f0',lore:'The after-hours house pour.'}
+  ];
+  function crossCost(){return Math.round(15000*Math.pow(3,state.crosses.done.length))}
+  function startCross(id){
+    var c=CROSSES.filter(function(x){return x.id===id})[0];
+    if(!c||state.crosses.active||state.crosses.done.indexOf(id)>=0)return;
+    if(state.breedingLevel<1||state.strains[c.parents[0]]<5||state.strains[c.parents[1]]<5||state.money<crossCost()){playSound('denied',state.sound);return}
+    state.money-=crossCost();state.crosses.active={pair:id,remaining:300};
+    playSound('build',state.sound);notify('CROSS STARTED · '+c.name.toUpperCase());save();renderUI();
+  }
+  function renderJournal(){
+    var grid=$('journalGrid');if(!grid)return;
+    var lab=state.breedingLevel>0;
+    $('journalIntro').textContent=lab?
+      'The breeding program crosses two mastered strains (level 5+) into a house cultivar. Every discovery permanently adds +2% to all sales.':
+      'Buy the Breeding lab in the Shop to cross mastered strains (level 5+). Every discovery permanently adds +2% to all sales.';
+    var key=state.crosses.done.join(',')+'|'+(state.crosses.active?state.crosses.active.pair+':'+Math.ceil(state.crosses.active.remaining):'')+'|'+lab+'|'+state.strains.join(',')+'|'+(state.money>=crossCost());
+    if(grid.dataset.key===key)return;grid.dataset.key=key;
+    grid.innerHTML=CROSSES.map(function(c){
+      var done=state.crosses.done.indexOf(c.id)>=0,growing=state.crosses.active&&state.crosses.active.pair===c.id;
+      var eligible=lab&&state.strains[c.parents[0]]>=5&&state.strains[c.parents[1]]>=5;
+      var parents=STRAINS[c.parents[0]].name+' × '+STRAINS[c.parents[1]].name;
+      if(done)return '<div class="journal-card is-found" style="--strain:'+c.color+'"><i>'+budSvg(c.color,c.pistil)+'</i><b>'+c.name+'</b><small>'+parents+'</small><p>'+c.lore+'</p><em>+2% all sales</em></div>';
+      if(growing)return '<div class="journal-card is-growing" style="--strain:'+c.color+'"><i>'+budSvg(c.color,c.pistil)+'</i><b>'+c.name+'</b><small>'+parents+'</small><p>Crossing · '+Math.ceil(state.crosses.active.remaining)+'s</p></div>';
+      return '<div class="journal-card is-locked"><i>'+budSvg('#5c6b5e','#77857a')+'</i><b>???</b><small>'+parents+'</small>'+
+        (eligible?'<button type="button" data-cross="'+c.id+'"'+(state.crosses.active||state.money<crossCost()?' disabled':'')+'>Cross · '+fmt(crossCost())+'</button>':'<p>'+(lab?'Both parents to level 5':'Needs the Breeding lab')+'</p>')+'</div>';
+    }).join('');
+  }
   // A glass jar with the strain's bud inside. Calyx blobs stack in three tones of the strain colour; pistils and frost differ per strain.
   function strainArt(i,locked){
     var c=STRAINS[i].color,look=STRAIN_LOOKS[i],dark=shadeColor(c,.66),mid=shadeColor(c,.86),light=shadeColor(c,1.18),g='';
@@ -150,7 +232,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     '</svg>';
   }
   // A thumbnail bud in the strain's colours for legend tiles.
-  function strainBud(i){var c=STRAINS[i].color,d=shadeColor(c,.7),l=shadeColor(c,1.2),pk=(STRAIN_LOOKS[i]||{}).pistil||'#e8a25f';return '<svg viewBox="0 0 20 20" aria-hidden="true">'+
+  function strainBud(i){return budSvg(STRAINS[i].color,(STRAIN_LOOKS[i]||{}).pistil||'#e8a25f')}
+  function budSvg(c,pk){var d=shadeColor(c,.7),l=shadeColor(c,1.2);return '<svg viewBox="0 0 20 20" aria-hidden="true">'+
     '<path d="M10 17.5C6.4 16.2 4.8 13.4 5.7 10.4C8.7 11.9 10 14.1 10 17.5Z" fill="'+d+'"/>'+
     '<path d="M10 17.5C13.6 16.2 15.2 13.4 14.3 10.4C11.3 11.9 10 14.1 10 17.5Z" fill="'+c+'"/>'+
     '<path d="M9.6 13.8C6.8 12.6 5.8 10.2 6.8 7.6C9.1 9.1 9.9 11.1 9.6 13.8Z" fill="'+c+'"/>'+
@@ -175,6 +258,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var menu=menuStrains(),trend=state.strainTrend.index,trendLeft=Math.max(0,Math.ceil(state.strainTrend.remaining)),trendClock=Math.floor(trendLeft/60)+':'+('0'+trendLeft%60).slice(-2);
     var reserve=strains.reserveStrain(menu,state.strains),buzzLeft=Math.ceil(state.vipBuzz||0);
     $('flowerSummary').textContent=fmt(flowerValue());
+    renderJournal();
     // Live modifiers as tiles: VIP buzz, the type peaking right now, and the trending strain.
     var FLAME='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 4 5 5.5 5 11a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5.2 1.6 1 2.5 2 2.5 0-4 .5-6.5 1-9Z"/></svg>';
     var STAR='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.7 6 6.5.6-4.9 4.3 1.5 6.4L12 16.4l-5.8 3.4 1.5-6.4L2.8 9.1l6.5-.6Z"/></svg>';
@@ -237,14 +321,18 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function compactCount(n){return n>=100000?Math.round(n/1000)+'k':n>=1000?(Math.round(n/100)/10).toFixed(n%1000?1:0).replace(/\.0$/,'')+'k':Math.round(n*10)/10+''}
   function secondsLabel(t){return (t>=10?Math.round(t):t>=1?t.toFixed(1):t.toFixed(2))+'s'}
   function qtyShort(n){var f=state.productMenu.active;if(f===0){var oz=n/8;return (oz>=1000?(oz/1000).toFixed(oz>=10000?0:1)+'k':oz>=10?Math.round(oz):Math.round(oz*10)/10)+' oz'}return (n>=1000?(n/1000).toFixed(n>=10000?0:1)+'k':n)+(f===1?' jt':' ed')}
-  var playSound=makeSound();
+  var playSound=makeSound(),ambience=makeAmbience();
   var telemetry=createTelemetry();
   // Progression markers: the first time any station reaches these levels on this device.
   function trackStationLevel(i){var lv=state.lines[i];[10,25,50,100].forEach(function(m){if(lv>=m)telemetry.once('station_level_'+m,{station:LINES[i].name})})}
   // Browsers only start audio inside a gesture: the first tap or key press primes the context while sound is on.
-  ['pointerdown','keydown'].forEach(function(type){window.addEventListener(type,function prime(){playSound.unlock(state.sound)},{passive:true})});
-  function flowerValue(index){if(index===undefined){var menu=menuStrains();return menu.reduce(function(total,i){return total+flowerValue(i)},0)/menu.length}var i=index;return Math.round(STRAINS[i].price*(1+Math.max(0,state.strains[i]-1)*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatOf(i).value*trendBoost(i)*displayBoost(i)*strains.timeFactor(strains.STRAIN_TYPE[i],atmosphere(state.empire.network).night))}
-  function onlineValue(sequence){return Math.round(flowerValue(menuChoice(sequence===undefined?state.onlineCompleted:sequence))*4/3*(1+state.onlineBonusLevel*.05))}
+  ['pointerdown','keydown'].forEach(function(type){window.addEventListener(type,function prime(){playSound.unlock(state.sound);ambienceTick()},{passive:true})});
+  // The ambient bed follows the sound settings, the light and the crowd; the gesture call above also serves
+  // as the user-gesture unlock its AudioContext needs.
+  function ambienceTick(){ambience.update({enabled:state.sound&&state.ambience,night:render.nightT||0,crowd:customers.length})}
+  setInterval(ambienceTick,1000);
+  function flowerValue(index){if(index===undefined){var menu=menuStrains();return menu.reduce(function(total,i){return total+flowerValue(i)},0)/menu.length}var i=index;return Math.round(STRAINS[i].price*(1+Math.max(0,state.strains[i]-1)*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatOf(i).value*trendBoost(i)*displayBoost(i)*strains.timeFactor(strains.STRAIN_TYPE[i],atmosphere(state.empire.network).night)*(i>0?weeklyNow().boutique||1:1)*(1+.02*state.crosses.done.length))}
+  function onlineValue(sequence){return Math.round(flowerValue(menuChoice(sequence===undefined?state.onlineCompleted:sequence))*4/3*(1+state.onlineBonusLevel*.05)*(weeklyNow().online||1))}
   function strainCost(i){return state.strains[i]?Math.round(Math.max(250,STRAINS[i].unlock*.35)*Math.pow(1.85,state.strains[i]-1)):STRAINS[i].unlock}
   function buyStrain(i){
     if(i<0||i>=STRAINS.length||state.strains[i]>=10||state.money<strainCost(i))return;
@@ -273,6 +361,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       if(maxRank)$('prestigeStart').removeAttribute('aria-describedby');else $('prestigeStart').setAttribute('aria-describedby','prestigeFundingStatus prestigeCarryover');
       $('prestigeCarryover').hidden=maxRank;
       $('soundToggle').textContent=state.sound?'Sound on':'Sound off';$('soundToggle').setAttribute('aria-pressed',String(state.sound));
+      if($('ambienceToggle')){$('ambienceToggle').textContent=state.ambience?'Ambience on':'Ambience off';$('ambienceToggle').setAttribute('aria-pressed',String(state.ambience))}
     }
 
     renderStrainMenu();
@@ -296,7 +385,9 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function batchSize(i){return economy.batchSize(state.lines[i])*(i<3?1+state[['seedBatchLevel','growBatchLevel','harvestBatchLevel'][i]]*.06:1)}
   function cycleSpeed(i){return (1+state.staff[i]*.3)*state.multiplier/(i===3?formatFactor('packing'):1)*(i===1?growFactorNow():i===3?strains.packBonus(state.strains)*(1+state.packSpeedLevel*.06):1)}
   // Breeding bench claws back part of the boutique grow penalty on top of strain mastery.
-  function growFactorNow(){var g=strains.growFactor(menuStrains(),state.strains);return 1-(1-g)*(1-state.breedingLevel*.03)}
+  // This week's special (see depth.js WEEKLIES): cached per minute, applied as mild multipliers below.
+  function weeklyNow(){var now=Date.now();if(!weeklyNow.at||now-weeklyNow.at>60000){weeklyNow.at=now;weeklyNow.value=weeklySpecial(now)}return weeklyNow.value}
+  function growFactorNow(){var g=strains.growFactor(menuStrains(),state.strains);return (1-(1-g)*(1-state.breedingLevel*.03))*(weeklyNow().grow||1)}
   var batchRemainder=[0,0,0,0];
   var readyWork=0;
   var work=[0,0,0,0,0,0],customers=[],arrival=0,customerId=0,pickupQueueSequence=0;
@@ -325,6 +416,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // and fades back in at the back door on the way out.
   function enterLounge(c){
     var take=loungeTake(state.lounge,flowerValue(strainFor(c)));
+    var weeklyLounge=weeklyNow().lounge;if(weeklyLounge){take.total=Math.round(take.total*weeklyLounge);take.cover=Math.round(take.cover*weeklyLounge)}
     state.stock[3]-=1;add(take.total);state.loungeSessions++;state.loungeEarned+=take.total;c.loungeLeft=loungeSessionSeconds(state.lounge);c.phase='lounge';c.walking=false;c.loungeTake=take.total;
     c.loungeFade=1;c.fadeFromZ=c.z;c.facing=-.3;
     recordEvent(state.empire,'pickup',1);playSound('coin',state.sound);
@@ -377,8 +469,10 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     return work[i]>=1;
   }
   function simulate(dt){
+    // A running cross ripens on simulated time, so pause and speed apply like any other clock.
+    if(state.crosses.active){state.crosses.active.remaining-=dt;if(state.crosses.active.remaining<=0){var finishedCross=state.crosses.active.pair;state.crosses.active=null;if(state.crosses.done.indexOf(finishedCross)<0)state.crosses.done.push(finishedCross);var crossDef=CROSSES.filter(function(x){return x.id===finishedCross})[0];notify('NEW CULTIVAR · '+(crossDef?crossDef.name.toUpperCase():''),'upgrade');playSound('sparkle',state.sound);save()}}
     state.empire.retailBoost=retailBoost();accrueOnlineRequests(dt);
-    add(branchRate(state.empire)*dt);tickBranches(state.empire,dt);var operationResult=tickOperations(state,dt);if(operationResult.revenue)add(operationResult.revenue);if(operationResult.deliveries){state.onlineCompleted+=operationResult.deliveries;recordEvent(state.empire,'online',operationResult.deliveries)}
+    add(branchRateNow()*dt);tickBranches(state.empire,dt);var operationResult=tickOperations(state,dt);if(operationResult.revenue)add(operationResult.revenue);if(operationResult.deliveries){state.onlineCompleted+=operationResult.deliveries;recordEvent(state.empire,'online',operationResult.deliveries)}
     arrival+=dt;state.vipBuzz=Math.max(0,(state.vipBuzz||0)-dt);
     if(strains.tickTrend(state.strainTrend,dt,STRAINS.length,state.sold+customerId)){var trending=STRAINS[state.strainTrend.index];notify(trending.name.toUpperCase()+' IS TRENDING · +35% for 8 min'+(state.strains[state.strainTrend.index]?'':' · unlock it to cash in'),'upgrade');renderUI()}
     // Nobody walks in until the sign flips; stations that are already standing still stock the shelves.
@@ -515,7 +609,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function kioskServiceDuration(){return .8+1.2/(1+state.kioskSpeedLevel*.15)}
   function rawSecurityDuration(level){return .9/((1+level*.3)*(1+state.scannerLevel*.12))}
   function securityDuration(){return Math.max(economy.ID_CHECK_FLOOR,rawSecurityDuration(state.idStaff))}
-  function arrivalInterval(){return (atmosphere(state.empire.network).night?1.2:.9)/(1+state.trafficLevel*.15)/formatFactor('demand')/strains.trafficFactor(menuStrains(),state.strainTrend.index)/strains.buzzFactor(state.vipBuzz)/(1+state.signLevel*.04)}
+  function arrivalInterval(){return (atmosphere(state.empire.network).night?1.2:.9)/(1+state.trafficLevel*.15)/formatFactor('demand')/strains.trafficFactor(menuStrains(),state.strainTrend.index)/strains.buzzFactor(state.vipBuzz)/(1+state.signLevel*.04)/(weeklyNow().traffic||1)}
   function pickupLimit(){return 4+state.pickupLevel*2}
   function readyCapacity(){return economy.readyCapacity(state.readyLevel,state.lines)}
   function componentCost(i){var L=state[COMPONENTS[i].key];return Math.round(COMPONENTS[i].base*Math.pow(1.8,Math.min(L,8))*Math.pow(2.15,Math.max(0,L-8)))}
@@ -648,6 +742,42 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   var buildRise=[0,0,0,0,0,0,0,0];
   // Grand-opening confetti: paper pieces in the shop's own palette, drifting down over the whole building in world space.
   var confetti=[],CONFETTI_COLORS=['#f0d89a','#f6efdd','#b6e58c','#9dc47a','#e6c95a','#e8823a','#d3e0cb'];
+  // The golden trim: every minute or so while the shop is open, one plant on the floor glints. Snipping it
+  // (a tap) banks about ten seconds of income — presence is rewarded, absence never punished. The cadence
+  // runs on wall time so pause and game speed leave it alone, and nothing about it is saved.
+  var trimSpark=null,trimSparkClock=25;
+  var TRIM_SPOTS=[{x:2.35,y:11.1,z:-3.5},{x:3.65,y:11.1,z:-2.5},{x:2.25,y:6.5,z:-.3},{x:5.65,y:1.6,z:8.9},{x:10.35,y:1.6,z:8.9}];
+  // Debug/test hook in the spirit of __canopyFrameMs: the spark's screen position or the seconds until the next one.
+  window.__canopyTrim=function(){return trimSpark?{spark:true,life:trimSpark.life,sx:project(trimSpark.x,trimSpark.y,trimSpark.z).x,sy:project(trimSpark.x,trimSpark.y,trimSpark.z).y}:{spark:false,next:trimSparkClock}};
+  function stepTrimSpark(wallDelta){
+    if(!state.shopOpen){trimSpark=null;return}
+    if(trimSpark){trimSpark.life-=wallDelta;if(trimSpark.life<=0){trimSpark=null;trimSparkClock=55+Math.random()*45}render.invalidated=true}
+    else{trimSparkClock-=wallDelta;if(trimSparkClock<=0){var spot=TRIM_SPOTS[Math.floor(Math.random()*TRIM_SPOTS.length)];trimSpark={x:spot.x,y:spot.y,z:spot.z,life:12,seed:Math.random()};render.invalidated=true}}
+  }
+  function drawTrimSpark(){
+    if(!trimSpark||state.empire.activeStore)return;
+    var s=trimSpark,fade=Math.max(0,Math.min(1,(12-s.life)*2.5,s.life*1.2)),tw=motionPreference.matches?.8:.65+.35*Math.sin(sceneTime*.007+s.seed*6);
+    var p=project(s.x,s.y,s.z),r=Math.max(10,unit*.42);
+    ctx.save();ctx.globalAlpha=fade;
+    var g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,r*2.6);g.addColorStop(0,'rgba(255,226,124,'+(.85*tw).toFixed(3)+')');g.addColorStop(.4,'rgba(255,222,120,'+(.35*tw).toFixed(3)+')');g.addColorStop(1,'rgba(255,222,120,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(p.x,p.y,r*2.6,0,Math.PI*2);ctx.fill();
+    if(!motionPreference.matches){var ring=(sceneTime*.0011+s.seed)%1;ctx.globalAlpha=fade*(1-ring)*.7;ctx.strokeStyle='#ffe9a8';ctx.lineWidth=Math.max(1.4,unit*.055);ctx.beginPath();ctx.arc(p.x,p.y,r*(.6+ring*2),0,Math.PI*2);ctx.stroke();ctx.globalAlpha=fade}
+    ctx.strokeStyle='#fff8dc';ctx.lineWidth=Math.max(1.6,unit*.065);ctx.lineCap='round';
+    var arm=r*(.6+.28*tw);ctx.beginPath();ctx.moveTo(p.x-arm,p.y);ctx.lineTo(p.x+arm,p.y);ctx.moveTo(p.x,p.y-arm);ctx.lineTo(p.x,p.y+arm);ctx.stroke();
+    ctx.lineWidth=Math.max(1.2,unit*.036);var d=arm*.55;ctx.beginPath();ctx.moveTo(p.x-d,p.y-d);ctx.lineTo(p.x+d,p.y+d);ctx.moveTo(p.x-d,p.y+d);ctx.lineTo(p.x+d,p.y-d);ctx.stroke();
+    ctx.fillStyle='#fffef2';ctx.beginPath();ctx.arc(p.x,p.y,r*.2,0,Math.PI*2);ctx.fill();
+    ctx.restore();render.invalidated=true;
+  }
+  // Snip: bank the bonus with a sparkle, a burst and a floating ticket at the plant.
+  function collectTrimSpark(){
+    if(!trimSpark)return;
+    var bonus=Math.max(25,Math.round(incomeRate()*10));state.money+=bonus;
+    burst({x:trimSpark.x,y:trimSpark.y-1.4,z:trimSpark.z},'#f5d76e');
+    if(!motionPreference.matches)tickets.push({x:trimSpark.x,y:trimSpark.y+.3,z:trimSpark.z,life:1,text:fmt(bonus)});
+    trimSpark=null;trimSparkClock=55+Math.random()*45;
+    playSound('sparkle',state.sound);if(navigator.vibrate)navigator.vibrate(12);
+    save();renderUI();render.invalidated=true;
+  }
   function celebrateOpening(){
     if(motionPreference.matches)return;
     tierFlashes.fill(1);burst({x:-10.65,z:10},'#f0d89a');burst({x:4,z:4.9},'#b6e58c');
@@ -3209,6 +3339,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       glCompose(now);updateBranchMarker();requestAnimationFrame(render);return;
     }
     drawTower(now);
+    stepTrimSpark(wallDelta);
     tierFlashes.forEach(function(life,i){if(life<=0)return;tierFlashes[i]=Math.max(0,life-frameDelta);var station=machinePos[i];ctx.save();ctx.globalAlpha=life*.8;for(var n=0;n<5;n++){var q=project(station.x-1.3+n*.65,station.y+1.6+(motionPreference.matches?0:(1-life)*.5),station.z+.7),r=unit*.09*life;ctx.strokeStyle='#f6e3ae';ctx.lineWidth=Math.max(.7,unit*.025);ctx.beginPath();ctx.moveTo(q.x-r,q.y);ctx.lineTo(q.x+r,q.y);ctx.moveTo(q.x,q.y-r);ctx.lineTo(q.x,q.y+r);ctx.stroke()}ctx.restore()});
     var speed=state.lines.some(function(n){return n>0})?Math.min(.07,.02+production()*.00002):0;
     crateTime=(crateTime+frameDelta*speed*1.4)%1;
@@ -3334,6 +3465,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       nightBloom(nightT,now,nightEmitters);nightMotes(nightT,now);
     }
     for(var i=particles.length-1;i>=0;i--){var p=particles[i];p.life-=frameDelta*1.5;if(!motionPreference.matches){p.x+=p.vx*frameDelta;p.z+=p.vz*frameDelta;p.y+=p.vy*frameDelta;}p.vy-=frameDelta*5;var screen=project(p.x,p.y,p.z),size=Math.max(2,unit*.1);ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.fillRect(screen.x-size/2,screen.y-size/2,size,size);ctx.globalAlpha=1;if(p.life<=0)particles.splice(i,1)}
+    drawTrimSpark();
     drawTickets(frameDelta);drawConfetti(wallDelta);
     atmosphereFinish(nightT);
     glCompose(now);updateMarkers();requestAnimationFrame(render);
@@ -3481,7 +3613,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // While the shop is still a building site the guide row counts sites instead of naming a bottleneck.
     if(!state.shopOpen){var raised=(state.doorBuilt?1:0)+state.lines.filter(function(n){return n>0}).length,nextSite=!state.doorBuilt?'Security':raised<7?shortNames[slow]:null;$('flowLabel').textContent='Under construction';$('flowText').textContent=raised+' of 7 sites raised'+(nextSite?' · next: '+nextSite:' · ready to open');$('flowText').title='Tap a site on the map to raise it. Customers arrive once the shop opens.';$('flowAction').textContent=nextSite?'Build '+nextSite:'Open the shop';$('flowAction').dataset.mode='fix'}
     var line=LINES[selected],open=isOpen(selected),level=state.lines[selected],price=cost(selected),affordable=open&&(!level||state.money>=price);
-    $('rate').dataset.paused=String(state.gameSpeed===0);$('money').textContent=fmt(state.money);$('rate').textContent=state.gameSpeed===0?'Paused':fmt((state.empire.activeStore?storeRate(state.empire,state.empire.activeStore-1):production()+branchRate(state.empire))*state.gameSpeed)+'/s';document.querySelector('.stat.output small').textContent=state.empire.activeStore?'BRANCH INCOME':'CAPACITY';
+    $('rate').dataset.paused=String(state.gameSpeed===0);$('money').textContent=fmt(state.money);$('rate').textContent=state.gameSpeed===0?'Paused':fmt((state.empire.activeStore?storeRate(state.empire,state.empire.activeStore-1):production()+branchRateNow())*state.gameSpeed)+'/s';document.querySelector('.stat.output small').textContent=state.empire.activeStore?'BRANCH INCOME':'CAPACITY';
     var paused=state.gameSpeed===0;speedButtons.forEach(function(button){var value=Number(button.getAttribute('data-speed'));button.setAttribute('aria-pressed',String(value===state.gameSpeed||(value===1&&paused)))});
     var glyph=paused?'pause':'play';if(speedOne.getAttribute('data-glyph')!==glyph){speedOne.setAttribute('data-glyph',glyph);speedOne.innerHTML=paused?PAUSE_GLYPH:PLAY_GLYPH}speedOne.setAttribute('aria-label',paused?'Paused. Resume normal speed':'Normal speed. Press again to pause');speedOne.title=paused?'Paused · press to resume':'Normal speed · press again to pause';speedOne.parentElement.setAttribute('data-paused',String(paused));
     if(securitySelected){renderSecuritySelection()}else if(loungeSelected){renderLoungeSelection()}else{
@@ -4027,6 +4159,14 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     '<dl class="prestige-carryover" id="prestigeCarryover"><div><dt>Keep</dt><dd>Permanent rank bonus &amp; sound setting</dd></div><div><dt>Restart</dt><dd>Cash, stores &amp; all shop progress</dd></div></dl><button id="prestigeStart" type="button" aria-describedby="prestigeFundingStatus prestigeCarryover"></button></div>';
   document.querySelector('[data-empire-section="growth"]').append(prestigePanel);
   var soundButton=document.createElement('button');soundButton.id='soundToggle';soundButton.type='button';soundButton.onclick=function(){state.sound=!state.sound;playSound('sale',state.sound);save();renderUI()};document.querySelector('.shop-reset').prepend(soundButton);
+  if($('journalGrid'))$('journalGrid').addEventListener('click',function(e){var b=e.target.closest('[data-cross]');if(b&&!b.disabled)startCross(b.dataset.cross)});
+  var ambienceButton=document.createElement('button');ambienceButton.id='ambienceToggle';ambienceButton.type='button';ambienceButton.onclick=function(){state.ambience=!state.ambience;save();renderUI()};document.querySelector('.shop-reset').prepend(ambienceButton);
+  // Backup controls live in Settings, which drives these through the same hidden-proxy pattern as the toggles.
+  var exportButton=document.createElement('button');exportButton.id='exportSave';exportButton.type='button';exportButton.textContent='Export save';exportButton.onclick=exportSave;document.querySelector('.shop-reset').prepend(exportButton);
+  var importInput=document.createElement('input');importInput.id='importSaveInput';importInput.type='file';importInput.accept='application/json,.json';importInput.hidden=true;
+  importInput.addEventListener('change',function(){importSaveFile(importInput.files&&importInput.files[0]);importInput.value=''});
+  document.body.appendChild(importInput);
+  var importButton=document.createElement('button');importButton.id='importSave';importButton.type='button';importButton.textContent='Import save';importButton.onclick=function(){importInput.click()};document.querySelector('.shop-reset').prepend(importButton);
   var prestigeDialog=document.createElement('div');prestigeDialog.id='prestigeModal';prestigeDialog.className='modal-wrap';prestigeDialog.hidden=true;prestigeDialog.innerHTML='<div class="modal" role="dialog" aria-modal="true" aria-labelledby="prestigeTitle"><h2 id="prestigeTitle">Reopen your empire?</h2><p id="prestigePreview"></p><p>Clears cash, stores, staff, stock, strains, reputation, collections, goals and events. Only your prestige rank and sound preference carry over.</p><div><button id="prestigeCancel">Keep playing</button><button id="prestigeConfirm">Reopen from scratch</button></div></div>';document.body.append(prestigeDialog);
   $('prestigeStart').onclick=function(){var o=prestigeOffer(state);if(!o.eligible)return;$('prestigePreview').textContent='Next rank: '+o.multiplier.toFixed(1)+'× base main-shop and branch income.';prestigeDialog.hidden=false;$('prestigeCancel').focus()};
   $('prestigeCancel').onclick=function(){prestigeDialog.hidden=true;$('prestigeStart').focus()};
@@ -4118,12 +4258,14 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     $('dailyTime').textContent='Next daily reset in '+duration(d.remaining)+' · midnight UTC';
     $('dailyClaim').textContent=d.available?'Collect '+fmt(d.reward):'Collected today';$('dailyClaim').disabled=!d.available;
     DAILY.forEach(function(reward,i){var el=$('dailyDay'+i);el.classList.toggle('current',i===d.day-1);el.classList.toggle('collected',i<d.day-1||(!d.available&&i===d.day-1));el.setAttribute('aria-label','Day '+(i+1)+', '+fmt(reward)+(i===d.day-1?(d.available?', ready to collect':', collected'):''));});
+    var weekly=weeklyNow();$('weeklySpecial').textContent='This week: '+weekly.name+' · '+weekly.detail;
     $('eventName').textContent=e.name;$('eventDescription').textContent=e.copy+' Earn '+fmt(e.reward)+' and a trophy. Event VIPs visit every fourth arrival and tip 25% extra on boutique flower. Exclusive reward: '+['market lantern','vendor display','harvest planter'][e.slot%3]+' for every branch.';
-    $('eventTime').textContent=(e.open?'Ends in ':e.joined&&e.progress>=e.goal&&!e.claimed?'Claim before next event in ':'Next event in ')+duration(e.remaining);
+    // An event is open for its whole hour, so the only clock that matters is the turn of the hour.
+    $('eventTime').textContent='Ends in '+duration(e.remaining);
     $('eventProgress').value=Math.min(100,e.progress/e.goal*100);
-    $('eventCount').textContent=e.claimed?'Reward collected':e.joined?e.progress+' / '+e.goal+(e.open?' completed':e.progress>=e.goal?' · Complete':' · Event ended'):'Join to start counting progress';
-    $('eventAction').textContent=e.claimed?'Collected':e.joined?(e.progress>=e.goal?'Collect '+fmt(e.reward):e.open?'Challenge in progress':'Event ended'):e.open?'Join event':'Waiting for next event';
-    $('eventAction').disabled=e.claimed||(e.joined?e.progress<e.goal:!e.open);
+    $('eventCount').textContent=e.claimed?'Reward collected':e.joined?e.progress+' / '+e.goal+' completed':'Join to start counting progress';
+    $('eventAction').textContent=e.claimed?'Collected':e.joined?(e.progress>=e.goal?'Collect '+fmt(e.reward):'Challenge in progress'):'Join event';
+    $('eventAction').disabled=e.claimed||(e.joined&&e.progress<e.goal);
     $('eventTrophies').textContent=p.trophies+' event '+(p.trophies===1?'trophy':'trophies')+' · '+p.rewards.filter(Boolean).length+' / 3 scene keepsakes collected';
   }
   $('dailyClaim').onclick=function(){var reward=claimDaily(state,Date.now(),rewardScale());if(reward){save();renderUI();notify('DAILY REWARD · +'+fmt(reward),'upgrade')}};
@@ -4232,7 +4374,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
     if(zoom<1.7)zoomAt(2.2,x,y);else{zoom=1;panX=0;panY=0;applyCamera()}
   });
-  canvas.addEventListener('pointerup',function(e){mapHintActivity();if(!gestureMoved&&Object.keys(touches).length===1&&state.empire.activeStore){var br=canvas.getBoundingClientRect(),f=BRANCH_THEMES[state.empire.activeStore-1].focus,q=project(f.x,f.y,f.z);if(Math.hypot(e.clientX-br.left-q.x,e.clientY-br.top-q.y)<Math.max(45,unit*3))manageViewedStore()}else if(!gestureMoved&&Object.keys(touches).length===1){var rect=canvas.getBoundingClientRect(),best=-1,distance=60;machinePos.forEach(function(pos,i){var p=project(pos.x,1.4+(pos.y||0),pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=i;distance=d}});orderCounterPositions(state.orderCounters).forEach(function(pos){var p=project(pos.x,1.4,pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=4;distance=d}});var online=project(-10.7,8.45,1.5),od=Math.hypot(e.clientX-rect.left-online.x,e.clientY-rect.top-online.y);if(od<distance){showTray('orders');renderUI()}else if(best>=0)selectMachine(best)}delete touches[e.pointerId];if(Object.keys(touches).length)gestureMoved=true;else gestureOrigin=null});
+  canvas.addEventListener('pointerup',function(e){mapHintActivity();if(!gestureMoved&&Object.keys(touches).length===1&&state.empire.activeStore){var br=canvas.getBoundingClientRect(),f=BRANCH_THEMES[state.empire.activeStore-1].focus,q=project(f.x,f.y,f.z);if(Math.hypot(e.clientX-br.left-q.x,e.clientY-br.top-q.y)<Math.max(45,unit*3))manageViewedStore()}else if(!gestureMoved&&Object.keys(touches).length===1&&trimSpark&&(function(){var rect=canvas.getBoundingClientRect(),sp=project(trimSpark.x,trimSpark.y,trimSpark.z);return Math.hypot(e.clientX-rect.left-sp.x,e.clientY-rect.top-sp.y)<Math.max(32,unit*.85)})()){collectTrimSpark()}else if(!gestureMoved&&Object.keys(touches).length===1){var rect=canvas.getBoundingClientRect(),best=-1,distance=60;machinePos.forEach(function(pos,i){var p=project(pos.x,1.4+(pos.y||0),pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=i;distance=d}});orderCounterPositions(state.orderCounters).forEach(function(pos){var p=project(pos.x,1.4,pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=4;distance=d}});var online=project(-10.7,8.45,1.5),od=Math.hypot(e.clientX-rect.left-online.x,e.clientY-rect.top-online.y);if(od<distance){showTray('orders');renderUI()}else if(best>=0)selectMachine(best)}delete touches[e.pointerId];if(Object.keys(touches).length)gestureMoved=true;else gestureOrigin=null});
   function cancelPointer(e){mapHintActivity();delete touches[e.pointerId];gestureMoved=true}
   canvas.addEventListener('pointercancel',cancelPointer);canvas.addEventListener('lostpointercapture',cancelPointer);
   canvas.addEventListener('wheel',function(e){mapHintActivity();e.preventDefault();var r=canvas.getBoundingClientRect();zoomAt(zoom*Math.exp(-e.deltaY*.0015),e.clientX-r.left,e.clientY-r.top)},{passive:false});
@@ -4324,5 +4466,5 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   document.body.dataset.pageHidden=String(document.hidden);
   document.addEventListener('visibilitychange',function(){document.body.dataset.pageHidden=String(document.hidden);tickTime=performance.now();tickRemainder=0;if(document.hidden){releasePanKeys();save()}else{collectOffline();if(state.empire.returnReport){renderUI()}renderUI()}});
 
-  if(document.modelContext&&document.modelContext.registerTool){document.modelContext.registerTool({name:'read_factory_status',title:'Read factory status',description:'Read cash, production, and machine levels.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:function(){return{orderCounters:state.orderCounters,reservedWalkInBags:customers.filter(function(c){return c.ordered&&!c.bag}).reduce(function(n,c){return n+(c.bags||1)},0),orderCounterPositions:orderCounterPositions(state.orderCounters),autoDrone:state.autoDrone,deliveryDrones:deliveryDrones.length,productMenu:state.productMenu,prestige:state.empire.prestige,contract:state.contract,viewedStore:state.empire.activeStore,branchLevels:state.empire.stores.map(function(s){return s.level}),branchProjects:state.empire.stores.map(function(s){return s.projects}),network:state.empire.network,reputation:state.empire.reputation,management:state.empire.stores,goalsCompleted:state.empire.goalsCompleted,branchIncome:branchRate(state.empire)*state.gameSpeed,cash:Math.floor(state.money),lifetime:Math.floor(state.lifetime),perSecond:production()*state.gameSpeed,gameSpeed:state.gameSpeed,paused:state.gameSpeed===0,lineLevels:state.lines,shopOpen:state.shopOpen,doorBuilt:state.doorBuilt,stock:state.stock,customersServed:state.sold,employeeLevels:state.staff,onlineCompleted:state.onlineCompleted,camera:{zoom:zoom,panX:panX,panY:panY,angle:angle},orderRoute:queueRoute(false),pickupRoute:queueRoute(true),lounge:{level:state.lounge,seats:loungeSeats(state.lounge),seated:loungeSeated(),waiting:loungeWaiting().length,sessions:state.loungeSessions,earned:state.loungeEarned,rate:loungeCurrentRate(state.lounge,loungeSeated(),flowerValue())*state.gameSpeed,nextCost:loungeUpgradeCost(state.lounge)},customers:customers.map(function(c){return{kind:c.kind,id:c.id,phase:c.phase,ordered:c.ordered,bag:c.bag,bags:c.bags||0,kiosk:!!c.kiosk,lounge:!!c.lounge,orderCounter:c.orderCounter,pickupTicket:c.pickupTicket||0,walking:!!c.walking,x:c.x,z:c.z,serviceElapsed:c.serviceElapsed||0}})}}});}
+  if(document.modelContext&&document.modelContext.registerTool){document.modelContext.registerTool({name:'read_factory_status',title:'Read factory status',description:'Read cash, production, and machine levels.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:function(){return{orderCounters:state.orderCounters,reservedWalkInBags:customers.filter(function(c){return c.ordered&&!c.bag}).reduce(function(n,c){return n+(c.bags||1)},0),orderCounterPositions:orderCounterPositions(state.orderCounters),autoDrone:state.autoDrone,deliveryDrones:deliveryDrones.length,productMenu:state.productMenu,prestige:state.empire.prestige,contract:state.contract,viewedStore:state.empire.activeStore,branchLevels:state.empire.stores.map(function(s){return s.level}),branchProjects:state.empire.stores.map(function(s){return s.projects}),network:state.empire.network,reputation:state.empire.reputation,management:state.empire.stores,goalsCompleted:state.empire.goalsCompleted,branchIncome:branchRateNow()*state.gameSpeed,cash:Math.floor(state.money),lifetime:Math.floor(state.lifetime),perSecond:production()*state.gameSpeed,gameSpeed:state.gameSpeed,paused:state.gameSpeed===0,lineLevels:state.lines,shopOpen:state.shopOpen,doorBuilt:state.doorBuilt,stock:state.stock,customersServed:state.sold,employeeLevels:state.staff,onlineCompleted:state.onlineCompleted,camera:{zoom:zoom,panX:panX,panY:panY,angle:angle},orderRoute:queueRoute(false),pickupRoute:queueRoute(true),lounge:{level:state.lounge,seats:loungeSeats(state.lounge),seated:loungeSeated(),waiting:loungeWaiting().length,sessions:state.loungeSessions,earned:state.loungeEarned,rate:loungeCurrentRate(state.lounge,loungeSeated(),flowerValue())*state.gameSpeed,nextCost:loungeUpgradeCost(state.lounge)},customers:customers.map(function(c){return{kind:c.kind,id:c.id,phase:c.phase,ordered:c.ordered,bag:c.bag,bags:c.bags||0,kiosk:!!c.kiosk,lounge:!!c.lounge,orderCounter:c.orderCounter,pickupTicket:c.pickupTicket||0,walking:!!c.walking,x:c.x,z:c.z,serviceElapsed:c.serviceElapsed||0}})}}});}
 })();

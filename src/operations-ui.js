@@ -1,5 +1,30 @@
 import {BRANCH_NAMES,LINES,STAFF,REGULARS,COSMETICS,staffLevel,shelfCapacity,shelfUsed,allocateShelf,developProduct,chooseRecipe,customize,importHarvest,transferReason,sendTransfer,deliveryReason,dispatchDelivery,upgradeFleet,expandArea,openingStatus,claimOpening,storyStatus,fulfillStory,neighborhood} from './operations.js';
 import {PRODUCTS,MANAGERS,exclusiveAvailable,setFeatured,assignManager} from './progression.js';
+// Flat vector portraits in the game's people palette: one per regular, drawn from simple shapes so they
+// read as the same world as the canvas figures. Index order matches REGULARS.
+function regularPortrait(i){
+ const P=[
+  // Mara: sun hat, auburn side bun, sage shirt.
+  {bg:'#3c5748',skin:'#e9b28e',shirt:'#8fa787',hair:'#b66c38',extra:'<ellipse cx="32" cy="21" rx="17" ry="4.5" fill="#d9b775"/><path d="M22 21a10 10 0 0 1 20 0Z" fill="#d9b775"/><circle cx="43" cy="30" r="4.5" fill="#b66c38"/>'},
+  // Sol: round amber glasses, ink apron.
+  {bg:'#4a4438',skin:'#8a5a3c',shirt:'#315d6b',hair:'#211f20',extra:'<circle cx="26.5" cy="29" r="4.2" fill="none" stroke="#d9a851" stroke-width="1.6"/><circle cx="37.5" cy="29" r="4.2" fill="none" stroke="#d9a851" stroke-width="1.6"/><path d="M30.7 29h2.6" stroke="#d9a851" stroke-width="1.6"/><path d="M24 47h16v9H24z" fill="#28323c"/>'},
+  // Kit: backwards teal cap, orange windbreaker.
+  {bg:'#39514d',skin:'#f0c9a0',shirt:'#ce865b',hair:'#513b28',extra:'<path d="M21 24a11 8 0 0 1 22 0v3H21Z" fill="#4a8a8c"/><path d="M43 24l6 2-1 4-5-2Z" fill="#3d7476"/><path d="M27 49l5 7 5-7" fill="none" stroke="#f4e7c6" stroke-width="1.6"/>'},
+  // Ruth: silver curls, coral scarf.
+  {bg:'#54463a',skin:'#6b4530',shirt:'#93754d',hair:'#ded5bf',extra:'<circle cx="21" cy="26" r="4" fill="#ded5bf"/><circle cx="43" cy="26" r="4" fill="#ded5bf"/><circle cx="26" cy="20" r="4.5" fill="#ded5bf"/><circle cx="38" cy="20" r="4.5" fill="#ded5bf"/><path d="M22 48c6-4 14-4 20 0v6H22Z" fill="#c96b60"/>'},
+  // Nils: red beanie, blond beard, forest fleece.
+  {bg:'#31463b',skin:'#e6b193',shirt:'#496a59',hair:'#d9b775',extra:'<path d="M21 24a11 9 0 0 1 22 0v2H21Z" fill="#b5473c"/><path d="M21 25h22v3H21Z" fill="#9c3b32"/><path d="M24 34c0 8 4 12 8 12s8-4 8-12c-2 5-14 5-16 0Z" fill="#d9b775"/>'}
+ ][i];
+ return '<svg class="regular-portrait" viewBox="0 0 64 64" aria-hidden="true">'+
+  '<circle cx="32" cy="32" r="31" fill="'+P.bg+'"/>'+
+  '<path d="M12 58a20 14 0 0 1 40 0v6H12Z" fill="'+P.shirt+'"/>'+
+  '<rect x="27" y="38" width="10" height="9" rx="3" fill="'+P.skin+'"/>'+
+  '<ellipse cx="32" cy="30" rx="11" ry="12" fill="'+P.skin+'"/>'+
+  '<path d="M21 28a11 11 0 0 1 22 0v-3a11 9 0 0 0-22 0Z" fill="'+P.hair+'"/>'+
+  '<circle cx="27.5" cy="30" r="1.3" fill="#2b2620"/><circle cx="36.5" cy="30" r="1.3" fill="#2b2620"/>'+
+  '<path d="M29 36c2 1.4 4 1.4 6 0" fill="none" stroke="#2b2620" stroke-width="1.3" stroke-linecap="round"/>'+
+  P.extra+'</svg>';
+}
 export function mountOperations({getState,format,changed,visit}){
  const $=id=>document.getElementById(id),selected=[0,0,0];
  const act=(fn,message)=>{const result=fn();if(result)changed(message);return result;};
@@ -31,7 +56,7 @@ export function mountOperations({getState,format,changed,visit}){
   onPill('deliveryArea'+i,value=>{getState().empire.network.stores[i].area=Number(value);changed('Delivery area changed');});
   onPill('walkinReserve'+i,value=>{getState().empire.network.stores[i].reserve=Number(value)*5;changed('Walk-in reserve updated');});
   $('fleetUpgrade'+i).onclick=()=>act(()=>upgradeFleet(getState()),'Driver joined the fleet');$('areaUpgrade'+i).onclick=()=>act(()=>expandArea(getState()),'Delivery area expanded');
-  $('opPane'+i+'2').innerHTML='<p class="operation-hint" id="managerSummary'+i+'"></p><h4>Team</h4>'+Object.entries(STAFF).map(([id,person])=>'<div class="operation-row"><span><strong>'+person.name+'</strong><small>'+person.trait+'</small><small>'+MANAGERS.find(m=>m.id===id).detail+'</small><small id="staffInfo'+i+id+'"></small></span><button id="assign'+i+id+'"></button></div>').join('')+'<h4>'+REGULARS[i].name+' <span class="operation-muted">'+REGULARS[i].role+'</span></h4><p id="storyTitle'+i+'"></p><div class="relationship" id="relationship'+i+'"></div><div class="operation-row"><span id="storyNeed'+i+'"></span><button id="storyServe'+i+'">Fulfill request</button></div><p class="operation-hint" id="storyHint'+i+'"></p>';
+  $('opPane'+i+'2').innerHTML='<p class="operation-hint" id="managerSummary'+i+'"></p><h4>Team</h4>'+Object.entries(STAFF).map(([id,person])=>'<div class="operation-row"><span><strong>'+person.name+'</strong><small>'+person.trait+'</small><small>'+MANAGERS.find(m=>m.id===id).detail+'</small><small id="staffInfo'+i+id+'"></small></span><button id="assign'+i+id+'"></button></div>').join('')+'<div class="regular-card">'+regularPortrait(i)+'<div><h4>'+REGULARS[i].name+' <span class="operation-muted">'+REGULARS[i].role+'</span></h4><p class="regular-speech" id="regularSpeech'+i+'"></p></div></div><p id="storyTitle'+i+'"></p><div class="relationship" id="relationship'+i+'"></div><div class="operation-row"><span id="storyNeed'+i+'"></span><button id="storyServe'+i+'">Fulfill request</button></div><p class="operation-hint" id="storyHint'+i+'"></p>';
   Object.keys(STAFF).forEach(id=>$('assign'+i+id).onclick=()=>act(()=>assignManager(getState().empire,i,id),STAFF[id].name+' moved to '+name));
   $('storyServe'+i).onclick=()=>act(()=>fulfillStory(getState(),i),REGULARS[i].name+' relationship grew');
   $('opPane'+i+'3').innerHTML='<p class="operation-hint">Your look. No cost or income bonus.</p>'+Object.entries(COSMETICS).map(([key,options])=>pillGroup('style'+i+key,key[0].toUpperCase()+key.slice(1),options,options.map((_,j)=>j),key)).join('')+'<p class="operation-hint" id="neighborhood'+i+'"></p><button id="previewStyle'+i+'">View store</button>';
@@ -53,7 +78,9 @@ export function mountOperations({getState,format,changed,visit}){
    $('fleetLabel'+i).textContent=n.fleet+' driver'+(n.fleet===1?'':'s');$('fleetUpgrade'+i).textContent=n.fleet>=3?'Fully staffed':'+ Driver '+format(2000*n.fleet*n.fleet);$('fleetUpgrade'+i).disabled=n.fleet>=3||state.money<2000*n.fleet*n.fleet;$('areaUpgrade'+i).textContent=n.area===2?'Citywide':format([3000,12000][n.area]);$('areaUpgrade'+i).disabled=n.area===2||state.money<[3000,12000][n.area]||!p.stores[2].level;
    Object.keys(STAFF).forEach(id=>{const location=p.stores.findIndex(s=>s.manager===id);$('staffInfo'+i+id).textContent=STAFF[id].specialty+' '+staffLevel(n,id)+'/5 · '+Math.floor(n.staff[id].xp)+' XP'+(location>=0?' · '+BRANCH_NAMES[location]:'');$('assign'+i+id).textContent=location===i?'Assigned':'Move here';$('assign'+i+id).disabled=location===i||!owned;});
    const mgr=MANAGERS.find(m=>m.id===p.stores[i].manager);$('managerSummary'+i).textContent=(p.stores[i].manager==='none'?'No manager assigned.':mgr.name+' is managing · '+mgr.detail+'.')+' One store per specialist — assigning below moves them from elsewhere.';
-   const story=storyStatus(p,i);$('storyTitle'+i).textContent=story.title;$('relationship'+i).textContent=['New face','Acquaintance','Friend','Regular'][s.relationship]+' · '+s.relationship+'/3';$('storyNeed'+i).textContent=s.relationship===3?'Story complete':story.need+' '+LINES[story.line].name;$('storyServe'+i).disabled=!story.ready;$('storyServe'+i).hidden=s.relationship===3;$('storyHint'+i).textContent=s.relationship===3?'Returns to the shop as a familiar face':s.storyWait>0?'Returns in '+Math.ceil(s.storyWait)+'s':format(story.reward)+' · +5 loyalty';
+   const story=storyStatus(p,i),lines=REGULARS[i].lines;
+   $('regularSpeech'+i).textContent='“'+(s.relationship===3?lines.regular:s.storyWait>0?lines.thanks:story.ready?lines.request:s.relationship>0?lines.request:lines.meet)+'”';
+   $('storyTitle'+i).textContent=story.title;$('relationship'+i).textContent=['New face','Acquaintance','Friend','Regular'][s.relationship]+' · '+s.relationship+'/3';$('storyNeed'+i).textContent=s.relationship===3?'Story complete':story.need+' '+LINES[story.line].name;$('storyServe'+i).disabled=!story.ready;$('storyServe'+i).hidden=s.relationship===3;$('storyHint'+i).textContent=s.relationship===3?'Returns to the shop as a familiar face':s.storyWait>0?'Returns in '+Math.ceil(s.storyWait)+'s':format(story.reward)+' · +5 loyalty';
    Object.keys(COSMETICS).forEach(key=>setPill('style'+i+key,String(s.cosmetics[key])));$('neighborhood'+i).textContent='Neighborhood: '+['Quiet block','New neighbors','Lively street','Local destination'][neighborhood(p,i)];
   });
  }};

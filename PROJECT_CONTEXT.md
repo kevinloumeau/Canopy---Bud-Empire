@@ -597,3 +597,45 @@ Security card: the paragraph is gone; like the lounge card it shows a status chi
 Pace floors, so a fully upgraded shop stops being a blur: Floor flow's walking speed now has diminishing returns (`walkSpeed` tops out near 2.2× the base pace instead of 3× at level 20, and the Shop card's "+X% walking speed" reads from the curve); one customer's handoff never drops below a second at the order desk or 0.7 s at pickup however many lanes the counter runs (`customerHandoff`, `HANDOFF_FLOOR` in `src/economy.js`, used by the service tick, the throughput estimate and both counter cards); and no ID check takes under a quarter of a second (`ID_CHECK_FLOOR`; Security training stops there and the card says "As quick as a check gets"). Past those floors the shop grows through more counters, kiosks, baskets, prices, the lounge and the branches. Probe at level 35 door / level 20 counters: still four or five at the door and ten to twelve in the pen, with about the same takings — the line just holds people for a believable beat.
 
 Counter cards at the handoff floor: once a level no longer shortens the handoff, the comparison switches to "Units per basket" — the order desk's next level shows "+4 per basket" (or "Same basket · +1 at Lv N" on the levels between), the pickup counter "Same basket · ×2 when both counters reach Lv 30", since its level moves the basket only through the retail tier. `renderUpgradeComparison` no longer escalates to five decimals when the two values are simply equal.
+
+## Depth features (September 22, 2026)
+
+Five additions from the "what is the game missing" review, all offline and save-migrated:
+
+- **Ambient bed.** `makeAmbience()` in sfx.js: a synthesised quiet layer under the cue kit — brown-noise room tone, a four-voice lo-fi pad drifting through a slow chord cycle, crowd murmur swelling with the floor, crickets after dark. Steered once a second by `ambienceTick()` in main.js, gesture-unlocked alongside the cue kit, and governed by a new `state.ambience` toggle (Settings → Ambience; defaults on, requires Sound on).
+- **The golden trim.** While the shop is open, every ~1–2 minutes (wall time, so pause and speed don't matter) one plant glints gold for 12 seconds; tapping it banks ~10 seconds of income (min $25) with a burst, ticket and sparkle. Five fixed plant anchors across the floors. Pure bonus — never a penalty. `window.__canopyTrim()` reports spark state for tests.
+- **Weekly special.** `WEEKLIES`/`weeklySpecial()` in depth.js rotate six mild economy modifiers deterministically with the UTC week (grow output, boutique price, walk-in traffic, online pay, branch income, lounge take). Applied via `weeklyNow()` at the six hooks in main.js and shown as a gold banner atop Empire → Events.
+- **Seasons.** branch-maps derives a season from the local date (`?season=` overrides for capture/tests). Deciduous canopies and bushes turn amber in autumn and blossom in spring; winter dusts crowns, bushes and pine tiers white and snows over the Alpine plot. Evergreens and architecture are untouched.
+- **Regulars in person.** REGULARS gained four dialogue lines each (meet/request/thanks/regular); each branch's People tab shows a flat-vector SVG portrait beside the current line, and once met the regular stands in their branch scene with a name tag (gold dot while their request is ready).
+- **Cultivar journal.** Six house crosses (one per pair of shelf strains) under the Menu pane. With the Breeding lab and both parents at level 5+, a cross costs 15K×3^discovered and ripens over 300 simulated seconds in `state.crosses`; each discovery permanently adds +2% to all sales and its tinted bud joins the journal. Verified end-to-end over CDP: start, ripen, discover, +2% applied, no console errors; the construction intro suite still passes.
+
+## Respecting absence (September 23, 2026)
+
+Four changes from the idle-design research pass. The through-line: this game sells nothing, so every mechanic that
+punishes a player for being away costs them something and returns us nothing. The design literature is explicit —
+"allow players to disengage at any point without substantial consequences" (Spiel et al., "It Started as a Joke",
+CHI PLAY '19) — and the commercial reasons for the opposite (appointment mechanics driving conversion) do not apply.
+
+- **Offline cap 4h → 12h.** `OFFLINE_SECONDS` in depth.js is now the single source; main.js's welcome-back report
+  and offline accrual both read it. Twelve hours covers a night's sleep, which is the real return cadence for a cozy
+  PWA. A practitioner naming his own churn out of Egg Inc over its two-hour cap is the closest thing to evidence here
+  (Pecorella, GDC Europe 2016); the usual reason to cap tightly is conversion pressure on an IAP that does not exist.
+- **The daily track holds its place.** `dailyStatus` no longer resets to Day 1 after a missed day — the track advances
+  on each day you actually visit, so a week away costs the days' rewards but not the streak.
+- **Events run the whole hour.** `eventStatus.open` was `elapsed < 20 minutes`, which quietly required being present
+  on the hour; it is now open for the full slot, so arriving late costs the attempt rather than the chance. The event
+  VIP guests and the festival stall in the branch scenes follow the same flag and now dress the whole hour. Three
+  now-unreachable UI branches ("Event ended", "Waiting for next event") were removed rather than left as dead code.
+- **Save export/import.** Settings gained Back up save / Restore save. Export writes a
+  `{game,format,exported,state}` JSON file the player keeps; import validates shape, stashes the current shop in the
+  existing `shift-save-backup` slot, writes the incoming save and reloads so the normal `load()` path does all
+  migration and clamping. `save()` is guarded by an `importing` flag, without which the `beforeunload`/`pagehide`
+  autosaves would write the replaced shop straight back over the import. Nothing is uploaded and no account exists —
+  this is the only route by which a shop survives cleared site data or a new device.
+
+Verified over CDP: daily resumes at Day 4 after a three-day gap; an event 45 minutes into its hour is joinable;
+export downloads a well-formed file; import replaces the shop and survives the reload; a junk file is rejected with
+the shop intact; no console errors; the construction-intro suite still passes on phone and desktop.
+Note for future test authors: `DOM.setFileInputFiles` will not attach to the hidden import input, and a
+`Page.addScriptToEvaluateOnNewDocument` seed re-fires after the import's reload — drive the input with an in-page
+`DataTransfer` and remove the seed script before importing, or the test will look like a product bug.

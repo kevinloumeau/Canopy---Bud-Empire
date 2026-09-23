@@ -48,6 +48,22 @@ const FIRST=[['FIRST BATCH',100,40],['STEADY SUPPLY',1500,450],['MASS MARKET',20
 export function milestone(index){if(!Number.isInteger(index)||index<0||index>20)return null;const row=FIRST[index];return row?{name:row[0],goal:row[1],reward:row[2]}:{name:'EMPIRE CONTRACT '+(index-3),goal:1000000*3**(index-4),reward:200000*3**(index-4)};}
 // Prestige is gated on this run's lifetime revenue, not on hoarding cash.
 export function prestigeOffer(state){const rank=state.empire.prestige||0,target=10000000*3**Math.min(rank,18);return {rank,target,eligible:rank<19&&state.lifetime>=target,multiplier:1+(rank+1)*.2};}
+// The week's special: a mild, always-on modifier that rotates deterministically with the UTC week, so every
+// player shares the same week without a server. Each entry nudges one corner of the economy and names it.
+export const WEEKLIES=[
+  {id:'green-thumb',name:'Green Thumb Week',detail:'Grow room output +15%',grow:1.15},
+  {id:'terpene-fair',name:'Terpene Fair',detail:'Boutique strains pay +15%',boutique:1.15},
+  {id:'street-fair',name:'Street Fair',detail:'Walk-ins arrive 12% faster',traffic:1.12},
+  {id:'courier-rally',name:'Courier Rally',detail:'Online orders pay +20%',online:1.2},
+  {id:'neighborhood-days',name:'Neighborhood Days',detail:'Branch income +15%',branch:1.15},
+  {id:'high-tea',name:'High Tea Week',detail:'Lounge sessions pay +25%',lounge:1.25}
+];
+export function weeklySpecial(now){const week=Math.floor((now/86400000+4)/7);return WEEKLIES[((week%WEEKLIES.length)+WEEKLIES.length)%WEEKLIES.length];}
+// How much time away still pays. A cozy game is checked in on morning and evening, so the cap covers a night's
+// sleep rather than a lunch break: the usual reason to cap tightly is conversion pressure on an in-app purchase,
+// and this game sells nothing. (Idle practitioners name a stingy cap as a churn driver — Anthony Pecorella, GDC
+// Europe 2016, on his own churn out of Egg Inc's two-hour cap.)
+export const OFFLINE_SECONDS=43200;
 // Fixed simulation steps driven by elapsed time, not timer callback count.
 // Long visible stalls use the same capped estimate as a suspended tab.
-export function elapsedSteps(seconds,speed){const elapsed=Math.max(0,Number.isFinite(seconds)?seconds:0);return elapsed>5?{steps:0,offline:Math.min(14400,elapsed)}:{steps:Math.floor((elapsed+1e-8)/.05)*speed,offline:0};}
+export function elapsedSteps(seconds,speed){const elapsed=Math.max(0,Number.isFinite(seconds)?seconds:0);return elapsed>5?{steps:0,offline:Math.min(OFFLINE_SECONDS,elapsed)}:{steps:Math.floor((elapsed+1e-8)/.05)*speed,offline:0};}

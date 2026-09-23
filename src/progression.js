@@ -68,9 +68,12 @@ export function selectStore(p,i) {if(!Number.isInteger(i)||i<0||i>STORES.length|
 export function time(p, now=Date.now()) {p.clock=Math.max(p.clock,now);return p.clock;}
 // Fixed rewards scale with current income (scale >= 1) so they stay meaningful after the first hour.
 export function scaledReward(base,scale=1){return Math.round(base*Math.max(1,Number.isFinite(scale)?scale:1));}
+// The track advances on each day you actually visit, and a missed day costs nothing — being away is not a
+// mistake to be punished. (Idle-game design guidance is explicit that players should be able to disengage at
+// any point without substantial consequences: Spiel et al., "It Started as a Joke", CHI PLAY '19.)
 export function dailyStatus(p, now=Date.now(), scale=1) {
   const today=Math.floor(time(p,now)/DAY), available=today>p.daily.day;
-  const next=p.daily.day===today-1 ? p.daily.streak%7+1 : 1;
+  const next=p.daily.streak%7+1;
   const day=available?next:Math.max(1,p.daily.streak);
   return {available,day,reward:scaledReward(DAILY[day-1],scale),remaining:(today+1)*DAY-p.clock};
 }
@@ -93,11 +96,15 @@ export function buyStore(state,i) {
   if(p.stores[i].level>=10 || state.lifetime<STORES[i].goal || state.money<cost)return false;
   const before=storeRate(p,i);state.money-=cost;p.stores[i].level++;p.network.stores[i].construction=6;p.network.stores[i].incomeGain=storeRate(p,i)-before;recordGoal(p,'invest',1);return true;
 }
+// An event runs for its whole hour: joinable and scoring right up to the turn of the hour, so showing up late
+// costs the attempt rather than the chance. It used to close after the first twenty minutes, which quietly
+// required the player to be present on the hour — an appointment a game with nothing to sell has no reason to
+// keep (see the disengagement guidance cited on dailyStatus).
 export function eventStatus(p, now=Date.now(), scale=1) {
   const t=time(p,now),slot=Math.floor(t/HOUR), elapsed=t%HOUR;
   const definition=EVENTS[slot%EVENTS.length];
   const current=p.event.slot===slot;
-  return {...definition,reward:scaledReward(definition.reward,scale),slot,open:elapsed<20*60000,remaining:elapsed<20*60000?20*60000-elapsed:HOUR-elapsed,
+  return {...definition,reward:scaledReward(definition.reward,scale),slot,open:true,remaining:HOUR-elapsed,
     joined:current&&p.event.joined,progress:current?p.event.progress:0,claimed:current&&p.event.claimed};
 }
 export function joinEvent(p, now=Date.now()) {

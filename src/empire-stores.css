@@ -264,3 +264,9 @@
 .stock-featured .pill-group{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
 .stock-make .pill-group{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
 .sheet .empire-screen .stock-make .pill-group button{padding-inline:6px;font-size:11.5px;line-height:1.2}
+
+/* The regular's card in a branch People tab: portrait beside two lines of their own voice. */
+.regular-card{display:flex;gap:12px;align-items:center;margin:14px 0 6px}
+.regular-card .regular-portrait{width:52px;height:52px;flex:none;border-radius:50%;box-shadow:0 0 0 2px rgba(232,210,156,.35)}
+.regular-card h4{margin:0 0 4px}
+.regular-speech{margin:0;font-size:12.5px;line-height:1.45;color:#cfe0c6;font-style:italic}

@@ -47,3 +47,7 @@
 .goals-dropdown .short-goal button{margin-top:6px;min-height:38px;padding:0 14px;font:inherit;font-size:13px;font-weight:700;letter-spacing:.01em;cursor:pointer;background:linear-gradient(145deg,#c9e4b82b,#c6dfb60a),#608149;color:#f8fbed;border:1px solid #d9f1c445;border-radius:12px;box-shadow:inset 0 1px 0 #efffdf40,0 3px 9px #0b1c1626}
 .goals-dropdown .short-goal button:disabled{background:#2a3d30;color:#8ea18c;border-color:#ffffff14;box-shadow:none;cursor:default}
 @media(hover:hover){.goals-dropdown .short-goal button:not(:disabled):hover{background:linear-gradient(145deg,#d6ecc63a,#c6dfb612),#6b8f52}}
+
+/* Rows that need a line of explanation under the label (the save backup pair). */
+.modal .settings-row>span{display:flex;flex-direction:column;gap:2px}
+.modal .settings-row>span small{font-size:11.5px;line-height:1.35;color:#9fb894}

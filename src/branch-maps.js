@@ -1,4 +1,4 @@
-import {atmosphere} from './operations.js';
+import {atmosphere,REGULARS} from './operations.js';
 // Three hand-curated Canvas scenes, each a whole city block around its shop. They share the main map's projection and gestures.
 // `frame` is each scene's projected bounding box in world units at unit scale (width, height, centre), measured by
 // drawing it through a recording projection; the camera fits it to the viewport.
@@ -9,6 +9,13 @@ export const BRANCH_THEMES = [
   {name:'Desert Oasis', description:'An adobe courtyard shop in the desert, with a rooftop lounge and glass grow room, saguaros and agaves in a gravel garden, and a sun-baked parking court.', background:'#2e4f48', focus:{x:0,y:1.3,z:1.4}, frame:{w:43.3,h:23.6,cx:-.85,cy:-1.15}},
   {name:'Alpine', description:'A stone-and-timber mountain lodge among the pines, with a glass conservatory wing under a rooftop terrace, a fireside pergola patio, and a waterfall garden with a creek-side deck.', background:'#233b31', focus:{x:0,y:1.3,z:1.4}, frame:{w:43.3,h:23.7,cx:-.85,cy:-1.2}}
 ];
+
+// Season from the local date (a ?season=winter|spring|summer|autumn URL override serves tests and captures):
+// deciduous foliage turns with it, spring trees blossom, winter dusts the canopies and snows on Alpine.
+// Evergreens stay evergreen, and the shops themselves are untouched.
+const SEASON=(()=>{try{const forced=new URLSearchParams(location.search).get('season');if(['winter','spring','summer','autumn'].includes(forced))return forced;}catch(e){}const m=new Date().getMonth();return m>=11||m<2?'winter':m<5?'spring':m<8?'summer':'autumn';})();
+const CANOPY_TONES={summer:['#648768','#88a675','#a2b780'],autumn:['#a97a4a','#c1954f','#d4ad62'],spring:['#6f9468','#93b277','#aecb88'],winter:['#6b7f68','#8a9c80','#a3b295']}[SEASON];
+const BUSH_TONES={summer:['#4f7a55','#6d9a62','#8fb478'],autumn:['#7a6b40','#98854a','#b39d56'],spring:['#54805a','#74a168','#96bb7e'],winter:['#546753','#6f8168','#8a9a7c']}[SEASON];
 
 export function drawBranchMap(api, index, level, now, projects=[], experience={}) {
   const {width,height,unit,project:p,box:b,line:l,poly,ellipse,plant,jar,carton,person,depth}=api;
@@ -34,8 +41,11 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     [-1,1].forEach(s=>l([[x,1.6*size,z],[x+s*.6*size,2.8*size,z+s*.25]],'#826243',.085));
     // Wobbled canopy lobes with a few pointed leaves breaking the rim, instead of a cluster of perfect ovals.
     const blob=api.blob||((bx,by,rx,ry,f)=>ellipse(bx,by,rx,ry,f));
-    for(let i=0;i<14;i++){const a=i*2.4,q=p(x+Math.cos(a)*(.5+i%3*.2)*size,2.8*size+(i%4)*.28,z+Math.sin(a)*.7*size);blob(q.x,q.y,unit*.64*size,unit*.47*size,['#648768','#88a675','#a2b780'][i%3],x*5.3+z*2.7+i,.16);}
-    if(api.leaf&&unit>=9)for(let i=0;i<6;i++){const a=i*1.05+x,q=p(x+Math.cos(a)*1.05*size,3.4*size+(i%3)*.3,z+Math.sin(a)*.85*size);api.leaf(q.x,q.y,unit*.28*size,a+.6,['#88a675','#a2b780'][i%2]);}
+    for(let i=0;i<14;i++){const a=i*2.4,q=p(x+Math.cos(a)*(.5+i%3*.2)*size,2.8*size+(i%4)*.28,z+Math.sin(a)*.7*size);blob(q.x,q.y,unit*.64*size,unit*.47*size,CANOPY_TONES[i%3],x*5.3+z*2.7+i,.16);}
+    if(api.leaf&&unit>=9)for(let i=0;i<6;i++){const a=i*1.05+x,q=p(x+Math.cos(a)*1.05*size,3.4*size+(i%3)*.3,z+Math.sin(a)*.85*size);api.leaf(q.x,q.y,unit*.28*size,a+.6,CANOPY_TONES[1+i%2]);}
+    // Spring blossoms on the rim; winter dusts the crown white.
+    if(SEASON==='spring'&&api.noise)for(let i=0;i<5;i++){const a=i*1.3+z,q=p(x+Math.cos(a)*.95*size,3.2*size+(i%3)*.3,z+Math.sin(a)*.75*size);ellipse(q.x,q.y,unit*.07*size,unit*.055*size,i%2?'#e7bcc8':'#f0d3da');}
+    if(SEASON==='winter')[[-.4,3.3],[.35,3.5],[0,3.9]].forEach(([dx,dy],i)=>{const q=p(x+dx*size,dy*size,z);blob(q.x,q.y,unit*.42*size,unit*.16*size,'#e9efec',x*3.1+z*8.3+i,.22);});
   }
   function bench(x,z,w=2.8,y=0){
     if(style.layout===1&&y===0){display(x,z,0,wood);return;}
@@ -256,7 +266,8 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
   function lanternPost(x,z,y=0){b(x,z,y,.14,.14,.85,dark);b(x,z,y+.85,.34,.34,.06,dark);b(x,z,y+.91,.26,.26,.3,['#ffefc4','#e0b76a','#f2cf8a']);b(x,z,y+1.21,.38,.38,.07,dark);glow(x,y+1.05,z,.7,'#ffc978');}
   // A dense, layered shrub: clustered leaf ellipses in three greens.
   function bush(x,z,y,size=1){const blob=api.blob||((bx,by,rx,ry,f)=>ellipse(bx,by,rx,ry,f));
-    {const sh=p(x,y+.02,z);ellipse(sh.x-unit*.14*size,sh.y+unit*.05,unit*.52*size,unit*.2*size,'#141f1822');}for(let i=0;i<9;i++){const a=i*2.2,q=p(x+Math.cos(a)*.35*size,y+.25*size+(i%3)*.16*size,z+Math.sin(a)*.3*size);blob(q.x,q.y,unit*.36*size,unit*.27*size,['#4f7a55','#6d9a62','#8fb478'][i%3],x*4.1+z*6.3+i,.18);}}
+    {const sh=p(x,y+.02,z);ellipse(sh.x-unit*.14*size,sh.y+unit*.05,unit*.52*size,unit*.2*size,'#141f1822');}for(let i=0;i<9;i++){const a=i*2.2,q=p(x+Math.cos(a)*.35*size,y+.25*size+(i%3)*.16*size,z+Math.sin(a)*.3*size);blob(q.x,q.y,unit*.36*size,unit*.27*size,BUSH_TONES[i%3],x*4.1+z*6.3+i,.18);}
+    if(SEASON==='winter'){const q=p(x,y+.62*size,z);blob(q.x,q.y,unit*.26*size,unit*.1*size,'#e9efec',x*7.7+z*2.3,.25);}}
   // Seeded meadow scatter: sparse grass-blade tufts and occasional wildflower dots over a lawn slab. Drawn right
   // after the slab, so paths and buildings painted later simply cover the tufts beneath them.
   function meadow(x,z,w,d,n,seed,y=0,tones=['#5d7a54','#78946a','#87a473']){
@@ -901,6 +912,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
         blob(q.x,q.y,rx,ry,tone,x*3.3+z*5.7+i,.2);
         // Drooping branch tips off each tier's rim, so the stack reads as boughs rather than discs.
         if(api.leaf&&unit>=8)[-1,1].forEach(k=>api.leaf(q.x+k*rx*.7,q.y+ry*.2,rx*.5,k>0?.5:Math.PI-.5,tone));
+        if(SEASON==='winter')blob(q.x,q.y-ry*.42,rx*.72,ry*.34,'#e9efec',x*5.9+z*3.7+i,.22);
       }
       const tip=p(x,y+3.45*s,z);ellipse(tip.x,tip.y,unit*.14*s,unit*.2*s,'#51825c');
     }
@@ -1102,6 +1114,25 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
   });
   if(district>=2){job(12,7.6,()=>{planter(12,7.6,.85,1.2);lamp(12,8.4);});job(-10,10,()=>planter(-10,10,.7,1));}
   if(district>=3){job(13,1,()=>{b(13,1,0,2,2.5,.15,cream);bench(13,1,2);});}
+  // The branch's regular stands in the scene once you have met them: a fixed, recognisable figure with a
+  // name tag, and a gold dot on the tag while their next request is ready to fill.
+  if(operation&&operation.relationship>0&&api.person){
+    const SPOT=[[-8.6,4.3,.45],[-5.2,7.2,.35],[-5.5,4.6,.4],[-5,7.4,.35],[-6.2,5.6,.4]][index],IDENT=[103,110,115,118,113][index];
+    const rx=SPOT[0],rz=SPOT[1],stock=operation.stock||[0,0,0],line=Math.min(operation.relationship,2);
+    const ready=operation.relationship<3&&operation.storyWait===0&&stock[line]>=[3,2,1][line];
+    job(rx,rz,()=>{
+      api.person(rx,rz,now,IDENT,false,false,false,{amount:0,phase:index*2.1,facing:SPOT[2],identity:IDENT});
+      const tag=p(rx,2.35,rz),ctx=api.ctx,label=REGULARS[index].name,size=Math.max(9,unit*.3);
+      ctx.save();ctx.font='600 '+size+'px "Space Grotesk",system-ui,sans-serif';
+      const w=ctx.measureText(label).width+size*(ready?1.7:1.1),h=size*1.5,x0=tag.x-w/2,y0=tag.y-h;
+      ctx.globalAlpha=.92;ctx.beginPath();
+      if(ctx.roundRect)ctx.roundRect(x0,y0,w,h,h/2);else ctx.rect(x0,y0,w,h);
+      ctx.fillStyle='#1c2c24e0';ctx.fill();ctx.strokeStyle='#e8d29c66';ctx.lineWidth=1;ctx.stroke();
+      ctx.fillStyle='#f0e6c8';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(label,x0+size*.55,y0+h/2);
+      if(ready){ctx.fillStyle='#f2c14e';ctx.beginPath();ctx.arc(x0+w-size*.55,y0+h/2,size*.28,0,Math.PI*2);ctx.fill();}
+      ctx.restore();
+    });
+  }
   if(network){
     network.jobs.forEach(route=>{
       const f=Math.min(1,route.elapsed/route.duration),source=route.from===index,destination=route.to===index;
@@ -1116,6 +1147,18 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     if(network.flagship)job(0,5.5,()=>{b(0,5.5,0,.6,.6,1.8,dark);b(0,5.5,1.8,1.1,.15,.8,brass);const q=p(0,2.2,5.6);ellipse(q.x,q.y,unit*.18,unit*.2,'#f0e4bb');});
   }
   jobs.sort((a,b)=>a.depth-b.depth);jobs.forEach(j=>j.draw());
+  // Winter snowfall over the Alpine lodge: seeded flakes drifting on the shared clock (absent under reduced
+  // motion, when `now` holds at zero), drawn over the whole scene before the night pass relights it.
+  if(index===4&&SEASON==='winter'&&now>0&&api.noise){
+    const ctx=api.ctx;ctx.save();
+    for(let i=0;i<70;i++){
+      const fall=(api.noise(31,i)+now*.000045*(0.7+api.noise(67,i)*.6))%1;
+      const fx=-18+api.noise(13,i)*36+Math.sin(now*.0007+i)*0.5,fz=-12+api.noise(47,i)*25,fy=13-fall*13.6;
+      const q=p(fx,fy,fz);ctx.globalAlpha=.75*Math.min(1,fall*4,(1-fall)*5);
+      ctx.fillStyle='#f2f6f4';ctx.beginPath();ctx.arc(q.x,q.y,Math.max(.8,unit*.03*(0.7+api.noise(83,i)*.6)),0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+  }
   // After dark the main map lights the branch with the same deferred light map, from the fixtures registered by glow().
   if(api.night)api.night(fixtures,lightColor,theme.focus);
 }
