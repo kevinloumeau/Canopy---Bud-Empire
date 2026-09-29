@@ -2,7 +2,7 @@ import UIKit
 import Capacitor
 import WebKit
 
-/// The bottom tab bar is the one piece of chrome that is native rather than web.
+/// Metal renders the map beneath the web controls; UIKit supplies the native tab bar.
 ///
 /// Apple's material guidance puts Liquid Glass on the functional layer — tab bars, toolbars, sidebars — and
 /// explicitly keeps it out of the content layer. The real material cannot be reached from CSS: a web view has
@@ -54,6 +54,9 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     private var buttons: [UIButton] = []
     private var badgeDots: [UIView] = []
     private var selectedKey = "factory"
+    private var panelExpanded = true
+    private var loadingCover: UIView?
+    private var nativeMap: CanopyMapRenderer?
     /// The lozenge that sits behind the selected tab. It is a glass element in its own right, so inside a
     /// `UIGlassContainerEffect` it fuses with the bar's own glass rather than sitting on top of it.
     private var bubble: UIVisualEffectView?
@@ -64,9 +67,103 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         webView?.configuration.userContentController.add(self, name: "canopyTray")
         webView?.configuration.userContentController.add(self, name: "canopyHaptic")
         installTabBar()
+        setBarHidden(true)
+        installLoadingCover()
         NotificationCenter.default.addObserver(
             self, selector: #selector(powerStateChanged),
             name: .NSProcessInfoPowerStateDidChange, object: nil)
+    }
+
+    override func capacitorDidLoad() {
+        super.capacitorDidLoad()
+        installNativeMap()
+    }
+
+    private func installNativeMap() {
+        guard let webView else { return }
+        #if DEBUG
+        if let script = ProcessInfo.processInfo.environment["CANOPY_MAP_REVIEW_SCRIPT"] {
+            let controller = webView.configuration.userContentController
+            controller.add(self, name: "canopyMapReview")
+            controller.addUserScript(WKUserScript(source: script, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        }
+        #endif
+        guard let map = CanopyMapRenderer(frame: view.bounds) else { return }
+        // Capacitor initially makes its web view the root. A sibling native surface needs a container.
+        let container = UIView(frame: view.bounds)
+        container.backgroundColor = UIColor(red: 0.2, green: 0.29, blue: 0.24, alpha: 1)
+        webView.removeFromSuperview()
+        webView.frame = container.bounds
+        webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        container.addSubview(webView)
+        view = container
+        nativeMap = map
+        view.insertSubview(map.mapView, belowSubview: webView)
+        webView.isOpaque = false
+        webView.backgroundColor = .clear
+        webView.scrollView.backgroundColor = .clear
+        let controller = webView.configuration.userContentController
+        controller.add(self, name: "canopyMap")
+        let characterKinds = map.availableCharacterKinds.map(String.init).joined(separator: ",")
+        let nativeAvailability = "window.canopyNativeMapAvailable=true;window.canopyNativeCharacterKinds=[\(characterKinds)];"
+        controller.addUserScript(WKUserScript(source: nativeAvailability, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        // Also covers Capacitor having already begun the first navigation.
+        webView.evaluateJavaScript(nativeAvailability)
+    }
+
+    // The launch storyboard is static and shows this exact frame (same sprout, label and centring), so the
+    // hand-off is invisible; from here the sprout breathes until the web view is ready.
+    private func installLoadingCover() {
+        let cover = UIView()
+        cover.backgroundColor = UIColor(red: 32/255, green: 55/255, blue: 43/255, alpha: 1)
+        cover.translatesAutoresizingMaskIntoConstraints = false
+        cover.accessibilityViewIsModal = true
+        view.addSubview(cover)
+        loadingCover = cover
+        NSLayoutConstraint.activate([
+            cover.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            cover.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            cover.topAnchor.constraint(equalTo: view.topAnchor),
+            cover.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        let plant = UIImageView(image: UIImage(named: "Sprout"))
+        plant.contentMode = .scaleAspectFit
+        plant.translatesAutoresizingMaskIntoConstraints = false
+        plant.isAccessibilityElement = false
+        let label = UILabel()
+        label.text = "Loading Canopy…"
+        label.textColor = UIColor(red: 0.86, green: 0.91, blue: 0.75, alpha: 1)
+        label.font = UIFont.preferredFont(forTextStyle: .subheadline)
+        label.adjustsFontForContentSizeCategory = true
+        label.textAlignment = .center
+        let stack = UIStackView(arrangedSubviews: [plant, label])
+        stack.axis = .vertical; stack.alignment = .center; stack.spacing = 12
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        cover.addSubview(stack)
+        NSLayoutConstraint.activate([
+            plant.widthAnchor.constraint(equalToConstant: 96), plant.heightAnchor.constraint(equalToConstant: 96),
+            stack.centerXAnchor.constraint(equalTo: cover.centerXAnchor),
+            stack.centerYAnchor.constraint(equalTo: cover.centerYAnchor)
+        ])
+        if !UIAccessibility.isReduceMotionEnabled {
+            // Starts at rest (scale 1) so the first frame matches the storyboard.
+            let grow = CABasicAnimation(keyPath: "transform.scale")
+            grow.fromValue = 1.0; grow.toValue = 1.08; grow.duration = 1.1
+            grow.autoreverses = true; grow.repeatCount = .infinity
+            grow.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            plant.layer.add(grow, forKey: "sproutBreathing")
+        }
+        // Never cover the web loader's existing Retry button if startup fails.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 8) { [weak self] in self?.dismissLoadingCover() }
+    }
+
+    private func dismissLoadingCover() {
+        guard let cover = loadingCover else { return }
+        loadingCover = nil
+        UIView.animate(withDuration: UIAccessibility.isReduceMotionEnabled ? 0 : 0.2,
+                       animations: { cover.alpha = 0 }) { _ in cover.removeFromSuperview() }
+        // The cover was modal; hand VoiceOver back to the game.
+        UIAccessibility.post(notification: .screenChanged, argument: webView)
     }
 
     // MARK: - The bar
@@ -239,7 +336,7 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         guard gesture.state == .began || gesture.state == .changed, let row = tabRow else { return }
         let point = gesture.location(in: row)
         guard let hit = buttons.first(where: { $0.frame.contains(point) }) else { return }
-        select(tabs[hit.tag])
+        select(tabs[hit.tag], toggle: false)
     }
 
     /// Colour carries the selection. The guidance is to tint the label rather than fill the background for a
@@ -250,6 +347,7 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
             buttons[index].tintColor = chosen ? accent : resting
             buttons[index].configuration?.baseForegroundColor = chosen ? accent : resting
             buttons[index].accessibilityLabel = tab.title
+            buttons[index].accessibilityHint = chosen && panelExpanded ? "Collapse panel" : "Open panel"
             // `.selected` rather than a spoken value: VoiceOver says "selected" itself, in the reader's own
             // language, and a hardcoded English string here would not have translated.
             buttons[index].accessibilityTraits = chosen ? [.button, .selected] : [.button]
@@ -394,11 +492,10 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     }
 
     /// The one way a tab is chosen, by tap or by scrub.
-    private func select(_ tab: Tab) {
-        // The web tray's own tabs are hidden natively, so this would otherwise be the one control in the app that
-        // moves the whole screen without being felt. Landing on the tab already showing stays quiet — which also
-        // keeps a scrub from buzzing continuously while the finger sits still inside one tab.
-        guard tab.key != selectedKey else { return }
+    private func select(_ tab: Tab, toggle: Bool = true) {
+        // Taps toggle the current panel; scrubbing only changes tabs, so lingering on one cannot
+        // repeatedly collapse and reopen it.
+        guard toggle || tab.key != selectedKey else { return }
         playHaptic("select")
         selectedKey = tab.key
         paint(animated: true)
@@ -414,8 +511,40 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
             playHaptic(payload["kind"] as? String ?? "select")
             return
         }
+        if message.name == "canopyMap" {
+            guard let nativeMap else { return }
+            if let width = payload["width"] as? Double, let height = payload["height"] as? Double {
+                let frame = CGRect(x: payload["left"] as? Double ?? 0, y: payload["top"] as? Double ?? 0, width: width, height: height)
+                if nativeMap.mapView.frame != frame { nativeMap.mapView.frame = frame }
+            }
+            let id = payload["id"] as? Int ?? 0
+            nativeMap.receive(payload) { [weak self] result in
+                switch result {
+                case .drawn:
+                    self?.webView?.evaluateJavaScript("window.canopyNativeMapAck&&window.canopyNativeMapAck(\(id))")
+                case .retry:
+                    // Busy or backgrounded: drop this frame, the web side sends the next one.
+                    self?.webView?.evaluateJavaScript("window.canopyNativeMapRetry&&window.canopyNativeMapRetry()")
+                case .failed:
+                    self?.webView?.evaluateJavaScript("window.canopyNativeMapFailed&&window.canopyNativeMapFailed()")
+                    self?.nativeMap?.mapView.isHidden = true
+                }
+            }
+            return
+        }
+        #if DEBUG
+        if message.name == "canopyMapReview" {
+            if let data = try? JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted, .sortedKeys]) {
+                let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("native-map-review.json")
+                try? data.write(to: url, options: .atomic)
+            }
+            return
+        }
+        #endif
         guard message.name == "canopyTray" else { return }
+        if payload["ready"] as? Bool == true { dismissLoadingCover() }
         if !powerStatePushed { pushPowerState() }
+        if let expanded = payload["expanded"] as? Bool { panelExpanded = expanded }
         if let active = payload["active"] as? String, tabs.contains(where: { $0.key == active }) {
             selectedKey = active
             paint(animated: true)
@@ -427,6 +556,7 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         if let badges = payload["badges"] as? [String] {
             for (index, tab) in tabs.enumerated() {
                 badgeDots[index].isHidden = !badges.contains(tab.key)
+                buttons[index].accessibilityValue = badges.contains(tab.key) ? "Update available" : nil
             }
         }
     }

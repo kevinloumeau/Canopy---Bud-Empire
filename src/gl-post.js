@@ -29,9 +29,11 @@ void main(){
  vec3 bloom=texture(u_bloom,uv).rgb*u_bloomAmount*(1.-.6*dot(base,vec3(.299,.587,.114)));
  vec3 c=1.-(1.-base)*(1.-bloom);
  float l=dot(c,vec3(.299,.587,.114));
- c=mix(vec3(l),c,1.07);
+ // A modest lift keeps the timber, foliage and tile lively without bleaching the lights.
+ c=mix(vec3(l),c,1.16);
+ c*=1.06;
  c+=(l-.5)*vec3(.045,.012,-.05);
- vec2 v=uv-.5;c*=1.-dot(v,v)*.45;
+ vec2 v=uv-.5;c*=1.-dot(v,v)*.35;
  c+=(hash(gl_FragCoord.xy+fract(u_time)*61.7)-.5)*u_grain;
  outColor=vec4(c,1.);
 }`;

@@ -1,0 +1,4 @@
+/* The native MTKView sits beneath the existing accessible controls and effect overlay. */
+html.native-map-ready,html.native-map-ready body,html.native-map-ready .world{background:transparent!important}
+html.native-map-ready .world>canvas{filter:none!important}
+@media(min-width:780px){html.native-map-ready .hud{padding-top:calc(12px + env(safe-area-inset-top,0px))}}

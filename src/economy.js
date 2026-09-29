@@ -26,7 +26,8 @@ export function counterServiceDuration(station,rate,serviceFactor=1){return (1.4
 export function patience(type,comfortLevel){return (type==='vip'?15:20)*(1+Math.max(0,comfortLevel||0)*.15);}
 // Customers walk a little faster with each Floor flow level, closing the gap between counter capacity and real sales —
 // with diminishing returns that top out at about 2.2× the base pace, so a fully upgraded shop never turns into a blur.
-export function walkSpeed(trafficLevel){return 2.8*(1+1.2*(1-Math.exp(-Math.max(0,trafficLevel||0)/7)));}
+export const CUSTOMER_WALK_SPEED_BASE=2.2;
+export function walkSpeed(trafficLevel){return CUSTOMER_WALK_SPEED_BASE*(1+1.2*(1-Math.exp(-Math.max(0,trafficLevel||0)/7)));}
 // However many lanes a counter runs, one customer's handoff never drops below this: a second at the order desk, most
 // of one at pickup. Past that point the shop grows through more counters, kiosks, baskets and prices, not faster hands.
 export const HANDOFF_FLOOR={4:1,5:.7};

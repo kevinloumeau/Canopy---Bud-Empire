@@ -498,7 +498,7 @@ Stations row: eight cards (Security, six stations, Lounge) on one row at phone a
 
 Revenue goals: the “Earn $N” goal's target grew with the log of income while its reward grew linearly, so a late shop earned the target in seconds and collected more than it earned ($4,969 target, $147K reward). The target now grows with income itself (`base × scale`, i.e. two to four minutes of takings) and the reward is `200 × scale` — a bonus of 20–40% of the target, never more than it. Count goals keep their log growth.
 
-Sell-as per strain: the product format is chosen per strain rather than once for the shop. `productMenu.formats[strain]` holds each strain's format (an old save's single choice becomes every strain's), a format's unlock is still paid once for all strains, and `productMenu.active` is now the format most of the menu uses (`dominantFormat`), kept for unit labels. A strain's own format sets its sale value; demand, packing speed and service time use the mean of the formats on the menu (`menuFormatFactor`). The global “Sell as” panel is gone; each strain's card carries three pills (Selling / Switch / unlock price) and the effect line for its format.
+Sell-as per strain: the product format is chosen and purchased per strain. `productMenu.formats[strain]` holds each strain's format, `productMenu.unlockedByStrain[strain]` holds its owned formats, and `productMenu.active` is the format most of the menu uses (`dominantFormat`), kept for unit labels. Legacy saves retain paid formats on the strains already configured to use them; an old single shop-wide choice carries to the four original strains. A strain's own format sets its sale value; demand, packing speed and service time use the mean of the formats on the menu (`menuFormatFactor`). The global “Sell as” panel is gone; each strain's card carries three pills (Selling / Switch / Buy price) and the effect line for its format.
 
 Counters sort with the customers: the ground-floor order desks and pickup counter are now depth-sorted jobs drawn after the floors (their soffit downlights still paint with the ground floor, under the mezzanine slab), so a guest walking beside or behind a counter — a lounge guest on the approach beside the left desk, say — is hidden by it instead of standing on its top; upper-floor stations still paint with their floors. `sceneJobs` is shared between the tower painter and the frame.
 
@@ -639,3 +639,203 @@ the shop intact; no console errors; the construction-intro suite still passes on
 Note for future test authors: `DOM.setFileInputFiles` will not attach to the hidden import input, and a
 `Page.addScriptToEvaluateOnNewDocument` seed re-fires after the import's reload — drive the input with an in-page
 `DataTransfer` and remove the seed script before importing, or the test will look like a product bug.
+
+## iOS transition reliability review (September 27, 2026)
+
+The existing Capacitor/Canvas architecture is retained. Native tabs now toggle their selected panel on tap while scrubbing remains selection-only; they start hidden and respect Settings/confirmation dialogs. Panel expansion and badge state feed VoiceOver hints. SceneDelegate forwards active/inactive transitions, combined with browser visibility so interruption saves and offline settlement happen once without changing the player's speed.
+
+Native Preferences writes now start immediately through `src/native-save.js`, serialize asynchronous writes and retain the latest queued snapshot. Malformed local JSON can recover from native storage. Boot does not write over an unresolved recovery; failed reads protect the native backup for a later launch.
+
+Validation: 92 unit tests, classic production build, Capacitor sync, Debug and Release simulator builds, construction walkthrough at phone/desktop sizes, and `tests/native-check.mjs` passed. The latter uses a mocked bridge to verify tabs, dialog blocking, equipment purchases, save persistence, duplicate interruption signals and recovery failures. An isolated iPhone simulator launches to the correct age screen with tabs hidden. Native taps and physical-device behavior remain unverified because the computer-control tool cannot connect to Simulator. Full findings and remaining release work: `docs/IOS-TRANSITION-REVIEW.md`. No publication.
+
+## Animated iOS startup (September 27, 2026)
+
+A native forest-green loading cover now draws the sprout stem and gently scales the plant while WKWebView starts. A readiness flag in the existing tray bridge dismisses it with a short fade; there is no minimum display delay. Reduce Motion uses a static sprout. After six seconds the cover yields to the existing web loading/error UI so Retry remains reachable. The static system launch storyboard and existing web sprout animation remain intact. Production build, Capacitor sync and Debug simulator build passed. An isolated delayed-start simulator fixture verified two distinct animation frames and the handoff to the age gate; the normal app bundle was restored afterwards.
+
+## One goals and rewards destination (September 27, 2026)
+
+The user chose the HUD flag as the single destination for goals and claimable daily/event/bonus rewards. It is now titled Goals & rewards, with Goals and Rewards views; Rewards has Daily, Event and Bonus selectors. Current chapter and all three shift goals remain expanded under Goals, with no Earlier chapters. The redundant Your shop story shortcut and reward chips were removed from Empire. Empire now focuses on stores and Records (lifetime figures, reputation and New beginnings). Ready reward counts live on the flag, not the Empire/Shop tabs. Existing claim handlers and saved progress are preserved. Phone, 320px phone and desktop production checks exercised daily claims, joining an event, bonus claims, popup fit and removal of duplicate entry points. Production build and iOS sync passed.
+
+## Store-centered zoom buttons (September 27, 2026)
+
+The plus/minus map buttons now zoom around the store's fitted center in the visible map above the tray, returning to that framing after a pan. Main and branch camera frames expose their visual center; pinch, wheel and double-tap keep their existing gesture focal points. Zoom limits and fixed orientation remain unchanged. Classic production build and iOS sync passed. Isolated phone (390×844) and desktop (1440×900) checks covered all four stores, zoom reversal, panning followed by button zoom, and both limits; screenshots in artifacts/store-zoom were checked for main-shop framing. No save changes or publication.
+
+## Pinch and customer motion performance (September 27, 2026)
+
+Pinch input now reuses its gesture bounds, applies one camera update per pointer event, and defers periodic menu rendering until the fingers lift. The cached floor reuses its Canvas surface instead of allocating a full-resolution bitmap for every camera change. Frame pacing carries timing remainder forward at the existing 60/30 fps targets; customer position smoothing uses wall time so 2×/4× simulation does not make it snap between ticks. Pause, simulation/service timing, save format, and gesture focal points are preserved.
+
+Production build and iOS sync succeeded; all 92 unit tests pass. Isolated phone/desktop browser checks exercised two-finger zoom with the menu open, return to the starting scale, customer movement and order-before-pickup; phone checks also covered 4× and pause. Desktop layout passes during the sampled pinch fell from 60 to 27; phone timing was effectively unchanged around 5 ms of JS drawing per sampled frame. These are headless browser measurements, not confirmation of iPhone frame rate or touch latency. Real-device feel remains to be checked in Xcode. No publication.
+
+## Audible ambience and silent lounge entry (September 27, 2026)
+
+Removed the automatic coin cue from lounge entry; session earnings, tickets and progression remain unchanged. Raised the ambient pad/master mix, moved its chord voices up an octave for phone-speaker audibility, and shortened fade-in. Sound and Ambience toggles now update the audio within their click handlers, preserving gesture-based audio unlock; native backgrounding also mutes ambience immediately. Ambient modulation oscillators now stop along with the pad/noise after fading out. No saved preference defaults changed.
+
+Classic build/iOS sync and 93 unit tests passed, including source cleanup/restart coverage. Browser audio-analyser checks at phone and desktop sizes exercise a nonzero ambient output, off/on, master mute and saved preferences. Phone ambient RMS measured about 0.026 after fade-in; these checks verify the generated signal, not the physical iPhone speaker output. Lounge entry was checked at its shared event handler. No publication.
+
+## Customer exit layer consistency (September 27, 2026)
+
+Customer visual poses now update before the building's background/column passes, so every drawing pass uses the same smoothed position for that frame. Previously the rear pass used the old pose and the foreground pass the new pose, causing a missing or double-painted customer when crossing the rear-wall boundary. The lounge exit column now also checks rendered coordinates rather than simulation coordinates. Routes, earnings, order/pickup behavior and saves are unchanged.
+
+Classic production build/iOS sync and 93 unit tests passed. `tests/customer-exit-check.mjs http://127.0.0.1:4183` runs against a Vite development preview, instrumenting only the browser response to exercise rear-wall crossings in both directions, lounge-column crossings and the entrance. Phone/desktop fixtures verify exactly one customer paint per frame at the updated visual coordinates. Screenshots are in artifacts/customer-exit; phone rear-wall and desktop column views were inspected. No test hooks are included in the shipped bundle. Real-device verification remains separate. No publication.
+
+## Lounge queue beside the order counters (September 27, 2026)
+
+The seven-place lounge queue turns out from the curtain into the side aisle at x −7.65 and extends toward the entrance between the kiosks and order pen, instead of spreading horizontally behind the counters. Arrivals follow the same route from security, join at the tail and advance by route distance with 1.7-unit spacing. Admission requires reaching the curtain, preventing a waiting guest from teleporting in from farther down the aisle; stock/seat/session rules are unchanged. The curtain opens only for nearby guests.
+
+Production/classic build, iOS sync and 93 unit tests passed. `tests/lounge-queue-check.mjs` against the development preview verified all seven queue positions and head admission/following around the bend on phone and desktop. Both screenshots in artifacts/lounge-queue were visually checked with all three kiosks present. Test instrumentation is browser-only. No save format changes or publication.
+
+## Remove the static launch sprout (September 27, 2026)
+
+The system launch storyboard now contains only the matching forest-green background, without the static Splash image. The animated native loading cover remains the first sprout shown once the app runs. iOS's system launch phase itself cannot execute the app's animation. Xcode Debug simulator build (including storyboard compilation) succeeded, and the updated app was installed/launched in the dedicated review simulator. No save changes, uninstall or publication.
+
+## Brighter map and menu refinements (September 27, 2026)
+
+Map grading now adds a modest 6% exposure lift, increases the existing GPU saturation from 1.07 to 1.16 and softens its vignette. The plain Canvas fallback receives a corresponding brightness/saturation filter; CSS filtering does not alter the source pixels uploaded to the GPU. Phone/desktop production previews verified both GPU and fallback paths, main shop/branch navigation and zoom, with fallback day/night captures. Images are in artifacts/map-color.
+
+Panel arrow controls are 44px targets with clearer outlines and state-specific collapse/open accessibility labels. Auto Drone is now the first control in Deliveries, sticky above the receipt with explicit On/Off text and its bulk action on a separate phone row. Empire moves Records alongside the store heading and gives each location a full-width name and a separate figures/action row. Existing store, upgrade and records behavior remains.
+
+Opening, collapsing, expanding and switching menus now preserves map framing: its phone dock reserve updates only when the viewport changes. The actual menu height still updates the UI layout. Phone (390×844), small-phone (320×640), and desktop production checks confirmed unchanged map-marker positions across panel states/tabs, visible drone controls and persistent toggles, and store/Records navigation with no overflow or browser errors. Screenshots in artifacts/menu-refinements were inspected. Classic build/iOS sync passed; no publication or save-format change.
+
+## Speed feedback stays in the HUD (September 27, 2026)
+
+Removed the bottom-panel toast for speed changes and pause. The active speed button and existing paused HUD state provide the feedback beside the controls. Speed changes still save and retain their tap cue. Production build/iOS sync passed; phone/desktop checks verified 1×/2×/4×/pause, saved speed and selected button state, with no toast whether the menu is open or collapsed.
+
+## Non-musical shop ambience (September 27, 2026)
+
+The user chose soft shop sounds instead of music. Removed the chord pad, musical oscillators/modulation and nighttime chirps from ambience. It now contains soft filtered room/ventilation noise and occasional indistinct crowd rustle, quieter after dark. Existing Sound/Ambience settings and action effects remain. Production build/iOS sync, 94 unit tests and phone/desktop browser audio-analyser checks passed (signal, toggle off/on, master mute, saved preferences). Added a regression check that even a crowded nighttime scene creates no ambient oscillators. Physical phone speaker quality is not verified. No publication.
+
+## Permanent unlocked flowers and grouped upgrades (September 27, 2026)
+
+The user clarified that purchased flowers should stay on the menu automatically. Removed the add/remove control and its toggle handler; saved menus now migrate to all unlocked strains, preserving levels/cash/formats. New unlocks enter the menu automatically. Flower cards show level instead of repeated On/Off menu labels. The hero groups level, progress, next-level price benefit and the upgrade cost/button in one row before traits and formats, with explicit locked and max-level states.
+
+Classic build/iOS sync and 94 unit tests passed. Phone (390×844), small-phone (320×640) and desktop browser checks exercised formerly inactive owned strains, upgrade cash/level changes, automatic unlock inclusion, maximum levels and reload persistence. Screenshots in artifacts/flower-upgrade were inspected. No publication.
+
+## Ambience removed (September 27, 2026)
+
+Removed ambient playback, its timer/generator, the Settings row and hidden control, and the unused saved preference. Regular action sound effects and their Sound toggle remain. Old saves containing ambience still load with money, levels and Sound preserved. Classic build/iOS sync, 92 remaining unit tests and phone/desktop Settings/persistence checks passed. No publication.
+
+## Clear reward notification badges (September 27, 2026)
+
+Goals/Rewards and Daily/Event/Bonus tabs now use gold count badges matching the flag icon, replacing the inline Rewards count. Tabs with claims ready receive a gold border and tint, or solid gold when selected. Counts and highlights clear after collection; Join event is not counted as a claim. Accessible labels include the ready count.
+
+Classic build/iOS sync passed. Phone (390×844), small-phone (320×640) and desktop checks verified daily collection, exact Bonus/Rewards badges, claim clearing and no overflow/errors. Phone screenshot inspected in artifacts/reward-badges. No publication.
+
+## Simpler top bar (September 27, 2026)
+
+Removed the customer counter and its unused pickup/served markup and display updates from the HUD. The flag/rewards control remains beside speed controls; customer simulation and first-time hints are unchanged. Production build/iOS sync and phone, small-phone, and desktop checks passed, including opening rewards and checking overflow/runtime errors. Phone screenshot visually verified in artifacts/hud-no-counter.
+
+## More translucent station signs (September 27, 2026)
+
+Map labels now use a 62% forest tint, subtle glass edge, and the existing small 6px blur with slight saturation. Selected signs retain their station color at 80% opacity; construction/lounge signs also have translucent tints. Text stays fully opaque and reduced-transparency/high-contrast preferences use solid fills. Production build/iOS sync and mobile, small-phone, desktop selection/overflow/error checks passed; phone screenshot visually verified in artifacts/glass-labels.
+
+## Disable game text callouts (September 27, 2026)
+
+Disabled text selection and WebKit touch callouts throughout the game UI, with normal selection/callouts retained for input, textarea, and editable content. Production build/iOS sync passed; mobile and desktop browser checks confirmed computed selection rules, editable exceptions, and station/reward taps. Physical iPhone long-press verification remains for the next device run.
+
+## Keep delivery dispatch visible (September 27, 2026)
+
+Compacted Auto drone, its switch, and bulk control into one row. The built delivery desk now fits the pane height, reserves the send action at the bottom, and scrolls the receipt independently. Short phone screens allow a taller delivery sheet so the receipt remains usable; map framing stays unchanged. Added an is-built class for scoped pane sizing. Production build/iOS sync passed. Phone, small-phone and desktop checks verified the send button within the visible pane, successful dispatch, auto/bulk toggles, receipt space, and no overflow/errors. Screenshots inspected in artifacts/dispatch-fit.
+
+## Remove Shop recommendation (September 27, 2026)
+
+Removed the Recommended bottleneck card from the Shop tab, its callback, and dedicated styling. Shop opens directly to category upgrades. Production build/iOS sync and phone, small-phone, desktop checks of all five shop categories passed; phone screenshot verified in artifacts/shop-no-recommendation.
+
+## Single menu control (September 27, 2026)
+
+Replaced the pair of boxed menu arrows with one borderless chevron to collapse/reopen the sheet. Removed the separate expand button and handlers; dragging the header still expands to full height. Retained the 44px hit area, keyboard focus, and accessible state labels. Notifications use the freed header width. Production build/iOS sync and mobile/desktop checks passed, including button collapse/reopen and phone drag-to-tall followed by collapse. Phone screenshot inspected in artifacts/single-menu-control.
+
+## Consistent map gestures (September 27, 2026)
+
+Unified pointer starts on the canvas and station labels so a second finger on a label participates in pinch instead of interrupting it. Canvas/label selection waits for the 300ms double-tap window; double-tap no longer also opens a station. Zoom in and out both preserve the tapped world point rather than snapping back to the default camera. Drag/pinch/cancel clear pending taps, long presses do not select, and lifting one pinch finger reanchors the remaining drag. Normal capture release no longer acts like a cancelled gesture. Production build/iOS sync and 92 unit tests passed. Isolated phone/small-phone/desktop browser runs exercised focal zoom round trips, pinch-to-single-finger pan and cancellation; phone/desktop also exercised double-taps on labels without selection. Real iPhone frame pacing remains unverified.
+
+## Actionable Cultivar journal (September 27, 2026)
+
+Replaced mystery tiles with named parent pairs, per-parent level/5 progress, readiness states, and direct links to unlock/upgrade a missing flower or find the Breeding bench in Shop. Ready pairs and active breeding sort before unfinished/collected pairs. Displays discovery count, total permanent bonus, explicit breeding cost/time, active countdown/progress and earned bonuses. Uses full-width readable cards on phones. Existing breeding costs, five-minute game timer and save fields remain intact. Production build/iOS sync, 92 unit tests and phone/small-phone/desktop browser checks passed: starting a cross charges the correct amount, missing-parent links open the matching flower, and active breeding survives reload. Phone screenshot verified in artifacts/journal-clear.
+
+## Remove periodic impact sounds (September 27, 2026)
+
+User disliked an intermittent bang-like sound. Removed recurring pickup and drone-launch sound calls and the bass/noise impact from the construction cue; tap/upgrade/reward sounds remain. Production build/iOS sync, 92 unit tests, and phone/small-phone/desktop delivery interaction checks passed. The exact reported sound was not identified by device listening; these changes remove the likely recurring sources and explicit build thud.
+
+## Staff roster grid (September 27, 2026)
+
+Staff now presents the entire eight-role roster at once instead of as a vertical list: Security, the six production roles, and a Lounge host in a balanced two-column grid. Each tile keeps its icon, level, live speed and both training actions together; the prior global Train/Max headings are hidden because the actions are now locally grouped. Lounge training unlocks with the lounge and adds 30% faster seat turnover per level, raising its live rate; old saves migrate to lounge staff level 0. Phone and desktop production checks confirmed every tile is fully visible without pane scrolling or horizontal overflow, and a training purchase updates its tile in place. All 93 unit tests and the production build passed. The iOS bundle was synced.
+
+## Native Metal map (September 27, 2026)
+
+The user explicitly chose **Rebuild the map with native iOS graphics**, overriding Canvas preservation for the iOS map. The iOS app now places a Metal world renderer beneath the existing transparent controls/signage/effects overlay and native tab bar. `src/native-map.js` exports world-space geometry, not raster frames; `CanopyMapRenderer.swift` and `CanopyMapShaders.txt` render beveled solids, plants, customers, real depth, directional shadows and fixture lighting. The fixed projection is shared with station hit targets, pan and zoom. All five branches use the native renderer; Riverside and Alpine have genuine below-grade water channels. The main-shop fit accounts for the iPhone status bar and iPad panel.
+
+Gameplay, upgrade economics, `shift-save`, Preferences backup and Site identity remain unchanged. Browsers retain the existing Canvas/classic build. Native initialization/rendering failure restores Canvas; packets are acknowledged after GPU completion to bound work in flight. This is a map-renderer migration, not a rewrite of the simulation or every UI control. See `docs/NATIVE-MAP.md` for the architecture and validation scope. No publication or submission.
+
+Validation: production/classic build and iOS sync passed; 98 unit tests passed. Debug simulator and unsigned Release iPhone builds passed. Native bridge phone/desktop checks exercised drag, pinch, zoom, panels, purchases, saved progress and failure recovery. Isolated iPhone/iPad Metal runs exercised upgrades, Staff, zoom, station selection and 300 pickups each with no order-before-pickup violations. All branch maps and main day/night lighting were captured; screenshots and reports are in `artifacts/native-map/`. Physical-device pacing, battery/thermal behavior and gesture feel still require an on-device pass.
+
+## Calmer playback speeds (September 27, 2026)
+
+Normal playback now advances at 70% of its former pace. The middle setting advances at 140% of the old normal pace, twice the new normal; fastest remains at 400%. The shared playback rate scales simulation, map animation, live income displays and handoff estimates together. Saved mode identifiers and pause behavior remain compatible; offline rewards retain their established calculation. Production/classic build, iOS sync, 99 unit tests and desktop/phone speed-selection and pause/resume browser checks passed.
+
+## Restore native customer detail (September 27, 2026)
+
+Replaced the native renderer's generic person with the existing 20 character styles: stable identity-based skin, hair, shirt and trouser palettes; long hair, curls, buns, hats, beards, glasses, necklaces, earrings, striped tops, jackets, dresses, satchels, shoe soles and marked shopping bags. Details are native geometry, facing the fixed camera for legibility, and follow the existing gait. Staff retain aprons with straps/pockets and the seed technician's auburn hair. Simulation and speed settings are unchanged. Production/classic build, iOS sync, Debug simulator build and 99 tests passed; phone/desktop bridge checks covered upgrades, panels, reload and fallback. Native iPhone character gallery and live-map screenshots were visually inspected in artifacts/customer-details.
+
+## Native visual conversion regression pass (September 27, 2026)
+
+Restored native staff work poses and tools using the existing activity/task clocks (seed packet, watering can and drops, scissors, packing bags and order slip). Reduced motion now preserves gait identity/task metadata while freezing movement. Native oak flooring again uses clipped herringbone boards instead of a rectangular plank grid. Pointed leaf geometry follows the source angle; branch leaf emblems now occupy their actual sign planes instead of drawing above the entire scene. The grow exhaust fan is fully native, including animated blades and fixed guard, so nearer geometry occludes it correctly. Existing gameplay, saves, speed settings and browser rendering are preserved.
+
+Validation: production/classic build, iOS sync, Debug simulator build and 101 tests passed. Added checks for herringbone coverage/bounds, leaf direction and staff/fan motion. Phone/desktop bridge checks passed for gestures, purchases, panels, reload and fallback. Native iPhone live checks completed 300 pickups with zero order violations across 202 samples. Main day/night and all five branches were captured on iPhone; main day/night and Riverside on iPad. Visual captures/reports are in artifacts/native-visual-fixes. Physical-device performance is not established by these checks.
+
+## Entry sign, globe and service arch glitches (September 27, 2026)
+
+Fixed the three native defects shown in the user's close-up iPhone screenshots. The marquee's colored sign face now sits slightly proud of its backing to prevent coplanar depth fighting. Globe pendants use one spherical native light instead of intersecting highlight ellipsoids; their globe/rod silhouette clears the retained Canvas letter-board overlay, which previously cut visible stripes through fixtures in front of it. Order/pickup arches now use a continuous extruded curved rail and separate light inlay instead of many overlapping capped cylinders and translucent halos. Browser rendering and gameplay remain unchanged.
+
+Validation: production/classic build, iOS sync, Debug simulator build, and 102 unit tests passed. Added native globe/arch geometry checks. Phone/desktop bridge interactions, save/reload and fallback passed. Native iPhone close-ups of the entry and order area in day/night are in artifacts/sign-fixture-fixes.
+
+## Imported tie-dye customer (September 27, 2026)
+
+Integrated the user's low-poly rigged Meshy tie-dye character into the native iOS customer mix. One quarter of customer styles use the textured 4,156-triangle mesh with GPU skinning, blended idle/walking animations, path-facing rotation and a shopping bag attached to the animated hand. Staff and other customer styles remain. The prepared mesh, 1024px texture and shared animation atlas occupy about 1 MB; source provenance and repeatable import instructions are in `docs/NATIVE-MAP.md`. Existing saves, gameplay and browser Canvas rendering are unchanged.
+
+Validation: production/classic build and iOS sync, 105 unit tests, Debug simulator and unsigned Release iPhone builds passed. Native iPhone gallery verifies front/back, idle/walking poses, texture and bag attachment. Live native checks completed 300 pickups with zero order violations across 207 samples, plus upgrades, Staff, zoom and station selection. Phone/desktop bridge checks passed for gestures, upgrades, panels, save/reload and renderer fallback. Artifacts are in `artifacts/custom-character`. Physical-device performance remains unverified.
+
+## Additional caramel trench-coat customer (September 27, 2026)
+
+Added the user's Caramel Trench Meshy export alongside TieDye and the existing procedural customers. The native renderer now loads and batches separate model/texture/animation assets, with independent availability fallback. Caramel occupies customer IDs modulo four equal to 2; TieDye retains 0 and existing styles retain 1/3. The 10,111-triangle character uses Idle_11 and Walking, a 1024px texture, path-facing rotation and animated hand attachment for pickup bags. Corrected the source idle clip's lifted floor alignment. Running is imported but not selected, matching the existing movement behavior. Staff, saves, browser rendering and simulation are unchanged.
+
+Validation: production/classic build and iOS sync, 106 tests, Debug simulator and unsigned Release iPhone builds passed. Native iPhone gallery confirms the coat, hair, sunglasses, texture, front/back poses and simultaneous TieDye rendering. Live checks confirmed both assets active, 300 pickups, zero order violations across 207 samples, upgrades, Staff and zoom. Phone/desktop bridge checks passed including reload and fallback. Evidence is in `artifacts/caramel-character`. Physical-device performance is still unverified.
+
+## Two-character customer roster and softer motion (September 27, 2026)
+
+Per user request, all native iOS customers now alternate between TieDye and Caramel until more models are supplied. Staff keep their existing appearance. If only one imported asset loads, all customers use that model; procedural customers remain solely as the unavailable-assets/browser fallback. Rebuilt both animation atlases at 60 samples per second with a 180 ms eased loop-seam blend. Walking/idle blends use smoothstep, while native gait changes and turns ease using wall time so faster playback does not snap through transitions. Paths, economy, saves, pause and reduced-motion behavior remain intact.
+
+Validation: production/classic build and iOS sync, 107 tests, Debug simulator and unsigned Release iPhone builds passed. Full roster/fallback selection is covered for 40 customer IDs. Native gallery inspected; live native checks completed 300 pickups with no order violations across 205 samples, plus upgrades, Staff and zoom. Phone/desktop interactions, reload and fallback passed. Evidence: `artifacts/customer-roster`. Physical-device animation feel/performance remains unverified.
+
+## Native staff packet rejection and detached labels (September 28, 2026)
+
+The user's on-device screenshot revealed detached station labels and a low Canvas shop despite the earlier build/browser checks passing. Reproduced the same failure in the isolated iPhone simulator: native acknowledgments stayed at zero because `CanopyMapRenderer.receive` still capped instance kinds at 17 after adding staff kinds 18–20. Packet validation now derives its maximum from loaded assets, requires integer kinds, and retains the missing-asset rejection. Native initialization remains active with all 17 imported models. The app's Canvas fallback now shares the native camera frame instead of changing framing after a renderer failure, preserving overlay alignment.
+
+Validation: 115 unit tests including revised staff atlases/rotation and the native range regression; production/classic build and iOS sync; Debug simulator build; strengthened phone/desktop bridge tests asserting unchanged label positions during fallback. Real Metal iPhone and iPad runs remained active with kinds 4–20, passed upgrades, Staff, zoom and selection, and completed 233 pickups each with zero order violations across 208 samples each and no JavaScript errors. Inspected actual before/after iPhone and final iPad screenshots. A deliberate native iPhone fallback retained camera and label transforms. Evidence: `artifacts/map-alignment`. Physical-device verification still requires running this corrected build on the user's phone; prior installed builds are not modified by local file changes.
+
+## Maximum-zoom pan reach (September 28, 2026)
+
+The user reported that maximum zoom stopped panning before every part of the shop could be reached. `applyCamera()` previously clamped pan to 1.6 viewport widths/heights regardless of scene scale. The shared camera now uses `src/camera-pan.js` to grow its limits with the zoomed projected scene dimensions, centered on the same fitted-center offset as the zoom controls. Branches use their measured frames. Overview overscroll, fixed orientation, mouse/touch/keyboard handlers, focal-point zoom, recenter and saves remain unchanged. Canvas and native Metal use the same correction.
+
+Validation: 118 unit tests, including corner reachability across six scenes, four viewport sizes and four zoom levels; phone/desktop production-browser checks covering all four maximum-zoom drag directions, pinch, upgrades, panel interaction, exact paused save/reload and renderer fallback. Production/classic build, iOS sync and Debug simulator compilation passed. Isolated iPhone and iPad Metal runs passed synthetic touch pan in all four directions at 8×, retained orientation and zoom, recentered successfully and reported no JavaScript errors. Their post-recenter screenshots were inspected; evidence is in `artifacts/max-zoom-pan`. Physical-device touch feel is not verified; run the updated Xcode build on the user's phone.
+
+## Recenter when the menu drops down (September 28, 2026)
+
+The user's latest framing request supersedes the September 27 rule that kept the open-menu reserve after collapse. The camera now releases that reserve when the menu settles closed and centers the current shop/branch in the available map area, preserving the chosen zoom. On native wide layouts, a collapsed sheet uses the full-width area above the remaining menu strip rather than a side column. Tall sheets retain half-open framing, and subsequent drag/pinch/wheel gestures remain unchanged. Canvas and Metal share the updated camera; save data is untouched. Production assets are synchronized into Xcode. Interaction, visual and native compilation checks remain skipped per the user's request.
+
+## Additional native staff characters (September 28, 2026)
+
+Imported the user's revised Gray Employee, Dark Haired Employee and Young Employee Meshy ZIPs. Native regular staff now rotate deterministically through GreenMan, GreenWoman, GrayEmployee, DarkHairedEmployee and YoungEmployee (types 16–20); Security remains a separate type 15. Unavailable regular assets are skipped, with the existing procedural fallback when none load. Customer selection remains separate. All three imports use Idle_11 and Walking through the existing shared-clock GPU animation pipeline; Running is retained but not selected. Source archive hashes are stored in the generated manifests. No staff-role, simulation, save or browser Canvas changes.
+
+The dark-haired export retains its supplied 226,978-triangle mesh; its hardware performance is not established. Tests, Xcode compilation and visual/device verification were skipped at the user's explicit request. Production assets are prepared and synchronized into the Xcode project, not published.
+
+## Budtender Moments, shift recap, and operations alerts (September 28, 2026)
+
+The user approved three additions to the Xcode game: occasional optional recommendations, a short shift recap, and visible operations alerts. `src/shop-play.js` owns pure migration, recommendations, shift accounting and operation selectors; `src/shop-play-ui.js` and its stylesheet extend the existing HUD without a new tray tab or currency.
+
+- An eligible checked-in counter customer requests advice every 60–90 simulated seconds, one at a time. The initial cooldown is 35 seconds. A world-projected 44px speech button and the Shop activity control open the same accessible request. Choices use owned strains and unlocked per-strain formats, with Hybrid/Sativa/Indica clues. A starter menu has one choice; variety increases with unlocks.
+- The request expires after 18 simulated seconds. Automatic service continues when it is ignored; opening the request temporarily holds only that customer's Orders service. Closing releases the hold; choosing adds a two-second consultation reduced by existing Orders staff and counter training. Consultation/reading time does not lower ordinary satisfaction payouts. Successful recommendations fulfill the chosen product, add a 20% base-sale tip and +2 reputation at pickup, and tint the bag label in Canvas and Metal. Poor choices and skipped requests retain the normal sale. No live request/customer is restored on reload.
+- A recap becomes available every five minutes of active wall-clock play, independent of playback speed. Pause, background time and offline payouts do not advance it. It reports customers served (not bag count), great matches, live earnings, dispatches/transfers, queue peak and average wait, with one next action. Only the latest completed recap is retained; it is optional and does not open a modal.
+- Alerts derive from existing open-branch state: regular requests ready, shelf allocation/full shelves, missing harvest without an incoming transfer, and dispatchable goods with a free driver. Each opens existing People or Stock controls, selecting the relevant product/transfer destination without sending or spending automatically.
+- On phones and compact tablets where the panels would overlap, opening Shop activity temporarily folds away the upgrade sheet; closing restores its prior open state. Store alert navigation opens the appropriate branch screen. Activity refreshes preserve focused control identity and scroll position, falling back to a surviving control when a request ends. Existing map projection, pan/zoom, native customer rendering, browser fallback, rewards destinations and `shift-save` are retained. No Site publication or identity change.
+
+Validation: 113 unit tests; phone/desktop browser interaction checks for tip-at-pickup, order-before-pickup, recap, People/Stock links, upgrades, focused-control refresh and paused exact save/reload; production/classic build and iOS sync; Debug simulator and unsigned Release iPhone builds. Existing native save/recovery/suspension and map/gesture/fallback checks passed at both sizes. Clean iPhone and iPad simulators confirmed real Metal rendering, upgrades, recommendations with tips, recap and alert links, 15 pickups each and zero order violations across 99 samples each with no JavaScript errors. Final independent UI review scored its compact-tablet overlap and keyboard-continuity fixes resolved; incumbent design documentation required no change. Evidence: `artifacts/shop-play` and `.impeccable/review/phone.png` / `tablet.png`. Physical-device feel and performance still require hardware validation.

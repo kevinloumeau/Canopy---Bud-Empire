@@ -44,8 +44,8 @@ export function mountEmpireStores({getState,format}){
   const icon=el('span','store-icon',ICONS[i]+'<i class="store-dot" hidden></i>');
   // Name and status share the top line; the figures row below keeps the full width so nothing clips at 375px.
   const status=el('span','store-status');
-  const copy=el('span','store-copy');copy.append(name,status,el('small','store-detail',store.detail));
-  const meta=el('span','store-meta');meta.append(figures);
+  const copy=el('span','store-copy');copy.append(name,el('small','store-detail',store.detail));
+  const meta=el('span','store-meta');meta.append(figures,status);
   const meter=el('span','store-meter','<i></i>');meter.hidden=true;
   toggle.innerHTML='';toggle.append(icon,copy,meta,meter);
   cards[i]={toggle,status,meter,dot:icon.querySelector('.store-dot'),sig:''};
@@ -122,8 +122,8 @@ export function mountEmpireStores({getState,format}){
   if(stockUI[i]){const u=stockUI[i],cap=shelfCapacity(p,i),used=shelfUsed(s);
    const sig=[Math.floor(s.raw),used,cap,s.stock.join(),s.shelves.join(),s.sold,s.recipe].join('|');
    if(sig!==u.sig){u.sig=sig;const v=k=>u.supply.querySelector('[data-supply="'+k+'"]'),m=k=>u.supply.querySelector('[data-meter="'+k+'"]');
-    set(v('harvest'),Math.floor(s.raw)+' / 120');m('harvest').style.width=Math.min(100,s.raw/120*100)+'%';
-    set(v('shelf'),used+' / '+cap);m('shelf').style.width=Math.min(100,used/cap*100)+'%';
+    set(v('harvest'),Math.floor(s.raw)+' / 120');m('harvest').style.setProperty('--meter-fill',Math.min(1,s.raw/120));
+    set(v('shelf'),used+' / '+cap);m('shelf').style.setProperty('--meter-fill',Math.min(1,used/cap));
     set(u.makeCount,LINES[s.recipe].name+' · '+s.sold+' sold');set(u.shelfCount,used+' / '+cap+' used');
     LINES.forEach((_,j)=>{const meter=$('shelfAllocation'+i+j).closest('.shelf-row').querySelector('.line-meter');const on=n.recipes[j]&&s.shelves[j]>0;meter.hidden=!on;if(on)meter.firstChild.style.width=Math.min(100,s.stock[j]/s.shelves[j]*100)+'%';$('shelfAllocation'+i+j).closest('.shelf-row').classList.toggle('is-locked',!n.recipes[j]);});}}
   if(peopleUI[i]){const u=peopleUI[i],mgr=MANAGERS.find(m=>m.id===p.stores[i].manager)||MANAGERS[0];
@@ -155,13 +155,16 @@ export function mountEmpireStores({getState,format}){
   const c=cards[i],d=describe(i);
   let chip='',tone='',dot=false;
   if(d.locked){chip=Math.round(d.unlockPct)+'% there';tone='locked';}
-  else if(!d.lvl){chip=d.afford?'Ready to open':'Need '+format(d.cost-d.state.money);tone=d.afford?'ready gold':'';}
+  else if(!d.lvl){chip=d.afford?'Open · '+format(d.cost):'Need '+format(d.cost-d.state.money);tone=d.afford?'ready gold':'';}
   else if(d.max){chip='Max level';tone='max';}
   else{chip=(d.afford?'Upgrade · ':'Next · ')+format(d.cost);tone=d.afford?'ready':'';dot=(d.opening&&d.opening.ready)||d.projectReady;}
   const sig=[chip,tone,dot,d.locked&&Math.round(d.unlockPct)].join('|');
   if(sig===c.sig)return;c.sig=sig;
   set(c.status,chip);c.status.className='store-status'+(tone?' '+tone.split(' ').map(t=>'is-'+t).join(' '):'');
-  c.dot.hidden=!dot;c.meter.hidden=!d.locked;if(d.locked)c.meter.firstChild.style.width=d.unlockPct+'%';
+  const unopened=!d.lvl,canOpen=unopened&&!d.locked&&d.afford;
+  c.toggle.disabled=unopened&&!canOpen;
+  c.toggle.setAttribute('aria-label',unopened?(canOpen?'Open '+d.def.name+' for '+format(d.cost):d.locked?d.def.name+' is locked':'Need '+format(d.cost-d.state.money)+' to open '+d.def.name):'Open '+d.def.name+' store tabs');
+  c.dot.hidden=!dot;c.meter.hidden=!d.locked;if(d.locked)c.meter.firstChild.style.setProperty('--meter-fill',d.unlockPct/100);
   c.toggle.classList.toggle('is-locked',d.locked);c.toggle.classList.toggle('has-ready',!!tone&&tone!=='max'&&tone!=='locked');
  }
 

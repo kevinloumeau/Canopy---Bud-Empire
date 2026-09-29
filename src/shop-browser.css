@@ -11,8 +11,6 @@
 .shop-browser .shop-filter{display:flex;justify-content:space-between;align-items:center;color:#bdcdb5;font-size:12px;padding:0 5px}
 .shop-filter label{display:flex;gap:6px;align-items:center;min-height:44px;cursor:pointer}
 .shop-filter input{accent-color:#aacb85;width:16px;height:16px}
-.shop-browser .shop-recommendation{display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;min-height:52px;padding:8px 10px;margin:2px 0 8px;border:1px solid #7c7953;border-radius:8px;background:#354832;color:#e5d3a0}
-.shop-recommendation>span:first-child{display:grid;gap:4px}.shop-recommendation small{font-size:9px;letter-spacing:.06em}.shop-recommendation strong{font-size:12px;font-weight:600}
 [data-pane="boosts"].shop-browser .shop-item{display:grid;grid-template-columns:28px minmax(0,1fr) 82px;gap:8px;margin:0;padding:10px 4px;border-bottom:1px solid #435649;align-items:center}
 .shop-browser .shop-item .shop-symbol svg{width:26px;height:26px}
 .shop-browser .shop-item .shop-copy,.shop-browser .shop-item .storage-copy{display:grid;gap:4px;min-width:0}

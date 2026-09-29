@@ -16,6 +16,23 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         SceneDelegateProxy.shared.scene(scene, willConnectTo: session, options: connectionOptions)
     }
 
+    // Scene activation also covers interruptions that do not hide the web document.
+    // The web side combines this signal with visibilitychange and settles each absence once.
+    func sceneWillResignActive(_ scene: UIScene) {
+        sendActivity(false)
+    }
+
+    func sceneDidBecomeActive(_ scene: UIScene) {
+        sendActivity(true)
+    }
+
+    private func sendActivity(_ active: Bool) {
+        guard let controller = window?.rootViewController as? CanopyViewController else { return }
+        controller.webView?.evaluateJavaScript(
+            "window.dispatchEvent(new CustomEvent('canopyAppState',{detail:\(active)}))",
+            completionHandler: nil)
+    }
+
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         SceneDelegateProxy.shared.scene(scene, openURLContexts: URLContexts)
     }

@@ -18,12 +18,13 @@ const STEPS=[
  {open:true,eyebrow:'Canopy · Grand opening',title:'Ready to open.',text:'Every station is standing and your crew is at their posts. Flip the sign: customers walk in and cash arrives as bags go out. Feed the slowest station first; the rest can wait.',cta:'Open the shop'}
 ];
 const BUILT_PAUSE=900;
-export function mountStartGuide({showTray,collapse,fit,paintHero,sound,report,isBuilt,build,shopOpen,openShop,finish,sheet,reserve,select}){
+export function mountStartGuide({showTray,collapse,fit,paintHero,paintStep,sound,report,isBuilt,build,shopOpen,openShop,finish,sheet,reserve,select}){
  // `sheet` drops the tray and `reserve` keeps the map framed above the docked card, so every site stays on screen.
  const root=document.createElement('div');root.className='start-guide';root.hidden=true;
  root.innerHTML='<div class="guide-dim"></div><div class="guide-ring" hidden></div>'+
   '<section class="guide-card" role="dialog" aria-modal="true" aria-labelledby="guideTitle">'+
   '<div class="guide-hero" hidden><canvas class="guide-hero-art" width="760" height="380" aria-hidden="true"></canvas></div>'+
+  '<div class="guide-step-visual" hidden><canvas class="guide-step-art" width="720" height="240" aria-hidden="true"></canvas></div>'+
   '<div class="guide-dots" aria-hidden="true"></div><p class="guide-eyebrow" hidden></p><h2 id="guideTitle"></h2><p id="guideText"></p><ul class="guide-beats" hidden></ul>'+
   '<div class="guide-sign" hidden aria-hidden="true"><i class="guide-sign-string"></i><i class="guide-sign-string"></i><div class="guide-plaque"><span class="guide-face is-closed">Closed</span><span class="guide-face is-open">Open</span></div></div>'+
   '<div class="guide-actions"><p class="guide-tap" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11V4.5a1.5 1.5 0 0 1 3 0V11m0-3.5a1.5 1.5 0 0 1 3 0V11m0-1.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1.2a6 6 0 0 1-4.9-2.5L3.5 15a1.6 1.6 0 0 1 2.4-2l3.1 3"/></svg><span>Tap to build</span></p><button type="button" class="guide-skip">Skip</button><button type="button" class="guide-next">Next</button></div></section>';
@@ -50,6 +51,9 @@ export function mountStartGuide({showTray,collapse,fit,paintHero,sound,report,is
   if(select&&site(s))select(s.build!==undefined?s.build:s.select);
   $('#guideTitle').textContent=s.title;$('#guideText').textContent=s.text;
   root.classList.toggle('is-hero',!!s.hero);$('.guide-hero').hidden=!s.hero;$('.guide-eyebrow').hidden=!s.eyebrow;$('.guide-eyebrow').textContent=s.eyebrow||'';
+  const stepVisual=$('.guide-step-visual'),hasStepVisual=s.build!==undefined;
+  stepVisual.hidden=!hasStepVisual;
+  if(hasStepVisual&&paintStep)paintStep($('.guide-step-art'),s.build);
   const beats=$('.guide-beats');beats.hidden=!s.beats;
   if(s.beats&&!beats.childElementCount){s.beats.forEach(([tray,label])=>{const li=document.createElement('li'),icon=document.querySelector('[data-tray='+tray+'] svg');if(icon)li.append(icon.cloneNode(true));li.append(Object.assign(document.createElement('span'),{textContent:label}));beats.append(li);});}
   if(s.hero&&paintHero)paintHero($('.guide-hero-art'));

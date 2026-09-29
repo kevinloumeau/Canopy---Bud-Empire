@@ -23,7 +23,7 @@ try{
   const send=(method,params={})=>new Promise((r,j)=>{const i=++id;pending.set(i,r);ws.send(JSON.stringify({id:i,method,params}));setTimeout(()=>{if(pending.delete(i))j(new Error(method+' stalled'))},20000)});
   const ev=async e=>{const r=await send('Runtime.evaluate',{expression:e,returnByValue:true});if(r.exceptionDetails)throw new Error(r.exceptionDetails.exception?.description||r.exceptionDetails.text);return r.result?.value};
   await send('Page.enable');await send('Runtime.enable');
-  await send('Emulation.setDeviceMetricsOverride',{width:1440,height:900,deviceScaleFactor:1,mobile:false});
+  await send('Emulation.setDeviceMetricsOverride',{width:process.env.MOBILE?390:1440,height:process.env.MOBILE?844:900,deviceScaleFactor:1,mobile:!!process.env.MOBILE});
   await send('Page.navigate',{url:gameUrl+'manifest.webmanifest'});await sleep(300);
   await ev("localStorage.clear();localStorage.setItem('canopy-age-ok','1');localStorage.setItem('canopy-telemetry','off');localStorage.setItem('shift-guide-seen','1');localStorage.setItem('shift-save',JSON.stringify({money:500,gameSpeed:1,lastSeen:Date.now()}))");
   await send('Page.addScriptToEvaluateOnNewDocument',{source:"Object.defineProperty(document,'modelContext',{value:{registerTool:t=>window.factoryTool=t},configurable:true});"});

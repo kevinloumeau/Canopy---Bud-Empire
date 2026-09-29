@@ -220,7 +220,16 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
   // draw() receives the context and the screen pixels per world unit along the face, since faces are foreshortened.
   function face(x,y,z,alongZ,draw){const ctx=api.ctx,q=p(x,y,z),axis=alongZ?p(x,y,z-1):p(x+1,y,z),run=Math.abs(axis.x-q.x);if(!(run>1e-6))return;ctx.save();ctx.translate(q.x,q.y);ctx.transform(1,(axis.y-q.y)/(axis.x-q.x),0,1,0,0);draw(ctx,run);ctx.restore();}
   function text(x,y,z,label,widthUnits,size,color,alongZ=false,weight='800'){face(x,y,z,alongZ,(ctx,run)=>{ctx.fillStyle=color;ctx.font=weight+' '+Math.max(5,unit*size)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,0,0,widthUnits*run);});}
-  function leaf(x,y,z,size,color,alongZ=false){face(x,y,z,alongZ,ctx=>{ctx.fillStyle=color;for(let k=-2;k<=2;k++){ctx.save();ctx.rotate(k*.5);ctx.beginPath();ctx.ellipse(0,-unit*size*.42,unit*size*.13,unit*size*.46,0,0,Math.PI*2);ctx.fill();ctx.restore();}ctx.fillRect(-unit*size*.025,0,unit*size*.05,unit*size*.36);});}
+  function leaf(x,y,z,size,color,alongZ=false){
+    if(api.native){
+      // Paint emblems onto their actual sign plane so foreground geometry can occlude them.
+      const point=(dx,dy)=>alongZ?p(x,y+dy,z-dx):p(x+dx,y+dy,z);
+      for(let k=-2;k<=2;k++){const a=k*.5,c=Math.cos(a),s=Math.sin(a),ps=[];
+        for(let i=0;i<16;i++){const t=i*Math.PI/8,dx=Math.cos(t)*size*.13,dy=size*.42+Math.sin(t)*size*.46;ps.push(point(dx*c+dy*s,-dx*s+dy*c))}poly(ps,color);
+      }
+      poly([point(-size*.025,0),point(size*.025,0),point(size*.025,-size*.36),point(-size*.025,-size*.36)],color);return;
+    }
+    face(x,y,z,alongZ,ctx=>{ctx.fillStyle=color;for(let k=-2;k<=2;k++){ctx.save();ctx.rotate(k*.5);ctx.beginPath();ctx.ellipse(0,-unit*size*.42,unit*size*.13,unit*size*.46,0,0,Math.PI*2);ctx.fill();ctx.restore();}ctx.fillRect(-unit*size*.025,0,unit*size*.05,unit*size*.36);});}
   // Lounge furniture: sofas and armchairs in fabric, rugs under seating zones.
   function sofa(x,z,w,y=0,fabric=rust,facing=1){
     b(x,z,y,w,1.1,.42,fabric);b(x,z+facing*.42,y+.42,w,.26,.55,fabric);
@@ -274,7 +283,10 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     if(!api.leaf||!api.noise||unit<7)return;
     const ctx=api.ctx;
     for(let i=0;i<n;i++){
-      const rx=x-w/2+api.noise(seed,i)*w,rz=z-d/2+api.noise(seed+40,i)*d,q=p(rx,y,rz);
+      const rx=x-w/2+api.noise(seed,i)*w,rz=z-d/2+api.noise(seed+40,i)*d;
+      if(api.native&&index===0&&seed===7&&((rx>-15.5&&rx<-7.75)||(rx>=-7.75&&rx<-4&&rz>9.5+(rx+7.75)*3/3.75)))continue;
+      if(api.native&&index===4&&seed===11&&rx>12.6&&rx<16.6&&rz>-1&&rz<12.5)continue;
+      const q=p(rx,y,rz);
       if(api.noise(seed+80,i)<.1){ctx.fillStyle=['#d8d2a4','#cfdba8','#d8bfc6'][i%3];ctx.beginPath();ctx.arc(q.x,q.y-unit*.03,Math.max(.7,unit*.026),0,Math.PI*2);ctx.fill();}
       else{const tone=tones[i%tones.length],len=unit*(.12+api.noise(seed+120,i)*.08);
         api.leaf(q.x,q.y,len,-Math.PI/2-.4,tone);api.leaf(q.x,q.y,len*.85,-Math.PI/2+.45,tone);}
@@ -332,7 +344,14 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     const WL=-.4,RX0=-15.5,RX1=-7.75,RZ=12.5,ctx=api.ctx,alpha=a=>Math.round(Math.max(0,Math.min(1,a))*255).toString(16).padStart(2,'0');
     wood=['#cf9f62','#8a5f33','#b07f42'];dark=['#2f4237','#172620','#243529'];
     const stone=['#b9bba8','#6f7466','#9a9d8c'],grass=['#8aa07a','#4a6150','#6a8262'];
-    b(-2.25,0,-.65,36.5,25,.5,grass);
+    if(api.native){
+      // Canvas painted the river over a continuous slab. Real depth needs an actual channel.
+      b(-2.25,0,-.65,36.5,25,.1,grass);
+      b(-18,0,-.55,5,25,.4,grass);
+      b(4.125,-1.5,-.55,23.75,22,.4,grass);
+      b(6,11,-.55,20,3,.4,grass);
+      poly([p(RX1,-.15,9.5),p(-4,-.15,9.5),p(-4,-.15,RZ)],grass[0]);
+    }else b(-2.25,0,-.65,36.5,25,.5,grass);
     meadow(-2.25,0,36.5,25,190,7,-.15);
     // Far bank: a gravel promenade with lamps and benches, a boathouse with racked kayaks, and a small fishing dock.
     patch(-17.7,0,1.5,25,'#b3ae93',-.14);
@@ -362,7 +381,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     [-7.4,-1.1,5.9,10.2].forEach((z,i)=>{for(let j=0;j<4;j++){const x=-15.55+j*.09;l([[x,-.05,z],[x+Math.sin(j*1.3+i)*.1,.5+(j%3)*.18,z]],'#7e975f',.032);}});
     const across=(a,b)=>ctx.createLinearGradient(p(a,WL,0).x,p(a,WL,0).y,p(b,WL,0).x,p(b,WL,0).y);
     const water=across(RX0,RX1);water.addColorStop(0,'#74cabf');water.addColorStop(.3,'#41aaa6');water.addColorStop(.72,'#2f9497');water.addColorStop(1,'#2a868b');
-    poly([p(RX0,WL,-RZ),p(RX1,WL,-RZ),p(RX1,WL,RZ),p(RX0,WL,RZ)],water);
+    poly([p(RX0,WL,-RZ),p(RX1,WL,-RZ),p(RX1,WL,RZ),p(RX0,WL,RZ)],api.native?'#41aaa6':water);
     // Sky reflected down the middle of the channel, the boardwalk's shadow along the near bank.
     const sky=across(-13.8,-10.4);sky.addColorStop(0,'#dcefe400');sky.addColorStop(.5,'#e6f6ee3a');sky.addColorStop(1,'#dcefe400');
     poly([p(-13.8,WL,-RZ),p(-10.4,WL,-RZ),p(-10.4,WL,RZ),p(-13.8,WL,RZ)],sky);
@@ -391,7 +410,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     // The near bank: a shadowed earth lip under the boardwalk curb, then reeds along the water's edge.
     poly([p(RX1,WL,-RZ),p(RX1,WL,9.5),p(RX1,-.15,9.5),p(RX1,-.15,-RZ)],'#4a5a45');
     // The bank bends around the front corner, so the water wraps the boardwalk: an inlet with rocks and reeds.
-    poly([p(RX1,WL,9.5),p(RX1,WL,RZ),p(-4,WL,RZ)],water);poly([p(RX1,WL,9.5),p(-4,WL,RZ),p(-4,-.15,RZ),p(RX1,-.15,9.5)],'#4a5a45');
+    poly([p(RX1,WL,9.5),p(RX1,WL,RZ),p(-4,WL,RZ)],api.native?'#41aaa6':water);poly([p(RX1,WL,9.5),p(-4,WL,RZ),p(-4,-.15,RZ),p(RX1,-.15,9.5)],'#4a5a45');
     poly([p(RX1,-.65,RZ),p(-4,-.65,RZ),p(-4,WL,RZ),p(RX1,WL,RZ)],'#256b6e');
     [[-6.9,11.1],[-5.6,11.9],[-4.7,12.2]].forEach(([x,z],i)=>{const q=p(x,WL+.008,z);ellipse(q.x,q.y,unit*.2,unit*.12,'#6d9a63');if(i===1)ellipse(q.x-unit*.04,q.y-unit*.06,unit*.07,unit*.05,'#e9bcb6');});
     [[-6.9,10.2,.5],[-5.9,11,.42],[-5,11.7,.55],[-4.2,12.3,.36]].forEach(([x,z,w])=>b(x,z,-.05,w,w*.8,w*.55,stone));
@@ -930,7 +949,14 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
       const e=p(c[0],.3,c[2]);ellipse(e.x,e.y,unit*.2,unit*.22,'#b39268');ellipse(e.x,e.y,unit*.12,unit*.13,'#8a6a48');
       [[a[0],a[2]],[c[0],c[2]]].forEach(([bx,bz])=>{const q=p(bx,.02,bz);ellipse(q.x,q.y,unit*.24,unit*.1,'#1a241c33');});
     }
-    b(0,.5,-.55,34,25,.55,grass);
+    if(api.native){
+      // Leave a real opening around the below-grade waterfall channel.
+      b(0,.5,-.55,34,25,.1,grass);
+      b(-2.2,.5,-.45,29.6,25,.45,grass);
+      b(16.8,.5,-.45,.4,25,.45,grass);
+      b(14.6,-6.5,-.45,4,11,.45,grass);
+      b(14.6,12.75,-.45,4,.5,.45,grass);
+    }else b(0,.5,-.55,34,25,.55,grass);
     meadow(0,.5,34,25,190,11,0,['#55744e','#6c8a60','#7c9a6a']);
     // The tree line along the rear edge is painted first: everything built later stands in front of it.
     [[-16.2,-9.3,1.3],[-14,-9.6,1.05],[-11.3,-9.2,1.2],[-8.3,-9.5,.9],[-5.6,-9.8,1.1],[1.6,-9.7,1],[5.9,-9.9,.85],[12.4,-9.4,1.25],[15.8,-8.6,1]].forEach(([x,z,sz])=>pine(x,z,sz));

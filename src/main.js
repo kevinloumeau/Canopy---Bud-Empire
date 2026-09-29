@@ -1,11 +1,16 @@
+import './native-map.css';
+import {createNativeMap} from './native-map.js';
+import {cameraPanBounds} from './camera-pan.js';
+import {mountRewardsMenu} from './rewards-menu.js';
+import {createNativeSaveWriter} from './native-save.js';
 import {migrateOrderCounters,orderCounterPositions,orderCounterCost,buyOrderCounter,ORDER_QUEUE_GATE,assignOrderCounter,atOrderCounter,orderAvailability} from './order-counters.js';
-import {LOUNGE_TIERS,LOUNGE_MAX,migrateLounge,loungeTier,loungeUpgradeCost,loungeSeats,loungeSessionSeconds,buyLoungeTier,wantsLounge,loungeAdmission,loungeTake,loungeRate,loungeCurrentRate} from './lounge.js';
+import {LOUNGE_TIERS,LOUNGE_MAX,migrateLounge,migrateLoungeStaff,loungeTier,loungeUpgradeCost,loungeSeats,loungeStaffSpeed,loungeStaffSessionSeconds,buyLoungeTier,wantsLounge,loungeAdmission,loungeTake,loungeRate,loungeCurrentRate} from './lounge.js';
 import {migrateJourney,advanceJourney,CHAPTERS} from './journey.js';
 import {mountJourney} from './journey-ui.js';
 import {manageDialog} from './dialog-focus.js';
 import {AUTO_DRONE_COST,BULK_DRONE_COST,buyAutoDrone,buyBulkDrone,autoDroneLimit,migrateAutoDrone,autoDroneReady} from './auto-drone.js';
-import {FORMATS,wantedFormat,strainForFormat,formatPremium,BOOST_MAX,boostCost,migrateMenu,chooseFormat,strainFormat,dominantFormat,menuFormatFactor,milestone,prestigeOffer,elapsedSteps,weeklySpecial,OFFLINE_SECONDS} from './depth.js';
-import {makeSound,makeAmbience} from './sfx.js';
+import {FORMATS,wantedFormat,strainForFormat,formatPremium,formatUnlocked,BOOST_MAX,boostCost,migrateMenu,chooseFormat,strainFormat,dominantFormat,menuFormatFactor,milestone,prestigeOffer,elapsedSteps,playbackRate,weeklySpecial,OFFLINE_SECONDS} from './depth.js';
+import {makeSound} from './sfx.js';
 import {installQuietDom} from './quiet-dom.js';
 import {createTelemetry} from './telemetry.js';
 installQuietDom();
@@ -15,12 +20,14 @@ import {mountOperations} from './operations-ui.js';
 import {mountEmpireShell} from './empire-shell.js';
 import {mountStartGuide} from './start-guide.js';
 import {mountSettings} from './settings.js';
+import {migrateShopPlay,createMoment,resolveMoment,recordPickup,tickShift,operationsAlerts} from './shop-play.js';
+import {mountShopPlay} from './shop-play-ui.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import { createGlPost } from './gl-post.js';
 import * as economy from './economy.js';
 import * as strains from './strains.js';
-import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent } from './progression.js';
+import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent } from './progression.js';
 (function () {
   'use strict';
 
@@ -33,11 +40,9 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // Contract progression is defined in depth.js, including post-city milestones.
   var $=function(id){return document.getElementById(id)};
   // A new shop starts as seven construction sites: the door and six stations are raised for free during the intro, then the sign flips.
-  function fresh(){return{money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),productMenu:migrateMenu(),sound:true,ambience:true,stillMotion:false,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),crosses:{done:[],active:null},vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
-  // Whether the web view arrived with no save at all, sampled before anything in the game can write one. The
-  // native recovery below depends on this: boot itself calls save(), so by the time it runs, local storage always
-  // looks populated and the question can no longer be asked.
-  var localStorageArrivedEmpty=(function(){try{return !localStorage.getItem('shift-save')&&!localStorage.getItem('shift-save-backup')}catch(e){return false}})();
+  function fresh(){return{money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),productMenu:migrateMenu(),sound:true,stillMotion:false,empire:migrateProgression(),idStaff:0,loungeStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),crosses:{done:[],active:null},vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
+  // Sample usable local data before boot saves. Corrupt JSON must not prevent native recovery.
+  var localStorageArrivedEmpty=(function(){try{return !Object.keys(readSave()).length}catch(e){return false}})();
   function readSave(){
     for(var key of ['shift-save','shift-save-backup']){
       try{var raw=localStorage.getItem(key);if(!raw)continue;var value=JSON.parse(raw);if(value&&typeof value==='object'&&!Array.isArray(value))return value}catch(e){}
@@ -52,34 +57,37 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     next.idStaff=Math.floor(finite(old.idStaff,0,0,10000));
     next.strains=STRAINS.map(function(_,i){return Math.floor(finite(old.strains&&old.strains[i],i===0?1:0,i===0?1:0,10))});
     next.activeStrain=Math.floor(finite(old.activeStrain,0,0,STRAINS.length-1));if(!next.strains[next.activeStrain])next.activeStrain=0;
-    next.menuStrains=STRAINS.map(function(_,i){return i}).filter(function(i){return next.strains[i]>0&&(!Array.isArray(old.menuStrains)||old.menuStrains.indexOf(i)>=0)});if(!next.menuStrains.length)next.menuStrains=[0];next.strainTrend=strains.migrateTrend(old.strainTrend,STRAINS.length);next.vipBuzz=finite(old.vipBuzz,0,0,strains.VIP_BUZZ_SECONDS);
-    next.journey=migrateJourney(old.journey);next.orderCounters=migrateOrderCounters(old.orderCounters);
+    next.menuStrains=STRAINS.map(function(_,i){return i}).filter(function(i){return next.strains[i]>0});if(!next.menuStrains.length)next.menuStrains=[0];next.strainTrend=strains.migrateTrend(old.strainTrend,STRAINS.length);next.vipBuzz=finite(old.vipBuzz,0,0,strains.VIP_BUZZ_SECONDS);
+    next.journey=migrateJourney(old.journey);next.orderCounters=migrateOrderCounters(old.orderCounters);next.shopPlay=migrateShopPlay(old.shopPlay);
     next.money=finite(old.money,30,0,Number.MAX_SAFE_INTEGER);
     next.lifetime=finite(old.lifetime,0,0,Number.MAX_SAFE_INTEGER);
     next.sold=Math.floor(finite(old.sold,0,0,Number.MAX_SAFE_INTEGER));
     next.onlineCompleted=Math.floor(finite(old.onlineCompleted,0,0,Number.MAX_SAFE_INTEGER));next.onlineRequests=finite(old.onlineRequests,0,0,40);next.hints={web:!!(old.hints&&old.hints.web),storage:!!(old.hints&&old.hints.storage),queue:!!(old.hints&&old.hints.queue)};
-    next.contract=Math.floor(finite(old.contract,0,0,21));next.productMenu=migrateMenu(old.productMenu);next.sound=old.sound!==false;next.ambience=old.ambience!==false;next.stillMotion=old.stillMotion===true;next.lightMode=['day','night'].includes(old.lightMode)?old.lightMode:null;next.autoDrone=migrateAutoDrone(old.autoDrone);
+    next.contract=Math.floor(finite(old.contract,0,0,21));next.productMenu=migrateMenu(old.productMenu);next.sound=old.sound!==false;next.stillMotion=old.stillMotion===true;next.lightMode=['day','night'].includes(old.lightMode)?old.lightMode:null;next.autoDrone=migrateAutoDrone(old.autoDrone);
     next.globalLevel=Math.floor(finite(old.globalLevel,0,0,500));
     next.crosses=(function(raw){var valid=['0-1','0-2','0-3','1-2','1-3','2-3'],r=raw&&typeof raw==='object'?raw:{};
       var done=(Array.isArray(r.done)?r.done:[]).filter(function(id,ix,arr){return valid.indexOf(id)>=0&&arr.indexOf(id)===ix});
       var a=r.active&&typeof r.active==='object'&&valid.indexOf(r.active.pair)>=0&&done.indexOf(r.active.pair)<0?{pair:r.active.pair,remaining:finite(r.active.remaining,300,1,300)}:null;
       return {done:done,active:a}})(old.crosses);
     next.multiplier=Math.pow(1.25,next.globalLevel);
-    next.lastSeen=finite(old.lastSeen,Date.now(),0,Date.now());next.lines=LINES.map(function(_,i){return Math.floor(finite(old.lines&&old.lines[i],1,next.shopOpen?1:0,10000))});next.storageLevel=Math.min(20,Math.max(0,Math.floor(Number(old.storageLevel)||0)));next.stock=Array.from({length:5},function(_,i){return Math.floor(finite(old.stock&&old.stock[i],0,0,i===4?100+next.readyLevel*50:100+next.storageLevel*100))});next.staff=LINES.map(function(_,i){return Math.floor(finite(old.staff&&old.staff[i],0,0,10000))});next.kiosk=old.kiosk===true;next.lounge=migrateLounge(old.lounge);next.loungeSessions=Math.floor(finite(old.loungeSessions,0,0,1e9));next.loungeEarned=finite(old.loungeEarned,0,0,1e15);next.secondKiosk=next.kiosk&&old.secondKiosk===true;next.thirdKiosk=next.secondKiosk&&old.thirdKiosk===true;next.queueLevel=Math.min(7,Math.max(0,Math.floor(Number(old.queueLevel)||0)));next.theme='dispensary';next.gameSpeed=[0,1,2,4].indexOf(old.gameSpeed)>=0?old.gameSpeed:1;return next}catch(e){return fresh()}}
+    next.lastSeen=finite(old.lastSeen,Date.now(),0,Date.now());next.lines=LINES.map(function(_,i){return Math.floor(finite(old.lines&&old.lines[i],1,next.shopOpen?1:0,10000))});next.storageLevel=Math.min(20,Math.max(0,Math.floor(Number(old.storageLevel)||0)));next.stock=Array.from({length:5},function(_,i){return Math.floor(finite(old.stock&&old.stock[i],0,0,i===4?100+next.readyLevel*50:100+next.storageLevel*100))});next.staff=LINES.map(function(_,i){return Math.floor(finite(old.staff&&old.staff[i],0,0,10000))});next.kiosk=old.kiosk===true;next.lounge=migrateLounge(old.lounge);next.loungeStaff=migrateLoungeStaff(old.loungeStaff);next.loungeSessions=Math.floor(finite(old.loungeSessions,0,0,1e9));next.loungeEarned=finite(old.loungeEarned,0,0,1e15);next.secondKiosk=next.kiosk&&old.secondKiosk===true;next.thirdKiosk=next.secondKiosk&&old.thirdKiosk===true;next.queueLevel=Math.min(7,Math.max(0,Math.floor(Number(old.queueLevel)||0)));next.theme='dispensary';next.gameSpeed=[0,1,2,4].indexOf(old.gameSpeed)>=0?old.gameSpeed:1;return next}catch(e){return fresh()}}
   var firstRun=false;try{firstRun=!localStorage.getItem('shift-save')}catch(e){}
   var securitySelected=false,loungeSelected=false;
   var state=load(),selected=0,toastTimer,dispatchSummary=null;
+  state.shopPlay=migrateShopPlay(state.shopPlay);
+  var shopPlayUI=null,budtenderMoment=null;
   state.productMenu.active=dominantFormat(state.productMenu,state.menuStrains.filter(function(i){return state.strains[i]>0}));
   state.empire=migrateProgression(state.empire);state.empire.activeStore=selectedStore(state.empire);state.empire.retailBoost=retailBoost();advanceJourney(state);
   function visualLight(){return state.lightMode?{night:state.lightMode==='night',darkness:state.lightMode==='night'?.34:0}:atmosphere(state.empire.network)}
   var lightToggle=document.createElement('button');lightToggle.id='lightToggle';lightToggle.type='button';lightToggle.onclick=function(){state.lightMode=visualLight().darkness>.15?'day':'night';save();renderUI()};document.querySelector('.speed-controls').appendChild(lightToggle);
   var speedButtons=Array.prototype.slice.call(document.querySelectorAll('[data-speed]'));
-  function setGameSpeed(value){if([0,1,2,4].indexOf(value)<0)return;if(state.gameSpeed!==value)playSound('tap',state.sound);state.gameSpeed=value;renderUI();save();notify(value===0?'GAME PAUSED':'GAME SPEED · '+value+'×')}
+  function setGameSpeed(value){if([0,1,2,4].indexOf(value)<0)return;if(state.gameSpeed!==value)playSound('tap',state.sound);state.gameSpeed=value;renderUI();save()}
   // The 1× button doubles as pause: pressed again at normal speed it stops the clock, and pressed while paused it resumes.
   var speedOne=speedButtons.filter(function(b){return b.getAttribute('data-speed')==='1'})[0],PLAY_GLYPH=speedOne.innerHTML,PAUSE_GLYPH='<svg viewBox="0 0 18 16" fill="currentColor" aria-hidden="true"><path d="M5 3.5h3v9H5zM10 3.5h3v9h-3z"></path></svg>';
   speedButtons.forEach(function(button){button.onclick=function(){var value=Number(button.getAttribute('data-speed'));setGameSpeed(value===1&&state.gameSpeed===1?0:value)}});
+  var nativeInactive=false,gameSuspended=document.hidden;
   var tickTime=performance.now(),tickRemainder=0;
-  function tick(){var now=performance.now(),seconds=(now-tickTime)/1000;tickTime=now;if(document.hidden){tickRemainder=0;return}var elapsed=elapsedSteps(seconds+tickRemainder,state.gameSpeed);if(elapsed.offline){tickRemainder=0;collectOffline(elapsed.offline)}else{tickRemainder=Math.max(0,seconds+tickRemainder-Math.floor((seconds+tickRemainder+1e-8)/.05)*.05);for(var step=0;step<elapsed.steps;step++)simulate(.05)}}
+  function tick(){var now=performance.now(),seconds=(now-tickTime)/1000;tickTime=now;if(gameSuspended){tickRemainder=0;return}var elapsed=elapsedSteps(seconds+tickRemainder,state.gameSpeed);if(elapsed.offline){tickRemainder=0;collectOffline(elapsed.offline)}else{tickRemainder=Math.max(0,seconds+tickRemainder-Math.floor((seconds+tickRemainder+1e-8)/.05)*.05);for(var step=0;step<elapsed.steps;step++)simulate(.05*playbackRate(state.gameSpeed)/state.gameSpeed)}}
   // Native backstop. In the iOS app the game runs inside a web view whose local storage the system may evict when
   // the device is short of space — and with no account and no server there would be nothing to restore from. So
   // every save is mirrored into native preferences, which are part of the app's own data and survive that.
@@ -103,18 +111,11 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(navigator.vibrate)navigator.vibrate(HAPTIC_MS[kind]||8);
   }
 
-  // The mirror trails the real save by a moment: save() runs on a five-second autosave and on every purchase, and
-  // the native write is asynchronous, so coalesce them rather than queueing one per call.
-  // While a recovery is still being decided, nothing may be mirrored: boot writes a fresh save within the first
-  // second, and without this the brand-new shop would overwrite the very copy being recovered.
-  var mirrorPending=null,nativeRestorePending=localStorageArrivedEmpty;
+  // Dispatch immediately. Serialize writes so an older asynchronous save can never land last.
+  var nativeRestorePending=!!nativeStore()&&localStorageArrivedEmpty;
+  var writeNativeSave=createNativeSaveWriter(nativeStore(),NATIVE_KEY);
   function mirrorSaveToNative(serialized){
-    var store=nativeStore();if(!store||nativeRestorePending)return;
-    if(mirrorPending)clearTimeout(mirrorPending);
-    mirrorPending=setTimeout(function(){
-      mirrorPending=null;
-      try{store.set({key:NATIVE_KEY,value:serialized})}catch(e){/* The backstop is optional; the web view's own copy stands. */}
-    },1200);
+    if(!nativeRestorePending)writeNativeSave(serialized);
   }
   // Recovery: if the web view has lost its storage but the native copy is still there, put it back and reload so
   // the ordinary load path migrates it. Only fires when local storage is genuinely empty, so a normal launch and
@@ -126,11 +127,11 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       var raw=result&&result.value,parsed=null;
       try{parsed=raw?JSON.parse(raw):null}catch(e){parsed=null}
       // Nothing worth restoring: release the mirror so this session starts backing itself up as usual.
-      if(!parsed||typeof parsed!=='object'||Array.isArray(parsed)||!Array.isArray(parsed.lines)){nativeRestorePending=false;return}
+      if(!parsed||typeof parsed!=='object'||Array.isArray(parsed)||!Array.isArray(parsed.lines)){nativeRestorePending=false;save();return}
       localStorage.setItem('shift-save',raw);
       // `importing` also stops the unload save, which would otherwise write this session's fresh shop back out.
       importing=true;location.reload();
-    }).catch(function(){nativeRestorePending=false});
+    }).catch(function(){notify('BACKUP UNAVAILABLE · reopen the app to retry recovery')});
   }
   var saveFailed=false,importing=false;
   // Asked as early as it can be: after `importing` exists (the reload below sets it) and before boot has run far
@@ -139,7 +140,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function save(){
     // An import has already written the incoming shop and is reloading; the unload and interval saves that fire
     // on the way out would otherwise put the replaced shop straight back.
-    if(importing)return false;
+    if(importing||nativeRestorePending)return false;
     state.lastSeen=Date.now();
     try{
       var previous=localStorage.getItem('shift-save');
@@ -215,14 +216,14 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function strainFor(c){if(c.kind==='vip'){var reserve=strains.reserveStrain(menuStrains(),state.strains);if(reserve!==null)return reserve}var preferred=economy.preferredStrain(c.kind,menuStrains(),state.strains);return strainForFormat(state.productMenu,menuStrains(),preferred===null?menuChoice(c.id):preferred,wantedFormat(state.productMenu,c.id),c.id)}
   function salePriceFor(c,strain){var f=formatOf(strain);if(c.kind==='vip')return flowerValue(strain);return Math.round(flowerValue(strain)/f.value*formatPremium(state.productMenu,strain,wantedFormat(state.productMenu,c.id)))}
   // Satisfaction tips: patience stretches with Queue comfort, and Lasting effects sweeten every happy sale.
-  function customerSaleBonus(c){var bonus=satisfyCustomer(state.empire,-1,c.kind,c.strain===0?'everyday':'boutique',c.waitSeconds||0,1+state.comfortLevel*.15);if(bonus>1)bonus+=state.durationLevel*.03;
+  function customerSaleBonus(c){var paidStrain=c.normalStrain===undefined?c.strain:c.normalStrain,bonus=satisfyCustomer(state.empire,-1,c.kind,paidStrain===0?'everyday':'boutique',Math.max(0,(c.waitSeconds||0)-(c.adviceWait||0)),1+state.comfortLevel*.15);if(bonus>1)bonus+=state.durationLevel*.03;
     // Strain identity: potency tips, the everyday and VIP perks, and Violet Haze's word of mouth on happy boutique sales.
-    bonus*=strains.tipFactor(c.kind,strainPotency(c.strain||0));if(bonus>1)bonus*=1+state.loyaltyLevel*.03;
-    if(c.strain===0)bonus*=strains.everydayBonus(state.strains);
+    bonus*=strains.tipFactor(c.kind,strainPotency(paidStrain||0));if(bonus>1)bonus*=1+state.loyaltyLevel*.03;
+    if(paidStrain===0)bonus*=strains.everydayBonus(state.strains);
     // VIPs: served their reserve they pay the Orchid premium, boost reputation and start a buzz; offered only everyday flower they snub the shop.
-    if(c.kind==='vip'){if(c.strain>0){bonus*=strains.vipBonus(state.strains);state.empire.reputation=Math.min(1000,state.empire.reputation+strains.VIP_REPUTATION);state.vipBuzz=strains.VIP_BUZZ_SECONDS;burst({x:4,z:4.9,y:1.6},'#f0cf7f')}else{bonus=1;state.empire.reputation=Math.max(0,state.empire.reputation-strains.VIP_SNUB_REPUTATION)}}
-    if(bonus>1&&c.strain>0)state.empire.reputation=Math.min(1000,state.empire.reputation+strains.reputationBonus(state.strains));
-    return bonus*(c.eventGuest&&c.strain>0?1.25:1)}
+    if(c.kind==='vip'){if(paidStrain>0){bonus*=strains.vipBonus(state.strains);state.empire.reputation=Math.min(1000,state.empire.reputation+strains.VIP_REPUTATION);state.vipBuzz=strains.VIP_BUZZ_SECONDS;burst({x:4,z:4.9,y:1.6},'#f0cf7f')}else{bonus=1;state.empire.reputation=Math.max(0,state.empire.reputation-strains.VIP_SNUB_REPUTATION)}}
+    if(bonus>1&&paidStrain>0)state.empire.reputation=Math.min(1000,state.empire.reputation+strains.reputationBonus(state.strains));
+    return bonus*(c.eventGuest&&paidStrain>0?1.25:1)}
   // Flower menu: one jar illustration per strain, a row of cards to pick from, and a hero for the chosen strain.
   var STRAIN_LOOKS=[
     {kind:'Everyday',buyers:'Regulars always order this one.',pistil:'#d9c46a',frost:false,shape:'round'},
@@ -251,19 +252,22 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function renderJournal(){
     var grid=$('journalGrid');if(!grid)return;
     var lab=state.breedingLevel>0;
-    $('journalIntro').textContent=lab?
-      'The breeding program crosses two mastered strains (level 5+) into a house cultivar. Every discovery permanently adds +2% to all sales.':
-      'Buy the Breeding lab in the Shop to cross mastered strains (level 5+). Every discovery permanently adds +2% to all sales.';
+    $('journalIntro').textContent='Raise two flowers to level 5, then breed a new cultivar. Each discovery adds a permanent +2% to all sales.';
+    $('journalSummary').textContent=state.crosses.done.length+'/6 discovered · +'+(state.crosses.done.length*2)+'% sales bonus';
     var key=state.crosses.done.join(',')+'|'+(state.crosses.active?state.crosses.active.pair+':'+Math.ceil(state.crosses.active.remaining):'')+'|'+lab+'|'+state.strains.join(',')+'|'+(state.money>=crossCost());
     if(grid.dataset.key===key)return;grid.dataset.key=key;
-    grid.innerHTML=CROSSES.map(function(c){
+    grid.innerHTML=CROSSES.slice().sort(function(a,b){function rank(c){return state.crosses.active&&state.crosses.active.pair===c.id?0:state.crosses.done.indexOf(c.id)>=0?3:c.parents.every(function(i){return state.strains[i]>=5})?1:2}return rank(a)-rank(b)}).map(function(c){
       var done=state.crosses.done.indexOf(c.id)>=0,growing=state.crosses.active&&state.crosses.active.pair===c.id;
-      var eligible=lab&&state.strains[c.parents[0]]>=5&&state.strains[c.parents[1]]>=5;
-      var parents=STRAINS[c.parents[0]].name+' × '+STRAINS[c.parents[1]].name;
-      if(done)return '<div class="journal-card is-found" style="--strain:'+c.color+'"><i>'+budSvg(c.color,c.pistil)+'</i><b>'+c.name+'</b><small>'+parents+'</small><p>'+c.lore+'</p><em>+2% all sales</em></div>';
-      if(growing)return '<div class="journal-card is-growing" style="--strain:'+c.color+'"><i>'+budSvg(c.color,c.pistil)+'</i><b>'+c.name+'</b><small>'+parents+'</small><p>Crossing · '+Math.ceil(state.crosses.active.remaining)+'s</p></div>';
-      return '<div class="journal-card is-locked"><i>'+budSvg('#5c6b5e','#77857a')+'</i><b>???</b><small>'+parents+'</small>'+
-        (eligible?'<button type="button" data-cross="'+c.id+'"'+(state.crosses.active||state.money<crossCost()?' disabled':'')+'>Cross · '+fmt(crossCost())+'</button>':'<p>'+(lab?'Both parents to level 5':'Needs the Breeding lab')+'</p>')+'</div>';
+      var missing=c.parents.find(function(i){return state.strains[i]<5}),eligible=lab&&missing===undefined;
+      var parents=c.parents.map(function(i){var n=state.strains[i];return '<div class="journal-parent"><span>'+STRAINS[i].name+'</span><strong>'+(n>=5?'Ready · Lv '+n:n?'Lv '+n+' / 5':'Not unlocked')+'</strong><progress max="5" value="'+Math.min(5,n)+'" aria-label="'+STRAINS[i].name+' mastery"></progress></div>'}).join('');
+      var status=done?'Discovered':growing?'Breeding in progress':eligible?'Ready to breed':'Prepare this pair';
+      var action='';
+      if(growing){var sec=Math.ceil(state.crosses.active.remaining);action='<p>Ready in '+Math.floor(sec/60)+'m '+(sec%60)+'s of game time</p><progress max="300" value="'+(300-sec)+'" aria-label="Breeding progress"></progress>'}
+      else if(done)action='<p>'+c.lore+'</p><em>+2% sales bonus earned</em>';
+      else if(!lab)action='<button type="button" data-journal-lab>Find Breeding bench in Shop</button>';
+      else if(missing!==undefined)action='<button type="button" data-journal-parent="'+missing+'">'+(state.strains[missing]?'Upgrade ':'Unlock ')+STRAINS[missing].name+'</button>';
+      else action='<button type="button" data-cross="'+c.id+'"'+(state.crosses.active||state.money<crossCost()?' disabled':'')+'>Breed cultivar · '+fmt(crossCost())+'</button><p>'+(state.crosses.active?'Finish the current cross first':state.money<crossCost()?'Save up to afford this cross · 5 min breeding time':'5 min breeding time · permanent +2% sales')+'</p>';
+      return '<div class="journal-card '+(done?'is-found':growing?'is-growing':eligible?'is-ready':'is-preparing')+'" style="--strain:'+c.color+'"><div class="journal-card-heading"><b>'+(done||growing?c.name:STRAINS[c.parents[0]].name+' × '+STRAINS[c.parents[1]].name)+'</b><small>'+status+'</small></div>'+(done?'':parents)+action+'</div>';
     }).join('');
   }
   // A glass jar with the strain's bud inside. Calyx blobs stack in three tones of the strain colour; pistils and frost differ per strain.
@@ -334,15 +338,15 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       var level=state.strains[i],active=state.menuStrains.indexOf(i)>=0,tab=$('strainTab'+i),art=tab.querySelector('.strain-card-art');
       var artKey=(level?'u':'l');if(art.dataset.key!==artKey){art.innerHTML=strainArt(i,!level);art.dataset.key=artKey}
       tab.classList.toggle('is-on-menu',active);tab.classList.toggle('is-locked',!level);tab.classList.toggle('is-trending',i===trend);tab.setAttribute('aria-selected',String(flowerFocus===i));tab.tabIndex=flowerFocus===i?0:-1;
-      var tag=tab.querySelector('small');tag.textContent=!level?fmt(strain.unlock):active?'On menu':'Off menu';tag.classList.toggle('price-tag',!level);
+      var tag=tab.querySelector('small');tag.textContent=!level?fmt(strain.unlock):'Lv '+level;tag.classList.toggle('price-tag',!level);
       Array.prototype.forEach.call(tab.querySelectorAll('.strain-pips i'),function(pip,k){pip.classList.toggle('is-filled',k<level)});
     });
     var i=flowerFocus,strain=STRAINS[i],look=STRAIN_LOOKS[i],level=state.strains[i],active=state.menuStrains.indexOf(i)>=0,price=strainCost(i),maxed=level>=10,detail=$('strainDetail');
     var isNight=atmosphere(state.empire.network).night,type=strains.STRAIN_TYPE[i],timeNow=strains.timeFactor(type,isNight);
     var nextValue=Math.round(strain.price*(1+level*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatOf(i).value*trendBoost(i)*displayBoost(i)*timeNow);
     var stats=level?
-      '<span><b>'+fmt(flowerValue(i))+'</b><small>'+unitWord(1,strainFormat(state.productMenu,i))+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+(maxed?'Max':'+'+fmt(nextValue-flowerValue(i)))+'</b><small>'+(maxed?'level 10':'next lv')+'</small></span>':
-      '<span><b>'+fmt(Math.round(strain.price*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatOf(i).value*timeNow))+'</b><small>'+unitWord(1,strainFormat(state.productMenu,i))+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+fmt(strain.unlock)+'</b><small>unlock</small></span>';
+      '<span><b>'+fmt(flowerValue(i))+'</b><small>'+unitWord(1,strainFormat(state.productMenu,i))+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span>':
+      '<span><b>'+fmt(Math.round(strain.price*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatOf(i).value*timeNow))+'</b><small>'+unitWord(1,strainFormat(state.productMenu,i))+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span>';
     var growPct=Math.round((1-strains.strainGrowFactor(i,Math.max(1,level)))*100),tipVip=Math.round((strains.tipFactor('vip',strains.potency(i,level)+state.terpeneLevel*.25)-1)*100),tier=strains.perkTier(level),perk=strains.PERKS[i];
     var traits='<ul class="strain-traits">'+
       '<li'+(growPct?' class="is-cost"':'')+'>'+(growPct?'Grow room −'+growPct+'%'+(level<10?' · masters with levels':''):'Easy to grow')+'</li>'+
@@ -354,18 +358,18 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var perkLine='<p class="strain-perk'+(tier?' is-unlocked':'')+'"><b>'+(tier?'★ '+perk.name:'☆ '+perk.name)+'</b> · '+(tier?perk.effect[tier-1]+(tier<2?' · level 10 doubles it':''):perk.locked)+'</p>';
     var heroHtml='<div class="strain-hero'+(level?'':' is-locked')+(active?' is-on-menu':'')+(i===trend?' is-trending':'')+'" style="--strain:'+strain.color+'">'+
       '<div class="strain-hero-art">'+strainArt(i,!level)+'</div>'+
-      '<div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">'+look.kind+' · </span>'+strains.TYPES[type]+(level?' · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>'+level+' / 10':' · Locked')+'</small><h2>'+strain.name+'</h2><p>'+(level?look.buyers:'Unlock to put it on the menu. '+look.buyers)+'</p></div>'+
+      '<div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">'+look.kind+' · </span>'+strains.TYPES[type]+(level?'':' · Locked')+'</small><h2>'+strain.name+'</h2><p>'+(level?look.buyers:'Unlock to start selling. '+look.buyers)+'</p></div>'+
       '<div class="strain-stats">'+stats+'</div>'+
       '<div class="strain-hero-details">'+traits+perkLine+'</div>'+
-      (level?'<div class="product-line strain-format"><h2>Sell as</h2><div class="format-options">'+FORMATS.map(function(f,k){var own=strainFormat(state.productMenu,i)===k,unlocked=state.productMenu.unlocked[k];return '<button type="button" class="strain-format-pill" data-format="'+k+'" aria-pressed="'+own+'"'+(!unlocked&&state.money<f.cost?' disabled':'')+' title="'+f.detail+'"><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+productIcons[k]+'</svg><strong>'+f.name+'</strong><small>'+(own?'Selling':unlocked?'Switch':fmt(f.cost))+'</small></button>'}).join('')+'</div><p class="format-benefit">'+[['Standard value','Half the door wants it'],['+45% value for the 3 in 10 who want it','Faster pickup','Slower packing'],['+120% value for the 1 in 5 who want it','Lower demand','Slower packing']][strainFormat(state.productMenu,i)].join(' · ')+'</p></div>':'')+
-      '<div class="strain-hero-actions">'+(level?'<button type="button" id="flowerSelect" aria-pressed="'+active+'">'+(active?'On menu ✓':'Add to menu')+'</button>':'')+'<button type="button" id="flowerBuy" class="is-primary">'+(maxed?'Fully upgraded':(level?'Upgrade':'Unlock')+' · '+fmt(price))+'</button></div>'+
+      (level?'<div class="product-line strain-format"><h2>Sell as</h2><div class="format-options">'+FORMATS.map(function(f,k){var own=strainFormat(state.productMenu,i)===k,unlocked=formatUnlocked(state.productMenu,i,k),action=own?'Selling':unlocked?'Switch':'Buy '+fmt(f.cost);return '<button type="button" class="strain-format-pill" data-format="'+k+'" aria-pressed="'+own+'" aria-label="'+action+' '+f.name+' for '+strain.name+'"'+(!unlocked&&state.money<f.cost?' disabled':'')+' title="'+f.detail+'"><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+productIcons[k]+'</svg><strong>'+f.name+'</strong><small>'+action+'</small></button>'}).join('')+'</div><p class="format-benefit">'+[['Standard value','Half the door wants it'],['+45% value for the 3 in 10 who want it','Faster pickup','Slower packing'],['+120% value for the 1 in 5 who want it','Lower demand','Slower packing']][strainFormat(state.productMenu,i)].join(' · ')+'</p></div>':'')+
+      '<div class="strain-hero-actions strain-upgrade"><div class="strain-upgrade-copy"><b>'+(level?'Level '+level+' / 10':'Not unlocked')+'</b><small>'+(maxed?'Fully upgraded':level?'Next: level '+(level+1)+' · +'+fmt(nextValue-flowerValue(i))+' / '+unitWord(1,strainFormat(state.productMenu,i)):'Unlock level 1')+'</small><progress max="10" value="'+level+'" aria-label="Strain level"></progress></div><button type="button" id="flowerBuy" class="is-primary"><span>'+(maxed?'Max level':level?'Upgrade':'Unlock')+'</span>'+(maxed?'':'<b>'+fmt(price)+'</b>')+'</button>'+'</div>'+
     '</div>';
-    var heroKey=heroHtml+'|'+(maxed||state.money<price)+'|'+(active&&menu.length===1)+'|'+state.productMenu.formats.join(',')+'|'+state.productMenu.unlocked.join(',');
+    var heroKey=heroHtml+'|'+(maxed||state.money<price)+'|'+(active&&menu.length===1)+'|'+state.productMenu.formats.join(',')+'|'+state.productMenu.unlockedByStrain.map(function(row){return row.join(',')}).join('|');
     Array.prototype.forEach.call(document.querySelectorAll('.menu-board .trend-clock'),function(el){el.textContent=trendClock});
     if(detail.dataset.key===heroKey)return;
     detail.innerHTML=heroHtml;detail.dataset.key=heroKey;
     Array.prototype.forEach.call(detail.querySelectorAll('.trend-clock'),function(el){el.textContent=trendClock});
-    if(level){var sel=$('flowerSelect');sel.disabled=active&&menu.length===1;sel.title=sel.disabled?'Keep at least one strain on the menu':active?'Remove from menu':'Add to menu';sel.onclick=function(){selectStrain(i)}}
+
     var buy=$('flowerBuy');buy.disabled=maxed||state.money<price;buy.onclick=function(){buyStrain(i)};
     Array.prototype.forEach.call(detail.querySelectorAll('.strain-format-pill'),function(pill){pill.onclick=function(){chooseStrainFormat(i,Number(pill.dataset.format))}});
   }
@@ -384,29 +388,24 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function compactCount(n){return n>=100000?Math.round(n/1000)+'k':n>=1000?(Math.round(n/100)/10).toFixed(n%1000?1:0).replace(/\.0$/,'')+'k':Math.round(n*10)/10+''}
   function secondsLabel(t){return (t>=10?Math.round(t):t>=1?t.toFixed(1):t.toFixed(2))+'s'}
   function qtyShort(n){var f=state.productMenu.active;if(f===0){var oz=n/8;return (oz>=1000?(oz/1000).toFixed(oz>=10000?0:1)+'k':oz>=10?Math.round(oz):Math.round(oz*10)/10)+' oz'}return (n>=1000?(n/1000).toFixed(n>=10000?0:1)+'k':n)+(f===1?' jt':' ed')}
-  var playSound=makeSound(),ambience=makeAmbience();
+  var playSound=makeSound();
   var telemetry=createTelemetry();
   // Progression markers: the first time any station reaches these levels on this device.
   function trackStationLevel(i){var lv=state.lines[i];[10,25,50,100].forEach(function(m){if(lv>=m)telemetry.once('station_level_'+m,{station:LINES[i].name})})}
   // Browsers only start audio inside a gesture: the first tap or key press primes the context while sound is on.
-  ['pointerdown','keydown'].forEach(function(type){window.addEventListener(type,function prime(){playSound.unlock(state.sound);ambienceTick()},{passive:true})});
-  // The ambient bed follows the sound settings, the light and the crowd; the gesture call above also serves
-  // as the user-gesture unlock its AudioContext needs.
-  function ambienceTick(){ambience.update({enabled:state.sound&&state.ambience,night:render.nightT||0,crowd:customers.length})}
-  setInterval(ambienceTick,1000);
+  ['pointerdown','keydown'].forEach(function(type){window.addEventListener(type,function prime(){playSound.unlock(state.sound)},{passive:true})});
   function flowerValue(index){if(index===undefined){var menu=menuStrains();return menu.reduce(function(total,i){return total+flowerValue(i)},0)/menu.length}var i=index;return Math.round(STRAINS[i].price*(1+Math.max(0,state.strains[i]-1)*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatOf(i).value*trendBoost(i)*displayBoost(i)*strains.timeFactor(strains.STRAIN_TYPE[i],atmosphere(state.empire.network).night)*(i>0?weeklyNow().boutique||1:1)*(1+.02*state.crosses.done.length))}
   function onlineValue(sequence){return Math.round(flowerValue(menuChoice(sequence===undefined?state.onlineCompleted:sequence))*4/3*(1+state.onlineBonusLevel*.05)*(weeklyNow().online||1))}
-  function strainCost(i){return state.strains[i]?Math.round(Math.max(250,STRAINS[i].unlock*.35)*Math.pow(1.85,state.strains[i]-1)):STRAINS[i].unlock}
+  function strainCost(i){return strains.upgradeCost(STRAINS[i].unlock,state.strains[i])}
   function buyStrain(i){
     if(i<0||i>=STRAINS.length||state.strains[i]>=10||state.money<strainCost(i))return;
-    var unlocking=!state.strains[i];state.money-=strainCost(i);state.strains[i]++;if(unlocking)state.menuStrains.push(i);
+    // `renderUI` replaces the strain hero after a purchase. WebKit otherwise tries to keep the removed, focused
+    // button visible and re-anchors the flowers pane around its replacement, which makes the whole menu jump.
+    // Preserve the pane itself instead, then return focus without asking the browser to scroll it again.
+    var pane=document.querySelector('[data-pane="flowers"]'),scrollTop=pane?pane.scrollTop:0;
+    var unlocking=!state.strains[i];state.money-=strainCost(i);state.strains[i]++;if(unlocking)state.menuStrains.push(i);syncDominantFormat();
     notify(STRAINS[i].name.toUpperCase()+(unlocking?' UNLOCKED':' · LEVEL '+state.strains[i]),'upgrade');save();renderUI();
-  }
-  function selectStrain(i){
-    if(!state.strains[i])return;
-    var index=state.menuStrains.indexOf(i);
-    if(index>=0){if(state.menuStrains.length===1)return;state.menuStrains.splice(index,1)}else state.menuStrains.push(i);
-    syncDominantFormat();save();renderUI();notify(STRAINS[i].name.toUpperCase()+(index>=0?' · REMOVED FROM MENU':' · ADDED TO MENU'));
+    if(pane){pane.scrollTop=scrollTop;var nextBuy=$('flowerBuy');if(nextBuy&&!nextBuy.disabled)try{nextBuy.focus({preventScroll:true})}catch(e){nextBuy.focus();pane.scrollTop=scrollTop}}
   }
   function renderFlowers(){
     if($('prestigeStart')){
@@ -424,7 +423,6 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       if(maxRank)$('prestigeStart').removeAttribute('aria-describedby');else $('prestigeStart').setAttribute('aria-describedby','prestigeFundingStatus prestigeCarryover');
       $('prestigeCarryover').hidden=maxRank;
       $('soundToggle').textContent=state.sound?'Sound on':'Sound off';$('soundToggle').setAttribute('aria-pressed',String(state.sound));
-      if($('ambienceToggle')){$('ambienceToggle').textContent=state.ambience?'Ambience on':'Ambience off';$('ambienceToggle').setAttribute('aria-pressed',String(state.ambience))}
     }
 
     renderStrainMenu();
@@ -471,7 +469,9 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // Up to seven guests wait for a seat at the curtains: the first on the carpet, the rest in a line along the lounge's
   // front wall to the right of the door, clear of the carpet's stanchions.
   var LOUNGE_DOOR={x:-9.85,z:-.45},LOUNGE_EXIT={x:8.57,z:-3.3},LOUNGE_RIGHT=8.25,LOUNGE_ROPE=7;
-  function loungeWaitSpot(place){return place<=0?LOUNGE_DOOR:{x:LOUNGE_DOOR.x+1.3+(place-1)*.65,z:LOUNGE_DOOR.z+.1}}
+  // Head at the curtain; the tail runs down the aisle between kiosks and the order pen.
+  function loungeQueueRoute(){return [LOUNGE_DOOR,{x:LOUNGE_DOOR.x,z:2.2},{x:-7.65,z:2.2},{x:-7.65,z:8.3},{x:-8.2,z:8.6},{x:-9.7,z:8.15},{x:-10.05,z:8.5},{x:-10.05,z:9.35}]}
+  function loungeWaitSpot(place){return routePoint(loungeQueueRoute(),Math.max(0,place)*1.7)}
   function loungeSeated(){return customers.filter(function(c){return c.phase==='lounge'}).length}
   function loungeWaiting(){return customers.filter(function(c){return c.phase==='toLounge'&&!c.waypoints.length}).sort(function(a,b){return a.id-b.id})}
   function loungeSpareJars(){return state.stock[3]-reservedJars()}
@@ -480,9 +480,9 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function enterLounge(c){
     var take=loungeTake(state.lounge,flowerValue(strainFor(c)));
     var weeklyLounge=weeklyNow().lounge;if(weeklyLounge){take.total=Math.round(take.total*weeklyLounge);take.cover=Math.round(take.cover*weeklyLounge)}
-    state.stock[3]-=1;add(take.total);state.loungeSessions++;state.loungeEarned+=take.total;c.loungeLeft=loungeSessionSeconds(state.lounge);c.phase='lounge';c.walking=false;c.loungeTake=take.total;
+    state.stock[3]-=1;add(take.total);state.shopPlay.shift.earned+=take.total;state.loungeSessions++;state.loungeEarned+=take.total;c.loungeLeft=loungeStaffSessionSeconds(state.lounge,state.loungeStaff);c.phase='lounge';c.walking=false;c.loungeTake=take.total;
     c.loungeFade=1;c.fadeFromZ=c.z;c.facing=-.3;
-    recordEvent(state.empire,'pickup',1);playSound('coin',state.sound);
+    recordEvent(state.empire,'pickup',1);
     if(!motionPreference.matches)tickets.push({x:LOUNGE_DOOR.x,y:2.1,z:LOUNGE_DOOR.z,life:1,text:fmt(take.cover)});
   }
   function leaveLounge(c){
@@ -500,7 +500,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     });
     // The rope: the first guest waiting at the curtain goes in as soon as a seat and a jar are free.
     var waiting=loungeWaiting();
-    if(waiting.length&&loungeAdmission(state.lounge,loungeSeated(),loungeSpareJars()).admit)enterLounge(waiting[0]);
+    if(waiting.length&&Math.hypot(waiting[0].x-LOUNGE_DOOR.x,waiting[0].z-LOUNGE_DOOR.z)<.15&&loungeAdmission(state.lounge,loungeSeated(),loungeSpareJars()).admit)enterLounge(waiting[0]);
   }
   // Occasional thought bubbles: three-beat emoji stories about why someone came in, what the wait feels like, or the plan once the bag is in hand.
   var THOUGHTS={
@@ -532,10 +532,24 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     return work[i]>=1;
   }
   function simulate(dt){
+    var shiftRevenue=branchRateNow()*dt;
+    state.shopPlay.cooldown=Math.max(0,state.shopPlay.cooldown-dt);
+    if(budtenderMoment){
+      budtenderMoment.remaining-=dt;
+      var momentCustomer=customers.find(function(c){return c.id===budtenderMoment.customerId});
+      if(!momentCustomer||momentCustomer.ordered||budtenderMoment.remaining<=0)budtenderMoment=null;
+    }
+    if(!budtenderMoment&&state.shopOpen&&!state.empire.activeStore&&state.shopPlay.cooldown<=0){
+      var guest=customers.find(function(c){return !c.ordered&&!c.kiosk&&!c.lounge&&!c.momentOffered&&c.idChecked===true&&c.phase==='entering'});
+      if(guest){guest.momentOffered=true;budtenderMoment=createMoment(state,guest);state.shopPlay.cooldown=60+(state.shopPlay.sequence%3)*15;}
+    }
     // A running cross ripens on simulated time, so pause and speed apply like any other clock.
     if(state.crosses.active){state.crosses.active.remaining-=dt;if(state.crosses.active.remaining<=0){var finishedCross=state.crosses.active.pair;state.crosses.active=null;if(state.crosses.done.indexOf(finishedCross)<0)state.crosses.done.push(finishedCross);var crossDef=CROSSES.filter(function(x){return x.id===finishedCross})[0];notify('NEW CULTIVAR · '+(crossDef?crossDef.name.toUpperCase():''),'upgrade');playSound('sparkle',state.sound);save()}}
     state.empire.retailBoost=retailBoost();accrueOnlineRequests(dt);
-    add(branchRateNow()*dt);tickBranches(state.empire,dt);var operationResult=tickOperations(state,dt);if(operationResult.revenue)add(operationResult.revenue);if(operationResult.deliveries){state.onlineCompleted+=operationResult.deliveries;recordEvent(state.empire,'online',operationResult.deliveries)}
+    var beforeTransfers=state.empire.network.stores.reduce(function(n,s){return n+s.sent},0);
+    add(branchRateNow()*dt);tickBranches(state.empire,dt);var operationResult=tickOperations(state,dt);if(operationResult.revenue){add(operationResult.revenue);shiftRevenue+=operationResult.revenue;}if(operationResult.deliveries){state.onlineCompleted+=operationResult.deliveries;state.shopPlay.shift.deliveries+=operationResult.deliveries;recordEvent(state.empire,'online',operationResult.deliveries)}
+    state.shopPlay.shift.transfers+=state.empire.network.stores.reduce(function(n,s){return n+s.sent},0)-beforeTransfers;
+    state.shopPlay.shift.earned+=shiftRevenue;
     arrival+=dt;state.vipBuzz=Math.max(0,(state.vipBuzz||0)-dt);
     if(strains.tickTrend(state.strainTrend,dt,STRAINS.length,state.sold+customerId)){var trending=STRAINS[state.strainTrend.index];notify(trending.name.toUpperCase()+' IS TRENDING · +35% for 8 min'+(state.strains[state.strainTrend.index]?'':' · unlock it to cash in'),'upgrade');renderUI()}
     // Nobody walks in until the sign flips; stations that are already standing still stock the shelves.
@@ -550,7 +564,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     customers=customers.filter(function(c){return c.phase!=='leaving'||c.t<1});
     if(state.lines[5]){
       var pickups=customers.filter(function(c){return c.ordered&&!c.bag}).sort(function(a,b){return pickupOrder(a)-pickupOrder(b)}).slice(0,1).filter(function(c){return c.phase==='pickup'&&!c.walking&&Math.hypot(c.x-4,c.z-4.9)<.01});
-      if(pickups.length&&state.stock[4]>0){var served=advanceCounterService(pickups[0],5,dt)?1:0;if(served>0){work[5]=0;var bags=Math.max(1,Math.min(pickups[0].bags||1,state.stock[4]));pickups[0].bags=bags;state.stock[4]-=bags;state.sold+=bags;playSound('sale',state.sound);recordEvent(state.empire,'pickup',served);add(pickups.slice(0,served).reduce(function(total,c){return total+(c.salePrice||flowerValue())*(c.bags||1)*customerSaleBonus(c)},0));pickups.slice(0,served).forEach(function(c){c.phase='leaving';c.t=0;c.bag=true;c.effectAge=0;recentPickupRatings.push(customerRatings(c).highness);if(recentPickupRatings.length>20)recentPickupRatings.shift()});burst(machinePos[5],colors.acid)}}else work[5]=0;
+      if(pickups.length&&state.stock[4]>0){var served=advanceCounterService(pickups[0],5,dt)?1:0;if(served>0){work[5]=0;var bags=Math.max(1,Math.min(pickups[0].bags||1,state.stock[4]));pickups[0].bags=bags;state.stock[4]-=bags;state.sold+=bags;recordEvent(state.empire,'pickup',served);add(pickups.slice(0,served).reduce(function(total,c){var revenue=(c.salePrice||flowerValue())*(c.bags||1)*customerSaleBonus(c);if(c.momentMatched){var tip=Math.max(1,Math.round((c.salePrice||flowerValue())*(c.bags||1)*.2));revenue+=tip;state.shopPlay.tips+=tip;state.empire.reputation=Math.min(1000,state.empire.reputation+2);if(shopPlayUI)shopPlayUI.feedback(c.momentName+' loved your pick · +'+fmt(tip)+' tip · +2 reputation');}recordPickup(state.shopPlay,c,revenue);return total+revenue},0));pickups.slice(0,served).forEach(function(c){c.phase='leaving';c.t=0;c.bag=true;c.effectAge=0;recentPickupRatings.push(customerRatings(c).highness);if(recentPickupRatings.length>20)recentPickupRatings.shift()});burst(machinePos[5],pickups[0].momentMatched?'#eed69b':colors.acid)}}else work[5]=0;
     }
     // Prepare pickup bags independently of the number of customers collecting, but never from jars a waiting web order needs.
     var spareJars=state.stock[3]-reservedJars();
@@ -565,9 +579,11 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       customers.filter(function(c){return atOrderCounter(c,state.orderCounters)}).forEach(function(c){
         var available=orderAvailability(customers,state.stock[4],pickupLimit());
         if(available.places<1||available.bags<1)return;
+        if(budtenderMoment&&budtenderMoment.customerId===c.id&&budtenderMoment.opened){c.adviceWait=(c.adviceWait||0)+dt;return;}
+        if(c.consultRemaining>0){c.adviceWait=(c.adviceWait||0)+dt;c.consultRemaining=Math.max(0,c.consultRemaining-dt);return;}
         if(advanceCounterService(c,4,dt)){
           c.bags=Math.min(basketSize()*(c.kind==='vip'?strains.VIP_BASKET:1),available.bags);
-          c.strain=strainFor(c);c.salePrice=salePriceFor(c,c.strain);c.ordered=true;
+          c.normalStrain=strainFor(c);c.strain=c.momentMatched?c.momentChoice.strain:c.normalStrain;c.orderFormat=c.momentMatched?c.momentChoice.format:strainFormat(state.productMenu,c.strain);c.salePrice=salePriceFor(c,c.normalStrain);c.ordered=true;
           c.phase='toPickup';c.t=0;
         }
       });
@@ -597,6 +613,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       }
     }
     if(autoDroneReady(state.autoDrone,dt,state.lines[4]>0&&state.stock[3]>=onlineSize()&&onlineRequestsReady()>0)){state.autoDrone.remaining*=1-state.fleetLevel*.03;sendOnlineOrders(autoDroneLimit(state.autoDrone)+(state.autoDrone.bulk&&state.autoDrone.mode==='bulk'?state.cargoLevel:0),true)}
+    if(state.shopOpen&&tickShift(state.shopPlay,dt/playbackRate(state.gameSpeed),{queue:customers.filter(inOrderFlow).length,stockout:customers.some(function(c){return c.ordered&&!c.bag})&&state.stock[4]<1})){if(shopPlayUI)shopPlayUI.feedback('Shift recap ready · see how your shop did');save();}
   }
   function staffCost(i){return economy.staffCost(state.staff[i])}
   function idTrainingQuote(limit){
@@ -629,6 +646,17 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     burst(machinePos[i],'#b6e58c');notify(LINES[i].name+' EMPLOYEE · +'+batch.levels+' LEVEL'+(batch.levels===1?'':'S'),'upgrade');renderUI();save();
   }
   function upgradeStaff(i){if(!state.lines[i])return;var price=staffCost(i);if(state.money<price)return;state.money-=price;state.staff[i]++;burst(machinePos[i],'#b6e58c');notify('EMPLOYEE LEVEL '+state.staff[i]+' · +30% BASE SPEED','upgrade');renderUI();save()}
+  function loungeStaffCost(){return economy.staffCost(state.loungeStaff)}
+  function maxLoungeStaffTraining(){
+    var levels=0,total=0;if(!state.lounge)return {levels:0,cost:0};
+    while(state.loungeStaff+levels<10000){var price=economy.staffCost(state.loungeStaff+levels);if(!Number.isFinite(price)||total+price>state.money)break;total+=price;levels++}
+    return {levels:levels,cost:total};
+  }
+  function trainLoungeStaff(limit){
+    var quote=maxLoungeStaffTraining();if(limit===1&&quote.levels)quote={levels:1,cost:loungeStaffCost()};else if(limit===1)return;
+    if(!quote.levels)return;state.money-=quote.cost;state.loungeStaff+=quote.levels;
+    burst(LOUNGE_DOOR,'#b6e58c');notify('LOUNGE HOST · +'+quote.levels+' LEVEL'+(quote.levels===1?'':'S'),'upgrade');renderUI();save();
+  }
   function expandOrderCounters(){
     if(!buyOrderCounter(state))return;
     selectMachine(4);tierFlashes[4]=1;burst(machinePos[4],'#e6d3a0');
@@ -679,7 +707,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function componentUnlocked(i){return COMPONENTS[i].key!=='kioskSpeedLevel'||state.kiosk}
   function upgradeComponent(i){var c=COMPONENTS[i],price=componentCost(i);if(!componentUnlocked(i)||state[c.key]>=c.max||state.money<price)return;state.money-=price;state[c.key]++;save();renderUI();notify(c.name.toUpperCase()+' · LEVEL '+state[c.key],'upgrade')}
   function renderComponents(){
-    var describe=[function(l){return '+'+Math.round((economy.walkSpeed(l)/2.8-1)*100)+'% walking speed'},function(l){return (4+l*2)+' picking up'},function(l){return economy.readyCapacity(l,state.lines)+' ready bags'},function(l){return '+'+(l*3)+'% sale value'},function(l){return '+'+(l*3)+'% happy tips'},function(l){return '+'+(l*15)+'% kiosk speed'},function(l){return '+'+(l*5)+'% online value'},function(l){return Math.round(economy.patience('hurried',l))+'s patience'},function(l){return '+'+(l*12)+'% check speed'},function(l){return (requestRate(state.onlineCompleted,1,l)*60).toFixed(1)+' requests / min · '+requestCap(state.onlineCompleted,l)+' waiting'},
+    var describe=[function(l){return '+'+Math.round((economy.walkSpeed(l)/economy.CUSTOMER_WALK_SPEED_BASE-1)*100)+'% walking speed'},function(l){return (4+l*2)+' picking up'},function(l){return economy.readyCapacity(l,state.lines)+' ready bags'},function(l){return '+'+(l*3)+'% sale value'},function(l){return '+'+(l*3)+'% happy tips'},function(l){return '+'+(l*15)+'% kiosk speed'},function(l){return '+'+(l*5)+'% online value'},function(l){return Math.round(economy.patience('hurried',l))+'s patience'},function(l){return '+'+(l*12)+'% check speed'},function(l){return (requestRate(state.onlineCompleted,1,l)*60).toFixed(1)+' requests / min · '+requestCap(state.onlineCompleted,l)+' waiting'},
       function(l){return '+'+(l*6)+'% seed batch'},function(l){return '+'+(l*6)+'% grow batch'},function(l){return '+'+(l*6)+'% harvest batch'},function(l){return '+'+(l*6)+'% pack speed'},
       function(l){return '+'+(l*4)+'% counter speed'},function(l){return '+'+(l*4)+'% foot traffic'},function(l){return '+'+(l*3)+'% happy tips'},function(l){return '+'+(l*4)+'% basket size'},
       function(l){return '+'+(l*.25).toFixed(2).replace(/\.?0+$/,'')+'% THC'},function(l){return '-'+(l*3)+'% grow penalty'},function(l){return '+'+(l*2)+'% boutique value'},function(l){return '+'+(35+l*2)+'% trend bonus'},
@@ -709,6 +737,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function sendOnlineOrders(limit,automatic){
     var batch=onlineBatch(limit);if(!batch.count)return;
     state.stock[3]-=batch.jars;state.onlineCompleted+=batch.count;consumeRequests(state,batch.count);
+    state.shopPlay.shift.deliveries+=batch.count;state.shopPlay.shift.earned+=batch.reward;
     // Repeat buyers: a share of fulfilled orders come straight back as new requests.
     if(state.repeatLevel)state.onlineRequests=Math.min(onlineRequestCap(),state.onlineRequests+batch.count*state.repeatLevel*.04);
     queueDeliveryWave(batch.count);
@@ -722,7 +751,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       if(wave.length<5){
         // Couriers in a wave lift off one after another, not as a block.
         var drone={age:age,delay:wave.length*.42,slot:wave.length,orders:1};
-        wave.push(drone);deliveryDrones.push(drone);playSound('whoosh',state.sound);
+        wave.push(drone);deliveryDrones.push(drone);
       }else{
         var carrier=wave.reduce(function(a,b){return a.orders<=b.orders?a:b});carrier.orders++;
       }
@@ -772,26 +801,32 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     dispatchSummary.count+=batch.count;dispatchSummary.reward+=batch.reward;dispatchSummary.lastClick=now;
     notify(dispatchSummary.count+' ONLINE ORDER'+(dispatchSummary.count===1?'':'S')+' SENT · '+fmt(dispatchSummary.reward),'dispatch');
   }
-  function notify(message,kind){var cue=kind==='upgrade'?(/BUILT|OPEN|EXPANDED/.test(message)?'build':'upgrade'):/REWARD|MILESTONE|GOAL COMPLETE|EVENT COMPLETE|CHAPTER COMPLETE|WHILE AWAY|Prestige/.test(message)?'sparkle':/^Need |previous stage first/.test(message)?'denied':null;if(cue)playSound(cue,state.sound);if(kind!=='dispatch')dispatchSummary=null;$('toast').classList.toggle('is-upgrade',kind==='upgrade');$('toast').textContent=message;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){$('toast').classList.remove('show')},1600)}
+  function notify(message,kind){var cue=kind==='upgrade'?(/BUILT|OPEN|EXPANDED/.test(message)?'build':'upgrade'):/REWARD|MILESTONE|GOAL COMPLETE|EVENT COMPLETE|CHAPTER COMPLETE|WHILE AWAY|Prestige/.test(message)?'sparkle':/^Need |previous stage first/.test(message)?'denied':null;if(cue)playSound(cue,state.sound);if(kind!=='dispatch')dispatchSummary=null;var toast=$('toast'),header=document.querySelector('.panel-header');header.appendChild(toast);header.classList.add('notification-feedback');$('toast').classList.toggle('is-upgrade',kind==='upgrade');$('toast').textContent=message;$('toast').classList.add('show');header.style.setProperty('--notification-height',(toast.offsetHeight+12)+'px');clearTimeout(toastTimer);toastTimer=setTimeout(function(){$('toast').classList.remove('show');header.classList.remove('notification-feedback');header.style.removeProperty('--notification-height')},1600)}
 
-  var world=$('world'),canvas=document.createElement('canvas'),ctx=canvas.getContext('2d',{alpha:false});
+  var nativeMap=createNativeMap();
+  var world=$('world'),canvas=document.createElement('canvas'),ctx=canvas.getContext('2d',{alpha:!!nativeMap});
   if(!ctx){$('loadStatus').textContent='CANVAS COULD NOT START';$('loadRetry').hidden=false;return}
   world.insertBefore(canvas,world.firstChild);canvas.setAttribute('aria-hidden','true');
+  // Match the brighter map grade when the optional GPU compositor is unavailable.
+  // CSS does not alter the source pixels uploaded to WebGL, so the two grades never compound.
+  canvas.style.filter='brightness(1.06) saturate(1.09)';
   var screenCtx=ctx;
   // GPU compositor pilot (Desert Oasis only for now): the 2D frame is re-composited through WebGL2 with bloom,
   // grade, vignette and grain on an overlay canvas. Any failure leaves the plain canvas visible underneath.
   var glPost=null,glCanvas=null;
   try{
+    if(nativeMap)throw new Error('Native Metal owns map rendering');
     glCanvas=document.createElement('canvas');glPost=createGlPost(glCanvas);
     if(glPost){glCanvas.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none';glCanvas.setAttribute('aria-hidden','true');canvas.after(glCanvas)}
     else glCanvas=null;
   }catch(e){glPost=null;glCanvas=null}
   function glCompose(now){
+    if(nativeMap&&nativeMap.active){nativeMap.finish();return}
     var wanted=!!glPost;
     if(wanted){try{wanted=glPost.apply(canvas,now,nightAmount(),!motionPreference.matches)}catch(e){wanted=false;glPost=null}}
     if(glCanvas&&glCanvas.style.display!==(wanted?'block':'none'))glCanvas.style.display=wanted?'block':'none';
   }
-  var dpr=1,width=1,height=1,angle=.57,zoom=1,panX=0,panY=0,centerX=0,centerY=0,unit=32;
+  var dpr=1,width=1,height=1,angle=.57,zoom=1,panX=0,panY=0,centerX=0,centerY=0,unit=32,MAX_ZOOM=8;
   var colors={bg:'#202226',floorTop:'#303238',floorLeft:'#1c1f23',floorRight:'#272a30',grid:'#41444a',beltEdge:'#111419',belt:'#313943',slat:'#5b6470',oliveTop:'#f4f5ec',oliveLeft:'#a9b6be',oliveRight:'#d5dce0',darkTop:'#56616a',darkLeft:'#252e36',darkRight:'#3b4650',metalTop:'#eef2f3',metalLeft:'#8b9ba8',metalRight:'#becbd4',acid:'#f5c344',orange:'#ff7628',boxTop:'#d3a36c',boxLeft:'#8e6741',boxRight:'#b17f50'};
   var machinePos=[{x:-3,z:-3,y:9.4},{x:3,z:-3,y:9.4},{x:3,z:-.3,y:4.7},{x:-3,z:-.3,y:4.7},{x:-4,z:2.5,y:0},{x:4,z:2.5,y:0}];
   // The front-of-house display case along the front-right of the shop floor, planters built into both ends.
@@ -872,15 +907,45 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
 
   function resize(){var rect=world.getBoundingClientRect(),oldWidth=width,oldHeight=height,oldDpr=dpr;dpr=Math.min(window.devicePixelRatio||1,dprCap);width=Math.max(1,Math.round(rect.width));height=Math.max(1,Math.round(rect.height));if(oldWidth!==width||oldHeight!==height||oldDpr!==dpr){canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);}canvas.style.width=width+'px';canvas.style.height=height+'px';ctx.setTransform(dpr,0,0,dpr,0,0);applyCamera()}
   function cameraFrame(){
+    if(nativeMap&&!state.empire.activeStore){
+      // The app's Canvas fallback shares this frame; renderer failure must not move the shop under its labels.
+      // Fit the complete native diorama into the largest clear rectangle around the sheet.
+      var head=document.querySelector('.hud').getBoundingClientRect().bottom+12,rect={x:20,y:head,w:width-40,h:Math.max(100,visibleHeight()-head-14)};
+      if(width>=780){
+        var sheetRect=$('sheet').getBoundingClientRect(),side={x:20,y:head,w:Math.max(100,sheetRect.left-36),h:height-head-24},above={x:20,y:head,w:width-40,h:Math.max(100,sheetRect.top-head-16)};
+        // A collapsed menu no longer reserves a side column: center across the full map width.
+        rect=$('sheet').classList.contains('collapsed')?above:Math.min(side.w/35,side.h/29)>=Math.min(above.w/35,above.h/29)?side:above;
+      }
+      var fitUnit=Math.max(1,Math.min(rect.w/35,rect.h/29)),fx=rect.x+rect.w/2,fy=rect.y+rect.h/2;
+      return{x:fx+.8*fitUnit,y:fy+4.6*fitUnit,focusX:fx,focusY:fy,unit:fitUnit};
+    }
     if(state.empire.activeStore){
       // A branch plot fills the viewport: its measured projected extents (see BRANCH_THEMES[].frame) fit the width or the
       // height under the HUD, whichever binds. On desktop the tray floats over the bottom-right, where the plot's near
       // corner lands, so a little more room is kept under the plot there.
       var fit=BRANCH_THEMES[state.empire.activeStore-1].frame,wide=width>=780,top=document.querySelector('.hud').getBoundingClientRect().bottom+16,low=wide?64:16,space=Math.max(130,visibleHeight()-top-low),area=Math.max(260,width-(wide?56:24)),u=Math.max(1,Math.min(area/fit.w,space/fit.h));
-      return{x:width*.5-fit.cx*u,y:top+space*.5-fit.cy*u,unit:u}}
-    var visible=visibleHeight(),bottom=0,top=Math.min(160,visible*.26),space=Math.max(120,visible-top-bottom);return{x:width*.5,y:top+space*.66,unit:Math.max(1,Math.min((width-40)/33,space/28))*1.18}}
-  function applyCamera(){render.invalidated=true;var frame=cameraFrame();panX=Math.max(-width*1.6,Math.min(width*1.6,panX));panY=Math.max(-height*1.6,Math.min(height*1.6,panY));centerX=frame.x+panX;centerY=frame.y+panY;unit=frame.unit*zoom;if(state.empire.activeStore)updateBranchMarker()}
-  function zoomAt(next,x,y){next=Math.max(.65,Math.min(4,next));var ratio=next/zoom,frame=cameraFrame();panX=x-(x-centerX)*ratio-frame.x;panY=y-(y-centerY)*ratio-frame.y;zoom=next;applyCamera()}
+      return{x:width*.5-fit.cx*u,y:top+space*.5-fit.cy*u,focusX:width*.5,focusY:top+space*.5,unit:u}}
+    var visible=visibleHeight(),bottom=0,top=Math.min(160,visible*.26);var space=Math.max(120,visible-top-bottom);return{x:width*.5,y:top+space*.66,focusX:width*.5,focusY:top+space*.5,unit:Math.max(1,Math.min((width-40)/33,space/28))*1.18}}
+  function applyCamera(){
+    render.invalidated=true;var frame=cameraFrame(),scene=state.empire.activeStore?BRANCH_THEMES[state.empire.activeStore-1].frame:{w:35,h:29};
+    unit=frame.unit*zoom;
+    var bounds=cameraPanBounds({width:width,height:height,sceneWidth:scene.w,sceneHeight:scene.h,unit:unit,homeX:(frame.focusX-frame.x)*(1-zoom),homeY:(frame.focusY-frame.y)*(1-zoom)});
+    panX=Math.max(bounds.minX,Math.min(bounds.maxX,panX));panY=Math.max(bounds.minY,Math.min(bounds.maxY,panY));
+    centerX=frame.x+panX;centerY=frame.y+panY;if(state.empire.activeStore)updateBranchMarker();
+  }
+  function zoomAt(next,x,y){recentering=null;next=Math.max(.65,Math.min(MAX_ZOOM,next));var ratio=next/zoom,frame=cameraFrame();panX=x-(x-centerX)*ratio-frame.x;panY=y-(y-centerY)*ratio-frame.y;zoom=next;applyCamera()}
+  // Buttons return to the store's fitted center, above the tray; gestures retain their own focal point.
+  function zoomStore(next){
+    var frame=cameraFrame();zoom=Math.max(.65,Math.min(MAX_ZOOM,next));
+    panX=(frame.focusX-frame.x)*(1-zoom);panY=(frame.focusY-frame.y)*(1-zoom);applyCamera();
+  }
+  // Once the player has zoomed in, selecting a station also brings it into the usable map center above the tray.
+  // The zoom level is preserved; the fitted overview remains still so ordinary browsing never shifts the map.
+  function focusMapPoint(point){
+    if(zoom<=1.01||state.empire.activeStore)return;
+    var frame=cameraFrame(),screen=project(point.x,point.y||0,point.z);
+    panX+=frame.focusX-screen.x;panY+=frame.focusY-screen.y;applyCamera();
+  }
   // Desktop keyboard panning: arrows or WASD glide the camera while held. Direction is the way the view moves, so the
   // content slides the other way. Velocity eases toward the held direction, so a tap nudges and a hold coasts to speed,
   // and the render loop steps it on wall time so panning runs at any game speed, including paused.
@@ -892,18 +957,18 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var dt=keyPan.at===undefined?0:Math.min(.1,Math.max(0,(wallNow-keyPan.at)/1000)),ease=1-Math.exp(-dt*14);keyPan.at=wallNow;
     keyPan.vx+=(tx-keyPan.vx)*ease;keyPan.vy+=(ty-keyPan.vy)*ease;
     if(!len&&Math.hypot(keyPan.vx,keyPan.vy)<3){keyPan.vx=0;keyPan.vy=0}
-    panX+=keyPan.vx*dt;panY+=keyPan.vy*dt;applyCamera();
+    if(keyPan.vx||keyPan.vy)recentering=null;panX+=keyPan.vx*dt;panY+=keyPan.vy*dt;applyCamera();
   }
   function releasePanKeys(){for(var code in heldPanKeys)delete heldPanKeys[code]}
   function rotate(x,z){var c=Math.cos(angle),s=Math.sin(angle);return{x:x*c-z*s,z:x*s+z*c}}
-  function project(x,y,z){var r=rotate(x,z);return{x:centerX+r.x*unit,y:centerY+r.z*unit*.5-(y+sceneElevation)*unit,depth:r.z}}
+  function project(x,y,z){var r=rotate(x,z);var p={x:centerX+r.x*unit,y:centerY+r.z*unit*.5-(y+sceneElevation)*unit,depth:r.z};return nativeMap&&nativeMap.active?nativeMap.project(p,x,y+sceneElevation,z):p}
   // Gradients are rebuilt identically every frame while the camera is still, so reuse them per context, keyed by colour
   // and quarter-pixel geometry. The map is cleared when it grows large, so moving objects cannot leak entries.
   var gradientCaches=new WeakMap(),gradientCtx=null,gradientMap=null,hexCache=new Map();
   function cachedGradient(key,make){if(gradientCtx!==ctx){gradientCtx=ctx;gradientMap=gradientCaches.get(ctx);if(!gradientMap){gradientMap=new Map();gradientCaches.set(ctx,gradientMap)}}var g=gradientMap.get(key);if(g)return g;if(gradientMap.size>=12000)gradientMap.clear();g=make();gradientMap.set(key,g);return g}
   function isHexColor(fill){if(typeof fill!=='string')return false;var hit=hexCache.get(fill);if(hit===undefined){hit=/^#[0-9a-f]{6}$/i.test(fill);hexCache.set(fill,hit)}return hit}
   function q4(v){return Math.round(v*4)}
-  function poly(points,fill,stroke,opaque){if(occluding()&&(opaque||isHexColor(fill)))occludePoly(points);ctx.beginPath();ctx.moveTo(points[0].x,points[0].y);for(var i=1;i<points.length;i++)ctx.lineTo(points[i].x,points[i].y);ctx.closePath();if(isHexColor(fill)){
+  function poly(points,fill,stroke,opaque){if(nativeMap&&nativeMap.active){nativeMap.poly(points,fill,ctx.globalAlpha);return}if(occluding()&&(opaque||isHexColor(fill)))occludePoly(points);ctx.beginPath();ctx.moveTo(points[0].x,points[0].y);for(var i=1;i<points.length;i++)ctx.lineTo(points[i].x,points[i].y);ctx.closePath();if(isHexColor(fill)){
       var lo=points[0].y,hi=lo;for(var k=1;k<points.length;k++){var py=points[k].y;if(py<lo)lo=py;else if(py>hi)hi=py}hi=Math.max(lo+1,hi);
       ctx.fillStyle=cachedGradient(fill+'|v|'+q4(lo)+'|'+q4(hi),function(){var shade=ctx.createLinearGradient(0,lo,0,hi);shade.addColorStop(0,fill);shade.addColorStop(1,shadeColor(fill,.9));return shade});
     }else ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=Math.max(.4,Math.min(1,unit*.021));ctx.lineJoin='round';ctx.stroke()}}
@@ -916,7 +981,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var c={x:(base[0].x+base[2].x)/2,y:(base[0].y+base[2].y)/2},g=cachedGradient('c|'+alpha+'|'+q4(c.x)+'|'+q4(c.y)+'|'+q4(dx)+'|'+q4(dy),function(){var g=ctx.createLinearGradient(c.x,c.y,c.x+dx,c.y+dy);g.addColorStop(0,'rgba(14,28,20,'+alpha+')');g.addColorStop(1,'rgba(14,28,20,'+(alpha*.25)+')');return g});
     poly(hull,g);
   }
-  function drawBox(x,z,y,w,d,h,palette){var p=palette||[colors.oliveTop,colors.oliveLeft,colors.oliveRight],b0=project(x-w/2,y,z-d/2),b1=project(x+w/2,y,z-d/2),b2=project(x+w/2,y,z+d/2),b3=project(x-w/2,y,z+d/2);
+  function drawBox(x,z,y,w,d,h,palette){if(nativeMap&&nativeMap.active){nativeMap.box(x,z,y+sceneElevation,w,d,h,(palette||[colors.oliveTop])[0],ctx.globalAlpha);return}var p=palette||[colors.oliveTop,colors.oliveLeft,colors.oliveRight],b0=project(x-w/2,y,z-d/2),b1=project(x+w/2,y,z-d/2),b2=project(x+w/2,y,z+d/2),b3=project(x-w/2,y,z+d/2);
     // Furniture-sized boxes resting on a floor or counter cast; slabs, walls, rails and trim do not.
     var furniture=h>=.2&&h<=3.2&&w>=.15&&d>=.15&&w<=5&&d<=5&&y>=-.05&&y<=1.6;
     // Repeated furniture stops sharing pixel-identical fills: a tint nudge seeded by a coarse floor cell, so one
@@ -1007,6 +1072,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // own layer alphas.
   var nightScene=false,emissiveCtx=null,litDepth=0,EMISSIVE_WEIGHT={face:1,strip:.18,pane:.26};
   function lit(draw,kind){
+    if(nativeMap&&nativeMap.active){nativeMap.lit(draw);return}
     kind=kind||'face';litDepth++;draw(1);litDepth--;
     if(nightScene&&litDepth===0&&kind!=='spill'){var scene=ctx,weight=EMISSIVE_WEIGHT[kind];ctx=emissiveCtx;ctx.save();ctx.globalAlpha=scene.globalAlpha*weight;litDepth++;draw(weight);litDepth--;ctx.restore();ctx=scene}
   }
@@ -1209,6 +1275,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   // Branch maps: the same sky and light map, from the flat theme colour and the fixtures the branch registers.
   function branchBackdrop(color){
+    if(nativeMap&&nativeMap.active){ctx.clearRect(0,0,width,height);render.nightT=0;return}
     var nt=nightAmount();render.nightT=nt;
     var sky=ctx.createLinearGradient(0,0,0,height);sky.addColorStop(0,nt>0?mixHex(color,'#131b1e',nt*.85):mixHex(color,'#dfeadb',.1));sky.addColorStop(.55,mixHex(color,'#0e1417',nt*.87));sky.addColorStop(1,mixHex(color,'#0e1417',.16+nt*.74));
     ctx.fillStyle=sky;ctx.fillRect(0,0,width,height);
@@ -1216,6 +1283,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(nt>0){var halo=project(0,0,1);ctx.save();ctx.globalAlpha=nt;glow(halo.x,halo.y-unit*3,unit*20,'#4b6a6a30');ctx.restore();beginNightScene()}
   }
   function branchNight(fixtures,color,focus){
+    if(nativeMap&&nativeMap.active)return;
     var t=render.nightT||0;if(!(t>0))return;
     endNightScene();
     var ms=dpr*.5,map=nightSurface('light',Math.ceil(width*ms),Math.ceil(height*ms)),saved=sceneElevation;sceneElevation=0;
@@ -1239,6 +1307,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
 
   function ellipse(x,y,rx,ry,fill){
+    if(nativeMap&&nativeMap.active){nativeMap.ellipse(x,y,rx,ry,fill,ctx.globalAlpha);return}
     if(occluding()&&rx>=unit*.04&&isHexColor(fill))occludeEllipse(x,y,rx,ry);
     ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);
     if(isHexColor(fill)&&rx>unit*.11){
@@ -1250,6 +1319,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // A hand-drawn ellipse: eight seeded lobes joined by quadratics, for foliage, soil and other soft silhouettes.
   // Shading and occlusion match ellipse(); amp is the radius wobble (default ±14%).
   function blobEllipse(x,y,rx,ry,fill,seed,amp){
+    if(nativeMap&&nativeMap.active){nativeMap.ellipse(x,y,rx,ry,fill,ctx.globalAlpha);return}
     amp=amp===undefined?.14:amp;
     if(occluding()&&rx>=unit*.04&&isHexColor(fill))occludeEllipse(x,y,rx,ry);
     var pts=new Array(8);
@@ -1263,6 +1333,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   // A pointed leaf or calyx in screen space: two quadratics from base to tip, fat in the middle.
   function leafShape(px,py,len,ang,fill){
+    if(nativeMap&&nativeMap.active){nativeMap.leaf(px,py,len,ang,fill,ctx.globalAlpha);return}
     var ca=Math.cos(ang),sa=Math.sin(ang),tx=px+ca*len,ty=py+sa*len,mx=px+ca*len*.45,my=py+sa*len*.45,wx=-sa*len*.36,wy=ca*len*.36;
     ctx.beginPath();ctx.moveTo(px,py);ctx.quadraticCurveTo(mx+wx,my+wy,tx,ty);ctx.quadraticCurveTo(mx-wx,my-wy,px,py);
     ctx.fillStyle=fill;ctx.fill();
@@ -1302,6 +1373,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       ctx.moveTo(p.x+r*.32,p.y-r*.4);ctx.quadraticCurveTo(p.x+r*.62,p.y-r*.56,p.x+r*.52,p.y-r*.9);ctx.stroke()}
   }
   function plant(x,z,y,size,strain,growth){
+    if(nativeMap&&nativeMap.active){nativeMap.plant(x,z,y+sceneElevation,size,strain,growth,ctx.globalAlpha,sceneTime);return}
     var base=project(x,y,z),rim=project(x,y+.38,z),r=unit*.3;
     poly([{x:rim.x-r,y:rim.y},{x:rim.x+r,y:rim.y},{x:base.x+r*.72,y:base.y},{x:base.x-r*.72,y:base.y}],'#b67d59');
     ellipse(base.x,base.y,r*.72,r*.24,'#8b583f');ellipse(rim.x,rim.y,r*1.1,r*.48,'#e8b38a');blobEllipse(rim.x,rim.y,r*.84,r*.32,'#46382c',x*5.1+z*7.7,.1);
@@ -1312,9 +1384,10 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       var cy=top.y+unit*size*(.55-layer*.3),spread=unit*size*(.52-layer*.09)*(strain===undefined?1:[1,.88,.72,1.2][strain]);
       for(var side=-1;side<=1;side+=2){
         var bx=top.x,tx=bx+side*spread,ty=cy-spread*.6;
-        ctx.beginPath();ctx.moveTo(bx,cy);ctx.bezierCurveTo(bx+side*spread*.2,cy-spread*.5,tx-side*spread*.15,ty-spread*.22,tx,ty);ctx.bezierCurveTo(tx-side*spread*.1,ty+spread*.35,bx+side*spread*.55,cy+spread*.19,bx,cy);
-        ctx.fillStyle=side>0?['#46935c','#69b45b','#a4cf71'][layer]:['#357c50','#4e9a57','#80b567'][layer];if(strain!==undefined)ctx.fillStyle=[['#488857','#6baa64'],['#668b4a','#9cab61'],['#456f62','#7d9273'],['#386b62','#659b87']][strain][side>0?1:0];ctx.fill();
-        ctx.beginPath();ctx.moveTo(bx,cy);ctx.lineTo(tx,ty);ctx.strokeStyle='#b4da7b77';ctx.lineWidth=Math.max(.6,unit*.015);ctx.stroke();
+        var tone=strain!==undefined?[['#488857','#6baa64'],['#668b4a','#9cab61'],['#456f62','#7d9273'],['#386b62','#659b87']][strain][side>0?1:0]:side>0?['#46935c','#69b45b','#a4cf71'][layer]:['#357c50','#4e9a57','#80b567'][layer];
+        // Each leaf is a small hand of narrow leaflets, so the plant reads as foliage rather than two flat blobs.
+        var lean=side>0?-.38:Math.PI+.38,offsets=[-.85,-.42,0,.42,.85],lens=[.55,.8,1,.8,.55],leafLen=spread*1.15;
+        for(var lf=0;lf<5;lf++)leafShape(bx+side*spread*.12,cy,leafLen*lens[lf],lean+offsets[lf]*side,lf===2?shadeColor(tone,1.14):shadeColor(tone,lf%2?.92:1.04));
         if(strain!==undefined&&growth>.6){flowerBud(x+side*.1,z,y+.58+size*(.6+layer*.16),strain,.07+(growth-.6)*.13)}
         else if(strain===undefined&&size>.8){var bud=project(x+side*.09,y+.58+size*(.6+layer*.16),z);ellipse(bud.x,bud.y,unit*.09,unit*.13,layer%2?'#a3bd68':'#779b4b')}
       }
@@ -1335,6 +1408,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     ellipse(p.x,p.y,unit*w*.45,unit*d*.22,'#1c302b18');
   }
   function jar(x,z,y,strain){
+    if(nativeMap&&nativeMap.active){nativeMap.jar(x,z,y+sceneElevation,strain===undefined?visibleStrain(Math.round(Math.abs(x*7+z*11))):strain,ctx.globalAlpha);return}
     if(strain===undefined)strain=visibleStrain(Math.round(Math.abs(x*7+z*11)));
     objectShadow(x,z,y,.52,.5);
     var base=project(x,y,z),top=project(x,y+.55,z),r=unit*.23;
@@ -1351,7 +1425,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   // Glass: translucent tint plus a diagonal sheen so panes read as glazing rather than flat film.
   function glassPane(points,tint){poly(points,tint);var xs=points.map(function(q){return q.x}),ys=points.map(function(q){return q.y}),x0=Math.min.apply(null,xs),x1=Math.max.apply(null,xs),y0=Math.min.apply(null,ys),y1=Math.max.apply(null,ys),g=ctx.createLinearGradient(x0,y0,x1,y1);g.addColorStop(0,'rgba(255,255,255,.14)');g.addColorStop(.32,'rgba(255,255,255,.02)');g.addColorStop(.5,'rgba(255,255,255,.08)');g.addColorStop(.68,'rgba(255,255,255,0)');poly(points,g)}
-  function worldLine(points,color,weight){var w=Math.max(.65,unit*weight),q=new Array(points.length);ctx.beginPath();for(var i=0;i<points.length;i++){var v=project(points[i][0],points[i][1],points[i][2]);q[i]=v;if(i)ctx.lineTo(v.x,v.y);else ctx.moveTo(v.x,v.y)}ctx.strokeStyle=color;ctx.lineWidth=w;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();if(weight>=.05&&occluding()&&isHexColor(color))occludeStroke(q,w)}
+  function worldLine(points,color,weight){if(nativeMap&&nativeMap.active){nativeMap.line(points.map(function(p){return[p[0],p[1]+sceneElevation,p[2]]}),color,weight,ctx.globalAlpha);return}var w=Math.max(.65,unit*weight),q=new Array(points.length);ctx.beginPath();for(var i=0;i<points.length;i++){var v=project(points[i][0],points[i][1],points[i][2]);q[i]=v;if(i)ctx.lineTo(v.x,v.y);else ctx.moveTo(v.x,v.y)}ctx.strokeStyle=color;ctx.lineWidth=w;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();if(weight>=.05&&occluding()&&isHexColor(color))occludeStroke(q,w)}
   function constructionTape(a,b){
     // A vertical ribbon in world space stays attached to the stair posts when the camera moves.
     function point(t,lift){return project(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t+lift,a[2]+(b[2]-a[2])*t)}
@@ -1665,6 +1739,12 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(tier>=3){drawBox(x,z+1.21,.35,2.9,.06,.12,['#f4dda2','#ae8c50','#d6b56e']);drawBox(x+2.33,z-.3,.58,.035,.9,.32,['#f4dda2','#ae8c50','#d6b56e'])}
   }
   function drawPerson(x,z,now,id,moving,employee,bag,gait){
+    if(nativeMap&&nativeMap.active){
+      var nativeGait=Object.assign({phase:now*.007+id,amount:moving?1:0},gait),still=motionPreference.matches;
+      if(still){nativeGait.phase=0;nativeGait.amount=0;nativeGait.lean=0}nativeGait.still=still;
+      if(employee&&id<6){nativeGait.workActivity=gait&&gait.workActivity!==undefined?gait.workActivity:still?(stationWorking(id)?1:0):taskActivity[id];nativeGait.workCycle=still?.5:(1-Math.cos(taskClocks[id]*[.004,.0022,.006,.0035,.003,.003][id]+(gait&&gait.taskOffset||0)))*.5;nativeGait.workTime=taskClocks[id]}
+      nativeMap.person(x,z,sceneElevation,id,employee,bag,nativeGait,now,ctx.globalAlpha);return
+    }
     var reduced=motionPreference.matches,u=unit,p=project(x,0,z);
     var amount=reduced?0:(gait?gait.amount:(moving?1:0)),phase=gait?gait.phase:now*.007+id;
     var step=Math.sin(phase)*amount,bob=reduced?0:(Math.cos(phase*2)*.022*amount+Math.sin(now*.0018+id)*.009);
@@ -1751,7 +1831,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(employee||style===0){var cap=employee?'#527b69':accent;block(-.22,1.83,.43,.18,.1,cap);block(.07,1.72,.27,.06,.025,cap)}
     if(!employee&&(style===4||style===9)){var glassesY=1.57;[-1,1].forEach(function(side){var q=point(side*.095+facing*.025,glassesY);ctx.beginPath();roundedRectPath(q.x-u*.073,q.y-u*.048,u*.146,u*.1,u*.025);ctx.strokeStyle='#365764';ctx.lineWidth=u*.026;ctx.stroke()});limb([[-.025,glassesY],[.025,glassesY]],'#365764',.023)}
     if(!employee&&(style===3||style===6)){var mouth=point(.075,1.4);ellipse(mouth.x,mouth.y,u*.034,u*.018,'#b96356')}
-    if(bag){var bx=x+.48,bz=z+.1,by=.55+(reduced?0:Math.sin(phase-.65)*amount*.055+(gait&&gait.pickupAge!==undefined?.14*Math.exp(-gait.pickupAge*5):0));drawBox(bx,bz,by,.38,.3,.48,['#ead3a1','#9c8052','#c6aa75']);worldLine([[bx-.12,by+.48,bz],[bx-.12,by+.59,bz],[bx+.12,by+.59,bz],[bx+.12,by+.48,bz]],'#bd9f67',.03);drawBox(bx,bz+.16,by+.16,.2,.018,.22,['#496f50','#496f50','#496f50']);bagAppIcon(bx,bz+.18,by+.16,.22)}
+    if(bag){var bx=x+.48,bz=z+.1,by=.55+(reduced?0:Math.sin(phase-.65)*amount*.055+(gait&&gait.pickupAge!==undefined?.14*Math.exp(-gait.pickupAge*5):0)),labelColor=gait&&gait.bagColor||'#496f50';drawBox(bx,bz,by,.38,.3,.48,['#ead3a1','#9c8052','#c6aa75']);worldLine([[bx-.12,by+.48,bz],[bx-.12,by+.59,bz],[bx+.12,by+.59,bz],[bx+.12,by+.48,bz]],'#bd9f67',.03);drawBox(bx,bz+.16,by+.16,.2,.018,.22,[labelColor,labelColor,labelColor]);bagAppIcon(bx,bz+.18,by+.16,.22)}
   }
   // The order line snakes through three full-width rows of the rope pen in front of the order desk (z 7.0, 8.15 and
   // 9.3, between x −6.5 and −2.0, the gate at the right-hand end — a little back and to the right of the ID desk)
@@ -1815,7 +1895,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
         // else, so the rope never backs up through the kiosks to the door.
         if(c.lounge&&loungeSeats(state.lounge)>0&&loungeWaiting().length+customers.filter(function(q){return q.phase==='toLounge'&&q.waypoints.length}).length<LOUNGE_ROPE){
           // Past the doorman, along the kiosk row and back to the curtain.
-          c.phase='toLounge';c.routeKind='lounge';c.waypoints=[{x:-10.05,z:8.5},{x:-9.7,z:8.15},{x:-8.2,z:8.6},{x:-7.95,z:7.6},{x:-7.95,z:2.2},{x:LOUNGE_DOOR.x,z:2.2},LOUNGE_DOOR];return;
+          c.phase='toLounge';c.routeKind='lounge';c.loungeDistance=routeLength(loungeQueueRoute());c.waypoints=[];return;
         }
         c.lounge=false;
         var route=c.kiosk?kioskRoute(c.kioskIndex):queueRoute(false),join=laneJoinIndex(route);
@@ -1829,11 +1909,14 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(c.phase==='lounge'){if(!(c.loungeFade>0))c.walking=false;return}
     if(c.phase==='toLounge'){
       var loungeStartX=c.x,loungeStartZ=c.z,loungeBudget=dt*economy.walkSpeed(state.trafficLevel);
+      while(c.waypoints.length&&loungeBudget>0){var lp=c.waypoints[0],ldx=lp.x-c.x,ldz=lp.z-c.z,ld=Math.hypot(ldx,ldz),ls=Math.min(ld,loungeBudget);if(ld>.0001){c.x+=ldx/ld*ls;c.z+=ldz/ld*ls}loungeBudget-=ls;if(ld<=ls+.0001)c.waypoints.shift();else break}
       if(!c.waypoints.length){
-        // Waiting on the rope: shuffle back along the approach, one place per guest ahead.
-        var place=loungeWaiting().indexOf(c),spot=loungeWaitSpot(place);
-        var wdx=spot.x-c.x,wdz=spot.z-c.z,wd=Math.hypot(wdx,wdz),ws=Math.min(wd,loungeBudget);if(wd>.001){c.x+=wdx/wd*ws;c.z+=wdz/wd*ws}
-      }else while(c.waypoints.length&&loungeBudget>0){var lp=c.waypoints[0],ldx=lp.x-c.x,ldz=lp.z-c.z,ld=Math.hypot(ldx,ldz),ls=Math.min(ld,loungeBudget);if(ld>.0001){c.x+=ldx/ld*ls;c.z+=ldz/ld*ls}loungeBudget-=ls;if(ld<=ls+.0001)c.waypoints.shift();else break}
+        var queue=customers.filter(function(q){return q.phase==='toLounge'}).sort(function(a,b){return a.id-b.id}),place=queue.indexOf(c),target=place*1.7;
+        var ahead=queue[place-1];if(ahead)target=Math.max(target,(ahead.loungeDistance===undefined?routeLength(loungeQueueRoute()):ahead.loungeDistance)+1.7);
+        if(c.loungeDistance===undefined)c.loungeDistance=routeLength(loungeQueueRoute());
+        c.loungeDistance=Math.max(target,c.loungeDistance-loungeBudget);
+        var spot=routePoint(loungeQueueRoute(),c.loungeDistance);c.x=spot.x;c.z=spot.z;
+      }
       c.walking=Math.hypot(c.x-loungeStartX,c.z-loungeStartZ)>.001;return;
     }
     if(!c.ordered&&c.orderCounter!=null){
@@ -1911,17 +1994,18 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     ctx.save();ctx.globalAlpha=alpha;drawCustomer(c,now);ctx.restore();
   }
   function drawCustomer(c,now){
-    var moving=c.walking;
-    if(c.eventGuest||c.kind==='vip'){var guest=project(c.x,.02,c.z);ellipse(guest.x,guest.y,unit*.48,unit*.22,'#dac18b80');}
-    if(c.kind==='vip'){var vip=project(c.x,2.6,c.z);ctx.fillStyle='#f0cf7f';ctx.font='bold '+Math.max(9,unit*.25)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText('VIP',vip.x,vip.y)}
-    drawPerson(c.x,c.z,now,c.id,moving,false,c.bag,{phase:c.walkPhase||0,amount:c.walkAmount||0,facing:c.facing===undefined?.3:c.facing,lean:c.turnLean||0,pickupAge:c.effectAge});
-    if(atOrderCounter(c,state.orderCounters)||c.phase==='pickup'||c.phase==='toPickup'){var p=project(c.x,2.05,c.z);ellipse(p.x,p.y,unit*.2,unit*.18,c.ordered?'#c4e8a7':'#f0dfb0');ctx.fillStyle='#24412f';ctx.font='bold '+Math.max(8,unit*.22)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText(c.ordered?'✓':'…',p.x,p.y+unit*.075);var serviceIndex=c.ordered?5:4;if(!moving&&c.serviceStation===serviceIndex&&c.serviceElapsed>0){var serviceProgress=motionPreference.matches?Math.min(1,c.serviceElapsed*economy.counterLanes(state.lines[serviceIndex])/counterServiceDuration(serviceIndex)):(c.serviceVisual||0);ctx.beginPath();ctx.arc(p.x,p.y,Math.max(5,unit*.26),-Math.PI/2,-Math.PI/2+Math.PI*2*serviceProgress);ctx.strokeStyle=c.ordered?'#d5f3ad':'#f3d294';ctx.lineWidth=Math.max(1.5,unit*.06);ctx.lineCap='round';ctx.stroke();}}
+    var moving=c.walking,visualX=c.renderX===undefined?c.x:c.renderX,visualZ=c.renderZ===undefined?c.z:c.renderZ;
+    if(c.eventGuest||c.kind==='vip'){var guest=project(visualX,.02,visualZ);ellipse(guest.x,guest.y,unit*.48,unit*.22,'#dac18b80');}
+    if(c.kind==='vip'){var vip=project(visualX,2.6,visualZ);ctx.fillStyle='#f0cf7f';ctx.font='bold '+Math.max(9,unit*.25)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText('VIP',vip.x,vip.y)}
+    drawPerson(visualX,visualZ,now,c.id,moving,false,c.bag,{phase:c.walkPhase||0,amount:c.walkAmount||0,facing:c.facing===undefined?.3:c.facing,lean:c.turnLean||0,pickupAge:c.effectAge,heading:c.nativeHeading,bagColor:c.momentMatched?STRAINS[c.momentChoice.strain].color:null});
+    if(atOrderCounter(c,state.orderCounters)||c.phase==='pickup'||c.phase==='toPickup'){var p=project(visualX,2.05,visualZ);ellipse(p.x,p.y,unit*.2,unit*.18,c.ordered?'#c4e8a7':'#f0dfb0');ctx.fillStyle='#24412f';ctx.font='bold '+Math.max(8,unit*.22)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText(c.ordered?'✓':'…',p.x,p.y+unit*.075);var serviceIndex=c.ordered?5:4;if(!moving&&c.serviceStation===serviceIndex&&c.serviceElapsed>0){var serviceProgress=motionPreference.matches?Math.min(1,c.serviceElapsed*economy.counterLanes(state.lines[serviceIndex])/counterServiceDuration(serviceIndex)):(c.serviceVisual||0);ctx.beginPath();ctx.arc(p.x,p.y,Math.max(5,unit*.26),-Math.PI/2,-Math.PI/2+Math.PI*2*serviceProgress);ctx.strokeStyle=c.ordered?'#d5f3ad':'#f3d294';ctx.lineWidth=Math.max(1.5,unit*.06);ctx.lineCap='round';ctx.stroke();}}
     if(c.thought)drawThought(c);
   }
   function drawThought(c){
     var t=c.thought,reduced=motionPreference.matches,fade=Math.min(1,(t.duration-t.age)/.5);
     var pop=reduced?1:Math.min(1,t.age/.32),scale=pop<1?1-Math.pow(1-pop,3)*.6+Math.sin(pop*Math.PI)*.12:1;
-    var drift=reduced?0:Math.sin(t.age*2.2+c.id)*.03,head=project(c.x,2.05,c.z),cloud=project(c.x+.58,2.72+drift,c.z),u=unit*scale;
+    var visualX=c.renderX===undefined?c.x:c.renderX,visualZ=c.renderZ===undefined?c.z:c.renderZ;
+    var drift=reduced?0:Math.sin(t.age*2.2+c.id)*.03,head=project(visualX,2.05,visualZ),cloud=project(visualX+.58,2.72+drift,visualZ),u=unit*scale;
     ctx.save();ctx.globalAlpha*=fade*Math.min(1,pop*1.6);
     // Two rising puffs lead from the temple to the cloud.
     ellipse(head.x+(cloud.x-head.x)*.22,head.y+(cloud.y-head.y)*.28,u*.055,u*.05,'#ffffff');
@@ -2158,7 +2242,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     top:['FLOWER','PRE-ROLLS','EDIBLES','HOUSE GROWN'],bottom:['OPEN 7 DAYS','WALK-IN','PICKUP','DELIVERY']};
   function drawMarquee(emissive){
     var m=MARQUEE,steel=['#33372f','#14181a','#23292a'],cream='#f4e7bd',green='#1f4a37',ink='#193b2b';
-    var face=m.x+m.depth/2,segments=m.top.length,len=(m.zFront-m.zRear)/segments;
+    var face=m.x+m.depth/2+(nativeMap&&nativeMap.active?.025:0),segments=m.top.length,len=(m.zFront-m.zRear)/segments;
     var seam=.02,rowH=(m.y1-m.y0-seam)/2,botY0=m.y0,botY1=botY0+rowH,topY0=botY1+seam,topY1=m.y1;
     function bar(y0,y1,fill){
       var q=[project(face,y0,m.zFront),project(face,y0,m.zRear),project(face,y1,m.zRear),project(face,y1,m.zFront)];
@@ -2183,6 +2267,15 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function drawMarqueeRearPilaster(){var m=MARQUEE;drawBox(m.x,m.rearPilaster,0,m.depth,m.depth,m.y1,['#33372f','#14181a','#23292a'])}
   // Frosted globe pendants on slim brass rods under the mezzanine soffit, a soft pool on the floor beneath each.
   function globePendant(x,z,soffitY){
+    if(nativeMap&&nativeMap.active){
+      nativeMap.pendant(x,z,soffitY+sceneElevation,ctx.globalAlpha);
+      // The split-flap lettering is retained on the transparent overlay. Clear its coverage where
+      // this foreground fixture sits, otherwise its cells cut stripes through the Metal globe.
+      var center=project(x,soffitY-1.05,z),top=project(x,soffitY-.05,z),neck=project(x,soffitY-.75,z);
+      ctx.save();ctx.globalCompositeOperation='destination-out';ctx.globalAlpha=1;ctx.fillStyle='#000';
+      ctx.beginPath();ctx.ellipse(center.x,center.y,unit*.31,unit*.31*Math.sqrt(1.25),0,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.moveTo(top.x,top.y);ctx.lineTo(neck.x,neck.y);ctx.strokeStyle='#000';ctx.lineWidth=unit*.028;ctx.stroke();ctx.restore();return;
+    }
     var globeY=soffitY-1.05,canopy=project(x,soffitY-.02,z),g=project(x,globeY,z);
     ellipse(canopy.x,canopy.y,unit*.11,unit*.055,'#b7a16d');
     worldLine([[x,soffitY-.02,z],[x,globeY+.3,z]],'#c9ab6a',.028);
@@ -2206,7 +2299,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       var t=Math.PI-step*Math.PI/32;
       arch.push([x+Math.cos(t)*half,spring+Math.sin(t)*rise,z]);
     }
-    worldLine(arch,'#6a654e',.2);worldLine(arch,'#bda979',.12);warmStrip(arch.map(function(p){return [p[0],p[1]-.07,p[2]+.07]}),false,'face');
+    if(nativeMap&&nativeMap.active)nativeMap.arch(x,z,spring+sceneElevation,half,rise,ctx.globalAlpha);
+    else{ worldLine(arch,'#6a654e',.2);worldLine(arch,'#bda979',.12);warmStrip(arch.map(function(p){return [p[0],p[1]-.07,p[2]+.07]}),false,'face'); }
     var y=compact?2.72:3.35,w=compact?1.76:2.55,h=compact?.43:.55;
     var halo=project(x,y+h*.5,z);glow(halo.x,halo.y,unit*1.65,'#ffdb9460');
     drawBox(x,z,y,w,.16,h,['#aa9568','#203f31','#2d503c']);
@@ -2317,7 +2411,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   // A guest coming out of the lounge's back door is behind the cream column from this camera until they have walked
   // clear of it (x 9.5), so until then they are painted here, just before the column, rather than as a sorted job.
-  function leaverBehindColumn(c){return c.lounge&&c.phase==='leaving'&&c.x<9.5&&c.z>-4.6}
+  function leaverBehindColumn(c){var x=c.renderX===undefined?c.x:c.renderX,z=c.renderZ===undefined?c.z:c.renderZ;return c.lounge&&c.phase==='leaving'&&x<9.5&&z>-4.6}
   function retailDetails(fi,rear,now){
     var oak=['#cfb184','#836949','#b09266'],stone=['#e2dfd0','#969c8e','#c3c8b8'],brass=['#d7c28b','#8c774c','#b7a16c'];
     if(fi===0){
@@ -2408,11 +2502,14 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   var groundCache=null;
   function drawCachedGround(floor){
+    if(nativeMap&&nativeMap.active){nativeMap.floor(floor,sceneElevation,ctx.globalAlpha);return}
     var key=[width,height,dpr,unit,centerX,centerY,angle,stationTier(4),stationTier(5)].join(':');
     if(typeof OffscreenCanvas==='undefined'){paintGround();return}
     if(!groundCache||groundCache.key!==key){
-      var surface=new OffscreenCanvas(Math.ceil(width*dpr),Math.ceil(height*dpr)),mainContext=ctx;
-      ctx=surface.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+      var surface=groundCache?groundCache.surface:new OffscreenCanvas(Math.ceil(width*dpr),Math.ceil(height*dpr)),mainContext=ctx;
+      if(surface.width!==Math.ceil(width*dpr))surface.width=Math.ceil(width*dpr);
+      if(surface.height!==Math.ceil(height*dpr))surface.height=Math.ceil(height*dpr);
+      ctx=surface.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,width,height);
       try{paintGround()}finally{ctx=mainContext}
       groundCache={key:key,surface:surface};
     }
@@ -2440,6 +2537,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
 
   function drawGrowExhaustFan(x,z,y){
+    if(nativeMap&&nativeMap.active){nativeMap.fan(x,z,y+sceneElevation,sceneTime,ctx.globalAlpha);return}
     var faceZ=z+.13,center=project(x,y,faceZ);
     if(center.x+unit*1.5<0||center.x-unit*1.5>width||center.y+unit*1.6<0||center.y-unit*1.6>height)return;
     // The housing and rotor share the rear wall's plane, including its isometric shear.
@@ -2509,7 +2607,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // Backdrop: the same quiet studio gradient day and night, a halo behind the shop and a vignette at the edges. After
     // dark the gradient deepens and cools and the halo turns into the building's own spill, while the diorama is
     // painted on its own surface so the night light map can be multiplied over the building alone.
-    var nt=nightAmount();render.nightT=nt;
+    var nt=nativeMap&&nativeMap.active?0:nightAmount();render.nightT=nt;
+    if(nativeMap&&nativeMap.active){ctx.clearRect(0,0,width,height)}else{
     var sky=ctx.createLinearGradient(0,0,0,height);sky.addColorStop(0,mixHex('#3a433c','#131b1e',nt));sky.addColorStop(.5,mixHex('#4a544a','#1a2427',nt));sky.addColorStop(1,mixHex('#333b34','#0e1417',nt));ctx.fillStyle=sky;ctx.fillRect(0,0,width,height);
     var halo=project(0,0,1);
     if(nt<1){ctx.save();ctx.globalAlpha=1-nt;glow(halo.x,halo.y-unit*4,unit*24,'#98a88626');ctx.restore()}
@@ -2521,6 +2620,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     ellipse(lift.x,lift.y,unit*27,unit*16,softRadial(lift.x,lift.y,unit*27,liftC,.09));
     var settle=project(-17,0,13),settleC=parseHex(mixHex('#1e2b24','#0c1216',nt));
     ellipse(settle.x,settle.y,unit*21,unit*13,softRadial(settle.x,settle.y,unit*21,settleC,.14));
+    }
     var stone=['#c9c7b5','#737c70','#9fa796'],wood=['#bc9d73','#6f5943','#998063'],green=['#698775','#314b40','#496a56'],metal=['#414440','#191e1c','#2b302d'];
     // Contact shadow: one soft radial pool under the slab, biased toward the front-left, with no polygon edges to read as lines.
     var pool=project(0,-.33,1),shadowGradient=ctx.createRadialGradient(pool.x-unit*1.4,pool.y+unit*1.2,0,pool.x-unit*1.4,pool.y+unit*1.2,unit*23);
@@ -2946,7 +3046,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       worldLine([[-12.7,.04,7.45],[-12.1,.04,7.45]],'#e5d7ae',.05);
     }});
     if(!state.doorBuilt){jobs.push({depth:depthOf({x:x,z:z}),draw:function(){drawConstructionSite(x,z,1.5,2.1,function(){drawBox(x,z,0,.64,1.25,.12,steel);drawBox(x,z,.12,.6,1.2,.85,wood);drawBox(x,z,.97,.78,1.38,.13,['#efe4c8','#a9a18c','#d4c7a6'])})}});return}
-    jobs.push({depth:depthOf({x:x+.7,z:z}),draw:function(){drawPerson(x+.7,z,now,4,false,true,false)}});
+    jobs.push({depth:depthOf({x:x+.7,z:z}),draw:function(){drawPerson(x+.7,z,now,4,false,true,false,{amount:0,phase:0,role:'security'})}});
     jobs.push({depth:depthOf({x:x,z:z}),draw:function(){
       var rise=buildRise[6]||0,lift=rise*rise*1.1;if(rise>0){ctx.save();ctx.globalAlpha=.15+.85*(1-rise);sceneElevation-=lift}
       try{drawIdDesk()}finally{if(rise>0){sceneElevation+=lift;ctx.restore()}}
@@ -3161,7 +3261,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     customers.forEach(function(c){
       // Drawn back as a guest who will be let straight in comes down the last stretch, held while they step through,
       // then closed over them.
-      if(admitting&&c.phase==='toLounge'&&c.waypoints.length<=1&&c.z<1.6)target=1;
+      if(admitting&&c.phase==='toLounge'&&Math.hypot(c.x-LOUNGE_DOOR.x,c.z-LOUNGE_DOOR.z)<1.6)target=1;
       if(c.phase==='lounge'&&c.loungeFade>0){var p=1-c.loungeFade;target=Math.max(target,p<.4?1:p<.7?1-(p-.4)/.3:0)}
     });
     return target;
@@ -3390,30 +3490,59 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function depthOf(pos){return rotate(pos.x,pos.z).z}
   // A single failed frame (for example a zero-width canvas while the page is being laid out) must not stop the scene forever.
   function render(wallNow){var t0=performance.now();try{renderFrame(wallNow);render.frameMs=(render.frameMs||0)*.9+(performance.now()-t0)*.1;window.__canopyFrameMs=render.frameMs;if(render.frameMs>13&&dprCap>2){dprCap=2;resize()}}catch(e){if(!render.failed)console.error('Canopy frame failed; retrying',e);ctx=screenCtx;sceneElevation=0;render.failed=true;render.invalidated=true;requestAnimationFrame(render)}}
+  // Set one visual pose before any background, column or foreground pass chooses an occlusion layer.
+  function updateCustomerVisuals(frameDelta,wallDelta){
+    customers.forEach(function(c){
+      // Smooth between simulation ticks in real time, including at 2×/4× speed.
+      var blend=state.gameSpeed>0?1-Math.exp(-wallDelta*12):0,oldX=c.renderX===undefined?c.x:c.renderX,oldZ=c.renderZ===undefined?c.z:c.renderZ;
+      c.renderX=oldX+(c.x-oldX)*blend;c.renderZ=oldZ+(c.z-oldZ)*blend;
+      var dx=c.renderX-oldX,dz=c.renderZ-oldZ,distance=Math.hypot(dx,dz);
+      if(distance>.001){var wantedHeading=Math.atan2(dx,dz),oldHeading=c.nativeHeading===undefined?wantedHeading:c.nativeHeading;var headingDelta=Math.atan2(Math.sin(wantedHeading-oldHeading),Math.cos(wantedHeading-oldHeading));c.nativeHeading=oldHeading+headingDelta*(1-Math.exp(-wallDelta*6))}
+      c.walkPhase=(c.walkPhase||0)+distance*5;
+      var measuredSpeed=wallDelta>0?distance/wallDelta:0;c.visualWalkSpeed=(c.visualWalkSpeed||0)+(measuredSpeed-(c.visualWalkSpeed||0))*(1-Math.exp(-wallDelta*9));
+      var strideTarget=Math.min(1,c.visualWalkSpeed/economy.CUSTOMER_WALK_SPEED_BASE),strideRate=strideTarget>(c.walkAmount||0)?8:5;
+      c.walkAmount=(c.walkAmount||0)+(strideTarget-(c.walkAmount||0))*(1-Math.exp(-wallDelta*strideRate));
+      var previousFacing=c.facing===undefined?.3:c.facing;
+      var direction=distance>.001?Math.max(-1,Math.min(1,rotate(dx,dz).x/distance)):(c.facing===undefined?.3:c.facing);
+      c.facing=(c.facing===undefined?direction:c.facing)+(direction-(c.facing===undefined?direction:c.facing))*(1-Math.exp(-frameDelta*8));
+      c.turnLean=(c.turnLean||0)+((c.facing-previousFacing)*1.5-(c.turnLean||0))*(1-Math.exp(-frameDelta*12));
+      var serviceIndex=c.ordered?5:4,serviceTarget=c.serviceStation===serviceIndex?Math.min(1,(c.serviceElapsed||0)/economy.customerHandoff(serviceIndex,state.lines[serviceIndex],counterServiceDuration(serviceIndex))):0;
+      if(c.visualServiceStation!==serviceIndex){c.serviceVisual=0;c.visualServiceStation=serviceIndex;}c.serviceVisual=(c.serviceVisual||0)+(serviceTarget-(c.serviceVisual||0))*(1-Math.exp(-frameDelta*22));
+    });
+  }
   function renderFrame(wallNow){
-    if(document.hidden){render.last=wallNow;requestAnimationFrame(render);return}
-    keyboardPan(wallNow);
+    if(gameSuspended){render.last=wallNow;requestAnimationFrame(render);return}
+    keyboardPan(wallNow);cameraEase(wallNow);
+    if(nativeMap&&nativeMap.enabled&&!nativeMap.available(wallNow)){requestAnimationFrame(render);return}
     // Half rate in Low Power Mode. The shop is a thing people leave running for hours, so it is exactly the sort
     // of app that mode is asking to ease off, and at this scale the drop reads as a slightly softer pan rather
     // than as a stutter. The flag is set by the iOS bar; on the web it is never defined and this stays at 60.
-    var frameInterval=state.gameSpeed===0?250:(window.canopyPowerSaver?1000/30:1000/60);
-    if(!render.invalidated&&render.drawnAt!==undefined&&wallNow-render.drawnAt<frameInterval-1){requestAnimationFrame(render);return}
-    render.drawnAt=wallNow;render.invalidated=false;
-    var wallDelta=Math.min(.1,Math.max(0,(wallNow-(render.last===undefined?wallNow:render.last))/1000)),frameDelta=wallDelta*state.gameSpeed;
+    var frameInterval=state.gameSpeed===0?250:(nativeMap&&nativeMap.enabled?1000/(window.canopyPowerSaver?20:30):(window.canopyPowerSaver?1000/30:1000/60));
+    if(!render.invalidated&&render.drawnAt!==undefined&&wallNow-render.drawnAt<frameInterval-.5){requestAnimationFrame(render);return}
+    render.drawnAt=frameInterval&&render.drawnAt!==undefined&&!render.invalidated?wallNow-((wallNow-render.drawnAt+.5)%frameInterval)+.5:wallNow;render.invalidated=false;
+    var wallDelta=Math.min(.1,Math.max(0,(wallNow-(render.last===undefined?wallNow:render.last))/1000)),frameDelta=wallDelta*playbackRate(state.gameSpeed);
     render.last=wallNow;
     // A freshly built station rises out of its site on wall time, so the reveal plays at the same pace at every game speed.
     for(var site=0;site<buildRise.length;site++)if(buildRise[site]>0){buildRise[site]=motionPreference.matches?0:Math.max(0,buildRise[site]-wallDelta*1.7);render.invalidated=true}
     animationTime+=frameDelta*1000;for(var task=0;task<6;task++){var target=stationWorking(task)?1:0;taskActivity[task]+=(target-taskActivity[task])*(1-Math.exp(-frameDelta*5));taskClocks[task]+=frameDelta*1000*taskActivity[task]}
     for(var slot=0;slot<4;slot++){var phase=(taskClocks[1]/9000+slot*.23)%1;var targetGrowth=state.stock[1]>=storageCapacity()?1:phase>.86?Math.max(0,(1-phase)/.14):Math.min(1,phase/.72);cropGrowth[slot]+=(targetGrowth-cropGrowth[slot])*(1-Math.exp(-frameDelta*4))}var now=animationTime;
     sceneTime=motionPreference.matches?0:now;
+    if(nativeMap&&nativeMap.enabled){
+      var mapRect=world.getBoundingClientRect(),bg=state.empire.activeStore?BRANCH_THEMES[state.empire.activeStore-1].background:'#344a3e';
+      nativeMap.begin({width:width,height:height,x:centerX,y:centerY,unit:unit,angle:angle,night:nightAmount(),left:mapRect.left,top:mapRect.top,background:parseHex(bg).slice(0,3).map(function(n){return n/255})});
+      ctx.clearRect(0,0,width,height);
+    }
     if(state.empire.activeStore){
+      if(shopPlayUI)shopPlayUI.position(null,false);
       sceneElevation=0;
-      drawBranchMap({get ctx(){return ctx},width:width,height:height,unit:unit,project:project,box:drawBox,line:worldLine,poly:poly,ellipse:ellipse,blob:blobEllipse,leaf:leafShape,noise:seedNoise,lit:lit,plant:plant,jar:jar,carton:carton,person:drawPerson,depth:depthOf,backdrop:branchBackdrop,night:nightAmount()>0?branchNight:null},state.empire.activeStore-1,state.empire.stores[state.empire.activeStore-1].level,motionPreference.matches?0:now,state.empire.stores[state.empire.activeStore-1].projects,{lighting:visualLight(),store:state.empire.stores[state.empire.activeStore-1],event:eventStatus(state.empire),rewards:state.empire.rewards,network:state.empire.network,neighborhood:neighborhood(state.empire,state.empire.activeStore-1)});
+      drawBranchMap({native:!!(nativeMap&&nativeMap.active),get ctx(){return ctx},width:width,height:height,unit:unit,project:project,box:drawBox,line:worldLine,poly:poly,ellipse:ellipse,blob:blobEllipse,leaf:leafShape,noise:seedNoise,lit:lit,plant:plant,jar:jar,carton:carton,person:drawPerson,depth:depthOf,backdrop:branchBackdrop,night:nightAmount()>0?branchNight:null},state.empire.activeStore-1,state.empire.stores[state.empire.activeStore-1].level,motionPreference.matches?0:now,state.empire.stores[state.empire.activeStore-1].projects,{lighting:visualLight(),store:state.empire.stores[state.empire.activeStore-1],event:eventStatus(state.empire),rewards:state.empire.rewards,network:state.empire.network,neighborhood:neighborhood(state.empire,state.empire.activeStore-1)});
       // Main-store effects expire while visiting a branch rather than replaying on return.
       particles.forEach(function(p){p.life-=frameDelta*1.5});particles=particles.filter(function(p){return p.life>0});deliveryDrones.forEach(function(d){d.age+=frameDelta});deliveryDrones=deliveryDrones.filter(function(d){return d.age<d.delay+7.5});
       atmosphereFinish(nightAmount());
       glCompose(now);updateBranchMarker();requestAnimationFrame(render);return;
     }
+    updateCustomerVisuals(frameDelta,wallDelta);
+    if(shopPlayUI){var momentGuest=budtenderMoment&&customers.find(function(c){return c.id===budtenderMoment.customerId&&!c.ordered});var momentPoint=momentGuest?project(momentGuest.renderX===undefined?momentGuest.x:momentGuest.renderX,2.8,momentGuest.renderZ===undefined?momentGuest.z:momentGuest.renderZ):null;shopPlayUI.position(momentPoint,!!momentPoint&&momentPoint.x>24&&momentPoint.x<width-24&&momentPoint.y>90&&momentPoint.y<visibleHeight());}
     drawTower(now);
     stepTrimSpark(wallDelta);
     tierFlashes.forEach(function(life,i){if(life<=0)return;tierFlashes[i]=Math.max(0,life-frameDelta);var station=machinePos[i];ctx.save();ctx.globalAlpha=life*.8;for(var n=0;n<5;n++){var q=project(station.x-1.3+n*.65,station.y+1.6+(motionPreference.matches?0:(1-life)*.5),station.z+.7),r=unit*.09*life;ctx.strokeStyle='#f6e3ae';ctx.lineWidth=Math.max(.7,unit*.025);ctx.beginPath();ctx.moveTo(q.x-r,q.y);ctx.lineTo(q.x+r,q.y);ctx.moveTo(q.x,q.y-r);ctx.lineTo(q.x,q.y+r);ctx.stroke()}ctx.restore()});
@@ -3421,18 +3550,6 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     crateTime=(crateTime+frameDelta*speed*1.4)%1;
     var jobs=sceneJobs;
     customers.forEach(function(c){
-      var blend=1-Math.exp(-frameDelta*20),oldX=c.renderX===undefined?c.x:c.renderX,oldZ=c.renderZ===undefined?c.z:c.renderZ;
-      c.renderX=oldX+(c.x-oldX)*blend;c.renderZ=oldZ+(c.z-oldZ)*blend;
-      var dx=c.renderX-oldX,dz=c.renderZ-oldZ,distance=Math.hypot(dx,dz);
-      c.walkPhase=(c.walkPhase||0)+distance*5;
-      var strideTarget=frameDelta>0?Math.min(1,distance/frameDelta/2.2):(c.walkAmount||0);
-      c.walkAmount=(c.walkAmount||0)+(strideTarget-(c.walkAmount||0))*(1-Math.exp(-frameDelta*10));
-      var previousFacing=c.facing===undefined?.3:c.facing;
-      var direction=distance>.001?Math.max(-1,Math.min(1,rotate(dx,dz).x/distance)):(c.facing===undefined?.3:c.facing);
-      c.facing=(c.facing===undefined?direction:c.facing)+(direction-(c.facing===undefined?direction:c.facing))*(1-Math.exp(-frameDelta*8));
-      c.turnLean=(c.turnLean||0)+((c.facing-previousFacing)*1.5-(c.turnLean||0))*(1-Math.exp(-frameDelta*12));
-      var serviceIndex=c.ordered?5:4,serviceTarget=c.serviceStation===serviceIndex?Math.min(1,(c.serviceElapsed||0)/economy.customerHandoff(serviceIndex,state.lines[serviceIndex],counterServiceDuration(serviceIndex))):0;
-      if(c.visualServiceStation!==serviceIndex){c.serviceVisual=0;c.visualServiceStation=serviceIndex;}c.serviceVisual=(c.serviceVisual||0)+(serviceTarget-(c.serviceVisual||0))*(1-Math.exp(-frameDelta*22));
       var visual=Object.assign({},c,{x:c.renderX,z:c.renderZ});
       if(c.phase==='lounge'){if(c.loungeFade>0)jobs.push({depth:depthOf(visual),draw:function(){drawGuestThroughDrapes(visual,now)}})}
       else if(leaverBehindColumn(c)){}
@@ -3549,6 +3666,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // A final pass over the composed frame: at day a faint warm wash from the key light's corner ties the palette
   // together, and a whisper of world-anchored grain keeps large flat fills reading as material at every zoom.
   function atmosphereFinish(nightT){
+    if(nativeMap&&nativeMap.active)return;
     if(nightT<1){
       var sun=cachedGradient('sun|'+q4(width)+'|'+q4(height),function(){var g=ctx.createLinearGradient(width,0,width*.25,height*.8);g.addColorStop(0,'rgba(255,233,190,.075)');g.addColorStop(.5,'rgba(255,233,190,.02)');g.addColorStop(1,'rgba(255,233,190,0)');return g});
       ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=1-nightT;ctx.fillStyle=sun;ctx.fillRect(0,0,width,height);ctx.restore();
@@ -3631,7 +3749,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function updateCommerceControls(){
     if($('buyAutoDrone')){var drone=state.autoDrone,dronePrice=drone.owned?BULK_DRONE_COST:AUTO_DRONE_COST;
       $('buyAutoDrone').disabled=drone.bulk||state.money<dronePrice;$('autoDronePrice').textContent=drone.bulk?'Installed':fmt(dronePrice);$('buyAutoDrone').querySelector('span').textContent=drone.owned?'Bulk upgrade':'Install';$('autoDroneBenefit').textContent=drone.owned?'Up to 10 ready orders every 10s':'Send a ready order every 10s';
-      $('autoDroneToggle').disabled=!drone.owned&&state.money<AUTO_DRONE_COST;$('autoDroneToggle').textContent=!drone.owned?'Install '+fmt(AUTO_DRONE_COST):drone.enabled?'On':'Off';if(drone.owned)$('autoDroneToggle').setAttribute('aria-pressed',String(drone.enabled));else $('autoDroneToggle').removeAttribute('aria-pressed');$('autoDroneToggle').setAttribute('aria-label',drone.owned?'Automatic drone dispatch':('Install auto drone for '+fmt(AUTO_DRONE_COST)));
+      $('autoDroneToggle').disabled=!drone.owned&&state.money<AUTO_DRONE_COST;$('autoDroneToggleState').textContent=!drone.owned?'Install '+fmt(AUTO_DRONE_COST):drone.enabled?'On':'Off';if(drone.owned)$('autoDroneToggle').setAttribute('aria-pressed',String(drone.enabled));else $('autoDroneToggle').removeAttribute('aria-pressed');$('autoDroneToggle').setAttribute('aria-label',drone.owned?('Automatic drone dispatch '+(drone.enabled?'on':'off')+'. Press to turn '+(drone.enabled?'off':'on')):('Install auto drone for '+fmt(AUTO_DRONE_COST)));
       $('autoDroneBulk').hidden=!drone.owned;$('autoDroneBulk').disabled=!drone.bulk&&state.money<BULK_DRONE_COST;$('autoDroneBulk').textContent=drone.bulk?(drone.mode==='bulk'?'Bulk · up to 10':'Single · 1 order'):'Upgrade to bulk · '+fmt(BULK_DRONE_COST);if(drone.bulk)$('autoDroneBulk').setAttribute('aria-pressed',String(drone.mode==='bulk'));else $('autoDroneBulk').removeAttribute('aria-pressed');$('autoDroneBulk').setAttribute('aria-label',drone.bulk?'Bulk automatic dispatch':('Upgrade auto drone to bulk for '+fmt(BULK_DRONE_COST)));
       $('autoDroneStatus').textContent=!drone.owned?'A ready order every 10s':!drone.enabled?'Manual dispatch':state.gameSpeed===0?'Paused':drone.remaining>.05?'Next check in '+Math.ceil(drone.remaining)+'s':state.stock[3]<onlineSize()?'Waiting for '+(onlineSize()-state.stock[3])+' jars':'Ready to launch';}
 
@@ -3667,8 +3785,9 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     return (customers.some(function(c){return c.ordered&&!c.bag&&c.phase==='pickup'&&Math.hypot(c.x-4,c.z-4.9)<.15})?'Serving a customer':'Waiting for a customer at the counter')+heldNote;
   }
   function renderUI(periodic){
-    if(document.hidden)return;
+    if(gameSuspended||(periodic&&touches&&Object.keys(touches).length>1))return;
     if(!periodic)render.invalidated=true;
+    if(shopPlayUI)shopPlayUI.render();
     // Keeps the app's native tab bar in step with the selected tray and the badge dots. A no-op on the web, and
     // it only crosses the bridge when something actually changed.
     reportNativeTray();
@@ -3692,7 +3811,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // While the shop is still a building site the guide row counts sites instead of naming a bottleneck.
     if(!state.shopOpen){var raised=(state.doorBuilt?1:0)+state.lines.filter(function(n){return n>0}).length,nextSite=!state.doorBuilt?'Security':raised<7?shortNames[slow]:null;$('flowLabel').textContent='Under construction';$('flowText').textContent=raised+' of 7 sites raised'+(nextSite?' · next: '+nextSite:' · ready to open');$('flowText').title='Tap a site on the map to raise it. Customers arrive once the shop opens.';$('flowAction').textContent=nextSite?'Build '+nextSite:'Open the shop';$('flowAction').dataset.mode='fix'}
     var line=LINES[selected],open=isOpen(selected),level=state.lines[selected],price=cost(selected),affordable=open&&(!level||state.money>=price);
-    $('rate').dataset.paused=String(state.gameSpeed===0);$('money').textContent=fmt(state.money);$('rate').textContent=state.gameSpeed===0?'Paused':fmt((state.empire.activeStore?storeRate(state.empire,state.empire.activeStore-1):production()+branchRateNow())*state.gameSpeed)+'/s';document.querySelector('.stat.output small').textContent=state.empire.activeStore?'BRANCH INCOME':'CAPACITY';
+    $('rate').dataset.paused=String(state.gameSpeed===0);$('money').textContent=fmt(state.money);$('rate').textContent=state.gameSpeed===0?'Paused':fmt((state.empire.activeStore?storeRate(state.empire,state.empire.activeStore-1):production()+branchRateNow())*playbackRate(state.gameSpeed))+'/s';document.querySelector('.stat.output small').textContent=state.empire.activeStore?'BRANCH INCOME':'CAPACITY';
     var paused=state.gameSpeed===0;speedButtons.forEach(function(button){var value=Number(button.getAttribute('data-speed'));button.setAttribute('aria-pressed',String(value===state.gameSpeed||(value===1&&paused)))});
     var glyph=paused?'pause':'play';if(speedOne.getAttribute('data-glyph')!==glyph){speedOne.setAttribute('data-glyph',glyph);speedOne.innerHTML=paused?PAUSE_GLYPH:PLAY_GLYPH}speedOne.setAttribute('aria-label',paused?'Paused. Resume normal speed':'Normal speed. Press again to pause');speedOne.title=paused?'Paused · press to resume':'Normal speed · press again to pause';speedOne.parentElement.setAttribute('data-paused',String(paused));
     if(securitySelected){renderSecuritySelection()}else if(loungeSelected){renderLoungeSelection()}else{
@@ -3705,7 +3824,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var ICON_BATCH='<svg viewBox="0 0 24 24"><path d="M4 8h16v11H4zM4 8l3-4h10l3 4M12 4v4"/></svg>',ICON_CLOCK='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg>',ICON_TIER='<svg viewBox="0 0 24 24"><path d="M12 3l2.4 5.2 5.6.7-4.1 3.9 1.1 5.7L12 15.8 7 18.5l1.1-5.7L4 8.9l5.6-.7z"/></svg>',ICON_LANES='<svg viewBox="0 0 24 24"><path d="M5 5v14M12 5v14M19 5v14"/></svg>';
     var tiles=!level?'<span class="stat" title="Nothing to measure until the station is built">'+(selected<4?ICON_BATCH:ICON_CLOCK)+'<b>—</b><small>'+(selected<4?'per batch':'per customer')+'</small></span><span class="stat" title="Raise the site to see its output">'+(selected<4?ICON_CLOCK:ICON_LANES)+'<b>—</b><small>'+(selected<4?'per cycle':'counters')+'</small></span>':selected<4?
       '<span class="stat" title="Units finished each time the station completes a batch">'+ICON_BATCH+'<b>'+(selected===3?qtyShort(Math.round(batchSize(selected))):compactCount(batchSize(selected)))+'</b><small>per batch</small></span><span class="stat" title="Time to complete one batch">'+ICON_CLOCK+'<b>every '+secondsLabel([2,3,2,2][selected]/cycleSpeed(selected))+'</b></span>':
-      '<span class="stat" title="Time to serve one customer">'+ICON_CLOCK+'<b>'+secondsLabel(economy.customerHandoff(selected,level,counterServiceDuration(selected))/Math.max(1,state.gameSpeed))+'</b><small>per customer</small></span><span class="stat" title="Individually staffed counters">'+ICON_LANES+'<b>'+(selected===4?state.orderCounters:1)+'</b><small>'+((selected===4?state.orderCounters:1)===1?'counter':'counters')+'</small></span>';
+      '<span class="stat" title="Time to serve one customer">'+ICON_CLOCK+'<b>'+secondsLabel(economy.customerHandoff(selected,level,counterServiceDuration(selected))/(playbackRate(state.gameSpeed)||playbackRate(1)))+'</b><small>per customer</small></span><span class="stat" title="Individually staffed counters">'+ICON_LANES+'<b>'+(selected===4?state.orderCounters:1)+'</b><small>'+((selected===4?state.orderCounters:1)===1?'counter':'counters')+'</small></span>';
     var tierTile=tierTo?'<span class="stat tier" title="Output doubles at level '+tierTo+'">'+ICON_TIER+'<b>×2</b><small>at Lv '+tierTo+'</small><i class="tier-bar"><i style="width:'+tierPct+'%"></i></i></span>':'<span class="stat tier">'+ICON_TIER+'<b>Flagship</b><small>top tier</small></span>';
     var statusHtml='<span class="status-chip" data-tone="'+statusTone+'" title="'+statusText.replace(/"/g,'')+'"><i></i>'+statusWord+'</span>'+tiles+tierTile;
     if($('stationStatus').dataset.html!==statusHtml){$('stationStatus').innerHTML=statusHtml;$('stationStatus').dataset.html=statusHtml}
@@ -3729,7 +3848,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
         // Pickup only moves the basket through the retail tier, which both counters have to reach.
         var retail=economy.retailTier(state.lines),laterGain=basketAt(nextGain)>basketNow?'+1 at Lv '+nextGain:retail<TIER_LEVELS.length-1?'×2 when both counters reach Lv '+TIER_LEVELS[retail+1]:'';
         renderUpgradeComparison('Units per basket',basketNow,basketNext,false,false,false,{gain:function(before,after){return after>before?'+'+(after-before)+' per basket':'Same basket'+(laterGain?' · '+laterGain:'')}});
-      }else renderUpgradeComparison('Seconds per handoff',handoffNow/Math.max(1,state.gameSpeed),handoffNext/Math.max(1,state.gameSpeed),true,!level,false);
+      }else renderUpgradeComparison('Seconds per handoff',handoffNow/(playbackRate(state.gameSpeed)||playbackRate(1)),handoffNext/(playbackRate(state.gameSpeed)||playbackRate(1)),true,!level,false);
     }
     paintUpgradePreview(selected);
     $('nextAppearance').textContent=(tier?'Tier bonus ×'+economy.tierBoost(level)+' · ':'')+(tier<6?'Output ×2 and new look at level '+TIER_LEVELS[tier+1]+' · '+STATION_TIERS[tier+1]+(selected>=4?' · both counters at a tier double baskets':''):'Flagship equipment · upgrades keep increasing output');
@@ -3758,6 +3877,10 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     $('trainIdCheckerMax').disabled=!idMax.levels;$('trainIdCheckerMax').querySelector('span').textContent=idMax.levels?'+'+idMax.levels+' lv':'Maxed';$('trainIdCheckerMax').querySelector('b').textContent=idMax.levels?fmt(idMax.cost):'—';
     LINES.forEach(function(line,i){var quote=maxStaffTraining(i),button=$('staffMax'+i);button.disabled=!quote.levels;button.querySelector('span').textContent=quote.levels?'+'+quote.levels+' lv':'Maxed';button.querySelector('b').textContent=quote.levels?fmt(quote.cost):'—';button.setAttribute('aria-label','Train '+line.name+' employee by '+quote.levels+' levels for '+fmt(quote.cost))});
     staffButtons.forEach(function(button,i){button.disabled=!state.lines[i]||state.money<staffCost(i);button.querySelector('b').textContent=fmt(staffCost(i));button.querySelector('span').textContent='+'+Math.round(.3/(1+state.staff[i]*.3)*100)+'%';$('employeeInfo'+i).innerHTML='<span>Lv '+state.staff[i]+'</span><span>'+(1+state.staff[i]*.3).toFixed(1)+'× speed'+'</span>';button.title=state.money<staffCost(i)?fmt(staffCost(i)-state.money)+' more needed':'Train '+shortNames[i]+' employee';button.setAttribute('aria-label','Train '+shortNames[i]+' employee, '+button.querySelector('span').textContent+', '+fmt(staffCost(i)));});
+    var loungePrice=loungeStaffCost(),loungeQuote=maxLoungeStaffTraining(),loungeOpen=state.lounge>0;
+    $('loungeEmployeeInfo').innerHTML='<span>Lv '+state.loungeStaff+'</span><span>'+loungeStaffSpeed(state.loungeStaff).toFixed(1)+'× turns</span>';
+    $('trainLoungeStaff').disabled=!loungeOpen||state.money<loungePrice;$('trainLoungeStaff').querySelector('span').textContent='+'+Math.round(.3/loungeStaffSpeed(state.loungeStaff)*100)+'%';$('trainLoungeStaff').querySelector('b').textContent=fmt(loungePrice);$('trainLoungeStaff').title=!loungeOpen?'Open the lounge first':state.money<loungePrice?fmt(loungePrice-state.money)+' more needed':'Train lounge host';
+    $('trainLoungeStaffMax').disabled=!loungeQuote.levels;$('trainLoungeStaffMax').querySelector('span').textContent=loungeQuote.levels?'+'+loungeQuote.levels+' lv':'Maxed';$('trainLoungeStaffMax').querySelector('b').textContent=loungeQuote.levels?fmt(loungeQuote.cost):'—';
     var installedKiosks=kioskCount(),nextKioskPrice=[25000,50000,100000][installedKiosks];
     $('kioskCountLabel').textContent=installedKiosks+' / 3 installed';
     $('buyKiosk').disabled=installedKiosks===3||state.money<nextKioskPrice;
@@ -3771,15 +3894,15 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var maxUnlocked=state.lines[3]>=10,maxBatch=onlineBatch(maxUnlocked?Infinity:10);
     $('fulfillOnlineMax').disabled=!maxBatch.count;$('onlineMaxLabel').textContent=maxBatch.count?'Send '+maxBatch.count+(maxBatch.count===1?' order':' orders'):'Nothing to send';$('onlineMaxReward').textContent=maxBatch.count?fmt(maxBatch.reward):'';$('onlineMaxInfo').textContent=maxBatch.count?qtyLabel(maxBatch.jars)+(maxUnlocked?'':' · up to 10 per launch until Pack Lv 10'):(onlineRequestsReady()?'Needs '+qtyLabel(onlineSize())+' packed':'No requests waiting');
 
-    var built=deliveryBuilt();if(!built&&activeTray==='orders')paintDeliveryPreview();$('deliverySite').style.display=built?'none':'';$('buildDelivery').disabled=state.money<AUTO_DRONE_COST;$('deliveryFunding').value=Math.min(100,state.money/AUTO_DRONE_COST*100);$('deliveryFundingText').textContent=state.money>=AUTO_DRONE_COST?'Ready to build':fmt(state.money)+' saved · '+fmt(AUTO_DRONE_COST-state.money)+' to go';['.online-card','#dispatchHint','.auto-drone-control','.dispatch-stats'].forEach(function(sel){document.querySelector('[data-pane="orders"] '+sel).style.display=built?'':'none'});
+    var built=deliveryBuilt();document.querySelector('.dispatch-desk').classList.toggle('is-built',built);if(!built&&activeTray==='orders')paintDeliveryPreview();$('deliverySite').style.display=built?'none':'';$('buildDelivery').disabled=state.money<AUTO_DRONE_COST;$('deliveryFunding').value=Math.min(100,state.money/AUTO_DRONE_COST*100);$('deliveryFundingText').textContent=state.money>=AUTO_DRONE_COST?'Ready to build':fmt(state.money)+' saved · '+fmt(AUTO_DRONE_COST-state.money)+' to go';['.online-card','#dispatchHint','.auto-drone-control','.dispatch-stats'].forEach(function(sel){document.querySelector('[data-pane="orders"] '+sel).style.display=built?'':'none'});
     $('onlineTitle').textContent='#'+String(state.onlineCompleted+1).padStart(3,'0');$('onlineNeed').textContent=qtyLabel(onlineSize())+(state.productMenu.active===0?' ':' · ')+STRAINS[menuChoice(state.onlineCompleted)].name;$('receiptUnit').textContent=fmt(onlineValue())+' / '+unitShort();$('receiptFormat').textContent=format().name;$('receiptTotal').textContent=fmt(onlineSize()*onlineValue());var heldBags=customers.filter(function(c){return c.ordered&&!c.bag}).length;$('onlineStock').textContent=heldBags?heldBags+' walk-in bag'+(heldBags===1?'':'s')+' reserved first':'';renderDispatchDesk(maxBatch.count);$('dispatchHint').textContent=onlineRequestsReady()<1?'Waiting for the next web request. Requests arrive faster as you complete orders, and with Web marketing in the Shop.':state.stock[3]<onlineSize()?'Waiting for '+qtyLabel(onlineSize()-state.stock[3])+' more to be packed. Walk-in pickups stay reserved.':'';
     // The caption under the send button doubles as the hint line, so the card never changes height.
     if($('dispatchHint').textContent){$('onlineMaxInfo').textContent=$('dispatchHint').textContent;$('onlineMaxInfo').classList.add('is-hint')}else $('onlineMaxInfo').classList.remove('is-hint');var webItem=$('stockCountOnline').closest('.stock-item'),webCount=onlineRequestsReady();$('stockCountOnline').textContent=webCount;webItem.dataset.heat=String(requestHeat(webCount));$('stockCountOnline').classList.toggle('stock-full',webCount>=onlineRequestCap());webItem.title=webCount+' deliver'+(webCount===1?'y':'ies')+' requested · '+onlineRequestCap()+' max';$('onlineBadge').hidden=$('fulfillOnlineMax').disabled;
     renderCustomerRatings();
-    var waiting=customers.filter(inOrderFlow).length;$('queueCount').textContent=waiting+'/'+queueLimit();$('queueCount').classList.toggle('queue-full',waiting>=queueLimit());firstTimeHints(waiting);$('queueCount').parentElement.title=waiting>=queueLimit()?'Line is full · new customers walk away. Upgrade the order desk or its employees to add places.':'Customers waiting to order';$('pickupCount').textContent=customers.filter(function(c){return c.phase==='pickup'||c.phase==='toPickup'}).length;$('servedCount').textContent=state.sold.toLocaleString();state.stock.forEach(function(n,i){var packed=i===3,oz=state.productMenu.active===0,v=packed&&oz?n/8:n;$('stockCount'+i).innerHTML=compactCount(v)+(packed?'<small>'+(oz?'oz':state.productMenu.active===1?'jt':'ed')+'</small>':'');$('stockCount'+i).title=i===4?n+' / '+readyCapacity()+' packed orders ready for walk-in pickup':i===3?qtyLabel(n)+' packed of '+qtyLabel(storageCapacity())+(n>=storageCapacity()?' · Storage full':''):n+' / '+storageCapacity()+(n>=storageCapacity()?' · Storage full':'');$('stockCount'+i).classList.toggle('stock-full',n>=(i===4?readyCapacity():storageCapacity()))});var order=milestone(state.contract);
+    var waiting=customers.filter(inOrderFlow).length;firstTimeHints(waiting);state.stock.forEach(function(n,i){var packed=i===3,oz=state.productMenu.active===0,v=packed&&oz?n/8:n;$('stockCount'+i).innerHTML=compactCount(v)+(packed?'<small>'+(oz?'oz':state.productMenu.active===1?'jt':'ed')+'</small>':'');$('stockCount'+i).title=i===4?n+' / '+readyCapacity()+' packed orders ready for walk-in pickup':i===3?qtyLabel(n)+' packed of '+qtyLabel(storageCapacity())+(n>=storageCapacity()?' · Storage full':''):n+' / '+storageCapacity()+(n>=storageCapacity()?' · Storage full':'');$('stockCount'+i).classList.toggle('stock-full',n>=(i===4?readyCapacity():storageCapacity()))});var order=milestone(state.contract);
     if(order){$('orderName').textContent=state.lifetime>=order.goal?'ORDER READY TO CLAIM':order.name;$('orderProgress').textContent=fmt(Math.min(state.lifetime,order.goal))+' / '+fmt(order.goal);$('orderFill').style.width=Math.min(100,state.lifetime/order.goal*100)+'%';$('claimReward').textContent='+'+fmt(order.reward);$('claim').disabled=state.lifetime<order.goal}
     else{$('orderName').textContent='ALL ORDERS FILLED';$('orderProgress').textContent='COMPLETE';$('orderFill').style.width='100%';$('claimReward').textContent='✓';$('claim').disabled=true}
-    $('orderBadge').hidden=!order||state.lifetime<order.goal;
+    $('orderBadge').hidden=true;
     $('boostPreview').textContent=state.multiplier.toFixed(2)+'× → '+(state.multiplier*1.25).toFixed(2)+'× all stations';
     var boostPrice=boostCost(state.globalLevel);$('boostCost').textContent=state.globalLevel>=BOOST_MAX?'MAX':fmt(boostPrice);$('boost').disabled=state.globalLevel>=BOOST_MAX||state.money<boostPrice;
     var slowNow=slowestStation();
@@ -3800,9 +3923,9 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       var offset=parseFloat(getComputedStyle(previous.querySelector('.station-orbit rect')).strokeDashoffset);
       if(Number.isFinite(offset))stationOrbitOffset=offset;
     }
-    // Start the next card at the outgoing border's exact position on the 16-second circuit.
+    // Start the next card at the outgoing border's exact position on the 24-second circuit.
     var next=machineTabs[index];
-    if(next)next.style.setProperty('--station-orbit-delay',(stationOrbitOffset*.16)+'s');
+    if(next)next.style.setProperty('--station-orbit-delay',(stationOrbitOffset*.24)+'s');
     machineTabs.forEach(function(tab,i){tab.classList.toggle('is-bottleneck',i===index)});
     stationOrbitIndex=index;
   }
@@ -3837,11 +3960,53 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     run.onfinish=function(){pane.style.overflow='';if(paneGlide===run)paneGlide=null;if(done)done();fitControls()};
     run.oncancel=function(){pane.style.overflow='';if(paneGlide===run)paneGlide=null};
   }
-  function showTray(name){if(document.body.dataset.activeTray!==name)playSound('tap',state.sound);document.body.dataset.activeTray=name;if(state.empire.activeStore&&name!=='empire')visitStore(0,false);activeTray=name;var wasCollapsed=$('sheet').classList.contains('collapsed');panelOpen=true;$('sheet').classList.remove('collapsed');$('panelToggle').setAttribute('aria-expanded','true');$('panelToggle').textContent='⌄';var titles={factory:'Stations',employees:'Staff',orders:'Deliveries',boosts:'Shop',flowers:'Menu',empire:'Empire'};$('panelTitle').textContent=titles[name];trayTabs.forEach(function(t){t.setAttribute('aria-pressed',String(t.getAttribute('data-tray')===name))});Array.prototype.forEach.call(document.querySelectorAll('[data-pane]'),function(p){p.hidden=p.getAttribute('data-pane')!==name});if(wasCollapsed)glidePane(document.querySelector('[data-pane="'+name+'"]'),true);else if(paneGlide){paneGlide.cancel();paneGlide=null}fitControls()}
-  function collapsePanel(){var sheet=$('sheet'),wasOpen=!sheet.classList.contains('collapsed');if(wasOpen&&sheet.classList.contains('tall')){settleSheet('collapsed');return}panelOpen=false;$('panelToggle').setAttribute('aria-expanded','false');$('panelToggle').textContent='⌃';if(!wasOpen){fitControls();return}
+  function showTray(name){if(document.body.dataset.activeTray!==name)playSound('tap',state.sound);document.body.dataset.activeTray=name;if(state.empire.activeStore&&name!=='empire')visitStore(0,false);activeTray=name;var wasCollapsed=$('sheet').classList.contains('collapsed');panelOpen=true;$('sheet').classList.remove('collapsed');$('panelToggle').setAttribute('aria-expanded','true');$('panelToggle').setAttribute('aria-label','Collapse menu');$('panelToggle').title='Collapse menu';$('panelToggle').textContent='⌄';var titles={factory:'Stations',employees:'Staff',orders:'Deliveries',boosts:'Shop',flowers:'Menu',empire:'Empire'};$('panelTitle').textContent=titles[name];trayTabs.forEach(function(t){t.setAttribute('aria-pressed',String(t.getAttribute('data-tray')===name))});Array.prototype.forEach.call(document.querySelectorAll('[data-pane]'),function(p){p.hidden=p.getAttribute('data-pane')!==name});if(wasCollapsed)glidePane(document.querySelector('[data-pane="'+name+'"]'),true);else if(paneGlide){paneGlide.cancel();paneGlide=null}fitControls()}
+  function collapsePanel(){var sheet=$('sheet'),wasOpen=!sheet.classList.contains('collapsed');if(wasOpen&&sheet.classList.contains('tall')){settleSheet('collapsed');return}panelOpen=false;$('panelToggle').setAttribute('aria-expanded','false');$('panelToggle').setAttribute('aria-label','Open menu');$('panelToggle').title='Open menu';$('panelToggle').textContent='⌃';if(!wasOpen){fitControls();return}
     // The pane folds away first; the sheet only takes its collapsed shape once nothing is left to hide.
     glidePane(document.querySelector('[data-pane]:not([hidden])'),false,function(){if(!panelOpen){sheet.classList.add('collapsed');fitControls()}});fitControls()}
   trayTabs.forEach(function(tab){tab.onclick=function(){var name=tab.getAttribute('data-tray');if(name===activeTray&&panelOpen)collapsePanel();else showTray(name)}});
+  // The native tab bar lets a held finger scrub across destinations. Give the smaller, in-panel tab strips the
+  // same interaction without replacing their click handlers: those handlers remain the single source of truth
+  // for selection, sound, saving, and dynamically mounted views.
+  var scrubNavSelector='.machine-nav,.strain-nav,.shop-categories,.operation-tabs,.goals-view-nav,.reward-view-nav';
+  var subnavScrub=null,suppressedSubnavClick=null;
+  function scrubButtonAt(nav,x,y){
+    var hit=document.elementFromPoint(x,y),button=hit&&hit.closest&&hit.closest('button');
+    return button&&nav.contains(button)&&!button.disabled?button:null;
+  }
+  function finishSubnavScrub(e){
+    if(!subnavScrub||e.pointerId!==subnavScrub.pointerId)return;
+    if(subnavScrub.moved)suppressedSubnavClick={nav:subnavScrub.nav,until:performance.now()+500};
+    subnavScrub.nav.classList.remove('is-scrubbing');
+    if(subnavScrub.nav.hasPointerCapture&&subnavScrub.nav.hasPointerCapture(e.pointerId))subnavScrub.nav.releasePointerCapture(e.pointerId);
+    subnavScrub=null;
+  }
+  document.addEventListener('pointerdown',function(e){
+    if(e.button!==0||subnavScrub)return;
+    var button=e.target.closest&&e.target.closest('button'),nav=button&&button.closest(scrubNavSelector);
+    if(!nav||button.disabled)return;
+    subnavScrub={pointerId:e.pointerId,nav:nav,last:button,x:e.clientX,y:e.clientY,moved:false};
+  });
+  document.addEventListener('pointermove',function(e){
+    var scrub=subnavScrub;if(!scrub||e.pointerId!==scrub.pointerId)return;
+    var dx=e.clientX-scrub.x,dy=e.clientY-scrub.y;
+    if(!scrub.moved){
+      if(Math.abs(dy)>Math.abs(dx)&&Math.abs(dy)>6){subnavScrub=null;return}
+      if(Math.abs(dx)<=6)return;
+      scrub.moved=true;scrub.nav.classList.add('is-scrubbing');
+      if(scrub.nav.setPointerCapture)scrub.nav.setPointerCapture(e.pointerId);
+    }
+    e.preventDefault();
+    var button=scrubButtonAt(scrub.nav,e.clientX,e.clientY);
+    if(button&&button!==scrub.last){scrub.last=button;button.click()}
+  },{passive:false});
+  document.addEventListener('pointerup',finishSubnavScrub);
+  document.addEventListener('pointercancel',finishSubnavScrub);
+  document.addEventListener('click',function(e){
+    if(!e.isTrusted||!suppressedSubnavClick)return;
+    if(performance.now()<=suppressedSubnavClick.until&&suppressedSubnavClick.nav.contains(e.target)){e.preventDefault();e.stopImmediatePropagation()}
+    suppressedSubnavClick=null;
+  },true);
   // In the app the tab bar is a native Liquid Glass bar rather than this strip (see CanopyViewController): the
   // material only exists natively, and Apple puts it on the tab bar rather than in the content. The two halves
   // keep each other honest — a tap there calls in here, and every tray change reports back out, because the game
@@ -3852,18 +4017,18 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }catch(e){return null}})();
   if(nativeTray){
     window.canopyNativeTray={select:function(name){
-      if(!name)return;
+      if(!trayTabs.some(function(tab){return tab.getAttribute('data-tray')===name})||document.querySelector('.modal-wrap:not([hidden])')||document.body.classList.contains('guide-open')||!document.documentElement.classList.contains('age-ok'))return;
       if(name===activeTray&&panelOpen)collapsePanel();else showTray(name);
     }};
     // The badge dots the native bar draws mirror the ones the web strip hides and shows.
-    var BADGE_FOR={orders:'onlineBadge',boosts:'orderBadge',empire:'empireBadge'};
+    var BADGE_FOR={orders:'onlineBadge'};
     var lastTrayReport='';
     reportNativeTray=function(){
       var badges=Object.keys(BADGE_FOR).filter(function(key){var el=$(BADGE_FOR[key]);return el&&!el.hidden});
       // The opening walkthrough and the age gate both own the whole screen, and the bar has no business floating
       // over either: during the guide it sits on top of the very buttons the step is asking to be pressed, and
       // the tabs it offers are not reachable yet anyway.
-      var blocked=document.body.classList.contains('guide-open')||!document.documentElement.classList.contains('age-ok');
+      var blocked=document.body.classList.contains('guide-open')||!document.documentElement.classList.contains('age-ok')||!!document.querySelector('.modal-wrap:not([hidden])');
       // On a wide screen the sheet stops being a bottom drawer and becomes a panel down one side, and a tab bar
       // centred on the whole window would then float away from the thing it controls. Report where the panel
       // actually is so the bar can sit under it. On a phone the sheet spans the window and this says nothing.
@@ -3872,9 +4037,9 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
         var box=sheetEl.getBoundingClientRect();
         if(box.width&&box.width<window.innerWidth-24)anchor={left:Math.round(box.left),width:Math.round(box.width)};
       }
-      var payload={active:activeTray,badges:badges,hidden:blocked};
+      var payload={active:activeTray,expanded:panelOpen,badges:badges,hidden:blocked,ready:window.__shiftReady===true};
       if(anchor){payload.anchorLeft=anchor.left;payload.anchorWidth=anchor.width}
-      var signature=payload.active+'|'+badges.join(',')+'|'+blocked+'|'+(anchor?anchor.left+'x'+anchor.width:'full');
+      var signature=payload.ready+'|'+payload.active+'|'+panelOpen+'|'+badges.join(',')+'|'+blocked+'|'+(anchor?anchor.left+'x'+anchor.width:'full');
       if(signature===lastTrayReport)return;
       lastTrayReport=signature;
       try{nativeTray.postMessage(payload)}catch(e){}
@@ -3883,7 +4048,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // waiting for the next frame that happens to redraw the tray.
     if(window.MutationObserver){
       var watchChrome=new MutationObserver(function(){reportNativeTray()});
-      watchChrome.observe(document.body,{attributes:true,attributeFilter:['class']});
+      watchChrome.observe(document.body,{attributes:true,subtree:true,attributeFilter:['class','hidden']});
       watchChrome.observe(document.documentElement,{attributes:true,attributeFilter:['class']});
       window.addEventListener('resize',function(){reportNativeTray()});
       window.addEventListener('orientationchange',function(){setTimeout(reportNativeTray,120)});
@@ -3903,9 +4068,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(sheetGlide){sheetGlide.cancel();sheetGlide=null}
     if(paneGlide){paneGlide.cancel();paneGlide=null}
     sheet.style.height='';sheet.classList.add('fluid');
-    if(target==='collapsed'){panelOpen=false;$('panelToggle').setAttribute('aria-expanded','false');$('panelToggle').textContent='⌃';sheet.classList.remove('tall')}
+    if(target==='collapsed'){panelOpen=false;$('panelToggle').setAttribute('aria-expanded','false');$('panelToggle').setAttribute('aria-label','Open menu');$('panelToggle').title='Open menu';$('panelToggle').textContent='⌃';sheet.classList.remove('tall')}
     else{if(!panelOpen){showTray(activeTray);if(paneGlide){paneGlide.cancel();paneGlide=null}}sheet.classList.toggle('tall',target==='tall')}
-    $('panelExpand').setAttribute('aria-pressed',String(target==='tall'));$('panelExpand').setAttribute('aria-label',target==='tall'?'Return this panel to half height':'Fill the screen with this panel');
     // Measure the destination in its settled classes, then glide the sheet's height there with the pane stretching.
     sheet.classList.remove('fluid');if(target==='collapsed')sheet.classList.add('collapsed');
     var to=sheet.getBoundingClientRect().height;
@@ -3917,7 +4081,6 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     run.onfinish=function(){if(sheetGlide===run)finish()};
     run.oncancel=function(){if(sheetGlide===run){sheet.classList.remove('fluid');sheetGlide=null}};
   }
-  $('panelExpand').onclick=function(){settleSheet($('sheet').classList.contains('tall')?'half':'tall')};
   // A drag can start anywhere on the sheet that does not scroll: the header, the stats strip and the tab bar. Their
   // buttons still take taps, because a press that moves less than 8px is left alone.
   var sheetSurface=$('sheet');
@@ -3969,13 +4132,13 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   function renderLoungeSelection(){
     var level=state.lounge,tier=loungeTier(level),next=LOUNGE_TIERS[level]||null,price=loungeUpgradeCost(level),maxed=!next,affordable=!maxed&&state.money>=price;
-    var seated=loungeSeated(),seats=loungeSeats(level),jar=flowerValue(),take=loungeTake(level,jar),waiting=loungeWaiting().length,nowRate=loungeCurrentRate(level,seated,jar)*state.gameSpeed;
+    var seated=loungeSeated(),seats=loungeSeats(level),jar=flowerValue(),take=loungeTake(level,jar),waiting=loungeWaiting().length,nowRate=loungeCurrentRate(level,seated,jar,state.loungeStaff)*playbackRate(state.gameSpeed);
     $('machineNumber').textContent='BACK ROOM · '+(!tier?'UNDER CONSTRUCTION':seated>=seats?'FULL'+(waiting?' · '+waiting+' ON THE ROPE':''):seated?seated+' OF '+seats+' SEATED':'SEATS FREE');
     $('machineName').textContent='SMOKING LOUNGE';$('machineLevel').textContent=level;$('machineRate').textContent=tier?fmt(nowRate)+'/s · '+fmt(take.total)+' / session':'Under construction';
     var ICON_SEAT='<svg viewBox="0 0 24 24"><path d="M6 11V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v5M4 11h16v4H4zM6 15v5M18 15v5"/></svg>',ICON_GUESTS='<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M15 20c0-2.6 1.5-4.4 3.7-4.9 1.4.3 2.3 1.6 2.3 3.4"/></svg>',ICON_TICKET='<svg viewBox="0 0 24 24"><path d="M4 8a2 2 0 0 0 2-2h12a2 2 0 0 0 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 0-2 2H6a2 2 0 0 0-2-2v-3a2 2 0 0 0 0-4zM9 6v12"/></svg>',ICON_JAR='<svg viewBox="0 0 24 24"><path d="M8 4h8v3H8zM7 7h10v11a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2zM7 11h10"/></svg>',ICON_SESSIONS='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg>',ICON_RATE='<svg viewBox="0 0 24 24"><path d="M4 17l5-6 4 3 7-8M15 6h5v5"/></svg>',ICON_BANKED='<svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v4c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 10v4c0 1.7 3.1 3 7 3s7-1.3 7-3v-4M5 14v4c0 1.7 3.1 3 7 3s7-1.3 7-3v-4"/></svg>';
     var chipTone=!tier?'wait':seated>=seats?'stop':seated?'go':'wait',chipWord=!tier?'Site':seated>=seats?'Full':seated?seated+' of '+seats+' seated':'Seats free';
     var loungeHtml='<span class="status-chip" data-tone="'+chipTone+'"><i></i>'+chipWord+'</span>'+
-      (tier?'<span class="stat" title="What the lounge is making right now: '+seated+' of '+seats+' seats taken, each worth the '+fmt(take.total)+' take once per '+tier.session+'-second session">'+ICON_RATE+'<b>'+fmt(nowRate)+'/s</b><small>now</small></span>'+
+      (tier?'<span class="stat" title="What the lounge is making right now: '+seated+' of '+seats+' seats taken, each worth the '+fmt(take.total)+' take once per '+loungeStaffSessionSeconds(level,state.loungeStaff).toFixed(1)+'-second session">'+ICON_RATE+'<b>'+fmt(nowRate)+'/s</b><small>now</small></span>'+
       '<span class="stat" title="Banked by the lounge since it opened: every cover and every jar sold at the lounge premium">'+ICON_BANKED+'<b>'+fmt(state.loungeEarned)+'</b><small>total</small></span>'+
       '<span class="stat tier" title="One guest in '+tier.share+' through the door heads for the curtain; VIPs twice as often">'+ICON_GUESTS+'<b>1 in '+tier.share+'</b><small>guests</small></span>'+
       '<span class="stat" title="Seats in the back room">'+ICON_SEAT+'<b>'+seats+'</b><small>seats</small></span>'+
@@ -4082,6 +4245,25 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       var pc=target.getContext('2d');pc.clearRect(0,0,target.width,target.height);
       if(right>=left&&bottom>=top){var w=right-left+1,h=bottom-top+1,scale=Math.min((target.width-24)/w,(target.height-16)/h);pc.drawImage(art,left,top,w,h,(target.width-w*scale)/2,target.height-h*scale-6,w*scale,h*scale)}
       target.dataset.art='1';
+    }finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle;sceneElevation=savedElevation}
+  }
+  // Each construction card shows the actual finished station artwork. Drawing into an isolated canvas keeps the
+  // walkthrough in sync with later visual upgrades without changing the live shop or its camera.
+  function paintGuideStep(target,index){
+    if(!target)return;var key=String(index);if(target.dataset.art===key)return;
+    var art=document.createElement('canvas');art.width=720;art.height=480;
+    var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle,savedElevation=sceneElevation;
+    try{
+      ctx=art.getContext('2d',{willReadFrequently:true});unit=82;centerX=360;centerY=390;angle=.57;sceneElevation=0;
+      if(index==='door'){
+        drawBox(0,0,-.24,2.6,2.6,.24,['#cbb085','#7f6a4b','#ac9168']);
+        drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5']);drawPerson(-.55,-.45,0,7,false,true,false);
+      }else drawStage({x:0,z:0},index,0,true);
+      var pixels=ctx.getImageData(0,0,art.width,art.height).data,left=art.width,right=0,top=art.height,bottom=0;
+      for(var y=0;y<art.height;y++)for(var x=0;x<art.width;x++)if(pixels[(y*art.width+x)*4+3]>180){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y)}
+      var pc=target.getContext('2d');pc.clearRect(0,0,target.width,target.height);
+      if(right>=left&&bottom>=top){var w=right-left+1,h=bottom-top+1,scale=Math.min((target.width-48)/w,(target.height-20)/h);pc.drawImage(art,left,top,w,h,(target.width-w*scale)/2,target.height-h*scale-8,w*scale,h*scale)}
+      target.dataset.art=key;
     }finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle;sceneElevation=savedElevation}
   }
   function paintCustomerGuide(){
@@ -4208,7 +4390,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   function paintLoungeThumbnail(){var card=document.querySelector('[data-lounge] canvas');if(!card)return;var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;ctx=card.getContext('2d');if(ctx){ctx.clearRect(0,0,80,100);unit=22;centerX=40;centerY=94;angle=.57;drawLoungeThumb()}ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
   function paintThumbnails(){paintSecurityThumbnail();paintLoungeThumbnail();var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;machineTabs.forEach(function(tab,i){ctx=tab.querySelector('canvas').getContext('2d');if(!ctx)return;ctx.clearRect(0,0,80,100);unit=25;centerX=40;centerY=97;angle=.57;drawStage({x:0,z:0},i,0)});ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
-  function selectLounge(){securitySelected=false;loungeSelected=true;showTray('factory');renderUI();var card=document.querySelector('[data-lounge]');if(card&&card.scrollIntoView)card.scrollIntoView({block:'nearest',inline:'nearest'});haptic('select')}
+  function selectLounge(){securitySelected=false;loungeSelected=true;showTray('factory');focusMapPoint({x:LOUNGE_DOOR.x,y:1.25,z:LOUNGE_DOOR.z});renderUI();var card=document.querySelector('[data-lounge]');if(card&&card.scrollIntoView)card.scrollIntoView({block:'nearest',inline:'nearest'});haptic('select')}
   // Each lounge tier is bought outright; the first one raises the doorway out of its hoarding.
   function upgradeLounge(){
     var price=loungeUpgradeCost(state.lounge);if(price===null)return;if(state.money<price)return notify('Need '+fmt(price-state.money)+' more');
@@ -4216,8 +4398,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(wasLot)buildRise[7]=1;burst({x:LOUNGE_DOOR.x,z:LOUNGE_DOOR.z},'#f0a7c8');playSound(wasLot?'build':'sparkle',state.sound);telemetry.send('lounge_tier',{tier:state.lounge});
     notify(wasLot?'LOUNGE OPEN · '+tier.name:'LOUNGE · '+tier.name.toUpperCase(),'upgrade');paintThumbnails();updateMarkers.key=null;render.invalidated=true;renderUI();save();haptic('firm');
   }
-  function selectSecurity(){loungeSelected=false;securitySelected=true;showTray('factory');renderUI();var card=document.querySelector('[data-security]');if(card&&card.scrollIntoView)card.scrollIntoView({block:'nearest',inline:'nearest'});haptic('select')}
-  function selectMachine(i){securitySelected=false;loungeSelected=false;selected=i;showTray('factory');renderUI();if(machineTabs[i]&&machineTabs[i].scrollIntoView)machineTabs[i].scrollIntoView({block:'nearest',inline:'nearest'});haptic('select')}
+  function selectSecurity(){loungeSelected=false;securitySelected=true;showTray('factory');focusMapPoint({x:DOOR_POS.x,y:.75,z:DOOR_POS.z});renderUI();var card=document.querySelector('[data-security]');if(card&&card.scrollIntoView)card.scrollIntoView({block:'nearest',inline:'nearest'});haptic('select')}
+  function selectMachine(i){securitySelected=false;loungeSelected=false;selected=i;showTray('factory');var station=machinePos[i];focusMapPoint({x:station.x,y:station.y+1,z:station.z+.35});renderUI();if(machineTabs[i]&&machineTabs[i].scrollIntoView)machineTabs[i].scrollIntoView({block:'nearest',inline:'nearest'});haptic('select')}
   // Construction: the door and each station are raised for free, in line order, with the intro explaining what each one does.
   // Building never charges cash because a shop with no pickup counter cannot earn any.
   var DOOR_POS={x:-9.1,z:9.3};
@@ -4271,7 +4453,12 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     body.appendChild($('branchHint'+i));heading.remove();
     while(article.firstChild)body.appendChild(article.firstChild);
     article.appendChild(toggle);article.appendChild(body);
-    toggle.onclick=function(){var open=toggle.getAttribute('aria-expanded')!=='true';expandBranch(open?i:-1);if(open)requestAnimationFrame(function(){toggle.scrollIntoView({block:'start'})})};
+    toggle.onclick=function(){
+      // A store has no management tabs until it exists. Its home card is the opening action;
+      // once owned, the same card becomes the familiar tab expander.
+      if(!state.empire.stores[i].level){if(!toggle.disabled)$('branchBuy'+i).click();return}
+      var open=toggle.getAttribute('aria-expanded')!=='true';expandBranch(open?i:-1);if(open)requestAnimationFrame(function(){toggle.scrollIntoView({block:'start'})})
+    };
   });
   $('bulkDispatch').onclick=function(){var reward=dispatchBulk(state);if(reward){queueDeliveryWave(1);notify('BULK DELIVERY · +'+fmt(reward),'upgrade');save();renderUI()}};
   var productIcons=[
@@ -4279,8 +4466,18 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     '<path d="m5 23 17-17 5 5-17 17Z M8 20l5 5m7-17 5 5M7 7c-3-3 3-3 0-6"/>',
     '<rect x="5" y="5" width="22" height="22" rx="4"/><path d="M5 16h22M16 5v22M9 10h3m8 0h3M9 21h3m8 0h3"/>'
   ];
-  // Each strain's card carries its own Sell-as pills (see renderFlowers); a format's unlock is paid once, for every strain.
-  function chooseStrainFormat(strain,index){if(chooseFormat(state,index,strain)){syncDominantFormat();save();renderUI();notify(STRAINS[strain].name.toUpperCase()+' · SOLD AS '+FORMATS[index].name.toUpperCase(),'upgrade')}}
+  // Each strain's card carries its own Sell-as pills (see renderFlowers); each format is purchased per strain.
+  function chooseStrainFormat(strain,index){
+    // Rebuilding the strain card removes the pressed format button. Keep the menu's reading position stable instead
+    // of allowing the browser to scroll the freshly recreated control back into view.
+    var menuPane=document.querySelector('[data-pane="flowers"]'),scrollTop=menuPane?menuPane.scrollTop:0;
+    var wasUnlocked=formatUnlocked(state.productMenu,strain,index);
+    if(chooseFormat(state,index,strain)){
+      syncDominantFormat();save();renderUI();
+      if(menuPane){menuPane.scrollTop=scrollTop;requestAnimationFrame(function(){menuPane.scrollTop=scrollTop})}
+      notify(STRAINS[strain].name.toUpperCase()+' · '+(wasUnlocked?'SOLD AS ':'BOUGHT ')+FORMATS[index].name.toUpperCase(),'upgrade');
+    }
+  }
   var prestigePanel=document.createElement('details');prestigePanel.className='depth-panel prestige-panel';prestigePanel.innerHTML=
     '<summary><svg class="prestige-sprout" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V11M12 14C3 14 3 7 3 7s9-1 9 7ZM12 11c0-8 9-9 9-9s0 9-9 9Z"/></svg><span>New beginnings</span><small id="prestigeStatus"></small><svg class="prestige-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></summary>'+
     '<div class="prestige-body"><div class="prestige-rank-track" id="prestigeComparison" role="group"><div class="prestige-rank"><span id="prestigeCurrentRank"></span><strong id="prestigeCurrentRate"></strong><small>base sales</small></div><svg id="prestigeArrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h17m-6-6 6 6-6 6"/></svg><div class="prestige-rank is-next" id="prestigeNext"><span id="prestigeNextRank"></span><strong id="prestigeNextRate"></strong><small>base sales</small></div></div>'+
@@ -4288,8 +4485,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     '<dl class="prestige-carryover" id="prestigeCarryover"><div><dt>Keep</dt><dd>Permanent rank bonus &amp; sound setting</dd></div><div><dt>Restart</dt><dd>Cash, stores &amp; all shop progress</dd></div></dl><button id="prestigeStart" type="button" aria-describedby="prestigeFundingStatus prestigeCarryover"></button></div>';
   document.querySelector('[data-empire-section="growth"]').append(prestigePanel);
   var soundButton=document.createElement('button');soundButton.id='soundToggle';soundButton.type='button';soundButton.onclick=function(){state.sound=!state.sound;playSound('sale',state.sound);save();renderUI()};document.querySelector('.shop-reset').prepend(soundButton);
-  if($('journalGrid'))$('journalGrid').addEventListener('click',function(e){var b=e.target.closest('[data-cross]');if(b&&!b.disabled)startCross(b.dataset.cross)});
-  var ambienceButton=document.createElement('button');ambienceButton.id='ambienceToggle';ambienceButton.type='button';ambienceButton.onclick=function(){state.ambience=!state.ambience;save();renderUI()};document.querySelector('.shop-reset').prepend(ambienceButton);
+  if($('journalGrid'))$('journalGrid').addEventListener('click',function(e){var b=e.target.closest('button');if(!b||b.disabled)return;if(b.hasAttribute('data-cross'))startCross(b.dataset.cross);else if(b.hasAttribute('data-journal-parent'))$('strainTab'+b.dataset.journalParent).click();else if(b.hasAttribute('data-journal-lab')){showTray('boosts');shopBrowser.show(3);renderUI();$('componentBuy19').parentElement.scrollIntoView({block:'nearest'})}});
   // Backup controls live in Settings, which drives these through the same hidden-proxy pattern as the toggles.
   var exportButton=document.createElement('button');exportButton.id='exportSave';exportButton.type='button';exportButton.textContent='Export save';exportButton.onclick=exportSave;document.querySelector('.shop-reset').prepend(exportButton);
   var importInput=document.createElement('input');importInput.id='importSaveInput';importInput.type='file';importInput.accept='application/json,.json';importInput.hidden=true;
@@ -4303,21 +4499,14 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   $('prestigeConfirm').onclick=function(){var offer=prestigeOffer(state);if(!offer.eligible)return;var rank=offer.rank+1,sound=state.sound;resetRun(rank,sound);prestigeDialog.hidden=true;save();showTray('factory');renderUI();notify('Prestige '+rank+' · permanent sales bonus','upgrade')};
   var droneRow=document.createElement('div');droneRow.className='shop-upgrade';droneRow.innerHTML='<div class="shop-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="11" y="11" width="10" height="9" rx="2"/><path d="m11 12-5-5m15 5 5-5m-15 12-5 6m15-6 5 6M2 7h8m12 0h8M2 25h8m12 0h8M13 24h6"/></svg></div><div class="shop-copy"><h2>Auto drone</h2><strong id="autoDroneBenefit">Send a ready order every 10s</strong></div><button id="buyAutoDrone"><span>Install</span><b id="autoDronePrice"></b></button>';
   document.querySelector('[data-pane="boosts"]').append(droneRow);
-  var droneControl=document.createElement('div');droneControl.className='auto-drone-control';droneControl.innerHTML='<span class="drone-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 10h6v4H9zM4 6h3M17 6h3M5.5 6v4h3.5M18.5 6v4H15M9 14l-3 4M15 14l3 4"/></svg></span><div><strong>Auto drone</strong><small id="autoDroneStatus"></small></div><button id="autoDroneToggle" type="button" class="drone-switch"></button><button id="autoDroneBulk" type="button" hidden></button>';document.querySelector('.dispatch-desk').append(droneControl);
+  var droneControl=document.createElement('div');droneControl.className='auto-drone-control';droneControl.innerHTML='<button id="autoDroneToggle" type="button" class="auto-drone-toggle"><span class="drone-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 10h6v4H9zM4 6h3M17 6h3M5.5 6v4h3.5M18.5 6v4H15M9 14l-3 4M15 14l3 4"/></svg></span><span class="auto-drone-copy"><strong>Auto drone</strong><small id="autoDroneStatus"></small></span><span class="auto-drone-state" id="autoDroneToggleState" aria-hidden="true"></span></button><button id="autoDroneBulk" type="button" hidden></button>';document.querySelector('.dispatch-desk').prepend(droneControl);
   var deliverySite=document.createElement('div');deliverySite.className='delivery-site';deliverySite.id='deliverySite';deliverySite.innerHTML='<h2>Build your delivery pad</h2><div class="delivery-preview"><canvas id="deliveryPreview" width="600" height="720" role="img" aria-label="Preview of the finished rooftop launch deck, packing counter and courier drone carrying a parcel"></canvas></div><ul class="delivery-benefits"><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 10h7l1.5 3.5h-10zM8.5 10 5 7m10.5 3L19 7M8.5 13.5 5 17m10.5-3.5L19 17M2 7h6m8 0h6M2 17h6m8 0h6"/></svg><strong>1 drone</strong><span>included</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 8a8 8 0 0 0-14-3L3 8m0-5v5h5m-4 8a8 8 0 0 0 14 3l3-3m0 5v-5h-5"/></svg><strong>Auto</strong><span>dispatch</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 17 6-6 4 4 8-10m-6 0h6v6"/></svg><strong>+33%</strong><span>per unit</span></li></ul><div class="delivery-build"><div class="delivery-funding"><small id="deliveryFundingText"></small><progress id="deliveryFunding" max="100" value="0" aria-label="Cash toward delivery pad"></progress></div><button id="buildDelivery" type="button"><span>Build delivery pad</span><b>'+fmt(AUTO_DRONE_COST)+'</b></button></div>';document.querySelector('.dispatch-desk').prepend(deliverySite);$('buildDelivery').onclick=purchaseAutoDrone;
   function purchaseAutoDrone(){if(buyAutoDrone(state)){telemetry.once('delivery_pad_built');save();renderUI();notify('DELIVERY PAD BUILT · web orders open','upgrade')}}
   function purchaseBulkDrone(){if(buyBulkDrone(state)){save();renderUI();notify('Bulk auto drone installed','upgrade')}}
   $('buyAutoDrone').onclick=function(){if(state.autoDrone.owned)purchaseBulkDrone();else purchaseAutoDrone()};
   $('autoDroneBulk').onclick=function(){if(!state.autoDrone.bulk){purchaseBulkDrone();return}state.autoDrone.mode=state.autoDrone.mode==='bulk'?'single':'bulk';save();renderUI()};
-  // The switch flips on any press-and-release anywhere on it: pointer capture means the release always lands on the
-  // button even though the knob slides under the pointer, and the click event is ignored so nothing double-fires.
   function flipAutoDrone(){if(!state.autoDrone.owned){purchaseAutoDrone();return}state.autoDrone.enabled=!state.autoDrone.enabled;save();renderUI()}
-  (function(toggle){var pressed=false;
-    toggle.addEventListener('pointerdown',function(e){if(e.button&&e.button!==0)return;pressed=true;try{toggle.setPointerCapture(e.pointerId)}catch(err){}});
-    toggle.addEventListener('pointerup',function(e){if(!pressed)return;pressed=false;try{toggle.releasePointerCapture(e.pointerId)}catch(err){}flipAutoDrone()});
-    toggle.addEventListener('pointercancel',function(){pressed=false});
-    toggle.addEventListener('click',function(e){if(e.detail!==0)e.preventDefault();else flipAutoDrone()});
-  })($('autoDroneToggle'));
+  $('autoDroneToggle').onclick=flipAutoDrone;
   // Cards for the second wave of upgrades are generated from the table; the originals stay in the HTML.
   (function(){var icons={seedBatchLevel:'<path d="M6 26h20M9 26V14h14v12M12 14V8h8v6M16 8V4"/>',growBatchLevel:'<path d="M6 6h20M8 6v4h16V6M12 10v4m8-4v4M9 28h14l-1-8H10Z"/>',harvestBatchLevel:'<path d="M8 8l16 16M8 24 24 8M8 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm0 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>',packSpeedLevel:'<path d="M4 10h18v14H4zM22 14h5l2 3v7h-7M8 24a2 2 0 1 0 4 0m10 0a2 2 0 1 0 4 0"/>',serviceLevel:'<path d="M4 24h24M6 24V12h20v12M12 12V7h8v5M4 16h24"/>',signLevel:'<path d="M16 28V10M8 10h16l3 4-3 4H8Z"/>',loyaltyLevel:'<path d="M4 9h24v14H4zM4 14h24M9 19h6"/>',basketLevel:'<path d="M5 12h22l-2 14H7ZM10 12l3-7m9 7-3-7M12 17v5m4-5v5m4-5v5"/>',terpeneLevel:'<path d="M12 4h8M14 4v8L6 26h20L18 12V4M10 20h12"/>',breedingLevel:'<path d="M16 28V14M16 14c-6 0-9-4-9-9 6 0 9 4 9 9Zm0 0c6 0 9-4 9-9-6 0-9 4-9 9ZM6 28h20"/>',displayLevel:'<path d="M5 10h22v16H5zM5 18h22M9 10V6h14v4"/>',trendLevel:'<path d="M4 24 12 15l5 5 11-11M20 9h8v8"/>',fleetLevel:'<path d="M12 12h8v6h-8zM4 8h5M23 8h5M6 8v4h6M26 8v4h-6M12 18l-3 6M20 18l3 6"/>',cargoLevel:'<path d="M4 10h24v14H4zM4 16h24M12 10v14m8-14v14"/>',repeatLevel:'<path d="M6 14a10 10 0 0 1 17-6l3 3M26 6v6h-6M26 18a10 10 0 0 1-17 6l-3-3M6 26v-6h6"/>'};
     var blurbs={seedBatchLevel:'Deeper trays start more seedlings per cycle.',growBatchLevel:'Brighter lights fatten every grow batch.',harvestBatchLevel:'Robots trim more flower per pass.',packSpeedLevel:'Machines bag flower faster than hands can.',serviceLevel:'Both counters hand off customers quicker.',signLevel:'Street signs pull more walk-ins through the door.',loyaltyLevel:'Happy customers tip more when they carry your card.',basketLevel:'Customers take a little more home each visit.',terpeneLevel:'Raises the THC of every strain on the menu.',breedingLevel:'Breeds boutique strains that grow closer to everyday speed.',displayLevel:'Boutique flower sells for more in lit cases.',trendLevel:'Spots trends early so the trending strain pays out more.',fleetLevel:'More couriers on the pad: shorter gaps between launches.',cargoLevel:'Bulk runs carry extra orders per launch.',repeatLevel:'A share of web customers order again right away.'};
@@ -4325,15 +4514,29 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     COMPONENTS.forEach(function(c,i){if(document.getElementById('componentBuy'+i))return;var card=document.createElement('div');card.className='shop-upgrade shop-feature';card.innerHTML='<div class="shop-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+icons[c.key]+'</svg></div><div class="shop-copy"><h2>'+c.name+'</h2><strong id="componentBenefit'+i+'"></strong><small>'+blurbs[c.key]+'</small><small id="componentLevel'+i+'"></small></div><button id="componentBuy'+i+'"><span>Upgrade</span><b id="componentPrice'+i+'"></b></button>';pane.insertBefore(card,anchor)});
   })();
   $('expandOrderCounter').onclick=expandOrderCounters;$('buyOrderCounter').onclick=expandOrderCounters;
-  var shopBrowser=mountShopBrowser({getState:function(){return state},components:COMPONENTS,kiosks:kioskCount,queueLimit:queueLimit,recommend:function(open){var r=recommendation();if(open){actOnRecommendation();return ''}return r.name+' · '+(r.kind==='component'?'in Customers · ':'upgrade ')+fmt(r.price)}});
+  var shopBrowser=mountShopBrowser({getState:function(){return state},components:COMPONENTS,kiosks:kioskCount,queueLimit:queueLimit});
   var operationsUI=mountOperations({getState:function(){return state},format:fmt,changed:function(message){save();renderUI();if(message)notify(message,'upgrade')},visit:function(i,manage){visitStore(i+1,!manage);if(manage)manageViewedStore()}});
+  var activitySheetWasOpen=false;
+  shopPlayUI=mountShopPlay({getState:function(){return state},getMoment:function(){return budtenderMoment},getAlerts:function(){return operationsAlerts(state)},names:STRAINS.map(function(s){return s.name}),format:fmt,changed:save,
+    opening:function(){var sheetRect=$('sheet').getBoundingClientRect(),activityRight=(width<780?12:76)+Math.min(360,width-24);activitySheetWasOpen=panelOpen&&(width<780||sheetRect.left<activityRight+12);if(activitySheetWasOpen)collapsePanel();},closing:function(){if(activitySheetWasOpen){activitySheetWasOpen=false;showTray(activeTray);}},
+    choose:function(index){
+      if(!budtenderMoment)return;var result=resolveMoment(budtenderMoment,index),c=customers.find(function(c){return c.id===budtenderMoment.customerId&&!c.ordered});if(!result||!c)return;
+      c.momentMatched=result.matched;c.momentChoice=result.option;c.momentName=budtenderMoment.name;c.consultRemaining=2/(1+state.staff[4]*.15+state.serviceLevel*.12);
+      shopPlayUI.feedback(result.matched?'Good match · '+c.momentName+' will tip at pickup':'Thanks for the suggestion · the team will finish the usual order');budtenderMoment=null;haptic('light');save();renderUI();
+    },skip:function(){budtenderMoment=null;save();renderUI();},navigate:function(a){
+      if(a.station!==undefined){selectMachine(a.station);return;}if(a.moment){shopPlayUI.open();return;}
+      visitStore(a.store+1,false);showTray('empire');if(empireShell)empireShell.openStore(a.store);else expandBranch(a.store);operationsUI.showTab(a.store,a.tab);
+      if(a.transferTo!==undefined)document.querySelector('#transferTo'+a.store+' [data-value="'+a.transferTo+'"]').click();
+      if(a.line!==undefined)document.querySelector('#deliveryLine'+a.store+' [data-value="'+a.line+'"]').click();
+      var target=$(a.control);if(target){if(a.details)target.closest('details').open=true;target.scrollIntoView({block:'center'});target.focus({preventScroll:true});}fitControls();
+    }});
   function renderManagement(){
     var p=state.empire,report=p.returnReport,investment=recommendation();
     $('returnSummary').hidden=!report;
     if(report){$('returnTime').textContent=duration(report.seconds*1000)+' away · estimated earnings (4-hour cap, 1× rate)';$('returnEarnings').innerHTML=report.earnings.map(function(n,i){return '<li><span>'+(['Home store'].concat(STORES.map(function(s){return s.name})))[i]+'</span><strong>'+fmt(n)+'</strong></li>'}).join('');$('returnGoals').textContent=report.goals+' goals ready to collect on return. Customer service and deliveries resume while playing.';}
     $('nextInvestment').textContent='Next improvement: '+investment.name+' · '+fmt(investment.price)+(state.money<investment.price?' ('+fmt(investment.price-state.money)+' to go)':' · ready');
-    var goalsReady=[0,1,2].filter(function(i){var g=goalStatus(p,i,rewardScale());return g.progress>=g.target}).length;if($('goalsBadge')){$('goalsBadge').textContent=goalsReady;$('goalsBadge').hidden=!goalsReady;$('goalsOpen').classList.toggle('has-ready',goalsReady>0);if($('shiftGoalsReady'))$('shiftGoalsReady').textContent=goalsReady?goalsReady+' ready':''}
-    [0,1,2].forEach(function(i){var g=goalStatus(p,i,rewardScale());$('goalTitle'+i).textContent=g.title;$('goalProgress'+i).value=g.progress/g.target*100;$('goalCount'+i).textContent=(g.kind==='revenue'?fmt(g.progress)+' / '+fmt(g.target):abbr(g.progress)+' / '+abbr(g.target))+' · '+abbr(p.goalsCompleted)+' goals completed';$('goalClaim'+i).textContent='Collect '+fmt(g.reward);$('goalClaim'+i).disabled=g.progress<g.target;var gated=g.kind==='online'&&!deliveryBuilt()&&g.progress<g.target;if(gated){$('goalCount'+i).textContent='First build the delivery pad · '+fmt(AUTO_DRONE_COST);$('goalClaim'+i).textContent='View delivery pad';$('goalClaim'+i).disabled=false;}});
+    var goalsReady=[0,1,2].filter(function(i){var g=goalStatus(p,i,rewardScale());return g.progress>=g.target}).length;if($('shiftGoalsReady'))$('shiftGoalsReady').textContent=goalsReady?goalsReady+' ready':'';
+    [0,1,2].forEach(function(i){var g=goalStatus(p,i,rewardScale());$('goalTitle'+i).textContent=g.title;$('goalProgress'+i).value=g.progress/g.target*100;$('goalCount'+i).textContent=(g.kind==='revenue'?fmt(g.progress)+' / '+fmt(g.target):abbr(g.progress)+' / '+abbr(g.target));$('goalClaim'+i).textContent='Collect '+fmt(g.reward);$('goalClaim'+i).disabled=g.progress<g.target;var gated=g.kind==='online'&&!deliveryBuilt()&&g.progress<g.target;if(gated){$('goalCount'+i).textContent='First build the delivery pad · '+fmt(AUTO_DRONE_COST);$('goalClaim'+i).textContent='View delivery pad';$('goalClaim'+i).disabled=false;}});
     var reputationTarget=p.reputation<20?20:60;
     $('reputationStatus').textContent=p.reputation+' loyalty';
     $('reputationNext').textContent=p.reputation>=60?'VIPs unlocked':'VIPs at 60';
@@ -4355,19 +4558,13 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   function renderEmpire(){
     renderStoreView();renderManagement();operationsUI.render();
-    var p=state.empire,d=dailyStatus(p,Date.now(),rewardScale()),e=eventStatus(p,Date.now(),rewardScale()),m=CAREER[p.career];
-    $('empireBadge').hidden=!(d.available||(m&&state.lifetime>=m.goal)||(e.joined&&!e.claimed&&e.progress>=e.goal));
-    $('careerName').textContent=m?m.name:'Bud empire complete';
-    $('careerDetail').textContent=m?fmt(state.lifetime)+' / '+fmt(m.goal)+' lifetime revenue':'All six career milestones collected.';
-    $('careerProgress').value=m?Math.min(100,state.lifetime/m.goal*100):100;
-    $('careerBonus').textContent='Permanent sale bonus: +'+(p.career*5)+'% · '+p.career+' / 6 milestones';
-    $('careerClaim').disabled=!m||state.lifetime<m.goal;
-    $('careerClaim').textContent=m?'Collect '+fmt(m.reward)+' + 5% sale bonus':'Career complete';
-    $('branchSummary').textContent=(1+p.stores.filter(function(s){return s.level>0}).length)+'/'+(STORES.length+1)+' open · '+fmt(branchRate(p)*state.gameSpeed)+'/s';
+    var p=state.empire,d=dailyStatus(p,Date.now(),rewardScale()),e=eventStatus(p,Date.now(),rewardScale());
+    $('empireBadge').hidden=true;
+    $('branchSummary').textContent=(1+p.stores.filter(function(s){return s.level>0}).length)+'/'+(STORES.length+1)+' open · '+fmt(branchRate(p)*playbackRate(state.gameSpeed))+'/s';
     STORES.forEach(function(store,i){var level=p.stores[i].level,locked=state.lifetime<store.goal,max=level>=10;
       // Store row: level pips and an income figure instead of a sentence; unopened stores show a lock and the opening price.
       var pips='';for(var pip=0;pip<10;pip++)pips+='<i'+(pip<level?' class="on"':'')+'></i>';
-      var rowHtml=level?'<span class="store-level" title="Level '+level+' of 10"><span class="store-pips">'+pips+'</span><b>Lv '+level+'</b></span><span class="store-income"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.5 10a2.5 2 0 0 1 5 0c0 2.5-5 1.5-5 4a2.5 2 0 0 0 5 0"/></svg>'+fmt(storeRate(p,i)*state.gameSpeed)+'/s</span>':
+      var rowHtml=level?'<span class="store-level" title="Level '+level+' of 10"><span class="store-pips">'+pips+'</span><b>Lv '+level+'</b></span><span class="store-income"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.5 10a2.5 2 0 0 1 5 0c0 2.5-5 1.5-5 4a2.5 2 0 0 0 5 0"/></svg>'+fmt(storeRate(p,i)*playbackRate(state.gameSpeed))+'/s</span>':
         '<span class="store-locked'+(locked?' is-locked':'')+'"><svg viewBox="0 0 24 24" aria-hidden="true">'+(locked?'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>':'<path d="M4 20V9l8-5 8 5v11M9 20v-6h6v6"/>')+'</svg>'+(locked?'Unlock at '+fmt(store.goal):'Open · '+fmt(storeCost(p,i)))+'</span><span class="store-income muted">'+fmt(store.rate*saleMultiplier(p)*Math.max(1,p.retailBoost||1))+'/s</span>';
       if($('branchLevel'+i).dataset.html!==rowHtml){$('branchLevel'+i).innerHTML=rowHtml;$('branchLevel'+i).dataset.html=rowHtml}
       $('branchHint'+i).textContent=locked?'Unlock at '+fmt(store.goal)+' revenue':max?'':'Next: +'+fmt(nextStoreRate(p,i)-storeRate(p,i))+'/s';$('branchHint'+i).hidden=max;$('branchBuy'+i).hidden=max;$('projectSummary'+i).parentElement.hidden=!level;
@@ -4398,24 +4595,23 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     $('eventTrophies').textContent=p.trophies+' event '+(p.trophies===1?'trophy':'trophies')+' · '+p.rewards.filter(Boolean).length+' / 3 scene keepsakes collected';
   }
   $('dailyClaim').onclick=function(){var reward=claimDaily(state,Date.now(),rewardScale());if(reward){save();renderUI();notify('DAILY REWARD · +'+fmt(reward),'upgrade')}};
-  $('careerClaim').onclick=function(){var reward=claimCareer(state);if(reward){save();renderUI();notify('CAREER MILESTONE · +'+fmt(reward)+' · +5% sale value','upgrade')}};
   // Opening a store for the first time takes you straight to its map; later upgrades stay on the management pane.
   STORES.forEach(function(store,i){$('branchBuy'+i).onclick=function(){var opening=state.empire.stores[i].level===0;if(buyStore(state,i)){if(opening)telemetry.send('store_opened',{store:store.name});save();renderUI();notify(opening?store.name+' is open · +'+fmt(state.empire.network.stores[i].incomeGain)+'/s':store.name+' upgraded · +'+fmt(state.empire.network.stores[i].incomeGain)+'/s','upgrade');if(opening)visitStore(i+1)}}});
   $('eventAction').onclick=function(){var e=eventStatus(state.empire);if(!e.joined){if(joinEvent(state.empire))notify('EVENT JOINED · '+e.copy)}else{var reward=claimEvent(state,Date.now(),rewardScale());if(reward)notify('EVENT COMPLETE · +'+fmt(reward),'upgrade')}save();renderUI()};
   // The whole bottleneck line is the target; the button inside becomes its chevron.
   var flowGuide=document.querySelector('.flow-guide');if(flowGuide){flowGuide.setAttribute('role','button');flowGuide.setAttribute('tabindex','0');flowGuide.addEventListener('click',function(e){if(e.target!==$('flowAction'))$('flowAction').click()});flowGuide.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();$('flowAction').click()}});$('flowAction').setAttribute('tabindex','-1');$('flowAction').setAttribute('aria-hidden','true');}
   // Goals live in their own popover, opened from a flag beside the customer count, rather than inside the Empire tab.
-  var goalsButton=document.createElement('button');goalsButton.type='button';goalsButton.id='goalsOpen';goalsButton.setAttribute('aria-label','Shop story and goals');goalsButton.setAttribute('aria-haspopup','dialog');goalsButton.title='Goals';
+  var goalsButton=document.createElement('button');goalsButton.type='button';goalsButton.id='goalsOpen';goalsButton.setAttribute('aria-label','Goals and rewards');goalsButton.setAttribute('aria-haspopup','dialog');goalsButton.title='Goals & rewards';
   goalsButton.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg><span id="goalsBadge" hidden></span>';
   $('customerStatus').appendChild(goalsButton);
   // The list is a dropdown anchored under the flag, not a full-screen dialog.
   var goalsWrap=document.createElement('div');goalsWrap.className='goals-dropdown';goalsWrap.id='goalsModal';goalsWrap.hidden=true;goalsWrap.setAttribute('role','dialog');goalsWrap.setAttribute('aria-labelledby','goalsTitle');
-  goalsWrap.innerHTML='<div class="settings-head"><h2 id="goalsTitle">Your shop story</h2><button type="button" id="goalsClose" aria-label="Close shop story">×</button></div><div class="goals-body"></div>';
+  goalsWrap.innerHTML='<div class="settings-head"><h2 id="goalsTitle">Goals &amp; rewards</h2><button type="button" id="goalsClose" aria-label="Close goals and rewards">×</button></div><div class="goals-body"></div>';
   document.body.append(goalsWrap);
   var goalsBody=goalsWrap.querySelector('.goals-body'),nextStepsHeading=today.querySelector('h2:not(.empire-section-heading)');if(nextStepsHeading)nextStepsHeading.remove();
   var investmentLink=document.createElement('button');investmentLink.type='button';investmentLink.id='nextInvestmentLink';investmentLink.append($('nextInvestment'));investmentLink.onclick=function(){closeGoals();var r=recommendation();if(r.kind==='station')selectMachine(r.index);else{showTray('boosts');shopBrowser.show(2);renderUI();}};
-  var dailyGoals=document.createElement('details');dailyGoals.className='story-goals';dailyGoals.innerHTML='<summary>Shift goals <span id=shiftGoalsReady></span></summary>';dailyGoals.append($('shortGoals'));goalsBody.append(investmentLink,dailyGoals);$('goalsClose').onclick=closeGoals;
-  function placeGoals(){var r=goalsButton.getBoundingClientRect(),wide=window.innerWidth>=480;goalsWrap.style.top=Math.round(r.bottom+8)+'px';goalsWrap.style.right=wide?Math.max(8,Math.round(window.innerWidth-r.right-4))+'px':'8px';goalsWrap.style.left=wide?'auto':'8px';goalsWrap.style.setProperty('--caret',Math.round(r.left+r.width/2-(wide?goalsWrap.getBoundingClientRect().left:8))+'px')}
+  var dailyGoals=document.createElement('section');dailyGoals.className='story-goals';dailyGoals.setAttribute('aria-labelledby','shiftGoalsTitle');dailyGoals.innerHTML='<h3 id=shiftGoalsTitle>Shift goals <span id=shiftGoalsReady></span></h3>';dailyGoals.append($('shortGoals'));goalsBody.append(investmentLink,dailyGoals);$('goalsClose').onclick=closeGoals;
+  function placeGoals(){var r=goalsButton.getBoundingClientRect(),wide=window.innerWidth>=480;goalsWrap.style.top=Math.round(r.bottom+8)+'px';goalsWrap.style.setProperty('--goals-top',Math.round(r.bottom+8)+'px');goalsWrap.style.right=wide?Math.max(8,Math.round(window.innerWidth-r.right-4))+'px':'8px';goalsWrap.style.left=wide?'auto':'8px';goalsWrap.style.setProperty('--caret',Math.round(r.left+r.width/2-(wide?goalsWrap.getBoundingClientRect().left:8))+'px')}
   function openGoals(){goalsWrap.hidden=false;renderUI();placeGoals();$('goalsClose').focus({preventScroll:true});goalsButton.setAttribute('aria-expanded','true')}
   function closeGoals(){if(goalsWrap.hidden)return;var restore=goalsWrap.contains(document.activeElement);goalsWrap.hidden=true;goalsButton.setAttribute('aria-expanded','false');if(restore)goalsButton.focus({preventScroll:true})}
   goalsButton.setAttribute('aria-expanded','false');goalsButton.onclick=function(){if(goalsWrap.hidden)openGoals();else closeGoals()};
@@ -4423,13 +4619,14 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!goalsWrap.hidden){e.stopPropagation();closeGoals();goalsButton.focus()}},true);
   window.addEventListener('resize',function(){if(!goalsWrap.hidden)placeGoals()});
   var empireShell=mountEmpireShell({fit:fitControls,getState:function(){return state},format:fmt});
+  mountRewardsMenu();
   var journeyUI=mountJourney({getState:function(){return state},openGoals:openGoals,navigate:function(destination){
     closeGoals();if(destination==='pickup')return selectMachine(5);if(destination==='stations'){var r=recommendation();if(state.lines[r.index]<3)return selectMachine(r.index);return selectMachine(state.lines.findIndex(function(n){return n<3}));}
     if(destination==='flowers')return showTray('flowers');showTray('empire');if(destination==='empire'){empireShell.show('home');return;}
     var i=destination==='regulars'?state.empire.network.stores.findIndex(function(b){return !b.relationship}):0;empireShell.openStore(Math.max(0,i));if(destination==='mara'||destination==='regulars'){var people=$('opTab'+Math.max(0,i)+'2');if(people)people.click();}
   }});
   markStill();
-  var startGuide=mountStartGuide({showTray:showTray,collapse:function(){showTray('factory')},fit:fitControls,paintHero:paintIntroArt,sound:function(kind){playSound(kind,state.sound)},report:function(name,props){telemetry.send(name,props)},
+  var startGuide=mountStartGuide({showTray:showTray,collapse:function(){showTray('factory')},fit:fitControls,paintHero:paintIntroArt,paintStep:paintGuideStep,sound:function(kind){playSound(kind,state.sound)},report:function(name,props){telemetry.send(name,props)},
     // Construction steps: the guide asks whether a site is built, builds it on a tap, opens the shop at the end and, if
     // skipped, finishes the job itself. On phones the sheet drops away so every site is on screen beneath the card.
     isBuilt:isBuilt,build:buildStation,shopOpen:function(){return state.shopOpen},openShop:openShop,finish:finishConstruction,
@@ -4479,7 +4676,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   Array.prototype.forEach.call(document.querySelectorAll('[data-store]'),function(button){button.onclick=function(){var id=Number(this.getAttribute('data-store'));closeLocations();if(id!==state.empire.activeStore)visitStore(id);locationToggle.focus({preventScroll:true})}});$('manageViewedStore').onclick=function(){closeLocations();manageViewedStore()};$('branchMapMarker').onclick=manageViewedStore;
   STORES.forEach(function(_,i){$('branchVisit'+i).onclick=function(){visitStore(i+1)}});
 
-  var touches={},gestureMoved=false,gestureOrigin=null;
+  var touches={},gestureMoved=false,gestureOrigin=null,gestureRect=null,gestureStarted=0,gestureTarget=null;
   var hintHideTimer=setTimeout(function(){$('gestureHint').classList.add('is-hidden')},4500),hintIdleTimer;
   function mapHintActivity(){
     clearTimeout(hintHideTimer);clearTimeout(hintIdleTimer);$('gestureHint').classList.add('is-hidden');
@@ -4489,30 +4686,40 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       hintHideTimer=setTimeout(function(){$('gestureHint').classList.add('is-hidden')},4000);
     },30000);
   }
-  canvas.addEventListener('pointerdown',function(e){mapHintActivity();canvas.setPointerCapture(e.pointerId);touches[e.pointerId]={x:e.clientX,y:e.clientY};if(Object.keys(touches).length===1){gestureMoved=false;gestureOrigin={x:e.clientX,y:e.clientY}}else gestureMoved=true});
+  canvas.parentElement.addEventListener('pointerdown',function(e){if(e.button!==0||(e.target!==canvas&&!e.target.closest('.marker')))return;mapHintActivity();canvas.setPointerCapture(e.pointerId);gestureRect=canvas.getBoundingClientRect();touches[e.pointerId]={x:e.clientX,y:e.clientY};if(Object.keys(touches).length===1){gestureMoved=false;gestureTarget=e.target.closest('.marker');gestureStarted=performance.now();gestureOrigin={x:e.clientX,y:e.clientY}}else{gestureMoved=true;clearMapTap()}});
   canvas.addEventListener('pointermove',function(e){
-    if(!touches[e.pointerId])return;mapHintActivity();var before=Object.values(touches),previous=touches[e.pointerId];touches[e.pointerId]={x:e.clientX,y:e.clientY};var after=Object.values(touches);
-    if(after.length===1){var dx=e.clientX-previous.x,dy=e.clientY-previous.y;if(Math.hypot(e.clientX-gestureOrigin.x,e.clientY-gestureOrigin.y)>5)gestureMoved=true;if(gestureMoved){panX+=dx;panY+=dy;applyCamera()}}
-    else if(after.length===2){var rect=canvas.getBoundingClientRect(),oldDistance=Math.hypot(before[0].x-before[1].x,before[0].y-before[1].y),newDistance=Math.hypot(after[0].x-after[1].x,after[0].y-after[1].y),mx=(after[0].x+after[1].x)/2-rect.left,my=(after[0].y+after[1].y)/2-rect.top;panX+=(after[0].x+after[1].x-before[0].x-before[1].x)/2;panY+=(after[0].y+after[1].y-before[0].y-before[1].y)/2;applyCamera();if(oldDistance>0)zoomAt(zoom*newDistance/oldDistance,mx,my)}
+    if(!touches[e.pointerId])return;recentering=null;var before=Object.values(touches),previous=touches[e.pointerId];touches[e.pointerId]={x:e.clientX,y:e.clientY};var after=Object.values(touches);
+    if(after.length===1){var dx=e.clientX-previous.x,dy=e.clientY-previous.y;if(Math.hypot(e.clientX-gestureOrigin.x,e.clientY-gestureOrigin.y)>5)gestureMoved=true;if(gestureMoved){clearMapTap();panX+=dx;panY+=dy;applyCamera()}}
+    else if(after.length===2){var rect=gestureRect,oldDistance=Math.hypot(before[0].x-before[1].x,before[0].y-before[1].y),newDistance=Math.hypot(after[0].x-after[1].x,after[0].y-after[1].y),mx=(after[0].x+after[1].x)/2-rect.left,my=(after[0].y+after[1].y)/2-rect.top;var shiftX=(after[0].x+after[1].x-before[0].x-before[1].x)/2,shiftY=(after[0].y+after[1].y-before[0].y-before[1].y)/2;panX+=shiftX;panY+=shiftY;centerX+=shiftX;centerY+=shiftY;if(oldDistance>0)zoomAt(zoom*newDistance/oldDistance,mx,my);else applyCamera()}
   });
-  // Double-tap anywhere on the map (canvas or a station pill) zooms in around the tap, or back out when already close.
-  var lastTap={time:0,x:0,y:0};
-  canvas.parentElement.addEventListener('pointerup',function(e){
-    if(e.pointerType==='mouse'&&e.button!==0)return;if(Object.keys(touches).length>1||gestureMoved&&e.target===canvas)return;
-    if(e.target.closest&&e.target.closest('.map-controls,.location-nav,#locationNav,button:not(.marker)'))return;
-    var now=performance.now(),quick=now-lastTap.time<350&&Math.hypot(e.clientX-lastTap.x,e.clientY-lastTap.y)<30;
-    lastTap=quick?{time:0,x:0,y:0}:{time:now,x:e.clientX,y:e.clientY};
-    if(!quick)return;
-    var r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
-    if(zoom<1.7)zoomAt(2.2,x,y);else{zoom=1;panX=0;panY=0;applyCamera()}
+  // Resolve a canvas tap only after the double-tap window, so zoom never also opens a station.
+  var lastTap=null,mapTapTimer=null;
+  function clearMapTap(){clearTimeout(mapTapTimer);mapTapTimer=null;lastTap=null}
+  function selectCanvasPoint(e){if(e.marker){e.marker.click();return}if(state.empire.activeStore){var br=canvas.getBoundingClientRect(),f=BRANCH_THEMES[state.empire.activeStore-1].focus,q=project(f.x,f.y,f.z);if(Math.hypot(e.clientX-br.left-q.x,e.clientY-br.top-q.y)<Math.max(45,unit*3))manageViewedStore()}else if(trimSpark&&(function(){var rect=canvas.getBoundingClientRect(),sp=project(trimSpark.x,trimSpark.y,trimSpark.z);return Math.hypot(e.clientX-rect.left-sp.x,e.clientY-rect.top-sp.y)<Math.max(32,unit*.85)})()){collectTrimSpark()}else{var rect=canvas.getBoundingClientRect(),best=-1,distance=60;machinePos.forEach(function(pos,i){var p=project(pos.x,1.4+(pos.y||0),pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=i;distance=d}});orderCounterPositions(state.orderCounters).forEach(function(pos){var p=project(pos.x,1.4,pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=4;distance=d}});var online=project(-10.7,8.45,1.5),od=Math.hypot(e.clientX-rect.left-online.x,e.clientY-rect.top-online.y);if(od<distance){showTray('orders');renderUI()}else if(best>=0)selectMachine(best)}}
+  canvas.addEventListener('pointerup',function(e){
+    if(!touches[e.pointerId])return;
+    mapHintActivity();
+    var tap=!gestureMoved&&Object.keys(touches).length===1&&performance.now()-gestureStarted<300;
+    delete touches[e.pointerId];
+    var remaining=Object.values(touches);gestureOrigin=remaining.length?remaining[0]:null;
+    if(remaining.length)gestureMoved=true;
+    if(!tap){clearMapTap();return}
+    var now=performance.now(),point={clientX:e.clientX,clientY:e.clientY,marker:gestureTarget};
+    var quick=lastTap&&now-lastTap.time<300&&Math.hypot(e.clientX-lastTap.x,e.clientY-lastTap.y)<30;
+    if(quick){
+      clearMapTap();var r=gestureRect||canvas.getBoundingClientRect();
+      // Both directions retain the touched world point instead of snapping out to a different camera.
+      zoomAt(zoom<1.7?2.2:1,e.clientX-r.left,e.clientY-r.top);return;
+    }
+    clearMapTap();lastTap={time:now,x:e.clientX,y:e.clientY};
+    mapTapTimer=setTimeout(function(){clearMapTap();selectCanvasPoint(point)},300);
   });
-  canvas.addEventListener('pointerup',function(e){mapHintActivity();if(!gestureMoved&&Object.keys(touches).length===1&&state.empire.activeStore){var br=canvas.getBoundingClientRect(),f=BRANCH_THEMES[state.empire.activeStore-1].focus,q=project(f.x,f.y,f.z);if(Math.hypot(e.clientX-br.left-q.x,e.clientY-br.top-q.y)<Math.max(45,unit*3))manageViewedStore()}else if(!gestureMoved&&Object.keys(touches).length===1&&trimSpark&&(function(){var rect=canvas.getBoundingClientRect(),sp=project(trimSpark.x,trimSpark.y,trimSpark.z);return Math.hypot(e.clientX-rect.left-sp.x,e.clientY-rect.top-sp.y)<Math.max(32,unit*.85)})()){collectTrimSpark()}else if(!gestureMoved&&Object.keys(touches).length===1){var rect=canvas.getBoundingClientRect(),best=-1,distance=60;machinePos.forEach(function(pos,i){var p=project(pos.x,1.4+(pos.y||0),pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=i;distance=d}});orderCounterPositions(state.orderCounters).forEach(function(pos){var p=project(pos.x,1.4,pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=4;distance=d}});var online=project(-10.7,8.45,1.5),od=Math.hypot(e.clientX-rect.left-online.x,e.clientY-rect.top-online.y);if(od<distance){showTray('orders');renderUI()}else if(best>=0)selectMachine(best)}delete touches[e.pointerId];if(Object.keys(touches).length)gestureMoved=true;else gestureOrigin=null});
-  function cancelPointer(e){mapHintActivity();delete touches[e.pointerId];gestureMoved=true}
+  function cancelPointer(e){if(!touches[e.pointerId])return;delete touches[e.pointerId];gestureMoved=true;clearMapTap();var remaining=Object.values(touches);gestureOrigin=remaining.length?remaining[0]:null}
   canvas.addEventListener('pointercancel',cancelPointer);canvas.addEventListener('lostpointercapture',cancelPointer);
   canvas.addEventListener('wheel',function(e){mapHintActivity();e.preventDefault();var r=canvas.getBoundingClientRect();zoomAt(zoom*Math.exp(-e.deltaY*.0015),e.clientX-r.left,e.clientY-r.top)},{passive:false});
-  $('zoomIn').onclick=function(){mapHintActivity();zoomAt(zoom*1.2,width/2,height/2)};
-  $('zoomOut').onclick=function(){mapHintActivity();zoomAt(zoom/1.2,width/2,height/2)};
-  $('centerView').onclick=function(){mapHintActivity();zoom=1;panX=0;panY=0;applyCamera()};
+  $('zoomIn').onclick=function(){mapHintActivity();zoomStore(zoom*1.2)};
+  $('zoomOut').onclick=function(){mapHintActivity();zoomStore(zoom/1.2)};
+  $('centerView').onclick=function(){mapHintActivity();recentering=null;zoom=1;panX=0;panY=0;applyCamera()};
   var staffButtons=Array.prototype.slice.call(document.querySelectorAll('[data-staff]'));
   staffButtons.forEach(function(button){button.onclick=function(){upgradeStaff(Number(button.getAttribute('data-staff')))}});
   COMPONENTS.forEach(function(_,i){$('componentBuy'+i).onclick=function(){upgradeComponent(i)}});
@@ -4547,6 +4754,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function actOnRecommendation(){var r=recommendation();if(r.kind==='component'){showTray('boosts');if(shopBrowser&&shopBrowser.show)shopBrowser.show(2);renderUI();var card=$('componentBuy'+r.index).parentElement;card.classList.remove('is-recommended');void card.offsetWidth;card.classList.add('is-recommended');if(card.scrollIntoView)card.scrollIntoView({block:'nearest'});return}if(activeTray!=='factory')showTray('factory');selectMachine(r.index);if(state.money>=cost(r.index))buySelected()}
   $('flowAction').onclick=function(){if(state.gameSpeed===0)return setGameSpeed(1);if(!state.shopOpen){if(!state.doorBuilt)return buildStation('door');var next=state.lines.indexOf(0);return next<0?openShop():buildStation(next)}actOnRecommendation()};
   LINES.forEach(function(_,i){$('staffMax'+i).onclick=function(){trainStaffMax(i)}});
+  $('trainLoungeStaff').onclick=function(){trainLoungeStaff(1)};$('trainLoungeStaffMax').onclick=function(){trainLoungeStaff(10000)};
   $('trainIdChecker').onclick=function(){if(!state.doorBuilt)return buildStation('door');trainIdChecker(1)};
   $('trainIdCheckerMax').onclick=function(){trainIdChecker(10000)};
   $('fulfillOnlineMax').onclick=function(){sendOnlineOrders(state.lines[3]>=10?Infinity:10)};
@@ -4554,7 +4762,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   window.addEventListener('resize',resize);$('buyMachine').onclick=buySelected;$('buyMachineMax').onclick=buySelectedMax;$('upgradeStorage').onclick=upgradeStorage;$('boost').onclick=boostAll;$('claim').onclick=claimOrder;$('resetOpen').onclick=function(){$('resetModal').hidden=false};$('resetCancel').onclick=function(){$('resetModal').hidden=true};$('resetConfirm').onclick=function(){resetRun(0,state.sound)};function resetRun(rank,sound){if(rank>0)telemetry.send('prestige',{rank:rank});state=fresh();state.empire.prestige=rank;state.sound=sound;
     // A prestige reopens a standing shop; Start over goes back to the building site and replays the intro.
     if(rank>0){state.lines=LINES.map(function(){return 1});state.doorBuilt=true;state.shopOpen=true}
-    syncDominantFormat();readyWork=0;work=[0,0,0,0,0,0];batchRemainder=[0,0,0,0];customers=[];arrival=0;customerId=0;deliveryDrones=[];particles=[];tickets=[];taskClocks.fill(0);taskActivity.fill(0);cropGrowth=[.15,.4,.7,.95];tierFlashes.fill(0);buildRise.fill(0);confetti=[];recentPickupRatings=[];animationTime=0;sceneTime=0;crateTime=0;render.last=undefined;securitySelected=false;loungeSelected=false;selected=0;updateMarkers.key=null;save();$('resetModal').hidden=true;notify(rank>0?'FACTORY RESET':'STARTING OVER');syncMapView();paintThumbnails();renderUI();if(!state.shopOpen)setTimeout(function(){startGuide.open()},400)};
+    state.shopPlay=migrateShopPlay();budtenderMoment=null;if(shopPlayUI)shopPlayUI.reset();syncDominantFormat();readyWork=0;work=[0,0,0,0,0,0];batchRemainder=[0,0,0,0];customers=[];arrival=0;customerId=0;deliveryDrones=[];particles=[];tickets=[];taskClocks.fill(0);taskActivity.fill(0);cropGrowth=[.15,.4,.7,.95];tierFlashes.fill(0);buildRise.fill(0);confetti=[];recentPickupRatings=[];animationTime=0;sceneTime=0;crateTime=0;render.last=undefined;securitySelected=false;loungeSelected=false;selected=0;updateMarkers.key=null;save();$('resetModal').hidden=true;notify(rank>0?'FACTORY RESET':'STARTING OVER');syncMapView();paintThumbnails();renderUI();if(!state.shopOpen)setTimeout(function(){startGuide.open()},400)};
 
   // The intro waits behind the 21+ gate; a visitor who answers No never sees it.
   // `resume` picks the intro up at the first unbuilt site when a half-built shop is reloaded.
@@ -4563,16 +4771,43 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function finishLoading(){requestAnimationFrame(function(){requestAnimationFrame(function(){$('loading').hidden=true})})}
   var offline=collectOffline();if(offline>=1){setTimeout(function(){notify('WHILE AWAY +'+fmt(offline))},500)}
   // The canvas runs full height behind the sheet; the camera frames the building in the strip above it.
-  var dockHeight=0;
+  var dockHeight=0,mapDockHeight=0,mapPanelCollapsed,dockShown=null,recentering=null,cameraEaseAt;
   function fitControls(){document.documentElement.style.setProperty('--hud-height',document.querySelector('.hud').getBoundingClientRect().height+'px');
     var sheet=$('sheet');if(!phoneSheet())sheet.classList.remove('tall');
     // A tall or gliding sheet keeps the last settled dock height, so the map is framed for the half-open sheet it sits behind.
     if(!sheet.classList.contains('tall')&&!sheet.classList.contains('fluid')){dockHeight=sheet.getBoundingClientRect().height;if(!sheet.classList.contains('collapsed')&&!paneGlide)sheetHalfHeight=dockHeight}
-    document.documentElement.style.setProperty('--dock-height',dockHeight+'px');resize()}
+    // Release the open-menu reserve when the tray settles closed. Tall sheets keep the half-open frame.
+    var collapsed=sheet.classList.contains('collapsed'),recenter=collapsed&&mapPanelCollapsed===false;
+    mapPanelCollapsed=collapsed;
+    // While the menu opens or folds away the camera follows the sheet's live height, so the map moves with it instead of
+    // waiting for the glide to finish; a settled open menu keeps the half-open frame.
+    mapDockHeight=collapsed?sheet.getBoundingClientRect().height:(paneGlide||!panelOpen)?dockHeight:sheetHalfHeight||dockHeight;
+    if(dockShown==null||motionPreference.matches)dockShown=Math.max(mapDockHeight||dockHeight,guideReserve);
+    document.documentElement.style.setProperty('--dock-height',dockHeight+'px');resize();
+    // Reset only the pan after collapsing, not the player's zoom; normal gestures remain authoritative afterward.
+    if(recenter){if(motionPreference.matches)zoomStore(zoom);else recentering=true}}
   // While the intro's card is docked over the collapsed tray, the map is framed above the card rather than the tray.
   var guideReserve=0;
-  function visibleHeight(){return width>=780?height:Math.max(200,height-Math.max(dockHeight,guideReserve))}
-  if(window.ResizeObserver){new ResizeObserver(fitControls).observe($('sheet'))}
+  function dockTarget(){return Math.max(mapDockHeight||dockHeight,guideReserve)}
+  function visibleHeight(){return width>=780?height:Math.max(200,height-(dockShown==null?dockTarget():dockShown))}
+  // The framed strip eases toward where the menu is, and the pan eases home after the menu folds away, on wall time so
+  // it is smooth at any game speed. A player's own drag or zoom moves the pan away from what was last set, which ends the ease.
+  function cameraEase(wallNow){
+    var dt=cameraEaseAt===undefined?0:Math.min(.1,Math.max(0,(wallNow-cameraEaseAt)/1000));cameraEaseAt=wallNow;
+    if(dockShown==null)return;
+    var target=dockTarget(),moved=false,ease=1-Math.exp(-dt*16);
+    if(Math.abs(target-dockShown)>.4){dockShown+=(target-dockShown)*ease;moved=true}else if(dockShown!==target){dockShown=target;moved=true}
+    if(recentering){
+      {
+        var frame=cameraFrame(),homeX=(frame.focusX-frame.x)*(1-zoom),homeY=(frame.focusY-frame.y)*(1-zoom),soft=1-Math.exp(-dt*9);
+        if(Math.hypot(homeX-panX,homeY-panY)<.5){panX=homeX;panY=homeY;recentering=null}
+        else{panX+=(homeX-panX)*soft;panY+=(homeY-panY)*soft}
+        moved=true
+      }
+    }
+    if(moved)applyCamera();
+  }
+  if(window.ResizeObserver){var layoutObserver=new ResizeObserver(fitControls);layoutObserver.observe($('sheet'));if(nativeMap)layoutObserver.observe(document.querySelector('.hud'),{box:'border-box'})}
   window.addEventListener('resize',fitControls);
   // Desktop conveniences: the hint names the pointer, and speed and tabs have keys when no field has focus.
   // Hint copy follows the active pointer, and drops the keyboard shortcuts where the map is too narrow to fit them.
@@ -4594,9 +4829,20 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   if(state.empire.returnReport){renderUI()}
   syncMapView();if(!state.empire.returnReport&&state.empire.activeStore){showTray('empire');collapsePanel()}
   paintThumbnails();
-  selected=slowestStation();fitControls();syncGestureHint();renderUI();telemetry.drain();telemetry.session({returning:!firstRun});telemetry.heartbeat();ctx.fillStyle=colors.bg;ctx.fillRect(0,0,width,height);window.__shiftReady=true;finishLoading();if(!state.shopOpen)openGuideAfterGate(!firstRun);else if(firstRun&&!startGuide.seen())openGuideAfterGate(false);requestAnimationFrame(render);setInterval(tick,50);setInterval(function(){renderUI(true)},250);setInterval(function(){if(!document.hidden)save()},5000);window.addEventListener('beforeunload',function(){if(!document.hidden)save()});window.addEventListener('pagehide',function(){if(!document.hidden)save()});
-  document.body.dataset.pageHidden=String(document.hidden);
-  document.addEventListener('visibilitychange',function(){document.body.dataset.pageHidden=String(document.hidden);tickTime=performance.now();tickRemainder=0;if(document.hidden){releasePanKeys();save()}else{collectOffline();if(state.empire.returnReport){renderUI()}renderUI()}});
+  selected=slowestStation();fitControls();syncGestureHint();renderUI();telemetry.drain();telemetry.session({returning:!firstRun});telemetry.heartbeat();ctx.fillStyle=colors.bg;ctx.fillRect(0,0,width,height);window.__shiftReady=true;finishLoading();if(!state.shopOpen)openGuideAfterGate(!firstRun);else if(firstRun&&!startGuide.seen())openGuideAfterGate(false);requestAnimationFrame(render);setInterval(tick,50);setInterval(function(){renderUI(true)},250);setInterval(function(){if(!gameSuspended)save()},5000);window.addEventListener('beforeunload',function(){if(!gameSuspended)save()});window.addEventListener('pagehide',function(){if(!gameSuspended)save()});
+  function syncSuspension(){
+    var suspended=document.hidden||nativeInactive;
+    if(suspended===gameSuspended)return;
+    gameSuspended=suspended;document.body.dataset.pageHidden=String(suspended);
+    tickTime=performance.now();tickRemainder=0;
+    if(suspended){releasePanKeys();save()}
+    else{collectOffline();renderUI()}
+  }
+  document.body.dataset.pageHidden=String(gameSuspended);
+  document.addEventListener('visibilitychange',syncSuspension);
+  window.addEventListener('canopyAppState',function(event){
+    nativeInactive=event.detail===false;syncSuspension();
+  });
 
-  if(document.modelContext&&document.modelContext.registerTool){document.modelContext.registerTool({name:'read_factory_status',title:'Read factory status',description:'Read cash, production, and machine levels.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:function(){return{orderCounters:state.orderCounters,reservedWalkInBags:customers.filter(function(c){return c.ordered&&!c.bag}).reduce(function(n,c){return n+(c.bags||1)},0),orderCounterPositions:orderCounterPositions(state.orderCounters),autoDrone:state.autoDrone,deliveryDrones:deliveryDrones.length,productMenu:state.productMenu,prestige:state.empire.prestige,contract:state.contract,viewedStore:state.empire.activeStore,branchLevels:state.empire.stores.map(function(s){return s.level}),branchProjects:state.empire.stores.map(function(s){return s.projects}),network:state.empire.network,reputation:state.empire.reputation,management:state.empire.stores,goalsCompleted:state.empire.goalsCompleted,branchIncome:branchRateNow()*state.gameSpeed,cash:Math.floor(state.money),lifetime:Math.floor(state.lifetime),perSecond:production()*state.gameSpeed,gameSpeed:state.gameSpeed,paused:state.gameSpeed===0,lineLevels:state.lines,shopOpen:state.shopOpen,doorBuilt:state.doorBuilt,stock:state.stock,customersServed:state.sold,employeeLevels:state.staff,onlineCompleted:state.onlineCompleted,camera:{zoom:zoom,panX:panX,panY:panY,angle:angle},orderRoute:queueRoute(false),pickupRoute:queueRoute(true),lounge:{level:state.lounge,seats:loungeSeats(state.lounge),seated:loungeSeated(),waiting:loungeWaiting().length,sessions:state.loungeSessions,earned:state.loungeEarned,rate:loungeCurrentRate(state.lounge,loungeSeated(),flowerValue())*state.gameSpeed,nextCost:loungeUpgradeCost(state.lounge)},customers:customers.map(function(c){return{kind:c.kind,id:c.id,phase:c.phase,ordered:c.ordered,bag:c.bag,bags:c.bags||0,kiosk:!!c.kiosk,lounge:!!c.lounge,orderCounter:c.orderCounter,pickupTicket:c.pickupTicket||0,walking:!!c.walking,x:c.x,z:c.z,serviceElapsed:c.serviceElapsed||0}})}}});}
+  if(document.modelContext&&document.modelContext.registerTool){document.modelContext.registerTool({name:'read_factory_status',title:'Read factory status',description:'Read cash, production, and machine levels.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:function(){return{shopPlay:state.shopPlay,budtenderMoment:budtenderMoment,operationsAlerts:operationsAlerts(state),orderCounters:state.orderCounters,reservedWalkInBags:customers.filter(function(c){return c.ordered&&!c.bag}).reduce(function(n,c){return n+(c.bags||1)},0),orderCounterPositions:orderCounterPositions(state.orderCounters),autoDrone:state.autoDrone,deliveryDrones:deliveryDrones.length,productMenu:state.productMenu,prestige:state.empire.prestige,contract:state.contract,viewedStore:state.empire.activeStore,branchLevels:state.empire.stores.map(function(s){return s.level}),branchProjects:state.empire.stores.map(function(s){return s.projects}),network:state.empire.network,reputation:state.empire.reputation,management:state.empire.stores,goalsCompleted:state.empire.goalsCompleted,branchIncome:branchRateNow()*playbackRate(state.gameSpeed),cash:Math.floor(state.money),lifetime:Math.floor(state.lifetime),perSecond:production()*playbackRate(state.gameSpeed),gameSpeed:state.gameSpeed,paused:state.gameSpeed===0,lineLevels:state.lines,shopOpen:state.shopOpen,doorBuilt:state.doorBuilt,stock:state.stock,customersServed:state.sold,employeeLevels:state.staff,onlineCompleted:state.onlineCompleted,camera:{zoom:zoom,panX:panX,panY:panY,angle:angle},orderRoute:queueRoute(false),pickupRoute:queueRoute(true),lounge:{level:state.lounge,seats:loungeSeats(state.lounge),seated:loungeSeated(),waiting:loungeWaiting().length,sessions:state.loungeSessions,earned:state.loungeEarned,rate:loungeCurrentRate(state.lounge,loungeSeated(),flowerValue())*playbackRate(state.gameSpeed),nextCost:loungeUpgradeCost(state.lounge)},customers:customers.map(function(c){return{momentMatched:!!c.momentMatched,momentChoice:c.momentChoice,kind:c.kind,id:c.id,phase:c.phase,ordered:c.ordered,bag:c.bag,bags:c.bags||0,kiosk:!!c.kiosk,lounge:!!c.lounge,orderCounter:c.orderCounter,pickupTicket:c.pickupTicket||0,walking:!!c.walking,x:c.x,z:c.z,serviceElapsed:c.serviceElapsed||0}})}}});}
 })();

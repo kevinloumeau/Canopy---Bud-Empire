@@ -1,0 +1,29 @@
+.shop-play{position:absolute;inset:0;pointer-events:none;z-index:9;color:#eaf3df;font-family:'Bricolage Grotesque',sans-serif}
+.shop-play button,.shop-activity-panel{pointer-events:auto}
+.shop-activity{position:absolute;left:12px;top:calc(var(--hud-height,60px) + 12px);display:flex;align-items:center;gap:8px;max-width:calc(100% - 100px);min-height:44px;padding:9px 12px;border:1px solid #708c6a;border-radius:10px;background:#183528;color:#eaf3df;font:700 12px 'Bricolage Grotesque',sans-serif;text-align:left;cursor:pointer}
+.shop-play svg{width:22px;height:22px;flex:none}.shop-activity span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.shop-activity.has-update{border-color:#d3bd7d}.shop-play button:focus-visible{outline:2px solid #eed69b;outline-offset:3px}.shop-play button:hover{background:#30573e}
+.shop-activity-panel{position:absolute;left:12px;top:calc(var(--hud-height,60px) + 64px);width:min(360px,calc(100% - 24px));max-height:calc(100dvh - var(--hud-height,60px) - var(--dock-height,90px) - 80px);overflow:auto;padding:16px;border-radius:14px;background:#19382b;box-shadow:0 8px 28px #071a1259;scrollbar-color:#89a279 #19382b;overscroll-behavior:contain}
+.shop-activity-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.shop-activity-heading h2{font-size:19px;margin:0}.shop-activity-heading button{width:44px;height:44px;flex:none;border:0;background:transparent;color:#eaf3df;font-size:25px;cursor:pointer}
+.shop-play h3{font-size:15px;margin:18px 0 8px}.shop-play p{font-size:13px;line-height:1.45;margin:8px 0;color:#eaf3df}.shop-play small{display:block;font-size:12px;line-height:1.4;color:#c4d7b9}.shop-play progress{width:100%;height:5px;accent-color:#c4e8a7;margin:10px 0 0}.shop-play progress::-webkit-progress-bar{background:#426047;border-radius:4px}.shop-play progress::-webkit-progress-value{background:#c4e8a7;border-radius:4px}
+.moment-options{display:grid;gap:6px}.moment-options button,.operations-alerts button,.shift-recap button{width:100%;min-height:44px;padding:10px 12px;border:0;border-radius:8px;background:#294c37;color:#eaf3df;text-align:left;font:600 13px 'Bricolage Grotesque',sans-serif;cursor:pointer}.moment-options strong,.operations-alerts strong{display:block}.moment-options small,.operations-alerts small{margin-top:3px}.moment-skip{min-height:44px;background:transparent;border:0;color:#d1dfc7;font:600 12px 'Bricolage Grotesque',sans-serif;padding:6px 0;cursor:pointer}.moment-note{margin-bottom:16px}.shift-recap,.operations-alerts{border-top:1px solid #59754d;padding-top:3px;margin-top:16px}.operations-alerts button+button{margin-top:6px}.shop-play .recap-detail{color:#c4d7b9;font-size:12px}.shift-recap button{margin-top:8px;line-height:1.4}
+.moment-bubble{position:absolute;width:44px;height:44px;display:grid;place-items:center;transform:translate(-50%,-100%);border:0;border-radius:12px 12px 12px 2px;background:#eed69b;color:#24412f;box-shadow:0 4px 12px #1029184d;cursor:pointer}.shop-play .moment-bubble:hover{background:#f8e6b9}.shop-play-feedback{position:absolute;left:50%;top:calc(var(--hud-height,60px) + 64px);transform:translateX(-50%);width:max-content;max-width:calc(100% - 28px);padding:10px 14px;border-radius:10px;background:#e4eecf;color:#24412f!important;box-shadow:0 4px 15px #1029184d;text-align:center;pointer-events:none}
+.shop-play [hidden]{display:none!important}.guide-open .shop-play,html:not(.age-ok) .shop-play{display:none}::selection{background:#d3bd7d;color:#183528}
+.shop-activity-panel .shop-play-feedback{position:static;transform:none;width:auto;max-width:none;margin:8px 0;box-shadow:none}
+@media(min-width:780px){.shop-activity{left:76px}.shop-activity-panel{left:76px;max-height:calc(100dvh - var(--hud-height,60px) - 90px)}}
+
+/* A budtender moment is one small card: who, what they asked, the picks, and a way out. */
+.shop-activity.is-moment{border-color:#e8d29c;background:#3a3218;color:#f7ecc8}.shop-activity.is-moment svg{color:#e8d29c}.shop-activity.is-moment:hover{background:#4a4020}
+.shop-activity-panel.has-moment .shift-recap,.shop-activity-panel.has-moment .operations-alerts{display:none}
+.shop-activity-panel.has-moment{padding:14px 16px 16px}
+.shop-activity-panel.has-moment .shop-activity-heading h2{font-size:17px}
+.shop-play .moment-quote{margin:2px 0 12px;font-size:15px;line-height:1.35;font-style:italic;color:#f3ecd2}
+.shop-play .moment-options{gap:8px}
+.shop-play .moment-options button{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;min-height:52px;padding:8px 12px;border:1.5px solid #e8d29c;background:#2b4a36;color:#f4f7ea}
+.shop-play .moment-options button:hover{background:#3a5f45}
+.shop-play .moment-options strong{font-size:14px}
+.shop-play .moment-options small{margin:0;padding:3px 9px;border-radius:99px;background:#e8d29c;color:#2b2410;font-weight:700;font-size:11px}
+.shop-play .moment-skip{display:block;width:100%;margin-top:6px;text-align:center;text-decoration:underline;text-underline-offset:3px;color:#c4d7b9}
+.shop-play .moment-note{margin:2px 0 0;text-align:center;font-size:11px;color:#a9bf9b}
+.shop-play .moment-bubble{border-radius:50%;transform:translate(-50%,-115%);background:#e8d29c;color:#2b2410;animation:momentPulse 1.8s ease-out infinite}
+@keyframes momentPulse{0%{box-shadow:0 4px 12px #1029184d,0 0 0 0 #e8d29c99}70%,100%{box-shadow:0 4px 12px #1029184d,0 0 0 12px #e8d29c00}}
+@media(prefers-reduced-motion:reduce){.shop-play .moment-bubble{animation:none}}

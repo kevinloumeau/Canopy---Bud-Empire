@@ -6,6 +6,31 @@
       "em-dash-overuse"
     ],
     "ignoreFiles": [],
-    "ignoreValues": []
+    "ignoreValues": [
+      {
+        "rule": "layout-transition",
+        "value": "*",
+        "files": [
+          "src/empire-stores.css"
+        ],
+        "createdAt": "2026-09-27T20:30:51.696Z",
+        "reason": "Codex reviewed 2026-09-27: false positive; both store and supply meters animate transform: scaleX only, not width, height, padding, or margin."
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(.3, 1.35, .45, 1)",
+        "createdAt": "2026-09-27T20:49:19.760Z",
+        "reason": "Existing hanging sign flip uses a brief physical overshoot during the grand-opening celebration"
+      },
+      {
+        "rule": "layout-transition",
+        "value": "*",
+        "files": [
+          "src/start-guide.css"
+        ],
+        "createdAt": "2026-09-27T20:49:23.527Z",
+        "reason": "Existing spotlight ring must interpolate between measured station rectangles during the guided tour"
+      }
+    ]
   }
 }

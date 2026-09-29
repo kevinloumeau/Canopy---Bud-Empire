@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {LOUNGE_TIERS,LOUNGE_MAX,migrateLounge,loungeTier,loungeUpgradeCost,loungeSeats,loungeSessionSeconds,buyLoungeTier,loungeShare,wantsLounge,loungeAdmission,loungeTake,loungeRate,loungeCurrentRate} from '../src/lounge.js';
+import {LOUNGE_TIERS,LOUNGE_MAX,migrateLounge,migrateLoungeStaff,loungeTier,loungeUpgradeCost,loungeSeats,loungeSessionSeconds,loungeStaffSpeed,loungeStaffSessionSeconds,buyLoungeTier,loungeShare,wantsLounge,loungeAdmission,loungeTake,loungeRate,loungeCurrentRate} from '../src/lounge.js';
 
 test('the tiers get dearer and bigger, and each buys more seats and a higher take',()=>{
   assert.equal(LOUNGE_TIERS.length,LOUNGE_MAX);
@@ -15,6 +15,13 @@ test('old saves have no lounge and malformed levels are clamped',()=>{
   for(const value of [undefined,null,NaN,Infinity,'2',{},-3])assert.equal(migrateLounge(value),0);
   assert.equal(migrateLounge(2.7),2);assert.equal(migrateLounge(99),LOUNGE_MAX);
   assert.equal(loungeTier(0),null);assert.equal(loungeSeats(0),0);assert.equal(loungeSessionSeconds(0),0);
+  for(const value of [undefined,null,NaN,Infinity,'2',{},-3])assert.equal(migrateLoungeStaff(value),0);
+});
+test('lounge staff turns seats faster and raises the live lounge rate',()=>{
+  assert.equal(loungeStaffSpeed(0),1);assert.equal(loungeStaffSpeed(2),1.6);
+  assert.equal(loungeStaffSessionSeconds(1,2),LOUNGE_TIERS[0].session/1.6);
+  assert.ok(Math.abs(loungeCurrentRate(1,2,80,2)-loungeCurrentRate(1,2,80)*1.6)<1e-9);
+  assert.ok(Math.abs(loungeRate(1,80,2)-loungeRate(1,80)*1.6)<1e-9);
 });
 test('buying charges each tier once, in order, and stops at the members’ room',()=>{
   const state={money:LOUNGE_TIERS[0].cost-1};

@@ -11,7 +11,6 @@ export function mountSettings(options){
  wrap.innerHTML='<div class="modal settings" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><div class="settings-head"><h2 id="settingsTitle">Settings</h2><button type="button" class="settings-close" aria-label="Close settings">×</button></div>'+
   '<div class="settings-list">'+
   '<button type="button" class="settings-row" data-proxy="soundToggle"><span>Sound</span><b data-mirror="soundToggle"></b></button>'+
-  '<button type="button" class="settings-row" data-proxy="ambienceToggle"><span>Ambience</span><b data-mirror="ambienceToggle"></b></button>'+
   // Motion belongs beside sound: both are things a player may want quiet without changing their whole phone.
   '<button type="button" class="settings-row" data-still><span>Reduce motion<small>Holds the shop still</small></span><b data-mirror="still"></b></button>'+
   '<button type="button" class="settings-row" data-proxy="guide"><span>Start guide</span><b>Replay</b></button>'+
@@ -26,9 +25,8 @@ export function mountSettings(options){
  const modal=wrap.querySelector('.modal'),closeButton=wrap.querySelector('.settings-close');
  let opener=null;
  function sync(){
-  const sound=$('soundToggle'),bed=$('ambienceToggle');
+  const sound=$('soundToggle');
   wrap.querySelector('[data-mirror=soundToggle]').textContent=sound?(sound.textContent.replace('Sound ','')==='on'?'On':'Off'):'';
-  wrap.querySelector('[data-mirror=ambienceToggle]').textContent=bed?(bed.textContent.replace('Ambience ','')==='on'?'On':'Off'):'';
   // When the phone itself asks for reduced motion the game follows it and the row says so rather than pretending
   // to be a switch that would not do anything.
   const stillRow=wrap.querySelector('[data-still]'),fromSystem=opts.systemStill?opts.systemStill():false;

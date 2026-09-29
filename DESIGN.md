@@ -208,3 +208,7 @@ All of it costs roughly what the old wireframe strokes did (~3.5ms software-rend
 A close-zoom pass adds: queue ropes and stanchions cast soft down-left floor shadows; the furniture bevel rim is lit directionally (dim on the shadow side, bright toward the key light) so pale counter tops read as rounded lips, not rings; large pale slab tops carry two faint seeded stone veins once `unit ≥ 22`; the globe pendants are shaded spheres (amber rim, cream body, upper-left bloom, small specular) instead of flat discs; and the Seeds bench trays sprout twin pointed cotyledons.
 
 Branch buildings' warm window panes (tones from `#e0`) register as dim emitters through `api.lit(paint,'pane')` at emissive weight .26, so occupied windows keep a soft interior glow — with bloom, without whiting out — after dark, while dark panes go properly black under the night multiply.
+
+## Native iOS diorama
+
+The September 27 native-map approval moves the iOS world into Metal while retaining its architecture, forest/stone/oak palette, fixed isometric projection and interactive scene. Actual beveled geometry, directional cast shadows, cool environmental fill and warm fixture light replace painted box-face shading. Plants, jars and people become dimensional meshes. Riverside and Alpine water occupies cutouts in the terrain, with the original boardwalks and bridges above it. Fit the entire main shop around the open panel and below system chrome. The browser renderer and accessible control styling remain intact; text and small effects may remain in the transparent overlay.

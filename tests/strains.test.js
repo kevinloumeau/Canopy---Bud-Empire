@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {growFactor,strainGrowFactor,trafficFactor,potency,tipFactor,trendPrice,nextTrend,migrateTrend,tickTrend,TREND_SECONDS,perkTier,everydayBonus,packBonus,reputationBonus,vipBonus,reserveStrain,buzzFactor,VIP_BUZZ_TRAFFIC,timeFactor,peakType,STRAIN_TYPE,SATIVA,INDICA,HYBRID} from '../src/strains.js';
+import {growFactor,strainGrowFactor,trafficFactor,potency,tipFactor,trendPrice,nextTrend,migrateTrend,tickTrend,TREND_SECONDS,perkTier,everydayBonus,packBonus,reputationBonus,vipBonus,reserveStrain,buzzFactor,VIP_BUZZ_TRAFFIC,timeFactor,peakType,upgradeCost,STRAIN_TYPE,SATIVA,INDICA,HYBRID} from '../src/strains.js';
 
 test('boutique strains slow the grow room and mastery claws most of it back',()=>{
   assert.equal(strainGrowFactor(0,1),1);assert.equal(strainGrowFactor(0,10),1);
@@ -33,6 +33,15 @@ test('trend rotates on its cadence, never repeats itself, and migrates safely',(
 test('signature perks unlock at level 5 and 10',()=>{
   assert.deepEqual([1,4,5,9,10].map(perkTier),[0,0,1,1,2]);
   assert.equal(everydayBonus([10,0,0,0]),1.2);assert.equal(packBonus([1,5,0,0]),1.15);assert.equal(reputationBonus([1,1,10,0]),2);assert.equal(vipBonus([1,1,1,5]),1.25);assert.equal(vipBonus([1,1,1,4]),1);
+});
+
+test('strain upgrades steepen through mastery and charge more at perk milestones',()=>{
+  const costs=Array.from({length:9},(_,i)=>upgradeCost(1500,i+1));
+  assert.ok(costs.every((cost,i)=>i===0||cost>costs[i-1]));
+  assert.ok(costs[3]>costs[2]*2.05,'level 5 should carry a perk milestone premium');
+  assert.ok(costs[8]>costs[7]*2.05,'level 10 should carry a larger perk milestone premium');
+  assert.equal(upgradeCost(1500,0),1500,'unlock price should not change');
+  assert.equal(upgradeCost(0,1),300,'the everyday strain should still require a real investment');
 });
 
 test('the VIP reserve is the most potent boutique strain on the menu, never Meadow Mint',()=>{

@@ -65,3 +65,12 @@ export function timeFactor(type,night){
   return 1;
 }
 export function peakType(night){return night?INDICA:SATIVA;}
+
+// Strain mastery should remain an investment after the shop's income accelerates. Unlock prices stay familiar;
+// subsequent levels climb faster, with premiums on the two levels that unlock signature perks.
+export function upgradeCost(unlock,currentLevel){
+  if(currentLevel<=0)return Math.max(0,Math.round(unlock));
+  const nextLevel=Math.min(10,Math.floor(currentLevel)+1);
+  const milestone=nextLevel===5?1.25:nextLevel===10?1.5:1;
+  return Math.round(Math.max(300,unlock*.4)*Math.pow(2.05,currentLevel-1)*milestone);
+}

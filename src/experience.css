@@ -15,11 +15,9 @@
 .shop-story progress::-webkit-progress-bar,#deliveryFunding::-webkit-progress-bar{background:#102c22}
 .shop-story progress::-webkit-progress-value,#deliveryFunding::-webkit-progress-value{background:#c4dc9f}
 #storyAction{width:100%;min-height:44px;padding:10px 14px;border:0;border-radius:10px;color:#1e3628;background:#c4dc9f;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
-.story-history{margin-top:12px}.story-history summary,.story-goals summary{min-height:44px;align-content:center;color:#d3e2c8;font-size:13px;cursor:pointer}
-.story-history ol{padding:0 0 0 20px;margin:4px 0}.story-history li{padding:7px 0;font-size:12px;color:#bad49f}.story-history p{margin:4px 0;color:#c5d5bc;line-height:1.45}
 #nextInvestmentLink{display:block;width:100%;min-height:44px;padding:12px 0;border:0;border-block:1px solid #d7e5c924;border-radius:0;background:transparent;text-align:left;cursor:pointer}
 .goals-dropdown #nextInvestment{margin:0;line-height:1.5;font-size:12px;color:#e8d29c}
-.story-goals summary{font-weight:700}.story-goals summary span{float:right;color:#e8d29c;font-size:12px}
+.story-goals>h3{display:flex;justify-content:space-between;margin:10px 0 4px;font-size:13px;color:#d3e2c8}.story-goals>h3 span{color:#e8d29c;font-size:12px}
 .goals-dropdown .short-goal button{min-height:44px;background:#55733e}
 .story-entry{display:flex;align-items:center;gap:10px;width:100%;padding:0 0 10px;margin:0 0 10px;border:0;border-bottom:1px solid #d7e5c921;border-radius:0;background:transparent;color:#d1dfc4;text-align:left;cursor:pointer;font:inherit}
 .story-entry>svg{width:24px;height:24px;flex:0 0 auto;color:#e8d29c}
@@ -175,8 +173,246 @@
 .sheet .machine-nav button.is-lot em,.sheet .machine-nav button.is-lot.can-upgrade em{color:#f7c6da}
 .sheet .machine-nav button.is-site .machine-thumb{opacity:.9}
 
-/* The tray glides: the pane's height is animated in script; the header and its chevron-to-handle ease alongside it. */
-.sheet .panel-header{transition:min-height .3s cubic-bezier(.22,.9,.24,1),padding .3s cubic-bezier(.22,.9,.24,1)}
-.sheet .panel-header #panelToggle{transition:width .3s cubic-bezier(.22,.9,.24,1),height .3s cubic-bezier(.22,.9,.24,1),background-color .16s ease,box-shadow .16s ease}
-.sheet .panel-header #panelToggle::after{transition:transform .3s cubic-bezier(.22,.9,.24,1),width .3s cubic-bezier(.22,.9,.24,1),height .3s cubic-bezier(.22,.9,.24,1),opacity .2s ease}
+/* The pane glides in script; header geometry snaps to its settled state so the animation stays compositor-friendly. */
+.sheet .panel-header #panelToggle{transition:background-color .16s ease,box-shadow .16s ease}
+.sheet .panel-header #panelToggle::after{transition:transform .3s cubic-bezier(.22,.9,.24,1),opacity .2s ease}
 @media(prefers-reduced-motion:reduce){.sheet .panel-header,.sheet .panel-header #panelToggle,.sheet .panel-header #panelToggle::after{transition:none}}
+
+/* Keep the lounge map plaque to one line; its price and level live in the station panel. */
+.world .marker.station-sign[data-marker="lounge"] .station-sign-level{display:none}
+.world .marker.station-sign[data-marker="lounge"]{padding:5px .6em}
+.world .marker.station-sign[data-marker="lounge"].can-upgrade{padding-right:1.75em}
+.world .marker.station-sign[data-marker="lounge"]::after{left:auto;right:.45em;bottom:auto;top:calc(50% - .525em)}
+
+/* All notification feedback belongs to the controls, leaving the shop unobstructed. */
+.panel-header{position:relative}
+.panel-header.notification-feedback #panelTitle{visibility:hidden}
+.panel-header>.toast{
+ position:absolute;left:0;top:50%;transform:translateY(-50%);max-width:calc(100% - 92px);
+ margin:0;padding:4px 7px;font-size:11px;line-height:1.2;text-align:left;box-shadow:none;
+}
+.panel-header>.toast.show{transform:translateY(-50%)}
+
+.sheet .panel-header.notification-feedback{min-height:max(46px,var(--notification-height,46px))}
+
+/* Story and all three goals fit together beneath the HUD. Scroll only on unusually short screens. */
+.goals-dropdown{width:min(390px,calc(100vw - 16px));max-height:calc(100vh - var(--goals-top,80px) - env(safe-area-inset-bottom,0px) - 12px);max-height:calc(100dvh - var(--goals-top,80px) - env(safe-area-inset-bottom,0px) - 12px);padding:8px 12px 10px}
+.goals-dropdown .settings-head{margin:0}
+.goals-dropdown .shop-story{padding:4px 0 10px}
+.goals-dropdown .story-heading h3{font-size:18px}
+.goals-dropdown .story-path{margin:9px 0}
+.goals-dropdown .shop-story>p{margin-bottom:10px;line-height:1.4}
+.goals-dropdown .shop-story progress{margin:6px 0 8px}
+.goals-dropdown #nextInvestmentLink{padding:6px 0}
+.goals-dropdown .short-goal{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"title button" "count button" "progress progress";column-gap:10px;row-gap:3px;padding:6px 0}
+.goals-dropdown .short-goal h3{margin:0;align-self:end;font-size:13px;line-height:1.25}
+.goals-dropdown .short-goal p{margin:0;font-size:11px;line-height:1.25}
+.goals-dropdown .short-goal button{grid-area:button;margin:0;min-height:44px;padding:0 10px;font-size:12px;max-width:132px}
+.goals-dropdown .short-goal progress{height:4px;margin:2px 0 0}
+
+/* The flag owns goals and claims; Empire owns stores and records. */
+.goals-view-nav,.reward-view-nav{display:flex;gap:6px;margin:0 0 8px}
+.machine-nav,.strain-nav,.shop-categories,.operation-tabs,.goals-view-nav,.reward-view-nav{touch-action:pan-y;-webkit-user-select:none;user-select:none}
+.machine-nav.is-scrubbing,.strain-nav.is-scrubbing,.shop-categories.is-scrubbing,.operation-tabs.is-scrubbing,.goals-view-nav.is-scrubbing,.reward-view-nav.is-scrubbing{cursor:grabbing}
+.goals-view-nav button,.reward-view-nav button{flex:1;min-height:36px;padding:6px 10px;border:1px solid #c7dbb92e;border-radius:8px;background:#193025;color:#cbdcc1;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.goals-view-nav button[aria-pressed=true],.reward-view-nav button[aria-pressed=true]{background:#c4dc9f;color:#1e3628;border-color:#c4dc9f}
+.goals-story-view[hidden],.goals-rewards-view[hidden],.flag-reward-pane[hidden]{display:none}
+.flag-reward-pane{font-size:13px;line-height:1.45}
+.flag-reward-pane h2{font-size:18px;margin:10px 0 8px}
+.flag-reward-pane p{margin:8px 0;color:#cbdcc1}
+.flag-reward-pane button{min-height:44px;font:600 13px 'Bricolage Grotesque',sans-serif;padding:8px 12px;border:1px solid #c7dbb94a;border-radius:9px;background:#c4dc9f;color:#1e3628;cursor:pointer}
+.flag-reward-pane button:disabled{background:#2a3d30;color:#8ea18c;cursor:default}
+.flag-reward-pane>.empire-primary{width:100%}
+.flag-reward-pane progress{width:100%;height:5px;accent-color:#c4dc9f}
+.flag-reward-pane .daily-track{margin:12px 0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;list-style:none}
+.flag-reward-pane .daily-track li{padding:8px 4px;text-align:center}
+.flag-reward-pane .shop-milestone{display:grid;gap:10px;margin:12px 0;padding:0;border:0;background:none}
+.flag-reward-pane .shop-milestone .shop-symbol{display:none}
+.goals-view-nav button:focus-visible,.reward-view-nav button:focus-visible{outline:2px solid #e8d29c;outline-offset:2px}
+
+.goals-story-view .short-goal{padding-block:4px}
+.goals-story-view .shop-story{padding-bottom:4px}
+.flag-reward-pane .shop-milestone{grid-template-columns:minmax(0,1fr);grid-template-areas:"copy" "meter" "button"}
+.flag-reward-pane .shop-milestone .shop-copy{grid-area:copy;display:grid;gap:6px;min-width:0}
+.flag-reward-pane .shop-milestone .shop-copy h2{margin:0}
+.flag-reward-pane .shop-milestone .shop-copy strong{font-size:14px;line-height:1.3}
+.flag-reward-pane .shop-milestone .shop-copy small{font-size:12px;color:#cbdcc1}
+.flag-reward-pane .shop-milestone #claim{grid-area:button;display:flex;align-items:center;justify-content:space-between;width:100%}
+.flag-reward-pane .shop-milestone .shop-meter{grid-area:meter;grid-column:auto;height:5px;margin:0;background:#142c22;border-radius:4px;overflow:hidden}
+.flag-reward-pane .shop-milestone .shop-meter i{display:block;height:100%;background:#b6d690}
+
+/* Clear, touch-sized panel controls. */
+.sheet:not(.collapsed) .panel-header{min-height:52px;gap:8px}
+.sheet:not(.collapsed) .panel-header #panelToggle,
+.sheet:not(.collapsed) .panel-header #panelExpand{width:44px;height:44px;flex:0 0 44px;border-radius:12px;background:#d7edcb14;box-shadow:inset 0 0 0 1px #d7edcb30;color:#e8f4da}
+.sheet .panel-header #panelExpand svg{width:22px;height:22px}
+.sheet:not(.collapsed) .panel-header #panelToggle::after{width:10px;height:10px;border-width:0 2px 2px 0;opacity:1}
+.sheet .panel-header button:focus-visible{outline:2px solid #d5e9ac;outline-offset:2px}
+.sheet .panel-header button:active{background:#d7edcb30}
+
+/* Automation is the first control in Deliveries, above the receipt. */
+.dispatch-desk .auto-drone-control{position:sticky;top:0;z-index:4;background:#304b39;border-color:#a8c58c70;padding:10px;gap:8px;flex-shrink:0}
+.dispatch-desk .auto-drone-control strong{font-size:14px;color:#f0f6e7}
+.dispatch-desk .auto-drone-control small{font-size:11px;color:#d0dfc6;line-height:1.3}
+.dispatch-desk .auto-drone-control button{min-height:44px}
+.dispatch-desk .drone-switch::before{top:8px}
+.dispatch-desk .auto-drone-control:has(#autoDroneToggle[aria-pressed=true]) strong::after{content:' · On';color:#d5e9a9;font-weight:500}
+.dispatch-desk .auto-drone-control:has(#autoDroneToggle[aria-pressed=false]) strong::after{content:' · Off';color:#d1d9cd;font-weight:500}
+@media(max-width:779px){
+ .dispatch-desk .auto-drone-control{grid-template-columns:28px minmax(0,1fr) 52px}
+ .dispatch-desk .auto-drone-control .drone-glyph{width:28px;height:32px;background:none}
+ .dispatch-desk .auto-drone-control>#autoDroneBulk{grid-column:1/-1;grid-row:2;justify-self:stretch;max-width:none;min-height:44px}
+}
+
+/* Empire: clear location names, readable figures, and Records within reach. */
+.empire-home-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 8px}
+.empire-home-head .empire-section-heading{margin:0;font-size:18px;letter-spacing:-.02em}
+.sheet .empire-screen .empire-home-head .empire-more{width:auto;min-height:44px;margin:0;padding:8px 10px;gap:5px;background:transparent;border:1px solid #c1d7b73a;border-radius:10px;font-size:12px}
+[data-empire-screen] #branchSummary{font-family:inherit;font-weight:500;font-size:12px;line-height:1.5;color:#c4d5b9;margin-bottom:12px}
+.sheet .empire-screen .store-list .branch-toggle.store-card{grid-template-areas:"icon copy chev" "meta meta meta" "meter meter meter";padding:12px;gap:10px 10px;background:#dce9be09;border:1px solid #c1d7b72e;border-radius:12px;box-shadow:none}
+.store-card .store-icon{grid-row:1;width:38px;height:38px}
+.store-card .store-copy{grid-template-columns:minmax(0,1fr);grid-template-areas:"name" "detail";gap:4px}
+.store-card .branch-name{font-size:15px;white-space:normal;overflow:visible}
+.store-card .store-detail{white-space:normal;overflow:visible;font-size:11.5px;line-height:1.4;color:#c1d0b8}
+.store-card .store-meta{justify-content:space-between;flex-wrap:wrap;gap:8px;padding-top:9px;border-top:1px solid #dce9be16}
+.store-card .store-meta .store-status{grid-area:auto;font-family:inherit;font-size:11px;padding:5px 7px;box-shadow:none}
+.store-card .store-pips{display:none}
+.store-card.is-locked{opacity:1}
+.sheet .empire-screen .store-card.has-ready{border-color:#b6d69065;box-shadow:none}
+.sheet .empire-screen .store-card::after{grid-row:1;align-self:center}
+.store-card .store-meter{height:4px;margin:0}
+
+/* Strain level and purchase form one readable upgrade row, before the deeper details. */
+.menu-board .strain-hero{grid-template-areas:"art info" "art stats" "actions actions" "details details" "format format"}
+.menu-board .strain-upgrade{grid-template-columns:minmax(0,1fr) minmax(104px,auto);align-items:center;gap:10px;padding:12px 0;margin:6px 0;border-block:1px solid #dce9be24;min-width:0}
+.strain-upgrade-copy{display:grid;gap:5px;min-width:0}
+.strain-upgrade-copy>b{font-size:14px;color:#f0f6e6}
+.strain-upgrade-copy>small{font-size:11px;line-height:1.4;color:#c3d5b7}
+.strain-upgrade-copy progress{width:100%;height:5px;margin:2px 0 0;accent-color:var(--strain)}
+.menu-board .strain-upgrade #flowerBuy{display:grid;gap:3px;min-height:52px;padding:8px 12px}
+.strain-upgrade #flowerBuy span{font-size:12px}
+.strain-upgrade #flowerBuy b{font-size:15px;font-variant-numeric:tabular-nums}
+@media(max-width:360px){.menu-board .strain-hero{grid-template-areas:"art info" "stats stats" "actions actions" "details details" "format format"}}
+
+.menu-board .strain-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+/* Claim-ready badges follow the flag's gold count, including the exact reward category. */
+.goals-view-nav button,.reward-view-nav button{position:relative;overflow:visible}
+.reward-ready-badge{position:absolute;top:-5px;right:4px;min-width:16px;height:16px;box-sizing:border-box;padding:0 4px;border-radius:8px;background:#e7c77f;color:#25331f;font-family:inherit;line-height:16px;font-size:10px;font-weight:700;text-align:center;box-shadow:0 0 0 2px #20372b}
+.reward-ready-badge[hidden]{display:none}
+.goals-view-nav button.has-ready,.reward-view-nav button.has-ready{border-color:#e7c77f;background:#514b2d;color:#f7e7b8;box-shadow:inset 0 0 0 1px #e7c77f44}
+.goals-view-nav button.has-ready[aria-pressed=true],.reward-view-nav button.has-ready[aria-pressed=true]{background:#e7c77f;color:#25331f;box-shadow:inset 0 0 0 1px #fff1c0}
+
+/* Lightly frosted map signs let the shop show through without fading the text. */
+.world .marker.station-sign,.world .marker.station-sign:not(.selected){
+ background:rgba(20,44,32,.62);border-color:#e3f5dc55;
+ box-shadow:0 2px 7px #0b1c1633,inset 0 1px 0 #f3ffe533;
+ -webkit-backdrop-filter:blur(6px) saturate(1.15);backdrop-filter:blur(6px) saturate(1.15);
+}
+.world .marker.station-sign.selected{background:color-mix(in srgb,var(--station-tier,#d0e6b6) 80%,transparent);border-color:#f0f8e6bb}
+.world .marker.station-sign.is-site:not(.selected){background:#2a2617a6}
+.world .marker.station-sign.is-lot:not(.selected){background:#2a1a22a6}
+.world .marker.station-sign.is-site.selected{background:#e6c95acc}
+.world .marker.station-sign.is-lot.selected{background:#f0a7c8cc}
+@media(prefers-reduced-transparency:reduce),(prefers-contrast:more){
+ .world .marker.station-sign,.world .marker.station-sign:not(.selected){background:#152d21;-webkit-backdrop-filter:none;backdrop-filter:none}
+ .world .marker.station-sign.selected{background:var(--station-tier,#d0e6b6)}
+ .world .marker.station-sign.is-site.selected{background:#e6c95a}
+ .world .marker.station-sign.is-lot.selected{background:#f0a7c8}
+}
+
+/* Press-and-hold belongs to the game, not WebKit's text/image copy callout. */
+html,body,body *{
+ -webkit-user-select:none;user-select:none;
+ -webkit-touch-callout:none;
+}
+input,textarea,[contenteditable=""],[contenteditable="true"],[contenteditable="plaintext-only"],
+[contenteditable=""] *,[contenteditable="true"] *,[contenteditable="plaintext-only"] *{
+ -webkit-user-select:text;user-select:text;
+ -webkit-touch-callout:default;
+}
+
+/* Fit dispatch into the open sheet: controls stay visible and the current receipt stays put. */
+.sheet>[data-pane="orders"]:has(.dispatch-desk.is-built){overflow:hidden;padding-bottom:4px}
+.dispatch-desk.is-built{min-height:0;gap:6px}
+.dispatch-desk .dispatch-stats{flex-shrink:0}
+.dispatch-desk .dispatch-stat{padding:5px 8px}
+.dispatch-desk .auto-drone-control{position:static;padding:6px 8px;gap:6px;grid-template-columns:minmax(0,1fr) 52px minmax(80px,110px)}
+.dispatch-desk .auto-drone-control>.drone-glyph{display:none}
+.dispatch-desk .auto-drone-control>div{grid-column:1}
+.dispatch-desk .auto-drone-control>#autoDroneToggle{grid-column:2;grid-row:1}
+.dispatch-desk .auto-drone-control>#autoDroneBulk{grid-column:3;grid-row:1;justify-self:stretch;max-width:none;min-height:44px;padding:5px 6px}
+.dispatch-desk .auto-drone-control strong{font-size:12px}
+.dispatch-desk .auto-drone-control small{font-size:10px}
+[data-pane="orders"] .dispatch-desk .online-card{flex:1 1 0;min-height:0;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;gap:6px;padding:0 8px 6px;align-content:stretch}
+[data-pane="orders"] .online-card>.receipt-stack{min-height:0;max-height:100%;overflow:hidden;overscroll-behavior:none;touch-action:pan-y;margin:0;width:min(100%,360px);align-self:stretch;padding:0 3px}
+[data-pane="orders"] .online-card .online-details.receipt{padding:10px 10px 12px}
+[data-pane="orders"] .online-card>.dispatch-actions,[data-pane="orders"] .online-card>.dispatch-actions:has(#onlineMaxOption){margin:0;width:100%;align-self:end;justify-self:stretch}
+.sheet [data-pane="orders"] .dispatch-option button{min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px}
+.sheet [data-pane="orders"] .dispatch-option>small{font-size:10px}
+@media(max-width:779px) and (max-height:700px){
+ html body[data-active-tray="orders"] .sheet:has(.dispatch-desk.is-built){max-height:72vh;max-height:72dvh}
+ .dispatch-desk .auto-drone-control{grid-template-columns:minmax(0,1fr) 52px 88px}
+ .dispatch-desk .auto-drone-control strong{font-size:11px;white-space:nowrap}
+ .sheet .dispatch-stat small{font-size:9px;white-space:nowrap}
+}
+
+/* One quiet chevron toggles the menu; the header still drags to full height. */
+.sheet:not(.collapsed) .panel-header #panelToggle{
+ width:44px;height:44px;flex:0 0 44px;margin-left:auto;
+ border:0;border-radius:10px;background:transparent;box-shadow:none;color:#d7e7cd;
+}
+.sheet:not(.collapsed) .panel-header #panelToggle::after{width:9px;height:9px;border-width:0 2px 2px 0}
+.sheet .panel-header #panelToggle:focus-visible{outline:2px solid #d7e7cd;outline-offset:-4px}
+@media(hover:hover){.sheet:not(.collapsed) .panel-header #panelToggle:hover{background:#d7edcb12}}
+.panel-header>.toast{max-width:calc(100% - 52px)}
+
+/* Auto drone uses its whole status bar as the on/off control; Bulk remains a separate mode choice. */
+.dispatch-desk .auto-drone-control{grid-template-columns:minmax(0,1fr) minmax(104px,116px);padding:6px 8px;gap:8px}
+.dispatch-desk .auto-drone-control>#autoDroneToggle{grid-column:1;grid-row:1;display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:8px;width:100%;min-height:48px;padding:7px 9px;border:1px solid #c7dbb941;border-radius:10px;background:#ffffff08;color:#eef5e7;text-align:left;font:inherit;cursor:pointer}
+.dispatch-desk .auto-drone-control>#autoDroneToggle .drone-glyph{display:grid;place-items:center;width:28px;height:28px;background:transparent;color:#d8e8cb}
+.dispatch-desk .auto-drone-copy{display:grid;gap:2px;min-width:0}
+.dispatch-desk .auto-drone-copy strong{font-size:12px}
+.dispatch-desk .auto-drone-copy small{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dispatch-desk .auto-drone-state{font-size:12px;font-weight:700;color:#cfe7aa}
+.dispatch-desk .auto-drone-control>#autoDroneToggle[aria-pressed=true]{background:#55733e;border-color:#b7cf8e}
+.dispatch-desk .auto-drone-control>#autoDroneToggle[aria-pressed=false]{background:#20372b;color:#bdcbb8}
+.dispatch-desk .auto-drone-control>#autoDroneToggle[aria-pressed=false] .auto-drone-state{color:#bdcbb8}
+.dispatch-desk .auto-drone-control>#autoDroneToggle:focus-visible{outline:2px solid #e8d29c;outline-offset:2px}
+.dispatch-desk .auto-drone-control>#autoDroneBulk{grid-column:2;grid-row:1;min-height:48px;padding:5px 6px}
+@media(max-width:360px){.dispatch-desk .auto-drone-control{grid-template-columns:minmax(0,1fr) 92px;gap:6px}.dispatch-desk .auto-drone-control>#autoDroneToggle{gap:6px;padding-inline:7px}.dispatch-desk .auto-drone-state{font-size:11px}}
+
+/* Breeding is a compact collection: status and the next action stay visible without turning the menu into a long form. */
+.journal-summary{display:block;margin:5px 0;color:#d7e9b7;font-size:12px}
+.journal-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.journal-card{min-height:0;padding:10px;gap:6px}
+.journal-card-heading{display:grid;gap:2px}
+.journal-card-heading b{font-family:inherit;font-size:13px;line-height:1.25}
+.journal-card-heading small{font-family:inherit;font-size:10px;line-height:1.25;color:#c6d8bd}
+.journal-parent{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 5px;font-size:10.5px;line-height:1.25;color:#dce6d4}
+.journal-parent strong{font-size:10px;color:#c5dca8;white-space:nowrap}
+/* The adjacent status already communicates mastery; hiding the duplicate meter saves a full line on every cross. */
+.journal-card .journal-parent progress{display:none}
+.journal-card button{min-height:40px;margin-top:1px;padding:6px;font-size:11px;line-height:1.2}
+.journal-card p{font-size:10.5px;line-height:1.32}
+.journal-card em{font-size:10px;line-height:1.25}
+.journal-card.is-ready{border-color:#b7cf8e88}
+.journal-card.is-ready button{background:#c4dc9f;color:#1e3628}
+.journal-card p{font-family:inherit}
+@media(min-width:1000px){.journal-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* Goals & rewards: one short list, no tabs. Claims first, then shift goals, then the current chapter. */
+.goals-dropdown .goals-body{display:flex;flex-direction:column;gap:10px}
+.goals-dropdown .collect-all{min-height:48px;padding:0 14px;border:0;border-radius:12px;background:#e8d29c;color:#2b2410;font:700 15px 'Bricolage Grotesque',sans-serif;cursor:pointer}
+.goals-dropdown .collect-all[hidden]{display:none}
+.reward-rows>h3,.goals-dropdown .story-goals>h3{margin:4px 0 2px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#b9cdab}
+.reward-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #c7dbb924}
+.reward-row strong{display:block;font-size:14px;line-height:1.25;color:#f0f5e8}
+.reward-row small{display:block;margin-top:2px;font-size:12px;line-height:1.3;color:#bdd0b0}
+.reward-row button{min-height:44px;min-width:104px;max-width:150px;padding:0 12px;border:0;border-radius:10px;background:transparent;color:#a9bf9b;font:600 12px 'Bricolage Grotesque',sans-serif;cursor:default}
+.reward-row button:not(:disabled){cursor:pointer;background:#c4dc9f;color:#1e3628}
+.reward-row button.is-ready:not(:disabled){background:#e8d29c;color:#2b2410}
+.goals-story-view{display:flex;flex-direction:column}
+.goals-story-view .story-goals{order:1}.goals-story-view .shop-story{order:2;margin-top:6px;padding-top:8px;border-top:1px solid #c7dbb924}.goals-story-view #nextInvestmentLink{order:3}
+.goals-story-view #storyText,.goals-story-view .story-path{display:none}
+.goals-story-view .story-heading h3{font-size:15px}

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {customerHandoff,HANDOFF_FLOOR,counterLanes,stationTier,tierBoost,retailBoost,batchSize,capacity,stationCost,staffCost,basketSize,storageCapacity,readyCapacity,onlineSize,counterServiceDuration,patience,walkSpeed,preferredStrain,rewardScale} from '../src/economy.js';
+import {customerHandoff,HANDOFF_FLOOR,CUSTOMER_WALK_SPEED_BASE,counterLanes,stationTier,tierBoost,retailBoost,batchSize,capacity,stationCost,staffCost,basketSize,storageCapacity,readyCapacity,onlineSize,counterServiceDuration,patience,walkSpeed,preferredStrain,rewardScale} from '../src/economy.js';
 import {migrateProgression,satisfyCustomer,dailyStatus,claimDaily,eventStatus,claimEvent,goalStatus,claimGoal,recordGoal,storeRate,buyStore,STORES} from '../src/progression.js';
 
 test('tiers double output at 10/20/30/50/75/100 and per-level gains stay linear between them',()=>{
@@ -27,9 +27,9 @@ test('counter handoff keeps its 1.4s floor and the service format factor',()=>{
 
 test('queue comfort stretches patience, floor flow speeds walking, curing/duration are exposed as sale bonuses',()=>{
   assert.equal(patience('hurried',0),20);assert.equal(patience('vip',0),15);assert.ok(Math.abs(patience('hurried',1)-23)<1e-9);assert.ok(Math.abs(patience('vip',8)-33)<1e-9);
-  assert.ok(Math.abs(walkSpeed(0)-2.8)<1e-9);assert.ok(walkSpeed(8)>2.8*1.7&&walkSpeed(8)<2.8*1.9);assert.ok(Math.abs(walkSpeed(undefined)-2.8)<1e-9);
+  assert.equal(CUSTOMER_WALK_SPEED_BASE,2.2);assert.ok(Math.abs(walkSpeed(0)-CUSTOMER_WALK_SPEED_BASE)<1e-9);assert.ok(walkSpeed(8)>CUSTOMER_WALK_SPEED_BASE*1.7&&walkSpeed(8)<CUSTOMER_WALK_SPEED_BASE*1.9);assert.ok(Math.abs(walkSpeed(undefined)-CUSTOMER_WALK_SPEED_BASE)<1e-9);
   // Floor flow's pace tops out: level 20 is under 2.2× and level 40 barely faster than 20, so the shop never blurs.
-  assert.ok(walkSpeed(20)<2.8*2.2&&walkSpeed(40)-walkSpeed(20)<.2);
+  assert.ok(walkSpeed(20)<CUSTOMER_WALK_SPEED_BASE*2.2&&walkSpeed(40)-walkSpeed(20)<.2);
   // A handoff never drops below the floor however many lanes a counter runs.
   assert.equal(customerHandoff(4,64,1.4),HANDOFF_FLOOR[4]);assert.equal(customerHandoff(5,64,1.4),HANDOFF_FLOOR[5]);
   assert.ok(Math.abs(customerHandoff(4,1,3.4)-3.4)<1e-9);assert.ok(Math.abs(customerHandoff(4,6,3.4)-1.7)<1e-9);

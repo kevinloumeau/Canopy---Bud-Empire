@@ -4,9 +4,9 @@ import {makeSound,AMBIENT_MIN_GAP} from '../src/sfx.js';
 
 // A stub Web Audio graph that records what each cue builds, so a broken cue fails here instead of being swallowed in the browser.
 function stubAudio(){
- const log={oscillators:0,noise:0,connects:0,starts:0,resumes:0};
- const param=()=>({value:0,setValueAtTime(){},exponentialRampToValueAtTime(){}});
- const node=()=>({connect(){log.connects++;},start(){log.starts++;},stop(){},gain:param(),frequency:param(),Q:param(),type:'',buffer:null});
+ const log={oscillators:0,noise:0,connects:0,starts:0,resumes:0,stops:0,targets:[]};
+ const param=()=>({value:0,setValueAtTime(){},exponentialRampToValueAtTime(){},cancelScheduledValues(){},setTargetAtTime(value){log.targets.push(value);}});
+ const node=()=>({connect(){log.connects++;},start(){log.starts++;},stop(){log.stops++;},gain:param(),frequency:param(),detune:param(),Q:param(),type:'',buffer:null});
  class AudioContext{
   constructor(){this.state='suspended';this.currentTime=0;this.sampleRate=48000;this.destination={};}
   resume(){log.resumes++;this.state='running';return Promise.resolve();}

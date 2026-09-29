@@ -1,17 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {FORMATS,wantedFormat,strainForFormat,formatPremium,BOOST_MAX,boostCost,migrateMenu,chooseFormat,strainFormat,dominantFormat,menuFormatFactor,milestone,prestigeOffer,elapsedSteps,OFFLINE_SECONDS} from '../src/depth.js';
+import {FORMATS,wantedFormat,strainForFormat,formatPremium,formatUnlocked,BOOST_MAX,boostCost,migrateMenu,chooseFormat,strainFormat,dominantFormat,menuFormatFactor,milestone,prestigeOffer,elapsedSteps,playbackRate,OFFLINE_SECONDS} from '../src/depth.js';
 import {migrateProgression,customerType,satisfyCustomer,saleMultiplier} from '../src/progression.js';
-test('old and invalid menus stay usable; unlocks charge once and choices trade speed for value',()=>{assert.deepEqual(migrateMenu(),{active:0,unlocked:[true,false,false],formats:[]});assert.equal(migrateMenu({active:2,unlocked:[]}).active,0);const s={money:2500,productMenu:migrateMenu()};assert.equal(chooseFormat(s,2,0),false);assert.equal(chooseFormat(s,1,0),true);assert.equal(s.money,0);assert.equal(chooseFormat(s,0,0),true);assert.equal(chooseFormat(s,1,0),true);assert.equal(s.money,0);assert.equal(chooseFormat(s,9,0),false);assert.equal(chooseFormat(s,1),false);assert.ok(FORMATS[1].packing>FORMATS[0].packing);assert.ok(FORMATS[1].service<FORMATS[0].service);assert.ok(FORMATS[2].demand<FORMATS[0].demand)});
-test('formats are chosen per strain: an old single choice covers every strain, the mix sets units and factors',()=>{
-  const legacy=migrateMenu({active:1,unlocked:[true,true,false]});assert.equal(strainFormat(legacy,0),1);assert.equal(strainFormat(legacy,5),1);
-  const s={money:10000,productMenu:migrateMenu({active:0,unlocked:[true,true,false]})};
-  assert.equal(chooseFormat(s,1,2),true);assert.equal(s.money,10000,'a format already unlocked is free for another strain');
+test('sell-as formats are purchased separately for every strain',()=>{assert.deepEqual(migrateMenu(),{active:0,formats:[],unlockedByStrain:[]});assert.equal(migrateMenu({active:2,unlocked:[]}).active,0);const s={money:5000,productMenu:migrateMenu()};assert.equal(chooseFormat(s,2,0),false);assert.equal(chooseFormat(s,1,0),true);assert.equal(s.money,2500);assert.equal(chooseFormat(s,0,0),true);assert.equal(chooseFormat(s,1,0),true);assert.equal(s.money,2500,'switching to an owned format is free');assert.equal(chooseFormat(s,1,1),true);assert.equal(s.money,0,'the same format costs again on another strain');assert.equal(formatUnlocked(s.productMenu,0,1),true);assert.equal(formatUnlocked(s.productMenu,1,1),true);assert.equal(formatUnlocked(s.productMenu,2,1),false);assert.equal(chooseFormat(s,9,0),false);assert.equal(chooseFormat(s,1),false);assert.ok(FORMATS[1].packing>FORMATS[0].packing);assert.ok(FORMATS[1].service<FORMATS[0].service);assert.ok(FORMATS[2].demand<FORMATS[0].demand)});
+test('formats are chosen per strain: legacy purchases migrate safely, and the mix sets units and factors',()=>{
+  const legacy=migrateMenu({active:1,unlocked:[true,true,false]});assert.deepEqual(legacy.formats,[1,1,1,1]);assert.equal(strainFormat(legacy,0),1);assert.equal(strainFormat(legacy,3),1);assert.equal(strainFormat(legacy,5),0);
+  const configured=migrateMenu({active:1,unlocked:[true,true,true],formats:[1,0,2,0]});assert.equal(formatUnlocked(configured,0,1),true);assert.equal(formatUnlocked(configured,1,1),false);assert.equal(formatUnlocked(configured,2,2),true);
+  const s={money:12500,productMenu:migrateMenu()};
+  assert.equal(chooseFormat(s,1,2),true);assert.equal(s.money,10000);
   assert.equal(strainFormat(s.productMenu,2),1);assert.equal(strainFormat(s.productMenu,0),0);assert.equal(strainFormat(s.productMenu,7),0);
   assert.equal(chooseFormat(s,2,3),true);assert.equal(s.money,0);assert.equal(strainFormat(s.productMenu,3),2);
   assert.equal(dominantFormat(s.productMenu,[0,2,3]),0);assert.equal(dominantFormat(s.productMenu,[2,3,7,3]),2);assert.equal(dominantFormat(s.productMenu,[]),0);
   assert.ok(Math.abs(menuFormatFactor(s.productMenu,[0,2],'value')-(1+1.45)/2)<1e-9);assert.equal(menuFormatFactor(s.productMenu,[3],'packing'),3);
-  const restored=migrateMenu(JSON.parse(JSON.stringify(s.productMenu)));assert.deepEqual(restored.formats,s.productMenu.formats);
+  const restored=migrateMenu(JSON.parse(JSON.stringify(s.productMenu)));assert.deepEqual(restored.formats,s.productMenu.formats);assert.equal(formatUnlocked(restored,2,1),true);assert.equal(formatUnlocked(restored,3,2),true);assert.equal(formatUnlocked(restored,0,1),false);
   const trimmed=migrateMenu({active:0,unlocked:[true,false,false],formats:[0,2,1]});assert.deepEqual(trimmed.formats,[0,0,0],'formats never point at a locked format');
 });
 test('milestones continue past city without non-finite costs or rewards',()=>{assert.equal(milestone(3).goal,250000);assert.equal(milestone(4).goal,1000000);for(let i=0;i<=20;i++){const m=milestone(i);assert.ok(Number.isSafeInteger(m.goal));assert.ok(m.reward<m.goal)}assert.equal(milestone(21),null);assert.ok(boostCost(BOOST_MAX-1)<250*4**(BOOST_MAX-1));assert.ok(Number.isSafeInteger(boostCost(500)))});
@@ -20,13 +21,13 @@ test('VIP reward requires reputation unlock and a fast handoff',()=>{assert.equa
 test('delayed timers preserve fixed steps, cap long-stall estimates and respect pause',()=>{assert.deepEqual(elapsedSteps(.2,4),{steps:16,offline:0});assert.deepEqual(elapsedSteps(.2,0),{steps:0,offline:0});assert.equal(OFFLINE_SECONDS,12*3600,'time away pays for up to twelve hours — a night\'s sleep, not a lunch break');assert.deepEqual(elapsedSteps(100000,1),{steps:0,offline:OFFLINE_SECONDS});assert.equal(elapsedSteps(-1,1).steps,0);assert.equal(elapsedSteps(NaN,1).steps,0);assert.equal(migrateProgression({returnReport:{seconds:86400,earnings:[1,2,3,4]}}).returnReport.seconds,86400)});
 
 test('customers come for a format — half flower, three in ten pre-rolls, one in five edibles — switch strain to get it, and pay the premium only then',()=>{
-  const mixed={unlocked:[true,true,true],active:0,formats:[0,1,2,2]};
+  const mixed={unlockedByStrain:[[true,false,false],[true,true,false],[true,false,true],[true,false,true]],active:0,formats:[0,1,2,2]};
   const wants=[...Array(10).keys()].map(n=>wantedFormat(mixed,n));
   assert.deepEqual([0,1,2].map(f=>wants.filter(w=>w===f).length),[5,3,2]);
-  assert.equal(wantedFormat({unlocked:[true,false,false],active:0,formats:[]},9),0,'nobody wants a format the shop does not sell yet');
+  assert.equal(wantedFormat({unlockedByStrain:[],active:0,formats:[]},9),0,'nobody wants a format the shop does not sell yet');
   assert.equal(strainForFormat(mixed,[0,1,2,3],0,2,0),2);assert.equal(strainForFormat(mixed,[0,1,2,3],0,2,1),3);
   assert.equal(strainForFormat(mixed,[0,1,2,3],1,1,7),1,'a strain already sold their way is kept');
-  const edibles={unlocked:[true,true,true],active:2,formats:[2,2,2,2]},flower={unlocked:[true,true,true],active:0,formats:[0,0,0,0]};
+  const edibles={unlockedByStrain:Array.from({length:4},()=>[true,false,true]),active:2,formats:[2,2,2,2]},flower={unlockedByStrain:Array.from({length:4},()=>[true,false,false]),active:0,formats:[0,0,0,0]};
   assert.equal(strainForFormat(edibles,[0,1,2,3],1,0,4),1,'with nothing sold their way they keep the pick');
   assert.equal(formatPremium(edibles,1,0),1);assert.equal(formatPremium(edibles,1,2),FORMATS[2].value);
   // Ten customers' takings, times the menu's demand factor: all edibles trails all flower, and a mixed menu beats both.
@@ -36,3 +37,5 @@ test('customers come for a format — half flower, three in ten pre-rolls, one i
   assert.ok(allEdibles<allFlower,`all edibles (${allEdibles}) should trail all flower (${allFlower})`);
   assert.ok(mix>allFlower,`a mixed menu (${mix}) should beat all flower (${allFlower})`);
 });
+
+test("playback modes slow normal and middle without changing pause or fastest",()=>{assert.equal(playbackRate(0),0);assert.equal(playbackRate(1),.7);assert.equal(playbackRate(2),2*playbackRate(1));assert.equal(playbackRate(4),4);for(const mode of [1,2,4])assert.ok(Math.abs(elapsedSteps(1,mode).steps*.05*playbackRate(mode)/mode-playbackRate(mode))<1e-10)});
