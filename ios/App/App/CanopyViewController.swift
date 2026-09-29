@@ -76,6 +76,16 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
 
     override func capacitorDidLoad() {
         super.capacitorDidLoad()
+        // The game pans and zooms itself and its panels scroll inside the page. The web view's own scroll view must
+        // stay put: a stray drag or rubber-band would slide the web layer against the native map beneath it.
+        if let scroll = webView?.scrollView {
+            scroll.isScrollEnabled = false
+            scroll.bounces = false
+            scroll.alwaysBounceVertical = false
+            scroll.alwaysBounceHorizontal = false
+            scroll.contentInsetAdjustmentBehavior = .never
+            scroll.pinchGestureRecognizer?.isEnabled = false
+        }
         installNativeMap()
     }
 
