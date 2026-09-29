@@ -1,0 +1,69 @@
+#include <metal_stdlib>
+using namespace metal;
+struct MapVertex { float4 position; float4 normal; };
+struct MapInstance { float4 positionType; float4 sizeEmission; float4 rotation; float4 color; float4 extra; float4 material; };
+struct MapUniforms { float4 viewport; float4 camera; float4 sun; float4 background; };
+struct MapLight { float4 positionRadius; float4 color; };
+struct MapVarying { float4 position [[position]]; float3 world; float3 normal; float4 color; float emission; float roughness; float metallic; float2 uv; float textured; };
+float3 rotateQ(float3 v,float4 q){return v+2*cross(q.xyz,cross(q.xyz,v)+q.w*v);}
+float3 sunDirection(){return normalize(float3(-.55,1.0,.65));}
+float4 lightClip(float3 p){float3 d=sunDirection(),r=normalize(cross(float3(0,1,0),d)),u=cross(d,r);p-=float3(0,7,0);return float4(dot(p,r)/36,dot(p,u)/36,.5-dot(p,d)/100,1);}
+MapVarying instanceVertex(uint vid,uint iid,device const MapVertex* vertices,device const MapInstance* items,constant MapUniforms& u){
+  MapInstance i=items[iid];MapVertex v=vertices[vid];MapVarying o;
+  if(i.positionType.w==3){o.world=vid%3==0?i.positionType.xyz:vid%3==1?i.sizeEmission.xyz:i.rotation.xyz;o.normal=normalize(cross(i.sizeEmission.xyz-i.positionType.xyz,i.rotation.xyz-i.positionType.xyz));}
+  else{o.world=i.positionType.xyz+rotateQ(v.position.xyz*i.sizeEmission.xyz,i.rotation);o.normal=normalize(rotateQ(v.normal.xyz/max(abs(i.sizeEmission.xyz),float3(.0001)),i.rotation));}
+  float c=cos(u.viewport.w),s=sin(u.viewport.w);float rx=o.world.x*c-o.world.z*s,rz=o.world.x*s+o.world.z*c;
+  o.position=float4((u.camera.x+rx*u.viewport.z)*2/u.viewport.x-1,1-(u.camera.y+(rz*.5-o.world.y)*u.viewport.z)*2/u.viewport.y,.5-(rz*.894427+o.world.y*.447214)/160,1);
+  o.color=i.color;o.emission=i.sizeEmission.w;o.roughness=i.material.x;o.metallic=i.material.y;o.uv=float2(0);o.textured=0;return o;
+}
+vertex MapVarying mapVertex(uint vid [[vertex_id]],uint iid [[instance_id]],device const MapVertex* vertices [[buffer(0)]],device const MapInstance* items [[buffer(1)]],constant MapUniforms& u [[buffer(2)]]){return instanceVertex(vid,iid,vertices,items,u);}
+vertex float4 mapShadow(uint vid [[vertex_id]],uint iid [[instance_id]],device const MapVertex* vertices [[buffer(0)]],device const MapInstance* items [[buffer(1)]],constant MapUniforms& u [[buffer(2)]]){return lightClip(instanceVertex(vid,iid,vertices,items,u).world);}
+struct CharacterVertex { float4 position; float4 normal; float4 uv; uint4 joints; float4 weights; };
+float4x4 characterPose(float frame,uint joint,device const float4x4* poses,uint bones){
+    uint base=uint(floor(frame));float f=fract(frame);
+    return poses[base*bones+joint]*(1-f)+poses[(base+1)*bones+joint]*f;
+}
+MapVarying characterVarying(uint vid,uint iid,device const CharacterVertex* vertices,device const MapInstance* items,constant MapUniforms& u,device const float4x4* poses,uint bones){
+    CharacterVertex v=vertices[vid];MapInstance i=items[iid];float4x4 skin=float4x4(0);
+    for(uint k=0;k<4;k++){
+        float4x4 idle=characterPose(i.extra.x,v.joints[k],poses,bones),walk=characterPose(i.extra.y,v.joints[k],poses,bones);
+        skin+=(idle*(1-i.extra.z)+walk*i.extra.z)*v.weights[k];
+    }
+    MapVarying o;float3 local=(skin*v.position).xyz;
+    o.world=i.positionType.xyz+rotateQ(local*i.sizeEmission.xyz,i.rotation);
+    o.normal=normalize(rotateQ((skin*float4(v.normal.xyz,0)).xyz,i.rotation));
+    float c=cos(u.viewport.w),s=sin(u.viewport.w),rx=o.world.x*c-o.world.z*s,rz=o.world.x*s+o.world.z*c;
+    o.position=float4((u.camera.x+rx*u.viewport.z)*2/u.viewport.x-1,1-(u.camera.y+(rz*.5-o.world.y)*u.viewport.z)*2/u.viewport.y,.5-(rz*.894427+o.world.y*.447214)/160,1);
+    o.color=i.color;o.emission=0;o.roughness=.85;o.metallic=0;o.uv=v.uv.xy;o.textured=1;return o;
+}
+vertex MapVarying characterVertex(uint vid [[vertex_id]],uint iid [[instance_id]],device const CharacterVertex* vertices [[buffer(0)]],device const MapInstance* items [[buffer(1)]],constant MapUniforms& u [[buffer(2)]],device const float4x4* poses [[buffer(3)]],constant uint& bones [[buffer(4)]]){return characterVarying(vid,iid,vertices,items,u,poses,bones);}
+vertex float4 characterShadow(uint vid [[vertex_id]],uint iid [[instance_id]],device const CharacterVertex* vertices [[buffer(0)]],device const MapInstance* items [[buffer(1)]],constant MapUniforms& u [[buffer(2)]],device const float4x4* poses [[buffer(3)]],constant uint& bones [[buffer(4)]]){return lightClip(characterVarying(vid,iid,vertices,items,u,poses,bones).world);}
+fragment float4 mapFragment(MapVarying v [[stage_in]],bool front [[front_facing]],constant MapUniforms& u [[buffer(0)]],constant MapLight* lights [[buffer(1)]],depth2d<float> shadow [[texture(0)]],texture2d<float> albedo [[texture(1)]]){
+  float3 n=normalize(v.normal);float3 eye=normalize(float3(sin(u.viewport.w),.5,cos(u.viewport.w)));if(dot(n,eye)<0)n=-n;
+  float night=u.camera.z;float3 l=sunDirection(),h=normalize(l+eye);float ndl=max(0.0,dot(n,l));
+  float4 sc=lightClip(v.world+n*.015);float2 uv=float2(sc.x*.5+.5,.5-sc.y*.5);
+  constexpr sampler shadowSampler(coord::normalized,address::clamp_to_edge,filter::linear,compare_func::less_equal);
+  float visibility=0;for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++)visibility+=shadow.sample_compare(shadowSampler,uv+float2(x,y)/1536.0,sc.z-.00065);
+  visibility/=9.0;if(any(uv<0)||any(uv>1))visibility=1;
+  float hemi=.72+.28*n.y;
+  float3 illumination=mix(float3(.33,.39,.34),float3(.095,.14,.18),night)*hemi;
+  illumination+=float3(1.0,.88,.7)*ndl*visibility*mix(.9,.12,night);
+  // Cool reflected sky preserves the shape of shadowed walls; warm key defines the bevels.
+  illumination+=float3(.1,.15,.17)*max(0.0,dot(n,normalize(float3(.7,.3,-.6))))*(1-night*.65);
+  float spec=pow(max(0.0,dot(n,h)),mix(28.0,95.0,v.metallic))*visibility*(.14+v.metallic*.5)*(1-night*.85);
+  for(uint i=0;i<32;i++){MapLight lamp=lights[i];if(lamp.positionRadius.w<=0)break;float3 delta=lamp.positionRadius.xyz-v.world;float dist=length(delta);float fall=pow(max(0.0,1-dist/lamp.positionRadius.w),2.0);illumination+=lamp.color.rgb*fall*(.18+.82*max(0.0,dot(n,delta/max(.01,dist))))*(.25+night*1.35);}
+  constexpr sampler skinSampler(coord::normalized,address::repeat,filter::linear,mip_filter::linear);
+  float3 color=v.color.rgb;if(v.textured>.5)color*=albedo.sample(skinSampler,v.uv).rgb;
+  float3 base=pow(max(color,float3(0)),float3(2.2));
+  // Tiny world-anchored material variation, not screen noise, makes timber and stone tactile.
+  float grain=sin(v.world.x*37+sin(v.world.z*11))*sin(v.world.z*23+v.world.y*19)*.014;
+  float3 radiance=base*illumination*(1+grain)+spec*float3(1,.92,.77);
+  radiance=mix(radiance,base*(1.3+night*.6),min(1.0,v.emission));
+  float3 result=pow(max(radiance,float3(0)),float3(1/2.2));
+  return float4(clamp(result,0.0,1.0),v.color.a);
+}
+struct Background {float4 position [[position]];float2 uv;};
+vertex Background mapBackground(uint id [[vertex_id]]){float2 p=float2((id<<1)&2,id&2);return {float4(p*2-1,1,1),p};}
+fragment float4 mapBackgroundFragment(Background v [[stage_in]],constant MapUniforms& u [[buffer(0)]]){
+ float d=length((v.uv-float2(.58,.57))*float2(.85,1.0));float3 color=u.background.rgb*(.65+.5*exp(-d*d*4));color=mix(color,color*float3(.42,.52,.64),u.camera.z);return float4(color,1);
+}

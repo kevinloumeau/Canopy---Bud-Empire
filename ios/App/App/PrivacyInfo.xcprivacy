@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- The shop tracks nobody. There is no account, no advertising identifier and no analytics: the Plausible tag
+	     in index.html is commented out, and the only URL anywhere in the built bundle is the SVG namespace. -->
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<!-- Nothing leaves the device, so there is nothing to declare as collected. -->
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<!-- Capacitor's Preferences plugin keeps the save mirror in UserDefaults, and unlike Capacitor's own
+			     frameworks it ships no manifest of its own, so the reason is declared here for it. CA92.1 is
+			     "access info from the app itself" — the only thing read back is this app's own saved shop. -->
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>
