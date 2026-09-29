@@ -1,0 +1,1576 @@
+{
+  "available" : true,
+  "caramelCharacter" : false,
+  "characterKinds" : [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "checks" : {
+    "charged" : true,
+    "complete" : true,
+    "customerSamples" : 208,
+    "native" : true,
+    "orderViolations" : 0,
+    "pickups" : 233,
+    "selection" : true,
+    "staff" : true,
+    "upgrade" : true,
+    "zoom" : true
+  },
+  "customCharacter" : false,
+  "errors" : [
+
+  ],
+  "frameMs" : 5.6697996245057141,
+  "layout" : {
+    "controls" : {
+      "height" : 194,
+      "width" : 44,
+      "x" : 346,
+      "y" : 127
+    },
+    "hud" : {
+      "height" : 115,
+      "width" : 402,
+      "x" : 0,
+      "y" : 0
+    },
+    "hudHeight" : "115px",
+    "world" : {
+      "height" : 874,
+      "width" : 402,
+      "x" : 0,
+      "y" : 0
+    }
+  },
+  "native" : true,
+  "ready" : true,
+  "save" : {
+    "activeStrain" : 0,
+    "autoDrone" : {
+      "bulk" : false,
+      "enabled" : false,
+      "mode" : "single",
+      "owned" : false,
+      "remaining" : 0
+    },
+    "basketLevel" : 0,
+    "breedingLevel" : 0,
+    "cargoLevel" : 0,
+    "comfortLevel" : 0,
+    "contract" : 0,
+    "crosses" : {
+      "active" : null,
+      "done" : [
+
+      ]
+    },
+    "curingLevel" : 0,
+    "displayLevel" : 0,
+    "doorBuilt" : true,
+    "durationLevel" : 0,
+    "empire" : {
+      "activeStore" : 0,
+      "career" : 0,
+      "clock" : 1790649870392,
+      "counters" : {
+        "invest" : 0,
+        "online" : 0,
+        "pickup" : 94,
+        "revenue" : 6669411.1056002267
+      },
+      "daily" : {
+        "day" : 0,
+        "streak" : 0
+      },
+      "event" : {
+        "claimed" : false,
+        "joined" : false,
+        "progress" : 0,
+        "slot" : 0
+      },
+      "goals" : [
+        {
+          "round" : 0,
+          "start" : 0
+        },
+        {
+          "round" : 0,
+          "start" : 0
+        },
+        {
+          "round" : 0,
+          "start" : 0
+        }
+      ],
+      "goalsCompleted" : 0,
+      "network" : {
+        "area" : 0,
+        "discoveries" : [
+          1,
+          0,
+          0
+        ],
+        "flagship" : false,
+        "fleet" : 1,
+        "jobs" : [
+
+        ],
+        "nextJob" : 1,
+        "productRevenue" : 513.57600000000002,
+        "recipes" : [
+          true,
+          false,
+          false
+        ],
+        "staff" : {
+          "dispatcher" : {
+            "xp" : 0
+          },
+          "grower" : {
+            "xp" : 0
+          },
+          "host" : {
+            "xp" : 0
+          }
+        },
+        "stores" : [
+          {
+            "area" : 0,
+            "construction" : 0,
+            "cosmetics" : {
+              "awning" : 0,
+              "counter" : 0,
+              "layout" : 0,
+              "lighting" : 0,
+              "plants" : 0
+            },
+            "craftClock" : 5.5499999999995531,
+            "crafted" : 35,
+            "deliveries" : 0,
+            "demand" : 3,
+            "demandClock" : 36.99999999999622,
+            "harvested" : 145.39000000000559,
+            "incomeGain" : 0,
+            "opening" : 0,
+            "raw" : 110.3900000000024,
+            "received" : 0,
+            "recipe" : 0,
+            "relationship" : 0,
+            "reserve" : 5,
+            "saleClock" : 1.0000000000006701,
+            "sent" : 0,
+            "shelves" : [
+              20,
+              0,
+              0
+            ],
+            "sold" : 18,
+            "stock" : [
+              17,
+              0,
+              0
+            ],
+            "storyWait" : 0
+          },
+          {
+            "area" : 0,
+            "construction" : 0,
+            "cosmetics" : {
+              "awning" : 0,
+              "counter" : 0,
+              "layout" : 0,
+              "lighting" : 0,
+              "plants" : 0
+            },
+            "craftClock" : 0,
+            "crafted" : 0,
+            "deliveries" : 0,
+            "demand" : 3,
+            "demandClock" : 36.99999999999622,
+            "harvested" : 0,
+            "incomeGain" : 0,
+            "opening" : 0,
+            "raw" : 0,
+            "received" : 0,
+            "recipe" : 0,
+            "relationship" : 0,
+            "reserve" : 5,
+            "saleClock" : 1.0000000000006701,
+            "sent" : 0,
+            "shelves" : [
+              20,
+              0,
+              0
+            ],
+            "sold" : 0,
+            "stock" : [
+              0,
+              0,
+              0
+            ],
+            "storyWait" : 0
+          },
+          {
+            "area" : 0,
+            "construction" : 0,
+            "cosmetics" : {
+              "awning" : 0,
+              "counter" : 0,
+              "layout" : 0,
+              "lighting" : 0,
+              "plants" : 0
+            },
+            "craftClock" : 0,
+            "crafted" : 0,
+            "deliveries" : 0,
+            "demand" : 3,
+            "demandClock" : 36.99999999999622,
+            "harvested" : 0,
+            "incomeGain" : 0,
+            "opening" : 0,
+            "raw" : 0,
+            "received" : 0,
+            "recipe" : 0,
+            "relationship" : 0,
+            "reserve" : 5,
+            "saleClock" : 1.0000000000006701,
+            "sent" : 0,
+            "shelves" : [
+              20,
+              0,
+              0
+            ],
+            "sold" : 0,
+            "stock" : [
+              0,
+              0,
+              0
+            ],
+            "storyWait" : 0
+          },
+          {
+            "area" : 0,
+            "construction" : 0,
+            "cosmetics" : {
+              "awning" : 0,
+              "counter" : 0,
+              "layout" : 0,
+              "lighting" : 0,
+              "plants" : 0
+            },
+            "craftClock" : 0,
+            "crafted" : 0,
+            "deliveries" : 0,
+            "demand" : 3,
+            "demandClock" : 36.99999999999622,
+            "harvested" : 0,
+            "incomeGain" : 0,
+            "opening" : 0,
+            "raw" : 0,
+            "received" : 0,
+            "recipe" : 0,
+            "relationship" : 0,
+            "reserve" : 5,
+            "saleClock" : 1.0000000000006701,
+            "sent" : 0,
+            "shelves" : [
+              20,
+              0,
+              0
+            ],
+            "sold" : 0,
+            "stock" : [
+              0,
+              0,
+              0
+            ],
+            "storyWait" : 0
+          },
+          {
+            "area" : 0,
+            "construction" : 0,
+            "cosmetics" : {
+              "awning" : 0,
+              "counter" : 0,
+              "layout" : 0,
+              "lighting" : 0,
+              "plants" : 0
+            },
+            "craftClock" : 0,
+            "crafted" : 0,
+            "deliveries" : 0,
+            "demand" : 3,
+            "demandClock" : 36.99999999999622,
+            "harvested" : 0,
+            "incomeGain" : 0,
+            "opening" : 0,
+            "raw" : 0,
+            "received" : 0,
+            "recipe" : 0,
+            "relationship" : 0,
+            "reserve" : 5,
+            "saleClock" : 1.0000000000006701,
+            "sent" : 0,
+            "shelves" : [
+              20,
+              0,
+              0
+            ],
+            "sold" : 0,
+            "stock" : [
+              0,
+              0,
+              0
+            ],
+            "storyWait" : 0
+          }
+        ],
+        "time" : 217.00000000001509,
+        "version" : 1
+      },
+      "prestige" : 0,
+      "reputation" : 69,
+      "retailBoost" : 2,
+      "returnReport" : null,
+      "rewards" : [
+        false,
+        false,
+        false
+      ],
+      "stores" : [
+        {
+          "featured" : "everyday",
+          "level" : 7,
+          "loyalty" : 18,
+          "manager" : "none",
+          "projects" : [
+            true,
+            true,
+            true
+          ],
+          "served" : 18,
+          "serviceClock" : 1.0000000000006701
+        },
+        {
+          "featured" : "everyday",
+          "level" : 7,
+          "loyalty" : 18,
+          "manager" : "none",
+          "projects" : [
+            true,
+            true,
+            true
+          ],
+          "served" : 18,
+          "serviceClock" : 1.0000000000006701
+        },
+        {
+          "featured" : "everyday",
+          "level" : 7,
+          "loyalty" : 18,
+          "manager" : "none",
+          "projects" : [
+            true,
+            true,
+            true
+          ],
+          "served" : 18,
+          "serviceClock" : 1.0000000000006701
+        },
+        {
+          "featured" : "everyday",
+          "level" : 7,
+          "loyalty" : 18,
+          "manager" : "none",
+          "projects" : [
+            true,
+            true,
+            true
+          ],
+          "served" : 18,
+          "serviceClock" : 1.0000000000006701
+        },
+        {
+          "featured" : "everyday",
+          "level" : 7,
+          "loyalty" : 18,
+          "manager" : "none",
+          "projects" : [
+            true,
+            true,
+            true
+          ],
+          "served" : 18,
+          "serviceClock" : 1.0000000000006701
+        }
+      ],
+      "trophies" : 0,
+      "version" : 4
+    },
+    "fleetLevel" : 0,
+    "gameSpeed" : 4,
+    "globalLevel" : 0,
+    "growBatchLevel" : 0,
+    "harvestBatchLevel" : 0,
+    "hints" : {
+      "queue" : true,
+      "storage" : true,
+      "web" : false
+    },
+    "idStaff" : 0,
+    "journey" : {
+      "completed" : [
+        "rhythm",
+        "river",
+        "city",
+        "first-bags"
+      ]
+    },
+    "kiosk" : true,
+    "kioskSpeedLevel" : 0,
+    "lastSeen" : 1790649870428,
+    "lifetime" : 13669411.105600225,
+    "lightMode" : "day",
+    "lines" : [
+      15,
+      16,
+      15,
+      15,
+      15,
+      15
+    ],
+    "lounge" : 2,
+    "loungeEarned" : 7300,
+    "loungeSessions" : 25,
+    "loungeStaff" : 0,
+    "loyaltyLevel" : 0,
+    "menuStrains" : [
+      0
+    ],
+    "money" : 11669180.105600227,
+    "multiplier" : 1,
+    "onlineBonusLevel" : 0,
+    "onlineCompleted" : 0,
+    "onlineRequests" : 0,
+    "orderCounters" : 1,
+    "packSpeedLevel" : 0,
+    "pickupLevel" : 0,
+    "productMenu" : {
+      "active" : 0,
+      "formats" : [
+
+      ],
+      "unlockedByStrain" : [
+
+      ]
+    },
+    "queueLevel" : 0,
+    "readyLevel" : 0,
+    "repeatLevel" : 0,
+    "scannerLevel" : 0,
+    "secondKiosk" : false,
+    "seedBatchLevel" : 0,
+    "serviceLevel" : 0,
+    "shopOpen" : true,
+    "shopPlay" : {
+      "cooldown" : 50.950000000000514,
+      "matches" : 0,
+      "recap" : null,
+      "recapUnread" : false,
+      "sequence" : 3,
+      "shift" : {
+        "deliveries" : 0,
+        "earned" : 6669411.1056002248,
+        "matches" : 0,
+        "queuePeak" : 12,
+        "seconds" : 54.250000000003773,
+        "served" : 69,
+        "stockoutSeconds" : 0,
+        "transfers" : 0,
+        "waitTotal" : 849.50000000000398
+      },
+      "tips" : 0,
+      "version" : 1
+    },
+    "signLevel" : 0,
+    "sold" : 744,
+    "sound" : true,
+    "staff" : [
+      2,
+      2,
+      2,
+      2,
+      2,
+      2
+    ],
+    "stillMotion" : false,
+    "stock" : [
+      199,
+      184,
+      197,
+      200,
+      200
+    ],
+    "storageLevel" : 0,
+    "strains" : [
+      1,
+      0,
+      0,
+      0
+    ],
+    "strainTrend" : {
+      "index" : 1,
+      "remaining" : 262.99999999995066
+    },
+    "terpeneLevel" : 0,
+    "theme" : "dispensary",
+    "thirdKiosk" : false,
+    "trafficLevel" : 0,
+    "trendLevel" : 0,
+    "vipBuzz" : 0,
+    "webLevel" : 0
+  },
+  "stats" : {
+    "ack" : 1122,
+    "bytes" : 1018944,
+    "instances" : 10614,
+    "sequence" : 1123
+  },
+  "status" : {
+    "autoDrone" : {
+      "bulk" : false,
+      "enabled" : false,
+      "mode" : "single",
+      "owned" : false,
+      "remaining" : 0
+    },
+    "branchIncome" : 125021.70240000001,
+    "branchLevels" : [
+      7,
+      7,
+      7,
+      7,
+      7
+    ],
+    "branchProjects" : [
+      [
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true
+      ]
+    ],
+    "budtenderMoment" : null,
+    "camera" : {
+      "angle" : 0.56999999999999995,
+      "panX" : -0,
+      "panY" : -0,
+      "zoom" : 1
+    },
+    "cash" : 12183347,
+    "contract" : 0,
+    "customers" : [
+      {
+        "bag" : true,
+        "bags" : 16,
+        "id" : 90,
+        "kind" : "regular",
+        "kiosk" : false,
+        "lounge" : false,
+        "momentMatched" : false,
+        "orderCounter" : 0,
+        "ordered" : true,
+        "phase" : "leaving",
+        "pickupTicket" : 70,
+        "serviceElapsed" : 0.75000000000000011,
+        "walking" : true,
+        "x" : -2.078671600713951,
+        "z" : -8.0999999999999996
+      },
+      {
+        "bag" : true,
+        "bags" : 16,
+        "id" : 92,
+        "kind" : "regular",
+        "kiosk" : false,
+        "lounge" : false,
+        "momentMatched" : false,
+        "orderCounter" : 0,
+        "ordered" : true,
+        "phase" : "leaving",
+        "pickupTicket" : 72,
+        "serviceElapsed" : 0.75000000000000011,
+        "walking" : true,
+        "x" : 4.851328399286051,
+        "z" : -8.0999999999999996
+      },
+      {
+        "bag" : true,
+        "bags" : 16,
+        "id" : 94,
+        "kind" : "regular",
+        "kiosk" : false,
+        "lounge" : false,
+        "momentMatched" : false,
+        "orderCounter" : 0,
+        "ordered" : true,
+        "phase" : "leaving",
+        "pickupTicket" : 74,
+        "serviceElapsed" : 0.75000000000000011,
+        "walking" : true,
+        "x" : 11.15,
+        "z" : 0.30018956920186468
+      },
+      {
+        "bag" : false,
+        "bags" : 0,
+        "id" : 95,
+        "kind" : "hurried",
+        "kiosk" : false,
+        "lounge" : true,
+        "momentMatched" : false,
+        "ordered" : false,
+        "phase" : "leaving",
+        "pickupTicket" : 0,
+        "serviceElapsed" : 0,
+        "walking" : true,
+        "x" : -4.914988280480781,
+        "z" : -8.0999999999999996
+      },
+      {
+        "bag" : true,
+        "bags" : 16,
+        "id" : 96,
+        "kind" : "regular",
+        "kiosk" : false,
+        "lounge" : false,
+        "momentMatched" : false,
+        "orderCounter" : 0,
+        "ordered" : true,
+        "phase" : "leaving",
+        "pickupTicket" : 75,
+        "serviceElapsed" : 0.75000000000000011,
+        "walking" : true,
+        "x" : 10.679810430798137,
+        "z" : 5
+      },
+      {
+        "bag" : true,
+        "bags" : 1,
+        "id" : 97,
+        "kind" : "hurried",
+        "kiosk" : true,
+        "lounge" : false,
+        "momentMatched" : false,
+        "ordered" : true,
+        "phase" : "leaving",
+        "pickupTicket" : 71,
+        "serviceElapsed" : 0.75000000000000011,
+        "walking" : true,
+        "x" : 0.34132839928605008,
+        "z" : -8.0999999999999996
+      },
+      {
+        "bag" : false,
+        "bags" : 16,
+        "id" : 98,
+        "kind" : "regular",
+        "kiosk" : false,
+        "lounge" : false,
+        "momentMatched" : false,
+        "orderCounter" : 0,
+        "ordered" : true,
+        "phase" : "pickup",
+        "pickupTicket" : 77,
+        "serviceElapsed" : 1.0000000000000002,
+        "walking" : true,
+        "x" : 2.8899999999999908,
+        "z" : 6.0999999999999996
+      },
+      {
+        "bag" : false,
+        "bags" : 0,
+        "id" : 99,
+        "kind" : "hurried",
+        "kiosk" : false,
+        "lounge" : true,
+        "momentMatched" : false,
+        "ordered" : false,
+        "phase" : "leaving",
+        "pickupTicket" : 0,
+        "serviceElapsed" : 0,
+        "walking" : true,
+        "x" : 10.25,
+        "z" : -5.6649882804807596
+      },
+      {
+        "bag" : false,
+        "bags" : 16,
+        "id" : 100,
+        "kind" : "regular",
+        "kiosk" : false,
+        "lounge" : false,
+        "momentMatched" : false,
+        "orderCounter" : 0,
+        "ordered" : true,
+        "phase" : "toPickup",
+        "pickupTicket" : 0,
+        "serviceElapsed" : 1.0000000000000002,
+        "walking" : true,
+        "x" : -0.25,
+        "z" : 7.5300000000000065
+      },
+      {
+        "bag" : true,
+        "bags" : 1,
+        "id" : 101,
+        "kind" : "hurried",
+        "kiosk" : true,
+        "lounge" : false,
+        "momentMatched" : false,
+        "ordered" : true,
+        "phase" : "leaving",
+        "pickupTicket" : 73,
+        "serviceElapsed" : 0.75000000000000011,
+        "walking" : true,
+        "x" : 11.15,
+        "z" : -3.3298104307981347
+      },
+      {
+        "bag" : false,
+        "bags" : 0,
+        "id" : 102,
+        "kind" : "regular",
+        "kiosk" : false,
+        "lounge" : false,
+        "momentMatched" : false,
+        "orderCounter" : 0,
+        "ordered" : false,
+        "phase" : "ordering",
+        "pickupTicket" : 0,
+        "serviceElapsed" : 0.54999999999999993,
+        "walking" : false,
+        "x" : -4,
+        "z" : 4.9000000000000004
+      },
+      {
+        "bag" : false,
+        "bags" : 0,
+        "id" : 103,
+        "kind" : "hurried",
+        "kiosk" : false,
+        "lounge" : true,
+        "momentMatched" : false,
+        "ordered" : false,
+        "phase" : "lounge",
+        "pickupTicket" : 0,
+        "serviceElapsed" : 0,
+        "walking" : false,
+        "x" : -9.8499999999999996,
+        "z" : -1.1500000000000001
+      },
+      {
+        "bag" : false,
+        "bags" : 0,
+        "id" : 104,
+        "kind" : "vip",
+        "kiosk" : false,
+        "lounge" : false,
+        "momentMatched" : false,
+        "ordered" : false,
+        "phase" : "ordering",
+        "pickupTicket" : 0,
+        "serviceElapsed" : 0,
+        "walking" : false,
+        "x" : -2,
+        "z" : 6.0999999999999996
+      },
+      {
+        "bag" : true,
+        "bags" : 1,
+        "id" : 105,
+        "kind" : "hurried",
+        "kiosk" : true,
+        "lounge" : false,
+        "momentMatched" : false,
+        "ordered" : true,
+        "phase" : "leaving",
+        "pickupTicket" : 76,
+        "serviceElapsed" : 0.75000000000000011,
+        "walking" : true,
+        "x" : 4.1943040677566277,
+        "z" : 4.0473912360382016
+      },
+      {
+        "bag" : false,
+        "bags" : 0,
+        "id" : 106,
+        "kind" : "regular",
+        "kiosk" : false,
+        "lounge" : false,
+        "momentMatched" : false,
+        "ordered" : false,
+        "phase" : "ordering",
+        "pickupTicket" : 0,
+        "serviceElapsed" : 0,
+        "walking" : false,
+        "x" : -2,
+        "z" : 6.8499999999999996
+      },
+      {
+        "bag" : false,
+        "bags" : 0,
+        "id" : 107,
+        "kind" : "hurried",
+        "kiosk" : false,
+        "lounge" : true,
+        "momentMatched" : false,
+        "ordered" : false,
+        "phase" : "lounge",
+        "pickupTicket" : 0,
+        "serviceElapsed" : 0,
+        "walking" : false,
+        "x" : -9.8499999999999996,
+        "z" : -1.1500000000000001
+      },
+      {
+        "bag" : false,
+        "bags" : 0,
+        "id" : 108,
+        "kind" : "regular",
+        "kiosk" : false,
+        "lounge" : false,
+        "momentMatched" : false,
+        "ordered" : false,
+        "phase" : "ordering",
+        "pickupTicket" : 0,
+        "serviceElapsed" : 0,
+        "walking" : false,
+        "x" : -2.5999999999999996,
+        "z" : 7
+      },
+      {
+        "bag" : false,
+        "bags" : 1,
+        "id" : 109,
+        "kind" : "hurried",
+        "kiosk" : true,
+        "lounge" : false,
+        "momentMatched" : false,
+        "ordered" : true,
+        "phase" : "toPickup",
+        "pickupTicket" : 0,
+        "serviceElapsed" : 0,
+        "walking" : true,
+        "x" : -0.25,
+        "z" : 6.6382178936723735
+      },
+      {
+        "bag" : false,
+        "bags" : 0,
+        "id" : 110,
+        "kind" : "regular",
+        "kiosk" : false,
+        "lounge" : false,
+        "momentMatched" : false,
+        "ordered" : false,
+        "phase" : "ordering",
+        "pickupTicket" : 0,
+        "serviceElapsed" : 0,
+        "walking" : false,
+        "x" : -3.3499999999999996,
+        "z" : 7
+      },
+      {
+        "bag" : false,
+        "bags" : 0,
+        "id" : 111,
+        "kind" : "vip",
+        "kiosk" : false,
+        "lounge" : true,
+        "momentMatched" : false,
+        "ordered" : false,
+        "phase" : "toLounge",
+        "pickupTicket" : 0,
+        "serviceElapsed" : 0,
+        "walking" : true,
+        "x" : -8.4624810725257333,
+        "z" : 2.2000000000000002
+      },
+      {
+        "bag" : false,
+        "bags" : 0,
+        "id" : 112,
+        "kind" : "regular",
+        "kiosk" : false,
+        "lounge" : false,
+        "momentMatched" : false,
+        "ordered" : false,
+        "phase" : "ordering",
+        "pickupTicket" : 0,
+        "serviceElapsed" : 0,
+        "walking" : true,
+        "x" : -3.124035304440671,
+        "z" : 9.3000000000000007
+      },
+      {
+        "bag" : false,
+        "bags" : 0,
+        "id" : 113,
+        "kind" : "hurried",
+        "kiosk" : true,
+        "lounge" : false,
+        "momentMatched" : false,
+        "ordered" : false,
+        "phase" : "kiosk",
+        "pickupTicket" : 0,
+        "serviceElapsed" : 0,
+        "walking" : false,
+        "x" : -8.9499999999999993,
+        "z" : 6.7999999999999998
+      },
+      {
+        "bag" : false,
+        "bags" : 0,
+        "id" : 114,
+        "kind" : "regular",
+        "kiosk" : false,
+        "lounge" : false,
+        "momentMatched" : false,
+        "ordered" : false,
+        "phase" : "ordering",
+        "pickupTicket" : 0,
+        "serviceElapsed" : 0,
+        "walking" : true,
+        "x" : -8.072830134367198,
+        "z" : 8.7112736324287017
+      },
+      {
+        "bag" : false,
+        "bags" : 0,
+        "id" : 115,
+        "kind" : "hurried",
+        "kiosk" : false,
+        "lounge" : true,
+        "momentMatched" : false,
+        "ordered" : false,
+        "phase" : "idCheck",
+        "pickupTicket" : 0,
+        "serviceElapsed" : 0,
+        "walking" : true,
+        "x" : -12.4,
+        "z" : 4.4099999999999344
+      },
+      {
+        "bag" : false,
+        "bags" : 0,
+        "id" : 116,
+        "kind" : "regular",
+        "kiosk" : false,
+        "lounge" : false,
+        "momentMatched" : false,
+        "ordered" : false,
+        "phase" : "idCheck",
+        "pickupTicket" : 0,
+        "serviceElapsed" : 0,
+        "walking" : true,
+        "x" : -12.4,
+        "z" : 0.66999999999994309
+      },
+      {
+        "bag" : false,
+        "bags" : 0,
+        "id" : 117,
+        "kind" : "hurried",
+        "kiosk" : true,
+        "lounge" : false,
+        "momentMatched" : false,
+        "ordered" : false,
+        "phase" : "idCheck",
+        "pickupTicket" : 0,
+        "serviceElapsed" : 0,
+        "walking" : true,
+        "x" : -12.4,
+        "z" : -1.3100000000000476
+      },
+      {
+        "bag" : false,
+        "bags" : 0,
+        "id" : 118,
+        "kind" : "vip",
+        "kiosk" : false,
+        "lounge" : false,
+        "momentMatched" : false,
+        "ordered" : false,
+        "phase" : "idCheck",
+        "pickupTicket" : 0,
+        "serviceElapsed" : 0,
+        "walking" : true,
+        "x" : -12.4,
+        "z" : -3.6200000000000356
+      }
+    ],
+    "customersServed" : 811,
+    "deliveryDrones" : 0,
+    "doorBuilt" : true,
+    "employeeLevels" : [
+      2,
+      2,
+      2,
+      2,
+      2,
+      2
+    ],
+    "gameSpeed" : 4,
+    "goalsCompleted" : 0,
+    "lifetime" : 14183578,
+    "lineLevels" : [
+      15,
+      16,
+      15,
+      15,
+      15,
+      15
+    ],
+    "lounge" : {
+      "earned" : 7884,
+      "level" : 2,
+      "nextCost" : 2000000,
+      "rate" : 146,
+      "seated" : 2,
+      "seats" : 6,
+      "sessions" : 27,
+      "waiting" : 1
+    },
+    "management" : [
+      {
+        "featured" : "everyday",
+        "level" : 7,
+        "loyalty" : 19,
+        "manager" : "none",
+        "projects" : [
+          true,
+          true,
+          true
+        ],
+        "served" : 19,
+        "serviceClock" : 5.4000000000006967
+      },
+      {
+        "featured" : "everyday",
+        "level" : 7,
+        "loyalty" : 19,
+        "manager" : "none",
+        "projects" : [
+          true,
+          true,
+          true
+        ],
+        "served" : 19,
+        "serviceClock" : 5.4000000000006967
+      },
+      {
+        "featured" : "everyday",
+        "level" : 7,
+        "loyalty" : 19,
+        "manager" : "none",
+        "projects" : [
+          true,
+          true,
+          true
+        ],
+        "served" : 19,
+        "serviceClock" : 5.4000000000006967
+      },
+      {
+        "featured" : "everyday",
+        "level" : 7,
+        "loyalty" : 19,
+        "manager" : "none",
+        "projects" : [
+          true,
+          true,
+          true
+        ],
+        "served" : 19,
+        "serviceClock" : 5.4000000000006967
+      },
+      {
+        "featured" : "everyday",
+        "level" : 7,
+        "loyalty" : 19,
+        "manager" : "none",
+        "projects" : [
+          true,
+          true,
+          true
+        ],
+        "served" : 19,
+        "serviceClock" : 5.4000000000006967
+      }
+    ],
+    "network" : {
+      "area" : 0,
+      "discoveries" : [
+        1,
+        0,
+        0
+      ],
+      "flagship" : false,
+      "fleet" : 1,
+      "jobs" : [
+
+      ],
+      "nextJob" : 1,
+      "productRevenue" : 542.63999999999999,
+      "recipes" : [
+        true,
+        false,
+        false
+      ],
+      "staff" : {
+        "dispatcher" : {
+          "xp" : 0
+        },
+        "grower" : {
+          "xp" : 0
+        },
+        "host" : {
+          "xp" : 0
+        }
+      },
+      "stores" : [
+        {
+          "area" : 0,
+          "construction" : 0,
+          "cosmetics" : {
+            "awning" : 0,
+            "counter" : 0,
+            "layout" : 0,
+            "lighting" : 0,
+            "plants" : 0
+          },
+          "craftClock" : 3.949999999999521,
+          "crafted" : 38,
+          "deliveries" : 0,
+          "demand" : 3,
+          "demandClock" : 53.399999999995288,
+          "harvested" : 156.37800000000678,
+          "incomeGain" : 0,
+          "opening" : 0,
+          "raw" : 118.3780000000036,
+          "received" : 0,
+          "recipe" : 0,
+          "relationship" : 0,
+          "reserve" : 5,
+          "saleClock" : 5.4000000000006967,
+          "sent" : 0,
+          "shelves" : [
+            20,
+            0,
+            0
+          ],
+          "sold" : 19,
+          "stock" : [
+            19,
+            0,
+            0
+          ],
+          "storyWait" : 0
+        },
+        {
+          "area" : 0,
+          "construction" : 0,
+          "cosmetics" : {
+            "awning" : 0,
+            "counter" : 0,
+            "layout" : 0,
+            "lighting" : 0,
+            "plants" : 0
+          },
+          "craftClock" : 0,
+          "crafted" : 0,
+          "deliveries" : 0,
+          "demand" : 3,
+          "demandClock" : 53.399999999995288,
+          "harvested" : 0,
+          "incomeGain" : 0,
+          "opening" : 0,
+          "raw" : 0,
+          "received" : 0,
+          "recipe" : 0,
+          "relationship" : 0,
+          "reserve" : 5,
+          "saleClock" : 5.4000000000006967,
+          "sent" : 0,
+          "shelves" : [
+            20,
+            0,
+            0
+          ],
+          "sold" : 0,
+          "stock" : [
+            0,
+            0,
+            0
+          ],
+          "storyWait" : 0
+        },
+        {
+          "area" : 0,
+          "construction" : 0,
+          "cosmetics" : {
+            "awning" : 0,
+            "counter" : 0,
+            "layout" : 0,
+            "lighting" : 0,
+            "plants" : 0
+          },
+          "craftClock" : 0,
+          "crafted" : 0,
+          "deliveries" : 0,
+          "demand" : 3,
+          "demandClock" : 53.399999999995288,
+          "harvested" : 0,
+          "incomeGain" : 0,
+          "opening" : 0,
+          "raw" : 0,
+          "received" : 0,
+          "recipe" : 0,
+          "relationship" : 0,
+          "reserve" : 5,
+          "saleClock" : 5.4000000000006967,
+          "sent" : 0,
+          "shelves" : [
+            20,
+            0,
+            0
+          ],
+          "sold" : 0,
+          "stock" : [
+            0,
+            0,
+            0
+          ],
+          "storyWait" : 0
+        },
+        {
+          "area" : 0,
+          "construction" : 0,
+          "cosmetics" : {
+            "awning" : 0,
+            "counter" : 0,
+            "layout" : 0,
+            "lighting" : 0,
+            "plants" : 0
+          },
+          "craftClock" : 0,
+          "crafted" : 0,
+          "deliveries" : 0,
+          "demand" : 3,
+          "demandClock" : 53.399999999995288,
+          "harvested" : 0,
+          "incomeGain" : 0,
+          "opening" : 0,
+          "raw" : 0,
+          "received" : 0,
+          "recipe" : 0,
+          "relationship" : 0,
+          "reserve" : 5,
+          "saleClock" : 5.4000000000006967,
+          "sent" : 0,
+          "shelves" : [
+            20,
+            0,
+            0
+          ],
+          "sold" : 0,
+          "stock" : [
+            0,
+            0,
+            0
+          ],
+          "storyWait" : 0
+        },
+        {
+          "area" : 0,
+          "construction" : 0,
+          "cosmetics" : {
+            "awning" : 0,
+            "counter" : 0,
+            "layout" : 0,
+            "lighting" : 0,
+            "plants" : 0
+          },
+          "craftClock" : 0,
+          "crafted" : 0,
+          "deliveries" : 0,
+          "demand" : 3,
+          "demandClock" : 53.399999999995288,
+          "harvested" : 0,
+          "incomeGain" : 0,
+          "opening" : 0,
+          "raw" : 0,
+          "received" : 0,
+          "recipe" : 0,
+          "relationship" : 0,
+          "reserve" : 5,
+          "saleClock" : 5.4000000000006967,
+          "sent" : 0,
+          "shelves" : [
+            20,
+            0,
+            0
+          ],
+          "sold" : 0,
+          "stock" : [
+            0,
+            0,
+            0
+          ],
+          "storyWait" : 0
+        }
+      ],
+      "time" : 233.40000000001882,
+      "version" : 1
+    },
+    "onlineCompleted" : 0,
+    "operationsAlerts" : [
+      {
+        "control" : "storyServe0",
+        "detail" : "Riverside · 3 Daily jars",
+        "id" : "regular-0",
+        "store" : 0,
+        "tab" : 2,
+        "title" : "Mara’s request is ready"
+      },
+      {
+        "control" : "deliverySend0",
+        "detail" : "3 requests · dispatch Daily jars",
+        "details" : true,
+        "id" : "driver-0",
+        "line" : 0,
+        "store" : 0,
+        "tab" : 1,
+        "title" : "Driver ready for Riverside"
+      },
+      {
+        "control" : "transferSend0",
+        "detail" : "Send a transfer from Riverside",
+        "details" : true,
+        "id" : "harvest-1",
+        "store" : 0,
+        "tab" : 1,
+        "title" : "Old Town needs harvest",
+        "transferTo" : 1
+      },
+      {
+        "control" : "transferSend0",
+        "detail" : "Send a transfer from Riverside",
+        "details" : true,
+        "id" : "harvest-2",
+        "store" : 0,
+        "tab" : 1,
+        "title" : "City Center needs harvest",
+        "transferTo" : 2
+      },
+      {
+        "control" : "transferSend0",
+        "detail" : "Send a transfer from Riverside",
+        "details" : true,
+        "id" : "harvest-3",
+        "store" : 0,
+        "tab" : 1,
+        "title" : "Desert Oasis needs harvest",
+        "transferTo" : 3
+      },
+      {
+        "control" : "transferSend0",
+        "detail" : "Send a transfer from Riverside",
+        "details" : true,
+        "id" : "harvest-4",
+        "store" : 0,
+        "tab" : 1,
+        "title" : "Alpine needs harvest",
+        "transferTo" : 4
+      }
+    ],
+    "orderCounterPositions" : [
+      {
+        "x" : -4,
+        "z" : 2.5
+      }
+    ],
+    "orderCounters" : 1,
+    "orderRoute" : [
+      {
+        "x" : -2,
+        "z" : 6.0999999999999996
+      },
+      {
+        "x" : -2,
+        "z" : 7
+      },
+      {
+        "x" : -5.2999999999999998,
+        "z" : 7
+      },
+      {
+        "x" : -5.2999999999999998,
+        "z" : 8.1500000000000004
+      },
+      {
+        "x" : -2,
+        "z" : 8.1500000000000004
+      },
+      {
+        "x" : -2,
+        "z" : 9.3000000000000007
+      },
+      {
+        "x" : -5.2999999999999998,
+        "z" : 9.3000000000000007
+      },
+      {
+        "x" : -7.4000000000000004,
+        "z" : 9.3000000000000007
+      },
+      {
+        "x" : -8.1999999999999993,
+        "z" : 8.5999999999999996
+      },
+      {
+        "x" : -9.6999999999999993,
+        "z" : 8.1500000000000004
+      },
+      {
+        "x" : -10.300000000000001,
+        "z" : 8.75
+      },
+      {
+        "x" : -10.9,
+        "z" : 9.3000000000000007
+      },
+      {
+        "x" : -11.699999999999999,
+        "z" : 9.3000000000000007
+      },
+      {
+        "x" : -12.4,
+        "z" : 7.7999999999999998
+      }
+    ],
+    "paused" : false,
+    "perSecond" : 537.60000000000002,
+    "pickupRoute" : [
+      {
+        "x" : 4,
+        "z" : 4.9000000000000004
+      },
+      {
+        "x" : 1.8999999999999999,
+        "z" : 4.9000000000000004
+      },
+      {
+        "x" : 1.8999999999999999,
+        "z" : 6.0999999999999996
+      },
+      {
+        "x" : 4,
+        "z" : 6.0999999999999996
+      },
+      {
+        "x" : 4,
+        "z" : 7.2999999999999998
+      },
+      {
+        "x" : 1.8999999999999999,
+        "z" : 7.2999999999999998
+      },
+      {
+        "x" : 1.8999999999999999,
+        "z" : 8.0999999999999996
+      }
+    ],
+    "prestige" : 0,
+    "productMenu" : {
+      "active" : 0,
+      "formats" : [
+
+      ],
+      "unlockedByStrain" : [
+
+      ]
+    },
+    "reputation" : 76,
+    "reservedWalkInBags" : 33,
+    "shopOpen" : true,
+    "shopPlay" : {
+      "cooldown" : 34.550000000001447,
+      "matches" : 0,
+      "recap" : null,
+      "recapUnread" : false,
+      "sequence" : 3,
+      "shift" : {
+        "deliveries" : 0,
+        "earned" : 7183578.8030402362,
+        "matches" : 0,
+        "queuePeak" : 12,
+        "seconds" : 58.350000000004705,
+        "served" : 76,
+        "stockoutSeconds" : 0,
+        "transfers" : 0,
+        "waitTotal" : 930.40000000000418
+      },
+      "tips" : 0,
+      "version" : 1
+    },
+    "stock" : [
+      199,
+      183,
+      199,
+      199,
+      200
+    ],
+    "viewedStore" : 0
+  },
+  "viewport" : {
+    "height" : 874,
+    "width" : 402
+  }
+}
