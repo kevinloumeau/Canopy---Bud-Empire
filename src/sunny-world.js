@@ -37,11 +37,33 @@ export function stationSprite(i, level) {
   }
   return null;
 }
+// People: cast members are picked by a stable identity; customer 07 (Kevin's own outfit) is weighted to show up twice as often.
+const CAST = { customer: [1, 2, 3, 4, 5, 6, 7, 7], walker: [1, 2, 3, 4, 7] };
+const STAFF_FOR_LINE = [2, 2, 2, 1, 1, 1, 3, 1]; // seeds/grow/harvest growers, pack/orders/pickup budtenders, 6 is the ID desk, 7 the lounge host
+function hashId(n) { n = Math.imul((n | 0) + 1, 0x9e3779b1) >>> 0; n = Math.imul(n ^ (n >>> 15), 0x45d9f3b) >>> 0; return (n ^ (n >>> 16)) >>> 0; }
+function personName(role, nn, walking) { return 'person.' + role + '.0' + nn + '.' + (walking ? 'walk' : 'stand'); }
+// Draws a sprite figure in place of a code-drawn one. Walking alternates the stand and stride frames on the step
+// cycle; facing < 0 mirrors it, since every sprite faces front-right. Returns false until the frame has loaded.
+export function drawPersonSprite(api, x, z, identity, employee, facing, phase, amount) {
+  let role = employee ? 'staff' : 'customer', nn;
+  if (employee) nn = STAFF_FOR_LINE[identity] || 1;
+  else if (identity < 0) { role = 'walker'; nn = CAST.walker[(-identity) % CAST.walker.length]; if (nn === 7) role = 'customer'; }
+  else nn = CAST.customer[hashId(identity) % CAST.customer.length];
+  const walking = amount > .3 && Math.floor(phase / Math.PI) % 2 === 0;
+  const name = personName(role, nn, walking), base = personName(role, nn, false);
+  lazySprite(name, 'sprites/people/' + name + '.png', { h: 1.85, drop: .04 });
+  lazySprite(base, 'sprites/people/' + base + '.png', { h: 1.85, drop: .04 });
+  const use = spriteReady(name) ? name : spriteReady(base) ? base : null;
+  if (!use) return false;
+  const p = api.project(x, 0, z), u = api.unit;
+  api.ellipse(p.x + u * .06, p.y + u * .03, u * .34, u * .1, 'rgba(14,28,20,.22)');
+  return drawSprite(api, use, x, z, facing < 0);
+}
 export function spriteReady(name) { const s = SPRITES[name]; return !!(s && !s.missing && s.img && s.img.complete && s.img.naturalWidth); }
 // Draws a sprite at world (x, z) on the current floor; flip mirrors it so a car can face the other way along a street.
 export function drawSprite(api, name, x, z, flip, scale) {
   const s = SPRITES[name]; if (!spriteReady(name)) return false;
-  const q = api.project(x, 0, z), u = api.unit, w = s.w * u * (scale || 1), h = w * s.img.naturalHeight / s.img.naturalWidth, ctx = api.ctx;
+  const q = api.project(x, 0, z), u = api.unit, ar = s.img.naturalHeight / s.img.naturalWidth, w = (s.h ? s.h / ar : s.w) * u * (scale || 1), h = w * ar, ctx = api.ctx;
   ctx.save(); ctx.translate(q.x, q.y + s.drop * u * (scale || 1)); if (flip) ctx.scale(-1, 1);
   ctx.drawImage(s.img, -w / 2, -h, w, h); ctx.restore();
   return true;
@@ -268,7 +290,8 @@ function drawWalkers(api, back) {
     for (let k = 0; k < n; k++) {
       const ph = ((t * (.8 + k * .17) + k / n + wi * .31) % 1), f = ph < .5 ? ph * 2 : 2 - ph * 2;
       const px = x0 + (x1 - x0) * f, pz = z0 + (z1 - z0) * f;
-      if (spriteReady('person')) { drawSprite(api, 'person', px, pz, (x1 - x0) * (ph < .5 ? 1 : -1) < 0, .95 + (k % 2) * .08); continue; }
+      const dir = (x1 - x0) * (ph < .5 ? 1 : -1), stride = api.now * .009 + k * 1.7;
+      if (drawPersonSprite(api, px, pz, -(wi * 3 + k + 1), false, dir, stride, api.now > 0 ? 1 : 0)) continue;
       api.person(px, pz, 40 + wi * 7 + k, api.now > 0);
     }
   });
