@@ -8,6 +8,8 @@
 // and paints over any overlap); `front` paints only low furniture, cars and walkers on the front and right, placed
 // so nothing tall ever covers a station.
 export const SUNNY = typeof location !== 'undefined' && /[?&]look=sunny\b/.test(location.search);
+// The shop's own Ludo sprites (stations, display case) stay off unless asked for: mixed with the drawn shell they read as pasted on.
+export const SHOP_SPRITES = SUNNY && /[?&]sprites=shop\b/.test(location.search);
 
 // Hero sprites (rendered in Ludo.ai from the sprite brief). Each is placed by its footprint centre: `w` is the
 // on-screen width in world units at zoom 1, `drop` how far the image's bottom edge sits below the footprint centre

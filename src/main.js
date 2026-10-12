@@ -18,7 +18,7 @@ import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import { createGlPost } from './gl-post.js';
-import { SUNNY, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite } from './sunny-world.js';
+import { SUNNY, SHOP_SPRITES, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite } from './sunny-world.js';
 import * as economy from './economy.js';
 import * as strains from './strains.js';
 import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent } from './progression.js';
@@ -1262,7 +1262,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       if(only!==undefined&&p.index!==only)return;
       var active=customers.some(function(c){return c.orderCounter===p.index&&atOrderCounter(c,state.orderCounters)&&c.serviceElapsed>0});
       if(state.lines[4]>0)drawPerson(p.x-.35,p.z-1.5,now,4,false,true,false,{amount:0,phase:0,facing:.3,identity:4+p.index*23,taskOffset:p.index*1.7,workActivity:active?1:0});
-      if(SUNNY&&drawSprite(sunnyApi(now),stationSprite(4,state.lines[4])||(state.orderCounters>1?'counter':''),p.x,p.z)){if(selected===4&&state.orderCounters>1)selectionRing(p,true);return}
+      if(SHOP_SPRITES&&drawSprite(sunnyApi(now),stationSprite(4,state.lines[4])||(state.orderCounters>1?'counter':''),p.x,p.z)){if(selected===4&&state.orderCounters>1)selectionRing(p,true);return}
       if(state.orderCounters===1){drawStage(p,4,now);return}
       var x=p.x,z=p.z,stone=['#f8f3e5','#bfc3b4','#dfe2d5'],walnut=['#8d6a45','#4a3120','#6e5034'],oak=['#cfb085','#82613f','#a88960'];
       drawBox(x,z,.03,2.12,2.16,.25,['#425046','#222d25','#324137']);
@@ -2613,7 +2613,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       // Staff positions: most stand behind their bench; the grow-room pair stand where the gantry and rack do not hide them.
       var staffSpots={0:{dx:-2.45,dz:.45,front:true,facing:1},1:{dx:-2.45,dz:.45,front:true,facing:1},5:{dx:1.05,dz:-1.55,front:false,facing:.35}};
       if(fi===2)drawGrowGantry('posts');
-      function drawStation(i,only){if(i===4){drawOrderCounterBank(now,only);if(selected===4&&state.orderCounters===1)selectionRing(machinePos[4]);return}if(i===5)drawCounterDivider();var p=machinePos[i],spot=staffSpots[i]||{dx:-.95,dz:-1.65,front:false},gait=spot.facing?{amount:0,phase:0,facing:spot.facing}:undefined,staffed=state.lines[i]>0;if(staffed&&!spot.front)drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait);if(!(SUNNY&&drawSprite(sunnyApi(now),stationSprite(i,state.lines[i])||(i===1?'grow':''),p.x,p.z)))drawStage(p,i,now);if(staffed&&spot.front)drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait);if(selected===i)selectionRing(p)}
+      function drawStation(i,only){if(i===4){drawOrderCounterBank(now,only);if(selected===4&&state.orderCounters===1)selectionRing(machinePos[4]);return}if(i===5)drawCounterDivider();var p=machinePos[i],spot=staffSpots[i]||{dx:-.95,dz:-1.65,front:false},gait=spot.facing?{amount:0,phase:0,facing:spot.facing}:undefined,staffed=state.lines[i]>0;if(staffed&&!spot.front)drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait);if(!(SHOP_SPRITES&&drawSprite(sunnyApi(now),stationSprite(i,state.lines[i])||(i===1?'grow':''),p.x,p.z)))drawStage(p,i,now);if(staffed&&spot.front)drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait);if(selected===i)selectionRing(p)}
       // The ground-floor counters sort with the customers; the upper stations paint with their floors.
       floor.ids.forEach(fi===0?function(i){
         var p=machinePos[i],desks=i===4?orderCounterPositions(state.orderCounters):[p];
@@ -2706,8 +2706,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     [-1.75,-2.75,-3.75].forEach(function(bz){worldLine([[8.93,4.7,bz],[8.93,5.6,bz]],'#252b28',bz===-1.75?.07:.045)});
     // Enclosed gravity transfers bridge each floor without crossing the stairs.
     // The arched service signs stand in front of the counters, which now sort as jobs, so they sort as jobs too.
-    if(!SUNNY)orderCounterPositions(state.orderCounters).forEach(function(p){sceneJobs.push({depth:depthOf({x:p.x,z:3.75}),draw:function(){sceneElevation=0;archedServiceSign(p.x,'ORDER',state.orderCounters>1)}})});
-    if(!SUNNY)sceneJobs.push({depth:depthOf({x:4,z:3.75}),draw:function(){sceneElevation=0;archedServiceSign(4,'PICKUP')}});
+    if(!SHOP_SPRITES)orderCounterPositions(state.orderCounters).forEach(function(p){sceneJobs.push({depth:depthOf({x:p.x,z:3.75}),draw:function(){sceneElevation=0;archedServiceSign(p.x,'ORDER',state.orderCounters>1)}})});
+    if(!SHOP_SPRITES)sceneJobs.push({depth:depthOf({x:4,z:3.75}),draw:function(){sceneElevation=0;archedServiceSign(4,'PICKUP')}});
     // Street-level queue markings and low entry planters retain the service route.
     // One dash per standing place along the order line, as far as the doorman; lit while someone is on it.
     var waiting=customers.filter(inOrderFlow).length,orderRoute=queueRoute(false),spacing=queueLimit()>20?.6:.75,inside=routeLength(orderRoute.slice(0,laneJoinIndex(orderRoute)+1));
@@ -2757,7 +2757,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       try{drawIdDesk()}finally{if(rise>0){sceneElevation+=lift;ctx.restore()}}
     }});
     function drawIdDesk(){
-      if(SUNNY&&drawSprite(sunnyApi(now),stationSprite(6,state.idStaff),x,z))return;
+      if(SHOP_SPRITES&&drawSprite(sunnyApi(now),stationSprite(6,state.idStaff),x,z))return;
       drawBox(x,z,0,.64,1.25,.12,steel);drawBox(x,z,.12,.6,1.2,.85,wood);
       drawBox(x,z,.97,.78,1.38,.13,['#efe4c8','#a9a18c','#d4c7a6']);
       drawBox(x-.12,z,1.1,.24,.32,.08,['#b7ccac','#527563','#88a488']);
@@ -3272,7 +3272,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // Ground planters share guest depth sorting, so foliage occludes people behind it.
     [{x:-10.35,z:5.9,compact:true}].forEach(function(p){
       jobs.push({depth:depthOf(p),draw:function(){
-        if(SUNNY&&drawSprite(sunnyApi(now),fixtureSprite('shop.planter.small'),p.x,p.z))return;
+        if(SHOP_SPRITES&&drawSprite(sunnyApi(now),fixtureSprite('shop.planter.small'),p.x,p.z))return;
         drawBox(p.x,p.z,0,p.compact?.45:.95,p.compact?.45:1,p.compact?.4:.65,['#bc9d73','#6f5943','#998063']);
         plant(p.x,p.z,p.compact?.4:.65,p.compact?.7:1.1);
       }});
@@ -3281,7 +3281,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // of the plinth, and between them a glass hood covers a back riser of jars with products and merch on the deck.
     function drawDisplayCase(x,z,width){
       jobs.push({depth:depthOf({x:x,z:z}),draw:function(){
-        if(SUNNY&&drawSprite(sunnyApi(now),fixtureSprite('shop.displaycase'),x,z,true))return;
+        if(SHOP_SPRITES&&drawSprite(sunnyApi(now),fixtureSprite('shop.displaycase'),x,z,true))return;
         var oak=['#cfb184','#836949','#b09266'],stone=['#e2dfd0','#969c8e','#c3c8b8'],brass=['#d7c28b','#8c774c','#b7a16c'],half=width/2,bed=.95,inner=half-bed;
         drawBox(x,z,0,width,1.35,.85,oak);
         for(var flute=0;flute<Math.floor(width/.185);flute++)worldLine([[x-half+.1+flute*.185,.08,z+.69],[x-half+.1+flute*.185,.78,z+.69]],'#6f593b35',.018);
