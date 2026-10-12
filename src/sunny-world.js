@@ -15,7 +15,29 @@ export const SUNNY = typeof location !== 'undefined' && /[?&]look=sunny\b/.test(
 // paints instead, so a slow network never leaves a hole.
 const SPRITES = { person: { w: .95, drop: .1 }, counter: { w: 3.3, drop: .55 }, grow: { w: 4.3, drop: .62 }, car: { w: 3.1, drop: .55 }, tree: { w: 3.4, drop: .5 } };
 if (SUNNY && typeof Image !== 'undefined') for (const name in SPRITES) { const img = new Image(); img.decoding = 'async'; img.src = 'sprites/' + name + '.png'; SPRITES[name].img = img; }
-export function spriteReady(name) { const s = SPRITES[name]; return !!(s && s.img && s.img.complete && s.img.naturalWidth); }
+// Interior batch: stations come in three visual tiers named per the brief (station.<key>.tier<N>.png under
+// sprites/interior/). They load lazily on first use; a missing file marks itself absent so the code-drawn station
+// keeps painting, and a missing tier falls back to the nearest tier that exists.
+const STATION_KEYS = ['seeds', 'grow', 'harvest', 'pack', 'orders', 'pickup'];
+const STATION_SIZE = { seeds: { w: 3.6, drop: .6 }, grow: { w: 4.3, drop: .62 }, harvest: { w: 3.8, drop: .6 }, pack: { w: 3.6, drop: .6 }, orders: { w: 3.3, drop: .55 }, pickup: { w: 3.6, drop: .6 } };
+function lazySprite(name, file, size) {
+  if (SPRITES[name] || !SUNNY || typeof Image === 'undefined') return;
+  const img = new Image(); img.decoding = 'async'; img.onerror = () => { SPRITES[name].missing = true; }; img.src = file;
+  SPRITES[name] = Object.assign({ img }, size);
+}
+export function stationTier(level) { return level >= 20 ? 3 : level >= 10 ? 2 : 1; }
+// Returns the sprite name to draw for station i at this level, or null while none is available.
+export function stationSprite(i, level) {
+  const key = STATION_KEYS[i]; if (!key) return null;
+  const want = stationTier(level), order = [want, ...[1, 2, 3].filter(t => t !== want).sort((a, b) => Math.abs(a - want) - Math.abs(b - want))];
+  for (const t of order) {
+    const name = 'station.' + key + '.tier' + t;
+    lazySprite(name, 'sprites/interior/' + name + '.png', STATION_SIZE[key]);
+    if (spriteReady(name)) return name;
+  }
+  return null;
+}
+export function spriteReady(name) { const s = SPRITES[name]; return !!(s && !s.missing && s.img && s.img.complete && s.img.naturalWidth); }
 // Draws a sprite at world (x, z) on the current floor; flip mirrors it so a car can face the other way along a street.
 export function drawSprite(api, name, x, z, flip, scale) {
   const s = SPRITES[name]; if (!spriteReady(name)) return false;
