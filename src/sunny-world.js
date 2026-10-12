@@ -45,6 +45,7 @@ const STAFF_FOR_LINE = [2, 2, 2, 1, 1, 1, 3, 1]; // seeds/grow/harvest growers, 
 // Every figure sits on the same 448x640 canvas, 600 px tall with its feet 8 px above the bottom edge.
 // Figures are drawn 2.3 units tall: the Ludo counters and cars came out chunky, and true-to-life people looked like toys beside them.
 const PERSON_SIZE = { h: 2.3 * 640 / 600, drop: 2.3 * 8 / 600 + .03 };
+const CYCLE_07 = 35;
 function hashId(n) { n = Math.imul((n | 0) + 1, 0x9e3779b1) >>> 0; n = Math.imul(n ^ (n >>> 15), 0x45d9f3b) >>> 0; return (n ^ (n >>> 16)) >>> 0; }
 function personName(role, nn, walking) { return 'person.' + role + '.0' + nn + '.' + (walking ? 'walk' : 'stand'); }
 // Draws a sprite figure in place of a code-drawn one. Walking alternates the stand and stride frames on the step
@@ -55,7 +56,15 @@ export function drawPersonSprite(api, x, z, identity, employee, facing, phase, a
   else if (identity < 0) { role = 'walker'; nn = CAST.walker[(-identity) % CAST.walker.length]; if (nn === 7) role = 'customer'; }
   else nn = CAST.customer[hashId(identity) % CAST.customer.length];
   const walking = amount > .3 && Math.floor(phase / Math.PI) % 2 === 0;
-  const name = personName(role, nn, walking), base = personName(role, nn, false);
+  let name = personName(role, nn, walking);
+  const base = personName(role, nn, false);
+  // Customer 07 has a full 35-frame Ludo walk cycle (about 18 frames a stride); the others still swap stand and stride.
+  if (role === 'customer' && nn === 7 && amount > .3) {
+    const f = (((Math.floor(phase * 9 / Math.PI) % CYCLE_07) + CYCLE_07) % CYCLE_07), cycle = 'person.customer.07.cycle.' + (f < 10 ? '0' : '') + f;
+    lazySprite(cycle, 'sprites/people/cycle/' + cycle + '.png', PERSON_SIZE);
+    if (spriteReady(cycle)) name = cycle;
+    else for (let k = 0; k < CYCLE_07; k++) { const n = 'person.customer.07.cycle.' + (k < 10 ? '0' : '') + k; lazySprite(n, 'sprites/people/cycle/' + n + '.png', PERSON_SIZE); }
+  }
   lazySprite(name, 'sprites/people/' + name + '.png', PERSON_SIZE);
   lazySprite(base, 'sprites/people/' + base + '.png', PERSON_SIZE);
   const use = spriteReady(name) ? name : spriteReady(base) ? base : null;
