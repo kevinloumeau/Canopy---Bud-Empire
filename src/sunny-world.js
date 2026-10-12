@@ -18,8 +18,8 @@ if (SUNNY && typeof Image !== 'undefined') for (const name in SPRITES) { const i
 // Interior batch: stations come in three visual tiers named per the brief (station.<key>.tier<N>.png under
 // sprites/interior/). They load lazily on first use; a missing file marks itself absent so the code-drawn station
 // keeps painting, and a missing tier falls back to the nearest tier that exists.
-const STATION_KEYS = ['seeds', 'grow', 'harvest', 'pack', 'orders', 'pickup'];
-const STATION_SIZE = { seeds: { w: 3.6, drop: .6 }, grow: { w: 4.3, drop: .62 }, harvest: { w: 3.8, drop: .6 }, pack: { w: 3.6, drop: .6 }, orders: { w: 3.3, drop: .55 }, pickup: { w: 3.6, drop: .6 } };
+const STATION_KEYS = ['seeds', 'grow', 'harvest', 'pack', 'orders', 'pickup', 'security']; // index 6 is the ID desk, levelled by idStaff
+const STATION_SIZE = { seeds: { w: 3.6, drop: .6 }, grow: { w: 4.3, drop: .62 }, harvest: { w: 3.8, drop: .6 }, pack: { w: 3.6, drop: .6 }, orders: { w: 3.3, drop: .55 }, pickup: { w: 4.1, drop: .6 }, security: { w: 1.9, drop: .45 } };
 function lazySprite(name, file, size) {
   if (SPRITES[name] || !SUNNY || typeof Image === 'undefined') return;
   const img = new Image(); img.decoding = 'async'; img.onerror = () => { SPRITES[name].missing = true; }; img.src = file;

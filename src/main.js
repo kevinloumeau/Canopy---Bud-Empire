@@ -1262,7 +1262,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       if(only!==undefined&&p.index!==only)return;
       var active=customers.some(function(c){return c.orderCounter===p.index&&atOrderCounter(c,state.orderCounters)&&c.serviceElapsed>0});
       if(state.lines[4]>0)drawPerson(p.x-.35,p.z-1.5,now,4,false,true,false,{amount:0,phase:0,facing:.3,identity:4+p.index*23,taskOffset:p.index*1.7,workActivity:active?1:0});
-      if(SUNNY&&state.orderCounters>1&&drawSprite(sunnyApi(now),stationSprite(4,state.lines[4])||'counter',p.x,p.z))return;
+      if(SUNNY&&drawSprite(sunnyApi(now),stationSprite(4,state.lines[4])||(state.orderCounters>1?'counter':''),p.x,p.z)){if(selected===4&&state.orderCounters>1)selectionRing(p,true);return}
       if(state.orderCounters===1){drawStage(p,4,now);return}
       var x=p.x,z=p.z,stone=['#f8f3e5','#bfc3b4','#dfe2d5'],walnut=['#8d6a45','#4a3120','#6e5034'],oak=['#cfb085','#82613f','#a88960'];
       drawBox(x,z,.03,2.12,2.16,.25,['#425046','#222d25','#324137']);
@@ -2704,8 +2704,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     [-1.75,-2.75,-3.75].forEach(function(bz){worldLine([[8.93,4.7,bz],[8.93,5.6,bz]],'#252b28',bz===-1.75?.07:.045)});
     // Enclosed gravity transfers bridge each floor without crossing the stairs.
     // The arched service signs stand in front of the counters, which now sort as jobs, so they sort as jobs too.
-    if(!(SUNNY&&state.orderCounters>1))orderCounterPositions(state.orderCounters).forEach(function(p){sceneJobs.push({depth:depthOf({x:p.x,z:3.75}),draw:function(){sceneElevation=0;archedServiceSign(p.x,'ORDER',state.orderCounters>1)}})});
-    sceneJobs.push({depth:depthOf({x:4,z:3.75}),draw:function(){sceneElevation=0;archedServiceSign(4,'PICKUP')}});
+    if(!SUNNY)orderCounterPositions(state.orderCounters).forEach(function(p){sceneJobs.push({depth:depthOf({x:p.x,z:3.75}),draw:function(){sceneElevation=0;archedServiceSign(p.x,'ORDER',state.orderCounters>1)}})});
+    if(!SUNNY)sceneJobs.push({depth:depthOf({x:4,z:3.75}),draw:function(){sceneElevation=0;archedServiceSign(4,'PICKUP')}});
     // Street-level queue markings and low entry planters retain the service route.
     // One dash per standing place along the order line, as far as the doorman; lit while someone is on it.
     var waiting=customers.filter(inOrderFlow).length,orderRoute=queueRoute(false),spacing=queueLimit()>20?.6:.75,inside=routeLength(orderRoute.slice(0,laneJoinIndex(orderRoute)+1));
@@ -2755,6 +2755,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       try{drawIdDesk()}finally{if(rise>0){sceneElevation+=lift;ctx.restore()}}
     }});
     function drawIdDesk(){
+      if(SUNNY&&drawSprite(sunnyApi(now),stationSprite(6,state.idStaff),x,z))return;
       drawBox(x,z,0,.64,1.25,.12,steel);drawBox(x,z,.12,.6,1.2,.85,wood);
       drawBox(x,z,.97,.78,1.38,.13,['#efe4c8','#a9a18c','#d4c7a6']);
       drawBox(x-.12,z,1.1,.24,.32,.08,['#b7ccac','#527563','#88a488']);
