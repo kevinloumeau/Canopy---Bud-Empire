@@ -42,6 +42,8 @@ export function stationSprite(i, level) {
 // People: cast members are picked by a stable identity; customer 07 (Kevin's own outfit) is weighted to show up twice as often.
 const CAST = { customer: [1, 2, 3, 4, 5, 6, 7, 7], walker: [1, 2, 3, 4, 7] };
 const STAFF_FOR_LINE = [2, 2, 2, 1, 1, 1, 3, 1]; // seeds/grow/harvest growers, pack/orders/pickup budtenders, 6 is the ID desk, 7 the lounge host
+// Every figure sits on the same 448x640 canvas, 600 px tall with its feet 8 px above the bottom edge.
+const PERSON_SIZE = { h: 1.85 * 640 / 600, drop: 1.85 * 8 / 600 + .03 };
 function hashId(n) { n = Math.imul((n | 0) + 1, 0x9e3779b1) >>> 0; n = Math.imul(n ^ (n >>> 15), 0x45d9f3b) >>> 0; return (n ^ (n >>> 16)) >>> 0; }
 function personName(role, nn, walking) { return 'person.' + role + '.0' + nn + '.' + (walking ? 'walk' : 'stand'); }
 // Draws a sprite figure in place of a code-drawn one. Walking alternates the stand and stride frames on the step
@@ -53,8 +55,8 @@ export function drawPersonSprite(api, x, z, identity, employee, facing, phase, a
   else nn = CAST.customer[hashId(identity) % CAST.customer.length];
   const walking = amount > .3 && Math.floor(phase / Math.PI) % 2 === 0;
   const name = personName(role, nn, walking), base = personName(role, nn, false);
-  lazySprite(name, 'sprites/people/' + name + '.png', { h: 1.85, drop: .04 });
-  lazySprite(base, 'sprites/people/' + base + '.png', { h: 1.85, drop: .04 });
+  lazySprite(name, 'sprites/people/' + name + '.png', PERSON_SIZE);
+  lazySprite(base, 'sprites/people/' + base + '.png', PERSON_SIZE);
   const use = spriteReady(name) ? name : spriteReady(base) ? base : null;
   if (!use) return false;
   const p = api.project(x, 0, z), u = api.unit;
@@ -64,6 +66,31 @@ export function drawPersonSprite(api, x, z, identity, employee, facing, phase, a
 // Shop fixtures from the interior batch, sized in world units like the stations.
 const FIXTURE_SIZE = { 'shop.displaycase': { w: 6.4, drop: .55 }, 'shop.planter.small': { w: .95, drop: .12 } };
 export function fixtureSprite(name) { if (!FIXTURE_SIZE[name]) return null; lazySprite(name, 'sprites/interior/' + name + '.png', FIXTURE_SIZE[name]); return spriteReady(name) ? name : null; }
+// Shop shell (Kevin chose an all-sprite shop): wall modules stretched over a wall run's screen box, and floor
+// textures unwarped from the floor sprites, laid as a pattern in the floor plane so any outline can be filled.
+export function shellSprite(name) { lazySprite(name, 'sprites/shell/' + name + '.png', { w: 1, drop: 0 }); return spriteReady(name) ? name : null; }
+export function drawSpan(api, name, x0, z0, x1, z1, h, y0) {
+  if (!name || !spriteReady(name)) return false;
+  y0 = y0 || 0;
+  const a = api.project(x0, y0, z0), b = api.project(x1, y0, z1), ta = api.project(x0, y0 + h, z0), tb = api.project(x1, y0 + h, z1);
+  const l = Math.min(a.x, b.x), r = Math.max(a.x, b.x), t = Math.min(ta.y, tb.y), bt = Math.max(a.y, b.y);
+  api.ctx.drawImage(SPRITES[name].img, l, t, r - l, bt - t);
+  return true;
+}
+const FLOOR_TEX = {};
+// Seamless ground textures from the Ludo ground batch; the mezzanine timber and grow-room concrete are unwarped from the shell's floor sprites.
+const TEXTURE_FILES = { herringbone: 'sprites/ground/ground.floor.herringbone.png', sidewalk: 'sprites/ground/ground.sidewalk.concrete.png', asphalt: 'sprites/ground/ground.asphalt.png' };
+export function floorPattern(api, name, size) {
+  if (!SUNNY || typeof Image === 'undefined') return null;
+  let t = FLOOR_TEX[name];
+  if (!t) { t = FLOOR_TEX[name] = { img: new Image() }; t.img.src = TEXTURE_FILES[name] || 'sprites/shell/tex.floor.' + name + '.png'; }
+  if (!t.img.complete || !t.img.naturalWidth) return null;
+  if (!t.pattern) { t.pattern = api.ctx.createPattern(t.img, 'repeat'); if (!t.pattern) return null; }
+  if (!t.pattern.setTransform || typeof DOMMatrix === 'undefined') return null;
+  const o = api.project(0, 0, 0), ex = api.project(1, 0, 0), ez = api.project(0, 0, 1), k = size / t.img.naturalWidth;
+  t.pattern.setTransform(new DOMMatrix([(ex.x - o.x) * k, (ex.y - o.y) * k, (ez.x - o.x) * k, (ez.y - o.y) * k, o.x, o.y]));
+  return t.pattern;
+}
 export function spriteReady(name) { const s = SPRITES[name]; return !!(s && !s.missing && s.img && s.img.complete && s.img.naturalWidth); }
 // Draws a sprite at world (x, z) on the current floor; flip mirrors it so a car can face the other way along a street.
 export function drawSprite(api, name, x, z, flip, scale) {
@@ -105,6 +132,8 @@ export function drawSunnyWorld(api, front, alpha) {
     // One paved plaza everywhere: the slab's own concrete, with the slab's scoring lattice carried right across it
     // and a soft checker so large flat areas keep some texture at every zoom.
     ctx.fillStyle = PAVER; ctx.fillRect(0, 0, api.width, api.height);
+    const plazaTex = floorPattern(api, 'sidewalk', 6);
+    if (plazaTex) quad(-L, -L, L, L, P, plazaTex);
     for (let x = -19.5 + 1.5; x < 19.5; x += 1.5) for (let z = -15.5 + 1.5; z < 18.5; z += 1.5) {
       if (x > -13 && x < 13 && z > -9 && z < 12) continue;
       if (((Math.round(x / 1.5) + Math.round(z / 1.5)) & 1) === 0) quad(x - 1.5, z - 1.5, x, z, P, 'rgba(255,255,240,.07)');
@@ -133,6 +162,8 @@ export function drawSunnyWorld(api, front, alpha) {
 function roadSurface(api, quad, { along, at }) {
   const a0 = at - RW / 2, a1 = at + RW / 2;
   if (along === 'x') quad(-L, a0, L, a1, G, ASPHALT); else quad(a0, -L, a1, L, G, ASPHALT);
+  const tarmac = floorPattern(api, 'asphalt', 8);
+  if (tarmac) { if (along === 'x') quad(-L, a0, L, a1, G, tarmac); else quad(a0, -L, a1, L, G, tarmac); }
   // Manhole covers down one lane.
   const p = api.project, u = api.unit;
   for (let k = -36; k <= 36; k += 24) { const q = along === 'x' ? p(k, G + .002, at - 1.5) : p(at + 1.5, G + .002, k); api.ellipse(q.x, q.y, u * .45, u * .25, '#4a4e54'); api.ellipse(q.x, q.y, u * .32, u * .17, '#5f636a'); }
@@ -176,9 +207,24 @@ function crossing(api, quad, along, at, pos) {
 
 // A muted low-rise neighbour: walls, parapet, a sparse grid of pale windows, a glazed ground floor under a plain
 // awning, then a haze wash over the whole thing so it sits back from the shop.
+// Ludo neighbour buildings, picked by wall colour and height, scaled to the footprint's on-screen width and set on
+// its nearest corner; a light haze keeps them behind the shop in emphasis.
+function buildingSprite(api, x0, x1, z0, z1, h, wall) {
+  const name = wall === STONE ? (h >= 8 ? 'building.mid.stone' : 'building.low.stone') : wall === TAN ? 'building.low.tan' : wall === SAGE ? 'building.low.sage' : 'building.corner';
+  lazySprite(name, 'sprites/buildings/' + name + '.png', { w: 1, drop: 0 });
+  if (!spriteReady(name)) return false;
+  const p = api.project, base = [p(x0, P, z0), p(x1, P, z0), p(x1, P, z1), p(x0, P, z1)];
+  const l = Math.min(...base.map(q => q.x)), r = Math.max(...base.map(q => q.x)), b = Math.max(...base.map(q => q.y));
+  const top = Math.min(...[p(x0, P + h, z0), p(x1, P + h, z0), p(x1, P + h, z1), p(x0, P + h, z1)].map(q => q.y));
+  const img = SPRITES[name].img, ar = img.naturalHeight / img.naturalWidth, ht = Math.min((r - l) * 1.04 * ar, (b - top) * 1.05), w = ht / ar, ctx = api.ctx;
+  ctx.save(); ctx.globalAlpha *= .82; ctx.drawImage(img, (l + r) / 2 - w / 2, b - ht + api.unit * .3, w, ht); ctx.restore();
+  return true;
+}
+
 function building(api, [x, z, w, d, h, wall, awning]) {
   const p = api.project, x0 = x - w / 2, x1 = x + w / 2, z0 = z - d / 2, z1 = z + d / 2;
   api.poly([p(x0, P, z1), p(x0 - h * .3, P, z1 + h * .18), p(x1 - h * .3, P, z1 + h * .18), p(x1, P, z1)], 'rgba(40,40,30,.12)');
+  if (buildingSprite(api, x0, x1, z0, z1, h, wall)) return;
   api.box(x, z, P, w, d, h, wall);
   api.box(x, z, P + h, w + .2, d + .2, .3, [api.shade(wall[0], .93), api.shade(wall[1], .9), api.shade(wall[2], .9)]);
   for (let y = 2.9; y < h - .9; y += 1.8) {
@@ -197,6 +243,7 @@ function building(api, [x, z, w, d, h, wall, awning]) {
 
 function streetTree(api, x, z) {
   const p = api.project, u = api.unit;
+  if (((Math.round(x) + Math.round(z)) & 3) === 1 && prop(api, 'street.tree.02', x, z)) return;
   if (drawSprite(api, 'tree', x, z)) return;
   const sh = p(x, P, z); api.ellipse(sh.x - u * .8, sh.y + u * .2, u * 1.8, u * .7, 'rgba(40,50,30,.18)');
   // Tree pit: dark soil under an iron grate.
@@ -207,7 +254,17 @@ function streetTree(api, x, z) {
   const hi = p(x + .3, 3.9, z - .2); api.ellipse(hi.x, hi.y, u * .4, u * .26, 'rgba(255,255,210,.3)');
 }
 
+// Street props from the Ludo street batch; each falls back to its drawn version until the image has loaded.
+const PROPS = { 'street.lamp': { h: 4.6, drop: .1 }, 'street.bench': { w: 2.4, drop: .25 }, 'street.planter': { w: 3.2, drop: .35 }, 'street.cafe.table': { w: 2.3, drop: .3 },
+  'street.coffeecart': { w: 2.6, drop: .35 }, 'street.bin': { h: 1.1, drop: .1 }, 'street.hydrant': { h: .95, drop: .08 }, 'street.bikerack': { w: 2.6, drop: .35 },
+  'street.busstop': { w: 3.6, drop: .4 }, 'street.tree.02': { h: 5.4, drop: .4 } };
+function prop(api, name, x, z, flip) {
+  if (!PROPS[name]) return false;
+  lazySprite(name, 'sprites/street/' + name + '.png', PROPS[name]);
+  return drawSprite(api, name, x, z, flip);
+}
 function lamp(api, x, z) {
+  if (prop(api, 'street.lamp', x, z)) return;
   api.box(x, z, P, .5, .5, .25, ['#4a5450', '#2f3a36', '#3a4641']);
   api.line([[x, P, z], [x, 4.4, z]], '#2f3a36', .09);
   api.box(x, z, 4.3, .55, .55, .35, ['#f6e7b6', '#2f3a36', '#3a4641']);
@@ -216,6 +273,7 @@ function lamp(api, x, z) {
 }
 
 function planter(api, x, z) {
+  if (prop(api, 'street.planter', x, z)) return;
   const p = api.project, u = api.unit;
   api.box(x, z, P, 1.8, 1.1, .6, ['#cfc6b0', '#9b917a', '#b5ab93']);
   for (let k = 0; k < 3; k++) { const q = p(x - .5 + k * .5, .6, z); api.blob(q.x, q.y, u * .45, u * .36, ['#4f8a38', '#6ea845', '#8fc257'][k], x + k, .14); }
@@ -223,6 +281,7 @@ function planter(api, x, z) {
 }
 
 function bench(api, x, z) {
+  if (prop(api, 'street.bench', x, z)) return;
   const wood = ['#b98a5a', '#7a5636', '#9c7247'], iron = ['#3a3f3c', '#22262a', '#2f3435'];
   [-1, 1].forEach(s => api.box(x + s * 1, z, P, .12, .6, .5, iron));
   for (let i = 0; i < 4; i++) api.box(x, z - .3 + i * .2, P + .48, 2.4, .15, .08, wood);
@@ -230,6 +289,7 @@ function bench(api, x, z) {
 }
 
 function umbrella(api, x, z) {
+  if (prop(api, 'street.cafe.table', x, z)) return;
   const p = api.project, u = api.unit;
   api.box(x, z, P, .9, .9, .55, ['#e8e2d2', '#b3ac9a', '#cfc8b6']);
   api.line([[x, P + .5, z], [x, 2.4, z]], '#6b6b6b', .06);
@@ -238,6 +298,7 @@ function umbrella(api, x, z) {
 }
 
 function cart(api, x, z) {
+  if (prop(api, 'street.coffeecart', x, z)) return;
   const p = api.project, u = api.unit;
   const body = ['#f4f1e4', '#b9ad8f', '#d9cfae'];
   api.box(x, z, P + .35, 2, 1.1, 1, body);
@@ -249,11 +310,12 @@ function cart(api, x, z) {
   api.box(x - .5, z, P + 1.35, .5, .4, .35, ['#8a5a3a', '#5a3a22', '#70482e']); api.box(x + .5, z, P + 1.35, .4, .4, .3, ['#f4c542', '#b0891f', '#d4a92f']);
 }
 
-function bin(api, x, z) { api.box(x, z, P, .6, .6, .9, ['#2f4a3f', '#1d3029', '#27403a']); api.box(x, z, P + .9, .7, .7, .1, ['#3a5a4c', '#223a30', '#2f4c40']); }
-function hydrant(api, x, z) { api.box(x, z, P, .35, .35, .8, ['#e0564a', '#9c3a31', '#c2483e']); api.box(x, z, P + .3, .7, .3, .22, ['#e0564a', '#9c3a31', '#c2483e']); api.box(x, z, P + .8, .25, .25, .18, ['#f0a090', '#9c3a31', '#c2483e']); }
-function bikeRack(api, x, z) { for (let k = 0; k < 3; k++) { const bx = x + k * .8; api.line([[bx, P, z - .5], [bx, P + .8, z - .5], [bx, P + .8, z + .5], [bx, P, z + .5]], '#3a3f3c', .06); } }
+function bin(api, x, z) { if (prop(api, 'street.bin', x + 0, z)) return; api.box(x, z, P, .6, .6, .9, ['#2f4a3f', '#1d3029', '#27403a']); api.box(x, z, P + .9, .7, .7, .1, ['#3a5a4c', '#223a30', '#2f4c40']); }
+function hydrant(api, x, z) { if (prop(api, 'street.hydrant', x + 0, z)) return; api.box(x, z, P, .35, .35, .8, ['#e0564a', '#9c3a31', '#c2483e']); api.box(x, z, P + .3, .7, .3, .22, ['#e0564a', '#9c3a31', '#c2483e']); api.box(x, z, P + .8, .25, .25, .18, ['#f0a090', '#9c3a31', '#c2483e']); }
+function bikeRack(api, x, z) { if (prop(api, 'street.bikerack', x + .8, z)) return; for (let k = 0; k < 3; k++) { const bx = x + k * .8; api.line([[bx, P, z - .5], [bx, P + .8, z - .5], [bx, P + .8, z + .5], [bx, P, z + .5]], '#3a3f3c', .06); } }
 
 function busStop(api, x, z) {
+  if (prop(api, 'street.busstop', x, z)) return;
   const p = api.project, glass = 'rgba(190,220,230,.55)';
   [-1.4, 1.4].forEach(dz => api.line([[x + .5, P, z + dz], [x + .5, 2.5, z + dz]], '#3a3f3c', .07));
   api.poly([p(x + .5, P + .1, z - 1.4), p(x + .5, P + .1, z + 1.4), p(x + .5, 2.4, z + 1.4), p(x + .5, 2.4, z - 1.4)], glass);
@@ -264,6 +326,14 @@ function busStop(api, x, z) {
 // A rounded compact car, nose along x or z, drawn at street level.
 function car(api, x, z, along, color) {
   const p = api.project, u = api.unit, ax = along === 'x', Lc = 2.6, W = 1.3;
+  const variant = { '#e0564a': 'red', '#f4f1e4': 'white', '#4f8fd0': 'blue', '#f2c14e': 'yellow', '#6ea845': 'green', '#8a6fd1': 'white' }[color];
+  const carName = (variant ? 'street.car.' + variant : 'street.van') + (ax ? '.fr' : '.fl');
+  lazySprite(carName, 'sprites/street/' + carName + '.png', variant ? { w: 3.1, drop: .55 } : { w: 3.3, drop: .55 });
+  if (carName === 'street.car.red.fr' ? spriteReady('car') : spriteReady(carName)) {
+    const ctx = api.ctx, q = api.project(x, G, z);
+    ctx.save(); ctx.translate(0, q.y - api.project(x, 0, z).y);
+    drawSprite(api, carName === 'street.car.red.fr' ? 'car' : carName, x, z, false); ctx.restore(); return;
+  }
   if (spriteReady('car')) {
     // One red hero sprite stands in for every colour; z-street cars are mirrored so they face along their lane.
     const ctx = api.ctx, hue = { '#f4f1e4': 0, '#4f8fd0': 210, '#f2c14e': 45, '#6ea845': 100, '#e8913c': 25, '#8a6fd1': 260 }[color] || 0;

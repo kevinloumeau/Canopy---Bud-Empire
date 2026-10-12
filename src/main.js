@@ -18,7 +18,7 @@ import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import { createGlPost } from './gl-post.js';
-import { SUNNY, SHOP_SPRITES, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite } from './sunny-world.js';
+import { SUNNY, SHOP_SPRITES, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, drawSpan, floorPattern } from './sunny-world.js';
 import * as economy from './economy.js';
 import * as strains from './strains.js';
 import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent } from './progression.js';
@@ -2208,6 +2208,15 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     }
   }
   var groundCache=null;
+  // All-sprite shop: Ludo wall modules along each floor's rear wall and left stub, in place of the drawn walls.
+  function drawShellWalls(fi,floor,left,right,rear,green){
+    var api=sunnyApi(sceneTime),end=fi===0?9.05:right,kinds=fi===2?['shell.wall.upper.right']:fi===0?['shell.wall.tile.right','shell.wall.window.right']:['shell.wall.tile.right'];
+    var n=Math.max(1,Math.round((end-left)/4)),step=(end-left)/n;
+    for(var k=0;k<n;k++)drawSpan(api,shellSprite(kinds[k%kinds.length]),left+k*step,rear,left+(k+1)*step,rear,3.9);
+    if(fi===2)drawSpan(api,shellSprite('shell.wall.upper.left'),left,rear,left,rear+3.5,3.9);
+    // The mezzanine's tall left stub has no matching module, so it keeps its drawn slatted wall.
+    if(fi===1){drawSlattedWall(true,left,rear,rear+3.5,4.7,green);drawSlattedWall(false,rear,left,-6.5,4.7,green)}
+  }
   function drawCachedGround(floor){
     var key=[width,height,dpr,unit,centerX,centerY,angle,stationTier(4),stationTier(5)].join(':');
     if(typeof OffscreenCanvas==='undefined'){paintGround();return}
@@ -2390,7 +2399,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
         }
         sceneElevation=floor.y;
       }
-      if(fi===0){drawCachedGround(floor);drawSideAislePlanter()}
+      if(fi===0){drawCachedGround(floor);if(SHOP_SPRITES){var groundTex=floorPattern(sunnyApi(now),'herringbone',4);if(groundTex)poly([project(-floor.w/2,0,floor.z-floor.d/2),project(floor.w/2,0,floor.z-floor.d/2),project(floor.w/2,0,floor.z+floor.d/2),project(-floor.w/2,0,floor.z+floor.d/2)],groundTex)}drawSideAislePlanter()}
 
       else{
         // One continuous floor outline includes the stair landing, with no internal slab edge.
@@ -2403,8 +2412,9 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
         }
         var slabTop=outline.map(function(p){return project(p[0],0,p[1])});
         poly(slabTop,finish[0]);
+        if(SHOP_SPRITES){var slabTex=floorPattern(sunnyApi(now),fi===1?'timber':'concrete',4);if(slabTex){poly(slabTop,slabTex);slabTop=null}}
         // The same material grain the walls carry, so the wide slab tops don't read as flat vector fill.
-        ctx.save();ctx.globalAlpha*=.75;poly(slabTop,surfaceTexture());ctx.restore();
+        if(slabTop){ctx.save();ctx.globalAlpha*=.75;poly(slabTop,surfaceTexture());ctx.restore()}
       }
       if(fi>0){
         // Warm oak fascia with a slim black steel edge beneath each mezzanine.
@@ -2414,6 +2424,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       }
       // Material seams, a rear forest-green wall, and warm recessed strip lighting.
       if(fi>0)for(var seam=left+.8;seam<right;seam+=.9)worldLine([[seam,.015,rear],[seam,.015,front]],fi===1?'#71593b18':'#72796c12',.014);
+      if(!SHOP_SPRITES){
       var wallFinish=green;
       drawBox(fi===0?-1.225:0,rear,0,fi===0?20.55:floor.w,.2,3.9,wallFinish);
       if(fi===2)drawBox(left,rear+1.7,0,.18,3.6,3.9,wallFinish);
@@ -2440,9 +2451,10 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
         var daylight=project(0,headY,rear+.3),dayFactor=1-Math.min(1,visualLight().darkness/.34);
         ctx.save();ctx.globalAlpha=dayFactor;glow(daylight.x,daylight.y,unit*6.5,'#e9f0d81c',unit*3.2);wallWash(left+.5,right-.5,rear+.2,headY,sillY-.9,'#eef4e2',.12);ctx.restore();
       }
+      }else drawShellWalls(fi,floor,left,right,rear,green);
       // Ambient occlusion: the floor darkens softly where it meets the rear and side walls.
       shadowBand(fi===0?-11.5:left+.2,fi===0?9.05:right-.2,rear+.1,rear+1.6,.012,fi===0?.14:.22);shadowBandX(rear+.1,rear+3.5,left+.18,left+1.3,.012,.14);
-      if(fi===0){
+      if(fi===0&&!SHOP_SPRITES){
         // Half-height glazed tile wainscot, beneath the existing cream plaster.
         drawBox(-1.225,rear+.125,.06,20.37,.055,1.72,['#537867','#244a3d','#365e4c']);
         for(var tileX=left+.15;tileX<9.05-.1;tileX+=.27)worldLine([[tileX,.08,rear+.16],[tileX,1.77,rear+.16]],'#cbd2b2',.016);
@@ -2452,8 +2464,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
         for(var mosaicX=left+.18;mosaicX<9.05-.12;mosaicX+=.18)drawBox(mosaicX,rear+.2,1.81,.09,.018,.075,['#345441','#345441','#345441']);
         worldLine([[left+.08,1.96,rear+.2],[9.05-.08,1.96,rear+.2]],'#c6af79',.04);
       }
-      worldLine([[left+.3,3.6,rear+.14],[fi===0?8.95:right-.3,3.6,rear+.14]],'#f5dfaa',.065);
-      wallWash(left+.3,fi===0?8.95:right-.3,rear+.2,3.58,fi===2?1.9:1.5,'#f7d58b',.2);
+      if(!SHOP_SPRITES)worldLine([[left+.3,3.6,rear+.14],[fi===0?8.95:right-.3,3.6,rear+.14]],'#f5dfaa',.065);
+      if(!SHOP_SPRITES)wallWash(left+.3,fi===0?8.95:right-.3,rear+.2,3.58,fi===2?1.9:1.5,'#f7d58b',.2);
       var light=project(0,2.5,rear+.3);glow(light.x,light.y,unit*5,'#f7d58b18',unit*2.4);
       // Ambient occlusion where the floor meets the walls, and under the mezzanine above.
       shadowBand(left+.2,fi===0?9:right-.2,rear+.2,rear+1.9,.018,.2);
