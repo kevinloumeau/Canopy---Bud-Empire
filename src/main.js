@@ -2976,6 +2976,9 @@ if(!SHOP_SPRITES){
       })(segment/12,(segment+1)/12);
     }
     // Rails that meet share one post.
+    // Sprite shop: each rail is one or more Ludo stanchion runs (four posts, three ropes), sorted at their middle.
+    function spritePen(rails){rails.forEach(function(r){var along=Math.abs(r[2]-r[0])>Math.abs(r[3]-r[1]),len=Math.hypot(r[2]-r[0],r[3]-r[1]),n=Math.max(1,Math.round(len/3)),name=shellSprite(along?'shell.queue.rail.x':'shell.queue.rail.z');for(var k=0;k<n;k++)(function(t0,t1){var x0=r[0]+(r[2]-r[0])*t0,z0=r[1]+(r[3]-r[1])*t0,x1=r[0]+(r[2]-r[0])*t1,z1=r[1]+(r[3]-r[1])*t1,ux=(x1-x0)/len*n*.12,uz=(z1-z0)/len*n*.12;jobs.push({depth:depthOf({x:(x0+x1)/2,z:(z0+z1)/2}),draw:function(){drawSpan(sunnyApi(sceneTime),name||shellSprite(along?'shell.queue.rail.x':'shell.queue.rail.z'),x0-ux,z0-uz,x1+ux,z1+uz,1.15,-.12)}})})(k/n,(k+1)/n)})}
+    if(SHOP_SPRITES)pen=spritePen;
     function pen(rails){var posts={};rails.forEach(function(r){[[r[0],r[1]],[r[2],r[3]]].forEach(function(p){var key=p[0].toFixed(3)+','+p[1].toFixed(3);if(!posts[key]){posts[key]=true;post(p[0],p[1])}});rope(r[0],r[1],r[2],r[3])})}
     // Pickup pen: two alternating dividers leave turning pockets matching queueRoute(true).
     var near=4.65,far=1.25;
