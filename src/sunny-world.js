@@ -43,7 +43,8 @@ export function stationSprite(i, level) {
 const CAST = { customer: [1, 2, 3, 4, 5, 6, 7, 7], walker: [1, 2, 3, 4, 7] };
 const STAFF_FOR_LINE = [2, 2, 2, 1, 1, 1, 3, 1]; // seeds/grow/harvest growers, pack/orders/pickup budtenders, 6 is the ID desk, 7 the lounge host
 // Every figure sits on the same 448x640 canvas, 600 px tall with its feet 8 px above the bottom edge.
-const PERSON_SIZE = { h: 1.85 * 640 / 600, drop: 1.85 * 8 / 600 + .03 };
+// Figures are drawn 2.3 units tall: the Ludo counters and cars came out chunky, and true-to-life people looked like toys beside them.
+const PERSON_SIZE = { h: 2.3 * 640 / 600, drop: 2.3 * 8 / 600 + .03 };
 function hashId(n) { n = Math.imul((n | 0) + 1, 0x9e3779b1) >>> 0; n = Math.imul(n ^ (n >>> 15), 0x45d9f3b) >>> 0; return (n ^ (n >>> 16)) >>> 0; }
 function personName(role, nn, walking) { return 'person.' + role + '.0' + nn + '.' + (walking ? 'walk' : 'stand'); }
 // Draws a sprite figure in place of a code-drawn one. Walking alternates the stand and stride frames on the step
@@ -154,17 +155,26 @@ export function drawSunnyWorld(api, front, alpha) {
     ROADS.forEach(r => roadMarkings(api, quad, r));
     crossing(api, quad, 'x', 21.5, -8); crossing(api, quad, 'z', -22.5, 4); crossing(api, quad, 'x', -18.5, 8);
     [[22.5, -18.5], [-22.5, 21.5], [22.5, 21.5]].forEach(([x, z]) => { crossing(api, quad, 'x', z, x - 5.5); crossing(api, quad, 'x', z, x + 5.5); crossing(api, quad, 'z', x, z - 5.5); crossing(api, quad, 'z', x, z + 5.5); });
-    byDepth(BUILDINGS).forEach(b => building(api, b));
-    byDepth(FAR_TREES.concat(NEAR_TREES)).forEach(([x, z]) => streetTree(api, x, z));
-    LAMPS.filter(([x, z]) => z < -9 || x < -13).forEach(([x, z]) => lamp(api, x, z));
+    // Buildings, trees, props, cars and walkers share one depth sort, so a car on the far street never paints over a near tree.
+    const jobs = [];
+    const at = (x, z, f) => jobs.push([x, z, f]);
+    BUILDINGS.forEach(b => at(b[0], b[1], () => building(api, b)));
+    FAR_TREES.concat(NEAR_TREES).forEach(([x, z]) => at(x, z, () => streetTree(api, x, z)));
+    LAMPS.filter(([x, z]) => z < -9 || x < -13).forEach(([x, z]) => at(x, z, () => lamp(api, x, z)));
     // Left-side street life: a coffee cart and café seating by the entrance, bins and a hydrant.
-    cart(api, -18, 7.5); umbrella(api, -17, 12.5); umbrella(api, -17, 15.5); bin(api, -18.5, -8); hydrant(api, -18.5, 10.5);
-    drawCars(api, true); drawWalkers(api, true);
+    at(-18, 7.5, () => cart(api, -18, 7.5)); at(-17, 12.5, () => umbrella(api, -17, 12.5)); at(-17, 15.5, () => umbrella(api, -17, 15.5));
+    at(-18.5, -8, () => bin(api, -18.5, -8)); at(-18.5, 10.5, () => hydrant(api, -18.5, 10.5));
+    drawCars(api, true, at); drawWalkers(api, true, at);
+    byDepth(jobs).forEach(j => j[2]());
   } else {
-    LAMPS.filter(([x, z]) => !(z < -9 || x < -13)).forEach(([x, z]) => lamp(api, x, z));
-    [[18, -6], [18, 6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => planter(api, x, z));
-    bench(api, 0, 16.5); bench(api, 18, 0); bikeRack(api, 14, 16); busStop(api, 18.5, -11); bin(api, 18.5, 12); hydrant(api, 12, 17.5);
-    drawCars(api, false); drawWalkers(api, false);
+    const jobs = [];
+    const at = (x, z, f) => jobs.push([x, z, f]);
+    LAMPS.filter(([x, z]) => !(z < -9 || x < -13)).forEach(([x, z]) => at(x, z, () => lamp(api, x, z)));
+    [[18, -6], [18, 6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => at(x, z, () => planter(api, x, z)));
+    at(0, 16.5, () => bench(api, 0, 16.5)); at(18, 0, () => bench(api, 18, 0)); at(14, 16, () => bikeRack(api, 14, 16));
+    at(18.5, -11, () => busStop(api, 18.5, -11)); at(18.5, 12, () => bin(api, 18.5, 12)); at(12, 17.5, () => hydrant(api, 12, 17.5));
+    drawCars(api, false, at); drawWalkers(api, false, at);
+    byDepth(jobs).forEach(j => j[2]());
   }
   ctx.restore();
 }
@@ -218,7 +228,7 @@ function crossing(api, quad, along, at, pos) {
 // A muted low-rise neighbour: walls, parapet, a sparse grid of pale windows, a glazed ground floor under a plain
 // awning, then a haze wash over the whole thing so it sits back from the shop.
 // Ludo neighbour buildings, picked by wall colour and height, scaled to the footprint's on-screen width and set on
-// its nearest corner; a light haze keeps them behind the shop in emphasis.
+// its nearest corner, fully opaque (a see-through building reads as a ghost).
 function buildingSprite(api, x0, x1, z0, z1, h, wall) {
   const name = wall === STONE ? (h >= 8 ? 'building.mid.stone' : 'building.low.stone') : wall === TAN ? 'building.low.tan' : wall === SAGE ? 'building.low.sage' : 'building.corner';
   lazySprite(name, 'sprites/buildings/' + name + '.png', { w: 1, drop: 0 });
@@ -227,7 +237,7 @@ function buildingSprite(api, x0, x1, z0, z1, h, wall) {
   const l = Math.min(...base.map(q => q.x)), r = Math.max(...base.map(q => q.x)), b = Math.max(...base.map(q => q.y));
   const top = Math.min(...[p(x0, P + h, z0), p(x1, P + h, z0), p(x1, P + h, z1), p(x0, P + h, z1)].map(q => q.y));
   const img = SPRITES[name].img, ar = img.naturalHeight / img.naturalWidth, ht = Math.min((r - l) * 1.04 * ar, (b - top) * 1.05), w = ht / ar, ctx = api.ctx;
-  ctx.save(); ctx.globalAlpha *= .82; ctx.drawImage(img, (l + r) / 2 - w / 2, b - ht + api.unit * .3, w, ht); ctx.restore();
+  ctx.drawImage(img, (l + r) / 2 - w / 2, b - ht + api.unit * .3, w, ht);
   return true;
 }
 
@@ -359,25 +369,24 @@ function car(api, x, z, along, color) {
 }
 
 // Cars loop along their lane; the back pass takes the rear and left streets, the front pass the front and right.
-function drawCars(api, back) {
+function drawCars(api, back, at) {
   const t = api.now * .00022;
   const list = CARS.map(([ri, lane, dir, phase, color]) => {
     const r = ROADS[ri], s = (((phase + dir * t) % 1) + 1) % 1 * 90 - 45;
     return r.along === 'x' ? [s, r.at + lane, 'x', color] : [r.at + lane, s, 'z', color];
   }).filter(c => back === (c[1] < -12 || c[0] < -19));
-  list.sort((a, b) => api.depth({ x: a[0], z: a[1] }) - api.depth({ x: b[0], z: b[1] })).forEach(c => car(api, ...c));
+  list.forEach(c => at(c[0], c[1], () => car(api, ...c)));
 }
 
 // Pedestrians pace their pavement segment; each has its own phase so they spread out and cross paths.
-function drawWalkers(api, back) {
+function drawWalkers(api, back, at) {
   const t = api.now * .00012;
   WALKS.filter(w => w[5] === back).forEach(([x0, z0, x1, z1, n], wi) => {
     for (let k = 0; k < n; k++) {
       const ph = ((t * (.8 + k * .17) + k / n + wi * .31) % 1), f = ph < .5 ? ph * 2 : 2 - ph * 2;
       const px = x0 + (x1 - x0) * f, pz = z0 + (z1 - z0) * f;
       const dir = (x1 - x0) * (ph < .5 ? 1 : -1), stride = api.now * .009 + k * 1.7;
-      if (drawPersonSprite(api, px, pz, -(wi * 3 + k + 1), false, dir, stride, api.now > 0 ? 1 : 0)) continue;
-      api.person(px, pz, 40 + wi * 7 + k, api.now > 0);
+      at(px, pz, () => { if (!drawPersonSprite(api, px, pz, -(wi * 3 + k + 1), false, dir, stride, api.now > 0 ? 1 : 0)) api.person(px, pz, 40 + wi * 7 + k, api.now > 0); });
     }
   });
 }
