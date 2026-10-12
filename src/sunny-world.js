@@ -77,6 +77,15 @@ export function drawSpan(api, name, x0, z0, x1, z1, h, y0) {
   api.ctx.drawImage(SPRITES[name].img, l, t, r - l, bt - t);
   return true;
 }
+// Stretches a sprite over the screen box of a world-space box, for pieces with depth such as stairs.
+export function drawBoxSprite(api, name, x0, x1, z0, z1, y0, y1) {
+  if (!name || !spriteReady(name)) return false;
+  const pts = [];
+  for (const x of [x0, x1]) for (const z of [z0, z1]) for (const y of [y0, y1]) pts.push(api.project(x, y, z));
+  const l = Math.min(...pts.map(q => q.x)), r = Math.max(...pts.map(q => q.x)), t = Math.min(...pts.map(q => q.y)), b = Math.max(...pts.map(q => q.y));
+  api.ctx.drawImage(SPRITES[name].img, l, t, r - l, b - t);
+  return true;
+}
 const FLOOR_TEX = {};
 // Seamless ground textures from the Ludo ground batch; the mezzanine timber and grow-room concrete are unwarped from the shell's floor sprites.
 const TEXTURE_FILES = { herringbone: 'sprites/ground/ground.floor.herringbone.png', sidewalk: 'sprites/ground/ground.sidewalk.concrete.png', asphalt: 'sprites/ground/ground.asphalt.png' };

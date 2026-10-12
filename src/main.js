@@ -18,7 +18,7 @@ import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import { createGlPost } from './gl-post.js';
-import { SUNNY, SHOP_SPRITES, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, drawSpan, floorPattern } from './sunny-world.js';
+import { SUNNY, SHOP_SPRITES, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, drawSpan, drawBoxSprite, floorPattern } from './sunny-world.js';
 import * as economy from './economy.js';
 import * as strains from './strains.js';
 import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent } from './progression.js';
@@ -635,7 +635,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(wanted){try{wanted=glPost.apply(canvas,now,nightAmount(),!motionPreference.matches,SUNNY&&!state.empire.activeStore?1-nightAmount():0)}catch(e){wanted=false;glPost=null}}
     if(glCanvas&&glCanvas.style.display!==(wanted?'block':'none'))glCanvas.style.display=wanted?'block':'none';
   }
-  var dpr=1,width=1,height=1,angle=.57,zoom=1,panX=0,panY=0,centerX=0,centerY=0,unit=32;
+  var dpr=1,width=1,height=1,angle=SHOP_SPRITES?Math.PI/4:.57,zoom=1,panX=0,panY=0,centerX=0,centerY=0,unit=32;
   var colors={bg:'#202226',floorTop:'#303238',floorLeft:'#1c1f23',floorRight:'#272a30',grid:'#41444a',beltEdge:'#111419',belt:'#313943',slat:'#5b6470',oliveTop:'#f4f5ec',oliveLeft:'#a9b6be',oliveRight:'#d5dce0',darkTop:'#56616a',darkLeft:'#252e36',darkRight:'#3b4650',metalTop:'#eef2f3',metalLeft:'#8b9ba8',metalRight:'#becbd4',acid:'#f5c344',orange:'#ff7628',boxTop:'#d3a36c',boxLeft:'#8e6741',boxRight:'#b17f50'};
   var machinePos=[{x:-3,z:-3,y:9.4},{x:3,z:-3,y:9.4},{x:3,z:-.3,y:4.7},{x:-3,z:-.3,y:4.7},{x:-4,z:2.5,y:0},{x:4,z:2.5,y:0}];
   // The front-of-house display case along the front-right of the shop floor, planters built into both ends.
@@ -2217,6 +2217,25 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // The mezzanine's tall left stub has no matching module, so it keeps its drawn slatted wall.
     if(fi===1){drawSlattedWall(true,left,rear,rear+3.5,4.7,green);drawSlattedWall(false,rear,left,-6.5,4.7,green)}
   }
+  // All-sprite shop: rear shelving, the product wall behind the counters and the stair flights from the shell batch.
+  function drawShellShelves(fi,rear){
+    var api=sunnyApi(sceneTime);
+    if(fi===2){drawSpan(api,shellSprite('shell.shelf.seedling.right'),-2.4,rear+.62,2.4,rear+.62,2.7);return}
+    var runs=fi===1?[[-8.7,-4.35],[-4.35,0],[0,4.35],[4.35,8.7]]:[[-8.2,-3.8]];
+    runs.forEach(function(r){drawSpan(api,shellSprite('shell.shelf.wall.right'),r[0],rear+.5,r[1],rear+.5,3.3)});
+  }
+  function drawShellProductWall(displayZ,now,wood){
+    var api=sunnyApi(now);
+    drawSpan(api,shellSprite('shell.wall.tile.right'),-6.7,displayZ,-1.3,displayZ,3.95);
+    drawMenuBoard(-3.9,displayZ,1.38,5.1,1.24,now,wood);
+    [[-1.3,2.7],[2.7,6.7]].forEach(function(r){drawSpan(api,shellSprite('shell.shelf.wall.right'),r[0],displayZ+.3,r[1],displayZ+.3,3.6)});
+  }
+  function drawShellStairs(now){
+    var api=sunnyApi(now);
+    drawBoxSprite(api,shellSprite('shell.stairs.upper'),6.5,8.2,-5.6,.7,4.7,9.4);
+    drawBoxSprite(api,shellSprite('shell.stairs.main'),9.1,10.7,-.8,4.2,0,4.7);
+    drawSpan(api,shellSprite('shell.rail.glass.left'),8.93,-4.8,8.93,-1.75,1,4.7);
+  }
   function drawCachedGround(floor){
     var key=[width,height,dpr,unit,centerX,centerY,angle,stationTier(4),stationTier(5)].join(':');
     if(typeof OffscreenCanvas==='undefined'){paintGround();return}
@@ -2488,6 +2507,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       if(fi===1){
       }
       var shelfX=fi===0?-6:fi===1?-5:0;
+if(!SHOP_SPRITES){
       if(fi===2){
         // Grow room: an open black-steel propagation rack with seedling trays under cool grow-light bars.
         var rackZ=rear+.62,rackW=4.6,rackD=.95,tierY=[.42,1.18,1.94],rackFrame=['#3a403c','#1a1f1c','#282e2a'];
@@ -2537,11 +2557,13 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       for(var cubby=4;cubby>=0;cubby--)drawBox(shelfX-2.1+cubby*1.05,rear+.55,.1,.06,.82,3.17,wood);
       [2.1,-2.1].forEach(function(dx){drawBox(shelfX+dx,rear+.5,0,.09,.86,3.3,wood)});
       }
+}else drawShellShelves(fi,rear)
       if(fi===0){
         // Built-in product wall directly behind the service counters, under the mezzanine.
         var displayZ=DISPLAY_Z;
         // The lounge's walls go down first: the shelving unit stands in front of the wall's end.
         drawLoungeFront(now);
+        if(SHOP_SPRITES){drawShellProductWall(displayZ,now,wood)}else{
         drawBox(0,displayZ,0,13.4,.32,3.95,green);
         drawBox(0,displayZ+.22,.04,13.4,.75,.62,wood);
         // The bay uprights go down before the goods, so what stands beside them is never cut by them.
@@ -2569,8 +2591,10 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
           for(var row=0;row<4;row++){if(boardRow(row))continue;var sy=.7+row*.76;warmStrip([[bx-1.18,sy+.12,displayZ+.67],[bx+1.18,sy+.12,displayZ+.67]],false)}
         }
         drawBox(0,displayZ+.22,3.8,13.45,.84,.16,wood);
+        }
         drawExitCabinet();
       }
+if(!SHOP_SPRITES){
       if(fi===2){
         // Low L-shaped planter fitted into the left corner of the mezzanine.
         var planterX=left+.57,planterZ=front-1.05;
@@ -2612,8 +2636,9 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
         worldLine([[left+.2,2.95,rear+.18],[right-.2,2.95,rear+.18]],'#b7986a',.11);
         warmStrip([[left+.35,2.87,rear+.25],[right-.35,2.87,rear+.25]],fi===2);
       }
+}
       if(fi===2)drawGrowExhaustFan(-4.4,rear+.24,2.4);
-      if(fi>0)warmStrip([[left+.2,-.08,front+.025],[right-.2,-.08,front+.025]],false);
+      if(fi>0&&!SHOP_SPRITES)warmStrip([[left+.2,-.08,front+.025],[right-.2,-.08,front+.025]],false);
       if(fi<2)retailDetails(fi,rear,now);
 
       // Short roller belts carry products directly between neighboring stations, along their rear halves so the
@@ -2637,7 +2662,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       // Thin mezzanine guard rails stop short of the workstation fronts. The top floor's transfer tube drops behind its
       // front rail, so that run is painted first and the rail over it.
       if(fi===2){sceneElevation=0;drawFloorTransfer(1,true);sceneElevation=floor.y}
-      if(fi>0){
+      if(fi>0&&SHOP_SPRITES){var railApi=sunnyApi(now);[[left,left+2],[right-2,right]].forEach(function(pair){drawSpan(railApi,shellSprite('shell.rail.glass.right'),pair[0],front-.1,pair[1],front-.1,1.05)})}
+      else if(fi>0){
         var rz=front-.1;
         [-floor.w/2,-floor.w/2+2,floor.w/2-2,floor.w/2].forEach(function(x){worldLine([[x,0,rz],[x,.95,rz]],'#252b28',.055)});
         [[left,left+2],[right-2,right]].forEach(function(pair){worldLine([[pair[0],.95,rz],[pair[1],.95,rz]],'#252b28',.055)});
@@ -2678,6 +2704,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // Illuminated stair flights connect the open floors at the right-hand edge, each flush against the slab it climbs
     // to: the lower flight's inner edge meets the mezzanine at x 9, the upper flight's meets the top floor at x 6.5.
     // The upper flight is one straight run.
+if(!SHOP_SPRITES){
     [{x:7.35,y:4.7,z:.45}].forEach(function(stair){
       for(var step=0;step<14;step++){
         var sy=stair.y+step*4.7/14,sz=stair.z-step*.43;
@@ -2716,6 +2743,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // of its top tread, leaving a gap to walk through; an end post closes the rail there.
     worldLine([[8.93,5.6,-1.75],[8.93,5.6,-4.8],[8.27,5.6,-4.8]],'#252b28',.07);
     [-1.75,-2.75,-3.75].forEach(function(bz){worldLine([[8.93,4.7,bz],[8.93,5.6,bz]],'#252b28',bz===-1.75?.07:.045)});
+}else drawShellStairs(now)
     // Enclosed gravity transfers bridge each floor without crossing the stairs.
     // The arched service signs stand in front of the counters, which now sort as jobs, so they sort as jobs too.
     if(!SHOP_SPRITES)orderCounterPositions(state.orderCounters).forEach(function(p){sceneJobs.push({depth:depthOf({x:p.x,z:3.75}),draw:function(){sceneElevation=0;archedServiceSign(p.x,'ORDER',state.orderCounters>1)}})});
