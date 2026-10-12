@@ -9,6 +9,22 @@
 // so nothing tall ever covers a station.
 export const SUNNY = typeof location !== 'undefined' && /[?&]look=sunny\b/.test(location.search);
 
+// Hero sprites (rendered in Ludo.ai from the sprite brief). Each is placed by its footprint centre: `w` is the
+// on-screen width in world units at zoom 1, `drop` how far the image's bottom edge sits below the footprint centre
+// (the near corner of an isometric base projects below its centre). Until an image loads, the code-drawn fallback
+// paints instead, so a slow network never leaves a hole.
+const SPRITES = { person: { w: .95, drop: .1 }, counter: { w: 3.3, drop: .55 }, grow: { w: 4.3, drop: .62 }, car: { w: 3.1, drop: .55 }, tree: { w: 3.4, drop: .5 } };
+if (SUNNY && typeof Image !== 'undefined') for (const name in SPRITES) { const img = new Image(); img.decoding = 'async'; img.src = 'sprites/' + name + '.png'; SPRITES[name].img = img; }
+export function spriteReady(name) { const s = SPRITES[name]; return !!(s && s.img && s.img.complete && s.img.naturalWidth); }
+// Draws a sprite at world (x, z) on the current floor; flip mirrors it so a car can face the other way along a street.
+export function drawSprite(api, name, x, z, flip, scale) {
+  const s = SPRITES[name]; if (!spriteReady(name)) return false;
+  const q = api.project(x, 0, z), u = api.unit, w = s.w * u * (scale || 1), h = w * s.img.naturalHeight / s.img.naturalWidth, ctx = api.ctx;
+  ctx.save(); ctx.translate(q.x, q.y + s.drop * u * (scale || 1)); if (flip) ctx.scale(-1, 1);
+  ctx.drawImage(s.img, -w / 2, -h, w, h); ctx.restore();
+  return true;
+}
+
 const P = -.012, G = -.33, L = 90; // plaza level (flush with the slab top), street level, half-extent of the streets
 const ROADS = [{ along: 'x', at: -18.5 }, { along: 'x', at: 21.5 }, { along: 'z', at: -22.5 }, { along: 'z', at: 22.5 }];
 const RW = 6; // street width kerb to kerb
@@ -132,6 +148,7 @@ function building(api, [x, z, w, d, h, wall, awning]) {
 
 function streetTree(api, x, z) {
   const p = api.project, u = api.unit;
+  if (drawSprite(api, 'tree', x, z)) return;
   const sh = p(x, P, z); api.ellipse(sh.x - u * .8, sh.y + u * .2, u * 1.8, u * .7, 'rgba(40,50,30,.18)');
   // Tree pit: dark soil under an iron grate.
   api.poly([p(x - .8, P + .003, z - .8), p(x + .8, P + .003, z - .8), p(x + .8, P + .003, z + .8), p(x - .8, P + .003, z + .8)], '#5a4a38');
@@ -198,6 +215,13 @@ function busStop(api, x, z) {
 // A rounded compact car, nose along x or z, drawn at street level.
 function car(api, x, z, along, color) {
   const p = api.project, u = api.unit, ax = along === 'x', Lc = 2.6, W = 1.3;
+  if (spriteReady('car')) {
+    // One red hero sprite stands in for every colour; z-street cars are mirrored so they face along their lane.
+    const ctx = api.ctx, hue = { '#f4f1e4': 0, '#4f8fd0': 210, '#f2c14e': 45, '#6ea845': 100, '#e8913c': 25, '#8a6fd1': 260 }[color] || 0;
+    ctx.save(); if (hue && 'filter' in ctx) ctx.filter = 'hue-rotate(' + hue + 'deg)';
+    const q = api.project(x, G, z); api.ctx.translate(0, q.y - api.project(x, 0, z).y);
+    drawSprite(api, 'car', x, z, !ax); ctx.restore(); return;
+  }
   const sh = p(x, G, z); api.ellipse(sh.x - u * .4, sh.y + u * .2, u * 1.8, u * .7, 'rgba(30,30,30,.22)');
   [[-.85, 1], [.85, 1], [-.85, -1], [.85, -1]].forEach(([a, s]) => { const q = ax ? p(x + a, G + .25, z + s * W / 2) : p(x + s * W / 2, G + .25, z + a); api.ellipse(q.x, q.y, u * .24, u * .24, '#25282b'); });
   const dark = api.shade(color, .72), mid = api.shade(color, .86);
@@ -221,7 +245,9 @@ function drawWalkers(api, back) {
   WALKS.filter(w => w[5] === back).forEach(([x0, z0, x1, z1, n], wi) => {
     for (let k = 0; k < n; k++) {
       const ph = ((t * (.8 + k * .17) + k / n + wi * .31) % 1), f = ph < .5 ? ph * 2 : 2 - ph * 2;
-      api.person(x0 + (x1 - x0) * f, z0 + (z1 - z0) * f, 40 + wi * 7 + k, api.now > 0);
+      const px = x0 + (x1 - x0) * f, pz = z0 + (z1 - z0) * f;
+      if (spriteReady('person')) { drawSprite(api, 'person', px, pz, (x1 - x0) * (ph < .5 ? 1 : -1) < 0, .95 + (k % 2) * .08); continue; }
+      api.person(px, pz, 40 + wi * 7 + k, api.now > 0);
     }
   });
 }
