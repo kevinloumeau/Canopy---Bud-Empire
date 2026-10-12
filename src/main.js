@@ -2095,6 +2095,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // Before the delivery pad is bought the mezzanine corner is a building site: bare deck, taped-off perimeter,
   // a sheeted counter, stacked materials and an unlit COMING SOON board where the sign will go.
   function onlineCounterSite(now,x,z,oak){
+    // Sprite shop: the 45° Ludo render of the taped-off deck, stretched over the site's whole box, once it exists.
+    if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(now),shellSprite('deck.delivery.site'),x-2.2,x+2.2,z-3.55,z+1.9,-.24,3.8))return;
     var padZ=z-2.25,steel=['#526659','#253b30','#3a5142'],ply=['#d9c39a','#8a7250','#b89a6c'],sheet=['#d8dad2','#9a9f97','#bfc3ba'],hazard=['#e8c85a','#8c7420','#c6a93f'];
     [-1.2,1.2].forEach(function(dx){drawBox(x+dx,z-1.05,.02,.12,.14,3.04,steel);worldLine([[x+dx,2.05,z-1.05],[x+dx,2.96,padZ-.65]],'#304638',.09)});
     drawBox(x+.85,padZ,2.86,1.9,.14,.1,steel);
@@ -3142,6 +3144,8 @@ if(!SHOP_SPRITES){
     if(open){
       drawLoungeDrapes(1,loungeCurtain);
       drawBox(dx,face-.05,2.44,1.5,.1,.14,['#4a1b29','#2b0d16','#3b1420']);
+    }else if(SHOP_SPRITES&&drawSpan(sunnyApi(sceneTime),shellSprite('shell.lounge.door.closed'),dx-.8,face,dx+.8,face,2.6)){
+      // Sprite shop: the 45° Ludo lounge door, when it has been rendered.
     }else if(SHOP_SPRITES){
       // Sprite shop: a closed forest-green door in the storefront's colours, two inset panels, brass handle and kick
       // plate, and a cream plaque in place of the plywood and tape.
