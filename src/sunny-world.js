@@ -1,24 +1,34 @@
 // Style prototype ("?look=sunny"): instead of a diorama floating in a dark studio, the main shop sits on a sunlit
-// city block that runs to the screen edges: asphalt streets with crossings, sidewalks, street trees, lamps, parked
-// cars and neighbouring shopfronts, in the warm, saturated palette of mobile idle games. Off by default; nothing
-// here touches saves or rules. The back pass paints under the shop (ground and everything behind it); the front
-// pass paints only low street furniture and cars, so nothing tall ever covers a station.
+// city block that runs to the screen edges. The shop's slab and the sidewalk are one continuous paved plaza, a
+// kerb drops to sunken asphalt streets on all four sides, and muted low-rise neighbours sit beyond the far kerbs so
+// the shop stays the brightest, most detailed thing on screen. Cars circulate on the streets and pedestrians walk
+// the pavements. Off by default; nothing here touches saves or rules.
+//
+// Two passes: `back` paints the ground and everything behind or beside-left of the shop (where the shop is nearer
+// and paints over any overlap); `front` paints only low furniture, cars and walkers on the front and right, placed
+// so nothing tall ever covers a station.
 export const SUNNY = typeof location !== 'undefined' && /[?&]look=sunny\b/.test(location.search);
 
-const G = -.335; // ground level, just under the shop's slab
-// Neighbouring buildings behind the shop: [x, z, w, d, h, wall, awning]. Rows sit across the rear streets.
-const BACK_BUILDINGS = [
-  [-36, -36, 14, 14, 15, ['#d9cdb8', '#a8987f', '#c4b59c'], '#3e6e5c'],
-  [-10, -30, 10, 10, 5, ['#c9744f', '#8c4a31', '#ad5f40'], '#f2c14e'],
-  [2, -30, 10, 10, 5, ['#efe3c8', '#bfae8c', '#dccca9'], '#e0564a'],
-  [14, -30, 10, 10, 6, ['#7fb3b0', '#4f7d7a', '#669996'], '#f39ab4'],
-  [26, -30, 10, 10, 12, ['#b9b4c9', '#7f7a95', '#9d98b2'], '#6ea845'],
-  [-32, -11, 10, 9, 8, ['#e8b04a', '#ad7d2a', '#cf983a'], '#3e6e5c'],
-  [-32, 1, 10, 9, 11, ['#d48f73', '#9b5c45', '#ba765c'], '#f4f1e4'],
-  [-32, 13, 10, 9, 5, ['#9fc0d8', '#6a8aa3', '#85a6be'], '#e0564a']
+const P = -.012, G = -.33, L = 90; // plaza level (flush with the slab top), street level, half-extent of the streets
+const ROADS = [{ along: 'x', at: -18.5 }, { along: 'x', at: 21.5 }, { along: 'z', at: -22.5 }, { along: 'z', at: 22.5 }];
+const RW = 6; // street width kerb to kerb
+const PAVER = '#d2c8ab', PAVER_LINE = '#b5aa8c', KERB = '#e2dac4', KERB_FACE = '#a69d85', ASPHALT = '#5a5e64';
+const STONE = ['#d6d0c2', '#a9a295', '#c1bbad'], TAN = ['#dac9b6', '#ad9b87', '#c6b29d'], SAGE = ['#c9cfc6', '#9ea59b', '#b4bab0'], MAUVE = ['#d6cdcf', '#a9a0a2', '#c2b8ba'];
+// Neighbours: [x, z, w, d, h, wall, awning]. All beyond the far kerbs; heights stay low so they read as a backdrop.
+const BUILDINGS = [
+  [-34, -32, 14, 14, 9, STONE, '#8a9e8c'], [-16, -31, 11, 12, 6, TAN, '#b7a07a'], [-3, -31, 11, 12, 7, SAGE, '#8a9e8c'],
+  [10, -31, 11, 12, 5, MAUVE, '#9c8f9e'], [23, -31, 11, 12, 8, STONE, '#b7a07a'], [36, -31, 11, 12, 6, TAN, '#8a9e8c'],
+  [-34, -15, 12, 11, 6, TAN, '#9c8f9e'], [-34, -2, 12, 11, 7, SAGE, '#b7a07a'], [-34, 11, 12, 11, 5, STONE, '#8a9e8c'], [-34, 24, 12, 11, 6, MAUVE, '#b7a07a']
 ];
-const BACK_TREES = [[-8, -19.5], [0, -19.5], [8, -19.5], [16, -19.5], [-23.5, -6], [-23.5, 2], [-23.5, 10]];
-const CARS = [[-6, -16.2, 'x', '#e0564a'], [10, -17.8, 'x', '#f2c14e'], [-20.4, -3, 'z', '#4f8fd0'], [5, 19.2, 'x', '#f4f1e4'], [-8, 20.8, 'x', '#6ea845'], [20.4, 4, 'z', '#e8913c']];
+const FAR_TREES = [[-12, -24], [-1, -24], [10, -24], [21, -24], [-28, -13], [-28, -2], [-28, 9], [-28, 20]];
+const NEAR_TREES = [[-15, -13.5], [-5, -13.5], [5, -13.5], [15, -13.5], [-17, -4], [-17, 4]]; // behind / left of the shop only
+const LAMPS = [[-18.5, -14.5], [18.5, -14.5], [-18.5, 17.5], [18.5, 17.5], [0, -14.5], [-18.5, 1]];
+// Walkers: [x0, z0, x1, z1, count, back-pass?]; each walks the segment back and forth on its own phase.
+const WALKS = [[-19, -13.5, 19, -13.5, 3, true], [-17.5, -15, -17.5, 18, 2, true], [-30, -24, 30, -24, 3, true], [-28, -26, -28, 26, 2, true],
+  [-19, 17, 19, 17, 3, false], [17.5, -15, 17.5, 18, 2, false]];
+// Cars: [road index, lane offset from centre, direction, phase, colour]
+const CARS = [[0, -1.5, 1, 0, '#e0564a'], [0, -1.5, 1, .45, '#f4f1e4'], [0, 1.5, -1, .2, '#4f8fd0'], [2, -1.5, -1, .1, '#f2c14e'], [2, 1.5, 1, .6, '#6ea845'],
+  [1, -1.5, 1, .3, '#e8913c'], [1, 1.5, -1, .75, '#8a6fd1'], [3, -1.5, -1, .5, '#4f8fd0'], [3, 1.5, 1, .05, '#f4f1e4']];
 
 export function drawSunnyWorld(api, front, alpha) {
   if (!(alpha > 0)) return;
@@ -27,89 +37,191 @@ export function drawSunnyWorld(api, front, alpha) {
   const quad = (x0, z0, x1, z1, y, fill) => api.poly([p(x0, y, z0), p(x1, y, z0), p(x1, y, z1), p(x0, y, z1)], fill);
   const byDepth = list => list.slice().sort((a, b) => api.depth({ x: a[0], z: a[1] }) - api.depth({ x: b[0], z: b[1] }));
   if (!front) {
-    // Pale sidewalk concrete everywhere, then the street grid laid over it.
-    ctx.fillStyle = '#e6e0cf'; ctx.fillRect(0, 0, api.width, api.height);
-    for (let k = -30; k < 30; k++) api.line([[k * 2, G, -90], [k * 2, G, 90]], 'rgba(150,140,115,.25)', .025);
-    for (let k = -30; k < 30; k++) api.line([[-90, G, k * 2], [90, G, k * 2]], 'rgba(150,140,115,.25)', .025);
-    road(api, quad, 'x', -18.5, 6); road(api, quad, 'x', 19.5, 6);
-    road(api, quad, 'z', -21.5, 6); road(api, quad, 'z', 21.5, 6);
-    // The shop's own forecourt: warm pavers and a planter strip edge.
-    quad(-16.5, -12.5, 16.5, 15.5, G + .002, '#efe2c2');
-    api.line([[-16.5, G, -12.5], [16.5, G, -12.5], [16.5, G, 15.5], [-16.5, G, 15.5], [-16.5, G, -12.5]], '#c9b88e', .07);
-    byDepth(BACK_BUILDINGS).forEach(b => building(api, b));
-    byDepth(BACK_TREES).forEach(([x, z]) => streetTree(api, x, z));
-    CARS.filter(c => c[1] < -12 || c[0] < -18).forEach(c => car(api, ...c));
-    [[-16, -14.5], [16, -14.5], [-18.5, 13]].forEach(([x, z]) => lamp(api, x, z));
+    // One paved plaza everywhere: the slab's own concrete, with the slab's scoring lattice carried right across it
+    // and a soft checker so large flat areas keep some texture at every zoom.
+    ctx.fillStyle = PAVER; ctx.fillRect(0, 0, api.width, api.height);
+    for (let x = -19.5 + 1.5; x < 19.5; x += 1.5) for (let z = -15.5 + 1.5; z < 18.5; z += 1.5) {
+      if (x > -13 && x < 13 && z > -9 && z < 12) continue;
+      if (((Math.round(x / 1.5) + Math.round(z / 1.5)) & 1) === 0) quad(x - 1.5, z - 1.5, x, z, P, 'rgba(255,255,240,.07)');
+    }
+    for (let k = -11.5 - 1.5 * 30; k < 60; k += 1.5) { api.line([[k, P + .004, -L], [k, P + .004, L]], PAVER_LINE, .02); api.line([[-L, P + .004, k + 1.5 * 3], [L, P + .004, k + 1.5 * 3]], PAVER_LINE, .02); }
+    ROADS.forEach(r => roadSurface(api, quad, r));
+    ROADS.forEach(r => roadKerbs(api, quad, r));
+    ROADS.forEach(r => roadMarkings(api, quad, r));
+    crossing(api, quad, 'x', 21.5, -8); crossing(api, quad, 'z', -22.5, 4); crossing(api, quad, 'x', -18.5, 8);
+    [[22.5, -18.5], [-22.5, 21.5], [22.5, 21.5]].forEach(([x, z]) => { crossing(api, quad, 'x', z, x - 5.5); crossing(api, quad, 'x', z, x + 5.5); crossing(api, quad, 'z', x, z - 5.5); crossing(api, quad, 'z', x, z + 5.5); });
+    byDepth(BUILDINGS).forEach(b => building(api, b));
+    byDepth(FAR_TREES.concat(NEAR_TREES)).forEach(([x, z]) => streetTree(api, x, z));
+    LAMPS.filter(([x, z]) => z < -9 || x < -13).forEach(([x, z]) => lamp(api, x, z));
+    // Left-side street life: a coffee cart and café seating by the entrance, bins and a hydrant.
+    cart(api, -18, 7.5); umbrella(api, -17, 12.5); umbrella(api, -17, 15.5); bin(api, -18.5, -8); hydrant(api, -18.5, 10.5);
+    drawCars(api, true); drawWalkers(api, true);
   } else {
-    byDepth(CARS.filter(c => !(c[1] < -12 || c[0] < -18))).forEach(c => car(api, ...c));
-    [[17.5, -9], [17.5, 13], [-12, 16.8], [12, 16.8]].forEach(([x, z]) => planter(api, x, z));
+    LAMPS.filter(([x, z]) => !(z < -9 || x < -13)).forEach(([x, z]) => lamp(api, x, z));
+    [[18, -6], [18, 6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => planter(api, x, z));
+    bench(api, 0, 16.5); bench(api, 18, 0); bikeRack(api, 14, 16); busStop(api, 18.5, -11); bin(api, 18.5, 12); hydrant(api, 12, 17.5);
+    drawCars(api, false); drawWalkers(api, false);
   }
   ctx.restore();
 }
 
-// A two-lane street of width w centred on `at`, running along x (or z): asphalt, a gutter on each kerb, a dashed
-// centre line, and zebra crossings where it meets the cross streets.
-function road(api, quad, along, at, w) {
-  const a0 = at - w / 2, a1 = at + w / 2, L = 90;
-  if (along === 'x') {
-    quad(-L, a0, L, a1, G + .004, '#5d6168');
-    quad(-L, a0, L, a0 + .25, G + .005, '#c9c3b2'); quad(-L, a1 - .25, L, a1, G + .005, '#c9c3b2');
-    for (let x = -L; x < L; x += 3) api.line([[x, G + .006, at], [x + 1.6, G + .006, at]], '#f2d16b', .07);
-    [-21.5, 21.5].forEach(cx => { for (let k = 0; k < 6; k++) quad(cx - 2.4, a0 + .6 + k * .85, cx + 2.4, a0 + 1.05 + k * .85, G + .007, '#f4f1e8'); });
-  } else {
-    quad(a0, -L, a1, L, G + .004, '#5d6168');
-    quad(a0, -L, a0 + .25, L, G + .005, '#c9c3b2'); quad(a1 - .25, -L, a1, L, G + .005, '#c9c3b2');
-    for (let z = -L; z < L; z += 3) api.line([[at, G + .006, z], [at, G + .006, z + 1.6]], '#f2d16b', .07);
-  }
+function roadSurface(api, quad, { along, at }) {
+  const a0 = at - RW / 2, a1 = at + RW / 2;
+  if (along === 'x') quad(-L, a0, L, a1, G, ASPHALT); else quad(a0, -L, a1, L, G, ASPHALT);
+  // Manhole covers down one lane.
+  const p = api.project, u = api.unit;
+  for (let k = -36; k <= 36; k += 24) { const q = along === 'x' ? p(k, G + .002, at - 1.5) : p(at + 1.5, G + .002, k); api.ellipse(q.x, q.y, u * .45, u * .25, '#4a4e54'); api.ellipse(q.x, q.y, u * .32, u * .17, '#5f636a'); }
 }
 
-// A low-rise shopfront block: walls, a parapet, a grid of lit glass on both visible faces, and a coloured awning
-// over a glazed ground floor.
-function building(api, [x, z, w, d, h, wall, awning]) {
-  const p = api.project, x1 = x + w / 2, z1 = z + d / 2;
-  const sh = p(x - w / 2, G, z1); api.poly([sh, p(x - w / 2 - h * .35, G, z1 + h * .2), p(x1 - h * .35, G, z1 + h * .2), p(x1, G, z1)], 'rgba(40,40,30,.16)');
-  api.box(x, z, G, w, d, h, wall);
-  api.box(x, z, G + h, w + .2, d + .2, .35, [api.shade(wall[0], .92), api.shade(wall[1], .9), api.shade(wall[2], .9)]);
-  const glass = ['#bfe3ef', '#9cc9dc'];
-  for (let y = 2.6; y < h - .8; y += 1.7) {
-    for (let k = x - w / 2 + .8; k < x1 - .8; k += 1.6) api.poly([p(k, y, z1 + .01), p(k + .9, y, z1 + .01), p(k + .9, y + 1, z1 + .01), p(k, y + 1, z1 + .01)], glass[(Math.round(k + y)) & 1]);
-    for (let k = z - d / 2 + .8; k < z1 - .8; k += 1.6) api.poly([p(x1 + .01, y, k), p(x1 + .01, y, k + .9), p(x1 + .01, y + 1, k + .9), p(x1 + .01, y + 1, k)], glass[(Math.round(k + y) + 1) & 1]);
+// Kerb faces: the far wall of each sunken street, segmented so nothing is drawn across the intersections, plus a
+// pale kerb stone along the top edge on both sides.
+function roadKerbs(api, quad, { along, at }) {
+  const a0 = at - RW / 2, a1 = at + RW / 2, p = api.project;
+  const cross = ROADS.filter(r => r.along !== along).map(r => r.at);
+  const segs = [[-L, cross[0] - RW / 2], [cross[0] + RW / 2, cross[1] - RW / 2], [cross[1] + RW / 2, L]];
+  segs.forEach(([s0, s1]) => {
+    if (along === 'x') {
+      api.poly([p(s0, P, a0), p(s1, P, a0), p(s1, G, a0), p(s0, G, a0)], KERB_FACE);
+      quad(s0, a0 - .3, s1, a0, P + .002, KERB); quad(s0, a1, s1, a1 + .3, P + .002, KERB);
+    } else {
+      api.poly([p(a0, P, s0), p(a0, P, s1), p(a0, G, s1), p(a0, G, s0)], KERB_FACE);
+      quad(a0 - .3, s0, a0, s1, P + .002, KERB); quad(a1, s0, a1 + .3, s1, P + .002, KERB);
+    }
+  });
+}
+
+function roadMarkings(api, quad, { along, at }) {
+  const cross = ROADS.filter(r => r.along !== along).map(r => r.at);
+  for (let k = -L; k < L; k += 3) {
+    if (cross.some(c => Math.abs(k + .8 - c) < RW / 2 + .5)) continue;
+    if (along === 'x') api.line([[k, G + .004, at], [k + 1.6, G + .004, at]], '#f2d16b', .06); else api.line([[at, G + .004, k], [at, G + .004, k + 1.6]], '#f2d16b', .06);
   }
-  // Ground floor: shop glass and a striped awning on the street faces.
-  api.poly([p(x - w / 2 + .5, G + .2, z1 + .01), p(x1 - .5, G + .2, z1 + .01), p(x1 - .5, G + 1.7, z1 + .01), p(x - w / 2 + .5, G + 1.7, z1 + .01)], '#8fb9c9');
-  api.poly([p(x1 + .01, G + .2, z - d / 2 + .5), p(x1 + .01, G + .2, z1 - .5), p(x1 + .01, G + 1.7, z1 - .5), p(x1 + .01, G + 1.7, z - d / 2 + .5)], '#a3cad8');
-  for (let k = 0; k < Math.floor((w - 1) / .8); k++) { const a = x - w / 2 + .5 + k * .8; api.poly([p(a, G + 2.2, z1), p(a + .8, G + 2.2, z1), p(a + .8, G + 1.8, z1 + .8), p(a, G + 1.8, z1 + .8)], k & 1 ? '#f8f3e6' : awning); }
-  for (let k = 0; k < Math.floor((d - 1) / .8); k++) { const a = z - d / 2 + .5 + k * .8; api.poly([p(x1, G + 2.2, a), p(x1, G + 2.2, a + .8), p(x1 + .8, G + 1.8, a + .8), p(x1 + .8, G + 1.8, a)], k & 1 ? '#f8f3e6' : awning); }
+  // Stop lines before each intersection.
+  cross.forEach(c => [-1, 1].forEach(s => { const e = c + s * (RW / 2 + .4), l0 = s > 0 ? at : at - RW / 2, l1 = s > 0 ? at + RW / 2 : at;
+    if (along === 'x') quad(e - .15, l0, e + .15, l1, G + .005, '#f4f1e8'); else quad(l0, e - .15, l1, e + .15, G + .005, '#f4f1e8'); }));
+}
+
+// A zebra crossing across a street at position `pos` along it, with tactile paving on both kerbs.
+function crossing(api, quad, along, at, pos) {
+  const a0 = at - RW / 2, a1 = at + RW / 2;
+  for (let k = 0; k < 6; k++) { const s = a0 + .55 + k * .85; if (along === 'x') quad(pos - 1.6, s, pos + 1.6, s + .45, G + .006, '#f4f1e8'); else quad(s, pos - 1.6, s + .45, pos + 1.6, G + .006, '#f4f1e8'); }
+  if (along === 'x') { quad(pos - 1.6, a0 - .9, pos + 1.6, a0 - .3, P + .003, '#d9c27a'); quad(pos - 1.6, a1 + .3, pos + 1.6, a1 + .9, P + .003, '#d9c27a'); }
+  else { quad(a0 - .9, pos - 1.6, a0 - .3, pos + 1.6, P + .003, '#d9c27a'); quad(a1 + .3, pos - 1.6, a1 + .9, pos + 1.6, P + .003, '#d9c27a'); }
+}
+
+// A muted low-rise neighbour: walls, parapet, a sparse grid of pale windows, a glazed ground floor under a plain
+// awning, then a haze wash over the whole thing so it sits back from the shop.
+function building(api, [x, z, w, d, h, wall, awning]) {
+  const p = api.project, x0 = x - w / 2, x1 = x + w / 2, z0 = z - d / 2, z1 = z + d / 2;
+  api.poly([p(x0, P, z1), p(x0 - h * .3, P, z1 + h * .18), p(x1 - h * .3, P, z1 + h * .18), p(x1, P, z1)], 'rgba(40,40,30,.12)');
+  api.box(x, z, P, w, d, h, wall);
+  api.box(x, z, P + h, w + .2, d + .2, .3, [api.shade(wall[0], .93), api.shade(wall[1], .9), api.shade(wall[2], .9)]);
+  for (let y = 2.9; y < h - .9; y += 1.8) {
+    for (let k = x0 + 1; k < x1 - 1; k += 1.8) api.poly([p(k, y, z1 + .01), p(k + .8, y, z1 + .01), p(k + .8, y + .95, z1 + .01), p(k, y + .95, z1 + .01)], '#dfe6e8');
+    for (let k = z0 + 1; k < z1 - 1; k += 1.8) api.poly([p(x1 + .01, y, k), p(x1 + .01, y, k + .8), p(x1 + .01, y + .95, k + .8), p(x1 + .01, y + .95, k)], '#d3dcdf');
+  }
+  api.poly([p(x0 + .6, P + .2, z1 + .01), p(x1 - .6, P + .2, z1 + .01), p(x1 - .6, P + 1.8, z1 + .01), p(x0 + .6, P + 1.8, z1 + .01)], '#aac3cb');
+  api.poly([p(x1 + .01, P + .2, z0 + .6), p(x1 + .01, P + .2, z1 - .6), p(x1 + .01, P + 1.8, z1 - .6), p(x1 + .01, P + 1.8, z0 + .6)], '#b9ced4');
+  api.poly([p(x0 + .4, P + 2.3, z1), p(x1 - .4, P + 2.3, z1), p(x1 - .4, P + 1.95, z1 + .8), p(x0 + .4, P + 1.95, z1 + .8)], awning);
+  api.poly([p(x1, P + 2.3, z0 + .4), p(x1, P + 2.3, z1 - .4), p(x1 + .8, P + 1.95, z1 - .4), p(x1 + .8, P + 1.95, z0 + .4)], awning);
+  const haze = 'rgba(238,230,214,.24)';
+  api.poly([p(x0, P, z1), p(x1, P, z1), p(x1, P + h + .3, z1), p(x0, P + h + .3, z1)], haze);
+  api.poly([p(x1, P, z0), p(x1, P, z1), p(x1, P + h + .3, z1), p(x1, P + h + .3, z0)], haze);
+  api.poly([p(x0, P + h + .3, z0), p(x1, P + h + .3, z0), p(x1, P + h + .3, z1), p(x0, P + h + .3, z1)], haze);
 }
 
 function streetTree(api, x, z) {
   const p = api.project, u = api.unit;
-  const sh = p(x, G, z); api.ellipse(sh.x - u * .8, sh.y + u * .2, u * 1.8, u * .7, 'rgba(40,50,30,.2)');
-  api.box(x, z, G, 1.2, 1.2, .25, ['#7d6a52', '#5a4a38', '#6b5a45']);
-  api.line([[x, G, z], [x, 2.4, z]], '#7a5232', .2);
+  const sh = p(x, P, z); api.ellipse(sh.x - u * .8, sh.y + u * .2, u * 1.8, u * .7, 'rgba(40,50,30,.18)');
+  // Tree pit: dark soil under an iron grate.
+  api.poly([p(x - .8, P + .003, z - .8), p(x + .8, P + .003, z - .8), p(x + .8, P + .003, z + .8), p(x - .8, P + .003, z + .8)], '#5a4a38');
+  for (let k = -.6; k <= .6; k += .3) api.line([[x - .8, P + .005, z + k], [x + .8, P + .005, z + k]], '#3a3f3c', .03);
+  api.line([[x, P, z], [x, 2.4, z]], '#7a5232', .2);
   [[-.6, 2.6, .3, 1, '#3f7432'], [0, 3, 0, 1.25, '#4f8a38'], [.6, 2.7, -.3, .95, '#5f9a3e'], [.1, 3.7, .1, .9, '#7cb648']].forEach(([dx, y, dz, r, c], k) => { const q = p(x + dx, y, z + dz); api.blob(q.x, q.y, u * r, u * r * .9, c, x * 5 + z + k, .1); });
   const hi = p(x + .3, 3.9, z - .2); api.ellipse(hi.x, hi.y, u * .4, u * .26, 'rgba(255,255,210,.3)');
 }
 
 function lamp(api, x, z) {
-  api.line([[x, G, z], [x, 4.2, z]], '#2f3a36', .1);
-  api.box(x, z, 4.1, .55, .55, .35, ['#f6e7b6', '#2f3a36', '#3a4641']);
+  api.box(x, z, P, .5, .5, .25, ['#4a5450', '#2f3a36', '#3a4641']);
+  api.line([[x, P, z], [x, 4.4, z]], '#2f3a36', .09);
+  api.box(x, z, 4.3, .55, .55, .35, ['#f6e7b6', '#2f3a36', '#3a4641']);
+  // A small banner hung from the post, in the shop's green.
+  const p = api.project; api.poly([p(x + .08, 3.9, z), p(x + .08, 2.6, z), p(x + .9, 2.6, z), p(x + .9, 3.9, z)], '#3e6e5c');
 }
 
 function planter(api, x, z) {
   const p = api.project, u = api.unit;
-  api.box(x, z, G, 1.8, 1.1, .6, ['#cfc6b0', '#9b917a', '#b5ab93']);
+  api.box(x, z, P, 1.8, 1.1, .6, ['#cfc6b0', '#9b917a', '#b5ab93']);
   for (let k = 0; k < 3; k++) { const q = p(x - .5 + k * .5, .6, z); api.blob(q.x, q.y, u * .45, u * .36, ['#4f8a38', '#6ea845', '#8fc257'][k], x + k, .14); }
   [['#e8524a', -.4], ['#f4c542', .1], ['#f39ab4', .45]].forEach(([c, dx]) => { const q = p(x + dx, .9, z + .1); api.ellipse(q.x, q.y, u * .1, u * .1, c); });
 }
 
-// A rounded compact car parked along the kerb, nose along x or z.
+function bench(api, x, z) {
+  const wood = ['#b98a5a', '#7a5636', '#9c7247'], iron = ['#3a3f3c', '#22262a', '#2f3435'];
+  [-1, 1].forEach(s => api.box(x + s * 1, z, P, .12, .6, .5, iron));
+  for (let i = 0; i < 4; i++) api.box(x, z - .3 + i * .2, P + .48, 2.4, .15, .08, wood);
+  api.box(x, z - .42, P + .56, 2.4, .1, .6, wood);
+}
+
+function umbrella(api, x, z) {
+  const p = api.project, u = api.unit;
+  api.box(x, z, P, .9, .9, .55, ['#e8e2d2', '#b3ac9a', '#cfc8b6']);
+  api.line([[x, P + .5, z], [x, 2.4, z]], '#6b6b6b', .06);
+  const q = p(x, 2.3, z); api.ellipse(q.x, q.y, u * 1.05, u * .52, '#e0564a'); api.ellipse(q.x, q.y - u * .08, u * .55, u * .22, '#ef7a6e');
+  [[-.6, .4], [.6, -.4]].forEach(([dx, dz]) => api.box(x + dx, z + dz, P, .4, .4, .45, ['#3e6e5c', '#2a4c3f', '#35604f']));
+}
+
+function cart(api, x, z) {
+  const p = api.project, u = api.unit;
+  const body = ['#f4f1e4', '#b9ad8f', '#d9cfae'];
+  api.box(x, z, P + .35, 2, 1.1, 1, body);
+  api.box(x, z + .5, P + 1.35, 2.1, .3, .12, ['#3e6e5c', '#2a4c3f', '#35604f']);
+  api.poly([p(x - 1.2, P + 2.2, z - .6), p(x + 1.2, P + 2.2, z - .6), p(x + 1.2, P + 1.9, z + .9), p(x - 1.2, P + 1.9, z + .9)], '#e0564a');
+  for (let k = -1; k <= 1; k += .5) api.poly([p(x + k - .2, P + 2.2, z - .6), p(x + k + .05, P + 2.2, z - .6), p(x + k + .05, P + 1.9, z + .9), p(x + k - .2, P + 1.9, z + .9)], '#f8f3e6');
+  [-1, 1].forEach(s => api.line([[x + s * 1.1, P + 1.35, z - .5], [x + s * 1.1, P + 2.2, z - .5]], '#3a3f3c', .05));
+  [-.7, .7].forEach(dx => { const q = p(x + dx, P + .3, z + .5); api.ellipse(q.x, q.y, u * .3, u * .3, '#25282b'); api.ellipse(q.x, q.y, u * .12, u * .12, '#8a8f93'); });
+  api.box(x - .5, z, P + 1.35, .5, .4, .35, ['#8a5a3a', '#5a3a22', '#70482e']); api.box(x + .5, z, P + 1.35, .4, .4, .3, ['#f4c542', '#b0891f', '#d4a92f']);
+}
+
+function bin(api, x, z) { api.box(x, z, P, .6, .6, .9, ['#2f4a3f', '#1d3029', '#27403a']); api.box(x, z, P + .9, .7, .7, .1, ['#3a5a4c', '#223a30', '#2f4c40']); }
+function hydrant(api, x, z) { api.box(x, z, P, .35, .35, .8, ['#e0564a', '#9c3a31', '#c2483e']); api.box(x, z, P + .3, .7, .3, .22, ['#e0564a', '#9c3a31', '#c2483e']); api.box(x, z, P + .8, .25, .25, .18, ['#f0a090', '#9c3a31', '#c2483e']); }
+function bikeRack(api, x, z) { for (let k = 0; k < 3; k++) { const bx = x + k * .8; api.line([[bx, P, z - .5], [bx, P + .8, z - .5], [bx, P + .8, z + .5], [bx, P, z + .5]], '#3a3f3c', .06); } }
+
+function busStop(api, x, z) {
+  const p = api.project, glass = 'rgba(190,220,230,.55)';
+  [-1.4, 1.4].forEach(dz => api.line([[x + .5, P, z + dz], [x + .5, 2.5, z + dz]], '#3a3f3c', .07));
+  api.poly([p(x + .5, P + .1, z - 1.4), p(x + .5, P + .1, z + 1.4), p(x + .5, 2.4, z + 1.4), p(x + .5, 2.4, z - 1.4)], glass);
+  api.box(x, z, 2.5, 1.6, 3.2, .18, ['#3e6e5c', '#2a4c3f', '#35604f']);
+  bench(api, x, z); api.box(x + .5, z - 1.5, P, .18, .4, 2.6, ['#4a5450', '#2f3a36', '#3a4641']);
+}
+
+// A rounded compact car, nose along x or z, drawn at street level.
 function car(api, x, z, along, color) {
-  const p = api.project, u = api.unit, ax = along === 'x';
-  const L = 2.6, W = 1.3, sh = p(x, G, z);
-  api.ellipse(sh.x - u * .4, sh.y + u * .2, u * 1.8, u * .7, 'rgba(30,30,30,.22)');
+  const p = api.project, u = api.unit, ax = along === 'x', Lc = 2.6, W = 1.3;
+  const sh = p(x, G, z); api.ellipse(sh.x - u * .4, sh.y + u * .2, u * 1.8, u * .7, 'rgba(30,30,30,.22)');
   [[-.85, 1], [.85, 1], [-.85, -1], [.85, -1]].forEach(([a, s]) => { const q = ax ? p(x + a, G + .25, z + s * W / 2) : p(x + s * W / 2, G + .25, z + a); api.ellipse(q.x, q.y, u * .24, u * .24, '#25282b'); });
   const dark = api.shade(color, .72), mid = api.shade(color, .86);
-  api.box(x, z, G + .25, ax ? L : W, ax ? W : L, .6, [color, ax ? dark : mid, ax ? mid : dark]);
+  api.box(x, z, G + .25, ax ? Lc : W, ax ? W : Lc, .6, [color, ax ? dark : mid, ax ? mid : dark]);
   api.box(x - (ax ? .15 : 0), z - (ax ? 0 : .15), G + .85, ax ? 1.5 : W * .86, ax ? W * .86 : 1.5, .5, ['#e9eef0', '#7f98a6', '#9fb6c2']);
+}
+
+// Cars loop along their lane; the back pass takes the rear and left streets, the front pass the front and right.
+function drawCars(api, back) {
+  const t = api.now * .00022;
+  const list = CARS.map(([ri, lane, dir, phase, color]) => {
+    const r = ROADS[ri], s = (((phase + dir * t) % 1) + 1) % 1 * 90 - 45;
+    return r.along === 'x' ? [s, r.at + lane, 'x', color] : [r.at + lane, s, 'z', color];
+  }).filter(c => back === (c[1] < -12 || c[0] < -19));
+  list.sort((a, b) => api.depth({ x: a[0], z: a[1] }) - api.depth({ x: b[0], z: b[1] })).forEach(c => car(api, ...c));
+}
+
+// Pedestrians pace their pavement segment; each has its own phase so they spread out and cross paths.
+function drawWalkers(api, back) {
+  const t = api.now * .00012;
+  WALKS.filter(w => w[5] === back).forEach(([x0, z0, x1, z1, n], wi) => {
+    for (let k = 0; k < n; k++) {
+      const ph = ((t * (.8 + k * .17) + k / n + wi * .31) % 1), f = ph < .5 ? ph * 2 : 2 - ph * 2;
+      api.person(x0 + (x1 - x0) * f, z0 + (z1 - z0) * f, 40 + wi * 7 + k, api.now > 0);
+    }
+  });
 }

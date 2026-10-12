@@ -33,7 +33,7 @@ void main(){
  c+=(l-.5)*vec3(.045,.012,-.05);
  // Sunny prototype grade: richer saturation, lifted mids and a warm cast, with a lighter vignette.
  c=mix(c,pow(max(mix(vec3(l),c,1.2),0.),vec3(.9))+vec3(.025,.012,-.02),u_sunny);
- vec2 v=uv-.5;c*=1.-dot(v,v)*mix(.45,.2,u_sunny);
+ vec2 v=uv-.5;c*=1.-dot(v,v)*mix(.45,.3,u_sunny);
  c+=(hash(gl_FragCoord.xy+fract(u_time)*61.7)-.5)*u_grain;
  outColor=vec4(c,1.);
 }`;

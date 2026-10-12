@@ -2302,7 +2302,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(alongZ)drawBox(plane+.02,(a0+a1)/2,slatTop,.1,a1-a0,.09,rail);else drawBox((a0+a1)/2,plane+.02,slatTop,a1-a0,.1,.09,rail);
   }
   var sceneJobs=[];
-  function sunnyApi(){return{get ctx(){return ctx},width:width,height:height,unit:unit,project:project,poly:poly,line:worldLine,ellipse:ellipse,blob:blobEllipse,noise:seedNoise,depth:depthOf,box:drawBox,shade:shadeColor}}
+  function sunnyApi(now){return{get ctx(){return ctx},width:width,height:height,unit:unit,now:motionPreference.matches?0:now,project:project,poly:poly,line:worldLine,ellipse:ellipse,blob:blobEllipse,noise:seedNoise,depth:depthOf,box:drawBox,shade:shadeColor,person:function(x,z,id,moving){drawPerson(x,z,now,id,moving,false,false)}}}
   function drawTower(now){
     sceneElevation=0;signFaces.length=0;
     // Backdrop: the same quiet studio gradient day and night, a halo behind the shop and a vignette at the edges. After
@@ -2320,7 +2320,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     ellipse(lift.x,lift.y,unit*27,unit*16,softRadial(lift.x,lift.y,unit*27,liftC,.09));
     var settle=project(-17,0,13),settleC=parseHex(mixHex('#1e2b24','#0c1216',nt));
     ellipse(settle.x,settle.y,unit*21,unit*13,softRadial(settle.x,settle.y,unit*21,settleC,.14));
-    if(SUNNY)drawSunnyWorld(sunnyApi(),false,1-nt);
+    if(SUNNY)drawSunnyWorld(sunnyApi(now),false,1-nt);
     var stone=['#c9c7b5','#737c70','#9fa796'],wood=['#bc9d73','#6f5943','#998063'],green=['#698775','#314b40','#496a56'],metal=['#414440','#191e1c','#2b302d'];
     // Contact shadow: one soft radial pool under the slab, biased toward the front-left, with no polygon edges to read as lines.
     var pool=project(0,-.33,1),shadowGradient=ctx.createRadialGradient(pool.x-unit*1.4,pool.y+unit*1.2,0,pool.x-unit*1.4,pool.y+unit*1.2,unit*23);
@@ -2329,13 +2329,15 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(nt>0)beginNightScene();
     // Ground slab: the same on-screen margin past the wood floor on every edge. The floor is 23 × 17 around z = 1.5;
     // 1.5 units of overhang along x and 1.95 along z project to matching ~1.1-unit bands in this isometric view.
-    drawBox(0,1.5,-.32,26,20.9,.32,['#bfbcab','#68695d','#8e8c7b']);
+    // In the sunny prototype the slab is flush with the surrounding plaza, so it has no visible sides or kerb ring.
+    if(SUNNY)drawBox(0,1.5,-.012,26,20.9,.012,['#d2c8ab','#68695d','#8e8c7b']);else drawBox(0,1.5,-.32,26,20.9,.32,['#bfbcab','#68695d','#8e8c7b']);
     // The margin reads as a perimeter sidewalk: scored concrete panels with a darker kerb band along the outer edge.
-    for(var jx=-11.5;jx<13;jx+=1.5)worldLine([[jx,.006,-8.95],[jx,.006,11.95]],'#a3a08f',.02);
-    for(var jz=-7.5;jz<11.95;jz+=1.5)worldLine([[-13,.006,jz],[13,.006,jz]],'#a3a08f',.02);
-    groundPatch(0,-8.95+.17,26,.34,'#aca997');groundPatch(0,11.95-.17,26,.34,'#aca997');
+    var score=SUNNY?'#b5aa8c':'#a3a08f';
+    for(var jx=-11.5;jx<13;jx+=1.5)worldLine([[jx,.006,-8.95],[jx,.006,11.95]],score,.02);
+    for(var jz=-7.5;jz<11.95;jz+=1.5)worldLine([[-13,.006,jz],[13,.006,jz]],score,.02);
+    if(!SUNNY){groundPatch(0,-8.95+.17,26,.34,'#aca997');groundPatch(0,11.95-.17,26,.34,'#aca997');
     groundPatch(-13+.17,1.5,.34,20.9,'#aca997');groundPatch(13-.17,1.5,.34,20.9,'#aca997');
-    worldLine([[-13,.02,-8.95],[13,.02,-8.95],[13,.02,11.95],[-13,.02,11.95],[-13,.02,-8.95]],'#8f8c7b',.03);
+    worldLine([[-13,.02,-8.95],[13,.02,-8.95],[13,.02,11.95],[-13,.02,11.95],[-13,.02,-8.95]],'#8f8c7b',.03);}
     // Rear circulation is painted before the building so people pass behind its walls. The entrance bollards go down
     // first of all, so guests queuing outside always stand in front of them.
     exteriorFixtures.bollards.filter(function(b){return b.x<=-11.5}).forEach(drawBollard);
@@ -3330,7 +3332,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     jobs.sort(function(a,b){return a.depth-b.depth});jobs.forEach(function(job){job.draw()});
     drawDeliveryDrones(frameDelta,now);
     var nightT=render.nightT||0;
-    if(SUNNY)drawSunnyWorld(sunnyApi(),true,1-nightT);
+    if(SUNNY)drawSunnyWorld(sunnyApi(now),true,1-nightT);
     if(nightT>0){
       endNightScene();
       nightLightMap(nightT,now);nightAir(nightT,now);
