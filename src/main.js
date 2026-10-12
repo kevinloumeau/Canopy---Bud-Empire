@@ -635,7 +635,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(wanted){try{wanted=glPost.apply(canvas,now,nightAmount(),!motionPreference.matches,SUNNY&&!state.empire.activeStore?1-nightAmount():0)}catch(e){wanted=false;glPost=null}}
     if(glCanvas&&glCanvas.style.display!==(wanted?'block':'none'))glCanvas.style.display=wanted?'block':'none';
   }
-  var dpr=1,width=1,height=1,angle=.57,zoom=1,panX=0,panY=0,centerX=0,centerY=0,unit=32;
+  var dpr=1,width=1,height=1,angle=SHOP_SPRITES||/[?&]cam=45\b/.test(location.search)?Math.PI/4:.57,zoom=1,panX=0,panY=0,centerX=0,centerY=0,unit=32;
   var colors={bg:'#202226',floorTop:'#303238',floorLeft:'#1c1f23',floorRight:'#272a30',grid:'#41444a',beltEdge:'#111419',belt:'#313943',slat:'#5b6470',oliveTop:'#f4f5ec',oliveLeft:'#a9b6be',oliveRight:'#d5dce0',darkTop:'#56616a',darkLeft:'#252e36',darkRight:'#3b4650',metalTop:'#eef2f3',metalLeft:'#8b9ba8',metalRight:'#becbd4',acid:'#f5c344',orange:'#ff7628',boxTop:'#d3a36c',boxLeft:'#8e6741',boxRight:'#b17f50'};
   var machinePos=[{x:-3,z:-3,y:9.4},{x:3,z:-3,y:9.4},{x:3,z:-.3,y:4.7},{x:-3,z:-.3,y:4.7},{x:-4,z:2.5,y:0},{x:4,z:2.5,y:0}];
   // The front-of-house display case along the front-right of the shop floor, planters built into both ends.
@@ -3150,7 +3150,7 @@ if(!SHOP_SPRITES){
       drawBox(dx,face+.02,.02,1.3,.03,.18,['#d8c18b','#8d7950','#b7a16d']);
       drawBox(dx+.5,face+.04,1.1,.07,.05,.36,['#e2cc94','#8d7950','#c4ad76']);
       drawBox(dx,face+.03,1.42,.98,.03,.3,['#f1e7cc','#bfb38f','#ddd2b2']);
-      wallText(dx,1.57,face+.06,'COMING SOON',unit*.9,.13,'#2d6146',false,'800');
+      wallText(dx,1.57,face+.06,'COMING SOON',unit*.78,.1,'#2d6146',false,'800');
     }else{
       // Boarded up: a plywood sheet with battens, a COMING SOON stencil and a strip of tape across the frame.
       drawBox(dx,face-.04,0,1.36,.08,2.46,['#c9a874','#7d6240','#a9895c']);
