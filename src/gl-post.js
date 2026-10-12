@@ -21,7 +21,7 @@ outColor=vec4(c,1.);}`;
 
 const COMPOSITE_FS = `#version 300 es
 precision mediump float;uniform sampler2D u_src;uniform sampler2D u_bloom;uniform vec2 u_res;
-uniform float u_time;uniform float u_bloomAmount;uniform float u_grain;out vec4 outColor;
+uniform float u_time;uniform float u_bloomAmount;uniform float u_grain;uniform float u_sunny;out vec4 outColor;
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 void main(){
  vec2 uv=gl_FragCoord.xy/u_res;
@@ -31,7 +31,9 @@ void main(){
  float l=dot(c,vec3(.299,.587,.114));
  c=mix(vec3(l),c,1.07);
  c+=(l-.5)*vec3(.045,.012,-.05);
- vec2 v=uv-.5;c*=1.-dot(v,v)*.45;
+ // Sunny prototype grade: richer saturation, lifted mids and a warm cast, with a lighter vignette.
+ c=mix(c,pow(max(mix(vec3(l),c,1.2),0.),vec3(.9))+vec3(.025,.012,-.02),u_sunny);
+ vec2 v=uv-.5;c*=1.-dot(v,v)*mix(.45,.2,u_sunny);
  c+=(hash(gl_FragCoord.xy+fract(u_time)*61.7)-.5)*u_grain;
  outColor=vec4(c,1.);
 }`;
@@ -55,7 +57,7 @@ export function createGlPost(glCanvas){
     for(const t of [halfA,halfB]){gl.bindTexture(gl.TEXTURE_2D,t.tex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,hw,hh,0,gl.RGBA,gl.UNSIGNED_BYTE,null);gl.bindFramebuffer(gl.FRAMEBUFFER,t.fbo);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t.tex,0);}
   }
   return {
-    apply(source,timeMs,night,animate){
+    apply(source,timeMs,night,animate,sunny){
       if(lost)return false;
       if(source.width!==w||source.height!==h)size(source.width,source.height);
       if(!w)return false;
@@ -77,7 +79,7 @@ export function createGlPost(glCanvas){
       gl.uniform2f(composite.u.u_res,w,h);
       gl.uniform1f(composite.u.u_time,animate?timeMs*.001:0);
       gl.uniform1f(composite.u.u_bloomAmount,.45+night*.15);
-      gl.uniform1f(composite.u.u_grain,.03);
+      gl.uniform1f(composite.u.u_grain,.03*(1.-.5*(sunny||0)));gl.uniform1f(composite.u.u_sunny,sunny||0);
       gl.drawArrays(gl.TRIANGLES,0,3);
       return true;
     }
