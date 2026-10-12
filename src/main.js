@@ -2302,7 +2302,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(alongZ)drawBox(plane+.02,(a0+a1)/2,slatTop,.1,a1-a0,.09,rail);else drawBox((a0+a1)/2,plane+.02,slatTop,a1-a0,.1,.09,rail);
   }
   var sceneJobs=[];
-  function sunnyApi(){return{get ctx(){return ctx},width:width,height:height,unit:unit,project:project,poly:poly,line:worldLine,ellipse:ellipse,blob:blobEllipse,noise:seedNoise,depth:depthOf}}
+  function sunnyApi(){return{get ctx(){return ctx},width:width,height:height,unit:unit,project:project,poly:poly,line:worldLine,ellipse:ellipse,blob:blobEllipse,noise:seedNoise,depth:depthOf,box:drawBox,shade:shadeColor}}
   function drawTower(now){
     sceneElevation=0;signFaces.length=0;
     // Backdrop: the same quiet studio gradient day and night, a halo behind the shop and a vignette at the edges. After
