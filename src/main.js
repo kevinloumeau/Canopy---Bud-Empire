@@ -635,7 +635,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(wanted){try{wanted=glPost.apply(canvas,now,nightAmount(),!motionPreference.matches,SUNNY&&!state.empire.activeStore?1-nightAmount():0)}catch(e){wanted=false;glPost=null}}
     if(glCanvas&&glCanvas.style.display!==(wanted?'block':'none'))glCanvas.style.display=wanted?'block':'none';
   }
-  var dpr=1,width=1,height=1,angle=SHOP_SPRITES?Math.PI/4:.57,zoom=1,panX=0,panY=0,centerX=0,centerY=0,unit=32;
+  var dpr=1,width=1,height=1,angle=.57,zoom=1,panX=0,panY=0,centerX=0,centerY=0,unit=32;
   var colors={bg:'#202226',floorTop:'#303238',floorLeft:'#1c1f23',floorRight:'#272a30',grid:'#41444a',beltEdge:'#111419',belt:'#313943',slat:'#5b6470',oliveTop:'#f4f5ec',oliveLeft:'#a9b6be',oliveRight:'#d5dce0',darkTop:'#56616a',darkLeft:'#252e36',darkRight:'#3b4650',metalTop:'#eef2f3',metalLeft:'#8b9ba8',metalRight:'#becbd4',acid:'#f5c344',orange:'#ff7628',boxTop:'#d3a36c',boxLeft:'#8e6741',boxRight:'#b17f50'};
   var machinePos=[{x:-3,z:-3,y:9.4},{x:3,z:-3,y:9.4},{x:3,z:-.3,y:4.7},{x:-3,z:-.3,y:4.7},{x:-4,z:2.5,y:0},{x:4,z:2.5,y:0}];
   // The front-of-house display case along the front-right of the shop floor, planters built into both ends.
@@ -1983,7 +1983,17 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   function drawMarqueeRearPilaster(){var m=MARQUEE;drawBox(m.x,m.rearPilaster,0,m.depth,m.depth,m.y1,['#33372f','#14181a','#23292a'])}
   // Frosted globe pendants on slim brass rods under the mezzanine soffit, a soft pool on the floor beneath each.
+  // A sprite hung from a point: `px` wide on screen, its top edge at the anchor, centred on it.
+  function drawHungSprite(name,x,y,z,px){
+    var img=spriteImage(name);if(!img)return false;
+    var a=project(x,y,z),h=px*img.naturalHeight/img.naturalWidth;ctx.drawImage(img,a.x-px/2,a.y,px,h);return true;
+  }
   function globePendant(x,z,soffitY){
+    if(SHOP_SPRITES&&shellSprite('shell.pendant.cluster')){
+      drawHungSprite('shell.pendant.cluster',x,soffitY-.02,z,unit*1.15);
+      var lamp=project(x,soffitY-1.75,z),pool=project(x,.02,z);glow(lamp.x,lamp.y,unit*.9,'#ffe9bb40',unit*.8);glow(pool.x,pool.y,unit*1.3,'#ffe6b022',unit*.6);
+      return;
+    }
     var globeY=soffitY-1.05,canopy=project(x,soffitY-.02,z),g=project(x,globeY,z);
     ellipse(canopy.x,canopy.y,unit*.11,unit*.055,'#b7a16d');
     worldLine([[x,soffitY-.02,z],[x,globeY+.3,z]],'#c9ab6a',.028);
@@ -2383,6 +2393,12 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       sceneElevation=floor.y;
       var rear=floor.z-floor.d/2,front=floor.z+floor.d/2,left=-floor.w/2,right=floor.w/2;
       // The drawn pothos canopy has no Ludo counterpart and reads as a tangle of lines beside the sprites, so the sprite shop leaves it out.
+      // In the sprite shop the canopy is Ludo's pothos curtain on its brass rail, hung under the top-floor soffit.
+      if(fi===2&&SHOP_SPRITES&&shellSprite('shell.plant.hanging')){
+        sceneElevation=0;var hangL=project(-2.3,9.1,-1.35),hangR=project(2.3,9.1,-1.35);
+        var vines=spriteImage('shell.plant.hanging'),vw=Math.abs(hangR.x-hangL.x)*1.04;ctx.drawImage(vines,(hangL.x+hangR.x)/2-vw/2,Math.min(hangL.y,hangR.y)-unit*.1,vw,vw*vines.naturalHeight/vines.naturalWidth);
+        sceneElevation=floor.y;
+      }
       if(fi===2&&!SHOP_SPRITES){
         // Draw the suspended foliage before the slab so the floor occludes its crown.
         sceneElevation=0;
@@ -2837,7 +2853,7 @@ if(!SHOP_SPRITES){
       for(var leaf=0;leaf<18;leaf++){var a=leaf*2.399,r=.35+(leaf%4)*.18,lp=project(tx+Math.cos(a)*r,2.7+(leaf%5)*.19,tz+Math.sin(a)*r*.6);ellipse(lp.x,lp.y,unit*.33,unit*.24,leaf%3===0?'#98b96e':leaf%3===1?'#587c4d':'#769852')}
   }
   function addEntryDoor(jobs){
-    var x=-10.65,z=10,frame=['#414843','#171e1a','#2b342e'],brass=['#d8c18b','#8d7950','#b7a16d'];
+    var x=-10.65,z=10,frame=SHOP_SPRITES?['#3f7a58','#1f4a35','#2d6146']:['#414843','#171e1a','#2b342e'],brass=['#d8c18b','#8d7950','#b7a16d'];
     function add(px,pz,fn){jobs.push({depth:depthOf({x:px,z:pz}),draw:fn})}
     if(SHOP_SPRITES){
       // All-sprite shop: the Ludo storefront in vertical slices so the queue outside sorts against it, and the exit door.
@@ -2954,7 +2970,7 @@ if(!SHOP_SPRITES){
     add(x-.14,z-1.9,function(){
       var hinge=[x-.14,0,z-1.1],end=[x-.14,0,z-2.75];
       glassPane([project(hinge[0],.12,hinge[2]),project(end[0],.12,end[2]),project(end[0],3.17,end[2]),project(hinge[0],3.17,hinge[2])],'#b5d7c12e');
-      worldLine([[hinge[0],.12,hinge[2]],[end[0],.12,end[2]],[end[0],3.17,end[2]],[hinge[0],3.17,hinge[2]],[hinge[0],.12,hinge[2]]],'#2b342e',.075);
+      worldLine([[hinge[0],.12,hinge[2]],[end[0],.12,end[2]],[end[0],3.17,end[2]],[hinge[0],3.17,hinge[2]],[hinge[0],.12,hinge[2]]],SHOP_SPRITES?'#2d6146':'#2b342e',.075);
       worldLine([[end[0],1.25,end[2]+.18],[end[0],1.85,end[2]+.18]],'#dfc58c',.065);
 
     });
@@ -2963,6 +2979,10 @@ if(!SHOP_SPRITES){
 
     function post(x,z){jobs.push({depth:depthOf({x:x,z:z}),draw:function(){
       var base=project(x,.05,z),cap=project(x,.85,z);
+      // Sprite shop: a single Ludo brass stanchion, its base on the post's foot and its knob at the rope's height.
+      var stanchion=SHOP_SPRITES&&shellSprite('shell.queue.post');
+      if(stanchion){var img=spriteImage(stanchion),top=project(x,1.02,z),foot=project(x,-.06,z),h=foot.y-top.y,w=h*img.naturalWidth/img.naturalHeight;
+        ellipse(base.x-unit*.12,base.y+unit*.04,unit*.2,unit*.06,'#14201824');ctx.drawImage(img,foot.x-w*.62,top.y,w,h);return}
       // The post's cast shadow leans down-left with the key light before its brass base goes down.
       ellipse(base.x-unit*.17,base.y+unit*.055,unit*.24,unit*.07,'#14201824');
       ellipse(base.x,base.y,unit*.2,unit*.09,'#8a805b');
@@ -2974,13 +2994,11 @@ if(!SHOP_SPRITES){
         jobs.push({depth:depthOf({x:(x0+x)/2,z:(z0+z)/2}),draw:function(){
           // The rope's soft shadow lies on the floor, displaced down-left like every other cast shadow.
           worldLine([[x0-.14,.012,z0+.08],[x-.14,.012,z+.08]],'#1420181c',.06);
+          if(SHOP_SPRITES){worldLine([[x0,.84-.62*t0*(1-t0),z0],[x,.84-.62*t1*(1-t1),z]],'#2f6b45',.1);worldLine([[x0,.855-.62*t0*(1-t0),z0],[x,.855-.62*t1*(1-t1),z]],'#5fa06a',.03);return}
           worldLine([[x0,.77-.62*t0*(1-t0),z0],[x,.77-.62*t1*(1-t1),z]],'#365846',.07)}});
       })(segment/12,(segment+1)/12);
     }
     // Rails that meet share one post.
-    // Sprite shop: each rail is one or more Ludo stanchion runs (four posts, three ropes), sorted at their middle.
-    function spritePen(rails){rails.forEach(function(r){var along=Math.abs(r[2]-r[0])>Math.abs(r[3]-r[1]),len=Math.hypot(r[2]-r[0],r[3]-r[1]),n=Math.max(1,Math.round(len/3)),name=shellSprite(along?'shell.queue.rail.x':'shell.queue.rail.z');for(var k=0;k<n;k++)(function(t0,t1){var x0=r[0]+(r[2]-r[0])*t0,z0=r[1]+(r[3]-r[1])*t0,x1=r[0]+(r[2]-r[0])*t1,z1=r[1]+(r[3]-r[1])*t1,ux=(x1-x0)/len*n*.12,uz=(z1-z0)/len*n*.12;jobs.push({depth:depthOf({x:(x0+x1)/2,z:(z0+z1)/2}),draw:function(){drawSpan(sunnyApi(sceneTime),name||shellSprite(along?'shell.queue.rail.x':'shell.queue.rail.z'),x0-ux,z0-uz,x1+ux,z1+uz,1.15,-.12)}})})(k/n,(k+1)/n)})}
-    if(SHOP_SPRITES)pen=spritePen;
     function pen(rails){var posts={};rails.forEach(function(r){[[r[0],r[1]],[r[2],r[3]]].forEach(function(p){var key=p[0].toFixed(3)+','+p[1].toFixed(3);if(!posts[key]){posts[key]=true;post(p[0],p[1])}});rope(r[0],r[1],r[2],r[3])})}
     // Pickup pen: two alternating dividers leave turning pockets matching queueRoute(true).
     var near=4.65,far=1.25;
@@ -3124,6 +3142,15 @@ if(!SHOP_SPRITES){
     if(open){
       drawLoungeDrapes(1,loungeCurtain);
       drawBox(dx,face-.05,2.44,1.5,.1,.14,['#4a1b29','#2b0d16','#3b1420']);
+    }else if(SHOP_SPRITES){
+      // Sprite shop: a closed forest-green door in the storefront's colours, two inset panels, brass handle and kick
+      // plate, and a cream plaque in place of the plywood and tape.
+      drawBox(dx,face-.04,0,1.4,.08,2.48,['#3f7a58','#1f4a35','#2d6146']);
+      [[.25,1.1],[1.3,2.3]].forEach(function(r){drawBox(dx,face+.01,r[0],1.06,.03,r[1]-r[0],['#356b4d','#1a3f2d','#285a40'])});
+      drawBox(dx,face+.02,.02,1.3,.03,.18,['#d8c18b','#8d7950','#b7a16d']);
+      drawBox(dx+.5,face+.04,1.1,.07,.05,.36,['#e2cc94','#8d7950','#c4ad76']);
+      drawBox(dx,face+.03,1.42,.98,.03,.3,['#f1e7cc','#bfb38f','#ddd2b2']);
+      wallText(dx,1.57,face+.06,'COMING SOON',unit*.9,.13,'#2d6146',false,'800');
     }else{
       // Boarded up: a plywood sheet with battens, a COMING SOON stencil and a strip of tape across the frame.
       drawBox(dx,face-.04,0,1.36,.08,2.46,['#c9a874','#7d6240','#a9895c']);
