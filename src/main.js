@@ -2305,14 +2305,15 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // Grow-room lighting gantry, drawn after the benches so the bars always sit above them.
   function drawGrowGantry(part){
     // Lighting gantry: posts are painted before the benches so their feet sit behind the counters; the beam and bars come after.
-    var beamY=3.85,beamZ=-3.55,metal=['#414440','#191e1c','#2b302d'],bars=growLightBars();
+    // In the sprite shop the steel takes the shell's forest green and the hangers its brass, instead of black.
+    var beamY=3.85,beamZ=-3.55,metal=SHOP_SPRITES?['#4f8a6c','#2c5a44','#3c7058']:['#414440','#191e1c','#2b302d'],hanger=SHOP_SPRITES?'#c9a85a':'#2a302d',bars=growLightBars();
     if(!bars.length)return;
     if(part==='posts'){[-5.4,5.4].forEach(function(px){drawBox(px,beamZ,0,.12,.12,beamY,metal)});return}
     drawBox(0,beamZ,beamY,10.9,.14,.12,metal);
     // Two bars per bench, hung across the beam so they run front to back over the Seeds and Grow stations.
     bars.forEach(function(lx,li){
       var barY=3.25,barZ=beamZ+.55;
-      [-.85,.85].forEach(function(dz){worldLine([[lx,beamY,beamZ],[lx,barY+.12,barZ+dz]],'#2a302d',.022)});
+      [-.85,.85].forEach(function(dz){worldLine([[lx,beamY,beamZ],[lx,barY+.12,barZ+dz]],hanger,.022)});
       drawBox(lx,barZ,barY,.5,2.3,.13,['#3c4146','#1d2124','#2b3034']);
       litLine([[lx-.12,barY-.005,barZ-1.1],[lx-.12,barY-.005,barZ+1.1]],'#e7b8ff',.045);litLine([[lx+.12,barY-.005,barZ-1.1],[lx+.12,barY-.005,barZ+1.1]],'#e7b8ff',.045);
       ctx.save();ctx.globalAlpha=.22;litLine([[lx,barY-.03,barZ-1.1],[lx,barY-.03,barZ+1.1]],'#c98bff',.5);ctx.restore();
@@ -2381,7 +2382,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     [{y:0,z:1.5,w:23,d:17,ids:[4,5]},{y:4.7,z:-2.55,w:18,d:8.2,ids:[3,2]},{y:9.4,z:-3.6,w:13,d:6.6,ids:[0,1]}].forEach(function(floor,fi){
       sceneElevation=floor.y;
       var rear=floor.z-floor.d/2,front=floor.z+floor.d/2,left=-floor.w/2,right=floor.w/2;
-      if(fi===2){
+      // The drawn pothos canopy has no Ludo counterpart and reads as a tangle of lines beside the sprites, so the sprite shop leaves it out.
+      if(fi===2&&!SHOP_SPRITES){
         // Draw the suspended foliage before the slab so the floor occludes its crown.
         sceneElevation=0;
         // One broad hanging canopy, suspended from the center of the top-floor soffit.
