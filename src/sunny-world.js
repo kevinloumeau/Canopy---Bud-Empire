@@ -59,6 +59,9 @@ export function drawPersonSprite(api, x, z, identity, employee, facing, phase, a
   api.ellipse(p.x + u * .06, p.y + u * .03, u * .34, u * .1, 'rgba(14,28,20,.22)');
   return drawSprite(api, use, x, z, facing < 0);
 }
+// Shop fixtures from the interior batch, sized in world units like the stations.
+const FIXTURE_SIZE = { 'shop.displaycase': { w: 6.4, drop: .55 }, 'shop.planter.small': { w: .95, drop: .12 } };
+export function fixtureSprite(name) { if (!FIXTURE_SIZE[name]) return null; lazySprite(name, 'sprites/interior/' + name + '.png', FIXTURE_SIZE[name]); return spriteReady(name) ? name : null; }
 export function spriteReady(name) { const s = SPRITES[name]; return !!(s && !s.missing && s.img && s.img.complete && s.img.naturalWidth); }
 // Draws a sprite at world (x, z) on the current floor; flip mirrors it so a car can face the other way along a street.
 export function drawSprite(api, name, x, z, flip, scale) {

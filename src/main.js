@@ -18,7 +18,7 @@ import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import { createGlPost } from './gl-post.js';
-import { SUNNY, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite } from './sunny-world.js';
+import { SUNNY, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite } from './sunny-world.js';
 import * as economy from './economy.js';
 import * as strains from './strains.js';
 import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent } from './progression.js';
@@ -3272,6 +3272,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // Ground planters share guest depth sorting, so foliage occludes people behind it.
     [{x:-10.35,z:5.9,compact:true}].forEach(function(p){
       jobs.push({depth:depthOf(p),draw:function(){
+        if(SUNNY&&drawSprite(sunnyApi(now),fixtureSprite('shop.planter.small'),p.x,p.z))return;
         drawBox(p.x,p.z,0,p.compact?.45:.95,p.compact?.45:1,p.compact?.4:.65,['#bc9d73','#6f5943','#998063']);
         plant(p.x,p.z,p.compact?.4:.65,p.compact?.7:1.1);
       }});
@@ -3280,6 +3281,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // of the plinth, and between them a glass hood covers a back riser of jars with products and merch on the deck.
     function drawDisplayCase(x,z,width){
       jobs.push({depth:depthOf({x:x,z:z}),draw:function(){
+        if(SUNNY&&drawSprite(sunnyApi(now),fixtureSprite('shop.displaycase'),x,z,true))return;
         var oak=['#cfb184','#836949','#b09266'],stone=['#e2dfd0','#969c8e','#c3c8b8'],brass=['#d7c28b','#8c774c','#b7a16c'],half=width/2,bed=.95,inner=half-bed;
         drawBox(x,z,0,width,1.35,.85,oak);
         for(var flute=0;flute<Math.floor(width/.185);flute++)worldLine([[x-half+.1+flute*.185,.08,z+.69],[x-half+.1+flute*.185,.78,z+.69]],'#6f593b35',.018);
