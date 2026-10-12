@@ -68,6 +68,7 @@ const FIXTURE_SIZE = { 'shop.displaycase': { w: 6.4, drop: .55 }, 'shop.planter.
 export function fixtureSprite(name) { if (!FIXTURE_SIZE[name]) return null; lazySprite(name, 'sprites/interior/' + name + '.png', FIXTURE_SIZE[name]); return spriteReady(name) ? name : null; }
 // Shop shell (Kevin chose an all-sprite shop): wall modules stretched over a wall run's screen box, and floor
 // textures unwarped from the floor sprites, laid as a pattern in the floor plane so any outline can be filled.
+export function spriteImage(name) { return SPRITES[name] && SPRITES[name].img; }
 export function shellSprite(name) { lazySprite(name, 'sprites/shell/' + name + '.png', { w: 1, drop: 0 }); return spriteReady(name) ? name : null; }
 export function drawSpan(api, name, x0, z0, x1, z1, h, y0) {
   if (!name || !spriteReady(name)) return false;

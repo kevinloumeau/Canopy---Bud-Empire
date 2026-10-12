@@ -18,7 +18,7 @@ import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import { createGlPost } from './gl-post.js';
-import { SUNNY, SHOP_SPRITES, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, drawSpan, drawBoxSprite, floorPattern } from './sunny-world.js';
+import { SUNNY, SHOP_SPRITES, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, floorPattern } from './sunny-world.js';
 import * as economy from './economy.js';
 import * as strains from './strains.js';
 import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent } from './progression.js';
@@ -2837,6 +2837,17 @@ if(!SHOP_SPRITES){
   function addEntryDoor(jobs){
     var x=-10.65,z=10,frame=['#414843','#171e1a','#2b342e'],brass=['#d8c18b','#8d7950','#b7a16d'];
     function add(px,pz,fn){jobs.push({depth:depthOf({x:px,z:pz}),draw:fn})}
+    if(SHOP_SPRITES){
+      // All-sprite shop: the Ludo storefront in vertical slices so the queue outside sorts against it, and the exit door.
+      var front=shellSprite('shell.storefront'),slices=8,z0=2.5,z1=8.8;
+      for(var slice=0;slice<slices;slice++)(function(k){var za=z0+(z1-z0)*k/slices,zb=z0+(z1-z0)*(k+1)/slices;add(x,(za+zb)/2,function(){
+        if(!front)return;var api=sunnyApi(sceneTime),pts=[project(x,0,z0),project(x,0,z1),project(x,4.4,z0),project(x,4.4,z1)];
+        var l=Math.min.apply(null,pts.map(function(q){return q.x})),r=Math.max.apply(null,pts.map(function(q){return q.x})),t=Math.min.apply(null,pts.map(function(q){return q.y})),bt=Math.max.apply(null,pts.map(function(q){return q.y}));
+        var img=spriteImage(front),w=img.naturalWidth,f0=k/slices,f1=(k+1)/slices;
+        ctx.drawImage(img,w*f0,0,w*(f1-f0),img.naturalHeight,l+(r-l)*f0,t,(r-l)*(f1-f0),bt-t);
+      })})(slice);
+      add(10.25,-6.86,function(){drawBoxSprite(sunnyApi(sceneTime),shellSprite('shell.door.exit'),9.1,11.4,-7.1,-6.9,0,3.7)});
+    }else{
     // Glazed storefront bays continue the door frame behind the kiosk row.
     for(var bay=0;bay<4;bay++)(function(start,end){
       for(var strip=0;strip<6;strip++)(function(a,b){add(x,(a+b)/2,function(){
@@ -2907,6 +2918,7 @@ if(!SHOP_SPRITES){
         worldLine([[glazingX,.06,back],[glazingX,.06,front],[glazingX,top,front],[glazingX,top,back],[glazingX,.06,back]],'#303c32',.045);
       });
     });
+    }
     jobs.push({depth:-Infinity,draw:function(){
       // The mat lies in the exit lane just past the merch cabinet, its arrow pointing on to the door.
       var matX=10.7,matZ=-4.35;
