@@ -2253,7 +2253,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var api=sunnyApi(sceneTime);
     if(fi===2)return; // the top floor's rear wall stays clear of shelving
     var runs=fi===1?[[-8.7,-4.35],[-4.35,0],[0,4.35],[4.35,8.7]]:[[-8.2,-3.8]];
-    runs.forEach(function(r){drawWallFace(api,'shell.shelf.wall.right',r[0],rear+.5,r[1],rear+.5,0,3.3)});
+    runs.forEach(function(r){drawWallFace(api,'shell.shelf.wall.right',r[0],rear+.5,r[1],rear+.5,0,3.6)});
   }
   function drawShellProductWall(displayZ,now,wood){
     var api=sunnyApi(now);
