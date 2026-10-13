@@ -155,7 +155,7 @@ const BUILDINGS = [
 // Kept toward the kerb, clear of the facades behind them.
 const FAR_TREES = [[-12, -22.4], [-1, -22.4], [10, -22.4], [21, -22.4], [-26.4, -13], [-26.4, -2], [-26.4, 9], [-26.4, 20]];
 const NEAR_TREES = [[-15, -13.5], [-5, -13.5], [5, -13.5], [15, -13.5], [-17, -4], [-17, 4]]; // behind / left of the shop only
-const LAMPS = [[-18.5, -14.5], [18.5, -14.5], [-18.5, 17.5], [18.5, 17.5], [0, -14.5], [-18.5, 1]];
+export const LAMPS = [[-18.5, -14.5], [18.5, -14.5], [-18.5, 17.5], [18.5, 17.5], [0, -14.5], [-18.5, 1]];
 // Walkers: [x0, z0, x1, z1, count, back-pass?]; each walks the segment back and forth on its own phase.
 const WALKS = [[-19, -13.5, 19, -13.5, 3, true], [-17.5, -15, -17.5, 18, 2, true], [-30, -24, 30, -24, 3, true], [-28, -26, -28, 26, 2, true],
   [-19, 17, 19, 17, 3, false], [17.5, -15, 17.5, 18, 2, false]];

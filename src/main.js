@@ -18,7 +18,7 @@ import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import { createGlPost } from './gl-post.js';
-import { SUNNY, SHOP_SPRITES, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern } from './sunny-world.js';
+import { SUNNY, SHOP_SPRITES, LAMPS as STREET_LAMPS, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern } from './sunny-world.js';
 import * as economy from './economy.js';
 import * as strains from './strains.js';
 import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent } from './progression.js';
@@ -941,6 +941,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     pool(0,9.44,-6.2,2.9,.45,'#cfe6ff');halo(0,11.4,-6.2,2.3,.22,'#cfe6ff');halo(.6,11,-6.7,3.4,.3,WARM);
     // Stair treads.
     for(var st=0;st<8;st++)pool(9.2,.6+st*1.15,4.6-st*.75,.65,.45,WARM);
+    // Street lamps around the block, in the sprite shop where the city stays on screen at night.
+    if(SHOP_SPRITES)STREET_LAMPS.forEach(function(l){halo(l[0],4.15,l[1],1,.6,WARM);beam(l[0],4.05,l[1],.03,.2,2.2,.25,WARM);pool(l[0],.03,l[1],3,.75,WARM)});
   }
   // The light map: ambient ink, a room fill per floor, then every fixture as light; masked to the diorama's own alpha
   // and multiplied over it in one draw, so nothing is tinted twice and the sky stays untouched.
@@ -983,6 +985,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(!SHOP_SPRITES)drawMarquee(true); // the storefront sprite carries its own sign
     if(deliveryBuilt()){sceneElevation=7.05;var pending=onlineRequestsReady();onlineReadout(-10.7,2.4,pending,pending>0&&state.stock[3]>=onlineSize());sceneElevation=0}
     if(state.lounge>0)loungeNeon(true);
+    if(SHOP_SPRITES)STREET_LAMPS.forEach(function(l){var q=project(l[0],4.15,l[1]);ellipse(q.x,q.y,unit*.2,unit*.16,'#fff1c8')});
     sceneElevation=saved;
   }
   // Bloom: the emitters drawn again at half resolution, blurred, and added back so every light source glows.
@@ -2392,13 +2395,15 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     ellipse(lift.x,lift.y,unit*27,unit*16,softRadial(lift.x,lift.y,unit*27,liftC,.09));
     var settle=project(-17,0,13),settleC=parseHex(mixHex('#1e2b24','#0c1216',nt));
     ellipse(settle.x,settle.y,unit*21,unit*13,softRadial(settle.x,settle.y,unit*21,settleC,.14));
-    if(SUNNY)drawSunnyWorld(sunnyApi(now),false,1-nt);
+    // The sprite shop keeps its city block after dark: the street joins the night scene and takes the light map.
+    var cityNight=SHOP_SPRITES&&nt>0;if(cityNight)beginNightScene();
+    if(SUNNY)drawSunnyWorld(sunnyApi(now),false,SHOP_SPRITES?1:1-nt);
     var stone=['#c9c7b5','#737c70','#9fa796'],wood=['#bc9d73','#6f5943','#998063'],green=SHOP_GREEN_PLASTER,metal=['#414440','#191e1c','#2b302d'];
     // Contact shadow: one soft radial pool under the slab, biased toward the front-left, with no polygon edges to read as lines.
     var pool=project(0,-.33,1),shadowGradient=ctx.createRadialGradient(pool.x-unit*1.4,pool.y+unit*1.2,0,pool.x-unit*1.4,pool.y+unit*1.2,unit*23);
     shadowGradient.addColorStop(0,'rgba(12,22,17,.36)');shadowGradient.addColorStop(.45,'rgba(12,22,17,.2)');shadowGradient.addColorStop(.75,'rgba(12,22,17,.07)');shadowGradient.addColorStop(1,'rgba(12,22,17,0)');
     ellipse(pool.x-unit*1.4,pool.y+unit*1.2,unit*23,unit*12.6,shadowGradient);
-    if(nt>0)beginNightScene();
+    if(nt>0&&!cityNight)beginNightScene();
     // Ground slab: the same on-screen margin past the wood floor on every edge. The floor is 23 × 17 around z = 1.5;
     // 1.5 units of overhang along x and 1.95 along z project to matching ~1.1-unit bands in this isometric view.
     // In the sunny prototype the slab is flush with the surrounding plaza, so it has no visible sides or kerb ring.
@@ -3477,7 +3482,7 @@ if(!SHOP_SPRITES){
     jobs.sort(function(a,b){return a.depth-b.depth});jobs.forEach(function(job){job.draw()});
     drawDeliveryDrones(frameDelta,now);
     var nightT=render.nightT||0;
-    if(SUNNY)drawSunnyWorld(sunnyApi(now),true,1-nightT);
+    if(SUNNY)drawSunnyWorld(sunnyApi(now),true,SHOP_SPRITES?1:1-nightT);
     if(nightT>0){
       endNightScene();
       nightLightMap(nightT,now);nightAir(nightT,now);
