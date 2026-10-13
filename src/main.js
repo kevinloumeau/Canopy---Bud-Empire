@@ -18,7 +18,7 @@ import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import { createGlPost } from './gl-post.js';
-import { SUNNY, SHOP_SPRITES, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, floorPattern } from './sunny-world.js';
+import { SUNNY, SHOP_SPRITES, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern } from './sunny-world.js';
 import * as economy from './economy.js';
 import * as strains from './strains.js';
 import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent } from './progression.js';
@@ -2224,25 +2224,28 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   var groundCache=null;
   // All-sprite shop: Ludo wall modules along each floor's rear wall and left stub, in place of the drawn walls.
   function drawShellWalls(fi,floor,left,right,rear,green){
-    var api=sunnyApi(sceneTime),end=fi===0?9.05:right,kinds=fi===2?['shell.wall.upper.right']:fi===0?['shell.wall.tile.right','shell.wall.window.right']:['shell.wall.tile.right'];
+    // Modules are cut to equal runs along the wall and sheared into its plane, so they butt edge to edge. Tile modules
+    // drop their moulded end caps (u .04-.95) so the tiling reads as one continuous wall; window and glass modules keep
+    // their frames, which meet as mullions.
+    var api=sunnyApi(sceneTime),end=fi===0?9.05:right,kinds=fi===2?['wall.upper.right']:fi===0?['wall.tile.right','wall.window.right','wall.tile.right']:['wall.tile.right'];
     var n=Math.max(1,Math.round((end-left)/4)),step=(end-left)/n;
-    for(var k=0;k<n;k++)drawSpan(api,shellSprite(kinds[k%kinds.length]),left+k*step,rear,left+(k+1)*step,rear,3.9);
-    if(fi===2)drawSpan(api,shellSprite('shell.wall.upper.left'),left,rear,left,rear+3.5,3.9);
-    // The mezzanine's tall left stub has no matching module, so it keeps its drawn slatted wall.
-    if(fi===1){drawSlattedWall(true,left,rear,rear+3.5,4.7,green);drawSlattedWall(false,rear,left,-6.5,4.7,green)}
+    for(var k=0;k<n;k++){var kind=kinds[k%kinds.length],capped=kind.indexOf('tile')>=0;drawWallFace(api,'shell.'+kind,left+k*step,rear,left+(k+1)*step,rear,0,3.9,capped?.04:0,capped?.95:1)}
+    // Side walls along z: the image's left edge is the near (larger z) end.
+    if(fi===2)drawWallFace(api,'shell.wall.upper.left',left,rear+3.5,left,rear,0,3.9);
+    if(fi===1)drawWallFace(api,'shell.wall.tile.left',left,rear+3.5,left,rear,0,3.9,.05,.96);
   }
   // All-sprite shop: rear shelving, the product wall behind the counters and the stair flights from the shell batch.
   function drawShellShelves(fi,rear){
     var api=sunnyApi(sceneTime);
     if(fi===2){drawSpan(api,shellSprite('shell.shelf.seedling.right'),-2.4,rear+.62,2.4,rear+.62,2.7);return}
     var runs=fi===1?[[-8.7,-4.35],[-4.35,0],[0,4.35],[4.35,8.7]]:[[-8.2,-3.8]];
-    runs.forEach(function(r){drawSpan(api,shellSprite('shell.shelf.wall.right'),r[0],rear+.5,r[1],rear+.5,3.3)});
+    runs.forEach(function(r){drawWallFace(api,'shell.shelf.wall.right',r[0],rear+.5,r[1],rear+.5,0,3.3)});
   }
   function drawShellProductWall(displayZ,now,wood){
     var api=sunnyApi(now);
-    drawSpan(api,shellSprite('shell.wall.tile.right'),-6.7,displayZ,-1.3,displayZ,3.95);
+    drawWallFace(api,'shell.wall.tile.right',-6.7,displayZ,-1.3,displayZ,0,3.95,.04,.95);
     drawMenuBoard(-3.9,displayZ,1.38,5.1,1.24,now,wood);
-    [[-1.3,2.7],[2.7,6.7]].forEach(function(r){drawSpan(api,shellSprite('shell.shelf.wall.right'),r[0],displayZ+.3,r[1],displayZ+.3,3.6)});
+    [[-1.3,2.7],[2.7,6.7]].forEach(function(r){drawWallFace(api,'shell.shelf.wall.right',r[0],displayZ+.3,r[1],displayZ+.3,0,3.6)});
   }
   function drawShellStairs(now){
     var api=sunnyApi(now);

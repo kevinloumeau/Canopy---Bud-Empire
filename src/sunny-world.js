@@ -90,6 +90,19 @@ export function drawSpan(api, name, x0, z0, x1, z1, h, y0) {
   return true;
 }
 // Stretches a sprite over the screen box of a world-space box, for pieces with depth such as stairs.
+// Wall modules are stored flattened front-on (flat.<name>.png, unwarped from the isometric sprite) and sheared on to
+// the wall's own plane here, so every module meets the floor and its neighbours at exactly the camera's angle.
+// (x0, z0) is the end at the image's left edge; u0..u1 picks a horizontal slice of the image (to drop end caps).
+export function drawWallFace(api, name, x0, z0, x1, z1, y0, h, u0, u1) {
+  const flat = 'flat.' + name.replace(/^shell\./, '');
+  lazySprite(flat, 'sprites/shell/' + flat + '.png', { w: 1, drop: 0 });
+  if (!spriteReady(flat)) return false;
+  const img = SPRITES[flat].img, W = img.naturalWidth, H = img.naturalHeight, a = u0 || 0, b = u1 === undefined ? 1 : u1, sw = W * (b - a);
+  const tl = api.project(x0, y0 + h, z0), tr = api.project(x1, y0 + h, z1), bl = api.project(x0, y0, z0), ctx = api.ctx;
+  ctx.save(); ctx.transform((tr.x - tl.x) / sw, (tr.y - tl.y) / sw, (bl.x - tl.x) / H, (bl.y - tl.y) / H, tl.x, tl.y);
+  ctx.drawImage(img, W * a, 0, sw, H, 0, 0, sw, H); ctx.restore();
+  return true;
+}
 // With `keepAspect`, the sprite fills the box's screen width at its own proportions, standing on the box's bottom edge.
 export function drawBoxSprite(api, name, x0, x1, z0, z1, y0, y1, keepAspect) {
   if (!name || !spriteReady(name)) return false;
