@@ -2407,11 +2407,33 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var n=Math.max(1,Math.round((end-left)/4)),step=(end-left)/n;
     // The ground floor and mezzanine walls rise the full 4.7 to the slab above, so no daylight shows between them.
     var wallH=fi===2?3.9:4.7;
+    // The grow room's glazing is drawn slim rather than from the window module, whose frame overpowered the plants;
+    // the exhaust fan gets a solid bay of its own instead of hanging on glass.
+    if(fi===2&&SHOP_SPRITES){drawSlimGlazing(false,rear,left,right,wallH,FAN_X);drawSlimGlazing(true,left,rear,rear+3.5,wallH);return}
     for(var k=0;k<n;k++){var kind=kinds[k%kinds.length],capped=kind.indexOf('tile')>=0;drawWallFace(api,'shell.'+kind,left+k*step,rear,left+(k+1)*step,rear,0,wallH,capped?.04:0,capped?.95:1)}
     // Side walls along z: the image's left edge is the near (larger z) end.
     if(fi===2)drawWallFace(api,'shell.wall.upper.left',left,rear+3.5,left,rear,0,3.9);
     if(fi===1)drawWallFace(api,'shell.wall.tile.left',left,rear+3.5,left,rear,0,wallH,.05,.96);
   }
+  // Slim forest-green glazing for the grow room: a low plinth, thin mullions on a regular bay, a mid rail and a top
+  // rail, with the bay at `solidX` (if any) panelled solid to carry the exhaust fan. `alongZ` runs the wall along z
+  // with its face toward +x from the plane x; otherwise along x with its face toward +z.
+  var FAN_X=-4.9,GLAZING_BAY=1.6;
+  function drawSlimGlazing(alongZ,plane,a0,a1,h,solidX){
+    var green=['#3f7d5e','#275441','#336a50'],frame='#2c5a44',plinth=.3,bays=Math.max(1,Math.round((a1-a0)/GLAZING_BAY)),step=(a1-a0)/bays,face=plane+.09;
+    if(alongZ)drawBox(plane,(a0+a1)/2,0,.18,a1-a0,plinth,green);else drawBox((a0+a1)/2,plane,0,a1-a0,.18,plinth,green);
+    function P(t,y){return alongZ?project(face,y,t):project(t,y,face)}
+    function L(t,y0,y1){return alongZ?[[face,y0,t],[face,y1,t]]:[[t,y0,face],[t,y1,face]]}
+    for(var b=0;b<bays;b++){
+      var t0=a0+b*step,t1=t0+step,pts=[P(t0,plinth),P(t1,plinth),P(t1,h),P(t0,h)];
+      if(solidX!==undefined&&solidX>=t0&&solidX<t1)poly(pts,'#2f5d4a');else glassPane(pts,'#c8dde033');
+    }
+    for(var m=0;m<=bays;m++)worldLine(L(a0+m*step,plinth,h),frame,.07);
+    worldLine(alongZ?[[face,h,a0],[face,h,a1]]:[[a0,h,face],[a1,h,face]],frame,.09);
+    worldLine(alongZ?[[face,2.95,a0],[face,2.95,a1]]:[[a0,2.95,face],[a1,2.95,face]],frame,.05);
+  }
+  // The centre of the glazing bay that carries the fan, so the housing sits square in its solid panel.
+  function fanBayCentre(left,right){var bays=Math.max(1,Math.round((right-left)/GLAZING_BAY)),step=(right-left)/bays;return left+(Math.floor((FAN_X-left)/step)+.5)*step}
   // All-sprite shop: rear shelving, the product wall behind the counters and the stair flights from the shell batch.
   function drawShellShelves(fi,rear){
     var api=sunnyApi(sceneTime);
@@ -2476,18 +2498,19 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var faceZ=z+.13,center=project(x,y,faceZ);
     if(center.x+unit*1.5<0||center.x-unit*1.5>width||center.y+unit*1.6<0||center.y-unit*1.6>height)return;
     // The housing and rotor share the rear wall's plane, including its isometric shear.
-    poly([project(x-1.25,y-1.26,z-.02),project(x+1.3,y-1.26,z-.02),project(x+1.3,y+1.18,z-.02),project(x-1.25,y+1.18,z-.02)],'#15241c48');
     // Sprite shop: the v2 forest-green housing goes over a smaller rotor, which shows through its open aperture.
-    var housing=SHOP_SPRITES&&fixtureSprite('shell.fan.housing');
+    var housing=SHOP_SPRITES&&fixtureSprite('shell.fan.housing'),hw=housing?.8:1.25;
+    poly([project(x-hw,y-hw,z-.02),project(x+hw+.05,y-hw,z-.02),project(x+hw+.05,y+hw-.08,z-.02),project(x-hw,y+hw-.08,z-.02)],'#15241c48');
     if(!housing)drawBox(x,z,y-1.18,2.36,.24,2.36,['#a8b6a6','#647a6c','#7f9686']);
     var across=project(x+1,y,faceZ),down=project(x,y-1,faceZ);
     ctx.save();ctx.transform(across.x-center.x,across.y-center.y,down.x-center.x,down.y-center.y,center.x,center.y);
     if(housing){
-      ctx.beginPath();ctx.arc(0,0,.5,0,Math.PI*2);ctx.fillStyle='#1d3028';ctx.fill();
-      ctx.save();ctx.scale(.5,.5);ctx.rotate(sceneTime*Math.PI*2/26000);
+      var FAN_W=1.4,r=.5*FAN_W/1.95;
+      ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fillStyle='#1d3028';ctx.fill();
+      ctx.save();ctx.scale(r,r);ctx.rotate(sceneTime*Math.PI*2/26000);
       for(var hb=0;hb<4;hb++){ctx.save();ctx.rotate(hb*Math.PI/2);ctx.beginPath();ctx.moveTo(.12,-.07);ctx.bezierCurveTo(.32,-.48,.71,-.64,.87,-.31);ctx.bezierCurveTo(1.01,-.03,.76,.38,.56,.34);ctx.bezierCurveTo(.39,.3,.38,.08,.12,.09);ctx.closePath();ctx.fillStyle='#b9cbb4';ctx.fill();ctx.restore()}
       ctx.beginPath();ctx.arc(0,0,.2,0,Math.PI*2);ctx.fillStyle='#d8c18b';ctx.fill();ctx.restore();ctx.restore();
-      spriteAt('shell.fan.housing',center,1.95,234/515,298/620);return;
+      spriteAt('shell.fan.housing',center,FAN_W,234/515,298/620);return;
     }
     ctx.fillStyle='#718779';ctx.fillRect(-1.1,-1.1,2.2,2.2);
     var metal=ctx.createLinearGradient(-1,-1,1,1);metal.addColorStop(0,'#d6dfcf');metal.addColorStop(.45,'#93a99a');metal.addColorStop(1,'#526b5c');
@@ -2871,7 +2894,7 @@ if(!SHOP_SPRITES){
         warmStrip([[left+.35,2.87,rear+.25],[right-.35,2.87,rear+.25]],fi===2);
       }
 }
-      if(fi===2)drawGrowExhaustFan(-4.4,rear+.24,2.4);
+      if(fi===2)drawGrowExhaustFan(SHOP_SPRITES?fanBayCentre(left,right):-4.4,rear+.24,SHOP_SPRITES?2.15:2.4);
       if(fi>0&&!SHOP_SPRITES)warmStrip([[left+.2,-.08,front+.025],[right-.2,-.08,front+.025]],false);
       if(fi<2)retailDetails(fi,rear,now);
 
