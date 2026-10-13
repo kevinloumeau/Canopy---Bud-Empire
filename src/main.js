@@ -2868,14 +2868,17 @@ if(!SHOP_SPRITES){
     var x=-10.65,z=10,frame=SHOP_SPRITES?['#3f7a58','#1f4a35','#2d6146']:['#414843','#171e1a','#2b342e'],brass=['#d8c18b','#8d7950','#b7a16d'];
     function add(px,pz,fn){jobs.push({depth:depthOf({x:px,z:pz}),draw:fn})}
     if(SHOP_SPRITES){
-      // All-sprite shop: the Ludo storefront in vertical slices so the queue outside sorts against it, and the exit door.
-      var front=shellSprite('shell.storefront'),slices=8,z0=2.5,z1=8.8;
-      for(var slice=0;slice<slices;slice++)(function(k){var za=z0+(z1-z0)*k/slices,zb=z0+(z1-z0)*(k+1)/slices;add(x,(za+zb)/2,function(){
-        if(!front)return;var api=sunnyApi(sceneTime),pts=[project(x,0,z0),project(x,0,z1),project(x,4.4,z0),project(x,4.4,z1)];
-        var l=Math.min.apply(null,pts.map(function(q){return q.x})),r=Math.max.apply(null,pts.map(function(q){return q.x})),t=Math.min.apply(null,pts.map(function(q){return q.y})),bt=Math.max.apply(null,pts.map(function(q){return q.y}));
-        var img=spriteImage(front),w=img.naturalWidth,f0=k/slices,f1=(k+1)/slices;
-        ctx.drawImage(img,w*f0,0,w*(f1-f0),img.naturalHeight,l+(r-l)*f0,t,(r-l)*(f1-f0),bt-t);
+      // All-sprite shop: the storefront (ChatGPT render, unwarped to a flat elevation) sheared on to the wall plane in
+      // vertical slices so the queue outside sorts against it. The image's left edge is the near end, by the entrance.
+      var slices=8,z0=2.5,z1=8.8;
+      for(var slice=0;slice<slices;slice++)(function(k){var za=z1-(z1-z0)*k/slices,zb=z1-(z1-z0)*(k+1)/slices;add(x,(za+zb)/2,function(){
+        drawWallFace(sunnyApi(sceneTime),'shell.storefront',x,za,x,zb,0,4.4,k/slices,(k+1)/slices);
       })})(slice);
+      // The open entrance frame: canopy and near post, header, far post, each sorted at its own depth so customers
+      // walking through pass behind the near post and in front of the far one.
+      [[0,.33,11.2],[.33,.9,10],[.9,1,8.8]].forEach(function(part){var zn=11.95,zf=8.67,za=zn-(zn-zf)*part[0],zb=zn-(zn-zf)*part[1];
+        add(x,part[2],function(){drawWallFace(sunnyApi(sceneTime),'shell.storefront.door',x,za,x,zb,0,3.93,part[0],part[1])});
+      });
       add(10.25,-6.86,function(){drawBoxSprite(sunnyApi(sceneTime),shellSprite('shell.door.exit'),9.1,11.4,-7.1,-6.9,0,3.7)});
     }else{
     // Glazed storefront bays continue the door frame behind the kiosk row.
@@ -2974,12 +2977,14 @@ if(!SHOP_SPRITES){
     // Threshold and welcome mat lie on the actual customer approach.
     jobs.push({depth:-Infinity,draw:function(){groundPatch(x-.8,z,1.6,2,'#314d3d');drawBox(x,z,.025,.34,2.5,.06,brass)}});
     // The door posts run straight to the slab: a wider brass foot block read as a loose crate beside the ID desk.
+    if(!SHOP_SPRITES){
     [z-1.2,z+1.2].forEach(function(edge){add(x,edge,function(){drawBox(x,edge,0,.26,.26,3.3,frame)})});
     add(x,z,function(){
       drawBox(x,z,3.3,.26,2.66,.3,frame);
     });
-    // Park the glass leaf along the side wall, clear of the entrance lanes.
-    add(x-.14,z-1.9,function(){
+    }
+    // Park the glass leaf along the side wall, clear of the entrance lanes (the sprite shop's doorway has none).
+    if(!SHOP_SPRITES)add(x-.14,z-1.9,function(){
       var hinge=[x-.14,0,z-1.1],end=[x-.14,0,z-2.75];
       glassPane([project(hinge[0],.12,hinge[2]),project(end[0],.12,end[2]),project(end[0],3.17,end[2]),project(hinge[0],3.17,hinge[2])],'#b5d7c12e');
       worldLine([[hinge[0],.12,hinge[2]],[end[0],.12,end[2]],[end[0],3.17,end[2]],[hinge[0],3.17,hinge[2]],[hinge[0],.12,hinge[2]]],SHOP_SPRITES?'#2d6146':'#2b342e',.075);
