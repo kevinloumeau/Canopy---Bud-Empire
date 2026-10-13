@@ -41,7 +41,9 @@ export function stationSprite(i, level) {
 }
 // People: cast members are picked by a stable identity; customer 07 (Kevin's own outfit) is weighted to show up twice as often.
 const CAST = { customer: [1, 2, 3, 4, 5, 6, 7, 7], walker: [1, 2, 3, 4, 7] };
-const STAFF_FOR_LINE = [2, 2, 2, 1, 1, 1, 3, 1]; // seeds/grow/harvest growers, pack/orders/pickup budtenders, 6 is the ID desk, 7 the lounge host
+const STAFF_FOR_LINE = [2, 2, 2, 1, 1, 1, 3, 1];
+// staff-v3 working poses by line: growers upstairs, a packer at pack and pickup, budtenders at orders and the lounge, the supervisor at the ID desk.
+const STAFF_V3 = { 0: '05.grower', 1: '05.grower', 2: '05.grower', 3: '06.packer', 4: '04.budtender', 5: '06.packer', 6: '07.supervisor', 7: '04.budtender' }; // seeds/grow/harvest growers, pack/orders/pickup budtenders, 6 is the ID desk, 7 the lounge host
 // Every figure sits on the same 448x640 canvas, 600 px tall with its feet 8 px above the bottom edge.
 // Figures are drawn 2.3 units tall: the Ludo counters and cars came out chunky, and true-to-life people looked like toys beside them.
 const PERSON_SIZE = { h: 2.3 * 640 / 600, drop: 2.3 * 8 / 600 + .03 };
@@ -64,8 +66,12 @@ export function drawPersonSprite(api, x, z, identity, employee, facing, phase, a
   const walking = amount > .3 && Math.floor(phase / Math.PI) % 2 === 0;
   let name = personName(role, nn, walking), flip = employee ? facing >= 0 : facing < 0;
   const base = personName(role, nn, false);
-  if (!employee) {
-    const v3 = personName(role, nn, walking) + (bag ? '.bag' : '.empty') + (facing < 0 ? '.left' : '.right');
+  // Latest renders face both ways themselves, so no mirroring. The staff ones are role-specific working poses
+  // (no walking frames); their `facing` keeps the sign the original mirrored renders used, so >= 0 faces the floor.
+  const v3 = employee
+    ? (STAFF_V3[identity] || (identity > 7 ? '04.budtender' : null)) && 'person.staff.' + (STAFF_V3[identity] || '04.budtender') + '.work.' + (facing >= 0 ? 'left' : 'right')
+    : personName(role, nn, walking) + (bag ? '.bag' : '.empty') + (facing < 0 ? '.left' : '.right');
+  if (v3) {
     lazySprite(v3, 'sprites/people/' + v3 + '.png', PERSON_V3_SIZE);
     if (spriteReady(v3)) { name = v3; flip = false; }
   }

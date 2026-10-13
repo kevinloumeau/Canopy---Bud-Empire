@@ -2168,6 +2168,22 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   // A door render pinned by its two post feet (image points) to world points on its wall line: the posts stay upright
   // and the render keeps its own proportions, so it is never stretched over a screen box.
+  // Glass railing renders (three panels each) pinned post-to-post along a floor axis: uniform scale plus a vertical
+  // shear so the post feet follow the slab edge while the posts stay upright. `n` whole panels are drawn from
+  // (x0,z0); the render's far end cap is spliced on at the last post so short runs still finish with a capped post.
+  var RAIL_RUNS={x:{name:'railing.glass.down-right',posts:[[24.8,165.5],[269.7,261.6],[512.7,355.9],[756.4,450.7]]},
+                 z:{name:'railing.glass.up-right',posts:[[24.8,492.9],[264.1,403.0],[507.8,301.3],[762.0,195.9]]}};
+  function drawRailRun(along,x0,z0,y0,n,panel){
+    var run=RAIL_RUNS[along];if(!shellSprite(run.name))return false;
+    var img=spriteImage(run.name),W=img.naturalWidth,H=img.naturalHeight,posts=run.posts,len=n*(panel||2);
+    var x1=along==='x'?x0+len:x0,z1=along==='x'?z0:z0-len,p0=project(x0,y0,z0),p1=project(x1,y0,z1);
+    var a=posts[0],b=posts[Math.min(n,3)],k=(p1.x-p0.x)/(b[0]-a[0]),shear=(p1.y-p0.y-k*(b[1]-a[1]))/(b[0]-a[0]);
+    function piece(u0,u1,px,py,sx,sy){ctx.save();ctx.transform(k,shear,0,k,sx-k*px-0,sy-k*py-shear*px);ctx.drawImage(img,u0,0,u1-u0,H,u0,0,u1-u0,H);ctx.restore()}
+    var cut=Math.round(b[0]);
+    piece(0,cut,a[0],a[1],p0.x,p0.y);
+    if(n<3){var e=posts[3];piece(Math.round(e[0]),W,e[0],e[1],p1.x,p1.y)}
+    return true;
+  }
   function pinnedDoor(name,x,z){
     if(!shellSprite(name))return false;var img=spriteImage(name),p0=project(x-.95,0,z+.12),p1=project(x+.95,0,z+.12),u0=103,v0=455,u1=413,v1=619;
     var k=(p1.x-p0.x)/(u1-u0),shear=(p1.y-p0.y-k*(v1-v0))/(u1-u0);ctx.save();ctx.transform(k,shear,0,k,p0.x-k*u0,p0.y-k*v0-shear*u0);ctx.drawImage(img,0,0);ctx.restore();return true;
@@ -2419,7 +2435,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // The main-flight render came out floating and half transparent, so the upper flight's render serves both.
     drawBoxSprite(api,shellSprite('shell.stairs.upper'),9.1,10.7,-.8,4.2,0,4.7,'height',.74);
     // Glass guard rail along the mezzanine's open right edge, sheared on to its own plane from the flat render.
-    drawWallFace(api,'shell.rail.glass.left',8.93,-1.75,8.93,-4.8,4.7,1);
+    if(!drawRailRun('z',8.93,-1.75,4.7,2))drawWallFace(api,'shell.rail.glass.left',8.93,-1.75,8.93,-4.8,4.7,1);
   }
   function drawCachedGround(floor){
     var key=[width,height,dpr,unit,centerX,centerY,angle,stationTier(4),stationTier(5)].join(':');
@@ -2879,7 +2895,7 @@ if(!SHOP_SPRITES){
       if(fi===2)drawGrowGantry();
       // Thin mezzanine guard rails stop short of the workstation fronts. The top floor's transfer tube drops behind its
       // front rail, so that run is painted first and the rail over it.
-      if(fi>0&&SHOP_SPRITES){var railApi=sunnyApi(now);[[left,left+2],[right-2,right]].forEach(function(pair){drawWallFace(railApi,'shell.rail.glass.right',pair[0],front-.1,pair[1],front-.1,0,1.05)})}
+      if(fi>0&&SHOP_SPRITES){var railApi=sunnyApi(now);[left,right-2].forEach(function(x){if(!drawRailRun('x',x,front-.1,0,1))drawWallFace(railApi,'shell.rail.glass.right',x,front-.1,x+2,front-.1,0,1.05)})}
       else if(fi>0){
         var rz=front-.1;
         [-floor.w/2,-floor.w/2+2,floor.w/2-2,floor.w/2].forEach(function(x){worldLine([[x,0,rz],[x,.95,rz]],'#252b28',.055)});
