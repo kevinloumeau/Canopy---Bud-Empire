@@ -40,7 +40,7 @@ export function stationSprite(i, level) {
   return null;
 }
 // People: cast members are picked by a stable identity; customer 07 (Kevin's own outfit) is weighted to show up twice as often.
-const CAST = { customer: [1, 2, 3, 4, 5, 6, 7, 7], walker: [1, 2, 3, 4, 7] };
+const CAST = { customer: [1, 2, 3, 4, 5, 6, 7], walker: [1, 2, 3, 4, 7] };
 const STAFF_FOR_LINE = [2, 2, 2, 1, 1, 1, 3, 1];
 // staff-v3 working poses by line: growers upstairs, a packer at pack and pickup, budtenders at orders and the lounge, the supervisor at the ID desk.
 const STAFF_V3 = { 0: '05.grower', 1: '05.grower', 2: '05.grower', 3: '06.packer', 4: '04.budtender', 5: '06.packer', 6: '07.supervisor', 7: '04.budtender' }; // seeds/grow/harvest growers, pack/orders/pickup budtenders, 6 is the ID desk, 7 the lounge host

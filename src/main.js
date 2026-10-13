@@ -1617,10 +1617,13 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       if(heads.indexOf(c)>=0)return 0;
       var waiting=queue.filter(function(q){return heads.indexOf(q)<0});
       // Both kiosk branches merge into the same rear walkway. Reserve each slot once.
-      return .5+(7.6-(6.8-(c.kioskIndex||0)*1.8))+Math.max(0,waiting.indexOf(c))*.55;
+      return .5+(7.6-(6.8-(c.kioskIndex||0)*1.8))+Math.max(0,waiting.indexOf(c))*queueGap(true);
     }
-    return Math.max(0,queue.indexOf(c))*(queueLimit()>20?.6:.75);
+    return Math.max(0,queue.indexOf(c))*queueGap(false);
   }
+  // Space between people in a line. The figures are about .8 wide, so anything under one tile reads as a crush;
+  // the longest lines close up a little so more of them fit in the pen before the tail runs outside.
+  function queueGap(kiosk){return kiosk?.75:queueLimit()>20?.85:1}
   function customerTarget(c){
     if(c.phase==='leaving')return{x:-10.5,z:-8.1};
     return routePoint(c.kiosk&&!c.ordered?kioskRoute(c.kioskIndex):queueRoute(c.ordered),customerQueueDistance(c));
@@ -1699,7 +1702,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
           var aheadRoute=ahead.kiosk&&!ahead.ordered?kioskRoute(ahead.kioskIndex):queueRoute(ahead.ordered);
           if(ahead.laneDistance==null||ahead.waypoints&&ahead.waypoints.length)target=Math.max(target,routeLength(route));
           else if(!c.kiosk||c.ordered||(ahead.kioskIndex||0)===(c.kioskIndex||0)||ahead.laneDistance>.5){
-            target=Math.max(target,ahead.laneDistance+routeLength(route)-routeLength(aheadRoute)+(c.kiosk&&!c.ordered?.55:.75));
+            target=Math.max(target,ahead.laneDistance+routeLength(route)-routeLength(aheadRoute)+queueGap(c.kiosk&&!c.ordered));
           }
         }
         // Never jump backwards when a new customer joins another queue.
@@ -2985,7 +2988,7 @@ if(!SHOP_SPRITES){
     if(!SHOP_SPRITES)sceneJobs.push({depth:depthOf({x:PICKUP_X,z:3.75}),draw:function(){sceneElevation=0;archedServiceSign(PICKUP_X,'PICKUP')}});
     // Street-level queue markings and low entry planters retain the service route.
     // One dash per standing place along the order line, as far as the doorman; lit while someone is on it.
-    var waiting=customers.filter(inOrderFlow).length,orderRoute=queueRoute(false),spacing=queueLimit()>20?.6:.75,inside=routeLength(orderRoute.slice(0,laneJoinIndex(orderRoute)+1));
+    var waiting=customers.filter(inOrderFlow).length,orderRoute=queueRoute(false),spacing=queueGap(false),inside=routeLength(orderRoute.slice(0,laneJoinIndex(orderRoute)+1));
     for(var place=0;place<queueLimit();place++){var along=place*spacing;if(along>inside)break;var spot=routePoint(orderRoute,along),next=routePoint(orderRoute,along+.02),acrossX=Math.abs(next.x-spot.x)>=Math.abs(next.z-spot.z);groundPatch(spot.x,spot.z,acrossX?.06:.3,acrossX?.3:.06,place<waiting?'#dfcb99':'#7d8f78')}
 
   }
