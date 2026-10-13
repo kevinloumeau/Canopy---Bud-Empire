@@ -148,7 +148,7 @@ export function drawSprite(api, name, x, z, flip, scale) {
 const P = -.012, G = -.33, L = 90; // plaza level (flush with the slab top), street level, half-extent of the streets
 const ROADS = [{ along: 'x', at: -18.5 }, { along: 'x', at: 21.5 }, { along: 'z', at: -22.5 }, { along: 'z', at: 22.5 }];
 const RW = 6; // street width kerb to kerb
-const PAVER = '#d2c8ab', PAVER_LINE = '#b5aa8c', KERB = '#e2dac4', KERB_FACE = '#a69d85', ASPHALT = '#5a5e64';
+const PAVER = '#d2c8ab', PAVER_LINE = '#b5aa8c', TACTILE = 'rgba(217,194,122,.38)', KERB = '#e2dac4', KERB_FACE = '#a69d85', ASPHALT = '#5a5e64';
 const STONE = ['#d6d0c2', '#a9a295', '#c1bbad'], TAN = ['#dac9b6', '#ad9b87', '#c6b29d'], SAGE = ['#c9cfc6', '#9ea59b', '#b4bab0'], MAUVE = ['#d6cdcf', '#a9a0a2', '#c2b8ba'];
 // Neighbours: [x, z, w, d, h, wall, awning]. All beyond the far kerbs; heights stay low so they read as a backdrop.
 const BUILDINGS = [
@@ -158,11 +158,13 @@ const BUILDINGS = [
 ];
 // Kept toward the kerb, clear of the facades behind them.
 const FAR_TREES = [[-12, -22.4], [-1, -22.4], [10, -22.4], [21, -22.4], [-26.4, -13], [-26.4, -2], [-26.4, 9], [-26.4, 20]];
-const NEAR_TREES = [[-15, -13.5], [-5, -13.5], [5, -13.5], [15, -13.5], [-17, -4], [-17, 4]]; // behind / left of the shop only
+const NEAR_TREES = [[-15, -13.5], [-5, -13.5], [5, -13.5], [15, -13.5], [-17, 4]]; // behind / left of the shop only; nothing under the delivery deck's legs
 export const LAMPS = [[-18.5, -14.5], [18.5, -14.5], [-18.5, 17.5], [18.5, 17.5], [0, -14.5], [-18.5, 1]];
 // Walkers: [x0, z0, x1, z1, count, back-pass?]; each walks the segment back and forth on its own phase.
-const WALKS = [[-19, -13.5, 19, -13.5, 3, true], [-17.5, -15, -17.5, 18, 2, true], [-30, -24, 30, -24, 3, true], [-28, -26, -28, 26, 2, true],
-  [-19, 17, 19, 17, 3, false], [17.5, -15, 17.5, 18, 2, false]];
+// Lanes keep clear of the trees, lamps and furniture: the rear and left walks run between the slab and the props, the
+// front walk along the kerb in front of the planters and bench, the right walk between the slab and the bus stop.
+const WALKS = [[-19, -11.6, 19, -11.6, 3, true], [-15.2, -15, -15.2, 18, 2, true], [-30, -24, 30, -24, 3, true], [-28, -26, -28, 26, 2, true],
+  [-19, 18.3, 19, 18.3, 3, false], [15.3, -15, 15.3, 18, 2, false]];
 // Cars: [road index, lane offset from centre, direction, phase, colour]
 const CARS = [[0, -1.5, 1, 0, '#e0564a'], [0, -1.5, 1, .45, '#f4f1e4'], [0, 1.5, -1, .2, '#4f8fd0'], [2, -1.5, -1, .1, '#f2c14e'], [2, 1.5, 1, .6, '#6ea845'],
   [1, -1.5, 1, .3, '#e8913c'], [1, 1.5, -1, .75, '#8a6fd1'], [3, -1.5, -1, .5, '#4f8fd0'], [3, 1.5, 1, .05, '#f4f1e4']];
@@ -209,7 +211,7 @@ export function drawSunnyWorld(api, front, alpha) {
     [[18, -6], [18, 6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => at(x, z, () => planter(api, x, z)));
     at(0, 16.5, () => bench(api, 0, 16.5, true)); // mirrored to run along the front street
     at(18, 0, () => bench(api, 18, 0)); at(14, 16, () => bikeRack(api, 14, 16));
-    at(18.5, -11, () => busStop(api, 18.5, -11)); at(18.5, 12, () => bin(api, 18.5, 12)); at(12, 17.5, () => hydrant(api, 12, 17.5));
+    at(18.5, -11, () => busStop(api, 18.5, -11)); at(18.5, 12, () => bin(api, 18.5, 12)); at(12, 15.4, () => hydrant(api, 12, 15.4));
     drawCars(api, false, at); drawWalkers(api, false, at);
     byDepth(jobs).forEach(j => j[2]());
   }
@@ -258,8 +260,8 @@ function roadMarkings(api, quad, { along, at }) {
 function crossing(api, quad, along, at, pos) {
   const a0 = at - RW / 2, a1 = at + RW / 2;
   for (let k = 0; k < 6; k++) { const s = a0 + .55 + k * .85; if (along === 'x') quad(pos - 1.6, s, pos + 1.6, s + .45, G + .006, '#f4f1e8'); else quad(s, pos - 1.6, s + .45, pos + 1.6, G + .006, '#f4f1e8'); }
-  if (along === 'x') { quad(pos - 1.6, a0 - .9, pos + 1.6, a0 - .3, P + .003, '#d9c27a'); quad(pos - 1.6, a1 + .3, pos + 1.6, a1 + .9, P + .003, '#d9c27a'); }
-  else { quad(a0 - .9, pos - 1.6, a0 - .3, pos + 1.6, P + .003, '#d9c27a'); quad(a1 + .3, pos - 1.6, a1 + .9, pos + 1.6, P + .003, '#d9c27a'); }
+  if (along === 'x') { quad(pos - 1.6, a0 - .9, pos + 1.6, a0 - .3, P + .003, TACTILE); quad(pos - 1.6, a1 + .3, pos + 1.6, a1 + .9, P + .003, TACTILE); }
+  else { quad(a0 - .9, pos - 1.6, a0 - .3, pos + 1.6, P + .003, TACTILE); quad(a1 + .3, pos - 1.6, a1 + .9, pos + 1.6, P + .003, TACTILE); }
 }
 
 // A muted low-rise neighbour: walls, parapet, a sparse grid of pale windows, a glazed ground floor under a plain
@@ -311,7 +313,7 @@ function shadowTexture() {
   g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
   return (SHADOW_TEX = c);
 }
-function softShadow(api, x, y, z, rx, rz, alpha) {
+export function softShadow(api, x, y, z, rx, rz, alpha) {
   const tex = shadowTexture(); if (!tex) return;
   const o = api.project(x, y, z), ex = api.project(x + 1, y, z), ez = api.project(x, y, z + 1), ctx = api.ctx;
   ctx.save(); ctx.transform(ex.x - o.x, ex.y - o.y, ez.x - o.x, ez.y - o.y, o.x, o.y);
@@ -416,7 +418,7 @@ function busStop(api, x, z) {
 // A rounded compact car, nose along x or z, drawn at street level.
 function car(api, x, z, along, color) {
   const p = api.project, u = api.unit, ax = along === 'x', Lc = 2.6, W = 1.3;
-  const variant = { '#e0564a': 'red', '#f4f1e4': 'white', '#4f8fd0': 'blue', '#f2c14e': 'yellow', '#6ea845': 'green', '#8a6fd1': 'white' }[color];
+  const variant = { '#e0564a': 'red', '#f4f1e4': 'white', '#4f8fd0': 'blue', '#f2c14e': 'yellow', '#6ea845': 'green', '#e8913c': 'orange', '#8a6fd1': 'purple' }[color];
   const carName = (variant ? 'street.car.' + variant : 'street.van') + (ax ? '.fr' : '.fl');
   lazySprite(carName, 'sprites/street/' + carName + '.png', variant ? { w: 3.1, drop: .55 } : { w: 3.3, drop: .55 });
   if (spriteReady(carName) || spriteReady('car')) groundShadow(api, x, G, z, ax ? 1.5 : .75, ax ? .75 : 1.5, 1.4);

@@ -18,7 +18,7 @@ import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import { createGlPost } from './gl-post.js';
-import { SUNNY, SHOP_SPRITES, LAMPS as STREET_LAMPS, compactOrderSprite, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern } from './sunny-world.js';
+import { SUNNY, SHOP_SPRITES, LAMPS as STREET_LAMPS, compactOrderSprite, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern, softShadow } from './sunny-world.js';
 import * as economy from './economy.js';
 import * as strains from './strains.js';
 import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent } from './progression.js';
@@ -860,7 +860,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     ctx.save();ctx.translate(p.x,p.y);if(flip)ctx.scale(-1,1);ctx.drawImage(img,-ax*W,-ay*H,W,H);ctx.restore();return true;
   }
   function drawBollard(b){
-    if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),fixtureSprite('street.bollard'),b.x-.22,b.x+.22,b.z-.22,b.z+.22,0,.7,true))return;
+    if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),fixtureSprite('street.bollard'),b.x-.11,b.x+.11,b.z-.11,b.z+.11,0,.7,true))return;
     drawBox(b.x,b.z,0,.2,.2,.7,['#414843','#171e1a','#2b342e']);litBox(b.x,b.z,.5,.21,.21,.13,['#fff1c9','#d8c18b','#f2e0b1']);drawBox(b.x,b.z,.7,.24,.24,.05,['#d8c18b','#8d7950','#b7a16d']);
   }
   function exteriorLightSpill(k){
@@ -1267,7 +1267,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // right-hand order desk and the pickup counter (the desks narrow when the order bank expands, so the gap moves).
     var count=state.orderCounters,orderEdge=Math.max.apply(null,orderCounterPositions(count).map(function(p){return p.x+(count===1?1.46:1.01)})),pickupEdge=4-1.46;
     var cx=(orderEdge+pickupEdge)/2,width=count===3?2:3.5,seams=Math.floor(width/.24);
-    if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),shellSprite(count===3?'shell.counter.divider.short':'shell.counter.divider.wide'),cx-width/2,cx+width/2,2.36,2.64,0,1.18,true))return;
+    if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),shellSprite('shell.counter.divider.wide2'),orderEdge-.2,pickupEdge+.15,2.36,2.64,0,1.18,true))return;
     drawBox(cx,2.5,.03,width,.28,1.04,['#6b8972','#284939','#3d614c']);
     for(var tile=0;tile<seams;tile++){var tx=cx-width/2+.07+tile*.24;worldLine([[tx,.09,2.65],[tx,1.05,2.65]],'#d4d6b7',.016)}
     [.38,.72].forEach(function(y){worldLine([[cx-width/2,y,2.65],[cx+width/2,y,2.65]],'#d4d6b7',.016)});
@@ -1821,13 +1821,16 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function conveyorRun(x1,x2,z,y,stage){
     var length=Math.abs(x2-x1),mid=(x1+x2)/2,forward=x2>x1?1:-1;
     var steel=['#758d80','#344a40','#536c5b'];
+    var phase=state.lines[stage]>0&&!motionPreference.matches?crateTime:0;
+    var belt=SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),shellSprite(stage===0?'shell.conveyor.upper':'shell.conveyor.lower'),Math.min(x1,x2)-.15,Math.max(x1,x2)+.15,z-.4,z+.4,0,y,true);
+    if(!belt){
     // The stands first: they are under the belt, so its body goes over them.
     [x1+.2*forward,x2-.2*forward].forEach(function(x){drawBox(x,z,.06,.1,.5,Math.max(.1,y-.25),steel)});
     drawBox(mid,z,y-.18,length,.7,.16,steel);
     drawBox(mid,z,y-.01,length,.5,.035,['#334b40','#24382f','#2a4035']);
     [-.36,.36].forEach(function(dz){worldLine([[x1,y+.09,z+dz],[x2,y+.09,z+dz]],'#b6c7ad',.055)});
-    var phase=state.lines[stage]>0&&!motionPreference.matches?crateTime:0;
-    for(var slat=0;slat<Math.ceil(length/.23);slat++){
+    }
+    for(var slat=0;slat<Math.ceil(length/.23)&&!belt;slat++){
       var t=(slat*.23+phase*.7)%length,x=x1+forward*t;
       worldLine([[x,y+.03,z-.24],[x,y+.03,z+.24]],'#75927a',.035);
     }
@@ -2063,9 +2066,18 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   // Sprite shop: the delivery deck render, with its long stair down to the mezzanine. Scaled from the earlier deck render
   // (whose platform sat right) and pinned by the platform's left corner, measured on the half-size sprite at (76.5, 232).
+  // A top-down render (a mat) laid into the floor plane over its world footprint. `along` says which world axis the
+  // image's width runs on: 'x', 'z', or '-z' (so an arrow pointing right on the image points towards the rear wall).
+  function drawFlatSprite(name,x0,x1,z0,z1,along){
+    if(!shellSprite(name))return false;var img=spriteImage(name),W=img.naturalWidth,H=img.naturalHeight;
+    var ox=along==='x'?x0:along==='z'?x0:x1,oz=along==='x'?z0:along==='z'?z0:z1,o=project(ox,.01,oz);
+    var u=along==='x'?project(x1,.01,oz):project(ox,.01,along==='z'?z1:z0),v=along==='x'?project(ox,.01,z1):project(along==='-z'?x0:x1,.01,oz);
+    ctx.save();ctx.transform((u.x-o.x)/W,(u.y-o.y)/W,(v.x-o.x)/H,(v.y-o.y)/H,o.x,o.y);ctx.drawImage(img,0,0);ctx.restore();return true;
+  }
   function drawDeckSprite(now,name){
     var api=sunnyApi(now),img=shellSprite(name)&&spriteImage(name);if(!img)return false;
     var x=-10.7,z=1.5,pts=[];[x-2.2,x+2.2].forEach(function(px){[z-3.55,z+1.9].forEach(function(pz){[-.24,3.8].forEach(function(py){pts.push(project(px,py,pz))})})});
+    var savedElevation=sceneElevation;sceneElevation=0;softShadow(api,x-.3,0,z-.6,2.1,2.6,.3);softShadow(api,x+.9,0,z-1.1,2.6,2.9,.14);sceneElevation=savedElevation;
     var l=Math.min.apply(null,pts.map(function(q){return q.x})),r=Math.max.apply(null,pts.map(function(q){return q.x})),b=Math.max.apply(null,pts.map(function(q){return q.y}));
     var kOld=(r-l)/1146,cx=l+5*kOld,cy=b-1149*kOld+679*kOld,k=kOld*1.2*2;
     ctx.save();ctx.translate(cx-k*76.5,cy-k*232);ctx.scale(k,k);ctx.drawImage(img,0,0);ctx.restore();return true;
@@ -2214,6 +2226,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       var ax=-8.75;
       for(var alcove=0;alcove<1;alcove++){
         var zz=-4.85,shape=[];
+        if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(now),shellSprite('shell.arch.shelves'),ax-.1,ax+.55,zz-1.05,zz+1.05,0,3.4,true))continue;
+        if(SHOP_SPRITES)continue;
         shape.push(project(ax,.15,zz-1));shape.push(project(ax,2.3,zz-1));
         for(var arc=0;arc<=16;arc++){var t=Math.PI-arc/16*Math.PI;shape.push(project(ax,2.3+Math.sin(t),zz+Math.cos(t)))}
         shape.push(project(ax,.15,zz+1));poly(shape,'#d3a888','#62796f');
@@ -2278,7 +2292,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function drawShellShelves(fi,rear){
     var api=sunnyApi(sceneTime);
     if(fi===2)return; // the top floor's rear wall stays clear of shelving
-    var runs=fi===1?[[-8.7,-4.35],[-4.35,0],[0,4.35],[4.35,8.7]]:[[-8.2,-3.8]];
+    var runs=fi===1?[[-9,-4.5],[-4.5,0],[0,4.5],[4.5,9]]:[[-8.2,-3.8]];
     drawShelfRun(api,runs,rear+.95,3.6,.75);
   }
   // Oak carcasses first so the units stand out from the wall with a lit top and end panels, then the flat shelf
@@ -2584,10 +2598,12 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       }
       if(fi===2){
         var artX=left+.13,artZ=rear+1.8;
+        if(SHOP_SPRITES&&drawSpan(sunnyApi(now),shellSprite('shell.art.leaf'),artX,artZ+.7,artX,artZ-.7,1.45,.7)){}else{
         drawBox(artX,artZ,.55,.1,1.25,1.5,wood);
         drawBox(artX+.06,artZ,.64,.025,1.07,1.32,['#e4dbc0','#c2b69a','#ded4b7']);
         worldLine([[artX+.08,.8,artZ],[artX+.08,1.8,artZ]],'#476746',.035);
         for(var leaf=0;leaf<4;leaf++)[-1,1].forEach(function(dir){var y=.98+leaf*.2;poly([project(artX+.08,y,artZ),project(artX+.08,y+.17,artZ+dir*.3),project(artX+.08,y+.04,artZ+dir*.36),project(artX+.08,y-.025,artZ+dir*.13)],'#718b52')});
+        }
       }
       if(fi===1){
       }
@@ -3026,6 +3042,7 @@ if(!SHOP_SPRITES){
     jobs.push({depth:-Infinity,draw:function(){
       // The mat lies in the exit lane just past the merch cabinet, its arrow pointing on to the door.
       var matX=10.7,matZ=-4.35;
+      if(SHOP_SPRITES&&drawFlatSprite('shell.mat.exit',matX-.6,matX+.6,matZ-1.1,matZ+1.1,'-z'))return;
       groundPatch(matX,matZ,1.4,1.9,'#314d3d');
       worldLine([[matX,.055,matZ+.7],[matX,.055,matZ-.7],[matX-.28,.055,matZ-.35]],'#d6c18a',.07);
       worldLine([[matX,.055,matZ-.7],[matX+.28,.055,matZ-.35]],'#d6c18a',.07);
@@ -3047,7 +3064,7 @@ if(!SHOP_SPRITES){
     jobs.push({depth:depthOf({x:exitX,z:exitZ-.3})+.05,draw:function(){var e=exteriorFixtures.exitLamp;haloLight(e.x,e.y-.14,e.z,.7,.18,'#ffe2a5')}});
     // Threshold and welcome mat lie on the actual customer approach.
     // Sprite shop: one mat filling the doorway, from the kerb line to the timber floor, with no loose brass strip.
-    jobs.push({depth:-Infinity,draw:function(){if(SHOP_SPRITES){groundPatch(x-.3,z,1.5,2.3,'#314d3d');return}groundPatch(x-.8,z,1.6,2,'#314d3d');drawBox(x,z,.025,.34,2.5,.06,brass)}});
+    jobs.push({depth:-Infinity,draw:function(){if(SHOP_SPRITES){if(!drawFlatSprite('shell.mat.entrance',x-.45,x+.45,z-.95,z+1.35,'z'))groundPatch(x,z+.2,.9,2.2,'#3f5f4c');return}groundPatch(x-.8,z,1.6,2,'#314d3d');drawBox(x,z,.025,.34,2.5,.06,brass)}});
     // The door posts run straight to the slab: a wider brass foot block read as a loose crate beside the ID desk.
     if(!SHOP_SPRITES){
     [z-1.2,z+1.2].forEach(function(edge){add(x,edge,function(){drawBox(x,edge,0,.26,.26,3.3,frame)})});
