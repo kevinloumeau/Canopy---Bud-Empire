@@ -2872,14 +2872,14 @@ if(!SHOP_SPRITES){
     if(SHOP_SPRITES){
       // All-sprite shop: the storefront (ChatGPT render, unwarped to a flat elevation) sheared on to the wall plane in
       // vertical slices so the queue outside sorts against it. The image's left edge is the near end, by the entrance.
-      var slices=8,z0=2.5,z1=8.8;
+      var slices=8,z0=2.5,z1=8.94;
       for(var slice=0;slice<slices;slice++)(function(k){var za=z1-(z1-z0)*k/slices,zb=z1-(z1-z0)*(k+1)/slices;add(x,(za+zb)/2,function(){
-        drawWallFace(sunnyApi(sceneTime),'shell.storefront',x,za,x,zb,0,4.4,k/slices,(k+1)/slices);
+        drawWallFace(sunnyApi(sceneTime),'shell.storefront',x,za,x,zb,-.04,4.19,k/slices,(k+1)/slices);
       })})(slice);
-      // The open entrance frame: canopy and near post, header, far post, each sorted at its own depth so customers
-      // walking through pass behind the near post and in front of the far one.
-      [[0,.33,11.2],[.33,.9,10],[.9,1,8.8]].forEach(function(part){var zn=11.95,zf=8.67,za=zn-(zn-zf)*part[0],zb=zn-(zn-zf)*part[1];
-        add(x,part[2],function(){drawWallFace(sunnyApi(sceneTime),'shell.storefront.door',x,za,x,zb,0,3.93,part[0],part[1])});
+      // The open entrance frame: canopy and near post, then the header (the far post is the storefront's first
+      // mullion), each sorted at its own depth so customers walking through pass behind the near post.
+      [[0,.38,11.2],[.38,1,10]].forEach(function(part){var zn=12.05,zf=8.8,za=zn-(zn-zf)*part[0],zb=zn-(zn-zf)*part[1];
+        add(x,part[2],function(){drawWallFace(sunnyApi(sceneTime),'shell.storefront.door',x,za,x,zb,-.04,4.2,part[0],part[1])});
       });
       // The exit door's frame stands in the rear wall line: its outer post feet (image points measured on the sprite;
       // the open leaf swings below them) are pinned to x 9.1 and 11.4 on z -7, posts kept upright.
@@ -3200,6 +3200,8 @@ if(!SHOP_SPRITES){
     });
   }
   function drawExitCabinet(){
+    // Sprite shop: the ChatGPT render of the arched merch cabinet, standing on the drawn cabinet's footprint.
+    if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),shellSprite('shell.merch.cabinet'),8.29,9.03,-6.84,-4.8,0,3.4,true))return;
     // Arched display cabinet in the corner between the lounge's right wall and the exit wall: an oak case with a
     // fluted back, three lit glass shelves of merchandise behind a glazed arch, and oak spandrels that turn the
     // rectangular case into a rounded niche. Its rear end sits against the rear wall beside the exit door.
