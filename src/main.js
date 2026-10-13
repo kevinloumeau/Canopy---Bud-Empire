@@ -1568,7 +1568,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(employee||style===0){var cap=employee?'#527b69':accent;block(-.22,1.83,.43,.18,.1,cap);block(.07,1.72,.27,.06,.025,cap)}
     if(!employee&&(style===4||style===9)){var glassesY=1.57;[-1,1].forEach(function(side){var q=point(side*.095+facing*.025,glassesY);ctx.beginPath();roundedRectPath(q.x-u*.073,q.y-u*.048,u*.146,u*.1,u*.025);ctx.strokeStyle='#365764';ctx.lineWidth=u*.026;ctx.stroke()});limb([[-.025,glassesY],[.025,glassesY]],'#365764',.023)}
     if(!employee&&(style===3||style===6)){var mouth=point(.075,1.4);ellipse(mouth.x,mouth.y,u*.034,u*.018,'#b96356')}
-    if(bag){var bx=x+.48,bz=z+.1,by=.55+(reduced?0:Math.sin(phase-.65)*amount*.055+(gait&&gait.pickupAge!==undefined?.14*Math.exp(-gait.pickupAge*5):0));drawBox(bx,bz,by,.38,.3,.48,['#ead3a1','#9c8052','#c6aa75']);worldLine([[bx-.12,by+.48,bz],[bx-.12,by+.59,bz],[bx+.12,by+.59,bz],[bx+.12,by+.48,bz]],'#bd9f67',.03);drawBox(bx,bz+.16,by+.16,.2,.018,.22,['#496f50','#496f50','#496f50']);bagAppIcon(bx,bz+.18,by+.16,.22)}
+    if(bag){var bx=x+.48,bz=z+.1,by=.55+(reduced?0:Math.sin(phase-.65)*amount*.055+(gait&&gait.pickupAge!==undefined?.14*Math.exp(-gait.pickupAge*5):0));
+      if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),fixtureSprite('prop.pickup.bag'),bx-.19,bx+.19,bz-.13,bz+.13,by,by+.6,true)){}else{drawBox(bx,bz,by,.38,.3,.48,['#ead3a1','#9c8052','#c6aa75']);worldLine([[bx-.12,by+.48,bz],[bx-.12,by+.59,bz],[bx+.12,by+.59,bz],[bx+.12,by+.48,bz]],'#bd9f67',.03);drawBox(bx,bz+.16,by+.16,.2,.018,.22,['#496f50','#496f50','#496f50']);bagAppIcon(bx,bz+.18,by+.16,.22)}}
   }
   // The order line snakes through three full-width rows of the rope pen in front of the order desk (z 7.0, 8.15 and
   // 9.3, between x −6.5 and −2.0, the gate at the right-hand end — a little back and to the right of the ID desk)
@@ -1803,10 +1804,14 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       [[-.1,0,.13],[.09,-.04,.13],[0,-.16,.14]].forEach(function(b){ellipse(p.x+b[0]*u,p.y+b[1]*u,u*b[2],u*b[2]*1.15,'#84a55c')});
       ellipse(p.x+.055*u,p.y-.16*u,u*.035,u*.07,'#d9b47f');
     }else if(stage===3){
+      // Sprite shop: the v2 gold-lidded flower jar in place of the drawn one.
+      if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),fixtureSprite('prop.jar'),x-.15,x+.15,z-.14,z+.14,y,y+.46,true))return;
       drawBox(x,z,y,.3,.27,.4,['#c4dec4','#719883','#a1bea8']);
       drawBox(x,z,y+.4,.34,.31,.07,['#dacba0','#9a8c62','#c0b182']);
       drawBox(x,z+.143,y+.1,.22,.014,.16,['#f3efda','#f3efda','#f3efda']);
     }else{
+      // Sprite shop: the v2 kraft pickup bag with its green label.
+      if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),fixtureSprite('prop.pickup.bag'),x-.2,x+.2,z-.13,z+.13,y,y+.62,true))return;
       drawBox(x,z,y,.39,.26,.46,['#e0c796','#a38c61','#c7ac78']);
       worldLine([[x-.1,y+.46,z],[x-.1,y+.6,z],[x+.1,y+.6,z],[x+.1,y+.46,z]],'#987e50',.025);
       drawBox(x,z+.14,y+.12,.2,.018,.23,['#496f50','#496f50','#496f50']);bagAppIcon(x,z+.16,y+.12,.23);
@@ -2073,6 +2078,11 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var ox=along==='x'?x0:along==='z'?x0:x1,oz=along==='x'?z0:along==='z'?z0:z1,o=project(ox,.01,oz);
     var u=along==='x'?project(x1,.01,oz):project(ox,.01,along==='z'?z1:z0),v=along==='x'?project(ox,.01,z1):project(along==='-z'?x0:x1,.01,oz);
     ctx.save();ctx.transform((u.x-o.x)/W,(u.y-o.y)/W,(v.x-o.x)/H,(v.y-o.y)/H,o.x,o.y);ctx.drawImage(img,0,0);ctx.restore();return true;
+  }
+  // Map a flat render on to any world plane: image (0,0) lands on world point o, its right edge on u, its bottom on v.
+  function drawPlaneSprite(img,o,u,v){
+    if(!img)return false;var W=img.naturalWidth,H=img.naturalHeight,po=project(o[0],o[1],o[2]),pu=project(u[0],u[1],u[2]),pv=project(v[0],v[1],v[2]);
+    ctx.save();ctx.transform((pu.x-po.x)/W,(pu.y-po.y)/W,(pv.x-po.x)/H,(pv.y-po.y)/H,po.x,po.y);ctx.drawImage(img,0,0);ctx.restore();return true;
   }
   function drawDeckSprite(now,name){
     var api=sunnyApi(now),img=shellSprite(name)&&spriteImage(name);if(!img)return false;
@@ -2533,10 +2543,13 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
         if(slabTop){ctx.save();ctx.globalAlpha*=.75;poly(slabTop,surfaceTexture());ctx.restore()}
       }
       if(fi>0){
-        // Warm oak fascia with a slim black steel edge beneath each mezzanine.
+        // Warm oak fascia with a slim black steel edge beneath each mezzanine; in the sprite shop the rendered slab edge
+        // (cream slab lip over an oak beam) is sheared on to the front edge instead.
+        if(!(SHOP_SPRITES&&shellSprite('shell.slab.edge.left')&&drawPlaneSprite(spriteImage('shell.slab.edge.left'),[left,.04,front+.03],[right,.04,front+.03],[left,-.3,front+.03]))){
         drawBox(0,front+.015,-.23,floor.w,.16,.19,['#bb9366','#785438','#a57b50']);
         drawBox(0,front+.035,-.27,floor.w,.18,.045,metal);
         for(var grain=0;grain<3;grain++)worldLine([[left+.1,-.18+grain*.044,front+.1],[right-.1,-.18+grain*.044,front+.1]],'#d0ac793c',.012);
+        }
       }
       // Material seams, a rear forest-green wall, and warm recessed strip lighting.
       if(fi>0)for(var seam=left+.8;seam<right;seam+=.9)worldLine([[seam,.015,rear],[seam,.015,front]],fi===1?'#71593b18':'#72796c12',.014);
@@ -3205,8 +3218,9 @@ if(!SHOP_SPRITES){
     groundPatch(-10.1,roomZ,2.3,roomD,'#2a1b22');
     if(SHOP_SPRITES&&fixtureSprite('lounge.sofa')&&fixtureSprite('lounge.rug.floor')){
       // Sprite shop: the v2 plum sofas, walnut coffee and lamp tables on a plum rug (the rug turned to run along z).
-      var lapi=sunnyApi(sceneTime),rug=spriteImage('lounge.rug.floor'),r0=project(-10.85,0,-5.25),r1=project(-9.35,0,-2.95),rw=Math.abs(r1.x-r0.x)+unit*.25;
-      ctx.save();var rc=project(-10.1,0,-4.1);ctx.translate(rc.x,rc.y);ctx.scale(-1,1);ctx.drawImage(rug,-rw/2,-rw*rug.naturalHeight/rug.naturalWidth/2,rw,rw*rug.naturalHeight/rug.naturalWidth);ctx.restore();
+      var lapi=sunnyApi(sceneTime),rug=spriteImage('lounge.rug.floor');
+      // The top-down v2 rug laid on the floor plane, its long side running along z between the two sofas.
+      drawPlaneSprite(rug,[-10.95,.01,-5.3],[-10.95,.01,-2.9],[-9.25,.01,-5.3]);
       drawBoxSprite(lapi,'lounge.sofa',-10.9,-9.3,-6.15,-5.55,0,1,true);
       drawBoxSprite(lapi,fixtureSprite('lounge.coffee.table'),-10.55,-9.65,-4.35,-3.85,0,.4,true);
       drawBoxSprite(lapi,'lounge.sofa',-10.9,-9.3,-2.65,-2.05,0,1,true);
