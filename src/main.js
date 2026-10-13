@@ -1278,11 +1278,12 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // A low dark-green tiled wall with a cream cap, drawn on its true footprint (the sprite shop's divider and store edge).
   // Every drawn tile face in the sprite shop uses the one scheme of the wall renders: slim vertical stack-bond tiles
   // in the storefront emerald, light grout, and a brass rail where a cream cap or plaster sits on them.
-  var TILE_PITCH=.16,TILE_GROUT='#cfdcc4',TILE_BRASS=['#dcc48e','#8d7446','#b99c62'];
+  var TILE_PITCH=.2,TILE_GROUT='#cfdcc4',TILE_BRASS=['#dcc48e','#8d7446','#b99c62'];
   function tiledLowWall(cx,cz,w,d,h){
     drawBox(cx,cz,0,w,d,h,SHOP_GREEN_TILE);
     var f=cz+d/2+.004;
     for(var tx=cx-w/2+TILE_PITCH;tx<cx+w/2-.04;tx+=TILE_PITCH)worldLine([[tx,.02,f],[tx,h-.08,f]],TILE_GROUT,.012);
+    worldLine([[cx-w/2,(h-.07)/2,f],[cx+w/2,(h-.07)/2,f]],TILE_GROUT,.012);
     drawBox(cx,cz,h-.07,w+.04,d+.05,.07,TILE_BRASS);
     drawBox(cx,cz,h,w+.1,d+.12,.1,['#ece2c8','#b3a78a','#d2c6a6']);
   }
@@ -2129,6 +2130,12 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var u=along==='x'?project(x1,.01,oz):project(ox,.01,along==='z'?z1:z0),v=along==='x'?project(ox,.01,z1):project(along==='-z'?x0:x1,.01,oz);
     ctx.save();ctx.transform((u.x-o.x)/W,(u.y-o.y)/W,(v.x-o.x)/H,(v.y-o.y)/H,o.x,o.y);ctx.drawImage(img,0,0);ctx.restore();return true;
   }
+  // A door render pinned by its two post feet (image points) to world points on its wall line: the posts stay upright
+  // and the render keeps its own proportions, so it is never stretched over a screen box.
+  function pinnedDoor(name,x,z){
+    if(!shellSprite(name))return false;var img=spriteImage(name),p0=project(x-.95,0,z+.12),p1=project(x+.95,0,z+.12),u0=103,v0=455,u1=413,v1=619;
+    var k=(p1.x-p0.x)/(u1-u0),shear=(p1.y-p0.y-k*(v1-v0))/(u1-u0);ctx.save();ctx.transform(k,shear,0,k,p0.x-k*u0,p0.y-k*v0-shear*u0);ctx.drawImage(img,0,0);ctx.restore();return true;
+  }
   // Map a flat render on to any world plane: image (0,0) lands on world point o, its right edge on u, its bottom on v.
   // f0..f1 pick a horizontal band of the image (fractions of its height) so one render can be split across two planes.
   function drawPlaneSprite(img,o,u,v,f0,f1){
@@ -2515,11 +2522,11 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // Ground slab: the same on-screen margin past the wood floor on every edge. The floor is 23 × 17 around z = 1.5;
     // 1.5 units of overhang along x and 1.95 along z project to matching ~1.1-unit bands in this isometric view.
     // In the sunny prototype the slab is flush with the surrounding plaza, so it has no visible sides or kerb ring.
-    if(SUNNY)drawBox(0,1.5,-.012,26,20.9,.012,['#d2c8ab','#68695d','#8e8c7b']);else drawBox(0,1.5,-.32,26,20.9,.32,['#bfbcab','#68695d','#8e8c7b']);
+    if(!SUNNY)drawBox(0,1.5,-.32,26,20.9,.32,['#bfbcab','#68695d','#8e8c7b']);
     // The margin reads as a perimeter sidewalk: scored concrete panels with a darker kerb band along the outer edge.
-    var score=SUNNY?'#b5aa8c':'#a3a08f';
-    for(var jx=-11.5;jx<13;jx+=1.5)worldLine([[jx,.006,-8.95],[jx,.006,11.95]],score,.02);
-    for(var jz=-7.5;jz<11.95;jz+=1.5)worldLine([[-13,.006,jz],[13,.006,jz]],score,.02);
+    var score='#a3a08f';
+    if(!SUNNY){for(var jx=-11.5;jx<13;jx+=1.5)worldLine([[jx,.006,-8.95],[jx,.006,11.95]],score,.02);
+    for(var jz=-7.5;jz<11.95;jz+=1.5)worldLine([[-13,.006,jz],[13,.006,jz]],score,.02);}
     if(!SUNNY){groundPatch(0,-8.95+.17,26,.34,'#aca997');groundPatch(0,11.95-.17,26,.34,'#aca997');
     groundPatch(-13+.17,1.5,.34,20.9,'#aca997');groundPatch(13-.17,1.5,.34,20.9,'#aca997');
     worldLine([[-13,.02,-8.95],[13,.02,-8.95],[13,.02,11.95],[-13,.02,11.95],[-13,.02,-8.95]],'#8f8c7b',.03);}
@@ -2532,7 +2539,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // floors paint and drawn by the frame after them, so a guest walking behind a counter is hidden by it and one in
     // front stands on it.
     sceneJobs=[];var jobs=sceneJobs;
-    [{y:0,z:1.5,w:23,d:17,ids:[4,5]},{y:4.7,z:-2.55,w:18,d:8.2,ids:[3,2]},{y:9.4,z:-3.6,w:13,d:6.6,ids:[0,1]}].forEach(function(floor,fi){
+    [{y:0,z:1.5,w:23,d:17,ids:[4,5]},{y:4.7,z:-2.95,w:18,d:7.4,ids:[3,2]},{y:9.4,z:-3.6,w:13,d:6.6,ids:[0,1]}].forEach(function(floor,fi){
       sceneElevation=floor.y;
       var rear=floor.z-floor.d/2,front=floor.z+floor.d/2,left=-floor.w/2,right=floor.w/2;
       // The drawn pothos canopy has no Ludo counterpart and reads as a tangle of lines beside the sprites, so the sprite shop leaves it out.
@@ -2579,7 +2586,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
         }
         sceneElevation=floor.y;
       }
-      if(fi===0){drawCachedGround(floor);if(SHOP_SPRITES){var groundTex=floorPattern(sunnyApi(now),'herringbone',4);if(groundTex){var front=11.95;poly([project(-floor.w/2,0,floor.z-floor.d/2),project(floor.w/2,0,floor.z-floor.d/2),project(floor.w/2,0,front),project(-floor.w/2,0,front)],groundTex)}drawStoreFrontEdge(floor);jobs.push({depth:depthOf({x:-7.5,z:11.95}),draw:function(){tiledLowWall((-10.45-4.6)/2,11.95-.26,5.85,.32,1.05)}})}drawSideAislePlanter()}
+      if(fi===0){drawCachedGround(floor);if(SHOP_SPRITES){var groundTex=floorPattern(sunnyApi(now),'herringbone',4);if(groundTex){var front=11.95;poly([project(-floor.w/2,0,floor.z-floor.d/2),project(floor.w/2,0,floor.z-floor.d/2),project(floor.w/2,0,front),project(-floor.w/2,0,front)],groundTex)}drawStoreFrontEdge(floor);if(!drawFlatSprite('shell.mat.entrance',-11.1,-10.2,9.05,11.35,'z'))groundPatch(-10.65,10.2,.9,2.2,'#3f5f4c');jobs.push({depth:depthOf({x:-11.3,z:11.53}),draw:function(){tiledLowWall((-11.3-4.6)/2,11.95-.26,6.7,.32,1.05)}})}drawSideAislePlanter()}
 
       else{
         // One continuous floor outline includes the stair landing, with no internal slab edge.
@@ -3036,7 +3043,7 @@ if(!SHOP_SPRITES){
       });
       // The exit door's frame stands in the rear wall line: its outer post feet (image points measured on the sprite;
       // the open leaf swings below them) are pinned to x 9.1 and 11.4 on z -7, posts kept upright.
-      add(10.25,-6.86,function(){var name=shellSprite('shell.door.exit');if(!name)return;var img=spriteImage(name),p0=project(9.1,0,-7),p1=project(11.4,0,-7),u0=75,v0=360,u1=251,v1=441;
+      add(10.25,-6.86,function(){var name=shellSprite('shell.door.exit.v2')||shellSprite('shell.door.exit');if(!name)return;var v2=name==='shell.door.exit.v2',img=spriteImage(name),p0=project(9.1,0,-7),p1=project(11.4,0,-7),u0=v2?45:75,v0=v2?529:360,u1=v2?255:251,v1=v2?616:441;
         var k=(p1.x-p0.x)/(u1-u0),shear=(p1.y-p0.y-k*(v1-v0))/(u1-u0);ctx.save();ctx.transform(k,shear,0,k,p0.x-k*u0,p0.y-k*v0-shear*u0);ctx.drawImage(img,0,0);ctx.restore()});
     }else{
     // Glazed storefront bays continue the door frame behind the kiosk row.
@@ -3135,7 +3142,7 @@ if(!SHOP_SPRITES){
     jobs.push({depth:depthOf({x:exitX,z:exitZ-.3})+.05,draw:function(){var e=exteriorFixtures.exitLamp;haloLight(e.x,e.y-.14,e.z,.7,.18,'#ffe2a5')}});
     // Threshold and welcome mat lie on the actual customer approach.
     // Sprite shop: one mat filling the doorway, from the kerb line to the timber floor, with no loose brass strip.
-    jobs.push({depth:-Infinity,draw:function(){if(SHOP_SPRITES){if(!drawFlatSprite('shell.mat.entrance',x-.45,x+.45,z-.95,z+1.35,'z'))groundPatch(x,z+.2,.9,2.2,'#3f5f4c');return}groundPatch(x-.8,z,1.6,2,'#314d3d');drawBox(x,z,.025,.34,2.5,.06,brass)}});
+    if(!SHOP_SPRITES)jobs.push({depth:-Infinity,draw:function(){groundPatch(x-.8,z,1.6,2,'#314d3d');drawBox(x,z,.025,.34,2.5,.06,brass)}});
     // The door posts run straight to the slab: a wider brass foot block read as a loose crate beside the ID desk.
     if(!SHOP_SPRITES){
     [z-1.2,z+1.2].forEach(function(edge){add(x,edge,function(){drawBox(x,edge,0,.26,.26,3.3,frame)})});
@@ -3271,7 +3278,7 @@ if(!SHOP_SPRITES){
       f+=.004;
       var pitch=SHOP_SPRITES?TILE_PITCH:.24,lo=Math.min(a0,a1),hi=Math.max(a0,a1);
       for(var s0=lo+pitch;s0<hi-.04;s0+=pitch)worldLine(alongZ?[[f,0,s0],[f,LOUNGE_TILE-.06,s0]]:[[s0,0,f],[s0,LOUNGE_TILE-.06,f]],SHOP_SPRITES?TILE_GROUT:seam,.012);
-      if(SHOP_SPRITES)worldLine(alongZ?[[f,LOUNGE_TILE-.03,lo],[f,LOUNGE_TILE-.03,hi]]:[[lo,LOUNGE_TILE-.03,f],[hi,LOUNGE_TILE-.03,f]],TILE_BRASS[0],.05);
+      if(SHOP_SPRITES){worldLine(alongZ?[[f,LOUNGE_TILE/2,lo],[f,LOUNGE_TILE/2,hi]]:[[lo,LOUNGE_TILE/2,f],[hi,LOUNGE_TILE/2,f]],TILE_GROUT,.012);worldLine(alongZ?[[f,LOUNGE_TILE-.03,lo],[f,LOUNGE_TILE-.03,hi]]:[[lo,LOUNGE_TILE-.03,f],[hi,LOUNGE_TILE-.03,f]],TILE_BRASS[0],.05)}
       else worldLine(alongZ?[[f,LOUNGE_TILE*.5,a0],[f,LOUNGE_TILE*.5,a1]]:[[a0,LOUNGE_TILE*.5,f],[a1,LOUNGE_TILE*.5,f]],seam,.014);
     }
     // The room seen from above, past the mezzanine's edge: a plum floor, a rug, two velvet sofas and lamp tables.
@@ -3314,7 +3321,6 @@ if(!SHOP_SPRITES){
     drawBox(-11.34,roomZ,0,.32,roomD,H,plaster);
     tileFace(true,-7,face,-11.18);
     drawBox(rx,roomZ,0,.32,roomD,H,plaster);
-    tileFace(true,-7,face,rx+.16);
     // The back door: a taller, wider opening than the entrance, dark inside so the drapes never open on to the wall's
     // tiles, with the same velvet pair and pelmet over it.
     var ez=LOUNGE_EXIT.z,eh=2.84,ew=.92;
@@ -3330,15 +3336,17 @@ if(!SHOP_SPRITES){
     if(!SHOP_SPRITES){drawBox(side.x,sideZ,0,.26,sideD,H,plaster);tileFace(true,side.z0,side.z1,side.x+.13)}
     // Facade: jamb and header around the doorway, the wall to its right and past the shelving, tiled below.
     if(rise>0){ctx.save();ctx.globalAlpha=.15+.85*(1-rise)}
-    drawBox(dx-.94,zc,0,.48,fd,H,plaster);drawBox(dx,zc,2.5,1.4,fd,H-2.5,plaster);drawBox((dx+.7-6.7)/2,zc,0,-6.7-(dx+.7),fd,H,plaster);drawBox((6.7+rx)/2,zc,0,rx-6.7,fd,H,plaster);
-    [[dx-1.18,dx-.7],[dx+.7,-6.7],[6.7,rx]].forEach(function(run){tileFace(false,run[0],run[1],face)});
+    drawBox(dx-.94,zc,0,.48,fd,H,plaster);drawBox(dx,zc,2.5,1.4,fd,H-2.5,plaster);drawBox((dx+.7-6.7)/2,zc,0,-6.7-(dx+.7),fd,H,plaster);drawBox((6.7+rx+.16)/2,zc,0,rx+.16-6.7,fd,H,plaster);
+    [[dx-1.18,dx-.7],[dx+.7,-6.7],[6.7,rx+.16]].forEach(function(run){tileFace(false,run[0],run[1],face)});
+    // The right end wall's tile band goes on after the facade so its corner is tiled on both faces, with no bare plaster strip.
+    tileFace(true,-7,face,rx+.16);
     worldLine([[dx-.74,.02,face+.02],[dx-.74,2.54,face+.02],[dx+.74,2.54,face+.02],[dx+.74,.02,face+.02]],'#171e1a',.07);
-    if(open&&SHOP_SPRITES&&drawSpan(sunnyApi(sceneTime),shellSprite('shell.lounge.door.open'),dx-.62,face,dx+.8,face,2.55)){
+    if(open&&SHOP_SPRITES&&pinnedDoor('shell.lounge.door.open',dx,face)){
       // Sprite shop: the burgundy drapes tied back from the lit lounge doors (ChatGPT redo of the 45° render).
     }else if(open){
       drawLoungeDrapes(1,loungeCurtain);
       drawBox(dx,face-.05,2.44,1.5,.1,.14,['#4a1b29','#2b0d16','#3b1420']);
-    }else if(SHOP_SPRITES&&drawSpan(sunnyApi(sceneTime),shellSprite('shell.lounge.door.closed'),dx-.62,face,dx+.8,face,2.55)){
+    }else if(SHOP_SPRITES&&pinnedDoor('shell.lounge.door.closed',dx,face)){
       // Sprite shop: the 45° Ludo lounge door, when it has been rendered.
     }else if(SHOP_SPRITES){
       // Sprite shop: a closed forest-green door in the storefront's colours, two inset panels, brass handle and kick
@@ -3526,6 +3534,8 @@ if(!SHOP_SPRITES){
       c.walkAmount=(c.walkAmount||0)+(strideTarget-(c.walkAmount||0))*(1-Math.exp(-frameDelta*10));
       var previousFacing=c.facing===undefined?.3:c.facing;
       var direction=distance>.001?Math.max(-1,Math.min(1,rotate(dx,dz).x/distance)):(c.facing===undefined?.3:c.facing);
+      // At the kiosk head a customer turns to the screen beside them (up-left of where they stand) for as long as they order.
+      if(distance<=.001&&c.phase==='kiosk'&&!c.ordered&&c.laneDistance!==null&&c.laneDistance<.05)direction=-1;
       c.facing=(c.facing===undefined?direction:c.facing)+(direction-(c.facing===undefined?direction:c.facing))*(1-Math.exp(-frameDelta*8));
       c.turnLean=(c.turnLean||0)+((c.facing-previousFacing)*1.5-(c.turnLean||0))*(1-Math.exp(-frameDelta*12));
       var serviceIndex=c.ordered?5:4,serviceTarget=c.serviceStation===serviceIndex?Math.min(1,(c.serviceElapsed||0)/economy.customerHandoff(serviceIndex,state.lines[serviceIndex],counterServiceDuration(serviceIndex))):0;
@@ -3636,7 +3646,9 @@ if(!SHOP_SPRITES){
         for(var n=0;n<5;n++){var q=project(8+n*.5,3.2,6);ellipse(q.x,q.y,unit*.16,unit*.23,color);}
       }});
     }
-    jobs.sort(function(a,b){return a.depth-b.depth});jobs.forEach(function(job){job.draw()});
+    // Ground coverings share an infinite depth, and Infinity minus Infinity is NaN, which broke the sort on some frames
+    // (the entrance mat then painted over the store-front wall), so compare instead of subtracting.
+    jobs.sort(function(a,b){return a.depth<b.depth?-1:a.depth>b.depth?1:0});jobs.forEach(function(job){job.draw()});
     drawDeliveryDrones(frameDelta,now);
     var nightT=render.nightT||0;
     if(SUNNY)drawSunnyWorld(sunnyApi(now),true,SHOP_SPRITES?1:1-nightT);

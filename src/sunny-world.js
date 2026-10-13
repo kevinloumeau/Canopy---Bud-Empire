@@ -335,7 +335,8 @@ function streetShadows(api, front) {
   const rear = ([x, z]) => z < -9 || x < -13;
   if (!front) FAR_TREES.concat(NEAR_TREES).forEach(([x, z]) => { softShadow(api, x, P, z, .9, .9, .35); softShadow(api, x + 1.5, P, z - .3, 2.2, 1.8, .2); });
   LAMPS.filter(l => rear(l) !== front).forEach(([x, z]) => { softShadow(api, x, P, z, .35, .35, .45); softShadow(api, x + 1.6, P, z - .3, 1.6, .35, .16); });
-  if (front) [[18, -6], [18, 6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => groundShadow(api, x, P, z, .55, 1.4, 1));
+  // Planters get a tight contact shadow under their base; a cast shadow out to the side made them read as floating.
+  if (front) [[18, -6], [18, 6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => softShadow(api, x + .05, P, z + .05, 1.25, .55, .3));
   if (front) groundShadow(api, 0, P, 16.5, 1.2, .35, .9);
   if (front) groundShadow(api, 18, P, 0, .35, 1.2, .9);
 }
