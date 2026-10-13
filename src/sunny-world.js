@@ -186,6 +186,7 @@ export function drawSunnyWorld(api, front, alpha) {
     crossing(api, quad, 'x', 21.5, -8); crossing(api, quad, 'z', -22.5, 4); crossing(api, quad, 'x', -18.5, 8);
     [[22.5, -18.5], [-22.5, 21.5], [22.5, 21.5]].forEach(([x, z]) => { crossing(api, quad, 'x', z, x - 5.5); crossing(api, quad, 'x', z, x + 5.5); crossing(api, quad, 'z', x, z - 5.5); crossing(api, quad, 'z', x, z + 5.5); });
     // Buildings, trees, props, cars and walkers share one depth sort, so a car on the far street never paints over a near tree.
+    streetShadows(api, false);
     const jobs = [];
     const at = (x, z, f) => jobs.push([x, z, f]);
     BUILDINGS.forEach(b => at(b[0], b[1], () => building(api, b)));
@@ -197,6 +198,7 @@ export function drawSunnyWorld(api, front, alpha) {
     drawCars(api, true, at); drawWalkers(api, true, at);
     byDepth(jobs).forEach(j => j[2]());
   } else {
+    streetShadows(api, true);
     const jobs = [];
     const at = (x, z, f) => jobs.push([x, z, f]);
     LAMPS.filter(([x, z]) => !(z < -9 || x < -13)).forEach(([x, z]) => at(x, z, () => lamp(api, x, z)));
@@ -292,6 +294,24 @@ function building(api, [x, z, w, d, h, wall, awning]) {
   api.poly([p(x0, P + h + .3, z0), p(x1, P + h + .3, z0), p(x1, P + h + .3, z1), p(x0, P + h + .3, z1)], haze);
 }
 
+// Soft cast shadow on the ground plane, thrown down-right away from the sprites' upper-left key light. The ground is
+// an affine image of the world plane, so a circle under that transform lies flat on it (no canvas filter, which
+// Safari lacks).
+function softShadow(api, x, y, z, r, alpha, stretch) {
+  const o = api.project(x, y, z), ex = api.project(x + 1, y, z), ez = api.project(x, y, z + 1), ctx = api.ctx;
+  ctx.save(); ctx.transform(ex.x - o.x, ex.y - o.y, ez.x - o.x, ez.y - o.y, o.x, o.y); ctx.scale(stretch || 1, 1);
+  // Stacked rings rather than a radial gradient, which renders unreliably under this skewed transform.
+  ctx.fillStyle = 'rgb(44,52,34)'; ctx.globalAlpha *= alpha * .2;
+  for (let k = 0; k < 10; k++) { ctx.beginPath(); ctx.arc(0, 0, r * (1 - k * .085), 0, Math.PI * 2); ctx.fill(); }
+  ctx.restore();
+}
+function streetShadows(api, front) {
+  const rear = ([x, z]) => z < -9 || x < -13;
+  if (!front) FAR_TREES.concat(NEAR_TREES).forEach(([x, z]) => softShadow(api, x + 1.6, P, z + .2, 2.7, .34, 1.35));
+  LAMPS.filter(l => rear(l) !== front).forEach(([x, z]) => softShadow(api, x + 2, P, z, .8, .26, 3));
+  if (front) [[18, -6], [18, 6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => softShadow(api, x + .6, P, z, 1.5, .3, 1.4));
+  if (front) [[0, 16.5], [18, 0]].forEach(([x, z]) => softShadow(api, x + .5, P, z, 1.2, .26, 1.5));
+}
 function streetTree(api, x, z) {
   const p = api.project, u = api.unit;
   if (((Math.round(x) + Math.round(z)) & 3) === 1 && prop(api, 'street.tree.02', x, z)) return;
@@ -380,6 +400,7 @@ function car(api, x, z, along, color) {
   const variant = { '#e0564a': 'red', '#f4f1e4': 'white', '#4f8fd0': 'blue', '#f2c14e': 'yellow', '#6ea845': 'green', '#8a6fd1': 'white' }[color];
   const carName = (variant ? 'street.car.' + variant : 'street.van') + (ax ? '.fr' : '.fl');
   lazySprite(carName, 'sprites/street/' + carName + '.png', variant ? { w: 3.1, drop: .55 } : { w: 3.3, drop: .55 });
+  if (spriteReady(carName) || spriteReady('car')) softShadow(api, x + .6, G, z, ax ? 2.3 : 1.5, .34, ax ? 1.2 : 1.6);
   if (carName === 'street.car.red.fr' ? spriteReady('car') : spriteReady(carName)) {
     const ctx = api.ctx, q = api.project(x, G, z);
     ctx.save(); ctx.translate(0, q.y - api.project(x, 0, z).y);

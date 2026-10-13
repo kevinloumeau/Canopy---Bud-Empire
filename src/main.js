@@ -4010,7 +4010,11 @@ if(!SHOP_SPRITES){
     var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;
     try{
       ctx=art.getContext('2d',{willReadFrequently:true});unit=90;centerX=240;centerY=480;angle=.57;
-      if(index===-2)drawLoungeThumb(state.lounge);
+      // The sprite shop shows the station's own sprite, so the panel matches the room.
+      var spriteName=SHOP_SPRITES&&index!==-2?stationSprite(index<0?6:index,index<0?state.idStaff:state.lines[index]):null,spriteArt=spriteName&&spriteImage(spriteName);
+      if(SHOP_SPRITES&&index!==-2&&!spriteArt)key=''; // repaint once the sprite has loaded
+      if(spriteArt){var fit=Math.min(440/spriteArt.naturalWidth,560/spriteArt.naturalHeight);ctx.drawImage(spriteArt,240-spriteArt.naturalWidth*fit/2,580-spriteArt.naturalHeight*fit,spriteArt.naturalWidth*fit,spriteArt.naturalHeight*fit)}
+      else if(index===-2)drawLoungeThumb(state.lounge);
       else if(index<0){drawBox(0,0,-.24,2.6,2.6,.24,['#cbb085','#7f6a4b','#ac9168']);drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5']);drawPerson(-.55,-.45,0,7,false,true,false)}
       else drawStage({x:0,z:0},index,0,true);
       var pixels=ctx.getImageData(0,0,art.width,art.height).data,left=480,right=0,top=600,bottom=0;
