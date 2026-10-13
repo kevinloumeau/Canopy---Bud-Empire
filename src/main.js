@@ -696,7 +696,10 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   function releasePanKeys(){for(var code in heldPanKeys)delete heldPanKeys[code]}
   function rotate(x,z){var c=Math.cos(angle),s=Math.sin(angle);return{x:x*c-z*s,z:x*s+z*c}}
-  function project(x,y,z){var r=rotate(x,z);return{x:centerX+r.x*unit,y:centerY+r.z*unit*.5-(y+sceneElevation)*unit,depth:r.z}}
+  // The sprite art is rendered with floor edges at about 30°, so the sprite shop flattens the floor plane by tan 30°
+  // rather than the classic 2:1 (26.6°) the drawn shop uses.
+  var FLOOR_SQUASH=SHOP_SPRITES?Math.tan(Math.PI/6):.5;
+  function project(x,y,z){var r=rotate(x,z);return{x:centerX+r.x*unit,y:centerY+r.z*unit*FLOOR_SQUASH-(y+sceneElevation)*unit,depth:r.z}}
   // Gradients are rebuilt identically every frame while the camera is still, so reuse them per context, keyed by colour
   // and quarter-pixel geometry. The map is cleared when it grows large, so moving objects cannot leak entries.
   var gradientCaches=new WeakMap(),gradientCtx=null,gradientMap=null,hexCache=new Map();
@@ -2231,6 +2234,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // Hanging planters and fine trails sit against the back wall, leaving sightlines open.
     for(var basket=0;basket<2;basket++){
       var hx=fi===2?(-2+basket*4):(-7+basket*12),hz=rear+.9;
+      var basketArt=SHOP_SPRITES&&shellSprite('shell.planter.hanging')&&spriteImage('shell.planter.hanging');
+      if(basketArt){var hook=project(hx,3.95,hz),bh=unit*2.2,bw=bh*basketArt.naturalWidth/basketArt.naturalHeight;ctx.drawImage(basketArt,hook.x-bw/2,hook.y,bw,bh);continue}
       worldLine([[hx,3.85,hz],[hx,3.1,hz]],'#343f33',.022);
       drawBox(hx,hz,2.85,.58,.5,.3,['#b6ac8a','#615e4a','#8c8667']);
       for(var vine=0;vine<5;vine++){
@@ -2850,7 +2855,7 @@ if(!SHOP_SPRITES){
       groundPatch(-12.4,7.1,.65,.7,'#c7d6a754');
       worldLine([[-12.7,.04,7.45],[-12.1,.04,7.45]],'#e5d7ae',.05);
     }});
-    if(!state.doorBuilt){jobs.push({depth:depthOf({x:x,z:z}),draw:function(){drawConstructionSite(x,z,1.5,2.1,function(){drawBox(x,z,0,.64,1.25,.12,steel);drawBox(x,z,.12,.6,1.2,.85,wood);drawBox(x,z,.97,.78,1.38,.13,['#efe4c8','#a9a18c','#d4c7a6'])})}});return}
+    if(!state.doorBuilt){jobs.push({depth:depthOf({x:x,z:z}),draw:function(){if(SHOP_SPRITES&&drawSprite(sunnyApi(now),fixtureSprite('station.security.site'),x,z))return;drawConstructionSite(x,z,1.5,2.1,function(){drawBox(x,z,0,.64,1.25,.12,steel);drawBox(x,z,.12,.6,1.2,.85,wood);drawBox(x,z,.97,.78,1.38,.13,['#efe4c8','#a9a18c','#d4c7a6'])})}});return}
     // In the sprite shop the doorman stands a step further back so the wider figure clears the desk.
     var guardX=SHOP_SPRITES?x+.85:x+.7,guardZ=SHOP_SPRITES?z-.55:z;
     jobs.push({depth:depthOf({x:guardX,z:guardZ}),draw:function(){drawPerson(guardX,guardZ,now,SUNNY?6:4,false,true,false)}});
@@ -2878,6 +2883,7 @@ if(!SHOP_SPRITES){
   // after the boards, so the interior stands in front of it while it still fronts the outside queue.
   function drawSideAislePlanter(){
     var x=-10.65;
+    if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),shellSprite('shell.planter.aisle'),x-1.05,x-.1,2,5.6,0,3.6,true))return;
     // The planter runs the glazed bays and a little past their rear pilaster, stopping well clear of the smoking
     // lounge, whose left end stands in the aisle beyond (its wall would otherwise paint over the planter's end).
     var px=x-.55,pz=3.8,len=3.6,tile=SHOP_GREEN_TILE,metal=['#414440','#191e1c','#2b302d'];
@@ -3474,6 +3480,7 @@ if(!SHOP_SPRITES){
     if(festival.joined&&festival.open&&!festival.claimed){
       jobs.push({depth:depthOf({x:9,z:6}),draw:function(){
         var color=festival.slot%3===0?'#e3bc7d':festival.slot%3===1?'#b3a4c8':'#afbc75';
+        if(SHOP_SPRITES&&drawSprite(sunnyApi(now),fixtureSprite('event.festival.stall'),9,6.2)){drawPerson(9,5,now,18,false,false,false);return}
         drawBox(9,6,0,2,1.2,1,['#c2a073','#7a5a40','#a3815b']);
         for(var k=0;k<3;k++){if(festival.slot%3===2)plant(8.4+k*.6,6,1,.6);else jar(8.4+k*.6,6,1,k+1);}
         drawPerson(9,5,now,18,false,false,false);
