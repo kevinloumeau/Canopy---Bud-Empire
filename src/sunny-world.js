@@ -45,34 +45,40 @@ const STAFF_FOR_LINE = [2, 2, 2, 1, 1, 1, 3, 1]; // seeds/grow/harvest growers, 
 // Every figure sits on the same 448x640 canvas, 600 px tall with its feet 8 px above the bottom edge.
 // Figures are drawn 2.3 units tall: the Ludo counters and cars came out chunky, and true-to-life people looked like toys beside them.
 const PERSON_SIZE = { h: 2.3 * 640 / 600, drop: 2.3 * 8 / 600 + .03 };
-const CYCLE_07 = 35;
+// people-complete-v3: every customer and walker also comes as 224x320 variants, posed stand/walk, with or without the
+// pickup bag in hand, facing left or right (so no mirroring). Figures are about 295 px tall with their feet 5 px up.
+const PERSON_V3_SIZE = { h: 2.3 * 320 / 295, drop: 2.3 * 5 / 295 + .03 };
 function hashId(n) { n = Math.imul((n | 0) + 1, 0x9e3779b1) >>> 0; n = Math.imul(n ^ (n >>> 15), 0x45d9f3b) >>> 0; return (n ^ (n >>> 16)) >>> 0; }
 function personName(role, nn, walking) { return 'person.' + role + '.0' + nn + '.' + (walking ? 'walk' : 'stand'); }
+// Walkers on the pavement carry a pickup bag by a stable identity, as if they had just left the shop.
+export function walkerHasBag(identity) { return hashId(identity) % 3 === 0; }
 // Draws a sprite figure in place of a code-drawn one. Walking alternates the stand and stride frames on the step
-// cycle; facing < 0 mirrors it, since every sprite faces front-right. Returns false until the frame has loaded.
-export function drawPersonSprite(api, x, z, identity, employee, facing, phase, amount) {
+// cycle. Customers and walkers pick the left- or right-facing variant from the sign of `facing` and carry the pickup
+// bag when `bag` is set; staff only exist as the original front-right renders, so they are mirrored to face the
+// floor. Returns false until a frame has loaded.
+export function drawPersonSprite(api, x, z, identity, employee, facing, phase, amount, bag) {
   let role = employee ? 'staff' : 'customer', nn;
   if (employee) nn = STAFF_FOR_LINE[identity] || 1;
   else if (identity < 0) { role = 'walker'; nn = CAST.walker[(-identity) % CAST.walker.length]; if (nn === 7) role = 'customer'; }
   else nn = CAST.customer[hashId(identity) % CAST.customer.length];
   const walking = amount > .3 && Math.floor(phase / Math.PI) % 2 === 0;
-  let name = personName(role, nn, walking);
+  let name = personName(role, nn, walking), flip = employee ? facing >= 0 : facing < 0;
   const base = personName(role, nn, false);
-  // Customer 07 has a full 35-frame Ludo walk cycle (about 18 frames a stride); the others still swap stand and stride.
-  if (role === 'customer' && nn === 7 && amount > .3) {
-    const f = (((Math.floor(phase * 9 / Math.PI) % CYCLE_07) + CYCLE_07) % CYCLE_07), cycle = 'person.customer.07.cycle.' + (f < 10 ? '0' : '') + f;
-    lazySprite(cycle, 'sprites/people/cycle/' + cycle + '.png', PERSON_SIZE);
-    if (spriteReady(cycle)) name = cycle;
-    else for (let k = 0; k < CYCLE_07; k++) { const n = 'person.customer.07.cycle.' + (k < 10 ? '0' : '') + k; lazySprite(n, 'sprites/people/cycle/' + n + '.png', PERSON_SIZE); }
+  if (!employee) {
+    const v3 = personName(role, nn, walking) + (bag ? '.bag' : '.empty') + (facing < 0 ? '.left' : '.right');
+    lazySprite(v3, 'sprites/people/' + v3 + '.png', PERSON_V3_SIZE);
+    if (spriteReady(v3)) { name = v3; flip = false; }
   }
-  lazySprite(name, 'sprites/people/' + name + '.png', PERSON_SIZE);
-  lazySprite(base, 'sprites/people/' + base + '.png', PERSON_SIZE);
-  const use = spriteReady(name) ? name : spriteReady(base) ? base : null;
-  if (!use) return false;
+  if (name === personName(role, nn, walking)) {
+    // Original single-direction renders, until the variant has loaded or when it is missing.
+    lazySprite(name, 'sprites/people/' + name + '.png', PERSON_SIZE);
+    lazySprite(base, 'sprites/people/' + base + '.png', PERSON_SIZE);
+    name = spriteReady(name) ? name : spriteReady(base) ? base : null;
+  }
+  if (!name) return false;
   const p = api.project(x, 0, z), u = api.unit;
   api.ellipse(p.x + u * .06, p.y + u * .03, u * .34, u * .1, 'rgba(14,28,20,.22)');
-  // Staff sprites are rendered facing the other way from the customers, so they are mirrored to face the floor.
-  return drawSprite(api, use, x, z, employee ? facing >= 0 : facing < 0);
+  return drawSprite(api, name, x, z, flip);
 }
 // Shop fixtures from the interior batch, sized in world units like the stations.
 const FIXTURE_SIZE = { 'station.security.site': { w: 2.2, drop: .45 }, 'event.festival.stall': { w: 2.6, drop: .45 }, 'station.orders.compact.tier1': { w: 2.15, drop: .45 }, 'station.orders.compact.tier2': { w: 2.15, drop: .45 }, 'station.orders.compact.tier3': { w: 2.2, drop: .45 }, 'shop.kiosk': { w: 1, drop: 0 }, 'shop.displaycase': { w: 4, drop: .55 }, 'shop.planter.small': { w: .95, drop: .12 },
@@ -459,7 +465,7 @@ function drawWalkers(api, back, at) {
       const ph = ((t * (.8 + k * .17) + k / n + wi * .31) % 1), f = ph < .5 ? ph * 2 : 2 - ph * 2;
       const px = x0 + (x1 - x0) * f, pz = z0 + (z1 - z0) * f;
       const dir = (x1 - x0) * (ph < .5 ? 1 : -1), stride = api.now * .009 + k * 1.7;
-      at(px, pz, () => { if (!drawPersonSprite(api, px, pz, -(wi * 3 + k + 1), false, dir, stride, api.now > 0 ? 1 : 0)) api.person(px, pz, 40 + wi * 7 + k, api.now > 0); });
+      at(px, pz, () => { if (!drawPersonSprite(api, px, pz, -(wi * 3 + k + 1), false, dir, stride, api.now > 0 ? 1 : 0, walkerHasBag(wi * 3 + k + 1))) api.person(px, pz, 40 + wi * 7 + k, api.now > 0); });
     }
   });
 }

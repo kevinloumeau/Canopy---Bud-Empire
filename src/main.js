@@ -1276,12 +1276,14 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     drawBox(cx,2.5,1.07,width+.12,.4,.11,['#e0d4b4','#a99c7b','#c5ba9a']);
   }
   // A low dark-green tiled wall with a cream cap, drawn on its true footprint (the sprite shop's divider and store edge).
+  // Every drawn tile face in the sprite shop uses the one scheme of the wall renders: slim vertical stack-bond tiles
+  // in the storefront emerald, light grout, and a brass rail where a cream cap or plaster sits on them.
+  var TILE_PITCH=.16,TILE_GROUT='#cfdcc4',TILE_BRASS=['#dcc48e','#8d7446','#b99c62'];
   function tiledLowWall(cx,cz,w,d,h){
-    var tile=['#2f6b4e','#143425','#1f4d37'],grout='#9fc4ad';
-    drawBox(cx,cz,0,w,d,h,tile);
+    drawBox(cx,cz,0,w,d,h,SHOP_GREEN_TILE);
     var f=cz+d/2+.004;
-    for(var tx=cx-w/2+.3;tx<cx+w/2-.05;tx+=.3)worldLine([[tx,.02,f],[tx,h-.02,f]],grout,.014);
-    for(var ty=.3;ty<h-.05;ty+=.3)worldLine([[cx-w/2,ty,f],[cx+w/2,ty,f]],grout,.014);
+    for(var tx=cx-w/2+TILE_PITCH;tx<cx+w/2-.04;tx+=TILE_PITCH)worldLine([[tx,.02,f],[tx,h-.08,f]],TILE_GROUT,.012);
+    drawBox(cx,cz,h-.07,w+.04,d+.05,.07,TILE_BRASS);
     drawBox(cx,cz,h,w+.1,d+.12,.1,['#ece2c8','#b3a78a','#d2c6a6']);
   }
   function drawOrderCounterBank(now,only){
@@ -1492,7 +1494,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   function drawPerson(x,z,now,id,moving,employee,bag,gait){
     // Sunny look: Ludo figures stand in for the drawn ones in the scene (thumbnails, drawn with now 0, keep the drawn style).
-    if(SUNNY&&now&&drawPersonSprite(sunnyApi(now),x,z,employee?id:(gait&&gait.identity!==undefined?gait.identity:id),employee,gait?gait.facing:.3,gait?gait.phase:now*.007+id,motionPreference.matches?0:(gait?gait.amount:(moving?1:0))))return;
+    if(SUNNY&&now&&drawPersonSprite(sunnyApi(now),x,z,employee?id:(gait&&gait.identity!==undefined?gait.identity:id),employee,gait?gait.facing:.3,gait?gait.phase:now*.007+id,motionPreference.matches?0:(gait?gait.amount:(moving?1:0)),!!bag))return;
     var reduced=motionPreference.matches,u=unit,p=project(x,0,z);
     var amount=reduced?0:(gait?gait.amount:(moving?1:0)),phase=gait?gait.phase:now*.007+id;
     var step=Math.sin(phase)*amount,bob=reduced?0:(Math.cos(phase*2)*.022*amount+Math.sin(now*.0018+id)*.009);
@@ -3267,8 +3269,10 @@ if(!SHOP_SPRITES){
       var f=at+.004,fill=alongZ?tile[2]:tile[1];
       poly(alongZ?[project(f,0,a0),project(f,0,a1),project(f,LOUNGE_TILE,a1),project(f,LOUNGE_TILE,a0)]:[project(a0,0,f),project(a1,0,f),project(a1,LOUNGE_TILE,f),project(a0,LOUNGE_TILE,f)],fill);
       f+=.004;
-      for(var s0=a0+.12;s0<a1-.06;s0+=.24)worldLine(alongZ?[[f,0,s0],[f,LOUNGE_TILE,s0]]:[[s0,0,f],[s0,LOUNGE_TILE,f]],seam,.015);
-      worldLine(alongZ?[[f,LOUNGE_TILE*.5,a0],[f,LOUNGE_TILE*.5,a1]]:[[a0,LOUNGE_TILE*.5,f],[a1,LOUNGE_TILE*.5,f]],seam,.014);
+      var pitch=SHOP_SPRITES?TILE_PITCH:.24,lo=Math.min(a0,a1),hi=Math.max(a0,a1);
+      for(var s0=lo+pitch;s0<hi-.04;s0+=pitch)worldLine(alongZ?[[f,0,s0],[f,LOUNGE_TILE-.06,s0]]:[[s0,0,f],[s0,LOUNGE_TILE-.06,f]],SHOP_SPRITES?TILE_GROUT:seam,.012);
+      if(SHOP_SPRITES)worldLine(alongZ?[[f,LOUNGE_TILE-.03,lo],[f,LOUNGE_TILE-.03,hi]]:[[lo,LOUNGE_TILE-.03,f],[hi,LOUNGE_TILE-.03,f]],TILE_BRASS[0],.05);
+      else worldLine(alongZ?[[f,LOUNGE_TILE*.5,a0],[f,LOUNGE_TILE*.5,a1]]:[[a0,LOUNGE_TILE*.5,f],[a1,LOUNGE_TILE*.5,f]],seam,.014);
     }
     // The room seen from above, past the mezzanine's edge: a plum floor, a rug, two velvet sofas and lamp tables.
     groundPatch(-10.1,roomZ,2.3,roomD,'#2a1b22');
@@ -3573,6 +3577,9 @@ if(!SHOP_SPRITES){
     // Front-of-house display: one long oak case along the front-right of the floor. A planter is built into each end
     // of the plinth, and between them a glass hood covers a back riser of jars with products and merch on the deck.
     function drawDisplayCase(x,z,width){
+      // Sprite shop: the case runs along the right wall in front of the exit, turned to face into the floor (the
+      // render mirrored, so its long glass side is the one the camera sees), per Kevin on 2026-10-13.
+      if(SHOP_SPRITES&&fixtureSprite('shop.displaycase')){var cx=10.05,cz=8.7;jobs.push({depth:depthOf({x:cx,z:cz}),draw:function(){softShadow(sunnyApi(now),cx,0,cz,1.4,2.6,.22);drawSprite(sunnyApi(now),'shop.displaycase',cx,cz,true)}});return}
       jobs.push({depth:depthOf({x:x,z:z}),draw:function(){
         if(SHOP_SPRITES&&drawSprite(sunnyApi(now),fixtureSprite('shop.displaycase'),x+.9,z,false))return;
         var oak=['#cfb184','#836949','#b09266'],stone=['#e2dfd0','#969c8e','#c3c8b8'],brass=['#d7c28b','#8c774c','#b7a16c'],half=width/2,bed=.95,inner=half-bed;
