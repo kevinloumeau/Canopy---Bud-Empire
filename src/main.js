@@ -2232,15 +2232,17 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // their frames, which meet as mullions.
     var api=sunnyApi(sceneTime),end=fi===0?9.05:right,kinds=fi===2?['wall.upper.right']:fi===0?['wall.tile.right','wall.window.right','wall.tile.right']:['wall.tile.right'];
     var n=Math.max(1,Math.round((end-left)/4)),step=(end-left)/n;
-    for(var k=0;k<n;k++){var kind=kinds[k%kinds.length],capped=kind.indexOf('tile')>=0;drawWallFace(api,'shell.'+kind,left+k*step,rear,left+(k+1)*step,rear,0,3.9,capped?.04:0,capped?.95:1)}
+    // The ground floor and mezzanine walls rise the full 4.7 to the slab above, so no daylight shows between them.
+    var wallH=fi===2?3.9:4.7;
+    for(var k=0;k<n;k++){var kind=kinds[k%kinds.length],capped=kind.indexOf('tile')>=0;drawWallFace(api,'shell.'+kind,left+k*step,rear,left+(k+1)*step,rear,0,wallH,capped?.04:0,capped?.95:1)}
     // Side walls along z: the image's left edge is the near (larger z) end.
     if(fi===2)drawWallFace(api,'shell.wall.upper.left',left,rear+3.5,left,rear,0,3.9);
-    if(fi===1)drawWallFace(api,'shell.wall.tile.left',left,rear+3.5,left,rear,0,3.9,.05,.96);
+    if(fi===1)drawWallFace(api,'shell.wall.tile.left',left,rear+3.5,left,rear,0,wallH,.05,.96);
   }
   // All-sprite shop: rear shelving, the product wall behind the counters and the stair flights from the shell batch.
   function drawShellShelves(fi,rear){
     var api=sunnyApi(sceneTime);
-    if(fi===2){drawSpan(api,shellSprite('shell.shelf.seedling.right'),-2.4,rear+.62,2.4,rear+.62,2.7);return}
+    if(fi===2)return; // the top floor's rear wall stays clear of shelving
     var runs=fi===1?[[-8.7,-4.35],[-4.35,0],[0,4.35],[4.35,8.7]]:[[-8.2,-3.8]];
     runs.forEach(function(r){drawWallFace(api,'shell.shelf.wall.right',r[0],rear+.5,r[1],rear+.5,0,3.3)});
   }
@@ -2252,7 +2254,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   function drawShellStairs(now){
     var api=sunnyApi(now);
-    drawBoxSprite(api,shellSprite('shell.stairs.upper'),6.5,8.2,-5.6,.7,4.7,9.4,true);
+    drawBoxSprite(api,shellSprite('shell.stairs.upper'),6.5,8.2,-5.6,.7,4.7,9.4,'height',.74);
     drawBoxSprite(api,shellSprite('shell.stairs.main'),9.1,10.7,-.8,4.2,0,4.7,'height',.74);
     drawSpan(api,shellSprite('shell.rail.glass.left'),8.93,-4.8,8.93,-1.75,1,4.7);
   }
@@ -2406,7 +2408,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       // In the sprite shop the canopy is Ludo's pothos curtain on its brass rail, hung under the top-floor soffit.
       if(fi===2&&SHOP_SPRITES&&shellSprite('shell.plant.hanging')){
         sceneElevation=0;var hangL=project(-2.3,9.1,-1.35),hangR=project(2.3,9.1,-1.35);
-        var vines=spriteImage('shell.plant.hanging'),vw=Math.abs(hangR.x-hangL.x)*1.04;ctx.drawImage(vines,(hangL.x+hangR.x)/2-vw/2,Math.min(hangL.y,hangR.y)-unit*.1,vw,vw*vines.naturalHeight/vines.naturalWidth);
+        var vines=spriteImage('shell.plant.hanging'),vw=Math.abs(hangR.x-hangL.x)*1.04;ctx.save();ctx.translate((hangL.x+hangR.x)/2,0);ctx.scale(-1,1);ctx.drawImage(vines,-vw/2,Math.min(hangL.y,hangR.y)-unit*.1,vw,vw*vines.naturalHeight/vines.naturalWidth);ctx.restore();
         sceneElevation=floor.y;
       }
       if(fi===2&&!SHOP_SPRITES){
@@ -2879,7 +2881,10 @@ if(!SHOP_SPRITES){
       [[0,.33,11.2],[.33,.9,10],[.9,1,8.8]].forEach(function(part){var zn=11.95,zf=8.67,za=zn-(zn-zf)*part[0],zb=zn-(zn-zf)*part[1];
         add(x,part[2],function(){drawWallFace(sunnyApi(sceneTime),'shell.storefront.door',x,za,x,zb,0,3.93,part[0],part[1])});
       });
-      add(10.25,-6.86,function(){drawBoxSprite(sunnyApi(sceneTime),shellSprite('shell.door.exit'),9.1,11.4,-7.1,-6.9,0,3.7)});
+      // The exit door's frame stands in the rear wall line: its outer post feet (image points measured on the sprite;
+      // the open leaf swings below them) are pinned to x 9.1 and 11.4 on z -7, posts kept upright.
+      add(10.25,-6.86,function(){var name=shellSprite('shell.door.exit');if(!name)return;var img=spriteImage(name),p0=project(9.1,0,-7),p1=project(11.4,0,-7),u0=75,v0=360,u1=251,v1=441;
+        var k=(p1.x-p0.x)/(u1-u0),shear=(p1.y-p0.y-k*(v1-v0))/(u1-u0);ctx.save();ctx.transform(k,shear,0,k,p0.x-k*u0,p0.y-k*v0-shear*u0);ctx.drawImage(img,0,0);ctx.restore()});
     }else{
     // Glazed storefront bays continue the door frame behind the kiosk row.
     for(var bay=0;bay<4;bay++)(function(start,end){
