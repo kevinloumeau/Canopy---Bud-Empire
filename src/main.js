@@ -636,6 +636,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(glCanvas&&glCanvas.style.display!==(wanted?'block':'none'))glCanvas.style.display=wanted?'block':'none';
   }
   var dpr=1,width=1,height=1,angle=SHOP_SPRITES||/[?&]cam=45\b/.test(location.search)?Math.PI/4:.57,zoom=1,panX=0,panY=0,centerX=0,centerY=0,unit=32;
+  // The sprite shop's plaster and tile take the storefront's emerald so the drawn walls match the glazing.
+  var SHOP_GREEN_PLASTER=SHOP_SPRITES?['#3f9468','#174f36','#226447']:['#698775','#314b40','#496a56'],SHOP_GREEN_TILE=SHOP_SPRITES?['#4a9a6e','#14482f','#1f5e40']:['#708b72','#2c4938','#4a6850'];
   var colors={bg:'#202226',floorTop:'#303238',floorLeft:'#1c1f23',floorRight:'#272a30',grid:'#41444a',beltEdge:'#111419',belt:'#313943',slat:'#5b6470',oliveTop:'#f4f5ec',oliveLeft:'#a9b6be',oliveRight:'#d5dce0',darkTop:'#56616a',darkLeft:'#252e36',darkRight:'#3b4650',metalTop:'#eef2f3',metalLeft:'#8b9ba8',metalRight:'#becbd4',acid:'#f5c344',orange:'#ff7628',boxTop:'#d3a36c',boxLeft:'#8e6741',boxRight:'#b17f50'};
   var machinePos=[{x:-3,z:-3,y:9.4},{x:3,z:-3,y:9.4},{x:3,z:-.3,y:4.7},{x:-3,z:-.3,y:4.7},{x:-4,z:2.5,y:0},{x:4,z:2.5,y:0}];
   // The front-of-house display case along the front-right of the shop floor, planters built into both ends.
@@ -2253,13 +2255,20 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var api=sunnyApi(sceneTime);
     if(fi===2)return; // the top floor's rear wall stays clear of shelving
     var runs=fi===1?[[-8.7,-4.35],[-4.35,0],[0,4.35],[4.35,8.7]]:[[-8.2,-3.8]];
-    runs.forEach(function(r){drawWallFace(api,'shell.shelf.wall.right',r[0],rear+.5,r[1],rear+.5,0,3.6)});
+    drawShelfRun(api,runs,rear+.95,3.6,.75);
+  }
+  // Oak carcasses first so the units stand out from the wall with a lit top and end panels, then the flat shelf
+  // fronts on their face plane.
+  var SHELF_OAK=['#e2bf8c','#b98a57','#cfa16c'];
+  function drawShelfRun(api,runs,face,h,d){
+    runs.forEach(function(r){drawBox((r[0]+r[1])/2,face-d/2,0,r[1]-r[0],d,h,SHELF_OAK)});
+    runs.forEach(function(r){drawWallFace(api,'shell.shelf.wall.right',r[0],face,r[1],face,0,h)});
   }
   function drawShellProductWall(displayZ,now,wood){
     var api=sunnyApi(now);
     drawWallFace(api,'shell.wall.tile.right',-6.7,displayZ,-1.3,displayZ,0,3.95,.04,.95);
     drawMenuBoard(-3.9,displayZ,1.38,5.1,1.24,now,wood);
-    [[-1.3,2.7],[2.7,6.7]].forEach(function(r){drawWallFace(api,'shell.shelf.wall.right',r[0],displayZ+.3,r[1],displayZ+.3,0,3.6)});
+    drawShelfRun(api,[[-1.3,2.7],[2.7,6.7]],displayZ+.6,3.6,.55);
   }
   function drawShellStairs(now){
     var api=sunnyApi(now);
@@ -2384,7 +2393,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var settle=project(-17,0,13),settleC=parseHex(mixHex('#1e2b24','#0c1216',nt));
     ellipse(settle.x,settle.y,unit*21,unit*13,softRadial(settle.x,settle.y,unit*21,settleC,.14));
     if(SUNNY)drawSunnyWorld(sunnyApi(now),false,1-nt);
-    var stone=['#c9c7b5','#737c70','#9fa796'],wood=['#bc9d73','#6f5943','#998063'],green=['#698775','#314b40','#496a56'],metal=['#414440','#191e1c','#2b302d'];
+    var stone=['#c9c7b5','#737c70','#9fa796'],wood=['#bc9d73','#6f5943','#998063'],green=SHOP_GREEN_PLASTER,metal=['#414440','#191e1c','#2b302d'];
     // Contact shadow: one soft radial pool under the slab, biased toward the front-left, with no polygon edges to read as lines.
     var pool=project(0,-.33,1),shadowGradient=ctx.createRadialGradient(pool.x-unit*1.4,pool.y+unit*1.2,0,pool.x-unit*1.4,pool.y+unit*1.2,unit*23);
     shadowGradient.addColorStop(0,'rgba(12,22,17,.36)');shadowGradient.addColorStop(.45,'rgba(12,22,17,.2)');shadowGradient.addColorStop(.75,'rgba(12,22,17,.07)');shadowGradient.addColorStop(1,'rgba(12,22,17,0)');
@@ -2864,7 +2873,7 @@ if(!SHOP_SPRITES){
     var x=-10.65;
     // The planter runs the glazed bays and a little past their rear pilaster, stopping well clear of the smoking
     // lounge, whose left end stands in the aisle beyond (its wall would otherwise paint over the planter's end).
-    var px=x-.55,pz=3.8,len=3.6,tile=['#708b72','#2c4938','#4a6850'],metal=['#414440','#191e1c','#2b302d'];
+    var px=x-.55,pz=3.8,len=3.6,tile=SHOP_GREEN_TILE,metal=['#414440','#191e1c','#2b302d'];
       drawBox(px,pz,0,.9,len,.56,tile);
       var faceX=px+.465,endZ=pz+len/2+.015;
       for(var sz=pz-len/2+.08;sz<pz+len/2-.04;sz+=.24)worldLine([[faceX,0,sz],[faceX,.56,sz]],'#ccd3b3',.015);
@@ -2924,7 +2933,7 @@ if(!SHOP_SPRITES){
       ctx.shadowBlur=0;worldLine(points,'#e6ffd2',.012);ctx.restore()});
     });
     // Matching short tiled returns flank the entrance without crossing the approach; both stand straight on the slab.
-    var tileWall=['#708b72','#2c4938','#4a6850'],coping=['#e0d4b4','#a99c7b','#c5ba9a'];
+    var tileWall=SHOP_GREEN_TILE,coping=['#e0d4b4','#a99c7b','#c5ba9a'];
     // Along the side wall, in ten sections so the queue sorts against it.
     for(var section=0;section<10;section++)(function(center,last){add(x,center,function(){
       drawBox(x,center,0,.26,7/30,1.15,tileWall);
@@ -3120,7 +3129,7 @@ if(!SHOP_SPRITES){
     if(alpha<1)ctx.restore();
   }
   function drawLoungeFront(now){
-    var z=DISPLAY_Z,fd=.81,zc=z+.245,face=z+.65,H=3.95,plaster=['#698775','#314b40','#496a56'],tile=['#708b72','#2c4938','#4a6850'],seam='#ccd3b3';
+    var z=DISPLAY_Z,fd=.81,zc=z+.245,face=z+.65,H=3.95,plaster=SHOP_GREEN_PLASTER,tile=SHOP_GREEN_TILE,seam='#ccd3b3';
     var velvet=['#6b2436','#3c1220','#8a3448'],darkWood=['#3a2a1e','#1e140e','#2c2016'],open=state.lounge>0,rise=buildRise[7]||0,dx=LOUNGE_DOOR.x;
     var rx=LOUNGE_RIGHT,rface=rx+.16,roomZ=(-7+face)/2,roomD=face+7,side=LOUNGE_SIDE,sideZ=(side.z0+side.z1)/2,sideD=side.z1-side.z0;
     // Tile band painted flat on a wall face — a change of finish, with no ledge on top (only the short half-walls at
