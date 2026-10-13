@@ -305,6 +305,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // they order, so a counter customer already in line is not held at the tail for a kiosk customer still walking over.
   function pickupOrder(c){return c.pickupTicket||Infinity}
   var QUEUE_MAX=30;
+  // The drone deck's centre: Kevin asked for it a touch up and right, into the clear sidewalk behind the lounge.
+  var DECK_X=-10.7,DECK_Z=.3;
   // Everyone still to order holds a place in the line — except guests who have gone through the curtain.
   function inOrderFlow(c){return !c.ordered&&c.phase!=='leaving'&&c.phase!=='toLounge'&&c.phase!=='lounge'}
   // The smoking lounge behind the back-wall shelving. Guests bound for it are let in at the curtain while a seat and a
@@ -556,7 +558,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // Repeat buyers: a share of fulfilled orders come straight back as new requests.
     if(state.repeatLevel)state.onlineRequests=Math.min(onlineRequestCap(),state.onlineRequests+batch.count*state.repeatLevel*.04);
     queueDeliveryWave(batch.count);
-    recordEvent(state.empire,'online',batch.count);add(batch.reward);if(!automatic)notifyDispatch(batch);burst({x:-10.7,z:1.5,y:7.05},'#dbc38b');slideReceipts(batch.count);renderUI();save();
+    recordEvent(state.empire,'online',batch.count);add(batch.reward);if(!automatic)notifyDispatch(batch);burst({x:DECK_X,z:DECK_Z,y:7.05},'#dbc38b');slideReceipts(batch.count);renderUI();save();
   }
   // Rapid dispatches share a short loading window, never a growing launch queue.
   function queueDeliveryWave(count){
@@ -944,7 +946,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // Concealed strips wash the rear walls of every floor so the architecture stays legible after dark.
     wash(-11.2,8.95,-6.9,3.6,1.3,.4,WARM);wash(-8.7,8.7,4.7-6.55,4.7+3.6,4.7+1.5,.42,WARM);wash(-6.2,6.2,9.4-6.7,9.4+3.6,9.4+1.7,.24,GROW);
     // Mezzanine: the online kiosk sign and the planted wall.
-    if(deliveryBuilt()){pool(-10.7,7.09,1.5,1.9,.7,MINT);halo(-10.7,9.2,1.5,1.5,.55,MINT)}
+    if(deliveryBuilt()){pool(DECK_X,7.09,DECK_Z,1.9,.7,MINT);halo(DECK_X,9.2,DECK_Z,1.5,.55,MINT)}
     halo(7.9,5.9,-6.5,1.9,.28,COOL);
     // Grow room: purple pendants over the benches, cool light on the rack and a warm wash behind the shelving.
     growLightBars().forEach(function(lx,li){var pulse=lampPulse(now,li*1.7);pool(lx,9.44,-3,1.9,.75*pulse,GROW);halo(lx,12.65,-3,1.2,.55*pulse,'#d9a8ff');beam(lx,12.6,-3,9.44,.3,1.3,.5*pulse,GROW)});
@@ -993,7 +995,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var saved=sceneElevation;sceneElevation=0;
     signFaces.forEach(function(sign){var p=project(sign.x,sign.y,sign.z);glow(p.x,p.y,unit*sign.halo,'#ffda8a40',unit*sign.halo*.7);signText(sign.x,sign.y,sign.z,sign.label,sign.width,sign.size,'#fff3d6')});
     if(!SHOP_SPRITES)drawMarquee(true); // the storefront sprite carries its own sign
-    if(deliveryBuilt()){sceneElevation=7.05;var pending=onlineRequestsReady();onlineReadout(-10.7,2.4,pending,pending>0&&state.stock[3]>=onlineSize());sceneElevation=0}
+    if(deliveryBuilt()){sceneElevation=7.05;var pending=onlineRequestsReady();onlineReadout(DECK_X,DECK_Z+.9,pending,pending>0&&state.stock[3]>=onlineSize());sceneElevation=0}
     if(state.lounge>0)loungeNeon(true);
     if(SHOP_SPRITES)STREET_LAMPS.forEach(function(l){var q=project(l[0],4.15,l[1]);ellipse(q.x,q.y,unit*.2,unit*.16,'#fff1c8')});
     sceneElevation=saved;
@@ -2200,18 +2202,18 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   function drawDeckSprite(now,name){
     var api=sunnyApi(now),img=shellSprite(name)&&spriteImage(name);if(!img)return false;
-    var x=-10.7,z=1.5,pts=[];[x-2.2,x+2.2].forEach(function(px){[z-3.55,z+1.9].forEach(function(pz){[-.24,3.8].forEach(function(py){pts.push(project(px,py,pz))})})});
+    var x=DECK_X,z=DECK_Z,pts=[];[x-2.2,x+2.2].forEach(function(px){[z-3.55,z+1.9].forEach(function(pz){[-.24,3.8].forEach(function(py){pts.push(project(px,py,pz))})})});
     var savedElevation=sceneElevation;sceneElevation=0;softShadow(api,x-.3,0,z-.6,2.1,2.6,.3);softShadow(api,x+.9,0,z-1.1,2.6,2.9,.14);sceneElevation=savedElevation;
     var l=Math.min.apply(null,pts.map(function(q){return q.x})),r=Math.max.apply(null,pts.map(function(q){return q.x})),b=Math.max.apply(null,pts.map(function(q){return q.y}));
     var kOld=(r-l)/1146,cx=l+5*kOld,cy=b-1149*kOld+679*kOld,k=kOld*1.2*2;
     ctx.save();ctx.translate(cx-k*76.5,cy-k*232);ctx.scale(k,k);ctx.drawImage(img,0,0);ctx.restore();return true;
   }
   function onlinePackingCounter(now,previewOnly){
-    var x=-10.7,z=1.5,oak=['#cbb085','#7f6a4b','#ac9168'],green=['#86a795','#3e6250','#648a70'];
+    var x=DECK_X,z=DECK_Z,oak=['#cbb085','#7f6a4b','#ac9168'],green=['#86a795','#3e6250','#648a70'];
     if(!deliveryBuilt()&&!previewOnly){onlineCounterSite(now,x,z,oak);return}
     // Sprite shop: the finished deck render, with the live dispatch readout and the jar feed still drawn over it.
     if(SHOP_SPRITES&&!previewOnly&&drawDeckSprite(now,'deck.delivery.built')){
-      transferTube([[-4.55,-.9,1],[-7.4,-.9,1],[-7.4,1.5,1.5],[-9.05,1.5,1.5]],3);return;
+      transferTube([[-4.55,-.9,1],[-7.4,-.9,1],[-7.4,1.5,DECK_Z],[-9.05,1.5,DECK_Z]],3);return;
     }
     // Cantilevered launch deck, attached to the rear sign supports.
     var padZ=z-2.25,steel=['#526659','#253b30','#3a5142'];
@@ -2262,7 +2264,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     worldLine([[x-.78,.45,faceZ+.05],[x+.78,.45,faceZ+.05]],'#0d1f17',.07);
     var fill=pending?Math.min(1,state.stock[3]/Math.max(1,needed)):0;if(fill>0)worldLine([[x-.78,.45,faceZ+.05],[x-.78+1.56*fill,.45,faceZ+.05]],ready?'#b7e394':'#a9d2c8',.05);
     // Its own feed branch carries packed jars from the packing station.
-    if(!previewOnly)transferTube([[-4.55,-.9,1],[-7.4,-.9,1],[-7.4,1.5,1.5],[-9.05,1.5,1.5]],3);
+    if(!previewOnly)transferTube([[-4.55,-.9,1],[-7.4,-.9,1],[-7.4,1.5,DECK_Z],[-9.05,1.5,DECK_Z]],3);
   }
   // Before the delivery pad is bought the mezzanine corner is a building site: bare deck, taped-off perimeter,
   // a sheeted counter, stacked materials and an unlit COMING SOON board where the sign will go.
@@ -2687,7 +2689,13 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
         // The render is a straight beam seen head-on: its cream slab lip goes on the floor plane along the edge and its
         // oak face on the vertical plane below, so neither half is sheared off its true plane.
         var slabEdge=SHOP_SPRITES&&shellSprite('shell.slab.edge.left')&&spriteImage('shell.slab.edge.left');
-        if(slabEdge){drawPlaneSprite(slabEdge,[left,.012,front-.22],[right,.012,front-.22],[left,.012,front+.03],0,.36);drawPlaneSprite(slabEdge,[left,0,front+.03],[right,0,front+.03],[left,-.26,front+.03],.36,1)}
+        // Every edge that faces the camera carries the same lip and beam, so the landing and the open side read as
+        // the same slab as the front rather than as thinner platforms.
+        if(slabEdge){outline.forEach(function(a,edge){
+          var b=outline[(edge+1)%outline.length];
+          if(b[0]===a[0]&&b[1]>a[1]){var X=a[0];drawPlaneSprite(slabEdge,[X-.22,.012,b[1]],[X-.22,.012,a[1]],[X+.03,.012,b[1]],0,.36);drawPlaneSprite(slabEdge,[X+.03,0,b[1]],[X+.03,0,a[1]],[X+.03,-.26,b[1]],.36,1)}
+          else if(b[1]===a[1]&&b[0]<a[0]){var Z=a[1];drawPlaneSprite(slabEdge,[b[0],.012,Z-.22],[a[0],.012,Z-.22],[b[0],.012,Z+.03],0,.36);drawPlaneSprite(slabEdge,[b[0],0,Z+.03],[a[0],0,Z+.03],[b[0],-.26,Z+.03],.36,1)}
+        })}
         else{
         drawBox(0,front+.015,-.23,floor.w,.16,.19,['#bb9366','#785438','#a57b50']);
         drawBox(0,front+.035,-.27,floor.w,.18,.045,metal);
@@ -2905,6 +2913,13 @@ if(!SHOP_SPRITES){
       floor.ids.forEach(function(i){var p=machinePos[i];lightPool(p.x,.035,p.z+.9,1.65,i===1)});
       // Furniture stays visible in front of the back wall and shelving.
       // Staff positions: most stand behind their bench; the grow-room pair stand where the gantry and rack do not hide them.
+      // Cream columns under each upper floor's front edge, rising to the slab's soffit, so both levels read as
+      // carried: on the ground floor behind the counters (sorted with the customers), on the mezzanine outside the
+      // packing and harvest benches, clear of the upper stairs.
+      if(SHOP_SPRITES&&fi<2){
+        var colY=4.7-.26,cols=fi===0?[[-4.5,.3],[6,.3]]:[[-6.1,-.65],[5.7,-.65]];
+        cols.forEach(function(cp){var draw=function(){drawBoxSprite(sunnyApi(now),shellSprite('shell.column'),cp[0]-.4,cp[0]+.4,cp[1]-.38,cp[1]+.38,0,colY,'height')};if(fi===0)jobs.push({depth:depthOf({x:cp[0],z:cp[1]}),draw:draw});else draw()});
+      }
       var staffSpots={0:{dx:-2.45,dz:.45,front:true,facing:1},1:{dx:-2.45,dz:.45,front:true,facing:1},5:{dx:1.05,dz:-1.55,front:false,facing:.35}};
       // Transfer tubes go down before the stations, so a station hides the stub that enters its side or back.
       if(fi===1){sceneElevation=0;drawFloorTransfer(3,true);drawFloorTransfer(1,false);sceneElevation=floor.y}
@@ -3762,7 +3777,7 @@ if(!SHOP_SPRITES){
       if(motionPreference.matches){lift=0;travel=0;}
       // Each slot fans out on its own heading and bobs on its own phase so a bulk launch reads as separate aircraft.
       var bob=motionPreference.matches?0:Math.sin(t*2.1+slot*1.9)*.07*Math.min(1,lift+travel);
-      var x=-10.7-travel*(20+slot*1.6)+(slot%3-1)*.72,z=-.75+travel*(5-(slot%2?1.2:0)+Math.floor(slot/3)*.9)+Math.floor(slot/3)*.62,y=11.10+lift*(2.4+slot*.18)+travel*7+bob;
+      var x=DECK_X-travel*(20+slot*1.6)+(slot%3-1)*.72,z=DECK_Z-2.25+travel*(5-(slot%2?1.2:0)+Math.floor(slot/3)*.9)+Math.floor(slot/3)*.62,y=11.10+lift*(2.4+slot*.18)+travel*7+bob;
       ctx.save();ctx.globalAlpha=motionPreference.matches?Math.min(1,t/.25,(7.5-t)/.7):Math.min(1,(7.5-t)/.7);
       // A taped parcel hangs beneath a compact four-rotor courier.
       if(t<2&&!motionPreference.matches){
@@ -4196,8 +4211,8 @@ if(!SHOP_SPRITES){
     var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle,savedElevation=sceneElevation;
     try{
       ctx=art.getContext('2d',{willReadFrequently:true});unit=100;angle=.57;sceneElevation=0;
-      var anchor=rotate(-10.7,1.5);centerX=450-anchor.x*unit;centerY=720-anchor.z*unit*.5;
-      onlinePackingCounter(0,true);drawCourierDrone(-10.7,4.6,-.75,0,0,1);
+      var anchor=rotate(DECK_X,DECK_Z);centerX=450-anchor.x*unit;centerY=720-anchor.z*unit*.5;
+      onlinePackingCounter(0,true);drawCourierDrone(DECK_X,4.6,DECK_Z-2.25,0,0,1);
       var pixels=ctx.getImageData(0,0,900,900).data,left=900,right=0,top=900,bottom=0;
       for(var y=0;y<900;y++)for(var x=0;x<900;x++)if(pixels[(y*900+x)*4+3]>180){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y)}
       var pc=preview.getContext('2d');pc.clearRect(0,0,preview.width,preview.height);
