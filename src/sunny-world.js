@@ -75,7 +75,7 @@ export function drawPersonSprite(api, x, z, identity, employee, facing, phase, a
   return drawSprite(api, use, x, z, employee ? facing >= 0 : facing < 0);
 }
 // Shop fixtures from the interior batch, sized in world units like the stations.
-const FIXTURE_SIZE = { 'shop.displaycase': { w: 3.4, drop: .5 }, 'shop.planter.small': { w: .95, drop: .12 } };
+const FIXTURE_SIZE = { 'shop.kiosk': { w: 1, drop: 0 }, 'shop.displaycase': { w: 3.4, drop: .5 }, 'shop.planter.small': { w: .95, drop: .12 } };
 export function fixtureSprite(name) { if (!FIXTURE_SIZE[name]) return null; lazySprite(name, 'sprites/interior/' + name + '.png', FIXTURE_SIZE[name]); return spriteReady(name) ? name : null; }
 // Shop shell (Kevin chose an all-sprite shop): wall modules stretched over a wall run's screen box, and floor
 // textures unwarped from the floor sprites, laid as a pattern in the floor plane so any outline can be filled.

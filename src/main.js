@@ -3374,6 +3374,8 @@ if(!SHOP_SPRITES){
       function kb(x,z,y,w,d,h,p){var q=point(x,y,z);drawBox(q[0],q[2],y,d,w,h,p)}
       function kp(x,y,z){var q=point(x,y,z);return project(q[0],q[1],q[2])}
       function kl(points,color,w){worldLine(points.map(function(p){return point(p[0],p[1],p[2])}),color,w)}
+      // Sprite shop: Kevin's ChatGPT kiosk render on the kiosk's footprint.
+      if(SHOP_SPRITES){var kz=6.8-dx;if(drawBoxSprite(sunnyApi(sceneTime),fixtureSprite('shop.kiosk'),-10.12,-9.38,kz-.5,kz+.5,0,2.4,true))return}
       var steel=['#424d43','#202c24','#303f32'],oak=['#c6a071','#7c583a','#a27c50'];
       kb(-1.3+dx,7.95,0,.95,.7,.12,steel);kb(-1.3+dx,7.95,.12,.58,.46,1.25,oak);
       // The head is as deep as the pedestal so the two front faces align and the head sits centred over the base.
