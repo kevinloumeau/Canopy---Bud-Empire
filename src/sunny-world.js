@@ -165,9 +165,9 @@ export const LAMPS = [[-18.5, -14.5], [18.5, -14.5], [-18.5, 17.5], [18.5, 17.5]
 // front walk along the kerb in front of the planters and bench, the right walk between the slab and the bus stop.
 const WALKS = [[-19, -11.6, 19, -11.6, 3, true], [-15.2, -15, -15.2, 18, 2, true], [-30, -24, 30, -24, 3, true], [-28, -26, -28, 26, 2, true],
   [-19, 18.3, 19, 18.3, 3, false], [15.3, -15, 15.3, 18, 2, false]];
-// Cars: [road index, lane offset from centre, direction, phase, colour]
-const CARS = [[0, -1.5, 1, 0, '#e0564a'], [0, -1.5, 1, .45, '#f4f1e4'], [0, 1.5, -1, .2, '#4f8fd0'], [2, -1.5, -1, .1, '#f2c14e'], [2, 1.5, 1, .6, '#6ea845'],
-  [1, -1.5, 1, .3, '#e8913c'], [1, 1.5, -1, .75, '#8a6fd1'], [3, -1.5, -1, .5, '#4f8fd0'], [3, 1.5, 1, .05, '#f4f1e4']];
+// Cars: [road index, lane offset from centre, direction, phase, colour]. Kevin pulled the cars on 2026-10-13: the
+// renders read far too small beside the shop and the walkers, so the streets stay empty until re-rendered to scale.
+const CARS = [];
 
 export function drawSunnyWorld(api, front, alpha) {
   if (!(alpha > 0)) return;

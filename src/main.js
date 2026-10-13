@@ -1818,6 +1818,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     }
   }
   function floorPort(x,y,z){
+    // Sprite shop: the brass floor flange with its glass collar from the tube batch.
+    if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),shellSprite('tube.port'),x-.62,x+.62,z-.62,z+.62,y,y+.95,true))return;
     var p=project(x,y+.02,z);
     ellipse(p.x,p.y,unit*.6,unit*.29,'#b8c5b1');
     ellipse(p.x,p.y,unit*.46,unit*.21,'#263b31');
@@ -2080,9 +2082,11 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     ctx.save();ctx.transform((u.x-o.x)/W,(u.y-o.y)/W,(v.x-o.x)/H,(v.y-o.y)/H,o.x,o.y);ctx.drawImage(img,0,0);ctx.restore();return true;
   }
   // Map a flat render on to any world plane: image (0,0) lands on world point o, its right edge on u, its bottom on v.
-  function drawPlaneSprite(img,o,u,v){
-    if(!img)return false;var W=img.naturalWidth,H=img.naturalHeight,po=project(o[0],o[1],o[2]),pu=project(u[0],u[1],u[2]),pv=project(v[0],v[1],v[2]);
-    ctx.save();ctx.transform((pu.x-po.x)/W,(pu.y-po.y)/W,(pv.x-po.x)/H,(pv.y-po.y)/H,po.x,po.y);ctx.drawImage(img,0,0);ctx.restore();return true;
+  // f0..f1 pick a horizontal band of the image (fractions of its height) so one render can be split across two planes.
+  function drawPlaneSprite(img,o,u,v,f0,f1){
+    if(!img)return false;var W=img.naturalWidth,H=img.naturalHeight,sy=Math.round(H*(f0||0)),sh=Math.round(H*((f1===undefined?1:f1)-(f0||0)));
+    var po=project(o[0],o[1],o[2]),pu=project(u[0],u[1],u[2]),pv=project(v[0],v[1],v[2]);
+    ctx.save();ctx.transform((pu.x-po.x)/W,(pu.y-po.y)/W,(pv.x-po.x)/sh,(pv.y-po.y)/sh,po.x,po.y);ctx.drawImage(img,0,sy,W,sh,0,0,W,sh);ctx.restore();return true;
   }
   function drawDeckSprite(now,name){
     var api=sunnyApi(now),img=shellSprite(name)&&spriteImage(name);if(!img)return false;
@@ -2545,7 +2549,11 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       if(fi>0){
         // Warm oak fascia with a slim black steel edge beneath each mezzanine; in the sprite shop the rendered slab edge
         // (cream slab lip over an oak beam) is sheared on to the front edge instead.
-        if(!(SHOP_SPRITES&&shellSprite('shell.slab.edge.left')&&drawPlaneSprite(spriteImage('shell.slab.edge.left'),[left,.04,front+.03],[right,.04,front+.03],[left,-.3,front+.03]))){
+        // The render is a straight beam seen head-on: its cream slab lip goes on the floor plane along the edge and its
+        // oak face on the vertical plane below, so neither half is sheared off its true plane.
+        var slabEdge=SHOP_SPRITES&&shellSprite('shell.slab.edge.left')&&spriteImage('shell.slab.edge.left');
+        if(slabEdge){drawPlaneSprite(slabEdge,[left,.012,front-.22],[right,.012,front-.22],[left,.012,front+.03],0,.36);drawPlaneSprite(slabEdge,[left,0,front+.03],[right,0,front+.03],[left,-.26,front+.03],.36,1)}
+        else{
         drawBox(0,front+.015,-.23,floor.w,.16,.19,['#bb9366','#785438','#a57b50']);
         drawBox(0,front+.035,-.27,floor.w,.18,.045,metal);
         for(var grain=0;grain<3;grain++)worldLine([[left+.1,-.18+grain*.044,front+.1],[right-.1,-.18+grain*.044,front+.1]],'#d0ac793c',.012);
