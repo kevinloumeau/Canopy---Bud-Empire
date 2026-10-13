@@ -31,7 +31,8 @@ export function stationTier(level) { return level >= 20 ? 3 : level >= 10 ? 2 : 
 // Returns the sprite name to draw for station i at this level, or null while none is available.
 export function stationSprite(i, level) {
   const key = STATION_KEYS[i]; if (!key) return null;
-  const want = stationTier(level), order = [want, ...[1, 2, 3].filter(t => t !== want).sort((a, b) => Math.abs(a - want) - Math.abs(b - want))];
+  // The 45° tier 3 pickup desk came back without its PICKUP arch, so tier 2 stands in until it is redone.
+  const want = key === 'pickup' && stationTier(level) === 3 ? 2 : stationTier(level), order = [want, ...[1, 2, 3].filter(t => t !== want).sort((a, b) => Math.abs(a - want) - Math.abs(b - want))];
   for (const t of order) {
     const name = 'station.' + key + '.tier' + t;
     lazySprite(name, 'sprites/interior/' + name + '.png', STATION_SIZE[key]);
@@ -74,7 +75,7 @@ export function drawPersonSprite(api, x, z, identity, employee, facing, phase, a
   return drawSprite(api, use, x, z, facing < 0);
 }
 // Shop fixtures from the interior batch, sized in world units like the stations.
-const FIXTURE_SIZE = { 'shop.displaycase': { w: 5.6, drop: .55 }, 'shop.planter.small': { w: .95, drop: .12 } };
+const FIXTURE_SIZE = { 'shop.displaycase': { w: 4.6, drop: .5 }, 'shop.planter.small': { w: .95, drop: .12 } };
 export function fixtureSprite(name) { if (!FIXTURE_SIZE[name]) return null; lazySprite(name, 'sprites/interior/' + name + '.png', FIXTURE_SIZE[name]); return spriteReady(name) ? name : null; }
 // Shop shell (Kevin chose an all-sprite shop): wall modules stretched over a wall run's screen box, and floor
 // textures unwarped from the floor sprites, laid as a pattern in the floor plane so any outline can be filled.
@@ -89,12 +90,17 @@ export function drawSpan(api, name, x0, z0, x1, z1, h, y0) {
   return true;
 }
 // Stretches a sprite over the screen box of a world-space box, for pieces with depth such as stairs.
-export function drawBoxSprite(api, name, x0, x1, z0, z1, y0, y1) {
+// With `keepAspect`, the sprite fills the box's screen width at its own proportions, standing on the box's bottom edge.
+export function drawBoxSprite(api, name, x0, x1, z0, z1, y0, y1, keepAspect) {
   if (!name || !spriteReady(name)) return false;
   const pts = [];
   for (const x of [x0, x1]) for (const z of [z0, z1]) for (const y of [y0, y1]) pts.push(api.project(x, y, z));
   const l = Math.min(...pts.map(q => q.x)), r = Math.max(...pts.map(q => q.x)), t = Math.min(...pts.map(q => q.y)), b = Math.max(...pts.map(q => q.y));
-  api.ctx.drawImage(SPRITES[name].img, l, t, r - l, b - t);
+  // keepAspect 'height' instead fills the box's screen height and hangs from its top-right corner (a stair's landing).
+  const img = SPRITES[name].img, ar = img.naturalHeight / img.naturalWidth;
+  if (keepAspect === 'height') { const w = (b - t) / ar; api.ctx.drawImage(img, r - w, t, w, b - t); return true; }
+  const h = keepAspect ? (r - l) * ar : b - t;
+  api.ctx.drawImage(img, l, b - h, r - l, h);
   return true;
 }
 const FLOOR_TEX = {};

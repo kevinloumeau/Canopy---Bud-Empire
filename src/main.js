@@ -2096,7 +2096,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // a sheeted counter, stacked materials and an unlit COMING SOON board where the sign will go.
   function onlineCounterSite(now,x,z,oak){
     // Sprite shop: the 45° Ludo render of the taped-off deck, stretched over the site's whole box, once it exists.
-    if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(now),shellSprite('deck.delivery.site'),x-2.2,x+2.2,z-3.55,z+1.9,-.24,3.8))return;
+    // The 45° Ludo deck render (deck.delivery.site) came back as a separate composition that does not meet the
+    // mezzanine stairs or its supports, so the drawn site stays until it is redone.
     var padZ=z-2.25,steel=['#526659','#253b30','#3a5142'],ply=['#d9c39a','#8a7250','#b89a6c'],sheet=['#d8dad2','#9a9f97','#bfc3ba'],hazard=['#e8c85a','#8c7420','#c6a93f'];
     [-1.2,1.2].forEach(function(dx){drawBox(x+dx,z-1.05,.02,.12,.14,3.04,steel);worldLine([[x+dx,2.05,z-1.05],[x+dx,2.96,padZ-.65]],'#304638',.09)});
     drawBox(x+.85,padZ,2.86,1.9,.14,.1,steel);
@@ -2205,7 +2206,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     }
     if(fi===0){
       // A rounded terracotta display plinth offers a splash of color; it sorts with the counters and customers.
-      sceneJobs.push({depth:depthOf({x:9.85,z:2.9}),draw:function(){sceneElevation=0;drawBox(9.85,2.9,0,1.15,1.1,.7,['#dba588','#966955','#be8b70']);plant(9.85,2.9,.72,.75)}});
+      // The Ludo main stair runs its foot over this spot, so the sprite shop leaves the plinth out.
+      if(!SHOP_SPRITES)sceneJobs.push({depth:depthOf({x:9.85,z:2.9}),draw:function(){sceneElevation=0;drawBox(9.85,2.9,0,1.15,1.1,.7,['#dba588','#966955','#be8b70']);plant(9.85,2.9,.72,.75)}});
     }
     // Hanging planters and fine trails sit against the back wall, leaving sightlines open.
     for(var basket=0;basket<2;basket++){
@@ -2244,8 +2246,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   function drawShellStairs(now){
     var api=sunnyApi(now);
-    drawBoxSprite(api,shellSprite('shell.stairs.upper'),6.5,8.2,-5.6,.7,4.7,9.4);
-    drawBoxSprite(api,shellSprite('shell.stairs.main'),9.1,10.7,-.8,4.2,0,4.7);
+    drawBoxSprite(api,shellSprite('shell.stairs.upper'),6.5,8.2,-5.6,.7,4.7,9.4,true);
+    drawBoxSprite(api,shellSprite('shell.stairs.main'),9.1,10.7,-.8,4.2,0,4.7,'height');
     drawSpan(api,shellSprite('shell.rail.glass.left'),8.93,-4.8,8.93,-1.75,1,4.7);
   }
   function drawCachedGround(floor){
@@ -2694,6 +2696,7 @@ if(!SHOP_SPRITES){
       if(fi===1){
         // Stairs to the online-orders deck: a short flight leaves the mezzanine past the end of the side wall, reaches a landing
         // outside the building, then turns left and climbs forward to enter the deck from its rear edge, behind the counter.
+        {
         sceneElevation=4.7;
         var rise=2.35/10,rail='#252b28',post=['#3a403c','#1a1f1c','#282e2a'];
         var f1Z=-2.3,f1Start=-7.2,f1Run=.78,landX=-10.25,landZ=-2.3,f2X=-10.25,f2Start=-1.41,f2Run=.38;
@@ -2710,6 +2713,7 @@ if(!SHOP_SPRITES){
           var entryX=f1Start+.4;
           constructionTape([entryX,.92,f1Z-.74],[entryX,.48,f1Z+.74]);
           constructionTape([entryX,.48,f1Z-.74],[entryX,.92,f1Z+.74]);
+        }
         }
         sceneElevation=0;
         drawFloorTransfer(3,true);drawFloorTransfer(1,false);
@@ -3369,7 +3373,7 @@ if(!SHOP_SPRITES){
     // of the plinth, and between them a glass hood covers a back riser of jars with products and merch on the deck.
     function drawDisplayCase(x,z,width){
       jobs.push({depth:depthOf({x:x,z:z}),draw:function(){
-        if(SHOP_SPRITES&&drawSprite(sunnyApi(now),fixtureSprite('shop.displaycase'),x,z,true))return;
+        if(SHOP_SPRITES&&drawSprite(sunnyApi(now),fixtureSprite('shop.displaycase'),x+.9,z,false))return;
         var oak=['#cfb184','#836949','#b09266'],stone=['#e2dfd0','#969c8e','#c3c8b8'],brass=['#d7c28b','#8c774c','#b7a16c'],half=width/2,bed=.95,inner=half-bed;
         drawBox(x,z,0,width,1.35,.85,oak);
         for(var flute=0;flute<Math.floor(width/.185);flute++)worldLine([[x-half+.1+flute*.185,.08,z+.69],[x-half+.1+flute*.185,.78,z+.69]],'#6f593b35',.018);
