@@ -1,4 +1,4 @@
-import {migrateOrderCounters,orderCounterPositions,orderCounterCost,buyOrderCounter,ORDER_QUEUE_GATE,assignOrderCounter,atOrderCounter,orderAvailability} from './order-counters.js';
+import {migrateOrderCounters,orderCounterPositions,COUNTER_SHIFT,PICKUP_X,orderCounterCost,buyOrderCounter,ORDER_QUEUE_GATE,assignOrderCounter,atOrderCounter,orderAvailability} from './order-counters.js';
 import {LOUNGE_TIERS,LOUNGE_MAX,migrateLounge,loungeTier,loungeUpgradeCost,loungeSeats,loungeSessionSeconds,buyLoungeTier,wantsLounge,loungeAdmission,loungeTake,loungeRate,loungeCurrentRate} from './lounge.js';
 import {migrateJourney,advanceJourney,CHAPTERS} from './journey.js';
 import {mountJourney} from './journey-ui.js';
@@ -112,7 +112,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     bonus*=strains.tipFactor(c.kind,strainPotency(c.strain||0));if(bonus>1)bonus*=1+state.loyaltyLevel*.03;
     if(c.strain===0)bonus*=strains.everydayBonus(state.strains);
     // VIPs: served their reserve they pay the Orchid premium, boost reputation and start a buzz; offered only everyday flower they snub the shop.
-    if(c.kind==='vip'){if(c.strain>0){bonus*=strains.vipBonus(state.strains);state.empire.reputation=Math.min(1000,state.empire.reputation+strains.VIP_REPUTATION);state.vipBuzz=strains.VIP_BUZZ_SECONDS;burst({x:4,z:4.9,y:1.6},'#f0cf7f')}else{bonus=1;state.empire.reputation=Math.max(0,state.empire.reputation-strains.VIP_SNUB_REPUTATION)}}
+    if(c.kind==='vip'){if(c.strain>0){bonus*=strains.vipBonus(state.strains);state.empire.reputation=Math.min(1000,state.empire.reputation+strains.VIP_REPUTATION);state.vipBuzz=strains.VIP_BUZZ_SECONDS;burst({x:PICKUP_X,z:4.9,y:1.6},'#f0cf7f')}else{bonus=1;state.empire.reputation=Math.max(0,state.empire.reputation-strains.VIP_SNUB_REPUTATION)}}
     if(bonus>1&&c.strain>0)state.empire.reputation=Math.min(1000,state.empire.reputation+strains.reputationBonus(state.strains));
     return bonus*(c.eventGuest&&c.strain>0?1.25:1)}
   // Flower menu: one jar illustration per strain, a row of cards to pick from, and a hero for the chosen strain.
@@ -393,7 +393,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     tickThoughts(dt);
     customers=customers.filter(function(c){return c.phase!=='leaving'||c.t<1});
     if(state.lines[5]){
-      var pickups=customers.filter(function(c){return c.ordered&&!c.bag}).sort(function(a,b){return pickupOrder(a)-pickupOrder(b)}).slice(0,1).filter(function(c){return c.phase==='pickup'&&!c.walking&&Math.hypot(c.x-4,c.z-4.9)<.01});
+      var pickups=customers.filter(function(c){return c.ordered&&!c.bag}).sort(function(a,b){return pickupOrder(a)-pickupOrder(b)}).slice(0,1).filter(function(c){return c.phase==='pickup'&&!c.walking&&Math.hypot(c.x-PICKUP_X,c.z-4.9)<.01});
       if(pickups.length&&state.stock[4]>0){var served=advanceCounterService(pickups[0],5,dt)?1:0;if(served>0){work[5]=0;var bags=Math.max(1,Math.min(pickups[0].bags||1,state.stock[4]));pickups[0].bags=bags;state.stock[4]-=bags;state.sold+=bags;playSound('sale',state.sound);recordEvent(state.empire,'pickup',served);add(pickups.slice(0,served).reduce(function(total,c){return total+(c.salePrice||flowerValue())*(c.bags||1)*customerSaleBonus(c)},0));pickups.slice(0,served).forEach(function(c){c.phase='leaving';c.t=0;c.bag=true;c.effectAge=0;recentPickupRatings.push(customerRatings(c).highness);if(recentPickupRatings.length>20)recentPickupRatings.shift()});burst(machinePos[5],colors.acid)}}else work[5]=0;
     }
     // Prepare pickup bags independently of the number of customers collecting, but never from jars a waiting web order needs.
@@ -639,7 +639,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // The sprite shop's plaster and tile take the storefront's emerald so the drawn walls match the glazing.
   var SHOP_GREEN_PLASTER=SHOP_SPRITES?['#3f9468','#174f36','#226447']:['#698775','#314b40','#496a56'],SHOP_GREEN_TILE=SHOP_SPRITES?['#4a9a6e','#14482f','#1f5e40']:['#708b72','#2c4938','#4a6850'];
   var colors={bg:'#202226',floorTop:'#303238',floorLeft:'#1c1f23',floorRight:'#272a30',grid:'#41444a',beltEdge:'#111419',belt:'#313943',slat:'#5b6470',oliveTop:'#f4f5ec',oliveLeft:'#a9b6be',oliveRight:'#d5dce0',darkTop:'#56616a',darkLeft:'#252e36',darkRight:'#3b4650',metalTop:'#eef2f3',metalLeft:'#8b9ba8',metalRight:'#becbd4',acid:'#f5c344',orange:'#ff7628',boxTop:'#d3a36c',boxLeft:'#8e6741',boxRight:'#b17f50'};
-  var machinePos=[{x:-3,z:-3,y:9.4},{x:3,z:-3,y:9.4},{x:3,z:-.3,y:4.7},{x:-3,z:-.3,y:4.7},{x:-4,z:2.5,y:0},{x:4,z:2.5,y:0}];
+  var machinePos=[{x:-3,z:-3,y:9.4},{x:3,z:-3,y:9.4},{x:3,z:-.3,y:4.7},{x:-3,z:-.3,y:4.7},{x:-4+COUNTER_SHIFT,z:2.5,y:0},{x:4+COUNTER_SHIFT,z:2.5,y:0}];
   // The front-of-house display case along the front-right of the shop floor, planters built into both ends.
   var DISPLAY_CASE={x:8,z:8.9,width:5.2};
   // The back-wall shelving stands just behind the counters; the smoking lounge is the room behind it (z −7 → −1.76).
@@ -653,7 +653,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   var confetti=[],CONFETTI_COLORS=['#f0d89a','#f6efdd','#b6e58c','#9dc47a','#e6c95a','#e8823a','#d3e0cb'];
   function celebrateOpening(){
     if(motionPreference.matches)return;
-    tierFlashes.fill(1);burst({x:-10.65,z:10},'#f0d89a');burst({x:4,z:4.9},'#b6e58c');
+    tierFlashes.fill(1);burst({x:-10.65,z:10},'#f0d89a');burst({x:PICKUP_X,z:4.9},'#b6e58c');
     for(var i=0;i<170;i++)confetti.push({x:-12+Math.random()*20,z:-10+Math.random()*21,y:13+Math.random()*7,vy:-(2.6+Math.random()*2.2),vx:(Math.random()-.5)*.5,vz:(Math.random()-.5)*.5,phase:Math.random()*Math.PI*2,sway:.5+Math.random()*.8,rot:Math.random()*Math.PI,rotV:(Math.random()-.5)*9,color:CONFETTI_COLORS[i%CONFETTI_COLORS.length],life:3.4+Math.random()*1.6,w:.14+Math.random()*.1,h:.08+Math.random()*.04});
     render.invalidated=true;
   }
@@ -933,7 +933,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     pool(-12.3,.03,4.6,2.4,.3,'#ffe3a8');pool(-12.3,.03,8.2,2.4,.32,'#ffe3a8');
     // Shop floor: slab downlights over the counters, the retail counters, floor downlights, the vitrine, the lounge door.
     counters.concat([machinePos[5]]).forEach(function(q){beam(q.x,4.45,q.z,1.31,.12,1.3,.28,WARM);pool(q.x,1.32,q.z,1.6,.55,'#ffe3a8');halo(q.x+.65,1.6,q.z+.35,.6,.25,'#fff0c8')});
-    counters.forEach(function(p){pool(p.x,.03,4.9,many?1.5:2.9,.65,WARM)});pool(4,.03,4.9,2.9,.65,WARM);
+    counters.forEach(function(p){pool(p.x,.03,4.9,many?1.5:2.9,.65,WARM)});pool(PICKUP_X,.03,4.9,2.9,.65,WARM);
     [-5.3,-2.7,7.4].forEach(function(gx){pool(gx,.03,1,2.3,.55,'#ffe9bb');halo(gx,3.4,1,1.1,.4,'#ffe9bb')});
     pool(DISPLAY_CASE.x,.03,DISPLAY_CASE.z-.3,2.6,.45,'#fff0c8');halo(DISPLAY_CASE.x,1.4,DISPLAY_CASE.z-.32,1.5,.3,'#fff0c8');
     if(state.kiosk)for(var k=0;k<kioskCount();k++){halo(-9.45,1.85,6.8-k*1.8,.8,.45,'#dfeccc');pool(-9.1,.03,6.8-k*1.8,1.2,.4,'#dfeccc')}
@@ -1265,7 +1265,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function drawCounterDivider(){
     // A low tiled divider links the counters without crossing the customer lanes, centred in the gap between the
     // right-hand order desk and the pickup counter (the desks narrow when the order bank expands, so the gap moves).
-    var count=state.orderCounters,orderEdge=Math.max.apply(null,orderCounterPositions(count).map(function(p){return p.x+(count===1?1.46:1.01)})),pickupEdge=4-1.46;
+    var count=state.orderCounters,orderEdge=Math.max.apply(null,orderCounterPositions(count).map(function(p){return p.x+(count===1?1.46:1.01)})),pickupEdge=PICKUP_X-1.46;
     var cx=(orderEdge+pickupEdge)/2,width=count===3?2:3.5,seams=Math.floor(width/.24);
     // The render of this divider is a fixed-length block, so stretched over the gap its far end floated; the wall is
     // drawn in place instead, in the render's dark-green tile and cream cap.
@@ -1587,12 +1587,12 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // before its tail runs through the entry corridor in front of the ID desk and the doorman (never along the wall
   // beside them), crosses the threshold at z ≈ 9 and continues outside along the storefront.
   // The pen's rows grow with the line: 2.4 wide for the starter line of six, full width (4.5) from twenty places.
-  var ORDER_ROWS=[7.0,8.15,9.3],ORDER_PEN_RIGHT=-2.0,PICKUP_AISLE_Z=5.5;
+  var ORDER_ROWS=[7.0,8.15,9.3],ORDER_PEN_RIGHT=-2.0+COUNTER_SHIFT,PICKUP_AISLE_Z=5.5;
   function orderPen(){return {right:ORDER_PEN_RIGHT,left:ORDER_PEN_RIGHT-Math.min(4.5,1.5+queueLimit()*.15)}}
   function queueRoute(ordered){
     var ORDER_PEN=orderPen();
     if(!ordered)return [ORDER_QUEUE_GATE,{x:ORDER_PEN.right,z:ORDER_ROWS[0]},{x:ORDER_PEN.left,z:ORDER_ROWS[0]},{x:ORDER_PEN.left,z:ORDER_ROWS[1]},{x:ORDER_PEN.right,z:ORDER_ROWS[1]},{x:ORDER_PEN.right,z:ORDER_ROWS[2]},{x:ORDER_PEN.left,z:ORDER_ROWS[2]},{x:-7.4,z:ORDER_ROWS[2]},{x:-8.2,z:8.6}].concat(ENTRY_TAIL);
-    var x=4,d=-1;
+    var x=PICKUP_X,d=-1;
     return [{x:x,z:4.9},{x:x+d*2.1,z:4.9},{x:x+d*2.1,z:6.1},{x:x,z:6.1},{x:x,z:7.3},{x:x+d*2.1,z:7.3},{x:x+d*2.1,z:8.1}];
   }
   function routeLength(route){var n=0;for(var i=1;i<route.length;i++)n+=Math.hypot(route[i].x-route[i-1].x,route[i].z-route[i-1].z);return n}
@@ -1681,8 +1681,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       // the counters (z 4.9) and the head of the order line (z 6.1); counter customers step back into the same aisle
       // rather than walking along the counter front through the other customers. Everyone then goes down the middle
       // walkway to the line's tail.
-      var toPickup=[{x:-.25,z:PICKUP_AISLE_Z},{x:-.25,z:8.15},{x:1.9,z:8.15},{x:1.9,z:8.1}];
-      c.waypoints=(kind==='order'||kind==='kiosk')?[route[route.length-1]]:kind==='pickup'?(c.kiosk?[{x:-8,z:6.8-(c.kioskIndex||0)*1.8},{x:-7.4,z:PICKUP_AISLE_Z}].concat(toPickup):[{x:c.x,z:PICKUP_AISLE_Z}].concat(toPickup)):[{x:4,z:4},{x:8.1,z:5},{x:11.15,z:5},{x:11.15,z:-4.3},{x:10.25,z:-5.6},{x:10.25,z:-8.1},{x:7,z:-8.1},{x:-10.5,z:-8.1}];
+      var toPickup=[{x:-.25+COUNTER_SHIFT,z:PICKUP_AISLE_Z},{x:-.25+COUNTER_SHIFT,z:8.15},{x:1.9+COUNTER_SHIFT,z:8.15},{x:1.9+COUNTER_SHIFT,z:8.1}];
+      c.waypoints=(kind==='order'||kind==='kiosk')?[route[route.length-1]]:kind==='pickup'?(c.kiosk?[{x:-8,z:6.8-(c.kioskIndex||0)*1.8},{x:-7.4,z:PICKUP_AISLE_Z}].concat(toPickup):[{x:c.x,z:PICKUP_AISLE_Z}].concat(toPickup)):[{x:PICKUP_X,z:4},{x:8.1,z:5},{x:11.15,z:5},{x:11.15,z:-4.3},{x:10.25,z:-5.6},{x:10.25,z:-8.1},{x:7,z:-8.1},{x:-10.5,z:-8.1}];
     }
     while(c.waypoints.length&&budget>0){var point=c.waypoints[0],dx=point.x-c.x,dz=point.z-c.z,distance=Math.hypot(dx,dz),step=Math.min(distance,budget);if(distance>.0001){c.x+=dx/distance*step;c.z+=dz/distance*step}budget-=step;if(distance<=step+.0001)c.waypoints.shift();else break}
     if(!c.waypoints.length){
@@ -2364,9 +2364,9 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   function drawShellProductWall(displayZ,now,wood){
     var api=sunnyApi(now);
-    drawWallFace(api,'shell.wall.tile.right',-6.7,displayZ,-1.3,displayZ,0,3.95,.04,.95);
-    drawMenuBoard(-3.9,displayZ,1.38,5.1,1.24,now,wood);
-    drawShelfRun(api,[[-1.3,2.7],[2.7,6.5]],displayZ+.6,3.6,.55);
+    drawWallFace(api,'shell.wall.tile.right',-6.7+COUNTER_SHIFT,displayZ,-1.3+COUNTER_SHIFT,displayZ,0,3.95,.04,.95);
+    drawMenuBoard(-3.9+COUNTER_SHIFT,displayZ,1.38,5.1,1.24,now,wood);
+    drawShelfRun(api,[[-1.3+COUNTER_SHIFT,3.3],[3.3,6.5]],displayZ+.6,3.6,.55);
   }
   function drawShellStairs(now){
     var api=sunnyApi(now);
@@ -2920,7 +2920,7 @@ if(!SHOP_SPRITES){
     // Enclosed gravity transfers bridge each floor without crossing the stairs.
     // The arched service signs stand in front of the counters, which now sort as jobs, so they sort as jobs too.
     if(!SHOP_SPRITES)orderCounterPositions(state.orderCounters).forEach(function(p){sceneJobs.push({depth:depthOf({x:p.x,z:3.75}),draw:function(){sceneElevation=0;archedServiceSign(p.x,'ORDER',state.orderCounters>1)}})});
-    if(!SHOP_SPRITES)sceneJobs.push({depth:depthOf({x:4,z:3.75}),draw:function(){sceneElevation=0;archedServiceSign(4,'PICKUP')}});
+    if(!SHOP_SPRITES)sceneJobs.push({depth:depthOf({x:PICKUP_X,z:3.75}),draw:function(){sceneElevation=0;archedServiceSign(PICKUP_X,'PICKUP')}});
     // Street-level queue markings and low entry planters retain the service route.
     // One dash per standing place along the order line, as far as the doorman; lit while someone is on it.
     var waiting=customers.filter(inOrderFlow).length,orderRoute=queueRoute(false),spacing=queueLimit()>20?.6:.75,inside=routeLength(orderRoute.slice(0,laneJoinIndex(orderRoute)+1));
@@ -3762,7 +3762,7 @@ if(!SHOP_SPRITES){
     if(i===4)return state.stock[4]>=readyCapacity()?'Ready storage full':state.stock[3]<1?'Waiting for packed '+unitWord(2):'Preparing pickup bags';
     var held=customers.filter(function(c){return c.ordered&&!c.bag}).length,heldNote=held>1?' · '+held+' orders held':held===1?' · 1 order held':'';
     if(state.stock[4]<1)return 'Waiting for ready bags'+heldNote;
-    return (customers.some(function(c){return c.ordered&&!c.bag&&c.phase==='pickup'&&Math.hypot(c.x-4,c.z-4.9)<.15})?'Serving a customer':'Waiting for a customer at the counter')+heldNote;
+    return (customers.some(function(c){return c.ordered&&!c.bag&&c.phase==='pickup'&&Math.hypot(c.x-PICKUP_X,c.z-4.9)<.15})?'Serving a customer':'Waiting for a customer at the counter')+heldNote;
   }
   function renderUI(periodic){
     if(document.hidden)return;

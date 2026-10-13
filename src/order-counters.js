@@ -1,7 +1,11 @@
 export const ORDER_COUNTER_COSTS=[2500,12500];
 // The head of the order line waits here, at the right-hand end of the rope pen, until a counter is free.
-export const ORDER_QUEUE_GATE={x:-2,z:6.1};
-const POSITIONS=[{x:-4,z:2.5},{x:-6.6,z:2.5},{x:-1.4,z:2.5}];
+// The whole order and pickup counter line sits this far right of its original layout, so the floor in front of the
+// lounge door stays clear (Kevin, 2026-10-13). Everything tied to the line (pickup spot, rope pen, menu board) adds it.
+export const COUNTER_SHIFT=1.2;
+export const PICKUP_X=4+COUNTER_SHIFT;
+export const ORDER_QUEUE_GATE={x:-2+COUNTER_SHIFT,z:6.1};
+const POSITIONS=[{x:-4+COUNTER_SHIFT,z:2.5},{x:-6.6+COUNTER_SHIFT,z:2.5},{x:-1.4+COUNTER_SHIFT,z:2.5}];
 
 export function migrateOrderCounters(value){
   return typeof value==='number'&&Number.isFinite(value)?Math.max(1,Math.min(3,Math.floor(value))):1;
