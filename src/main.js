@@ -18,7 +18,7 @@ import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import { createGlPost } from './gl-post.js';
-import { SUNNY, SHOP_SPRITES, LAMPS as STREET_LAMPS, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern } from './sunny-world.js';
+import { SUNNY, SHOP_SPRITES, LAMPS as STREET_LAMPS, compactOrderSprite, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern } from './sunny-world.js';
 import * as economy from './economy.js';
 import * as strains from './strains.js';
 import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent } from './progression.js';
@@ -1257,6 +1257,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // right-hand order desk and the pickup counter (the desks narrow when the order bank expands, so the gap moves).
     var count=state.orderCounters,orderEdge=Math.max.apply(null,orderCounterPositions(count).map(function(p){return p.x+(count===1?1.46:1.01)})),pickupEdge=4-1.46;
     var cx=(orderEdge+pickupEdge)/2,width=count===3?2:3.5,seams=Math.floor(width/.24);
+    if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),shellSprite(count===3?'shell.counter.divider.short':'shell.counter.divider.wide'),cx-width/2,cx+width/2,2.36,2.64,0,1.18,true))return;
     drawBox(cx,2.5,.03,width,.28,1.04,['#6b8972','#284939','#3d614c']);
     for(var tile=0;tile<seams;tile++){var tx=cx-width/2+.07+tile*.24;worldLine([[tx,.09,2.65],[tx,1.05,2.65]],'#d4d6b7',.016)}
     [.38,.72].forEach(function(y){worldLine([[cx-width/2,y,2.65],[cx+width/2,y,2.65]],'#d4d6b7',.016)});
@@ -1267,7 +1268,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       if(only!==undefined&&p.index!==only)return;
       var active=customers.some(function(c){return c.orderCounter===p.index&&atOrderCounter(c,state.orderCounters)&&c.serviceElapsed>0});
       if(state.lines[4]>0)drawPerson(p.x-.35,p.z-1.5,now,4,false,true,false,{amount:0,phase:0,facing:.3,identity:4+p.index*23,taskOffset:p.index*1.7,workActivity:active?1:0});
-      if(SHOP_SPRITES&&drawSprite(sunnyApi(now),stationSprite(4,state.lines[4])||(state.orderCounters>1?'counter':''),p.x,p.z)){if(selected===4&&state.orderCounters>1)selectionRing(p,true);return}
+      if(SHOP_SPRITES&&drawSprite(sunnyApi(now),state.orderCounters>1?compactOrderSprite(state.lines[4])||stationSprite(4,state.lines[4])||'counter':stationSprite(4,state.lines[4]),p.x,p.z)){if(selected===4&&state.orderCounters>1)selectionRing(p,true);return}
       if(state.orderCounters===1){drawStage(p,4,now);return}
       var x=p.x,z=p.z,stone=['#f8f3e5','#bfc3b4','#dfe2d5'],walnut=['#8d6a45','#4a3120','#6e5034'],oak=['#cfb085','#82613f','#a88960'];
       drawBox(x,z,.03,2.12,2.16,.25,['#425046','#222d25','#324137']);
@@ -2160,6 +2161,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       // Cream columns with forest-green tile bases and brass wall sconces.
       [9.8].forEach(function(cx){
         var cz=-1.8;
+        if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),shellSprite('shell.column'),cx-.4,cx+.4,cz-.38,cz+.38,0,4.25,true))return;
         // Tiled base, its cap, then the shaft rising from the cap, so the cap reads as a lip around the shaft's foot
         // rather than a slab painted across it.
         drawBox(cx,cz,.08,.78,.73,1.65,['#37634d','#153c2d','#25523b']);
