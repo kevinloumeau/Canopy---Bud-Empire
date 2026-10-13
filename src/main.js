@@ -2478,7 +2478,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
         }
         sceneElevation=floor.y;
       }
-      if(fi===0){drawCachedGround(floor);if(SHOP_SPRITES){var groundTex=floorPattern(sunnyApi(now),'herringbone',4);if(groundTex){var front=11.95;poly([project(-floor.w/2,0,floor.z-floor.d/2),project(floor.w/2,0,floor.z-floor.d/2),project(floor.w/2,0,front),project(-floor.w/2,0,front)],groundTex)}}drawSideAislePlanter()}
+      if(fi===0){drawCachedGround(floor);if(SHOP_SPRITES){var groundTex=floorPattern(sunnyApi(now),'herringbone',4);if(groundTex){var front=11.95;poly([project(-floor.w/2,0,floor.z-floor.d/2),project(floor.w/2,0,floor.z-floor.d/2),project(floor.w/2,0,front),project(-floor.w/2,0,front)],groundTex)}drawStoreFrontEdge(floor)}drawSideAislePlanter()}
 
       else{
         // One continuous floor outline includes the stair landing, with no internal slab edge.
@@ -2881,6 +2881,13 @@ if(!SHOP_SPRITES){
   // course line) under the same steel rim as the mezzanine planters. It runs the whole side aisle, from the storefront
   // bays back past the corner window, and the corner's tree grows out of it. It is painted with the ground floor, right
   // after the boards, so the interior stands in front of it while it still fronts the outside queue.
+  // Sprite shop: the herringbone floor shows its oak edge along the front, and a low tiled wall closes the store's
+  // front from the entrance portal along that edge.
+  function drawStoreFrontEdge(floor){
+    var front=11.95;
+    drawBox(0,front-.07,0,floor.w,.14,.14,['#d8b47e','#8f6a42','#b48a5c']);
+    drawBoxSprite(sunnyApi(sceneTime),shellSprite('shell.store.edge'),-10.45,-4.6,front-.42,front-.1,0,1.15,true);
+  }
   function drawSideAislePlanter(){
     var x=-10.65;
     if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),shellSprite('shell.planter.aisle'),x-1.05,x-.1,2,5.6,0,3.6,true))return;
