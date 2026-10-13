@@ -2521,8 +2521,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       shadowBandX(rear+.2,front-.2,left+.2,left+1.4,.018,.15);
       if(fi===0){poly([project(-9,.016,rear+.2),project(9,.016,rear+.2),project(9,.016,1.55),project(-9,.016,1.55)],'rgba(14,28,20,.07)');shadowBand(-9,9,1.55,1.3,.017,.12)}
       if(fi===1){poly([project(-6.5,.016,rear+.2),project(6.5,.016,rear+.2),project(6.5,.016,-.3),project(-6.5,.016,-.3)],'rgba(14,28,20,.07)');shadowBand(-6.5,6.5,-.3,-1.9,.017,.12)}
-      if(fi!==0){
-      // Black-framed glass along the rear-right corner, not across the open front.
+      if(fi!==0&&!(SHOP_SPRITES&&fi===2)){
+      // Black-framed glass along the rear-right corner, not across the open front (the sprite shop's top floor has none).
       glassPane([project(right,0,rear),project(right,0,rear+3),project(right,3.8,rear+3),project(right,3.8,rear)],'#adc7b21b');
       for(var mull=0;mull<4;mull++)worldLine([[right,0,rear+mull],[right,3.8,rear+mull]],'#263a32',.04);
       worldLine([[right,3.8,rear],[right,3.8,rear+3]],'#252b28',.045);

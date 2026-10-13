@@ -152,7 +152,8 @@ const BUILDINGS = [
   [10, -31, 11, 12, 5, MAUVE, '#9c8f9e'], [23, -31, 11, 12, 8, STONE, '#b7a07a'], [36, -31, 11, 12, 6, TAN, '#8a9e8c'],
   [-34, -15, 12, 11, 6, TAN, '#9c8f9e'], [-34, -2, 12, 11, 7, SAGE, '#b7a07a'], [-34, 11, 12, 11, 5, STONE, '#8a9e8c'], [-34, 24, 12, 11, 6, MAUVE, '#b7a07a']
 ];
-const FAR_TREES = [[-12, -24], [-1, -24], [10, -24], [21, -24], [-28, -13], [-28, -2], [-28, 9], [-28, 20]];
+// Kept toward the kerb, clear of the facades behind them.
+const FAR_TREES = [[-12, -22.4], [-1, -22.4], [10, -22.4], [21, -22.4], [-26.4, -13], [-26.4, -2], [-26.4, 9], [-26.4, 20]];
 const NEAR_TREES = [[-15, -13.5], [-5, -13.5], [5, -13.5], [15, -13.5], [-17, -4], [-17, 4]]; // behind / left of the shop only
 const LAMPS = [[-18.5, -14.5], [18.5, -14.5], [-18.5, 17.5], [18.5, 17.5], [0, -14.5], [-18.5, 1]];
 // Walkers: [x0, z0, x1, z1, count, back-pass?]; each walks the segment back and forth on its own phase.
@@ -200,7 +201,7 @@ export function drawSunnyWorld(api, front, alpha) {
     const at = (x, z, f) => jobs.push([x, z, f]);
     LAMPS.filter(([x, z]) => !(z < -9 || x < -13)).forEach(([x, z]) => at(x, z, () => lamp(api, x, z)));
     [[18, -6], [18, 6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => at(x, z, () => planter(api, x, z)));
-    at(0, 16.5, () => bench(api, 0, 16.5)); at(18, 0, () => bench(api, 18, 0)); at(14, 16, () => bikeRack(api, 14, 16));
+    at(0, 16.5, () => bench(api, 0, 16.5, true)); // mirrored to run along the front street at(18, 0, () => bench(api, 18, 0)); at(14, 16, () => bikeRack(api, 14, 16));
     at(18.5, -11, () => busStop(api, 18.5, -11)); at(18.5, 12, () => bin(api, 18.5, 12)); at(12, 17.5, () => hydrant(api, 12, 17.5));
     drawCars(api, false, at); drawWalkers(api, false, at);
     byDepth(jobs).forEach(j => j[2]());
@@ -329,8 +330,8 @@ function planter(api, x, z) {
   [['#e8524a', -.4], ['#f4c542', .1], ['#f39ab4', .45]].forEach(([c, dx]) => { const q = p(x + dx, .9, z + .1); api.ellipse(q.x, q.y, u * .1, u * .1, c); });
 }
 
-function bench(api, x, z) {
-  if (prop(api, 'street.bench', x, z)) return;
+function bench(api, x, z, flip) {
+  if (prop(api, 'street.bench', x, z, flip)) return;
   const wood = ['#b98a5a', '#7a5636', '#9c7247'], iron = ['#3a3f3c', '#22262a', '#2f3435'];
   [-1, 1].forEach(s => api.box(x + s * 1, z, P, .12, .6, .5, iron));
   for (let i = 0; i < 4; i++) api.box(x, z - .3 + i * .2, P + .48, 2.4, .15, .08, wood);
