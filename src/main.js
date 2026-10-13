@@ -1267,11 +1267,22 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // right-hand order desk and the pickup counter (the desks narrow when the order bank expands, so the gap moves).
     var count=state.orderCounters,orderEdge=Math.max.apply(null,orderCounterPositions(count).map(function(p){return p.x+(count===1?1.46:1.01)})),pickupEdge=4-1.46;
     var cx=(orderEdge+pickupEdge)/2,width=count===3?2:3.5,seams=Math.floor(width/.24);
-    if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),shellSprite('shell.counter.divider.wide2'),orderEdge-.2,pickupEdge+.15,2.36,2.64,0,1.18,true))return;
+    // The render of this divider is a fixed-length block, so stretched over the gap its far end floated; the wall is
+    // drawn in place instead, in the render's dark-green tile and cream cap.
+    if(SHOP_SPRITES){tiledLowWall(cx,2.5,width,.28,1.04);return}
     drawBox(cx,2.5,.03,width,.28,1.04,['#6b8972','#284939','#3d614c']);
     for(var tile=0;tile<seams;tile++){var tx=cx-width/2+.07+tile*.24;worldLine([[tx,.09,2.65],[tx,1.05,2.65]],'#d4d6b7',.016)}
     [.38,.72].forEach(function(y){worldLine([[cx-width/2,y,2.65],[cx+width/2,y,2.65]],'#d4d6b7',.016)});
     drawBox(cx,2.5,1.07,width+.12,.4,.11,['#e0d4b4','#a99c7b','#c5ba9a']);
+  }
+  // A low dark-green tiled wall with a cream cap, drawn on its true footprint (the sprite shop's divider and store edge).
+  function tiledLowWall(cx,cz,w,d,h){
+    var tile=['#2f6b4e','#143425','#1f4d37'],grout='#9fc4ad';
+    drawBox(cx,cz,0,w,d,h,tile);
+    var f=cz+d/2+.004;
+    for(var tx=cx-w/2+.3;tx<cx+w/2-.05;tx+=.3)worldLine([[tx,.02,f],[tx,h-.02,f]],grout,.014);
+    for(var ty=.3;ty<h-.05;ty+=.3)worldLine([[cx-w/2,ty,f],[cx+w/2,ty,f]],grout,.014);
+    drawBox(cx,cz,h,w+.1,d+.12,.1,['#ece2c8','#b3a78a','#d2c6a6']);
   }
   function drawOrderCounterBank(now,only){
     orderCounterPositions(state.orderCounters).map(function(p,index){return {x:p.x,z:p.z,index:index}}).sort(function(a,b){return depthOf(a)-depthOf(b)}).forEach(function(p){
@@ -2311,7 +2322,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   // Oak carcasses first so the units stand out from the wall with a lit top and end panels, then the flat shelf
   // fronts on their face plane.
-  var SHELF_OAK=['#e2bf8c','#b98a57','#cfa16c'];
+  var SHELF_OAK=['#d9b482','#a6794a','#9e6f44'];
   function drawShelfRun(api,runs,face,h,d){
     runs.forEach(function(r){drawBox((r[0]+r[1])/2,face-d/2,0,r[1]-r[0],d,h,SHELF_OAK)});
     runs.forEach(function(r){drawWallFace(api,'shell.shelf.wall.right',r[0],face,r[1],face,0,h)});
@@ -2320,13 +2331,15 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var api=sunnyApi(now);
     drawWallFace(api,'shell.wall.tile.right',-6.7,displayZ,-1.3,displayZ,0,3.95,.04,.95);
     drawMenuBoard(-3.9,displayZ,1.38,5.1,1.24,now,wood);
-    drawShelfRun(api,[[-1.3,2.7],[2.7,6.7]],displayZ+.6,3.6,.55);
+    drawShelfRun(api,[[-1.3,2.7],[2.7,6.5]],displayZ+.6,3.6,.55);
   }
   function drawShellStairs(now){
     var api=sunnyApi(now);
     drawBoxSprite(api,shellSprite('shell.stairs.upper'),6.5,8.2,-5.6,.7,4.7,9.4,'height',.74);
-    drawBoxSprite(api,shellSprite('shell.stairs.main'),9.1,10.7,-.8,4.2,0,4.7,'height',.74);
-    drawSpan(api,shellSprite('shell.rail.glass.left'),8.93,-4.8,8.93,-1.75,1,4.7);
+    // The main-flight render came out floating and half transparent, so the upper flight's render serves both.
+    drawBoxSprite(api,shellSprite('shell.stairs.upper'),9.1,10.7,-.8,4.2,0,4.7,'height',.74);
+    // Glass guard rail along the mezzanine's open right edge, sheared on to its own plane from the flat render.
+    drawWallFace(api,'shell.rail.glass.left',8.93,-1.75,8.93,-4.8,4.7,1);
   }
   function drawCachedGround(floor){
     var key=[width,height,dpr,unit,centerX,centerY,angle,stationTier(4),stationTier(5)].join(':');
@@ -2619,7 +2632,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       }
       if(fi===2){
         var artX=left+.13,artZ=rear+1.8;
-        if(SHOP_SPRITES&&drawSpan(sunnyApi(now),shellSprite('shell.art.leaf'),artX,artZ+.7,artX,artZ-.7,1.45,.7)){}else{
+        if(SHOP_SPRITES&&shellSprite('shell.art.leaf')&&drawPlaneSprite(spriteImage('shell.art.leaf'),[artX,2.1,artZ+.6],[artX,2.1,artZ-.6],[artX,.9,artZ+.6])){}else{
         drawBox(artX,artZ,.55,.1,1.25,1.5,wood);
         drawBox(artX+.06,artZ,.64,.025,1.07,1.32,['#e4dbc0','#c2b69a','#ded4b7']);
         worldLine([[artX+.08,.8,artZ],[artX+.08,1.8,artZ]],'#476746',.035);
@@ -2784,7 +2797,7 @@ if(!SHOP_SPRITES){
       // Thin mezzanine guard rails stop short of the workstation fronts. The top floor's transfer tube drops behind its
       // front rail, so that run is painted first and the rail over it.
       if(fi===2){sceneElevation=0;drawFloorTransfer(1,true);sceneElevation=floor.y}
-      if(fi>0&&SHOP_SPRITES){var railApi=sunnyApi(now);[[left,left+2],[right-2,right]].forEach(function(pair){drawSpan(railApi,shellSprite('shell.rail.glass.right'),pair[0],front-.1,pair[1],front-.1,1.05)})}
+      if(fi>0&&SHOP_SPRITES){var railApi=sunnyApi(now);[[left,left+2],[right-2,right]].forEach(function(pair){drawWallFace(railApi,'shell.rail.glass.right',pair[0],front-.1,pair[1],front-.1,0,1.05)})}
       else if(fi>0){
         var rz=front-.1;
         [-floor.w/2,-floor.w/2+2,floor.w/2-2,floor.w/2].forEach(function(x){worldLine([[x,0,rz],[x,.95,rz]],'#252b28',.055)});
@@ -2946,7 +2959,7 @@ if(!SHOP_SPRITES){
   function drawStoreFrontEdge(floor){
     var front=11.95;
     drawBox(0,front-.07,0,floor.w,.14,.14,['#d8b47e','#8f6a42','#b48a5c']);
-    drawBoxSprite(sunnyApi(sceneTime),shellSprite('shell.store.edge'),-10.45,-4.6,front-.42,front-.1,0,1.15,true);
+    tiledLowWall((-10.45-4.6)/2,front-.26,5.85,.32,1.05);
   }
   function drawSideAislePlanter(){
     var x=-10.65;
@@ -3281,12 +3294,12 @@ if(!SHOP_SPRITES){
     drawBox(dx-.94,zc,0,.48,fd,H,plaster);drawBox(dx,zc,2.5,1.4,fd,H-2.5,plaster);drawBox((dx+.7-6.7)/2,zc,0,-6.7-(dx+.7),fd,H,plaster);drawBox((6.7+rx)/2,zc,0,rx-6.7,fd,H,plaster);
     [[dx-1.18,dx-.7],[dx+.7,-6.7],[6.7,rx]].forEach(function(run){tileFace(false,run[0],run[1],face)});
     worldLine([[dx-.74,.02,face+.02],[dx-.74,2.54,face+.02],[dx+.74,2.54,face+.02],[dx+.74,.02,face+.02]],'#171e1a',.07);
-    if(open&&SHOP_SPRITES&&drawSpan(sunnyApi(sceneTime),shellSprite('shell.lounge.door.open'),dx-.85,face,dx+.85,face,2.62)){
+    if(open&&SHOP_SPRITES&&drawSpan(sunnyApi(sceneTime),shellSprite('shell.lounge.door.open'),dx-.62,face,dx+.8,face,2.55)){
       // Sprite shop: the burgundy drapes tied back from the lit lounge doors (ChatGPT redo of the 45° render).
     }else if(open){
       drawLoungeDrapes(1,loungeCurtain);
       drawBox(dx,face-.05,2.44,1.5,.1,.14,['#4a1b29','#2b0d16','#3b1420']);
-    }else if(SHOP_SPRITES&&drawSpan(sunnyApi(sceneTime),shellSprite('shell.lounge.door.closed'),dx-.8,face,dx+.8,face,2.6)){
+    }else if(SHOP_SPRITES&&drawSpan(sunnyApi(sceneTime),shellSprite('shell.lounge.door.closed'),dx-.62,face,dx+.8,face,2.55)){
       // Sprite shop: the 45° Ludo lounge door, when it has been rendered.
     }else if(SHOP_SPRITES){
       // Sprite shop: a closed forest-green door in the storefront's colours, two inset panels, brass handle and kick
