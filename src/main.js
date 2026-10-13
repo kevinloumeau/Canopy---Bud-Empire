@@ -2041,6 +2041,10 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function onlinePackingCounter(now,previewOnly){
     var x=-10.7,z=1.5,oak=['#cbb085','#7f6a4b','#ac9168'],green=['#86a795','#3e6250','#648a70'];
     if(!deliveryBuilt()&&!previewOnly){onlineCounterSite(now,x,z,oak);return}
+    // Sprite shop: the finished deck render, with the live dispatch readout and the jar feed still drawn over it.
+    if(SHOP_SPRITES&&!previewOnly&&drawBoxSprite(sunnyApi(now),shellSprite('deck.delivery.built'),x-2.2,x+2.2,z-3.55,z+1.9,-.24,3.8,true)){
+      transferTube([[-4.55,-.9,1],[-7.4,-.9,1],[-7.4,1.5,1.5],[-9.05,1.5,1.5]],3);return;
+    }
     // Cantilevered launch deck, attached to the rear sign supports.
     var padZ=z-2.25,steel=['#526659','#253b30','#3a5142'];
     // A tie beam under the deck meets the mezzanine edge so the cantilever reads as attached.
@@ -2095,9 +2099,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // Before the delivery pad is bought the mezzanine corner is a building site: bare deck, taped-off perimeter,
   // a sheeted counter, stacked materials and an unlit COMING SOON board where the sign will go.
   function onlineCounterSite(now,x,z,oak){
-    // Sprite shop: the 45° Ludo render of the taped-off deck, stretched over the site's whole box, once it exists.
-    // The 45° Ludo deck render (deck.delivery.site) came back as a separate composition that does not meet the
-    // mezzanine stairs or its supports, so the drawn site stays until it is redone.
+    // Sprite shop: the taped-off deck as one connected render (ChatGPT redo), stretched over the site's whole box.
+    if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(now),shellSprite('deck.delivery.site'),x-2.2,x+2.2,z-3.55,z+1.9,-.24,3.8,true))return;
     var padZ=z-2.25,steel=['#526659','#253b30','#3a5142'],ply=['#d9c39a','#8a7250','#b89a6c'],sheet=['#d8dad2','#9a9f97','#bfc3ba'],hazard=['#e8c85a','#8c7420','#c6a93f'];
     [-1.2,1.2].forEach(function(dx){drawBox(x+dx,z-1.05,.02,.12,.14,3.04,steel);worldLine([[x+dx,2.05,z-1.05],[x+dx,2.96,padZ-.65]],'#304638',.09)});
     drawBox(x+.85,padZ,2.86,1.9,.14,.1,steel);
@@ -2250,7 +2253,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function drawShellStairs(now){
     var api=sunnyApi(now);
     drawBoxSprite(api,shellSprite('shell.stairs.upper'),6.5,8.2,-5.6,.7,4.7,9.4,true);
-    drawBoxSprite(api,shellSprite('shell.stairs.main'),9.1,10.7,-.8,4.2,0,4.7,'height');
+    drawBoxSprite(api,shellSprite('shell.stairs.main'),9.1,10.7,-.8,4.2,0,4.7,'height',.74);
     drawSpan(api,shellSprite('shell.rail.glass.left'),8.93,-4.8,8.93,-1.75,1,4.7);
   }
   function drawCachedGround(floor){
@@ -3148,7 +3151,9 @@ if(!SHOP_SPRITES){
     drawBox(dx-.94,zc,0,.48,fd,H,plaster);drawBox(dx,zc,2.5,1.4,fd,H-2.5,plaster);drawBox((dx+.7-6.7)/2,zc,0,-6.7-(dx+.7),fd,H,plaster);drawBox((6.7+rx)/2,zc,0,rx-6.7,fd,H,plaster);
     [[dx-1.18,dx-.7],[dx+.7,-6.7],[6.7,rx]].forEach(function(run){tileFace(false,run[0],run[1],face)});
     worldLine([[dx-.74,.02,face+.02],[dx-.74,2.54,face+.02],[dx+.74,2.54,face+.02],[dx+.74,.02,face+.02]],'#171e1a',.07);
-    if(open){
+    if(open&&SHOP_SPRITES&&drawSpan(sunnyApi(sceneTime),shellSprite('shell.lounge.door.open'),dx-.85,face,dx+.85,face,2.62)){
+      // Sprite shop: the burgundy drapes tied back from the lit lounge doors (ChatGPT redo of the 45° render).
+    }else if(open){
       drawLoungeDrapes(1,loungeCurtain);
       drawBox(dx,face-.05,2.44,1.5,.1,.14,['#4a1b29','#2b0d16','#3b1420']);
     }else if(SHOP_SPRITES&&drawSpan(sunnyApi(sceneTime),shellSprite('shell.lounge.door.closed'),dx-.8,face,dx+.8,face,2.6)){
