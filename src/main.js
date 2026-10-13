@@ -2038,11 +2038,20 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     ctx.save();ctx.translate(disp.x,disp.y);ctx.transform(1,(dAxis.y-disp.y)/(dAxis.x-disp.x),0,1,0,0);
     ctx.shadowColor=ready?'#b7e394':'#9ed6c8';ctx.shadowBlur=unit*.1;ctx.fillStyle=ready?'#d9f7c4':'#d2f2ea';ctx.font='600 '+Math.max(6,unit*.16)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(pending+(pending===1?' ORDER':' ORDERS')+' · '+state.stock[3]+' JARS',0,0,frameWidth);ctx.restore();
   }
+  // Sprite shop: the delivery deck render, with its long stair down to the mezzanine. Scaled from the earlier deck render
+  // (whose platform sat right) and pinned by the platform's left corner, measured on the half-size sprite at (76.5, 232).
+  function drawDeckSprite(now,name){
+    var api=sunnyApi(now),img=shellSprite(name)&&spriteImage(name);if(!img)return false;
+    var x=-10.7,z=1.5,pts=[];[x-2.2,x+2.2].forEach(function(px){[z-3.55,z+1.9].forEach(function(pz){[-.24,3.8].forEach(function(py){pts.push(project(px,py,pz))})})});
+    var l=Math.min.apply(null,pts.map(function(q){return q.x})),r=Math.max.apply(null,pts.map(function(q){return q.x})),b=Math.max.apply(null,pts.map(function(q){return q.y}));
+    var kOld=(r-l)/1146,cx=l+5*kOld,cy=b-1149*kOld+679*kOld,k=kOld*1.2*2;
+    ctx.save();ctx.translate(cx-k*76.5,cy-k*232);ctx.scale(k,k);ctx.drawImage(img,0,0);ctx.restore();return true;
+  }
   function onlinePackingCounter(now,previewOnly){
     var x=-10.7,z=1.5,oak=['#cbb085','#7f6a4b','#ac9168'],green=['#86a795','#3e6250','#648a70'];
     if(!deliveryBuilt()&&!previewOnly){onlineCounterSite(now,x,z,oak);return}
     // Sprite shop: the finished deck render, with the live dispatch readout and the jar feed still drawn over it.
-    if(SHOP_SPRITES&&!previewOnly&&drawBoxSprite(sunnyApi(now),shellSprite('deck.delivery.built'),x-2.2,x+2.2,z-3.55,z+1.9,-.24,3.8,true)){
+    if(SHOP_SPRITES&&!previewOnly&&drawDeckSprite(now,'deck.delivery.built')){
       transferTube([[-4.55,-.9,1],[-7.4,-.9,1],[-7.4,1.5,1.5],[-9.05,1.5,1.5]],3);return;
     }
     // Cantilevered launch deck, attached to the rear sign supports.
@@ -2100,7 +2109,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // a sheeted counter, stacked materials and an unlit COMING SOON board where the sign will go.
   function onlineCounterSite(now,x,z,oak){
     // Sprite shop: the taped-off deck as one connected render (ChatGPT redo), stretched over the site's whole box.
-    if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(now),shellSprite('deck.delivery.site'),x-2.2,x+2.2,z-3.55,z+1.9,-.24,3.8,true))return;
+    if(SHOP_SPRITES&&drawDeckSprite(now,'deck.delivery.site'))return;
     var padZ=z-2.25,steel=['#526659','#253b30','#3a5142'],ply=['#d9c39a','#8a7250','#b89a6c'],sheet=['#d8dad2','#9a9f97','#bfc3ba'],hazard=['#e8c85a','#8c7420','#c6a93f'];
     [-1.2,1.2].forEach(function(dx){drawBox(x+dx,z-1.05,.02,.12,.14,3.04,steel);worldLine([[x+dx,2.05,z-1.05],[x+dx,2.96,padZ-.65]],'#304638',.09)});
     drawBox(x+.85,padZ,2.86,1.9,.14,.1,steel);
@@ -2500,7 +2509,9 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
         var daylight=project(0,headY,rear+.3),dayFactor=1-Math.min(1,visualLight().darkness/.34);
         ctx.save();ctx.globalAlpha=dayFactor;glow(daylight.x,daylight.y,unit*6.5,'#e9f0d81c',unit*3.2);wallWash(left+.5,right-.5,rear+.2,headY,sillY-.9,'#eef4e2',.12);ctx.restore();
       }
-      }else drawShellWalls(fi,floor,left,right,rear,green);
+      }else{drawShellWalls(fi,floor,left,right,rear,green);
+        // The deck and its long stair go down with the mezzanine's walls, so the stations on the floor paint over the stair.
+        if(fi===1){sceneElevation=7.05;onlinePackingCounter(now);sceneElevation=floor.y}}
       // Ambient occlusion: the floor darkens softly where it meets the rear and side walls.
       shadowBand(fi===0?-11.5:left+.2,fi===0?9.05:right-.2,rear+.1,rear+1.6,.012,fi===0?.14:.22);shadowBandX(rear+.1,rear+3.5,left+.18,left+1.3,.012,.14);
       if(fi===0&&!SHOP_SPRITES){
@@ -2704,7 +2715,8 @@ if(!SHOP_SPRITES){
       if(fi===1){
         // Stairs to the online-orders deck: a short flight leaves the mezzanine past the end of the side wall, reaches a landing
         // outside the building, then turns left and climbs forward to enter the deck from its rear edge, behind the counter.
-        {
+        // The sprite shop's deck render carries its own stair and supports, so neither is drawn there.
+        if(!SHOP_SPRITES){
         sceneElevation=4.7;
         var rise=2.35/10,rail='#252b28',post=['#3a403c','#1a1f1c','#282e2a'];
         var f1Z=-2.3,f1Start=-7.2,f1Run=.78,landX=-10.25,landZ=-2.3,f2X=-10.25,f2Start=-1.41,f2Run=.38;
@@ -2725,12 +2737,12 @@ if(!SHOP_SPRITES){
         }
         sceneElevation=0;
         drawFloorTransfer(3,true);drawFloorTransfer(1,false);
-        drawBox(-12.5,3,0,.14,.14,6.81,metal);
+        if(!SHOP_SPRITES){drawBox(-12.5,3,0,.14,.14,6.81,metal);
         // The inner support is a raking strut: the platform's inner-front corner hangs past the mezzanine's front
         // edge, so it leans back to a shoe on the slab's front-left corner, in line with the side wall.
         drawBox(-8.95,1.35,4.7,.34,.34,.14,metal);
-        worldLine([[-8.95,4.84,1.35],[-8.9,6.81,3]],'#252b28',.14);
-        sceneElevation=7.05;onlinePackingCounter(now);sceneElevation=0;
+        worldLine([[-8.95,4.84,1.35],[-8.9,6.81,3]],'#252b28',.14);}
+        if(!SHOP_SPRITES){sceneElevation=7.05;onlinePackingCounter(now);sceneElevation=0}
       }
     });
     // Illuminated stair flights connect the open floors at the right-hand edge, each flush against the slab it climbs
@@ -2823,7 +2835,9 @@ if(!SHOP_SPRITES){
       worldLine([[-12.7,.04,7.45],[-12.1,.04,7.45]],'#e5d7ae',.05);
     }});
     if(!state.doorBuilt){jobs.push({depth:depthOf({x:x,z:z}),draw:function(){drawConstructionSite(x,z,1.5,2.1,function(){drawBox(x,z,0,.64,1.25,.12,steel);drawBox(x,z,.12,.6,1.2,.85,wood);drawBox(x,z,.97,.78,1.38,.13,['#efe4c8','#a9a18c','#d4c7a6'])})}});return}
-    jobs.push({depth:depthOf({x:x+.7,z:z}),draw:function(){drawPerson(x+.7,z,now,SUNNY?6:4,false,true,false)}});
+    // In the sprite shop the doorman stands a step further back so the wider figure clears the desk.
+    var guardX=SHOP_SPRITES?x+.85:x+.7,guardZ=SHOP_SPRITES?z-.55:z;
+    jobs.push({depth:depthOf({x:guardX,z:guardZ}),draw:function(){drawPerson(guardX,guardZ,now,SUNNY?6:4,false,true,false)}});
     jobs.push({depth:depthOf({x:x,z:z}),draw:function(){
       var rise=buildRise[6]||0,lift=rise*rise*1.1;if(rise>0){ctx.save();ctx.globalAlpha=.15+.85*(1-rise);sceneElevation-=lift}
       try{drawIdDesk()}finally{if(rise>0){sceneElevation+=lift;ctx.restore()}}
@@ -2980,7 +2994,8 @@ if(!SHOP_SPRITES){
     jobs.push({depth:depthOf({x:x-.3,z:z})+.05,draw:function(){exteriorLightSpill(.7)}});
     jobs.push({depth:depthOf({x:exitX,z:exitZ-.3})+.05,draw:function(){var e=exteriorFixtures.exitLamp;haloLight(e.x,e.y-.14,e.z,.7,.18,'#ffe2a5')}});
     // Threshold and welcome mat lie on the actual customer approach.
-    jobs.push({depth:-Infinity,draw:function(){groundPatch(x-.8,z,1.6,2,'#314d3d');drawBox(x,z,.025,.34,2.5,.06,brass)}});
+    // Sprite shop: one mat filling the doorway, from the kerb line to the timber floor, with no loose brass strip.
+    jobs.push({depth:-Infinity,draw:function(){if(SHOP_SPRITES){groundPatch(x-.3,z,1.5,2.3,'#314d3d');return}groundPatch(x-.8,z,1.6,2,'#314d3d');drawBox(x,z,.025,.34,2.5,.06,brass)}});
     // The door posts run straight to the slab: a wider brass foot block read as a loose crate beside the ID desk.
     if(!SHOP_SPRITES){
     [z-1.2,z+1.2].forEach(function(edge){add(x,edge,function(){drawBox(x,edge,0,.26,.26,3.3,frame)})});
