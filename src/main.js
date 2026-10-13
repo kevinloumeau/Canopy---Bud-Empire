@@ -2872,7 +2872,7 @@ if(!SHOP_SPRITES){
     if(SHOP_SPRITES){
       // All-sprite shop: the storefront (ChatGPT render, unwarped to a flat elevation) sheared on to the wall plane in
       // vertical slices so the queue outside sorts against it. The image's left edge is the near end, by the entrance.
-      var slices=8,z0=2.5,z1=8.94;
+      var slices=12,z0=LOUNGE_FRONT,z1=8.94; // the glazing runs all the way back to the lounge, with no plain wall
       for(var slice=0;slice<slices;slice++)(function(k){var za=z1-(z1-z0)*k/slices,zb=z1-(z1-z0)*(k+1)/slices;add(x,(za+zb)/2,function(){
         drawWallFace(sunnyApi(sceneTime),'shell.storefront',x,za,x,zb,-.04,4.19,k/slices,(k+1)/slices);
       })})(slice);
@@ -3154,8 +3154,7 @@ if(!SHOP_SPRITES){
       drawBox(rface+.05,ez,eh-.1,.1,ew*2+.04,.14,['#4a1b29','#2b0d16','#3b1420']);
     }else drawBox(rface+.03,ez,0,.05,ew*2-.3,eh-.24,darkWood);
     // The side wall closing the forecourt on the storefront line, from the lounge's front to the rear pilaster.
-    drawBox(side.x,sideZ,0,.26,sideD,H,plaster);
-    tileFace(true,side.z0,side.z1,side.x+.13);
+    if(!SHOP_SPRITES){drawBox(side.x,sideZ,0,.26,sideD,H,plaster);tileFace(true,side.z0,side.z1,side.x+.13)}
     // Facade: jamb and header around the doorway, the wall to its right and past the shelving, tiled below.
     if(rise>0){ctx.save();ctx.globalAlpha=.15+.85*(1-rise)}
     drawBox(dx-.94,zc,0,.48,fd,H,plaster);drawBox(dx,zc,2.5,1.4,fd,H-2.5,plaster);drawBox((dx+.7-6.7)/2,zc,0,-6.7-(dx+.7),fd,H,plaster);drawBox((6.7+rx)/2,zc,0,rx-6.7,fd,H,plaster);
@@ -3201,7 +3200,9 @@ if(!SHOP_SPRITES){
   }
   function drawExitCabinet(){
     // Sprite shop: the ChatGPT render of the arched merch cabinet, standing on the drawn cabinet's footprint.
-    if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),shellSprite('shell.merch.cabinet'),8.29,9.03,-6.84,-4.8,0,3.4,true))return;
+    // Its glazed face's bottom corners (measured on the sprite) are pinned to the floor at x 9.03, z -4.8 and -6.84.
+    if(SHOP_SPRITES&&shellSprite('shell.merch.cabinet')){var img=spriteImage('shell.merch.cabinet'),p0=project(9.03,0,-4.8),p1=project(9.03,0,-6.84),u0=85,v0=667,u1=298,v1=547;
+      var k=(p1.x-p0.x)/(u1-u0),shear=(p1.y-p0.y-k*(v1-v0))/(u1-u0);ctx.save();ctx.transform(k,shear,0,k,p0.x-k*u0,p0.y-k*v0-shear*u0);ctx.drawImage(img,0,0);ctx.restore();return}
     // Arched display cabinet in the corner between the lounge's right wall and the exit wall: an oak case with a
     // fluted back, three lit glass shelves of merchandise behind a glazed arch, and oak spandrels that turn the
     // rectangular case into a rounded niche. Its rear end sits against the rear wall beside the exit door.

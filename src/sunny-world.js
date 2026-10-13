@@ -71,7 +71,8 @@ export function drawPersonSprite(api, x, z, identity, employee, facing, phase, a
   if (!use) return false;
   const p = api.project(x, 0, z), u = api.unit;
   api.ellipse(p.x + u * .06, p.y + u * .03, u * .34, u * .1, 'rgba(14,28,20,.22)');
-  return drawSprite(api, use, x, z, facing < 0);
+  // Staff sprites are rendered facing the other way from the customers, so they are mirrored to face the floor.
+  return drawSprite(api, use, x, z, employee ? facing >= 0 : facing < 0);
 }
 // Shop fixtures from the interior batch, sized in world units like the stations.
 const FIXTURE_SIZE = { 'shop.displaycase': { w: 3.4, drop: .5 }, 'shop.planter.small': { w: .95, drop: .12 } };
