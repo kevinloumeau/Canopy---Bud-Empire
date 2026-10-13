@@ -853,7 +853,14 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     exitLamp:{x:10.25,y:3.38,z:-7.34},
     entryStrip:[[-10.9,3.27,8.85],[-10.9,3.27,11.15]]
   };
+  // Sprite shop: draws a fixture sprite `w` units wide with the image point (ax, ay) (fractions of its size) on screen
+  // point p, mirrored when `flip` is set; used for wall-mounted pieces anchored by their bracket.
+  function spriteAt(name,p,w,ax,ay,flip){
+    if(!fixtureSprite(name))return false;var img=spriteImage(name),W=w*unit,H=W*img.naturalHeight/img.naturalWidth;
+    ctx.save();ctx.translate(p.x,p.y);if(flip)ctx.scale(-1,1);ctx.drawImage(img,-ax*W,-ay*H,W,H);ctx.restore();return true;
+  }
   function drawBollard(b){
+    if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),fixtureSprite('street.bollard'),b.x-.22,b.x+.22,b.z-.22,b.z+.22,0,.7,true))return;
     drawBox(b.x,b.z,0,.2,.2,.7,['#414843','#171e1a','#2b342e']);litBox(b.x,b.z,.5,.21,.21,.13,['#fff1c9','#d8c18b','#f2e0b1']);drawBox(b.x,b.z,.7,.24,.24,.05,['#d8c18b','#8d7950','#b7a16d']);
   }
   function exteriorLightSpill(k){
@@ -1913,10 +1920,12 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // Set flush into the back wall: the black flap panel sits on the wall's face inside a slim oak trim that stands
     // only a hair proud of it, so nothing overhangs the letters from this camera. The sill and jambs go down before
     // the panel, the head after it, since its lip is in front of the panel's top edge.
-    var bar=.07,depth=.1,zMid=z+.16+depth/2,ix=width-bar*2,ih=height-bar*2,iy=y0+bar;
+    var bar=.07,depth=.1,zMid=z+.16+depth/2,ix=width-bar*2,ih=height-bar*2,iy=y0+bar,flatFrame=SHOP_SPRITES&&spriteImage('flat.menu.frame'),framed=flatFrame&&flatFrame.complete&&flatFrame.naturalWidth>0;
+    if(!framed){
     drawBox(x,zMid,y0,width,depth,bar,timber);
     drawBox(x-width/2+bar/2,zMid,iy,bar,depth,ih,timber);
     drawBox(x+width/2-bar/2,zMid,iy,bar,depth,ih,timber);
+    }
     drawBox(x,z+.16,iy,ix,.05,ih,['#1a1e20','#0b0e10','#131617']);
     var lines=flapLines(),reduced=motionPreference.matches,padX=.1,padY=.06;
     if(!flapSweepAt)scheduleFlapSweep(now);
@@ -1943,6 +1952,11 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       }
     }
     ctx.restore();
+    if(SHOP_SPRITES){
+      // Sprite shop: the v2 oak-and-brass frame, stretched only through its plain middle so the corners keep their shape.
+      var fz=z+.27,fy=y0-.12,fh=height+.24,x0=x-width/2-.14,x1=x+width/2+.14,cap=fh*.2*620/326,api=sunnyApi(sceneTime);
+      if(drawWallFace(api,'shell.menu.frame',x0,fz,x0+cap,fz,fy,fh,0,.2)){drawWallFace(api,'shell.menu.frame',x0+cap,fz,x1-cap,fz,fy,fh,.2,.8);drawWallFace(api,'shell.menu.frame',x1-cap,fz,x1,fz,fy,fh,.8,1);return}
+    }
     drawBox(x,zMid,y0+height-bar,width,depth,bar,timber);
   }
   function wallText(x,y,z,label,maxWidth,size,color,alongZ,weight){
@@ -2323,9 +2337,18 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(center.x+unit*1.5<0||center.x-unit*1.5>width||center.y+unit*1.6<0||center.y-unit*1.6>height)return;
     // The housing and rotor share the rear wall's plane, including its isometric shear.
     poly([project(x-1.25,y-1.26,z-.02),project(x+1.3,y-1.26,z-.02),project(x+1.3,y+1.18,z-.02),project(x-1.25,y+1.18,z-.02)],'#15241c48');
-    drawBox(x,z,y-1.18,2.36,.24,2.36,['#a8b6a6','#647a6c','#7f9686']);
+    // Sprite shop: the v2 forest-green housing goes over a smaller rotor, which shows through its open aperture.
+    var housing=SHOP_SPRITES&&fixtureSprite('shell.fan.housing');
+    if(!housing)drawBox(x,z,y-1.18,2.36,.24,2.36,['#a8b6a6','#647a6c','#7f9686']);
     var across=project(x+1,y,faceZ),down=project(x,y-1,faceZ);
     ctx.save();ctx.transform(across.x-center.x,across.y-center.y,down.x-center.x,down.y-center.y,center.x,center.y);
+    if(housing){
+      ctx.beginPath();ctx.arc(0,0,.5,0,Math.PI*2);ctx.fillStyle='#1d3028';ctx.fill();
+      ctx.save();ctx.scale(.5,.5);ctx.rotate(sceneTime*Math.PI*2/26000);
+      for(var hb=0;hb<4;hb++){ctx.save();ctx.rotate(hb*Math.PI/2);ctx.beginPath();ctx.moveTo(.12,-.07);ctx.bezierCurveTo(.32,-.48,.71,-.64,.87,-.31);ctx.bezierCurveTo(1.01,-.03,.76,.38,.56,.34);ctx.bezierCurveTo(.39,.3,.38,.08,.12,.09);ctx.closePath();ctx.fillStyle='#b9cbb4';ctx.fill();ctx.restore()}
+      ctx.beginPath();ctx.arc(0,0,.2,0,Math.PI*2);ctx.fillStyle='#d8c18b';ctx.fill();ctx.restore();ctx.restore();
+      spriteAt('shell.fan.housing',center,1.95,234/515,298/620);return;
+    }
     ctx.fillStyle='#718779';ctx.fillRect(-1.1,-1.1,2.2,2.2);
     var metal=ctx.createLinearGradient(-1,-1,1,1);metal.addColorStop(0,'#d6dfcf');metal.addColorStop(.45,'#93a99a');metal.addColorStop(1,'#526b5c');
     ctx.beginPath();ctx.arc(0,0,1.055,0,Math.PI*2);ctx.fillStyle=metal;ctx.fill();
@@ -3163,14 +3186,27 @@ if(!SHOP_SPRITES){
     }
     // The room seen from above, past the mezzanine's edge: a plum floor, a rug, two velvet sofas and lamp tables.
     groundPatch(-10.1,roomZ,2.3,roomD,'#2a1b22');
+    if(SHOP_SPRITES&&fixtureSprite('lounge.sofa')&&fixtureSprite('lounge.rug.floor')){
+      // Sprite shop: the v2 plum sofas, walnut coffee and lamp tables on a plum rug (the rug turned to run along z).
+      var lapi=sunnyApi(sceneTime),rug=spriteImage('lounge.rug.floor'),r0=project(-10.85,0,-5.25),r1=project(-9.35,0,-2.95),rw=Math.abs(r1.x-r0.x)+unit*.25;
+      ctx.save();var rc=project(-10.1,0,-4.1);ctx.translate(rc.x,rc.y);ctx.scale(-1,1);ctx.drawImage(rug,-rw/2,-rw*rug.naturalHeight/rug.naturalWidth/2,rw,rw*rug.naturalHeight/rug.naturalWidth);ctx.restore();
+      drawBoxSprite(lapi,'lounge.sofa',-10.9,-9.3,-6.15,-5.55,0,1,true);
+      drawBoxSprite(lapi,fixtureSprite('lounge.coffee.table'),-10.55,-9.65,-4.35,-3.85,0,.4,true);
+      drawBoxSprite(lapi,'lounge.sofa',-10.9,-9.3,-2.65,-2.05,0,1,true);
+      [[-10.7,-6.6],[-10.7,-1.55],[-9.6,-4.1]].forEach(function(t){drawBoxSprite(lapi,fixtureSprite(open?'lounge.lamp.on':'lounge.lamp.off'),t[0]-.22,t[0]+.22,t[1]-.22,t[1]+.22,0,1.2,true)});
+    }else{
     groundPatch(-10.1,-4.1,1.5,2.3,'#4a2a35');
     [[-5.85,1],[-2.35,-1]].forEach(function(sofa){var sz=sofa[0],dir=sofa[1];drawBox(-10.1,sz,0,1.6,.6,.5,velvet);drawBox(-10.1,sz-dir*.24,.45,1.6,.14,.42,velvet)});
     drawBox(-10.1,-4.1,0,.9,.5,.4,darkWood);
     [[-10.7,-6.6],[-10.7,-1.55],[-9.6,-4.1]].forEach(function(t){drawBox(t[0],t[1],0,.4,.4,.62,darkWood);var lamp=project(t[0],.92,t[1]);(open?litEllipse:ellipse)(lamp.x,lamp.y,unit*.16,unit*.1,open?'#f3c88a':'#6a5a4a');if(open)glow(lamp.x,lamp.y,unit*.8,'#ffb36a44')});
+    }
     if(open){var spill=project(dx,.03,-1.3);glow(spill.x,spill.y,unit*.8,'#ff9ab83a',unit*.36)}
     // A red carpet runs out from the curtain, with a short velvet rope on brass stanchions down its right-hand side;
     // the posts and rope sort with the guests who wait on the carpet.
-    if(open){
+    if(open&&SHOP_SPRITES&&fixtureSprite('lounge.carpet.entry')){
+      // Sprite shop: the v2 runner with its brass stanchions and velvet ropes, sorted with the guests waiting on it.
+      sceneJobs.push({depth:depthOf({x:dx,z:face+.3}),draw:function(){sceneElevation=0;drawBoxSprite(sunnyApi(sceneTime),'lounge.carpet.entry',dx-.6,dx+.6,face+.02,face+1.95,0,1,true)}});
+    }else if(open){
       groundPatch(dx,face+.95,1.1,1.9,'#7a1f2e');groundPatch(dx,face+.95,.96,1.78,'#8e2537');
       worldLine([[dx-.55,.018,face+.02],[dx-.55,.018,face+1.9]],'#c9a45a',.03);worldLine([[dx+.55,.018,face+.02],[dx+.55,.018,face+1.9]],'#c9a45a',.03);
       [[dx+.72,face+.25],[dx+.72,face+1.75]].forEach(function(pt){sceneJobs.push({depth:depthOf({x:pt[0],z:pt[1]}),draw:function(){
@@ -3197,6 +3233,8 @@ if(!SHOP_SPRITES){
       drawLoungeDrapes(1,undefined,true);
       drawBox(rface+.05,ez,eh-.1,.1,ew*2+.04,.14,['#4a1b29','#2b0d16','#3b1420']);
     }else drawBox(rface+.03,ez,0,.05,ew*2-.3,eh-.24,darkWood);
+    // Sprite shop: the hooded v2 exit lamp over the back door, projecting from the wall into the exit lane.
+    if(SHOP_SPRITES)spriteAt('shell.exit.lamp',project(rface,eh+.42,ez),.95,.076,.287);
     // The side wall closing the forecourt on the storefront line, from the lounge's front to the rear pilaster.
     if(!SHOP_SPRITES){drawBox(side.x,sideZ,0,.26,sideD,H,plaster);tileFace(true,side.z0,side.z1,side.x+.13)}
     // Facade: jamb and header around the doorway, the wall to its right and past the shelving, tiled below.
@@ -3227,14 +3265,23 @@ if(!SHOP_SPRITES){
       wallText(dx,1.55,face+.04,'COMING SOON',unit*1.15,.17,'#5a4a35',false,'800');
       constructionTape([dx-.75,1.05,face+.06],[dx+.75,.95,face+.06]);
     }
+    // Sprite shop: a v2 brass sconce past the end of the LOUNGE sign (mirrored so it stands out from the facade).
+    if(SHOP_SPRITES)spriteAt('street.sconce',project(dx+2.85,1.75,face),.62,.171,.272,true);
     // The neon blade on the side wall's inner face, beside the curtain: a glowing tube when open, dark over the hoarding.
-    drawBox(side.x+.145,side.z0+.42,.3,.03,.46,2.2,['#1a1216','#0e090c','#140d10']);
+    if(!SHOP_SPRITES)drawBox(side.x+.145,side.z0+.42,.3,.03,.46,2.2,['#1a1216','#0e090c','#140d10']);
     loungeNeon(open);
     if(rise>0)ctx.restore();
   }
   // The neon LOUNGE blade's glow and letters, on the side wall's inner face beside the curtain; drawn with the lounge
   // front by day and again above the night map.
   function loungeNeon(open){
+    // Sprite shop: the v2 blade sign runs along the facade from the doorway's right jamb, under the mezzanine's edge (its
+    // lettering only reads unmirrored, so it cannot project out of this wall), lit while the lounge is open.
+    if(SHOP_SPRITES&&fixtureSprite('lounge.sign.lit')&&fixtureSprite('lounge.sign.dark')){
+      var m=project(LOUNGE_DOOR.x+.82,1.95,LOUNGE_FRONT+.06);
+      if(open){var g=project(LOUNGE_DOOR.x+1.7,1.6,LOUNGE_FRONT+.3);glow(g.x,g.y,unit*.9,'#fff1c866',unit*.5)}
+      spriteAt(open?'lounge.sign.lit':'lounge.sign.dark',m,1.25,.051,.336);return;
+    }
     var bx=LOUNGE_SIDE.x+.135,bz=LOUNGE_SIDE.z0+.42;
     if(open){var neon=project(bx+.03,1.4,bz);glow(neon.x,neon.y,unit*.62,'#ff8fb87a',unit*1.3)}
     'LOUNGE'.split('').forEach(function(letter,i){var ly=2.28-i*.36;
@@ -3547,23 +3594,23 @@ if(!SHOP_SPRITES){
     }
   }
   function drawCourierDrone(x,y,z,now,slot,orders){
-      carton(x,z,y-.9,.62);
+      var droneArt=SHOP_SPRITES&&fixtureSprite('drone.courier.loaded');
+      if(droneArt)spriteAt('drone.courier.loaded',project(x,y+.2,z),1.75,.5,.46);else carton(x,z,y-.9,.62);
       if(orders>1){
         var cargoLabel=project(x,y-.55,z+.36);
         ctx.fillStyle='#f5efd7';ctx.font='600 '+Math.max(9,unit*.23)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText('×'+orders,cargoLabel.x,cargoLabel.y);
       }
-      worldLine([[x-.2,y-.35,z],[x-.2,y-.04,z]],'#d8c89e',.035);
-      worldLine([[x+.2,y-.35,z],[x+.2,y-.04,z]],'#d8c89e',.035);
+      if(!droneArt){worldLine([[x-.2,y-.35,z],[x-.2,y-.04,z]],'#d8c89e',.035);worldLine([[x+.2,y-.35,z],[x+.2,y-.04,z]],'#d8c89e',.035)}
       [[-.63,-.45],[.63,-.45],[-.63,.45],[.63,.45]].forEach(function(offset,n){
         var rx=x+offset[0],rz=z+offset[1];
-        worldLine([[x,y+.12,z],[rx,y+.15,rz]],'#527565',.12);
-        var rotor=project(rx,y+.2,rz);
+        if(!droneArt)worldLine([[x,y+.12,z],[rx,y+.15,rz]],'#527565',.12);
+        var rotor=project(rx,y+(droneArt?.35:.2),rz);
         ellipse(rotor.x,rotor.y,unit*.36,unit*.13,'#cbdacc66');
         var angle=motionPreference.matches?0:now*.055+n;
         ctx.beginPath();ctx.moveTo(rotor.x-Math.cos(angle)*unit*.3,rotor.y-Math.sin(angle)*unit*.1);ctx.lineTo(rotor.x+Math.cos(angle)*unit*.3,rotor.y+Math.sin(angle)*unit*.1);ctx.strokeStyle='#e5e9cf';ctx.lineWidth=Math.max(1,unit*.045);ctx.stroke();
-        ellipse(rotor.x,rotor.y,unit*.075,unit*.045,'#294c3b');
+        if(!droneArt)ellipse(rotor.x,rotor.y,unit*.075,unit*.045,'#294c3b');
       });
-      drawBox(x,z,y,.66,.5,.22,['#e5e8d0','#587766','#91ac98']);
+      if(!droneArt)drawBox(x,z,y,.66,.5,.22,['#e5e8d0','#587766','#91ac98']);
       // Navigation lights: red to port, green to starboard, and a white strobe on the tail that flashes twice a second.
       var phase=motionPreference.matches?0:now*.002+slot*1.3,strobe=motionPreference.matches?1:((phase%1)<.12||((phase+.2)%1)<.12?1:0),beacon=motionPreference.matches?1:.55+Math.sin(phase*Math.PI*2)*.45;
       [[-.55,-.42,'#ff5a4a',beacon],[.55,-.42,'#5cff8a',beacon],[.05,.3,'#ffffff',strobe]].forEach(function(nav){
