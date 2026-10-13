@@ -2215,7 +2215,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       // Cream columns with forest-green tile bases and brass wall sconces.
       [9.8].forEach(function(cx){
         var cz=-1.8;
-        if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),shellSprite('shell.column'),cx-.4,cx+.4,cz-.38,cz+.38,0,4.25,true))return;
+        if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),shellSprite('shell.column'),cx-.4,cx+.4,cz-.38,cz+.38,0,4.1,'height'))return;
         // Tiled base, its cap, then the shaft rising from the cap, so the cap reads as a lip around the shaft's foot
         // rather than a slab painted across it.
         drawBox(cx,cz,.08,.78,.73,1.65,['#37634d','#153c2d','#25523b']);
@@ -2251,7 +2251,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       var ax=-8.75;
       for(var alcove=0;alcove<1;alcove++){
         var zz=-4.85,shape=[];
-        if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(now),shellSprite('shell.arch.shelves'),ax-.1,ax+.55,zz-1.05,zz+1.05,0,3.4,true))continue;
+        if(SHOP_SPRITES&&shellSprite('shell.arch.shelves')){softShadow(sunnyApi(now),ax+.25,0,zz,.9,2.3,.22);drawBoxSprite(sunnyApi(now),shellSprite('shell.arch.shelves'),ax-.1,ax+.55,zz-1.05,zz+1.05,-.14,3.3,true);continue}
         if(SHOP_SPRITES)continue;
         shape.push(project(ax,.15,zz-1));shape.push(project(ax,2.3,zz-1));
         for(var arc=0;arc<=16;arc++){var t=Math.PI-arc/16*Math.PI;shape.push(project(ax,2.3+Math.sin(t),zz+Math.cos(t)))}
@@ -2415,7 +2415,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   // The purple grow bars over the top-floor benches are bought in the Shop (the Grow lights component): none until the
   // first level, then the two over the Grow bench, a third over Seeds, and all four from level three.
-  function growLightBars(){var level=state.growBatchLevel||0;return level<=0?[]:level===1?[2.25,3.75]:level===2?[-2.25,2.25,3.75]:[-3.75,-2.25,2.25,3.75]}
+  function growLightBars(){var level=state.growBatchLevel||0;if(SHOP_SPRITES)return[];return level<=0?[]:level===1?[2.25,3.75]:level===2?[-2.25,2.25,3.75]:[-3.75,-2.25,2.25,3.75]}
   // Grow-room lighting gantry, drawn after the benches so the bars always sit above them.
   function drawGrowGantry(part){
     // Lighting gantry: posts are painted before the benches so their feet sit behind the counters; the beam and bars come after.
@@ -2542,7 +2542,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
         }
         sceneElevation=floor.y;
       }
-      if(fi===0){drawCachedGround(floor);if(SHOP_SPRITES){var groundTex=floorPattern(sunnyApi(now),'herringbone',4);if(groundTex){var front=11.95;poly([project(-floor.w/2,0,floor.z-floor.d/2),project(floor.w/2,0,floor.z-floor.d/2),project(floor.w/2,0,front),project(-floor.w/2,0,front)],groundTex)}drawStoreFrontEdge(floor)}drawSideAislePlanter()}
+      if(fi===0){drawCachedGround(floor);if(SHOP_SPRITES){var groundTex=floorPattern(sunnyApi(now),'herringbone',4);if(groundTex){var front=11.95;poly([project(-floor.w/2,0,floor.z-floor.d/2),project(floor.w/2,0,floor.z-floor.d/2),project(floor.w/2,0,front),project(-floor.w/2,0,front)],groundTex)}drawStoreFrontEdge(floor);jobs.push({depth:depthOf({x:-7.5,z:11.95}),draw:function(){tiledLowWall((-10.45-4.6)/2,11.95-.26,5.85,.32,1.05)}})}drawSideAislePlanter()}
 
       else{
         // One continuous floor outline includes the stair landing, with no internal slab edge.
@@ -2959,7 +2959,7 @@ if(!SHOP_SPRITES){
   function drawStoreFrontEdge(floor){
     var front=11.95;
     drawBox(0,front-.07,0,floor.w,.14,.14,['#d8b47e','#8f6a42','#b48a5c']);
-    tiledLowWall((-10.45-4.6)/2,front-.26,5.85,.32,1.05);
+    // The tiled wall itself is a depth-sorted job (see the floor pass) so it stands in front of the door and mat.
   }
   function drawSideAislePlanter(){
     var x=-10.65;
@@ -3093,7 +3093,7 @@ if(!SHOP_SPRITES){
       var e=exteriorFixtures.exitLamp;drawBox(e.x,e.z,e.y-.1,.5,.22,.16,brass);drawBox(e.x,e.z+.1,e.y-.02,.14,.1,.2,frame);
       var lamp=project(e.x,e.y-.13,e.z-.02);litEllipse(lamp.x,lamp.y,unit*.085,unit*.05,'#fff3d2');
     });
-    add(x-.2,z,function(){warmStrip(exteriorFixtures.entryStrip,false)});
+    if(!SHOP_SPRITES)add(x-.2,z,function(){warmStrip(exteriorFixtures.entryStrip,false)});
     jobs.push({depth:depthOf({x:x-.3,z:z})+.05,draw:function(){exteriorLightSpill(.7)}});
     jobs.push({depth:depthOf({x:exitX,z:exitZ-.3})+.05,draw:function(){var e=exteriorFixtures.exitLamp;haloLight(e.x,e.y-.14,e.z,.7,.18,'#ffe2a5')}});
     // Threshold and welcome mat lie on the actual customer approach.
@@ -3503,7 +3503,7 @@ if(!SHOP_SPRITES){
       function kp(x,y,z){var q=point(x,y,z);return project(q[0],q[1],q[2])}
       function kl(points,color,w){worldLine(points.map(function(p){return point(p[0],p[1],p[2])}),color,w)}
       // Sprite shop: Kevin's ChatGPT kiosk render on the kiosk's footprint.
-      if(SHOP_SPRITES){var kz=6.8-dx;if(drawBoxSprite(sunnyApi(sceneTime),fixtureSprite('shop.kiosk'),-10.12,-9.38,kz-.5,kz+.5,0,2.4,true))return}
+      if(SHOP_SPRITES){var kz=6.8-dx;if(drawBoxSprite(sunnyApi(sceneTime),fixtureSprite('shop.kiosk'),-10.04,-9.46,kz-.4,kz+.4,0,1.8,true))return}
       var steel=['#424d43','#202c24','#303f32'],oak=['#c6a071','#7c583a','#a27c50'];
       kb(-1.3+dx,7.95,0,.95,.7,.12,steel);kb(-1.3+dx,7.95,.12,.58,.46,1.25,oak);
       // The head is as deep as the pedestal so the two front faces align and the head sits centred over the base.
