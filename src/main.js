@@ -1870,15 +1870,17 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     }
     path.push(points[points.length-1]);
     (ports||[]).forEach(function(p){floorPort(p[0],p[1],p[2])});
+    var spriteTube=SHOP_SPRITES&&shellSprite('tube.straight')&&shellSprite('tube.elbow');
+    if(spriteTube)drawTubeSprites(points);
     // Transparent body: the room remains visible through the tube.
-    worldLine(path,'#233e341a',.92);worldLine(path,'#233e343c',.78);worldLine(path,'#c5e6dd24',.68);
+    if(!spriteTube){worldLine(path,'#233e341a',.92);worldLine(path,'#233e343c',.78);worldLine(path,'#c5e6dd24',.68)}
     function glassEdge(offset,color,width){
       var screenPath=path.map(function(p){return project(p[0],p[1],p[2])});
       ctx.beginPath();screenPath.forEach(function(p,i){var a=screenPath[Math.max(0,i-1)],b=screenPath[Math.min(screenPath.length-1,i+1)],dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1;
         var x=p.x-dy/len*unit*offset,y=p.y+dx/len*unit*offset;if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y);
       });ctx.strokeStyle=color;ctx.lineWidth=unit*width;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();
     }
-    glassEdge(-.35,'#e2f3e93a',.06);glassEdge(-.35,'#e2f3e980',.022);glassEdge(.35,'#456f6338',.07);glassEdge(.35,'#456f6370',.03);
+    if(!spriteTube){glassEdge(-.35,'#e2f3e93a',.06);glassEdge(-.35,'#e2f3e980',.022);glassEdge(.35,'#456f6338',.07);glassEdge(.35,'#456f6370',.03)}
 
     var segments=[],total=0;
     for(var n=1;n<path.length;n++){var a=path[n-1],b=path[n],len=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]);segments.push({a:a,b:b,len:len});total+=len}
@@ -1886,10 +1888,43 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       var distance=((parcel/3+(state.lines[stage]>0&&!motionPreference.matches?crateTime:0))%1)*total;
       for(var n=0;n<segments.length;n++){var part=segments[n];if(distance>part.len){distance-=part.len;continue}var t=distance/part.len,q=mix(part.a,part.b,t);transportItem(q[0],q[1]-.18,q[2],cargoStage===undefined?stage:cargoStage);break}
     }
+    if(spriteTube)return;
     // Narrow glass reflection and restrained brass end couplings.
     worldLine(path,'#dcf3e814',.55);
     glassEdge(-.24,'#f5fff0b3',.05);glassEdge(.22,'#b9e4da5c',.024);
     [points[0],points[points.length-1]].forEach(function(p){var q=project(p[0],p[1],p[2]);ellipse(q.x,q.y,unit*.37,unit*.28,'#c3b789');ellipse(q.x,q.y,unit*.27,unit*.2,'#345e5066')});
+  }
+  // Sprite shop: the tube built from the brass-coupled straight and elbow renders. Every run is a chain of straight
+  // world segments, so each segment gets the straight render laid along its screen line (end couplings kept at their
+  // own scale, only the glass between them stretched) and each bend gets the elbow render, mapped by the one affine
+  // transform that lays its two arms exactly along the two segments meeting there.
+  function drawTubeSprites(points){
+    var S=spriteImage('tube.straight'),E=spriteImage('tube.elbow'),dia=.62,sS=unit*dia/180,sE=unit*dia/167;
+    var SW=S.naturalWidth,SH=S.naturalHeight,CAP=150,CAP2=470;
+    // Elbow geometry measured on the render: arm A rises from the virtual corner C to the top mouth, arm B runs to the
+    // lower-right mouth.
+    var C=[110,377],dA=[0,-1],dB=[300/330,138/330],arm=330*sE;
+    var P=points.map(function(p){return project(p[0],p[1],p[2])});
+    function slice(x,y,ux,uy,sy0,sy1,t0,t1){
+      var k=(t1-t0)/(sy1-sy0),px=-uy,py=ux,bx=x-px*SW/2*sS+ux*t0,by=y-py*SW/2*sS+uy*t0;
+      ctx.save();ctx.transform(px*sS,py*sS,ux*k,uy*k,bx-ux*k*sy0,by-uy*k*sy0);ctx.drawImage(S,0,sy0,SW,sy1-sy0,0,sy0,SW,sy1-sy0);ctx.restore();
+    }
+    for(var i=1;i<P.length;i++){
+      var a=P[i-1],b=P[i],dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy);if(L<1)continue;
+      var ux=dx/L,uy=dy/L,t0=i>1?arm*.8:0,t1=L-(i<P.length-1?arm*.8:0);if(t1-t0<2)continue;
+      var cap=CAP*sS;
+      if(t1-t0<cap*2.2){slice(a.x,a.y,ux,uy,0,SH,t0,t1);continue}
+      slice(a.x,a.y,ux,uy,0,CAP,t0,t0+cap);slice(a.x,a.y,ux,uy,CAP,CAP2,t0+cap,t1-cap);slice(a.x,a.y,ux,uy,CAP2,SH,t1-cap,t1);
+    }
+    for(var k=1;k<P.length-1;k++){
+      var c=P[k],q=P[k-1],n=P[k+1],l1=Math.hypot(q.x-c.x,q.y-c.y)||1,l2=Math.hypot(n.x-c.x,n.y-c.y)||1;
+      var u1=[(q.x-c.x)/l1,(q.y-c.y)/l1],u2=[(n.x-c.x)/l2,(n.y-c.y)/l2];
+      // Keep the render's handedness: arm A takes whichever neighbour leaves the bend un-mirrored.
+      if(u1[0]*u2[1]-u1[1]*u2[0]<0){var sw=u1;u1=u2;u2=sw}
+      var det=dA[0]*dB[1]-dA[1]*dB[0],i00=dB[1]/det,i01=-dB[0]/det,i10=-dA[1]/det,i11=dA[0]/det;
+      var m00=(u1[0]*i00+u2[0]*i10)*sE,m01=(u1[0]*i01+u2[0]*i11)*sE,m10=(u1[1]*i00+u2[1]*i10)*sE,m11=(u1[1]*i01+u2[1]*i11)*sE;
+      ctx.save();ctx.transform(m00,m10,m01,m11,c.x-m00*C[0]-m01*C[1],c.y-m10*C[0]-m11*C[1]);ctx.drawImage(E,0,0);ctx.restore();
+    }
   }
   function drawFloorTransfer(stage,upper){
     // The pack tube drops through the mezzanine at x 0.1, clear of the menu board's price column on the wall behind.
