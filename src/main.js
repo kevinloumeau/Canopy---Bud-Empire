@@ -1860,7 +1860,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       transportItem(px,y+.08,z,stage);
     }
   }
-  function transferTube(points,stage,ports,cargoStage){
+  function transferTube(points,stage,ports,cargoStage,cargoOnly){
     // Round every elbow in world space so cargo follows the same smooth path.
     var path=[points[0]],radius=.48;
     function mix(a,b,t){return a.map(function(v,i){return v+(b[i]-v)*t})}
@@ -1873,8 +1873,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     }
     path.push(points[points.length-1]);
     (ports||[]).forEach(function(p){floorPort(p[0],p[1],p[2])});
-    var spriteTube=SHOP_SPRITES&&shellSprite('tube.straight')&&shellSprite('tube.elbow');
-    if(spriteTube)drawTubeSprites(points);
+    var spriteTube=cargoOnly||(SHOP_SPRITES&&shellSprite('tube.straight')&&shellSprite('tube.elbow'));
+    if(spriteTube&&!cargoOnly)drawTubeSprites(points);
     // Transparent body: the room remains visible through the tube.
     if(!spriteTube){worldLine(path,'#233e341a',.92);worldLine(path,'#233e343c',.78);worldLine(path,'#c5e6dd24',.68)}
     function glassEdge(offset,color,width){
@@ -1929,7 +1929,43 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       ctx.save();ctx.transform(m00,m10,m01,m11,c.x-m00*C[0]-m01*C[1],c.y-m10*C[0]-m11*C[1]);ctx.drawImage(E,0,0);ctx.restore();
     }
   }
+  // tubes-v3: each inter-floor run is one rendered assembly (inlet stub, swept drop, outlet stub) drawn as a single
+  // image at one uniform scale, pinned by its vertical drop: the drop's centreline is the image column `axis`, and the
+  // inlet and outlet centrelines (rows `top` and `bot`) land on the two tube levels. `keep` lists the source rectangles
+  // that are drawn, so a terminal flange that would hang in the open is clipped away where a short connector of the
+  // straight/elbow renders carries the run on to the counter. `path` is the centreline the parcels ride.
+  var TUBE_RUNS={
+    1:{name:'tube.run.grow',axis:417.6,top:199.8,bot:718.2,x:5,z:-3,yTop:10.85,yBot:6.15,port:[5,9.4,-3],
+       keep:[[0,0,633,690],[258,690,375,205]],path:[[3.8,10.85,-3],[5,10.85,-3],[5,6.15,-3],[5,6.45,-.95]]},
+    3:{name:'tube.run.pack',axis:322.8,top:243,bot:693,x:.1,z:-.3,yTop:6.15,yBot:1.55,port:[.1,4.7,-.3],
+       keep:[[0,0,614,660],[0,660,474,262]],path:[[-2.6,6.15,-.3],[.1,6.15,-.3],[.1,1.55,-.3],[2.03,1.65,-.3],[3.9,1.65,-.3],[3.9,1.65,1.6]],
+       connector:[[2.03,1.65,-.3],[3.9,1.65,-.3],[3.9,1.65,1.6]]}
+  };
+  function drawTubeRun(run){
+    if(!shellSprite(run.name))return false;
+    var img=spriteImage(run.name),top=project(run.x,run.yTop,run.z),bot=project(run.x,run.yBot,run.z),k=(bot.y-top.y)/(run.bot-run.top);
+    ctx.save();ctx.translate(top.x-run.axis*k,top.y-run.top*k);ctx.scale(k,k);
+    run.keep.forEach(function(r){ctx.drawImage(img,r[0],r[1],r[2],r[3],r[0],r[1],r[2],r[3])});
+    ctx.restore();
+    if(run.connector&&shellSprite('tube.straight')&&shellSprite('tube.elbow'))drawTubeSprites(run.connector);
+    return true;
+  }
   function drawFloorTransfer(stage,upper){
+    var run=SHOP_SPRITES&&TUBE_RUNS[stage];
+    if(run&&shellSprite(run.name)){
+      // The one aligned image is drawn twice, clipped at the floor opening's screen line: the part above the slab with
+      // that floor, the rest with the floor below, so the slab itself hides the buried section.
+      var q=project(run.port[0],run.port[1],run.port[2]);
+      ctx.save();ctx.beginPath();
+      if(upper)ctx.rect(-10000,-10000,20000,10000+q.y);else ctx.rect(-10000,q.y,20000,20000);
+      ctx.clip();drawTubeRun(run);transferTube(run.path,stage,[],stage===3?4:stage,true);ctx.restore();
+      if(upper){
+        // A slim sleeve ring where the pipe passes the slab, its near half over the pipe.
+        ctx.beginPath();ctx.ellipse(q.x,q.y,unit*.34,unit*.16,0,0,Math.PI);ctx.strokeStyle='#c4cfb9';ctx.lineWidth=unit*.07;ctx.stroke();
+        ctx.beginPath();ctx.ellipse(q.x,q.y+unit*.05,unit*.34,unit*.16,0,0,Math.PI);ctx.strokeStyle='#6b8070';ctx.lineWidth=unit*.045;ctx.stroke();
+      }
+      return;
+    }
     // The pack tube drops through the mezzanine at x 0.1, clear of the menu board's price column on the wall behind.
     var port=stage===1?[5.4,9.4,-2]:[.1,4.7,-.3];
     var route=stage===1?[[4.55,10.85,-3],[5.4,10.85,-3],[5.4,10.85,-2],[5.4,6.15,-2],[5.4,6.15,-.3],[4.55,6.15,-.3]]:[[-1.45,6.15,-.3],[.1,6.15,-.3],[.1,1.55,-.3],[4,1.55,-.3],[4,1.55,1.35]];
@@ -2828,6 +2864,9 @@ if(!SHOP_SPRITES){
       // Furniture stays visible in front of the back wall and shelving.
       // Staff positions: most stand behind their bench; the grow-room pair stand where the gantry and rack do not hide them.
       var staffSpots={0:{dx:-2.45,dz:.45,front:true,facing:1},1:{dx:-2.45,dz:.45,front:true,facing:1},5:{dx:1.05,dz:-1.55,front:false,facing:.35}};
+      // Transfer tubes go down before the stations, so a station hides the stub that enters its side or back.
+      if(fi===1){sceneElevation=0;drawFloorTransfer(3,true);drawFloorTransfer(1,false);sceneElevation=floor.y}
+      if(fi===2){sceneElevation=0;drawFloorTransfer(1,true);sceneElevation=floor.y}
       if(fi===2)drawGrowGantry('posts');
       function drawStation(i,only){if(i===4){drawOrderCounterBank(now,only);if(selected===4&&state.orderCounters===1)selectionRing(machinePos[4]);return}if(i===5)drawCounterDivider();var p=machinePos[i],spot=staffSpots[i]||{dx:-.95,dz:-1.65,front:false},gait=spot.facing?{amount:0,phase:0,facing:spot.facing}:undefined,staffed=state.lines[i]>0;if(staffed&&!spot.front)drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait);if(!(SHOP_SPRITES&&drawSprite(sunnyApi(now),stationSprite(i,state.lines[i])||(i===1?'grow':''),p.x,p.z)))drawStage(p,i,now);if(staffed&&spot.front)drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait);if(selected===i)selectionRing(p)}
       // The ground-floor counters sort with the customers; the upper stations paint with their floors.
@@ -2840,7 +2879,6 @@ if(!SHOP_SPRITES){
       if(fi===2)drawGrowGantry();
       // Thin mezzanine guard rails stop short of the workstation fronts. The top floor's transfer tube drops behind its
       // front rail, so that run is painted first and the rail over it.
-      if(fi===2){sceneElevation=0;drawFloorTransfer(1,true);sceneElevation=floor.y}
       if(fi>0&&SHOP_SPRITES){var railApi=sunnyApi(now);[[left,left+2],[right-2,right]].forEach(function(pair){drawWallFace(railApi,'shell.rail.glass.right',pair[0],front-.1,pair[1],front-.1,0,1.05)})}
       else if(fi>0){
         var rz=front-.1;
@@ -2874,7 +2912,6 @@ if(!SHOP_SPRITES){
         }
         }
         sceneElevation=0;
-        drawFloorTransfer(3,true);drawFloorTransfer(1,false);
         if(!SHOP_SPRITES){drawBox(-12.5,3,0,.14,.14,6.81,metal);
         // The inner support is a raking strut: the platform's inner-front corner hangs past the mezzanine's front
         // edge, so it leans back to a shoe on the slab's front-left corner, in line with the side wall.
