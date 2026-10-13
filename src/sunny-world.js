@@ -296,23 +296,38 @@ function building(api, [x, z, w, d, h, wall, awning]) {
   api.poly([p(x0, P + h + .3, z0), p(x1, P + h + .3, z0), p(x1, P + h + .3, z1), p(x0, P + h + .3, z1)], haze);
 }
 
-// Soft cast shadow on the ground plane, thrown down-right away from the sprites' upper-left key light. The ground is
-// an affine image of the world plane, so a circle under that transform lies flat on it (no canvas filter, which
-// Safari lacks).
-function softShadow(api, x, y, z, r, alpha, stretch) {
+// Soft shadows on the ground plane. The ground is an affine image of the world plane, so a blurred disc drawn under
+// that transform lies flat on it. The disc is pre-rendered once (radial gradients misbehave under the skewed
+// transform, and Safari has no canvas filter). Each object gets a tight contact shadow under its footprint and a
+// fainter cast shadow thrown down-right, away from the sprites' upper-left key light.
+let SHADOW_TEX = null;
+function shadowTexture() {
+  if (SHADOW_TEX || typeof document === 'undefined') return SHADOW_TEX;
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d'), grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  [[0, 1], [.25, .92], [.5, .62], [.72, .3], [.88, .1], [1, 0]].forEach(([t, a]) => grad.addColorStop(t, 'rgba(46,52,36,' + a + ')'));
+  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
+  return (SHADOW_TEX = c);
+}
+function softShadow(api, x, y, z, rx, rz, alpha) {
+  const tex = shadowTexture(); if (!tex) return;
   const o = api.project(x, y, z), ex = api.project(x + 1, y, z), ez = api.project(x, y, z + 1), ctx = api.ctx;
-  ctx.save(); ctx.transform(ex.x - o.x, ex.y - o.y, ez.x - o.x, ez.y - o.y, o.x, o.y); ctx.scale(stretch || 1, 1);
-  // Stacked rings rather than a radial gradient, which renders unreliably under this skewed transform.
-  ctx.fillStyle = 'rgb(44,52,34)'; ctx.globalAlpha *= alpha * .2;
-  for (let k = 0; k < 10; k++) { ctx.beginPath(); ctx.arc(0, 0, r * (1 - k * .085), 0, Math.PI * 2); ctx.fill(); }
-  ctx.restore();
+  ctx.save(); ctx.transform(ex.x - o.x, ex.y - o.y, ez.x - o.x, ez.y - o.y, o.x, o.y);
+  ctx.globalAlpha *= alpha; ctx.drawImage(tex, -rx, -rz, rx * 2, rz * 2); ctx.restore();
+}
+// Contact plus cast for a footprint of half-sizes hx × hz with a given height.
+function groundShadow(api, x, y, z, hx, hz, height) {
+  softShadow(api, x, y, z, hx * 1.25, hz * 1.25, .42);
+  const reach = height * .45;
+  softShadow(api, x + reach * .6, y, z - reach * .15, hx + reach * .7, hz * 1.1 + reach * .2, .22);
 }
 function streetShadows(api, front) {
   const rear = ([x, z]) => z < -9 || x < -13;
-  if (!front) FAR_TREES.concat(NEAR_TREES).forEach(([x, z]) => softShadow(api, x + 1.6, P, z + .2, 2.7, .34, 1.35));
-  LAMPS.filter(l => rear(l) !== front).forEach(([x, z]) => softShadow(api, x + 2, P, z, .8, .26, 3));
-  if (front) [[18, -6], [18, 6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => softShadow(api, x + .6, P, z, 1.5, .3, 1.4));
-  if (front) [[0, 16.5], [18, 0]].forEach(([x, z]) => softShadow(api, x + .5, P, z, 1.2, .26, 1.5));
+  if (!front) FAR_TREES.concat(NEAR_TREES).forEach(([x, z]) => { softShadow(api, x, P, z, .9, .9, .35); softShadow(api, x + 1.5, P, z - .3, 2.2, 1.8, .2); });
+  LAMPS.filter(l => rear(l) !== front).forEach(([x, z]) => { softShadow(api, x, P, z, .35, .35, .45); softShadow(api, x + 1.6, P, z - .3, 1.6, .35, .16); });
+  if (front) [[18, -6], [18, 6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => groundShadow(api, x, P, z, .55, 1.4, 1));
+  if (front) groundShadow(api, 0, P, 16.5, 1.2, .35, .9);
+  if (front) groundShadow(api, 18, P, 0, .35, 1.2, .9);
 }
 function streetTree(api, x, z) {
   const p = api.project, u = api.unit;
@@ -402,7 +417,7 @@ function car(api, x, z, along, color) {
   const variant = { '#e0564a': 'red', '#f4f1e4': 'white', '#4f8fd0': 'blue', '#f2c14e': 'yellow', '#6ea845': 'green', '#8a6fd1': 'white' }[color];
   const carName = (variant ? 'street.car.' + variant : 'street.van') + (ax ? '.fr' : '.fl');
   lazySprite(carName, 'sprites/street/' + carName + '.png', variant ? { w: 3.1, drop: .55 } : { w: 3.3, drop: .55 });
-  if (spriteReady(carName) || spriteReady('car')) softShadow(api, x + .6, G, z, ax ? 2.3 : 1.5, .34, ax ? 1.2 : 1.6);
+  if (spriteReady(carName) || spriteReady('car')) groundShadow(api, x, G, z, ax ? 1.5 : .75, ax ? .75 : 1.5, 1.4);
   if (carName === 'street.car.red.fr' ? spriteReady('car') : spriteReady(carName)) {
     const ctx = api.ctx, q = api.project(x, G, z);
     ctx.save(); ctx.translate(0, q.y - api.project(x, 0, z).y);
