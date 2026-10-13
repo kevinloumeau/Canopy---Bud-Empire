@@ -978,7 +978,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     ctx.save();ctx.globalCompositeOperation='lighter';ctx.drawImage(nightSurfaces.emissive,0,0,width,height);ctx.restore();
     var saved=sceneElevation;sceneElevation=0;
     signFaces.forEach(function(sign){var p=project(sign.x,sign.y,sign.z);glow(p.x,p.y,unit*sign.halo,'#ffda8a40',unit*sign.halo*.7);signText(sign.x,sign.y,sign.z,sign.label,sign.width,sign.size,'#fff3d6')});
-    drawMarquee(true);
+    if(!SHOP_SPRITES)drawMarquee(true); // the storefront sprite carries its own sign
     if(deliveryBuilt()){sceneElevation=7.05;var pending=onlineRequestsReady();onlineReadout(-10.7,2.4,pending,pending>0&&state.stock[3]>=onlineSize());sceneElevation=0}
     if(state.lounge>0)loungeNeon(true);
     sceneElevation=saved;

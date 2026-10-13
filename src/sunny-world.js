@@ -201,7 +201,8 @@ export function drawSunnyWorld(api, front, alpha) {
     const at = (x, z, f) => jobs.push([x, z, f]);
     LAMPS.filter(([x, z]) => !(z < -9 || x < -13)).forEach(([x, z]) => at(x, z, () => lamp(api, x, z)));
     [[18, -6], [18, 6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => at(x, z, () => planter(api, x, z)));
-    at(0, 16.5, () => bench(api, 0, 16.5, true)); // mirrored to run along the front street at(18, 0, () => bench(api, 18, 0)); at(14, 16, () => bikeRack(api, 14, 16));
+    at(0, 16.5, () => bench(api, 0, 16.5, true)); // mirrored to run along the front street
+    at(18, 0, () => bench(api, 18, 0)); at(14, 16, () => bikeRack(api, 14, 16));
     at(18.5, -11, () => busStop(api, 18.5, -11)); at(18.5, 12, () => bin(api, 18.5, 12)); at(12, 17.5, () => hydrant(api, 12, 17.5));
     drawCars(api, false, at); drawWalkers(api, false, at);
     byDepth(jobs).forEach(j => j[2]());
