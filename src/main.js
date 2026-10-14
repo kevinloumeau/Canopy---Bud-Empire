@@ -1855,11 +1855,21 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     ellipse(p.x,p.y,unit*.46,unit*.21,'#263b31');
     [-1,1].forEach(function(side){ellipse(p.x+unit*.5*side,p.y,unit*.045,unit*.035,'#e0d5b3')});
   }
+  // The rendered belt troughs: `f` is the share of the render's width taken by the trough's length (the rest is its
+  // depth, measured on the sprite), `h` the rim height and `bed` the inner floor, in world units at the span below.
+  var TROUGH={upper:{f:.806,h:1.06,bed:.78},lower:{f:.826,h:1.06,bed:.78}},TROUGH_SPAN=7.7;
   function conveyorRun(x1,x2,z,y,stage){
     var length=Math.abs(x2-x1),mid=(x1+x2)/2,forward=x2>x1?1:-1;
     var steel=['#758d80','#344a40','#536c5b'];
     var phase=state.lines[stage]>0&&!motionPreference.matches?crateTime:0;
-    var belt=SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),shellSprite(stage===0?'shell.conveyor.upper':'shell.conveyor.lower'),Math.min(x1,x2)-.15,Math.max(x1,x2)+.15,z-.4,z+.4,0,y,true);
+    var belt=false;
+    if(SHOP_SPRITES){
+      // The trough is drawn on its true footprint (length plus depth fill the render's width), a quarter smaller than
+      // it was (Kevin, 2026-10-14: too large and too close to the benches); the cargo rides its bed, inside the rims.
+      var t=TROUGH[stage===0?'upper':'lower'],L=TROUGH_SPAN*t.f,D=TROUGH_SPAN-L;
+      belt=drawBoxSprite(sunnyApi(sceneTime),shellSprite(stage===0?'shell.conveyor.upper':'shell.conveyor.lower'),mid-L/2,mid+L/2,z-D/2,z+D/2,0,t.h,true);
+      if(belt){x1=mid-forward*(L/2-.55);x2=mid+forward*(L/2-.55);y=t.bed-.08}
+    }
     if(!belt){
     // The stands first: they are under the belt, so its body goes over them.
     [x1+.2*forward,x2-.2*forward].forEach(function(x){drawBox(x,z,.06,.1,.5,Math.max(.1,y-.25),steel)});
@@ -2435,7 +2445,13 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // The grow room's glazing is drawn slim rather than from the window module, whose frame overpowered the plants;
     // the exhaust fan gets a solid bay of its own instead of hanging on glass.
     if(fi===2&&SHOP_SPRITES){drawSlimGlazing(false,rear,left,right,wallH,FAN_X);drawSlimGlazing(true,left,rear,rear+3.5,wallH);return}
+    // The ground floor's wall runs on behind the exit door, so its doorway (the render's open frame: x 9.48-11.21,
+    // 3.25 high on the wall line) is cut out of the modules and the pavement outside shows through the open door
+    // (Kevin, 2026-10-14: no black rectangle, the frame intact, the render itself untouched).
+    var doorway=fi===0;
+    if(doorway){ctx.save();ctx.beginPath();ctx.rect(0,0,width,height);[project(9.5,0,rear),project(11.2,0,rear),project(11.2,3.22,rear),project(9.5,3.22,rear)].forEach(function(q,i){i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y)});ctx.closePath();ctx.clip('evenodd')}
     for(var k=0;k<n;k++){var kind=kinds[k%kinds.length],capped=kind.indexOf('tile')>=0;drawWallFace(api,'shell.'+kind,left+k*step,rear,left+(k+1)*step,rear,0,wallH,capped?.04:0,capped?.95:1)}
+    if(doorway)ctx.restore();
     // Side walls along z: the image's left edge is the near (larger z) end.
     if(fi===2)drawWallFace(api,'shell.wall.upper.left',left,rear+3.5,left,rear,0,3.9);
     if(fi===1)drawWallFace(api,'shell.wall.tile.left',left,rear+3.5,left,rear,0,wallH,.05,.96);
@@ -2470,7 +2486,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // fronts on their face plane.
   var SHELF_OAK=['#d9b482','#a6794a','#9e6f44'];
   function drawShelfRun(api,runs,face,h,d){
-    runs.forEach(function(r){drawBox((r[0]+r[1])/2,face-d/2,0,r[1]-r[0],d,h,SHELF_OAK)});
+    // The shelf fronts stand on the wall plane and carry their own ends; the drawn oak carcass that used to stand
+    // behind them put an end panel out past the last bay (Kevin, 2026-10-14), so nothing is drawn behind them now.
     runs.forEach(function(r){drawWallFace(api,'shell.shelf.wall.right',r[0],face,r[1],face,0,h)});
   }
   // Kevin's five-bay product shelving (2026-10-14), one render for the whole run. Pinned by its front base line: B0 is
@@ -2514,10 +2531,15 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var api=sunnyApi(now);
     // Kevin's steeper closed-stringer flight (2026-10-14) serves both runs; the old open flight is the fallback.
     var flight=shellSprite('shell.stairs.ascend'),scale=flight?1:.74;flight=flight||shellSprite('shell.stairs.upper');
-    drawBoxSprite(api,flight,6.5,8.2,-5.6,.7,4.7,9.4,'height',scale);
+    // The upper flight's foot sits a stride inside the mezzanine's front edge, beside the landing, so it is stepped on
+    // to from the floor rather than from the edge; its head lands at the top floor's rear-right corner.
+    drawBoxSprite(api,flight,6.5,8.2,-6.8,-.5,4.7,9.4,'height',scale);
     drawBoxSprite(api,flight,9.1,10.7,-.8,4.2,0,4.7,'height',scale);
-    // Glass guard rail along the mezzanine's open right edge, sheared on to its own plane from the flat render.
-    if(!drawRailRun('z',8.93,-1.75,4.7,2))drawWallFace(api,'shell.rail.glass.left',8.93,-1.75,8.93,-4.8,4.7,1);
+    // Glass guard rails, sheared on to their planes from the flat render: round the landing's outer and back edges
+    // behind the head of the ground flight, then along the mezzanine's open right edge.
+    if(!drawRailRun('z',10.78,-.8,4.7,1))drawWallFace(api,'shell.rail.glass.left',10.78,-.8,10.78,-2.8,4.7,1);
+    if(!drawRailRun('x',8.93,-2.8,4.7,1))drawWallFace(api,'shell.rail.glass.left',8.93,-2.8,10.85,-2.8,4.7,1);
+    if(!drawRailRun('z',8.93,-2.8,4.7,1))drawWallFace(api,'shell.rail.glass.left',8.93,-2.8,8.93,-4.8,4.7,1);
   }
   function drawCachedGround(floor){
     var key=[width,height,dpr,unit,centerX,centerY,angle,stationTier(4),stationTier(5)].join(':');
@@ -2725,7 +2747,11 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
 
       else{
         // One continuous floor outline includes the stair landing, with no internal slab edge.
-        var landing=fi===1?{outer:10.85,back:-1.58,front:-.37}:{outer:8.65,back:-5.58,front:-4.47};
+        // The mezzanine's landing is a platform along the open right edge: the ground flight arrives at its front and it
+        // runs on back behind the head of the flight, railed on its outer and back edges (Kevin, 2026-10-14: the old
+        // notch was a stub). In the sprite shop the upper flight now starts a stride inside the mezzanine's front edge
+        // and lands at the top floor's rear-right corner, on a notch out to the mezzanine's edge line.
+        var landing=fi===1?{outer:10.85,back:-2.8,front:-.37}:SHOP_SPRITES?{outer:9,back:-6.9,front:-5.7}:{outer:8.65,back:-5.58,front:-4.47};
         var finish=fi===1?wood:stone;
         var outline=[[left,rear],[right,rear],[right,landing.back],[landing.outer,landing.back],[landing.outer,landing.front],[right,landing.front],[right,front],[left,front]];
         for(var edge=0;edge<outline.length;edge++){
@@ -2962,10 +2988,10 @@ if(!SHOP_SPRITES){
       if(fi>0&&!SHOP_SPRITES)warmStrip([[left+.2,-.08,front+.025],[right-.2,-.08,front+.025]],false);
       if(fi<2)retailDetails(fi,rear,now);
 
-      // Station-to-station belts run behind the benches, big enough to read over them: from under one bench's far
-      // end to the other's, set back far enough that the trough shows above the bench tops and in the gap between.
-      if(fi===2)conveyorRun(-4.6,4.6,-5.4,1.6,0);
-      if(fi===1)conveyorRun(4.6,-4.6,-3.4,1.6,2);
+      // Station-to-station belts run behind the benches, between them and the rear wall: in the sprite shop the
+      // trough is a quarter smaller than it was and set back so a strip of floor shows behind the bench tops.
+      if(fi===2)conveyorRun(-4.6,4.6,SHOP_SPRITES?-5.8:-5.4,1.6,0);
+      if(fi===1)conveyorRun(4.6,-4.6,SHOP_SPRITES?-3.7:-3.4,1.6,2);
       floor.ids.forEach(function(i){var p=machinePos[i];lightPool(p.x,.035,p.z+.9,1.65,i===1)});
       // Furniture stays visible in front of the back wall and shelving.
       // Staff positions (Kevin, 2026-10-14): the upper-floor staff stand behind their benches, between the bench and the
