@@ -162,11 +162,26 @@ const ROADS = [{ along: 'x', at: -18.5 }, { along: 'x', at: 21.5 }, { along: 'z'
 const RW = 6; // street width kerb to kerb
 const PAVER = '#d2c8ab', PAVER_LINE = '#b5aa8c', TACTILE = 'rgba(217,194,122,.38)', KERB = '#e2dac4', KERB_FACE = '#a69d85', ASPHALT = '#5a5e64';
 const STONE = ['#d6d0c2', '#a9a295', '#c1bbad'], TAN = ['#dac9b6', '#ad9b87', '#c6b29d'], SAGE = ['#c9cfc6', '#9ea59b', '#b4bab0'], MAUVE = ['#d6cdcf', '#a9a0a2', '#c2b8ba'];
-// Neighbours: [x, z, w, d, h, wall, awning]. All beyond the far kerbs; heights stay low so they read as a backdrop.
+// Kevin's v3 neighbour renders (2026-10-14), each scaled by its own door opening: a front door stands 1.2 adult
+// sprites tall, so `door` (the door's height in image px) sets the draw scale and nothing is stretched to a footprint.
+// `foot` and `base` are the ground-contact vertex (the near corner) as fractions of the image; w and d are the
+// footprint that scale implies, along x and z.
+const DOOR_H = 2.3 * 1.2;
+const BUILDING_SPRITES = {
+  'building.corner': { door: 237, foot: .549, base: .998, w: 6.5, d: 7.9, wall: SAGE, h: 6 },
+  'building.low.sage': { door: 225, foot: .579, base: .992, w: 6.7, d: 9.2, wall: SAGE, h: 6 },
+  'building.low.stone': { door: 238, foot: .586, base: .996, w: 6.1, d: 8.6, wall: STONE, h: 6 },
+  'building.low.tan': { door: 244, foot: .601, base: .998, w: 5.8, d: 8.7, wall: TAN, h: 6 },
+  'building.mid.stone': { door: 242, foot: .582, base: .996, w: 5.6, d: 7.8, wall: STONE, h: 9 }
+};
+// Neighbours: [near-corner x, near-corner z, render]. The row stands behind the far street's pavement (faces on
+// z -25.5) and the column behind the left street's (faces on x -29.5), each building on its own footprint with an
+// alley between, the corner shop at the junction; all clear of the far walks and trees in front of them.
 const BUILDINGS = [
-  [-34, -32, 14, 14, 9, STONE, '#8a9e8c'], [-16, -31, 11, 12, 6, TAN, '#b7a07a'], [-3, -31, 11, 12, 7, SAGE, '#8a9e8c'],
-  [10, -31, 11, 12, 5, MAUVE, '#9c8f9e'], [23, -31, 11, 12, 8, STONE, '#b7a07a'], [36, -31, 11, 12, 6, TAN, '#8a9e8c'],
-  [-34, -15, 12, 11, 6, TAN, '#9c8f9e'], [-34, -2, 12, 11, 7, SAGE, '#b7a07a'], [-34, 11, 12, 11, 5, STONE, '#8a9e8c'], [-34, 24, 12, 11, 6, MAUVE, '#b7a07a']
+  [-29.5, -25.5, 'building.corner'],
+  [-21.3, -25.5, 'building.low.sage'], [-14, -25.5, 'building.low.tan'], [-6.4, -25.5, 'building.low.stone'], [.7, -25.5, 'building.mid.stone'],
+  [8.9, -25.5, 'building.low.sage'], [16.2, -25.5, 'building.low.tan'], [23.8, -25.5, 'building.low.stone'], [30.9, -25.5, 'building.mid.stone'], [39.1, -25.5, 'building.low.sage'],
+  [-29.5, -16.2, 'building.mid.stone'], [-29.5, -6, 'building.low.tan'], [-29.5, 4.7, 'building.low.sage'], [-29.5, 14.8, 'building.low.stone'], [-29.5, 25, 'building.low.tan'], [-29.5, 34.3, 'building.mid.stone']
 ];
 // Kept toward the kerb, clear of the facades behind them.
 const FAR_TREES = [[-12, -22.4], [-1, -22.4], [10, -22.4], [21, -22.4], [-26.4, -13], [-26.4, -2], [-26.4, 9], [-26.4, 20]];
@@ -207,7 +222,7 @@ export function drawSunnyWorld(api, front, alpha) {
     streetShadows(api, false);
     const jobs = [];
     const at = (x, z, f) => jobs.push([x, z, f]);
-    BUILDINGS.forEach(b => at(b[0], b[1], () => building(api, b)));
+    BUILDINGS.forEach(b => { const f = BUILDING_SPRITES[b[2]]; at(b[0] - f.w / 2, b[1] - f.d / 2, () => building(api, b)); });
     FAR_TREES.concat(NEAR_TREES).forEach(([x, z]) => at(x, z, () => streetTree(api, x, z)));
     LAMPS.filter(([x, z]) => z < -9 || x < -13).forEach(([x, z]) => at(x, z, () => lamp(api, x, z)));
     // Left-side street life: a coffee cart and café seating by the entrance, bins and a hydrant.
@@ -276,26 +291,23 @@ function crossing(api, quad, along, at, pos) {
   else { quad(a0 - .9, pos - 1.6, a0 - .3, pos + 1.6, P + .003, TACTILE); quad(a1 + .3, pos - 1.6, a1 + .9, pos + 1.6, P + .003, TACTILE); }
 }
 
-// A muted low-rise neighbour: walls, parapet, a sparse grid of pale windows, a glazed ground floor under a plain
-// awning, then a haze wash over the whole thing so it sits back from the shop.
-// Ludo neighbour buildings, picked by wall colour and height, scaled to the footprint's on-screen width and set on
-// its nearest corner, fully opaque (a see-through building reads as a ghost).
-function buildingSprite(api, x0, x1, z0, z1, h, wall) {
-  const name = wall === STONE ? (h >= 8 ? 'building.mid.stone' : 'building.low.stone') : wall === TAN ? 'building.low.tan' : wall === SAGE ? 'building.low.sage' : 'building.corner';
+// A neighbour render at its door-derived scale, its ground-contact vertex on the footprint's near corner.
+function buildingSprite(api, name, x1, z1) {
+  const f = BUILDING_SPRITES[name];
   lazySprite(name, 'sprites/buildings/' + name + '.png', { w: 1, drop: 0 });
   if (!spriteReady(name)) return false;
-  const p = api.project, base = [p(x0, P, z0), p(x1, P, z0), p(x1, P, z1), p(x0, P, z1)];
-  const l = Math.min(...base.map(q => q.x)), r = Math.max(...base.map(q => q.x)), b = Math.max(...base.map(q => q.y));
-  const top = Math.min(...[p(x0, P + h, z0), p(x1, P + h, z0), p(x1, P + h, z1), p(x0, P + h, z1)].map(q => q.y));
-  const img = SPRITES[name].img, ar = img.naturalHeight / img.naturalWidth, ht = Math.min((r - l) * 1.04 * ar, (b - top) * 1.05), w = ht / ar, ctx = api.ctx;
-  ctx.drawImage(img, (l + r) / 2 - w / 2, b - ht + api.unit * .3, w, ht);
+  const img = SPRITES[name].img, k = DOOR_H * api.unit / f.door, w = img.naturalWidth * k, h = img.naturalHeight * k, q = api.project(x1, P, z1);
+  api.ctx.drawImage(img, q.x - f.foot * w, q.y - f.base * h, w, h);
   return true;
 }
 
-function building(api, [x, z, w, d, h, wall, awning]) {
-  const p = api.project, x0 = x - w / 2, x1 = x + w / 2, z0 = z - d / 2, z1 = z + d / 2;
+// Until its render has loaded, a muted low-rise block on the same footprint: walls, parapet, a sparse grid of pale
+// windows, a glazed ground floor under a plain awning, then a haze wash so it sits back from the shop.
+function building(api, [x1, z1, name]) {
+  const f = BUILDING_SPRITES[name], p = api.project, w = f.w, d = f.d, h = f.h, wall = f.wall, awning = '#8a9e8c';
+  const x0 = x1 - w, z0 = z1 - d, x = x1 - w / 2, z = z1 - d / 2;
   api.poly([p(x0, P, z1), p(x0 - h * .3, P, z1 + h * .18), p(x1 - h * .3, P, z1 + h * .18), p(x1, P, z1)], 'rgba(40,40,30,.12)');
-  if (buildingSprite(api, x0, x1, z0, z1, h, wall)) return;
+  if (buildingSprite(api, name, x1, z1)) return;
   api.box(x, z, P, w, d, h, wall);
   api.box(x, z, P + h, w + .2, d + .2, .3, [api.shade(wall[0], .93), api.shade(wall[1], .9), api.shade(wall[2], .9)]);
   for (let y = 2.9; y < h - .9; y += 1.8) {
