@@ -466,12 +466,13 @@ function drawCars(api, back, at) {
 
 // Pedestrians pace their pavement segment; each has its own phase so they spread out and cross paths.
 function drawWalkers(api, back, at) {
-  const t = api.now * .00012;
+  // A believable stroll (Kevin found the earlier pace far too quick).
+  const t = api.now * .00004;
   WALKS.filter(w => w[5] === back).forEach(([x0, z0, x1, z1, n], wi) => {
     for (let k = 0; k < n; k++) {
       const ph = ((t * (.8 + k * .17) + k / n + wi * .31) % 1), f = ph < .5 ? ph * 2 : 2 - ph * 2;
       const px = x0 + (x1 - x0) * f, pz = z0 + (z1 - z0) * f;
-      const dir = (x1 - x0) * (ph < .5 ? 1 : -1), stride = api.now * .009 + k * 1.7;
+      const dir = (x1 - x0) * (ph < .5 ? 1 : -1), stride = api.now * .004 + k * 1.7;
       at(px, pz, () => { if (!drawPersonSprite(api, px, pz, -(wi * 3 + k + 1), false, dir, stride, api.now > 0 ? 1 : 0, walkerHasBag(wi * 3 + k + 1))) api.person(px, pz, 40 + wi * 7 + k, api.now > 0); });
     }
   });
