@@ -2477,8 +2477,12 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     return true;
   }
   function drawShellProductWall(displayZ,now,wood){
-    var api=sunnyApi(now);
-    drawWallFace(api,'shell.wall.tile.right',-6.7+COUNTER_SHIFT,displayZ,-1.3+COUNTER_SHIFT,displayZ,0,3.95,.04,.95);
+    var api=sunnyApi(now),wallL=-6.7,boardL=-6.7+COUNTER_SHIFT;
+    // The wall starts where the lounge's plaster ends (-6.7), flush on the same plane; the menu board's stretch moved
+    // right with the counters, so the strip left of it is cut from the render at the same tile phase as that stretch's
+    // left edge (its right edge lands 9.8 px past a grout line, like u .04 does), overlapping it a hair so no seam shows.
+    drawWallFace(api,'shell.wall.tile.right',wallL,displayZ,boardL+.03,displayZ,0,3.95,.231,.231+.91*(boardL+.03-wallL)/5.4);
+    drawWallFace(api,'shell.wall.tile.right',boardL,displayZ,-1.3+COUNTER_SHIFT,displayZ,0,3.95,.04,.95);
     drawMenuBoard(-3.9+COUNTER_SHIFT,displayZ,1.38,5.1,1.24,now,wood);
     if(drawProductShelving(api,-1.3+COUNTER_SHIFT,8.4,displayZ))return;
     drawShelfRun(api,[[-1.3+COUNTER_SHIFT,3.3],[3.3,6.5]],displayZ+.6,3.6,.55);
