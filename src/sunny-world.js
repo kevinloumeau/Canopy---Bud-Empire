@@ -39,8 +39,12 @@ export function stationSprite(i, level) {
   }
   return null;
 }
-// People: cast members are picked by a stable identity; customer 07 (Kevin's own outfit) is weighted to show up twice as often.
-const CAST = { customer: [1, 2, 3, 4, 5, 6, 7], walker: [1, 2, 3, 4, 7] };
+// People: the eleven people-v3 characters (seven customers, four street walkers) form one cast, since every one of them
+// comes in stand/walk, bag/empty, left/right variants. Customers take the cast in turn by id, so the same figure is
+// never within eleven places of itself in a queue (Kevin: too many repeats in a row). Street walkers are cast by their
+// index along WALKS, the four who appear twice placed at opposite ends of town.
+const PEOPLE = [['customer', 1], ['customer', 2], ['customer', 3], ['customer', 4], ['customer', 5], ['customer', 6], ['customer', 7], ['walker', 1], ['walker', 2], ['walker', 3], ['walker', 4]];
+const WALKER_CAST = [0, 7, 1, 2, 8, 3, 4, 9, 5, 10, 6, 0, 7, 1, 2];
 const STAFF_FOR_LINE = [2, 2, 2, 1, 1, 1, 3, 1];
 // staff-v3 working poses by line: growers upstairs, a packer at pack and pickup, budtenders at orders and the online counter, the supervisor at the ID desk.
 const STAFF_V3 = { 0: '05.grower', 1: '05.grower', 2: '05.grower', 3: '06.packer', 4: '04.budtender', 5: '06.packer', 6: '07.supervisor', 7: '04.budtender' }; // seeds/grow/harvest growers, pack/orders/pickup budtenders, 6 is the ID desk, 7 the online packing counter
@@ -68,11 +72,13 @@ export function walkerHasBag(identity) { return hashId(identity) % 3 === 0; }
 // bag when `bag` is set; staff play their v4 work loop while `working` is set, mirrored to face the floor (the
 // original and v3 renders stand in until the loop's frames have loaded). Returns false until a frame has loaded.
 export function drawPersonSprite(api, x, z, identity, employee, facing, phase, amount, bag, working) {
-  let role = employee ? 'staff' : 'customer', nn;
+  let role = 'staff', nn;
   if (employee) nn = STAFF_FOR_LINE[identity] || 1;
-  else if (identity < 0) { role = 'walker'; nn = CAST.walker[(-identity) % CAST.walker.length]; if (nn === 7) role = 'customer'; }
-  else nn = CAST.customer[hashId(identity) % CAST.customer.length];
+  else [role, nn] = PEOPLE[identity < 0 ? WALKER_CAST[(-identity - 1) % WALKER_CAST.length] : identity % PEOPLE.length];
   const walking = amount > .3 && Math.floor(phase / Math.PI) % 2 === 0;
+  // The walk is two frames (stand, stride) on the step cycle, so the body also rises and settles once a step, the way
+  // a walker does, to carry the motion between them. `phase` advances with the ground covered, never with the clock.
+  const lift = amount > .3 ? amount * .05 * (1 - Math.cos(2 * phase)) / 2 : 0;
   let name = personName(role, nn, walking), flip = employee ? facing >= 0 : facing < 0;
   const base = personName(role, nn, false);
   // Staff: the v4 work loop first, all four frames requested together so the loop never stutters on a late frame.
@@ -100,7 +106,7 @@ export function drawPersonSprite(api, x, z, identity, employee, facing, phase, a
   if (!name) return false;
   const p = api.project(x, 0, z), u = api.unit;
   api.ellipse(p.x + u * .06, p.y + u * .03, u * .34, u * .1, 'rgba(14,28,20,.22)');
-  return drawSprite(api, name, x, z, flip);
+  return drawSprite(api, name, x, z, flip, 1, lift);
 }
 // Shop fixtures from the interior batch, sized in world units like the stations.
 const FIXTURE_SIZE = { 'station.security.site': { w: 2.2, drop: .45 }, 'event.festival.stall': { w: 2.6, drop: .45 }, 'station.orders.compact.tier1': { w: 2.15, drop: .45 }, 'station.orders.compact.tier2': { w: 2.15, drop: .45 }, 'station.orders.compact.tier3': { w: 2.2, drop: .45 }, 'shop.kiosk': { w: 1, drop: 0 }, 'shop.displaycase': { w: 4, drop: .55 }, 'shop.planter.small': { w: .95, drop: .12 },
@@ -165,10 +171,10 @@ export function floorPattern(api, name, size) {
 }
 export function spriteReady(name) { const s = SPRITES[name]; return !!(s && !s.missing && s.img && s.img.complete && s.img.naturalWidth); }
 // Draws a sprite at world (x, z) on the current floor; flip mirrors it so a car can face the other way along a street.
-export function drawSprite(api, name, x, z, flip, scale) {
+export function drawSprite(api, name, x, z, flip, scale, lift) {
   const s = SPRITES[name]; if (!spriteReady(name)) return false;
   const q = api.project(x, 0, z), u = api.unit, ar = s.img.naturalHeight / s.img.naturalWidth, w = (s.h ? s.h / ar : s.w) * u * (scale || 1), h = w * ar, ctx = api.ctx;
-  ctx.save(); ctx.translate(q.x, q.y + s.drop * u * (scale || 1)); if (flip) ctx.scale(-1, 1);
+  ctx.save(); ctx.translate(q.x, q.y + (s.drop * (scale || 1) - (lift || 0)) * u); if (flip) ctx.scale(-1, 1);
   ctx.drawImage(s.img, -w / 2, -h, w, h); ctx.restore();
   return true;
 }
@@ -276,7 +282,7 @@ export const LAMPS = [[-18.5, -14.5], [18.5, -14.5], [-18.5, 17.5], [18.5, 17.5]
 // Lanes keep clear of the trees, lamps and furniture: the rear and left walks run between the slab and the props, the
 // front walk along the kerb in front of the planters and bench, the right walk between the slab and the bus stop.
 const WALKS = [[-19, -11.6, 19, -11.6, 3, true], [-15.2, -15, -15.2, 18, 2, true], [-30, -22.9, 30, -22.9, 3, true], [-26.9, -26, -26.9, 26, 2, true],
-  [-19, 18.3, 19, 18.3, 3, false], [15.3, -15, 15.3, 18, 2, false]];
+  [-19, 18.3, 19, 18.3, 3, false], [15.3, -15, 15.3, 14, 2, false]];
 // Cars: [road index, lane offset from centre, direction, phase, colour]. Kevin pulled the cars on 2026-10-13: the
 // renders read far too small beside the shop and the walkers, so the streets stay empty until re-rendered to scale.
 const CARS = [];
@@ -565,16 +571,20 @@ function drawCars(api, back, at) {
   list.forEach(c => at(c[0], c[1], () => car(api, ...c)));
 }
 
-// Pedestrians pace their pavement segment; each has its own phase so they spread out and cross paths.
+// Pedestrians pace their pavement segment there and back. Each walks at their own pace in world units a second (a
+// stroll, whatever the segment's length: Kevin found the earlier pace far too quick, and the far pavements, being
+// longer, used to be walked at a run), starts at their own point of the loop, faces the way they are going on screen,
+// and takes their steps from the ground covered so the feet never slide.
+const WALK_BASE = WALKS.reduce((acc, w) => (acc.push(acc[acc.length - 1] + w[4]), acc), [0]);
 function drawWalkers(api, back, at) {
-  // A believable stroll (Kevin found the earlier pace far too quick).
-  const t = api.now * .00004;
-  WALKS.filter(w => w[5] === back).forEach(([x0, z0, x1, z1, n], wi) => {
+  WALKS.forEach(([x0, z0, x1, z1, n, isBack], wi) => {
+    if (isBack !== back) return;
+    const len = Math.hypot(x1 - x0, z1 - z0), screenDir = Math.sign((x1 - x0) - (z1 - z0));
     for (let k = 0; k < n; k++) {
-      const ph = ((t * (.8 + k * .17) + k / n + wi * .31) % 1), f = ph < .5 ? ph * 2 : 2 - ph * 2;
-      const px = x0 + (x1 - x0) * f, pz = z0 + (z1 - z0) * f;
-      const dir = (x1 - x0) * (ph < .5 ? 1 : -1), stride = api.now * .004 + k * 1.7;
-      at(px, pz, () => { if (!drawPersonSprite(api, px, pz, -(wi * 3 + k + 1), false, dir, stride, api.now > 0 ? 1 : 0, walkerHasBag(wi * 3 + k + 1))) api.person(px, pz, 40 + wi * 7 + k, api.now > 0); });
+      const g = WALK_BASE[wi] + k, pace = 1.5 + (g * 7 % 5) * .12, loop = len * 2;
+      const s = (api.now * .001 * pace + ((g * .37 + k / n) % 1) * loop) % loop, out = s < len, f = out ? s / len : 2 - s / len;
+      const px = x0 + (x1 - x0) * f, pz = z0 + (z1 - z0) * f, facing = screenDir * (out ? 1 : -1) || .3;
+      at(px, pz, () => { if (!drawPersonSprite(api, px, pz, -(g + 1), false, facing, s * 3.6 + g * 1.7, api.now > 0 ? 1 : 0, walkerHasBag(g + 1))) api.person(px, pz, 40 + g, api.now > 0); });
     }
   });
 }
