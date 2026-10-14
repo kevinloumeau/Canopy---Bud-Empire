@@ -2968,8 +2968,10 @@ if(!SHOP_SPRITES){
       if(fi===1)conveyorRun(4.6,-4.6,-3.4,1.6,2);
       floor.ids.forEach(function(i){var p=machinePos[i];lightPool(p.x,.035,p.z+.9,1.65,i===1)});
       // Furniture stays visible in front of the back wall and shelving.
-      // Staff positions: most stand behind their bench; the grow-room pair stand where the gantry and rack do not hide them.
-      var staffSpots={0:{dx:-2.45,dz:.45,front:true,facing:1},1:{dx:1.2,dz:.5,front:true,facing:1},2:{dx:1.2,dz:.5,front:true,facing:1},3:{dx:-1.2,dz:.5,front:true,facing:1},5:{dx:1.05,dz:-1.55,front:false,facing:.35}};
+      // Staff positions (Kevin, 2026-10-14): the upper-floor staff stand behind their benches, between the bench and the
+      // belt, drawn before the bench so its top hides their legs; each stands clear of the trays, pots and gantry posts on
+      // the bench top and faces along it toward the work (facing >= 0 mirrors the right-facing renders).
+      var staffSpots={0:{dx:-.2,dz:-1.4,front:false,facing:1},1:{dx:-4,dz:-1,front:false,facing:-1},2:{dx:-.9,dz:-1.4,front:false,facing:-1},3:{dx:-.3,dz:-1.4,front:false,facing:-1},5:{dx:1.05,dz:-1.55,front:false,facing:.35}};
       // Transfer tubes go down before the stations, so a station hides the stub that enters its side or back.
       if(fi===1){sceneElevation=0;drawFloorTransfer(3,true);drawFloorTransfer(1,false);sceneElevation=floor.y}
       if(fi===2){sceneElevation=0;drawFloorTransfer(1,true);sceneElevation=floor.y}
