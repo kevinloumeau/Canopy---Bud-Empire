@@ -1096,6 +1096,17 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   function visibleStrain(slot){var menu=menuStrains();return menu[Math.abs(slot)%menu.length]}
   function stationWorking(i){return state.lines[i]>0&&(i<4?(i===0||state.stock[i-1]>0)&&state.stock[i]<storageCapacity():work[i]>0)}
+  // Whether the figure at a post is mid-task, which plays its staff-work-v4 loop: the stations by their flow, the
+  // order desks by the customer at them, the doorman while someone is passing the desk, the online counter while
+  // orders are being dispatched, the lounge host while guests are waiting or inside.
+  function staffWorking(id,gait,x,z){
+    if(gait&&gait.workActivity!==undefined)return gait.workActivity>0;
+    if(id<6)return stationWorking(id);
+    if(id===6)return customers.some(function(c){return Math.abs(c.x-x)+Math.abs(c.z-z)<2.4});
+    if(id===7)return readyWork>0||deliveryDrones.length>0;
+    if(id===8)return loungeWaiting().length>0||customers.some(function(c){return c.phase==='lounge'});
+    return false;
+  }
   var recentPickupRatings=[];
   var taskClocks=[0,0,0,0,0,0],taskActivity=[0,0,0,0,0,0],cropGrowth=[.15,.4,.7,.95];
   function crop(x,z,y,slot,mature){
@@ -1497,7 +1508,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   function drawPerson(x,z,now,id,moving,employee,bag,gait){
     // Sunny look: Ludo figures stand in for the drawn ones in the scene (thumbnails, drawn with now 0, keep the drawn style).
-    if(SUNNY&&now&&drawPersonSprite(sunnyApi(now),x,z,employee?id:(gait&&gait.identity!==undefined?gait.identity:id),employee,gait?gait.facing:.3,gait?gait.phase:now*.007+id,motionPreference.matches?0:(gait?gait.amount:(moving?1:0)),!!bag))return;
+    if(SUNNY&&now&&drawPersonSprite(sunnyApi(now),x,z,employee?id:(gait&&gait.identity!==undefined?gait.identity:id),employee,gait?gait.facing:.3,gait?gait.phase:now*.007+id,motionPreference.matches?0:(gait?gait.amount:(moving?1:0)),!!bag,employee&&staffWorking(id,gait,x,z)))return;
     var reduced=motionPreference.matches,u=unit,p=project(x,0,z);
     var amount=reduced?0:(gait?gait.amount:(moving?1:0)),phase=gait?gait.phase:now*.007+id;
     var step=Math.sin(phase)*amount,bob=reduced?0:(Math.cos(phase*2)*.022*amount+Math.sin(now*.0018+id)*.009);
@@ -3448,6 +3459,9 @@ if(!SHOP_SPRITES){
         sceneJobs.push({depth:depthOf({x:dx+side,z:(z0+z1)/2}),draw:function(){sceneElevation=0;worldLine([[dx+side,.84-.3*t0*(1-t0),z0],[dx+side,.84-.3*t1*(1-t1),z1]],'#8b1e34',.075)}});
       })(seg/8,(seg+1)/8)});
     }
+    // The lounge host (staff-work-v4, 2026-10-14) stands at the carpet's left edge facing the queue, welcoming guests
+    // in while any are waiting or inside; she sorts with the guests on the carpet.
+    if(open&&SUNNY){var hx=dx-1.05,hz=face+.75;sceneJobs.push({depth:depthOf({x:hx,z:hz}),draw:function(){sceneElevation=0;drawPerson(hx,hz,now,8,false,true,false,{amount:0,phase:0,facing:-.3})}})}
     // End walls at the floor's left edge and behind the exit corner, each with its tile band; the back door on the right
     // wall opens on to the exit lane between the column and the merch cabinet.
     drawBox(-11.34,roomZ,0,.32,roomD,H,plaster);

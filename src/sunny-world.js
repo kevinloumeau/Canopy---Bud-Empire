@@ -42,8 +42,17 @@ export function stationSprite(i, level) {
 // People: cast members are picked by a stable identity; customer 07 (Kevin's own outfit) is weighted to show up twice as often.
 const CAST = { customer: [1, 2, 3, 4, 5, 6, 7], walker: [1, 2, 3, 4, 7] };
 const STAFF_FOR_LINE = [2, 2, 2, 1, 1, 1, 3, 1];
-// staff-v3 working poses by line: growers upstairs, a packer at pack and pickup, budtenders at orders and the lounge, the supervisor at the ID desk.
-const STAFF_V3 = { 0: '05.grower', 1: '05.grower', 2: '05.grower', 3: '06.packer', 4: '04.budtender', 5: '06.packer', 6: '07.supervisor', 7: '04.budtender' }; // seeds/grow/harvest growers, pack/orders/pickup budtenders, 6 is the ID desk, 7 the lounge host
+// staff-v3 working poses by line: growers upstairs, a packer at pack and pickup, budtenders at orders and the online counter, the supervisor at the ID desk.
+const STAFF_V3 = { 0: '05.grower', 1: '05.grower', 2: '05.grower', 3: '06.packer', 4: '04.budtender', 5: '06.packer', 6: '07.supervisor', 7: '04.budtender' }; // seeds/grow/harvest growers, pack/orders/pickup budtenders, 6 is the ID desk, 7 the online packing counter
+// staff-work-v4 (Kevin, 2026-10-14): eight distinct staff, one per post, each with a four-frame work loop on the same
+// 224x320 canvas as people-v3 (anchor x 112, feet at y 315). The renders face screen right only, so a figure that
+// faces the floor (facing >= 0) is mirrored. Identity 8 is the lounge host; 7, the online packing counter of the
+// drawn deck, shares the packer.
+const STAFF_V4 = { 0: '04.seeds', 1: '05.grow', 2: '06.harvest', 3: '07.pack', 4: '08.orders', 5: '09.pickup', 6: '10.security', 7: '07.pack', 8: '11.lounge' };
+// The loop runs at 4 fps as a ping-pong (1 2 3 4 3 2) while the post is working and holds frame 1 when it is idle or
+// when motion is reduced (api.now is 0 then); each identity starts at its own point in the loop.
+const STAFF_V4_LOOP = [1, 2, 3, 4, 3, 2];
+function staffV4Frame(api, identity, working) { return working && api.now ? STAFF_V4_LOOP[Math.floor(api.now / 250 + identity * 1.7) % 6] : 1; }
 // Every figure sits on the same 448x640 canvas, 600 px tall with its feet 8 px above the bottom edge.
 // Figures are drawn 2.3 units tall: the Ludo counters and cars came out chunky, and true-to-life people looked like toys beside them.
 const PERSON_SIZE = { h: 2.3 * 640 / 600, drop: 2.3 * 8 / 600 + .03 };
@@ -56,9 +65,9 @@ function personName(role, nn, walking) { return 'person.' + role + '.0' + nn + '
 export function walkerHasBag(identity) { return hashId(identity) % 3 === 0; }
 // Draws a sprite figure in place of a code-drawn one. Walking alternates the stand and stride frames on the step
 // cycle. Customers and walkers pick the left- or right-facing variant from the sign of `facing` and carry the pickup
-// bag when `bag` is set; staff only exist as the original front-right renders, so they are mirrored to face the
-// floor. Returns false until a frame has loaded.
-export function drawPersonSprite(api, x, z, identity, employee, facing, phase, amount, bag) {
+// bag when `bag` is set; staff play their v4 work loop while `working` is set, mirrored to face the floor (the
+// original and v3 renders stand in until the loop's frames have loaded). Returns false until a frame has loaded.
+export function drawPersonSprite(api, x, z, identity, employee, facing, phase, amount, bag, working) {
   let role = employee ? 'staff' : 'customer', nn;
   if (employee) nn = STAFF_FOR_LINE[identity] || 1;
   else if (identity < 0) { role = 'walker'; nn = CAST.walker[(-identity) % CAST.walker.length]; if (nn === 7) role = 'customer'; }
@@ -66,9 +75,16 @@ export function drawPersonSprite(api, x, z, identity, employee, facing, phase, a
   const walking = amount > .3 && Math.floor(phase / Math.PI) % 2 === 0;
   let name = personName(role, nn, walking), flip = employee ? facing >= 0 : facing < 0;
   const base = personName(role, nn, false);
+  // Staff: the v4 work loop first, all four frames requested together so the loop never stutters on a late frame.
+  const v4 = employee && STAFF_V4[identity] ? 'person.staff.' + STAFF_V4[identity] + '.work.0' : null;
+  if (v4) {
+    for (let f = 1; f <= 4; f++) lazySprite(v4 + f, 'sprites/people/' + v4 + f + '.png', PERSON_V3_SIZE);
+    const frame = v4 + staffV4Frame(api, identity, working);
+    if (spriteReady(frame)) name = frame; else if (spriteReady(v4 + '1')) name = v4 + '1';
+  }
   // Latest renders face both ways themselves, so no mirroring. The staff ones are role-specific working poses
   // (no walking frames); their `facing` keeps the sign the original mirrored renders used, so >= 0 faces the floor.
-  const v3 = employee
+  const v3 = name !== personName(role, nn, walking) ? null : employee
     ? (STAFF_V3[identity] || (identity > 7 ? '04.budtender' : null)) && 'person.staff.' + (STAFF_V3[identity] || '04.budtender') + '.work.' + (facing >= 0 ? 'left' : 'right')
     : personName(role, nn, walking) + (bag ? '.bag' : '.empty') + (facing < 0 ? '.left' : '.right');
   if (v3) {
