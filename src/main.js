@@ -3457,13 +3457,12 @@ if(!SHOP_SPRITES){
     // The right end wall's tile band goes on after the facade so its corner is tiled on both faces, with no bare plaster strip.
     tileFace(true,-7,face,rx+.16);
     worldLine([[dx-.74,.02,face+.02],[dx-.74,2.54,face+.02],[dx+.74,2.54,face+.02],[dx+.74,.02,face+.02]],'#171e1a',.07);
-    if(open&&SHOP_SPRITES&&pinnedDoor('shell.lounge.door.open',dx,face,LOUNGE_DOOR_PIN)){
-      // Sprite shop: the burgundy drapes tied back from the lit lounge doors (ChatGPT redo of the 45° render).
+    if(SHOP_SPRITES&&pinnedDoor('shell.lounge.door.v2',dx,face,LOUNGE_DOOR_PIN)){
+      // Sprite shop: Kevin's curtained oak doorway (2026-10-14) stands whether the lounge is open or still to be bought;
+      // the marker and sign carry the state. The file is named v2 so no browser keeps the earlier door cached.
     }else if(open){
       drawLoungeDrapes(1,loungeCurtain);
       drawBox(dx,face-.05,2.44,1.5,.1,.14,['#4a1b29','#2b0d16','#3b1420']);
-    }else if(SHOP_SPRITES&&pinnedDoor('shell.lounge.door.closed',dx,face)){
-      // Sprite shop: the 45° Ludo lounge door, when it has been rendered.
     }else if(SHOP_SPRITES){
       // Sprite shop: a closed forest-green door in the storefront's colours, two inset panels, brass handle and kick
       // plate, and a cream plaque in place of the plywood and tape.
