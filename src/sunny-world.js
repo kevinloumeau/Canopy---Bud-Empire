@@ -164,24 +164,99 @@ const PAVER = '#d2c8ab', PAVER_LINE = '#b5aa8c', TACTILE = 'rgba(217,194,122,.38
 const STONE = ['#d6d0c2', '#a9a295', '#c1bbad'], TAN = ['#dac9b6', '#ad9b87', '#c6b29d'], SAGE = ['#c9cfc6', '#9ea59b', '#b4bab0'], MAUVE = ['#d6cdcf', '#a9a0a2', '#c2b8ba'];
 // Kevin's v3 neighbour renders (2026-10-14), each scaled by its own door opening: a front door stands 1.2 adult
 // sprites tall, so `door` (the door's height in image px) sets the draw scale and nothing is stretched to a footprint.
-// `foot` and `base` are the ground-contact vertex (the near corner) as fractions of the image; w and d are the
-// footprint that scale implies, along x and z.
+// The renders are 2:1 (26.6° edges); the sprites are squashed to 86.6% width so their edges lie on the map's 30° grid,
+// verticals untouched. `foot` and `base` are the ground-contact vertex (the near corner) as fractions of the image;
+// w and d are the footprint that scale implies, along x and z.
 const DOOR_H = 2.3 * 1.2;
 const BUILDING_SPRITES = {
-  'building.corner': { door: 237, foot: .549, base: .998, w: 6.5, d: 7.9, wall: SAGE, h: 6 },
-  'building.low.sage': { door: 225, foot: .579, base: .992, w: 6.7, d: 9.2, wall: SAGE, h: 6 },
-  'building.low.stone': { door: 238, foot: .586, base: .996, w: 6.1, d: 8.6, wall: STONE, h: 6 },
-  'building.low.tan': { door: 244, foot: .601, base: .998, w: 5.8, d: 8.7, wall: TAN, h: 6 },
-  'building.mid.stone': { door: 242, foot: .582, base: .996, w: 5.6, d: 7.8, wall: STONE, h: 9 }
+  'building.corner': { door: 151.0, foot: 0.551, base: 1.0, w: 5.59, d: 6.85, wall: SAGE, h: 6 },
+  'building.low.sage': { door: 137.3, foot: 0.577, base: 0.993, w: 5.78, d: 7.92, wall: SAGE, h: 6 },
+  'building.low.stone': { door: 143.9, foot: 0.585, base: 0.997, w: 5.22, d: 7.42, wall: STONE, h: 6 },
+  'building.low.tan': { door: 149.4, foot: 0.6, base: 0.999, w: 4.99, d: 7.52, wall: TAN, h: 6 },
+  'building.mid.stone': { door: 140.5, foot: 0.581, base: 0.997, w: 4.82, d: 6.74, wall: STONE, h: 9 }
 };
-// Neighbours: [near-corner x, near-corner z, render]. The row stands behind the far street's pavement (faces on
-// z -25.5) and the column behind the left street's (faces on x -29.5), each building on its own footprint with an
-// alley between, the corner shop at the junction; all clear of the far walks and trees in front of them.
+// Neighbours: [near-corner x, near-corner z, render]. Every block round the shop is terraced edge to edge, two units
+// back from the kerbs: a row's fronts share one z and a column's one x, each building butted to the last (a joint
+// overlaps by a few tenths rather than leaving an alley), corner shops at the junctions, a second row behind.
 const BUILDINGS = [
-  [-29.5, -25.5, 'building.corner'],
-  [-21.3, -25.5, 'building.low.sage'], [-14, -25.5, 'building.low.tan'], [-6.4, -25.5, 'building.low.stone'], [.7, -25.5, 'building.mid.stone'],
-  [8.9, -25.5, 'building.low.sage'], [16.2, -25.5, 'building.low.tan'], [23.8, -25.5, 'building.low.stone'], [30.9, -25.5, 'building.mid.stone'], [39.1, -25.5, 'building.low.sage'],
-  [-29.5, -16.2, 'building.mid.stone'], [-29.5, -6, 'building.low.tan'], [-29.5, 4.7, 'building.low.sage'], [-29.5, 14.8, 'building.low.stone'], [-29.5, 25, 'building.low.tan'], [-29.5, 34.3, 'building.mid.stone']
+  [-11.72, -23.5, 'building.low.sage'],
+  [-7.16, -23.5, 'building.low.tan'],
+  [-2.38, -23.5, 'building.low.stone'],
+  [2.01, -23.5, 'building.mid.stone'],
+  [6.56, -23.5, 'building.low.tan'],
+  [11.91, -23.5, 'building.low.sage'],
+  [17.5, -23.5, 'building.corner'],
+  [-12.68, -32, 'building.mid.stone'],
+  [-7.69, -32, 'building.low.tan'],
+  [-1.91, -32, 'building.low.sage'],
+  [2.91, -32, 'building.mid.stone'],
+  [8.13, -32, 'building.low.stone'],
+  [13.91, -32, 'building.low.sage'],
+  [18.9, -32, 'building.low.tan'],
+  [-27.5, -23.5, 'building.corner'],
+  [-33.09, -23.5, 'building.low.tan'],
+  [-38.08, -23.5, 'building.low.stone'],
+  [-43.3, -23.5, 'building.mid.stone'],
+  [-48.12, -23.5, 'building.low.tan'],
+  [-53.11, -23.5, 'building.low.sage'],
+  [-27.5, -30.35, 'building.low.stone'],
+  [-27.5, -37.77, 'building.mid.stone'],
+  [-27.5, -44.51, 'building.low.tan'],
+  [-27.5, -52.03, 'building.low.sage'],
+  [-33.09, -32, 'building.low.tan'],
+  [-38.08, -32, 'building.low.sage'],
+  [-43.86, -32, 'building.mid.stone'],
+  [-48.68, -32, 'building.low.stone'],
+  [-53.9, -32, 'building.low.sage'],
+  [32.72, -23.5, 'building.low.stone'],
+  [37.54, -23.5, 'building.mid.stone'],
+  [42.53, -23.5, 'building.low.tan'],
+  [48.31, -23.5, 'building.low.sage'],
+  [53.13, -23.5, 'building.mid.stone'],
+  [58.35, -23.5, 'building.low.stone'],
+  [33.28, -32, 'building.low.sage'],
+  [38.1, -32, 'building.mid.stone'],
+  [43.32, -32, 'building.low.stone'],
+  [49.1, -32, 'building.low.sage'],
+  [54.09, -32, 'building.low.tan'],
+  [-27.5, -11.98, 'building.low.tan'],
+  [-27.5, -4.58, 'building.low.stone'],
+  [-27.5, 2.15, 'building.mid.stone'],
+  [-27.5, 9.65, 'building.low.tan'],
+  [-27.5, 16.5, 'building.corner'],
+  [-33.0, -11.98, 'building.low.tan'],
+  [-33.0, -4.06, 'building.low.sage'],
+  [-33.0, 2.68, 'building.mid.stone'],
+  [-33.0, 10.1, 'building.low.stone'],
+  [-33.0, 18.02, 'building.low.sage'],
+  [33.28, -12.76, 'building.mid.stone'],
+  [33.28, -5.24, 'building.low.tan'],
+  [33.28, 2.68, 'building.low.sage'],
+  [33.28, 9.42, 'building.mid.stone'],
+  [33.28, 16.84, 'building.low.stone'],
+  [38.78, -12.76, 'building.mid.stone'],
+  [38.78, -5.34, 'building.low.stone'],
+  [38.78, 2.58, 'building.low.sage'],
+  [38.78, 10.1, 'building.low.tan'],
+  [38.78, 17.52, 'building.low.stone'],
+  [-27.5, 35.42, 'building.low.sage'],
+  [-33.28, 35.42, 'building.mid.stone'],
+  [-38.1, 35.42, 'building.low.stone'],
+  [-43.32, 35.42, 'building.low.sage'],
+  [-49.1, 35.42, 'building.low.tan'],
+  [-12.28, 35.42, 'building.low.stone'],
+  [-7.46, 35.42, 'building.mid.stone'],
+  [-2.47, 35.42, 'building.low.tan'],
+  [3.31, 35.42, 'building.low.sage'],
+  [8.13, 35.42, 'building.mid.stone'],
+  [13.35, 35.42, 'building.low.stone'],
+  [19.13, 35.42, 'building.low.sage'],
+  [32.72, 35.42, 'building.low.stone'],
+  [38.5, 35.42, 'building.low.sage'],
+  [43.49, 35.42, 'building.low.tan'],
+  [48.71, 35.42, 'building.low.stone'],
+  [53.53, 35.42, 'building.mid.stone'],
+  [58.52, 35.42, 'building.low.tan']
 ];
 // Kept toward the kerb, clear of the facades behind them.
 const FAR_TREES = [[-12, -22.4], [-1, -22.4], [10, -22.4], [21, -22.4], [-26.4, -13], [-26.4, -2], [-26.4, 9], [-26.4, 20]];
@@ -190,7 +265,7 @@ export const LAMPS = [[-18.5, -14.5], [18.5, -14.5], [-18.5, 17.5], [18.5, 17.5]
 // Walkers: [x0, z0, x1, z1, count, back-pass?]; each walks the segment back and forth on its own phase.
 // Lanes keep clear of the trees, lamps and furniture: the rear and left walks run between the slab and the props, the
 // front walk along the kerb in front of the planters and bench, the right walk between the slab and the bus stop.
-const WALKS = [[-19, -11.6, 19, -11.6, 3, true], [-15.2, -15, -15.2, 18, 2, true], [-30, -24, 30, -24, 3, true], [-28, -26, -28, 26, 2, true],
+const WALKS = [[-19, -11.6, 19, -11.6, 3, true], [-15.2, -15, -15.2, 18, 2, true], [-30, -22.9, 30, -22.9, 3, true], [-26.9, -26, -26.9, 26, 2, true],
   [-19, 18.3, 19, 18.3, 3, false], [15.3, -15, 15.3, 18, 2, false]];
 // Cars: [road index, lane offset from centre, direction, phase, colour]. Kevin pulled the cars on 2026-10-13: the
 // renders read far too small beside the shop and the walkers, so the streets stay empty until re-rendered to scale.
@@ -297,7 +372,10 @@ function buildingSprite(api, name, x1, z1) {
   lazySprite(name, 'sprites/buildings/' + name + '.png', { w: 1, drop: 0 });
   if (!spriteReady(name)) return false;
   const img = SPRITES[name].img, k = DOOR_H * api.unit / f.door, w = img.naturalWidth * k, h = img.naturalHeight * k, q = api.project(x1, P, z1);
-  api.ctx.drawImage(img, q.x - f.foot * w, q.y - f.base * h, w, h);
+  const l = q.x - f.foot * w, t = q.y - f.base * h;
+  // Most of the town is off screen at any one time; a building whose image misses the viewport costs nothing.
+  if (l > api.width || l + w < 0 || t > api.height || t + h < 0) return true;
+  api.ctx.drawImage(img, l, t, w, h);
   return true;
 }
 
@@ -305,7 +383,8 @@ function buildingSprite(api, name, x1, z1) {
 // windows, a glazed ground floor under a plain awning, then a haze wash so it sits back from the shop.
 function building(api, [x1, z1, name]) {
   const f = BUILDING_SPRITES[name], p = api.project, w = f.w, d = f.d, h = f.h, wall = f.wall, awning = '#8a9e8c';
-  const x0 = x1 - w, z0 = z1 - d, x = x1 - w / 2, z = z1 - d / 2;
+  const x0 = x1 - w, z0 = z1 - d, x = x1 - w / 2, z = z1 - d / 2, near = p(x1, P, z1), far = p(x0, P + 14, z0);
+  if (near.y < -api.unit * 4 || far.y > api.height + api.unit * 2 || Math.max(near.x, p(x1, P, z0).x) < 0 || Math.min(near.x, p(x0, P, z1).x) > api.width) return;
   api.poly([p(x0, P, z1), p(x0 - h * .3, P, z1 + h * .18), p(x1 - h * .3, P, z1 + h * .18), p(x1, P, z1)], 'rgba(40,40,30,.12)');
   if (buildingSprite(api, name, x1, z1)) return;
   api.box(x, z, P, w, d, h, wall);
