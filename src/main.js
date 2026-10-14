@@ -2469,23 +2469,35 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   var SHELVING_PIN={bx:11,by:432,ex:834,ey:766,ty:40},SHELVING_DEPTH=.64;
   function drawProductShelving(api,x0,x1,z){
     if(!shellSprite('shell.product.shelving'))return false;
-    // Tiled wall behind it, in the same 5.4-unit panels as the menu board's stretch so the tile scale matches.
-    for(var sx=x0;sx<x1-.01;sx+=5.4){var ex=Math.min(x1,sx+5.4);drawWallFace(api,'shell.wall.tile.right',sx,z,ex,z,0,3.95,.04,.04+.91*(ex-sx)/5.4)}
     var img=spriteImage('shell.product.shelving'),S=SHELVING_PIN,zf=z+SHELVING_DEPTH,p0=project(x0,0,zf),p1=project(x1,0,zf);
     var k=(p1.x-p0.x)/(S.ex-S.bx),shear=(p1.y-p0.y-k*(S.ey-S.by))/(S.ex-S.bx);
     ctx.save();ctx.transform(k,shear,0,k,p0.x-k*S.bx,p0.y-shear*S.bx-k*S.by);ctx.drawImage(img,0,0);ctx.restore();
     return true;
   }
+  // The product wall in the darker drawn tile of the counter walls and the lounge's band (Kevin, 2026-10-14), floor to
+  // slab, in place of the wall module's cream plaster and lighter dado. The band's grout course and brass rail run on
+  // across it at the same heights, and the stack-bond joints sit on the same .2 grid, so the two meet as one wall.
+  function drawTileWall(x0,x1,z,h){
+    var f=z+.004,rail=LOUNGE_TILE-.03;
+    poly([project(x0,0,f),project(x1,0,f),project(x1,h,f),project(x0,h,f)],SHOP_GREEN_TILE[1]);
+    f+=.004;
+    ctx.beginPath();
+    for(var tx=Math.ceil((x0+.04)/TILE_PITCH)*TILE_PITCH;tx<x1-.04;tx+=TILE_PITCH){var a=project(tx,0,f),b=project(tx,h-.02,f);ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y)}
+    ctx.strokeStyle=TILE_GROUT;ctx.lineWidth=Math.max(.65,unit*.012);ctx.lineCap='round';ctx.stroke();
+    var courses=Math.max(1,Math.round((h-LOUNGE_TILE)/(LOUNGE_TILE/2))),step=(h-LOUNGE_TILE)/courses;
+    worldLine([[x0,LOUNGE_TILE/2,f],[x1,LOUNGE_TILE/2,f]],TILE_GROUT,.012);
+    for(var c=1;c<courses;c++)worldLine([[x0,LOUNGE_TILE+c*step,f],[x1,LOUNGE_TILE+c*step,f]],TILE_GROUT,.012);
+    worldLine([[x0,rail,f],[x1,rail,f]],TILE_BRASS[0],.05);
+  }
   function drawShellProductWall(displayZ,now,wood){
-    var api=sunnyApi(now),wallL=-6.7,boardL=-6.7+COUNTER_SHIFT;
-    // The wall starts where the lounge's plaster ends (-6.7), flush on the same plane; the menu board's stretch moved
-    // right with the counters, so the strip left of it is cut from the render at the same tile phase as that stretch's
-    // left edge (its right edge lands 9.8 px past a grout line, like u .04 does), overlapping it a hair so no seam shows.
-    drawWallFace(api,'shell.wall.tile.right',wallL,displayZ,boardL+.03,displayZ,0,3.95,.231,.231+.91*(boardL+.03-wallL)/5.4);
-    drawWallFace(api,'shell.wall.tile.right',boardL,displayZ,-1.3+COUNTER_SHIFT,displayZ,0,3.95,.04,.95);
-    drawMenuBoard(-3.9+COUNTER_SHIFT,displayZ,1.38,5.1,1.24,now,wood);
-    if(drawProductShelving(api,-1.3+COUNTER_SHIFT,8.4,displayZ))return;
-    drawShelfRun(api,[[-1.3+COUNTER_SHIFT,3.3],[3.3,6.5]],displayZ+.6,3.6,.55);
+    // One wall from the lounge's plaster at -6.7 to the lounge's right end, flush on the facade's plane. The flip board
+    // sits centred between the plaster and the shelving, and a little higher than before so it is centred on the
+    // wall that shows above the counters.
+    var api=sunnyApi(now),wallL=-6.7,shelfL=-1.3+COUNTER_SHIFT,wallR=8.4;
+    drawTileWall(wallL,wallR,displayZ,3.95);
+    drawMenuBoard((wallL+shelfL)/2,displayZ,1.8,5.1,1.24,now,wood);
+    if(drawProductShelving(api,shelfL,wallR,displayZ))return;
+    drawShelfRun(api,[[shelfL,3.3],[3.3,6.5]],displayZ+.6,3.6,.55);
   }
   function drawShellStairs(now){
     var api=sunnyApi(now);
