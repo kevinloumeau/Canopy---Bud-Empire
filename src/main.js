@@ -1939,14 +1939,15 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // inlet and outlet centrelines (rows `top` and `bot`) land on the two tube levels. `keep` lists the source rectangles
   // that are drawn, so a terminal flange that would hang in the open is clipped away where a short connector of the
   // straight/elbow renders carries the run on to the counter. `path` is the centreline the parcels ride.
-  // The pack line's downstairs leg runs behind the product wall and only this stub shows, entering the pickup counter's back.
-  var PACK_STUB_X=4+COUNTER_SHIFT-.4;
+  // The pack line's downstairs leg runs behind the product wall; only a short drop from the mezzanine's underside into
+  // the pickup counter's back shows, so nothing pierces the shelving in front of that wall.
+  var PACK_STUB_X=4+COUNTER_SHIFT+.4;
   var TUBE_RUNS={
     1:{name:'tube.run.grow',axis:417.6,top:199.8,bot:718.2,x:5.6,z:-3,yTop:10.85,yBot:6.15,port:[5.6,9.4,-3],
        keep:[[0,0,633,690],[258,690,375,205]],path:[[4.4,10.85,-3],[5.6,10.85,-3],[5.6,6.15,-3],[5.6,6.45,-.95],[4.7,6.45,-.95]],
        connector:[[5.6,6.45,-2.2],[5.6,6.45,-.95],[4.7,6.45,-.95]]},
     3:{name:'tube.run.pack',axis:322.8,top:243,bot:693,x:.1,z:-1.3,yTop:6.15,yBot:1.55,port:[.1,4.7,-1.3],
-       keep:[[0,0,614,660],[0,660,474,262]],path:[[-2.6,6.15,-1.3],[.1,6.15,-1.3],[.1,1.55,-1.3],[PACK_STUB_X,1.65,-1.3],[PACK_STUB_X,1.65,1.6]]}
+       keep:[[0,0,614,660],[0,660,474,262]],path:[[-2.6,6.15,-1.3],[.1,6.15,-1.3],[.1,1.55,-1.3],[PACK_STUB_X,1.55,-1.3]]}
   };
   function drawTubeRun(run){
     if(!shellSprite(run.name))return false;
@@ -1957,12 +1958,12 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(run.connector&&shellSprite('tube.straight')&&shellSprite('tube.elbow'))drawTubeSprites(run.connector,.9);
     return true;
   }
-  // Downstairs the pack line is hidden by the product wall; this short stub comes out of that wall into the pickup
-  // counter's back, drawn after the wall with its own parcels.
+  // Downstairs the pack line is hidden by the product wall; this short drop from the slab above into the pickup
+  // counter's back is all that shows, drawn after the wall with its own parcels.
   function drawPackStub(){
     if(!(shellSprite('tube.straight')&&shellSprite('tube.elbow')))return;
-    drawTubeSprites([[PACK_STUB_X,1.65,-1.3],[PACK_STUB_X,1.65,1.6]],.9);
-    transferTube([[PACK_STUB_X,1.65,-.85],[PACK_STUB_X,1.65,1.6]],3,[],4,true);
+    drawTubeSprites([[PACK_STUB_X,4.5,1.3],[PACK_STUB_X,1.45,1.3]],.9);
+    transferTube([[PACK_STUB_X,4.4,1.3],[PACK_STUB_X,1.45,1.3]],3,[],4,true);
   }
   function drawFloorTransfer(stage,upper){
     var run=SHOP_SPRITES&&TUBE_RUNS[stage];
@@ -2461,10 +2462,25 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     runs.forEach(function(r){drawBox((r[0]+r[1])/2,face-d/2,0,r[1]-r[0],d,h,SHELF_OAK)});
     runs.forEach(function(r){drawWallFace(api,'shell.shelf.wall.right',r[0],face,r[1],face,0,h)});
   }
+  // Kevin's five-bay product shelving (2026-10-14), one render for the whole run. Pinned by its front base line: B0 is
+  // the front-bottom-left corner, B1 the front-bottom-right, T0 the top of the left edge (cleaned-sprite px). The render's
+  // length axis lies at 22° and its depth at 35°, so one uniform scale plus a small vertical shear lays the base on the
+  // wall line and leaves the depth edges within 3° of the map's; nothing is stretched.
+  var SHELVING_PIN={bx:11,by:432,ex:834,ey:766,ty:40},SHELVING_DEPTH=.64;
+  function drawProductShelving(api,x0,x1,z){
+    if(!shellSprite('shell.product.shelving'))return false;
+    // Tiled wall behind it, in the same 5.4-unit panels as the menu board's stretch so the tile scale matches.
+    for(var sx=x0;sx<x1-.01;sx+=5.4){var ex=Math.min(x1,sx+5.4);drawWallFace(api,'shell.wall.tile.right',sx,z,ex,z,0,3.95,.04,.04+.91*(ex-sx)/5.4)}
+    var img=spriteImage('shell.product.shelving'),S=SHELVING_PIN,zf=z+SHELVING_DEPTH,p0=project(x0,0,zf),p1=project(x1,0,zf);
+    var k=(p1.x-p0.x)/(S.ex-S.bx),shear=(p1.y-p0.y-k*(S.ey-S.by))/(S.ex-S.bx);
+    ctx.save();ctx.transform(k,shear,0,k,p0.x-k*S.bx,p0.y-shear*S.bx-k*S.by);ctx.drawImage(img,0,0);ctx.restore();
+    return true;
+  }
   function drawShellProductWall(displayZ,now,wood){
     var api=sunnyApi(now);
     drawWallFace(api,'shell.wall.tile.right',-6.7+COUNTER_SHIFT,displayZ,-1.3+COUNTER_SHIFT,displayZ,0,3.95,.04,.95);
     drawMenuBoard(-3.9+COUNTER_SHIFT,displayZ,1.38,5.1,1.24,now,wood);
+    if(drawProductShelving(api,-1.3+COUNTER_SHIFT,8.4,displayZ))return;
     drawShelfRun(api,[[-1.3+COUNTER_SHIFT,3.3],[3.3,6.5]],displayZ+.6,3.6,.55);
   }
   function drawShellStairs(now){
