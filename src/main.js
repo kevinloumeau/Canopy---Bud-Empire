@@ -1623,9 +1623,9 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     }
     return Math.max(0,queue.indexOf(c))*queueGap(false);
   }
-  // Space between people in a line. The figures are about .8 wide, so anything under one tile reads as a crush;
-  // the longest lines close up a little so more of them fit in the pen before the tail runs outside.
-  function queueGap(kiosk){return kiosk?.75:queueLimit()>20?.85:1}
+  // Space between people in a line: close enough to read as a queue (Kevin's call), a little tighter past twenty
+  // places so more of the line fits in the pen before the tail runs outside.
+  function queueGap(kiosk){return kiosk?.65:queueLimit()>20?.7:.8}
   function customerTarget(c){
     if(c.phase==='leaving')return{x:-10.5,z:-8.1};
     return routePoint(c.kiosk&&!c.ordered?kioskRoute(c.kioskIndex):queueRoute(c.ordered),customerQueueDistance(c));
@@ -1879,7 +1879,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     path.push(points[points.length-1]);
     (ports||[]).forEach(function(p){floorPort(p[0],p[1],p[2])});
     var spriteTube=cargoOnly||(SHOP_SPRITES&&shellSprite('tube.straight')&&shellSprite('tube.elbow'));
-    if(spriteTube&&!cargoOnly)drawTubeSprites(points);
+    if(spriteTube&&!cargoOnly)drawTubeSprites(points,transferBore);
     // Transparent body: the room remains visible through the tube.
     if(!spriteTube){worldLine(path,'#233e341a',.92);worldLine(path,'#233e343c',.78);worldLine(path,'#c5e6dd24',.68)}
     function glassEdge(offset,color,width){
@@ -1906,8 +1906,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // world segments, so each segment gets the straight render laid along its screen line (end couplings kept at their
   // own scale, only the glass between them stretched) and each bend gets the elbow render, mapped by the one affine
   // transform that lays its two arms exactly along the two segments meeting there.
-  function drawTubeSprites(points){
-    var S=spriteImage('tube.straight'),E=spriteImage('tube.elbow'),dia=.62,sS=unit*dia/180,sE=unit*dia/167;
+  function drawTubeSprites(points,bore){
+    var S=spriteImage('tube.straight'),E=spriteImage('tube.elbow'),dia=bore||.62,sS=unit*dia/180,sE=unit*dia/167;
     var SW=S.naturalWidth,SH=S.naturalHeight,CAP=150,CAP2=470;
     // Elbow geometry measured on the render: arm A rises from the virtual corner C to the top mouth, arm B runs to the
     // lower-right mouth.
@@ -1934,57 +1934,25 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       ctx.save();ctx.transform(m00,m10,m01,m11,c.x-m00*C[0]-m01*C[1],c.y-m10*C[0]-m11*C[1]);ctx.drawImage(E,0,0);ctx.restore();
     }
   }
-  // tubes-v3: each inter-floor run is one rendered assembly (inlet stub, swept drop, outlet stub) drawn as a single
-  // image at one uniform scale, pinned by its vertical drop: the drop's centreline is the image column `axis`, and the
-  // inlet and outlet centrelines (rows `top` and `bot`) land on the two tube levels. `keep` lists the source rectangles
-  // that are drawn, so a terminal flange that would hang in the open is clipped away where a short connector of the
-  // straight/elbow renders carries the run on to the counter. `path` is the centreline the parcels ride.
-  var TUBE_RUNS={
-    1:{name:'tube.run.grow',axis:417.6,top:199.8,bot:718.2,x:5,z:-3,yTop:10.85,yBot:6.15,port:[5,9.4,-3],
-       keep:[[0,0,633,690],[258,690,375,205]],path:[[3.8,10.85,-3],[5,10.85,-3],[5,6.15,-3],[5,6.45,-.95]]},
-    3:{name:'tube.run.pack',axis:322.8,top:243,bot:693,x:.1,z:-.3,yTop:6.15,yBot:1.55,port:[.1,4.7,-.3],
-       keep:[[0,0,614,660],[0,660,474,262]],path:[[-2.6,6.15,-.3],[.1,6.15,-.3],[.1,1.55,-.3],[2.03,1.65,-.3],[3.9,1.65,-.3],[3.9,1.65,1.6]],
-       connector:[[2.03,1.65,-.3],[3.9,1.65,-.3],[3.9,1.65,1.6]]}
-  };
-  function drawTubeRun(run){
-    if(!shellSprite(run.name))return false;
-    var img=spriteImage(run.name),top=project(run.x,run.yTop,run.z),bot=project(run.x,run.yBot,run.z),k=(bot.y-top.y)/(run.bot-run.top);
-    ctx.save();ctx.translate(top.x-run.axis*k,top.y-run.top*k);ctx.scale(k,k);
-    run.keep.forEach(function(r){ctx.drawImage(img,r[0],r[1],r[2],r[3],r[0],r[1],r[2],r[3])});
-    ctx.restore();
-    if(run.connector&&shellSprite('tube.straight')&&shellSprite('tube.elbow'))drawTubeSprites(run.connector);
-    return true;
-  }
+  // Inter-floor runs go round the back, station to station, at the larger bore Kevin asked for: the grow line leaves
+  // the grow bench's rear, drops behind it (in front of the glazing) and comes forward into the harvest bench's rear;
+  // the pack line leaves the packing bench's rear, drops behind it through the mezzanine into the space behind the
+  // product wall, and comes out of that wall beside the counter into its left end, so only the stub shows downstairs.
+  var TRANSFER_DIA=.95,transferBore=0;
   function drawFloorTransfer(stage,upper){
-    var run=SHOP_SPRITES&&TUBE_RUNS[stage];
-    if(run&&shellSprite(run.name)){
-      // The one aligned image is drawn twice, clipped at the floor opening's screen line: the part above the slab with
-      // that floor, the rest with the floor below, so the slab itself hides the buried section.
-      var q=project(run.port[0],run.port[1],run.port[2]);
-      ctx.save();ctx.beginPath();
-      if(upper)ctx.rect(-10000,-10000,20000,10000+q.y);else ctx.rect(-10000,q.y,20000,20000);
-      ctx.clip();drawTubeRun(run);transferTube(run.path,stage,[],stage===3?4:stage,true);ctx.restore();
-      if(upper){
-        // A slim sleeve ring where the pipe passes the slab, its near half over the pipe.
-        ctx.beginPath();ctx.ellipse(q.x,q.y,unit*.34,unit*.16,0,0,Math.PI);ctx.strokeStyle='#c4cfb9';ctx.lineWidth=unit*.07;ctx.stroke();
-        ctx.beginPath();ctx.ellipse(q.x,q.y+unit*.05,unit*.34,unit*.16,0,0,Math.PI);ctx.strokeStyle='#6b8070';ctx.lineWidth=unit*.045;ctx.stroke();
-      }
-      return;
-    }
-    // The pack tube drops through the mezzanine at x 0.1, clear of the menu board's price column on the wall behind.
-    var port=stage===1?[5.4,9.4,-2]:[.1,4.7,-.3];
-    var route=stage===1?[[4.55,10.85,-3],[5.4,10.85,-3],[5.4,10.85,-2],[5.4,6.15,-2],[5.4,6.15,-.3],[4.55,6.15,-.3]]:[[-1.45,6.15,-.3],[.1,6.15,-.3],[.1,1.55,-.3],[4,1.55,-.3],[4,1.55,1.35]];
+    var port=stage===1?[3,9.4,-4.9]:[-3,4.7,-2.6];
+    var route=stage===1?[[3,10.85,-4.1],[3,10.85,-4.9],[3,6.15,-4.9],[3,6.15,-1.6]]:[[-3,6.15,-1.6],[-3,6.15,-2.6],[-3,1.55,-2.6],[2.6,1.55,-2.6],[2.6,1.55,2.3],[3.8,1.55,2.3]];
     var p=project(port[0],port[1],port[2]);
     if(upper)floorPort(port[0],port[1],port[2]);
     ctx.save();ctx.beginPath();
     if(upper)ctx.rect(-10000,-10000,20000,10000+p.y);
     else ctx.rect(-10000,p.y,20000,20000);
-    ctx.clip();transferTube(route,stage,[],stage===3?4:stage);ctx.restore();
+    ctx.clip();transferBore=TRANSFER_DIA;transferTube(route,stage,[],stage===3?4:stage);transferBore=0;ctx.restore();
     if(upper){
       // The foreground half of the floor sleeve occludes the pipe at the opening.
-      ctx.beginPath();ctx.ellipse(p.x,p.y,unit*.54,unit*.25,0,0,Math.PI);
+      ctx.beginPath();ctx.ellipse(p.x,p.y,unit*.62,unit*.29,0,0,Math.PI);
       ctx.strokeStyle='#c4cfb9';ctx.lineWidth=unit*.11;ctx.stroke();
-      ctx.beginPath();ctx.ellipse(p.x,p.y+unit*.09,unit*.54,unit*.25,0,0,Math.PI);
+      ctx.beginPath();ctx.ellipse(p.x,p.y+unit*.09,unit*.62,unit*.29,0,0,Math.PI);
       ctx.strokeStyle='#6b8070';ctx.lineWidth=unit*.07;ctx.stroke();
     }
   }
@@ -2190,7 +2158,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     return true;
   }
   function pinnedDoor(name,x,z){
-    if(!shellSprite(name))return false;var img=spriteImage(name),p0=project(x-.95,0,z+.12),p1=project(x+.95,0,z+.12),u0=103,v0=455,u1=413,v1=619;
+    if(!shellSprite(name))return false;var img=spriteImage(name),p0=project(x-1.2,0,z+.12),p1=project(x+1.2,0,z+.12),u0=103,v0=455,u1=413,v1=619;
     var k=(p1.x-p0.x)/(u1-u0),shear=(p1.y-p0.y-k*(v1-v0))/(u1-u0);ctx.save();ctx.transform(k,shear,0,k,p0.x-k*u0,p0.y-k*v0-shear*u0);ctx.drawImage(img,0,0);ctx.restore();return true;
   }
   // Map a flat render on to any world plane: image (0,0) lands on world point o, its right edge on u, its bottom on v.
@@ -2458,9 +2426,10 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   function drawShellStairs(now){
     var api=sunnyApi(now);
-    drawBoxSprite(api,shellSprite('shell.stairs.upper'),6.5,8.2,-5.6,.7,4.7,9.4,'height',.74);
-    // The main-flight render came out floating and half transparent, so the upper flight's render serves both.
-    drawBoxSprite(api,shellSprite('shell.stairs.upper'),9.1,10.7,-.8,4.2,0,4.7,'height',.74);
+    // Kevin's steeper closed-stringer flight (2026-10-14) serves both runs; the old open flight is the fallback.
+    var flight=shellSprite('shell.stairs.ascend'),scale=flight?1:.74;flight=flight||shellSprite('shell.stairs.upper');
+    drawBoxSprite(api,flight,6.5,8.2,-5.6,.7,4.7,9.4,'height',scale);
+    drawBoxSprite(api,flight,9.1,10.7,-.8,4.2,0,4.7,'height',scale);
     // Glass guard rail along the mezzanine's open right edge, sheared on to its own plane from the flat render.
     if(!drawRailRun('z',8.93,-1.75,4.7,2))drawWallFace(api,'shell.rail.glass.left',8.93,-1.75,8.93,-4.8,4.7,1);
   }
@@ -2825,10 +2794,11 @@ if(!SHOP_SPRITES){
 }else drawShellShelves(fi,rear)
       if(fi===0){
         // Built-in product wall directly behind the service counters, under the mezzanine.
-        var displayZ=DISPLAY_Z;
+        // Sprite shop: the menu-board wall and the shelving stand on the lounge facade's plane, one flush wall.
+        var displayZ=SHOP_SPRITES?LOUNGE_FRONT:DISPLAY_Z;
         // The lounge's walls go down first: the shelving unit stands in front of the wall's end.
         drawLoungeFront(now);
-        if(SHOP_SPRITES){drawShellProductWall(displayZ,now,wood)}else{
+        if(SHOP_SPRITES){drawFloorTransfer(3,false);drawShellProductWall(displayZ,now,wood)}else{
         drawBox(0,displayZ,0,13.4,.32,3.95,green);
         drawBox(0,displayZ+.22,.04,13.4,.75,.62,wood);
         // The bay uprights go down before the goods, so what stands beside them is never cut by them.
@@ -2913,13 +2883,6 @@ if(!SHOP_SPRITES){
       floor.ids.forEach(function(i){var p=machinePos[i];lightPool(p.x,.035,p.z+.9,1.65,i===1)});
       // Furniture stays visible in front of the back wall and shelving.
       // Staff positions: most stand behind their bench; the grow-room pair stand where the gantry and rack do not hide them.
-      // Cream columns under each upper floor's front edge, rising to the slab's soffit, so both levels read as
-      // carried: on the ground floor behind the counters (sorted with the customers), on the mezzanine outside the
-      // packing and harvest benches, clear of the upper stairs.
-      if(SHOP_SPRITES&&fi<2){
-        var colY=4.7-.26,cols=fi===0?[[-4.5,.3],[6,.3]]:[[-6.1,-.65],[5.7,-.65]];
-        cols.forEach(function(cp){var draw=function(){drawBoxSprite(sunnyApi(now),shellSprite('shell.column'),cp[0]-.4,cp[0]+.4,cp[1]-.38,cp[1]+.38,0,colY,'height')};if(fi===0)jobs.push({depth:depthOf({x:cp[0],z:cp[1]}),draw:draw});else draw()});
-      }
       var staffSpots={0:{dx:-2.45,dz:.45,front:true,facing:1},1:{dx:-2.45,dz:.45,front:true,facing:1},5:{dx:1.05,dz:-1.55,front:false,facing:.35}};
       // Transfer tubes go down before the stations, so a station hides the stub that enters its side or back.
       if(fi===1){sceneElevation=0;drawFloorTransfer(3,true);drawFloorTransfer(1,false);sceneElevation=floor.y}
@@ -2944,7 +2907,7 @@ if(!SHOP_SPRITES){
       }
       sceneElevation=0;
       // Draw outgoing runs before the next slab, which naturally hides the buried section.
-      if(fi===0)drawFloorTransfer(3,false);
+      if(fi===0&&!SHOP_SPRITES)drawFloorTransfer(3,false);
       if(fi===1){
         // Stairs to the online-orders deck: a short flight leaves the mezzanine past the end of the side wall, reaches a landing
         // outside the building, then turns left and climbs forward to enter the deck from its rear edge, behind the counter.
@@ -3430,7 +3393,7 @@ if(!SHOP_SPRITES){
     if(!SHOP_SPRITES){drawBox(side.x,sideZ,0,.26,sideD,H,plaster);tileFace(true,side.z0,side.z1,side.x+.13)}
     // Facade: jamb and header around the doorway, the wall to its right and past the shelving, tiled below.
     if(rise>0){ctx.save();ctx.globalAlpha=.15+.85*(1-rise)}
-    drawBox(dx-.94,zc,0,.48,fd,H,plaster);drawBox(dx,zc,2.5,1.4,fd,H-2.5,plaster);drawBox((dx+.7-6.7)/2,zc,0,-6.7-(dx+.7),fd,H,plaster);drawBox((6.7+rx+.16)/2,zc,0,rx+.16-6.7,fd,H,plaster);
+    var hdr=SHOP_SPRITES?2.05:2.5;drawBox(dx-.94,zc,0,.48,fd,H,plaster);drawBox(dx,zc,hdr,1.4,fd,H-hdr,plaster);drawBox((dx+.7-6.7)/2,zc,0,-6.7-(dx+.7),fd,H,plaster);drawBox((6.7+rx+.16)/2,zc,0,rx+.16-6.7,fd,H,plaster);
     [[dx-1.18,dx-.7],[dx+.7,-6.7],[6.7,rx+.16]].forEach(function(run){tileFace(false,run[0],run[1],face)});
     // The right end wall's tile band goes on after the facade so its corner is tiled on both faces, with no bare plaster strip.
     tileFace(true,-7,face,rx+.16);
