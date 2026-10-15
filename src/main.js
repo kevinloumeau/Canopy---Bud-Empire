@@ -1850,27 +1850,48 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     }
   }
   function floorPort(x,y,z){
-    // Sprite shop: the brass floor flange with its glass collar from the tube batch.
-    if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),shellSprite('tube.port'),x-.62,x+.62,z-.62,z+.62,y,y+.95,true))return;
     var p=project(x,y+.02,z);
     ellipse(p.x,p.y,unit*.6,unit*.29,'#b8c5b1');
     ellipse(p.x,p.y,unit*.46,unit*.21,'#263b31');
     [-1,1].forEach(function(side){ellipse(p.x+unit*.5*side,p.y,unit*.045,unit*.035,'#e0d5b3')});
   }
-  // The rendered belt troughs: `f` is the share of the render's width taken by the trough's length (the rest is its
-  // depth, measured on the sprite), `h` the rim height and `bed` the inner floor, in world units at the span below.
-  var TROUGH={upper:{f:.806,h:1.06,bed:.78},lower:{f:.826,h:1.06,bed:.78}},TROUGH_SPAN=7.7;
+  // Kevin's belt kit (2026-10-15): a hopper end, a straight that tiles and a chute end. Each module is measured on its
+  // render in the render's own floor coordinates (ix, iz: pixels along its x and z axes) as the belt surface's extent and
+  // its near-left corner, so every module is scaled to the one belt width BELT_W and butts against the next with the
+  // surface flush. The three renders have different leg lengths, so the surface is pinned at the height that stands the
+  // straight module's feet on the floor and any longer legs are clipped at the floor line under the belt.
+  var BELT_W=.8,BELT_MODULES={
+    in:{name:'belt.end.in',ix:[244.2,617.5],iz:[64,193.6],corner:[43.8,219]},
+    straight:{name:'belt.straight',ix:[106.4,635.6],iz:[-66.4,103.9],corner:[2.2,105.2],foot:[148.6,406.1]},
+    out:{name:'belt.end.out',ix:[132.3,533.7],iz:[-68,82.6],corner:[43,107.4]}};
+  function beltModuleScale(m){var o=project(0,0,0),e=project(1,0,0);return Math.hypot(e.x-o.x,e.y-o.y)*BELT_W/(m.iz[1]-m.iz[0])}
+  function beltModuleLength(m){return (m.ix[1]-m.ix[0])*BELT_W/(m.iz[1]-m.iz[0])}
+  function beltHeight(){
+    // The straight's left foot sits (inset, -h, -BELT_W/2) from the surface's near-left corner; solve for h.
+    var m=BELT_MODULES.straight,k=beltModuleScale(m),o=project(0,0,0),ex=project(1,0,0),ey=project(0,1,0),ez=project(0,0,1);
+    var dx=(m.foot[0]-m.corner[0])*k,dy=(m.foot[1]-m.corner[1])*k,inset=(dx+BELT_W/2*(ez.x-o.x))/(ex.x-o.x);
+    return (inset*(ex.y-o.y)-BELT_W/2*(ez.y-o.y)-dy)/(ey.y-o.y);
+  }
+  function drawBeltModule(m,x0,z,h){
+    if(!shellSprite(m.name))return false;
+    var img=spriteImage(m.name),k=beltModuleScale(m),a=project(x0,h,z+BELT_W/2),f=project(x0,0,z),g=project(x0+1,0,z),slope=(g.y-f.y)/(g.x-f.x);
+    ctx.save();ctx.beginPath();ctx.moveTo(f.x-9000,f.y-9000*slope);ctx.lineTo(f.x+9000,f.y+9000*slope);ctx.lineTo(f.x+9000,-30000);ctx.lineTo(f.x-9000,-30000);ctx.closePath();ctx.clip();
+    ctx.translate(a.x-m.corner[0]*k,a.y-m.corner[1]*k);ctx.scale(k,k);ctx.drawImage(img,0,0);ctx.restore();
+    return true;
+  }
   function conveyorRun(x1,x2,z,y,stage){
     var length=Math.abs(x2-x1),mid=(x1+x2)/2,forward=x2>x1?1:-1;
     var steel=['#758d80','#344a40','#536c5b'];
     var phase=state.lines[stage]>0&&!motionPreference.matches?crateTime:0;
     var belt=false;
-    if(SHOP_SPRITES){
-      // The trough is drawn on its true footprint (length plus depth fill the render's width), a quarter smaller than
-      // it was (Kevin, 2026-10-14: too large and too close to the benches); the cargo rides its bed, inside the rims.
-      var t=TROUGH[stage===0?'upper':'lower'],L=TROUGH_SPAN*t.f,D=TROUGH_SPAN-L;
-      belt=drawBoxSprite(sunnyApi(sceneTime),shellSprite(stage===0?'shell.conveyor.upper':'shell.conveyor.lower'),mid-L/2,mid+L/2,z-D/2,z+D/2,0,t.h,true);
-      if(belt){x1=mid-forward*(L/2-.55);x2=mid+forward*(L/2-.55);y=t.bed-.08}
+    if(SHOP_SPRITES&&['in','straight','out'].every(function(k){return shellSprite(BELT_MODULES[k].name)})){
+      // Top floor: hopper end, straight and chute end laid end to end about the run's middle, the hopper behind the seeds
+      // bench and the chute behind the grow bench. The mezzanine run flows the other way, so it is straights only, the
+      // last pulled back to the run's end over the one before it (each module is drawn over the one behind it).
+      var M=BELT_MODULES,parts=stage===0?[M.in,M.straight,M.out]:[M.straight,M.straight,M.straight],lens=parts.map(beltModuleLength);
+      var total=stage===0?lens.reduce(function(a,b){return a+b},0):6.2,start=mid-total/2,h=beltHeight(),at=start;
+      parts.forEach(function(m,i){var x0=i===parts.length-1?Math.min(at,start+total-lens[i]):at;drawBeltModule(m,x0,z,h);at=x0+lens[i]});
+      belt=true;x1=mid-forward*(total/2-.6);x2=mid+forward*(total/2-.6);y=h-.08;
     }
     if(!belt){
     // The stands first: they are under the belt, so its body goes over them.
@@ -1934,92 +1955,119 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     glassEdge(-.24,'#f5fff0b3',.05);glassEdge(.22,'#b9e4da5c',.024);
     [points[0],points[points.length-1]].forEach(function(p){var q=project(p[0],p[1],p[2]);ellipse(q.x,q.y,unit*.37,unit*.28,'#c3b789');ellipse(q.x,q.y,unit*.27,unit*.2,'#345e5066')});
   }
-  // Sprite shop: the tube built from the brass-coupled straight and elbow renders. Every run is a chain of straight
-  // world segments, so each segment gets the straight render laid along its screen line (end couplings kept at their
-  // own scale, only the glass between them stretched) and each bend gets the elbow render, mapped by the one affine
-  // transform that lays its two arms exactly along the two segments meeting there.
-  function drawTubeSprites(points,dia){
-    dia=dia||TUBE_DIA;var S=spriteImage('tube.straight'),E=spriteImage('tube.elbow'),sS=unit*dia/180,sE=unit*dia/167;
-    var SW=S.naturalWidth,SH=S.naturalHeight,CAP=150,CAP2=470;
-    // Elbow geometry measured on the render: arm A rises from the virtual corner C to the top mouth, arm B runs to the
-    // lower-right mouth.
-    var C=[110,377],dA=[0,-1],dB=[300/330,138/330],arm=330*sE;
-    var P=points.map(function(p){return project(p[0],p[1],p[2])});
-    function slice(x,y,ux,uy,sy0,sy1,t0,t1){
-      var k=(t1-t0)/(sy1-sy0),px=-uy,py=ux,bx=x-px*SW/2*sS+ux*t0,by=y-py*SW/2*sS+uy*t0;
-      ctx.save();ctx.transform(px*sS,py*sS,ux*k,uy*k,bx-ux*k*sy0,by-uy*k*sy0);ctx.drawImage(S,0,sy0,SW,sy1-sy0,0,sy0,SW,sy1-sy0);ctx.restore();
-    }
-    for(var i=1;i<P.length;i++){
-      var a=P[i-1],b=P[i],dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy);if(L<1)continue;
-      var ux=dx/L,uy=dy/L,t0=i>1?arm*.8:0,t1=L-(i<P.length-1?arm*.8:0);if(t1-t0<2)continue;
-      var cap=CAP*sS;
-      if(t1-t0<cap*2.2){slice(a.x,a.y,ux,uy,0,SH,t0,t1);continue}
-      slice(a.x,a.y,ux,uy,0,CAP,t0,t0+cap);slice(a.x,a.y,ux,uy,CAP,CAP2,t0+cap,t1-cap);slice(a.x,a.y,ux,uy,CAP2,SH,t1-cap,t1);
-    }
+  // Kevin's glass tube kit (2026-10-15). The straight render runs along +x; at load it is turned once into a vertical
+  // image (its axis down column `axis`, its two collar mouths at the `mouth` rows) so a run can be laid along any screen
+  // line with only the glass between the collars stretched. Along x the render keeps its own orientation, along z it is
+  // mirrored (a straight tube has no handedness, and a mirror is exactly what turns the x axis into the z axis), and a
+  // vertical piece takes the turned image as it stands: its collar ellipses already lie flat.
+  var TUBE_STRAIGHT={angle:30.74*Math.PI/180,cx:304.9,cy:223.8,alongMin:-333.5,rows:679,w:200,axis:100,mouth:[68.3,617.8],cap:[134.7,554.8],glass:157.2},tubeStraightCanvas=null;
+  function tubeStraightVertical(){
+    if(tubeStraightCanvas)return tubeStraightCanvas;
+    var img=spriteImage('tube.straight');if(!img||!img.naturalWidth||typeof document==='undefined')return null;
+    var T=TUBE_STRAIGHT,c=document.createElement('canvas');c.width=T.w;c.height=Math.ceil(T.rows)+4;
+    var g=c.getContext('2d'),s=Math.sin(T.angle),co=Math.cos(T.angle),oy=2-T.alongMin;
+    g.setTransform(s,co,-co,s,T.axis-T.cx*s+T.cy*co,oy-T.cx*co-T.cy*s);g.drawImage(img,0,0);
+    return tubeStraightCanvas=c;
+  }
+  // The elbow render turns a vertical drop (arm A, up from the virtual corner) into a run along +x (arm B); at a bend it
+  // is mapped by the one affine transform that lays those two arms along the two segments meeting there.
+  var TUBE_ELBOW={corner:[102.5,398.4],armA:332,armB:262.8,w:161,dA:[0,-1],dB:[Math.cos(Math.PI/6),Math.sin(Math.PI/6)]};
+  function drawTubeSprites(points,dia,opts){
+    dia=dia||TUBE_DIA;opts=opts||{};var S=tubeStraightVertical(),E=spriteImage('tube.elbow'),T=TUBE_STRAIGHT;if(!S)return;
+    var P=points.map(function(p){return project(p[0],p[1],p[2])}),sE=unit*dia/TUBE_ELBOW.w,trim=[];
+    // Elbows first, to know how far each straight stops short of its corner.
     for(var k=1;k<P.length-1;k++){
       var c=P[k],q=P[k-1],n=P[k+1],l1=Math.hypot(q.x-c.x,q.y-c.y)||1,l2=Math.hypot(n.x-c.x,n.y-c.y)||1;
-      var u1=[(q.x-c.x)/l1,(q.y-c.y)/l1],u2=[(n.x-c.x)/l2,(n.y-c.y)/l2];
+      var u1=[(q.x-c.x)/l1,(q.y-c.y)/l1],u2=[(n.x-c.x)/l2,(n.y-c.y)/l2],swapped=u1[0]*u2[1]-u1[1]*u2[0]<0;
       // Keep the render's handedness: arm A takes whichever neighbour leaves the bend un-mirrored.
-      if(u1[0]*u2[1]-u1[1]*u2[0]<0){var sw=u1;u1=u2;u2=sw}
-      var det=dA[0]*dB[1]-dA[1]*dB[0],i00=dB[1]/det,i01=-dB[0]/det,i10=-dA[1]/det,i11=dA[0]/det;
+      if(swapped){var sw=u1;u1=u2;u2=sw}
+      trim[k]=swapped?[TUBE_ELBOW.armB*sE*.8,TUBE_ELBOW.armA*sE*.8]:[TUBE_ELBOW.armA*sE*.8,TUBE_ELBOW.armB*sE*.8];
+      if(!E)continue;
+      var dA=TUBE_ELBOW.dA,dB=TUBE_ELBOW.dB,C=TUBE_ELBOW.corner,det=dA[0]*dB[1]-dA[1]*dB[0],i00=dB[1]/det,i01=-dB[0]/det,i10=-dA[1]/det,i11=dA[0]/det;
       var m00=(u1[0]*i00+u2[0]*i10)*sE,m01=(u1[0]*i01+u2[0]*i11)*sE,m10=(u1[1]*i00+u2[1]*i10)*sE,m11=(u1[1]*i01+u2[1]*i11)*sE;
       ctx.save();ctx.transform(m00,m10,m01,m11,c.x-m00*C[0]-m01*C[1],c.y-m10*C[0]-m11*C[1]);ctx.drawImage(E,0,0);ctx.restore();
     }
+    function slice(x,y,ux,uy,px,py,s,sy0,sy1,t0,t1){
+      var k=(t1-t0)/(sy1-sy0),bx=x-px*T.axis*s+ux*t0,by=y-py*T.axis*s+uy*t0;
+      ctx.save();ctx.transform(px*s,py*s,ux*k,uy*k,bx-ux*k*sy0,by-uy*k*sy0);ctx.drawImage(S,0,sy0,T.w,sy1-sy0,0,sy0,T.w,sy1-sy0);ctx.restore();
+    }
+    for(var i=1;i<P.length;i++){
+      var a=P[i-1],b=P[i],dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy);if(L<1)continue;
+      var t0=trim[i-1]?trim[i-1][1]:0,t1=L-(trim[i]?trim[i][0]:0),openStart=!!opts.noCap0&&i===1,openEnd=false;
+      // The image runs down the screen, its far collar first; a segment that climbs is laid from its other end.
+      if(dy<0||(dy===0&&dx<0)){var tmp=a;a=b;b=tmp;dx=-dx;dy=-dy;var tt=t0;t0=L-t1;t1=L-tt;openEnd=openStart;openStart=false}
+      if(t1-t0<2)continue;
+      // A cylinder along a floor axis shows 1.118 bores across its screen line; a vertical one shows exactly one.
+      var ux=dx/L,uy=dy/L,mirror=ux<-.01,px=mirror?-uy:uy,py=mirror?ux:-ux,s=unit*dia*(Math.abs(ux)<.01?1:1.118)/T.glass;
+      var r0=T.mouth[0],r1=T.mouth[1],c0=T.cap[0],c1=T.cap[1],H=S.height,g0=openStart?t0:t0+(c0-r0)*s,g1=openEnd?t1:t1-(r1-c1)*s;
+      if(g1-g0<2){var su=(t1-t0)/(r1-r0);slice(a.x,a.y,ux,uy,px,py,s,0,H,t0-r0*su,t1+(H-r1)*su);continue}
+      if(!openStart)slice(a.x,a.y,ux,uy,px,py,s,0,c0,t0-r0*s,g0);
+      slice(a.x,a.y,ux,uy,px,py,s,c0,c1,g0,g1);
+      if(!openEnd)slice(a.x,a.y,ux,uy,px,py,s,c1,H,g1,t1+(H-r1)*s);
+    }
   }
-  // tubes-v3: each inter-floor run is one rendered assembly (inlet stub, swept drop, outlet stub) drawn as a single
-  // image at one uniform scale, pinned by its vertical drop: the drop's centreline is the image column `axis`, and the
-  // inlet and outlet centrelines (rows `top` and `bot`) land on the two tube levels. `keep` lists the source rectangles
-  // that are drawn, so a terminal flange that would hang in the open is clipped away where a short connector of the
-  // straight/elbow renders carries the run on to the counter. `path` is the centreline the parcels ride.
+  // Kevin's floor-to-floor assemblies (inlet from -x at the top, a brass floor ring, a swept outlet at the bottom), each
+  // measured on its render: the drop's axis column and glass width (one bore), the rows where the inlet and outlet arms
+  // meet the drop (`top`, `bot`), the floor ring's rows and centre, the rows where the two bends end and begin (`bend`),
+  // and the inlet and outlet mouth centres. The image is drawn at the scale that gives the drop TUBE_DIA, in five
+  // bands: the bends and the ring at that scale, the plain glass between them stretched so the inlet lands at the
+  // feeding bench's level, the ring in the floor slab and the outlet at the receiving level.
+  var TUBE_KIT={
+    'tube.run.grow':{axis:174.5,width:99,top:175.3,bot:764.1,ring:[342,445,402.7],bend:[284,655],inlet:[54.2,105.9],outlet:[55.4,832.9],outDir:'z'},
+    'tube.run.pack':{axis:178,width:96,top:170.3,bot:758.7,ring:[334,431,390.3],bend:[276,653],inlet:[56.6,100.2],outlet:[307.4,833.5],outDir:'x'}};
   // The pack line's downstairs leg runs behind the product wall; only a short drop from the mezzanine's underside into
   // the pickup counter's back shows, so nothing pierces the shelving in front of that wall.
   var PACK_STUB_X=4+COUNTER_SHIFT+.4;
   var TUBE_RUNS={
-    // The grow line drops at the top floor's right, a bore to match the pack line's, and its outlet runs straight
-    // forward into the back of the harvest bench standing in front of it (no dog-leg round the bench's end).
-    1:{name:'tube.run.grow',axis:417.6,top:199.8,bot:718.2,x:5.6,z:-3,yTop:10.85,yBot:5.21,port:[5.6,9.4,-3],
-       keep:[[0,0,633,690],[258,690,375,205]],path:[[4.16,10.85,-3],[5.6,10.85,-3],[5.6,5.21,-3],[5.6,5.57,-2.04],[5.6,5.57,-.3]],
-       connector:[[5.6,5.57,-2.04],[5.6,5.57,-.3]]},
-    3:{name:'tube.run.pack',axis:322.8,top:243,bot:693,x:.1,z:-1.3,yTop:6.15,yBot:1.55,port:[.1,4.7,-1.3],
-       keep:[[0,0,614,660],[0,660,474,262]],path:[[-2.6,6.15,-1.3],[.1,6.15,-1.3],[.1,1.55,-1.3],[PACK_STUB_X,1.55,-1.3]]}
-  };
+    // The grow line drops at the top floor's right and its outlet runs straight forward into the back of the harvest
+    // bench standing in front of it (no dog-leg round the bench's end); the connector is a straight along z.
+    1:{name:'tube.run.grow',x:5.6,z:-3,yTop:10.85,ySlab:9.4,yBot:5.21,end:-.3},
+    3:{name:'tube.run.pack',x:.1,z:-1.3,yTop:6.15,ySlab:4.7,yBot:1.55,end:PACK_STUB_X}};
+  // World geometry of a run from its render: the arm lengths follow from the bore, since the image has one scale.
+  function tubeRunGeometry(run){
+    if(run.path)return run;
+    var m=TUBE_KIT[run.name],f=TUBE_DIA/(m.width*Math.SQRT1_2),arm=(m.axis-m.inlet[0])*f,out=Math.abs(m.outlet[0]-m.axis)*f;
+    run.port=[run.x,run.ySlab,run.z];
+    var head=[[run.x-arm,run.yTop,run.z],[run.x,run.yTop,run.z],[run.x,run.yBot,run.z]];
+    if(m.outDir==='z'){run.connector=[[run.x,run.yBot,run.z+out],[run.x,run.yBot,run.end]];run.path=head.concat(run.connector)}
+    else run.path=head.concat([[run.x+out,run.yBot,run.z],[run.end,run.yBot,run.z]]);
+    return run;
+  }
   // The pack line is one flow: the visible mezzanine leg and drop, a buried stretch inside the product wall and up to
   // the slab, then the stub into the pickup counter. Its parcels are spaced over the whole length, so the ones that
   // come out of the stub are the ones that went into the wall, at the same rhythm.
-  var PACK_STUB=[[PACK_STUB_X,4,1.3],[PACK_STUB_X,1.45,1.3]]; // the parcels show below the stub's top coupling
+  var PACK_STUB=[[PACK_STUB_X,4,1.3],[PACK_STUB_X,1.45,1.3]]; // the parcels show below the stub's top collar
   function polyLength(pts){var s=0;for(var i=1;i<pts.length;i++)s+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1],pts[i][2]-pts[i-1][2]);return s}
-  var PACK_BURIED=polyLength([[PACK_STUB_X,1.55,-1.3],[PACK_STUB_X,4,-1.3],[PACK_STUB_X,4,1.3]]),PACK_STUB_AT=polyLength(TUBE_RUNS[3].path)+PACK_BURIED,PACK_FLOW=PACK_STUB_AT+polyLength(PACK_STUB);
+  var PACK_BURIED=polyLength([[PACK_STUB_X,1.55,-1.3],[PACK_STUB_X,4,-1.3],[PACK_STUB_X,4,1.3]]),PACK_STUB_AT=polyLength(tubeRunGeometry(TUBE_RUNS[3]).path)+PACK_BURIED,PACK_FLOW=PACK_STUB_AT+polyLength(PACK_STUB);
   TUBE_RUNS[3].flow={total:PACK_FLOW,offset:0};
   function drawTubeRun(run){
     if(!shellSprite(run.name))return false;
-    var img=spriteImage(run.name),top=project(run.x,run.yTop,run.z),bot=project(run.x,run.yBot,run.z),k=(bot.y-top.y)/(run.bot-run.top);
-    ctx.save();ctx.translate(top.x-run.axis*k,top.y-run.top*k);ctx.scale(k,k);
-    run.keep.forEach(function(r){ctx.drawImage(img,r[0],r[1],r[2],r[3],r[0],r[1],r[2],r[3])});
-    ctx.restore();
-    if(run.connector&&shellSprite('tube.straight')&&shellSprite('tube.elbow'))drawTubeSprites(run.connector);
+    tubeRunGeometry(run);
+    var img=spriteImage(run.name),m=TUBE_KIT[run.name],k=unit*TUBE_DIA/m.width,W=img.naturalWidth,H=img.naturalHeight;
+    var top=project(run.x,run.yTop,run.z),slab=project(run.x,run.ySlab,run.z),bot=project(run.x,run.yBot,run.z),x0=top.x-m.axis*k;
+    // Row -> screen y, rigid at the bends and the ring, the plain glass between them taking up the rest.
+    var rows=[0,m.bend[0],m.ring[0],m.ring[1],m.bend[1],H],ys=[top.y-m.top*k,top.y+(m.bend[0]-m.top)*k,slab.y-(m.ring[2]-m.ring[0])*k,slab.y+(m.ring[1]-m.ring[2])*k,bot.y-(m.bot-m.bend[1])*k,bot.y+(H-m.bot)*k];
+    for(var b=0;b<5;b++){var r0=rows[b],r1=rows[b+1],y0=ys[b],y1=ys[b+1];if(r1<=r0||y1<=y0+.01)continue;ctx.drawImage(img,0,r0,W,r1-r0,x0,y0,W*k,y1-y0)}
+    if(run.connector&&shellSprite('tube.straight'))drawTubeSprites(run.connector,TUBE_DIA,{noCap0:true});
     return true;
   }
   // Downstairs the pack line is hidden by the product wall; this short drop from the slab above into the pickup
   // counter's back is all that shows, drawn after the wall with its own parcels.
   function drawPackStub(){
-    if(!(shellSprite('tube.straight')&&shellSprite('tube.elbow')))return;
+    if(!shellSprite('tube.straight'))return;
     drawTubeSprites([[PACK_STUB_X,4.5,1.3],[PACK_STUB_X,1.45,1.3]]);
     transferTube(PACK_STUB,3,[],4,true,{total:PACK_FLOW,offset:PACK_STUB_AT});
   }
   function drawFloorTransfer(stage,upper){
     var run=SHOP_SPRITES&&TUBE_RUNS[stage];
     if(run&&shellSprite(run.name)){
-      // The one aligned image is drawn twice, clipped at the floor opening's screen line: the part above the slab with
+      // The one aligned image is drawn twice, clipped at the floor ring's screen line: the part above the slab with
       // that floor, the rest with the floor below, so the slab itself hides the buried section.
+      tubeRunGeometry(run);
       var q=project(run.port[0],run.port[1],run.port[2]);
       ctx.save();ctx.beginPath();
       if(upper)ctx.rect(-10000,-10000,20000,10000+q.y);else ctx.rect(-10000,q.y,20000,20000);
       ctx.clip();drawTubeRun(run);transferTube(run.path,stage,[],stage===3?4:stage,true,run.flow);ctx.restore();
-      if(upper){
-        // A slim sleeve ring where the pipe passes the slab, its near half over the pipe.
-        ctx.beginPath();ctx.ellipse(q.x,q.y,unit*.34,unit*.16,0,0,Math.PI);ctx.strokeStyle='#c4cfb9';ctx.lineWidth=unit*.07;ctx.stroke();
-        ctx.beginPath();ctx.ellipse(q.x,q.y+unit*.05,unit*.34,unit*.16,0,0,Math.PI);ctx.strokeStyle='#6b8070';ctx.lineWidth=unit*.045;ctx.stroke();
-      }
       return;
     }
     // The pack tube drops through the mezzanine at x 0.1, clear of the menu board's price column on the wall behind.
