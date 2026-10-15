@@ -301,24 +301,74 @@ const BUILDINGS = [
 const FAR_TREES = [[-12, -22.4], [-1, -22.4], [10, -22.4], [14.5, -22.4], [-26.4, -13], [-26.4, -2], [-26.4, 9], [-26.4, 20]];
 const NEAR_TREES = [[-15, -13.5], [-5, -13.5], [5, -13.5], [16.5, -13.5], [-17, 4]]; // the right rear tree sits past the food truck's cab // behind / left of the shop only; nothing under the delivery deck's legs
 export const LAMPS = [[-18.5, -14.5], [18.5, -14.5], [-18.5, 17.5], [18.5, 17.5], [0, -14.5], [-18.5, 1]];
-// Walkers: [x0, z0, x1, z1, count, back-pass?]; each walks the segment back and forth on its own phase.
+// Walkers: [x0, z0, x1, z1, count]; each walks the segment back and forth on its own phase.
 // Lanes keep clear of the trees, lamps and furniture: the rear and left walks run between the slab and the props, the
 // front walk along the kerb in front of the planters and bench, the right walk between the slab and the bus stop.
-const WALKS = [[-19, -11.6, 19, -11.6, 3, true], [-15.2, -15, -15.2, 18, 2, true], [-30, -22.9, 30, -22.9, 3, true], [-26.9, -26, -26.9, 26, 2, true],
-  [-19, 18.3, 19, 18.3, 3, false], [15.3, -15, 15.3, 14, 2, false]];
+const WALKS = [[-19, -11.6, 19, -11.6, 3], [-15.2, -15, -15.2, 18, 2], [-30, -22.9, 30, -22.9, 3], [-26.9, -26, -26.9, 26, 2],
+  [-19, 18.3, 19, 18.3, 3], [15.3, -15, 15.3, 14, 2]];
 // Cars: [road index, direction (+1 toward the camera: +x on the x streets, +z on the z streets), phase, colour or
 // 'van']. Traffic keeps to the right, so the direction picks the lane (see drawCars). Kevin pulled the first cars on
 // 2026-10-13 for reading far too small; his 2026-10-15 set (CAR_VIEW) is drawn 4.2 units long, with rear views for
-// the lanes going away.
-const CARS = [[0, 1, 0, 'blue'], [0, -1, .3, 'red'], [0, 1, .55, 'van'], [1, 1, .2, 'green'], [1, -1, .65, 'white'], [1, 1, .8, 'yellow'],
-  [2, 1, .1, 'purple'], [2, -1, .45, 'orange'], [2, -1, .9, 'van'], [3, 1, .35, 'blue'], [3, -1, .05, 'red'], [3, 1, .75, 'white']];
+// the lanes going away. Every car runs the same 90-unit loop at the same speed, so the phases are a timetable: these
+// keep every pair of crossing cars at least a sixth of a loop apart at each of the four junctions (no two cars in a
+// junction at once, so none drives through another) and cars sharing a lane a car's length and more apart.
+const CARS = [[0, 1, .01, 'blue'], [0, -1, .5, 'red'], [0, 1, .54, 'van'], [1, 1, .47, 'green'], [1, -1, .03, 'white'], [1, 1, .03, 'yellow'],
+  [2, 1, .27, 'purple'], [2, -1, .35, 'orange'], [2, -1, .18, 'van'], [3, 1, .29, 'blue'], [3, -1, .74, 'red'], [3, 1, .8, 'white']];
+
+// Draw order on the streets. Each job carries its footprint on the ground; the shop is drawn between the two passes,
+// so a job goes in the back pass only when nothing of it can hide the shop (its footprint ends left of the slab or
+// behind it) and in the front pass otherwise. Within a pass, two footprints a plane x = c or z = c separates have a
+// fixed order, since the one at larger x (or larger z) is nearer the camera and can never be hidden by the other;
+// that is what keeps a car passing another in the next lane, or driving past a building, from painting over it.
+// Footprints that overlap keep the centre-depth order.
+const SHOP = { x0: -12, x1: 12, z0: -7.5, z1: 12 };
+const behindShop = b => b.x1 <= SHOP.x0 || b.z1 <= SHOP.z0;
+function inFront(a, b) {
+  const sx = a.x0 >= b.x1 - 1e-6 ? 1 : b.x0 >= a.x1 - 1e-6 ? -1 : 0, sz = a.z0 >= b.z1 - 1e-6 ? 1 : b.z0 >= a.z1 - 1e-6 ? -1 : 0;
+  // Separable on both axes in opposite senses means the two never overlap on screen, so no order is imposed.
+  return sx && sz ? (sx === sz ? sx : 0) : sx || sz;
+}
+function orderJobs(jobs) {
+  jobs.sort((a, b) => a.depth - b.depth);
+  const n = jobs.length, before = jobs.map(() => []);
+  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) { const r = inFront(jobs[i], jobs[j]); if (r > 0) before[i].push(j); else if (r < 0) before[j].push(i); }
+  const out = [], seen = new Uint8Array(n), visit = i => { if (seen[i]) return; seen[i] = 1; before[i].forEach(visit); out.push(jobs[i]); };
+  for (let i = 0; i < n; i++) visit(i);
+  return out;
+}
+// Everything that stands on the streets, with its footprint (half-extents along x and z about its ground point).
+function streetJobs(api) {
+  const jobs = [];
+  const at = (x, z, f, hx = .5, hz = hx) => jobs.push({ x0: x - hx, x1: x + hx, z0: z - hz, z1: z + hz, depth: api.depth({ x, z }), draw: f });
+  BUILDINGS.forEach(b => { const f = BUILDING_SPRITES[b[2]]; at(b[0] - f.w / 2, b[1] - f.d / 2, () => building(api, b), f.w / 2, f.d / 2); });
+  FAR_TREES.concat(NEAR_TREES).forEach(([x, z]) => at(x, z, () => streetTree(api, x, z), 1.3));
+  LAMPS.forEach(([x, z]) => at(x, z, () => lamp(api, x, z), .4));
+  // Left-side street life: a coffee cart and café seating by the entrance, bins and a hydrant.
+  at(-18, 7.5, () => cart(api, -18, 7.5), 1.3, 1);
+  // Kevin's café set (2026-10-15) stands in for the two drawn umbrellas; the news boxes face the shop, and his food
+  // truck parks nose-first with the traffic on the rear pavement, hatch toward the walkers.
+  at(-17, 14, () => { if (!prop(api, 'street.awning.cafe', -17, 14)) { umbrella(api, -17, 12.5); umbrella(api, -17, 15.5); } }, 2.3, 1.6);
+  at(-18.5, -8, () => bin(api, -18.5, -8), .4); at(-18.5, 10.5, () => hydrant(api, -18.5, 10.5), .3);
+  at(-17.6, -3, () => prop(api, 'street.newsboxes', -17.6, -3, true), 1.3, 1); at(9.5, -13.6, () => prop(api, 'street.foodtruck', 9.5, -13.6), 3.75, 1.1);
+  [[18, -6], [18, 6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => at(x, z, () => planter(api, x, z), 1.6, 1.2));
+  at(0, 16.5, () => bench(api, 0, 16.5, true), 1.2, .5); // mirrored to run along the front street
+  at(18, 0, () => bench(api, 18, 0), .5, 1.2); at(14, 16, () => bikeRack(api, 14, 16), 1.3, .6);
+  at(18.5, -11, () => busStop(api, 18.5, -11), .9, 1.8); at(18.5, 12, () => bin(api, 18.5, 12), .4); at(12, 15.4, () => hydrant(api, 12, 15.4), .3);
+  // 2026-10-15 street dressing: a delivery pallet by the bus stop, a fingerpost and two meters on the right kerb,
+  // olive pots either side of the front bench, and a pedestrian light at the front crossing.
+  at(17.2, -7.5, () => prop(api, 'street.deliveryboxes', 17.2, -7.5), 1.15, .9);
+  at(19.4, 3.6, () => prop(api, 'street.signpost', 19.4, 3.6), .3); [8.4, 10.2].forEach(z => at(19.3, z, () => prop(api, 'street.meter', 19.3, z), .25));
+  [-3.2, 3.2].forEach(x => at(x, 16.5, () => prop(api, 'street.planter.round', x, 16.5), .6));
+  at(-10.8, 17.4, () => prop(api, 'street.trafficlight', -10.8, 17.4), .3);
+  drawCars(api, at); drawWalkers(api, at);
+  return jobs;
+}
 
 export function drawSunnyWorld(api, front, alpha) {
   if (!(alpha > 0)) return;
   const ctx = api.ctx, p = api.project;
   ctx.save(); ctx.globalAlpha = alpha;
   const quad = (x0, z0, x1, z1, y, fill) => api.poly([p(x0, y, z0), p(x1, y, z0), p(x1, y, z1), p(x0, y, z1)], fill);
-  const byDepth = list => list.slice().sort((a, b) => api.depth({ x: a[0], z: a[1] }) - api.depth({ x: b[0], z: b[1] }));
   if (!front) {
     // One paved plaza everywhere: the slab's own concrete, with the slab's scoring lattice carried right across it
     // and a soft checker so large flat areas keep some texture at every zoom.
@@ -335,40 +385,11 @@ export function drawSunnyWorld(api, front, alpha) {
     ROADS.forEach(r => roadMarkings(api, quad, r));
     crossing(api, quad, 'x', 21.5, -8); crossing(api, quad, 'z', -22.5, 4); crossing(api, quad, 'x', -18.5, 8);
     [[22.5, -18.5], [-22.5, 21.5], [22.5, 21.5]].forEach(([x, z]) => { crossing(api, quad, 'x', z, x - 5.5); crossing(api, quad, 'x', z, x + 5.5); crossing(api, quad, 'z', x, z - 5.5); crossing(api, quad, 'z', x, z + 5.5); });
-    // Buildings, trees, props, cars and walkers share one depth sort, so a car on the far street never paints over a near tree.
-    streetShadows(api, false);
-    const jobs = [];
-    const at = (x, z, f) => jobs.push([x, z, f]);
-    BUILDINGS.forEach(b => { const f = BUILDING_SPRITES[b[2]]; at(b[0] - f.w / 2, b[1] - f.d / 2, () => building(api, b)); });
-    FAR_TREES.concat(NEAR_TREES).forEach(([x, z]) => at(x, z, () => streetTree(api, x, z)));
-    LAMPS.filter(([x, z]) => z < -9 || x < -13).forEach(([x, z]) => at(x, z, () => lamp(api, x, z)));
-    // Left-side street life: a coffee cart and café seating by the entrance, bins and a hydrant.
-    at(-18, 7.5, () => cart(api, -18, 7.5));
-    // Kevin's café set (2026-10-15) stands in for the two drawn umbrellas; the news boxes face the shop, and his food
-    // truck parks nose-first with the traffic on the rear pavement, hatch toward the walkers.
-    at(-17, 14, () => { if (!prop(api, 'street.awning.cafe', -17, 14)) { umbrella(api, -17, 12.5); umbrella(api, -17, 15.5); } });
-    at(-18.5, -8, () => bin(api, -18.5, -8)); at(-18.5, 10.5, () => hydrant(api, -18.5, 10.5));
-    at(-17.6, -3, () => prop(api, 'street.newsboxes', -17.6, -3, true)); at(9.5, -13.6, () => prop(api, 'street.foodtruck', 9.5, -13.6));
-    drawCars(api, true, at); drawWalkers(api, true, at);
-    byDepth(jobs).forEach(j => j[2]());
-  } else {
-    streetShadows(api, true);
-    const jobs = [];
-    const at = (x, z, f) => jobs.push([x, z, f]);
-    LAMPS.filter(([x, z]) => !(z < -9 || x < -13)).forEach(([x, z]) => at(x, z, () => lamp(api, x, z)));
-    [[18, -6], [18, 6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => at(x, z, () => planter(api, x, z)));
-    at(0, 16.5, () => bench(api, 0, 16.5, true)); // mirrored to run along the front street
-    at(18, 0, () => bench(api, 18, 0)); at(14, 16, () => bikeRack(api, 14, 16));
-    at(18.5, -11, () => busStop(api, 18.5, -11)); at(18.5, 12, () => bin(api, 18.5, 12)); at(12, 15.4, () => hydrant(api, 12, 15.4));
-    // 2026-10-15 street dressing: a delivery pallet by the bus stop, a fingerpost and two meters on the right kerb,
-    // olive pots either side of the front bench, and a pedestrian light at the front crossing.
-    at(17.2, -7.5, () => prop(api, 'street.deliveryboxes', 17.2, -7.5));
-    at(19.4, 3.6, () => prop(api, 'street.signpost', 19.4, 3.6)); [8.4, 10.2].forEach(z => at(19.3, z, () => prop(api, 'street.meter', 19.3, z)));
-    [-3.2, 3.2].forEach(x => at(x, 16.5, () => prop(api, 'street.planter.round', x, 16.5)));
-    at(-10.8, 17.4, () => prop(api, 'street.trafficlight', -10.8, 17.4));
-    drawCars(api, false, at); drawWalkers(api, false, at);
-    byDepth(jobs).forEach(j => j[2]());
   }
+  // Buildings, trees, props, cars and walkers share one footprint-aware sort (orderJobs), so a car on the far street
+  // never paints over a near tree, nor a car on the front or right street over the terraces beyond it.
+  streetShadows(api, front);
+  orderJobs(streetJobs(api).filter(j => behindShop(j) !== front)).forEach(j => j.draw());
   ctx.restore();
 }
 
@@ -612,15 +633,15 @@ function car(api, x, z, along, dir, colour) {
   api.box(x - (ax ? .15 : 0), z - (ax ? 0 : .15), G + .85, ax ? 1.5 : W * .86, ax ? W * .86 : 1.5, .5, ['#e9eef0', '#7f98a6', '#9fb6c2']);
 }
 
-// Cars loop along their lane; the back pass takes the rear and left streets, the front pass the front and right.
-function drawCars(api, back, at) {
+// Cars loop along their lane, each sorted by its own footprint (a 4.2-unit car, 4.8 for the van, 1.9 wide).
+function drawCars(api, at) {
   const t = api.now * .00009; // one 90-unit loop every 11 s, about 8 units a second: four walkers' pace
-  const list = CARS.map(([ri, dir, phase, colour]) => {
+  CARS.forEach(([ri, dir, phase, colour]) => {
     // Right-hand traffic: heading +x the kerb is on the +z side, heading +z it is on the -x side.
-    const r = ROADS[ri], s = (((phase + dir * t) % 1) + 1) % 1 * 90 - 45, lane = (r.along === 'x' ? dir : -dir) * 1.5;
-    return r.along === 'x' ? [s, r.at + lane, 'x', dir, colour] : [r.at + lane, s, 'z', dir, colour];
-  }).filter(c => back === (c[1] < -12 || c[0] < -19));
-  list.forEach(c => at(c[0], c[1], () => car(api, ...c)));
+    const r = ROADS[ri], s = (((phase + dir * t) % 1) + 1) % 1 * 90 - 45, lane = (r.along === 'x' ? dir : -dir) * 1.5, ax = r.along === 'x';
+    const x = ax ? s : r.at + lane, z = ax ? r.at + lane : s, hl = colour === 'van' ? 2.4 : 2.1, hw = .95;
+    at(x, z, () => car(api, x, z, r.along, dir, colour), ax ? hl : hw, ax ? hw : hl);
+  });
 }
 
 // Pedestrians pace their pavement segment there and back. Each walks at their own pace in world units a second (a
@@ -628,15 +649,14 @@ function drawCars(api, back, at) {
 // longer, used to be walked at a run), starts at their own point of the loop, faces the way they are going on screen,
 // and takes their steps from the ground covered so the feet never slide.
 const WALK_BASE = WALKS.reduce((acc, w) => (acc.push(acc[acc.length - 1] + w[4]), acc), [0]);
-function drawWalkers(api, back, at) {
-  WALKS.forEach(([x0, z0, x1, z1, n, isBack], wi) => {
-    if (isBack !== back) return;
+function drawWalkers(api, at) {
+  WALKS.forEach(([x0, z0, x1, z1, n], wi) => {
     const len = Math.hypot(x1 - x0, z1 - z0), screenDir = Math.sign((x1 - x0) - (z1 - z0));
     for (let k = 0; k < n; k++) {
       const g = WALK_BASE[wi] + k, pace = 1.5 + (g * 7 % 5) * .12, loop = len * 2;
       const s = (api.now * .001 * pace + ((g * .37 + k / n) % 1) * loop) % loop, out = s < len, f = out ? s / len : 2 - s / len;
       const px = x0 + (x1 - x0) * f, pz = z0 + (z1 - z0) * f, facing = screenDir * (out ? 1 : -1) || .3;
-      at(px, pz, () => { if (!drawPersonSprite(api, px, pz, -(g + 1), false, facing, s * 3.6 + g * 1.7, api.now > 0 ? 1 : 0, walkerHasBag(g + 1))) api.person(px, pz, 40 + g, api.now > 0); });
+      at(px, pz, () => { if (!drawPersonSprite(api, px, pz, -(g + 1), false, facing, s * 3.6 + g * 1.7, api.now > 0 ? 1 : 0, walkerHasBag(g + 1))) api.person(px, pz, 40 + g, api.now > 0); }, .4);
     }
   });
 }
