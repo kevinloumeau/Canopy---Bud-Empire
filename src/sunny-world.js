@@ -88,7 +88,7 @@ export function drawPersonSprite(api, x, z, identity, employee, facing, phase, a
   const walking = amount > .3 && Math.floor(phase / Math.PI) % 2 === 0;
   // The walk is two frames (stand, stride) on the step cycle, so the body also rises and settles once a step, the way
   // a walker does, to carry the motion between them. `phase` advances with the ground covered, never with the clock.
-  const lift = amount > .3 ? amount * .05 * (1 - Math.cos(2 * phase)) / 2 : 0;
+  let lift = amount > .3 ? amount * .05 * (1 - Math.cos(2 * phase)) / 2 : 0;
   let name = personName(role, nn, walking), flip = employee ? facing >= 0 : facing < 0;
   const base = personName(role, nn, false);
   // Staff: the v4 work loop first, all four frames requested together so the loop never stutters on a late frame.
@@ -106,6 +106,14 @@ export function drawPersonSprite(api, x, z, identity, employee, facing, phase, a
   if (v3) {
     lazySprite(v3, 'sprites/people/' + v3 + '.png', PERSON_V3_SIZE);
     if (spriteReady(v3)) { name = v3; flip = false; }
+  }
+  // Kevin's 2026-10-15 walk cycles: four frames a step pair (contact, pass, contact, pass), stored facing right and
+  // mirrored to face left. The step phase picks the frame, and the frames carry the rise and settle, so no bob.
+  if (!employee && amount > .3) {
+    const cyc = personName(role, nn, true) + (bag ? '.bag' : '.empty') + '.0';
+    for (let f = 0; f < 4; f++) lazySprite(cyc + f, 'sprites/people/' + cyc + f + '.png', PERSON_V3_SIZE);
+    const frame = cyc + ((Math.floor(phase / (Math.PI / 2)) % 4) + 4) % 4;
+    if (spriteReady(frame)) { name = frame; flip = facing < 0; lift = 0; }
   }
   if (name === personName(role, nn, walking)) {
     // Original single-direction renders, until the variant has loaded or when it is missing.

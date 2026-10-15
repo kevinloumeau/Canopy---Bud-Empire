@@ -2479,22 +2479,37 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // Slim forest-green glazing for the grow room: a low plinth, thin mullions on a regular bay, a mid rail and a top
   // rail, with the bay at `solidX` (if any) panelled solid to carry the exhaust fan. `alongZ` runs the wall along z
   // with its face toward +x from the plane x; otherwise along x with its face toward +z.
-  var FAN_X=-4.9,GLAZING_BAY=1.6;
+  // One bay per pane of Kevin's 2026-10-15 glazing render (three panes a module), so the modules tile at their own
+  // proportions; the exhaust fan's solid panel is two panes wide, centred on the pane joint nearest FAN_X.
+  var FAN_X=-4.9,GLAZING_BAY=1.07;
+  function glazingBays(a0,a1){var n=Math.max(2,Math.round((a1-a0)/GLAZING_BAY));return{n:n,step:(a1-a0)/n}}
+  function fanPanel(a0,a1){var g=glazingBays(a0,a1),j=Math.max(0,Math.min(g.n-2,Math.round((FAN_X-a0)/g.step)-1));return{from:a0+j*g.step,to:a0+(j+2)*g.step}}
   function drawSlimGlazing(alongZ,plane,a0,a1,h,solidX){
-    var green=['#3f7d5e','#275441','#336a50'],frame='#2c5a44',plinth=.3,bays=Math.max(1,Math.round((a1-a0)/GLAZING_BAY)),step=(a1-a0)/bays,face=plane+.09;
-    if(alongZ)drawBox(plane,(a0+a1)/2,0,.18,a1-a0,plinth,green);else drawBox((a0+a1)/2,plane,0,a1-a0,.18,plinth,green);
+    var green=['#3f7d5e','#275441','#336a50'],frame='#2c5a44',plinth=.3,g=glazingBays(a0,a1),bays=g.n,step=g.step,face=plane+.09,solid=solidX!==undefined?fanPanel(a0,a1):null;
     function P(t,y){return alongZ?project(face,y,t):project(t,y,face)}
     function L(t,y0,y1){return alongZ?[[face,y0,t],[face,y1,t]]:[[t,y0,face],[t,y1,face]]}
-    for(var b=0;b<bays;b++){
-      var t0=a0+b*step,t1=t0+step,pts=[P(t0,plinth),P(t1,plinth),P(t1,h),P(t0,h)];
-      if(solidX!==undefined&&solidX>=t0&&solidX<t1)poly(pts,'#2f5d4a');else glassPane(pts,'#c8dde033');
+    // The render's three-pane module, flattened and sheared on to the wall three bays at a time, cut from the left end
+    // post's centre to the right one's foot so each joint reads as one more mullion. Its own plinth and rails come with it.
+    var api=sunnyApi(sceneTime),module='shell.wall.glazing.'+(alongZ?'left':'right'),drawn=0;
+    for(var b=0;b<bays;b+=3){
+      var c=Math.min(3,bays-b),t0=a0+b*step,t1=t0+c*step,u1=.025+.915*c/3;
+      if(alongZ?drawWallFace(api,module,plane,t1,plane,t0,0,h,.025,u1):drawWallFace(api,module,t0,plane,t1,plane,0,h,.025,u1))drawn++;else break;
+    }
+    if(drawn){
+      if(solid){var q=plane+.03,S=function(t,y){return alongZ?project(q,y,t):project(t,y,q)};poly([S(solid.from+.07,plinth),S(solid.to-.07,plinth),S(solid.to-.07,h-.08),S(solid.from+.07,h-.08)],'#2f5d4a')}
+      return;
+    }
+    if(alongZ)drawBox(plane,(a0+a1)/2,0,.18,a1-a0,plinth,green);else drawBox((a0+a1)/2,plane,0,a1-a0,.18,plinth,green);
+    for(var k=0;k<bays;k++){
+      var s0=a0+k*step,s1=s0+step,pts=[P(s0,plinth),P(s1,plinth),P(s1,h),P(s0,h)];
+      if(solid&&s0>=solid.from-.001&&s1<=solid.to+.001)poly(pts,'#2f5d4a');else glassPane(pts,'#c8dde033');
     }
     for(var m=0;m<=bays;m++)worldLine(L(a0+m*step,plinth,h),frame,.07);
     worldLine(alongZ?[[face,h,a0],[face,h,a1]]:[[a0,h,face],[a1,h,face]],frame,.09);
     worldLine(alongZ?[[face,2.95,a0],[face,2.95,a1]]:[[a0,2.95,face],[a1,2.95,face]],frame,.05);
   }
-  // The centre of the glazing bay that carries the fan, so the housing sits square in its solid panel.
-  function fanBayCentre(left,right){var bays=Math.max(1,Math.round((right-left)/GLAZING_BAY)),step=(right-left)/bays;return left+(Math.floor((FAN_X-left)/step)+.5)*step}
+  // The centre of the solid glazing panel that carries the fan, so the housing sits square in it.
+  function fanBayCentre(left,right){var p=fanPanel(left,right);return (p.from+p.to)/2}
   // All-sprite shop: rear shelving, the product wall behind the counters and the stair flights from the shell batch.
   function drawShellShelves(fi,rear){
     var api=sunnyApi(sceneTime);
