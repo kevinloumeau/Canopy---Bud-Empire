@@ -1,15 +1,18 @@
-// Style prototype ("?look=sunny"): instead of a diorama floating in a dark studio, the main shop sits on a sunlit
-// city block that runs to the screen edges. The shop's slab and the sidewalk are one continuous paved plaza, a
+// The sunny look (the default since 2026-10-15): instead of a diorama floating in a dark studio, the main shop sits
+// on a sunlit city block that runs to the screen edges. The shop's slab and the sidewalk are one continuous paved plaza, a
 // kerb drops to sunken asphalt streets on all four sides, and muted low-rise neighbours sit beyond the far kerbs so
 // the shop stays the brightest, most detailed thing on screen. Cars circulate on the streets and pedestrians walk
-// the pavements. Off by default; nothing here touches saves or rules.
+// the pavements. "?look=classic" brings the studio diorama back; nothing here touches saves or rules.
 //
 // Two passes: `back` paints the ground and everything behind or beside-left of the shop (where the shop is nearer
 // and paints over any overlap); `front` paints only low furniture, cars and walkers on the front and right, placed
 // so nothing tall ever covers a station.
-export const SUNNY = typeof location !== 'undefined' && /[?&]look=sunny\b/.test(location.search);
-// The shop's own Ludo sprites (stations, display case) stay off unless asked for: mixed with the drawn shell they read as pasted on.
-export const SHOP_SPRITES = SUNNY && /[?&]sprites=shop\b/.test(location.search);
+// Kevin made the sunny all-sprite shop the default on 2026-10-13 (shipped to main 2026-10-15). "?look=sunny" and
+// "?sprites=shop" are still accepted; "?look=classic" opts out of the city block, "?sprites=drawn" of the shop sprites.
+const search = typeof location !== 'undefined' ? location.search : '';
+export const SUNNY = !/[?&]look=(classic|studio|drawn)\b/.test(search);
+// The shop's own sprites (stations, shell, people) come with the sunny look: mixed with the drawn shell they read as pasted on.
+export const SHOP_SPRITES = SUNNY && !/[?&]sprites=(drawn|off|none)\b/.test(search);
 
 // Hero sprites (rendered in Ludo.ai from the sprite brief). Each is placed by its footprint centre: `w` is the
 // on-screen width in world units at zoom 1, `drop` how far the image's bottom edge sits below the footprint centre
