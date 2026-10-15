@@ -31,6 +31,12 @@ export function stationTier(level) { return level >= 20 ? 3 : level >= 10 ? 2 : 
 // Returns the sprite name to draw for station i at this level, or null while none is available.
 export function stationSprite(i, level) {
   const key = STATION_KEYS[i]; if (!key) return null;
+  // An unbought station is its taped-off plot (Kevin's 2026-10-15 site renders, on the bench's own footprint).
+  if (!(level > 0) && key !== 'security') {
+    const site = 'station.' + key + '.site';
+    lazySprite(site, 'sprites/interior/' + site + '.png', STATION_SIZE[key]);
+    if (spriteReady(site)) return site;
+  }
   const want = stationTier(level), order = [want, ...[1, 2, 3].filter(t => t !== want).sort((a, b) => Math.abs(a - want) - Math.abs(b - want))];
   for (const t of order) {
     const name = 'station.' + key + '.tier' + t;
@@ -39,12 +45,15 @@ export function stationSprite(i, level) {
   }
   return null;
 }
-// People: the eleven people-v3 characters (seven customers, four street walkers) form one cast, since every one of them
-// comes in stand/walk, bag/empty, left/right variants. Customers take the cast in turn by id, so the same figure is
-// never within eleven places of itself in a queue (Kevin: too many repeats in a row). Street walkers are cast by their
-// index along WALKS, the four who appear twice placed at opposite ends of town.
-const PEOPLE = [['customer', 1], ['customer', 2], ['customer', 3], ['customer', 4], ['customer', 5], ['customer', 6], ['customer', 7], ['walker', 1], ['walker', 2], ['walker', 3], ['walker', 4]];
-const WALKER_CAST = [0, 7, 1, 2, 8, 3, 4, 9, 5, 10, 6, 0, 7, 1, 2];
+// People: the twenty characters (thirteen customers, seven street walkers: people-v3 plus Kevin's nine of 2026-10-15)
+// form one cast, since every one of them comes in stand/walk, bag/empty, left/right variants. Customers take the
+// queue cast in turn by id, so the same figure is never within nineteen places of itself in a queue (Kevin: too many
+// repeats in a row); the jogger (walker 5, who has no bag pose) keeps to the pavements. Street walkers are cast by
+// their index along WALKS, fifteen different figures, the seven walkers spread among them.
+const PEOPLE = [['customer', 1], ['customer', 2], ['customer', 3], ['customer', 4], ['customer', 5], ['customer', 6], ['customer', 7], ['customer', 8], ['customer', 9], ['customer', 10], ['customer', 11], ['customer', 12], ['customer', 13],
+  ['walker', 1], ['walker', 2], ['walker', 3], ['walker', 4], ['walker', 5], ['walker', 6], ['walker', 7]];
+const QUEUE_CAST = PEOPLE.map((_, i) => i).filter(i => !(PEOPLE[i][0] === 'walker' && PEOPLE[i][1] === 5));
+const WALKER_CAST = [13, 0, 14, 1, 15, 2, 16, 3, 17, 4, 18, 5, 19, 6, 7];
 const STAFF_FOR_LINE = [2, 2, 2, 1, 1, 1, 3, 1];
 // staff-v3 working poses by line: growers upstairs, a packer at pack and pickup, budtenders at orders and the online counter, the supervisor at the ID desk.
 const STAFF_V3 = { 0: '05.grower', 1: '05.grower', 2: '05.grower', 3: '06.packer', 4: '04.budtender', 5: '06.packer', 6: '07.supervisor', 7: '04.budtender' }; // seeds/grow/harvest growers, pack/orders/pickup budtenders, 6 is the ID desk, 7 the online packing counter
@@ -64,7 +73,7 @@ const PERSON_SIZE = { h: 2.3 * 640 / 600, drop: 2.3 * 8 / 600 + .03 };
 // pickup bag in hand, facing left or right (so no mirroring). Figures are about 295 px tall with their feet 5 px up.
 const PERSON_V3_SIZE = { h: 2.3 * 320 / 295, drop: 2.3 * 5 / 295 + .03 };
 function hashId(n) { n = Math.imul((n | 0) + 1, 0x9e3779b1) >>> 0; n = Math.imul(n ^ (n >>> 15), 0x45d9f3b) >>> 0; return (n ^ (n >>> 16)) >>> 0; }
-function personName(role, nn, walking) { return 'person.' + role + '.0' + nn + '.' + (walking ? 'walk' : 'stand'); }
+function personName(role, nn, walking) { return 'person.' + role + '.' + (nn < 10 ? '0' : '') + nn + '.' + (walking ? 'walk' : 'stand'); }
 // Walkers on the pavement carry a pickup bag by a stable identity, as if they had just left the shop.
 export function walkerHasBag(identity) { return hashId(identity) % 3 === 0; }
 // Draws a sprite figure in place of a code-drawn one. Walking alternates the stand and stride frames on the step
@@ -74,7 +83,8 @@ export function walkerHasBag(identity) { return hashId(identity) % 3 === 0; }
 export function drawPersonSprite(api, x, z, identity, employee, facing, phase, amount, bag, working) {
   let role = 'staff', nn;
   if (employee) nn = STAFF_FOR_LINE[identity] || 1;
-  else [role, nn] = PEOPLE[identity < 0 ? WALKER_CAST[(-identity - 1) % WALKER_CAST.length] : identity % PEOPLE.length];
+  else [role, nn] = PEOPLE[identity < 0 ? WALKER_CAST[(-identity - 1) % WALKER_CAST.length] : QUEUE_CAST[identity % QUEUE_CAST.length]];
+  if (role === 'walker' && nn === 5) bag = false; // the jogger carries nothing
   const walking = amount > .3 && Math.floor(phase / Math.PI) % 2 === 0;
   // The walk is two frames (stand, stride) on the step cycle, so the body also rises and settles once a step, the way
   // a walker does, to carry the motion between them. `phase` advances with the ground covered, never with the clock.
@@ -170,11 +180,13 @@ export function floorPattern(api, name, size) {
   return t.pattern;
 }
 export function spriteReady(name) { const s = SPRITES[name]; return !!(s && !s.missing && s.img && (s.ready || (s.img.complete && s.img.naturalWidth))); }
-// Draws a sprite at world (x, z) on the current floor; flip mirrors it so a car can face the other way along a street.
+// Draws a sprite at world (x, z) on the current floor; flip mirrors it so a figure can face the other way. A size's
+// `ox` is how far (in world units of screen width) the image's centre sits right of the footprint centre, for renders
+// such as the vehicles whose mirrors or tail stick out on one side.
 export function drawSprite(api, name, x, z, flip, scale, lift) {
   const s = SPRITES[name]; if (!spriteReady(name)) return false;
   const q = api.project(x, 0, z), u = api.unit, ar = (s.img.naturalHeight || s.img.height) / (s.img.naturalWidth || s.img.width), w = (s.h ? s.h / ar : s.w) * u * (scale || 1), h = w * ar, ctx = api.ctx;
-  ctx.save(); ctx.translate(q.x, q.y + (s.drop * (scale || 1) - (lift || 0)) * u); if (flip) ctx.scale(-1, 1);
+  ctx.save(); ctx.translate(q.x + (s.ox || 0) * u * (scale || 1) * (flip ? -1 : 1), q.y + (s.drop * (scale || 1) - (lift || 0)) * u); if (flip) ctx.scale(-1, 1);
   ctx.drawImage(s.img, -w / 2, -h, w, h); ctx.restore();
   return true;
 }
@@ -276,19 +288,19 @@ const BUILDINGS = [
 ];
 // Kept toward the kerb, clear of the facades behind them.
 const FAR_TREES = [[-12, -22.4], [-1, -22.4], [10, -22.4], [14.5, -22.4], [-26.4, -13], [-26.4, -2], [-26.4, 9], [-26.4, 20]];
-const NEAR_TREES = [[-15, -13.5], [-5, -13.5], [5, -13.5], [15, -13.5], [-17, 4]]; // behind / left of the shop only; nothing under the delivery deck's legs
+const NEAR_TREES = [[-15, -13.5], [-5, -13.5], [5, -13.5], [16.5, -13.5], [-17, 4]]; // the right rear tree sits past the food truck's cab // behind / left of the shop only; nothing under the delivery deck's legs
 export const LAMPS = [[-18.5, -14.5], [18.5, -14.5], [-18.5, 17.5], [18.5, 17.5], [0, -14.5], [-18.5, 1]];
 // Walkers: [x0, z0, x1, z1, count, back-pass?]; each walks the segment back and forth on its own phase.
 // Lanes keep clear of the trees, lamps and furniture: the rear and left walks run between the slab and the props, the
 // front walk along the kerb in front of the planters and bench, the right walk between the slab and the bus stop.
 const WALKS = [[-19, -11.6, 19, -11.6, 3, true], [-15.2, -15, -15.2, 18, 2, true], [-30, -22.9, 30, -22.9, 3, true], [-26.9, -26, -26.9, 26, 2, true],
   [-19, 18.3, 19, 18.3, 3, false], [15.3, -15, 15.3, 14, 2, false]];
-// Cars: [road index, lane offset from centre, direction, phase, colour]. Kevin pulled the first cars on 2026-10-13 for
-// reading far too small; his blue city car of 2026-10-15 is drawn 4.2 units long (see CAR_V2). It is rendered nose-on
-// only, so for now every car drives toward the camera (+x on the x streets, +z on the z streets) in the right-hand
-// lane; the lanes going the other way wait for a rear view.
-const CARS = [[0, 1.5, 1, 0, 'blue'], [0, 1.5, 1, .5, 'red'], [1, 1.5, 1, .2, 'green'], [1, 1.5, 1, .7, 'yellow'],
-  [2, -1.5, 1, .1, 'purple'], [2, -1.5, 1, .6, 'orange'], [3, -1.5, 1, .35, 'blue'], [3, -1.5, 1, .85, 'red']];
+// Cars: [road index, direction (+1 toward the camera: +x on the x streets, +z on the z streets), phase, colour or
+// 'van']. Traffic keeps to the right, so the direction picks the lane (see drawCars). Kevin pulled the first cars on
+// 2026-10-13 for reading far too small; his 2026-10-15 set (CAR_VIEW) is drawn 4.2 units long, with rear views for
+// the lanes going away.
+const CARS = [[0, 1, 0, 'blue'], [0, -1, .3, 'red'], [0, 1, .55, 'van'], [1, 1, .2, 'green'], [1, -1, .65, 'white'], [1, 1, .8, 'yellow'],
+  [2, 1, .1, 'purple'], [2, -1, .45, 'orange'], [2, -1, .9, 'van'], [3, 1, .35, 'blue'], [3, -1, .05, 'red'], [3, 1, .75, 'white']];
 
 export function drawSunnyWorld(api, front, alpha) {
   if (!(alpha > 0)) return;
@@ -320,8 +332,12 @@ export function drawSunnyWorld(api, front, alpha) {
     FAR_TREES.concat(NEAR_TREES).forEach(([x, z]) => at(x, z, () => streetTree(api, x, z)));
     LAMPS.filter(([x, z]) => z < -9 || x < -13).forEach(([x, z]) => at(x, z, () => lamp(api, x, z)));
     // Left-side street life: a coffee cart and café seating by the entrance, bins and a hydrant.
-    at(-18, 7.5, () => cart(api, -18, 7.5)); at(-17, 12.5, () => umbrella(api, -17, 12.5)); at(-17, 15.5, () => umbrella(api, -17, 15.5));
+    at(-18, 7.5, () => cart(api, -18, 7.5));
+    // Kevin's café set (2026-10-15) stands in for the two drawn umbrellas; the news boxes face the shop, and his food
+    // truck parks nose-first with the traffic on the rear pavement, hatch toward the walkers.
+    at(-17, 14, () => { if (!prop(api, 'street.awning.cafe', -17, 14)) { umbrella(api, -17, 12.5); umbrella(api, -17, 15.5); } });
     at(-18.5, -8, () => bin(api, -18.5, -8)); at(-18.5, 10.5, () => hydrant(api, -18.5, 10.5));
+    at(-17.6, -3, () => prop(api, 'street.newsboxes', -17.6, -3, true)); at(9.5, -13.6, () => prop(api, 'street.foodtruck', 9.5, -13.6));
     drawCars(api, true, at); drawWalkers(api, true, at);
     byDepth(jobs).forEach(j => j[2]());
   } else {
@@ -333,6 +349,12 @@ export function drawSunnyWorld(api, front, alpha) {
     at(0, 16.5, () => bench(api, 0, 16.5, true)); // mirrored to run along the front street
     at(18, 0, () => bench(api, 18, 0)); at(14, 16, () => bikeRack(api, 14, 16));
     at(18.5, -11, () => busStop(api, 18.5, -11)); at(18.5, 12, () => bin(api, 18.5, 12)); at(12, 15.4, () => hydrant(api, 12, 15.4));
+    // 2026-10-15 street dressing: a delivery pallet by the bus stop, a fingerpost and two meters on the right kerb,
+    // olive pots either side of the front bench, and a pedestrian light at the front crossing.
+    at(17.2, -7.5, () => prop(api, 'street.deliveryboxes', 17.2, -7.5));
+    at(19.4, 3.6, () => prop(api, 'street.signpost', 19.4, 3.6)); [8.4, 10.2].forEach(z => at(19.3, z, () => prop(api, 'street.meter', 19.3, z)));
+    [-3.2, 3.2].forEach(x => at(x, 16.5, () => prop(api, 'street.planter.round', x, 16.5)));
+    at(-10.8, 17.4, () => prop(api, 'street.trafficlight', -10.8, 17.4));
     drawCars(api, false, at); drawWalkers(api, false, at);
     byDepth(jobs).forEach(j => j[2]());
   }
@@ -455,6 +477,8 @@ function streetShadows(api, front) {
   if (front) [[18, -6], [18, 6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => softShadow(api, x + .05, P, z + .05, 1.25, .55, .3));
   if (front) groundShadow(api, 0, P, 16.5, 1.2, .35, .9);
   if (front) groundShadow(api, 18, P, 0, .35, 1.2, .9);
+  if (front) { softShadow(api, 17.2, P, -7.5, .85, .85, .3); [-3.2, 3.2].forEach(x => softShadow(api, x, P, 16.5, .6, .6, .3)); }
+  else { groundShadow(api, 9.5, P, -13.6, 3.3, 1.2, 1.6); softShadow(api, -17.6, P, -3, .5, 1.1, .3); }
 }
 function streetTree(api, x, z) {
   const p = api.project, u = api.unit;
@@ -472,7 +496,12 @@ function streetTree(api, x, z) {
 // Street props from the Ludo street batch; each falls back to its drawn version until the image has loaded.
 const PROPS = { 'street.lamp': { h: 4.6, drop: .1 }, 'street.bench': { w: 2.4, drop: .25 }, 'street.planter': { w: 3.2, drop: .35 }, 'street.cafe.table': { w: 2.3, drop: .3 },
   'street.coffeecart': { w: 2.6, drop: .35 }, 'street.bin': { h: 1.1, drop: .1 }, 'street.hydrant': { h: .95, drop: .08 }, 'street.bikerack': { w: 2.6, drop: .35 },
-  'street.busstop': { w: 3.6, drop: .4 }, 'street.tree.02': { h: 5.4, drop: .4 } };
+  'street.busstop': { w: 3.6, drop: .4 }, 'street.tree.02': { h: 5.4, drop: .4 },
+  // Kevin's 2026-10-15 props, sized against the 2.3-unit adult: a 1.4 m meter, 3.2 m signal post, 2.8 m signpost, a
+  // row of three news boxes, a 1.2 m pallet, a potted olive and the café set (umbrella, two tables, four chairs).
+  // The food truck is a vehicle, placed by its wheels like the van (7.5 wide, nose +x, hatch facing +z).
+  'street.meter': { h: 1.9, drop: .08 }, 'street.trafficlight': { h: 4.3, drop: .1 }, 'street.signpost': { h: 3.8, drop: .1 }, 'street.newsboxes': { w: 2.6, drop: .4 },
+  'street.deliveryboxes': { w: 2.3, drop: .5 }, 'street.planter.round': { h: 2.5, drop: .18 }, 'street.awning.cafe': { w: 4.6, drop: .55 }, 'street.foodtruck': { w: 7.48, drop: 1.4, ox: -.09 } };
 function prop(api, name, x, z, flip) {
   if (!PROPS[name]) return false;
   lazySprite(name, 'sprites/street/' + name + '.png', PROPS[name]);
@@ -538,51 +567,31 @@ function busStop(api, x, z) {
   bench(api, x, z); api.box(x + .5, z - 1.5, P, .18, .4, 2.6, ['#4a5450', '#2f3a36', '#3a4641']);
 }
 
-// Kevin's blue city car (2026-10-15), rendered nose down-right on the map's 30° slopes, placed by its footprint: its
-// wheelbase stands for 2.86 units of a 4.2-unit car (a walker is 2.3 tall), so `w` is the render's width at that
-// scale and `drop` puts its lowest pixel, the near front tyre, half a wheelbase plus half a track below the footprint
-// centre. The one render serves both axes, since a car along z is its mirror image (a car is symmetrical, so the
-// mirror is the true view from the other side). The other colours turn the body's blue hue once per colour on an
-// offscreen canvas, leaving the cream roof, chrome, glass and tyres alone; a canvas filter would do it in one line
-// but Safari has none.
-const CAR_V2 = { w: 4.63, drop: .99 };
-const CAR_HUES = { blue: 0, red: 155, orange: 183, yellow: 205, green: 275, purple: 65 }; // degrees from the render's blue
-const CAR_PAINT = { blue: '#4f8fd0', red: '#e0564a', orange: '#e8913c', yellow: '#f2c14e', green: '#6ea845', purple: '#8a6fd1' };
-function carSprite(colour) {
-  const base = 'street.car.v2.blue.fr';
-  lazySprite(base, 'sprites/street/' + base + '.png', CAR_V2);
-  if (!spriteReady(base)) return null;
-  if (!CAR_HUES[colour]) return base;
-  const name = 'street.car.v2.' + colour + '.fr';
-  if (!SPRITES[name]) {
-    const img = SPRITES[base].img, c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight;
-    const g = c.getContext('2d'); g.drawImage(img, 0, 0);
-    try {
-      const d = g.getImageData(0, 0, c.width, c.height), px = d.data, turn = CAR_HUES[colour] / 60;
-      for (let i = 0; i < px.length; i += 4) {
-        const r = px[i], gr = px[i + 1], b = px[i + 2], mx = Math.max(r, gr, b), mn = Math.min(r, gr, b), ch = mx - mn;
-        if (!px[i + 3] || ch < 40) continue; // transparent, or too grey to be paintwork
-        let h = mx === r ? ((gr - b) / ch + 6) % 6 : mx === gr ? (b - r) / ch + 2 : (r - gr) / ch + 4;
-        if (h < 3 || h > 4.3) continue; // only the body's blues (180° to 258°), not the amber lamps
-        h = (h + turn) % 6;
-        const sat = ch / mx, k = Math.floor(h), f = h - k, p = mx * (1 - sat), q = mx * (1 - sat * f), t = mx * (1 - sat * (1 - f));
-        const rgb = [[mx, t, p], [q, mx, p], [p, mx, t], [p, q, mx], [t, p, mx], [mx, p, q]][k];
-        px[i] = rgb[0]; px[i + 1] = rgb[1]; px[i + 2] = rgb[2];
-      }
-      g.putImageData(d, 0, 0);
-    } catch (e) { return base; } // a tainted canvas (file:// preview) keeps the cars blue
-    SPRITES[name] = Object.assign({ img: c, ready: true }, CAR_V2);
-  }
-  return name;
+// Kevin's vehicle set (2026-10-15): the city car in seven colours and a delivery van, each in four views, named by
+// where the nose or tail points: fl nose down-left (driving +z), fr nose down-right (+x), bl tail down-left (driving
+// -z), br tail down-right (-x). Each view is placed by its own wheel landmarks (no two renders share a pixel scale):
+// the near-side hubs stand for the wheelbase (2.86 units of a 4.2-unit car, 3.7 of the van, so a car's roof sits
+// about head height on a 2.3-unit walker), `drop` puts the lowest pixel, the near tyre, below the footprint centre
+// and `ox` is the image centre's offset from it. The renders follow the map's 30° slopes, so nothing is mirrored.
+const CAR_VIEW = { fl: { w: 4.65, drop: .93, ox: -.22 }, fr: { w: 4.54, drop: .92, ox: .23 }, bl: { w: 4.69, drop: .98, ox: -.26 }, br: { w: 4.95, drop: 1.03, ox: .24 } };
+const VAN_VIEW = { fl: { w: 5.98, drop: 1.21, ox: .01 }, fr: { w: 5.88, drop: 1.2, ox: .08 }, bl: { w: 6.29, drop: 1.22, ox: -.22 }, br: { w: 6.67, drop: 1.24, ox: .37 } };
+const CAR_PAINT = { blue: '#4f8fd0', red: '#e0564a', orange: '#e8913c', yellow: '#f2c14e', green: '#6ea845', purple: '#8a6fd1', white: '#f4f1e4', van: '#f4f1e4' };
+function carSprite(colour, view) {
+  const name = 'street.' + (colour === 'van' ? 'van' : 'car.' + colour) + '.' + view;
+  lazySprite(name, 'sprites/street/' + name + '.png', (colour === 'van' ? VAN_VIEW : CAR_VIEW)[view]);
+  return spriteReady(name) ? name : null;
 }
-// A compact car, nose along x or z, drawn at street level: Kevin's render where it has loaded, else the drawn stand-in.
-function car(api, x, z, along, colour) {
-  const p = api.project, u = api.unit, ax = along === 'x', Lc = 2.6, W = 1.3, name = carSprite(colour);
+// A compact car or the van, nose along x or z, heading `dir` (+1 toward the camera), drawn at street level: Kevin's
+// render for that view where it has loaded, else the drawn stand-in.
+function car(api, x, z, along, dir, colour) {
+  const p = api.project, u = api.unit, ax = along === 'x', Lc = 2.6, W = 1.3, van = colour === 'van';
+  const name = carSprite(colour, ax ? (dir > 0 ? 'fr' : 'br') : (dir > 0 ? 'fl' : 'bl'));
   if (name) {
-    groundShadow(api, x, G, z, ax ? 2.1 : 1.05, ax ? 1.05 : 2.1, 1.4);
+    const hl = van ? 2.6 : 2.1, hw = van ? 1.3 : 1.05;
+    groundShadow(api, x, G, z, ax ? hl : hw, ax ? hw : hl, 1.4);
     const ctx = api.ctx, q = p(x, G, z);
     ctx.save(); ctx.translate(0, q.y - p(x, 0, z).y);
-    drawSprite(api, name, x, z, !ax); ctx.restore(); return;
+    drawSprite(api, name, x, z, false); ctx.restore(); return;
   }
   const color = CAR_PAINT[colour] || colour;
   const sh = p(x, G, z); api.ellipse(sh.x - u * .4, sh.y + u * .2, u * 1.8, u * .7, 'rgba(30,30,30,.22)');
@@ -595,9 +604,10 @@ function car(api, x, z, along, colour) {
 // Cars loop along their lane; the back pass takes the rear and left streets, the front pass the front and right.
 function drawCars(api, back, at) {
   const t = api.now * .00009; // one 90-unit loop every 11 s, about 8 units a second: four walkers' pace
-  const list = CARS.map(([ri, lane, dir, phase, color]) => {
-    const r = ROADS[ri], s = (((phase + dir * t) % 1) + 1) % 1 * 90 - 45;
-    return r.along === 'x' ? [s, r.at + lane, 'x', color] : [r.at + lane, s, 'z', color];
+  const list = CARS.map(([ri, dir, phase, colour]) => {
+    // Right-hand traffic: heading +x the kerb is on the +z side, heading +z it is on the -x side.
+    const r = ROADS[ri], s = (((phase + dir * t) % 1) + 1) % 1 * 90 - 45, lane = (r.along === 'x' ? dir : -dir) * 1.5;
+    return r.along === 'x' ? [s, r.at + lane, 'x', dir, colour] : [r.at + lane, s, 'z', dir, colour];
   }).filter(c => back === (c[1] < -12 || c[0] < -19));
   list.forEach(c => at(c[0], c[1], () => car(api, ...c)));
 }

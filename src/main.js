@@ -4394,7 +4394,7 @@ if(!SHOP_SPRITES){
     try{
       ctx=art.getContext('2d',{willReadFrequently:true});unit=90;centerX=240;centerY=480;angle=.57;
       // The sprite shop shows the station's own sprite, so the panel matches the room.
-      var spriteName=SHOP_SPRITES&&index!==-2?stationSprite(index<0?6:index,index<0?state.idStaff:state.lines[index]):null,spriteArt=spriteName&&spriteImage(spriteName);
+      var spriteName=SHOP_SPRITES&&index!==-2?stationSprite(index<0?6:index,index<0?state.idStaff:Math.max(1,state.lines[index])):null,spriteArt=spriteName&&spriteImage(spriteName);
       if(SHOP_SPRITES&&index!==-2&&!spriteArt)key=''; // repaint once the sprite has loaded
       if(spriteArt){var fit=Math.min(440/spriteArt.naturalWidth,560/spriteArt.naturalHeight);ctx.drawImage(spriteArt,240-spriteArt.naturalWidth*fit/2,580-spriteArt.naturalHeight*fit,spriteArt.naturalWidth*fit,spriteArt.naturalHeight*fit)}
       else if(index===-2)drawLoungeThumb(state.lounge);
