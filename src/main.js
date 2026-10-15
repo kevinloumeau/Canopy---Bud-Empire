@@ -641,14 +641,16 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // The sprite shop's plaster and tile take the storefront's emerald so the drawn walls match the glazing.
   var SHOP_GREEN_PLASTER=SHOP_SPRITES?['#3f9468','#174f36','#226447']:['#698775','#314b40','#496a56'],SHOP_GREEN_TILE=SHOP_SPRITES?['#4a9a6e','#14482f','#1f5e40']:['#708b72','#2c4938','#4a6850'];
   var colors={bg:'#202226',floorTop:'#303238',floorLeft:'#1c1f23',floorRight:'#272a30',grid:'#41444a',beltEdge:'#111419',belt:'#313943',slat:'#5b6470',oliveTop:'#f4f5ec',oliveLeft:'#a9b6be',oliveRight:'#d5dce0',darkTop:'#56616a',darkLeft:'#252e36',darkRight:'#3b4650',metalTop:'#eef2f3',metalLeft:'#8b9ba8',metalRight:'#becbd4',acid:'#f5c344',orange:'#ff7628',boxTop:'#d3a36c',boxLeft:'#8e6741',boxRight:'#b17f50'};
-  var machinePos=[{x:-3,z:-3,y:9.4},{x:3,z:-3,y:9.4},{x:3,z:-.3,y:4.7},{x:-3,z:-.3,y:4.7},{x:-4+COUNTER_SHIFT,z:2.5,y:0},{x:4+COUNTER_SHIFT,z:2.5,y:0}];
+  // Sprite shop: the harvest bench stands at x 4.8, directly in front of the grow line's drop, so the tube feeds its
+  // back in a straight run (the drawn shop keeps the symmetric pair at x 3).
+  var machinePos=[{x:-3,z:-3,y:9.4},{x:3,z:-3,y:9.4},{x:SHOP_SPRITES?4.8:3,z:-.3,y:4.7},{x:-3,z:-.3,y:4.7},{x:-4+COUNTER_SHIFT,z:2.5,y:0},{x:4+COUNTER_SHIFT,z:2.5,y:0}];
   // The front-of-house display case along the front-right of the shop floor, planters built into both ends.
   var DISPLAY_CASE={x:8,z:8.9,width:5.2};
   // The back-wall shelving stands just behind the counters; the smoking lounge is the room behind it (z −7 → −1.76).
   var DISPLAY_Z=-1.6,LOUNGE_FRONT=DISPLAY_Z+.65;
   var sceneElevation=0;
   var beltNodes=[[-5,-3.2],[0,-3.2],[5,-3.2],[5.4,0],[5,3.2],[0,3.2],[-5,3.2],[-5.4,0]];
-  var tierFlashes=[0,0,0,0,0,0],crateTime=0,particles=[],deliveryDrones=[],sceneTime=0,animationTime=0;
+  var tierFlashes=[0,0,0,0,0,0],crateTime=0,cargoOdo=0,particles=[],deliveryDrones=[],sceneTime=0,animationTime=0;
   // Rise-in progress (1 → 0) for a freshly built station; index 6 is the security door.
   var buildRise=[0,0,0,0,0,0,0,0];
   // Grand-opening confetti: paper pieces in the shop's own palette, drifting down over the whole building in world space.
@@ -1881,12 +1883,17 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       var t=(slat*.23+phase*.7)%length,x=x1+forward*t;
       worldLine([[x,y+.03,z-.24],[x,y+.03,z+.24]],'#75927a',.035);
     }
-    for(var pack=0;pack<2;pack++){
-      var px=x1+(x2-x1)*((phase+pack*.5)%1);
+    // Belt cargo at the same shop-wide speed as the tubes, a crate every CARGO_GAP units along the run.
+    var run=Math.abs(x2-x1),count=Math.max(2,Math.round(run/CARGO_GAP)),odo=state.lines[stage]>0?cargoOdo:0;
+    for(var pack=0;pack<count;pack++){
+      var px=x1+forward*((odo+pack*run/count)%run);
       transportItem(px,y+.08,z,stage);
     }
   }
-  function transferTube(points,stage,ports,cargoStage,cargoOnly){
+  // Every tube and belt moves its cargo at the one shop-wide speed (cargoOdo, in world units), a parcel every CARGO_GAP
+  // units, so the whole route reads as one line rather than runs on their own clocks. The sprite tubes share one bore.
+  var CARGO_GAP=2.4,TUBE_DIA=.68;
+  function transferTube(points,stage,ports,cargoStage,cargoOnly,window){
     // Round every elbow in world space so cargo follows the same smooth path.
     var path=[points[0]],radius=.48;
     function mix(a,b,t){return a.map(function(v,i){return v+(b[i]-v)*t})}
@@ -1913,8 +1920,12 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
 
     var segments=[],total=0;
     for(var n=1;n<path.length;n++){var a=path[n-1],b=path[n],len=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]);segments.push({a:a,b:b,len:len});total+=len}
-    for(var parcel=0;parcel<3;parcel++){
-      var distance=((parcel/3+(state.lines[stage]>0&&!motionPreference.matches?crateTime:0))%1)*total;
+    // `window` {total, offset} places this run inside a longer flow (the pack line's buried stretch and stub): the
+    // parcels are spaced over the whole flow and only those whose distance falls on this run are drawn here.
+    var span=window?window.total:total,start=window?window.offset:0,count=Math.max(2,Math.round(span/CARGO_GAP)),spacing=span/count,odo=state.lines[stage]>0?cargoOdo:0;
+    for(var parcel=0;parcel<count;parcel++){
+      var distance=(odo+parcel*spacing)%span-start;
+      if(distance<0||distance>=total)continue;
       for(var n=0;n<segments.length;n++){var part=segments[n];if(distance>part.len){distance-=part.len;continue}var t=distance/part.len,q=mix(part.a,part.b,t);transportItem(q[0],q[1]-.18,q[2],cargoStage===undefined?stage:cargoStage);break}
     }
     if(spriteTube)return;
@@ -1928,7 +1939,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // own scale, only the glass between them stretched) and each bend gets the elbow render, mapped by the one affine
   // transform that lays its two arms exactly along the two segments meeting there.
   function drawTubeSprites(points,dia){
-    dia=dia||.62;var S=spriteImage('tube.straight'),E=spriteImage('tube.elbow'),sS=unit*dia/180,sE=unit*dia/167;
+    dia=dia||TUBE_DIA;var S=spriteImage('tube.straight'),E=spriteImage('tube.elbow'),sS=unit*dia/180,sE=unit*dia/167;
     var SW=S.naturalWidth,SH=S.naturalHeight,CAP=150,CAP2=470;
     // Elbow geometry measured on the render: arm A rises from the virtual corner C to the top mouth, arm B runs to the
     // lower-right mouth.
@@ -1964,27 +1975,36 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // the pickup counter's back shows, so nothing pierces the shelving in front of that wall.
   var PACK_STUB_X=4+COUNTER_SHIFT+.4;
   var TUBE_RUNS={
-    1:{name:'tube.run.grow',axis:417.6,top:199.8,bot:718.2,x:5.6,z:-3,yTop:10.85,yBot:6.15,port:[5.6,9.4,-3],
-       keep:[[0,0,633,690],[258,690,375,205]],path:[[4.4,10.85,-3],[5.6,10.85,-3],[5.6,6.15,-3],[5.6,6.45,-.95],[4.7,6.45,-.95]],
-       connector:[[5.6,6.45,-2.2],[5.6,6.45,-.95],[4.7,6.45,-.95]]},
+    // The grow line drops at the top floor's right, a bore to match the pack line's, and its outlet runs straight
+    // forward into the back of the harvest bench standing in front of it (no dog-leg round the bench's end).
+    1:{name:'tube.run.grow',axis:417.6,top:199.8,bot:718.2,x:5.6,z:-3,yTop:10.85,yBot:5.21,port:[5.6,9.4,-3],
+       keep:[[0,0,633,690],[258,690,375,205]],path:[[4.16,10.85,-3],[5.6,10.85,-3],[5.6,5.21,-3],[5.6,5.57,-2.04],[5.6,5.57,-.3]],
+       connector:[[5.6,5.57,-2.04],[5.6,5.57,-.3]]},
     3:{name:'tube.run.pack',axis:322.8,top:243,bot:693,x:.1,z:-1.3,yTop:6.15,yBot:1.55,port:[.1,4.7,-1.3],
        keep:[[0,0,614,660],[0,660,474,262]],path:[[-2.6,6.15,-1.3],[.1,6.15,-1.3],[.1,1.55,-1.3],[PACK_STUB_X,1.55,-1.3]]}
   };
+  // The pack line is one flow: the visible mezzanine leg and drop, a buried stretch inside the product wall and up to
+  // the slab, then the stub into the pickup counter. Its parcels are spaced over the whole length, so the ones that
+  // come out of the stub are the ones that went into the wall, at the same rhythm.
+  var PACK_STUB=[[PACK_STUB_X,4,1.3],[PACK_STUB_X,1.45,1.3]]; // the parcels show below the stub's top coupling
+  function polyLength(pts){var s=0;for(var i=1;i<pts.length;i++)s+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1],pts[i][2]-pts[i-1][2]);return s}
+  var PACK_BURIED=polyLength([[PACK_STUB_X,1.55,-1.3],[PACK_STUB_X,4,-1.3],[PACK_STUB_X,4,1.3]]),PACK_STUB_AT=polyLength(TUBE_RUNS[3].path)+PACK_BURIED,PACK_FLOW=PACK_STUB_AT+polyLength(PACK_STUB);
+  TUBE_RUNS[3].flow={total:PACK_FLOW,offset:0};
   function drawTubeRun(run){
     if(!shellSprite(run.name))return false;
     var img=spriteImage(run.name),top=project(run.x,run.yTop,run.z),bot=project(run.x,run.yBot,run.z),k=(bot.y-top.y)/(run.bot-run.top);
     ctx.save();ctx.translate(top.x-run.axis*k,top.y-run.top*k);ctx.scale(k,k);
     run.keep.forEach(function(r){ctx.drawImage(img,r[0],r[1],r[2],r[3],r[0],r[1],r[2],r[3])});
     ctx.restore();
-    if(run.connector&&shellSprite('tube.straight')&&shellSprite('tube.elbow'))drawTubeSprites(run.connector,.9);
+    if(run.connector&&shellSprite('tube.straight')&&shellSprite('tube.elbow'))drawTubeSprites(run.connector);
     return true;
   }
   // Downstairs the pack line is hidden by the product wall; this short drop from the slab above into the pickup
   // counter's back is all that shows, drawn after the wall with its own parcels.
   function drawPackStub(){
     if(!(shellSprite('tube.straight')&&shellSprite('tube.elbow')))return;
-    drawTubeSprites([[PACK_STUB_X,4.5,1.3],[PACK_STUB_X,1.45,1.3]],.9);
-    transferTube([[PACK_STUB_X,4.4,1.3],[PACK_STUB_X,1.45,1.3]],3,[],4,true);
+    drawTubeSprites([[PACK_STUB_X,4.5,1.3],[PACK_STUB_X,1.45,1.3]]);
+    transferTube(PACK_STUB,3,[],4,true,{total:PACK_FLOW,offset:PACK_STUB_AT});
   }
   function drawFloorTransfer(stage,upper){
     var run=SHOP_SPRITES&&TUBE_RUNS[stage];
@@ -1994,7 +2014,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       var q=project(run.port[0],run.port[1],run.port[2]);
       ctx.save();ctx.beginPath();
       if(upper)ctx.rect(-10000,-10000,20000,10000+q.y);else ctx.rect(-10000,q.y,20000,20000);
-      ctx.clip();drawTubeRun(run);transferTube(run.path,stage,[],stage===3?4:stage,true);ctx.restore();
+      ctx.clip();drawTubeRun(run);transferTube(run.path,stage,[],stage===3?4:stage,true,run.flow);ctx.restore();
       if(upper){
         // A slim sleeve ring where the pipe passes the slab, its near half over the pipe.
         ctx.beginPath();ctx.ellipse(q.x,q.y,unit*.34,unit*.16,0,0,Math.PI);ctx.strokeStyle='#c4cfb9';ctx.lineWidth=unit*.07;ctx.stroke();
@@ -2991,7 +3011,8 @@ if(!SHOP_SPRITES){
       // Station-to-station belts run behind the benches, between them and the rear wall: in the sprite shop the
       // trough is a quarter smaller than it was and set back so a strip of floor shows behind the bench tops.
       if(fi===2)conveyorRun(-4.6,4.6,SHOP_SPRITES?-5.8:-5.4,1.6,0);
-      if(fi===1)conveyorRun(4.6,-4.6,SHOP_SPRITES?-3.7:-3.4,1.6,2);
+      // The mezzanine belt runs from the harvest bench (at x 4.8 in the sprite shop) back to the pack bench.
+      if(fi===1)conveyorRun(SHOP_SPRITES?4.2:4.6,SHOP_SPRITES?-3.2:-4.6,SHOP_SPRITES?-3.7:-3.4,1.6,2);
       floor.ids.forEach(function(i){var p=machinePos[i];lightPool(p.x,.035,p.z+.9,1.65,i===1)});
       // Furniture stays visible in front of the back wall and shelving.
       // Staff positions (Kevin, 2026-10-14): the upper-floor staff stand behind their benches, between the bench and the
@@ -3711,7 +3732,7 @@ if(!SHOP_SPRITES){
       for(var n=0;n<7;n++){var q=project(station.x-1.5+n*.5,station.y+1.4+(motionPreference.matches?0:age*(1.2+(n%3)*.4)),station.z+.6-(n%2)*1.2),r=unit*.16*life;ctx.lineWidth=Math.max(.8,unit*.035);ctx.beginPath();ctx.moveTo(q.x-r,q.y);ctx.lineTo(q.x+r,q.y);ctx.moveTo(q.x,q.y-r);ctx.lineTo(q.x,q.y+r);ctx.stroke()}
       ctx.restore()});
     var speed=state.lines.some(function(n){return n>0})?Math.min(.07,.02+production()*.00002):0;
-    crateTime=(crateTime+frameDelta*speed*1.4)%1;
+    crateTime=(crateTime+frameDelta*speed*1.4)%1;cargoOdo=(cargoOdo+frameDelta*speed*14)%1e5;
     var jobs=sceneJobs;
     customers.forEach(function(c){
       var blend=1-Math.exp(-frameDelta*20),oldX=c.renderX===undefined?c.x:c.renderX,oldZ=c.renderZ===undefined?c.z:c.renderZ;
@@ -4797,7 +4818,7 @@ if(!SHOP_SPRITES){
   window.addEventListener('resize',resize);$('buyMachine').onclick=buySelected;$('buyMachineMax').onclick=buySelectedMax;$('upgradeStorage').onclick=upgradeStorage;$('boost').onclick=boostAll;$('claim').onclick=claimOrder;$('resetOpen').onclick=function(){$('resetModal').hidden=false};$('resetCancel').onclick=function(){$('resetModal').hidden=true};$('resetConfirm').onclick=function(){resetRun(0,state.sound)};function resetRun(rank,sound){if(rank>0)telemetry.send('prestige',{rank:rank});state=fresh();state.empire.prestige=rank;state.sound=sound;
     // A prestige reopens a standing shop; Start over goes back to the building site and replays the intro.
     if(rank>0){state.lines=LINES.map(function(){return 1});state.doorBuilt=true;state.shopOpen=true}
-    syncDominantFormat();readyWork=0;work=[0,0,0,0,0,0];batchRemainder=[0,0,0,0];customers=[];arrival=0;customerId=0;deliveryDrones=[];particles=[];tickets=[];taskClocks.fill(0);taskActivity.fill(0);cropGrowth=[.15,.4,.7,.95];tierFlashes.fill(0);buildRise.fill(0);confetti=[];recentPickupRatings=[];animationTime=0;sceneTime=0;crateTime=0;render.last=undefined;securitySelected=false;loungeSelected=false;selected=0;updateMarkers.key=null;save();$('resetModal').hidden=true;notify(rank>0?'FACTORY RESET':'STARTING OVER');syncMapView();paintThumbnails();renderUI();if(!state.shopOpen)setTimeout(function(){startGuide.open()},400)};
+    syncDominantFormat();readyWork=0;work=[0,0,0,0,0,0];batchRemainder=[0,0,0,0];customers=[];arrival=0;customerId=0;deliveryDrones=[];particles=[];tickets=[];taskClocks.fill(0);taskActivity.fill(0);cropGrowth=[.15,.4,.7,.95];tierFlashes.fill(0);buildRise.fill(0);confetti=[];recentPickupRatings=[];animationTime=0;sceneTime=0;crateTime=0;cargoOdo=0;render.last=undefined;securitySelected=false;loungeSelected=false;selected=0;updateMarkers.key=null;save();$('resetModal').hidden=true;notify(rank>0?'FACTORY RESET':'STARTING OVER');syncMapView();paintThumbnails();renderUI();if(!state.shopOpen)setTimeout(function(){startGuide.open()},400)};
 
   // The intro waits behind the 21+ gate; a visitor who answers No never sees it.
   // `resume` picks the intro up at the first unbuilt site when a half-built shop is reloaded.
