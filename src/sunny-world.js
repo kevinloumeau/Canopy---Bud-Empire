@@ -15,7 +15,7 @@ export const SHOP_SPRITES = SUNNY && /[?&]sprites=shop\b/.test(location.search);
 // on-screen width in world units at zoom 1, `drop` how far the image's bottom edge sits below the footprint centre
 // (the near corner of an isometric base projects below its centre). Until an image loads, the code-drawn fallback
 // paints instead, so a slow network never leaves a hole.
-const SPRITES = { person: { w: .95, drop: .1 }, counter: { w: 3.3, drop: .55 }, grow: { w: 4.3, drop: .62 }, car: { w: 3.1, drop: .55 }, tree: { w: 3.4, drop: .5 } };
+const SPRITES = { person: { w: .95, drop: .1 }, counter: { w: 3.3, drop: .55 }, grow: { w: 4.3, drop: .62 }, tree: { w: 3.4, drop: .5 } };
 if (SUNNY && typeof Image !== 'undefined') for (const name in SPRITES) { const img = new Image(); img.decoding = 'async'; img.src = 'sprites/' + name + '.png'; SPRITES[name].img = img; }
 // Interior batch: stations come in three visual tiers named per the brief (station.<key>.tier<N>.png under
 // sprites/interior/). They load lazily on first use; a missing file marks itself absent so the code-drawn station
@@ -169,11 +169,11 @@ export function floorPattern(api, name, size) {
   t.pattern.setTransform(new DOMMatrix([(ex.x - o.x) * k, (ex.y - o.y) * k, (ez.x - o.x) * k, (ez.y - o.y) * k, o.x, o.y]));
   return t.pattern;
 }
-export function spriteReady(name) { const s = SPRITES[name]; return !!(s && !s.missing && s.img && s.img.complete && s.img.naturalWidth); }
+export function spriteReady(name) { const s = SPRITES[name]; return !!(s && !s.missing && s.img && (s.ready || (s.img.complete && s.img.naturalWidth))); }
 // Draws a sprite at world (x, z) on the current floor; flip mirrors it so a car can face the other way along a street.
 export function drawSprite(api, name, x, z, flip, scale, lift) {
   const s = SPRITES[name]; if (!spriteReady(name)) return false;
-  const q = api.project(x, 0, z), u = api.unit, ar = s.img.naturalHeight / s.img.naturalWidth, w = (s.h ? s.h / ar : s.w) * u * (scale || 1), h = w * ar, ctx = api.ctx;
+  const q = api.project(x, 0, z), u = api.unit, ar = (s.img.naturalHeight || s.img.height) / (s.img.naturalWidth || s.img.width), w = (s.h ? s.h / ar : s.w) * u * (scale || 1), h = w * ar, ctx = api.ctx;
   ctx.save(); ctx.translate(q.x, q.y + (s.drop * (scale || 1) - (lift || 0)) * u); if (flip) ctx.scale(-1, 1);
   ctx.drawImage(s.img, -w / 2, -h, w, h); ctx.restore();
   return true;
@@ -283,9 +283,12 @@ export const LAMPS = [[-18.5, -14.5], [18.5, -14.5], [-18.5, 17.5], [18.5, 17.5]
 // front walk along the kerb in front of the planters and bench, the right walk between the slab and the bus stop.
 const WALKS = [[-19, -11.6, 19, -11.6, 3, true], [-15.2, -15, -15.2, 18, 2, true], [-30, -22.9, 30, -22.9, 3, true], [-26.9, -26, -26.9, 26, 2, true],
   [-19, 18.3, 19, 18.3, 3, false], [15.3, -15, 15.3, 14, 2, false]];
-// Cars: [road index, lane offset from centre, direction, phase, colour]. Kevin pulled the cars on 2026-10-13: the
-// renders read far too small beside the shop and the walkers, so the streets stay empty until re-rendered to scale.
-const CARS = [];
+// Cars: [road index, lane offset from centre, direction, phase, colour]. Kevin pulled the first cars on 2026-10-13 for
+// reading far too small; his blue city car of 2026-10-15 is drawn 4.2 units long (see CAR_V2). It is rendered nose-on
+// only, so for now every car drives toward the camera (+x on the x streets, +z on the z streets) in the right-hand
+// lane; the lanes going the other way wait for a rear view.
+const CARS = [[0, 1.5, 1, 0, 'blue'], [0, 1.5, 1, .5, 'red'], [1, 1.5, 1, .2, 'green'], [1, 1.5, 1, .7, 'yellow'],
+  [2, -1.5, 1, .1, 'purple'], [2, -1.5, 1, .6, 'orange'], [3, -1.5, 1, .35, 'blue'], [3, -1.5, 1, .85, 'red']];
 
 export function drawSunnyWorld(api, front, alpha) {
   if (!(alpha > 0)) return;
@@ -535,25 +538,53 @@ function busStop(api, x, z) {
   bench(api, x, z); api.box(x + .5, z - 1.5, P, .18, .4, 2.6, ['#4a5450', '#2f3a36', '#3a4641']);
 }
 
-// A rounded compact car, nose along x or z, drawn at street level.
-function car(api, x, z, along, color) {
-  const p = api.project, u = api.unit, ax = along === 'x', Lc = 2.6, W = 1.3;
-  const variant = { '#e0564a': 'red', '#f4f1e4': 'white', '#4f8fd0': 'blue', '#f2c14e': 'yellow', '#6ea845': 'green', '#e8913c': 'orange', '#8a6fd1': 'purple' }[color];
-  const carName = (variant ? 'street.car.' + variant : 'street.van') + (ax ? '.fr' : '.fl');
-  lazySprite(carName, 'sprites/street/' + carName + '.png', variant ? { w: 3.1, drop: .55 } : { w: 3.3, drop: .55 });
-  if (spriteReady(carName) || spriteReady('car')) groundShadow(api, x, G, z, ax ? 1.5 : .75, ax ? .75 : 1.5, 1.4);
-  if (carName === 'street.car.red.fr' ? spriteReady('car') : spriteReady(carName)) {
-    const ctx = api.ctx, q = api.project(x, G, z);
-    ctx.save(); ctx.translate(0, q.y - api.project(x, 0, z).y);
-    drawSprite(api, carName === 'street.car.red.fr' ? 'car' : carName, x, z, false); ctx.restore(); return;
+// Kevin's blue city car (2026-10-15), rendered nose down-right on the map's 30° slopes, placed by its footprint: its
+// wheelbase stands for 2.86 units of a 4.2-unit car (a walker is 2.3 tall), so `w` is the render's width at that
+// scale and `drop` puts its lowest pixel, the near front tyre, half a wheelbase plus half a track below the footprint
+// centre. The one render serves both axes, since a car along z is its mirror image (a car is symmetrical, so the
+// mirror is the true view from the other side). The other colours turn the body's blue hue once per colour on an
+// offscreen canvas, leaving the cream roof, chrome, glass and tyres alone; a canvas filter would do it in one line
+// but Safari has none.
+const CAR_V2 = { w: 4.63, drop: .99 };
+const CAR_HUES = { blue: 0, red: 155, orange: 183, yellow: 205, green: 275, purple: 65 }; // degrees from the render's blue
+const CAR_PAINT = { blue: '#4f8fd0', red: '#e0564a', orange: '#e8913c', yellow: '#f2c14e', green: '#6ea845', purple: '#8a6fd1' };
+function carSprite(colour) {
+  const base = 'street.car.v2.blue.fr';
+  lazySprite(base, 'sprites/street/' + base + '.png', CAR_V2);
+  if (!spriteReady(base)) return null;
+  if (!CAR_HUES[colour]) return base;
+  const name = 'street.car.v2.' + colour + '.fr';
+  if (!SPRITES[name]) {
+    const img = SPRITES[base].img, c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight;
+    const g = c.getContext('2d'); g.drawImage(img, 0, 0);
+    try {
+      const d = g.getImageData(0, 0, c.width, c.height), px = d.data, turn = CAR_HUES[colour] / 60;
+      for (let i = 0; i < px.length; i += 4) {
+        const r = px[i], gr = px[i + 1], b = px[i + 2], mx = Math.max(r, gr, b), mn = Math.min(r, gr, b), ch = mx - mn;
+        if (!px[i + 3] || ch < 40) continue; // transparent, or too grey to be paintwork
+        let h = mx === r ? ((gr - b) / ch + 6) % 6 : mx === gr ? (b - r) / ch + 2 : (r - gr) / ch + 4;
+        if (h < 3 || h > 4.3) continue; // only the body's blues (180° to 258°), not the amber lamps
+        h = (h + turn) % 6;
+        const sat = ch / mx, k = Math.floor(h), f = h - k, p = mx * (1 - sat), q = mx * (1 - sat * f), t = mx * (1 - sat * (1 - f));
+        const rgb = [[mx, t, p], [q, mx, p], [p, mx, t], [p, q, mx], [t, p, mx], [mx, p, q]][k];
+        px[i] = rgb[0]; px[i + 1] = rgb[1]; px[i + 2] = rgb[2];
+      }
+      g.putImageData(d, 0, 0);
+    } catch (e) { return base; } // a tainted canvas (file:// preview) keeps the cars blue
+    SPRITES[name] = Object.assign({ img: c, ready: true }, CAR_V2);
   }
-  if (spriteReady('car')) {
-    // One red hero sprite stands in for every colour; z-street cars are mirrored so they face along their lane.
-    const ctx = api.ctx, hue = { '#f4f1e4': 0, '#4f8fd0': 210, '#f2c14e': 45, '#6ea845': 100, '#e8913c': 25, '#8a6fd1': 260 }[color] || 0;
-    ctx.save(); if (hue && 'filter' in ctx) ctx.filter = 'hue-rotate(' + hue + 'deg)';
-    const q = api.project(x, G, z); api.ctx.translate(0, q.y - api.project(x, 0, z).y);
-    drawSprite(api, 'car', x, z, !ax); ctx.restore(); return;
+  return name;
+}
+// A compact car, nose along x or z, drawn at street level: Kevin's render where it has loaded, else the drawn stand-in.
+function car(api, x, z, along, colour) {
+  const p = api.project, u = api.unit, ax = along === 'x', Lc = 2.6, W = 1.3, name = carSprite(colour);
+  if (name) {
+    groundShadow(api, x, G, z, ax ? 2.1 : 1.05, ax ? 1.05 : 2.1, 1.4);
+    const ctx = api.ctx, q = p(x, G, z);
+    ctx.save(); ctx.translate(0, q.y - p(x, 0, z).y);
+    drawSprite(api, name, x, z, !ax); ctx.restore(); return;
   }
+  const color = CAR_PAINT[colour] || colour;
   const sh = p(x, G, z); api.ellipse(sh.x - u * .4, sh.y + u * .2, u * 1.8, u * .7, 'rgba(30,30,30,.22)');
   [[-.85, 1], [.85, 1], [-.85, -1], [.85, -1]].forEach(([a, s]) => { const q = ax ? p(x + a, G + .25, z + s * W / 2) : p(x + s * W / 2, G + .25, z + a); api.ellipse(q.x, q.y, u * .24, u * .24, '#25282b'); });
   const dark = api.shade(color, .72), mid = api.shade(color, .86);
@@ -563,7 +594,7 @@ function car(api, x, z, along, color) {
 
 // Cars loop along their lane; the back pass takes the rear and left streets, the front pass the front and right.
 function drawCars(api, back, at) {
-  const t = api.now * .00022;
+  const t = api.now * .00009; // one 90-unit loop every 11 s, about 8 units a second: four walkers' pace
   const list = CARS.map(([ri, lane, dir, phase, color]) => {
     const r = ROADS[ri], s = (((phase + dir * t) % 1) + 1) % 1 * 90 - 45;
     return r.along === 'x' ? [s, r.at + lane, 'x', color] : [r.at + lane, s, 'z', color];
