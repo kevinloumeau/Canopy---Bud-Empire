@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {LOUNGE_TIERS,LOUNGE_MAX,migrateLounge,loungeTier,loungeUpgradeCost,loungeSeats,loungeSessionSeconds,buyLoungeTier,loungeShare,wantsLounge,loungeAdmission,loungeTake,loungeRate,loungeCurrentRate} from '../src/lounge.js';
+import {LOUNGE_TIERS,LOUNGE_MAX,migrateLounge,loungeTier,loungeUpgradeCost,loungeSeats,loungeSessionSeconds,buyLoungeTier,loungeShare,wantsLounge,loungeAdmission,loungeTake,loungeRate,loungeCurrentRate,migrateLoungeHost,loungeHostSpeed,loungeHostCost} from '../src/lounge.js';
 
 test('the tiers get dearer and bigger, and each buys more seats and a higher take',()=>{
   assert.equal(LOUNGE_TIERS.length,LOUNGE_MAX);
@@ -57,4 +57,14 @@ test('the rate right now counts one take per session for every seat taken, never
   assert.equal(loungeCurrentRate(1,9,80),loungeRate(1,80),'guests beyond the seats do not count');
   assert.equal(loungeCurrentRate(0,3,80),0,'nothing before the lounge opens');
   assert.equal(loungeCurrentRate(1,-2,80),0);assert.equal(loungeCurrentRate(1,NaN,80),0);
+});
+
+test('lounge host shortens sessions and raises the rate',()=>{
+  assert.equal(migrateLoungeHost(undefined),0);assert.equal(migrateLoungeHost(-3),0);assert.equal(migrateLoungeHost(2.7),2);assert.equal(migrateLoungeHost(1e9),10000);
+  assert.equal(loungeHostSpeed(0),1);assert.equal(loungeHostSpeed(2),1.6);
+  assert.equal(loungeSessionSeconds(1,0),LOUNGE_TIERS[0].session);
+  assert.equal(loungeSessionSeconds(1,2),LOUNGE_TIERS[0].session/1.6);
+  assert.ok(Math.abs(loungeRate(1,80,2)-loungeRate(1,80)*1.6)<1e-9);
+  assert.equal(loungeCurrentRate(1,4,80,2),loungeRate(1,80,2));
+  assert.equal(loungeHostCost(0),20);assert.equal(loungeHostCost(3),Math.floor(20*Math.pow(1.6,3)));
 });
