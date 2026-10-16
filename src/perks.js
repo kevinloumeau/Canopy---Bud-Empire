@@ -22,4 +22,4 @@ export function buyPerk(perks,id){const c=perkCost(perks,id);if(c===null||perks.
 export function perkStart(perks){return {money:[0,1000,10000,100000][perkLevel(perks,'seed')],line:1+perkLevel(perks,'crew')*5,offlineLevel:perkLevel(perks,'vault')};}
 export const spenderGap=(perks,base)=>base*(1-.25*perkLevel(perks,'regulars'));
 export const rushLength=perks=>60+30*perkLevel(perks,'rush');
-export const crossMinutes=(perks,minutes)=>Math.max(1,Math.round(minutes*(1-.2*perkLevel(perks,'breeder'))));
+export const crossSeconds=(perks,seconds)=>Math.max(1,Math.round(seconds*(1-.2*perkLevel(perks,'breeder'))));
