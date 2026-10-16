@@ -57,10 +57,10 @@ export function migrateProgression(raw, now=Date.now()) {
   const r=raw && typeof raw==='object' ? raw : {};
   const clock=num(r.clock, now);
   const event=r.event && typeof r.event==='object' ? r.event : {};
-  return {network:migrateOperations(r.network),version:4, retailBoost:Math.max(1,num(r.retailBoost,1,64)), prestige:num(r.prestige,0,19), clock, activeStore:num(r.activeStore,0,STORES.length), career:num(r.career,0,CAREER.length), daily:{
+  return {network:migrateOperations(r.network),version:4, retailBoost:Math.max(1,num(r.retailBoost,1,64)), prestige:num(r.prestige,0,999), ...prestigeShares(r), clock, activeStore:num(r.activeStore,0,STORES.length), career:num(r.career,0,CAREER.length), daily:{
     day:num(r.daily?.day,0), streak:num(r.daily?.streak,0,7)
   }, stores:STORES.map((_,i)=>({level:num(r.stores?.[i]?.level,0,10),projects:[0,1,2].map(j=>r.stores?.[i]?.projects?.[j]===true), manager:MANAGERS.some(m=>m.id===r.stores?.[i]?.manager)&&!(Array.isArray(r.stores)?r.stores:[]).slice(0,i).some(s=>s?.manager===r.stores?.[i]?.manager)?r.stores[i].manager:'none', featured:PRODUCTS.includes(r.stores?.[i]?.featured)?r.stores[i].featured:'everyday', loyalty:num(r.stores?.[i]?.loyalty,0,1000), served:num(r.stores?.[i]?.served), serviceClock:num(r.stores?.[i]?.serviceClock,0,11)})),
-  event:{slot:num(event.slot,0), joined:event.joined===true, progress:num(event.progress), claimed:event.claimed===true},
+  event:{slot:num(event.slot,0), joined:event.joined===true, progress:num(event.progress), claimed:event.claimed===true}, season:migrateSeason(r.season), badges:(Array.isArray(r.badges)?r.badges:[]).filter(b=>typeof b==='string'&&BADGE_ID.test(b)).filter((b,i,a)=>a.indexOf(b)===i).slice(0,200),
   trophies:num(r.trophies), rewards:[0,1,2].map(i=>r.rewards?.[i]===true), reputation:num(r.reputation,0,1000), counters:Object.fromEntries(['pickup','online','invest','revenue'].map(k=>[k,num(r.counters?.[k])])), goals:[0,1,2].map(i=>({round:num(r.goals?.[i]?.round),start:num(r.goals?.[i]?.start)})), goalsCompleted:num(r.goalsCompleted), returnReport:r.returnReport&&Array.isArray(r.returnReport.earnings)?{seconds:num(r.returnReport.seconds),earnings:[...Array(STORES.length+1)].map((_,i)=>num(r.returnReport.earnings[i])),goals:num(r.returnReport.goals,0,3)}:null};
 }
 export function selectedStore(p) {const i=p.activeStore;return Number.isInteger(i)&&i>0&&i<=STORES.length&&p.stores[i-1].level>0?i:0;}
@@ -70,7 +70,8 @@ export function time(p, now=Date.now()) {p.clock=Math.max(p.clock,now);return p.
 export function scaledReward(base,scale=1){return Math.round(base*Math.max(1,Number.isFinite(scale)?scale:1));}
 export function dailyStatus(p, now=Date.now(), scale=1) {
   const today=Math.floor(time(p,now)/DAY), available=today>p.daily.day;
-  const next=p.daily.day===today-1 ? p.daily.streak%7+1 : 1;
+  // A missed day keeps the player's place on the track instead of sending them back to Day 1.
+  const next=p.daily.streak%7+1;
   const day=available?next:Math.max(1,p.daily.streak);
   return {available,day,reward:scaledReward(DAILY[day-1],scale),remaining:(today+1)*DAY-p.clock};
 }
@@ -78,7 +79,18 @@ export function claimDaily(state, now=Date.now(), scale=1) {
   const p=state.empire, d=dailyStatus(p,now,scale);if(!d.available)return 0;
   p.daily={day:Math.floor(p.clock/DAY),streak:d.day};state.money+=d.reward;return d.reward;
 }
-export function saleMultiplier(p) {return (1+p.career*.05)*(1+(p.prestige||0)*.2);}
+export function saleMultiplier(p) {return (1+p.career*.05)*(1+(p.shares||0)*SHARE_BONUS);}
+// Reopening pays in shares: each is worth +5% base sales, and the all-time total grows with the square root of
+// all-time revenue, so a longer run earns more of them. Saves from the flat +20%-per-rank system convert at four
+// shares per rank (the same bonus) and are credited with the revenue those ranks required.
+export const SHARE_BONUS=.05, SHARE_BASE=10000000;
+export function sharesFor(revenue){return revenue>=SHARE_BASE?Math.floor(10*Math.sqrt(revenue/SHARE_BASE)+1e-9):0;}
+function prestigeShares(r){
+  const rank=num(r.prestige,0,999);
+  if(Number.isFinite(r.shares))return {shares:num(r.shares,0,1e6),lifetimeAll:num(r.lifetimeAll)};
+  let past=0;for(let k=0;k<Math.min(rank,19);k++)past+=SHARE_BASE*3**k;
+  return {shares:Math.min(rank,19)*4,lifetimeAll:past};
+}
 export function claimCareer(state) {
   const m=CAREER[state.empire.career];if(!m || state.lifetime<m.goal)return 0;
   state.empire.career++;state.money+=m.reward;return m.reward;
@@ -190,4 +202,52 @@ export function affordableImprovement(state,additional=[]){
     PROJECT_LEVELS.forEach((level,j)=>{if(p.stores[i].level>=level&&!p.stores[i].projects[j])options.push({name:STORE_PROJECTS[i][j],cost:projectCost(i,j)});});
   });
   options.sort((a,b)=>a.cost-b.cost);return options.find(o=>o.cost<=state.money)||options[0]||null;
+}
+
+// Multi-day events. Calendar seasons (4/20 week, Harvest, Spooky, Holiday, Solstice) take over their dates; every other
+// week runs a rotating weekly theme, so there is always one. Each has a three-step ladder with income-scaled rewards and
+// a trophy per step; the last step adds the event's badge to a collection that survives reopening. Progress counts from
+// the moment the player first opens the game during the event, so it never starts half-missed.
+const BADGE_ID=/^[a-z0-9-]{1,24}$/;
+export const SEASONS=[
+  {id:'420',name:'4/20 Week',kind:'pickup',from:[4,17],to:[4,23],copy:'The biggest week of the year. Serve walk-in customers to climb the ladder.'},
+  {id:'solstice',name:'Summer Solstice',kind:'revenue',from:[6,18],to:[6,24],copy:'Long days, long lines. Earn revenue to climb the ladder.'},
+  {id:'harvest',name:'Harvest Season',kind:'revenue',from:[10,1],to:[10,24],copy:'The outdoor harvest is in. Earn revenue to climb the ladder.'},
+  {id:'spooky',name:'Spooky Season',kind:'pickup',from:[10,25],to:[10,31],copy:'Costumed customers all week. Serve walk-ins to climb the ladder.'},
+  {id:'holiday',name:'Holiday Rush',kind:'online',from:[12,15],to:[12,31],copy:'Gift orders pile up. Send online orders to climb the ladder.'}
+];
+export const WEEKLY=[
+  {id:'neighbors',name:'Neighborhood Week',kind:'pickup',copy:'Regulars bring friends. Serve walk-in customers to climb the ladder.'},
+  {id:'delivery',name:'Delivery Week',kind:'online',copy:'The web shop is busy. Send online orders to climb the ladder.'},
+  {id:'bigsales',name:'Big Sales Week',kind:'revenue',copy:'Everyone is shopping. Earn revenue to climb the ladder.'}
+];
+export const SEASON_REWARDS=[1000,4000,12000];
+const FIXED_TARGETS={pickup:[300,1200,4000],online:[15,60,200]};
+const REVENUE_HOURS=[.5,2,6];
+function migrateSeason(r){
+  if(!r||typeof r!=='object'||typeof r.id!=='string'||!BADGE_ID.test(r.id))return null;
+  const kind=['pickup','online','revenue'].includes(r.kind)?r.kind:'pickup',targets=[0,1,2].map(i=>Math.max(1,num(r.targets?.[i],1)));
+  return {id:r.id,kind,start:num(r.start,0),targets,claimed:num(r.claimed,0,3)};
+}
+export function seasonWindow(now=Date.now()){
+  const d=new Date(now),y=d.getUTCFullYear(),day=Date.UTC(y,d.getUTCMonth(),d.getUTCDate());
+  for(const s of SEASONS){const from=Date.UTC(y,s.from[0]-1,s.from[1]),to=Date.UTC(y,s.to[0]-1,s.to[1])+DAY;if(day>=from&&day<to)return {...s,id:s.id+'-'+y,badge:s.id,start:from,end:to};}
+  // Weeks run Monday to Sunday UTC; 1970-01-05 was a Monday.
+  const week=Math.floor((now-4*DAY)/(7*DAY)),start=4*DAY+week*7*DAY,theme=WEEKLY[((week%WEEKLY.length)+WEEKLY.length)%WEEKLY.length];
+  return {...theme,id:theme.id+'-'+week,badge:theme.id,start,end:start+7*DAY};
+}
+export function seasonStatus(p,now=Date.now(),scale=1){
+  const w=seasonWindow(time(p,now));
+  if(!p.season||p.season.id!==w.id){
+    const income=Math.max(4,scale*4),targets=w.kind==='revenue'?REVENUE_HOURS.map(h=>Math.max(1000,Math.round(income*h*3600))):FIXED_TARGETS[w.kind].slice();
+    p.season={id:w.id,kind:w.kind,start:p.counters[w.kind],targets,claimed:0};
+  }
+  const r=p.season,progress=Math.max(0,p.counters[r.kind]-r.start),reached=r.targets.filter(t=>progress>=t).length;
+  const next=r.claimed<reached?r.claimed:-1;
+  return {...w,targets:r.targets,progress,claimed:r.claimed,reached,next,remaining:w.end-p.clock,
+    reward:next>=0?scaledReward(SEASON_REWARDS[next],scale):scaledReward(SEASON_REWARDS[Math.min(2,r.claimed)],scale),hasBadge:p.badges.includes(w.badge)};
+}
+export function claimSeason(state,now=Date.now(),scale=1){
+  const p=state.empire,s=seasonStatus(p,now,scale);if(s.next<0)return 0;
+  p.season.claimed++;p.trophies++;state.money+=s.reward;if(p.season.claimed===3&&!p.badges.includes(s.badge))p.badges.push(s.badge);return s.reward;
 }

@@ -9,6 +9,7 @@ export function mountSettings(){
  wrap.innerHTML='<div class="modal settings" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><div class="settings-head"><h2 id="settingsTitle">Settings</h2><button type="button" class="settings-close" aria-label="Close settings">×</button></div>'+
   '<div class="settings-list">'+
   '<button type="button" class="settings-row" data-proxy="soundToggle"><span>Sound</span><b data-mirror="soundToggle"></b></button>'+
+  '<button type="button" class="settings-row" data-proxy="remindersToggle" hidden><span>Reminders</span><b data-mirror="remindersToggle"></b></button>'+
   '<button type="button" class="settings-row" data-proxy="guide"><span>Start guide</span><b>Replay</b></button>'+
   '</div><div class="settings-foot"><button type="button" class="settings-row settings-danger" data-proxy="resetOpen"><span>Start over</span><b>Reset everything</b></button><p class="settings-note">Canopy: Bud Empire · saves in this browser</p></div></div>';
  document.body.append(wrap);
@@ -17,6 +18,8 @@ export function mountSettings(){
  function sync(){
   const sound=$('soundToggle');
   wrap.querySelector('[data-mirror=soundToggle]').textContent=sound?(sound.textContent.replace('Sound ','')==='on'?'On':'Off'):'';
+  // Reminders only appear in the iOS app, where the game creates their toggle.
+  const reminders=$('remindersToggle'),row=wrap.querySelector('[data-proxy=remindersToggle]');row.hidden=!reminders;if(reminders)wrap.querySelector('[data-mirror=remindersToggle]').textContent=reminders.textContent==='Reminders on'?'On':'Off';
  }
  function open(){opener=document.activeElement;sync();wrap.hidden=false;closeButton.focus();}
  function close(){wrap.hidden=true;if(opener&&opener.focus)opener.focus();}

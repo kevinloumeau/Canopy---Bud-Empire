@@ -38,7 +38,7 @@ Station levels increase batch output; reaching levels 10, 20, 30, 50, 75 and 100
 
 Orders and Pickup also gain service efficiency every five levels. This existing speed bonus is separate from purchasing additional physical order counters. The bottleneck guidance and next-investment shortcut point to the same production constraint.
 
-Customers pass Security, order, collect their reserved bags and leave. Their preferences, patience and satisfaction affect sales and tips. Shop upgrades improve walking speed, queue comfort, storage, product value and other parts of the business. Prestige becomes available at $10 million lifetime revenue for the current run; the requirement triples per rank, with a permanent base-sale bonus for reopening.
+Customers pass Security, order, collect their reserved bags and leave. Their preferences, patience and satisfaction affect sales and tips. Shop upgrades improve walking speed, queue comfort, storage, product value and other parts of the business. Reopening (prestige) pays shares, each a permanent +5% to base sales. All-time revenue (earlier runs plus this one) of $10 million is worth 10 shares, and the total grows with its square root (40 million is 20, 1 billion is 100); reopening pays the shares earned since the last reopen, so it is available whenever at least one new share is waiting. Saves from the older rank system convert at four shares per rank, the same bonus. The best-value purchase (the bottleneck row's Fix button and the Shop recommendation) tries every station level and shop upgrade and picks the one that adds the most income per dollar, preferring what about five minutes of income can buy.
 
 ### Shop story and goals
 
@@ -60,9 +60,15 @@ Automatic dispatch checks for a ready order every ten simulated seconds. The **$
 
 Each branch has its own map, ten upgrade levels, optional projects, stock, products, staff assignments, regular-customer requests and cosmetic choices. Transfers and deliveries share a limited driver fleet. Store growth changes the visible buildings, furnishings and neighborhood activity.
 
-Branches share cash with the main shop while retaining independent management. Their base income contributes to offline earnings, capped at four hours at the normal rate; pause prevents offline earnings. Detailed operations do not invent offline customer visits or completed delivery journeys. A welcome-back report summarizes the return.
+Branches share cash with the main shop while retaining independent management. Their base income contributes to offline earnings, capped at four hours at the normal rate, plus four hours for each level of the Back-room safe (up to 24); pausing does not stop offline earnings. Detailed operations do not invent offline customer visits or completed delivery journeys. A welcome-back report summarizes the return.
 
-Career milestones, a seven-day UTC reward track, rotating shift goals and hourly events live under Rewards & records. Cash rewards scale with current income. Event deadlines follow real time, including while the game is paused. These are local systems based on the device clock, not server-validated accounts.
+Career milestones, a seven-day UTC reward track, rotating shift goals, hourly events and a multi-day event live under Rewards & records. The multi-day event follows the calendar (4/20 Week, Summer Solstice, Harvest Season, Spooky Season, Holiday Rush) and otherwise rotates weekly themes (Neighborhood, Delivery and Big Sales weeks, Monday to Sunday UTC). Its three-step ladder counts pickups, online orders or revenue from the first time the game is opened during the event; each step pays an income-scaled reward and a trophy, and the last adds the event's badge, which carries over when reopening.
+
+Every two to ten minutes of play a big spender walks in with a gold tag; tapping the tag pays a tip worth about 90 seconds of income or starts a 60-second rush that doubles walk-in sales. Missing one costs nothing.
+
+The Menu tab's strain library lists ten cultivars, one for each pair of the four strains. Crossing needs both parents unlocked, costs a few minutes of income and takes 15, 45 or 120 real minutes (common, rare, epic), so it keeps growing while the game is closed; one cross runs at a time. Each discovery adds 2%, 3% or 5% to every sale for good and survives reopening.
+
+In the iOS app, Settings has a Reminders switch, off until the player turns it on and grants permission. When the app goes to the background it schedules up to three local notifications: when the back-room safe fills, when the next daily reward unlocks, and when a strain cross finishes. Returning to the app clears them. The web build has no reminders and hides the switch. The app needs the `@capacitor/local-notifications` plugin (`npm i @capacitor/local-notifications && npx cap sync ios`); without it the switch stays hidden. Cash rewards scale with current income. Event deadlines follow real time, including while the game is paused. These are local systems based on the device clock, not server-validated accounts.
 
 ## Saves and installation
 

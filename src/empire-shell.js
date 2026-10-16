@@ -40,11 +40,11 @@ export function mountEmpireShell({fit,getState,format}){
  const detailsBar=backBar('Empire','Rewards & records');screens.details.append(detailsBar.bar);
  // Scoreboard: the lifetime figures that left the HUD, at the top of the records.
  const board=el('section','scoreboard');board.setAttribute('aria-label','Lifetime figures');
- const stats=[['Lifetime revenue','revenue'],['Bags sold','served'],['Deliveries','deliveries'],['Trophies','trophies'],['Prestige rank','prestige']];
+ const stats=[['Lifetime revenue','revenue'],['Bags sold','served'],['Deliveries','deliveries'],['Trophies','trophies'],['Shares','prestige']];
  board.innerHTML=stats.map(([label,key])=>'<div class="score"><small>'+label+'</small><b data-score="'+key+'">—</b></div>').join('');
  screens.details.append(board);
  let boardSig='';
- function syncBoard(){if(!getState)return;const s=getState();const values={revenue:format?format(s.lifetime||0):String(Math.round(s.lifetime||0)),served:abbr(s.sold||0),deliveries:abbr(s.onlineCompleted||0),trophies:String((s.empire&&s.empire.trophies)||0),prestige:String((s.empire&&s.empire.prestige)||0)};const sig=Object.values(values).join('|');if(sig===boardSig)return;boardSig=sig;stats.forEach(([,key])=>{board.querySelector('[data-score="'+key+'"]').textContent=values[key];});}
+ function syncBoard(){if(!getState)return;const s=getState();const values={revenue:format?format(s.lifetime||0):String(Math.round(s.lifetime||0)),served:abbr(s.sold||0),deliveries:abbr(s.onlineCompleted||0),trophies:String((s.empire&&s.empire.trophies)||0),prestige:String((s.empire&&s.empire.shares)||0)};const sig=Object.values(values).join('|');if(sig===boardSig)return;boardSig=sig;stats.forEach(([,key])=>{board.querySelector('[data-score="'+key+'"]').textContent=values[key];});}
  setInterval(()=>{if(!document.hidden&&current==='details')syncBoard();},500);
  const shopMilestone=document.querySelector('.shop-milestone');
  screens.details.append(
@@ -72,8 +72,8 @@ export function mountEmpireShell({fit,getState,format}){
  if(window.MutationObserver){const watcher=new MutationObserver(()=>{const open=articles.findIndex((_,i)=>$('branchBody'+i)&&!$('branchBody'+i).hidden);if(open>=0&&(current!=='store'||storeBar.heading.textContent!==toggles[open].querySelector('.branch-name').textContent)){openStore(open);}});articles.forEach((_,i)=>{const body=$('branchBody'+i);if(body)watcher.observe(body,{attributes:true,attributeFilter:['hidden']});});}
  const todayView=pane.querySelector('[data-empire-view=today]');if(todayView)todayView.addEventListener('click',()=>{if(current!=='home')show('home');});
  // Rewards strip mirrors the existing claim buttons; collecting clicks them.
- const sources=[['Daily','dailyClaim'],['Milestone','careerClaim'],['Bonus','claim'],['Event','eventAction'],['Goal','goalClaim0'],['Goal','goalClaim1'],['Goal','goalClaim2']];
- const amount=text=>{const m=/\$[\d.,]+[KMB]?/.exec(text);return m?m[0]:'';};
+ const sources=[['Daily','dailyClaim'],['Milestone','careerClaim'],['Bonus','claim'],['Event','eventAction'],['Week','seasonClaim'],['Cross','breedCollect'],['Goal','goalClaim0'],['Goal','goalClaim1'],['Goal','goalClaim2']];
+ const amount=text=>{const m=/\$[\d.,]+[KMB]?/.exec(text);return m?m[0]:text.trim().replace(/^Collect\s*/,'');};
  let signature='';
  function sync(){
   if(document.hidden)return;
