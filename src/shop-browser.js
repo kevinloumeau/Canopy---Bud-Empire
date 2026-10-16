@@ -1,6 +1,6 @@
 import {BOOST_MAX} from './depth.js';
 // Reuse the original purchase nodes so prices, handlers and saves remain authoritative.
-export function mountShopBrowser({getState,components,kiosks,queueLimit,recommend}) {
+export function mountShopBrowser({getState,components,kiosks,queueLimit,recommend,openDeliveries,deliveryDesk}) {
   const pane=document.querySelector('[data-pane="boosts"]');
   pane.classList.add('shop-browser');
   const categories=['Production','Service','Customers','Products','Online'];
@@ -27,6 +27,11 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
   const list=document.createElement('div');list.className='shop-items';
   const empty=document.createElement('p');empty.className='shop-empty';empty.textContent='Nothing affordable here yet. Turn off the filter to see what’s next.';
   const milestone=pane.querySelector('.shop-milestone'),reset=pane.querySelector('.shop-reset');
+  // Online opens with the delivery desk itself, so Deliveries needs no tab of its own.
+  const desk=document.createElement('button');desk.type='button';desk.className='shop-desk';desk.hidden=true;
+  desk.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 10h7l1.5 3.5h-10zM8.5 10 5 7m10.5 3L19 7M8.5 13.5 5 17m10.5-3.5L19 17M2 7h6m8 0h6M2 17h6m8 0h6"/></svg><span class="shop-desk-copy"><b>Delivery desk</b><small></small></span><i class="shop-desk-count" hidden></i><svg class="shop-desk-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>';
+  desk.onclick=()=>{if(openDeliveries)openDeliveries()};
+  list.prepend(desk);
   pane.prepend(header,recommendation,list,empty);
   pane.append(milestone,reset);
   let category=0;
@@ -46,12 +51,16 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
       else {level=state.globalLevel;max=BOOST_MAX}
       // Keep kiosk hardware and software together; other completed upgrades sink to the end.
       const isDone=level>=max,kioskPair=row.id==='buyKiosk'||row.id==='componentBuy5';row.node.classList.toggle('is-maxed',isDone);order.push({row,isDone:isDone&&!kioskPair});
-      row.badge.textContent=row.id==='buyAutoDrone'?(isDone?'Bulk installed · controls in Deliveries':level===1?'Single installed · bulk available':'One-time upgrade'):row.id==='buyOrderCounter'?level+'/3 staffed':row.id==='upgradeQueue'?level+'/30 places':row.id==='buyKiosk'?level+'/3 installed':'Lv '+level+(Number.isFinite(max)?'/'+max:'');
+      row.badge.textContent=row.id==='buyAutoDrone'?(isDone?'Bulk installed · controls in Delivery desk':level===1?'Single installed · bulk available':'One-time upgrade'):row.id==='buyOrderCounter'?level+'/3 staffed':row.id==='upgradeQueue'?level+'/30 places':row.id==='buyKiosk'?level+'/3 installed':'Lv '+level+(Number.isFinite(max)?'/'+max:'');
       row.node.hidden=row.category!==category||(!isDone&&affordable&&row.button.disabled);
       if(row.category===category){if(isDone)done++;else if(!row.node.hidden)count++}
     });
     const sequence=order.filter(o=>!o.isDone).concat(order.filter(o=>o.isDone)).map(o=>o.row);
     const key=sequence.map(r=>r.id).join(',');if(key!==render.key){render.key=key;sequence.forEach(r=>list.appendChild(r.node))}
+    desk.hidden=category!==4||!deliveryDesk;
+    if(!desk.hidden){const d=deliveryDesk(),note=desk.querySelector('small'),count=desk.querySelector('.shop-desk-count');
+      note.textContent=d.built?d.waiting?d.waiting+' waiting to send':'No orders waiting':'Build the delivery pad';
+      count.hidden=!d.built||!d.waiting;count.textContent=d.waiting;desk.setAttribute('aria-label','Delivery desk, '+note.textContent)}
     empty.hidden=count>0||done>0;
     empty.textContent='Nothing here yet.';
     recommendation.querySelector('strong').textContent=recommend(false);
