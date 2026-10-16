@@ -72,7 +72,7 @@ export function mountEmpireShell({fit,getState,format}){
  if(window.MutationObserver){const watcher=new MutationObserver(()=>{const open=articles.findIndex((_,i)=>$('branchBody'+i)&&!$('branchBody'+i).hidden);if(open>=0&&(current!=='store'||storeBar.heading.textContent!==toggles[open].querySelector('.branch-name').textContent)){openStore(open);}});articles.forEach((_,i)=>{const body=$('branchBody'+i);if(body)watcher.observe(body,{attributes:true,attributeFilter:['hidden']});});}
  const todayView=pane.querySelector('[data-empire-view=today]');if(todayView)todayView.addEventListener('click',()=>{if(current!=='home')show('home');});
  // Rewards strip mirrors the existing claim buttons; collecting clicks them.
- const sources=[['Daily','dailyClaim'],['Milestone','careerClaim'],['Bonus','claim'],['Event','eventAction'],['Goal','goalClaim0'],['Goal','goalClaim1'],['Goal','goalClaim2']];
+ const sources=[['Daily','dailyClaim'],['Milestone','careerClaim'],['Bonus','claim'],['Event','eventAction'],['Week','seasonClaim'],['Goal','goalClaim0'],['Goal','goalClaim1'],['Goal','goalClaim2']];
  const amount=text=>{const m=/\$[\d.,]+[KMB]?/.exec(text);return m?m[0]:'';};
  let signature='';
  function sync(){

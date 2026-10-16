@@ -7,3 +7,16 @@
 .rush-pill{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 108px);transform:translateX(-50%);z-index:30;padding:6px 14px;border-radius:999px;background:#2a2410e6;border:1px solid #f0cf7f;color:#f6dc95;font:600 .78rem 'DM Mono',ui-monospace,monospace;box-shadow:0 4px 14px #0006;pointer-events:none;white-space:nowrap}
 .rush-pill[hidden]{display:none}
 body[data-store-view=branch] .rush-pill{display:none}
+/* Multi-day event card: kicker, name, countdown, a three-step ladder whose cells fill with progress, and the claim button. */
+.season-card{display:grid;gap:6px;padding:12px;margin:0 0 14px;border:1px solid #f0cf7f55;border-radius:12px;background:linear-gradient(160deg,#f0cf7f14,#0000 60%)}
+.season-card h2{margin:0}
+.season-card p{margin:0}
+.season-kicker{color:#f0cf7f;font:600 11px 'DM Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase}
+.season-tiers{list-style:none;margin:4px 0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.season-tiers li{--fill:0%;display:grid;gap:2px;padding:7px 8px;border-radius:8px;border:1px solid #ffffff1f;background:linear-gradient(90deg,#c4e8a733 var(--fill),#0000 var(--fill)),#ffffff08;min-width:0}
+.season-tiers li span{font:600 12px 'DM Mono',ui-monospace,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.season-tiers li b{font-size:11px;font-weight:600;opacity:.8}
+.season-tiers li small{font-size:11px;color:#f0cf7f}
+.season-tiers li.is-ready{border-color:#c4e8a7}
+.season-tiers li.is-collected{border-color:#f0cf7f88;background:#f0cf7f1f}
+.season-badges{font-size:12px;opacity:.8}

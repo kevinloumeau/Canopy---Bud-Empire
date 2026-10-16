@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {DAY,HOUR,DAILY,CAREER,migrateProgression,dailyStatus,claimDaily,claimCareer,saleMultiplier,branchRate,buyStore,storeRate,storeCost,eventStatus,joinEvent,recordEvent,claimEvent} from '../src/progression.js';
+import {DAY,HOUR,DAILY,CAREER,migrateProgression,dailyStatus,claimDaily,claimCareer,saleMultiplier,branchRate,buyStore,storeRate,storeCost,eventStatus,joinEvent,recordEvent,claimEvent,seasonWindow,seasonStatus,claimSeason,SEASON_REWARDS} from '../src/progression.js';
 const start=21000*DAY;
 const fresh=()=>({money:1000000,lifetime:1000000,empire:migrateProgression(undefined,start)});
 test('legacy and malformed progression fields migrate without unlocking rewards',()=>{
@@ -109,4 +109,17 @@ test('goals rotate on claim, do not reuse prior progress or count rewards as rev
 test('event scene rewards persist without duplicate cash claims',()=>{
  const s=fresh(),e=eventStatus(s.empire,start);joinEvent(s.empire,start);recordEvent(s.empire,e.kind,e.goal,start);claimEvent(s,start);
  assert.equal(s.empire.rewards[e.slot%3],true);assert.equal(claimEvent(s,start),0);assert.equal(migrateProgression(s.empire,start).rewards[e.slot%3],true);
+});
+
+test('multi-day events follow the calendar, climb a three-step ladder and award a lasting badge',()=>{
+ assert.equal(seasonWindow(Date.UTC(2026,3,20)).name,'4/20 Week');assert.equal(seasonWindow(Date.UTC(2026,9,16)).name,'Harvest Season');assert.equal(seasonWindow(Date.UTC(2026,9,31,23)).name,'Spooky Season');
+ const w=seasonWindow(Date.UTC(2026,10,4));assert.equal(new Date(w.start).getUTCDay(),1);assert.equal(w.end-w.start,7*DAY);
+ const now=Date.UTC(2026,3,18),s={money:0,lifetime:0,empire:migrateProgression({counters:{pickup:500}},now)};
+ let e=seasonStatus(s.empire,now);assert.equal(e.progress,0);assert.deepEqual(e.targets,[300,1200,4000]);assert.equal(claimSeason(s,now),0);
+ recordEvent(s.empire,'pickup',4000,now);e=seasonStatus(s.empire,now);assert.equal(e.reached,3);
+ assert.equal(claimSeason(s,now),SEASON_REWARDS[0]);assert.equal(claimSeason(s,now),SEASON_REWARDS[1]);assert.equal(claimSeason(s,now),SEASON_REWARDS[2]);assert.equal(claimSeason(s,now),0);
+ assert.deepEqual(s.empire.badges,['420']);assert.equal(s.empire.trophies,3);
+ const saved=migrateProgression(JSON.parse(JSON.stringify(s.empire)),now);assert.equal(saved.season.claimed,3);assert.deepEqual(saved.badges,['420']);
+ assert.deepEqual(migrateProgression({badges:['ok','BAD!',7,'ok'],season:{id:'x y'}}).badges,['ok']);assert.equal(migrateProgression({season:{id:'x y'}}).season,null);
+ const next=Date.UTC(2026,3,25);e=seasonStatus(s.empire,next);assert.notEqual(e.name,'4/20 Week');assert.equal(e.claimed,0);assert.equal(e.progress,0);
 });
