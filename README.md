@@ -107,7 +107,7 @@ The build targets Safari 14 and converts Vite's entry to a deferred classic scri
 
 The world is drawn with **Canvas 2D**. Plain JavaScript runs production, customer routing, the economy and branch operations; HTML controls keep management separate from the scene. **Vite** handles local development and production builds.
 
-Progress saves automatically in your browser. Older saves migrate forward, and a welcome-back report summarizes up to four hours of estimated earnings at normal speed after 15 minutes or more away (shorter breaks show a toast). Pause also stops offline earnings.
+Progress saves automatically in your browser. Older saves migrate forward, and a welcome-back report summarizes estimated earnings at normal speed after 15 minutes or more away (shorter breaks show a toast). Offline earnings are capped at four hours; the Back-room safe in Shop > Production raises the cap four hours a level, up to 24. Pausing does not stop offline earnings.
 
 <details>
 <summary><strong>Saves, installation and offline behavior</strong></summary>
@@ -128,7 +128,7 @@ Progress saves automatically in your browser. Older saves migrate forward, and a
 - **Kiosks:** install the hardware before purchasing software upgrades. Staffed counters and kiosks share stock reservations.
 - **Drone deliveries:** the $7,500 pad includes the base auto drone. A $25,000 bulk upgrade dispatches up to ten available orders per launch, subject to demand and stock.
 - **Branch life:** independent upgrades, optional projects, stock, products, staff assignments, regular-customer requests and cosmetic choices.
-- **Long-term goals:** story chapters, career milestones, a seven-day reward track, rotating shift goals, hourly events and prestige. Reopening begins at $10 million lifetime revenue, with the requirement tripling per rank.
+- **Long-term goals:** story chapters, career milestones, a seven-day reward track, rotating shift goals, hourly events and prestige. Reopening begins at $10 million all-time revenue and pays shares (+5% base sales each) that grow with the square root of all-time revenue, so longer runs earn more.
 
 See the [full guide](docs/GUIDE.md) for mechanics, controls and compatibility details.
 

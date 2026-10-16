@@ -172,7 +172,7 @@ export function mountEmpireStores({getState,format}){
   }else if(!d.lvl){
    h.level.innerHTML='<span class="hero-level-copy"><b>'+(d.afford?'Ready to open':'Unlocked')+'</b><small>'+(d.afford?'Opening takes you to the new store':'Need '+format(d.cost-d.state.money)+' more to open')+'</small></span>';
    h.income.innerHTML='<b>'+format(d.baseRate)+'/s</b><span>when open</span>';
-   h.hint.textContent='Earns automatically, even while you are away (up to 4 hours).';
+   h.hint.textContent='Earns automatically, even while you are away.';
   }else{
    h.level.innerHTML=pips(d.lvl)+'<span class="hero-level-copy"><b>Level '+d.lvl+' of 10</b><small>'+(d.max?'Fully upgraded':'Level '+(d.lvl+1)+' adds +'+format(d.next-d.rate)+'/s')+'</small></span>';
    h.income.innerHTML='<b>'+format(d.rate)+'/s</b><span>now</span>'+(d.max?'':'<em class="hero-arrow" aria-hidden="true">→</em><b class="is-next">'+format(d.next)+'/s</b><span>after upgrade</span>');

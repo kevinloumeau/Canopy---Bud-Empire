@@ -40,11 +40,11 @@ export function mountEmpireShell({fit,getState,format}){
  const detailsBar=backBar('Empire','Rewards & records');screens.details.append(detailsBar.bar);
  // Scoreboard: the lifetime figures that left the HUD, at the top of the records.
  const board=el('section','scoreboard');board.setAttribute('aria-label','Lifetime figures');
- const stats=[['Lifetime revenue','revenue'],['Bags sold','served'],['Deliveries','deliveries'],['Trophies','trophies'],['Prestige rank','prestige']];
+ const stats=[['Lifetime revenue','revenue'],['Bags sold','served'],['Deliveries','deliveries'],['Trophies','trophies'],['Shares','prestige']];
  board.innerHTML=stats.map(([label,key])=>'<div class="score"><small>'+label+'</small><b data-score="'+key+'">—</b></div>').join('');
  screens.details.append(board);
  let boardSig='';
- function syncBoard(){if(!getState)return;const s=getState();const values={revenue:format?format(s.lifetime||0):String(Math.round(s.lifetime||0)),served:abbr(s.sold||0),deliveries:abbr(s.onlineCompleted||0),trophies:String((s.empire&&s.empire.trophies)||0),prestige:String((s.empire&&s.empire.prestige)||0)};const sig=Object.values(values).join('|');if(sig===boardSig)return;boardSig=sig;stats.forEach(([,key])=>{board.querySelector('[data-score="'+key+'"]').textContent=values[key];});}
+ function syncBoard(){if(!getState)return;const s=getState();const values={revenue:format?format(s.lifetime||0):String(Math.round(s.lifetime||0)),served:abbr(s.sold||0),deliveries:abbr(s.onlineCompleted||0),trophies:String((s.empire&&s.empire.trophies)||0),prestige:String((s.empire&&s.empire.shares)||0)};const sig=Object.values(values).join('|');if(sig===boardSig)return;boardSig=sig;stats.forEach(([,key])=>{board.querySelector('[data-score="'+key+'"]').textContent=values[key];});}
  setInterval(()=>{if(!document.hidden&&current==='details')syncBoard();},500);
  const shopMilestone=document.querySelector('.shop-milestone');
  screens.details.append(

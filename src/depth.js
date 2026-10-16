@@ -1,3 +1,4 @@
+import {sharesFor,SHARE_BASE,SHARE_BONUS} from './progression.js';
 export const BOOST_MAX=12;
 export const boostCost=level=>Math.min(Number.MAX_SAFE_INTEGER,Math.floor(250*2.25**level));
 export const FORMATS=[
@@ -46,8 +47,15 @@ export function menuFormatFactor(menu,menuStrains,property){
 }
 const FIRST=[['FIRST BATCH',100,40],['STEADY SUPPLY',1500,450],['MASS MARKET',20000,6000],['CITY CONTRACT',250000,90000]];
 export function milestone(index){if(!Number.isInteger(index)||index<0||index>20)return null;const row=FIRST[index];return row?{name:row[0],goal:row[1],reward:row[2]}:{name:'EMPIRE CONTRACT '+(index-3),goal:1000000*3**(index-4),reward:200000*3**(index-4)};}
-// Prestige is gated on this run's lifetime revenue, not on hoarding cash.
-export function prestigeOffer(state){const rank=state.empire.prestige||0,target=10000000*3**Math.min(rank,18);return {rank,target,eligible:rank<19&&state.lifetime>=target,multiplier:1+(rank+1)*.2};}
+// Prestige pays shares for all-time revenue (earlier runs plus this one), never for hoarded cash. The first
+// reopen needs $10M; after that any new share makes reopening worthwhile, and the player chooses when.
+export function prestigeOffer(state){
+  const p=state.empire,rank=p.prestige||0,shares=p.shares||0,allTime=(p.lifetimeAll||0)+Math.max(0,state.lifetime||0);
+  const total=Math.max(shares,sharesFor(allTime)),gain=total-shares,next=total+1;
+  const target=allTime<SHARE_BASE?SHARE_BASE:Math.ceil(SHARE_BASE*(next/10)**2-1e-6);
+  return {rank,shares,total,gain,allTime,target,eligible:gain>=1,current:1+shares*SHARE_BONUS,multiplier:1+total*SHARE_BONUS};
+}
+export const OFFLINE_STEP=14400, OFFLINE_MAX=OFFLINE_STEP*6;
 // Fixed simulation steps driven by elapsed time, not timer callback count.
-// Long visible stalls use the same capped estimate as a suspended tab.
-export function elapsedSteps(seconds,speed){const elapsed=Math.max(0,Number.isFinite(seconds)?seconds:0);return elapsed>5?{steps:0,offline:Math.min(14400,elapsed)}:{steps:Math.floor((elapsed+1e-8)/.05)*speed,offline:0};}
+// Long visible stalls use the same capped estimate as a suspended tab; the player's own cap is applied on collection.
+export function elapsedSteps(seconds,speed){const elapsed=Math.max(0,Number.isFinite(seconds)?seconds:0);return elapsed>5?{steps:0,offline:Math.min(OFFLINE_MAX,elapsed)}:{steps:Math.floor((elapsed+1e-8)/.05)*speed,offline:0};}

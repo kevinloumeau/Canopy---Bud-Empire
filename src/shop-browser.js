@@ -5,7 +5,7 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
   pane.classList.add('shop-browser');
   const categories=['Production','Service','Customers','Products','Online'];
   // Keep related upgrades on the same shelf; the Service shelf includes counter expansion.
-  const definitions=[['upgradeStorage',0],['boost',0],['componentBuy10',0],['componentBuy11',0],['componentBuy12',0],['componentBuy13',0],
+  const definitions=[['upgradeStorage',0],['boost',0],['componentBuy10',0],['componentBuy11',0],['componentBuy12',0],['componentBuy13',0],['componentBuy25',0],
     ['buyKiosk',1],['componentBuy5',1],['buyOrderCounter',1],['componentBuy1',1],['componentBuy2',1],['componentBuy8',1],['componentBuy14',1],
     ['upgradeQueue',2],['componentBuy0',2],['componentBuy7',2],['componentBuy15',2],['componentBuy16',2],['componentBuy17',2],
     ['componentBuy3',3],['componentBuy4',3],['componentBuy18',3],['componentBuy19',3],['componentBuy20',3],['componentBuy21',3],
@@ -57,5 +57,6 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
     recommendation.querySelector('strong').textContent=recommend(false);
   }
   function show(index){category=index;header.querySelectorAll('[data-shop-category]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.shopCategory)===index)));render();}
-  return {render,show};
+  function categoryOf(id){const row=rows.find(r=>r.id===id);return row?row.category:0;}
+  return {render,show,categoryOf};
 }

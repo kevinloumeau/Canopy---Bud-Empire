@@ -57,7 +57,7 @@ export function migrateProgression(raw, now=Date.now()) {
   const r=raw && typeof raw==='object' ? raw : {};
   const clock=num(r.clock, now);
   const event=r.event && typeof r.event==='object' ? r.event : {};
-  return {network:migrateOperations(r.network),version:4, retailBoost:Math.max(1,num(r.retailBoost,1,64)), prestige:num(r.prestige,0,19), clock, activeStore:num(r.activeStore,0,STORES.length), career:num(r.career,0,CAREER.length), daily:{
+  return {network:migrateOperations(r.network),version:4, retailBoost:Math.max(1,num(r.retailBoost,1,64)), prestige:num(r.prestige,0,999), ...prestigeShares(r), clock, activeStore:num(r.activeStore,0,STORES.length), career:num(r.career,0,CAREER.length), daily:{
     day:num(r.daily?.day,0), streak:num(r.daily?.streak,0,7)
   }, stores:STORES.map((_,i)=>({level:num(r.stores?.[i]?.level,0,10),projects:[0,1,2].map(j=>r.stores?.[i]?.projects?.[j]===true), manager:MANAGERS.some(m=>m.id===r.stores?.[i]?.manager)&&!(Array.isArray(r.stores)?r.stores:[]).slice(0,i).some(s=>s?.manager===r.stores?.[i]?.manager)?r.stores[i].manager:'none', featured:PRODUCTS.includes(r.stores?.[i]?.featured)?r.stores[i].featured:'everyday', loyalty:num(r.stores?.[i]?.loyalty,0,1000), served:num(r.stores?.[i]?.served), serviceClock:num(r.stores?.[i]?.serviceClock,0,11)})),
   event:{slot:num(event.slot,0), joined:event.joined===true, progress:num(event.progress), claimed:event.claimed===true},
@@ -70,7 +70,8 @@ export function time(p, now=Date.now()) {p.clock=Math.max(p.clock,now);return p.
 export function scaledReward(base,scale=1){return Math.round(base*Math.max(1,Number.isFinite(scale)?scale:1));}
 export function dailyStatus(p, now=Date.now(), scale=1) {
   const today=Math.floor(time(p,now)/DAY), available=today>p.daily.day;
-  const next=p.daily.day===today-1 ? p.daily.streak%7+1 : 1;
+  // A missed day keeps the player's place on the track instead of sending them back to Day 1.
+  const next=p.daily.streak%7+1;
   const day=available?next:Math.max(1,p.daily.streak);
   return {available,day,reward:scaledReward(DAILY[day-1],scale),remaining:(today+1)*DAY-p.clock};
 }
@@ -78,7 +79,18 @@ export function claimDaily(state, now=Date.now(), scale=1) {
   const p=state.empire, d=dailyStatus(p,now,scale);if(!d.available)return 0;
   p.daily={day:Math.floor(p.clock/DAY),streak:d.day};state.money+=d.reward;return d.reward;
 }
-export function saleMultiplier(p) {return (1+p.career*.05)*(1+(p.prestige||0)*.2);}
+export function saleMultiplier(p) {return (1+p.career*.05)*(1+(p.shares||0)*SHARE_BONUS);}
+// Reopening pays in shares: each is worth +5% base sales, and the all-time total grows with the square root of
+// all-time revenue, so a longer run earns more of them. Saves from the flat +20%-per-rank system convert at four
+// shares per rank (the same bonus) and are credited with the revenue those ranks required.
+export const SHARE_BONUS=.05, SHARE_BASE=10000000;
+export function sharesFor(revenue){return revenue>=SHARE_BASE?Math.floor(10*Math.sqrt(revenue/SHARE_BASE)+1e-9):0;}
+function prestigeShares(r){
+  const rank=num(r.prestige,0,999);
+  if(Number.isFinite(r.shares))return {shares:num(r.shares,0,1e6),lifetimeAll:num(r.lifetimeAll)};
+  let past=0;for(let k=0;k<Math.min(rank,19);k++)past+=SHARE_BASE*3**k;
+  return {shares:Math.min(rank,19)*4,lifetimeAll:past};
+}
 export function claimCareer(state) {
   const m=CAREER[state.empire.career];if(!m || state.lifetime<m.goal)return 0;
   state.empire.career++;state.money+=m.reward;return m.reward;

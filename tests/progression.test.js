@@ -8,12 +8,12 @@ test('legacy and malformed progression fields migrate without unlocking rewards'
  assert.equal(p.career,0);assert.deepEqual(p.stores.map(s=>s.level),[0,0,10,0,0]);assert.equal(p.daily.streak,0);
  assert.deepEqual(migrateProgression(undefined,start).stores.map(s=>s.level),[0,0,0,0,0]);
 });
-test('daily claims are once per UTC day, cycle after day seven, and reset after a missed day',()=>{
+test('daily claims are once per UTC day, cycle after day seven, and keep their place after a missed day',()=>{
  const s=fresh(), initial=s.money;
  for(let i=0;i<7;i++){assert.equal(claimDaily(s,start+i*DAY),DAILY[i]);assert.equal(claimDaily(s,start+i*DAY+1000),0)}
  assert.equal(s.money-initial,DAILY.reduce((a,b)=>a+b,0));assert.equal(s.lifetime,1000000);
  assert.equal(dailyStatus(s.empire,start+7*DAY).day,1);
- claimDaily(s,start+7*DAY);assert.equal(dailyStatus(s.empire,start+9*DAY).day,1);
+ claimDaily(s,start+7*DAY);assert.equal(dailyStatus(s.empire,start+9*DAY).day,2);assert.equal(dailyStatus(s.empire,start+30*DAY).day,2);
  claimDaily(s,start+9*DAY);assert.equal(claimDaily(s,start+6*DAY),0);
 });
 test('clock rollback and save/reload cannot duplicate a daily claim',()=>{

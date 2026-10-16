@@ -38,7 +38,7 @@ Station levels increase batch output; reaching levels 10, 20, 30, 50, 75 and 100
 
 Orders and Pickup also gain service efficiency every five levels. This existing speed bonus is separate from purchasing additional physical order counters. The bottleneck guidance and next-investment shortcut point to the same production constraint.
 
-Customers pass Security, order, collect their reserved bags and leave. Their preferences, patience and satisfaction affect sales and tips. Shop upgrades improve walking speed, queue comfort, storage, product value and other parts of the business. Prestige becomes available at $10 million lifetime revenue for the current run; the requirement triples per rank, with a permanent base-sale bonus for reopening.
+Customers pass Security, order, collect their reserved bags and leave. Their preferences, patience and satisfaction affect sales and tips. Shop upgrades improve walking speed, queue comfort, storage, product value and other parts of the business. Reopening (prestige) pays shares, each a permanent +5% to base sales. All-time revenue (earlier runs plus this one) of $10 million is worth 10 shares, and the total grows with its square root (40 million is 20, 1 billion is 100); reopening pays the shares earned since the last reopen, so it is available whenever at least one new share is waiting. Saves from the older rank system convert at four shares per rank, the same bonus. The best-value purchase (the bottleneck row's Fix button and the Shop recommendation) tries every station level and shop upgrade and picks the one that adds the most income per dollar, preferring what about five minutes of income can buy.
 
 ### Shop story and goals
 
@@ -60,7 +60,7 @@ Automatic dispatch checks for a ready order every ten simulated seconds. The **$
 
 Each branch has its own map, ten upgrade levels, optional projects, stock, products, staff assignments, regular-customer requests and cosmetic choices. Transfers and deliveries share a limited driver fleet. Store growth changes the visible buildings, furnishings and neighborhood activity.
 
-Branches share cash with the main shop while retaining independent management. Their base income contributes to offline earnings, capped at four hours at the normal rate; pause prevents offline earnings. Detailed operations do not invent offline customer visits or completed delivery journeys. A welcome-back report summarizes the return.
+Branches share cash with the main shop while retaining independent management. Their base income contributes to offline earnings, capped at four hours at the normal rate, plus four hours for each level of the Back-room safe (up to 24); pausing does not stop offline earnings. Detailed operations do not invent offline customer visits or completed delivery journeys. A welcome-back report summarizes the return.
 
 Career milestones, a seven-day UTC reward track, rotating shift goals and hourly events live under Rewards & records. Cash rewards scale with current income. Event deadlines follow real time, including while the game is paused. These are local systems based on the device clock, not server-validated accounts.
 
