@@ -25,10 +25,27 @@ if (SUNNY && typeof Image !== 'undefined') for (const name in SPRITES) { const i
 // keeps painting, and a missing tier falls back to the nearest tier that exists.
 const STATION_KEYS = ['seeds', 'grow', 'harvest', 'pack', 'orders', 'pickup', 'security']; // index 6 is the ID desk, levelled by idStaff
 const STATION_SIZE = { seeds: { w: 3.6, drop: .6 }, grow: { w: 4.3, drop: .62 }, harvest: { w: 3.8, drop: .6 }, pack: { w: 3.6, drop: .6 }, orders: { w: 2.65, drop: .5 }, pickup: { w: 3.4, drop: .5 }, security: { w: 1.9, drop: .45 } };
+// Renders that came out off the map's angle. The map's floor edges run at 30° (screen slopes +0.577 down-right and
+// -0.577 up-right); the grow bench's tier 1 and tier 3 renders came out at a 2:1 pitch (26.6°) and tier 1 turned
+// a few degrees as well, so beside the seeds bench they read as rotated against the floor (Kevin, 2026-10-16: "grow
+// station perspective is off"). Each entry is the render's own floor-edge slopes, measured on the base of the render
+// (down-right, up-right; image px, y down), and drawSprite shears the image so both edges land on the map's slopes:
+// every upright stays upright, and the aspect change is split between width and height so pots and plants stretch
+// as little as possible. The PNGs stay as rendered. Tier 2 already follows the map's slopes.
+const RENDER_AXES = { 'station.grow.tier1': [.424, -.6], 'station.grow.tier3': [.458, -.552] };
 function lazySprite(name, file, size) {
   if (SPRITES[name] || !SUNNY || typeof Image === 'undefined') return;
   const img = new Image(); img.decoding = 'async'; img.onerror = () => { SPRITES[name].missing = true; }; img.src = file;
-  SPRITES[name] = Object.assign({ img }, size);
+  SPRITES[name] = Object.assign({ img }, size, RENDER_AXES[name] ? { axes: RENDER_AXES[name] } : null);
+}
+// The shear that squares a render's floor edges (slopes mL down-right, mR up-right) to the map's. With x' = sx·x and
+// y' = sy·y + k·x the two edge slopes become (sy·m + k) / sx; matching both fixes sy / sx and k, and the remaining
+// uniform scale is split so width shrinks and height grows by the same factor.
+export function squareUp(api, axes) {
+  const o = api.project(0, 0, 0), ex = api.project(1, 0, 0), ez = api.project(0, 0, 1);
+  const tX = (ex.y - o.y) / (ex.x - o.x), tZ = (ez.y - o.y) / (ez.x - o.x), ratio = (tX - tZ) / (axes[0] - axes[1]);
+  const sy = Math.sqrt(ratio), sx = 1 / sy;
+  return { sx, sy, k: sx * tX - sy * axes[0] };
 }
 export function stationTier(level) { return level >= 20 ? 3 : level >= 10 ? 2 : 1; }
 // Returns the sprite name to draw for station i at this level, or null while none is available.
@@ -226,6 +243,7 @@ export function drawSprite(api, name, x, z, flip, scale, lift, haze) {
   const s = SPRITES[name]; if (!spriteReady(name)) return false;
   const q = api.project(x, 0, z), u = api.unit, ar = (s.img.naturalHeight || s.img.height) / (s.img.naturalWidth || s.img.width), w = (s.h ? s.h / ar : s.w) * u * (scale || 1), h = w * ar, ctx = api.ctx;
   ctx.save(); ctx.translate(q.x + (s.ox || 0) * u * (scale || 1) * (flip ? -1 : 1), q.y + (s.drop * (scale || 1) - (lift || 0)) * u); if (flip) ctx.scale(-1, 1);
+  if (s.axes) { const m = squareUp(api, s.axes); ctx.transform(m.sx, m.k, 0, m.sy, 0, 0); }
   ctx.drawImage(s.img, -w / 2, -h, w, h);
   if (haze > 0) { const m = hazeMask(name); if (m) { ctx.globalAlpha *= haze; ctx.drawImage(m, -w / 2, -h, w, h); } }
   ctx.restore();
