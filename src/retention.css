@@ -42,3 +42,4 @@ body[data-store-view=branch] .rush-pill{display:none}
 .library-card[data-state=known]{border-color:#c4e8a766;background:#c4e8a712}
 .library-card[data-state=known] button{background:transparent;border-color:transparent;color:#c4e8a7}
 .library-card[data-state=ready]{border-color:#f0cf7f}
+.modal .settings-row[hidden]{display:none}

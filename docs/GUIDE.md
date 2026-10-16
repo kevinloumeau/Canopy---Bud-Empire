@@ -66,7 +66,9 @@ Career milestones, a seven-day UTC reward track, rotating shift goals, hourly ev
 
 Every two to ten minutes of play a big spender walks in with a gold tag; tapping the tag pays a tip worth about 90 seconds of income or starts a 60-second rush that doubles walk-in sales. Missing one costs nothing.
 
-The Menu tab's strain library lists ten cultivars, one for each pair of the four strains. Crossing needs both parents unlocked, costs a few minutes of income and takes 15, 45 or 120 real minutes (common, rare, epic), so it keeps growing while the game is closed; one cross runs at a time. Each discovery adds 2%, 3% or 5% to every sale for good and survives reopening. Cash rewards scale with current income. Event deadlines follow real time, including while the game is paused. These are local systems based on the device clock, not server-validated accounts.
+The Menu tab's strain library lists ten cultivars, one for each pair of the four strains. Crossing needs both parents unlocked, costs a few minutes of income and takes 15, 45 or 120 real minutes (common, rare, epic), so it keeps growing while the game is closed; one cross runs at a time. Each discovery adds 2%, 3% or 5% to every sale for good and survives reopening.
+
+In the iOS app, Settings has a Reminders switch, off until the player turns it on and grants permission. When the app goes to the background it schedules up to three local notifications: when the back-room safe fills, when the next daily reward unlocks, and when a strain cross finishes. Returning to the app clears them. The web build has no reminders and hides the switch. The app needs the `@capacitor/local-notifications` plugin (`npm i @capacitor/local-notifications && npx cap sync ios`); without it the switch stays hidden. Cash rewards scale with current income. Event deadlines follow real time, including while the game is paused. These are local systems based on the device clock, not server-validated accounts.
 
 ## Saves and installation
 
