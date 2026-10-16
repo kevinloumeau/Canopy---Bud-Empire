@@ -6,7 +6,7 @@ export const PERKS=[
   {id:'vault',name:'Kept vault',blurb:level=>'Back-room safe reopens at level '+level,costs:[2,4,6]},
   {id:'regulars',name:'Regulars',blurb:level=>'Big spenders '+(level*25)+'% more often',costs:[3,6]},
   {id:'rush',name:'Long rush',blurb:level=>'Rushes last '+(60+level*30)+'s',costs:[2,4]},
-  {id:'thumb',name:'Green thumb',blurb:level=>'Crosses '+(level*20)+'% faster',costs:[3,6]}
+  {id:'breeder',name:"Breeder's eye",blurb:level=>'Crosses '+(level*20)+'% faster',costs:[3,6]}
 ];
 const num=(v,max)=>Number.isFinite(v)?Math.max(0,Math.min(max,Math.floor(v))):0;
 // Saves from before the shop start with one point per share they already hold, so veterans have something to spend.
@@ -22,4 +22,4 @@ export function buyPerk(perks,id){const c=perkCost(perks,id);if(c===null||perks.
 export function perkStart(perks){return {money:[0,1000,10000,100000][perkLevel(perks,'seed')],line:1+perkLevel(perks,'crew')*5,offlineLevel:perkLevel(perks,'vault')};}
 export const spenderGap=(perks,base)=>base*(1-.25*perkLevel(perks,'regulars'));
 export const rushLength=perks=>60+30*perkLevel(perks,'rush');
-export const crossMinutes=(perks,minutes)=>Math.max(1,Math.round(minutes*(1-.2*perkLevel(perks,'thumb'))));
+export const crossMinutes=(perks,minutes)=>Math.max(1,Math.round(minutes*(1-.2*perkLevel(perks,'breeder'))));

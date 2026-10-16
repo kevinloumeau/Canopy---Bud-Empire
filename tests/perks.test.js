@@ -13,7 +13,7 @@ test('buying spends points, climbs the cost ladder and stops at max',()=>{
   PERKS.forEach(x=>assert.equal(x.blurb(0).length>0,true));
 });
 test('perk effects',()=>{
-  const p={points:0,levels:{seed:2,crew:3,vault:1,regulars:2,rush:1,thumb:2}};
+  const p={points:0,levels:{seed:2,crew:3,vault:1,regulars:2,rush:1,breeder:2}};
   assert.deepEqual(perkStart(p),{money:10000,line:16,offlineLevel:1});
   assert.deepEqual(perkStart({points:0,levels:{}}),{money:0,line:1,offlineLevel:0});
   assert.equal(spenderGap(p,400),200);assert.equal(rushLength(p),90);assert.equal(crossMinutes(p,120),72);

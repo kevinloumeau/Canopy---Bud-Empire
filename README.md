@@ -128,7 +128,7 @@ Progress saves automatically in your browser. Older saves migrate forward, and a
 - **Kiosks:** install the hardware before purchasing software upgrades. Staffed counters and kiosks share stock reservations.
 - **Drone deliveries:** the $7,500 pad includes the base auto drone. A $25,000 bulk upgrade dispatches up to ten available orders per launch, subject to demand and stock.
 - **Branch life:** independent upgrades, optional projects, stock, products, staff assignments, regular-customer requests and cosmetic choices.
-- **Long-term goals:** story chapters, career milestones, a seven-day reward track, rotating shift goals, hourly events and prestige. Reopening begins at $10 million all-time revenue and pays shares (+5% base sales each) that grow with the square root of all-time revenue, so longer runs earn more. Each reopening also pays one founder point per share gained; points buy permanent founder perks (seed money, veteran crew, kept vault, regulars, long rush, green thumb) without spending shares. Saves from before the perks start with one point per share they hold.
+- **Long-term goals:** story chapters, career milestones, a seven-day reward track, rotating shift goals, hourly events and prestige. Reopening begins at $10 million all-time revenue and pays shares (+5% base sales each) that grow with the square root of all-time revenue, so longer runs earn more. Each reopening also pays one founder point per share gained; points buy permanent founder perks (seed money, veteran crew, kept vault, regulars, long rush, breeder's eye) without spending shares. Saves from before the perks start with one point per share they hold.
 
 See the [full guide](docs/GUIDE.md) for mechanics, controls and compatibility details.
 
