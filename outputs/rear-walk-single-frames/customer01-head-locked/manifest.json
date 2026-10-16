@@ -1,0 +1,359 @@
+{
+  "status": "head-scale-locked",
+  "tool": "built-in image_gen",
+  "method": "One character and one frame per generation. Frame 00 reuses prior rear source.",
+  "frames": [
+    {
+      "index": 0,
+      "phase": "left-contact",
+      "source": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/rear-walk-single-frames/customer01-draft/person.customer.01.walk.empty.00.back-right.png",
+      "prompt": "Reused existing rear contact source.",
+      "file": "frames/person.customer.01.walk.empty.00.back-right.png",
+      "size": [
+        1024,
+        1536
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "uniform_scale": 1,
+      "translation": [
+        -22,
+        11
+      ],
+      "source_landmarks": {
+        "head_center_x": 534,
+        "collar_y": 341,
+        "waist_y": 759
+      },
+      "registered_landmarks": {
+        "head_center_x": 512,
+        "collar_y": 352,
+        "waist_y": 770
+      }
+    },
+    {
+      "index": 1,
+      "phase": "left-down",
+      "source": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/rear-walk-single-frames/customer01-refined/sources/head01.png",
+      "prompt": "Create ONE single walk-cycle sprite of this same rear-view clay character. Frame: LEFT FOOT weight-acceptance (down pose), shortly after the reference's contact. The FAR LEFT foot now bears weight, planted flat slightly ahead at upper-right. The NEAR RIGHT leg trails toward lower-left, knee softly bending as its heel rises. Narrow the stride to about two thirds the reference stride; bend the supporting left knee slightly, only a tiny natural body dip. Right arm swings forward, left arm backward as reference, slightly less extreme. Keep head and torso facing upper-right, same 30-degree dimetric camera, same brown hair, sunglasses, full-length blue jacket, olive wide trousers, brown boots and body proportions. One figure, entire hair-to-boots visible centered with margins, transparent background with no glow, no text. Distinct intermediate pose, not another wide contact.",
+      "file": "frames/person.customer.01.walk.empty.01.back-right.png",
+      "size": [
+        1024,
+        1536
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "uniform_scale": 0.9881796690307328,
+      "translation": [
+        -22,
+        15
+      ],
+      "source_landmarks": {
+        "head_center_x": 540,
+        "collar_y": 341,
+        "waist_y": 764
+      },
+      "registered_landmarks": {
+        "head_center_x": 511.6170212765958,
+        "collar_y": 351.9692671394799,
+        "waist_y": 769.9692671394799
+      }
+    },
+    {
+      "index": 2,
+      "phase": "left-support-passing",
+      "source": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/rear-walk-single-frames/customer01-draft/person.customer.01.walk.empty.02.back-right.png",
+      "prompt": "Generate ONE walk sprite: PASSING pose of this same rear-view clay character. LEGS CLOSE TOGETHER underneath pelvis. LEFT leg supports body nearly straight vertically under the left hip, left boot flat on ground. RIGHT knee bends and moves forward alongside left knee; right boot lifted off ground next to supporting left calf, toes pointing down. Narrow compact silhouette, no wide stride and no crossed stretched legs. Both arms are near vertical mid-swing close to sides. Same head and torso orientation facing away upper-right, same dimetric camera, same brown curls, sunglasses, blue long-sleeved jacket, olive trousers and brown boots. Same body proportions and full height. Single complete centered sprite, transparent background, no text or glow.",
+      "file": "frames/person.customer.01.walk.empty.02.back-right.png",
+      "size": [
+        1024,
+        1536
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "uniform_scale": 1.0048076923076923,
+      "translation": [
+        -24,
+        12
+      ],
+      "source_landmarks": {
+        "head_center_x": 533,
+        "collar_y": 338,
+        "waist_y": 754
+      },
+      "registered_landmarks": {
+        "head_center_x": 511.5625,
+        "collar_y": 351.625,
+        "waist_y": 769.625
+      }
+    },
+    {
+      "index": 3,
+      "phase": "right-reach",
+      "source": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/rear-walk-single-frames/customer01-refined/sources/fix03Arms.png",
+      "prompt": "Edit this ONE passing-pose sprite to the NEXT frame: move the bent RIGHT knee FORWARD toward the upper-right, and swing its lifted boot out from behind the left calf so the right boot is now ahead on screen-right. Keep that right knee visibly bent, with shin sloping down-right and foot still hovering. Keep LEFT foot supporting under the pelvis, with heel slightly lifting. Moderate compact reach pose, feet only one boot-length apart horizontally. Do not straighten both legs into a wide split. Right arm swings backward close to right hip; far left arm swings forward mostly hidden. Same exact rear-facing upper-right head and torso orientation, blue long-sleeve jacket, olive trousers, brown boots, clay material, height and camera. One full-body centered character, transparent background, no text or glow.",
+      "file": "frames/person.customer.01.walk.empty.03.back-right.png",
+      "size": [
+        1024,
+        1536
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "uniform_scale": 1.0048076923076923,
+      "translation": [
+        -27,
+        11
+      ],
+      "source_landmarks": {
+        "head_center_x": 536,
+        "collar_y": 339,
+        "waist_y": 755
+      },
+      "registered_landmarks": {
+        "head_center_x": 511.5769230769231,
+        "collar_y": 351.6298076923077,
+        "waist_y": 769.6298076923077
+      }
+    },
+    {
+      "index": 4,
+      "phase": "right-contact",
+      "source": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/rear-walk-single-frames/customer01-draft/person.customer.01.walk.empty.04.back-right.png",
+      "prompt": "Edit ONLY the arms of this single clay character. Keep head, torso, camera, clothes, legs and feet unchanged. He is walking away toward upper-right, right leg forward. For correct opposite arm swing, the near RIGHT ARM (on screen-right) hangs BACK and down close beside his right hip; move that right hand from its current far-right position inward and downward to just alongside the right upper thigh. The far LEFT ARM swings forward, mostly hidden behind the left side of his torso; its hand must no longer hang out to screen-left. Full length jacket sleeves remain. Same single sprite, full body, transparent background, no added objects or jewelry.",
+      "file": "frames/person.customer.01.walk.empty.04.back-right.png",
+      "size": [
+        1024,
+        1536
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "uniform_scale": 1.0023980815347722,
+      "translation": [
+        -27,
+        13
+      ],
+      "source_landmarks": {
+        "head_center_x": 538,
+        "collar_y": 338,
+        "waist_y": 755
+      },
+      "registered_landmarks": {
+        "head_center_x": 512.2901678657074,
+        "collar_y": 351.810551558753,
+        "waist_y": 769.810551558753
+      }
+    },
+    {
+      "index": 5,
+      "phase": "right-down",
+      "source": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/rear-walk-single-frames/customer01-refined/sources/head05.png",
+      "prompt": "ONE single sprite, the next frame after this right-foot contact: RIGHT-foot DOWN / weight acceptance. Same exact rear upper-right-facing character and fixed camera. Bring the feet substantially closer together than reference: the near RIGHT knee bends gently over the forward planted right boot, boot flat on ground; far LEFT knee begins bending behind him, heel lifts. Narrow stride, approximately half of reference foot separation. Hips dip slightly, torso stays upright. Right arm down beside right thigh, left arm forward mostly hidden. Keep full-length blue jacket, olive trousers, brown boots, brown curls and sunglasses and proportions. Entire single figure visible, transparent background. No wide split stride, no crossing legs, no extra character.",
+      "file": "frames/person.customer.01.walk.empty.05.back-right.png",
+      "size": [
+        1024,
+        1536
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "uniform_scale": 0.9881796690307328,
+      "translation": [
+        -31,
+        12
+      ],
+      "source_landmarks": {
+        "head_center_x": 549,
+        "collar_y": 344,
+        "waist_y": 767
+      },
+      "registered_landmarks": {
+        "head_center_x": 511.51063829787233,
+        "collar_y": 351.9338061465721,
+        "waist_y": 769.9338061465721
+      }
+    },
+    {
+      "index": 6,
+      "phase": "right-support-passing",
+      "source": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/rear-walk-single-frames/customer01-refined/sources/head06.png",
+      "prompt": "Create ONE single sprite of the reference character in RIGHT-leg-support PASSING pose. The nearer RIGHT leg stands nearly straight beneath the right hip, brown right boot flat on the ground. The far LEFT knee bends and swings forward alongside the supporting right knee; the LEFT boot is lifted off ground tucked beside the calf, partly occluded by the right leg. The legs are CLOSE TOGETHER underneath the hips, not stretched apart. Both arms hang near vertically at mid-swing. Preserve exactly this rear upper-right orientation of head and torso, sunglasses, brown curls, full-sleeve blue jacket, olive wide trousers and brown boots. Same clay style and dimetric camera. One full-body sprite on transparent background, no text, no glow.",
+      "file": "frames/person.customer.01.walk.empty.06.back-right.png",
+      "size": [
+        1024,
+        1536
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "uniform_scale": 1.0023980815347722,
+      "translation": [
+        -25,
+        14
+      ],
+      "source_landmarks": {
+        "head_center_x": 536,
+        "collar_y": 337,
+        "waist_y": 754
+      },
+      "registered_landmarks": {
+        "head_center_x": 512.2853717026379,
+        "collar_y": 351.80815347721824,
+        "waist_y": 769.8081534772182
+      }
+    },
+    {
+      "index": 7,
+      "phase": "left-reach",
+      "source": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/rear-walk-single-frames/customer01-refined/sources/head07.png",
+      "prompt": "Generate ONE next walk frame from this passing-pose character. Preserve exact rear upper-right-facing view and all identity/clothing/style. LEFT leg now reaches FORWARD toward upper-right from the far left hip, knee leading and lower leg extending but foot not yet landed. RIGHT leg supports and pushes backward under body, heel lifting; the near right trouser leg crosses in front of the advancing far left leg. A modest half-stride reach, left boot visible beyond the supporting right leg to screen-right, not a wide split. Right arm starts swinging forward toward upper-right, left arm starts swinging back toward lower-left. Keep torso upright, head facing away, body same length and scale. Full body single sprite, full-length blue sleeves, olive trousers, brown boots. Transparent background, no glow, no text.",
+      "file": "frames/person.customer.01.walk.empty.07.back-right.png",
+      "size": [
+        1024,
+        1536
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "uniform_scale": 1.0145631067961165,
+      "translation": [
+        -40,
+        5
+      ],
+      "source_landmarks": {
+        "head_center_x": 544,
+        "collar_y": 342,
+        "waist_y": 754
+      },
+      "registered_landmarks": {
+        "head_center_x": 511.9223300970874,
+        "collar_y": 351.9805825242718,
+        "waist_y": 769.9805825242719
+      }
+    }
+  ],
+  "qa": [
+    "Identical head size, position and pixels in all eight frames verified by SHA-256.",
+    "Collar joins visually inspected at full resolution.",
+    "Body pixels below row 392 are unchanged from the refined set.",
+    "Existing corrected leg poses and full PNG transparency retained.",
+    "Not integrated; body/clothing variation from source generation remains."
+  ],
+  "registration": {
+    "canvas": [
+      1024,
+      1536
+    ],
+    "collar_y": 352,
+    "waist_y": 770,
+    "head_center_x": 512,
+    "method": "Uniform scaling by collar-to-waist length, followed by translation; no per-axis stretch, pose warping or bottom-of-bounds alignment."
+  },
+  "head_correction": {
+    "master": "customer01-refined/frames/person.customer.01.walk.empty.00.back-right.png",
+    "identical_head_rows": [
+      0,
+      359
+    ],
+    "collar_transition_rows": [
+      360,
+      391
+    ],
+    "body_unchanged_from_row": 392,
+    "method": "Same frame 00 head pixels at fixed size and position; no image regeneration.",
+    "checks": [
+      {
+        "index": 0,
+        "file": "frames/person.customer.01.walk.empty.00.back-right.png",
+        "head_sha256": "d93d43fe46d6b3c570089ad46040f5c371301f8475ed2f789163d1b677b8336f",
+        "body_below_row_392_unchanged": true,
+        "canvas": [
+          1024,
+          1536
+        ]
+      },
+      {
+        "index": 1,
+        "file": "frames/person.customer.01.walk.empty.01.back-right.png",
+        "head_sha256": "d93d43fe46d6b3c570089ad46040f5c371301f8475ed2f789163d1b677b8336f",
+        "body_below_row_392_unchanged": true,
+        "canvas": [
+          1024,
+          1536
+        ]
+      },
+      {
+        "index": 2,
+        "file": "frames/person.customer.01.walk.empty.02.back-right.png",
+        "head_sha256": "d93d43fe46d6b3c570089ad46040f5c371301f8475ed2f789163d1b677b8336f",
+        "body_below_row_392_unchanged": true,
+        "canvas": [
+          1024,
+          1536
+        ]
+      },
+      {
+        "index": 3,
+        "file": "frames/person.customer.01.walk.empty.03.back-right.png",
+        "head_sha256": "d93d43fe46d6b3c570089ad46040f5c371301f8475ed2f789163d1b677b8336f",
+        "body_below_row_392_unchanged": true,
+        "canvas": [
+          1024,
+          1536
+        ]
+      },
+      {
+        "index": 4,
+        "file": "frames/person.customer.01.walk.empty.04.back-right.png",
+        "head_sha256": "d93d43fe46d6b3c570089ad46040f5c371301f8475ed2f789163d1b677b8336f",
+        "body_below_row_392_unchanged": true,
+        "canvas": [
+          1024,
+          1536
+        ]
+      },
+      {
+        "index": 5,
+        "file": "frames/person.customer.01.walk.empty.05.back-right.png",
+        "head_sha256": "d93d43fe46d6b3c570089ad46040f5c371301f8475ed2f789163d1b677b8336f",
+        "body_below_row_392_unchanged": true,
+        "canvas": [
+          1024,
+          1536
+        ]
+      },
+      {
+        "index": 6,
+        "file": "frames/person.customer.01.walk.empty.06.back-right.png",
+        "head_sha256": "d93d43fe46d6b3c570089ad46040f5c371301f8475ed2f789163d1b677b8336f",
+        "body_below_row_392_unchanged": true,
+        "canvas": [
+          1024,
+          1536
+        ]
+      },
+      {
+        "index": 7,
+        "file": "frames/person.customer.01.walk.empty.07.back-right.png",
+        "head_sha256": "d93d43fe46d6b3c570089ad46040f5c371301f8475ed2f789163d1b677b8336f",
+        "body_below_row_392_unchanged": true,
+        "canvas": [
+          1024,
+          1536
+        ]
+      }
+    ]
+  }
+}
