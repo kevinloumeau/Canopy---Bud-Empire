@@ -1,6 +1,8 @@
 /* Big spender tag and rush pill: gold accents on the game's dark glass, matching the station plaques. */
-.marker.spender-tag{left:0;top:0;display:block;min-height:32px;padding:6px 11px;border-radius:999px;background:#2a2410e6;border:1px solid #f0cf7f;color:#f6dc95;font-weight:700;font-size:.78rem;white-space:nowrap;box-shadow:0 4px 14px #0006,0 0 14px #f0cf7f33;cursor:pointer;z-index:4}
-.marker.spender-tag[hidden]{display:none}
+.world .marker.spender-tag,.world .marker.spender-tag:not(.selected){left:0;top:0;display:block;min-height:34px;padding:7px 12px;line-height:1.2;opacity:1;border-radius:999px;background:#2a2410e6;border:1px solid #f0cf7f;color:#f6dc95;font-weight:700;font-size:.8rem;white-space:nowrap;box-shadow:0 4px 14px #0006,0 0 14px #f0cf7f33;cursor:pointer;z-index:4}
+/* The plaque styles above it are smaller than a fingertip; an invisible margin brings the tap area to 44px. */
+.world .marker.spender-tag::before{content:'';position:absolute;inset:-5px -4px}
+.world .marker.spender-tag[hidden]{display:none!important}
 .marker.spender-tag span{color:#f0cf7f}
 @media (prefers-reduced-motion:no-preference){.marker.spender-tag{animation:spender-bob 1.6s ease-in-out infinite}}
 @keyframes spender-bob{50%{margin-top:-4px}}
