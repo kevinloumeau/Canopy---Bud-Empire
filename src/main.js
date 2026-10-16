@@ -117,7 +117,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // VIPs: served their reserve they pay the Orchid premium, boost reputation and start a buzz; offered only everyday flower they snub the shop.
     if(c.kind==='vip'){if(c.strain>0){bonus*=strains.vipBonus(state.strains);state.empire.reputation=Math.min(1000,state.empire.reputation+strains.VIP_REPUTATION);state.vipBuzz=strains.VIP_BUZZ_SECONDS;burst({x:4,z:4.9,y:1.6},'#f0cf7f')}else{bonus=1;state.empire.reputation=Math.max(0,state.empire.reputation-strains.VIP_SNUB_REPUTATION)}}
     if(bonus>1&&c.strain>0)state.empire.reputation=Math.min(1000,state.empire.reputation+strains.reputationBonus(state.strains));
-    return bonus*(c.eventGuest&&c.strain>0?1.25:1)}
+    return bonus*(c.eventGuest&&c.strain>0?1.25:1)*(state.rushTime>0?2:1)}
   // Flower menu: one jar illustration per strain, a row of cards to pick from, and a hero for the chosen strain.
   var STRAIN_LOOKS=[
     {kind:'Everyday',buyers:'Regulars always order this one.',pistil:'#d9c46a',frost:false,shape:'round'},
@@ -419,7 +419,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     customers=customers.filter(function(c){return c.phase!=='leaving'||c.t<1});
     if(state.lines[5]){
       var pickups=customers.filter(function(c){return c.ordered&&!c.bag}).sort(function(a,b){return pickupOrder(a)-pickupOrder(b)}).slice(0,1).filter(function(c){return c.phase==='pickup'&&!c.walking&&Math.hypot(c.x-4,c.z-4.9)<.01});
-      if(pickups.length&&state.stock[4]>0){var served=advanceCounterService(pickups[0],5,dt)?1:0;if(served>0){work[5]=0;var bags=Math.max(1,Math.min(pickups[0].bags||1,state.stock[4]));pickups[0].bags=bags;state.stock[4]-=bags;state.sold+=bags;playSound('sale',state.sound);recordEvent(state.empire,'pickup',served);add(pickups.slice(0,served).reduce(function(total,c){return total+(c.salePrice||flowerValue())*(c.bags||1)*customerSaleBonus(c)},0)*(state.rushTime>0?2:1));pickups.slice(0,served).forEach(function(c){c.phase='leaving';c.t=0;c.bag=true;c.effectAge=0;recentPickupRatings.push(customerRatings(c).highness);if(recentPickupRatings.length>20)recentPickupRatings.shift()});burst(machinePos[5],colors.acid)}}else work[5]=0;
+      if(pickups.length&&state.stock[4]>0){var served=advanceCounterService(pickups[0],5,dt)?1:0;if(served>0){work[5]=0;var bags=Math.max(1,Math.min(pickups[0].bags||1,state.stock[4]));pickups[0].bags=bags;state.stock[4]-=bags;state.sold+=bags;playSound('sale',state.sound);recordEvent(state.empire,'pickup',served);add(pickups.slice(0,served).reduce(function(total,c){return total+(c.salePrice||flowerValue())*(c.bags||1)*customerSaleBonus(c)},0));pickups.slice(0,served).forEach(function(c){c.phase='leaving';c.t=0;c.bag=true;c.effectAge=0;recentPickupRatings.push(customerRatings(c).highness);if(recentPickupRatings.length>20)recentPickupRatings.shift()});burst(machinePos[5],colors.acid)}}else work[5]=0;
     }
     // Prepare pickup bags independently of the number of customers collecting, but never from jars a waiting web order needs.
     var spareJars=state.stock[3]-reservedJars();
