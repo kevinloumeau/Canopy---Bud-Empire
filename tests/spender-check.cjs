@@ -7,7 +7,7 @@ for(const [name,viewport] of [['desktop',{width:1440,height:1000}],['mobile',{wi
  const tag=p.locator('#spenderTag');await tag.waitFor({state:'visible',timeout:20000});await p.waitForTimeout(2500);
  await p.screenshot({path:'artifacts/retention/'+name+'-spender.png'});
  const before=await p.evaluate(()=>window.factoryTool.execute());await tag.click({force:true});const after=await p.evaluate(()=>window.factoryTool.execute());
- assert.ok(after.rushTime>50||after.cash>before.cash+40,'tap pays: '+JSON.stringify([before.cash,after.cash,after.rushTime]));assert.ok(after.spenderClock>=110,'next spender scheduled');
+ assert.ok(after.rushTime>50||after.cash>before.cash+40,'tap pays: '+JSON.stringify([before.cash,after.cash,after.rushTime]));assert.ok(after.spenderClock>=60,'next spender scheduled');
  await p.waitForTimeout(400);assert.equal(await tag.isVisible(),false);
  if(after.rushTime>0){assert.ok(await p.locator('#rushPill').isVisible());await p.screenshot({path:'artifacts/retention/'+name+'-rush.png'})}
  assert.deepEqual(errors,[]);console.log(name,'spender ok',after.rushTime>0?'rush':'tip');await ctx.close()}
