@@ -1,0 +1,35 @@
+/* The iOS build's simpler menu: four tabs, staff on the station, Deliveries under Shop › Online. */
+.sheet .tray-tabs{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.sheet .panel-header #panelExpand,.sheet:not(.collapsed) .panel-header #panelExpand{display:none}
+.sheet .panel-header #panelBack{display:inline-flex;align-items:center;justify-content:center;gap:2px;flex:0 0 auto;width:auto;height:36px;min-width:0;margin-right:8px;padding:0 12px 0 6px;border:0;border-radius:12px;background:#d7edcb14;box-shadow:inset 0 0 0 1px #d7edcb30;color:#e8f4da;font-family:inherit;font-size:14px;font-weight:600;line-height:1}
+.sheet .panel-header #panelBack[hidden]{display:none}
+.sheet .panel-header #panelBack svg{display:block;width:18px;height:18px;flex:0 0 18px}
+.sheet .panel-header #panelBack span{display:block}
+.sheet .panel-header #panelToggle{margin-left:auto}
+
+.shop-browser .shop-desk{grid-column:1/-1;display:flex;align-items:center;gap:12px;width:100%;min-height:56px;margin:0 0 8px;padding:8px 12px;border:1px solid #8fb27a55;border-radius:14px;background:linear-gradient(160deg,#dce9be1a,#dce9be08);color:#eef4e2;font-family:inherit;text-align:left}
+.shop-browser .shop-desk[hidden]{display:none}
+.shop-browser .shop-desk>svg:first-child{flex:0 0 26px;width:26px;height:26px;color:#b7cf98}
+.shop-browser .shop-desk-copy{display:grid;gap:1px;min-width:0;flex:1}
+.shop-browser .shop-desk-copy b{font-size:14px;font-weight:700}
+.shop-browser .shop-desk-copy small{font-size:12px;color:#aebfa8}
+.shop-browser .shop-desk-count{flex:0 0 auto;min-width:24px;padding:2px 8px;border-radius:999px;background:#e9c96a;color:#2b2416;font:600 12px DM Mono,monospace;font-style:normal;text-align:center}
+.shop-browser .shop-desk-chevron{flex:0 0 16px;width:16px;height:16px;opacity:.7}
+
+.station-team{display:grid;grid-template-columns:24px minmax(0,1fr) 96px 96px;align-items:center;gap:8px;margin:6px 0 0;padding:6px 8px;border:1px solid #d6efd21c;border-radius:14px;background:linear-gradient(150deg,#dce9be0c,#dce9be04)}
+.station-team[hidden]{display:none}
+.station-team .team-icon svg{display:block;width:22px;height:22px;color:#b7cf98}
+.station-team .team-copy{display:grid;gap:1px;min-width:0}
+.station-team .team-copy b{font-size:12.5px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.station-team .team-copy small{font-size:11px;color:#b9c8b0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.station-team button{display:grid;place-items:center;gap:0;min-height:44px;padding:3px 4px;border-radius:11px;font-size:11px;line-height:1.1}
+.station-team button span,.station-team button b{font-size:11.5px;white-space:nowrap}
+.station-team #teamTrain:not(:disabled){background:#55733e;border:1px solid #91ab73;color:#fff7e7}
+.station-team #teamMax{background:#1c2f26;border:1px solid #4a6a58;color:#e2ead8}
+.station-team button:disabled{opacity:.5}
+
+@media(max-width:779px){
+  .station-team{grid-template-columns:24px minmax(0,1fr) 84px 84px}
+  .sheet #stockStatus{display:none!important}
+  .sheet [data-pane=factory] #stationStatus,.sheet [data-pane=factory] .station-upgrade{display:none!important}
+}

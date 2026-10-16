@@ -1,5 +1,6 @@
 import {migrateOrderCounters,orderCounterPositions,COUNTER_SHIFT,PICKUP_X,orderCounterCost,buyOrderCounter,ORDER_QUEUE_GATE,assignOrderCounter,atOrderCounter,orderAvailability} from './order-counters.js';
-import {LOUNGE_TIERS,LOUNGE_MAX,migrateLounge,loungeTier,loungeUpgradeCost,loungeSeats,loungeSessionSeconds,buyLoungeTier,wantsLounge,loungeAdmission,loungeTake,loungeRate,loungeCurrentRate} from './lounge.js';
+import {LOUNGE_TIERS,LOUNGE_MAX,migrateLounge,loungeTier,loungeUpgradeCost,loungeSeats,loungeSessionSeconds,buyLoungeTier,wantsLounge,loungeAdmission,loungeTake,loungeRate,loungeCurrentRate,migrateLoungeHost,loungeHostSpeed,loungeHostCost} from './lounge.js';
+import {migrateShopPlay,picks as momentPicks,createMoment,judgeChoice,tipFor,recordServed,tickShift,operationsAlerts,mountShopPlay} from './shop-play.js';
 import {migrateJourney,advanceJourney,CHAPTERS} from './journey.js';
 import {mountJourney} from './journey-ui.js';
 import {manageDialog} from './dialog-focus.js';
@@ -34,7 +35,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // Contract progression is defined in depth.js, including post-city milestones.
   var $=function(id){return document.getElementById(id)};
   // A new shop starts as seven construction sites: the door and six stations are raised for free during the intro, then the sign flips.
-  function fresh(){return{money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),productMenu:migrateMenu(),sound:true,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
+  function fresh(){return{shopPlay:migrateShopPlay(),money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),productMenu:migrateMenu(),sound:true,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeStaff:0,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
   function readSave(){
     for(var key of ['shift-save','shift-save-backup']){
       try{var raw=localStorage.getItem(key);if(!raw)continue;var value=JSON.parse(raw);if(value&&typeof value==='object'&&!Array.isArray(value))return value}catch(e){}
@@ -58,7 +59,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     next.contract=Math.floor(finite(old.contract,0,0,21));next.productMenu=migrateMenu(old.productMenu);next.sound=old.sound!==false;next.lightMode=['day','night'].includes(old.lightMode)?old.lightMode:null;next.autoDrone=migrateAutoDrone(old.autoDrone);
     next.globalLevel=Math.floor(finite(old.globalLevel,0,0,500));
     next.multiplier=Math.pow(1.25,next.globalLevel);
-    next.lastSeen=finite(old.lastSeen,Date.now(),0,Date.now());next.lines=LINES.map(function(_,i){return Math.floor(finite(old.lines&&old.lines[i],1,next.shopOpen?1:0,10000))});next.storageLevel=Math.min(20,Math.max(0,Math.floor(Number(old.storageLevel)||0)));next.stock=Array.from({length:5},function(_,i){return Math.floor(finite(old.stock&&old.stock[i],0,0,i===4?100+next.readyLevel*50:100+next.storageLevel*100))});next.staff=LINES.map(function(_,i){return Math.floor(finite(old.staff&&old.staff[i],0,0,10000))});next.kiosk=old.kiosk===true;next.lounge=migrateLounge(old.lounge);next.loungeSessions=Math.floor(finite(old.loungeSessions,0,0,1e9));next.loungeEarned=finite(old.loungeEarned,0,0,1e15);next.secondKiosk=next.kiosk&&old.secondKiosk===true;next.thirdKiosk=next.secondKiosk&&old.thirdKiosk===true;next.queueLevel=Math.min(7,Math.max(0,Math.floor(Number(old.queueLevel)||0)));next.theme='dispensary';next.gameSpeed=[0,1,2,4].indexOf(old.gameSpeed)>=0?old.gameSpeed:1;return next}catch(e){return fresh()}}
+    next.lastSeen=finite(old.lastSeen,Date.now(),0,Date.now());next.lines=LINES.map(function(_,i){return Math.floor(finite(old.lines&&old.lines[i],1,next.shopOpen?1:0,10000))});next.storageLevel=Math.min(20,Math.max(0,Math.floor(Number(old.storageLevel)||0)));next.stock=Array.from({length:5},function(_,i){return Math.floor(finite(old.stock&&old.stock[i],0,0,i===4?100+next.readyLevel*50:100+next.storageLevel*100))});next.staff=LINES.map(function(_,i){return Math.floor(finite(old.staff&&old.staff[i],0,0,10000))});next.kiosk=old.kiosk===true;next.lounge=migrateLounge(old.lounge);next.shopPlay=migrateShopPlay(old.shopPlay);next.loungeStaff=migrateLoungeHost(old.loungeStaff);next.loungeSessions=Math.floor(finite(old.loungeSessions,0,0,1e9));next.loungeEarned=finite(old.loungeEarned,0,0,1e15);next.secondKiosk=next.kiosk&&old.secondKiosk===true;next.thirdKiosk=next.secondKiosk&&old.thirdKiosk===true;next.queueLevel=Math.min(7,Math.max(0,Math.floor(Number(old.queueLevel)||0)));next.theme='dispensary';next.gameSpeed=[0,1,2,4].indexOf(old.gameSpeed)>=0?old.gameSpeed:1;return next}catch(e){return fresh()}}
   var firstRun=false;try{firstRun=!localStorage.getItem('shift-save')}catch(e){}
   var securitySelected=false,loungeSelected=false;
   var state=load(),selected=0,toastTimer,dispatchSummary=null;
@@ -107,7 +108,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function strainFor(c){if(c.kind==='vip'){var reserve=strains.reserveStrain(menuStrains(),state.strains);if(reserve!==null)return reserve}var preferred=economy.preferredStrain(c.kind,menuStrains(),state.strains);return strainForFormat(state.productMenu,menuStrains(),preferred===null?menuChoice(c.id):preferred,wantedFormat(state.productMenu,c.id),c.id)}
   function salePriceFor(c,strain){var f=formatOf(strain);if(c.kind==='vip')return flowerValue(strain);return Math.round(flowerValue(strain)/f.value*formatPremium(state.productMenu,strain,wantedFormat(state.productMenu,c.id)))}
   // Satisfaction tips: patience stretches with Queue comfort, and Lasting effects sweeten every happy sale.
-  function customerSaleBonus(c){var bonus=satisfyCustomer(state.empire,-1,c.kind,c.strain===0?'everyday':'boutique',c.waitSeconds||0,1+state.comfortLevel*.15);if(bonus>1)bonus+=state.durationLevel*.03;
+  function customerSaleBonus(c){var bonus=satisfyCustomer(state.empire,-1,c.kind,(c.normalStrain===undefined?c.strain:c.normalStrain)===0?'everyday':'boutique',Math.max(0,(c.waitSeconds||0)-(c.adviceWait||0)),1+state.comfortLevel*.15);if(bonus>1)bonus+=state.durationLevel*.03;
     // Strain identity: potency tips, the everyday and VIP perks, and Violet Haze's word of mouth on happy boutique sales.
     bonus*=strains.tipFactor(c.kind,strainPotency(c.strain||0));if(bonus>1)bonus*=1+state.loyaltyLevel*.03;
     if(c.strain===0)bonus*=strains.everydayBonus(state.strains);
@@ -328,7 +329,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // and fades back in at the back door on the way out.
   function enterLounge(c){
     var take=loungeTake(state.lounge,flowerValue(strainFor(c)));
-    state.stock[3]-=1;add(take.total);state.loungeSessions++;state.loungeEarned+=take.total;c.loungeLeft=loungeSessionSeconds(state.lounge);c.phase='lounge';c.walking=false;c.loungeTake=take.total;
+    state.stock[3]-=1;add(take.total);state.loungeSessions++;state.loungeEarned+=take.total;state.shopPlay.shift.earned+=take.total;c.loungeLeft=loungeSessionSeconds(state.lounge,state.loungeStaff);c.phase='lounge';c.walking=false;c.loungeTake=take.total;
     c.loungeFade=1;c.fadeFromZ=c.z;c.facing=-.3;
     recordEvent(state.empire,'pickup',1);playSound('coin',state.sound);
     if(!motionPreference.matches)tickets.push({x:LOUNGE_DOOR.x,y:2.1,z:LOUNGE_DOOR.z,life:1,text:fmt(take.cover)});
@@ -379,9 +380,23 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     work[i]=Math.min(1,c.serviceElapsed/economy.customerHandoff(i,state.lines[i],counterServiceDuration(i)));
     return work[i]>=1;
   }
+  var moment=null,shopPlayUI=null;
+  function transfersSent(){return state.empire.network.stores.reduce(function(sum,b){return sum+b.sent},0)}
+  // Every so often a walk-in who has cleared security asks the budtender for a pick.
+  function tickMoment(dt){
+    var play=state.shopPlay;play.cooldown=Math.max(0,play.cooldown-dt);
+    if(moment){moment.remaining-=dt;var asking=customers.find(function(c){return c.id===moment.customerId});if(!asking||asking.ordered||moment.remaining<=0)moment=null}
+    if(moment||!state.shopOpen||state.empire.activeStore||play.cooldown>0)return;
+    var guest=customers.find(function(c){return !c.ordered&&!c.kiosk&&!c.lounge&&!c.momentOffered&&c.idChecked===true&&c.phase==='entering'});
+    if(!guest)return;
+    var options=momentPicks(state,menuStrains());if(!options.length)return;
+    guest.momentOffered=true;moment=createMoment(play,guest,options);play.cooldown=60+(play.sequence%3)*15;
+  }
   function simulate(dt){
     state.empire.retailBoost=retailBoost();accrueOnlineRequests(dt);
-    add(branchRate(state.empire)*dt);tickBranches(state.empire,dt);var operationResult=tickOperations(state,dt);if(operationResult.revenue)add(operationResult.revenue);if(operationResult.deliveries){state.onlineCompleted+=operationResult.deliveries;recordEvent(state.empire,'online',operationResult.deliveries)}
+    tickMoment(dt);var shift=state.shopPlay.shift,sentBefore=transfersSent();
+    add(branchRate(state.empire)*dt);tickBranches(state.empire,dt);var operationResult=tickOperations(state,dt);if(operationResult.revenue){add(operationResult.revenue);shift.earned+=operationResult.revenue}if(operationResult.deliveries){state.onlineCompleted+=operationResult.deliveries;shift.deliveries+=operationResult.deliveries;recordEvent(state.empire,'online',operationResult.deliveries)}
+    shift.transfers+=transfersSent()-sentBefore;
     arrival+=dt;state.vipBuzz=Math.max(0,(state.vipBuzz||0)-dt);
     if(strains.tickTrend(state.strainTrend,dt,STRAINS.length,state.sold+customerId)){var trending=STRAINS[state.strainTrend.index];notify(trending.name.toUpperCase()+' IS TRENDING · +35% for 8 min'+(state.strains[state.strainTrend.index]?'':' · unlock it to cash in'),'upgrade');renderUI()}
     // Nobody walks in until the sign flips; stations that are already standing still stock the shelves.
@@ -396,7 +411,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     customers=customers.filter(function(c){return c.phase!=='leaving'||c.t<1});
     if(state.lines[5]){
       var pickups=customers.filter(function(c){return c.ordered&&!c.bag}).sort(function(a,b){return pickupOrder(a)-pickupOrder(b)}).slice(0,1).filter(function(c){return c.phase==='pickup'&&!c.walking&&Math.hypot(c.x-PICKUP_X,c.z-4.9)<.01});
-      if(pickups.length&&state.stock[4]>0){var served=advanceCounterService(pickups[0],5,dt)?1:0;if(served>0){work[5]=0;var bags=Math.max(1,Math.min(pickups[0].bags||1,state.stock[4]));pickups[0].bags=bags;state.stock[4]-=bags;state.sold+=bags;playSound('sale',state.sound);recordEvent(state.empire,'pickup',served);add(pickups.slice(0,served).reduce(function(total,c){return total+(c.salePrice||flowerValue())*(c.bags||1)*customerSaleBonus(c)},0));pickups.slice(0,served).forEach(function(c){c.phase='leaving';c.t=0;c.bag=true;c.effectAge=0;recentPickupRatings.push(customerRatings(c).highness);if(recentPickupRatings.length>20)recentPickupRatings.shift()});burst(machinePos[5],colors.acid)}}else work[5]=0;
+      if(pickups.length&&state.stock[4]>0){var served=advanceCounterService(pickups[0],5,dt)?1:0;if(served>0){work[5]=0;var bags=Math.max(1,Math.min(pickups[0].bags||1,state.stock[4]));pickups[0].bags=bags;state.stock[4]-=bags;state.sold+=bags;playSound('sale',state.sound);recordEvent(state.empire,'pickup',served);add(pickups.slice(0,served).reduce(function(total,c){var sale=(c.salePrice||flowerValue())*(c.bags||1)*customerSaleBonus(c);if(c.momentMatched){var tip=tipFor((c.salePrice||flowerValue())*(c.bags||1));sale+=tip;state.shopPlay.tips+=tip;state.empire.reputation=Math.min(1000,state.empire.reputation+2);if(shopPlayUI)shopPlayUI.feedback(c.momentName+' loved your pick · +'+fmt(tip)+' tip · +2 reputation')}recordServed(state.shopPlay,c,sale);return total+sale},0));pickups.slice(0,served).forEach(function(c){c.phase='leaving';c.t=0;c.bag=true;c.effectAge=0;recentPickupRatings.push(customerRatings(c).highness);if(recentPickupRatings.length>20)recentPickupRatings.shift()});burst(machinePos[5],colors.acid)}}else work[5]=0;
     }
     // Prepare pickup bags independently of the number of customers collecting, but never from jars a waiting web order needs.
     var spareJars=state.stock[3]-reservedJars();
@@ -411,9 +426,12 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       customers.filter(function(c){return atOrderCounter(c,state.orderCounters)}).forEach(function(c){
         var available=orderAvailability(customers,state.stock[4],pickupLimit());
         if(available.places<1||available.bags<1)return;
+        // A customer the player is advising waits at the desk; after a pick the team takes a moment to talk it through.
+        if(moment&&moment.customerId===c.id&&moment.opened){c.adviceWait=(c.adviceWait||0)+dt;return}
+        if(c.consultRemaining>0){c.adviceWait=(c.adviceWait||0)+dt;c.consultRemaining=Math.max(0,c.consultRemaining-dt);return}
         if(advanceCounterService(c,4,dt)){
           c.bags=Math.min(basketSize()*(c.kind==='vip'?strains.VIP_BASKET:1),available.bags);
-          c.strain=strainFor(c);c.salePrice=salePriceFor(c,c.strain);c.ordered=true;
+          c.normalStrain=strainFor(c);c.strain=c.momentMatched?c.momentChoice.strain:c.normalStrain;c.salePrice=salePriceFor(c,c.normalStrain);c.ordered=true;
           c.phase='toPickup';c.t=0;
         }
       });
@@ -443,6 +461,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       }
     }
     if(autoDroneReady(state.autoDrone,dt,state.lines[4]>0&&state.stock[3]>=onlineSize()&&onlineRequestsReady()>0)){state.autoDrone.remaining*=1-state.fleetLevel*.03;sendOnlineOrders(autoDroneLimit(state.autoDrone)+(state.autoDrone.bulk&&state.autoDrone.mode==='bulk'?state.cargoLevel:0),true)}
+    // Shifts run on wall time, so a recap always covers five minutes of play whatever the game speed.
+    if(state.shopOpen&&tickShift(state.shopPlay,dt/(state.gameSpeed||1),{queue:customers.filter(inOrderFlow).length,stockout:customers.some(function(c){return c.ordered&&!c.bag})&&state.stock[4]<1})&&shopPlayUI)shopPlayUI.render();
   }
   function staffCost(i){return economy.staffCost(state.staff[i])}
   function idTrainingQuote(limit){
@@ -454,6 +474,20 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       total+=price;levels++;
     }
     return {levels:levels,cost:total};
+  }
+  function loungeHostQuote(limit){
+    var levels=0,total=0;if(!state.lounge)return {levels:0,cost:0};
+    while(levels<limit&&state.loungeStaff+levels<10000){
+      var price=loungeHostCost(state.loungeStaff+levels);
+      if(!Number.isFinite(price)||total+price>state.money)break;
+      total+=price;levels++;
+    }
+    return {levels:levels,cost:total};
+  }
+  function trainLoungeHost(limit){
+    var quote=loungeHostQuote(limit);if(!quote.levels)return;
+    state.money-=quote.cost;state.loungeStaff+=quote.levels;
+    notify('LOUNGE HOST · +'+quote.levels+' LEVEL'+(quote.levels===1?'':'S'),'upgrade');renderUI();save();
   }
   function trainIdChecker(limit){
     var quote=idTrainingQuote(limit);if(!quote.levels)return;
@@ -554,7 +588,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   function sendOnlineOrders(limit,automatic){
     var batch=onlineBatch(limit);if(!batch.count)return;
-    state.stock[3]-=batch.jars;state.onlineCompleted+=batch.count;consumeRequests(state,batch.count);
+    state.stock[3]-=batch.jars;state.onlineCompleted+=batch.count;state.shopPlay.shift.deliveries+=batch.count;consumeRequests(state,batch.count);
     // Repeat buyers: a share of fulfilled orders come straight back as new requests.
     if(state.repeatLevel)state.onlineRequests=Math.min(onlineRequestCap(),state.onlineRequests+batch.count*state.repeatLevel*.04);
     queueDeliveryWave(batch.count);
@@ -3803,6 +3837,7 @@ if(!SHOP_SPRITES){
       // Main-store effects expire while visiting a branch rather than replaying on return.
       particles.forEach(function(p){p.life-=frameDelta*1.5});particles=particles.filter(function(p){return p.life>0});deliveryDrones.forEach(function(d){d.age+=frameDelta});deliveryDrones=deliveryDrones.filter(function(d){return d.age<d.delay+7.5});
       atmosphereFinish(nightAmount());
+      if(shopPlayUI)shopPlayUI.position(null,false);
       glCompose(now);updateBranchMarker();requestAnimationFrame(render);return;
     }
     drawTower(now);
@@ -3952,6 +3987,7 @@ if(!SHOP_SPRITES){
     for(var i=particles.length-1;i>=0;i--){var p=particles[i];p.life-=frameDelta*1.5;if(!motionPreference.matches){p.x+=p.vx*frameDelta;p.z+=p.vz*frameDelta;p.y+=p.vy*frameDelta;}p.vy-=frameDelta*5;var screen=project(p.x,p.y,p.z),size=Math.max(2,unit*.1);ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.fillRect(screen.x-size/2,screen.y-size/2,size,size);ctx.globalAlpha=1;if(p.life<=0)particles.splice(i,1)}
     drawTickets(frameDelta);drawConfetti(wallDelta);
     atmosphereFinish(nightT);
+    if(shopPlayUI){var asking=moment&&customers.find(function(c){return c.id===moment.customerId&&!c.ordered}),point=asking?project(asking.renderX===undefined?asking.x:asking.renderX,2.8,asking.renderZ===undefined?asking.z:asking.renderZ):null;shopPlayUI.position(point,!!point&&point.x>24&&point.x<width-24&&point.y>90&&point.y<visibleHeight())}
     glCompose(now);updateMarkers();requestAnimationFrame(render);
   }
   // A final pass over the composed frame: at day a faint warm wash from the key light's corner ties the palette
@@ -4161,8 +4197,13 @@ if(!SHOP_SPRITES){
     $('trainIdChecker').disabled=state.money<idPrice||state.idStaff>=10000;
     $('trainIdChecker').querySelector('span').textContent='+'+Math.round(.3/(1+state.idStaff*.3)*100)+'%';$('trainIdChecker').querySelector('b').textContent=fmt(idPrice);
     $('trainIdCheckerMax').disabled=!idMax.levels;$('trainIdCheckerMax').querySelector('span').textContent=idMax.levels?'+'+idMax.levels+' lv':'Maxed';$('trainIdCheckerMax').querySelector('b').textContent=idMax.levels?fmt(idMax.cost):'—';
+    var hostPrice=loungeHostCost(state.loungeStaff),hostMax=loungeHostQuote(10000),hostOpen=state.lounge>0;
+    $('loungeEmployeeInfo').innerHTML='<span>Lv '+state.loungeStaff+'</span><span>'+loungeHostSpeed(state.loungeStaff).toFixed(1)+'× turns</span>';
+    $('trainLoungeStaff').disabled=!hostOpen||state.money<hostPrice;$('trainLoungeStaff').querySelector('span').textContent='+'+Math.round(.3/loungeHostSpeed(state.loungeStaff)*100)+'%';$('trainLoungeStaff').querySelector('b').textContent=fmt(hostPrice);
+    $('trainLoungeStaff').title=!hostOpen?'Open the lounge first':state.money<hostPrice?fmt(hostPrice-state.money)+' more needed':'Train lounge host';
+    $('trainLoungeStaffMax').disabled=!hostMax.levels;$('trainLoungeStaffMax').querySelector('span').textContent=hostMax.levels?'+'+hostMax.levels+' lv':'Max';$('trainLoungeStaffMax').querySelector('b').textContent=hostMax.levels?fmt(hostMax.cost):'—';
     LINES.forEach(function(line,i){var quote=maxStaffTraining(i),button=$('staffMax'+i);button.disabled=!quote.levels;button.querySelector('span').textContent=quote.levels?'+'+quote.levels+' lv':'Maxed';button.querySelector('b').textContent=quote.levels?fmt(quote.cost):'—';button.setAttribute('aria-label','Train '+line.name+' employee by '+quote.levels+' levels for '+fmt(quote.cost))});
-    staffButtons.forEach(function(button,i){button.disabled=!state.lines[i]||state.money<staffCost(i);button.querySelector('b').textContent=fmt(staffCost(i));button.querySelector('span').textContent='+'+Math.round(.3/(1+state.staff[i]*.3)*100)+'%';$('employeeInfo'+i).innerHTML='<span>Lv '+state.staff[i]+'</span><span>'+(1+state.staff[i]*.3).toFixed(1)+'× speed'+'</span>';button.title=state.money<staffCost(i)?fmt(staffCost(i)-state.money)+' more needed':'Train '+shortNames[i]+' employee';button.setAttribute('aria-label','Train '+shortNames[i]+' employee, '+button.querySelector('span').textContent+', '+fmt(staffCost(i)));});
+    staffButtons.forEach(function(button,i){button.disabled=!state.lines[i]||state.money<staffCost(i);button.querySelector('b').textContent=fmt(staffCost(i));button.querySelector('span').textContent='+'+Math.round(.3/(1+state.staff[i]*.3)*100)+'%';$('employeeInfo'+i).innerHTML='<span>Lv '+state.staff[i]+'</span><span>'+(1+state.staff[i]*.3).toFixed(1)+'× speed'+'</span>';button.title=state.money<staffCost(i)?fmt(staffCost(i)-state.money)+' more needed':'Train '+shortNames[i]+' employee';button.setAttribute('aria-label','Train '+shortNames[i]+' employee, '+button.querySelector('span').textContent+', '+fmt(staffCost(i)));});renderStationTeam();
     var installedKiosks=kioskCount(),nextKioskPrice=[25000,50000,100000][installedKiosks];
     $('kioskCountLabel').textContent=installedKiosks+' / 3 installed';
     $('buyKiosk').disabled=installedKiosks===3||state.money<nextKioskPrice;
@@ -4227,6 +4268,15 @@ if(!SHOP_SPRITES){
   machineTabs.forEach(function(tab,i){var progress=document.createElement('progress');progress.max=100;progress.value=0;progress.setAttribute('aria-label',LINES[i].name+' equipment progress');tab.appendChild(progress);var label=document.createElement('span');label.className='level-funding';tab.appendChild(label);tab.onclick=function(){selectMachine(Number(tab.getAttribute('data-machine')))}});
   var trayTabs=Array.prototype.slice.call(document.querySelectorAll('[data-tray]'));
   var activeTray='factory',panelOpen=true;
+  // Staff training sits on the selected station, as on iOS. The row mirrors that station's buttons in the hidden
+  // Staff pane, so prices, limits and handlers stay in one place.
+  function stationStaff(){return securitySelected?{name:'Security',train:$('trainIdChecker'),max:$('trainIdCheckerMax'),info:$('idEmployeeInfo')}:loungeSelected?{name:'Lounge host',train:$('trainLoungeStaff'),max:$('trainLoungeStaffMax'),info:$('loungeEmployeeInfo')}:{name:'Team',train:document.querySelector('[data-staff="'+selected+'"]'),max:$('staffMax'+selected),info:$('employeeInfo'+selected)}}
+  function renderStationTeam(){var row=$('stationTeam'),staff=stationStaff();if(!staff.train||!staff.max){row.hidden=true;return}row.hidden=false;
+    [[$('teamTrain'),staff.train],[$('teamMax'),staff.max]].forEach(function(pair){var mine=pair[0],source=pair[1];mine.disabled=source.disabled;['span','b'].forEach(function(tag){var text=source.querySelector(tag).textContent;if(mine.querySelector(tag).textContent!==text)mine.querySelector(tag).textContent=text});mine.setAttribute('aria-label',source.getAttribute('aria-label')||'');mine.title=source.title||''});
+    if($('teamName').textContent!==staff.name)$('teamName').textContent=staff.name;
+    var info=staff.info?Array.prototype.map.call(staff.info.querySelectorAll('span'),function(span){return span.textContent.trim()}).filter(Boolean).join(' · ')||staff.info.textContent:'';if($('teamInfo').textContent!==info)$('teamInfo').textContent=info}
+  $('teamTrain').onclick=function(){var staff=stationStaff();if(staff.train&&!staff.train.disabled)staff.train.click()};
+  $('teamMax').onclick=function(){var staff=stationStaff();if(staff.max&&!staff.max.disabled)staff.max.click()};
   // The tray glides: a pane opens from nothing to its natural height and closes the same way, measured live so every
   // breakpoint keeps its own pane height. The sheet's ResizeObserver reframes the map on each step, so the scene eases too.
   var paneGlide=null;
@@ -4240,10 +4290,12 @@ if(!SHOP_SPRITES){
     run.onfinish=function(){pane.style.overflow='';if(paneGlide===run)paneGlide=null;if(done)done();fitControls()};
     run.oncancel=function(){pane.style.overflow='';if(paneGlide===run)paneGlide=null};
   }
-  function showTray(name){if(document.body.dataset.activeTray!==name)playSound('tap',state.sound);document.body.dataset.activeTray=name;if(state.empire.activeStore&&name!=='empire')visitStore(0,false);activeTray=name;var wasCollapsed=$('sheet').classList.contains('collapsed');panelOpen=true;$('sheet').classList.remove('collapsed');$('panelToggle').setAttribute('aria-expanded','true');$('panelToggle').textContent='⌄';var titles={factory:'Stations',employees:'Staff',orders:'Deliveries',boosts:'Shop',flowers:'Menu',empire:'Empire'};$('panelTitle').textContent=titles[name];trayTabs.forEach(function(t){t.setAttribute('aria-pressed',String(t.getAttribute('data-tray')===name))});Array.prototype.forEach.call(document.querySelectorAll('[data-pane]'),function(p){p.hidden=p.getAttribute('data-pane')!==name});if(wasCollapsed)glidePane(document.querySelector('[data-pane="'+name+'"]'),true);else if(paneGlide){paneGlide.cancel();paneGlide=null}fitControls()}
+  function showTray(name){if(name==='employees')name='factory';if(document.body.dataset.activeTray!==name)playSound('tap',state.sound);document.body.dataset.activeTray=name;if(state.empire.activeStore&&name!=='empire')visitStore(0,false);activeTray=name;var wasCollapsed=$('sheet').classList.contains('collapsed');panelOpen=true;$('sheet').classList.remove('collapsed');$('panelToggle').setAttribute('aria-expanded','true');$('panelToggle').textContent='⌄';var titles={factory:'Stations',employees:'Staff',orders:'Deliveries',boosts:'Shop',flowers:'Menu',empire:'Empire'};$('panelTitle').textContent=titles[name];var tabName=name==='orders'?'boosts':name;trayTabs.forEach(function(t){t.setAttribute('aria-pressed',String(t.getAttribute('data-tray')===tabName))});$('panelBack').hidden=name!=='orders';Array.prototype.forEach.call(document.querySelectorAll('[data-pane]'),function(p){p.hidden=p.getAttribute('data-pane')!==name});if(wasCollapsed)glidePane(document.querySelector('[data-pane="'+name+'"]'),true);else if(paneGlide){paneGlide.cancel();paneGlide=null}fitControls()}
   function collapsePanel(){var sheet=$('sheet'),wasOpen=!sheet.classList.contains('collapsed');if(wasOpen&&sheet.classList.contains('tall')){settleSheet('collapsed');return}panelOpen=false;$('panelToggle').setAttribute('aria-expanded','false');$('panelToggle').textContent='⌃';if(!wasOpen){fitControls();return}
     // The pane folds away first; the sheet only takes its collapsed shape once nothing is left to hide.
     glidePane(document.querySelector('[data-pane]:not([hidden])'),false,function(){if(!panelOpen){sheet.classList.add('collapsed');fitControls()}});fitControls()}
+  // Deliveries lives under Shop › Online, as on iOS; its header carries a way back.
+  $('panelBack').onclick=function(){showTray('boosts');if(shopBrowser)shopBrowser.show(4)};
   trayTabs.forEach(function(tab){tab.onclick=function(){var name=tab.getAttribute('data-tray');if(name===activeTray&&panelOpen)collapsePanel();else showTray(name)}});
   $('panelToggle').onclick=function(){if(panelOpen)collapsePanel();else showTray(activeTray)};
   // Phones: the sheet has three heights. Its header is a grabber: pulled up past the half-open height the sheet fills
@@ -4324,13 +4376,13 @@ if(!SHOP_SPRITES){
   }
   function renderLoungeSelection(){
     var level=state.lounge,tier=loungeTier(level),next=LOUNGE_TIERS[level]||null,price=loungeUpgradeCost(level),maxed=!next,affordable=!maxed&&state.money>=price;
-    var seated=loungeSeated(),seats=loungeSeats(level),jar=flowerValue(),take=loungeTake(level,jar),waiting=loungeWaiting().length,nowRate=loungeCurrentRate(level,seated,jar)*state.gameSpeed;
+    var seated=loungeSeated(),seats=loungeSeats(level),jar=flowerValue(),take=loungeTake(level,jar),waiting=loungeWaiting().length,nowRate=loungeCurrentRate(level,seated,jar,state.loungeStaff)*state.gameSpeed;
     $('machineNumber').textContent='BACK ROOM · '+(!tier?'UNDER CONSTRUCTION':seated>=seats?'FULL'+(waiting?' · '+waiting+' ON THE ROPE':''):seated?seated+' OF '+seats+' SEATED':'SEATS FREE');
     $('machineName').textContent='SMOKING LOUNGE';$('machineLevel').textContent=level;$('machineRate').textContent=tier?fmt(nowRate)+'/s · '+fmt(take.total)+' / session':'Under construction';
     var ICON_SEAT='<svg viewBox="0 0 24 24"><path d="M6 11V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v5M4 11h16v4H4zM6 15v5M18 15v5"/></svg>',ICON_GUESTS='<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M15 20c0-2.6 1.5-4.4 3.7-4.9 1.4.3 2.3 1.6 2.3 3.4"/></svg>',ICON_TICKET='<svg viewBox="0 0 24 24"><path d="M4 8a2 2 0 0 0 2-2h12a2 2 0 0 0 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 0-2 2H6a2 2 0 0 0-2-2v-3a2 2 0 0 0 0-4zM9 6v12"/></svg>',ICON_JAR='<svg viewBox="0 0 24 24"><path d="M8 4h8v3H8zM7 7h10v11a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2zM7 11h10"/></svg>',ICON_SESSIONS='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg>',ICON_RATE='<svg viewBox="0 0 24 24"><path d="M4 17l5-6 4 3 7-8M15 6h5v5"/></svg>',ICON_BANKED='<svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v4c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 10v4c0 1.7 3.1 3 7 3s7-1.3 7-3v-4M5 14v4c0 1.7 3.1 3 7 3s7-1.3 7-3v-4"/></svg>';
     var chipTone=!tier?'wait':seated>=seats?'stop':seated?'go':'wait',chipWord=!tier?'Site':seated>=seats?'Full':seated?seated+' of '+seats+' seated':'Seats free';
     var loungeHtml='<span class="status-chip" data-tone="'+chipTone+'"><i></i>'+chipWord+'</span>'+
-      (tier?'<span class="stat" title="What the lounge is making right now: '+seated+' of '+seats+' seats taken, each worth the '+fmt(take.total)+' take once per '+tier.session+'-second session">'+ICON_RATE+'<b>'+fmt(nowRate)+'/s</b><small>now</small></span>'+
+      (tier?'<span class="stat" title="What the lounge is making right now: '+seated+' of '+seats+' seats taken, each worth the '+fmt(take.total)+' take once per '+loungeSessionSeconds(level,state.loungeStaff).toFixed(1)+'-second session">'+ICON_RATE+'<b>'+fmt(nowRate)+'/s</b><small>now</small></span>'+
       '<span class="stat" title="Banked by the lounge since it opened: every cover and every jar sold at the lounge premium">'+ICON_BANKED+'<b>'+fmt(state.loungeEarned)+'</b><small>total</small></span>'+
       '<span class="stat tier" title="One guest in '+tier.share+' through the door heads for the curtain; VIPs twice as often">'+ICON_GUESTS+'<b>1 in '+tier.share+'</b><small>guests</small></span>'+
       '<span class="stat" title="Seats in the back room">'+ICON_SEAT+'<b>'+seats+'</b><small>seats</small></span>'+
@@ -4676,7 +4728,7 @@ if(!SHOP_SPRITES){
     COMPONENTS.forEach(function(c,i){if(document.getElementById('componentBuy'+i))return;var card=document.createElement('div');card.className='shop-upgrade shop-feature';card.innerHTML='<div class="shop-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+icons[c.key]+'</svg></div><div class="shop-copy"><h2>'+c.name+'</h2><strong id="componentBenefit'+i+'"></strong><small>'+blurbs[c.key]+'</small><small id="componentLevel'+i+'"></small></div><button id="componentBuy'+i+'"><span>Upgrade</span><b id="componentPrice'+i+'"></b></button>';pane.insertBefore(card,anchor)});
   })();
   $('expandOrderCounter').onclick=expandOrderCounters;$('buyOrderCounter').onclick=expandOrderCounters;
-  var shopBrowser=mountShopBrowser({getState:function(){return state},components:COMPONENTS,kiosks:kioskCount,queueLimit:queueLimit,recommend:function(open){var r=recommendation();if(open){actOnRecommendation();return ''}return r.name+' · '+(r.kind==='component'?'in Customers · ':'upgrade ')+fmt(r.price)}});
+  var shopBrowser=mountShopBrowser({getState:function(){return state},components:COMPONENTS,kiosks:kioskCount,queueLimit:queueLimit,openDeliveries:function(){showTray('orders')},deliveryDesk:function(){return{built:deliveryBuilt(),waiting:onlineRequestsReady()}},recommend:function(open){var r=recommendation();if(open){actOnRecommendation();return ''}return r.name+' · '+(r.kind==='component'?'in Customers · ':'upgrade ')+fmt(r.price)}});
   var operationsUI=mountOperations({getState:function(){return state},format:fmt,changed:function(message){save();renderUI();if(message)notify(message,'upgrade')},visit:function(i,manage){visitStore(i+1,!manage);if(manage)manageViewedStore()}});
   function renderManagement(){
     var p=state.empire,report=p.returnReport,investment=recommendation();
@@ -4705,7 +4757,7 @@ if(!SHOP_SPRITES){
     $('bulkDetail').textContent=(p.stores[2].level<2?'Unlocks at level 2 · ':'')+fmt(bulkReward(p))+' reward · '+qtyLabel(state.stock[3])+' of '+qtyLabel(30)+' shared';
   }
   function renderEmpire(){
-    renderStoreView();renderManagement();operationsUI.render();
+    renderStoreView();renderManagement();operationsUI.render();if(shopPlayUI)shopPlayUI.render();
     var p=state.empire,d=dailyStatus(p,Date.now(),rewardScale()),e=eventStatus(p,Date.now(),rewardScale()),m=CAREER[p.career];
     $('empireBadge').hidden=!(d.available||(m&&state.lifetime>=m.goal)||(e.joined&&!e.claimed&&e.progress>=e.goal));
     $('careerName').textContent=m?m.name:'Bud empire complete';
@@ -4772,6 +4824,28 @@ if(!SHOP_SPRITES){
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!goalsWrap.hidden){e.stopPropagation();closeGoals();goalsButton.focus()}},true);
   window.addEventListener('resize',function(){if(!goalsWrap.hidden)placeGoals()});
   var empireShell=mountEmpireShell({fit:fitControls,getState:function(){return state},format:fmt});
+  var shopPlayCollapsed=false;
+  shopPlayUI=mountShopPlay({getState:function(){return state},getMoment:function(){return moment},getAlerts:function(){return operationsAlerts(state.empire)},names:STRAINS.map(function(s){return s.name}),format:fmt,changed:save,
+    // On a phone, or where the side panel would sit under the list, the sheet steps aside while shop activity is open.
+    opening:function(){var sheet=$('sheet').getBoundingClientRect(),reach=(width<780?12:76)+Math.min(360,width-24);shopPlayCollapsed=panelOpen&&(width<780||sheet.left<reach+12);if(shopPlayCollapsed)collapsePanel()},
+    closing:function(){if(shopPlayCollapsed){shopPlayCollapsed=false;showTray(activeTray)}},
+    choose:function(index){
+      if(!moment)return;var result=judgeChoice(moment,index),guest=customers.find(function(c){return c.id===moment.customerId&&!c.ordered});
+      if(!result||!guest)return;
+      guest.momentMatched=result.matched;guest.momentChoice=result.option;guest.momentName=moment.name;guest.consultRemaining=2/(1+state.staff[4]*.15+state.serviceLevel*.12);
+      shopPlayUI.feedback(result.matched?'Good match · '+guest.momentName+' will tip at pickup':'Thanks for the suggestion · the team will finish the usual order');
+      moment=null;if(navigator.vibrate)navigator.vibrate(10);save();renderUI();
+    },
+    skip:function(){moment=null;save();renderUI()},
+    navigate:function(target){
+      if(target.station!==undefined)return selectMachine(target.station);
+      if(target.moment)return shopPlayUI.open();
+      visitStore(target.store+1,false);showTray('empire');empireShell.openStore(target.store);operationsUI.showTab(target.store,target.tab);
+      if(target.transferTo!==undefined){var to=document.querySelector('#transferTo'+target.store+' [data-value="'+target.transferTo+'"]');if(to)to.click()}
+      if(target.line!==undefined){var line=document.querySelector('#deliveryLine'+target.store+' [data-value="'+target.line+'"]');if(line)line.click()}
+      var control=$(target.control);if(control){if(target.details&&control.closest('details'))control.closest('details').open=true;control.scrollIntoView({block:'center'});control.focus({preventScroll:true})}
+      fitControls();
+    }});
   var journeyUI=mountJourney({getState:function(){return state},openGoals:openGoals,navigate:function(destination){
     closeGoals();if(destination==='pickup')return selectMachine(5);if(destination==='stations'){var r=recommendation();if(state.lines[r.index]<3)return selectMachine(r.index);return selectMachine(state.lines.findIndex(function(n){return n<3}));}
     if(destination==='flowers')return showTray('flowers');showTray('empire');if(destination==='empire'){empireShell.show('home');return;}
@@ -4895,9 +4969,11 @@ if(!SHOP_SPRITES){
   LINES.forEach(function(_,i){$('staffMax'+i).onclick=function(){trainStaffMax(i)}});
   $('trainIdChecker').onclick=function(){if(!state.doorBuilt)return buildStation('door');trainIdChecker(1)};
   $('trainIdCheckerMax').onclick=function(){trainIdChecker(10000)};
+  $('trainLoungeStaff').onclick=function(){trainLoungeHost(1)};
+  $('trainLoungeStaffMax').onclick=function(){trainLoungeHost(10000)};
   $('fulfillOnlineMax').onclick=function(){sendOnlineOrders(state.lines[3]>=10?Infinity:10)};
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){updateMarkers.key=null;render.invalidated=true});
-  window.addEventListener('resize',resize);$('buyMachine').onclick=buySelected;$('buyMachineMax').onclick=buySelectedMax;$('upgradeStorage').onclick=upgradeStorage;$('boost').onclick=boostAll;$('claim').onclick=claimOrder;$('resetOpen').onclick=function(){$('resetModal').hidden=false};$('resetCancel').onclick=function(){$('resetModal').hidden=true};$('resetConfirm').onclick=function(){resetRun(0,state.sound)};function resetRun(rank,sound){if(rank>0)telemetry.send('prestige',{rank:rank});state=fresh();state.empire.prestige=rank;state.sound=sound;
+  window.addEventListener('resize',resize);$('buyMachine').onclick=buySelected;$('buyMachineMax').onclick=buySelectedMax;$('upgradeStorage').onclick=upgradeStorage;$('boost').onclick=boostAll;$('claim').onclick=claimOrder;$('resetOpen').onclick=function(){$('resetModal').hidden=false};$('resetCancel').onclick=function(){$('resetModal').hidden=true};$('resetConfirm').onclick=function(){resetRun(0,state.sound)};function resetRun(rank,sound){if(rank>0)telemetry.send('prestige',{rank:rank});state=fresh();moment=null;if(shopPlayUI)shopPlayUI.reset();state.empire.prestige=rank;state.sound=sound;
     // A prestige reopens a standing shop; Start over goes back to the building site and replays the intro.
     if(rank>0){state.lines=LINES.map(function(){return 1});state.doorBuilt=true;state.shopOpen=true}
     syncDominantFormat();readyWork=0;work=[0,0,0,0,0,0];batchRemainder=[0,0,0,0];customers=[];arrival=0;customerId=0;deliveryDrones=[];particles=[];tickets=[];taskClocks.fill(0);taskActivity.fill(0);cropGrowth=[.15,.4,.7,.95];tierFlashes.fill(0);buildRise.fill(0);confetti=[];recentPickupRatings=[];animationTime=0;sceneTime=0;crateTime=0;cargoOdo=0;render.last=undefined;securitySelected=false;loungeSelected=false;selected=0;updateMarkers.key=null;save();$('resetModal').hidden=true;notify(rank>0?'FACTORY RESET':'STARTING OVER');syncMapView();paintThumbnails();renderUI();if(!state.shopOpen)setTimeout(function(){startGuide.open()},400)};
