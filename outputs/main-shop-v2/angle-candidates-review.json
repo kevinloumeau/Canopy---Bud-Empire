@@ -1,0 +1,834 @@
+[
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.blue.bl.png",
+    "dominant_slopes": [
+      -0.56,
+      0.5
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.blue.br.png",
+    "dominant_slopes": [
+      -0.586,
+      0.548
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.blue.fl.png",
+    "dominant_slopes": [
+      -0.63,
+      0.602
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.blue.fr.png",
+    "dominant_slopes": [
+      -0.564,
+      0.602
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.green.bl.png",
+    "dominant_slopes": [
+      -0.554,
+      0.546
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.green.br.png",
+    "dominant_slopes": [
+      -0.584,
+      0.54
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.green.fl.png",
+    "dominant_slopes": [
+      -0.632,
+      0.622
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.green.fr.png",
+    "dominant_slopes": [
+      -0.564,
+      0.602
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.orange.bl.png",
+    "dominant_slopes": [
+      -0.558,
+      0.53
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.orange.br.png",
+    "dominant_slopes": [
+      -0.604,
+      0.546
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.orange.fl.png",
+    "dominant_slopes": [
+      -0.634,
+      0.612
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.orange.fr.png",
+    "dominant_slopes": [
+      -0.602,
+      0.602
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.purple.bl.png",
+    "dominant_slopes": [
+      -0.554,
+      0.5
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.purple.br.png",
+    "dominant_slopes": [
+      -0.586,
+      0.546
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.purple.fl.png",
+    "dominant_slopes": [
+      -0.664,
+      0.606
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.purple.fr.png",
+    "dominant_slopes": [
+      -0.564,
+      0.6
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.red.bl.png",
+    "dominant_slopes": [
+      -0.67,
+      0.528
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.red.br.png",
+    "dominant_slopes": [
+      -0.644,
+      0.658
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.red.fl.png",
+    "dominant_slopes": [
+      -0.632,
+      0.616
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.red.fr.png",
+    "dominant_slopes": [
+      -0.608,
+      0.602
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.white.bl.png",
+    "dominant_slopes": [
+      -0.56,
+      0.5
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.white.br.png",
+    "dominant_slopes": [
+      -0.598,
+      0.546
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.white.fl.png",
+    "dominant_slopes": [
+      -0.66,
+      0.606
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.white.fr.png",
+    "dominant_slopes": [
+      -0.568,
+      0.598
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.yellow.bl.png",
+    "dominant_slopes": [
+      -0.562,
+      0.5
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.yellow.br.png",
+    "dominant_slopes": [
+      -0.588,
+      0.54
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.yellow.fl.png",
+    "dominant_slopes": [
+      -0.63,
+      0.612
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.car.yellow.fr.png",
+    "dominant_slopes": [
+      -0.56,
+      0.602
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.van.bl.png",
+    "dominant_slopes": [
+      -0.54,
+      0.558
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.van.br.png",
+    "dominant_slopes": [
+      -0.55,
+      0.634
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.van.fl.png",
+    "dominant_slopes": [
+      -0.598,
+      0.624
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/cars/street.van.fr.png",
+    "dominant_slopes": [
+      -0.522,
+      0.68
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/shell/flat.wall.glazing.left.png",
+    "dominant_slopes": [
+      -0.402,
+      0.414
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/shell/flat.wall.glazing.right.png",
+    "dominant_slopes": [
+      -0.5,
+      0.418
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/shell/shell.stairs.landing.png",
+    "dominant_slopes": [
+      -0.61,
+      0.588
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/street/street.awning.cafe.png",
+    "dominant_slopes": [
+      -0.426,
+      0.442
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/street/street.deliveryboxes.png",
+    "dominant_slopes": [
+      -0.5,
+      0.53
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/street/street.foodtruck.png",
+    "dominant_slopes": [
+      -0.406,
+      0.404
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/street/street.meter.png",
+    "dominant_slopes": [
+      -0.538,
+      0.43
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/street/street.newsboxes.png",
+    "dominant_slopes": [
+      -0.588,
+      0.4
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/street/street.planter.round.png",
+    "dominant_slopes": [
+      -0.458,
+      0.402
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/street/street.signpost.png",
+    "dominant_slopes": [
+      -0.438,
+      0.42
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/street/street.trafficlight.png",
+    "dominant_slopes": [
+      -0.43,
+      0.438
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/tubes/tube.elbow.png",
+    "dominant_slopes": [
+      -0.5,
+      0.724
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/tubes/tube.port.png",
+    "dominant_slopes": [
+      -0.5,
+      0.638
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/tubes/tube.run.grow.png",
+    "dominant_slopes": [
+      -0.5,
+      0.74
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/tubes/tube.run.pack.png",
+    "dominant_slopes": [
+      -0.452,
+      0.63
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/tubes/tube.straight.png",
+    "dominant_slopes": [
+      -0.5,
+      0.604
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/tubes/tube.stub.pickup.png",
+    "dominant_slopes": [
+      -0.6,
+      0.644
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/belts/belt.end.in.png",
+    "dominant_slopes": [
+      -0.56,
+      0.622
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/belts/belt.end.out.png",
+    "dominant_slopes": [
+      -0.566,
+      0.612
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  },
+  {
+    "file": "outputs/main-shop-v2/belts/belt.straight.png",
+    "dominant_slopes": [
+      -0.594,
+      0.602
+    ],
+    "target": [
+      -0.577,
+      0.577
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "note": "Edge candidates support visual review; curved objects and occlusion require manual judgement."
+  }
+]

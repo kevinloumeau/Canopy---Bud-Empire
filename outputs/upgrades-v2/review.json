@@ -1,0 +1,541 @@
+{
+  "folder": "upgrades-v2",
+  "expected": 41,
+  "saved": 41,
+  "missing": [],
+  "alpha": [
+    {
+      "file": "crop.stage1.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1045462,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "crop.stage2.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1030292,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "crop.stage3.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1016754,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "grow.light.bar.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1303880,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "lounge.level.booths.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 948913,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "lounge.level.chef.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1094620,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "lounge.level.dabbar.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 848797,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "lounge.level.members.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1117216,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "lounge.level.speakeasy.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1031090,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "lounge.level.tasting.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 965149,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "lounge.level.terrace.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1027459,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "lounge.level.vinyl.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 994199,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.grow.tier4.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 986239,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.grow.tier5.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 986105,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.grow.tier6.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 951362,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.grow.tier7.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 972945,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.harvest.tier4.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 943178,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.harvest.tier5.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 981601,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.harvest.tier6.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1038941,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.harvest.tier7.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1005551,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.orders.tier4.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1035901,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.orders.tier5.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1048896,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.orders.tier6.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1069310,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.orders.tier7.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1041097,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.pack.tier4.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1046778,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.pack.tier5.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 970948,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.pack.tier6.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1019048,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.pack.tier7.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 906519,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.pickup.tier4.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1002367,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.pickup.tier5.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1072548,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.pickup.tier6.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1051577,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.pickup.tier7.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 982541,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.security.tier4.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1115529,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.security.tier5.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1055367,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.security.tier6.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 988664,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.security.tier7.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1077474,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.seeds.tier4.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1013914,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.seeds.tier5.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 936596,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.seeds.tier6.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 977163,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.seeds.tier7.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 888006,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.site.shared.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 913182,
+      "alpha_range": [
+        0,
+        254
+      ]
+    }
+  ]
+}

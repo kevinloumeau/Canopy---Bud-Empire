@@ -1,0 +1,14 @@
+Nano Banana Pro still PNG customer01 test
+
+No accepted eight-frame rear walk sheet was produced.
+
+1. Rear walking reference: both figures repeated the same stride; checkerboard
+was baked into an RGB image rather than transparent alpha.
+2. Neutral standing reference (explicitly approved for upload): distinct leg
+poses were produced, but the second figure faced upper-left instead of upper-right.
+3. Targeted direction correction: second figure still faced upper-left, and an
+unrequested gold hoop earring was introduced.
+
+All PNGs here are failed test outputs. Do not integrate them as a walk loop.
+Prompts, source paths, task IDs and per-test findings are saved in the JSON files.
+Only still images were generated. No Ludo, video, game code or live sprite changes.

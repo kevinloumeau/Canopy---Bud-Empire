@@ -1,0 +1,2311 @@
+{
+  "unique_sprite_assets": 234,
+  "normalized_people_exports": 22,
+  "all_png_with_real_alpha": true,
+  "files": [
+    {
+      "file": "interior-v2/shop.displaycase.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 706757
+    },
+    {
+      "file": "interior-v2/shop.kiosk.png",
+      "size": [
+        1024,
+        1536
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1009187
+    },
+    {
+      "file": "interior-v2/shop.planter.small.png",
+      "size": [
+        1199,
+        1312
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1014346
+    },
+    {
+      "file": "interior-v2/station.grow.tier1.png",
+      "size": [
+        1374,
+        1145
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 837657
+    },
+    {
+      "file": "interior-v2/station.grow.tier2.png",
+      "size": [
+        1374,
+        1145
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 887956
+    },
+    {
+      "file": "interior-v2/station.grow.tier3.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 921391
+    },
+    {
+      "file": "interior-v2/station.harvest.tier1.png",
+      "size": [
+        1374,
+        1145
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 942690
+    },
+    {
+      "file": "interior-v2/station.harvest.tier2.png",
+      "size": [
+        1402,
+        1122
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 733342
+    },
+    {
+      "file": "interior-v2/station.harvest.tier3.png",
+      "size": [
+        1374,
+        1145
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 762075
+    },
+    {
+      "file": "interior-v2/station.orders.tier1.png",
+      "size": [
+        1214,
+        1295
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 961662
+    },
+    {
+      "file": "interior-v2/station.orders.tier2.png",
+      "size": [
+        1222,
+        1287
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 955244
+    },
+    {
+      "file": "interior-v2/station.orders.tier3.png",
+      "size": [
+        1245,
+        1263
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 879098
+    },
+    {
+      "file": "interior-v2/station.pack.tier1.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1011011
+    },
+    {
+      "file": "interior-v2/station.pack.tier2.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 902737
+    },
+    {
+      "file": "interior-v2/station.pack.tier3.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 978418
+    },
+    {
+      "file": "interior-v2/station.pickup.tier1.png",
+      "size": [
+        1312,
+        1199
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 958554
+    },
+    {
+      "file": "interior-v2/station.pickup.tier2.png",
+      "size": [
+        1145,
+        1374
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 867179
+    },
+    {
+      "file": "interior-v2/station.pickup.tier3.png",
+      "size": [
+        1374,
+        1145
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1029652
+    },
+    {
+      "file": "interior-v2/station.security.tier1.png",
+      "size": [
+        1374,
+        1145
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1039437
+    },
+    {
+      "file": "interior-v2/station.security.tier2.png",
+      "size": [
+        1374,
+        1145
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 996148
+    },
+    {
+      "file": "interior-v2/station.security.tier3.png",
+      "size": [
+        1374,
+        1145
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1050477
+    },
+    {
+      "file": "interior-v2/station.seeds.tier1.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 987809
+    },
+    {
+      "file": "interior-v2/station.seeds.tier2.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 977821
+    },
+    {
+      "file": "interior-v2/station.seeds.tier3.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1017916
+    },
+    {
+      "file": "main-shop-v2/shell.counter.divider.wide.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1019164
+    },
+    {
+      "file": "main-shop-v2/shell.counter.divider.short.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 995348
+    },
+    {
+      "file": "main-shop-v2/station.orders.compact.tier1.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1210648
+    },
+    {
+      "file": "main-shop-v2/station.orders.compact.tier2.png",
+      "size": [
+        1246,
+        1262
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1041570
+    },
+    {
+      "file": "main-shop-v2/station.orders.compact.tier3.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1240047
+    },
+    {
+      "file": "main-shop-v2/shell.column.png",
+      "size": [
+        1185,
+        1327
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1284186
+    },
+    {
+      "file": "main-shop-v2/shell.planter.hanging.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1273753
+    },
+    {
+      "file": "main-shop-v2/shop.planter.aisle.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1217723
+    },
+    {
+      "file": "main-shop-v2/shell.queue.rope.left.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1443607
+    },
+    {
+      "file": "main-shop-v2/shell.queue.rope.right.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1429159
+    },
+    {
+      "file": "main-shop-v2/station.security.site.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 998545
+    },
+    {
+      "file": "main-shop-v2/event.festival.stall.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1146901
+    },
+    {
+      "file": "main-shop-v2/lounge.sofa.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1063995
+    },
+    {
+      "file": "main-shop-v2/lounge.coffee.table.png",
+      "size": [
+        1560,
+        1008
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1023952
+    },
+    {
+      "file": "main-shop-v2/lounge.lamp.off.png",
+      "size": [
+        1312,
+        1199
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1094970
+    },
+    {
+      "file": "main-shop-v2/lounge.lamp.on.png",
+      "size": [
+        1312,
+        1199
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1090840
+    },
+    {
+      "file": "main-shop-v2/lounge.carpet.entry.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1210775
+    },
+    {
+      "file": "main-shop-v2/lounge.sign.lit.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1241342
+    },
+    {
+      "file": "main-shop-v2/lounge.sign.dark.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1242509
+    },
+    {
+      "file": "main-shop-v2/shell.arch.shelves.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1100477
+    },
+    {
+      "file": "main-shop-v2/shell.fan.housing.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1176814
+    },
+    {
+      "file": "main-shop-v2/shell.conveyor.lower.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1201119
+    },
+    {
+      "file": "main-shop-v2/shell.conveyor.upper.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1089158
+    },
+    {
+      "file": "main-shop-v2/tube.straight.png",
+      "size": [
+        1024,
+        1536
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1062578
+    },
+    {
+      "file": "main-shop-v2/tube.elbow.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1321796
+    },
+    {
+      "file": "main-shop-v2/tube.port.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1326607
+    },
+    {
+      "file": "main-shop-v2/street.sconce.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1266712
+    },
+    {
+      "file": "main-shop-v2/street.bollard.png",
+      "size": [
+        1024,
+        1536
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1278000
+    },
+    {
+      "file": "main-shop-v2/shell.exit.lamp.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1200767
+    },
+    {
+      "file": "main-shop-v2/drone.courier.empty.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1136729
+    },
+    {
+      "file": "main-shop-v2/drone.courier.loaded.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1130538
+    },
+    {
+      "file": "main-shop-v2/prop.carton.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1180640
+    },
+    {
+      "file": "main-shop-v2/prop.jar.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1210340
+    },
+    {
+      "file": "main-shop-v2/prop.pickup.bag.png",
+      "size": [
+        1278,
+        1230
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 908289
+    },
+    {
+      "file": "main-shop-v2/prop.tee.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1033778
+    },
+    {
+      "file": "main-shop-v2/prop.cap.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1095649
+    },
+    {
+      "file": "main-shop-v2/prop.tote.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1120694
+    },
+    {
+      "file": "main-shop-v2/shell.menu.frame.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1066113
+    },
+    {
+      "file": "main-shop-v2/lounge.rug.floor.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 477381
+    },
+    {
+      "file": "main-shop-v2/lounge.door.open.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1129928
+    },
+    {
+      "file": "main-shop-v2/lounge.door.closed.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 33760
+    },
+    {
+      "file": "main-shop-v2/shell.slab.edge.left.png",
+      "size": [
+        2159,
+        728
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1253426
+    },
+    {
+      "file": "main-shop-v2/shell.slab.edge.right.png",
+      "size": [
+        2172,
+        724
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1137070
+    },
+    {
+      "file": "main-shop-v2/shell.art.leaf.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 848312
+    },
+    {
+      "file": "main-shop-v2/shell.mat.exit.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 434656
+    },
+    {
+      "file": "main-shop-v2/shell.mat.entrance.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 854505
+    },
+    {
+      "file": "main-shop-v2/street.crossing.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 991013
+    },
+    {
+      "file": "main-shop-v2/street.manhole.png",
+      "size": [
+        1263,
+        1246
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 771067
+    },
+    {
+      "file": "main-shop-v2/street.kerb.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1222016
+    },
+    {
+      "file": "main-shop-v2/street.car.orange.fl.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 933424
+    },
+    {
+      "file": "main-shop-v2/street.car.orange.fr.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 859923
+    },
+    {
+      "file": "main-shop-v2/street.car.purple.fl.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1041865
+    },
+    {
+      "file": "main-shop-v2/street.car.purple.fr.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 891315
+    },
+    {
+      "file": "upgrades-v2/station.seeds.tier4.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1013914
+    },
+    {
+      "file": "upgrades-v2/station.seeds.tier5.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 936596
+    },
+    {
+      "file": "upgrades-v2/station.seeds.tier6.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 977163
+    },
+    {
+      "file": "upgrades-v2/station.seeds.tier7.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 888006
+    },
+    {
+      "file": "upgrades-v2/station.grow.tier4.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 986239
+    },
+    {
+      "file": "upgrades-v2/station.grow.tier5.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 986105
+    },
+    {
+      "file": "upgrades-v2/station.grow.tier6.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 951362
+    },
+    {
+      "file": "upgrades-v2/station.grow.tier7.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 972945
+    },
+    {
+      "file": "upgrades-v2/station.harvest.tier4.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 943178
+    },
+    {
+      "file": "upgrades-v2/station.harvest.tier5.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 981601
+    },
+    {
+      "file": "upgrades-v2/station.harvest.tier6.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1038941
+    },
+    {
+      "file": "upgrades-v2/station.harvest.tier7.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1005551
+    },
+    {
+      "file": "upgrades-v2/station.pack.tier4.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1046778
+    },
+    {
+      "file": "upgrades-v2/station.pack.tier5.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 970948
+    },
+    {
+      "file": "upgrades-v2/station.pack.tier6.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1019048
+    },
+    {
+      "file": "upgrades-v2/station.pack.tier7.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 906519
+    },
+    {
+      "file": "upgrades-v2/station.orders.tier4.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1035901
+    },
+    {
+      "file": "upgrades-v2/station.orders.tier5.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1048896
+    },
+    {
+      "file": "upgrades-v2/station.orders.tier6.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1069310
+    },
+    {
+      "file": "upgrades-v2/station.orders.tier7.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1041097
+    },
+    {
+      "file": "upgrades-v2/station.pickup.tier4.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1002367
+    },
+    {
+      "file": "upgrades-v2/station.pickup.tier5.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1072548
+    },
+    {
+      "file": "upgrades-v2/station.pickup.tier6.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1051577
+    },
+    {
+      "file": "upgrades-v2/station.pickup.tier7.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 982541
+    },
+    {
+      "file": "upgrades-v2/station.security.tier4.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1115529
+    },
+    {
+      "file": "upgrades-v2/station.security.tier5.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1055367
+    },
+    {
+      "file": "upgrades-v2/station.security.tier6.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 988664
+    },
+    {
+      "file": "upgrades-v2/station.security.tier7.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1077474
+    },
+    {
+      "file": "upgrades-v2/station.site.shared.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 913182
+    },
+    {
+      "file": "upgrades-v2/crop.stage1.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1045462
+    },
+    {
+      "file": "upgrades-v2/crop.stage2.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1030292
+    },
+    {
+      "file": "upgrades-v2/crop.stage3.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1016754
+    },
+    {
+      "file": "upgrades-v2/grow.light.bar.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1303880
+    },
+    {
+      "file": "upgrades-v2/lounge.level.speakeasy.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1031090
+    },
+    {
+      "file": "upgrades-v2/lounge.level.dabbar.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 848797
+    },
+    {
+      "file": "upgrades-v2/lounge.level.vinyl.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 994199
+    },
+    {
+      "file": "upgrades-v2/lounge.level.terrace.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1027459
+    },
+    {
+      "file": "upgrades-v2/lounge.level.booths.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 948913
+    },
+    {
+      "file": "upgrades-v2/lounge.level.tasting.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 965149
+    },
+    {
+      "file": "upgrades-v2/lounge.level.chef.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1094620
+    },
+    {
+      "file": "upgrades-v2/lounge.level.members.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1117216
+    },
+    {
+      "file": "optional-props-v2/upgrade.sign.tier1.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1182635
+    },
+    {
+      "file": "optional-props-v2/upgrade.sign.tier2.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 969478
+    },
+    {
+      "file": "optional-props-v2/upgrade.sign.tier3.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1176510
+    },
+    {
+      "file": "optional-props-v2/upgrade.queue.bench.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1300800
+    },
+    {
+      "file": "optional-props-v2/upgrade.curing.jars.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 937549
+    },
+    {
+      "file": "optional-props-v2/upgrade.curing.cabinet.png",
+      "size": [
+        1264,
+        1244
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 945128
+    },
+    {
+      "file": "optional-props-v2/upgrade.id.scanner.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1160392
+    },
+    {
+      "file": "optional-props-v2/upgrade.marketing.screen.png",
+      "size": [
+        1495,
+        1052
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1176120
+    },
+    {
+      "file": "optional-props-v2/upgrade.marketing.poster.png",
+      "size": [
+        1024,
+        1536
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 607412
+    },
+    {
+      "file": "optional-props-v2/upgrade.display.full.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 861560
+    },
+    {
+      "file": "optional-props-v2/upgrade.delivery.drone.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 904443
+    },
+    {
+      "file": "optional-props-v2/upgrade.delivery.cargo.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1199540
+    },
+    {
+      "file": "optional-props-v2/upgrade.delivery.fleet.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1131036
+    },
+    {
+      "file": "optional-props-v2/upgrade.loyalty.tier1.png",
+      "size": [
+        1491,
+        1055
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1105755
+    },
+    {
+      "file": "optional-props-v2/upgrade.loyalty.tier2.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1135304
+    },
+    {
+      "file": "branches-v2/branch.riverside.shopfront.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 999495
+    },
+    {
+      "file": "branches-v2/branch.riverside.counter.oak.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 951369
+    },
+    {
+      "file": "branches-v2/branch.riverside.counter.slate.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 997668
+    },
+    {
+      "file": "branches-v2/branch.riverside.counter.cream.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1004904
+    },
+    {
+      "file": "branches-v2/branch.riverside.shelf.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1108430
+    },
+    {
+      "file": "branches-v2/branch.riverside.showcase.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1009041
+    },
+    {
+      "file": "branches-v2/branch.riverside.checkout.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1075681
+    },
+    {
+      "file": "branches-v2/branch.riverside.planter.fern.png",
+      "size": [
+        1491,
+        1055
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1098011
+    },
+    {
+      "file": "branches-v2/branch.riverside.planter.flowers.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1017715
+    },
+    {
+      "file": "branches-v2/branch.riverside.planter.cactus.png",
+      "size": [
+        1312,
+        1199
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1103191
+    },
+    {
+      "file": "branches-v2/branch.riverside.awning.sage.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1009188
+    },
+    {
+      "file": "branches-v2/branch.riverside.awning.clay.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1002387
+    },
+    {
+      "file": "branches-v2/branch.riverside.awning.linen.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 999252
+    },
+    {
+      "file": "branches-v2/branch.oldtown.shopfront.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 876387
+    },
+    {
+      "file": "branches-v2/branch.oldtown.counter.oak.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 932078
+    },
+    {
+      "file": "branches-v2/branch.oldtown.counter.slate.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 952883
+    },
+    {
+      "file": "branches-v2/branch.oldtown.counter.cream.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 956687
+    },
+    {
+      "file": "branches-v2/branch.oldtown.shelf.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1063729
+    },
+    {
+      "file": "branches-v2/branch.oldtown.showcase.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1010525
+    },
+    {
+      "file": "branches-v2/branch.oldtown.checkout.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1089134
+    },
+    {
+      "file": "branches-v2/branch.oldtown.planter.fern.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1055702
+    },
+    {
+      "file": "branches-v2/branch.oldtown.planter.flowers.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1035593
+    },
+    {
+      "file": "branches-v2/branch.oldtown.planter.cactus.png",
+      "size": [
+        1395,
+        1127
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1177507
+    },
+    {
+      "file": "branches-v2/branch.oldtown.awning.sage.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 926337
+    },
+    {
+      "file": "branches-v2/branch.oldtown.awning.clay.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 924966
+    },
+    {
+      "file": "branches-v2/branch.oldtown.awning.linen.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 921061
+    },
+    {
+      "file": "branches-v2/branch.citycenter.shopfront.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1004058
+    },
+    {
+      "file": "branches-v2/branch.citycenter.counter.oak.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 979286
+    },
+    {
+      "file": "branches-v2/branch.citycenter.counter.slate.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 986623
+    },
+    {
+      "file": "branches-v2/branch.citycenter.counter.cream.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 989712
+    },
+    {
+      "file": "branches-v2/branch.citycenter.shelf.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1072889
+    },
+    {
+      "file": "branches-v2/branch.citycenter.showcase.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 971450
+    },
+    {
+      "file": "branches-v2/branch.citycenter.checkout.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1133618
+    },
+    {
+      "file": "branches-v2/branch.citycenter.planter.fern.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1255889
+    },
+    {
+      "file": "branches-v2/branch.citycenter.planter.flowers.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1088734
+    },
+    {
+      "file": "branches-v2/branch.citycenter.planter.cactus.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1257066
+    },
+    {
+      "file": "branches-v2/branch.citycenter.awning.sage.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1161729
+    },
+    {
+      "file": "branches-v2/branch.citycenter.awning.clay.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1163021
+    },
+    {
+      "file": "branches-v2/branch.citycenter.awning.linen.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1159368
+    },
+    {
+      "file": "branches-v2/branch.desert.shopfront.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 952636
+    },
+    {
+      "file": "branches-v2/branch.desert.counter.oak.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1055482
+    },
+    {
+      "file": "branches-v2/branch.desert.counter.slate.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1058344
+    },
+    {
+      "file": "branches-v2/branch.desert.counter.cream.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1057360
+    },
+    {
+      "file": "branches-v2/branch.desert.shelf.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1073023
+    },
+    {
+      "file": "branches-v2/branch.desert.showcase.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1041094
+    },
+    {
+      "file": "branches-v2/branch.desert.checkout.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1163421
+    },
+    {
+      "file": "branches-v2/branch.desert.planter.fern.png",
+      "size": [
+        1374,
+        1145
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1049761
+    },
+    {
+      "file": "branches-v2/branch.desert.planter.flowers.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 889091
+    },
+    {
+      "file": "branches-v2/branch.desert.planter.cactus.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1277511
+    },
+    {
+      "file": "branches-v2/branch.desert.awning.sage.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1063432
+    },
+    {
+      "file": "branches-v2/branch.desert.awning.clay.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1059741
+    },
+    {
+      "file": "branches-v2/branch.desert.awning.linen.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1053274
+    },
+    {
+      "file": "branches-v2/branch.alpine.shopfront.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1092077
+    },
+    {
+      "file": "branches-v2/branch.alpine.counter.oak.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1049353
+    },
+    {
+      "file": "branches-v2/branch.alpine.counter.slate.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1005541
+    },
+    {
+      "file": "branches-v2/branch.alpine.counter.cream.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1048131
+    },
+    {
+      "file": "branches-v2/branch.alpine.shelf.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1058141
+    },
+    {
+      "file": "branches-v2/branch.alpine.showcase.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1035324
+    },
+    {
+      "file": "branches-v2/branch.alpine.checkout.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1189262
+    },
+    {
+      "file": "branches-v2/branch.alpine.planter.fern.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1187822
+    },
+    {
+      "file": "branches-v2/branch.alpine.planter.flowers.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1093548
+    },
+    {
+      "file": "branches-v2/branch.alpine.planter.cactus.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1213183
+    },
+    {
+      "file": "branches-v2/branch.alpine.awning.sage.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1021178
+    },
+    {
+      "file": "branches-v2/branch.alpine.awning.clay.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1013519
+    },
+    {
+      "file": "branches-v2/branch.alpine.awning.linen.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1009650
+    },
+    {
+      "file": "branches-v2/branch.riverside.canoe.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1130272
+    },
+    {
+      "file": "branches-v2/branch.riverside.reeds.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1175567
+    },
+    {
+      "file": "branches-v2/branch.oldtown.flowercart.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 972787
+    },
+    {
+      "file": "branches-v2/branch.oldtown.clock.png",
+      "size": [
+        1315,
+        1196
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1366425
+    },
+    {
+      "file": "branches-v2/branch.citycenter.fountain.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1148600
+    },
+    {
+      "file": "branches-v2/branch.citycenter.bicycle.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1116009
+    },
+    {
+      "file": "branches-v2/branch.desert.saguaro.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1245883
+    },
+    {
+      "file": "branches-v2/branch.desert.agave.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1245744
+    },
+    {
+      "file": "branches-v2/branch.desert.barrelcactus.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1267345
+    },
+    {
+      "file": "branches-v2/branch.desert.palm.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1263842
+    },
+    {
+      "file": "branches-v2/branch.desert.rocks.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1160489
+    },
+    {
+      "file": "branches-v2/branch.alpine.pine.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1335309
+    },
+    {
+      "file": "branches-v2/branch.alpine.logbench.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1122261
+    },
+    {
+      "file": "branches-v2/branch.alpine.lantern.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1288270
+    },
+    {
+      "file": "people-bags-v2/person.customer.01.stand.bag.png",
+      "size": [
+        1049,
+        1499
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1097066
+    },
+    {
+      "file": "people-bags-v2/person.customer.01.walk.bag.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1100081
+    },
+    {
+      "file": "people-bags-v2/person.customer.02.stand.bag.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1095475
+    },
+    {
+      "file": "people-bags-v2/person.customer.02.walk.bag.png",
+      "size": [
+        1050,
+        1498
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1137791
+    },
+    {
+      "file": "people-bags-v2/person.customer.03.stand.bag.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1115127
+    },
+    {
+      "file": "people-bags-v2/person.customer.03.walk.bag.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1131898
+    },
+    {
+      "file": "people-bags-v2/person.customer.04.stand.bag.png",
+      "size": [
+        1049,
+        1499
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1103827
+    },
+    {
+      "file": "people-bags-v2/person.customer.04.walk.bag.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1104237
+    },
+    {
+      "file": "people-bags-v2/person.customer.05.stand.bag.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1102544
+    },
+    {
+      "file": "people-bags-v2/person.customer.05.walk.bag.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1123981
+    },
+    {
+      "file": "people-bags-v2/person.customer.06.stand.bag.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1102597
+    },
+    {
+      "file": "people-bags-v2/person.customer.06.walk.bag.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1078130
+    },
+    {
+      "file": "people-bags-v2/person.customer.07.stand.bag.png",
+      "size": [
+        1049,
+        1499
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1083462
+    },
+    {
+      "file": "people-bags-v2/person.customer.07.walk.bag.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1110606
+    },
+    {
+      "file": "people-bags-v2/person.walker.01.stand.bag.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1103608
+    },
+    {
+      "file": "people-bags-v2/person.walker.01.walk.bag.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1124409
+    },
+    {
+      "file": "people-bags-v2/person.walker.02.stand.bag.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1107625
+    },
+    {
+      "file": "people-bags-v2/person.walker.02.walk.bag.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1140267
+    },
+    {
+      "file": "people-bags-v2/person.walker.03.stand.bag.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1106323
+    },
+    {
+      "file": "people-bags-v2/person.walker.03.walk.bag.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1131142
+    },
+    {
+      "file": "people-bags-v2/person.walker.04.stand.bag.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1103218
+    },
+    {
+      "file": "people-bags-v2/person.walker.04.walk.bag.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1136259
+    },
+    {
+      "file": "people-bags-v2/game-scale/person.customer.01.stand.bag.png",
+      "size": [
+        224,
+        320
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 48853
+    },
+    {
+      "file": "people-bags-v2/game-scale/person.customer.01.walk.bag.png",
+      "size": [
+        224,
+        320
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 49190
+    },
+    {
+      "file": "people-bags-v2/game-scale/person.customer.02.stand.bag.png",
+      "size": [
+        224,
+        320
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 49226
+    },
+    {
+      "file": "people-bags-v2/game-scale/person.customer.02.walk.bag.png",
+      "size": [
+        224,
+        320
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 50661
+    },
+    {
+      "file": "people-bags-v2/game-scale/person.customer.03.stand.bag.png",
+      "size": [
+        224,
+        320
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 49540
+    },
+    {
+      "file": "people-bags-v2/game-scale/person.customer.03.walk.bag.png",
+      "size": [
+        224,
+        320
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 50056
+    },
+    {
+      "file": "people-bags-v2/game-scale/person.customer.04.stand.bag.png",
+      "size": [
+        224,
+        320
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 48705
+    },
+    {
+      "file": "people-bags-v2/game-scale/person.customer.04.walk.bag.png",
+      "size": [
+        224,
+        320
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 48662
+    },
+    {
+      "file": "people-bags-v2/game-scale/person.customer.05.stand.bag.png",
+      "size": [
+        224,
+        320
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 49012
+    },
+    {
+      "file": "people-bags-v2/game-scale/person.customer.05.walk.bag.png",
+      "size": [
+        224,
+        320
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 49782
+    },
+    {
+      "file": "people-bags-v2/game-scale/person.customer.06.stand.bag.png",
+      "size": [
+        224,
+        320
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 48144
+    },
+    {
+      "file": "people-bags-v2/game-scale/person.customer.06.walk.bag.png",
+      "size": [
+        224,
+        320
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 47429
+    },
+    {
+      "file": "people-bags-v2/game-scale/person.customer.07.stand.bag.png",
+      "size": [
+        224,
+        320
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 48863
+    },
+    {
+      "file": "people-bags-v2/game-scale/person.customer.07.walk.bag.png",
+      "size": [
+        224,
+        320
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 49449
+    },
+    {
+      "file": "people-bags-v2/game-scale/person.walker.01.stand.bag.png",
+      "size": [
+        224,
+        320
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 49632
+    },
+    {
+      "file": "people-bags-v2/game-scale/person.walker.01.walk.bag.png",
+      "size": [
+        224,
+        320
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 50300
+    },
+    {
+      "file": "people-bags-v2/game-scale/person.walker.02.stand.bag.png",
+      "size": [
+        224,
+        320
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 48619
+    },
+    {
+      "file": "people-bags-v2/game-scale/person.walker.02.walk.bag.png",
+      "size": [
+        224,
+        320
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 49991
+    },
+    {
+      "file": "people-bags-v2/game-scale/person.walker.03.stand.bag.png",
+      "size": [
+        224,
+        320
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 49503
+    },
+    {
+      "file": "people-bags-v2/game-scale/person.walker.03.walk.bag.png",
+      "size": [
+        224,
+        320
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 50596
+    },
+    {
+      "file": "people-bags-v2/game-scale/person.walker.04.stand.bag.png",
+      "size": [
+        224,
+        320
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 48924
+    },
+    {
+      "file": "people-bags-v2/game-scale/person.walker.04.walk.bag.png",
+      "size": [
+        224,
+        320
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 50434
+    }
+  ]
+}

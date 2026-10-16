@@ -1,0 +1,815 @@
+[
+  {
+    "folder": "cars",
+    "name": "street.car.blue.fl.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted soft sky blue, cream roof, front-left three-quarter, nose lower left. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.blue.fr.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted soft sky blue, cream roof, front-right three-quarter, nose lower right. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.blue.bl.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted soft sky blue, cream roof, rear three-quarter rear lower left, nose away upper right, tail lights visible. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.blue.br.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted soft sky blue, cream roof, rear three-quarter rear lower right, nose away upper left, tail lights visible. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.green.fl.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted sage green, cream roof, front-left three-quarter, nose lower left. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.green.fr.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted sage green, cream roof, front-right three-quarter, nose lower right. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.green.bl.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted sage green, cream roof, rear three-quarter rear lower left, nose away upper right, tail lights visible. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.green.br.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted sage green, cream roof, rear three-quarter rear lower right, nose away upper left, tail lights visible. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.orange.fl.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted tangerine orange, cream roof, front-left three-quarter, nose lower left. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.orange.fr.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted tangerine orange, cream roof, front-right three-quarter, nose lower right. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.orange.bl.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted tangerine orange, cream roof, rear three-quarter rear lower left, nose away upper right, tail lights visible. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.orange.br.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted tangerine orange, cream roof, rear three-quarter rear lower right, nose away upper left, tail lights visible. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.purple.fl.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted soft lavender, cream roof, front-left three-quarter, nose lower left. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.purple.fr.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted soft lavender, cream roof, front-right three-quarter, nose lower right. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.purple.bl.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted soft lavender, cream roof, rear three-quarter rear lower left, nose away upper right, tail lights visible. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.purple.br.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted soft lavender, cream roof, rear three-quarter rear lower right, nose away upper left, tail lights visible. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.red.fl.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted tomato red, cream roof, front-left three-quarter, nose lower left. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.red.fr.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted tomato red, cream roof, front-right three-quarter, nose lower right. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.red.bl.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted tomato red, cream roof, rear three-quarter rear lower left, nose away upper right, tail lights visible. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.red.br.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted tomato red, cream roof, rear three-quarter rear lower right, nose away upper left, tail lights visible. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.white.fl.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted cream white, cream roof, front-left three-quarter, nose lower left. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.white.fr.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted cream white, cream roof, front-right three-quarter, nose lower right. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.white.bl.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted cream white, cream roof, rear three-quarter rear lower left, nose away upper right, tail lights visible. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.white.br.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted cream white, cream roof, rear three-quarter rear lower right, nose away upper left, tail lights visible. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.yellow.fl.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted mustard yellow, cream roof, front-left three-quarter, nose lower left. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.yellow.fr.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted mustard yellow, cream roof, front-right three-quarter, nose lower right. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.yellow.bl.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted mustard yellow, cream roof, rear three-quarter rear lower left, nose away upper right, tail lights visible. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.car.yellow.br.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: rounded compact European city car painted mustard yellow, cream roof, rear three-quarter rear lower right, nose away upper left, tail lights visible. Reference person is 1.75m adult for SCALE ONLY do not include person. Car 3.7m long, 1.45m roof height, 0.6m wheels. Car sides exactly follow isometric slopes. No number plate lettering. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.van.fl.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: boxy small delivery van white with green side stripe, 1.9m tall and 4.8m long, front-left nose lower left. Person reference scale only, exclude person. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.van.fr.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: boxy small delivery van white with green side stripe, 1.9m tall and 4.8m long, front-right nose lower right. Person reference scale only, exclude person. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.van.bl.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: boxy small delivery van white with green side stripe, 1.9m tall and 4.8m long, rear lower left nose away upper right. Person reference scale only, exclude person. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "folder": "cars",
+    "name": "street.van.br.png",
+    "refs": [
+      "sprites/street/street.car.blue.fl.png",
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png"
+    ],
+    "prompt": "Use case: stylized-concept. Isometric game sprite for cozy sunny city-block cannabis dispensary idle game. Match supplied reference style exactly: simple soft clay-like 3D, warm upper-left sunlight, soft contact shadow, forest green brass cream and oak palette where appropriate. Standard 45-degree isometric camera, 30-degree dimetric edge slopes +0.577 and -0.577. Subject: boxy small delivery van white with green side stripe, 1.9m tall and 4.8m long, rear lower right nose away upper left. Person reference scale only, exclude person. One isolated sprite only centered with generous margin, true transparent alpha background. No ground beyond requested object, no text, no watermark."
+  },
+  {
+    "id": "customer.08",
+    "name": "person.customer.08.stand.empty.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: woman in her 30s, short black bob, olive bomber jacket over cream tee, dark straight jeans, white sneakers, small crossbody bag. Pose: standing relaxed arms at sides. Hands empty except explicitly worn or held character accessories. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "customer.08",
+    "name": "person.customer.08.stand.bag.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: woman in her 30s, short black bob, olive bomber jacket over cream tee, dark straight jeans, white sneakers, small crossbody bag. Pose: standing relaxed arms at sides. Carry kraft paper shopping bag with rope handles in nearest hand matching walker reference. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "customer.08",
+    "name": "person.customer.08.walk.empty.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: woman in her 30s, short black bob, olive bomber jacket over cream tee, dark straight jeans, white sneakers, small crossbody bag. Pose: mid-stride walking lower right, front heel down back leg pushing off, gentle arm swing. Hands empty except explicitly worn or held character accessories. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "customer.08",
+    "name": "person.customer.08.walk.bag.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: woman in her 30s, short black bob, olive bomber jacket over cream tee, dark straight jeans, white sneakers, small crossbody bag. Pose: mid-stride walking lower right, front heel down back leg pushing off, gentle arm swing. Carry kraft paper shopping bag with rope handles in nearest hand matching walker reference. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "customer.09",
+    "name": "person.customer.09.stand.empty.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: man in his 50s, grey beard, navy chore coat, white shirt, tan chinos, brown boots. Pose: standing relaxed arms at sides. Hands empty except explicitly worn or held character accessories. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "customer.09",
+    "name": "person.customer.09.stand.bag.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: man in his 50s, grey beard, navy chore coat, white shirt, tan chinos, brown boots. Pose: standing relaxed arms at sides. Carry kraft paper shopping bag with rope handles in nearest hand matching walker reference. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "customer.09",
+    "name": "person.customer.09.walk.empty.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: man in his 50s, grey beard, navy chore coat, white shirt, tan chinos, brown boots. Pose: mid-stride walking lower right, front heel down back leg pushing off, gentle arm swing. Hands empty except explicitly worn or held character accessories. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "customer.09",
+    "name": "person.customer.09.walk.bag.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: man in his 50s, grey beard, navy chore coat, white shirt, tan chinos, brown boots. Pose: mid-stride walking lower right, front heel down back leg pushing off, gentle arm swing. Carry kraft paper shopping bag with rope handles in nearest hand matching walker reference. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "customer.10",
+    "name": "person.customer.10.stand.empty.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: woman in her 20s with long braids, lilac hoodie, light wide-leg jeans, chunky white sneakers. Pose: standing relaxed arms at sides. Hands empty except explicitly worn or held character accessories. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "customer.10",
+    "name": "person.customer.10.stand.bag.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: woman in her 20s with long braids, lilac hoodie, light wide-leg jeans, chunky white sneakers. Pose: standing relaxed arms at sides. Carry kraft paper shopping bag with rope handles in nearest hand matching walker reference. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "customer.10",
+    "name": "person.customer.10.walk.empty.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: woman in her 20s with long braids, lilac hoodie, light wide-leg jeans, chunky white sneakers. Pose: mid-stride walking lower right, front heel down back leg pushing off, gentle arm swing. Hands empty except explicitly worn or held character accessories. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "customer.10",
+    "name": "person.customer.10.walk.bag.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: woman in her 20s with long braids, lilac hoodie, light wide-leg jeans, chunky white sneakers. Pose: mid-stride walking lower right, front heel down back leg pushing off, gentle arm swing. Carry kraft paper shopping bag with rope handles in nearest hand matching walker reference. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "customer.11",
+    "name": "person.customer.11.stand.empty.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: man in his 30s, buzz cut, round glasses, mustard knit sweater, black trousers, white sneakers. Pose: standing relaxed arms at sides. Hands empty except explicitly worn or held character accessories. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "customer.11",
+    "name": "person.customer.11.stand.bag.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: man in his 30s, buzz cut, round glasses, mustard knit sweater, black trousers, white sneakers. Pose: standing relaxed arms at sides. Carry kraft paper shopping bag with rope handles in nearest hand matching walker reference. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "customer.11",
+    "name": "person.customer.11.walk.empty.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: man in his 30s, buzz cut, round glasses, mustard knit sweater, black trousers, white sneakers. Pose: mid-stride walking lower right, front heel down back leg pushing off, gentle arm swing. Hands empty except explicitly worn or held character accessories. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "customer.11",
+    "name": "person.customer.11.walk.bag.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: man in his 30s, buzz cut, round glasses, mustard knit sweater, black trousers, white sneakers. Pose: mid-stride walking lower right, front heel down back leg pushing off, gentle arm swing. Carry kraft paper shopping bag with rope handles in nearest hand matching walker reference. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "customer.12",
+    "name": "person.customer.12.stand.empty.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: older woman in her 60s, short silver hair, long camel coat, burgundy scarf, low black boots. Pose: standing relaxed arms at sides. Hands empty except explicitly worn or held character accessories. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "customer.12",
+    "name": "person.customer.12.stand.bag.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: older woman in her 60s, short silver hair, long camel coat, burgundy scarf, low black boots. Pose: standing relaxed arms at sides. Carry kraft paper shopping bag with rope handles in nearest hand matching walker reference. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "customer.12",
+    "name": "person.customer.12.walk.empty.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: older woman in her 60s, short silver hair, long camel coat, burgundy scarf, low black boots. Pose: mid-stride walking lower right, front heel down back leg pushing off, gentle arm swing. Hands empty except explicitly worn or held character accessories. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "customer.12",
+    "name": "person.customer.12.walk.bag.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: older woman in her 60s, short silver hair, long camel coat, burgundy scarf, low black boots. Pose: mid-stride walking lower right, front heel down back leg pushing off, gentle arm swing. Carry kraft paper shopping bag with rope handles in nearest hand matching walker reference. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "customer.13",
+    "name": "person.customer.13.stand.empty.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: man in his 20s, curly red hair, green track jacket, grey joggers, retro trainers. Pose: standing relaxed arms at sides. Hands empty except explicitly worn or held character accessories. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "customer.13",
+    "name": "person.customer.13.stand.bag.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: man in his 20s, curly red hair, green track jacket, grey joggers, retro trainers. Pose: standing relaxed arms at sides. Carry kraft paper shopping bag with rope handles in nearest hand matching walker reference. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "customer.13",
+    "name": "person.customer.13.walk.empty.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: man in his 20s, curly red hair, green track jacket, grey joggers, retro trainers. Pose: mid-stride walking lower right, front heel down back leg pushing off, gentle arm swing. Hands empty except explicitly worn or held character accessories. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "customer.13",
+    "name": "person.customer.13.walk.bag.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: man in his 20s, curly red hair, green track jacket, grey joggers, retro trainers. Pose: mid-stride walking lower right, front heel down back leg pushing off, gentle arm swing. Carry kraft paper shopping bag with rope handles in nearest hand matching walker reference. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "walker.05",
+    "name": "person.walker.05.stand.empty.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: jogger woman in her 30s, ponytail, coral running top, black leggings, running shoes, small earbuds. Pose: standing relaxed arms at sides. Hands empty except explicitly worn or held character accessories. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "walker.05",
+    "name": "person.walker.05.walk.empty.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: jogger woman in her 30s, ponytail, coral running top, black leggings, running shoes, small earbuds. Pose: mid-stride walking lower right, front heel down back leg pushing off, gentle arm swing. Hands empty except explicitly worn or held character accessories. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "walker.06",
+    "name": "person.walker.06.stand.empty.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: man in his 40s with small tan dog on red lead beside front foot, denim jacket, white tee, khaki trousers. Pose: standing relaxed arms at sides. Hands empty except explicitly worn or held character accessories. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "walker.06",
+    "name": "person.walker.06.stand.bag.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: man in his 40s with small tan dog on red lead beside front foot, denim jacket, white tee, khaki trousers. Pose: standing relaxed arms at sides. Carry kraft paper shopping bag with rope handles in nearest hand matching walker reference. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "walker.06",
+    "name": "person.walker.06.walk.empty.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: man in his 40s with small tan dog on red lead beside front foot, denim jacket, white tee, khaki trousers. Pose: mid-stride walking lower right, front heel down back leg pushing off, gentle arm swing. Hands empty except explicitly worn or held character accessories. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "walker.06",
+    "name": "person.walker.06.walk.bag.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: man in his 40s with small tan dog on red lead beside front foot, denim jacket, white tee, khaki trousers. Pose: mid-stride walking lower right, front heel down back leg pushing off, gentle arm swing. Carry kraft paper shopping bag with rope handles in nearest hand matching walker reference. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "walker.07",
+    "name": "person.walker.07.stand.empty.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: young woman holding skateboard under one arm, oversized striped tee, cargo shorts, high socks, skate shoes. Pose: standing relaxed arms at sides. Hands empty except explicitly worn or held character accessories. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "walker.07",
+    "name": "person.walker.07.stand.bag.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: young woman holding skateboard under one arm, oversized striped tee, cargo shorts, high socks, skate shoes. Pose: standing relaxed arms at sides. Carry kraft paper shopping bag with rope handles in nearest hand matching walker reference. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "walker.07",
+    "name": "person.walker.07.walk.empty.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: young woman holding skateboard under one arm, oversized striped tee, cargo shorts, high socks, skate shoes. Pose: mid-stride walking lower right, front heel down back leg pushing off, gentle arm swing. Hands empty except explicitly worn or held character accessories. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "id": "walker.07",
+    "name": "person.walker.07.walk.bag.right.png",
+    "prompt": "Character sprite for cozy isometric idle game. Match reference figures exactly in style proportion detail: slim adult, simple rounded clay-like 3D, small calm face minimal detail, warm upper-left light, soft foot contact shadow. Simple matte finish. Camera standard 45 degree isometric from above, three-quarter facing LOWER RIGHT, full body feet at bottom. Character: young woman holding skateboard under one arm, oversized striped tee, cargo shorts, high socks, skate shoes. Pose: mid-stride walking lower right, front heel down back leg pushing off, gentle arm swing. Carry kraft paper shopping bag with rope handles in nearest hand matching walker reference. One figure centered transparent alpha portrait canvas generous margin, no text no ground.",
+    "folder": "people",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.bag.left.png"
+    ]
+  },
+  {
+    "folder": "tubes",
+    "name": "tube.straight.png",
+    "prompt": "Isometric cozy dispensary idle game sprite. Match supplied references' soft clay-like 3D finish, warm upper-left light, forest-green brass cream oak palette. Standard 45-degree isometric camera, screen slopes +/-0.577. One isolated piece centered generous margin TRUE TRANSPARENT alpha background clean edges no halo. No text, no unrelated props. Straight section of clear glass pneumatic tube running +0.577 slope. Faint green tint one soft highlight, constant bore thin forest-green brass collar each end. Empty inside. Establish same bore for later pieces.",
+    "refs": [
+      "outputs/main-shop-v2/tube.port.png",
+      "outputs/main-shop-v2/tube.straight.png",
+      "sprites/interior/station.seeds.tier2.png"
+    ]
+  },
+  {
+    "folder": "tubes",
+    "name": "tube.elbow.png",
+    "prompt": "Isometric cozy dispensary idle game sprite. Match supplied references' soft clay-like 3D finish, warm upper-left light, forest-green brass cream oak palette. Standard 45-degree isometric camera, screen slopes +/-0.577. One isolated piece centered generous margin TRUE TRANSPARENT alpha background clean edges no halo. No text, no unrelated props. Same bore glass tube, smooth 90-degree elbow from vertical into +0.577 slope toward lower right.",
+    "refs": [
+      "outputs/main-shop-v2/tube.port.png",
+      "outputs/main-shop-v2/tube.straight.png",
+      "sprites/interior/station.seeds.tier2.png"
+    ]
+  },
+  {
+    "folder": "tubes",
+    "name": "tube.run.grow.png",
+    "prompt": "Isometric cozy dispensary idle game sprite. Match supplied references' soft clay-like 3D finish, warm upper-left light, forest-green brass cream oak palette. Standard 45-degree isometric camera, screen slopes +/-0.577. One isolated piece centered generous margin TRUE TRANSPARENT alpha background clean edges no halo. No text, no unrelated props. One storey vertical glass drop, short top inlet from left along -0.577 through brass collar. Flat brass floor ring halfway down indicating floor penetration, no slab. Bottom elbow turns forward lower left ending open brass collar.",
+    "refs": [
+      "outputs/main-shop-v2/tube.port.png",
+      "outputs/main-shop-v2/tube.straight.png",
+      "sprites/interior/station.seeds.tier2.png"
+    ]
+  },
+  {
+    "folder": "tubes",
+    "name": "tube.run.pack.png",
+    "prompt": "Isometric cozy dispensary idle game sprite. Match supplied references' soft clay-like 3D finish, warm upper-left light, forest-green brass cream oak palette. Standard 45-degree isometric camera, screen slopes +/-0.577. One isolated piece centered generous margin TRUE TRANSPARENT alpha background clean edges no halo. No text, no unrelated props. One storey vertical glass drop, short top inlet from left along -0.577 through brass collar. Flat brass floor ring halfway down indicating floor penetration, no slab. Bottom elbow turns lower right along +0.577 ending open brass collar.",
+    "refs": [
+      "outputs/main-shop-v2/tube.port.png",
+      "outputs/main-shop-v2/tube.straight.png",
+      "sprites/interior/station.seeds.tier2.png"
+    ]
+  },
+  {
+    "folder": "tubes",
+    "name": "tube.stub.pickup.png",
+    "prompt": "Isometric cozy dispensary idle game sprite. Match supplied references' soft clay-like 3D finish, warm upper-left light, forest-green brass cream oak palette. Standard 45-degree isometric camera, screen slopes +/-0.577. One isolated piece centered generous margin TRUE TRANSPARENT alpha background clean edges no halo. No text, no unrelated props. Short 0.6m horizontal glass tube stub along +0.577 emerging from flat forest-green brass-rim wall plate, ending open brass collar.",
+    "refs": [
+      "outputs/main-shop-v2/tube.port.png",
+      "outputs/main-shop-v2/tube.straight.png",
+      "sprites/interior/station.seeds.tier2.png"
+    ]
+  },
+  {
+    "folder": "tubes",
+    "name": "tube.port.png",
+    "prompt": "Isometric cozy dispensary idle game sprite. Match supplied references' soft clay-like 3D finish, warm upper-left light, forest-green brass cream oak palette. Standard 45-degree isometric camera, screen slopes +/-0.577. One isolated piece centered generous margin TRUE TRANSPARENT alpha background clean edges no halo. No text, no unrelated props. Receiving port where tube ends at bench, short brass funnel round glass hatch small green status light.",
+    "refs": [
+      "outputs/main-shop-v2/tube.port.png",
+      "outputs/main-shop-v2/tube.straight.png",
+      "sprites/interior/station.seeds.tier2.png"
+    ]
+  },
+  {
+    "folder": "belts",
+    "name": "belt.straight.png",
+    "prompt": "Isometric cozy dispensary idle game sprite. Match supplied references' soft clay-like 3D finish, warm upper-left light, forest-green brass cream oak palette. Standard 45-degree isometric camera, screen slopes +/-0.577. One isolated piece centered generous margin TRUE TRANSPARENT alpha background clean edges no halo. No text, no unrelated props. 1.2m straight slim conveyor module running +0.577 waist-high two slim forest-green legs. Flat matte charcoal belt, low brass rails, cream panels. Square open ends so modules butt seamlessly, flat evenly lit surface, empty.",
+    "refs": [
+      "outputs/main-shop-v2/shell.conveyor.upper.png",
+      "sprites/interior/station.pack.tier2.png"
+    ]
+  },
+  {
+    "folder": "belts",
+    "name": "belt.end.in.png",
+    "prompt": "Isometric cozy dispensary idle game sprite. Match supplied references' soft clay-like 3D finish, warm upper-left light, forest-green brass cream oak palette. Standard 45-degree isometric camera, screen slopes +/-0.577. One isolated piece centered generous margin TRUE TRANSPARENT alpha background clean edges no halo. No text, no unrelated props. Same conveyor width and waist height, start module with rounded drum end cap and small brass hopper above belt where items drop on. Empty belt.",
+    "refs": [
+      "outputs/main-shop-v2/shell.conveyor.upper.png",
+      "sprites/interior/station.pack.tier2.png"
+    ]
+  },
+  {
+    "folder": "belts",
+    "name": "belt.end.out.png",
+    "prompt": "Isometric cozy dispensary idle game sprite. Match supplied references' soft clay-like 3D finish, warm upper-left light, forest-green brass cream oak palette. Standard 45-degree isometric camera, screen slopes +/-0.577. One isolated piece centered generous margin TRUE TRANSPARENT alpha background clean edges no halo. No text, no unrelated props. Same conveyor width and waist height, end module rounded drum end cap short brass chute angled down off end. Empty belt.",
+    "refs": [
+      "outputs/main-shop-v2/shell.conveyor.upper.png",
+      "sprites/interior/station.pack.tier2.png"
+    ]
+  },
+  {
+    "folder": "shell",
+    "name": "shell.stairs.landing.png",
+    "prompt": "Isometric cozy dispensary idle game sprite. Match supplied references' soft clay-like 3D finish, warm upper-left light, forest-green brass cream oak palette. Standard 45-degree isometric camera, screen slopes +/-0.577. One isolated piece centered generous margin TRUE TRANSPARENT alpha background clean edges no halo. No text, no unrelated props. Rectangular stair landing 1.2m wide 2.5m long long side -0.577, standing 2m above floor on two slim forest-green posts. Oak deck matches stair treads. Clear glass balustrade brass top rail on outer long edge and far short edge ONLY. Near short and inner long edge OPEN for flights. No stairs.",
+    "refs": [
+      "sprites/shell/shell.stairs.main.png",
+      "sprites/shell/shell.stairs.upper.png",
+      "outputs/glass-railings-v3/railing.glass.up-right.png"
+    ]
+  },
+  {
+    "folder": "street",
+    "name": "street.trafficlight.png",
+    "prompt": "Isometric cozy dispensary idle game sprite. Match supplied references' soft clay-like 3D finish, warm upper-left light, forest-green brass cream oak palette. Standard 45-degree isometric camera, screen slopes +/-0.577. One isolated piece centered generous margin TRUE TRANSPARENT alpha background clean edges no halo. No text, no unrelated props. Pedestrian traffic light slim dark-green 3m pole, waist-high crossing button, lit green walking-person signal facing lower left.",
+    "refs": [
+      "sprites/street/street.coffeecart.png",
+      "sprites/street/street.bench.png"
+    ]
+  },
+  {
+    "folder": "street",
+    "name": "street.newsboxes.png",
+    "prompt": "Isometric cozy dispensary idle game sprite. Match supplied references' soft clay-like 3D finish, warm upper-left light, forest-green brass cream oak palette. Standard 45-degree isometric camera, screen slopes +/-0.577. One isolated piece centered generous margin TRUE TRANSPARENT alpha background clean edges no halo. No text, no unrelated props. Row of three waist-high newspaper vending boxes red blue cream. No text.",
+    "refs": [
+      "sprites/street/street.coffeecart.png",
+      "sprites/street/street.bench.png"
+    ]
+  },
+  {
+    "folder": "street",
+    "name": "street.meter.png",
+    "prompt": "Isometric cozy dispensary idle game sprite. Match supplied references' soft clay-like 3D finish, warm upper-left light, forest-green brass cream oak palette. Standard 45-degree isometric camera, screen slopes +/-0.577. One isolated piece centered generous margin TRUE TRANSPARENT alpha background clean edges no halo. No text, no unrelated props. Single parking meter on short dark-green post.",
+    "refs": [
+      "sprites/street/street.coffeecart.png",
+      "sprites/street/street.bench.png"
+    ]
+  },
+  {
+    "folder": "street",
+    "name": "street.signpost.png",
+    "prompt": "Isometric cozy dispensary idle game sprite. Match supplied references' soft clay-like 3D finish, warm upper-left light, forest-green brass cream oak palette. Standard 45-degree isometric camera, screen slopes +/-0.577. One isolated piece centered generous margin TRUE TRANSPARENT alpha background clean edges no halo. No text, no unrelated props. 3m signpost with two crossed blank green street-name blades.",
+    "refs": [
+      "sprites/street/street.coffeecart.png",
+      "sprites/street/street.bench.png"
+    ]
+  },
+  {
+    "folder": "street",
+    "name": "street.planter.round.png",
+    "prompt": "Isometric cozy dispensary idle game sprite. Match supplied references' soft clay-like 3D finish, warm upper-left light, forest-green brass cream oak palette. Standard 45-degree isometric camera, screen slopes +/-0.577. One isolated piece centered generous margin TRUE TRANSPARENT alpha background clean edges no halo. No text, no unrelated props. Round knee-high terracotta planter with small olive tree.",
+    "refs": [
+      "sprites/street/street.coffeecart.png",
+      "sprites/street/street.bench.png"
+    ]
+  },
+  {
+    "folder": "street",
+    "name": "street.foodtruck.png",
+    "prompt": "Isometric cozy dispensary idle game sprite. Match supplied references' soft clay-like 3D finish, warm upper-left light, forest-green brass cream oak palette. Standard 45-degree isometric camera, screen slopes +/-0.577. One isolated piece centered generous margin TRUE TRANSPARENT alpha background clean edges no halo. No text, no unrelated props. Small cream taco food truck, open sage side awning, parked +0.577, realistic vehicle scale relative to 1.75m adult. No person.",
+    "refs": [
+      "sprites/street/street.coffeecart.png",
+      "sprites/street/street.bench.png"
+    ]
+  },
+  {
+    "folder": "street",
+    "name": "street.deliveryboxes.png",
+    "prompt": "Isometric cozy dispensary idle game sprite. Match supplied references' soft clay-like 3D finish, warm upper-left light, forest-green brass cream oak palette. Standard 45-degree isometric camera, screen slopes +/-0.577. One isolated piece centered generous margin TRUE TRANSPARENT alpha background clean edges no halo. No text, no unrelated props. Four kraft cardboard parcels stacked on small wooden pallet knee high.",
+    "refs": [
+      "sprites/street/street.coffeecart.png",
+      "sprites/street/street.bench.png"
+    ]
+  },
+  {
+    "folder": "street",
+    "name": "street.awning.cafe.png",
+    "prompt": "Isometric cozy dispensary idle game sprite. Match supplied references' soft clay-like 3D finish, warm upper-left light, forest-green brass cream oak palette. Standard 45-degree isometric camera, screen slopes +/-0.577. One isolated piece centered generous margin TRUE TRANSPARENT alpha background clean edges no halo. No text, no unrelated props. Two small round cafe tables four bistro chairs under one terracotta parasol.",
+    "refs": [
+      "sprites/street/street.coffeecart.png",
+      "sprites/street/street.bench.png"
+    ]
+  },
+  {
+    "folder": "shell",
+    "name": "flat.wall.glazing.left.png",
+    "prompt": "Isometric cozy dispensary idle game sprite. Match supplied references' soft clay-like 3D finish, warm upper-left light, forest-green brass cream oak palette. Standard 45-degree isometric camera, screen slopes +/-0.577. One isolated piece centered generous margin TRUE TRANSPARENT alpha background clean edges no halo. No text, no unrelated props. Flat greenhouse glass wall panel 3m wide 3m tall running -0.577. Slim forest-green mullions three tall clear faint-green panes one soft reflection, brass base rail. Seen from room inside, square ends to butt together.",
+    "refs": [
+      "sprites/shell/flat.wall.window.right.png"
+    ]
+  },
+  {
+    "folder": "shell",
+    "name": "flat.wall.glazing.right.png",
+    "prompt": "Isometric cozy dispensary idle game sprite. Match supplied references' soft clay-like 3D finish, warm upper-left light, forest-green brass cream oak palette. Standard 45-degree isometric camera, screen slopes +/-0.577. One isolated piece centered generous margin TRUE TRANSPARENT alpha background clean edges no halo. No text, no unrelated props. Flat greenhouse glass wall panel 3m wide 3m tall running +0.577. Slim forest-green mullions three tall clear faint-green panes one soft reflection, brass base rail. Seen from room inside, square ends to butt together.",
+    "refs": [
+      "sprites/shell/flat.wall.window.right.png"
+    ]
+  }
+]

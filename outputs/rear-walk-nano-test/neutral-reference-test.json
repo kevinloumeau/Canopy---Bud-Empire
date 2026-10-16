@@ -1,0 +1,15 @@
+{
+  "model": "nano-banana-pro",
+  "source": "outputs/people-complete-v3/person.customer.01.stand.empty.right.png",
+  "prompt": "Use @identity only for character identity and clay rendering style. Create ONE still image showing TWO DIFFERENT key poses of a walking cycle, side by side, same character scale and planted-foot baseline. Both viewed from behind three-quarter and facing UPPER RIGHT. We must see the back of head and back of jacket, never eyes or front chest. LEFT FIGURE: left leg is planted forward, right leg lifted and bent behind; right arm forward and left arm back. RIGHT FIGURE: right leg is planted forward, left leg lifted and bent behind; left arm forward and right arm back. Draw visibly opposite anatomical leg chains from hip to shoe and reverse the arm swing. The second figure is NOT a copy or horizontal mirror of the first. They face the same upper-right direction. This is an animation pose test: changing body pose is essential. Preserve blue denim jacket with full wrist-length sleeves and button cuffs, cream shirt, olive wide-leg trousers, brown shoes, wavy brown hair, black sunglasses and clay proportions. Full hair and shoes visible, ample whitespace between figures and all canvas edges. A perfectly flat pure WHITE background without any shadow, checkerboard, gradient, patterns or scenery. NO transparency simulation. No text. No extra props. Exactly two complete rear-view bodies with opposite leading feet.",
+  "taskId": "69cc0b5b-70f8-4f9f-9c77-680add0fa614",
+  "status": "failed-facing-consistency",
+  "scope": "still PNG pose test only",
+  "output": "customer01-neutral-reference-pair.png",
+  "findings": [
+    "Distinct leg silhouettes were generated.",
+    "Second figure faces upper-left rather than upper-right; not an acceptable alternating pair.",
+    "White background as requested; alpha cleanup pending."
+  ],
+  "correction_task": "0849f4aa-ce60-49cb-b290-67664c2f8aca"
+}

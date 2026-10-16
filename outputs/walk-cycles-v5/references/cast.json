@@ -1,0 +1,142 @@
+[
+  {
+    "id": "person.customer.01",
+    "references": {
+      "empty": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/people-complete-v3/person.customer.01.stand.empty.right.png",
+      "bag": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/people-complete-v3/person.customer.01.stand.bag.right.png"
+    }
+  },
+  {
+    "id": "person.customer.02",
+    "references": {
+      "empty": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/people-complete-v3/person.customer.02.stand.empty.right.png",
+      "bag": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/people-complete-v3/person.customer.02.stand.bag.right.png"
+    }
+  },
+  {
+    "id": "person.customer.03",
+    "references": {
+      "empty": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/people-complete-v3/person.customer.03.stand.empty.right.png",
+      "bag": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/people-complete-v3/person.customer.03.stand.bag.right.png"
+    }
+  },
+  {
+    "id": "person.customer.04",
+    "references": {
+      "empty": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/people-complete-v3/person.customer.04.stand.empty.right.png",
+      "bag": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/people-complete-v3/person.customer.04.stand.bag.right.png"
+    }
+  },
+  {
+    "id": "person.customer.05",
+    "references": {
+      "empty": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/people-complete-v3/person.customer.05.stand.empty.right.png",
+      "bag": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/people-complete-v3/person.customer.05.stand.bag.right.png"
+    }
+  },
+  {
+    "id": "person.customer.06",
+    "references": {
+      "empty": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/people-complete-v3/person.customer.06.stand.empty.right.png",
+      "bag": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/people-complete-v3/person.customer.06.stand.bag.right.png"
+    }
+  },
+  {
+    "id": "person.customer.07",
+    "references": {
+      "empty": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/people-complete-v3/person.customer.07.stand.empty.right.png",
+      "bag": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/people-complete-v3/person.customer.07.stand.bag.right.png"
+    }
+  },
+  {
+    "id": "person.customer.08",
+    "references": {
+      "empty": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/main-shop-v2/people/person.customer.08.stand.empty.right.png",
+      "bag": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/main-shop-v2/people/person.customer.08.stand.bag.right.png"
+    }
+  },
+  {
+    "id": "person.customer.09",
+    "references": {
+      "empty": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/main-shop-v2/people/person.customer.09.stand.empty.right.png",
+      "bag": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/main-shop-v2/people/person.customer.09.stand.bag.right.png"
+    }
+  },
+  {
+    "id": "person.customer.10",
+    "references": {
+      "empty": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/main-shop-v2/people/person.customer.10.stand.empty.right.png",
+      "bag": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/main-shop-v2/people/person.customer.10.stand.bag.right.png"
+    }
+  },
+  {
+    "id": "person.customer.11",
+    "references": {
+      "empty": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/main-shop-v2/people/person.customer.11.stand.empty.right.png",
+      "bag": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/main-shop-v2/people/person.customer.11.stand.bag.right.png"
+    }
+  },
+  {
+    "id": "person.customer.12",
+    "references": {
+      "empty": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/main-shop-v2/people/person.customer.12.stand.empty.right.png",
+      "bag": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/main-shop-v2/people/person.customer.12.stand.bag.right.png"
+    }
+  },
+  {
+    "id": "person.customer.13",
+    "references": {
+      "empty": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/main-shop-v2/people/person.customer.13.stand.empty.right.png",
+      "bag": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/main-shop-v2/people/person.customer.13.stand.bag.right.png"
+    }
+  },
+  {
+    "id": "person.walker.01",
+    "references": {
+      "empty": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/people-complete-v3/person.walker.01.stand.empty.right.png",
+      "bag": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/people-complete-v3/person.walker.01.stand.bag.right.png"
+    }
+  },
+  {
+    "id": "person.walker.02",
+    "references": {
+      "empty": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/people-complete-v3/person.walker.02.stand.empty.right.png",
+      "bag": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/people-complete-v3/person.walker.02.stand.bag.right.png"
+    }
+  },
+  {
+    "id": "person.walker.03",
+    "references": {
+      "empty": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/people-complete-v3/person.walker.03.stand.empty.right.png",
+      "bag": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/people-complete-v3/person.walker.03.stand.bag.right.png"
+    }
+  },
+  {
+    "id": "person.walker.04",
+    "references": {
+      "empty": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/people-complete-v3/person.walker.04.stand.empty.right.png",
+      "bag": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/people-complete-v3/person.walker.04.stand.bag.right.png"
+    }
+  },
+  {
+    "id": "person.walker.05",
+    "references": {
+      "empty": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/main-shop-v2/people/person.walker.05.stand.empty.right.png",
+      "bag": null
+    }
+  },
+  {
+    "id": "person.walker.06",
+    "references": {
+      "empty": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/main-shop-v2/people/person.walker.06.stand.empty.right.png",
+      "bag": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/main-shop-v2/people/person.walker.06.stand.bag.right.png"
+    }
+  },
+  {
+    "id": "person.walker.07",
+    "references": {
+      "empty": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/main-shop-v2/people/person.walker.07.stand.empty.right.png",
+      "bag": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/main-shop-v2/people/person.walker.07.stand.bag.right.png"
+    }
+  }
+]

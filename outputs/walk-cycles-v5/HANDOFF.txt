@@ -1,0 +1,52 @@
+CANOPY WALK ASSET HANDOFF — 2026-10-16
+
+Generated with built-in ChatGPT image generation. Ludo was not used.
+This is a PARTIAL asset delivery, not completed walk animation or game integration.
+
+DELIVERED
+rear-stills/: 20 transparent RGBA PNG source masters, customer 01–13 and walker 01–07.
+Each is a single rear three-quarter walking-away pose facing upper right, not a loop.
+Character clothing, hair, skin tone and existing accessories were compared visually
+with the standing references. Backpack, crossbody purse, scarf, dog/red leash,
+earbuds and carried skateboard are retained as applicable.
+
+limp-repair-candidates/: 6 transparent source masters for fourth-frame (phase03)
+replacement, customer 01, 05 and 10 in empty-handed and shopping-bag variants.
+These re-render the upright supporting leg/torso rather than replacing an entire
+four-frame cycle. They have not been aligned or played alongside phases00–02.
+Customer01 bag sleeves were corrected to the original full length after review.
+
+NOT COMPLETED
+No accepted eight-frame front empty/bag loops, and no accepted rear loops.
+Three customer01 eight-frame tests repeated the same leading leg rather than
+showing a complete alternating two-step cycle, including a test using an explicit
+pose guide. They are in rejected/ for diagnostic reference only and excluded from
+the delivery ZIP. Do not wire them into the game or count them as eight frames.
+
+CLEANUP AND VALIDATION STILL REQUIRED
+All assets are untrimmed generated source masters with variable canvas sizes,
+not True Size aligned game exports. Preserve these originals before cleanup.
+Remove colored/white fringes, isolated specks and low-alpha residue carefully;
+do not damage the red leash, pale shoes, fine hair, glasses or prop edges.
+Match body scale/camera to the existing standing sprite, anchor at actual planted
+foot contact, and preserve clear margins for the dog, leash and skateboard.
+For fourth-frame candidates, compare anatomical proportions and head/hip height
+against all three existing phases, then play the loop before accepting. Do not
+claim the 8–15px limp is fixed until the aligned loop has been verified.
+For future eight-frame work, require BOTH alternating foot leads, fixed facing,
+eight distinct poses, stable scale, no squat/bob, and a seamless loop boundary.
+Rear animation must never expose a frontal face or turn toward the viewer.
+
+INPUTS
+references/cast.json maps every character to current source standing assets.
+The first 7 customers and first 4 walkers use outputs/people-complete-v3/;
+later characters use outputs/main-shop-v2/people/.
+Walker05 has no stand.bag.right reference in those folders (null in cast.json).
+Do not silently invent that missing bag reference.
+Original fourth phases are in outputs/main-shop-v2/cycles/frames/.
+prompts.json records the generation instructions; validation.json records file
+sizes, RGBA mode and alpha extrema. Previews are for inspection only.
+
+SCOPE
+No source code, live sprites, saves, renderer, Sites identity or publication
+was changed. No new chat was created. Cleanup/wiring remains a later task.

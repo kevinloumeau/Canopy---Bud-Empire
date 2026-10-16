@@ -1,0 +1,8 @@
+These are replacement graphics, not installed map changes.
+
+Scale by the visible door opening, not PNG canvas width or the old building footprint.
+At the same map zoom, target door height = nearby adult sprite opaque height x 1.2 (about 2.1m door / 1.75m adult).
+Use each sprite's own door measurement; do not assign all PNGs the same draw height. The three-storey building needs a taller draw height to preserve the same door size.
+Uniform scaling only. Preserve isometric angles. Ground contact at building base; shadows do not determine anchor.
+After scaling, space buildings to fit their new footprint; do not stretch back to old oversized bounds. Keep sidewalks clear and ensure depth sorting behind pedestrians.
+Four two-storey variants and one three-storey variant. Generated with built-in ImageGen. Original sprites preserved.

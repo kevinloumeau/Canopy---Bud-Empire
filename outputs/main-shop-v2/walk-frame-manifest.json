@@ -1,0 +1,1406 @@
+[
+  {
+    "file": "cycles/frames/person.walker.02.walk.bag.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.02.walk.bag.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.02.walk.bag.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.02.walk.bag.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.empty.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.empty.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.empty.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.empty.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.empty.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.empty.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.empty.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.empty.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.bag.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.bag.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.bag.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.bag.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.bag.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.bag.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.bag.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.bag.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.empty.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.empty.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.empty.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.empty.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.bag.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.bag.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.bag.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.bag.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.empty.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.empty.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.empty.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.empty.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.bag.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.bag.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.bag.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.bag.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.empty.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.empty.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.empty.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.empty.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.empty.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.empty.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.empty.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.empty.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.bag.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.bag.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.bag.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.bag.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.empty.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.empty.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.empty.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.empty.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.bag.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.bag.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.bag.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.bag.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.bag.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.bag.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.bag.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.bag.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.bag.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.bag.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.bag.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.bag.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.05.walk.empty.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.05.walk.empty.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.05.walk.empty.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.05.walk.empty.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.empty.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.empty.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.empty.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.empty.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.bag.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.bag.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.bag.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.bag.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.bag.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.bag.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.bag.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.bag.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.empty.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.empty.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.empty.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.empty.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.empty.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.empty.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.empty.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.empty.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.empty.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.empty.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.empty.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.empty.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.bag.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.bag.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.bag.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.bag.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.empty.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.empty.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.empty.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.empty.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.bag.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.bag.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.bag.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.bag.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.empty.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.empty.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.empty.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.empty.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.empty.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.empty.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.empty.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.empty.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.bag.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.bag.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.bag.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.bag.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.bag.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.bag.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.bag.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.bag.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.bag.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.bag.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.bag.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.bag.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.bag.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.bag.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.bag.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.bag.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.empty.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.empty.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.empty.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.empty.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.empty.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.empty.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.empty.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.empty.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.empty.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.empty.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.empty.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.empty.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.bag.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.bag.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.bag.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.bag.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.empty.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.empty.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.empty.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.empty.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.bag.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.bag.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.bag.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.bag.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.02.walk.empty.00.right.png",
+    "phase": 0,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.02.walk.empty.01.right.png",
+    "phase": 1,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.02.walk.empty.02.right.png",
+    "phase": 2,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  },
+  {
+    "file": "cycles/frames/person.walker.02.walk.empty.03.right.png",
+    "phase": 3,
+    "baseline": 424,
+    "size": [
+      512,
+      448
+    ]
+  }
+]

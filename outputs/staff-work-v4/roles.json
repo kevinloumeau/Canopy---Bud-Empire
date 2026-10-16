@@ -1,0 +1,90 @@
+[
+  {
+    "id": "04",
+    "role": "seeds",
+    "desc": "26-year-old Black woman, natural hair puff, slim adult build",
+    "actions": [
+      "holds small cannabis seedling pot in left hand near waist, right hand poised with tiny seed dibber above soil",
+      "right hand lowers dibber into pot soil, slight forward lean",
+      "right hand withdraws dibber and gently pats soil around seedling",
+      "right hand returns upward near initial position, left hand keeps pot steady"
+    ]
+  },
+  {
+    "id": "05",
+    "role": "grow",
+    "desc": "38-year-old East Asian man, short straight black hair, clear round glasses",
+    "actions": [
+      "holds small brass watering can with both hands at waist, spout angled slightly down toward screen right",
+      "tilts can forward about 20 degrees, elbows extend, spout lowered",
+      "holds can at pouring tilt, slight head dip watching spout, no water particles",
+      "returns can near upright, elbows draw back toward waist"
+    ]
+  },
+  {
+    "id": "06",
+    "role": "harvest",
+    "desc": "45-year-old Latina woman, dark braid over shoulder, sturdy adult build",
+    "actions": [
+      "left hand holds a small cannabis branch at waist, right hand holds pruning scissors open just beside branch",
+      "scissor hand moves closer and closes blades around a small leaf tip",
+      "scissor hand draws away slightly with closed blades, left hand stays steady",
+      "scissors reopen beside branch, near initial pose"
+    ]
+  },
+  {
+    "id": "07",
+    "role": "pack",
+    "desc": "31-year-old South Asian nonbinary adult, short wavy dark hair, androgynous appearance",
+    "actions": [
+      "left hand supports small cream product box at waist, right fingertips poised above open top flap",
+      "right hand folds box top flap down, head looks at box",
+      "right hand presses closed top flat, left hand supports box",
+      "right hand lifts back slightly, box stays supported at waist"
+    ]
+  },
+  {
+    "id": "08",
+    "role": "orders",
+    "desc": "52-year-old white woman, silver-streaked auburn bob, clear eyeglasses",
+    "actions": [
+      "holds small green tablet in left hand near waist angled toward face, right index finger raised above screen",
+      "right index finger touches middle of tablet screen, head dips slightly",
+      "right index finger slides a little to screen right while tablet remains steady",
+      "right finger lifts back to initial hovering position"
+    ]
+  },
+  {
+    "id": "09",
+    "role": "pickup",
+    "desc": "24-year-old Black man, short twists, clean-shaven, athletic adult build",
+    "actions": [
+      "holds one small kraft shopping bag with green blank patch by handles near waist, other hand supports base",
+      "extends bag forward toward screen right about 15cm, slight elbow extension",
+      "extends bag a little farther in clear handoff gesture, feet stay planted",
+      "draws bag back halfway toward waist to return to start"
+    ]
+  },
+  {
+    "id": "10",
+    "role": "security",
+    "desc": "61-year-old Middle Eastern man, grey beard, short grey hair, broad build",
+    "actions": [
+      "left hand holds tiny blank cream ID card at chest, right hand holds small green handheld scanner beside it",
+      "right hand raises scanner toward card, eyes look at card",
+      "scanner held close to card, head tilts slightly down to inspect",
+      "scanner lowers toward initial position, card remains held steady"
+    ]
+  },
+  {
+    "id": "11",
+    "role": "lounge",
+    "desc": "67-year-old South Asian woman, silver hair in neat bun, round glasses, warm face",
+    "actions": [
+      "holds small green reservation tablet in left hand at waist, right hand near chest ready to welcome",
+      "right arm extends in open-palm welcoming gesture toward screen right",
+      "right open palm turns slightly upward indicating the lounge entrance, gentle nod",
+      "right arm retracts halfway back toward chest"
+    ]
+  }
+]

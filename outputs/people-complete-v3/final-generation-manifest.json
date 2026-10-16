@@ -1,0 +1,347 @@
+{
+  "tool": "Built-in ImageGen",
+  "source": "22 canonical high-resolution bag-carrying poses from people-bags-v2, copied as bag.right variants",
+  "reference": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/sprites/people/person.customer.07.stand.png",
+  "characters": 11,
+  "variants_per_character": 8,
+  "master_count": 88,
+  "edit_count": 66,
+  "logical_canvas": [
+    224,
+    320
+  ],
+  "standing_height_target": 299,
+  "feet_baseline_target": 315,
+  "jobs": [
+    {
+      "src": "person.customer.01.stand.bag.right",
+      "dst": "person.customer.01.stand.empty.right",
+      "edit": "Remove ONLY the kraft paper pickup bag and its handles from this character's hand. Restore a natural relaxed empty hand in exactly the same arm position. Keep this SAME person, identical head and face, hair, eyewear, skin, expression, clothing, seams, buttons, shoes, pose, limbs and body proportions, body height, camera, lighting, framing and object placement. BOTH hands empty. No new held object. If a worn backpack exists, preserve it; remove only the handheld pickup bag."
+    },
+    {
+      "src": "person.customer.01.stand.bag.right",
+      "dst": "person.customer.01.stand.bag.left",
+      "edit": "Make the exact opposite LEFT-FACING counterpart of this RIGHT-FACING character by horizontally reflecting the character AND carried bag. The face, torso and feet must now point toward image LEFT, not right. Preserve EXACT character identity, hair, face, eyewear, skin, expression, clothing, buttons, seams, shoes, pose, anatomy, limb lengths, silhouette, scale, height, framing and bag shape. Do not redesign or invent a new viewing pose; this is the matching reflected facing direction of the same sprite."
+    },
+    {
+      "src": "person.customer.01.stand.bag.right",
+      "dst": "person.customer.01.stand.empty.left",
+      "edit": "Remove ONLY the handheld paper bag and restore a natural empty hand, then make the opposite LEFT-FACING counterpart by horizontally reflecting this EXACT character. BOTH hands empty; face, torso and feet point toward image LEFT. Preserve the same identity, face, hair, eyewear, clothing, shoes, pose, anatomy, limb lengths, body proportions, silhouette, camera elevation, visual scale, height and framing. Do not add any held object or redesign the person. Preserve any worn backpack. This is the exact matching bag-free opposite-facing variant of the original sprite."
+    },
+    {
+      "src": "person.customer.01.walk.bag.right",
+      "dst": "person.customer.01.walk.empty.right",
+      "edit": "Remove ONLY the kraft paper pickup bag and its handles from this character's hand. Restore a natural relaxed empty hand in exactly the same arm position. Keep this SAME person, identical head and face, hair, eyewear, skin, expression, clothing, seams, buttons, shoes, pose, limbs and body proportions, body height, camera, lighting, framing and object placement. BOTH hands empty. No new held object. If a worn backpack exists, preserve it; remove only the handheld pickup bag."
+    },
+    {
+      "src": "person.customer.01.walk.bag.right",
+      "dst": "person.customer.01.walk.bag.left",
+      "edit": "Make the exact opposite LEFT-FACING counterpart of this RIGHT-FACING character by horizontally reflecting the character AND carried bag. The face, torso and feet must now point toward image LEFT, not right. Preserve EXACT character identity, hair, face, eyewear, skin, expression, clothing, buttons, seams, shoes, pose, anatomy, limb lengths, silhouette, scale, height, framing and bag shape. Do not redesign or invent a new viewing pose; this is the matching reflected facing direction of the same sprite."
+    },
+    {
+      "src": "person.customer.01.walk.bag.right",
+      "dst": "person.customer.01.walk.empty.left",
+      "edit": "Remove ONLY the handheld paper bag and restore a natural empty hand, then make the opposite LEFT-FACING counterpart by horizontally reflecting this EXACT character. BOTH hands empty; face, torso and feet point toward image LEFT. Preserve the same identity, face, hair, eyewear, clothing, shoes, pose, anatomy, limb lengths, body proportions, silhouette, camera elevation, visual scale, height and framing. Do not add any held object or redesign the person. Preserve any worn backpack. This is the exact matching bag-free opposite-facing variant of the original sprite."
+    },
+    {
+      "src": "person.customer.02.stand.bag.right",
+      "dst": "person.customer.02.stand.empty.right",
+      "edit": "Remove ONLY the kraft paper pickup bag and its handles from this character's hand. Restore a natural relaxed empty hand in exactly the same arm position. Keep this SAME person, identical head and face, hair, eyewear, skin, expression, clothing, seams, buttons, shoes, pose, limbs and body proportions, body height, camera, lighting, framing and object placement. BOTH hands empty. No new held object. If a worn backpack exists, preserve it; remove only the handheld pickup bag."
+    },
+    {
+      "src": "person.customer.02.stand.bag.right",
+      "dst": "person.customer.02.stand.bag.left",
+      "edit": "Make the exact opposite LEFT-FACING counterpart of this RIGHT-FACING character by horizontally reflecting the character AND carried bag. The face, torso and feet must now point toward image LEFT, not right. Preserve EXACT character identity, hair, face, eyewear, skin, expression, clothing, buttons, seams, shoes, pose, anatomy, limb lengths, silhouette, scale, height, framing and bag shape. Do not redesign or invent a new viewing pose; this is the matching reflected facing direction of the same sprite."
+    },
+    {
+      "src": "person.customer.02.stand.bag.right",
+      "dst": "person.customer.02.stand.empty.left",
+      "edit": "Remove ONLY the handheld paper bag and restore a natural empty hand, then make the opposite LEFT-FACING counterpart by horizontally reflecting this EXACT character. BOTH hands empty; face, torso and feet point toward image LEFT. Preserve the same identity, face, hair, eyewear, clothing, shoes, pose, anatomy, limb lengths, body proportions, silhouette, camera elevation, visual scale, height and framing. Do not add any held object or redesign the person. Preserve any worn backpack. This is the exact matching bag-free opposite-facing variant of the original sprite."
+    },
+    {
+      "src": "person.customer.02.walk.bag.right",
+      "dst": "person.customer.02.walk.empty.right",
+      "edit": "Remove ONLY the kraft paper pickup bag and its handles from this character's hand. Restore a natural relaxed empty hand in exactly the same arm position. Keep this SAME person, identical head and face, hair, eyewear, skin, expression, clothing, seams, buttons, shoes, pose, limbs and body proportions, body height, camera, lighting, framing and object placement. BOTH hands empty. No new held object. If a worn backpack exists, preserve it; remove only the handheld pickup bag."
+    },
+    {
+      "src": "person.customer.02.walk.bag.right",
+      "dst": "person.customer.02.walk.bag.left",
+      "edit": "Make the exact opposite LEFT-FACING counterpart of this RIGHT-FACING character by horizontally reflecting the character AND carried bag. The face, torso and feet must now point toward image LEFT, not right. Preserve EXACT character identity, hair, face, eyewear, skin, expression, clothing, buttons, seams, shoes, pose, anatomy, limb lengths, silhouette, scale, height, framing and bag shape. Do not redesign or invent a new viewing pose; this is the matching reflected facing direction of the same sprite."
+    },
+    {
+      "src": "person.customer.02.walk.bag.right",
+      "dst": "person.customer.02.walk.empty.left",
+      "edit": "Remove ONLY the handheld paper bag and restore a natural empty hand, then make the opposite LEFT-FACING counterpart by horizontally reflecting this EXACT character. BOTH hands empty; face, torso and feet point toward image LEFT. Preserve the same identity, face, hair, eyewear, clothing, shoes, pose, anatomy, limb lengths, body proportions, silhouette, camera elevation, visual scale, height and framing. Do not add any held object or redesign the person. Preserve any worn backpack. This is the exact matching bag-free opposite-facing variant of the original sprite."
+    },
+    {
+      "src": "person.customer.03.stand.bag.right",
+      "dst": "person.customer.03.stand.empty.right",
+      "edit": "Remove ONLY the kraft paper pickup bag and its handles from this character's hand. Restore a natural relaxed empty hand in exactly the same arm position. Keep this SAME person, identical head and face, hair, eyewear, skin, expression, clothing, seams, buttons, shoes, pose, limbs and body proportions, body height, camera, lighting, framing and object placement. BOTH hands empty. No new held object. If a worn backpack exists, preserve it; remove only the handheld pickup bag."
+    },
+    {
+      "src": "person.customer.03.stand.bag.right",
+      "dst": "person.customer.03.stand.bag.left",
+      "edit": "Make the exact opposite LEFT-FACING counterpart of this RIGHT-FACING character by horizontally reflecting the character AND carried bag. The face, torso and feet must now point toward image LEFT, not right. Preserve EXACT character identity, hair, face, eyewear, skin, expression, clothing, buttons, seams, shoes, pose, anatomy, limb lengths, silhouette, scale, height, framing and bag shape. Do not redesign or invent a new viewing pose; this is the matching reflected facing direction of the same sprite."
+    },
+    {
+      "src": "person.customer.03.stand.bag.right",
+      "dst": "person.customer.03.stand.empty.left",
+      "edit": "Remove ONLY the handheld paper bag and restore a natural empty hand, then make the opposite LEFT-FACING counterpart by horizontally reflecting this EXACT character. BOTH hands empty; face, torso and feet point toward image LEFT. Preserve the same identity, face, hair, eyewear, clothing, shoes, pose, anatomy, limb lengths, body proportions, silhouette, camera elevation, visual scale, height and framing. Do not add any held object or redesign the person. Preserve any worn backpack. This is the exact matching bag-free opposite-facing variant of the original sprite."
+    },
+    {
+      "src": "person.customer.03.walk.bag.right",
+      "dst": "person.customer.03.walk.empty.right",
+      "edit": "Remove ONLY the kraft paper pickup bag and its handles from this character's hand. Restore a natural relaxed empty hand in exactly the same arm position. Keep this SAME person, identical head and face, hair, eyewear, skin, expression, clothing, seams, buttons, shoes, pose, limbs and body proportions, body height, camera, lighting, framing and object placement. BOTH hands empty. No new held object. If a worn backpack exists, preserve it; remove only the handheld pickup bag."
+    },
+    {
+      "src": "person.customer.03.walk.bag.right",
+      "dst": "person.customer.03.walk.bag.left",
+      "edit": "Make the exact opposite LEFT-FACING counterpart of this RIGHT-FACING character by horizontally reflecting the character AND carried bag. The face, torso and feet must now point toward image LEFT, not right. Preserve EXACT character identity, hair, face, eyewear, skin, expression, clothing, buttons, seams, shoes, pose, anatomy, limb lengths, silhouette, scale, height, framing and bag shape. Do not redesign or invent a new viewing pose; this is the matching reflected facing direction of the same sprite."
+    },
+    {
+      "src": "person.customer.03.walk.bag.right",
+      "dst": "person.customer.03.walk.empty.left",
+      "edit": "Remove ONLY the handheld paper bag and restore a natural empty hand, then make the opposite LEFT-FACING counterpart by horizontally reflecting this EXACT character. BOTH hands empty; face, torso and feet point toward image LEFT. Preserve the same identity, face, hair, eyewear, clothing, shoes, pose, anatomy, limb lengths, body proportions, silhouette, camera elevation, visual scale, height and framing. Do not add any held object or redesign the person. Preserve any worn backpack. This is the exact matching bag-free opposite-facing variant of the original sprite."
+    },
+    {
+      "src": "person.customer.04.stand.bag.right",
+      "dst": "person.customer.04.stand.empty.right",
+      "edit": "Remove ONLY the kraft paper pickup bag and its handles from this character's hand. Restore a natural relaxed empty hand in exactly the same arm position. Keep this SAME person, identical head and face, hair, eyewear, skin, expression, clothing, seams, buttons, shoes, pose, limbs and body proportions, body height, camera, lighting, framing and object placement. BOTH hands empty. No new held object. If a worn backpack exists, preserve it; remove only the handheld pickup bag."
+    },
+    {
+      "src": "person.customer.04.stand.bag.right",
+      "dst": "person.customer.04.stand.bag.left",
+      "edit": "Make the exact opposite LEFT-FACING counterpart of this RIGHT-FACING character by horizontally reflecting the character AND carried bag. The face, torso and feet must now point toward image LEFT, not right. Preserve EXACT character identity, hair, face, eyewear, skin, expression, clothing, buttons, seams, shoes, pose, anatomy, limb lengths, silhouette, scale, height, framing and bag shape. Do not redesign or invent a new viewing pose; this is the matching reflected facing direction of the same sprite."
+    },
+    {
+      "src": "person.customer.04.stand.bag.right",
+      "dst": "person.customer.04.stand.empty.left",
+      "edit": "Remove ONLY the handheld paper bag and restore a natural empty hand, then make the opposite LEFT-FACING counterpart by horizontally reflecting this EXACT character. BOTH hands empty; face, torso and feet point toward image LEFT. Preserve the same identity, face, hair, eyewear, clothing, shoes, pose, anatomy, limb lengths, body proportions, silhouette, camera elevation, visual scale, height and framing. Do not add any held object or redesign the person. Preserve any worn backpack. This is the exact matching bag-free opposite-facing variant of the original sprite."
+    },
+    {
+      "src": "person.customer.04.walk.bag.right",
+      "dst": "person.customer.04.walk.empty.right",
+      "edit": "Remove ONLY the kraft paper pickup bag and its handles from this character's hand. Restore a natural relaxed empty hand in exactly the same arm position. Keep this SAME person, identical head and face, hair, eyewear, skin, expression, clothing, seams, buttons, shoes, pose, limbs and body proportions, body height, camera, lighting, framing and object placement. BOTH hands empty. No new held object. If a worn backpack exists, preserve it; remove only the handheld pickup bag."
+    },
+    {
+      "src": "person.customer.04.walk.bag.right",
+      "dst": "person.customer.04.walk.bag.left",
+      "edit": "Make the exact opposite LEFT-FACING counterpart of this RIGHT-FACING character by horizontally reflecting the character AND carried bag. The face, torso and feet must now point toward image LEFT, not right. Preserve EXACT character identity, hair, face, eyewear, skin, expression, clothing, buttons, seams, shoes, pose, anatomy, limb lengths, silhouette, scale, height, framing and bag shape. Do not redesign or invent a new viewing pose; this is the matching reflected facing direction of the same sprite."
+    },
+    {
+      "src": "person.customer.04.walk.bag.right",
+      "dst": "person.customer.04.walk.empty.left",
+      "edit": "Remove ONLY the handheld paper bag and restore a natural empty hand, then make the opposite LEFT-FACING counterpart by horizontally reflecting this EXACT character. BOTH hands empty; face, torso and feet point toward image LEFT. Preserve the same identity, face, hair, eyewear, clothing, shoes, pose, anatomy, limb lengths, body proportions, silhouette, camera elevation, visual scale, height and framing. Do not add any held object or redesign the person. Preserve any worn backpack. This is the exact matching bag-free opposite-facing variant of the original sprite."
+    },
+    {
+      "src": "person.customer.05.stand.bag.right",
+      "dst": "person.customer.05.stand.empty.right",
+      "edit": "Remove ONLY the kraft paper pickup bag and its handles from this character's hand. Restore a natural relaxed empty hand in exactly the same arm position. Keep this SAME person, identical head and face, hair, eyewear, skin, expression, clothing, seams, buttons, shoes, pose, limbs and body proportions, body height, camera, lighting, framing and object placement. BOTH hands empty. No new held object. If a worn backpack exists, preserve it; remove only the handheld pickup bag."
+    },
+    {
+      "src": "person.customer.05.stand.bag.right",
+      "dst": "person.customer.05.stand.bag.left",
+      "edit": "Make the exact opposite LEFT-FACING counterpart of this RIGHT-FACING character by horizontally reflecting the character AND carried bag. The face, torso and feet must now point toward image LEFT, not right. Preserve EXACT character identity, hair, face, eyewear, skin, expression, clothing, buttons, seams, shoes, pose, anatomy, limb lengths, silhouette, scale, height, framing and bag shape. Do not redesign or invent a new viewing pose; this is the matching reflected facing direction of the same sprite."
+    },
+    {
+      "src": "person.customer.05.stand.bag.right",
+      "dst": "person.customer.05.stand.empty.left",
+      "edit": "Remove ONLY the handheld paper bag and restore a natural empty hand, then make the opposite LEFT-FACING counterpart by horizontally reflecting this EXACT character. BOTH hands empty; face, torso and feet point toward image LEFT. Preserve the same identity, face, hair, eyewear, clothing, shoes, pose, anatomy, limb lengths, body proportions, silhouette, camera elevation, visual scale, height and framing. Do not add any held object or redesign the person. Preserve any worn backpack. This is the exact matching bag-free opposite-facing variant of the original sprite."
+    },
+    {
+      "src": "person.customer.05.walk.bag.right",
+      "dst": "person.customer.05.walk.empty.right",
+      "edit": "Remove ONLY the kraft paper pickup bag and its handles from this character's hand. Restore a natural relaxed empty hand in exactly the same arm position. Keep this SAME person, identical head and face, hair, eyewear, skin, expression, clothing, seams, buttons, shoes, pose, limbs and body proportions, body height, camera, lighting, framing and object placement. BOTH hands empty. No new held object. If a worn backpack exists, preserve it; remove only the handheld pickup bag."
+    },
+    {
+      "src": "person.customer.05.walk.bag.right",
+      "dst": "person.customer.05.walk.bag.left",
+      "edit": "Make the exact opposite LEFT-FACING counterpart of this RIGHT-FACING character by horizontally reflecting the character AND carried bag. The face, torso and feet must now point toward image LEFT, not right. Preserve EXACT character identity, hair, face, eyewear, skin, expression, clothing, buttons, seams, shoes, pose, anatomy, limb lengths, silhouette, scale, height, framing and bag shape. Do not redesign or invent a new viewing pose; this is the matching reflected facing direction of the same sprite."
+    },
+    {
+      "src": "person.customer.05.walk.bag.right",
+      "dst": "person.customer.05.walk.empty.left",
+      "edit": "Remove ONLY the handheld paper bag and restore a natural empty hand, then make the opposite LEFT-FACING counterpart by horizontally reflecting this EXACT character. BOTH hands empty; face, torso and feet point toward image LEFT. Preserve the same identity, face, hair, eyewear, clothing, shoes, pose, anatomy, limb lengths, body proportions, silhouette, camera elevation, visual scale, height and framing. Do not add any held object or redesign the person. Preserve any worn backpack. This is the exact matching bag-free opposite-facing variant of the original sprite."
+    },
+    {
+      "src": "person.customer.06.stand.bag.right",
+      "dst": "person.customer.06.stand.empty.right",
+      "edit": "Remove ONLY the kraft paper pickup bag and its handles from this character's hand. Restore a natural relaxed empty hand in exactly the same arm position. Keep this SAME person, identical head and face, hair, eyewear, skin, expression, clothing, seams, buttons, shoes, pose, limbs and body proportions, body height, camera, lighting, framing and object placement. BOTH hands empty. No new held object. If a worn backpack exists, preserve it; remove only the handheld pickup bag."
+    },
+    {
+      "src": "person.customer.06.stand.bag.right",
+      "dst": "person.customer.06.stand.bag.left",
+      "edit": "Make the exact opposite LEFT-FACING counterpart of this RIGHT-FACING character by horizontally reflecting the character AND carried bag. The face, torso and feet must now point toward image LEFT, not right. Preserve EXACT character identity, hair, face, eyewear, skin, expression, clothing, buttons, seams, shoes, pose, anatomy, limb lengths, silhouette, scale, height, framing and bag shape. Do not redesign or invent a new viewing pose; this is the matching reflected facing direction of the same sprite."
+    },
+    {
+      "src": "person.customer.06.stand.bag.right",
+      "dst": "person.customer.06.stand.empty.left",
+      "edit": "Remove ONLY the handheld paper bag and restore a natural empty hand, then make the opposite LEFT-FACING counterpart by horizontally reflecting this EXACT character. BOTH hands empty; face, torso and feet point toward image LEFT. Preserve the same identity, face, hair, eyewear, clothing, shoes, pose, anatomy, limb lengths, body proportions, silhouette, camera elevation, visual scale, height and framing. Do not add any held object or redesign the person. Preserve any worn backpack. This is the exact matching bag-free opposite-facing variant of the original sprite."
+    },
+    {
+      "src": "person.customer.06.walk.bag.right",
+      "dst": "person.customer.06.walk.empty.right",
+      "edit": "Remove ONLY the kraft paper pickup bag and its handles from this character's hand. Restore a natural relaxed empty hand in exactly the same arm position. Keep this SAME person, identical head and face, hair, eyewear, skin, expression, clothing, seams, buttons, shoes, pose, limbs and body proportions, body height, camera, lighting, framing and object placement. BOTH hands empty. No new held object. If a worn backpack exists, preserve it; remove only the handheld pickup bag."
+    },
+    {
+      "src": "person.customer.06.walk.bag.right",
+      "dst": "person.customer.06.walk.bag.left",
+      "edit": "Make the exact opposite LEFT-FACING counterpart of this RIGHT-FACING character by horizontally reflecting the character AND carried bag. The face, torso and feet must now point toward image LEFT, not right. Preserve EXACT character identity, hair, face, eyewear, skin, expression, clothing, buttons, seams, shoes, pose, anatomy, limb lengths, silhouette, scale, height, framing and bag shape. Do not redesign or invent a new viewing pose; this is the matching reflected facing direction of the same sprite."
+    },
+    {
+      "src": "person.customer.06.walk.bag.right",
+      "dst": "person.customer.06.walk.empty.left",
+      "edit": "Remove ONLY the handheld paper bag and restore a natural empty hand, then make the opposite LEFT-FACING counterpart by horizontally reflecting this EXACT character. BOTH hands empty; face, torso and feet point toward image LEFT. Preserve the same identity, face, hair, eyewear, clothing, shoes, pose, anatomy, limb lengths, body proportions, silhouette, camera elevation, visual scale, height and framing. Do not add any held object or redesign the person. Preserve any worn backpack. This is the exact matching bag-free opposite-facing variant of the original sprite."
+    },
+    {
+      "src": "person.customer.07.stand.bag.right",
+      "dst": "person.customer.07.stand.empty.right",
+      "edit": "Remove ONLY the kraft paper pickup bag and its handles from this character's hand. Restore a natural relaxed empty hand in exactly the same arm position. Keep this SAME person, identical head and face, hair, eyewear, skin, expression, clothing, seams, buttons, shoes, pose, limbs and body proportions, body height, camera, lighting, framing and object placement. BOTH hands empty. No new held object. If a worn backpack exists, preserve it; remove only the handheld pickup bag."
+    },
+    {
+      "src": "person.customer.07.stand.bag.right",
+      "dst": "person.customer.07.stand.bag.left",
+      "edit": "Make the exact opposite LEFT-FACING counterpart of this RIGHT-FACING character by horizontally reflecting the character AND carried bag. The face, torso and feet must now point toward image LEFT, not right. Preserve EXACT character identity, hair, face, eyewear, skin, expression, clothing, buttons, seams, shoes, pose, anatomy, limb lengths, silhouette, scale, height, framing and bag shape. Do not redesign or invent a new viewing pose; this is the matching reflected facing direction of the same sprite."
+    },
+    {
+      "src": "person.customer.07.stand.bag.right",
+      "dst": "person.customer.07.stand.empty.left",
+      "edit": "Remove ONLY the handheld paper bag and restore a natural empty hand, then make the opposite LEFT-FACING counterpart by horizontally reflecting this EXACT character. BOTH hands empty; face, torso and feet point toward image LEFT. Preserve the same identity, face, hair, eyewear, clothing, shoes, pose, anatomy, limb lengths, body proportions, silhouette, camera elevation, visual scale, height and framing. Do not add any held object or redesign the person. Preserve any worn backpack. This is the exact matching bag-free opposite-facing variant of the original sprite."
+    },
+    {
+      "src": "person.customer.07.walk.bag.right",
+      "dst": "person.customer.07.walk.empty.right",
+      "edit": "Remove ONLY the kraft paper pickup bag and its handles from this character's hand. Restore a natural relaxed empty hand in exactly the same arm position. Keep this SAME person, identical head and face, hair, eyewear, skin, expression, clothing, seams, buttons, shoes, pose, limbs and body proportions, body height, camera, lighting, framing and object placement. BOTH hands empty. No new held object. If a worn backpack exists, preserve it; remove only the handheld pickup bag."
+    },
+    {
+      "src": "person.customer.07.walk.bag.right",
+      "dst": "person.customer.07.walk.bag.left",
+      "edit": "Make the exact opposite LEFT-FACING counterpart of this RIGHT-FACING character by horizontally reflecting the character AND carried bag. The face, torso and feet must now point toward image LEFT, not right. Preserve EXACT character identity, hair, face, eyewear, skin, expression, clothing, buttons, seams, shoes, pose, anatomy, limb lengths, silhouette, scale, height, framing and bag shape. Do not redesign or invent a new viewing pose; this is the matching reflected facing direction of the same sprite."
+    },
+    {
+      "src": "person.customer.07.walk.bag.right",
+      "dst": "person.customer.07.walk.empty.left",
+      "edit": "Remove ONLY the handheld paper bag and restore a natural empty hand, then make the opposite LEFT-FACING counterpart by horizontally reflecting this EXACT character. BOTH hands empty; face, torso and feet point toward image LEFT. Preserve the same identity, face, hair, eyewear, clothing, shoes, pose, anatomy, limb lengths, body proportions, silhouette, camera elevation, visual scale, height and framing. Do not add any held object or redesign the person. Preserve any worn backpack. This is the exact matching bag-free opposite-facing variant of the original sprite."
+    },
+    {
+      "src": "person.walker.01.stand.bag.right",
+      "dst": "person.walker.01.stand.empty.right",
+      "edit": "Remove ONLY the kraft paper pickup bag and its handles from this character's hand. Restore a natural relaxed empty hand in exactly the same arm position. Keep this SAME person, identical head and face, hair, eyewear, skin, expression, clothing, seams, buttons, shoes, pose, limbs and body proportions, body height, camera, lighting, framing and object placement. BOTH hands empty. No new held object. If a worn backpack exists, preserve it; remove only the handheld pickup bag."
+    },
+    {
+      "src": "person.walker.01.stand.bag.right",
+      "dst": "person.walker.01.stand.bag.left",
+      "edit": "Make the exact opposite LEFT-FACING counterpart of this RIGHT-FACING character by horizontally reflecting the character AND carried bag. The face, torso and feet must now point toward image LEFT, not right. Preserve EXACT character identity, hair, face, eyewear, skin, expression, clothing, buttons, seams, shoes, pose, anatomy, limb lengths, silhouette, scale, height, framing and bag shape. Do not redesign or invent a new viewing pose; this is the matching reflected facing direction of the same sprite."
+    },
+    {
+      "src": "person.walker.01.stand.bag.right",
+      "dst": "person.walker.01.stand.empty.left",
+      "edit": "Remove ONLY the handheld paper bag and restore a natural empty hand, then make the opposite LEFT-FACING counterpart by horizontally reflecting this EXACT character. BOTH hands empty; face, torso and feet point toward image LEFT. Preserve the same identity, face, hair, eyewear, clothing, shoes, pose, anatomy, limb lengths, body proportions, silhouette, camera elevation, visual scale, height and framing. Do not add any held object or redesign the person. Preserve any worn backpack. This is the exact matching bag-free opposite-facing variant of the original sprite."
+    },
+    {
+      "src": "person.walker.01.walk.bag.right",
+      "dst": "person.walker.01.walk.empty.right",
+      "edit": "Remove ONLY the kraft paper pickup bag and its handles from this character's hand. Restore a natural relaxed empty hand in exactly the same arm position. Keep this SAME person, identical head and face, hair, eyewear, skin, expression, clothing, seams, buttons, shoes, pose, limbs and body proportions, body height, camera, lighting, framing and object placement. BOTH hands empty. No new held object. If a worn backpack exists, preserve it; remove only the handheld pickup bag."
+    },
+    {
+      "src": "person.walker.01.walk.bag.right",
+      "dst": "person.walker.01.walk.bag.left",
+      "edit": "Make the exact opposite LEFT-FACING counterpart of this RIGHT-FACING character by horizontally reflecting the character AND carried bag. The face, torso and feet must now point toward image LEFT, not right. Preserve EXACT character identity, hair, face, eyewear, skin, expression, clothing, buttons, seams, shoes, pose, anatomy, limb lengths, silhouette, scale, height, framing and bag shape. Do not redesign or invent a new viewing pose; this is the matching reflected facing direction of the same sprite."
+    },
+    {
+      "src": "person.walker.01.walk.bag.right",
+      "dst": "person.walker.01.walk.empty.left",
+      "edit": "Remove ONLY the handheld paper bag and restore a natural empty hand, then make the opposite LEFT-FACING counterpart by horizontally reflecting this EXACT character. BOTH hands empty; face, torso and feet point toward image LEFT. Preserve the same identity, face, hair, eyewear, clothing, shoes, pose, anatomy, limb lengths, body proportions, silhouette, camera elevation, visual scale, height and framing. Do not add any held object or redesign the person. Preserve any worn backpack. This is the exact matching bag-free opposite-facing variant of the original sprite."
+    },
+    {
+      "src": "person.walker.02.stand.bag.right",
+      "dst": "person.walker.02.stand.empty.right",
+      "edit": "Remove ONLY the kraft paper pickup bag and its handles from this character's hand. Restore a natural relaxed empty hand in exactly the same arm position. Keep this SAME person, identical head and face, hair, eyewear, skin, expression, clothing, seams, buttons, shoes, pose, limbs and body proportions, body height, camera, lighting, framing and object placement. BOTH hands empty. No new held object. If a worn backpack exists, preserve it; remove only the handheld pickup bag."
+    },
+    {
+      "src": "person.walker.02.stand.bag.right",
+      "dst": "person.walker.02.stand.bag.left",
+      "edit": "Make the exact opposite LEFT-FACING counterpart of this RIGHT-FACING character by horizontally reflecting the character AND carried bag. The face, torso and feet must now point toward image LEFT, not right. Preserve EXACT character identity, hair, face, eyewear, skin, expression, clothing, buttons, seams, shoes, pose, anatomy, limb lengths, silhouette, scale, height, framing and bag shape. Do not redesign or invent a new viewing pose; this is the matching reflected facing direction of the same sprite."
+    },
+    {
+      "src": "person.walker.02.stand.bag.right",
+      "dst": "person.walker.02.stand.empty.left",
+      "edit": "Remove ONLY the handheld paper bag and restore a natural empty hand, then make the opposite LEFT-FACING counterpart by horizontally reflecting this EXACT character. BOTH hands empty; face, torso and feet point toward image LEFT. Preserve the same identity, face, hair, eyewear, clothing, shoes, pose, anatomy, limb lengths, body proportions, silhouette, camera elevation, visual scale, height and framing. Do not add any held object or redesign the person. Preserve any worn backpack. This is the exact matching bag-free opposite-facing variant of the original sprite."
+    },
+    {
+      "src": "person.walker.02.walk.bag.right",
+      "dst": "person.walker.02.walk.empty.right",
+      "edit": "Remove ONLY the kraft paper pickup bag and its handles from this character's hand. Restore a natural relaxed empty hand in exactly the same arm position. Keep this SAME person, identical head and face, hair, eyewear, skin, expression, clothing, seams, buttons, shoes, pose, limbs and body proportions, body height, camera, lighting, framing and object placement. BOTH hands empty. No new held object. If a worn backpack exists, preserve it; remove only the handheld pickup bag."
+    },
+    {
+      "src": "person.walker.02.walk.bag.right",
+      "dst": "person.walker.02.walk.bag.left",
+      "edit": "Make the exact opposite LEFT-FACING counterpart of this RIGHT-FACING character by horizontally reflecting the character AND carried bag. The face, torso and feet must now point toward image LEFT, not right. Preserve EXACT character identity, hair, face, eyewear, skin, expression, clothing, buttons, seams, shoes, pose, anatomy, limb lengths, silhouette, scale, height, framing and bag shape. Do not redesign or invent a new viewing pose; this is the matching reflected facing direction of the same sprite."
+    },
+    {
+      "src": "person.walker.02.walk.bag.right",
+      "dst": "person.walker.02.walk.empty.left",
+      "edit": "Remove ONLY the handheld paper bag and restore a natural empty hand, then make the opposite LEFT-FACING counterpart by horizontally reflecting this EXACT character. BOTH hands empty; face, torso and feet point toward image LEFT. Preserve the same identity, face, hair, eyewear, clothing, shoes, pose, anatomy, limb lengths, body proportions, silhouette, camera elevation, visual scale, height and framing. Do not add any held object or redesign the person. Preserve any worn backpack. This is the exact matching bag-free opposite-facing variant of the original sprite."
+    },
+    {
+      "src": "person.walker.03.stand.bag.right",
+      "dst": "person.walker.03.stand.empty.right",
+      "edit": "Remove ONLY the kraft paper pickup bag and its handles from this character's hand. Restore a natural relaxed empty hand in exactly the same arm position. Keep this SAME person, identical head and face, hair, eyewear, skin, expression, clothing, seams, buttons, shoes, pose, limbs and body proportions, body height, camera, lighting, framing and object placement. BOTH hands empty. No new held object. If a worn backpack exists, preserve it; remove only the handheld pickup bag."
+    },
+    {
+      "src": "person.walker.03.stand.bag.right",
+      "dst": "person.walker.03.stand.bag.left",
+      "edit": "Make the exact opposite LEFT-FACING counterpart of this RIGHT-FACING character by horizontally reflecting the character AND carried bag. The face, torso and feet must now point toward image LEFT, not right. Preserve EXACT character identity, hair, face, eyewear, skin, expression, clothing, buttons, seams, shoes, pose, anatomy, limb lengths, silhouette, scale, height, framing and bag shape. Do not redesign or invent a new viewing pose; this is the matching reflected facing direction of the same sprite."
+    },
+    {
+      "src": "person.walker.03.stand.bag.right",
+      "dst": "person.walker.03.stand.empty.left",
+      "edit": "Remove ONLY the handheld paper bag and restore a natural empty hand, then make the opposite LEFT-FACING counterpart by horizontally reflecting this EXACT character. BOTH hands empty; face, torso and feet point toward image LEFT. Preserve the same identity, face, hair, eyewear, clothing, shoes, pose, anatomy, limb lengths, body proportions, silhouette, camera elevation, visual scale, height and framing. Do not add any held object or redesign the person. Preserve any worn backpack. This is the exact matching bag-free opposite-facing variant of the original sprite."
+    },
+    {
+      "src": "person.walker.03.walk.bag.right",
+      "dst": "person.walker.03.walk.empty.right",
+      "edit": "Remove ONLY the kraft paper pickup bag and its handles from this character's hand. Restore a natural relaxed empty hand in exactly the same arm position. Keep this SAME person, identical head and face, hair, eyewear, skin, expression, clothing, seams, buttons, shoes, pose, limbs and body proportions, body height, camera, lighting, framing and object placement. BOTH hands empty. No new held object. If a worn backpack exists, preserve it; remove only the handheld pickup bag."
+    },
+    {
+      "src": "person.walker.03.walk.bag.right",
+      "dst": "person.walker.03.walk.bag.left",
+      "edit": "Make the exact opposite LEFT-FACING counterpart of this RIGHT-FACING character by horizontally reflecting the character AND carried bag. The face, torso and feet must now point toward image LEFT, not right. Preserve EXACT character identity, hair, face, eyewear, skin, expression, clothing, buttons, seams, shoes, pose, anatomy, limb lengths, silhouette, scale, height, framing and bag shape. Do not redesign or invent a new viewing pose; this is the matching reflected facing direction of the same sprite."
+    },
+    {
+      "src": "person.walker.03.walk.bag.right",
+      "dst": "person.walker.03.walk.empty.left",
+      "edit": "Remove ONLY the handheld paper bag and restore a natural empty hand, then make the opposite LEFT-FACING counterpart by horizontally reflecting this EXACT character. BOTH hands empty; face, torso and feet point toward image LEFT. Preserve the same identity, face, hair, eyewear, clothing, shoes, pose, anatomy, limb lengths, body proportions, silhouette, camera elevation, visual scale, height and framing. Do not add any held object or redesign the person. Preserve any worn backpack. This is the exact matching bag-free opposite-facing variant of the original sprite."
+    },
+    {
+      "src": "person.walker.04.stand.bag.right",
+      "dst": "person.walker.04.stand.empty.right",
+      "edit": "Remove ONLY the kraft paper pickup bag and its handles from this character's hand. Restore a natural relaxed empty hand in exactly the same arm position. Keep this SAME person, identical head and face, hair, eyewear, skin, expression, clothing, seams, buttons, shoes, pose, limbs and body proportions, body height, camera, lighting, framing and object placement. BOTH hands empty. No new held object. If a worn backpack exists, preserve it; remove only the handheld pickup bag."
+    },
+    {
+      "src": "person.walker.04.stand.bag.right",
+      "dst": "person.walker.04.stand.bag.left",
+      "edit": "Make the exact opposite LEFT-FACING counterpart of this RIGHT-FACING character by horizontally reflecting the character AND carried bag. The face, torso and feet must now point toward image LEFT, not right. Preserve EXACT character identity, hair, face, eyewear, skin, expression, clothing, buttons, seams, shoes, pose, anatomy, limb lengths, silhouette, scale, height, framing and bag shape. Do not redesign or invent a new viewing pose; this is the matching reflected facing direction of the same sprite."
+    },
+    {
+      "src": "person.walker.04.stand.bag.right",
+      "dst": "person.walker.04.stand.empty.left",
+      "edit": "Remove ONLY the handheld paper bag and restore a natural empty hand, then make the opposite LEFT-FACING counterpart by horizontally reflecting this EXACT character. BOTH hands empty; face, torso and feet point toward image LEFT. Preserve the same identity, face, hair, eyewear, clothing, shoes, pose, anatomy, limb lengths, body proportions, silhouette, camera elevation, visual scale, height and framing. Do not add any held object or redesign the person. Preserve any worn backpack. This is the exact matching bag-free opposite-facing variant of the original sprite."
+    },
+    {
+      "src": "person.walker.04.walk.bag.right",
+      "dst": "person.walker.04.walk.empty.right",
+      "edit": "Remove ONLY the kraft paper pickup bag and its handles from this character's hand. Restore a natural relaxed empty hand in exactly the same arm position. Keep this SAME person, identical head and face, hair, eyewear, skin, expression, clothing, seams, buttons, shoes, pose, limbs and body proportions, body height, camera, lighting, framing and object placement. BOTH hands empty. No new held object. If a worn backpack exists, preserve it; remove only the handheld pickup bag."
+    },
+    {
+      "src": "person.walker.04.walk.bag.right",
+      "dst": "person.walker.04.walk.bag.left",
+      "edit": "Make the exact opposite LEFT-FACING counterpart of this RIGHT-FACING character by horizontally reflecting the character AND carried bag. The face, torso and feet must now point toward image LEFT, not right. Preserve EXACT character identity, hair, face, eyewear, skin, expression, clothing, buttons, seams, shoes, pose, anatomy, limb lengths, silhouette, scale, height, framing and bag shape. Do not redesign or invent a new viewing pose; this is the matching reflected facing direction of the same sprite."
+    },
+    {
+      "src": "person.walker.04.walk.bag.right",
+      "dst": "person.walker.04.walk.empty.left",
+      "edit": "Remove ONLY the handheld paper bag and restore a natural empty hand, then make the opposite LEFT-FACING counterpart by horizontally reflecting this EXACT character. BOTH hands empty; face, torso and feet point toward image LEFT. Preserve the same identity, face, hair, eyewear, clothing, shoes, pose, anatomy, limb lengths, body proportions, silhouette, camera elevation, visual scale, height and framing. Do not add any held object or redesign the person. Preserve any worn backpack. This is the exact matching bag-free opposite-facing variant of the original sprite."
+    }
+  ]
+}

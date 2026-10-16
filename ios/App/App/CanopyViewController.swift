@@ -23,7 +23,6 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
 
     private let tabs: [Tab] = [
         Tab(key: "factory",   title: "Stations",   symbol: "square.stack.3d.up"),
-        Tab(key: "employees", title: "Staff",      symbol: "person"),
         Tab(key: "flowers",   title: "Menu",       symbol: "leaf"),
         Tab(key: "boosts",    title: "Shop",       symbol: "bag"),
         Tab(key: "empire",    title: "Empire",     symbol: "crown")
@@ -275,7 +274,7 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
             config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 2, bottom: 8, trailing: 2)
             config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 17, weight: .medium)
             // The label tracks the reader's text size rather than sitting at a fixed 11pt. It is capped at 13:
-            // five tabs share the width of the screen, and past that the longest of them ("Stations") starts
+            // four tabs share the width of the screen, and past that the longest of them ("Stations") starts
             // colliding with its neighbours no matter how it is shrunk. Beyond the cap the shrink-to-fit below
             // takes over, so the text keeps growing in the reader's other apps without breaking the row here.
             config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in

@@ -1,0 +1,13 @@
+{
+  "model": "nano-banana-pro",
+  "inputTaskId": "69cc0b5b-70f8-4f9f-9c77-680add0fa614",
+  "taskId": "0849f4aa-ce60-49cb-b290-67664c2f8aca",
+  "prompt": "Edit @pair. Keep LEFT figure exactly as-is. Fix ONLY the RIGHT figure's facing direction, retaining its opposite-leg walk pose. Both characters must face the SAME upper-right compass direction; they must not face each other. On RIGHT figure, turn head and torso and both shoe toe directions to match LEFT figure's rear three-quarter upper-right view. The ear and sunglasses visible on image-right side of LEFT figure must also be visible on image-right side of RIGHT figure. Keep RIGHT figure's anatomical right/left leg roles opposite to LEFT figure: the leg lifted behind in one pose is the planted-forward leg in the other. Preserve that leg alternation; do not replace right body with a duplicate of left. Make right arm swing opposite left arm swing. Keep exact hair blue long-sleeve denim jacket olive trousers brown shoes clay style scale and full-body framing. Pure white background no checkerboard no shadows no text. Exactly two full characters, both back-facing upper right, one with left foot leading, the other with right foot leading. The essential correction is same facing direction WITHOUT losing the opposite leg lead.",
+  "status": "failed-visual-acceptance",
+  "output": "customer01-direction-correction.png",
+  "findings": [
+    "Right figure still faces upper-left; same-facing requirement not met.",
+    "Unexpected gold hoop earring added to right figure.",
+    "No accepted opposite-foot same-direction pair and no eight-frame sheet produced."
+  ]
+}

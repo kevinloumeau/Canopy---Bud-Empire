@@ -1,0 +1,16 @@
+PNG-only rear walk generation tests
+
+Requested: 20 eight-frame rear three-quarter transparent PNG sprite sheets.
+Method: built-in ChatGPT still-image generation only; no Ludo or video.
+
+Test 1: existing rear still as reference, eight-frame sheet. Character facing is
+preserved, but leg positions repeat the same leading leg across the two rows.
+Test 2: fresh generation from detailed character description, no pose reference.
+Some variation appears, but clothing drifts and a full two-step cycle is absent.
+Test 3: single opposite-stride pose using a colored leg blueprint plus identity
+reference. It still reproduces the original anatomical foot lead.
+
+All three tests fail acceptance and are retained in rejected/ for inspection.
+No accepted eight-frame rear walk loop was produced, and the 20-character task
+remains incomplete. Do not integrate these tests or label them usable loops.
+Existing 20 rear stills in outputs/walk-cycles-v5/rear-stills/ are unchanged.

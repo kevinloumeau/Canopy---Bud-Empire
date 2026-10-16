@@ -1,0 +1,13 @@
+Built-in ImageGen. Four role-specific working poses, each facing both directions. No walking variants.
+
+Create ONE new full-body Canopy dispensary employee sprite, real transparent alpha PNG, no floor or background. Image1 is uniform/style reference, Image2 is EXACT anatomy/scale reference: match adult head-to-body ratio, limb lengths, body build, shoe size and full standing height; no chibi or oversized head. Same soft matte 3D toy-like clay rendering, warm upper-left lighting, gentle AO, no outlines. Orthographic game camera, same three-quarter facing screen-right as reference. Forest green #2f5d4a apron and trousers, cream #f4f1e4 rolled-sleeve shirt, brown practical shoes, tiny plain brass apron fasteners, no writing or name tag text. Entire figure visible with margins. Adult employee, naturally balanced feet, anatomically correct hands. No shopping bags, people besides this one, counter, plants, furniture or scenery. 
+
+Adult East Asian woman, straight black hair in a neat low bun, round thin brass glasses. Budtender pose, holding one small closed cream product jar at waist level in both hands. Friendly calm expression.
+
+Adult Black man, close-cropped hair, short neat beard. Cultivation worker pose, holding one small terracotta pot containing a modest clearly identifiable cannabis plant with serrated palmate leaves at waist height. Plant does not obscure face.
+
+Adult South Asian woman, dark braid over shoulder. Packing worker pose, holding one small closed cream rectangular product carton at waist height with both hands. No bag.
+
+Adult older light-skinned man, short gray hair and neat mustache, slim glasses. Supervisor pose, one hand holding a small cream clipboard close to torso, other hand relaxed. Clipboard has no visible writing.
+
+Render this EXACT same employee facing the opposite direction, three-quarter screen-LEFT, keeping identity, face, hair, glasses, uniform, held object, pose, body proportions and height unchanged. Same camera and warm upper-left light, not a new character. One full-body figure, fully visible with margins, real transparent alpha PNG, no floor/background/text/shopping bag.

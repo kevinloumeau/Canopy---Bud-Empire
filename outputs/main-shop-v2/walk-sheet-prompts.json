@@ -1,0 +1,173 @@
+[
+  {
+    "folder": "cycles",
+    "name": "person.customer.01.walk.empty.sheet.png",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.01.stand.empty.right.png",
+      "outputs/people-complete-v3/person.customer.01.walk.empty.right.png"
+    ],
+    "prompt": "Using the attached character exactly as drawn, same clothes face proportions finish camera light, draw a FOUR FRAME walk cycle as four separate figures side by side in ONE ROW evenly spaced, all facing LOWER RIGHT, same height, feet same baseline. Frame1 LEFT foot forward heel down, frame2 passing RIGHT leg lifting, frame3 RIGHT foot forward heel down, frame4 passing LEFT leg lifting. Gentle arm swing, relaxed stroll, no exaggerated bounce. Keep any character-specific dog/leash/skateboard/earbuds or worn crossbody bag. NO shopping bag. Transparent alpha background generous margin, no text no numbers. Exactly four figures, full bodies, wide canvas."
+  },
+  {
+    "folder": "cycles",
+    "name": "person.customer.02.walk.empty.sheet.png",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.02.stand.empty.right.png",
+      "outputs/people-complete-v3/person.customer.02.walk.empty.right.png"
+    ],
+    "prompt": "Using the attached character exactly as drawn, same clothes face proportions finish camera light, draw a FOUR FRAME walk cycle as four separate figures side by side in ONE ROW evenly spaced, all facing LOWER RIGHT, same height, feet same baseline. Frame1 LEFT foot forward heel down, frame2 passing RIGHT leg lifting, frame3 RIGHT foot forward heel down, frame4 passing LEFT leg lifting. Gentle arm swing, relaxed stroll, no exaggerated bounce. Keep any character-specific dog/leash/skateboard/earbuds or worn crossbody bag. NO shopping bag. Transparent alpha background generous margin, no text no numbers. Exactly four figures, full bodies, wide canvas."
+  },
+  {
+    "folder": "cycles",
+    "name": "person.customer.03.walk.empty.sheet.png",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.03.stand.empty.right.png",
+      "outputs/people-complete-v3/person.customer.03.walk.empty.right.png"
+    ],
+    "prompt": "Using the attached character exactly as drawn, same clothes face proportions finish camera light, draw a FOUR FRAME walk cycle as four separate figures side by side in ONE ROW evenly spaced, all facing LOWER RIGHT, same height, feet same baseline. Frame1 LEFT foot forward heel down, frame2 passing RIGHT leg lifting, frame3 RIGHT foot forward heel down, frame4 passing LEFT leg lifting. Gentle arm swing, relaxed stroll, no exaggerated bounce. Keep any character-specific dog/leash/skateboard/earbuds or worn crossbody bag. NO shopping bag. Transparent alpha background generous margin, no text no numbers. Exactly four figures, full bodies, wide canvas."
+  },
+  {
+    "folder": "cycles",
+    "name": "person.customer.04.walk.empty.sheet.png",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.04.stand.empty.right.png",
+      "outputs/people-complete-v3/person.customer.04.walk.empty.right.png"
+    ],
+    "prompt": "Using the attached character exactly as drawn, same clothes face proportions finish camera light, draw a FOUR FRAME walk cycle as four separate figures side by side in ONE ROW evenly spaced, all facing LOWER RIGHT, same height, feet same baseline. Frame1 LEFT foot forward heel down, frame2 passing RIGHT leg lifting, frame3 RIGHT foot forward heel down, frame4 passing LEFT leg lifting. Gentle arm swing, relaxed stroll, no exaggerated bounce. Keep any character-specific dog/leash/skateboard/earbuds or worn crossbody bag. NO shopping bag. Transparent alpha background generous margin, no text no numbers. Exactly four figures, full bodies, wide canvas."
+  },
+  {
+    "folder": "cycles",
+    "name": "person.customer.05.walk.empty.sheet.png",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.05.stand.empty.right.png",
+      "outputs/people-complete-v3/person.customer.05.walk.empty.right.png"
+    ],
+    "prompt": "Using the attached character exactly as drawn, same clothes face proportions finish camera light, draw a FOUR FRAME walk cycle as four separate figures side by side in ONE ROW evenly spaced, all facing LOWER RIGHT, same height, feet same baseline. Frame1 LEFT foot forward heel down, frame2 passing RIGHT leg lifting, frame3 RIGHT foot forward heel down, frame4 passing LEFT leg lifting. Gentle arm swing, relaxed stroll, no exaggerated bounce. Keep any character-specific dog/leash/skateboard/earbuds or worn crossbody bag. NO shopping bag. Transparent alpha background generous margin, no text no numbers. Exactly four figures, full bodies, wide canvas."
+  },
+  {
+    "folder": "cycles",
+    "name": "person.customer.06.walk.empty.sheet.png",
+    "refs": [
+      "outputs/people-complete-v3/person.customer.06.stand.empty.right.png",
+      "outputs/people-complete-v3/person.customer.06.walk.empty.right.png"
+    ],
+    "prompt": "Using the attached character exactly as drawn, same clothes face proportions finish camera light, draw a FOUR FRAME walk cycle as four separate figures side by side in ONE ROW evenly spaced, all facing LOWER RIGHT, same height, feet same baseline. Frame1 LEFT foot forward heel down, frame2 passing RIGHT leg lifting, frame3 RIGHT foot forward heel down, frame4 passing LEFT leg lifting. Gentle arm swing, relaxed stroll, no exaggerated bounce. Keep any character-specific dog/leash/skateboard/earbuds or worn crossbody bag. NO shopping bag. Transparent alpha background generous margin, no text no numbers. Exactly four figures, full bodies, wide canvas."
+  },
+  {
+    "folder": "cycles",
+    "name": "person.customer.08.walk.empty.sheet.png",
+    "refs": [
+      "outputs/main-shop-v2/people/person.customer.08.stand.empty.right.png",
+      "outputs/main-shop-v2/people/person.customer.08.walk.empty.right.png"
+    ],
+    "prompt": "Using the attached character exactly as drawn, same clothes face proportions finish camera light, draw a FOUR FRAME walk cycle as four separate figures side by side in ONE ROW evenly spaced, all facing LOWER RIGHT, same height, feet same baseline. Frame1 LEFT foot forward heel down, frame2 passing RIGHT leg lifting, frame3 RIGHT foot forward heel down, frame4 passing LEFT leg lifting. Gentle arm swing, relaxed stroll, no exaggerated bounce. Keep any character-specific dog/leash/skateboard/earbuds or worn crossbody bag. NO shopping bag. Transparent alpha background generous margin, no text no numbers. Exactly four figures, full bodies, wide canvas."
+  },
+  {
+    "folder": "cycles",
+    "name": "person.customer.09.walk.empty.sheet.png",
+    "refs": [
+      "outputs/main-shop-v2/people/person.customer.09.stand.empty.right.png",
+      "outputs/main-shop-v2/people/person.customer.09.walk.empty.right.png"
+    ],
+    "prompt": "Using the attached character exactly as drawn, same clothes face proportions finish camera light, draw a FOUR FRAME walk cycle as four separate figures side by side in ONE ROW evenly spaced, all facing LOWER RIGHT, same height, feet same baseline. Frame1 LEFT foot forward heel down, frame2 passing RIGHT leg lifting, frame3 RIGHT foot forward heel down, frame4 passing LEFT leg lifting. Gentle arm swing, relaxed stroll, no exaggerated bounce. Keep any character-specific dog/leash/skateboard/earbuds or worn crossbody bag. NO shopping bag. Transparent alpha background generous margin, no text no numbers. Exactly four figures, full bodies, wide canvas."
+  },
+  {
+    "folder": "cycles",
+    "name": "person.customer.10.walk.empty.sheet.png",
+    "refs": [
+      "outputs/main-shop-v2/people/person.customer.10.stand.empty.right.png",
+      "outputs/main-shop-v2/people/person.customer.10.walk.empty.right.png"
+    ],
+    "prompt": "Using the attached character exactly as drawn, same clothes face proportions finish camera light, draw a FOUR FRAME walk cycle as four separate figures side by side in ONE ROW evenly spaced, all facing LOWER RIGHT, same height, feet same baseline. Frame1 LEFT foot forward heel down, frame2 passing RIGHT leg lifting, frame3 RIGHT foot forward heel down, frame4 passing LEFT leg lifting. Gentle arm swing, relaxed stroll, no exaggerated bounce. Keep any character-specific dog/leash/skateboard/earbuds or worn crossbody bag. NO shopping bag. Transparent alpha background generous margin, no text no numbers. Exactly four figures, full bodies, wide canvas."
+  },
+  {
+    "folder": "cycles",
+    "name": "person.customer.11.walk.empty.sheet.png",
+    "refs": [
+      "outputs/main-shop-v2/people/person.customer.11.stand.empty.right.png",
+      "outputs/main-shop-v2/people/person.customer.11.walk.empty.right.png"
+    ],
+    "prompt": "Using the attached character exactly as drawn, same clothes face proportions finish camera light, draw a FOUR FRAME walk cycle as four separate figures side by side in ONE ROW evenly spaced, all facing LOWER RIGHT, same height, feet same baseline. Frame1 LEFT foot forward heel down, frame2 passing RIGHT leg lifting, frame3 RIGHT foot forward heel down, frame4 passing LEFT leg lifting. Gentle arm swing, relaxed stroll, no exaggerated bounce. Keep any character-specific dog/leash/skateboard/earbuds or worn crossbody bag. NO shopping bag. Transparent alpha background generous margin, no text no numbers. Exactly four figures, full bodies, wide canvas."
+  },
+  {
+    "folder": "cycles",
+    "name": "person.customer.12.walk.empty.sheet.png",
+    "refs": [
+      "outputs/main-shop-v2/people/person.customer.12.stand.empty.right.png",
+      "outputs/main-shop-v2/people/person.customer.12.walk.empty.right.png"
+    ],
+    "prompt": "Using the attached character exactly as drawn, same clothes face proportions finish camera light, draw a FOUR FRAME walk cycle as four separate figures side by side in ONE ROW evenly spaced, all facing LOWER RIGHT, same height, feet same baseline. Frame1 LEFT foot forward heel down, frame2 passing RIGHT leg lifting, frame3 RIGHT foot forward heel down, frame4 passing LEFT leg lifting. Gentle arm swing, relaxed stroll, no exaggerated bounce. Keep any character-specific dog/leash/skateboard/earbuds or worn crossbody bag. NO shopping bag. Transparent alpha background generous margin, no text no numbers. Exactly four figures, full bodies, wide canvas."
+  },
+  {
+    "folder": "cycles",
+    "name": "person.customer.13.walk.empty.sheet.png",
+    "refs": [
+      "outputs/main-shop-v2/people/person.customer.13.stand.empty.right.png",
+      "outputs/main-shop-v2/people/person.customer.13.walk.empty.right.png"
+    ],
+    "prompt": "Using the attached character exactly as drawn, same clothes face proportions finish camera light, draw a FOUR FRAME walk cycle as four separate figures side by side in ONE ROW evenly spaced, all facing LOWER RIGHT, same height, feet same baseline. Frame1 LEFT foot forward heel down, frame2 passing RIGHT leg lifting, frame3 RIGHT foot forward heel down, frame4 passing LEFT leg lifting. Gentle arm swing, relaxed stroll, no exaggerated bounce. Keep any character-specific dog/leash/skateboard/earbuds or worn crossbody bag. NO shopping bag. Transparent alpha background generous margin, no text no numbers. Exactly four figures, full bodies, wide canvas."
+  },
+  {
+    "folder": "cycles",
+    "name": "person.walker.01.walk.empty.sheet.png",
+    "refs": [
+      "outputs/people-complete-v3/person.walker.01.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.01.walk.empty.right.png"
+    ],
+    "prompt": "Using the attached character exactly as drawn, same clothes face proportions finish camera light, draw a FOUR FRAME walk cycle as four separate figures side by side in ONE ROW evenly spaced, all facing LOWER RIGHT, same height, feet same baseline. Frame1 LEFT foot forward heel down, frame2 passing RIGHT leg lifting, frame3 RIGHT foot forward heel down, frame4 passing LEFT leg lifting. Gentle arm swing, relaxed stroll, no exaggerated bounce. Keep any character-specific dog/leash/skateboard/earbuds or worn crossbody bag. NO shopping bag. Transparent alpha background generous margin, no text no numbers. Exactly four figures, full bodies, wide canvas."
+  },
+  {
+    "folder": "cycles",
+    "name": "person.walker.02.walk.empty.sheet.png",
+    "refs": [
+      "outputs/people-complete-v3/person.walker.02.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.02.walk.empty.right.png"
+    ],
+    "prompt": "Using the attached character exactly as drawn, same clothes face proportions finish camera light, draw a FOUR FRAME walk cycle as four separate figures side by side in ONE ROW evenly spaced, all facing LOWER RIGHT, same height, feet same baseline. Frame1 LEFT foot forward heel down, frame2 passing RIGHT leg lifting, frame3 RIGHT foot forward heel down, frame4 passing LEFT leg lifting. Gentle arm swing, relaxed stroll, no exaggerated bounce. Keep any character-specific dog/leash/skateboard/earbuds or worn crossbody bag. NO shopping bag. Transparent alpha background generous margin, no text no numbers. Exactly four figures, full bodies, wide canvas."
+  },
+  {
+    "folder": "cycles",
+    "name": "person.walker.03.walk.empty.sheet.png",
+    "refs": [
+      "outputs/people-complete-v3/person.walker.03.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.03.walk.empty.right.png"
+    ],
+    "prompt": "Using the attached character exactly as drawn, same clothes face proportions finish camera light, draw a FOUR FRAME walk cycle as four separate figures side by side in ONE ROW evenly spaced, all facing LOWER RIGHT, same height, feet same baseline. Frame1 LEFT foot forward heel down, frame2 passing RIGHT leg lifting, frame3 RIGHT foot forward heel down, frame4 passing LEFT leg lifting. Gentle arm swing, relaxed stroll, no exaggerated bounce. Keep any character-specific dog/leash/skateboard/earbuds or worn crossbody bag. NO shopping bag. Transparent alpha background generous margin, no text no numbers. Exactly four figures, full bodies, wide canvas."
+  },
+  {
+    "folder": "cycles",
+    "name": "person.walker.04.walk.empty.sheet.png",
+    "refs": [
+      "outputs/people-complete-v3/person.walker.04.stand.empty.right.png",
+      "outputs/people-complete-v3/person.walker.04.walk.empty.right.png"
+    ],
+    "prompt": "Using the attached character exactly as drawn, same clothes face proportions finish camera light, draw a FOUR FRAME walk cycle as four separate figures side by side in ONE ROW evenly spaced, all facing LOWER RIGHT, same height, feet same baseline. Frame1 LEFT foot forward heel down, frame2 passing RIGHT leg lifting, frame3 RIGHT foot forward heel down, frame4 passing LEFT leg lifting. Gentle arm swing, relaxed stroll, no exaggerated bounce. Keep any character-specific dog/leash/skateboard/earbuds or worn crossbody bag. NO shopping bag. Transparent alpha background generous margin, no text no numbers. Exactly four figures, full bodies, wide canvas."
+  },
+  {
+    "folder": "cycles",
+    "name": "person.walker.05.walk.empty.sheet.png",
+    "refs": [
+      "outputs/main-shop-v2/people/person.walker.05.stand.empty.right.png",
+      "outputs/main-shop-v2/people/person.walker.05.walk.empty.right.png"
+    ],
+    "prompt": "Using the attached character exactly as drawn, same clothes face proportions finish camera light, draw a FOUR FRAME walk cycle as four separate figures side by side in ONE ROW evenly spaced, all facing LOWER RIGHT, same height, feet same baseline. Frame1 LEFT foot forward heel down, frame2 passing RIGHT leg lifting, frame3 RIGHT foot forward heel down, frame4 passing LEFT leg lifting. Gentle arm swing, relaxed stroll, no exaggerated bounce. Keep any character-specific dog/leash/skateboard/earbuds or worn crossbody bag. NO shopping bag. Transparent alpha background generous margin, no text no numbers. Exactly four figures, full bodies, wide canvas."
+  },
+  {
+    "folder": "cycles",
+    "name": "person.walker.06.walk.empty.sheet.png",
+    "refs": [
+      "outputs/main-shop-v2/people/person.walker.06.stand.empty.right.png",
+      "outputs/main-shop-v2/people/person.walker.06.walk.empty.right.png"
+    ],
+    "prompt": "Using the attached character exactly as drawn, same clothes face proportions finish camera light, draw a FOUR FRAME walk cycle as four separate figures side by side in ONE ROW evenly spaced, all facing LOWER RIGHT, same height, feet same baseline. Frame1 LEFT foot forward heel down, frame2 passing RIGHT leg lifting, frame3 RIGHT foot forward heel down, frame4 passing LEFT leg lifting. Gentle arm swing, relaxed stroll, no exaggerated bounce. Keep any character-specific dog/leash/skateboard/earbuds or worn crossbody bag. NO shopping bag. Transparent alpha background generous margin, no text no numbers. Exactly four figures, full bodies, wide canvas."
+  },
+  {
+    "folder": "cycles",
+    "name": "person.walker.07.walk.empty.sheet.png",
+    "refs": [
+      "outputs/main-shop-v2/people/person.walker.07.stand.empty.right.png",
+      "outputs/main-shop-v2/people/person.walker.07.walk.empty.right.png"
+    ],
+    "prompt": "Using the attached character exactly as drawn, same clothes face proportions finish camera light, draw a FOUR FRAME walk cycle as four separate figures side by side in ONE ROW evenly spaced, all facing LOWER RIGHT, same height, feet same baseline. Frame1 LEFT foot forward heel down, frame2 passing RIGHT leg lifting, frame3 RIGHT foot forward heel down, frame4 passing LEFT leg lifting. Gentle arm swing, relaxed stroll, no exaggerated bounce. Keep any character-specific dog/leash/skateboard/earbuds or worn crossbody bag. NO shopping bag. Transparent alpha background generous margin, no text no numbers. Exactly four figures, full bodies, wide canvas."
+  }
+]

@@ -1,0 +1,482 @@
+[
+  {
+    "file": "cars/street.car.yellow.fl.png",
+    "measured_slopes": [
+      -0.5725190839694656,
+      0.5796178343949043
+    ],
+    "x_scale": 1,
+    "y_scale": 1.0022251001369877,
+    "y_shear": -0.0035572729279913506,
+    "mapped_axes": [
+      -0.5773502691896255,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.car.purple.fl.png",
+    "measured_slopes": [
+      -0.5801526717557252,
+      0.5732484076433122
+    ],
+    "x_scale": 1,
+    "y_scale": 1.0011266323600903,
+    "y_shear": 0.0034560213398923123,
+    "mapped_axes": [
+      -0.5773502691896256,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.car.white.fl.png",
+    "measured_slopes": [
+      -0.5785440613026819,
+      0.5705128205128206
+    ],
+    "x_scale": 1,
+    "y_scale": 1.0049115554269443,
+    "y_shear": 0.004035343337074004,
+    "mapped_axes": [
+      -0.5773502691896255,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.car.red.fl.png",
+    "measured_slopes": [
+      -0.5763358778625953,
+      0.5796178343949042
+    ],
+    "x_scale": 1,
+    "y_scale": 0.9989158961427609,
+    "y_shear": -0.0016391992752865514,
+    "mapped_axes": [
+      -0.5773502691896257,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.car.orange.fl.png",
+    "measured_slopes": [
+      -0.5763358778625952,
+      0.5796178343949048
+    ],
+    "x_scale": 1,
+    "y_scale": 0.9989158961427606,
+    "y_shear": -0.0016391992752868845,
+    "mapped_axes": [
+      -0.5773502691896257,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.car.green.fl.png",
+    "measured_slopes": [
+      -0.5763358778625954,
+      0.5705128205128207
+    ],
+    "x_scale": 1,
+    "y_scale": 1.0068464480231418,
+    "y_shear": 0.0029314623046278188,
+    "mapped_axes": [
+      -0.5773502691896257,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.car.purple.fr.png",
+    "measured_slopes": [
+      -0.5751633986928103,
+      0.5783582089552238
+    ],
+    "x_scale": 1,
+    "y_scale": 1.0010220274361579,
+    "y_shear": -0.0015990377230775676,
+    "mapped_axes": [
+      -0.5773502691896257,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.car.white.fr.png",
+    "measured_slopes": [
+      -0.5751633986928107,
+      0.5783582089552237
+    ],
+    "x_scale": 1,
+    "y_scale": 1.0010220274361574,
+    "y_shear": -0.0015990377230772346,
+    "mapped_axes": [
+      -0.5773502691896256,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.car.red.fr.png",
+    "measured_slopes": [
+      -0.5751633986928104,
+      0.5805243445692884
+    ],
+    "x_scale": 1,
+    "y_scale": 0.9991457857984536,
+    "y_shear": -0.0026781832401882033,
+    "mapped_axes": [
+      -0.5773502691896255,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.car.orange.fr.png",
+    "measured_slopes": [
+      -0.5657894736842105,
+      0.5805243445692883
+    ],
+    "x_scale": 1,
+    "y_scale": 1.0073162514419745,
+    "y_shear": -0.007421337452719001,
+    "mapped_axes": [
+      -0.5773502691896256,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.car.green.fr.png",
+    "measured_slopes": [
+      -0.57516339869281,
+      0.5783582089552238
+    ],
+    "x_scale": 1,
+    "y_scale": 1.001022027436158,
+    "y_shear": -0.0015990377230776787,
+    "mapped_axes": [
+      -0.5773502691896256,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.car.yellow.fr.png",
+    "measured_slopes": [
+      -0.5751633986928104,
+      0.5805243445692883
+    ],
+    "x_scale": 1,
+    "y_scale": 0.9991457857984537,
+    "y_shear": -0.0026781832401882033,
+    "mapped_axes": [
+      -0.5773502691896256,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.car.yellow.bl.png",
+    "measured_slopes": [
+      -0.5830115830115827,
+      0.5804597701149428
+    ],
+    "x_scale": 1,
+    "y_scale": 0.9924615120744443,
+    "y_shear": 0.0012662880429651358,
+    "mapped_axes": [
+      -0.5773502691896257,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.car.green.bl.png",
+    "measured_slopes": [
+      -0.583011583011583,
+      0.5747126436781611
+    ],
+    "x_scale": 1,
+    "y_scale": 0.9973882482194067,
+    "y_shear": 0.004138632281920351,
+    "mapped_axes": [
+      -0.5773502691896256,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.car.orange.bl.png",
+    "measured_slopes": [
+      -0.586872586872587,
+      0.5804597701149423
+    ],
+    "x_scale": 1,
+    "y_scale": 0.9891789013363115,
+    "y_shear": 0.003171711517399034,
+    "mapped_axes": [
+      -0.5773502691896256,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.car.red.bl.png",
+    "measured_slopes": [
+      -0.5807692307692309,
+      0.5804597701149427
+    ],
+    "x_scale": 1,
+    "y_scale": 0.9943779715284826,
+    "y_shear": 0.00015386042883958062,
+    "mapped_axes": [
+      -0.5773502691896255,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.car.white.bl.png",
+    "measured_slopes": [
+      -0.5830115830115831,
+      0.5804597701149427
+    ],
+    "x_scale": 1,
+    "y_scale": 0.9924615120744441,
+    "y_shear": 0.0012662880429653578,
+    "mapped_axes": [
+      -0.5773502691896256,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.car.purple.bl.png",
+    "measured_slopes": [
+      -0.5791505791505792,
+      0.5804597701149424
+    ],
+    "x_scale": 1,
+    "y_scale": 0.99576598217722,
+    "y_shear": -0.0006518239132433656,
+    "mapped_axes": [
+      -0.5773502691896256,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.car.green.br.png",
+    "measured_slopes": [
+      -0.5767195767195762,
+      0.5755102040816327
+    ],
+    "x_scale": 1,
+    "y_scale": 1.0021443271291985,
+    "y_shear": 0.0006059829642500736,
+    "mapped_axes": [
+      -0.5773502691896258,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.car.orange.br.png",
+    "measured_slopes": [
+      -0.5767195767195767,
+      0.5772357723577237
+    ],
+    "x_scale": 1,
+    "y_scale": 1.0006457696153899,
+    "y_shear": -0.00025826449080279534,
+    "mapped_axes": [
+      -0.5773502691896255,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.car.red.br.png",
+    "measured_slopes": [
+      -0.5714285714285714,
+      0.5772357723577237
+    ],
+    "x_scale": 1,
+    "y_scale": 1.0052549681946767,
+    "y_shear": -0.0029188587926676224,
+    "mapped_axes": [
+      -0.5773502691896257,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.car.white.br.png",
+    "measured_slopes": [
+      -0.5767195767195766,
+      0.5772357723577233
+    ],
+    "x_scale": 1,
+    "y_scale": 1.0006457696153905,
+    "y_shear": -0.00025826449080279534,
+    "mapped_axes": [
+      -0.5773502691896258,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.car.purple.br.png",
+    "measured_slopes": [
+      -0.560846560846561,
+      0.5772357723577237
+    ],
+    "x_scale": 1,
+    "y_scale": 1.014601935809141,
+    "y_shear": -0.008314262862805455,
+    "mapped_axes": [
+      -0.5773502691896254,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.car.yellow.br.png",
+    "measured_slopes": [
+      -0.5714285714285714,
+      0.579591836734694
+    ],
+    "x_scale": 1,
+    "y_scale": 1.0031972762514771,
+    "y_shear": -0.0040946827602103,
+    "mapped_axes": [
+      -0.5773502691896257,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.van.fl.png",
+    "measured_slopes": [
+      -0.549407114624506,
+      0.5763888888888888
+    ],
+    "x_scale": 1,
+    "y_scale": 1.0256747534861121,
+    "y_shear": -0.013837262333619482,
+    "mapped_axes": [
+      -0.5773502691896258,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.van.fr.png",
+    "measured_slopes": [
+      -0.4935064935064935,
+      0.65
+    ],
+    "x_scale": 1,
+    "y_scale": 1.0097892272027522,
+    "y_shear": -0.07901272849216334,
+    "mapped_axes": [
+      -0.5773502691896255,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.van.bl.png",
+    "measured_slopes": [
+      -0.5758928571428571,
+      0.5116279069767442
+    ],
+    "x_scale": 1,
+    "y_scale": 1.0617733256008541,
+    "y_shear": 0.034117404928723505,
+    "mapped_axes": [
+      -0.5773502691896255,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "cars/street.van.br.png",
+    "measured_slopes": [
+      -0.5359477124183006,
+      0.6205128205128205
+    ],
+    "x_scale": 1,
+    "y_scale": 0.9984781196575649,
+    "y_shear": -0.04221820505942753,
+    "mapped_axes": [
+      -0.5773502691896257,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "street/street.foodtruck.png",
+    "measured_slopes": [
+      -0.5,
+      0.5891891891891892
+    ],
+    "x_scale": 1,
+    "y_scale": 1.060146896278717,
+    "y_shear": -0.04727682105026709,
+    "mapped_axes": [
+      -0.5773502691896256,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "street/street.newsboxes.png",
+    "measured_slopes": [
+      -0.5625,
+      0.3006535947712418
+    ],
+    "x_scale": 1,
+    "y_scale": 1.3377694831767188,
+    "y_shear": 0.17514506509727878,
+    "mapped_axes": [
+      -0.5773502691896255,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "shell/flat.wall.glazing.left.png",
+    "measured_slopes": [
+      -0.35661764705882354,
+      null
+    ],
+    "x_scale": 0.6781743051694318,
+    "y_scale": 1,
+    "y_shear": -0.034926470588235226,
+    "mapped_axes": [
+      -0.5773502691896256,
+      null
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  },
+  {
+    "file": "shell/flat.wall.glazing.right.png",
+    "measured_slopes": [
+      null,
+      0.37339055793991416
+    ],
+    "x_scale": 0.7619536814412443,
+    "y_scale": 1,
+    "y_shear": 0.0665236051502145,
+    "mapped_axes": [
+      null,
+      0.5773502691896256
+    ],
+    "measurement_limit": "Raster landmarks and line estimates; mapped reference axes exact, remaining render edges may vary."
+  }
+]

@@ -1,0 +1,104 @@
+[
+  {
+    "file": "outputs/main-shop-v2/sites/station.seeds.site.png",
+    "before": [
+      -0.618,
+      0.664
+    ],
+    "vertical_scale": 0.9007024480337373,
+    "vertical_shear": -0.020716156304775968,
+    "after": [
+      -0.58,
+      0.578
+    ],
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "outputs/main-shop-v2/sites/station.grow.site.png",
+    "before": [
+      -0.62,
+      0.664
+    ],
+    "vertical_scale": 0.899299484719043,
+    "vertical_shear": -0.019784588663818936,
+    "after": [
+      -0.582,
+      0.578
+    ],
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "outputs/main-shop-v2/sites/station.harvest.site.png",
+    "before": [
+      -0.626,
+      0.674
+    ],
+    "vertical_scale": 0.8882311833686548,
+    "vertical_shear": -0.021317548400847763,
+    "after": [
+      -0.58,
+      0.58
+    ],
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "outputs/main-shop-v2/sites/station.pack.site.png",
+    "before": [
+      -0.618,
+      0.664
+    ],
+    "vertical_scale": 0.9007024480337373,
+    "vertical_shear": -0.020716156304775968,
+    "after": [
+      -0.578,
+      0.58
+    ],
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "outputs/main-shop-v2/sites/station.orders.site.png",
+    "before": [
+      -0.626,
+      0.668
+    ],
+    "vertical_scale": 0.8923497205403796,
+    "vertical_shear": -0.018739344131348035,
+    "after": [
+      -0.572,
+      0.578
+    ],
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "outputs/main-shop-v2/sites/station.pickup.site.png",
+    "before": [
+      -0.618,
+      0.668
+    ],
+    "vertical_scale": 0.8979008852093711,
+    "vertical_shear": -0.022447522130234265,
+    "after": [
+      -0.58,
+      0.576
+    ],
+    "alpha": [
+      0,
+      255
+    ]
+  }
+]

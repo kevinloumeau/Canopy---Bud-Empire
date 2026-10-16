@@ -1,0 +1,39 @@
+{
+  "tool": "built-in image_gen",
+  "status": "failed-walk-cycle-acceptance",
+  "tests": [
+    {
+      "source": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-9069cbf7-40d4-485e-a618-ffa0982131b3.png",
+      "file": "customer01-rear-pair.png",
+      "prompt": "Create one transparent PNG containing TWO full-body clay game sprites side by side of this same customer, two opposite contact keyframes of a walking cycle. Input 1 is character identity and clothing. Input 2 is the exact rear three-quarter camera and facing direction to keep for BOTH sprites. Both face northeast, away toward the upper right, same 30-degree dimetric camera, same size and head height. Brown wavy hair, black sunglasses, blue jacket with full length sleeves, cream collar, olive trousers, brown boots. Empty hands. LEFT SPRITE: the leg attached to the screen-left hip reaches forward toward upper-right; the leg attached to screen-right hip stretches back toward lower-left. RIGHT SPRITE: reverse those limb roles, screen-left hip's leg stretches backward toward lower-left and screen-right hip's leg reaches forward toward upper-right. Trace each leg continuously from its own hip to its boot. Opposite arm swings in the two poses. The pelvis, shoulders and head keep the identical upper-right orientation across both sprites. These are two half-cycle-separated contact poses, not two camera angles. Do not mirror the body or turn around. Do not duplicate the same lead leg. Keep the reference character and clothes exactly. Full figure from hair to boot sole, equal generous margins, no text, no grid, no props or jewelry, genuinely transparent background.",
+      "mode": "RGBA",
+      "size": [
+        1536,
+        1024
+      ],
+      "alpha_extrema": [
+        0,
+        254
+      ]
+    },
+    {
+      "source": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-c858bc85-223d-409d-94a1-3c157b659c14.png",
+      "file": "customer01-rear-pair-correction.png",
+      "prompt": "Edit the right-hand character in this two-character image to the OPPOSITE step. Keep the left character as is. Keep the right character's head and torso facing upper-right exactly as now. Change the right character's near leg (the leg attached to the screen-right side of the pelvis): this leg must sweep BACK toward the bottom-left, its boot sole visible at the lower-left. Change the far leg (attached to screen-left side of pelvis): it must reach FORWARD toward upper-right, visible on the right beyond the near leg. The near leg must visibly overlap IN FRONT OF the far leg at their crossing. Currently the near leg travels forward: reverse this. The near arm on the right figure must swing backward toward lower-left, while the far arm swings forward, partly hidden beyond the torso. This is a different skeletal pose, not a mirror of the whole character. Same hairstyle, same denim jacket with full length sleeves, same olive trousers and boots, identical scale and view. Deliver on clean transparent alpha with no glow or background.",
+      "mode": "RGBA",
+      "size": [
+        1536,
+        1024
+      ],
+      "alpha_extrema": [
+        0,
+        254
+      ]
+    }
+  ],
+  "findings": [
+    "Both figures retain the rear upper-right orientation.",
+    "Both tests still show the same lead-leg pattern; correction changes foot lift and arm bend without reversing the stride.",
+    "Visible colored haze surrounds figures. These are rejected test images, not a usable walk loop."
+  ]
+}

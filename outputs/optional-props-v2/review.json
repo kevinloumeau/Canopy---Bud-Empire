@@ -1,0 +1,203 @@
+{
+  "folder": "optional-props-v2",
+  "expected": 15,
+  "saved": 15,
+  "missing": [],
+  "alpha": [
+    {
+      "file": "upgrade.curing.cabinet.png",
+      "size": [
+        1264,
+        1244
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 945128,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "upgrade.curing.jars.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 937549,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "upgrade.delivery.cargo.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1199540,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "upgrade.delivery.drone.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 904443,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "upgrade.delivery.fleet.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1131036,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "upgrade.display.full.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 861560,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "upgrade.id.scanner.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1160392,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "upgrade.loyalty.tier1.png",
+      "size": [
+        1491,
+        1055
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1105755,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "upgrade.loyalty.tier2.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1135304,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "upgrade.marketing.poster.png",
+      "size": [
+        1024,
+        1536
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 607412,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "upgrade.marketing.screen.png",
+      "size": [
+        1495,
+        1052
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1176120,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "upgrade.queue.bench.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1300800,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "upgrade.sign.tier1.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1182635,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "upgrade.sign.tier2.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 969478,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "upgrade.sign.tier3.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1176510,
+      "alpha_range": [
+        0,
+        254
+      ]
+    }
+  ]
+}

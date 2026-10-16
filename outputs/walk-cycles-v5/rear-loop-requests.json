@@ -1,0 +1,144 @@
+{
+  "status": "incomplete-png-generation-quality-failure",
+  "scope": "20 empty-handed rear three-quarter eight-frame walk loops; no game wiring or publication",
+  "sourceRoot": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/walk-cycles-v5/rear-stills/",
+  "generationPrompt": "Eight-frame PNG sprite sheet. Four columns and two rows. Rear three-quarter upper-right walk in place, contact/down/passing/up followed by opposite-leg contact/down/passing/up. Same character identity, clay style, scale, camera and accessories. Transparent alpha, no text, no scenery, no face exposed. No video generation.",
+  "frameExtraction": "Generate and inspect PNG poses directly; no video workflow. Align and assemble only accepted distinct poses.",
+  "acceptance": [
+    "Eight distinct poses across left and right steps",
+    "Back-facing upper-right direction held throughout",
+    "No face exposed",
+    "Exact cast identity and existing accessories retained",
+    "Stable body scale and ground anchor",
+    "Clean loop boundary",
+    "Alpha cleanup and final alignment checked visually"
+  ],
+  "assets": [
+    {
+      "id": "person.customer.01",
+      "input": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/walk-cycles-v5/rear-stills/person.customer.01.stand.empty.back-right.png",
+      "output": "person.customer.01.walk.empty.back-right.sheet.png",
+      "status": "pending-motion-generation"
+    },
+    {
+      "id": "person.customer.02",
+      "input": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/walk-cycles-v5/rear-stills/person.customer.02.stand.empty.back-right.png",
+      "output": "person.customer.02.walk.empty.back-right.sheet.png",
+      "status": "pending-motion-generation"
+    },
+    {
+      "id": "person.customer.03",
+      "input": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/walk-cycles-v5/rear-stills/person.customer.03.stand.empty.back-right.png",
+      "output": "person.customer.03.walk.empty.back-right.sheet.png",
+      "status": "pending-motion-generation"
+    },
+    {
+      "id": "person.customer.04",
+      "input": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/walk-cycles-v5/rear-stills/person.customer.04.stand.empty.back-right.png",
+      "output": "person.customer.04.walk.empty.back-right.sheet.png",
+      "status": "pending-motion-generation"
+    },
+    {
+      "id": "person.customer.05",
+      "input": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/walk-cycles-v5/rear-stills/person.customer.05.stand.empty.back-right.png",
+      "output": "person.customer.05.walk.empty.back-right.sheet.png",
+      "status": "pending-motion-generation"
+    },
+    {
+      "id": "person.customer.06",
+      "input": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/walk-cycles-v5/rear-stills/person.customer.06.stand.empty.back-right.png",
+      "output": "person.customer.06.walk.empty.back-right.sheet.png",
+      "status": "pending-motion-generation"
+    },
+    {
+      "id": "person.customer.07",
+      "input": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/walk-cycles-v5/rear-stills/person.customer.07.stand.empty.back-right.png",
+      "output": "person.customer.07.walk.empty.back-right.sheet.png",
+      "status": "pending-motion-generation"
+    },
+    {
+      "id": "person.customer.08",
+      "input": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/walk-cycles-v5/rear-stills/person.customer.08.stand.empty.back-right.png",
+      "output": "person.customer.08.walk.empty.back-right.sheet.png",
+      "status": "pending-motion-generation"
+    },
+    {
+      "id": "person.customer.09",
+      "input": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/walk-cycles-v5/rear-stills/person.customer.09.stand.empty.back-right.png",
+      "output": "person.customer.09.walk.empty.back-right.sheet.png",
+      "status": "pending-motion-generation"
+    },
+    {
+      "id": "person.customer.10",
+      "input": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/walk-cycles-v5/rear-stills/person.customer.10.stand.empty.back-right.png",
+      "output": "person.customer.10.walk.empty.back-right.sheet.png",
+      "status": "pending-motion-generation"
+    },
+    {
+      "id": "person.customer.11",
+      "input": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/walk-cycles-v5/rear-stills/person.customer.11.stand.empty.back-right.png",
+      "output": "person.customer.11.walk.empty.back-right.sheet.png",
+      "status": "pending-motion-generation"
+    },
+    {
+      "id": "person.customer.12",
+      "input": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/walk-cycles-v5/rear-stills/person.customer.12.stand.empty.back-right.png",
+      "output": "person.customer.12.walk.empty.back-right.sheet.png",
+      "status": "pending-motion-generation"
+    },
+    {
+      "id": "person.customer.13",
+      "input": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/walk-cycles-v5/rear-stills/person.customer.13.stand.empty.back-right.png",
+      "output": "person.customer.13.walk.empty.back-right.sheet.png",
+      "status": "pending-motion-generation"
+    },
+    {
+      "id": "person.walker.01",
+      "input": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/walk-cycles-v5/rear-stills/person.walker.01.stand.empty.back-right.png",
+      "output": "person.walker.01.walk.empty.back-right.sheet.png",
+      "status": "pending-motion-generation"
+    },
+    {
+      "id": "person.walker.02",
+      "input": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/walk-cycles-v5/rear-stills/person.walker.02.stand.empty.back-right.png",
+      "output": "person.walker.02.walk.empty.back-right.sheet.png",
+      "status": "pending-motion-generation"
+    },
+    {
+      "id": "person.walker.03",
+      "input": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/walk-cycles-v5/rear-stills/person.walker.03.stand.empty.back-right.png",
+      "output": "person.walker.03.walk.empty.back-right.sheet.png",
+      "status": "pending-motion-generation"
+    },
+    {
+      "id": "person.walker.04",
+      "input": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/walk-cycles-v5/rear-stills/person.walker.04.stand.empty.back-right.png",
+      "output": "person.walker.04.walk.empty.back-right.sheet.png",
+      "status": "pending-motion-generation"
+    },
+    {
+      "id": "person.walker.05",
+      "input": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/walk-cycles-v5/rear-stills/person.walker.05.stand.empty.back-right.png",
+      "output": "person.walker.05.walk.empty.back-right.sheet.png",
+      "status": "pending-motion-generation"
+    },
+    {
+      "id": "person.walker.06",
+      "input": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/walk-cycles-v5/rear-stills/person.walker.06.stand.empty.back-right.png",
+      "output": "person.walker.06.walk.empty.back-right.sheet.png",
+      "status": "pending-motion-generation"
+    },
+    {
+      "id": "person.walker.07",
+      "input": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/walk-cycles-v5/rear-stills/person.walker.07.stand.empty.back-right.png",
+      "output": "person.walker.07.walk.empty.back-right.sheet.png",
+      "status": "pending-motion-generation"
+    }
+  ],
+  "failedTests": [
+    "Customer01 rear eight-pose still sheet repeats the leading foot; rejected.",
+    "Customer01 opposite-stride single still did not swap anatomical leg leads; rejected."
+  ],
+  "blockingToolResult": "No account or video-plan dependency. Current built-in still-image tests fail the alternating anatomical foot-lead requirement.",
+  "generationMethod": "Built-in ChatGPT still-image generation only. User explicitly excludes video animation and Ludo."
+}

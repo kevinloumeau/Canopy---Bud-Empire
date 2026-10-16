@@ -1,0 +1,31 @@
+{
+  "primary_asset_counts": {
+    "sites": 6,
+    "people": 34,
+    "cars": 32,
+    "tubes": 6,
+    "belts": 3,
+    "shell": 3,
+    "street": 8
+  },
+  "walk_sheets": 39,
+  "individual_frames_both_directions": 312,
+  "frame_canvas": [
+    512,
+    448
+  ],
+  "baseline_y": 424,
+  "transparent_corners": "pass",
+  "frame_clipping_check": "pass",
+  "protected_attachment_hash": "pass",
+  "source_or_hosting_changes": "none from this task",
+  "geometry_evidence": [
+    "sites/angle-check.json",
+    "cars/master-angle-check.json",
+    "cars/matched-landmark-review.json",
+    "measured-geometry-adjustments.json",
+    "structural-angle-adjustments.json",
+    "tubes/axis-adjustments.json"
+  ],
+  "geometry_limit": "Measured reference axes are mapped to tan(30 degrees); raster estimates and generated secondary detail have finite precision. Curved and naturally tilted edges require visual judgement."
+}

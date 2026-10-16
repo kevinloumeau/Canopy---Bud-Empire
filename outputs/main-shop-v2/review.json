@@ -1,0 +1,697 @@
+{
+  "folder": "main-shop-v2",
+  "expected": 53,
+  "saved": 53,
+  "missing": [],
+  "alpha": [
+    {
+      "file": "drone.courier.empty.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1136729,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "drone.courier.loaded.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1130538,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "event.festival.stall.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1146901,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "lounge.carpet.entry.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1210775,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "lounge.coffee.table.png",
+      "size": [
+        1560,
+        1008
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1023952,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "lounge.door.closed.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 33760,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "lounge.door.open.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1129928,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "lounge.lamp.off.png",
+      "size": [
+        1312,
+        1199
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1094970,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "lounge.lamp.on.png",
+      "size": [
+        1312,
+        1199
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1090840,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "lounge.rug.floor.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 477381,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "lounge.sign.dark.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1242509,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "lounge.sign.lit.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1241342,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "lounge.sofa.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1063995,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "prop.cap.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1095649,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "prop.carton.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1180640,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "prop.jar.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1210340,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "prop.pickup.bag.png",
+      "size": [
+        1278,
+        1230
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 908289,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "prop.tee.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1033778,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "prop.tote.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1120694,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "shell.arch.shelves.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1100477,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "shell.art.leaf.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 848312,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "shell.column.png",
+      "size": [
+        1185,
+        1327
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1284186,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "shell.conveyor.lower.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1201119,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "shell.conveyor.upper.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1089158,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "shell.counter.divider.short.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 995348,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "shell.counter.divider.wide.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1019164,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "shell.exit.lamp.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1200767,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "shell.fan.housing.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1176814,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "shell.mat.entrance.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 854505,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "shell.mat.exit.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 434656,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "shell.menu.frame.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1066113,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "shell.planter.hanging.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1273753,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "shell.queue.rope.left.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1443607,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "shell.queue.rope.right.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1429159,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "shell.slab.edge.left.png",
+      "size": [
+        2159,
+        728
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1253426,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "shell.slab.edge.right.png",
+      "size": [
+        2172,
+        724
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1137070,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "shop.planter.aisle.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1217723,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.orders.compact.tier1.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1210648,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.orders.compact.tier2.png",
+      "size": [
+        1246,
+        1262
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1041570,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "station.orders.compact.tier3.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1240047,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "station.security.site.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 998545,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "street.bollard.png",
+      "size": [
+        1024,
+        1536
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1278000,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "street.car.orange.fl.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 933424,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "street.car.orange.fr.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 859923,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "street.car.purple.fl.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1041865,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "street.car.purple.fr.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 891315,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "street.crossing.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 991013,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "street.kerb.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1222016,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "street.manhole.png",
+      "size": [
+        1263,
+        1246
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 771067,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "street.sconce.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1266712,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "tube.elbow.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1321796,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "tube.port.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1326607,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "tube.straight.png",
+      "size": [
+        1024,
+        1536
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1062578,
+      "alpha_range": [
+        0,
+        254
+      ]
+    }
+  ]
+}

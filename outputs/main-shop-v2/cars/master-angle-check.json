@@ -1,0 +1,146 @@
+[
+  {
+    "file": "street.car.blue.fl.png",
+    "measurement": "Same-height wheel hubs and paired front or rear lights, checked on coordinate-grid preview",
+    "points": {
+      "negative": [
+        [
+          725,
+          838
+        ],
+        [
+          1220,
+          625
+        ]
+      ],
+      "positive": [
+        [
+          255,
+          610
+        ],
+        [
+          552,
+          738
+        ]
+      ]
+    },
+    "before": [
+      -0.4303030303030303,
+      0.43097643097643096
+    ],
+    "vertical_scale": 1.3406804530830245,
+    "vertical_shear": -0.0004514075599606482,
+    "mapped_axes": [
+      -0.5773502691896257,
+      0.5773502691896256
+    ]
+  },
+  {
+    "file": "street.car.blue.fr.png",
+    "measurement": "Same-height wheel hubs and paired front or rear lights, checked on coordinate-grid preview",
+    "points": {
+      "negative": [
+        [
+          944,
+          795
+        ],
+        [
+          1213,
+          670
+        ]
+      ],
+      "positive": [
+        [
+          310,
+          620
+        ],
+        [
+          780,
+          878
+        ]
+      ]
+    },
+    "before": [
+      -0.4646840148698885,
+      0.548936170212766
+    ],
+    "vertical_scale": 1.1391846328366997,
+    "vertical_shear": -0.04798938032498823,
+    "mapped_axes": [
+      -0.5773502691896256,
+      0.5773502691896256
+    ]
+  },
+  {
+    "file": "street.car.blue.bl.png",
+    "measurement": "Same-height wheel hubs and paired front or rear lights, checked on coordinate-grid preview",
+    "points": {
+      "negative": [
+        [
+          610,
+          936
+        ],
+        [
+          1082,
+          710
+        ]
+      ],
+      "positive": [
+        [
+          135,
+          665
+        ],
+        [
+          450,
+          831
+        ]
+      ]
+    },
+    "before": [
+      -0.4788135593220339,
+      0.526984126984127
+    ],
+    "vertical_scale": 1.1480445362923264,
+    "vertical_shear": -0.02765097850728293,
+    "mapped_axes": [
+      -0.5773502691896256,
+      0.5773502691896256
+    ]
+  },
+  {
+    "file": "street.car.blue.br.png",
+    "measurement": "Same-height wheel hubs and paired front or rear lights, checked on coordinate-grid preview",
+    "points": {
+      "negative": [
+        [
+          790,
+          860
+        ],
+        [
+          1108,
+          725
+        ]
+      ],
+      "positive": [
+        [
+          235,
+          660
+        ],
+        [
+          650,
+          930
+        ]
+      ]
+    },
+    "before": [
+      -0.42452830188679247,
+      0.6506024096385542
+    ],
+    "vertical_scale": 1.0740094446200075,
+    "vertical_shear": -0.12140286345471663,
+    "mapped_axes": [
+      -0.5773502691896255,
+      0.5773502691896256
+    ]
+  }
+]

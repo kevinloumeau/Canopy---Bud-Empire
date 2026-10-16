@@ -1,3 +1,6 @@
 .sites-runtime/
 node_modules/
 .DS_Store
+
+# Large sprite bundles; too big for GitHub
+*.zip

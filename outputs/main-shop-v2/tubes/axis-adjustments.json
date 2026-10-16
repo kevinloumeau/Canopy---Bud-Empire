@@ -1,0 +1,30 @@
+[
+  {
+    "file": "tube.straight.png",
+    "measured_axis": 0.5688888888888889,
+    "mapped_axis": 0.5773502691896256,
+    "y_scale": 1.0148735200598888,
+    "method": "Grid preview centerline or straight tangent measurement"
+  },
+  {
+    "file": "tube.elbow.png",
+    "measured_axis": 0.6666666666666666,
+    "mapped_axis": 0.5773502691896256,
+    "y_scale": 0.8660254037844385,
+    "method": "Grid preview centerline or straight tangent measurement"
+  },
+  {
+    "file": "tube.stub.pickup.png",
+    "measured_axis": 0.6273291925465838,
+    "mapped_axis": 0.5773502691896256,
+    "y_scale": 0.9203306271240568,
+    "method": "Grid preview centerline or straight tangent measurement"
+  },
+  {
+    "file": "tube.port.png",
+    "measured_axis": 0.65,
+    "mapped_axis": 0.5773502691896256,
+    "y_scale": 0.8882311833686548,
+    "method": "Grid preview centerline or straight tangent measurement"
+  }
+]

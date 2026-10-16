@@ -1,0 +1,5 @@
+Asset handoff complete: canopy-sprite-expansion.zip
+477 PNG deliverables: 92 primary sprites, 34 static left mirrors, 39 walk sheets, 312 individual walk frames in both directions.
+Transparency, frame clipping and protected attachment hash checks passed.
+Measured geometry adjustments and visual review completed; raster precision and curved-edge limits are documented in README-ASSETS.md.
+No game source or hosting changes were made by this task.

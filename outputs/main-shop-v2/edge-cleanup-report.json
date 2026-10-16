@@ -1,0 +1,62 @@
+[
+  {
+    "file": "people/person.customer.09.stand.bag.right.png",
+    "removed_marker_pixels": 4360
+  },
+  {
+    "file": "people/person.customer.10.stand.bag.right.png",
+    "removed_marker_pixels": 934
+  },
+  {
+    "file": "people/person.customer.08.stand.bag.right.png",
+    "removed_marker_pixels": 1712
+  },
+  {
+    "file": "people/person.customer.11.stand.bag.right.png",
+    "removed_marker_pixels": 1852
+  },
+  {
+    "file": "people/person.customer.11.walk.bag.right.png",
+    "removed_marker_pixels": 3762
+  },
+  {
+    "file": "people/person.customer.12.walk.bag.right.png",
+    "removed_marker_pixels": 4211
+  },
+  {
+    "file": "people/person.walker.05.walk.empty.right.png",
+    "removed_marker_pixels": 1522
+  },
+  {
+    "file": "people/person.customer.11.walk.empty.right.png",
+    "removed_marker_pixels": 3682
+  },
+  {
+    "file": "tubes/tube.stub.pickup.png",
+    "removed_marker_pixels": 88
+  },
+  {
+    "file": "tubes/tube.straight.png",
+    "removed_marker_pixels": 204
+  },
+  {
+    "file": "tubes/tube.elbow.png",
+    "removed_marker_pixels": 145
+  },
+  {
+    "file": "tubes/tube.port.png",
+    "removed_marker_pixels": 124
+  },
+  {
+    "file": "belts/belt.end.out.png",
+    "removed_marker_pixels": 1173
+  },
+  {
+    "file": "cycles/person.customer.07.walk.empty.sheet.png",
+    "removed_marker_pixels": 420
+  },
+  {
+    "file": "cycles/person.customer.01.walk.empty.pose-review-v2.png",
+    "removed_marker_pixels": 3994
+  }
+]

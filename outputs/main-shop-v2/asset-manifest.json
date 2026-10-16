@@ -1,0 +1,8588 @@
+[
+  {
+    "file": "belts/belt.end.in.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      400,
+      346,
+      853,
+      979
+    ],
+    "sha256": "22fe09eac205ab97f95533fe0d760a36b099640ccc2c7c2b702f05347cc5f6b4"
+  },
+  {
+    "file": "belts/belt.end.out.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      302,
+      288,
+      998,
+      1074
+    ],
+    "sha256": "3cea16844f757d868eeac9da89514b60fd448aebc6df40fbadc4eaf27e82655e"
+  },
+  {
+    "file": "belts/belt.straight.png",
+    "size": [
+      1302,
+      1264
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      262,
+      288,
+      1040,
+      1145
+    ],
+    "sha256": "824e14b6071219c059b438c872a94b2d2a20987d47d89eb68cc1933dfa984c97"
+  },
+  {
+    "file": "cars/street.car.blue.bl.png",
+    "size": [
+      1318,
+      1539
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      113,
+      291,
+      1207,
+      1251
+    ],
+    "sha256": "c1738679df8357cf874a36fe57a01aa7333d74dfa2a120c12e25f3e78066c9d8"
+  },
+  {
+    "file": "cars/street.car.blue.br.png",
+    "size": [
+      1318,
+      1564
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      171,
+      358,
+      1192,
+      1213
+    ],
+    "sha256": "da673163569b5e49f2dcca24665c347c14624159e2ddc2f022d78d0de545daf7"
+  },
+  {
+    "file": "cars/street.car.blue.fl.png",
+    "size": [
+      1600,
+      1438
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      193,
+      163,
+      1376,
+      1283
+    ],
+    "sha256": "8bc780750648815f570d99925e1f21fe34436a1fd6fa9de348b12fed20d654f9"
+  },
+  {
+    "file": "cars/street.car.blue.fr.png",
+    "size": [
+      1512,
+      1371
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      234,
+      95,
+      1295,
+      1175
+    ],
+    "sha256": "e5235b0a3dcccd413527504e597e91a0797dc126e1d4c4d3c358c8fea0f7437f"
+  },
+  {
+    "file": "cars/street.car.green.bl.png",
+    "size": [
+      1224,
+      1421
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      129,
+      297,
+      1096,
+      1130
+    ],
+    "sha256": "56337e2cab8c8fbf65214214363b4c3ef13af55573c731a9662c27a102de9004"
+  },
+  {
+    "file": "cars/street.car.green.br.png",
+    "size": [
+      1215,
+      1434
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      177,
+      361,
+      1077,
+      1096
+    ],
+    "sha256": "e40c8a6265f12d9947ff0a1200383d1528143337f1a5517f20eefc54e2ad268e"
+  },
+  {
+    "file": "cars/street.car.green.fl.png",
+    "size": [
+      1387,
+      1266
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      222,
+      178,
+      1172,
+      1108
+    ],
+    "sha256": "fd4b7bd660a659044e661a50a183c45a7f721a3961bb44c16c75c6e96f024441"
+  },
+  {
+    "file": "cars/street.car.green.fr.png",
+    "size": [
+      1381,
+      1262
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      235,
+      205,
+      1162,
+      1063
+    ],
+    "sha256": "2ebc5ca86a9ce3d187b7be2e18d38e0d521a8450e84cc92eb25755af0bf9abc6"
+  },
+  {
+    "file": "cars/street.car.orange.bl.png",
+    "size": [
+      1224,
+      1409
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      130,
+      285,
+      1095,
+      1120
+    ],
+    "sha256": "0834c28e06c75ba2f5a1d3d3f49d5563a08236d36b8b73a53f13a56bd0fef12a"
+  },
+  {
+    "file": "cars/street.car.orange.br.png",
+    "size": [
+      1215,
+      1432
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      179,
+      363,
+      1076,
+      1092
+    ],
+    "sha256": "d21befee91ada0ca045fdbf43f9ef9660db5e8cf7e03351604e7dc57ee36c541"
+  },
+  {
+    "file": "cars/street.car.orange.fl.png",
+    "size": [
+      1387,
+      1254
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      223,
+      175,
+      1172,
+      1098
+    ],
+    "sha256": "b793f2ad82c3ad5513c76b976c24aa2942fa713cbea03a992acbdaddcd65fd6b"
+  },
+  {
+    "file": "cars/street.car.orange.fr.png",
+    "size": [
+      1381,
+      1277
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      32,
+      206,
+      1162,
+      1076
+    ],
+    "sha256": "7b4edbad197533d4dbe004b0c2be441d5324668e94ab81c89ff2a8411e31315e"
+  },
+  {
+    "file": "cars/street.car.purple.bl.png",
+    "size": [
+      1225,
+      1415
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      130,
+      254,
+      1097,
+      1202
+    ],
+    "sha256": "30637d3d18e7cf825b32a11fc684b8cfe361717293e1e49ac7bf1391493b4d5e"
+  },
+  {
+    "file": "cars/street.car.purple.br.png",
+    "size": [
+      1215,
+      1460
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      177,
+      283,
+      1132,
+      1113
+    ],
+    "sha256": "637a8b75387c36ff287c433c46ba5dcd0bf7ac6d0498ca0dcbfc4e6de258789b"
+  },
+  {
+    "file": "cars/street.car.purple.fl.png",
+    "size": [
+      1387,
+      1259
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      225,
+      177,
+      1172,
+      1100
+    ],
+    "sha256": "ddafd6302d81363959fadaf35e05f97227d19fde98e5fde600f209f307cf2b39"
+  },
+  {
+    "file": "cars/street.car.purple.fr.png",
+    "size": [
+      1381,
+      1262
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      237,
+      205,
+      1158,
+      1059
+    ],
+    "sha256": "478df5a6868cc8b589864d4165cbfecee344f0a94c0cb02b3ebc100b6c354aa2"
+  },
+  {
+    "file": "cars/street.car.red.bl.png",
+    "size": [
+      1224,
+      1412
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      132,
+      197,
+      1097,
+      1123
+    ],
+    "sha256": "7ce45e7ff59a8eb1851b4c60fd59e2eb31431f1737bdb6eeea45ee5f42519b5d"
+  },
+  {
+    "file": "cars/street.car.red.br.png",
+    "size": [
+      1215,
+      1441
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      179,
+      363,
+      1076,
+      1100
+    ],
+    "sha256": "984f0c5e1ec4c1c9dfc113eb2dd9a4264beaea8a543b1b3f0ca1e36f92bde765"
+  },
+  {
+    "file": "cars/street.car.red.fl.png",
+    "size": [
+      1387,
+      1254
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      223,
+      174,
+      1178,
+      1097
+    ],
+    "sha256": "0cbabbfe48832875dca590ecac4bdd3096a8453ea26c9e00918cb8ff9c17d55a"
+  },
+  {
+    "file": "cars/street.car.red.fr.png",
+    "size": [
+      1381,
+      1261
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      234,
+      205,
+      1159,
+      1063
+    ],
+    "sha256": "b2a87897486eb56c265178a309726db07473476a3c6a4340f5436f34f05bc2bc"
+  },
+  {
+    "file": "cars/street.car.white.bl.png",
+    "size": [
+      1224,
+      1411
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      130,
+      288,
+      1100,
+      1123
+    ],
+    "sha256": "73ec64a5e0a809c32dffc1e8b85e107c423444245758b65d9cbc8e8b408a590d"
+  },
+  {
+    "file": "cars/street.car.white.br.png",
+    "size": [
+      1215,
+      1432
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      182,
+      360,
+      1076,
+      1093
+    ],
+    "sha256": "f80c303397232e29d7d78b9906fdfcb3f72831469d8d4b301659e8755fe83d36"
+  },
+  {
+    "file": "cars/street.car.white.fl.png",
+    "size": [
+      1387,
+      1265
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      222,
+      177,
+      1174,
+      1107
+    ],
+    "sha256": "fd5f8b183200999b0467ed5c809a713f5a0938548ef1a620e8bd074819075597"
+  },
+  {
+    "file": "cars/street.car.white.fr.png",
+    "size": [
+      1381,
+      1262
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      234,
+      205,
+      1164,
+      1065
+    ],
+    "sha256": "8f7f175cf39ff90bfdb9007fbbb3bcc314656a1c63adf5fdce5aa1a66b0ad018"
+  },
+  {
+    "file": "cars/street.car.yellow.bl.png",
+    "size": [
+      1224,
+      1411
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      130,
+      290,
+      1095,
+      1122
+    ],
+    "sha256": "0397b5ba74d89c03c309bb648a8bf5d941cbd2e4afd1459ef1794157de48aeee"
+  },
+  {
+    "file": "cars/street.car.yellow.br.png",
+    "size": [
+      1215,
+      1440
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      180,
+      363,
+      1076,
+      1098
+    ],
+    "sha256": "264c55458175e77db6f68606c58067a930e47dac2057b39a62f25bb234c69de8"
+  },
+  {
+    "file": "cars/street.car.yellow.fl.png",
+    "size": [
+      1387,
+      1261
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      120,
+      178,
+      1176,
+      1111
+    ],
+    "sha256": "0d5fe8e77a666029d3f2fc8197b5b3e865f62c561aa34d0623e15e18036468b6"
+  },
+  {
+    "file": "cars/street.car.yellow.fr.png",
+    "size": [
+      1381,
+      1261
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      234,
+      203,
+      1164,
+      1064
+    ],
+    "sha256": "b1e67cfe11345ed645ef792141b95895b55dad2bb283def6f8633b8bf0a7d62d"
+  },
+  {
+    "file": "cars/street.van.bl.png",
+    "size": [
+      1224,
+      1543
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      122,
+      322,
+      1110,
+      1235
+    ],
+    "sha256": "95b0b05c9388e6f22e006ce2de2949f8677bcade2e965a0ecbbf00d1234d3f6e"
+  },
+  {
+    "file": "cars/street.van.br.png",
+    "size": [
+      1215,
+      1477
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      184,
+      392,
+      1085,
+      1144
+    ],
+    "sha256": "098750eb83edfa528e936d09d69eaa608c6652e0836b91fddfb00e969bb995a3"
+  },
+  {
+    "file": "cars/street.van.fl.png",
+    "size": [
+      1387,
+      1302
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      194,
+      156,
+      1226,
+      1155
+    ],
+    "sha256": "0ddbd020225dc7d68bbb33c91cf8fadda346848109c1aac1c27ae14eb7a4c5e5"
+  },
+  {
+    "file": "cars/street.van.fr.png",
+    "size": [
+      1381,
+      1374
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      204,
+      214,
+      1237,
+      1184
+    ],
+    "sha256": "e528e73d12a15e9f3bfae0d07a9471e0bd30a482d2c563173f07ba599291ef54"
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.bag.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      172,
+      27,
+      340,
+      424
+    ],
+    "sha256": "5d1f6734c0481d9190ec9ee9ad7f49e2032a5bafaba37d55358d1a2ac0703687"
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.bag.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      172,
+      27,
+      340,
+      424
+    ],
+    "sha256": "1123b210feaee601a60ea33a07c584d4caf9812d06c37cc06463682c980fba98"
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.bag.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      148,
+      31,
+      328,
+      424
+    ],
+    "sha256": "cf422e665ac2ea9becf0503ce197fcecb22e6ec9a6e1848b69f6d07f2fce98fd"
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.bag.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      184,
+      31,
+      364,
+      424
+    ],
+    "sha256": "4aaa4aa288538eec8671846571d3967dfe766cf6208859d36e7697397ca70dc9"
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.bag.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      143,
+      24,
+      405,
+      424
+    ],
+    "sha256": "2025b7289a84c1370e3ef3ec9ae20accb233d718c933f7b0e010ec2558d5466e"
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.bag.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      107,
+      24,
+      369,
+      424
+    ],
+    "sha256": "e301a655fe86071cc5fb0fa8ffcb91ab65967d4af5d6595069965de18138b6b0"
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.bag.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      149,
+      39,
+      308,
+      424
+    ],
+    "sha256": "9fb9ab67f277a8e28588c991bf6fb9d91a7291c884310781f441644afe1d86de"
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.bag.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      204,
+      39,
+      363,
+      424
+    ],
+    "sha256": "417867347476edfd5a08f028a8af3a7f76b6ed7a5e0b1f19a372a92c31f26338"
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.empty.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      178,
+      29,
+      324,
+      424
+    ],
+    "sha256": "f1b4a3762b513bd62fb14a2f4c7c63d62fe11ebad71eac972bb5168159b70c38"
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.empty.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      188,
+      29,
+      334,
+      424
+    ],
+    "sha256": "992b082de3bf15912de502f8ae4f3c3f40f9836bb41286ba3eddae5a1b473528"
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.empty.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      166,
+      30,
+      309,
+      424
+    ],
+    "sha256": "7eae54d0617ee68f6adcb79f42c9f8b7a1b06e2a9fade51ea1c6fca44b32839f"
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.empty.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      203,
+      30,
+      346,
+      424
+    ],
+    "sha256": "3151e4bd81319a7936f409530c673f4bb7cfd66480ee724dcd8e05c594735b9e"
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.empty.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      144,
+      24,
+      373,
+      424
+    ],
+    "sha256": "67edf008313b32b8e7cc88123125a43d8a73de3e7b67ef1ecc3def0dc4affd46"
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.empty.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      139,
+      24,
+      368,
+      424
+    ],
+    "sha256": "f7ad53bb00db44b6395f4fd16173b11bde849935858c31fb3c48c58bee6a228e"
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.empty.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      185,
+      44,
+      307,
+      424
+    ],
+    "sha256": "24cd519017a2d795eeb4c8870257f78aaff3785194aa76adfdf0b2da4c965d37"
+  },
+  {
+    "file": "cycles/frames/person.customer.01.walk.empty.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      205,
+      44,
+      327,
+      424
+    ],
+    "sha256": "c47ffbf5e779396c4c22998b5c9df818da49dec661de230b2e175c5d5b9c216e"
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.bag.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      155,
+      24,
+      381,
+      424
+    ],
+    "sha256": "3236ebb4092880fd6930d800fb4475568f916a582d868546b1ee364339c42434"
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.bag.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      131,
+      24,
+      357,
+      424
+    ],
+    "sha256": "016cd0666f2e4918a88e6a5835c14a1dc3edb4fdb25ee820e70e64dc51a3e34f"
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.bag.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      98,
+      32,
+      342,
+      424
+    ],
+    "sha256": "6bcb2ec5ac7562729c1a9aea68422f4611db9ad85d37b206e07b713bd0dfaaa9"
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.bag.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      170,
+      32,
+      414,
+      424
+    ],
+    "sha256": "620018e4d54f899df7d0424e6f0e98377dafdf24d9aea7e7c7669cf138884f87"
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.bag.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      128,
+      25,
+      420,
+      424
+    ],
+    "sha256": "364dc22ce111c46cae3a9a3c9bb494d8ec94449e5eb19b8c9adb944877fe00a6"
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.bag.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      92,
+      25,
+      384,
+      424
+    ],
+    "sha256": "5c7a1bef2dab2f9115a82da0f98089dd7e6a0326e46348888a66a7029a330d6c"
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.bag.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      154,
+      34,
+      333,
+      424
+    ],
+    "sha256": "43ecd981da33b5a19aeba72d6aff2abba812c88244cdf5d2eb4aeae9ff637e38"
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.bag.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      179,
+      34,
+      358,
+      424
+    ],
+    "sha256": "16a0dd6893c5fd384feea125f77305c20930f8ce2ab6110e25196b02acd81e92"
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.empty.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      172,
+      24,
+      336,
+      424
+    ],
+    "sha256": "97e5e62c85cc404e995c5f57f5a043a2e17677002459164e9b84b916b9e98646"
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.empty.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      176,
+      24,
+      340,
+      424
+    ],
+    "sha256": "fdb929a6fbb33c4333b8e0f4f693783b4fcd22522201188b7d9da34bd86ab1f2"
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.empty.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      151,
+      26,
+      321,
+      424
+    ],
+    "sha256": "ee1f7b9ec70fac90c02a0fd2117ce9a4e80142f001e7966cf52d31ec8eeb4833"
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.empty.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      191,
+      26,
+      361,
+      424
+    ],
+    "sha256": "3c04023e6d70c83ca26b7b89f2fbf86575b42bc8677c3877027ca3b21271e34f"
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.empty.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      122,
+      24,
+      372,
+      424
+    ],
+    "sha256": "b30d987eb3485a27bca24d9e84712fb41150a13dd153c3067da78a6d8c090056"
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.empty.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      140,
+      24,
+      390,
+      424
+    ],
+    "sha256": "3665e4320073e47a69a5ce77fb2776fd9df782780f71ef221f7ac9e384e00291"
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.empty.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      159,
+      29,
+      319,
+      424
+    ],
+    "sha256": "3a97ee6c8145538c3b247a0414d9455790c9cb7ec22ab93d3e27cf9a190c84df"
+  },
+  {
+    "file": "cycles/frames/person.customer.02.walk.empty.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      193,
+      29,
+      353,
+      424
+    ],
+    "sha256": "35b704dab9a615d1dfae32cea303a59001a679937152f7948cb6d4b99476439e"
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.bag.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      157,
+      25,
+      362,
+      424
+    ],
+    "sha256": "f3ab6cf5362a8dbb69d44f03ca93020c4c1d0dc2db535bba26d3dfbde4af757a"
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.bag.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      150,
+      25,
+      355,
+      424
+    ],
+    "sha256": "143c963c8d8c966a11e22c5430ec2162939fc3a5c4ff23ddd205d4c9bbd9b2fd"
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.bag.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      144,
+      26,
+      339,
+      424
+    ],
+    "sha256": "0a31311d0f4f25375238c14d3fcc1d1133a1db2a43c45404fdb03ed84690c131"
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.bag.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      173,
+      26,
+      368,
+      424
+    ],
+    "sha256": "a277623feb58795175fbd5c09fce672a1d1954404251c641db7fe4ad9b51a6ea"
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.bag.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      138,
+      24,
+      388,
+      424
+    ],
+    "sha256": "bed2a49e71b17577451b0efde04824b91d52bb928a18e2fc79f67baba4f96986"
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.bag.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      124,
+      24,
+      374,
+      424
+    ],
+    "sha256": "592b3bc065a64d997b37134ec8b69304290f4c9706d4ee6c54dd86c08fab8aad"
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.bag.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      145,
+      27,
+      339,
+      424
+    ],
+    "sha256": "955322f06baec1bfe75e78058c16c5756755a305a032af530f9e05a27bc940d8"
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.bag.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      173,
+      27,
+      367,
+      424
+    ],
+    "sha256": "a1c3c7bd8d3791c6c2d2312898d6d7bfc7f947697c7ded2aa9959712687ed3f9"
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.empty.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      164,
+      26,
+      335,
+      424
+    ],
+    "sha256": "ebeea48cdc3612a8cd0f13855f9a901bffe098967d76b570bbb95431b9832a8f"
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.empty.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      177,
+      26,
+      348,
+      424
+    ],
+    "sha256": "8cb141c7c287407cbf5844579572765a7a9d10d57eb8a342e2fff72f63181af7"
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.empty.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      150,
+      26,
+      313,
+      424
+    ],
+    "sha256": "522608b5211e7280215b1578c1e4d6870ce36a34a3d485d7e823669c7314e4ff"
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.empty.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      199,
+      26,
+      362,
+      424
+    ],
+    "sha256": "2a68f11a068aa691390f7939a36857824b4823eda76ad786d8a0f7e46e13c6d1"
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.empty.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      138,
+      24,
+      366,
+      424
+    ],
+    "sha256": "65a7c37437906e385c13bee592d2900478da9b3675ec228cdd83ebe22f31e081"
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.empty.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      146,
+      24,
+      374,
+      424
+    ],
+    "sha256": "733ce156be138a6d96e27dfdb9d682bcb16985f90a38ce0c3cc52d4e50436c31"
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.empty.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      168,
+      26,
+      308,
+      424
+    ],
+    "sha256": "1d3aab214f25c82e0b9bf80d5878ec4700d8c8978e3228f695ca89903d8a3a8a"
+  },
+  {
+    "file": "cycles/frames/person.customer.03.walk.empty.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      204,
+      26,
+      344,
+      424
+    ],
+    "sha256": "1a2696143906688e0d727eda3ea1fd8ee07ade9990530b19976db24ffe28857f"
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.bag.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      154,
+      26,
+      338,
+      424
+    ],
+    "sha256": "ac4cb535ba6c4850c4c00e60435f4be3f0189b30fe18349897515f5dd2af4f97"
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.bag.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      174,
+      26,
+      358,
+      424
+    ],
+    "sha256": "70054500edc54fb37c65486bc9441f5847e6604d915acf18322024d4e7d1575f"
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.bag.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      151,
+      25,
+      334,
+      424
+    ],
+    "sha256": "dd6583bff5b99f13941c4eb32650e467559b03b98089b7f5c241ef6600e335dc"
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.bag.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      178,
+      25,
+      361,
+      424
+    ],
+    "sha256": "009dc08f86613e2249dfb4ab5b024effee71277e92f0f639997ac56bc5573cce"
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.bag.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      140,
+      24,
+      395,
+      424
+    ],
+    "sha256": "57cc2d7de889ad9c11911e90ebcc569e22f799b8c6cfb56099d72b36bcd48831"
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.bag.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      117,
+      24,
+      372,
+      424
+    ],
+    "sha256": "7b999a94f3c3b752d061f3b87b3823ceb6b6977eb58629d1ef312519c63a49ef"
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.bag.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      155,
+      26,
+      333,
+      424
+    ],
+    "sha256": "2ebcb504e5b34ccc49e0a3d604de4b4fef6c26264827579c4c153dd5aa02aaa6"
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.bag.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      179,
+      26,
+      357,
+      424
+    ],
+    "sha256": "9da61edaffe003425cecbf3b9fa9f4b6d4ee1d45ce3b34531731dd70323e85f2"
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.empty.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      160,
+      28,
+      334,
+      424
+    ],
+    "sha256": "e85cdaaa6af7154ce35500c1ec37ddd10d684f459e8c38d06b73ca031262f7d0"
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.empty.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      178,
+      28,
+      352,
+      424
+    ],
+    "sha256": "1783bc0904f55a059f910a93ab11a69583019f955d4c0a63e9848266716bee79"
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.empty.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      147,
+      29,
+      315,
+      424
+    ],
+    "sha256": "a625a917bacb85b3dc4f66375b5aa423b87955dd1141ad3d24410422e3c19f03"
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.empty.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      197,
+      29,
+      365,
+      424
+    ],
+    "sha256": "2a595bf3573d62965c19df2e457f551e099faa181ad3685190c71fbf592a08e9"
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.empty.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      127,
+      24,
+      373,
+      424
+    ],
+    "sha256": "723cd8af1690fe0a779f64f802ca7141860598f7019457c28f2ed3021f50c5c3"
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.empty.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      139,
+      24,
+      385,
+      424
+    ],
+    "sha256": "2d0c8528c3a69d059bcb546fb4c1fb00fa7569d8b103410e8507113b42f1fded"
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.empty.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      162,
+      29,
+      313,
+      424
+    ],
+    "sha256": "9b5491aea8bcfe275cec576c58bb2971fca12fddaafb0f50bbe3935d5b469cf1"
+  },
+  {
+    "file": "cycles/frames/person.customer.04.walk.empty.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      199,
+      29,
+      350,
+      424
+    ],
+    "sha256": "a580e9563f92b294002e1a829e63f285f5fd5dfd69a8f22585a59843c2f69fb1"
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.bag.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      149,
+      25,
+      363,
+      424
+    ],
+    "sha256": "533daa2c5210b74a6357da88a6cab678eefeb8be75c6a096edb13553f8c78c5e"
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.bag.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      149,
+      25,
+      363,
+      424
+    ],
+    "sha256": "2f78cb9129ed1fdb94fc78cebaf735b04edad05a86d0597635f95411b2e3750a"
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.bag.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      138,
+      25,
+      339,
+      424
+    ],
+    "sha256": "891bc61553958c671447f9218b3764d758337300bb8e3e77aefd25cc45e61f61"
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.bag.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      173,
+      25,
+      374,
+      424
+    ],
+    "sha256": "78a68c4dece82d3c4a9b34488caadb6b04039bc98773521b3bf0435abdb191cf"
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.bag.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      117,
+      24,
+      380,
+      424
+    ],
+    "sha256": "d14dc09fc9e90fd776397cab0ecb7c4058b9490608a7b5d6dd9daa9a85e87732"
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.bag.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      132,
+      24,
+      395,
+      424
+    ],
+    "sha256": "891683441b59b7a6a7e17d2953876b542d5dc20ddf8e1b5c6789a748e930a086"
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.bag.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      140,
+      29,
+      328,
+      424
+    ],
+    "sha256": "ff3cba0c4efa134d7eea1e390b440bd6ec0d30e869b820d2fd76336c2a6322f2"
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.bag.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      184,
+      29,
+      372,
+      424
+    ],
+    "sha256": "5b608776b1eca5e0b6b23c63ca4d164f0dd571a9299759770550a81689698d59"
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.empty.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      159,
+      25,
+      328,
+      424
+    ],
+    "sha256": "592106de4f1fe3939238abf59b61dd4d3da9ee400b9a9c3b41f03c5e33124819"
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.empty.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      184,
+      25,
+      353,
+      424
+    ],
+    "sha256": "8396300677f7edd632c0d3607dbfcaf7a3f1eb44afde84d9f1538e0b6fd6dbf6"
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.empty.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      137,
+      26,
+      311,
+      424
+    ],
+    "sha256": "21ccde5f4ec90309dceebf1f837578acb8204d1bcdfed22187b3262800e4df40"
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.empty.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      201,
+      26,
+      375,
+      424
+    ],
+    "sha256": "bae46636e638b72349807fb4432f633f55d6d351c2676b48a0b921093731cf94"
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.empty.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      113,
+      24,
+      370,
+      424
+    ],
+    "sha256": "2fc1acc82280d2c5ec571a3ff48186578e57adb36390df46f254557e100c05a7"
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.empty.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      142,
+      24,
+      399,
+      424
+    ],
+    "sha256": "b57f1d7e23fb8bc553bdce177ebb732df2d55fb31db8ee695461b5529429d046"
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.empty.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      159,
+      36,
+      385,
+      424
+    ],
+    "sha256": "908d641917f7b04ca3981fdf9fc576c23ada1ff29d9315136b6d1294def01f7e"
+  },
+  {
+    "file": "cycles/frames/person.customer.05.walk.empty.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      127,
+      36,
+      353,
+      424
+    ],
+    "sha256": "8b820176f95aa017e0431bdb9173d34e867d12a65470b5c1121dba1fcd490613"
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.bag.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      136,
+      25,
+      371,
+      424
+    ],
+    "sha256": "a2161db8f0821af399dd6cdb8d059a863292845b6b6c706b704f8b16b4d499e2"
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.bag.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      141,
+      25,
+      376,
+      424
+    ],
+    "sha256": "7ce1d4325f21b81f6ab8db356c0d505c6de636b22a27426651409e26e125ad06"
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.bag.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      126,
+      30,
+      330,
+      424
+    ],
+    "sha256": "0516cc11665ed19def87abe99944ff1af88dcb3e9890dea95d975aa0dd7ecbdb"
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.bag.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      182,
+      30,
+      386,
+      424
+    ],
+    "sha256": "51336c30dd6366156118b93ec5fc865848f932b5eac7cde9a218f1733270841f"
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.bag.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      129,
+      24,
+      404,
+      424
+    ],
+    "sha256": "1019d56b26a2ecc634814aca0125911c33d328a1b977108a7ddbffff57324d77"
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.bag.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      108,
+      24,
+      383,
+      424
+    ],
+    "sha256": "9176092ce0bb0bb4a9aaaa8047ed5563d2c3470cd4ccd1f7e86703f9adff2f3b"
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.bag.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      152,
+      32,
+      408,
+      424
+    ],
+    "sha256": "24a9e96b8f062e27d43f6586cb4bab77f52152742cbf146f4458ed82ed4b2fd3"
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.bag.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      104,
+      32,
+      360,
+      424
+    ],
+    "sha256": "c511485ca3c58bbac8a3d01c1b7533987c70fd17af2e100ea33a504cc2d9a0b3"
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.empty.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      156,
+      24,
+      340,
+      424
+    ],
+    "sha256": "35f75014af6191957df581ebfe169826b384cc3d96856b47fd25e776a33e0a0f"
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.empty.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      172,
+      24,
+      356,
+      424
+    ],
+    "sha256": "23c73fc76d15ff98db4cb81f1533e976f873aaf3e23934121f9f39ef9ecd040b"
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.empty.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      141,
+      27,
+      309,
+      424
+    ],
+    "sha256": "6caf158eb214f04bb3c4416596618387628d22b28daa92935bfed409fe4f97ed"
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.empty.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      203,
+      27,
+      371,
+      424
+    ],
+    "sha256": "f1a6457a836162bcfd2251dd08b95f5ce6406ecb9999e82011f84799727ec820"
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.empty.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      129,
+      25,
+      368,
+      424
+    ],
+    "sha256": "7bbfe2fcda12be9990ca54ae11523672a8c1780815203b971bd6e575da4d1dc2"
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.empty.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      144,
+      25,
+      383,
+      424
+    ],
+    "sha256": "5a53195d9c8412e0b4e2c0fb20d38805680f5ce2ca118a32d505136346cee70d"
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.empty.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      160,
+      32,
+      306,
+      424
+    ],
+    "sha256": "01d85053b6d1e7f3443ab6fea1d17f73d1e6414ff55dccd2a34e263b9c107511"
+  },
+  {
+    "file": "cycles/frames/person.customer.06.walk.empty.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      206,
+      32,
+      352,
+      424
+    ],
+    "sha256": "2deae9812fc23c09088b6a96cfe0832f6ddb768a89c309ed2831cdb93a95e0b0"
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.bag.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      156,
+      25,
+      357,
+      424
+    ],
+    "sha256": "3bc18917991b25d019beb0f277e8f7fc1841b1dedf0d939ac42c0d057210fdb7"
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.bag.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      155,
+      25,
+      356,
+      424
+    ],
+    "sha256": "14c3a452c4632b3c83e27971316a76f17aa7b1c80c7e6bf802b5e514170f62ff"
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.bag.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      135,
+      26,
+      335,
+      424
+    ],
+    "sha256": "fd08d7008d23c427c96f9a94006f0bd1b7e884977741e30c85c380c2f6ec2817"
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.bag.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      177,
+      26,
+      377,
+      424
+    ],
+    "sha256": "f6944b01aa43eaa0574cf4204a17f3e0154ce0da227b80d1e261f7f1d97ae8ee"
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.bag.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      137,
+      24,
+      389,
+      424
+    ],
+    "sha256": "1db73ae51b7b96998da9e21c34175b7327d68060e93bef9fc17d5791ce00ce51"
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.bag.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      123,
+      24,
+      375,
+      424
+    ],
+    "sha256": "02d8cffea61db5307bf809d8e75fc9eff5387da064014976743fc92c23d3b256"
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.bag.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      141,
+      27,
+      332,
+      424
+    ],
+    "sha256": "0a611d202e8ad4f86d9a19b41d3f711445d8ad0539fdde2b3abc5ad43222d4a0"
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.bag.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      180,
+      27,
+      371,
+      424
+    ],
+    "sha256": "63c02e0af4ac1249c83dd8fcf80a267f25c35938e65da759e7ac44e42de20a44"
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.empty.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      157,
+      29,
+      319,
+      424
+    ],
+    "sha256": "ce89121a554b5b1d69dc3d6f9f576e94639c62061f27e09e7407f768976a015b"
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.empty.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      193,
+      29,
+      355,
+      424
+    ],
+    "sha256": "2e3371261631f6d041303d650294061cf9d96ac02b41c8c9ac1dbeff67097d0f"
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.empty.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      192,
+      28,
+      328,
+      424
+    ],
+    "sha256": "c7060c762edd09b430fedaba398331c428940e134bca55edaff10fef760d79f3"
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.empty.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      184,
+      28,
+      320,
+      424
+    ],
+    "sha256": "b5872dca147223de1de7e15dfe0342ecf101403401fe84bf9c272a7d583e1864"
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.empty.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      168,
+      24,
+      337,
+      424
+    ],
+    "sha256": "256bd54669a62ea7900facbd01742be66a72210e095d87e512ea8dcd87ac0d18"
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.empty.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      175,
+      24,
+      344,
+      424
+    ],
+    "sha256": "e88b6d418496f4520ba3771f13097c60f93230b8e9d956053a6df03220b944e1"
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.empty.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      162,
+      28,
+      335,
+      424
+    ],
+    "sha256": "76d7e882df2144ec15afd82672f8d034b99239bd58b873f19bf549460751be03"
+  },
+  {
+    "file": "cycles/frames/person.customer.07.walk.empty.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      177,
+      28,
+      350,
+      424
+    ],
+    "sha256": "4edadab45f513dbc092663bda2a7bc74ac98ad244b338bdab02bee13c14f823c"
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.bag.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      166,
+      24,
+      347,
+      424
+    ],
+    "sha256": "2e425aafd818dc86b35ef6f2fd84baf615ad426c897dd2c1d56f90ba7cf4e9e3"
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.bag.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      165,
+      24,
+      346,
+      424
+    ],
+    "sha256": "4c210232d65e37a2654adf17f95c790deac83859b6b70c562882f575c11d95c8"
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.bag.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      134,
+      26,
+      334,
+      424
+    ],
+    "sha256": "8690663cab299e65107a0822b155a34c36513d0eb49c3b575c0600478c8ca877"
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.bag.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      178,
+      26,
+      378,
+      424
+    ],
+    "sha256": "96b44248dcc75696e697ab0540a125b1af19c41073d3928dd517b19ce5e19f72"
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.bag.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      125,
+      25,
+      398,
+      424
+    ],
+    "sha256": "7a3f3b3c389882208eb67eedbdaffe70f7c78fd5a5822a3883364f512ce7d4ed"
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.bag.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      114,
+      25,
+      387,
+      424
+    ],
+    "sha256": "8b34177455adc27fdec125b3d7dda5d57771b2ffbc9c57e1a49f06d4e710fff7"
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.bag.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      146,
+      26,
+      396,
+      424
+    ],
+    "sha256": "4052f315a7baa473825bcc0121deee8e1d74ac681613997a72be18e535262b02"
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.bag.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      116,
+      26,
+      366,
+      424
+    ],
+    "sha256": "63ba6d303ea09a903a519ad43056622038750226b1b8869571b965e3e40c26e3"
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.empty.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      156,
+      25,
+      336,
+      424
+    ],
+    "sha256": "a756ed0c95efd25d65e2bd860eac42fc5bd7eb182a575feeeaf952259837f326"
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.empty.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      176,
+      25,
+      356,
+      424
+    ],
+    "sha256": "5d252873a27c71049c33d3ae1fbbe23ef81e46312ff81c97891d462e5acfef03"
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.empty.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      141,
+      28,
+      312,
+      424
+    ],
+    "sha256": "cd1eabaf270cb6b7341342485b1798f567c20c92b7c3a1fa5cca0a5c14137cd8"
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.empty.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      200,
+      28,
+      371,
+      424
+    ],
+    "sha256": "fb8932672358c610ab7137b638d76f67bd86dab98fa8e253b947ef069cb78e20"
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.empty.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      124,
+      24,
+      376,
+      424
+    ],
+    "sha256": "2dfe206d19b608aee59a0e34de568f60909e0cf7fccc513aefcbe58db5ccfd1a"
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.empty.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      136,
+      24,
+      388,
+      424
+    ],
+    "sha256": "7e22bea2b6f08f3fe14725163bbb342cbcd24699515ab89a26787817772f8fbc"
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.empty.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      148,
+      29,
+      375,
+      424
+    ],
+    "sha256": "36bcbcfcbdbe1c6480c107cf53d509f757907df8dd6fa442a8addf9907888f60"
+  },
+  {
+    "file": "cycles/frames/person.customer.08.walk.empty.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      137,
+      29,
+      364,
+      424
+    ],
+    "sha256": "cff820dc2a8d8abc354e73be6e1e848363bda7309dbbb3fb1b67c08573f334fa"
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.bag.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      171,
+      24,
+      353,
+      424
+    ],
+    "sha256": "5d61a188bccde469cc1ed840859180defdf871aebc61cd0388a956b6dae27a70"
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.bag.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      159,
+      24,
+      341,
+      424
+    ],
+    "sha256": "ac68d4c524d3f880373004970d28b41396cb2224f033eeb83f4d715266c4b745"
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.bag.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      136,
+      26,
+      339,
+      424
+    ],
+    "sha256": "2614e467fea569a0647b95eb5810e45ec25357fc9c462a5e83350ffd6057ee37"
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.bag.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      173,
+      26,
+      376,
+      424
+    ],
+    "sha256": "516e1ac721912180b4ec36bb7af63ab41e55b1e203290062d8ca1ea3b6f409f5"
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.bag.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      130,
+      24,
+      407,
+      424
+    ],
+    "sha256": "92df44f9293777eea0b6072bff3d957682599eeda4d2cd3f651cbe0427a7b98a"
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.bag.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      105,
+      24,
+      382,
+      424
+    ],
+    "sha256": "df66148a2e8af2682a5c3c9de5336bc1037ae718e381c6ce9936005ae8623e91"
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.bag.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      139,
+      26,
+      383,
+      424
+    ],
+    "sha256": "90ba65053cd83b58bcced687a1c64ff2bfbf3a68ecb5b5ee4a268a0d582e2e3f"
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.bag.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      129,
+      26,
+      373,
+      424
+    ],
+    "sha256": "8a7ec08359f442eaa9966f7bd8fe61be4a0e9dda4d0b6c9c845caba3018a64dd"
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.empty.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      172,
+      27,
+      331,
+      424
+    ],
+    "sha256": "5659e6f95307930e7c3cb73d0a32388498750e9c72d3736717ffe1772f20947c"
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.empty.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      181,
+      27,
+      340,
+      424
+    ],
+    "sha256": "0137dfa573b1bb82730d09f91616bb39d87f8d1fea150c4ae9e85ad8e58e4dbe"
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.empty.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      142,
+      28,
+      311,
+      424
+    ],
+    "sha256": "2e5bca203261be1f29c8730c2e58c45ba10276c65bba559345a5852a23299e44"
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.empty.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      201,
+      28,
+      370,
+      424
+    ],
+    "sha256": "0c77c81daded968a32305d50c2dc02e486e7b548bf3b556c83ff617843612aa0"
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.empty.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      137,
+      24,
+      373,
+      424
+    ],
+    "sha256": "61ce6e6bb75e418b8d0059a5e313954681e4d24cb3863def95fc8ac37f2bf0be"
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.empty.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      139,
+      24,
+      375,
+      424
+    ],
+    "sha256": "1562060df39dc79d9c85422162d27eea25ca7b16dbb7ea92fdbe3f07794d9706"
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.empty.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      161,
+      28,
+      310,
+      424
+    ],
+    "sha256": "fd668d08ff6a621bb477daf93fe8fc145614c19b63a9c99e536051da5dcc285c"
+  },
+  {
+    "file": "cycles/frames/person.customer.09.walk.empty.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      202,
+      28,
+      351,
+      424
+    ],
+    "sha256": "cf778bdce86155b0fc02961709d1ed05f49a1391c28c1e57590a8b5acf1178e5"
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.bag.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      175,
+      24,
+      355,
+      424
+    ],
+    "sha256": "5c27043e48b28ee031a347784a44172f14feba6561f7dc6a47564355e567caff"
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.bag.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      157,
+      24,
+      337,
+      424
+    ],
+    "sha256": "3138444c3d9a43eaa8363c7abcf49f7eb735282c710904e9910dcd44f19968e8"
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.bag.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      130,
+      24,
+      326,
+      424
+    ],
+    "sha256": "6a82b35afe14b5e6f90d800df118d50f51fda3e851e401672951134c209eb13e"
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.bag.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      186,
+      24,
+      382,
+      424
+    ],
+    "sha256": "13e4e7c6a4d95bed9e5357195244903172f65cdd7b718e6a8f277713511c07b9"
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.bag.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      123,
+      24,
+      395,
+      424
+    ],
+    "sha256": "0ec852aca103f796c9e08f61094d5cbfce7f0352a13cde30d867f4ac1fff7191"
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.bag.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      117,
+      24,
+      389,
+      424
+    ],
+    "sha256": "181b3d23e04f70a7c8498255ed320336372d84071c10bc69c023ce0072754efd"
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.bag.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      135,
+      33,
+      312,
+      424
+    ],
+    "sha256": "bebf6df6a2beab0feb2134cc0f27b3aeeee480a8429b2760cc205ac64167447f"
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.bag.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      200,
+      33,
+      377,
+      424
+    ],
+    "sha256": "1da495f928fd27f6f71486a25211ac45d4d2b787b903b138bbff376b9384e7de"
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.empty.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      166,
+      27,
+      333,
+      424
+    ],
+    "sha256": "a094bc2b72594ba18cfab2cca3908ca84790035611e1c907b070525c63d0c986"
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.empty.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      179,
+      27,
+      346,
+      424
+    ],
+    "sha256": "ab83d3f34ef8ea61791285d251a5a93aca251b173b93a18963bac97958192625"
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.empty.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      149,
+      30,
+      318,
+      424
+    ],
+    "sha256": "bf90c43b2d7b4872d2d072d635c92c19234ec327dbc2cefc12a149c73ea551cd"
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.empty.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      194,
+      30,
+      363,
+      424
+    ],
+    "sha256": "015d667d921bfe473d1d94e63f8f57978232000fd33060c617b15fadef354705"
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.empty.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      133,
+      24,
+      376,
+      424
+    ],
+    "sha256": "deca9af3fd3773179cc818f5369a00045cf55ac00a1df34ab04fd74ec7ead24a"
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.empty.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      136,
+      24,
+      379,
+      424
+    ],
+    "sha256": "33d9afa34429c1e94a91f779914e6abe4961f673a37c198b792b102c7db83ead"
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.empty.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      160,
+      35,
+      300,
+      424
+    ],
+    "sha256": "94230bd8283d554b39857ecc8756ce437096c809d98be128a7120e9d00b48c54"
+  },
+  {
+    "file": "cycles/frames/person.customer.10.walk.empty.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      212,
+      35,
+      352,
+      424
+    ],
+    "sha256": "a9e9f33ca0ec6fa9e554c1bfb943fb33d61c2d9bdabf28c5220b86c4ae424e80"
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.bag.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      171,
+      27,
+      351,
+      424
+    ],
+    "sha256": "fbc0853231845e5b139243d0576fb9c4d0417f01bd8b4bdff72e4576ff782fd0"
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.bag.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      161,
+      27,
+      341,
+      424
+    ],
+    "sha256": "e34bf14c2b44a71e7bcecb5568d7565adbfc4a67fd415d74eb3ade4a0fce737c"
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.bag.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      154,
+      29,
+      334,
+      424
+    ],
+    "sha256": "3abb7dd585f5164f5cbe59f07645d10fbcae3e6808da94a4c525e5d483092fad"
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.bag.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      178,
+      29,
+      358,
+      424
+    ],
+    "sha256": "d65685d1b93303a2003b9494246680eafdc964c80ede6f407d35247a30186031"
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.bag.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      136,
+      24,
+      422,
+      424
+    ],
+    "sha256": "fb13f27624282220fadbdda15e3500e5f36794d6b072297f7a4aae20e3b99444"
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.bag.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      90,
+      24,
+      376,
+      424
+    ],
+    "sha256": "a6b74e46a65feaf63a96c50689df102e134aa0709b6709f316c966272d65c15e"
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.bag.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      157,
+      30,
+      314,
+      424
+    ],
+    "sha256": "d5b96ce4868aa6182c6026cc9c1cff89bb88821dc95dc29356834d181e6bde0c"
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.bag.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      198,
+      30,
+      355,
+      424
+    ],
+    "sha256": "ff6aecfbb132835ee44a7b90f7e774bcca0d2768f3be87357a1d14b006249a1c"
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.empty.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      168,
+      26,
+      341,
+      424
+    ],
+    "sha256": "729a56e346f6877f3ef8398fe19c5c657ee1d35d0912edea760aeadbb13c8705"
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.empty.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      171,
+      26,
+      344,
+      424
+    ],
+    "sha256": "00cabd4dc538b2d7f9479057fe9b76ae9147546c8de5ab64c9986e3cfcad4f51"
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.empty.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      152,
+      26,
+      324,
+      424
+    ],
+    "sha256": "5ffc7667ce1ccfbb0bac5e74a8acdc16ea835fbe808cb65cf811e1f1cedeab76"
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.empty.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      188,
+      26,
+      360,
+      424
+    ],
+    "sha256": "39988b4b28436bcdd7ce3b0b917e2566841d05ec6a3f00e92b6fb1c0f2f42d7c"
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.empty.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      132,
+      24,
+      376,
+      424
+    ],
+    "sha256": "ed519743535406866f5eb4fddea7a26564b9f419d0134f18078cbd4ab8b0c835"
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.empty.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      136,
+      24,
+      380,
+      424
+    ],
+    "sha256": "b5f0cd2719bc77c6a2285dfb648d234b9369b4b8b509ab259d8eb2bdfde417a7"
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.empty.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      155,
+      26,
+      309,
+      424
+    ],
+    "sha256": "b79a563e67b6a96be5f407c90a70db518ed8ed375427b5c352a44275d285699d"
+  },
+  {
+    "file": "cycles/frames/person.customer.11.walk.empty.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      203,
+      26,
+      357,
+      424
+    ],
+    "sha256": "65eb08e67e49cf0fcc9c6a37b19018a47f0deb20855495546d1219192cc4ffa2"
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.bag.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      142,
+      27,
+      353,
+      424
+    ],
+    "sha256": "a41b34ba68300dc462582c5d8f4dbcfd8b89d63f24f41ca79afed3fd88bd819d"
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.bag.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      159,
+      27,
+      370,
+      424
+    ],
+    "sha256": "82cad314ec7318562496f7bf050f678bca6a65f763d7095d6c2e72e5537af65a"
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.bag.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      140,
+      28,
+      338,
+      424
+    ],
+    "sha256": "48f8f112b7ed418a9a078188966a11f24ea7d19979ffb46c3ec79c1dd45ed491"
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.bag.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      174,
+      28,
+      372,
+      424
+    ],
+    "sha256": "063a5902c556e8560a391dc67f94bda37eed4cf2b890663602d1b9a59ff9cb65"
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.bag.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      138,
+      24,
+      414,
+      424
+    ],
+    "sha256": "d163f963bd319bdd33d25e846ab65df8e74f6e83000621fc739e59456ee6f9cf"
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.bag.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      98,
+      24,
+      374,
+      424
+    ],
+    "sha256": "8fe986257a570efcccfbb24947fcb306a6be88b243fd7799e37f0abc191efd0f"
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.bag.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      152,
+      32,
+      328,
+      424
+    ],
+    "sha256": "3740975549003604316a3fc59059c77910d12c09a980479cfeda63aaa2cf0fb2"
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.bag.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      184,
+      32,
+      360,
+      424
+    ],
+    "sha256": "2e02208ae1a88d9bff680e78c8d82422dca33fa4d2a8f365889a469eedf2142b"
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.empty.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      167,
+      30,
+      330,
+      424
+    ],
+    "sha256": "3a2871f66e10f5c62c1d6177a37f3df95592d0df11246cd2182dd8dc6f85a976"
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.empty.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      182,
+      30,
+      345,
+      424
+    ],
+    "sha256": "dc92de22c39585f3cba772ff227d8939c298f7cd33aea47edc0a3963221243ed"
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.empty.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      136,
+      27,
+      308,
+      424
+    ],
+    "sha256": "16c9134fdc2236709278ce3339cb5206237261791434d5e580687ca1cc52afd0"
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.empty.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      204,
+      27,
+      376,
+      424
+    ],
+    "sha256": "584ce62677ec4d0431a9b3ae54e5d649e488a119345bb0cc0b627b08e7f3151d"
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.empty.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      140,
+      24,
+      367,
+      424
+    ],
+    "sha256": "115eb1a9111f8e4c3a554b3055aa902511baecb0e4319f7f45e79d33ea7bb351"
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.empty.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      145,
+      24,
+      372,
+      424
+    ],
+    "sha256": "dfc0904742adbf0eeb279f1b4a1b527a26f07338f0ca65611d554bf97543041f"
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.empty.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      153,
+      28,
+      303,
+      424
+    ],
+    "sha256": "22f4ba14dc3caa908efe24ecb076d4abb3b9fb1480d384967e3c167197d34f88"
+  },
+  {
+    "file": "cycles/frames/person.customer.12.walk.empty.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      209,
+      28,
+      359,
+      424
+    ],
+    "sha256": "5cd599c532cbd4433f93a195e6ab9c7e4c87eac2f43e355070610949eabf3cf6"
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.bag.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      139,
+      24,
+      331,
+      424
+    ],
+    "sha256": "827de66f6723b0e2cd49e1aa85e1814a02431b5c238132d973ec65bea0224689"
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.bag.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      181,
+      24,
+      373,
+      424
+    ],
+    "sha256": "e5fd2c757df18cb8a82300509831698646ffd29ee306242251891b3cfdbd0ca9"
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.bag.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      138,
+      26,
+      328,
+      424
+    ],
+    "sha256": "95352e0a14593a3d75693b2b7c4bffa040596ae01d6c1f7465994efdf7dd54d4"
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.bag.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      184,
+      26,
+      374,
+      424
+    ],
+    "sha256": "6bdc90f8a49592ff215404182504c4c8fc65949ff98aa1490626a0d7b11e50f7"
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.bag.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      118,
+      25,
+      403,
+      424
+    ],
+    "sha256": "21e64df38c7230b947ceefc64b421d1750f097b01ab2c7bc3c5f5677d50d6fd4"
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.bag.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      109,
+      25,
+      394,
+      424
+    ],
+    "sha256": "9dc3e844bcea00873881e9199e7fde6a952af6c867e0347f9afa7603f45f6464"
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.bag.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      154,
+      28,
+      401,
+      424
+    ],
+    "sha256": "506a8a3d3323e2a1e713d32668eb976370839ce29292b9f8038f4f73b0630d02"
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.bag.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      111,
+      28,
+      358,
+      424
+    ],
+    "sha256": "8dda96ba8cdb373f45040f728ce54e1895d31b949d872a5af347674d0996ad54"
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.empty.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      168,
+      26,
+      337,
+      424
+    ],
+    "sha256": "6c7a64de26b5b9ddab1828d199db3e4fa63da02053f22002a55573096d9e957c"
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.empty.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      175,
+      26,
+      344,
+      424
+    ],
+    "sha256": "6d0968235dfb9db7fc28eee86a625ab3c00d388d8e74daf88ccad959eecd6fc8"
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.empty.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      158,
+      24,
+      313,
+      424
+    ],
+    "sha256": "b501d5951be903fcb7778e43ac7cb0510cbcc074a2f6c50ea95fd087903d564c"
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.empty.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      199,
+      24,
+      354,
+      424
+    ],
+    "sha256": "8969ab7bf9e26e988f97a83df0c67275344b10376c8ea9f4ff08897753862d15"
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.empty.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      133,
+      25,
+      363,
+      424
+    ],
+    "sha256": "ca8f93ae8c361cd7d83dd45d15b446e9b8829b0752c8ce92b7688b360fc21e6d"
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.empty.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      149,
+      25,
+      379,
+      424
+    ],
+    "sha256": "33e85a15f1fb3d84a0816c1497c47024d8eecdc4e428a78004efca5c16c18df3"
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.empty.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      157,
+      29,
+      305,
+      424
+    ],
+    "sha256": "1ea36aebbc361050efd7be9a3b564fdbc90556cb2832e58bc70e631437cb2d7b"
+  },
+  {
+    "file": "cycles/frames/person.customer.13.walk.empty.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      207,
+      29,
+      355,
+      424
+    ],
+    "sha256": "3a9d4ab9f3c1758d6b29a0c6ffe0f89902b2269fed9f4f273d94e6660181697e"
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.bag.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      155,
+      24,
+      373,
+      424
+    ],
+    "sha256": "060131350c91962147d497f08991a9e3bf7a0f5339042ef36dab97e01d8ff477"
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.bag.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      139,
+      24,
+      357,
+      424
+    ],
+    "sha256": "d93891aa2503fa843677a66354f156f694414e3a8a6e8f2b01c09df43ca8059e"
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.bag.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      137,
+      27,
+      343,
+      424
+    ],
+    "sha256": "9ae6ea69be7f5261e29484702d3c1ebb76c90b8e57ad77ede5f4f50e5888f00e"
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.bag.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      169,
+      27,
+      375,
+      424
+    ],
+    "sha256": "817b3350b728130e61103d25e06dbe805b3181ee0e2ced9cf8634d1dce00d6e0"
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.bag.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      133,
+      28,
+      395,
+      424
+    ],
+    "sha256": "a3fcfbc2f2404fa8165880761a6ea6856ecc0060cd0e9004d1c005d3ab3cd4fa"
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.bag.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      117,
+      28,
+      379,
+      424
+    ],
+    "sha256": "f368cd188936650cd2c87b0bc16f86ec330510d3411c11e623b12af2ca5d0f35"
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.bag.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      145,
+      33,
+      319,
+      424
+    ],
+    "sha256": "a6753f5e22794b62cbb1e4104f94d535edbee7562381a9ea870671fd854c4e3f"
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.bag.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      193,
+      33,
+      367,
+      424
+    ],
+    "sha256": "cdfcb3f9dcabda6614befaa5b0e15e9bb9ef2fb517dc82dc4ac0e3eecb1b074a"
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.empty.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      156,
+      24,
+      332,
+      424
+    ],
+    "sha256": "6ad4c2e6f4aeeca9cb06d3f635ec4c3bfcb0bcdbb36b8a990bcca0e09c62d17a"
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.empty.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      180,
+      24,
+      356,
+      424
+    ],
+    "sha256": "28b4de48e045ef6e9bb7fa9771ec8b4d724133b6625f5f88c7c43332ea85ae2f"
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.empty.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      154,
+      27,
+      317,
+      424
+    ],
+    "sha256": "6c14e48ba091249ee0f6cbf9614214f201bd5b8911e15107a2a250ed5d770d00"
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.empty.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      195,
+      27,
+      358,
+      424
+    ],
+    "sha256": "e8a27d39b644d8a5c66aef3ef3afe8286dc8e9a588fd37c7df91247595aab750"
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.empty.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      128,
+      25,
+      384,
+      424
+    ],
+    "sha256": "f3ac4db38e2898e327bb38990a27b7d827182058a46a9b266e9daa0dcbc88ce4"
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.empty.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      128,
+      25,
+      384,
+      424
+    ],
+    "sha256": "e0690544bedbf020ca485b3733c63b8a732219623268ce5a71319dc9610848bc"
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.empty.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      156,
+      26,
+      396,
+      424
+    ],
+    "sha256": "10685a32bd2f875245ff15b154e588e3a8a4e81107e02a3c699550823d06605b"
+  },
+  {
+    "file": "cycles/frames/person.walker.01.walk.empty.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      116,
+      26,
+      356,
+      424
+    ],
+    "sha256": "764cf522c242076603e8b8bbb6eb417a2ab478ab526cc449d471a19489cccc94"
+  },
+  {
+    "file": "cycles/frames/person.walker.02.walk.bag.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      178,
+      27,
+      364,
+      424
+    ],
+    "sha256": "feb56e0e2740c3c3bfb8e2dda69486c40f84dd6f20791651f40c0fbc1a315dfb"
+  },
+  {
+    "file": "cycles/frames/person.walker.02.walk.bag.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      148,
+      27,
+      334,
+      424
+    ],
+    "sha256": "824515b6acfd38d9386dbfe27b0ac6cdbdc5179b66a9bc090612757a7967afa6"
+  },
+  {
+    "file": "cycles/frames/person.walker.02.walk.bag.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      146,
+      30,
+      337,
+      424
+    ],
+    "sha256": "daa19f3b02e931a158a2b981edec830af18c7919cb71cba707786c04c84f5082"
+  },
+  {
+    "file": "cycles/frames/person.walker.02.walk.bag.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      175,
+      30,
+      366,
+      424
+    ],
+    "sha256": "5e8c08183d965ad464c3a865606f884a9344771226bb2d60fe5acc13911858a4"
+  },
+  {
+    "file": "cycles/frames/person.walker.02.walk.bag.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      139,
+      24,
+      412,
+      424
+    ],
+    "sha256": "ac8664de36b27bacc0c6402ebe6e7e89c3048188b54d5d511716862d2450e41e"
+  },
+  {
+    "file": "cycles/frames/person.walker.02.walk.bag.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      100,
+      24,
+      373,
+      424
+    ],
+    "sha256": "8fb68f29c02e07976df9864a0cb9858ede1c82589ea466d404d615429e3a4b43"
+  },
+  {
+    "file": "cycles/frames/person.walker.02.walk.bag.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      144,
+      34,
+      390,
+      424
+    ],
+    "sha256": "b3dc4ef554e9d68987901d18dc86e33bee3ec8dd9266b2ade7d6366fea7c1c17"
+  },
+  {
+    "file": "cycles/frames/person.walker.02.walk.bag.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      122,
+      34,
+      368,
+      424
+    ],
+    "sha256": "b2188a2c71707d3cdb2afcf7a77e958f21147abc440efe3238eb7c8384d7b44a"
+  },
+  {
+    "file": "cycles/frames/person.walker.02.walk.empty.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      168,
+      26,
+      342,
+      424
+    ],
+    "sha256": "0940e796fe4f51a88bafbfc3315f33e4949d2f9eaa7a6a5012d2cea7a939b513"
+  },
+  {
+    "file": "cycles/frames/person.walker.02.walk.empty.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      170,
+      26,
+      344,
+      424
+    ],
+    "sha256": "eeb55061de4576da734ee9a24799dfefacd41df4935c88640a54e188b5ac8140"
+  },
+  {
+    "file": "cycles/frames/person.walker.02.walk.empty.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      143,
+      28,
+      318,
+      424
+    ],
+    "sha256": "e0a79d25b470a9a43f742866f254bbb128a36d8d243edd8a1bdadef9599b07fe"
+  },
+  {
+    "file": "cycles/frames/person.walker.02.walk.empty.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      194,
+      28,
+      369,
+      424
+    ],
+    "sha256": "77ff4b55f206e3c0a289a0b9f09967e85b189485714df4336109d7a31ffeec93"
+  },
+  {
+    "file": "cycles/frames/person.walker.02.walk.empty.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      134,
+      24,
+      380,
+      424
+    ],
+    "sha256": "7c87fa2e6835f381ed54470e399e83d94d4e4e6c0062a1327f31ac422098a285"
+  },
+  {
+    "file": "cycles/frames/person.walker.02.walk.empty.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      132,
+      24,
+      378,
+      424
+    ],
+    "sha256": "c0678059c55c8c27132303eeb7a2c3a1abcccca6167a7ebf6f3767eccf70c207"
+  },
+  {
+    "file": "cycles/frames/person.walker.02.walk.empty.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      160,
+      29,
+      399,
+      424
+    ],
+    "sha256": "a62ef36e5049ab2b298cd134d39b946b1f592f17b5e5a6edcb1ceaf8631536a4"
+  },
+  {
+    "file": "cycles/frames/person.walker.02.walk.empty.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      113,
+      29,
+      352,
+      424
+    ],
+    "sha256": "0aa6637cbf151d1ed32e351e840ba4cb6527bae8edd9277acc6cf56d2352ccb7"
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.bag.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      160,
+      24,
+      337,
+      424
+    ],
+    "sha256": "d0030c163a82d98cee436b569ab095fec81f4e872389bfe765f55b203d15f668"
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.bag.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      175,
+      24,
+      352,
+      424
+    ],
+    "sha256": "0bf1078518c66a0abdc66168430cc87763d5af58ec779947e5477bf1868144a0"
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.bag.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      138,
+      25,
+      327,
+      424
+    ],
+    "sha256": "f63f81f4d0dd817712fa32f717eb7c5e7a182894d95cb9a5250bb3ca64c9e119"
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.bag.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      185,
+      25,
+      374,
+      424
+    ],
+    "sha256": "9db0d4f8b0159a886588b8b216c48aa366ebd9fe7e1d524b790e123fb155243f"
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.bag.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      126,
+      27,
+      396,
+      424
+    ],
+    "sha256": "f5950f862b56ae7ec4ebad5413d6a73fecf3a14598ea04399ab428f53cd22ed7"
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.bag.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      116,
+      27,
+      386,
+      424
+    ],
+    "sha256": "0fde53f928856da3352ffb570070751230b260613df89a04bebcb0901345378d"
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.bag.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      153,
+      27,
+      305,
+      424
+    ],
+    "sha256": "3a04ce71e481b9876c4812d16ed7acf9d26f22e3c8c80ddb18aef3b6b3387769"
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.bag.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      207,
+      27,
+      359,
+      424
+    ],
+    "sha256": "f591a637860a7153b8c6c233ec5dd9338804ef2a9550cc5bdcea95fb575f9978"
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.empty.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      167,
+      25,
+      339,
+      424
+    ],
+    "sha256": "fa238536cc9ef5fb3127d6186cc4a1d96f50f8bcc742756bfa8b107442e17823"
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.empty.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      173,
+      25,
+      345,
+      424
+    ],
+    "sha256": "0e3363accbe353068a74a85e38c53a2c33d97692234fe38869cdb44d251a49ab"
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.empty.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      145,
+      24,
+      311,
+      424
+    ],
+    "sha256": "8608e699fc0393943e9917cdf9e7faf743dcf5b0ef7bfbaebf8cd3ca6ce49644"
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.empty.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      201,
+      24,
+      367,
+      424
+    ],
+    "sha256": "e8154e26a7b713cee3605cb36fa0e893bc9b4267bc8fc7355e9b891194503801"
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.empty.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      119,
+      25,
+      385,
+      424
+    ],
+    "sha256": "2a8a22939a7af2a45f6d4b6074dddd71ec95fd8b24d6d9a1bf3cbc2f39b25962"
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.empty.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      127,
+      25,
+      393,
+      424
+    ],
+    "sha256": "75005c8230020f3df4033413f95264c09de964b2381f9dbf2c47d34a1d4f582f"
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.empty.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      153,
+      26,
+      306,
+      424
+    ],
+    "sha256": "874b2c2fba138e9c0fee93079f7ce62bafc4c483d5ba0f689d8abc3c1b58ed34"
+  },
+  {
+    "file": "cycles/frames/person.walker.03.walk.empty.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      206,
+      26,
+      359,
+      424
+    ],
+    "sha256": "e20abf25bd7802bb675d7397091b2c7202133eb672f34c453a1ae437529f7546"
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.bag.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      156,
+      27,
+      354,
+      424
+    ],
+    "sha256": "0376f5bd0ac82885eb00587a7a81df3796fff021ee34f9600258a0e9706eca34"
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.bag.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      158,
+      27,
+      356,
+      424
+    ],
+    "sha256": "f0ad86f74750467862bb53e61469549363ea11ec3dd0d124af5061501f0e1b07"
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.bag.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      130,
+      30,
+      332,
+      424
+    ],
+    "sha256": "7aac8f166e26a14acaa09bf35b334b7ba0f57af04f20e2ebcb3beb06eb5d5067"
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.bag.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      180,
+      30,
+      382,
+      424
+    ],
+    "sha256": "e01d233a578f33586d0de30a6e956dd39764265e46bc02566f295dc6b7e8acaf"
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.bag.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      125,
+      24,
+      392,
+      424
+    ],
+    "sha256": "93b740b74ffff0c59e035dec04545a1581c17a507d9b4f66cd8d646072a05038"
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.bag.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      120,
+      24,
+      387,
+      424
+    ],
+    "sha256": "5270f7534d7928cdef8710a80b754179c84738d47c6eb827250321b0c403de3f"
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.bag.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      132,
+      32,
+      318,
+      424
+    ],
+    "sha256": "2adf33695e33a1bf41c69bcb20dbe65a41753b53c140d22ff4ad8f12c7fc4352"
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.bag.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      194,
+      32,
+      380,
+      424
+    ],
+    "sha256": "7747413f8ac85b9fb06ed257467108bceb21197833544871e03c9078db8dfee4"
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.empty.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      157,
+      24,
+      349,
+      424
+    ],
+    "sha256": "58da8985697d91fd877fa2fcc7d794832ea49331502f2d659e7306f6729001a0"
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.empty.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      163,
+      24,
+      355,
+      424
+    ],
+    "sha256": "8e06cb2af495ff3686d4bbcbc6b993fa37027e6e149a8d49cb8a7af9a8db0994"
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.empty.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      146,
+      26,
+      318,
+      424
+    ],
+    "sha256": "1f27eca801cb12535cd77e587b60c106b68f4342cb8ca9551ce308de1e99b9e6"
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.empty.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      194,
+      26,
+      366,
+      424
+    ],
+    "sha256": "6053fc4a0a830bb8e4a170f6a6a314b1f75906ade33b1159fc98825ce19b8470"
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.empty.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      128,
+      24,
+      373,
+      424
+    ],
+    "sha256": "2f555b2213291dfe23867ee675731cedac6a4ae3647285c06b2b58f2a95272a8"
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.empty.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      139,
+      24,
+      384,
+      424
+    ],
+    "sha256": "99a6f599bd6055efd1e16a75e9c192f018423ae818ce3c824ec45733366d63b8"
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.empty.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      153,
+      25,
+      305,
+      424
+    ],
+    "sha256": "619b527b786ea7c57f50afa92522d3364d09e56a276274570fedaaf9431bd8ce"
+  },
+  {
+    "file": "cycles/frames/person.walker.04.walk.empty.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      207,
+      25,
+      359,
+      424
+    ],
+    "sha256": "46fef73d764d3b5f68cc441af4ea49a654af7a77784a239c6c36427c73e20723"
+  },
+  {
+    "file": "cycles/frames/person.walker.05.walk.empty.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      135,
+      27,
+      339,
+      424
+    ],
+    "sha256": "4921314b15b26dc486b01eda0916b7dd38466464e8152c505259f15c16effee4"
+  },
+  {
+    "file": "cycles/frames/person.walker.05.walk.empty.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      173,
+      27,
+      377,
+      424
+    ],
+    "sha256": "ba33e3207239856a7f6bedc0526c08c3057a84b3d04b8e9eb6c166a85ac24774"
+  },
+  {
+    "file": "cycles/frames/person.walker.05.walk.empty.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      147,
+      32,
+      315,
+      424
+    ],
+    "sha256": "290f9ce8c772b897ad897ded2bc0323e1857c219a92ec18aa012413f2276d3cd"
+  },
+  {
+    "file": "cycles/frames/person.walker.05.walk.empty.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      197,
+      32,
+      365,
+      424
+    ],
+    "sha256": "6efee3010d1897e00ca760a1fea240330e2b8c7ed2200d4a63e98951fd8eb286"
+  },
+  {
+    "file": "cycles/frames/person.walker.05.walk.empty.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      107,
+      26,
+      354,
+      424
+    ],
+    "sha256": "97ef6e34a2f275269e3536cc0200e21d85f21a740dd145881aafe606812041a5"
+  },
+  {
+    "file": "cycles/frames/person.walker.05.walk.empty.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      158,
+      26,
+      405,
+      424
+    ],
+    "sha256": "7134d62dbeef2c0c8200849654f129e2afd6792820e35ebc7570ceeee4afe651"
+  },
+  {
+    "file": "cycles/frames/person.walker.05.walk.empty.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      141,
+      24,
+      316,
+      424
+    ],
+    "sha256": "447bf46999ba40a145b5d3d0ae8bdd5a60778ee895f911b33ea95ad0d2ec0c6d"
+  },
+  {
+    "file": "cycles/frames/person.walker.05.walk.empty.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      196,
+      24,
+      371,
+      424
+    ],
+    "sha256": "1a0bdcd07c53739cb4afdf0a7817d220f41b5e0a1472483dddc631213a9566c8"
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.bag.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      87,
+      24,
+      362,
+      424
+    ],
+    "sha256": "1e21cdda8fbc07b2b0bf7b285baa41c0abd9e133dd760365e9955fa676138ff7"
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.bag.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      150,
+      24,
+      425,
+      424
+    ],
+    "sha256": "1271b2dccf196a00a75ce376b3f10191382747c24578930b9f8c9d5e79045d3f"
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.bag.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      81,
+      30,
+      354,
+      424
+    ],
+    "sha256": "731918f9bf8944f8aad720e58cd2acb7495eb21a568640dd9b6ec349984a6373"
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.bag.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      158,
+      30,
+      431,
+      424
+    ],
+    "sha256": "92032ff42972bd75f303458d7d1b1eb63460563fd3cf01ed7378da1e2279f9ad"
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.bag.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      77,
+      26,
+      372,
+      424
+    ],
+    "sha256": "e27caf71c4de0f8dad45d7d0a378e8d33eedd50aa0a9b08ae96386312e6d1a82"
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.bag.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      140,
+      26,
+      435,
+      424
+    ],
+    "sha256": "4ac59cb0f54495ed7bd3b365ae20a885558abc98672e232def3f4c5debf82bf6"
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.bag.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      87,
+      35,
+      365,
+      424
+    ],
+    "sha256": "e27d4e6f306c99cb17952f0b54fef0cd738de76f301eca7a40cb2a2d42284cfc"
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.bag.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      147,
+      35,
+      425,
+      424
+    ],
+    "sha256": "d884b9421770ec2b40796cbfdf692e0dc2473170af338617aebe87181277ba39"
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.empty.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      82,
+      26,
+      340,
+      424
+    ],
+    "sha256": "b3ac28c0411a698c2d1f593873fa4ad52f91c745102c894f38c060b62fbb7e40"
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.empty.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      172,
+      26,
+      430,
+      424
+    ],
+    "sha256": "d5227d0762237c6d34b174bd98367418ce9f348f061cb2922d690daa096964f1"
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.empty.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      55,
+      27,
+      345,
+      424
+    ],
+    "sha256": "701494a6bfbd4b3034695288aaafcec28b6413a9c8bcf88b5d872d70d565c810"
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.empty.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      167,
+      27,
+      457,
+      424
+    ],
+    "sha256": "c429a7fc0d4c6a988c74d9add31891a1a2c6671a201dabed90473910925df3fe"
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.empty.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      51,
+      24,
+      378,
+      424
+    ],
+    "sha256": "283f216835c01ee27221729d9a4eab6e1a8e3f0bb24a9f4e7ea2611a24451140"
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.empty.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      134,
+      24,
+      461,
+      424
+    ],
+    "sha256": "ae0a3bc049fb158827f987d10dd6ce3cd310d8e0e23f458b57163bc251ef82ec"
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.empty.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      110,
+      29,
+      354,
+      424
+    ],
+    "sha256": "6f73ddefb06eeb9b1473c0193f5ee7e837db99a9add34606eea153788a5e4e97"
+  },
+  {
+    "file": "cycles/frames/person.walker.06.walk.empty.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      158,
+      29,
+      402,
+      424
+    ],
+    "sha256": "8ca7cb08e132a9ec809f667d22be73c59481320d19b69071ae2073c559646b8e"
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.bag.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      143,
+      24,
+      349,
+      424
+    ],
+    "sha256": "b653b002e628342079f4aebe78fb62fab1d80198622a83728a34c23097b5dd9b"
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.bag.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      163,
+      24,
+      369,
+      424
+    ],
+    "sha256": "17c19c5e3c9ae37e5ac9b46dffad5b0cfe2b646cd3f145523b11157a5717fe50"
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.bag.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      137,
+      26,
+      331,
+      424
+    ],
+    "sha256": "45a390d09840d6b8ff6afd4cb9448b4db22f2b3670c78f7088c065fe3876e552"
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.bag.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      181,
+      26,
+      375,
+      424
+    ],
+    "sha256": "5b01bae534b2698c4a95de3fe93f748e491b07f2a9ca5778fd8593f9e39ffc4e"
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.bag.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      127,
+      26,
+      361,
+      424
+    ],
+    "sha256": "59f94573e377c7e7c18a0470a77812f0c96c390aba4b882fb60125f38272e716"
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.bag.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      151,
+      26,
+      385,
+      424
+    ],
+    "sha256": "32ac03819b8d918d9b0f3dbaef06b0c84844d95ac6b4ac77aeb278658cfd3860"
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.bag.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      150,
+      25,
+      333,
+      424
+    ],
+    "sha256": "cf9dddf9ee28f6a4ff99300cd0098371e184a7c31f7d99d049fdee599262db4f"
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.bag.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      179,
+      25,
+      362,
+      424
+    ],
+    "sha256": "5c40de6d46bc24bbb01fe3ba4db136a8271512448102f2c115932ec032154cb6"
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.empty.00.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      156,
+      27,
+      336,
+      424
+    ],
+    "sha256": "84aaa617d9a20f81706f52c0ad425e01c105643213e5ffe9f86411f73f95a893"
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.empty.00.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      176,
+      27,
+      356,
+      424
+    ],
+    "sha256": "711880909226d6075aa84f20a8503b4e31a6b0ac0efafe684a9ee6441f94a45e"
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.empty.01.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      128,
+      24,
+      335,
+      424
+    ],
+    "sha256": "af1f773acf734895cae94fb003aed6abebe0d12ab3c70ac1bda74af9a0073988"
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.empty.01.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      177,
+      24,
+      384,
+      424
+    ],
+    "sha256": "2d4cfbdcbb4101fc43abe9ec713dc6429229c7fc34e06540e19f8ea2641b0072"
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.empty.02.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      123,
+      24,
+      351,
+      424
+    ],
+    "sha256": "bcf6cbf5510a8aac9d302cd579ebf7fb38af1e819b92abd9eace444a8efefb25"
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.empty.02.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      161,
+      24,
+      389,
+      424
+    ],
+    "sha256": "229c3968807fa7b85ec52614a81b96cfb3e9f308028ef5c2896839c2b8599cf0"
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.empty.03.left.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      159,
+      31,
+      332,
+      424
+    ],
+    "sha256": "c89636eb459299648d4d51034e4bd93bcc6d73c68a86e25b70ce1847e6e803a2"
+  },
+  {
+    "file": "cycles/frames/person.walker.07.walk.empty.03.right.png",
+    "size": [
+      512,
+      448
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      180,
+      31,
+      353,
+      424
+    ],
+    "sha256": "36c119865c6df66e8a4fa42a8a2bcf68f222c884456563630fe7903b33660ed7"
+  },
+  {
+    "file": "cycles/person.customer.01.walk.bag.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      189,
+      28,
+      1952,
+      729
+    ],
+    "sha256": "c401098ae999d84b5efcf20cf64851c2a0c7b2082ce0ef0c303c7872e7fc9803"
+  },
+  {
+    "file": "cycles/person.customer.01.walk.empty.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      129,
+      28,
+      1908,
+      717
+    ],
+    "sha256": "2bf223df7e7d62b8f0dc83e55f20ef9eb003b5781856b63d2b6dea140520c1b7"
+  },
+  {
+    "file": "cycles/person.customer.02.walk.bag.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      47,
+      27,
+      1963,
+      737
+    ],
+    "sha256": "5127a1010d79ba55df8024a6cdc3f27872d1d44646816dde0d041c8d724506d4"
+  },
+  {
+    "file": "cycles/person.customer.02.walk.empty.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      131,
+      18,
+      1932,
+      744
+    ],
+    "sha256": "d88ce046fe08cb41d7ee68461c994a60a0c3e669201811d497914f949c5fb7a6"
+  },
+  {
+    "file": "cycles/person.customer.03.walk.bag.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      82,
+      22,
+      1963,
+      731
+    ],
+    "sha256": "a4e7f0bd3e06ec581de87d76d0f41dc4a5140100fd932e680a54eedda1c4979f"
+  },
+  {
+    "file": "cycles/person.customer.03.walk.empty.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      131,
+      16,
+      1954,
+      744
+    ],
+    "sha256": "88224e79942a06f0f2142857288c560b2ff2524ef41edc480d5d0c292f637094"
+  },
+  {
+    "file": "cycles/person.customer.04.walk.bag.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      85,
+      17,
+      1980,
+      747
+    ],
+    "sha256": "3098405a7c0f779739bdd36b15c8d7ac8e40b01ab054bf4842b3b7f032110016"
+  },
+  {
+    "file": "cycles/person.customer.04.walk.empty.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      107,
+      10,
+      1953,
+      757
+    ],
+    "sha256": "6a64b134992fdce0810749cbddb3cbebec1813122bce3d237d13983f6f337cd5"
+  },
+  {
+    "file": "cycles/person.customer.05.walk.bag.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      91,
+      18,
+      1973,
+      745
+    ],
+    "sha256": "d834ab5224e16f67a0c1abe6f98936bce8cc1734c5968bdda86e367fcc1a3a62"
+  },
+  {
+    "file": "cycles/person.customer.05.walk.empty.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      86,
+      19,
+      1963,
+      742
+    ],
+    "sha256": "5962e2a73195d23a6b74fe247cca3cd171f563ae596c4bc04618e878cf03ca2a"
+  },
+  {
+    "file": "cycles/person.customer.06.walk.bag.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      60,
+      24,
+      2002,
+      738
+    ],
+    "sha256": "251e7b84496d9ffb8f7d0bb750b7539504d9d95888da7da5a171a48c9b6fb5b5"
+  },
+  {
+    "file": "cycles/person.customer.06.walk.empty.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      126,
+      12,
+      1960,
+      749
+    ],
+    "sha256": "b8a7749765ddf8f59fd4b235c0f4c1e4eb46bac871d15a589b4a4ac18ea5c472"
+  },
+  {
+    "file": "cycles/person.customer.07.walk.bag.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      88,
+      20,
+      1991,
+      732
+    ],
+    "sha256": "9344b11c09009af8fea76f320de2dcf67f1f378a9d1dffa226e531fff100c43c"
+  },
+  {
+    "file": "cycles/person.customer.07.walk.empty.sheet.png",
+    "size": [
+      896,
+      320
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      63,
+      15,
+      854,
+      319
+    ],
+    "sha256": "73d8d2ea65c2d6c2517bde65b7be25c2fb22048b044c8d22da5f1e4401b32603"
+  },
+  {
+    "file": "cycles/person.customer.08.walk.bag.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      158,
+      20,
+      1994,
+      744
+    ],
+    "sha256": "b81277c49d6535e1e4b1daea2dd66ba888dbf3384e87fbf89001ba0b8d563fe5"
+  },
+  {
+    "file": "cycles/person.customer.08.walk.empty.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      122,
+      10,
+      1978,
+      755
+    ],
+    "sha256": "a4b6126a903c9b2626086b968a4808d7c453b333a6ea4927f946440a6b3c760c"
+  },
+  {
+    "file": "cycles/person.customer.09.walk.bag.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      134,
+      19,
+      1979,
+      741
+    ],
+    "sha256": "5355c51c9a6a6f27060b00c5299d8fc8e0b56fa3efab2c3d5d3d7204a97755ae"
+  },
+  {
+    "file": "cycles/person.customer.09.walk.empty.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      116,
+      13,
+      1984,
+      739
+    ],
+    "sha256": "d4f88e12ac5f80150afbe5143c59c1b9e4651489fc052083593a556ea214f378"
+  },
+  {
+    "file": "cycles/person.customer.10.walk.bag.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      130,
+      28,
+      1978,
+      742
+    ],
+    "sha256": "77762f29d46890c766438a277a9a989d9e75f7db220f902313637e6db950e79c"
+  },
+  {
+    "file": "cycles/person.customer.10.walk.empty.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      118,
+      17,
+      1950,
+      744
+    ],
+    "sha256": "a3c9fe127d410c1b60dba422493de860d27cf41fe9ec6dbdb63ac1f8e154fce9"
+  },
+  {
+    "file": "cycles/person.customer.11.walk.bag.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      127,
+      28,
+      1952,
+      732
+    ],
+    "sha256": "5abd656d51c9256502eea7d36cb4d8f874a853ffe41e45caa1a0e5a8d4b1b97b"
+  },
+  {
+    "file": "cycles/person.customer.11.walk.empty.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      134,
+      22,
+      1931,
+      738
+    ],
+    "sha256": "e7461a31ab2d6c10e239e45a2384a2edb26b8cabd3bd4263fa89171d1953630d"
+  },
+  {
+    "file": "cycles/person.customer.12.walk.bag.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      80,
+      19,
+      1990,
+      745
+    ],
+    "sha256": "8643a9aaa59f91201cf5c045d89d695c0fecf119061915a87852016afc2cd5d8"
+  },
+  {
+    "file": "cycles/person.customer.12.walk.empty.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      136,
+      12,
+      1958,
+      727
+    ],
+    "sha256": "a11f8b7fa1e0be3443f25bff5fd9c1d282f016caf884c03415d1673c7f4a2b76"
+  },
+  {
+    "file": "cycles/person.customer.13.walk.bag.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      119,
+      22,
+      1974,
+      730
+    ],
+    "sha256": "0373dd3e40ef471046ac8d146a598ad40a3c7808eda7c80caef74de0d72d753b"
+  },
+  {
+    "file": "cycles/person.customer.13.walk.empty.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      128,
+      15,
+      1963,
+      745
+    ],
+    "sha256": "3ef50d212d852761dbeffe8ff109cff24770ed5549472ed9485d481b0dd366a9"
+  },
+  {
+    "file": "cycles/person.walker.01.walk.bag.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      53,
+      13,
+      1971,
+      743
+    ],
+    "sha256": "261e965703672ab3b3516d0370bec291f52e2728b0260b2f93be7cab5b28d6f8"
+  },
+  {
+    "file": "cycles/person.walker.01.walk.empty.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      135,
+      15,
+      1972,
+      743
+    ],
+    "sha256": "5ff5e07dadfc2db19417a5baf74feb537efa0932f7b71f9c9fa672cd1dd6424c"
+  },
+  {
+    "file": "cycles/person.walker.02.walk.bag.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      143,
+      25,
+      2001,
+      742
+    ],
+    "sha256": "df134f20870d8ade57338cb38ad5725b81d83997ea818e49aa7e28387db3c353"
+  },
+  {
+    "file": "cycles/person.walker.02.walk.empty.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      100,
+      29,
+      1962,
+      740
+    ],
+    "sha256": "887e70f384b6e616453a6400e4039c0abfd941610bb955a6a3044c029bab6fbf"
+  },
+  {
+    "file": "cycles/person.walker.03.walk.bag.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      114,
+      15,
+      1968,
+      743
+    ],
+    "sha256": "ced4473d0554a5a9beab0509d45aadc28a61895019dd97425d1ffe2aa5a9ea32"
+  },
+  {
+    "file": "cycles/person.walker.03.walk.empty.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      107,
+      16,
+      1931,
+      745
+    ],
+    "sha256": "2aa722739955ce5f13d421915fb725f20841fa4277ab006d775408737fb718b1"
+  },
+  {
+    "file": "cycles/person.walker.04.walk.bag.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      137,
+      21,
+      1983,
+      742
+    ],
+    "sha256": "ca888f825b7a448987453e498ee6b9c243dff2eb0113e676ac5ec1238462c2b4"
+  },
+  {
+    "file": "cycles/person.walker.04.walk.empty.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      97,
+      21,
+      1984,
+      740
+    ],
+    "sha256": "ca739395de954252f31634de720ea4d05a84e8e176a2a6212c3d70f4ed0bd654"
+  },
+  {
+    "file": "cycles/person.walker.05.walk.empty.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      90,
+      11,
+      1967,
+      744
+    ],
+    "sha256": "f260bf5dccf8df954728f2422588a7059e9a0a48afc4c15da57b7835d989835e"
+  },
+  {
+    "file": "cycles/person.walker.06.walk.bag.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      12,
+      16,
+      2035,
+      732
+    ],
+    "sha256": "38b3c3fc7af339266a7898bb9b0d89235874375529aba8e1bb06bd0bd01581fb"
+  },
+  {
+    "file": "cycles/person.walker.06.walk.empty.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      75,
+      33,
+      2026,
+      722
+    ],
+    "sha256": "b0fe66921f9e1a015cc82496fe6a0236ef452bc201c09f269255d58284f657ed"
+  },
+  {
+    "file": "cycles/person.walker.07.walk.bag.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      114,
+      20,
+      1946,
+      736
+    ],
+    "sha256": "c566467881823ab808cf1b1a8c372659e47abedc8e5283f7041ebd56c90193e5"
+  },
+  {
+    "file": "cycles/person.walker.07.walk.empty.sheet.png",
+    "size": [
+      2048,
+      768
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ],
+    "opaque_bounds": [
+      104,
+      8,
+      1981,
+      752
+    ],
+    "sha256": "1e8beea845bc3862f7ca608512527175b28cd7a34a9407c6502b2c1a4315cebe"
+  },
+  {
+    "file": "people/left/person.customer.08.stand.bag.left.png",
+    "size": [
+      1048,
+      1501
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      276,
+      67,
+      809,
+      1444
+    ],
+    "sha256": "e7bc12de9c4c09b8024eb5f195c565909745d6ee89143e0a88d74c60e7ede542"
+  },
+  {
+    "file": "people/left/person.customer.08.stand.empty.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      280,
+      71,
+      754,
+      1436
+    ],
+    "sha256": "1b48dfc850738e3f56ce6498699e044453844c96ab08ef0b0a729b7ded8e5f4d"
+  },
+  {
+    "file": "people/left/person.customer.08.walk.bag.left.png",
+    "size": [
+      1047,
+      1501
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      150,
+      65,
+      876,
+      1433
+    ],
+    "sha256": "d5ddba0491de6aa320b2b352aef21edece831f9cc3d70290304306f3900a0159"
+  },
+  {
+    "file": "people/left/person.customer.08.walk.empty.left.png",
+    "size": [
+      1048,
+      1501
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      172,
+      69,
+      789,
+      1413
+    ],
+    "sha256": "35f1920415ed4645fb50102430f62a7e8624ef1871c3756c66a7970a301a2b04"
+  },
+  {
+    "file": "people/left/person.customer.09.stand.bag.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      239,
+      63,
+      829,
+      1445
+    ],
+    "sha256": "aed5448c000f6b3c524b0fbd1338c4878be68b07e5b3b42d879a9fed0fc10ddb"
+  },
+  {
+    "file": "people/left/person.customer.09.stand.empty.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      268,
+      67,
+      765,
+      1443
+    ],
+    "sha256": "231a1fc08955c67b2f1fc7c9fc2b939f0a44e6fe8c8558a0475f02e4ad6c5375"
+  },
+  {
+    "file": "people/left/person.customer.09.walk.bag.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      162,
+      66,
+      882,
+      1426
+    ],
+    "sha256": "5f48daf3c293f273b02dcb5952d773e71631303523ce49bd783c5566e1aae412"
+  },
+  {
+    "file": "people/left/person.customer.09.walk.empty.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      161,
+      66,
+      821,
+      1418
+    ],
+    "sha256": "31cc563997bbc054b2dd7b2c49179688513429dc288007b5dbb568585169ebb2"
+  },
+  {
+    "file": "people/left/person.customer.10.stand.bag.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      256,
+      82,
+      802,
+      1443
+    ],
+    "sha256": "3468cc2f08f1a318f021df31bba583e6f84b7f440be9a143882182cf1f5423a6"
+  },
+  {
+    "file": "people/left/person.customer.10.stand.empty.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      264,
+      85,
+      738,
+      1434
+    ],
+    "sha256": "e31bfe30318af686718c2beaf6453814bcad07a5a53fd8a897827f9f2689659e"
+  },
+  {
+    "file": "people/left/person.customer.10.walk.bag.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      201,
+      88,
+      879,
+      1410
+    ],
+    "sha256": "f84e75b4d27446407901197be764e17a93ba9ee634bc031407472d3b8f5042f9"
+  },
+  {
+    "file": "people/left/person.customer.10.walk.empty.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      213,
+      87,
+      780,
+      1425
+    ],
+    "sha256": "6b64199a7b17a886e7a1194988eb31ac5c7a3e09142b20b44546b48267e9ffb2"
+  },
+  {
+    "file": "people/left/person.customer.11.stand.bag.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      279,
+      79,
+      782,
+      1434
+    ],
+    "sha256": "4a64ace25fa291ae7ab9b4d3d9d66d824e35ad8afb3646ffc3fbaca4394f5348"
+  },
+  {
+    "file": "people/left/person.customer.11.stand.empty.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      281,
+      80,
+      756,
+      1432
+    ],
+    "sha256": "0774bfc5972e61a4e0838a8354d138237304354f2c7cbdec5652a8ea9e4d1618"
+  },
+  {
+    "file": "people/left/person.customer.11.walk.bag.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      190,
+      79,
+      876,
+      1415
+    ],
+    "sha256": "065869b8271f335278fe88178adaa06ce826c26748d132cec0cafd92cbe566fb"
+  },
+  {
+    "file": "people/left/person.customer.11.walk.empty.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      183,
+      85,
+      805,
+      1404
+    ],
+    "sha256": "046f2c190c38860e3ccd0df64f656f32457d8cb85dfe8df9ec811f4e5785f8fe"
+  },
+  {
+    "file": "people/left/person.customer.12.stand.bag.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      276,
+      62,
+      840,
+      1444
+    ],
+    "sha256": "a5843410c4c89751061947d3d0e45ef040132aa36793e7dea66065241800f30a"
+  },
+  {
+    "file": "people/left/person.customer.12.stand.empty.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      277,
+      64,
+      775,
+      1445
+    ],
+    "sha256": "7d6c3b54ceb9c7c39fedd76bcf214146761d9182b075d44c88077dfe3e9a3fbc"
+  },
+  {
+    "file": "people/left/person.customer.12.walk.bag.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      213,
+      66,
+      861,
+      1429
+    ],
+    "sha256": "f1b04bfdf7be9bf5996c945dcbb9fac72babf23d4bdc2a59797ef288907fc5b5"
+  },
+  {
+    "file": "people/left/person.customer.12.walk.empty.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      194,
+      66,
+      810,
+      1421
+    ],
+    "sha256": "8f77408b9006b4593d95599cef21eea1b4600e3c1c20173ae2987afe9cf6b531"
+  },
+  {
+    "file": "people/left/person.customer.13.stand.bag.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      268,
+      72,
+      814,
+      1454
+    ],
+    "sha256": "30180f685704ba05b4d8d5c2108aee41ede880df13aae7ba266c578d8b51f55c"
+  },
+  {
+    "file": "people/left/person.customer.13.stand.empty.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      270,
+      75,
+      745,
+      1453
+    ],
+    "sha256": "7cd95223199f8ea2dee3085c12300900fac945369978673435dcb22662d7680a"
+  },
+  {
+    "file": "people/left/person.customer.13.walk.bag.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      190,
+      71,
+      865,
+      1412
+    ],
+    "sha256": "f8bd9336d9bdc2afe63929720f69756b1d94f32973fef27ce2334baaba183cb5"
+  },
+  {
+    "file": "people/left/person.customer.13.walk.empty.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      173,
+      80,
+      769,
+      1418
+    ],
+    "sha256": "36e1a8f83e24eb7c50a35d928c0bb066f947619050251f985efc4c242bb8d698"
+  },
+  {
+    "file": "people/left/person.walker.05.stand.empty.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      295,
+      63,
+      738,
+      1419
+    ],
+    "sha256": "5a0e6ec8659211f792f634cac1bdbf1d7741af4d2c26840ac2acd1b10b91727f"
+  },
+  {
+    "file": "people/left/person.walker.05.walk.empty.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      171,
+      65,
+      759,
+      1436
+    ],
+    "sha256": "03ae9ccfe2a8f0b899e18497a38153d82117961c88f9b7dfc05f10b99c87736f"
+  },
+  {
+    "file": "people/left/person.walker.06.stand.bag.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      48,
+      57,
+      1049,
+      1460
+    ],
+    "sha256": "78d398fc33b9d24377787d4e8f47aa92978f8ab97eed780f95ef14ce70a0b871"
+  },
+  {
+    "file": "people/left/person.walker.06.stand.empty.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      64,
+      66,
+      1008,
+      1434
+    ],
+    "sha256": "b2d19583fc6ebfc5f65c45ed860a42562268c0eab00259d6ba903dc6d7353180"
+  },
+  {
+    "file": "people/left/person.walker.06.walk.bag.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      10,
+      21,
+      1049,
+      1484
+    ],
+    "sha256": "5b2f2d35f59451fd75b5cdae9b1d1daa7038978f200741d10095a7336b295cef"
+  },
+  {
+    "file": "people/left/person.walker.06.walk.empty.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      26,
+      45,
+      1047,
+      1450
+    ],
+    "sha256": "15abc03165fb0dbd062dee29edb720260a803f2736a79c0aeb349796cc98a2db"
+  },
+  {
+    "file": "people/left/person.walker.07.stand.bag.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      208,
+      64,
+      790,
+      1422
+    ],
+    "sha256": "f512c345c8f3cd4ea08627ec4023879da8881f657fc4263b13c76de8155b4d6e"
+  },
+  {
+    "file": "people/left/person.walker.07.stand.empty.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      277,
+      66,
+      788,
+      1421
+    ],
+    "sha256": "ebccc2d1bd6d92af235b1e8841118712150e19c249f609a901622852b5bbcfdb"
+  },
+  {
+    "file": "people/left/person.walker.07.walk.bag.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      216,
+      71,
+      856,
+      1419
+    ],
+    "sha256": "50e03b615b7a04953632c366d6ffb1b53322fa2e57d437583436e7c9ccdd6cfe"
+  },
+  {
+    "file": "people/left/person.walker.07.walk.empty.left.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      203,
+      75,
+      811,
+      1436
+    ],
+    "sha256": "90f337020f3b234af8c24315926e0e6e9dc81cd704e41a8a33f3b0464cd6ad47"
+  },
+  {
+    "file": "people/person.customer.08.stand.bag.right.png",
+    "size": [
+      1048,
+      1501
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      239,
+      67,
+      772,
+      1444
+    ],
+    "sha256": "909907670613bb9b08adcc3afc0ea9fcf8ba2e62ce25c16d4df00d542d8a70af"
+  },
+  {
+    "file": "people/person.customer.08.stand.empty.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      295,
+      71,
+      769,
+      1436
+    ],
+    "sha256": "169ea51f91a3bfe43298ccce6a25caf77b7d16636c700ce3cfc15983400021ac"
+  },
+  {
+    "file": "people/person.customer.08.walk.bag.right.png",
+    "size": [
+      1047,
+      1501
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      171,
+      65,
+      897,
+      1433
+    ],
+    "sha256": "b8bbd0b40eaabb4277e8ab02515d125d18bf45d696d530fa66c6780042894fc9"
+  },
+  {
+    "file": "people/person.customer.08.walk.empty.right.png",
+    "size": [
+      1048,
+      1501
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      259,
+      69,
+      876,
+      1413
+    ],
+    "sha256": "4e6c975269071822c22c31124b60e11a5380f0f68ae7ea474628043a43da3f85"
+  },
+  {
+    "file": "people/person.customer.09.stand.bag.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      220,
+      63,
+      810,
+      1445
+    ],
+    "sha256": "186ac8ccd4ae666d06682d2db4afeb8dd675cbda7b03b7656b0147785e70cdfa"
+  },
+  {
+    "file": "people/person.customer.09.stand.empty.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      284,
+      67,
+      781,
+      1443
+    ],
+    "sha256": "b7f055c05241444f259c3bbdf01a17d0099dfce25ba03ddc898cce17dc7128a8"
+  },
+  {
+    "file": "people/person.customer.09.walk.bag.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      167,
+      66,
+      887,
+      1426
+    ],
+    "sha256": "91708ddfdc859ba25ab21b60ceb35b060c3d474cf1c95dd2822077c9663ef7cb"
+  },
+  {
+    "file": "people/person.customer.09.walk.empty.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      228,
+      66,
+      888,
+      1418
+    ],
+    "sha256": "c7edcd6566b432b377fc56bec221fa42d48659cc51f38fd8105f7cebbd90c8c9"
+  },
+  {
+    "file": "people/person.customer.10.stand.bag.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      247,
+      82,
+      793,
+      1443
+    ],
+    "sha256": "8ec4eff4f5cd9cd0d262b8a3292296326dada66d9234c1c70cdd96ce501fea1a"
+  },
+  {
+    "file": "people/person.customer.10.stand.empty.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      311,
+      85,
+      785,
+      1434
+    ],
+    "sha256": "c82b45b155c6f1fce39fb5d5ee11697826acf2c98ccc9263697462d099a0e485"
+  },
+  {
+    "file": "people/person.customer.10.walk.bag.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      170,
+      88,
+      848,
+      1410
+    ],
+    "sha256": "69ed8dd27e7ea0193552e4cfc0adc56a7285f1d57dbd47e0e308a2ea1f83b7c7"
+  },
+  {
+    "file": "people/person.customer.10.walk.empty.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      269,
+      87,
+      836,
+      1425
+    ],
+    "sha256": "c8fb2461d22cd49e87f07a9d61089f3158bc76ea7dadaf7018cce541ef88c5dc"
+  },
+  {
+    "file": "people/person.customer.11.stand.bag.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      267,
+      79,
+      770,
+      1434
+    ],
+    "sha256": "53e2ea465c9032e45c61e1475cc039880cf36c515a5a6fccf927689a68291ff7"
+  },
+  {
+    "file": "people/person.customer.11.stand.empty.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      293,
+      80,
+      768,
+      1432
+    ],
+    "sha256": "b38f9b14052fc5818854d7296424134b7b498b9d3c72834676691c4552e179ad"
+  },
+  {
+    "file": "people/person.customer.11.walk.bag.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      173,
+      79,
+      859,
+      1415
+    ],
+    "sha256": "070a424b2bcae49cc14bd633cced710bf16f10595c8a1b54c9f9cd7b8d7e3055"
+  },
+  {
+    "file": "people/person.customer.11.walk.empty.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      244,
+      85,
+      866,
+      1404
+    ],
+    "sha256": "56db09f064425b03b2666039904bbbff3b8312d1b0b6b650526eafbc0ca4b561"
+  },
+  {
+    "file": "people/person.customer.12.stand.bag.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      209,
+      62,
+      773,
+      1444
+    ],
+    "sha256": "298684368a77503b0e78b6718ecb1c9017a3a3f50ad75fba5e8fa7cbf2b66ef6"
+  },
+  {
+    "file": "people/person.customer.12.stand.empty.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      274,
+      64,
+      772,
+      1445
+    ],
+    "sha256": "234dc9995b25116eb9eeca3a1dbe49c891e04b61950880664c4d1937a1279e8c"
+  },
+  {
+    "file": "people/person.customer.12.walk.bag.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      188,
+      66,
+      836,
+      1429
+    ],
+    "sha256": "cbda05a780246b5c88b0ac4908f529cd571cf1f81900b0f1959d0febde3e15ad"
+  },
+  {
+    "file": "people/person.customer.12.walk.empty.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      239,
+      66,
+      855,
+      1421
+    ],
+    "sha256": "95051c0e52b16967d66f6422ccd4eb64a37f46cc67b47a3d8f8f9adc39c28d0e"
+  },
+  {
+    "file": "people/person.customer.13.stand.bag.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      235,
+      72,
+      781,
+      1454
+    ],
+    "sha256": "3a4198fa97faf98ca43f5ded0fe1642e38188b0a95ae57c2fc6fe09d1c6ac38e"
+  },
+  {
+    "file": "people/person.customer.13.stand.empty.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      304,
+      75,
+      779,
+      1453
+    ],
+    "sha256": "bdda0ae7cec4b6ffec6601a1ecdc75449efac70a2b49d47e460f399efb536a57"
+  },
+  {
+    "file": "people/person.customer.13.walk.bag.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      184,
+      71,
+      859,
+      1412
+    ],
+    "sha256": "7ced0d593b69977f7bfff205b4e6f559a0d1f745cc292c9bb5bcad1a3fe2e4d3"
+  },
+  {
+    "file": "people/person.customer.13.walk.empty.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      280,
+      80,
+      876,
+      1418
+    ],
+    "sha256": "cd65e5164d7b88f36c4e0c602a35ddcbf8f43fecc7f7d8ec4ebd3b5d38275b2c"
+  },
+  {
+    "file": "people/person.walker.05.stand.empty.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      311,
+      63,
+      754,
+      1419
+    ],
+    "sha256": "3f788a5053460fd9e4ec4ccfbf2eaa5cafb01fdf2a57a768a474408dbff0c9b4"
+  },
+  {
+    "file": "people/person.walker.05.walk.empty.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      290,
+      65,
+      878,
+      1436
+    ],
+    "sha256": "2560a2c72f10ccf25ec62d3ad11f72a285e8433bbe49455067c9f4dcbd0618fa"
+  },
+  {
+    "file": "people/person.walker.06.stand.bag.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      0,
+      57,
+      1001,
+      1460
+    ],
+    "sha256": "8dffa40f775d0bd6f8faaf5137e56d507fb36f7e98c5bad2038a3d14872d80ef"
+  },
+  {
+    "file": "people/person.walker.06.stand.empty.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      41,
+      66,
+      985,
+      1434
+    ],
+    "sha256": "4900b4581e2bc21d9c2317b6cade8b5b5f49a0e787b4a5507a6073572548cf40"
+  },
+  {
+    "file": "people/person.walker.06.walk.bag.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      0,
+      21,
+      1039,
+      1484
+    ],
+    "sha256": "556a0c4cf61cd05043a00cdd67ae48173d9ebec6c47f475aa61ab28694c30e7b"
+  },
+  {
+    "file": "people/person.walker.06.walk.empty.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      2,
+      45,
+      1023,
+      1450
+    ],
+    "sha256": "e656623198549c37ce6ef0c7d64f7938f1bb758bc2f4eb47b8c571cc7f91ea75"
+  },
+  {
+    "file": "people/person.walker.07.stand.bag.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      259,
+      64,
+      841,
+      1422
+    ],
+    "sha256": "014bcea92642180775465573c51a635ea5af1050ef1e2d2b58c28ab87b6092a1"
+  },
+  {
+    "file": "people/person.walker.07.stand.empty.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      261,
+      66,
+      772,
+      1421
+    ],
+    "sha256": "ca4d45bf4e2d24e6b977d2749cf8e4d055b6abf12e8e1db7e2e5f8ba54fdaefc"
+  },
+  {
+    "file": "people/person.walker.07.walk.bag.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      193,
+      71,
+      833,
+      1419
+    ],
+    "sha256": "4644b79f0d0acbb23227d543beeae349f5d472eab3ac9fb8d77fd45d5c238e63"
+  },
+  {
+    "file": "people/person.walker.07.walk.empty.right.png",
+    "size": [
+      1049,
+      1500
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      238,
+      75,
+      846,
+      1436
+    ],
+    "sha256": "f3b1da30f398329c5594cec5933c049ec7079a50898187028e580b77d5248230"
+  },
+  {
+    "file": "shell/flat.wall.glazing.left.png",
+    "size": [
+      915,
+      1362
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      64,
+      70,
+      795,
+      1273
+    ],
+    "sha256": "5dcff0112d10d6ef4a54a33e96710aea6946f0e134fd0c0950a4a04efcc4a34c"
+  },
+  {
+    "file": "shell/flat.wall.glazing.right.png",
+    "size": [
+      1020,
+      1402
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      42,
+      64,
+      938,
+      1332
+    ],
+    "sha256": "481466036a6f8a99749197f1ee782e58b695c9c9b3a0741b432fb538d2578c3a"
+  },
+  {
+    "file": "shell/shell.stairs.landing.png",
+    "size": [
+      1302,
+      1270
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      259,
+      101,
+      1014,
+      1160
+    ],
+    "sha256": "4bc6fadcd0f276d01d9bd29810ad1d35267ad3803724619f6f3ae70ff988333d"
+  },
+  {
+    "file": "sites/station.grow.site.png",
+    "size": [
+      1419,
+      1108
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      121,
+      162,
+      1300,
+      925
+    ],
+    "sha256": "d845359504c15b45a465de63fdf9f983efb03cfa0b678b423dc8174e2edbc2e1"
+  },
+  {
+    "file": "sites/station.harvest.site.png",
+    "size": [
+      1419,
+      1097
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      118,
+      162,
+      1306,
+      931
+    ],
+    "sha256": "36d9b42cdaeccf5671907fe2ffdc8d6ad7dab287d51501d5d59b4280345b8d7e"
+  },
+  {
+    "file": "sites/station.orders.site.png",
+    "size": [
+      1419,
+      1099
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      122,
+      160,
+      1298,
+      920
+    ],
+    "sha256": "7f0d5f5fbc767965c6fef32cee02f398e10ba1d7ce7c51792652964384547c5c"
+  },
+  {
+    "file": "sites/station.pack.site.png",
+    "size": [
+      1419,
+      1111
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      122,
+      163,
+      1298,
+      926
+    ],
+    "sha256": "64751ac35349b5a1475f8dd6d7d582725e395d3aab405b7730e30a3c9a8a3145"
+  },
+  {
+    "file": "sites/station.pickup.site.png",
+    "size": [
+      1419,
+      1110
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      121,
+      164,
+      1299,
+      929
+    ],
+    "sha256": "6df00588741ead254ae33a121005573cffc34c7bd98a4d12970a9d950260ebaf"
+  },
+  {
+    "file": "sites/station.seeds.site.png",
+    "size": [
+      1418,
+      1111
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      123,
+      165,
+      1297,
+      926
+    ],
+    "sha256": "49ddbc5ad0d085c5decf8ea33c366e60a9490c79eeeda17be0378f7f6120a56d"
+  },
+  {
+    "file": "street/street.awning.cafe.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      31,
+      9,
+      1222,
+      1180
+    ],
+    "sha256": "ea91593b22b27a4bc47c4be297ede342e984cd2d323305208067c84a04c88e78"
+  },
+  {
+    "file": "street/street.deliveryboxes.png",
+    "size": [
+      1302,
+      1475
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      118,
+      64,
+      1192,
+      1374
+    ],
+    "sha256": "e5417fc2c5ef3c97eab61d5e360143755b942e1dfc9a04c42b225078a77a12bd"
+  },
+  {
+    "file": "street/street.foodtruck.png",
+    "size": [
+      1318,
+      1453
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      356,
+      374,
+      1145,
+      1131
+    ],
+    "sha256": "05d6afcf9a1888d506251f06a346a0f82b1af2e63e6b49b9ccb04c57b87dde76"
+  },
+  {
+    "file": "street/street.meter.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      403,
+      66,
+      862,
+      1192
+    ],
+    "sha256": "f5786087b05e449f621a37e837187671bfe9144d810c5e382d9e90afd3b9979e"
+  },
+  {
+    "file": "street/street.newsboxes.png",
+    "size": [
+      1318,
+      1962
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      101,
+      252,
+      1240,
+      1780
+    ],
+    "sha256": "cac02392f60ce6cfa4dccc104e9c874eb473296c44334f3d2f33df720960f5f1"
+  },
+  {
+    "file": "street/street.planter.round.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      194,
+      36,
+      1061,
+      1176
+    ],
+    "sha256": "ba3d058e10282af6dab0de8d470d0a2ff8e0e299099becd72d0ec5d5004b360d"
+  },
+  {
+    "file": "street/street.signpost.png",
+    "size": [
+      1302,
+      1294
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      441,
+      56,
+      891,
+      1241
+    ],
+    "sha256": "9a5137252ebba975c1057fb1bbb55cb630542001746af0930475f02b84ae7e36"
+  },
+  {
+    "file": "street/street.trafficlight.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      306,
+      40,
+      914,
+      1238
+    ],
+    "sha256": "742e7af8664d11c59dc8119472635fb6104f7dde0caa76ca64c6fa6e741b8f73"
+  },
+  {
+    "file": "tubes/tube.elbow.png",
+    "size": [
+      1254,
+      1086
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      464,
+      244,
+      878,
+      848
+    ],
+    "sha256": "b0681224487383b587b54f02fcfc8d2eeab8755a6779aab5f94e181e7e55213b"
+  },
+  {
+    "file": "tubes/tube.port.png",
+    "size": [
+      1254,
+      1114
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      375,
+      291,
+      963,
+      827
+    ],
+    "sha256": "23453e8de753ae4ffd43e774fb981cb9b99c473c53ad7c309e809f30d141fc83"
+  },
+  {
+    "file": "tubes/tube.run.grow.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      456,
+      66,
+      761,
+      1154
+    ],
+    "sha256": "55e56ae759d10c43d4280e51c14b72bceaa7b46e326e0191277c952a185ba1c8"
+  },
+  {
+    "file": "tubes/tube.run.pack.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      418,
+      56,
+      906,
+      1142
+    ],
+    "sha256": "68bad17742324c6a2ac83b7a58f03ef7ae9846155f92975d6a22c64ac0c4946f"
+  },
+  {
+    "file": "tubes/tube.straight.png",
+    "size": [
+      1254,
+      1273
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      134,
+      274,
+      1119,
+      1003
+    ],
+    "sha256": "0a25a7994c7ccb4afc53581c47237a99bbd692eceb6275592194115ae4048a92"
+  },
+  {
+    "file": "tubes/tube.stub.pickup.png",
+    "size": [
+      1254,
+      1155
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "opaque_bounds": [
+      371,
+      322,
+      898,
+      793
+    ],
+    "sha256": "f5c83436fe2351f0306005c48cec407ec36f5455b98ceed17232d09a5076ab59"
+  }
+]

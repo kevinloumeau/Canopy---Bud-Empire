@@ -1,0 +1,1035 @@
+{
+  "folder": "branches-v2",
+  "expected": 79,
+  "saved": 79,
+  "missing": [],
+  "alpha": [
+    {
+      "file": "branch.alpine.awning.clay.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1013519,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "branch.alpine.awning.linen.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1009650,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "branch.alpine.awning.sage.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1021178,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "branch.alpine.checkout.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1189262,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.alpine.counter.cream.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1048131,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.alpine.counter.oak.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1049353,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.alpine.counter.slate.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1005541,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.alpine.lantern.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1288270,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "branch.alpine.logbench.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1122261,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.alpine.pine.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1335309,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.alpine.planter.cactus.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1213183,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.alpine.planter.fern.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1187822,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "branch.alpine.planter.flowers.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1093548,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.alpine.shelf.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1058141,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.alpine.shopfront.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1092077,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.alpine.showcase.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1035324,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.citycenter.awning.clay.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1163021,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "branch.citycenter.awning.linen.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1159368,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "branch.citycenter.awning.sage.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1161729,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "branch.citycenter.bicycle.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1116009,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.citycenter.checkout.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1133618,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.citycenter.counter.cream.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 989712,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.citycenter.counter.oak.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 979286,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.citycenter.counter.slate.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 986623,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.citycenter.fountain.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1148600,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.citycenter.planter.cactus.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1257066,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.citycenter.planter.fern.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1255889,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.citycenter.planter.flowers.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1088734,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "branch.citycenter.shelf.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1072889,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.citycenter.shopfront.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1004058,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.citycenter.showcase.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 971450,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.desert.agave.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1245744,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "branch.desert.awning.clay.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1059741,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "branch.desert.awning.linen.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1053274,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "branch.desert.awning.sage.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1063432,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "branch.desert.barrelcactus.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1267345,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.desert.checkout.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1163421,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.desert.counter.cream.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1057360,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.desert.counter.oak.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1055482,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.desert.counter.slate.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1058344,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.desert.palm.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1263842,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.desert.planter.cactus.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1277511,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.desert.planter.fern.png",
+      "size": [
+        1374,
+        1145
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1049761,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "branch.desert.planter.flowers.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 889091,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.desert.rocks.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1160489,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.desert.saguaro.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1245883,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.desert.shelf.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1073023,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.desert.shopfront.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 952636,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.desert.showcase.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1041094,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.oldtown.awning.clay.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 924966,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.oldtown.awning.linen.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 921061,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.oldtown.awning.sage.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 926337,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.oldtown.checkout.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1089134,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.oldtown.clock.png",
+      "size": [
+        1315,
+        1196
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1366425,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "branch.oldtown.counter.cream.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 956687,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.oldtown.counter.oak.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 932078,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.oldtown.counter.slate.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 952883,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.oldtown.flowercart.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 972787,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.oldtown.planter.cactus.png",
+      "size": [
+        1395,
+        1127
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1177507,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "branch.oldtown.planter.fern.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1055702,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.oldtown.planter.flowers.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1035593,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.oldtown.shelf.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1063729,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.oldtown.shopfront.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 876387,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.oldtown.showcase.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1010525,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.riverside.awning.clay.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1002387,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "branch.riverside.awning.linen.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 999252,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "branch.riverside.awning.sage.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1009188,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "branch.riverside.canoe.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1130272,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "branch.riverside.checkout.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1075681,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.riverside.counter.cream.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1004904,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.riverside.counter.oak.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 951369,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.riverside.counter.slate.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 997668,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.riverside.planter.cactus.png",
+      "size": [
+        1312,
+        1199
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1103191,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "branch.riverside.planter.fern.png",
+      "size": [
+        1491,
+        1055
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1098011,
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "branch.riverside.planter.flowers.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1017715,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.riverside.reeds.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1175567,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.riverside.shelf.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1108430,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.riverside.shopfront.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 999495,
+      "alpha_range": [
+        0,
+        254
+      ]
+    },
+    {
+      "file": "branch.riverside.showcase.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1009041,
+      "alpha_range": [
+        0,
+        254
+      ]
+    }
+  ]
+}

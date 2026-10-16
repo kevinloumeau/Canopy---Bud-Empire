@@ -1,0 +1,110 @@
+[
+  {
+    "file": "person.customer.07.stand.png",
+    "canvas": [
+      224,
+      320
+    ],
+    "visible_height": 299,
+    "foot_baseline": 315
+  },
+  {
+    "file": "person.customer.01.stand.bag.png",
+    "canvas": [
+      224,
+      320
+    ],
+    "visible_height": 299,
+    "foot_baseline": 315
+  },
+  {
+    "file": "person.customer.02.stand.bag.png",
+    "canvas": [
+      224,
+      320
+    ],
+    "visible_height": 299,
+    "foot_baseline": 315
+  },
+  {
+    "file": "person.customer.03.stand.bag.png",
+    "canvas": [
+      224,
+      320
+    ],
+    "visible_height": 299,
+    "foot_baseline": 315
+  },
+  {
+    "file": "person.customer.04.stand.bag.png",
+    "canvas": [
+      224,
+      320
+    ],
+    "visible_height": 299,
+    "foot_baseline": 315
+  },
+  {
+    "file": "person.customer.05.stand.bag.png",
+    "canvas": [
+      224,
+      320
+    ],
+    "visible_height": 298,
+    "foot_baseline": 314
+  },
+  {
+    "file": "person.customer.06.stand.bag.png",
+    "canvas": [
+      224,
+      320
+    ],
+    "visible_height": 298,
+    "foot_baseline": 315
+  },
+  {
+    "file": "person.customer.07.stand.bag.png",
+    "canvas": [
+      224,
+      320
+    ],
+    "visible_height": 299,
+    "foot_baseline": 315
+  },
+  {
+    "file": "person.walker.01.stand.bag.png",
+    "canvas": [
+      224,
+      320
+    ],
+    "visible_height": 299,
+    "foot_baseline": 315
+  },
+  {
+    "file": "person.walker.02.stand.bag.png",
+    "canvas": [
+      224,
+      320
+    ],
+    "visible_height": 298,
+    "foot_baseline": 315
+  },
+  {
+    "file": "person.walker.03.stand.bag.png",
+    "canvas": [
+      224,
+      320
+    ],
+    "visible_height": 297,
+    "foot_baseline": 314
+  },
+  {
+    "file": "person.walker.04.stand.bag.png",
+    "canvas": [
+      224,
+      320
+    ],
+    "visible_height": 298,
+    "foot_baseline": 314
+  }
+]

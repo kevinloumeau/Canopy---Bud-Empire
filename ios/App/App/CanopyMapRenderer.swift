@@ -55,7 +55,19 @@ final class CanopyMapRenderer: NSObject, MTKViewDelegate {
         do { library = try device.makeLibrary(source: source, options: nil) }
         catch { NSLog("Canopy Metal shader: %@", String(describing: error)); return nil }
         gpu = device; self.queue = queue
-        characters = [4: "TieDye", 5: "Caramel", 6: "Beanie", 7: "Cream", 8: "Bearded", 9: "Chef", 10: "Colorful", 11: "Blazer", 12: "Office", 13: "Plaid", 14: "Utility", 15: "Security", 16: "GreenMan", 17: "GreenWoman", 18: "GrayEmployee", 19: "DarkHairedEmployee", 20: "YoungEmployee"].compactMapValues { CanopyCharacterAsset(device: device, name: $0) }
+        // The seventeen character meshes are independent, so they are read and uploaded together rather than one after
+        // another: this was most of the time the renderer took to start, and launch waits on it.
+        let roster: [Int: String] = [4: "TieDye", 5: "Caramel", 6: "Beanie", 7: "Cream", 8: "Bearded", 9: "Chef", 10: "Colorful", 11: "Blazer", 12: "Office", 13: "Plaid", 14: "Utility", 15: "Security", 16: "GreenMan", 17: "GreenWoman", 18: "GrayEmployee", 19: "DarkHairedEmployee", 20: "YoungEmployee"]
+        let specs = roster.sorted { $0.key < $1.key }.map { (kind: $0.key, name: $0.value) }
+        let slots = UnsafeMutablePointer<CanopyCharacterAsset?>.allocate(capacity: specs.count)
+        slots.initialize(repeating: nil, count: specs.count)
+        DispatchQueue.concurrentPerform(iterations: specs.count) { i in
+            slots[i] = CanopyCharacterAsset(device: device, name: specs[i].name)
+        }
+        var loadedCharacters: [Int: CanopyCharacterAsset] = [:]
+        for (i, spec) in specs.enumerated() { if let asset = slots[i] { loadedCharacters[spec.kind] = asset } }
+        slots.deinitialize(count: specs.count); slots.deallocate()
+        characters = loadedCharacters
         if let texture = characters[4]?.texture { characterTexture = texture }
         else {
             let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: 1, height: 1, mipmapped: false)

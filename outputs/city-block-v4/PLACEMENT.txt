@@ -1,0 +1,10 @@
+CANOPY CITY BLOCK V4
+10 individual transparent PNG buildings: 5 camera re-renders plus5 new designs.
+Generated with built-in ImageGen. Prompts in generation-manifest.json.
+
+Target projection: orthographic 30-degree dimetric grid, screen edge slopes +0.577 and -0.577, verticals vertical. These were re-rendered, not horizontally squashed.
+Remove the old 0.87 width multiplier for these assets; use uniform scaling. Verify roof/base edges on the live map before applying across all buildings.
+Scale each by its door opening: target door height about1.2 times nearby adult opaque height at same zoom. Do not assign every building same PNG draw height; 3-storey buildings need taller draw height to preserve door scale.
+Use base/ground contact for anchor, excluding transparent margins and soft shadow. Re-space footprints to keep sidewalks clear. Avoid stretching images to old bounds.
+Original five filenames retained for easier replacement; new variants are rowhouse.terracotta, townhouse.sage, apartment.brick, shop.narrow, workshop.low.
+These are standalone assets; no map code was changed and no publication performed.

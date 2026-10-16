@@ -1,0 +1,32 @@
+[
+  {
+    "folder": "main-shop-v2",
+    "expected": 53,
+    "saved": 53,
+    "missing": []
+  },
+  {
+    "folder": "upgrades-v2",
+    "expected": 41,
+    "saved": 41,
+    "missing": []
+  },
+  {
+    "folder": "optional-props-v2",
+    "expected": 15,
+    "saved": 15,
+    "missing": []
+  },
+  {
+    "folder": "branches-v2",
+    "expected": 79,
+    "saved": 79,
+    "missing": []
+  },
+  {
+    "folder": "people-bags-v2",
+    "expected": 22,
+    "saved": 22,
+    "missing": []
+  }
+]

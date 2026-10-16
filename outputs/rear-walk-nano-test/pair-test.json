@@ -1,0 +1,19 @@
+{
+  "model": "nano-banana-pro",
+  "type": "still PNG",
+  "source": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/walk-cycles-v5/rear-stills/person.customer.01.stand.empty.back-right.png",
+  "prompt": "Use @character as exact identity, clay rendering, clothing and rear three-quarter upper-right camera reference. Produce ONE PNG containing TWO full-body walking contact poses side by side, evenly spaced, same scale and floor baseline. This is a two-pose anatomical alternation test, not two variants of the same stride. LEFT figure: anatomical LEFT leg extends forward along upper-right walking direction, anatomical RIGHT knee bends behind with heel lifted. RIGHT figure: anatomical RIGHT leg extends forward along upper-right walking direction, anatomical LEFT knee bends behind with heel lifted. The legs exchange which is leading; the attached hip-to-foot chains must be opposite between figures. Reverse opposing arm swing accordingly. Both figures keep back of head and blue jacket toward viewer throughout, never show face or turn camera. Preserve wavy brown hair, black sunglasses, blue denim jacket FULL LENGTH sleeves and silver buttons, cream shirt, olive wide trousers, brown shoes. Natural upright steady stride without crouch. Full hair and shoes visible, ample gap and margins. Transparent alpha background if supported; otherwise pure white backdrop without shadows. No text, no grid, no props, no gradients. Do not mirror the whole person or draw the same leading leg twice.",
+  "taskId": "497b8f91-d7ad-4560-aaf0-6bae95add0a5",
+  "status": "failed-visual-acceptance",
+  "output": "customer01-opposite-contact-test.png",
+  "image_mode": "RGB",
+  "size": [
+    1200,
+    896
+  ],
+  "failures": [
+    "Both figures repeat the same anatomical leading leg and arm swing.",
+    "Checkerboard backdrop is baked into RGB pixels; no alpha channel."
+  ],
+  "next_test": "Use neutral standing identity reference rather than an existing walking pose. Upload blocked by automatic approval review pending explicit user approval."
+}

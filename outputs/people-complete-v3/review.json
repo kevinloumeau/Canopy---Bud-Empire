@@ -1,0 +1,800 @@
+{
+  "expected": 88,
+  "saved": 88,
+  "missing": [],
+  "all_saved_png_real_alpha": true,
+  "files": [
+    {
+      "file": "person.customer.01.stand.bag.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1096248
+    },
+    {
+      "file": "person.customer.01.stand.bag.right.png",
+      "size": [
+        1049,
+        1499
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1097066
+    },
+    {
+      "file": "person.customer.01.stand.empty.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1116050
+    },
+    {
+      "file": "person.customer.01.stand.empty.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1117836
+    },
+    {
+      "file": "person.customer.01.walk.bag.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1090943
+    },
+    {
+      "file": "person.customer.01.walk.bag.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1100081
+    },
+    {
+      "file": "person.customer.01.walk.empty.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1119422
+    },
+    {
+      "file": "person.customer.01.walk.empty.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1136061
+    },
+    {
+      "file": "person.customer.02.stand.bag.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1089223
+    },
+    {
+      "file": "person.customer.02.stand.bag.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1095475
+    },
+    {
+      "file": "person.customer.02.stand.empty.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1124315
+    },
+    {
+      "file": "person.customer.02.stand.empty.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1118948
+    },
+    {
+      "file": "person.customer.02.walk.bag.left.png",
+      "size": [
+        1050,
+        1498
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1122907
+    },
+    {
+      "file": "person.customer.02.walk.bag.right.png",
+      "size": [
+        1050,
+        1498
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1137791
+    },
+    {
+      "file": "person.customer.02.walk.empty.left.png",
+      "size": [
+        1050,
+        1498
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1159100
+    },
+    {
+      "file": "person.customer.02.walk.empty.right.png",
+      "size": [
+        1050,
+        1498
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1163716
+    },
+    {
+      "file": "person.customer.03.stand.bag.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1110120
+    },
+    {
+      "file": "person.customer.03.stand.bag.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1115127
+    },
+    {
+      "file": "person.customer.03.stand.empty.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1139809
+    },
+    {
+      "file": "person.customer.03.stand.empty.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1140499
+    },
+    {
+      "file": "person.customer.03.walk.bag.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1117573
+    },
+    {
+      "file": "person.customer.03.walk.bag.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1131898
+    },
+    {
+      "file": "person.customer.03.walk.empty.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1166506
+    },
+    {
+      "file": "person.customer.03.walk.empty.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1171626
+    },
+    {
+      "file": "person.customer.04.stand.bag.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1100721
+    },
+    {
+      "file": "person.customer.04.stand.bag.right.png",
+      "size": [
+        1049,
+        1499
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1103827
+    },
+    {
+      "file": "person.customer.04.stand.empty.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1128831
+    },
+    {
+      "file": "person.customer.04.stand.empty.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1129111
+    },
+    {
+      "file": "person.customer.04.walk.bag.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1083999
+    },
+    {
+      "file": "person.customer.04.walk.bag.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1104237
+    },
+    {
+      "file": "person.customer.04.walk.empty.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1132221
+    },
+    {
+      "file": "person.customer.04.walk.empty.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1139130
+    },
+    {
+      "file": "person.customer.05.stand.bag.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1097139
+    },
+    {
+      "file": "person.customer.05.stand.bag.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1102544
+    },
+    {
+      "file": "person.customer.05.stand.empty.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1121325
+    },
+    {
+      "file": "person.customer.05.stand.empty.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1127920
+    },
+    {
+      "file": "person.customer.05.walk.bag.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1111696
+    },
+    {
+      "file": "person.customer.05.walk.bag.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1123981
+    },
+    {
+      "file": "person.customer.05.walk.empty.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1147272
+    },
+    {
+      "file": "person.customer.05.walk.empty.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1152598
+    },
+    {
+      "file": "person.customer.06.stand.bag.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1092522
+    },
+    {
+      "file": "person.customer.06.stand.bag.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1102597
+    },
+    {
+      "file": "person.customer.06.stand.empty.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1099064
+    },
+    {
+      "file": "person.customer.06.stand.empty.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1117588
+    },
+    {
+      "file": "person.customer.06.walk.bag.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1089893
+    },
+    {
+      "file": "person.customer.06.walk.bag.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1078130
+    },
+    {
+      "file": "person.customer.06.walk.empty.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1123987
+    },
+    {
+      "file": "person.customer.06.walk.empty.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1125186
+    },
+    {
+      "file": "person.customer.07.stand.bag.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1082571
+    },
+    {
+      "file": "person.customer.07.stand.bag.right.png",
+      "size": [
+        1049,
+        1499
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1083462
+    },
+    {
+      "file": "person.customer.07.stand.empty.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1107988
+    },
+    {
+      "file": "person.customer.07.stand.empty.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1114021
+    },
+    {
+      "file": "person.customer.07.walk.bag.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1095997
+    },
+    {
+      "file": "person.customer.07.walk.bag.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1110606
+    },
+    {
+      "file": "person.customer.07.walk.empty.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1135057
+    },
+    {
+      "file": "person.customer.07.walk.empty.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1144223
+    },
+    {
+      "file": "person.walker.01.stand.bag.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1104100
+    },
+    {
+      "file": "person.walker.01.stand.bag.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1103608
+    },
+    {
+      "file": "person.walker.01.stand.empty.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1122977
+    },
+    {
+      "file": "person.walker.01.stand.empty.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1129665
+    },
+    {
+      "file": "person.walker.01.walk.bag.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1116226
+    },
+    {
+      "file": "person.walker.01.walk.bag.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1124409
+    },
+    {
+      "file": "person.walker.01.walk.empty.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1148077
+    },
+    {
+      "file": "person.walker.01.walk.empty.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1142438
+    },
+    {
+      "file": "person.walker.02.stand.bag.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1107562
+    },
+    {
+      "file": "person.walker.02.stand.bag.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1107625
+    },
+    {
+      "file": "person.walker.02.stand.empty.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1142959
+    },
+    {
+      "file": "person.walker.02.stand.empty.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1141159
+    },
+    {
+      "file": "person.walker.02.walk.bag.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1131666
+    },
+    {
+      "file": "person.walker.02.walk.bag.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1140267
+    },
+    {
+      "file": "person.walker.02.walk.empty.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1175659
+    },
+    {
+      "file": "person.walker.02.walk.empty.right.png",
+      "size": [
+        1048,
+        1501
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1177253
+    },
+    {
+      "file": "person.walker.03.stand.bag.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1094983
+    },
+    {
+      "file": "person.walker.03.stand.bag.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1106323
+    },
+    {
+      "file": "person.walker.03.stand.empty.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1119929
+    },
+    {
+      "file": "person.walker.03.stand.empty.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1129920
+    },
+    {
+      "file": "person.walker.03.walk.bag.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1109307
+    },
+    {
+      "file": "person.walker.03.walk.bag.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1131142
+    },
+    {
+      "file": "person.walker.03.walk.empty.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1156191
+    },
+    {
+      "file": "person.walker.03.walk.empty.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1156924
+    },
+    {
+      "file": "person.walker.04.stand.bag.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1096983
+    },
+    {
+      "file": "person.walker.04.stand.bag.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1103218
+    },
+    {
+      "file": "person.walker.04.stand.empty.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1118687
+    },
+    {
+      "file": "person.walker.04.stand.empty.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1117270
+    },
+    {
+      "file": "person.walker.04.walk.bag.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1123461
+    },
+    {
+      "file": "person.walker.04.walk.bag.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1136259
+    },
+    {
+      "file": "person.walker.04.walk.empty.left.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1154067
+    },
+    {
+      "file": "person.walker.04.walk.empty.right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "mode": "RGBA",
+      "transparent_pixels": 1164244
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+[
+  {
+    "file": "outputs/main-shop-v2/belts/belt.straight.png",
+    "before": [
+      -0.594,
+      0.602
+    ],
+    "vertical_scale": 0.9654686775746248,
+    "vertical_shear": -0.0038618747102985296,
+    "after": [
+      -0.58,
+      0.572
+    ],
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "outputs/main-shop-v2/belts/belt.end.out.png",
+    "before": [
+      -0.566,
+      0.612
+    ],
+    "vertical_scale": 0.980221170101232,
+    "vertical_shear": -0.02254508691232837,
+    "after": [
+      -0.574,
+      0.58
+    ],
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "outputs/main-shop-v2/shell/shell.stairs.landing.png",
+    "before": [
+      -0.61,
+      0.588
+    ],
+    "vertical_scale": 0.9638568767773383,
+    "vertical_shear": 0.010602425644550717,
+    "after": [
+      -0.578,
+      0.582
+    ],
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "outputs/main-shop-v2/street/street.newsboxes.png",
+    "before": [
+      -0.588,
+      0.4
+    ],
+    "vertical_scale": 1.168725241274546,
+    "vertical_shear": 0.10986017267980724,
+    "after": [
+      -0.582,
+      0.45
+    ],
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "outputs/main-shop-v2/street/street.deliveryboxes.png",
+    "before": [
+      -0.5,
+      0.53
+    ],
+    "vertical_scale": 1.1210684838633507,
+    "vertical_shear": -0.016816027257950283,
+    "after": [
+      -0.576,
+      0.576
+    ],
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "outputs/main-shop-v2/street/street.signpost.png",
+    "before": [
+      -0.616,
+      0.572
+    ],
+    "vertical_scale": 0.971970150150885,
+    "vertical_shear": 0.02138334330331948,
+    "after": [
+      -0.576,
+      0.572
+    ],
+    "alpha": [
+      0,
+      255
+    ]
+  }
+]

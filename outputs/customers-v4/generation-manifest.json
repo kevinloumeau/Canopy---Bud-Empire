@@ -1,0 +1,386 @@
+[
+  {
+    "id": "08",
+    "pose": "stand",
+    "carry": "empty",
+    "facing": "right",
+    "prompt": "Precise style-consistency edit. Image 1 is TARGET new customer. Image 2 is FACE/RENDER STYLE reference ONLY, do not copy identity, outfit, age or glasses. Keep target character identity, gender, age, skin tone, hair, outfit, body proportions, standing pose and facing unchanged. Standardize face to image 2's soft clay toy style: simple dark brown vertical OVAL eyes of consistent small size relative to head, no detailed iris/sclera, no anime eyelashes or glossy oversized eyeballs. Subtle rounded sculpted nose, restrained small closed smile, clean softly shaded skin, simplified brows. Same detail level in face, hair and clothing, no photoreal wrinkles; older adults keep restrained age cues and mature facial structure. Preserve target clear eyeglasses if present, but remove sunglasses from customer13 so matching eyes visible. Warm upper-left soft lighting. One full body customer standing empty-handed right-facing, transparent alpha PNG, no extra objects or floor.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-41920940-16e7-4dc3-988e-57356bac3c1d.png"
+  },
+  {
+    "id": "09",
+    "pose": "stand",
+    "carry": "empty",
+    "facing": "right",
+    "prompt": "Precise style-consistency edit. Image 1 is TARGET new customer. Image 2 is FACE/RENDER STYLE reference ONLY, do not copy identity, outfit, age or glasses. Keep target character identity, gender, age, skin tone, hair, outfit, body proportions, standing pose and facing unchanged. Standardize face to image 2's soft clay toy style: simple dark brown vertical OVAL eyes of consistent small size relative to head, no detailed iris/sclera, no anime eyelashes or glossy oversized eyeballs. Subtle rounded sculpted nose, restrained small closed smile, clean softly shaded skin, simplified brows. Same detail level in face, hair and clothing, no photoreal wrinkles; older adults keep restrained age cues and mature facial structure. Preserve target clear eyeglasses if present, but remove sunglasses from customer13 so matching eyes visible. Warm upper-left soft lighting. One full body customer standing empty-handed right-facing, transparent alpha PNG, no extra objects or floor.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-c141a91c-5d3b-4b7b-8d7b-6e984457c8e8.png"
+  },
+  {
+    "id": "10",
+    "pose": "stand",
+    "carry": "empty",
+    "facing": "right",
+    "prompt": "Precise style-consistency edit. Image 1 is TARGET new customer. Image 2 is FACE/RENDER STYLE reference ONLY, do not copy identity, outfit, age or glasses. Keep target character identity, gender, age, skin tone, hair, outfit, body proportions, standing pose and facing unchanged. Standardize face to image 2's soft clay toy style: simple dark brown vertical OVAL eyes of consistent small size relative to head, no detailed iris/sclera, no anime eyelashes or glossy oversized eyeballs. Subtle rounded sculpted nose, restrained small closed smile, clean softly shaded skin, simplified brows. Same detail level in face, hair and clothing, no photoreal wrinkles; older adults keep restrained age cues and mature facial structure. Preserve target clear eyeglasses if present, but remove sunglasses from customer13 so matching eyes visible. Warm upper-left soft lighting. One full body customer standing empty-handed right-facing, transparent alpha PNG, no extra objects or floor.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-a973ff53-f81f-4e70-b108-4cbd59b8149c.png"
+  },
+  {
+    "id": "11",
+    "pose": "stand",
+    "carry": "empty",
+    "facing": "right",
+    "prompt": "Precise style-consistency edit. Image 1 is TARGET new customer. Image 2 is FACE/RENDER STYLE reference ONLY, do not copy identity, outfit, age or glasses. Keep target character identity, gender, age, skin tone, hair, outfit, body proportions, standing pose and facing unchanged. Standardize face to image 2's soft clay toy style: simple dark brown vertical OVAL eyes of consistent small size relative to head, no detailed iris/sclera, no anime eyelashes or glossy oversized eyeballs. Subtle rounded sculpted nose, restrained small closed smile, clean softly shaded skin, simplified brows. Same detail level in face, hair and clothing, no photoreal wrinkles; older adults keep restrained age cues and mature facial structure. Preserve target clear eyeglasses if present, but remove sunglasses from customer13 so matching eyes visible. Warm upper-left soft lighting. One full body customer standing empty-handed right-facing, transparent alpha PNG, no extra objects or floor.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-81564c94-3e72-40cc-84ca-2888204bcfe9.png"
+  },
+  {
+    "id": "12",
+    "pose": "stand",
+    "carry": "empty",
+    "facing": "right",
+    "prompt": "Precise style-consistency edit. Image 1 is TARGET new customer. Image 2 is FACE/RENDER STYLE reference ONLY, do not copy identity, outfit, age or glasses. Keep target character identity, gender, age, skin tone, hair, outfit, body proportions, standing pose and facing unchanged. Standardize face to image 2's soft clay toy style: simple dark brown vertical OVAL eyes of consistent small size relative to head, no detailed iris/sclera, no anime eyelashes or glossy oversized eyeballs. Subtle rounded sculpted nose, restrained small closed smile, clean softly shaded skin, simplified brows. Same detail level in face, hair and clothing, no photoreal wrinkles; older adults keep restrained age cues and mature facial structure. Preserve target clear eyeglasses if present, but remove sunglasses from customer13 so matching eyes visible. Warm upper-left soft lighting. One full body customer standing empty-handed right-facing, transparent alpha PNG, no extra objects or floor.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-135f4649-884c-4f3c-aa3a-fe51190e1be7.png"
+  },
+  {
+    "id": "13",
+    "pose": "stand",
+    "carry": "empty",
+    "facing": "right",
+    "prompt": "Precise style-consistency edit. Image 1 is TARGET new customer. Image 2 is FACE/RENDER STYLE reference ONLY, do not copy identity, outfit, age or glasses. Keep target character identity, gender, age, skin tone, hair, outfit, body proportions, standing pose and facing unchanged. Standardize face to image 2's soft clay toy style: simple dark brown vertical OVAL eyes of consistent small size relative to head, no detailed iris/sclera, no anime eyelashes or glossy oversized eyeballs. Subtle rounded sculpted nose, restrained small closed smile, clean softly shaded skin, simplified brows. Same detail level in face, hair and clothing, no photoreal wrinkles; older adults keep restrained age cues and mature facial structure. Preserve target clear eyeglasses if present, but remove sunglasses from customer13 so matching eyes visible. Warm upper-left soft lighting. One full body customer standing empty-handed right-facing, transparent alpha PNG, no extra objects or floor.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-60436a71-d6c3-4d7b-9983-e8279f12b82f.png"
+  },
+  {
+    "id": "08",
+    "pose": "stand",
+    "carry": "empty",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 08. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Standing relaxed upright, same body scale. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Both hands EMPTY, no handheld bag or object. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-a053a01a-53d4-4959-aa68-c2fc54a6f8fd.png"
+  },
+  {
+    "id": "08",
+    "pose": "stand",
+    "carry": "bag",
+    "facing": "right",
+    "prompt": "Precise character variant of supplied NEW customer 08. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Standing relaxed upright, same body scale. Face screen RIGHT in three-quarter isometric view; same facing as reference. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-676fada9-3662-4b41-9be7-a0b4ba87d48a.png"
+  },
+  {
+    "id": "08",
+    "pose": "stand",
+    "carry": "bag",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 08. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Standing relaxed upright, same body scale. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-9a162184-a108-42ec-b1e7-548950408242.png"
+  },
+  {
+    "id": "08",
+    "pose": "walk",
+    "carry": "empty",
+    "facing": "right",
+    "prompt": "Precise character variant of supplied NEW customer 08. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen RIGHT in three-quarter isometric view; same facing as reference. Both hands EMPTY, no handheld bag or object. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-16505836-502d-4727-b3ff-664dd46a8a0b.png"
+  },
+  {
+    "id": "08",
+    "pose": "walk",
+    "carry": "empty",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 08. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Both hands EMPTY, no handheld bag or object. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-bfd02b48-4c69-4146-bcfa-705453ea4ac1.png"
+  },
+  {
+    "id": "08",
+    "pose": "walk",
+    "carry": "bag",
+    "facing": "right",
+    "prompt": "Precise character variant of supplied NEW customer 08. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen RIGHT in three-quarter isometric view; same facing as reference. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-d32af09a-9bfa-4570-a37c-8e136f21cabf.png"
+  },
+  {
+    "id": "08",
+    "pose": "walk",
+    "carry": "bag",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 08. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-b60daa37-1846-41fe-93d0-306d556aad66.png"
+  },
+  {
+    "id": "09",
+    "pose": "stand",
+    "carry": "empty",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 09. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Standing relaxed upright, same body scale. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Both hands EMPTY, no handheld bag or object. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-cf63bacf-edba-43ba-8451-db6b22120aaa.png"
+  },
+  {
+    "id": "09",
+    "pose": "stand",
+    "carry": "bag",
+    "facing": "right",
+    "prompt": "Precise character variant of supplied NEW customer 09. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Standing relaxed upright, same body scale. Face screen RIGHT in three-quarter isometric view; same facing as reference. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-c20b5171-b579-47d8-9ead-56ea53077911.png"
+  },
+  {
+    "id": "09",
+    "pose": "stand",
+    "carry": "bag",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 09. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Standing relaxed upright, same body scale. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-949c31df-1104-4ce1-bbac-a3e2e6d9bf25.png"
+  },
+  {
+    "id": "09",
+    "pose": "walk",
+    "carry": "empty",
+    "facing": "right",
+    "prompt": "Precise character variant of supplied NEW customer 09. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen RIGHT in three-quarter isometric view; same facing as reference. Both hands EMPTY, no handheld bag or object. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-44720bfe-e7b1-48bb-bd0a-2dc369e80e0c.png"
+  },
+  {
+    "id": "09",
+    "pose": "walk",
+    "carry": "empty",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 09. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Both hands EMPTY, no handheld bag or object. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-ce267755-8318-4b72-9917-b9807bfa435d.png"
+  },
+  {
+    "id": "09",
+    "pose": "walk",
+    "carry": "bag",
+    "facing": "right",
+    "prompt": "Precise character variant of supplied NEW customer 09. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen RIGHT in three-quarter isometric view; same facing as reference. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-cade7d34-9600-4f99-90a8-279bf1de8b1b.png"
+  },
+  {
+    "id": "09",
+    "pose": "walk",
+    "carry": "bag",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 09. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-23caa3d9-77c5-45b2-b6cc-f10c8c99e777.png"
+  },
+  {
+    "id": "10",
+    "pose": "stand",
+    "carry": "empty",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 10. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Standing relaxed upright, same body scale. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Both hands EMPTY, no handheld bag or object. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-819a2357-d87d-4a23-8cad-bd389de836ee.png"
+  },
+  {
+    "id": "10",
+    "pose": "stand",
+    "carry": "bag",
+    "facing": "right",
+    "prompt": "Precise character variant of supplied NEW customer 10. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Standing relaxed upright, same body scale. Face screen RIGHT in three-quarter isometric view; same facing as reference. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-b9d6dd52-b6c1-4625-b88f-a330f6adb337.png"
+  },
+  {
+    "id": "10",
+    "pose": "stand",
+    "carry": "bag",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 10. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Standing relaxed upright, same body scale. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-6c1115e4-65f4-452f-81d9-173deb32bb23.png"
+  },
+  {
+    "id": "10",
+    "pose": "walk",
+    "carry": "empty",
+    "facing": "right",
+    "prompt": "Precise character variant of supplied NEW customer 10. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen RIGHT in three-quarter isometric view; same facing as reference. Both hands EMPTY, no handheld bag or object. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-4fb4a58b-98b5-42dc-8409-db66744f224a.png"
+  },
+  {
+    "id": "10",
+    "pose": "walk",
+    "carry": "empty",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 10. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Both hands EMPTY, no handheld bag or object. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-4ee9ebe8-d1df-4e56-9c0c-0ceeb7b34a0d.png"
+  },
+  {
+    "id": "10",
+    "pose": "walk",
+    "carry": "bag",
+    "facing": "right",
+    "prompt": "Precise character variant of supplied NEW customer 10. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen RIGHT in three-quarter isometric view; same facing as reference. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-b3e758bd-d5a4-4ce1-824b-16cc560cae8a.png"
+  },
+  {
+    "id": "10",
+    "pose": "walk",
+    "carry": "bag",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 10. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-34c6c0d3-9fc1-4ce3-a1c1-267fa794656a.png"
+  },
+  {
+    "id": "11",
+    "pose": "stand",
+    "carry": "empty",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 11. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Standing relaxed upright, same body scale. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Both hands EMPTY, no handheld bag or object. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-681faece-dea8-469e-ae0c-8a996a05b3ff.png"
+  },
+  {
+    "id": "11",
+    "pose": "stand",
+    "carry": "bag",
+    "facing": "right",
+    "prompt": "Precise character variant of supplied NEW customer 11. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Standing relaxed upright, same body scale. Face screen RIGHT in three-quarter isometric view; same facing as reference. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-867f6d85-57e8-4442-bfa8-aec08cc47a41.png"
+  },
+  {
+    "id": "11",
+    "pose": "stand",
+    "carry": "bag",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 11. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Standing relaxed upright, same body scale. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-50130a8b-6153-438a-a71d-af6eb320eea4.png"
+  },
+  {
+    "id": "11",
+    "pose": "walk",
+    "carry": "empty",
+    "facing": "right",
+    "prompt": "Precise character variant of supplied NEW customer 11. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen RIGHT in three-quarter isometric view; same facing as reference. Both hands EMPTY, no handheld bag or object. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-10ac9289-4df3-41da-913c-9ec5ccd46673.png"
+  },
+  {
+    "id": "11",
+    "pose": "walk",
+    "carry": "empty",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 11. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Both hands EMPTY, no handheld bag or object. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-e85b7ab3-4c22-4718-b80b-81d7332e54c1.png"
+  },
+  {
+    "id": "11",
+    "pose": "walk",
+    "carry": "bag",
+    "facing": "right",
+    "prompt": "Precise character variant of supplied NEW customer 11. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen RIGHT in three-quarter isometric view; same facing as reference. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-b922be37-c95e-4f86-bb09-525fc8fec3ba.png"
+  },
+  {
+    "id": "11",
+    "pose": "walk",
+    "carry": "bag",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 11. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-7a803388-a62b-4b0e-ad67-a809f3c4c9b8.png"
+  },
+  {
+    "id": "12",
+    "pose": "stand",
+    "carry": "empty",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 12. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Standing relaxed upright, same body scale. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Both hands EMPTY, no handheld bag or object. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-e496d328-8d85-4789-a0f7-b56e6436d73f.png"
+  },
+  {
+    "id": "12",
+    "pose": "stand",
+    "carry": "bag",
+    "facing": "right",
+    "prompt": "Precise character variant of supplied NEW customer 12. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Standing relaxed upright, same body scale. Face screen RIGHT in three-quarter isometric view; same facing as reference. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-ba917cf9-8587-436a-b953-3b9b69eae7af.png"
+  },
+  {
+    "id": "12",
+    "pose": "stand",
+    "carry": "bag",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 12. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Standing relaxed upright, same body scale. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-17cc4a09-a114-471b-b77a-320c8e268069.png"
+  },
+  {
+    "id": "12",
+    "pose": "walk",
+    "carry": "empty",
+    "facing": "right",
+    "prompt": "Precise character variant of supplied NEW customer 12. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen RIGHT in three-quarter isometric view; same facing as reference. Both hands EMPTY, no handheld bag or object. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-08fcf442-77d3-4ed8-9e5f-93570b723c58.png"
+  },
+  {
+    "id": "12",
+    "pose": "walk",
+    "carry": "empty",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 12. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Both hands EMPTY, no handheld bag or object. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-5a077fd1-5967-4029-abd4-e7e88c1197fd.png"
+  },
+  {
+    "id": "12",
+    "pose": "walk",
+    "carry": "bag",
+    "facing": "right",
+    "prompt": "Precise character variant of supplied NEW customer 12. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen RIGHT in three-quarter isometric view; same facing as reference. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-7e462312-e516-40cd-b4a2-06e35d0d3f0f.png"
+  },
+  {
+    "id": "12",
+    "pose": "walk",
+    "carry": "bag",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 12. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-16c2f539-b5b2-46ab-98af-ec40d6ddb10c.png"
+  },
+  {
+    "id": "13",
+    "pose": "stand",
+    "carry": "empty",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 13. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Standing relaxed upright, same body scale. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Both hands EMPTY, no handheld bag or object. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-c58a24dd-fe22-46a8-b98b-36f3d13eb2e9.png"
+  },
+  {
+    "id": "13",
+    "pose": "stand",
+    "carry": "bag",
+    "facing": "right",
+    "prompt": "Precise character variant of supplied NEW customer 13. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Standing relaxed upright, same body scale. Face screen RIGHT in three-quarter isometric view; same facing as reference. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-6132015a-37f8-413a-ad31-a4ad5b4abf2d.png"
+  },
+  {
+    "id": "13",
+    "pose": "stand",
+    "carry": "bag",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 13. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Standing relaxed upright, same body scale. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-b87731de-66c9-46c5-8a6c-0cf21b6d770a.png"
+  },
+  {
+    "id": "13",
+    "pose": "walk",
+    "carry": "empty",
+    "facing": "right",
+    "prompt": "Precise character variant of supplied NEW customer 13. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen RIGHT in three-quarter isometric view; same facing as reference. Both hands EMPTY, no handheld bag or object. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-c729c197-ae40-4304-9c83-70c766801e97.png"
+  },
+  {
+    "id": "13",
+    "pose": "walk",
+    "carry": "empty",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 13. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Both hands EMPTY, no handheld bag or object. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-6bdc58ef-ddd3-44ed-80bc-aff16558fd2a.png"
+  },
+  {
+    "id": "13",
+    "pose": "walk",
+    "carry": "bag",
+    "facing": "right",
+    "prompt": "Precise character variant of supplied NEW customer 13. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen RIGHT in three-quarter isometric view; same facing as reference. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-b5b29b64-8240-4c75-94c7-c38691eb8bc9.png"
+  },
+  {
+    "id": "13",
+    "pose": "walk",
+    "carry": "bag",
+    "facing": "left",
+    "prompt": "Precise character variant of supplied NEW customer 13. Preserve EXACT identity, face, simple dark oval eye style, head/body proportions, age, skin tone, hair, eyewear, outfit, shoes and detail level. Do not redesign face or clothes. Walking pose, one natural modest step mid-stride with slight opposing arm swing, same body scale, age-appropriate relaxed gait. Face screen LEFT in three-quarter isometric view; opposite facing from reference, actually turn the same character, no new outfit. Hold ONE small kraft dispensary shopping bag with short loop handles in a naturally lowered hand, simple forest-green rectangular patch with no text; bag modest about knee-to-hand size. Match exact reference eye proportions and soft sculpted facial detail. Orthographic game camera, matte clay/cloth 3D, warm upper-left light remains upper-left regardless of facing. Entire full body and feet visible with margins. One person only, real transparent alpha PNG, no floor/scenery/text/extra props.",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a137f6-feb8-7303-95e1-f64ff0dda525/exec-6b383f59-7200-4022-9c63-f4c53d891665.png"
+  }
+]
