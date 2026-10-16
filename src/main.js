@@ -18,7 +18,7 @@ import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import { createGlPost } from './gl-post.js';
-import { SUNNY, SHOP_SPRITES, LAMPS as STREET_LAMPS, compactOrderSprite, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern, softShadow } from './sunny-world.js';
+import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, LAMPS as STREET_LAMPS, compactOrderSprite, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern, softShadow } from './sunny-world.js';
 import * as economy from './economy.js';
 import * as strains from './strains.js';
 import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent } from './progression.js';
@@ -683,7 +683,25 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       var fit=BRANCH_THEMES[state.empire.activeStore-1].frame,wide=width>=780,top=document.querySelector('.hud').getBoundingClientRect().bottom+16,low=wide?64:16,space=Math.max(130,visibleHeight()-top-low),area=Math.max(260,width-(wide?56:24)),u=Math.max(1,Math.min(area/fit.w,space/fit.h));
       return{x:width*.5-fit.cx*u,y:top+space*.5-fit.cy*u,unit:u}}
     var visible=visibleHeight(),bottom=0,top=Math.min(160,visible*.26),space=Math.max(120,visible-top-bottom);return{x:width*.5,y:top+space*.66,unit:Math.max(1,Math.min((width-40)/33,space/28))*1.18}}
-  function applyCamera(){render.invalidated=true;var frame=cameraFrame();panX=Math.max(-width*1.6,Math.min(width*1.6,panX));panY=Math.max(-height*1.6,Math.min(height*1.6,panY));centerX=frame.x+panX;centerY=frame.y+panY;unit=frame.unit*zoom;if(state.empire.activeStore)updateBranchMarker()}
+  function applyCamera(){render.invalidated=true;var frame=cameraFrame();
+    if(SUNNY&&!state.empire.activeStore)clampSunnyPan(frame);else{panX=Math.max(-width*1.6,Math.min(width*1.6,panX));panY=Math.max(-height*1.6,Math.min(height*1.6,panY));}
+    centerX=frame.x+panX;centerY=frame.y+panY;unit=frame.unit*zoom;if(state.empire.activeStore)updateBranchMarker()}
+  // The sunny city block ends in haze, and SUNNY_VIEW says how far the camera may look: the point under the frame's
+  // anchor (where the shop's origin sits at rest) stays inside the shop block and its first ring of streets, and the
+  // visible map (the HUD's bottom to the bottom of the map, less the sheet on a phone) stays inside the hazed reach,
+  // measured along the camera's rotated axes, so no edge of the town shows at any zoom. When the visible map is wider
+  // than the reach, the view sits centred on it.
+  function clampSunnyPan(frame){
+    var u=frame.unit*zoom,sq=FLOOR_SQUASH,c=Math.cos(angle),s=Math.sin(angle),view=SUNNY_VIEW;
+    var rx=-panX/u,rz=-panY/(u*sq),x=rx*c+rz*s,z=rz*c-rx*s;
+    x=Math.max(view.centre.x[0],Math.min(view.centre.x[1],x));z=Math.max(view.centre.z[0],Math.min(view.centre.z[1],z));
+    rx=x*c-z*s;rz=x*s+z*c;
+    var hud=document.querySelector('.hud'),top=hud?hud.getBoundingClientRect().bottom:0,bottom=visibleHeight();
+    var fit=function(v,lo,hi){return lo>hi?(lo+hi)/2:Math.max(lo,Math.min(hi,v))};
+    rx=fit(rx,view.reach.rx[0]+frame.x/u,view.reach.rx[1]-(width-frame.x)/u);
+    rz=fit(rz,view.reach.rz[0]+Math.max(0,frame.y-top)/(u*sq),view.reach.rz[1]-Math.max(0,bottom-frame.y)/(u*sq));
+    panX=-rx*u;panY=-rz*u*sq;
+  }
   function zoomAt(next,x,y){next=Math.max(.65,Math.min(4,next));var ratio=next/zoom,frame=cameraFrame();panX=x-(x-centerX)*ratio-frame.x;panY=y-(y-centerY)*ratio-frame.y;zoom=next;applyCamera()}
   // Desktop keyboard panning: arrows or WASD glide the camera while held. Direction is the way the view moves, so the
   // content slides the other way. Velocity eases toward the held direction, so a tap nudges and a hold coasts to speed,
