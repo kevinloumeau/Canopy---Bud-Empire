@@ -198,16 +198,32 @@ export function spriteReady(name) { const s = SPRITES[name]; return !!(s && !s.m
 // Draws a sprite at world (x, z) on the current floor; flip mirrors it so a figure can face the other way. A size's
 // `ox` is how far (in world units of screen width) the image's centre sits right of the footprint centre, for renders
 // such as the vehicles whose mirrors or tail stick out on one side.
-export function drawSprite(api, name, x, z, flip, scale, lift) {
+export function drawSprite(api, name, x, z, flip, scale, lift, haze) {
   const s = SPRITES[name]; if (!spriteReady(name)) return false;
   const q = api.project(x, 0, z), u = api.unit, ar = (s.img.naturalHeight || s.img.height) / (s.img.naturalWidth || s.img.width), w = (s.h ? s.h / ar : s.w) * u * (scale || 1), h = w * ar, ctx = api.ctx;
   ctx.save(); ctx.translate(q.x + (s.ox || 0) * u * (scale || 1) * (flip ? -1 : 1), q.y + (s.drop * (scale || 1) - (lift || 0)) * u); if (flip) ctx.scale(-1, 1);
-  ctx.drawImage(s.img, -w / 2, -h, w, h); ctx.restore();
+  ctx.drawImage(s.img, -w / 2, -h, w, h);
+  if (haze > 0) { const m = hazeMask(name); if (m) { ctx.globalAlpha *= haze; ctx.drawImage(m, -w / 2, -h, w, h); } }
+  ctx.restore();
   return true;
+}
+// A sprite's haze: its own silhouette in the haze colour, kept at a quarter of the render's size (the haze is soft),
+// laid over the sprite at the haze's strength, so a far render fades into the sky without the ground showing through.
+function hazeMask(name) {
+  const s = SPRITES[name]; if (s.hazeMask !== undefined) return s.hazeMask;
+  if (typeof document === 'undefined') return (s.hazeMask = null);
+  const w = Math.max(1, Math.round((s.img.naturalWidth || s.img.width) / 4)), h = Math.max(1, Math.round((s.img.naturalHeight || s.img.height) / 4)), c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d'); g.drawImage(s.img, 0, 0, w, h); g.globalCompositeOperation = 'source-in'; g.fillStyle = hazeRGBA(1); g.fillRect(0, 0, w, h);
+  return (s.hazeMask = c);
 }
 
 const P = -.012, G = -.33, L = 90; // plaza level (flush with the slab top), street level, half-extent of the streets
-const ROADS = [{ along: 'x', at: -18.5 }, { along: 'x', at: 21.5 }, { along: 'z', at: -22.5 }, { along: 'z', at: 22.5 }];
+// Streets, kerb to kerb 6 wide, sunk a third of a unit below the pavement. The four round the shop carry the traffic;
+// behind each terrace runs a quiet back street (a block's depth beyond the first), so every row of neighbours fronts a
+// street of its own instead of standing on the heels of the row before it, and every street runs on through its
+// junctions into the haze rather than ending.
+const ROADS = [{ along: 'x', at: -18.5 }, { along: 'x', at: 21.5 }, { along: 'z', at: -22.5 }, { along: 'z', at: 22.5 },
+  { along: 'x', at: -36.5 }, { along: 'x', at: 40.5 }, { along: 'z', at: -48.5 }, { along: 'z', at: 42 }];
 const RW = 6; // street width kerb to kerb
 const PAVER = '#d2c8ab', PAVER_LINE = '#b5aa8c', TACTILE = 'rgba(217,194,122,.38)', KERB = '#e2dac4', KERB_FACE = '#a69d85', ASPHALT = '#5a5e64';
 const STONE = ['#d6d0c2', '#a9a295', '#c1bbad'], TAN = ['#dac9b6', '#ad9b87', '#c6b29d'], SAGE = ['#c9cfc6', '#9ea59b', '#b4bab0'], MAUVE = ['#d6cdcf', '#a9a0a2', '#c2b8ba'];
@@ -233,74 +249,75 @@ const BUILDING_SPRITES = {
 };
 // Neighbours: [near-corner x, near-corner z, render]. Every block round the shop is terraced edge to edge, two units
 // back from the kerbs: a row's fronts share one z and a column's one x, each building butted to the last (a joint
-// overlaps by a few tenths rather than leaving an alley), corner shops at the junctions, a second row behind.
+// overlaps by a few tenths rather than leaving an alley), corner shops at the junctions. A second ring of terraces
+// stands across the back streets (a whole block behind the first ring, never on its heels, so their fronts and the
+// street between show above the first ring's roofs), and the outermost of them stand in the haze.
 const BUILDINGS = [
+  // Far row, facing the shop across the rear street.
   [-7.72, -23.5, 'building.rowhouse.terracotta'],
   [0.8, -23.5, 'building.low.sage'],
   [10.02, -23.5, 'building.apartment.brick'],
   [17.5, -23.5, 'building.corner'],
-  [-10.04, -32, 'building.townhouse.sage'],
-  [-3.06, -32, 'building.low.tan'],
-  [3.97, -32, 'building.low.stone'],
-  [10.88, -32, 'building.townhouse.sage'],
-  [18.55, -32, 'building.shop.narrow'],
-  [-27.5, -23.5, 'building.corner'],
-  [-34.83, -23.5, 'building.rowhouse.terracotta'],
-  [-43.29, -23.5, 'building.apartment.brick'],
-  [-52.36, -23.5, 'building.low.tan'],
-  [-27.5, -30.35, 'building.workshop.low'],
-  [-27.5, -37.18, 'building.apartment.brick'],
-  [-27.5, -43.87, 'building.shop.narrow'],
-  [-27.5, -49.7, 'building.low.tan'],
-  [-34.83, -32, 'building.apartment.brick'],
-  [-43.9, -32, 'building.low.sage'],
-  [-52.27, -32, 'building.low.stone'],
-  [36.97, -23.5, 'building.apartment.brick'],
-  [44.85, -23.5, 'building.shop.narrow'],
-  [52.08, -23.5, 'building.low.stone'],
-  [59.96, -23.5, 'building.shop.narrow'],
-  [67.19, -23.5, 'building.low.stone'],
-  [36.77, -32, 'building.low.sage'],
-  [44.83, -32, 'building.mid.stone'],
-  [51.94, -32, 'building.townhouse.sage'],
-  [59.82, -32, 'building.shop.narrow'],
-  [68.19, -32, 'building.low.sage'],
-  [-27.5, -12.34, 'building.mid.stone'],
-  [-27.5, -4.77, 'building.low.sage'],
-  [-27.5, 2.79, 'building.low.stone'],
-  [-27.5, 9.63, 'building.workshop.low'],
+  // Left column, packed from the front street's kerb so its head clears the rear street.
   [-27.5, 16.5, 'building.corner'],
-  [-37, -13.31, 'building.shop.narrow'],
-  [-37, -6.75, 'building.mid.stone'],
-  [-37, -1.46, 'building.townhouse.sage'],
-  [-37, 4.62, 'building.rowhouse.terracotta'],
-  [-37, 11.54, 'building.low.tan'],
-  [-37, 18.03, 'building.apartment.brick'],
-  [37, -11.98, 'building.low.tan'],
-  [37, -4.48, 'building.low.sage'],
-  [37, 2.3, 'building.workshop.low'],
-  [37, 9.01, 'building.mid.stone'],
+  [-27.5, 9.65, 'building.low.stone'],
+  [-27.5, 2.11, 'building.low.sage'],
+  [-27.5, -5.44, 'building.mid.stone'],
+  // Right column, likewise.
   [37, 16.5, 'building.low.stone'],
-  [46.5, -13.31, 'building.shop.narrow'],
-  [46.5, -6.75, 'building.mid.stone'],
-  [46.5, -1.46, 'building.townhouse.sage'],
-  [46.5, 4.62, 'building.rowhouse.terracotta'],
-  [46.5, 11.54, 'building.low.tan'],
-  [46.5, 18.03, 'building.apartment.brick'],
-  [-27.5, 35.5, 'building.townhouse.sage'],
-  [-34.61, 35.5, 'building.low.tan'],
-  [-41.79, 35.5, 'building.townhouse.sage'],
-  [-48.9, 35.5, 'building.low.sage'],
+  [37, 8.96, 'building.mid.stone'],
+  [37, 2.2, 'building.low.sage'],
+  [37, -5.35, 'building.low.tan'],
+  // Front row, across the front street, facing away.
   [-8.03, 35.5, 'building.apartment.brick'],
   [0.63, 35.5, 'building.rowhouse.terracotta'],
   [9.2, 35.5, 'building.low.sage'],
   [17.46, 35.5, 'building.mid.stone'],
+  // Corner blocks of the first ring.
+  [-27.5, -23.5, 'building.corner'],
+  [-34.83, -23.5, 'building.rowhouse.terracotta'],
+  [36.97, -23.5, 'building.apartment.brick'],
+  [-27.5, 35.5, 'building.townhouse.sage'],
+  [-34.61, 35.5, 'building.low.tan'],
   [35.13, 35.5, 'building.low.stone'],
-  [42.44, 35.5, 'building.workshop.low'],
-  [50.32, 35.5, 'building.shop.narrow'],
-  [57.43, 35.5, 'building.townhouse.sage'],
-  [65.49, 35.5, 'building.mid.stone']
+  // Second ring: the row beyond the rear back street...
+  [-10.04, -41.5, 'building.townhouse.sage'],
+  [-3.06, -41.5, 'building.low.tan'],
+  [3.97, -41.5, 'building.low.stone'],
+  [10.88, -41.5, 'building.townhouse.sage'],
+  [18.55, -41.5, 'building.shop.narrow'],
+  [-27.5, -41.5, 'building.corner'],
+  [-34.83, -41.5, 'building.low.sage'],
+  [36.77, -41.5, 'building.low.sage'],
+  [55.46, -41.5, 'building.mid.stone'],
+  [62.57, -41.5, 'building.townhouse.sage'],
+  // ...the columns beyond the side back streets...
+  [-53.5, 16.5, 'building.apartment.brick'],
+  [-53.5, 9.81, 'building.low.tan'],
+  [-53.5, 2.69, 'building.rowhouse.terracotta'],
+  [-53.5, -3.59, 'building.townhouse.sage'],
+  [-53.5, -23.5, 'building.apartment.brick'],
+  [56.5, 16.5, 'building.apartment.brick'],
+  [56.5, 9.81, 'building.low.tan'],
+  [56.5, 2.69, 'building.rowhouse.terracotta'],
+  [56.5, -3.59, 'building.townhouse.sage'],
+  // ...and the far row's run beyond the right back street, fading out.
+  [55.28, -23.5, 'building.shop.narrow'],
+  [62.51, -23.5, 'building.low.stone'],
+  [70.39, -23.5, 'building.shop.narrow']
 ];
+// The town ends in haze. Beyond the back streets the ground, the far terraces and the cars fade into the sky colour
+// over a dozen units (HAZE_RAMP: where each side starts to fade and where it is gone), so no edge of the paving and
+// no end of a street is ever on screen. SUNNY_VIEW is the camera's matching limit, in world units: the point under
+// the view's anchor stays inside `centre` (the shop block and its first ring of streets), and the visible area stays
+// inside `reach`, measured along the camera's rotated axes (screen-right and screen-down across the ground), so the
+// view never runs past the haze at any zoom; main.js applies it.
+const HAZE = [220, 217, 203];
+const HAZE_RAMP = { west: [-55, -66], east: [57, 69], north: [-51, -62], south: [44, 55] };
+const ramp = (v, [from, to]) => Math.max(0, Math.min(1, (v - from) / (to - from)));
+function hazeAt(x, z) { return Math.max(ramp(x, HAZE_RAMP.west), ramp(x, HAZE_RAMP.east), ramp(z, HAZE_RAMP.north), ramp(z, HAZE_RAMP.south)); }
+const hazeRGBA = a => 'rgba(' + HAZE[0] + ',' + HAZE[1] + ',' + HAZE[2] + ',' + a + ')';
+export const SUNNY_VIEW = { centre: { x: [-32, 42], z: [-30, 34] }, reach: { rx: [-55, 69], rz: [-58, 63] } };
 // Kept toward the kerb, clear of the facades behind them.
 const FAR_TREES = [[-12, -22.4], [-1, -22.4], [10, -22.4], [14.5, -22.4], [-26.4, -13], [-26.4, -2], [-26.4, 9], [-26.4, 20]];
 const NEAR_TREES = [[-15, -13.5], [-5, -13.5], [5, -13.5], [16.5, -13.5], [-17, 4]]; // the right rear tree sits past the food truck's cab // behind / left of the shop only; nothing under the delivery deck's legs
@@ -313,11 +330,12 @@ const WALKS = [[-19, -11.6, 19, -11.6, 3], [-15.2, -15, -15.2, 18, 2], [-30, -22
 // Cars: [road index, direction (+1 toward the camera: +x on the x streets, +z on the z streets), phase, colour or
 // 'van']. Traffic keeps to the right, so the direction picks the lane (see drawCars). Kevin pulled the first cars on
 // 2026-10-13 for reading far too small; his 2026-10-15 set (CAR_VIEW) is drawn 4.2 units long, with rear views for
-// the lanes going away. Every car runs the same 90-unit loop at the same speed, so the phases are a timetable: these
-// keep every pair of crossing cars at least a sixth of a loop apart at each of the four junctions (no two cars in a
-// junction at once, so none drives through another) and cars sharing a lane a car's length and more apart.
-const CARS = [[0, 1, .01, 'blue'], [0, -1, .5, 'red'], [0, 1, .54, 'van'], [1, 1, .47, 'green'], [1, -1, .03, 'white'], [1, 1, .03, 'yellow'],
-  [2, 1, .27, 'purple'], [2, -1, .35, 'orange'], [2, -1, .18, 'van'], [3, 1, .29, 'blue'], [3, -1, .74, 'red'], [3, 1, .8, 'white']];
+// the lanes going away. Every car runs the same CAR_LOOP-unit loop at the same speed, so the phases are a timetable
+// (solved by search over the lane rectangles): no two cars' bodies ever meet at any of the four junctions, with four
+// units to spare, and cars sharing a lane stay a car's length and more apart.
+const CARS = [[0, 1, .63, 'blue'], [0, -1, .16, 'red'], [0, 1, .53, 'van'], [1, 1, .95, 'green'], [1, -1, .48, 'white'], [1, 1, .38, 'yellow'],
+  [2, 1, .86, 'purple'], [2, -1, .38, 'orange'], [2, -1, .91, 'van'], [3, 1, .12, 'blue'], [3, -1, .09, 'red'], [3, 1, .6, 'white']];
+const CAR_LOOP = 132; // each car's run, centred on the shop: both ends lie in the haze, so no car pops into view
 
 // Draw order on the streets. Each job carries its footprint on the ground; the shop is drawn between the two passes,
 // so a job goes in the back pass only when nothing of it can hide the shop (its footprint ends left of the slab or
@@ -383,18 +401,36 @@ export function drawSunnyWorld(api, front, alpha) {
       if (x > -13 && x < 13 && z > -9 && z < 12) continue;
       if (((Math.round(x / 1.5) + Math.round(z / 1.5)) & 1) === 0) quad(x - 1.5, z - 1.5, x, z, P, 'rgba(255,255,240,.07)');
     }
-    for (let k = -11.5 - 1.5 * 30; k < 60; k += 1.5) { api.line([[k, P + .004, -L], [k, P + .004, L]], PAVER_LINE, .02); api.line([[-L, P + .004, k + 1.5 * 3], [L, P + .004, k + 1.5 * 3]], PAVER_LINE, .02); }
+    for (let k = -L + .5; k < L; k += 1.5) { api.line([[k, P + .004, -L], [k, P + .004, L]], PAVER_LINE, .02); api.line([[-L, P + .004, k + 1.5 * 3], [L, P + .004, k + 1.5 * 3]], PAVER_LINE, .02); }
     ROADS.forEach(r => roadSurface(api, quad, r));
     ROADS.forEach(r => roadKerbs(api, quad, r));
     ROADS.forEach(r => roadMarkings(api, quad, r));
     crossing(api, quad, 'x', 21.5, -8); crossing(api, quad, 'z', -22.5, 4); crossing(api, quad, 'x', -18.5, 8);
-    [[22.5, -18.5], [-22.5, 21.5], [22.5, 21.5]].forEach(([x, z]) => { crossing(api, quad, 'x', z, x - 5.5); crossing(api, quad, 'x', z, x + 5.5); crossing(api, quad, 'z', x, z - 5.5); crossing(api, quad, 'z', x, z + 5.5); });
+    // Zebra crossings on all four arms of every junction (the walkers' lanes round the shop run through the ones at the
+    // shop's own corners).
+    ROADS.filter(r => r.along === 'x').forEach(rz => ROADS.filter(r => r.along === 'z').forEach(rx => { const x = rx.at, z = rz.at; crossing(api, quad, 'x', z, x - 5.5); crossing(api, quad, 'x', z, x + 5.5); crossing(api, quad, 'z', x, z - 5.5); crossing(api, quad, 'z', x, z + 5.5); }));
+    groundHaze(api);
   }
   // Buildings, trees, props, cars and walkers share one footprint-aware sort (orderJobs), so a car on the far street
   // never paints over a near tree, nor a car on the front or right street over the terraces beyond it.
   streetShadows(api, front);
   orderJobs(streetJobs(api).filter(j => behindShop(j) !== front)).forEach(j => j.draw());
   ctx.restore();
+}
+
+// The haze over the ground plane: one linear gradient per side, laid along that side's normal on screen (the ground is
+// an affine image of the world plane, so a world-space band is a screen-space band), clear at the ramp's start and
+// solid past its end, where the gradient clamps. Renders standing in the haze take their own share in hazeMask.
+function groundHaze(api) {
+  const ctx = api.ctx, p = api.project;
+  const band = (along, [a, b]) => {
+    const p0 = along === 'x' ? p(0, P, a) : p(a, P, 0), p1 = along === 'x' ? p(0, P, b) : p(b, P, 0), d = along === 'x' ? p(1, P, a) : p(a, P, 1);
+    let nx = p0.y - d.y, ny = d.x - p0.x; const len = Math.hypot(nx, ny) || 1; nx /= len; ny /= len;
+    const dist = (p1.x - p0.x) * nx + (p1.y - p0.y) * ny, g = ctx.createLinearGradient(p0.x, p0.y, p0.x + nx * dist, p0.y + ny * dist);
+    g.addColorStop(0, hazeRGBA(0)); g.addColorStop(.5, hazeRGBA(.5)); g.addColorStop(1, hazeRGBA(1));
+    ctx.fillStyle = g; ctx.fillRect(0, 0, api.width, api.height);
+  };
+  band('x', HAZE_RAMP.north); band('x', HAZE_RAMP.south); band('z', HAZE_RAMP.west); band('z', HAZE_RAMP.east);
 }
 
 function roadSurface(api, quad, { along, at }) {
@@ -411,8 +447,8 @@ function roadSurface(api, quad, { along, at }) {
 // pale kerb stone along the top edge on both sides.
 function roadKerbs(api, quad, { along, at }) {
   const a0 = at - RW / 2, a1 = at + RW / 2, p = api.project;
-  const cross = ROADS.filter(r => r.along !== along).map(r => r.at);
-  const segs = [[-L, cross[0] - RW / 2], [cross[0] + RW / 2, cross[1] - RW / 2], [cross[1] + RW / 2, L]];
+  const cross = ROADS.filter(r => r.along !== along).map(r => r.at).sort((a, b) => a - b), segs = [];
+  let from = -L; cross.forEach(c => { segs.push([from, c - RW / 2]); from = c + RW / 2; }); segs.push([from, L]);
   segs.forEach(([s0, s1]) => {
     if (along === 'x') {
       api.poly([p(s0, P, a0), p(s1, P, a0), p(s1, G, a0), p(s0, G, a0)], KERB_FACE);
@@ -437,7 +473,8 @@ function roadMarkings(api, quad, { along, at }) {
 
 // A zebra crossing across a street at position `pos` along it, with tactile paving on both kerbs.
 function crossing(api, quad, along, at, pos) {
-  const a0 = at - RW / 2, a1 = at + RW / 2;
+  const a0 = at - RW / 2, a1 = at + RW / 2, c = api.project(along === 'x' ? pos : at, G, along === 'x' ? at : pos), m = api.unit * 6;
+  if (c.x < -m || c.x > api.width + m || c.y < -m || c.y > api.height + m) return;
   for (let k = 0; k < 6; k++) { const s = a0 + .55 + k * .85; if (along === 'x') quad(pos - 1.6, s, pos + 1.6, s + .45, G + .006, '#f4f1e8'); else quad(s, pos - 1.6, s + .45, pos + 1.6, G + .006, '#f4f1e8'); }
   if (along === 'x') { quad(pos - 1.6, a0 - .9, pos + 1.6, a0 - .3, P + .003, TACTILE); quad(pos - 1.6, a1 + .3, pos + 1.6, a1 + .9, P + .003, TACTILE); }
   else { quad(a0 - .9, pos - 1.6, a0 - .3, pos + 1.6, P + .003, TACTILE); quad(a1 + .3, pos - 1.6, a1 + .9, pos + 1.6, P + .003, TACTILE); }
@@ -452,7 +489,9 @@ function buildingSprite(api, name, x1, z1) {
   const l = q.x - f.foot * w, t = q.y - f.base * h;
   // Most of the town is off screen at any one time; a building whose image misses the viewport costs nothing.
   if (l > api.width || l + w < 0 || t > api.height || t + h < 0) return true;
-  api.ctx.drawImage(img, l, t, w, h);
+  const ctx = api.ctx, haze = hazeAt(x1 - f.w / 2, z1 - f.d / 2);
+  ctx.drawImage(img, l, t, w, h);
+  if (haze > 0) { const m = hazeMask(name); if (m) { ctx.save(); ctx.globalAlpha *= haze; ctx.drawImage(m, l, t, w, h); ctx.restore(); } }
   return true;
 }
 
@@ -623,11 +662,10 @@ function car(api, x, z, along, dir, colour) {
   const p = api.project, u = api.unit, ax = along === 'x', Lc = 2.6, W = 1.3, van = colour === 'van';
   const name = carSprite(colour, ax ? (dir > 0 ? 'fr' : 'br') : (dir > 0 ? 'fl' : 'bl'));
   if (name) {
-    const hl = van ? 2.6 : 2.1, hw = van ? 1.3 : 1.05;
-    groundShadow(api, x, G, z, ax ? hl : hw, ax ? hw : hl, 1.4);
-    const ctx = api.ctx, q = p(x, G, z);
+    const hl = van ? 2.6 : 2.1, hw = van ? 1.3 : 1.05, haze = hazeAt(x, z), ctx = api.ctx, q = p(x, G, z);
+    ctx.save(); ctx.globalAlpha *= 1 - haze; groundShadow(api, x, G, z, ax ? hl : hw, ax ? hw : hl, 1.4); ctx.restore();
     ctx.save(); ctx.translate(0, q.y - p(x, 0, z).y);
-    drawSprite(api, name, x, z, false); ctx.restore(); return;
+    drawSprite(api, name, x, z, false, 1, 0, haze); ctx.restore(); return;
   }
   const color = CAR_PAINT[colour] || colour;
   const sh = p(x, G, z); api.ellipse(sh.x - u * .4, sh.y + u * .2, u * 1.8, u * .7, 'rgba(30,30,30,.22)');
@@ -639,10 +677,10 @@ function car(api, x, z, along, dir, colour) {
 
 // Cars loop along their lane, each sorted by its own footprint (a 4.2-unit car, 4.8 for the van, 1.9 wide).
 function drawCars(api, at) {
-  const t = api.now * .00009; // one 90-unit loop every 11 s, about 8 units a second: four walkers' pace
+  const t = api.now * .00009 * 90 / CAR_LOOP; // about 8 units a second, four walkers' pace, whatever the loop's length
   CARS.forEach(([ri, dir, phase, colour]) => {
     // Right-hand traffic: heading +x the kerb is on the +z side, heading +z it is on the -x side.
-    const r = ROADS[ri], s = (((phase + dir * t) % 1) + 1) % 1 * 90 - 45, lane = (r.along === 'x' ? dir : -dir) * 1.5, ax = r.along === 'x';
+    const r = ROADS[ri], s = (((phase + dir * t) % 1) + 1) % 1 * CAR_LOOP - CAR_LOOP / 2, lane = (r.along === 'x' ? dir : -dir) * 1.5, ax = r.along === 'x';
     const x = ax ? s : r.at + lane, z = ax ? r.at + lane : s, hl = colour === 'van' ? 2.4 : 2.1, hw = .95;
     at(x, z, () => car(api, x, z, r.along, dir, colour), ax ? hl : hw, ax ? hw : hl);
   });
