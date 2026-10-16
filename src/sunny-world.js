@@ -55,6 +55,9 @@ export function stationSprite(i, level) {
 // their index along WALKS, fifteen different figures, the seven walkers spread among them.
 const PEOPLE = [['customer', 1], ['customer', 2], ['customer', 3], ['customer', 4], ['customer', 5], ['customer', 6], ['customer', 7], ['customer', 8], ['customer', 9], ['customer', 10], ['customer', 11], ['customer', 12], ['customer', 13],
   ['walker', 1], ['walker', 2], ['walker', 3], ['walker', 4], ['walker', 5], ['walker', 6], ['walker', 7]];
+// The people with an original single-direction render to stand in while their variants load: Kevin's 2026-10-15 cast
+// (customers 8 to 13, walkers 5 to 7) was only ever rendered facing both ways, so asking for one would be a 404.
+const ORIGINAL_RENDERS = { customer: 7, walker: 4, staff: 3 };
 const QUEUE_CAST = PEOPLE.map((_, i) => i).filter(i => !(PEOPLE[i][0] === 'walker' && PEOPLE[i][1] === 5));
 const WALKER_CAST = [13, 0, 14, 1, 15, 2, 16, 3, 17, 4, 18, 5, 19, 6, 7];
 const STAFF_FOR_LINE = [2, 2, 2, 1, 1, 1, 3, 1];
@@ -120,6 +123,7 @@ export function drawPersonSprite(api, x, z, identity, employee, facing, phase, a
   }
   if (name === personName(role, nn, walking)) {
     // Original single-direction renders, until the variant has loaded or when it is missing.
+    if (nn > (ORIGINAL_RENDERS[role] || 0)) return false;
     lazySprite(name, 'sprites/people/' + name + '.png', PERSON_SIZE);
     lazySprite(base, 'sprites/people/' + base + '.png', PERSON_SIZE);
     name = spriteReady(name) ? name : spriteReady(base) ? base : null;
