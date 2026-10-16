@@ -62,7 +62,11 @@ Each branch has its own map, ten upgrade levels, optional projects, stock, produ
 
 Branches share cash with the main shop while retaining independent management. Their base income contributes to offline earnings, capped at four hours at the normal rate, plus four hours for each level of the Back-room safe (up to 24); pausing does not stop offline earnings. Detailed operations do not invent offline customer visits or completed delivery journeys. A welcome-back report summarizes the return.
 
-Career milestones, a seven-day UTC reward track, rotating shift goals and hourly events live under Rewards & records. Cash rewards scale with current income. Event deadlines follow real time, including while the game is paused. These are local systems based on the device clock, not server-validated accounts.
+Career milestones, a seven-day UTC reward track, rotating shift goals, hourly events and a multi-day event live under Rewards & records. The multi-day event follows the calendar (4/20 Week, Summer Solstice, Harvest Season, Spooky Season, Holiday Rush) and otherwise rotates weekly themes (Neighborhood, Delivery and Big Sales weeks, Monday to Sunday UTC). Its three-step ladder counts pickups, online orders or revenue from the first time the game is opened during the event; each step pays an income-scaled reward and a trophy, and the last adds the event's badge, which carries over when reopening.
+
+Every two to ten minutes of play a big spender walks in with a gold tag; tapping the tag pays a tip worth about 90 seconds of income or starts a 60-second rush that doubles walk-in sales. Missing one costs nothing.
+
+The Menu tab's strain library lists ten cultivars, one for each pair of the four strains. Crossing needs both parents unlocked, costs a few minutes of income and takes 15, 45 or 120 real minutes (common, rare, epic), so it keeps growing while the game is closed; one cross runs at a time. Each discovery adds 2%, 3% or 5% to every sale for good and survives reopening. Cash rewards scale with current income. Event deadlines follow real time, including while the game is paused. These are local systems based on the device clock, not server-validated accounts.
 
 ## Saves and installation
 

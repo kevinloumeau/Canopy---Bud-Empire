@@ -20,3 +20,25 @@ body[data-store-view=branch] .rush-pill{display:none}
 .season-tiers li.is-ready{border-color:#c4e8a7}
 .season-tiers li.is-collected{border-color:#f0cf7f88;background:#f0cf7f1f}
 .season-badges{font-size:12px;opacity:.8}
+/* Strain library on the Menu board: a summary line, the active cross with its collect button, and a grid of cultivar cards. */
+.strain-library{display:grid;gap:8px;margin-top:6px;padding:10px;border-radius:12px;background:#0f1a14b0;border:1px solid #ffffff10}
+.library-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.library-head h3{margin:0;font-size:15px}
+.library-head small{font:500 11px 'DM Mono',ui-monospace,monospace;opacity:.85}
+.library-note{margin:0;font-size:12px;opacity:.8}
+.library-active{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid #c4e8a755;background:#c4e8a714;font-size:12px}
+.library-active[hidden]{display:none}
+.library-active button{min-height:44px;padding:0 14px;border-radius:10px;background:#55733e;color:#f6f1df;border:0;font-weight:700}
+.library-active button[hidden]{display:none}
+.library-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px}
+.library-card{display:grid;gap:2px;align-content:start;padding:8px;border-radius:10px;border:1px solid #ffffff14;background:#ffffff06;min-width:0}
+.library-card b{font-size:13px}
+.library-card small{font-size:11px;opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.library-card em{font-style:normal;font-size:11px;color:#c4e8a7}
+.library-card.rarity-1 em{color:#8ad6d9}
+.library-card.rarity-2 em{color:#f0cf7f}
+.library-card button{margin-top:4px;min-height:44px;padding:4px 8px;border-radius:8px;border:1px solid #ffffff22;background:#55733e;color:#f6f1df;font-size:11px;font-weight:600;line-height:1.2}
+.library-card button:disabled{background:#ffffff0d;color:#f6f1dfaa;cursor:default}
+.library-card[data-state=known]{border-color:#c4e8a766;background:#c4e8a712}
+.library-card[data-state=known] button{background:transparent;border-color:transparent;color:#c4e8a7}
+.library-card[data-state=ready]{border-color:#f0cf7f}
