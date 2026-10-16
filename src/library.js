@@ -1,6 +1,7 @@
 // Strain library: cross two strains you grow to discover a named cultivar. Each discovery is permanent (it survives
 // reopening) and adds a little to every sale's value, so the library is a collection with a reason to finish it.
 // A cross takes real minutes, so it keeps ticking while the game is closed and gives a reason to come back.
+import {crossMinutes} from './perks.js';
 export const CULTIVARS=[
   {id:'mint-select',name:'Mint Select',parents:[0,0]},
   {id:'amber-gold',name:'Amber Gold',parents:[1,1]},
@@ -38,7 +39,7 @@ export function cultivarStatus(state,c,now=Date.now(),income=0){
   if(breeding)return state.breed.ready<=now?{kind:'ready'}:{kind:'growing',remaining:state.breed.ready-now,share:1-(state.breed.ready-now)/(state.breed.minutes*MINUTE)};
   const missing=c.parents.filter(i=>!(state.strains[i]>0));
   if(missing.length)return {kind:'locked',missing};
-  return {kind:'open',cost:crossCost(c,income),minutes:RARITY[rarityOf(c)].minutes,busy:!!state.breed};
+  return {kind:'open',cost:crossCost(c,income),minutes:crossMinutes(state.perks,RARITY[rarityOf(c)].minutes),busy:!!state.breed};
 }
 export function startCross(state,id,now=Date.now(),income=0){
   const c=CULTIVARS.find(x=>x.id===id);if(!c)return false;const s=cultivarStatus(state,c,now,income);

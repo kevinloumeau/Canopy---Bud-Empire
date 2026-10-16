@@ -6,7 +6,7 @@ for(const [name,viewport] of [['desktop',{width:1440,height:1000}],['mobile',{wi
  await p.goto((process.env.GAME_URL||'http://127.0.0.1:4176'));await p.waitForFunction(()=>window.__shiftReady);
  await p.locator('[data-tray=empire]').click();await p.waitForTimeout(300);
  assert.equal(await p.locator('.reward-chip',{hasText:'Cross'}).count(),1,'cross chip');
- await p.locator('[data-tray=flowers]').click();const lib=p.locator('.strain-library');await lib.scrollIntoViewIfNeeded();
+ await p.locator('[data-tray=flowers]').click();const lib=p.locator('.strain-library:not(.founder-perks)');await lib.scrollIntoViewIfNeeded();
  assert.match(await p.locator('#librarySummary').innerText(),/1 \/ 10/);
  await p.locator('#breedCollect').click();assert.match(await p.locator('#librarySummary').innerText(),/2 \/ 10 discovered · \+4% sales/);
  const card=p.locator('.library-card',{hasText:'Lavender Frost'}).locator('button');assert.match(await card.innerText(),/^Cross/);await card.click();
