@@ -29,7 +29,13 @@ export function migrateLounge(value){
 export function loungeTier(level){return LOUNGE_TIERS[migrateLounge(level)-1]||null;}
 export function loungeUpgradeCost(level){return LOUNGE_TIERS[migrateLounge(level)]?.cost??null;}
 export function loungeSeats(level){return loungeTier(level)?.seats||0;}
-export function loungeSessionSeconds(level){return loungeTier(level)?.session||0;}
+export function loungeSessionSeconds(level,host=0){return (loungeTier(level)?.session||0)/loungeHostSpeed(host);}
+// The lounge host turns tables over faster: each training level shortens a session by the same 30% step staff get.
+export function migrateLoungeHost(value){
+  return typeof value==='number'&&Number.isFinite(value)?Math.max(0,Math.min(10000,Math.floor(value))):0;
+}
+export function loungeHostSpeed(host){return 1+migrateLoungeHost(host)*.3;}
+export function loungeHostCost(host){return Math.floor(20*Math.pow(1.6,migrateLoungeHost(host)));}
 export function buyLoungeTier(state){
   const level=migrateLounge(state.lounge),cost=loungeUpgradeCost(level);
   if(cost===null||!Number.isFinite(state.money)||state.money<cost)return false;
@@ -61,14 +67,14 @@ export function loungeTake(level,jarValue){
 }
 // Earnings rate right now: each seated guest paid the take at the curtain and holds the seat for one session, so
 // every occupied seat is worth the take once per session. Capped at the seats the tier has.
-export function loungeCurrentRate(level,seated,jarValue){
+export function loungeCurrentRate(level,seated,jarValue,host=0){
   const tier=loungeTier(level);
   if(!tier)return 0;
   const occupied=Math.max(0,Math.min(tier.seats,Math.floor(Number(seated)||0)));
-  return loungeTake(level,jarValue).total*occupied/tier.session;
+  return loungeTake(level,jarValue).total*occupied/loungeSessionSeconds(level,host);
 }
 // Rough earnings rate with every seat busy, for the station card.
-export function loungeRate(level,jarValue){
+export function loungeRate(level,jarValue,host=0){
   const tier=loungeTier(level);
-  return tier?loungeTake(level,jarValue).total*tier.seats/tier.session:0;
+  return tier?loungeTake(level,jarValue).total*tier.seats/loungeSessionSeconds(level,host):0;
 }
