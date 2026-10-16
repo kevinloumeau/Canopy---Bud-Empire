@@ -1,0 +1,9 @@
+/* Big spender tag and rush pill: gold accents on the game's dark glass, matching the station plaques. */
+.marker.spender-tag{left:0;top:0;display:block;min-height:32px;padding:6px 11px;border-radius:999px;background:#2a2410e6;border:1px solid #f0cf7f;color:#f6dc95;font-weight:700;font-size:.78rem;white-space:nowrap;box-shadow:0 4px 14px #0006,0 0 14px #f0cf7f33;cursor:pointer;z-index:4}
+.marker.spender-tag[hidden]{display:none}
+.marker.spender-tag span{color:#f0cf7f}
+@media (prefers-reduced-motion:no-preference){.marker.spender-tag{animation:spender-bob 1.6s ease-in-out infinite}}
+@keyframes spender-bob{50%{margin-top:-4px}}
+.rush-pill{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 108px);transform:translateX(-50%);z-index:30;padding:6px 14px;border-radius:999px;background:#2a2410e6;border:1px solid #f0cf7f;color:#f6dc95;font:600 .78rem 'DM Mono',ui-monospace,monospace;box-shadow:0 4px 14px #0006;pointer-events:none;white-space:nowrap}
+.rush-pill[hidden]{display:none}
+body[data-store-view=branch] .rush-pill{display:none}
