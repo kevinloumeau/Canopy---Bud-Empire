@@ -78,6 +78,12 @@ const PERSON_SIZE = { h: 2.3 * 640 / 600, drop: 2.3 * 8 / 600 + .03 };
 // people-complete-v3: every customer and walker also comes as 224x320 variants, posed stand/walk, with or without the
 // pickup bag in hand, facing left or right (so no mirroring). Figures are about 295 px tall with their feet 5 px up.
 const PERSON_V3_SIZE = { h: 2.3 * 320 / 295, drop: 2.3 * 5 / 295 + .03 };
+// The stride the walk frames show: the planted foot travels about 36 px of the 224x320 frame from contact to pass,
+// a quarter of the cycle, so one cycle (two steps) covers about 1.6 world units of pavement and the step phase turns
+// 3.9 radians per unit walked. Feet only stay put when the frames change at the pace of the ground going by.
+export const WALK_STEP_RATE = 3.9;
+// How much of the glide under a held pose is taken back (1 holds the figure still until the next pose).
+const WALK_PIN = 1;
 function hashId(n) { n = Math.imul((n | 0) + 1, 0x9e3779b1) >>> 0; n = Math.imul(n ^ (n >>> 15), 0x45d9f3b) >>> 0; return (n ^ (n >>> 16)) >>> 0; }
 function personName(role, nn, walking) { return 'person.' + role + '.' + (nn < 10 ? '0' : '') + nn + '.' + (walking ? 'walk' : 'stand'); }
 // Walkers on the pavement carry a pickup bag by a stable identity, as if they had just left the shop.
@@ -85,8 +91,11 @@ export function walkerHasBag(identity) { return hashId(identity) % 3 === 0; }
 // Draws a sprite figure in place of a code-drawn one. Walking alternates the stand and stride frames on the step
 // cycle. Customers and walkers pick the left- or right-facing variant from the sign of `facing` and carry the pickup
 // bag when `bag` is set; staff play their v4 work loop while `working` is set, mirrored to face the floor (the
-// original and v3 renders stand in until the loop's frames have loaded). Returns false until a frame has loaded.
-export function drawPersonSprite(api, x, z, identity, employee, facing, phase, amount, bag, working) {
+// original and v3 renders stand in until the loop's frames have loaded). `ground` is the distance the figure has
+// walked in world units, and `heading` (a unit {x, z}, optional) the way it is walking. Returns false until a frame
+// has loaded.
+export function drawPersonSprite(api, x, z, identity, employee, facing, ground, amount, bag, working, heading) {
+  const phase = ground * WALK_STEP_RATE;
   let role = 'staff', nn;
   if (employee) nn = STAFF_FOR_LINE[identity] || 1;
   else [role, nn] = PEOPLE[identity < 0 ? WALKER_CAST[(-identity - 1) % WALKER_CAST.length] : QUEUE_CAST[identity % QUEUE_CAST.length]];
@@ -113,13 +122,28 @@ export function drawPersonSprite(api, x, z, identity, employee, facing, phase, a
     lazySprite(v3, 'sprites/people/' + v3 + '.png', PERSON_V3_SIZE);
     if (spriteReady(v3)) { name = v3; flip = false; }
   }
+  // Walking up the screen (away from the camera) the figure shows its back: Kevin's walk-v5 rear stills, one
+  // mid-stride pose each facing up-right (mirrored for up-left), empty-handed only, so anyone carrying a bag keeps
+  // the front cycle. With a single pose there is nothing to pin, so it glides with the step's rise and settle.
+  let rearShown = false;
+  if (!employee && amount > .3 && heading && !bag && heading.x + heading.z < -.05) {
+    const rear = personName(role, nn, true) + '.back';
+    lazySprite(rear, 'sprites/people/' + rear + '.png', PERSON_V3_SIZE);
+    if (spriteReady(rear)) { name = rear; flip = heading.x - heading.z < 0; lift = amount * .04 * (1 - Math.cos(2 * phase)) / 2; rearShown = true; }
+  }
   // Kevin's 2026-10-15 walk cycles: four frames a step pair (contact, pass, contact, pass), stored facing right and
   // mirrored to face left. The step phase picks the frame, and the frames carry the rise and settle, so no bob.
-  if (!employee && amount > .3) {
-    const cyc = personName(role, nn, true) + (bag ? '.bag' : '.empty') + '.0';
+  // Each pose is shown either side of its own moment in the stride, and while it is held the figure stays where that
+  // pose belongs (it moves on in a small hop at the change of pose, the way a stepped sprite walks): gliding on under
+  // a held pose is what made the planted foot skate.
+  if (!employee && amount > .3 && !rearShown) {
+    const cyc = personName(role, nn, true) + (bag ? '.bag' : '.empty') + '.0', quarter = phase / (Math.PI / 2), key = Math.round(quarter);
     for (let f = 0; f < 4; f++) lazySprite(cyc + f, 'sprites/people/' + cyc + f + '.png', PERSON_V3_SIZE);
-    const frame = cyc + ((Math.floor(phase / (Math.PI / 2)) % 4) + 4) % 4;
-    if (spriteReady(frame)) { name = frame; flip = facing < 0; lift = 0; }
+    const frame = cyc + ((key % 4) + 4) % 4;
+    if (spriteReady(frame)) {
+      name = frame; flip = facing < 0; lift = 0;
+      if (heading) { const back = (quarter - key) * (Math.PI / 2) / WALK_STEP_RATE * WALK_PIN; x -= heading.x * back; z -= heading.z * back; }
+    }
   }
   if (name === personName(role, nn, walking)) {
     // Original single-direction renders, until the variant has loaded or when it is missing.
@@ -689,7 +713,7 @@ function drawCars(api, at) {
 // Pedestrians pace their pavement segment there and back. Each walks at their own pace in world units a second (a
 // stroll, whatever the segment's length: Kevin found the earlier pace far too quick, and the far pavements, being
 // longer, used to be walked at a run), starts at their own point of the loop, faces the way they are going on screen,
-// and takes their steps from the ground covered so the feet never slide.
+// and takes their steps from the ground covered so the feet never slide (see WALK_STEP_RATE).
 const WALK_BASE = WALKS.reduce((acc, w) => (acc.push(acc[acc.length - 1] + w[4]), acc), [0]);
 function drawWalkers(api, at) {
   WALKS.forEach(([x0, z0, x1, z1, n], wi) => {
@@ -698,7 +722,8 @@ function drawWalkers(api, at) {
       const g = WALK_BASE[wi] + k, pace = 1.5 + (g * 7 % 5) * .12, loop = len * 2;
       const s = (api.now * .001 * pace + ((g * .37 + k / n) % 1) * loop) % loop, out = s < len, f = out ? s / len : 2 - s / len;
       const px = x0 + (x1 - x0) * f, pz = z0 + (z1 - z0) * f, facing = screenDir * (out ? 1 : -1) || .3;
-      at(px, pz, () => { if (!drawPersonSprite(api, px, pz, -(g + 1), false, facing, s * 3.6 + g * 1.7, api.now > 0 ? 1 : 0, walkerHasBag(g + 1))) api.person(px, pz, 40 + g, api.now > 0); }, .4);
+      const heading = { x: (x1 - x0) / len * (out ? 1 : -1), z: (z1 - z0) / len * (out ? 1 : -1) };
+      at(px, pz, () => { if (!drawPersonSprite(api, px, pz, -(g + 1), false, facing, s + g * .44, api.now > 0 ? 1 : 0, walkerHasBag(g + 1), false, heading)) api.person(px, pz, 40 + g, api.now > 0); }, .4);
     }
   });
 }
