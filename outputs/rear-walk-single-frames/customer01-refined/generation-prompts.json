@@ -1,0 +1,42 @@
+[
+  {
+    "key": "fix01",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-637d5313-da36-490f-b2b5-5b9ee3318cf6.png",
+    "prompt": "Edit this single sprite, only reduce its wide stride into the next walking DOWN pose. LEFT leg (far leg ending at screen-right boot) bears weight; bring the left boot under the body and plant it flat, with a slight knee bend. RIGHT leg (near leg that crosses diagonally in front) bends at knee and trails behind, boot raised toward lower-left. Feet only about half as far apart as currently, a transitional compact step. Right hand still swings forward but lower and closer to torso; left hand still back but closer to hip. Keep head, hairstyle, sunglasses, exact rear upper-right view, shoulders, blue full-length jacket, olive trousers, brown boots, same scale and proportions. No face turn. Transparent background with clean edges and no color fringe. ONE full body figure."
+  },
+  {
+    "key": "fix03",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-5f4d0b80-ab33-459e-aafc-182e362a7b9c.png",
+    "prompt": "Edit image 1, ONE sprite only, walk frame 03. Image 2 shows the next contact pose and the arm swing to approach. LOWER the lifted right knee and boot: this is a relaxed walking reach, not a march. The right thigh slopes almost vertically downward with only a slight forward angle; right knee below the jacket by roughly one thigh length. Right lower leg angles forward gently; right boot hovers only a small distance above the floor, just ahead of the left support foot. Keep feet moderately close, much closer than image 2. The left leg stays nearly straight supporting the body. Correct arms: near right arm hangs down/back next to right hip, its hand at upper-thigh height; far left arm swings forward and is mostly hidden by torso. Preserve exactly image 1's head, rear upper-right direction, camera, torso size, clothes, colors and full-length sleeves. Do not raise knee to waist or put boots at widely different heights. True transparent background, clean edges, no glow or colored fringe, full body with margins."
+  },
+  {
+    "key": "fix03Arms",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-d955b2a4-de89-442d-a6eb-1f3d347b315c.png",
+    "prompt": "Change ONLY arm pose on this ONE rear-view sprite. Leave all legs, boots, head and torso pixels visually unchanged. LOWER the near right arm visible on the right: rotate its upper arm down so elbow sits by the side of the waist, straighten elbow naturally, put the right hand low beside the right upper thigh at the same height as the left hand currently. Move far left arm FORWARD so left forearm and left hand disappear behind the left side of torso; just a little bent blue sleeve remains at the left edge. This opposite arm swing must be obvious: the right hand hangs low beside the leg, the left hand is hidden. Preserve full-length sleeves, existing proportions and every garment, same camera facing upper-right. Transparent background, clean edge, no glow."
+  },
+  {
+    "key": "fix07",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-52dbf99e-948a-45b6-8949-d6aeb5c7be78.png",
+    "prompt": "Task: one rear-view game sprite, relaxed walking reach.\nImage 1: edit target, frame 07.\nImage 2: fixed appearance master. Match its hair, head direction, jacket cut, fabric texture, colors, proportions and camera.\nChange only: shorten frame 07's leg reach.\nPose: the foreground trouser leg crosses in front and supports the body, nearly vertical; its boot rests under the hips. The other trouser leg reaches a little forward; its boot appears just to the right of the support boot and only slightly above it. Feet are roughly one boot-width apart, not the current broad stride.\nKeep: frame 07's arm swing, single full figure, rear upper-right direction.\nOutput: clean transparent PNG, no halo."
+  },
+  {
+    "key": "head01",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-480a468b-b546-4584-acf0-c383dc6d99eb.png",
+    "prompt": "Task: precise head replacement for sprite consistency.\nImage 1: edit target. Preserve its entire body pose, arms, clothing and feet.\nImage 2: appearance master.\nChange only the head above the white collar in image 1. Match image 2's exact head size, brown curl arrangement, ear, sunglasses and rear upper-right angle. Seat that head at image 1's existing collar. The current head is slightly oversized; use the master's head-to-jacket proportion.\nOutput: one full-body transparent PNG. Preserve every body landmark and the canvas."
+  },
+  {
+    "key": "head05",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-197d10c8-208b-48ed-99a5-686f8317977a.png",
+    "prompt": "Task: precise head replacement for sprite consistency.\nImage 1: edit target. Preserve its entire body pose, arms, clothing and feet.\nImage 2: appearance master.\nChange only the head above the white collar in image 1. Match image 2's exact head size, brown curl arrangement, ear, sunglasses and rear upper-right angle. Seat that head at image 1's existing collar. The current head is slightly oversized; use the master's head-to-jacket proportion.\nOutput: one full-body transparent PNG. Preserve every body landmark and the canvas."
+  },
+  {
+    "key": "head06",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-ff05497f-1f50-44ca-b9fc-3ef14e95e1dc.png",
+    "prompt": "Task: precise head replacement for sprite consistency.\nImage 1: edit target. Preserve its entire body pose, arms, clothing and feet.\nImage 2: appearance master.\nChange only the head above the white collar in image 1. Match image 2's exact head size, brown curl arrangement, ear, sunglasses and rear upper-right angle. Seat that head at image 1's existing collar. The current head is slightly oversized; use the master's head-to-jacket proportion.\nOutput: one full-body transparent PNG. Preserve every body landmark and the canvas."
+  },
+  {
+    "key": "head07",
+    "path": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-fc1945ad-ad93-4bef-a67e-3b37d4497dfa.png",
+    "prompt": "Task: precise head replacement for sprite consistency.\nImage 1: edit target. Preserve its entire body pose, arms, clothing and feet.\nImage 2: appearance master.\nChange only the head above the white collar in image 1. Match image 2's exact head size, brown curl arrangement, ear, sunglasses and rear upper-right angle. Seat that head at image 1's existing collar. The current head is slightly oversized; use the master's head-to-jacket proportion.\nOutput: one full-body transparent PNG. Preserve every body landmark and the canvas."
+  }
+]

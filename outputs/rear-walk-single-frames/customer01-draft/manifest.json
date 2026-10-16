@@ -1,0 +1,135 @@
+{
+  "status": "draft-source-frames-not-production-ready",
+  "tool": "built-in image_gen",
+  "method": "One character and one frame per generation. Frame 00 reuses prior rear source.",
+  "frames": [
+    {
+      "index": 0,
+      "phase": "left-contact",
+      "source": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/walk-cycles-v5/rear-stills/person.customer.01.stand.empty.back-right.png",
+      "prompt": "Reused existing rear contact source.",
+      "file": "person.customer.01.walk.empty.00.back-right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "index": 1,
+      "phase": "left-down",
+      "source": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-11ca12e3-d2da-4acb-bfca-2936960dd0d4.png",
+      "prompt": "Create ONE single walk-cycle sprite of this same rear-view clay character. Frame: LEFT FOOT weight-acceptance (down pose), shortly after the reference's contact. The FAR LEFT foot now bears weight, planted flat slightly ahead at upper-right. The NEAR RIGHT leg trails toward lower-left, knee softly bending as its heel rises. Narrow the stride to about two thirds the reference stride; bend the supporting left knee slightly, only a tiny natural body dip. Right arm swings forward, left arm backward as reference, slightly less extreme. Keep head and torso facing upper-right, same 30-degree dimetric camera, same brown hair, sunglasses, full-length blue jacket, olive wide trousers, brown boots and body proportions. One figure, entire hair-to-boots visible centered with margins, transparent background with no glow, no text. Distinct intermediate pose, not another wide contact.",
+      "file": "person.customer.01.walk.empty.01.back-right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "index": 2,
+      "phase": "left-support-passing",
+      "source": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-d5333bfb-5493-4afd-b9f5-9244cccc8b2b.png",
+      "prompt": "Generate ONE walk sprite: PASSING pose of this same rear-view clay character. LEGS CLOSE TOGETHER underneath pelvis. LEFT leg supports body nearly straight vertically under the left hip, left boot flat on ground. RIGHT knee bends and moves forward alongside left knee; right boot lifted off ground next to supporting left calf, toes pointing down. Narrow compact silhouette, no wide stride and no crossed stretched legs. Both arms are near vertical mid-swing close to sides. Same head and torso orientation facing away upper-right, same dimetric camera, same brown curls, sunglasses, blue long-sleeved jacket, olive trousers and brown boots. Same body proportions and full height. Single complete centered sprite, transparent background, no text or glow.",
+      "file": "person.customer.01.walk.empty.02.back-right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "index": 3,
+      "phase": "right-reach",
+      "source": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-907618ac-8612-4a78-a082-be3d9f53c65c.png",
+      "prompt": "Edit this ONE passing-pose sprite to the NEXT frame: move the bent RIGHT knee FORWARD toward the upper-right, and swing its lifted boot out from behind the left calf so the right boot is now ahead on screen-right. Keep that right knee visibly bent, with shin sloping down-right and foot still hovering. Keep LEFT foot supporting under the pelvis, with heel slightly lifting. Moderate compact reach pose, feet only one boot-length apart horizontally. Do not straighten both legs into a wide split. Right arm swings backward close to right hip; far left arm swings forward mostly hidden. Same exact rear-facing upper-right head and torso orientation, blue long-sleeve jacket, olive trousers, brown boots, clay material, height and camera. One full-body centered character, transparent background, no text or glow.",
+      "file": "person.customer.01.walk.empty.03.back-right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "index": 4,
+      "phase": "right-contact",
+      "source": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-261726ca-92ab-409e-83b7-996e3d6ec781.png",
+      "prompt": "Edit ONLY the arms of this single clay character. Keep head, torso, camera, clothes, legs and feet unchanged. He is walking away toward upper-right, right leg forward. For correct opposite arm swing, the near RIGHT ARM (on screen-right) hangs BACK and down close beside his right hip; move that right hand from its current far-right position inward and downward to just alongside the right upper thigh. The far LEFT ARM swings forward, mostly hidden behind the left side of his torso; its hand must no longer hang out to screen-left. Full length jacket sleeves remain. Same single sprite, full body, transparent background, no added objects or jewelry.",
+      "file": "person.customer.01.walk.empty.04.back-right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "index": 5,
+      "phase": "right-down",
+      "source": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-a6d12f85-4256-4116-9810-04cde97af490.png",
+      "prompt": "ONE single sprite, the next frame after this right-foot contact: RIGHT-foot DOWN / weight acceptance. Same exact rear upper-right-facing character and fixed camera. Bring the feet substantially closer together than reference: the near RIGHT knee bends gently over the forward planted right boot, boot flat on ground; far LEFT knee begins bending behind him, heel lifts. Narrow stride, approximately half of reference foot separation. Hips dip slightly, torso stays upright. Right arm down beside right thigh, left arm forward mostly hidden. Keep full-length blue jacket, olive trousers, brown boots, brown curls and sunglasses and proportions. Entire single figure visible, transparent background. No wide split stride, no crossing legs, no extra character.",
+      "file": "person.customer.01.walk.empty.05.back-right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "index": 6,
+      "phase": "right-support-passing",
+      "source": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-9c4fc7c7-f33e-47f0-ae7c-02b3bc7e7ef4.png",
+      "prompt": "Create ONE single sprite of the reference character in RIGHT-leg-support PASSING pose. The nearer RIGHT leg stands nearly straight beneath the right hip, brown right boot flat on the ground. The far LEFT knee bends and swings forward alongside the supporting right knee; the LEFT boot is lifted off ground tucked beside the calf, partly occluded by the right leg. The legs are CLOSE TOGETHER underneath the hips, not stretched apart. Both arms hang near vertically at mid-swing. Preserve exactly this rear upper-right orientation of head and torso, sunglasses, brown curls, full-sleeve blue jacket, olive wide trousers and brown boots. Same clay style and dimetric camera. One full-body sprite on transparent background, no text, no glow.",
+      "file": "person.customer.01.walk.empty.06.back-right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "index": 7,
+      "phase": "left-reach",
+      "source": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-1ea6ec20-5498-4b91-9a96-08d368a3a7ae.png",
+      "prompt": "Generate ONE next walk frame from this passing-pose character. Preserve exact rear upper-right-facing view and all identity/clothing/style. LEFT leg now reaches FORWARD toward upper-right from the far left hip, knee leading and lower leg extending but foot not yet landed. RIGHT leg supports and pushes backward under body, heel lifting; the near right trouser leg crosses in front of the advancing far left leg. A modest half-stride reach, left boot visible beyond the supporting right leg to screen-right, not a wide split. Right arm starts swinging forward toward upper-right, left arm starts swinging back toward lower-left. Keep torso upright, head facing away, body same length and scale. Full body single sprite, full-length blue sleeves, olive trousers, brown boots. Transparent background, no glow, no text.",
+      "file": "person.customer.01.walk.empty.07.back-right.png",
+      "size": [
+        1049,
+        1500
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    }
+  ],
+  "qa": [
+    "Rear upper-right facing direction retained throughout.",
+    "Contact poses and passing poses now alternate anatomical legs.",
+    "Unaligned raw frames: scale, torso angle, texture and arm swing vary; colored alpha fringes persist.",
+    "Frame 03 lifts the knee and foot more than desired, with arm swing inconsistent with frame 04.",
+    "Frames 01 and 07 remain close to wide contact silhouettes; timing and in-between movement need review.",
+    "No animation smoothness approval, gameplay integration or complete cast delivery is claimed."
+  ]
+}
