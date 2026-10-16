@@ -1510,7 +1510,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   function drawPerson(x,z,now,id,moving,employee,bag,gait){
     // Sunny look: Ludo figures stand in for the drawn ones in the scene (thumbnails, drawn with now 0, keep the drawn style).
-    if(SUNNY&&now&&drawPersonSprite(sunnyApi(now),x,z,employee?id:(gait&&gait.identity!==undefined?gait.identity:id),employee,gait?gait.facing:.3,gait?gait.phase:now*.007+id,motionPreference.matches?0:(gait?gait.amount:(moving?1:0)),!!bag,employee&&staffWorking(id,gait,x,z)))return;
+    // The drawn walk phase turns 5 radians a unit, so phase/5 is the ground walked, which the sprite walk wants.
+    if(SUNNY&&now&&drawPersonSprite(sunnyApi(now),x,z,employee?id:(gait&&gait.identity!==undefined?gait.identity:id),employee,gait?gait.facing:.3,(gait?gait.phase:now*.007+id)/5,motionPreference.matches?0:(gait?gait.amount:(moving?1:0)),!!bag,employee&&staffWorking(id,gait,x,z),gait&&gait.heading))return;
     var reduced=motionPreference.matches,u=unit,p=project(x,0,z);
     var amount=reduced?0:(gait?gait.amount:(moving?1:0)),phase=gait?gait.phase:now*.007+id;
     var step=Math.sin(phase)*amount,bob=reduced?0:(Math.cos(phase*2)*.022*amount+Math.sin(now*.0018+id)*.009);
@@ -1764,7 +1765,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var moving=c.walking;
     if(c.eventGuest||c.kind==='vip'){var guest=project(c.x,.02,c.z);ellipse(guest.x,guest.y,unit*.48,unit*.22,'#dac18b80');}
     if(c.kind==='vip'){var vip=project(c.x,2.6,c.z);ctx.fillStyle='#f0cf7f';ctx.font='bold '+Math.max(9,unit*.25)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText('VIP',vip.x,vip.y)}
-    drawPerson(c.x,c.z,now,c.id,moving,false,c.bag,{phase:c.walkPhase||0,amount:c.walkAmount||0,facing:c.facing===undefined?.3:c.facing,lean:c.turnLean||0,pickupAge:c.effectAge});
+    drawPerson(c.x,c.z,now,c.id,moving,false,c.bag,{phase:c.walkPhase||0,heading:c.walkHeading,amount:c.walkAmount||0,facing:c.facing===undefined?.3:c.facing,lean:c.turnLean||0,pickupAge:c.effectAge});
     if(atOrderCounter(c,state.orderCounters)||c.phase==='pickup'||c.phase==='toPickup'){var p=project(c.x,2.05,c.z);ellipse(p.x,p.y,unit*.2,unit*.18,c.ordered?'#c4e8a7':'#f0dfb0');ctx.fillStyle='#24412f';ctx.font='bold '+Math.max(8,unit*.22)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText(c.ordered?'✓':'…',p.x,p.y+unit*.075);var serviceIndex=c.ordered?5:4;if(!moving&&c.serviceStation===serviceIndex&&c.serviceElapsed>0){var serviceProgress=motionPreference.matches?Math.min(1,c.serviceElapsed*economy.counterLanes(state.lines[serviceIndex])/counterServiceDuration(serviceIndex)):(c.serviceVisual||0);ctx.beginPath();ctx.arc(p.x,p.y,Math.max(5,unit*.26),-Math.PI/2,-Math.PI/2+Math.PI*2*serviceProgress);ctx.strokeStyle=c.ordered?'#d5f3ad':'#f3d294';ctx.lineWidth=Math.max(1.5,unit*.06);ctx.lineCap='round';ctx.stroke();}}
     if(c.thought)drawThought(c);
   }
@@ -3801,7 +3802,7 @@ if(!SHOP_SPRITES){
       var blend=1-Math.exp(-frameDelta*20),oldX=c.renderX===undefined?c.x:c.renderX,oldZ=c.renderZ===undefined?c.z:c.renderZ;
       c.renderX=oldX+(c.x-oldX)*blend;c.renderZ=oldZ+(c.z-oldZ)*blend;
       var dx=c.renderX-oldX,dz=c.renderZ-oldZ,distance=Math.hypot(dx,dz);
-      c.walkPhase=(c.walkPhase||0)+distance*5;
+      c.walkPhase=(c.walkPhase||0)+distance*5;if(distance>.001)c.walkHeading={x:dx/distance,z:dz/distance};
       var strideTarget=frameDelta>0?Math.min(1,distance/frameDelta/2.2):(c.walkAmount||0);
       c.walkAmount=(c.walkAmount||0)+(strideTarget-(c.walkAmount||0))*(1-Math.exp(-frameDelta*10));
       var previousFacing=c.facing===undefined?.3:c.facing;
