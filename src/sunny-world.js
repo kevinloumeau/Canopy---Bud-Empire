@@ -122,12 +122,21 @@ export function drawPersonSprite(api, x, z, identity, employee, facing, ground, 
     lazySprite(v3, 'sprites/people/' + v3 + '.png', PERSON_V3_SIZE);
     if (spriteReady(v3)) { name = v3; flip = false; }
   }
+  // Walking up the screen (away from the camera) the figure shows its back: Kevin's walk-v5 rear stills, one
+  // mid-stride pose each facing up-right (mirrored for up-left), empty-handed only, so anyone carrying a bag keeps
+  // the front cycle. With a single pose there is nothing to pin, so it glides with the step's rise and settle.
+  let rearShown = false;
+  if (!employee && amount > .3 && heading && !bag && heading.x + heading.z < -.05) {
+    const rear = personName(role, nn, true) + '.back';
+    lazySprite(rear, 'sprites/people/' + rear + '.png', PERSON_V3_SIZE);
+    if (spriteReady(rear)) { name = rear; flip = heading.x - heading.z < 0; lift = amount * .04 * (1 - Math.cos(2 * phase)) / 2; rearShown = true; }
+  }
   // Kevin's 2026-10-15 walk cycles: four frames a step pair (contact, pass, contact, pass), stored facing right and
   // mirrored to face left. The step phase picks the frame, and the frames carry the rise and settle, so no bob.
   // Each pose is shown either side of its own moment in the stride, and while it is held the figure stays where that
   // pose belongs (it moves on in a small hop at the change of pose, the way a stepped sprite walks): gliding on under
   // a held pose is what made the planted foot skate.
-  if (!employee && amount > .3) {
+  if (!employee && amount > .3 && !rearShown) {
     const cyc = personName(role, nn, true) + (bag ? '.bag' : '.empty') + '.0', quarter = phase / (Math.PI / 2), key = Math.round(quarter);
     for (let f = 0; f < 4; f++) lazySprite(cyc + f, 'sprites/people/' + cyc + f + '.png', PERSON_V3_SIZE);
     const frame = cyc + ((key % 4) + 4) % 4;
