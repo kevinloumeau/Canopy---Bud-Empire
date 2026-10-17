@@ -95,6 +95,8 @@ const PERSON_SIZE = { h: 2.3 * 640 / 600, drop: 2.3 * 8 / 600 + .03 };
 // people-complete-v3: every customer and walker also comes as 224x320 variants, posed stand/walk, with or without the
 // pickup bag in hand, facing left or right (so no mirroring). Figures are about 295 px tall with their feet 5 px up.
 const PERSON_V3_SIZE = { h: 2.3 * 320 / 295, drop: 2.3 * 5 / 295 + .03 };
+// Height of the top of a person's head above the floor: every cut-out's figure starts 16 px down its 320 px canvas.
+export const PERSON_HEAD_Y = PERSON_V3_SIZE.h * (320 - 16) / 320 - PERSON_V3_SIZE.drop;
 // The stride the walk frames show: the planted foot travels about 36 px of the 224x320 frame from contact to pass,
 // a quarter of the cycle, so one cycle (two steps) covers about 1.6 world units of pavement and the step phase turns
 // 3.9 radians per unit walked. Feet only stay put when the frames change at the pace of the ground going by.
@@ -362,7 +364,7 @@ const hazeRGBA = a => 'rgba(' + HAZE[0] + ',' + HAZE[1] + ',' + HAZE[2] + ',' + 
 export const SUNNY_VIEW = { centre: { x: [-32, 42], z: [-30, 34] }, reach: { rx: [-55, 69], rz: [-58, 63] } };
 // Kept toward the kerb, clear of the facades behind them.
 const FAR_TREES = [[-12, -22.4], [-1, -22.4], [10, -22.4], [14.5, -22.4], [-26.4, -13], [-26.4, -2], [-26.4, 9], [-26.4, 20]];
-const NEAR_TREES = [[-15, -13.5], [-5, -13.5], [5, -13.5], [16.5, -13.5], [-17, 4]]; // the right rear tree sits past the food truck's cab // behind / left of the shop only; nothing under the delivery deck's legs
+const NEAR_TREES = [[-15, -13.5], [-5, -13.5], [5, -13.5], [16.5, -13.5], [-17, 4]]; // behind / left of the shop only; nothing under the delivery deck's legs
 export const LAMPS = [[-18.5, -14.5], [18.5, -14.5], [-18.5, 17.5], [18.5, 17.5], [0, -14.5], [-18.5, 1]];
 // Walkers: [x0, z0, x1, z1, count]; each walks the segment back and forth on its own phase.
 // Lanes keep clear of the trees, lamps and furniture: the rear and left walks run between the slab and the props, the
@@ -409,11 +411,10 @@ function streetJobs(api) {
   LAMPS.forEach(([x, z]) => at(x, z, () => lamp(api, x, z), .4));
   // Left-side street life: a coffee cart and café seating by the entrance, bins and a hydrant.
   at(-18, 7.5, () => cart(api, -18, 7.5), 1.3, 1);
-  // Kevin's café set (2026-10-15) stands in for the two drawn umbrellas; the news boxes face the shop, and his food
-  // truck parks nose-first with the traffic on the rear pavement, hatch toward the walkers.
+  // Kevin's café set (2026-10-15) stands in for the two drawn umbrellas; the news boxes face the shop.
   at(-17, 14, () => { if (!prop(api, 'street.awning.cafe', -17, 14)) { umbrella(api, -17, 12.5); umbrella(api, -17, 15.5); } }, 2.3, 1.6);
   at(-18.5, -8, () => bin(api, -18.5, -8), .4); at(-18.5, 10.5, () => hydrant(api, -18.5, 10.5), .3);
-  at(-17.6, -3, () => prop(api, 'street.newsboxes', -17.6, -3, true), 1.3, 1); at(9.5, -13.6, () => prop(api, 'street.foodtruck', 9.5, -13.6), 3.75, 1.1);
+  at(-17.6, -3, () => prop(api, 'street.newsboxes', -17.6, -3, true), 1.3, 1);
   [[18, -6], [18, 6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => at(x, z, () => planter(api, x, z), 1.6, 1.2));
   at(0, 16.5, () => bench(api, 0, 16.5, true), 1.2, .5); // mirrored to run along the front street
   at(18, 0, () => bench(api, 18, 0), .5, 1.2); at(14, 16, () => bikeRack(api, 14, 16), 1.3, .6);
@@ -595,7 +596,7 @@ function streetShadows(api, front) {
   if (front) groundShadow(api, 0, P, 16.5, 1.2, .35, .9);
   if (front) groundShadow(api, 18, P, 0, .35, 1.2, .9);
   if (front) { softShadow(api, 17.2, P, -7.5, .85, .85, .3); [-3.2, 3.2].forEach(x => softShadow(api, x, P, 16.5, .6, .6, .3)); }
-  else { groundShadow(api, 9.5, P, -13.6, 3.3, 1.2, 1.6); softShadow(api, -17.6, P, -3, .5, 1.1, .3); }
+  else softShadow(api, -17.6, P, -3, .5, 1.1, .3);
 }
 function streetTree(api, x, z) {
   const p = api.project, u = api.unit;
@@ -616,9 +617,8 @@ const PROPS = { 'street.lamp': { h: 4.6, drop: .1 }, 'street.bench': { w: 2.4, d
   'street.busstop': { w: 3.6, drop: .4 }, 'street.tree.02': { h: 5.4, drop: .4 },
   // Kevin's 2026-10-15 props, sized against the 2.3-unit adult: a 1.4 m meter, 3.2 m signal post, 2.8 m signpost, a
   // row of three news boxes, a 1.2 m pallet, a potted olive and the café set (umbrella, two tables, four chairs).
-  // The food truck is a vehicle, placed by its wheels like the van (7.5 wide, nose +x, hatch facing +z).
   'street.meter': { h: 1.9, drop: .08 }, 'street.trafficlight': { h: 4.3, drop: .1 }, 'street.signpost': { h: 3.8, drop: .1 }, 'street.newsboxes': { w: 2.6, drop: .4 },
-  'street.deliveryboxes': { w: 2.3, drop: .5 }, 'street.planter.round': { h: 2.5, drop: .18 }, 'street.awning.cafe': { w: 4.6, drop: .55 }, 'street.foodtruck': { w: 7.48, drop: 1.4, ox: -.09 } };
+  'street.deliveryboxes': { w: 2.3, drop: .5 }, 'street.planter.round': { h: 2.5, drop: .18 }, 'street.awning.cafe': { w: 4.6, drop: .55 } };
 function prop(api, name, x, z, flip) {
   if (!PROPS[name]) return false;
   lazySprite(name, 'sprites/street/' + name + '.png', PROPS[name]);
@@ -698,16 +698,76 @@ function carSprite(colour, view) {
   lazySprite(name, 'sprites/street/' + name + '.png', (colour === 'van' ? VAN_VIEW : CAR_VIEW)[view]);
   return spriteReady(name) ? name : null;
 }
+// Wheel spin (Kevin, 2026-10-17: "the car wheels should rotate"). The renders are stills, so the two near-side
+// wheels of every view get a ring of lug nuts and four rim slots painted over the hubcap, turned by the distance the
+// car has driven: no wheel slides on the road and each turn takes 2π tyre radii. Per render, image px of its 620-wide
+// cut-out: hub centre, the hub's semi-diameter pointing the way the car drives (A) and its upward conjugate (B), both
+// fitted to the hubcap's own ellipse, and the tyre's radius. Four-fold marks repeat every quarter turn, so even at
+// 20 frames a second a turn per frame stays under half a repeat and the wheels never seem to run backward.
+const CAR_WHEELS = {
+  'car.blue.bl': [[297.5, 467.8, 26.1, -15.1, -0.4, -38.7, 79.4], [565.5, 314.9, 23.7, -13.7, 0.3, -36.9, 76.3]],
+  'car.blue.br': [[59, 302.3, -24.6, -14.2, 2.8, -38.9, 72], [310.8, 445.8, -24.6, -14.2, 3, -38.5, 71.8]],
+  'car.blue.fl': [[282.9, 533.2, -24, 13.8, 0.4, -45.4, 85.6], [553.4, 380.6, -22.6, 13, 0.8, -44.8, 82.4]],
+  'car.blue.fr': [[60.3, 346.4, 23.7, 13.7, 1.6, -37.6, 72.7], [337.3, 506.5, 24.1, 13.9, 1.7, -37.5, 74.5]],
+  'car.green.bl': [[297.7, 464.2, 26, -15, -0.5, -38.5, 82.5], [564.8, 313.7, 23.7, -13.7, 0.2, -37.1, 78.1]],
+  'car.green.br': [[59.5, 301.9, -24.8, -14.3, 2.9, -39.4, 74.8], [310.6, 446.1, -24.9, -14.4, 3.3, -39, 75.6]],
+  'car.green.fl': [[282.6, 536.7, -24.1, 13.9, 0.8, -45.7, 88.7], [553, 384, -22.9, 13.2, 1.1, -45.2, 86]],
+  'car.green.fr': [[61.1, 346.1, 23.7, 13.7, 1.7, -37.6, 75.1], [337.5, 505.4, 24.2, 14, 1.9, -37.5, 78.3]],
+  'car.orange.bl': [[297.4, 463.6, 26, -15, -0.3, -38.9, 78.4], [564.5, 313.2, 23.6, -13.6, 0.5, -37.6, 75.3]],
+  'car.orange.br': [[59.3, 300.6, -24.7, -14.3, 2.7, -39.2, 71.9], [310.7, 443.6, -24.8, -14.3, 3.1, -38.8, 71.8]],
+  'car.orange.fl': [[282.9, 532.5, -23.9, 13.8, 0.5, -44.7, 85.7], [552.9, 379.6, -22.7, 13.1, 0.9, -44.1, 82.5]],
+  'car.orange.fr': [[61.5, 350.3, 23.9, 13.8, 1.2, -38.1, 72.9], [337.7, 509.7, 24.4, 14.1, 1.2, -38.7, 74.2]],
+  'car.purple.bl': [[297.1, 465.4, 25.9, -15, -0.1, -39.4, 80.8], [564.5, 313.8, 23.5, -13.6, 0.5, -38.5, 77.1]],
+  'car.purple.br': [[58.5, 308.2, -24.5, -14.1, 3.1, -39.9, 74.3], [310.5, 451.8, -24.8, -14.3, 3.3, -39.3, 75]],
+  'car.purple.fl': [[282.7, 535.1, -24.2, 14, 0.5, -45.8, 85.9], [553, 383.4, -23, 13.3, 1, -45.4, 82.9]],
+  'car.purple.fr': [[60.7, 347.5, 23.8, 13.7, 1.3, -38.1, 74.4], [337.6, 507.9, 24.3, 14, 1.6, -38.4, 76.3]],
+  'car.red.bl': [[297.4, 465.1, 26.1, -15.1, -0.3, -39, 78.7], [565, 313.2, 23.7, -13.7, 0.3, -37.2, 75.6]],
+  'car.red.br': [[59.4, 304.5, -24.8, -14.3, 2.9, -39.7, 72.4], [310.6, 447.8, -24.8, -14.3, 3.2, -39.1, 72.4]],
+  'car.red.fl': [[282.9, 533.6, -24.4, 14.1, 0, -45.9, 85.7], [553.6, 381.1, -23.1, 13.4, 0.1, -45.3, 82.1]],
+  'car.red.fr': [[61.1, 347.1, 23.8, 13.7, 1.6, -37.8, 72.3], [338, 506.6, 24.1, 13.9, 1.4, -38.5, 73.8]],
+  'car.white.bl': [[297.4, 463.5, 26.1, -15.1, -0.4, -38.8, 81.1], [564.7, 312.6, 23.6, -13.6, 0.4, -37.3, 77]],
+  'car.white.br': [[58.6, 302.7, -24.7, -14.3, 2.7, -39.3, 73.8], [310.3, 445.9, -24.8, -14.3, 3.2, -38.8, 74.3]],
+  'car.white.fl': [[282.8, 535.5, -24.2, 14, 0.6, -45.4, 86.2], [552.5, 383.4, -22.9, 13.2, 1.1, -45.2, 83.1]],
+  'car.white.fr': [[60.8, 346.3, 23.8, 13.8, 1.6, -37.8, 73.8], [337.2, 505.9, 24.1, 13.9, 1.8, -38, 74.8]],
+  'car.yellow.bl': [[297.7, 463.5, 25.9, -15, -0.3, -38.5, 78.5], [564.6, 312.5, 23.6, -13.6, 0.2, -37, 75.4]],
+  'car.yellow.br': [[59.2, 303.3, -24.8, -14.3, 2.8, -39.2, 72], [310.5, 445.6, -24.8, -14.3, 3.3, -38.7, 72]],
+  'car.yellow.fl': [[282.9, 534.2, -24.2, 14, 0.2, -45.8, 85.9], [553.4, 380.6, -22.8, 13.2, 0.5, -45, 82.6]],
+  'car.yellow.fr': [[61.4, 345.8, 24.2, 14, 1.1, -38.2, 72.1], [337.4, 504.6, 24.3, 14, 1.2, -38.4, 73.8]],
+  'van.bl': [[306.8, 504.5, 27.1, -15.6, -0.6, -39.6, 83.1], [563.4, 358.7, 24.7, -14.3, 0.2, -39.1, 81.2]],
+  'van.br': [[60.9, 312.5, -23.6, -13.6, 3.9, -36.1, 69.3], [305.9, 453, -24.7, -14.2, 3.7, -36.3, 71.8]],
+  'van.fl': [[273.5, 539.9, -22, 12.7, 0, -38, 73.4], [545.2, 386.1, -21.5, 12.4, 0.7, -38.1, 72]],
+  'van.fr': [[67.3, 365.9, 23.8, 13.7, 3.3, -34, 68.3], [342.5, 522.1, 22.7, 13.1, 2.6, -32.3, 70]]
+};
+function drawWheels(api, name, key, x, z, roll, haze) {
+  const s = SPRITES[name], wheels = CAR_WHEELS[key]; if (!wheels || !api.now) return;
+  const u = api.unit, q = api.project(x, 0, z), nw = s.img.naturalWidth || s.img.width, k = s.w * u / nw, ctx = api.ctx;
+  const x0 = q.x + (s.ox || 0) * u - s.w * u / 2, y0 = q.y + s.drop * u - (s.img.naturalHeight || s.img.height) * k;
+  const up = Math.abs(api.project(x, 1, z).y - q.y) || 1;
+  ctx.save(); ctx.globalAlpha *= 1 - (haze || 0);
+  wheels.forEach(([cx, cy, ax, ay, bx, by, tyre]) => {
+    if (Math.hypot(bx, by) * k < 2) return; // too small to read
+    ctx.save(); ctx.translate(x0 + cx * k, y0 + cy * k); ctx.transform(ax * k, ay * k, bx * k, by * k, 0, 0);
+    ctx.rotate(-roll * up / (tyre * k)); // rolling forward carries the top of the wheel the way the car drives
+    ctx.fillStyle = 'rgba(64,56,48,.5)';
+    for (let i = 0; i < 4; i++) {
+      const a = i * Math.PI / 2;
+      ctx.beginPath(); ctx.arc(Math.cos(a) * .36, Math.sin(a) * .36, .085, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(0, 0, .82, a + .38, a + .98); ctx.arc(0, 0, .64, a + .98, a + .38, true); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  });
+  ctx.restore();
+}
 // A compact car or the van, nose along x or z, heading `dir` (+1 toward the camera), drawn at street level: Kevin's
 // render for that view where it has loaded, else the drawn stand-in.
-function car(api, x, z, along, dir, colour) {
+function car(api, x, z, along, dir, colour, roll) {
   const p = api.project, u = api.unit, ax = along === 'x', Lc = 2.6, W = 1.3, van = colour === 'van';
   const name = carSprite(colour, ax ? (dir > 0 ? 'fr' : 'br') : (dir > 0 ? 'fl' : 'bl'));
   if (name) {
     const hl = van ? 2.6 : 2.1, hw = van ? 1.3 : 1.05, haze = hazeAt(x, z), ctx = api.ctx, q = p(x, G, z);
     ctx.save(); ctx.globalAlpha *= 1 - haze; groundShadow(api, x, G, z, ax ? hl : hw, ax ? hw : hl, 1.4); ctx.restore();
     ctx.save(); ctx.translate(0, q.y - p(x, 0, z).y);
-    drawSprite(api, name, x, z, false, 1, 0, haze); ctx.restore(); return;
+    drawSprite(api, name, x, z, false, 1, 0, haze); drawWheels(api, name, name.slice(7), x, z, roll || 0, haze); ctx.restore(); return;
   }
   const color = CAR_PAINT[colour] || colour;
   const sh = p(x, G, z); api.ellipse(sh.x - u * .4, sh.y + u * .2, u * 1.8, u * .7, 'rgba(30,30,30,.22)');
@@ -724,7 +784,8 @@ function drawCars(api, at) {
     // Right-hand traffic: heading +x the kerb is on the +z side, heading +z it is on the -x side.
     const r = ROADS[ri], s = (((phase + dir * t) % 1) + 1) % 1 * CAR_LOOP - CAR_LOOP / 2, lane = (r.along === 'x' ? dir : -dir) * 1.5, ax = r.along === 'x';
     const x = ax ? s : r.at + lane, z = ax ? r.at + lane : s, hl = colour === 'van' ? 2.4 : 2.1, hw = .95;
-    at(x, z, () => car(api, x, z, r.along, dir, colour), ax ? hl : hw, ax ? hw : hl);
+    // roll: how far this car has driven since the clock started, for its wheels.
+    at(x, z, () => car(api, x, z, r.along, dir, colour, (dir * phase + t) * CAR_LOOP), ax ? hl : hw, ax ? hw : hl);
   });
 }
 
