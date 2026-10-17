@@ -1,4 +1,4 @@
-import {migrateOrderCounters,orderCounterPositions,COUNTER_SHIFT,PICKUP_X,orderCounterCost,buyOrderCounter,ORDER_QUEUE_GATE,assignOrderCounter,atOrderCounter,orderAvailability} from './order-counters.js';
+import {migrateOrderCounters,orderCounterPositions,COUNTER_SHIFT,PICKUP_X,orderCounterCost,buyOrderCounter,ORDER_QUEUE_GATE,ORDER_SPOT_Z,assignOrderCounter,atOrderCounter,orderAvailability} from './order-counters.js';
 import {LOUNGE_TIERS,LOUNGE_MAX,migrateLounge,loungeTier,loungeUpgradeCost,loungeSeats,loungeSessionSeconds,buyLoungeTier,wantsLounge,loungeAdmission,loungeTake,loungeRate,loungeCurrentRate,migrateLoungeHost,loungeHostSpeed,loungeHostCost} from './lounge.js';
 import {migrateShopPlay,picks as momentPicks,createMoment,judgeChoice,tipFor,recordServed,tickShift,operationsAlerts,mountShopPlay} from './shop-play.js';
 import {migrateJourney,advanceJourney,CHAPTERS} from './journey.js';
@@ -22,7 +22,7 @@ import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import { createGlPost } from './gl-post.js';
-import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, LAMPS as STREET_LAMPS, compactOrderSprite, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern, softShadow } from './sunny-world.js';
+import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, LAMPS as STREET_LAMPS, compactOrderSprite, PERSON_HEAD_Y, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern, softShadow } from './sunny-world.js';
 import * as economy from './economy.js';
 import * as strains from './strains.js';
 import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent, seasonStatus, claimSeason, SEASONS, RETIRED_WEEKLY, nextSeason, weeklySpecial, specialFactor } from './progression.js';
@@ -364,6 +364,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // Up to seven guests wait for a seat at the curtains: the first on the carpet, the rest in a line along the lounge's
   // front wall to the right of the door, clear of the carpet's stanchions.
   var LOUNGE_DOOR={x:-9.5,z:-.45},LOUNGE_EXIT={x:8.57,z:-3.3},LOUNGE_RIGHT=8.25,LOUNGE_ROPE=7;
+  // The red carpet runs from the curtain to just past where lounge guests turn on to it (z 2.2), clear of the third kiosk.
+  var LOUNGE_CARPET_END=2.6;
   function loungeWaitSpot(place){return place<=0?LOUNGE_DOOR:{x:LOUNGE_DOOR.x+1.3+(place-1)*.65,z:LOUNGE_DOOR.z+.1}}
   function loungeSeated(){return customers.filter(function(c){return c.phase==='lounge'}).length}
   function loungeWaiting(){return customers.filter(function(c){return c.phase==='toLounge'&&!c.waypoints.length}).sort(function(a,b){return a.id-b.id})}
@@ -1423,7 +1425,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       jar(x+.61,z-.35,1.31);
       slabDownlight(x,z,4.45,1.31);
       if(selected===4)selectionRing(p,true);
-      var wait=project(x,.025,4.9);ellipse(wait.x,wait.y,unit*.32,unit*.12,active?'#dcc89170':'#b2bc9340');
+      var wait=project(x,.025,ORDER_SPOT_Z);ellipse(wait.x,wait.y,unit*.32,unit*.12,active?'#dcc89170':'#b2bc9340');
     });
   }
   function drawStarterStation(x,z,i){
@@ -1798,7 +1800,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(c.routeKind!==kind){
       c.routeKind=kind;c.laneDistance=null;
       // To the pickup line: kiosk customers cross the floor along z 5.5, the aisle between the customers ordering at
-      // the counters (z 4.9) and the head of the order line (z 6.1); counter customers step back into the same aisle
+      // the counters (ORDER_SPOT_Z) and the head of the order line (z 6.1); counter customers step back into the same aisle
       // rather than walking along the counter front through the other customers. Everyone then goes down the middle
       // walkway to the line's tail.
       var toPickup=[{x:-.25+COUNTER_SHIFT,z:PICKUP_AISLE_Z},{x:-.25+COUNTER_SHIFT,z:8.15},{x:1.9+COUNTER_SHIFT,z:8.15},{x:1.9+COUNTER_SHIFT,z:8.1}];
@@ -1862,10 +1864,24 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function drawCustomer(c,now){
     var moving=c.walking;
     if(c.eventGuest||c.kind==='vip'){var guest=project(c.x,.02,c.z);ellipse(guest.x,guest.y,unit*.48,unit*.22,'#dac18b80');}
-    if(c.kind==='vip'){var vip=project(c.x,2.6,c.z);ctx.fillStyle='#f0cf7f';ctx.font='bold '+Math.max(9,unit*.25)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText('VIP',vip.x,vip.y)}
+    if(c.kind==='vip'){var vip=project(c.x,PERSON_HEAD_Y+(customerBadged(c)?.55:.3),c.z);ctx.fillStyle='#f0cf7f';ctx.font='bold '+Math.max(9,unit*.25)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText('VIP',vip.x,vip.y)}
     drawPerson(c.x,c.z,now,c.id,moving,false,c.bag,{phase:c.walkPhase||0,heading:c.walkHeading,amount:c.walkAmount||0,facing:c.facing===undefined?.3:c.facing,lean:c.turnLean||0,pickupAge:c.effectAge});
-    if(atOrderCounter(c,state.orderCounters)||c.phase==='pickup'||c.phase==='toPickup'){var p=project(c.x,2.05,c.z);ellipse(p.x,p.y,unit*.2,unit*.18,c.ordered?'#c4e8a7':'#f0dfb0');ctx.fillStyle='#24412f';ctx.font='bold '+Math.max(8,unit*.22)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText(c.ordered?'✓':'…',p.x,p.y+unit*.075);var serviceIndex=c.ordered?5:4;if(!moving&&c.serviceStation===serviceIndex&&c.serviceElapsed>0){var serviceProgress=motionPreference.matches?Math.min(1,c.serviceElapsed*economy.counterLanes(state.lines[serviceIndex])/counterServiceDuration(serviceIndex)):(c.serviceVisual||0);ctx.beginPath();ctx.arc(p.x,p.y,Math.max(5,unit*.26),-Math.PI/2,-Math.PI/2+Math.PI*2*serviceProgress);ctx.strokeStyle=c.ordered?'#d5f3ad':'#f3d294';ctx.lineWidth=Math.max(1.5,unit*.06);ctx.lineCap='round';ctx.stroke();}}
+    if(!c.badgeLater)drawCustomerBadge(c);
     if(c.thought)drawThought(c);
+  }
+  function customerBadged(c){return atOrderCounter(c,state.orderCounters)||c.phase==='pickup'||c.phase==='toPickup'}
+  // Ordering (…) and order-in (✓) badges: a small forest-glass disc floating just clear of the head, so faces stay
+  // visible. In the depth-sorted pass it is drawn a little in front of its customer, so the next person in a packed
+  // line does not hide it.
+  function drawCustomerBadge(c){
+    if(!customerBadged(c))return;
+    var r=Math.max(6,unit*.15),top=project(c.x,PERSON_HEAD_Y+.07,c.z),x=top.x,y=top.y-r,g=r*.42;
+    ctx.save();ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle='rgba(23,52,38,.86)';ctx.fill();
+    ctx.lineWidth=Math.max(1,r*.12);ctx.strokeStyle='rgba(236,246,232,.55)';ctx.stroke();
+    if(c.ordered){ctx.beginPath();ctx.moveTo(x-g,y+g*.05);ctx.lineTo(x-g*.25,y+g*.7);ctx.lineTo(x+g,y-g*.6);ctx.strokeStyle='#c4e8a7';ctx.lineWidth=Math.max(1.4,r*.2);ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke()}
+    else{ctx.fillStyle='#f0dfb0';[-1,0,1].forEach(function(i){ctx.beginPath();ctx.arc(x+i*g*.85,y,Math.max(.9,r*.11),0,Math.PI*2);ctx.fill()})}
+    var serviceIndex=c.ordered?5:4;if(!c.walking&&c.serviceStation===serviceIndex&&c.serviceElapsed>0){var serviceProgress=motionPreference.matches?Math.min(1,c.serviceElapsed*economy.counterLanes(state.lines[serviceIndex])/counterServiceDuration(serviceIndex)):(c.serviceVisual||0);ctx.beginPath();ctx.arc(x,y,r+Math.max(2,unit*.05),-Math.PI/2,-Math.PI/2+Math.PI*2*serviceProgress);ctx.strokeStyle=c.ordered?'#d5f3ad':'#f3d294';ctx.lineWidth=Math.max(1.5,unit*.05);ctx.lineCap='round';ctx.stroke()}
+    ctx.restore();
   }
   function drawThought(c){
     var t=c.thought,reduced=motionPreference.matches,fade=Math.min(1,(t.duration-t.age)/.5);
@@ -3674,9 +3690,26 @@ if(!SHOP_SPRITES){
     if(open){var spill=project(dx,.03,-1.3);glow(spill.x,spill.y,unit*.8,'#ff9ab83a',unit*.36)}
     // A red carpet runs out from the curtain, with a short velvet rope on brass stanchions down its right-hand side;
     // the posts and rope sort with the guests who wait on the carpet.
-    if(open&&SHOP_SPRITES&&fixtureSprite('lounge.carpet.entry')){
-      // Sprite shop: the v2 runner with its brass stanchions and velvet ropes, sorted with the guests waiting on it.
-      sceneJobs.push({depth:depthOf({x:dx,z:face+.3}),draw:function(){sceneElevation=0;drawBoxSprite(sunnyApi(sceneTime),'lounge.carpet.entry',dx-.6,dx+.6,face+.02,face+1.95,0,1,true)}});
+    if(open&&SHOP_SPRITES){
+      // Sprite shop: a runner at the guests' scale (the v2 carpet render is 5:1 and needs over five units of floor, with a
+      // post in the middle of its door end, so it can't fit between the curtain and the third kiosk). Gold edge, red
+      // band, cream pinstripe and red field in the render's colours, from the curtain to where guests step on at z 2.2.
+      var runEnd=LOUNGE_CARPET_END,runZ=(face+runEnd)/2,runD=runEnd-face;
+      [[1.1,'#b98b41'],[1.02,'#722739'],[.94,'#ecd9b0'],[.88,'#722739']].forEach(function(band){var inset=1.1-band[0];groundPatch(dx,runZ+inset/2,band[0],runD-inset,band[1])});
+      // The order line's brass stanchions down its right-hand side with a velvet rope, open at the near end where guests
+      // turn on to it; posts and rope sort with the guests waiting on the carpet.
+      var ropeX=dx+.72,ropePosts=[face+.3,face+1.4,face+2.5];
+      ropePosts.forEach(function(pz){sceneJobs.push({depth:depthOf({x:ropeX,z:pz}),draw:function(){
+        sceneElevation=0;var stanchion=shellSprite('shell.queue.post');if(!stanchion)return;
+        var img=spriteImage(stanchion),base=project(ropeX,.05,pz),top=project(ropeX,1.02,pz),foot=project(ropeX,-.06,pz),h=foot.y-top.y,w=h*img.naturalWidth/img.naturalHeight;
+        ellipse(base.x-unit*.12,base.y+unit*.04,unit*.2,unit*.06,'#14201824');ctx.drawImage(img,foot.x-w*.62,top.y,w,h);
+      }})});
+      // Each span is one stroke, so the highlight runs unbroken instead of being capped over at every segment.
+      for(var span=0;span<ropePosts.length-1;span++)(function(z1,z2){
+        function sag(lift,dx,dz){var pts=[];for(var i=0;i<=10;i++){var t=i/10;pts.push([ropeX+dx,lift?lift-.62*t*(1-t):.012,z1+(z2-z1)*t+dz])}return pts}
+        sceneJobs.push({depth:depthOf({x:ropeX,z:(z1+z2)/2}),draw:function(){sceneElevation=0;
+          worldLine(sag(0,-.14,.08),'#1420181c',.06);worldLine(sag(.84,0,0),'#6b1f35',.1);worldLine(sag(.855,0,0),'#a84a62',.03)}});
+      })(ropePosts[span],ropePosts[span+1]);
     }else if(open){
       groundPatch(dx,face+.95,1.1,1.9,'#7a1f2e');groundPatch(dx,face+.95,.96,1.78,'#8e2537');
       worldLine([[dx-.55,.018,face+.02],[dx-.55,.018,face+1.9]],'#c9a45a',.03);worldLine([[dx+.55,.018,face+.02],[dx+.55,.018,face+1.9]],'#c9a45a',.03);
@@ -3935,7 +3968,7 @@ if(!SHOP_SPRITES){
       if(c.phase==='lounge'){if(c.loungeFade>0)jobs.push({depth:depthOf(visual),draw:function(){drawGuestThroughDrapes(visual,now)}})}
       else if(leaverBehindColumn(c)){}
       else if(c.loungeFadeIn!==undefined&&c.loungeFadeIn<1)jobs.push({depth:depthOf(visual),draw:function(){drawGuestThroughDrapes(visual,now,true)}})
-      else if(!customerBehindBuilding(c))jobs.push({depth:depthOf(visual),draw:function(){drawFadedCustomer(visual,now)}})
+      else if(!customerBehindBuilding(c)){visual.badgeLater=true;jobs.push({depth:depthOf(visual),draw:function(){drawFadedCustomer(visual,now)}});if(customerBadged(visual))jobs.push({depth:depthOf(visual)+1.5,draw:function(){drawCustomerBadge(visual)}})}
     });
     if(state.kiosk)Array.from({length:kioskCount()},function(_,index){return index}).forEach(function(index){var dx=index*1.8;jobs.push({depth:depthOf({x:-9.6,z:6.8-dx}),draw:function(){
       function point(x,y,z){return [-9.75+(z-7.95),y,6.8-dx-(x-(-1.3+dx))]}
