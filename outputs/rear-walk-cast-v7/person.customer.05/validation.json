@@ -1,0 +1,114 @@
+{
+  "id": "person.customer.05",
+  "frames": 8,
+  "head_locked": true,
+  "head_cut": 358,
+  "collar_join_end": 390,
+  "checks": [
+    {
+      "index": 0,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 1,
+      "translation": [
+        -19,
+        0
+      ],
+      "head_sha256": "ff704c49e38b01034aaed2cd888f710a8bd647d23148b469f22bf48b1ac493a5"
+    },
+    {
+      "index": 1,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 0.9981549815498155,
+      "translation": [
+        -18,
+        2
+      ],
+      "head_sha256": "ff704c49e38b01034aaed2cd888f710a8bd647d23148b469f22bf48b1ac493a5"
+    },
+    {
+      "index": 2,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 0.9908424908424909,
+      "translation": [
+        -21,
+        -1
+      ],
+      "head_sha256": "ff704c49e38b01034aaed2cd888f710a8bd647d23148b469f22bf48b1ac493a5"
+    },
+    {
+      "index": 3,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 0.9747747747747748,
+      "translation": [
+        -2,
+        15
+      ],
+      "head_sha256": "ff704c49e38b01034aaed2cd888f710a8bd647d23148b469f22bf48b1ac493a5"
+    },
+    {
+      "index": 4,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 0.9818511796733213,
+      "translation": [
+        -13,
+        13
+      ],
+      "head_sha256": "ff704c49e38b01034aaed2cd888f710a8bd647d23148b469f22bf48b1ac493a5"
+    },
+    {
+      "index": 5,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 1.038387715930902,
+      "translation": [
+        -30,
+        -8
+      ],
+      "head_sha256": "ff704c49e38b01034aaed2cd888f710a8bd647d23148b469f22bf48b1ac493a5"
+    },
+    {
+      "index": 6,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 0.996316758747698,
+      "translation": [
+        -21,
+        2
+      ],
+      "head_sha256": "ff704c49e38b01034aaed2cd888f710a8bd647d23148b469f22bf48b1ac493a5"
+    },
+    {
+      "index": 7,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 0.9944852941176471,
+      "translation": [
+        -16,
+        3
+      ],
+      "head_sha256": "ff704c49e38b01034aaed2cd888f710a8bd647d23148b469f22bf48b1ac493a5"
+    }
+  ],
+  "status": "awaiting-contact-sheet-review"
+}

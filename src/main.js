@@ -1,4 +1,4 @@
-import {migrateOrderCounters,orderCounterPositions,COUNTER_SHIFT,PICKUP_X,orderCounterCost,buyOrderCounter,ORDER_QUEUE_GATE,assignOrderCounter,atOrderCounter,orderAvailability} from './order-counters.js';
+import {migrateOrderCounters,orderCounterPositions,COUNTER_SHIFT,PICKUP_X,orderCounterCost,buyOrderCounter,ORDER_QUEUE_GATE,ORDER_SPOT_Z,assignOrderCounter,atOrderCounter,orderAvailability} from './order-counters.js';
 import {LOUNGE_TIERS,LOUNGE_MAX,migrateLounge,loungeTier,loungeUpgradeCost,loungeSeats,loungeSessionSeconds,buyLoungeTier,wantsLounge,loungeAdmission,loungeTake,loungeRate,loungeCurrentRate,migrateLoungeHost,loungeHostSpeed,loungeHostCost} from './lounge.js';
 import {migrateShopPlay,picks as momentPicks,createMoment,judgeChoice,tipFor,recordServed,tickShift,operationsAlerts,mountShopPlay} from './shop-play.js';
 import {migrateJourney,advanceJourney,CHAPTERS} from './journey.js';
@@ -11,7 +11,7 @@ import {makeSound} from './sfx.js';
 import {installQuietDom} from './quiet-dom.js';
 import {createTelemetry} from './telemetry.js';
 import {createReminders,planReminders} from './reminders.js';
-import {CULTIVARS,RARITY,rarityOf,migrateLibrary,migrateBreed,libraryBonus,cultivarStatus,startCross,collectCross} from './library.js';
+import {CULTIVARS,PARENT_LEVEL,migrateCrosses,crossBonus,cultivarStatus,startCross,tickCross,sortedCultivars} from './breeding.js';
 installQuietDom();
 import {mountShopBrowser} from './shop-browser.js';
 import {tickOperations,atmosphere,neighborhood} from './operations.js';
@@ -22,10 +22,10 @@ import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import { createGlPost } from './gl-post.js';
-import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, LAMPS as STREET_LAMPS, compactOrderSprite, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern, softShadow, sunShadow, SUN, SUN_REACH } from './sunny-world.js';
+import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, LAMPS as STREET_LAMPS, compactOrderSprite, PERSON_HEAD_Y, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern, softShadow, sunShadow, SUN, SUN_REACH } from './sunny-world.js';
 import * as economy from './economy.js';
 import * as strains from './strains.js';
-import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent, seasonStatus, claimSeason, SEASONS, WEEKLY } from './progression.js';
+import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent, seasonStatus, claimSeason, SEASONS, RETIRED_WEEKLY, nextSeason, weeklySpecial, specialFactor } from './progression.js';
 (function () {
   'use strict';
 
@@ -38,7 +38,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // Contract progression is defined in depth.js, including post-city milestones.
   var $=function(id){return document.getElementById(id)};
   // A new shop starts as seven construction sites: the door and six stations are raised for free during the intro, then the sign flips.
-  function fresh(){return{shopPlay:migrateShopPlay(),money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),productMenu:migrateMenu(),sound:true,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,offlineLevel:0,spenderClock:180,rushTime:0,library:[],breed:null,reminders:false,perks:{points:0,levels:{}},scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeStaff:0,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
+  function fresh(){return{shopPlay:migrateShopPlay(),money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),productMenu:migrateMenu(),sound:true,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,offlineLevel:0,spenderClock:180,rushTime:0,crosses:{done:[],active:null},reminders:false,perks:{points:0,levels:{}},scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeStaff:0,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
   function readSave(){
     for(var key of ['shift-save','shift-save-backup']){
       try{var raw=localStorage.getItem(key);if(!raw)continue;var value=JSON.parse(raw);if(value&&typeof value==='object'&&!Array.isArray(value))return value}catch(e){}
@@ -50,7 +50,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // Saves from before the construction intro have no `shopOpen`; they are open shops with every station standing.
     next.shopOpen=old.shopOpen!==false;next.doorBuilt=next.shopOpen||old.doorBuilt===true;
     ['trafficLevel','pickupLevel','readyLevel','curingLevel','durationLevel','kioskSpeedLevel','onlineBonusLevel','comfortLevel','scannerLevel','webLevel','seedBatchLevel','growBatchLevel','harvestBatchLevel','packSpeedLevel','serviceLevel','signLevel','loyaltyLevel','basketLevel','terpeneLevel','breedingLevel','displayLevel','trendLevel','fleetLevel','cargoLevel','repeatLevel'].forEach(function(key){next[key]=Math.floor(finite(old[key],0,0,key==='pickupLevel'?12:20))});
-    next.offlineLevel=Math.floor(finite(old.offlineLevel,0,0,5));next.spenderClock=finite(old.spenderClock,180,0,600);next.rushTime=finite(old.rushTime,0,0,120);next.library=migrateLibrary(old.library);next.breed=migrateBreed(old.breed);next.reminders=old.reminders===true;next.perks=migratePerks(old.perks,next.empire.shares);
+    next.offlineLevel=Math.floor(finite(old.offlineLevel,0,0,5));next.spenderClock=finite(old.spenderClock,180,0,600);next.rushTime=finite(old.rushTime,0,0,120);next.crosses=migrateCrosses(old.crosses,old.library,old.breed);next.reminders=old.reminders===true;next.perks=migratePerks(old.perks,next.empire.shares);
     next.idStaff=Math.floor(finite(old.idStaff,0,0,10000));
     next.strains=STRAINS.map(function(_,i){return Math.floor(finite(old.strains&&old.strains[i],i===0?1:0,i===0?1:0,10))});
     next.activeStrain=Math.floor(finite(old.activeStrain,0,0,STRAINS.length-1));if(!next.strains[next.activeStrain])next.activeStrain=0;
@@ -88,7 +88,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     }catch(e){if(!saveFailed)notify('SAVE UNAVAILABLE · keep this window open to retain progress');saveFailed=true;return false}
   }
   // Demand ceiling counts whole baskets, so offline pay and reward scaling track real sales.
-  function incomeRate(){return Math.min(production(),flowerValue()*basketSize()/arrivalInterval())+branchRate(state.empire)}
+  function branchIncome(p){return branchRate(p)*specialFactor('branch')}
+  function incomeRate(){return Math.min(production(),flowerValue()*basketSize()/arrivalInterval())+branchIncome(state.empire)}
   // Offline earnings accrue whether or not the game was paused; the Back-room safe raises the cap in four-hour steps.
   function offlineCap(){return OFFLINE_STEP*(1+state.offlineLevel)}
   function offlineReward(seconds){return incomeRate()*Math.min(offlineCap(),Math.max(0,seconds))}
@@ -251,8 +252,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function trackStationLevel(i){var lv=state.lines[i];[10,25,50,100].forEach(function(m){if(lv>=m)telemetry.once('station_level_'+m,{station:LINES[i].name})})}
   // Browsers only start audio inside a gesture: the first tap or key press primes the context while sound is on.
   ['pointerdown','keydown'].forEach(function(type){window.addEventListener(type,function prime(){playSound.unlock(state.sound)},{passive:true})});
-  function flowerValue(index){if(index===undefined){var menu=menuStrains();return menu.reduce(function(total,i){return total+flowerValue(i)},0)/menu.length}var i=index;return Math.round(STRAINS[i].price*(1+Math.max(0,state.strains[i]-1)*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatOf(i).value*trendBoost(i)*displayBoost(i)*strains.timeFactor(strains.STRAIN_TYPE[i],atmosphere(state.empire.network).night)*(1+libraryBonus(state.library)))}
-  function onlineValue(sequence){return Math.round(flowerValue(menuChoice(sequence===undefined?state.onlineCompleted:sequence))*4/3*(1+state.onlineBonusLevel*.05))}
+  function flowerValue(index){if(index===undefined){var menu=menuStrains();return menu.reduce(function(total,i){return total+flowerValue(i)},0)/menu.length}var i=index;return Math.round(STRAINS[i].price*(1+Math.max(0,state.strains[i]-1)*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatOf(i).value*trendBoost(i)*displayBoost(i)*strains.timeFactor(strains.STRAIN_TYPE[i],atmosphere(state.empire.network).night)*(1+crossBonus(state.crosses))*(i>0?specialFactor('boutique'):1))}
+  function onlineValue(sequence){return Math.round(flowerValue(menuChoice(sequence===undefined?state.onlineCompleted:sequence))*4/3*(1+state.onlineBonusLevel*.05)*specialFactor('online'))}
   function strainCost(i){return state.strains[i]?Math.round(Math.max(250,STRAINS[i].unlock*.35)*Math.pow(1.85,state.strains[i]-1)):STRAINS[i].unlock}
   function buyStrain(i){
     if(i<0||i>=STRAINS.length||state.strains[i]>=10||state.money<strainCost(i))return;
@@ -265,26 +266,41 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(index>=0){if(state.menuStrains.length===1)return;state.menuStrains.splice(index,1)}else state.menuStrains.push(i);
     syncDominantFormat();save();renderUI();notify(STRAINS[i].name.toUpperCase()+(index>=0?' · REMOVED FROM MENU':' · ADDED TO MENU'));
   }
-  // Strain library: ten cultivars from crossing the four strains, one cross at a time, each a small permanent sale bonus.
-  var libraryPanel=document.createElement('section');libraryPanel.className='strain-library';libraryPanel.setAttribute('aria-labelledby','libraryTitle');
-  libraryPanel.innerHTML='<div class="library-head"><h3 id="libraryTitle">Strain library</h3><small id="librarySummary"></small></div><p class="library-note">Cross two strains you grow to discover a cultivar. Each one adds to every sale for good, even after reopening. Crosses keep growing while you are away.</p><div class="library-active" id="libraryActive" hidden><span id="libraryActiveText"></span><button type="button" id="breedCollect"></button></div><ul class="library-grid" id="libraryGrid"></ul>';
-  document.querySelector('[data-pane="flowers"] .menu-board').append(libraryPanel);
-  var libraryCards=CULTIVARS.map(function(c){var li=document.createElement('li');li.className='library-card rarity-'+rarityOf(c);li.innerHTML='<b>'+c.name+'</b><small>'+STRAINS[c.parents[0]].name+' × '+STRAINS[c.parents[1]].name+'</small><em>'+RARITY[rarityOf(c)].name+' · +'+Math.round(RARITY[rarityOf(c)].bonus*100)+'% sales</em><button type="button"></button>';
-    li.querySelector('button').onclick=function(){if(startCross(state,c.id,Date.now(),incomeRate())){save();renderUI();notify('CROSSING '+c.name.toUpperCase()+' · '+state.breed.minutes+' MIN','upgrade')}};$('libraryGrid').append(li);return li});
-  $('breedCollect').onclick=function(){var c=collectCross(state,Date.now());if(c){telemetry.send('cultivar',{id:c.id,count:state.library.length});save();renderUI();notify('DISCOVERED '+c.name.toUpperCase()+' · +'+Math.round(RARITY[rarityOf(c)].bonus*100)+'% SALES','upgrade')}};
-  function renderLibrary(){
-    var now=Date.now(),income=incomeRate(),bonus=libraryBonus(state.library);
-    $('librarySummary').textContent=state.library.length+' / '+CULTIVARS.length+' discovered · +'+Math.round(bonus*100)+'% sales';
-    var b=state.breed,active=b&&CULTIVARS.filter(function(c){return c.id===b.id})[0];$('libraryActive').hidden=!active;
-    if(active){var ready=b.ready<=now;$('libraryActiveText').textContent=ready?active.name+' is ready':'Crossing '+active.name+' · '+duration(b.ready-now)+' left';$('breedCollect').hidden=!ready;$('breedCollect').disabled=!ready;$('breedCollect').textContent=ready?'Collect '+active.name:''}
-    else{$('breedCollect').hidden=true;$('breedCollect').disabled=true;$('breedCollect').textContent=''}
-    CULTIVARS.forEach(function(c,i){var s=cultivarStatus(state,c,now,income),card=libraryCards[i],button=card.querySelector('button');card.dataset.state=s.kind;
-      var label=s.kind==='known'?'Discovered':s.kind==='ready'?'Ready':s.kind==='growing'?duration(s.remaining)+' left':s.kind==='locked'?'Grow '+s.missing.map(function(m){return STRAINS[m].name}).join(' & '):s.busy?'Bench busy':'Cross · '+fmt(s.cost)+' · '+s.minutes+'m';
-      if(button.textContent!==label)button.textContent=label;button.disabled=s.kind!=='open'||s.busy||state.money<s.cost;
-      if(s.kind==='ready'){button.disabled=false;button.onclick=function(){$('breedCollect').click()}}else button.onclick=function(){if(startCross(state,c.id,Date.now(),incomeRate())){save();renderUI();notify('CROSSING '+c.name.toUpperCase()+' · '+state.breed.minutes+' MIN','upgrade')}}});
-  }
+  // Breeding, as in the iOS app: the Menu tab's Breed view lists six cultivars, one per pair of base strains.
+  // Crosses need the Breeding bench and both parents at level 5, and run on game time; each discovery is +2% sales.
+  var menuBoard=document.querySelector('[data-pane="flowers"] .menu-board');
+  var menuViews=document.createElement('div');menuViews.className='menu-views';menuViews.setAttribute('role','tablist');menuViews.setAttribute('aria-label','Menu views');
+  menuViews.innerHTML='<button type="button" role="tab" data-menu-view="strains">Strains</button><button type="button" role="tab" data-menu-view="breed">Breed</button>';
+  menuBoard.insertBefore(menuViews,$('strainNav'));
+  var breedPanel=document.createElement('section');breedPanel.className='breed-view';breedPanel.id='breedView';breedPanel.setAttribute('aria-labelledby','breedTitle');breedPanel.hidden=true;
+  breedPanel.innerHTML='<div class="library-head"><h3 id="breedTitle">Cultivar journal</h3><small id="breedSummary"></small></div><ul class="breed-list" id="breedList"></ul>';
+  menuBoard.append(breedPanel);
+  var menuView='strains';
+  function showMenuView(view){menuView=view;menuBoard.dataset.menuView=view;breedPanel.hidden=view!=='breed';menuViews.querySelectorAll('button').forEach(function(b){b.setAttribute('aria-selected',String(b.dataset.menuView===view))});renderBreed()}
+  menuViews.querySelectorAll('button').forEach(function(b){b.onclick=function(){showMenuView(b.dataset.menuView)}});
+  var breedCards={};CULTIVARS.forEach(function(c){var li=document.createElement('li');li.className='breed-card';li.dataset.cultivar=c.id;
+    li.innerHTML='<div class="breed-copy"><b>'+c.name+'</b><small>'+STRAINS[c.parents[0]].name+' × '+STRAINS[c.parents[1]].name+'</small><em class="breed-status"></em><div class="breed-parents"></div></div><button type="button"></button>';
+    li.querySelector('button').onclick=function(){breedAction(c)};breedCards[c.id]=li});
+  function openBreedingBench(){var index=COMPONENTS.findIndex(function(c){return c.key==='breedingLevel'});showTray('boosts');if(shopBrowser&&shopBrowser.show)shopBrowser.show(shopBrowser.categoryOf?shopBrowser.categoryOf('componentBuy'+index):2);renderUI();var card=$('componentBuy'+index).parentElement;card.classList.remove('is-recommended');void card.offsetWidth;card.classList.add('is-recommended');if(card.scrollIntoView)card.scrollIntoView({block:'nearest'})}
+  function breedAction(c){var s=cultivarStatus(state,c);
+    if(s.kind==='bench')return openBreedingBench();
+    if(s.kind==='prepare'){showMenuView('strains');var tab=$('strainTab'+s.missing);if(tab)tab.click();return}
+    if(startCross(state,c.id)){telemetry.send('cross',{id:c.id});save();renderUI();notify('BREEDING '+c.name.toUpperCase()+' · '+duration(state.crosses.active.remaining*1000),'upgrade')}}
+  function renderBreed(){
+    var x=state.crosses;$('breedSummary').textContent=x.done.length+'/'+CULTIVARS.length+' discovered · +'+Math.round(crossBonus(x)*100)+'% sales bonus';
+    if(menuView!=='breed')return;
+    var list=$('breedList');sortedCultivars(state).forEach(function(entry,k){var c=entry.c,s=entry.s,li=breedCards[c.id],button=li.querySelector('button');
+      if(list.children[k]!==li)list.insertBefore(li,list.children[k]||null);li.dataset.state=s.kind;
+      var status=s.kind==='known'?'Discovered · '+c.lore+' · +2% sales bonus earned':s.kind==='growing'?'Breeding in progress · '+duration(s.remaining*1000)+' left':s.kind==='open'?'Ready to breed':s.kind==='bench'?'Find Breeding bench in Shop':'Prepare this pair';
+      var em=li.querySelector('.breed-status');if(em.textContent!==status)em.textContent=status;
+      var parents=s.kind==='prepare'?c.parents.map(function(i,n){var l=s.levels[n];return '<span style="--fill:'+Math.min(100,l/PARENT_LEVEL*100)+'%">'+STRAINS[i].name+' · '+(l<1?'Not unlocked':l>=PARENT_LEVEL?'Ready · Lv '+l:'Lv '+l+' / '+PARENT_LEVEL)+'</span>'}).join(''):'';
+      var pDiv=li.querySelector('.breed-parents');if(pDiv.innerHTML!==parents)pDiv.innerHTML=parents;pDiv.hidden=!parents;
+      var label=s.kind==='known'?'Discovered':s.kind==='growing'?'Breeding':s.kind==='bench'?'Open Shop':s.kind==='prepare'?((state.strains[s.missing]||0)<1?'Unlock ':'Upgrade ')+STRAINS[s.missing].name:s.busy?'Bench busy':'Breed · '+fmt(s.cost);
+      if(button.textContent!==label)button.textContent=label;
+      button.disabled=s.kind==='known'||s.kind==='growing'||(s.kind==='open'&&(s.busy||state.money<s.cost))})}
+  showMenuView('strains');
   function renderFlowers(){
-    renderLibrary();
+    renderBreed();
     if($('perkGrid'))renderPerks();
     if($('prestigeStart')){
       // Shares turn all-time revenue into a permanent bonus; the panel compares the bonus now with the bonus after reopening.
@@ -323,7 +339,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   function production(){return Math.min.apply(null,LINES.map(function(_,i){return stationThroughput(i)}))*flowerValue()}
   function batchSize(i){return economy.batchSize(state.lines[i])*(i<3?1+state[['seedBatchLevel','growBatchLevel','harvestBatchLevel'][i]]*.06:1)}
-  function cycleSpeed(i){return (1+state.staff[i]*.3)*state.multiplier/(i===3?formatFactor('packing'):1)*(i===1?growFactorNow():i===3?strains.packBonus(state.strains)*(1+state.packSpeedLevel*.06):1)}
+  function cycleSpeed(i){return (1+state.staff[i]*.3)*state.multiplier/(i===3?formatFactor('packing'):1)*(i===1?growFactorNow()*specialFactor('grow'):i===3?strains.packBonus(state.strains)*(1+state.packSpeedLevel*.06):1)}
   // Breeding bench claws back part of the boutique grow penalty on top of strain mastery.
   function growFactorNow(){var g=strains.growFactor(menuStrains(),state.strains);return 1-(1-g)*(1-state.breedingLevel*.03)}
   var batchRemainder=[0,0,0,0];
@@ -348,6 +364,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // Up to seven guests wait for a seat at the curtains: the first on the carpet, the rest in a line along the lounge's
   // front wall to the right of the door, clear of the carpet's stanchions.
   var LOUNGE_DOOR={x:-9.5,z:-.45},LOUNGE_EXIT={x:8.57,z:-3.3},LOUNGE_RIGHT=8.25,LOUNGE_ROPE=7;
+  // The red carpet runs from the curtain to just past where lounge guests turn on to it (z 2.2), clear of the third kiosk.
+  var LOUNGE_CARPET_END=2.6;
   function loungeWaitSpot(place){return place<=0?LOUNGE_DOOR:{x:LOUNGE_DOOR.x+1.3+(place-1)*.65,z:LOUNGE_DOOR.z+.1}}
   function loungeSeated(){return customers.filter(function(c){return c.phase==='lounge'}).length}
   function loungeWaiting(){return customers.filter(function(c){return c.phase==='toLounge'&&!c.waypoints.length}).sort(function(a,b){return a.id-b.id})}
@@ -355,7 +373,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // A guest steps through the gap in the drapes and fades as they go (`loungeFade` 1 → 0 over the last half unit),
   // and fades back in at the back door on the way out.
   function enterLounge(c){
-    var take=loungeTake(state.lounge,flowerValue(strainFor(c)));
+    var take=loungeTake(state.lounge,flowerValue(strainFor(c))*specialFactor('lounge'));
     state.stock[3]-=1;add(take.total);state.loungeSessions++;state.loungeEarned+=take.total;state.shopPlay.shift.earned+=take.total;c.loungeLeft=loungeSessionSeconds(state.lounge,state.loungeStaff);c.phase='lounge';c.walking=false;c.loungeTake=take.total;
     c.loungeFade=1;c.fadeFromZ=c.z;c.facing=-.3;
     recordEvent(state.empire,'pickup',1);playSound('coin',state.sound);
@@ -422,7 +440,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function simulate(dt){
     state.empire.retailBoost=retailBoost();accrueOnlineRequests(dt);
     tickMoment(dt);var shift=state.shopPlay.shift,sentBefore=transfersSent();
-    add(branchRate(state.empire)*dt);tickBranches(state.empire,dt);var operationResult=tickOperations(state,dt);if(operationResult.revenue){add(operationResult.revenue);shift.earned+=operationResult.revenue}if(operationResult.deliveries){state.onlineCompleted+=operationResult.deliveries;shift.deliveries+=operationResult.deliveries;recordEvent(state.empire,'online',operationResult.deliveries)}
+    var bred=tickCross(state,dt);if(bred){telemetry.send('cultivar',{id:bred.id,count:state.crosses.done.length});notify('DISCOVERED '+bred.name.toUpperCase()+' · +2% SALES','upgrade');save()}
+    add(branchIncome(state.empire)*dt);tickBranches(state.empire,dt);var operationResult=tickOperations(state,dt);if(operationResult.revenue){add(operationResult.revenue);shift.earned+=operationResult.revenue}if(operationResult.deliveries){state.onlineCompleted+=operationResult.deliveries;shift.deliveries+=operationResult.deliveries;recordEvent(state.empire,'online',operationResult.deliveries)}
     shift.transfers+=transfersSent()-sentBefore;
     arrival+=dt;state.vipBuzz=Math.max(0,(state.vipBuzz||0)-dt);state.rushTime=Math.max(0,state.rushTime-dt);if(state.shopOpen)state.spenderClock=Math.max(0,state.spenderClock-dt);
     if(strains.tickTrend(state.strainTrend,dt,STRAINS.length,state.sold+customerId)){var trending=STRAINS[state.strainTrend.index];notify(trending.name.toUpperCase()+' IS TRENDING · +35% for 8 min'+(state.strains[state.strainTrend.index]?'':' · unlock it to cash in'),'upgrade');renderUI()}
@@ -581,7 +600,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function kioskServiceDuration(){return .8+1.2/(1+state.kioskSpeedLevel*.15)}
   function rawSecurityDuration(level){return .9/((1+level*.3)*(1+state.scannerLevel*.12))}
   function securityDuration(){return Math.max(economy.ID_CHECK_FLOOR,rawSecurityDuration(state.idStaff))}
-  function arrivalInterval(){return (atmosphere(state.empire.network).night?1.2:.9)/(1+state.trafficLevel*.15)/formatFactor('demand')/strains.trafficFactor(menuStrains(),state.strainTrend.index)/strains.buzzFactor(state.vipBuzz)/(1+state.signLevel*.04)}
+  function arrivalInterval(){return (atmosphere(state.empire.network).night?1.2:.9)/(1+state.trafficLevel*.15)/formatFactor('demand')/strains.trafficFactor(menuStrains(),state.strainTrend.index)/strains.buzzFactor(state.vipBuzz)/(1+state.signLevel*.04)/specialFactor('traffic')}
   function pickupLimit(){return 4+state.pickupLevel*2}
   function readyCapacity(){return economy.readyCapacity(state.readyLevel,state.lines)}
   function componentCost(i){var L=state[COMPONENTS[i].key];return Math.round(COMPONENTS[i].base*Math.pow(1.8,Math.min(L,8))*Math.pow(2.15,Math.max(0,L-8)))}
@@ -936,8 +955,12 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   var exteriorFixtures={
     sconces:[{x:-10.98,y:2.3,z:8.72},{x:-10.98,y:2.3,z:11.28}],
     // Entrance bollards stay on the far side of the approach so arriving guests always pass in front of them.
-    bollards:[{x:-12.8,z:10.35},{x:-12.75,z:6.2},{x:9.05,z:-8.45},{x:11.3,z:-8.9}],
-    exitLamp:{x:10.25,y:3.38,z:-7.34},
+    // The bollard that stood on the pavement in view through the exit doorway is gone (Kevin, 2026-10-17: "remove that
+    // post on the sidewalk"); the other exit bollard stands behind the open leaf.
+    bollards:[{x:-12.8,z:10.35},{x:-12.75,z:6.2},{x:11.3,z:-8.9}],
+    // The hooded exit lamp hangs above the door frame (its top face reaches 3.79), not on its header (Kevin, 2026-10-17:
+    // "move the light above the frame").
+    exitLamp:{x:10.25,y:4.08,z:-7.34},
     entryStrip:[[-10.9,3.27,8.85],[-10.9,3.27,11.15]]
   };
   // Sprite shop: draws a fixture sprite `w` units wide with the image point (ax, ay) (fractions of its size) on screen
@@ -1413,7 +1436,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       jar(x+.61,z-.35,1.31);
       slabDownlight(x,z,4.45,1.31);
       if(selected===4)selectionRing(p,true);
-      var wait=project(x,.025,4.9);ellipse(wait.x,wait.y,unit*.32,unit*.12,active?'#dcc89170':'#b2bc9340');
+      var wait=project(x,.025,ORDER_SPOT_Z);ellipse(wait.x,wait.y,unit*.32,unit*.12,active?'#dcc89170':'#b2bc9340');
     });
   }
   function drawStarterStation(x,z,i){
@@ -1790,7 +1813,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(c.routeKind!==kind){
       c.routeKind=kind;c.laneDistance=null;
       // To the pickup line: kiosk customers cross the floor along z 5.5, the aisle between the customers ordering at
-      // the counters (z 4.9) and the head of the order line (z 6.1); counter customers step back into the same aisle
+      // the counters (ORDER_SPOT_Z) and the head of the order line (z 6.1); counter customers step back into the same aisle
       // rather than walking along the counter front through the other customers. Everyone then goes down the middle
       // walkway to the line's tail.
       var toPickup=[{x:-.25+COUNTER_SHIFT,z:PICKUP_AISLE_Z},{x:-.25+COUNTER_SHIFT,z:8.15},{x:1.9+COUNTER_SHIFT,z:8.15},{x:1.9+COUNTER_SHIFT,z:8.1}];
@@ -1854,10 +1877,24 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   function drawCustomer(c,now){
     var moving=c.walking;
     if(c.eventGuest||c.kind==='vip'){var guest=project(c.x,.02,c.z);ellipse(guest.x,guest.y,unit*.48,unit*.22,'#dac18b80');}
-    if(c.kind==='vip'){var vip=project(c.x,2.6,c.z);ctx.fillStyle='#f0cf7f';ctx.font='bold '+Math.max(9,unit*.25)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText('VIP',vip.x,vip.y)}
+    if(c.kind==='vip'){var vip=project(c.x,PERSON_HEAD_Y+(customerBadged(c)?.55:.3),c.z);ctx.fillStyle='#f0cf7f';ctx.font='bold '+Math.max(9,unit*.25)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText('VIP',vip.x,vip.y)}
     drawPerson(c.x,c.z,now,c.id,moving,false,c.bag,{phase:c.walkPhase||0,heading:c.walkHeading,amount:c.walkAmount||0,facing:c.facing===undefined?.3:c.facing,lean:c.turnLean||0,pickupAge:c.effectAge});
-    if(atOrderCounter(c,state.orderCounters)||c.phase==='pickup'||c.phase==='toPickup'){var p=project(c.x,2.05,c.z);ellipse(p.x,p.y,unit*.2,unit*.18,c.ordered?'#c4e8a7':'#f0dfb0');ctx.fillStyle='#24412f';ctx.font='bold '+Math.max(8,unit*.22)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText(c.ordered?'✓':'…',p.x,p.y+unit*.075);var serviceIndex=c.ordered?5:4;if(!moving&&c.serviceStation===serviceIndex&&c.serviceElapsed>0){var serviceProgress=motionPreference.matches?Math.min(1,c.serviceElapsed*economy.counterLanes(state.lines[serviceIndex])/counterServiceDuration(serviceIndex)):(c.serviceVisual||0);ctx.beginPath();ctx.arc(p.x,p.y,Math.max(5,unit*.26),-Math.PI/2,-Math.PI/2+Math.PI*2*serviceProgress);ctx.strokeStyle=c.ordered?'#d5f3ad':'#f3d294';ctx.lineWidth=Math.max(1.5,unit*.06);ctx.lineCap='round';ctx.stroke();}}
+    if(!c.badgeLater)drawCustomerBadge(c);
     if(c.thought)drawThought(c);
+  }
+  function customerBadged(c){return atOrderCounter(c,state.orderCounters)||c.phase==='pickup'||c.phase==='toPickup'}
+  // Ordering (…) and order-in (✓) badges: a small forest-glass disc floating just clear of the head, so faces stay
+  // visible. In the depth-sorted pass it is drawn a little in front of its customer, so the next person in a packed
+  // line does not hide it.
+  function drawCustomerBadge(c){
+    if(!customerBadged(c))return;
+    var r=Math.max(6,unit*.15),top=project(c.x,PERSON_HEAD_Y+.07,c.z),x=top.x,y=top.y-r,g=r*.42;
+    ctx.save();ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle='rgba(23,52,38,.86)';ctx.fill();
+    ctx.lineWidth=Math.max(1,r*.12);ctx.strokeStyle='rgba(236,246,232,.55)';ctx.stroke();
+    if(c.ordered){ctx.beginPath();ctx.moveTo(x-g,y+g*.05);ctx.lineTo(x-g*.25,y+g*.7);ctx.lineTo(x+g,y-g*.6);ctx.strokeStyle='#c4e8a7';ctx.lineWidth=Math.max(1.4,r*.2);ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke()}
+    else{ctx.fillStyle='#f0dfb0';[-1,0,1].forEach(function(i){ctx.beginPath();ctx.arc(x+i*g*.85,y,Math.max(.9,r*.11),0,Math.PI*2);ctx.fill()})}
+    var serviceIndex=c.ordered?5:4;if(!c.walking&&c.serviceStation===serviceIndex&&c.serviceElapsed>0){var serviceProgress=motionPreference.matches?Math.min(1,c.serviceElapsed*economy.counterLanes(state.lines[serviceIndex])/counterServiceDuration(serviceIndex)):(c.serviceVisual||0);ctx.beginPath();ctx.arc(x,y,r+Math.max(2,unit*.05),-Math.PI/2,-Math.PI/2+Math.PI*2*serviceProgress);ctx.strokeStyle=c.ordered?'#d5f3ad':'#f3d294';ctx.lineWidth=Math.max(1.5,unit*.05);ctx.lineCap='round';ctx.stroke()}
+    ctx.restore();
   }
   function drawThought(c){
     var t=c.thought,reduced=motionPreference.matches,fade=Math.min(1,(t.duration-t.age)/.5);
@@ -2603,12 +2640,13 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var wallH=fi===2?3.9:4.7;
     // The grow room's glazing is drawn slim rather than from the window module, whose frame overpowered the plants;
     // the exhaust fan gets a solid bay of its own instead of hanging on glass.
-    if(fi===2&&SHOP_SPRITES){drawSlimGlazing(false,rear,left,right,wallH,FAN_X);drawSlimGlazing(true,left,rear,rear+3.5,wallH);return}
-    // The ground floor's wall runs on behind the exit door, so its doorway (the render's open frame: x 9.48-11.21,
-    // 3.25 high on the wall line) is cut out of the modules and the pavement outside shows through the open door
-    // (Kevin, 2026-10-14: no black rectangle, the frame intact, the render itself untouched).
+    if(fi===2&&SHOP_SPRITES){drawSlimGlazing(false,rear,left,TOP_LANDING.outer,wallH,FAN_X);drawSlimGlazing(true,left,rear,rear+3.5,wallH);return}
+    // The ground floor's wall runs on behind the exit door, so its doorway (the render's open frame between the posts'
+    // inner faces: x 9.44-11.25, 3.3 high on the wall line, just under the header) is cut out of the modules and the
+    // pavement outside shows through the open door (Kevin, 2026-10-14: no black rectangle, the frame intact, the
+    // render itself untouched).
     var doorway=fi===0;
-    if(doorway){ctx.save();ctx.beginPath();ctx.rect(0,0,width,height);[project(9.5,0,rear),project(11.2,0,rear),project(11.2,3.22,rear),project(9.5,3.22,rear)].forEach(function(q,i){i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y)});ctx.closePath();ctx.clip('evenodd')}
+    if(doorway){ctx.save();ctx.beginPath();ctx.rect(0,0,width,height);[project(9.44,0,rear),project(11.25,0,rear),project(11.25,3.3,rear),project(9.44,3.3,rear)].forEach(function(q,i){i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y)});ctx.closePath();ctx.clip('evenodd')}
     for(var k=0;k<n;k++){var kind=kinds[k%kinds.length],capped=kind.indexOf('tile')>=0;drawWallFace(api,'shell.'+kind,left+k*step,rear,left+(k+1)*step,rear,0,wallH,capped?.04:0,capped?.95:1)}
     if(doorway)ctx.restore();
     // Side walls along z: the image's left edge is the near (larger z) end.
@@ -2620,7 +2658,9 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // with its face toward +x from the plane x; otherwise along x with its face toward +z.
   // One bay per pane of Kevin's 2026-10-15 glazing render (three panes a module), so the modules tile at their own
   // proportions; the exhaust fan's solid panel is two panes wide, centred on the pane joint nearest FAN_X.
-  var FAN_X=-4.9,GLAZING_BAY=1.07;
+  // The rear glazing runs on past the top floor's corner to the outer edge of the stair's landing notch, so no slab
+  // or street shows between its end and the landing (Kevin, 2026-10-17).
+  var FAN_X=-4.9,GLAZING_BAY=1.07,TOP_LANDING={outer:9,back:-6.9,front:-5.7};
   function glazingBays(a0,a1){var n=Math.max(2,Math.round((a1-a0)/GLAZING_BAY));return{n:n,step:(a1-a0)/n}}
   function fanPanel(a0,a1){var g=glazingBays(a0,a1),j=Math.max(0,Math.min(g.n-2,Math.round((FAN_X-a0)/g.step)-1));return{from:a0+j*g.step,to:a0+(j+2)*g.step}}
   function drawSlimGlazing(alongZ,plane,a0,a1,h,solidX){
@@ -2635,6 +2675,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       if(alongZ?drawWallFace(api,module,plane,t1,plane,t0,0,h,.025,u1):drawWallFace(api,module,t0,plane,t1,plane,0,h,.025,u1))drawn++;else break;
     }
     if(drawn){
+      // Each module is cut before its own right post, so the run's open end gets that post back as its closing frame.
+      if(!alongZ&&drawn*3>=bays)drawWallFace(api,module,a1-.07,plane,a1+.07,plane,0,h,.955,1);
       if(solid){var q=plane+.03,S=function(t,y){return alongZ?project(q,y,t):project(t,y,q)};poly([S(solid.from+.07,plinth),S(solid.to-.07,plinth),S(solid.to-.07,h-.08),S(solid.from+.07,h-.08)],'#2f5d4a')}
       return;
     }
@@ -2654,7 +2696,20 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var api=sunnyApi(sceneTime);
     if(fi===2)return; // the top floor's rear wall stays clear of shelving
     var runs=fi===1?[[-9,-4.5],[-4.5,0],[0,4.5],[4.5,9]]:[[-8.2,-3.8]];
+    if(shellSprite('shell.shelf.wall.right')){runs.forEach(function(r){drawPinnedShelf(r[0],r[1],rear+SHELF_PIN.depth)});return}
     drawShelfRun(api,runs,rear+.95,3.6,.75);
+  }
+  // The wall shelf render stood flat in the wall plane, its top and green end panel squashed into the front (Kevin,
+  // 2026-10-17: "the cabinets look flat"). It is pinned by its front base line instead: B0 the front-bottom-left
+  // corner, B1 the front-bottom-right, measured on the render with its front base at slope .40 and its end's base at
+  // -.60. Verticals stay vertical; the horizontal scale lays the front on the run and a vertical scale (about 15% up)
+  // plus a shear turns both base edges on to the map's floor slopes, so the top and the end panel read as real depth.
+  // The render's end is about .55 deep at that scale, so the fronts stand that far off the wall.
+  var SHELF_PIN={bx:4,by:350.4,ex:569.5,ey:576.4,front:.3997,end:-.5995,depth:.6};
+  function drawPinnedShelf(x0,x1,z){
+    var img=spriteImage('shell.shelf.wall.right'),S=SHELF_PIN,p0=project(x0,0,z),p1=project(x1,0,z),o=project(0,0,0),ex=project(1,0,0),ez=project(0,0,1);
+    var tX=(ex.y-o.y)/(ex.x-o.x),tZ=(ez.y-o.y)/(ez.x-o.x),a=(p1.x-p0.x)/(S.ex-S.bx),d=a*(tX-tZ)/(S.front-S.end),b=a*tX-d*S.front;
+    ctx.save();ctx.transform(a,b,0,d,p0.x-a*S.bx,p0.y-b*S.bx-d*S.by);ctx.drawImage(img,0,0);ctx.restore();
   }
   // Oak carcasses first so the units stand out from the wall with a lit top and end panels, then the flat shelf
   // fronts on their face plane.
@@ -2676,19 +2731,20 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     ctx.save();ctx.transform(k,shear,0,k,p0.x-k*S.bx,p0.y-shear*S.bx-k*S.by);ctx.drawImage(img,0,0);ctx.restore();
     return true;
   }
-  // The product wall in the darker drawn tile of the counter walls and the lounge's band (Kevin, 2026-10-14), floor to
-  // slab, in place of the wall module's cream plaster and lighter dado. The band's grout course and brass rail run on
-  // across it at the same heights, and the stack-bond joints sit on the same .2 grid, so the two meet as one wall.
+  // The product wall in the darker drawn tile of the counter walls and the lounge's band (Kevin, 2026-10-14), one
+  // unbroken run from the lounge's plaster to the lounge's right end. Like the lounge section beside it (Kevin,
+  // 2026-10-16: "the back wall tile should be bottom part of the wall and then solid green on top like the section by
+  // the lounge"), the tile is a dado to the band's height under the brass rail, with the facade's green plaster from
+  // there to the slab; the band's grout course and the stack-bond joints sit on the same .2 grid, so the two meet as one wall.
   function drawTileWall(x0,x1,z,h){
     var f=z+.004,rail=LOUNGE_TILE-.03;
-    poly([project(x0,0,f),project(x1,0,f),project(x1,h,f),project(x0,h,f)],SHOP_GREEN_TILE[1]);
+    poly([project(x0,LOUNGE_TILE,f),project(x1,LOUNGE_TILE,f),project(x1,h,f),project(x0,h,f)],SHOP_GREEN_PLASTER[1]);
+    poly([project(x0,0,f),project(x1,0,f),project(x1,LOUNGE_TILE,f),project(x0,LOUNGE_TILE,f)],SHOP_GREEN_TILE[1]);
     f+=.004;
     ctx.beginPath();
-    for(var tx=Math.ceil((x0+.04)/TILE_PITCH)*TILE_PITCH;tx<x1-.04;tx+=TILE_PITCH){var a=project(tx,0,f),b=project(tx,h-.02,f);ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y)}
+    for(var tx=Math.ceil((x0+.04)/TILE_PITCH)*TILE_PITCH;tx<x1-.04;tx+=TILE_PITCH){var a=project(tx,0,f),b=project(tx,LOUNGE_TILE-.06,f);ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y)}
     ctx.strokeStyle=TILE_GROUT;ctx.lineWidth=Math.max(.65,unit*.012);ctx.lineCap='round';ctx.stroke();
-    var courses=Math.max(1,Math.round((h-LOUNGE_TILE)/(LOUNGE_TILE/2))),step=(h-LOUNGE_TILE)/courses;
     worldLine([[x0,LOUNGE_TILE/2,f],[x1,LOUNGE_TILE/2,f]],TILE_GROUT,.012);
-    for(var c=1;c<courses;c++)worldLine([[x0,LOUNGE_TILE+c*step,f],[x1,LOUNGE_TILE+c*step,f]],TILE_GROUT,.012);
     worldLine([[x0,rail,f],[x1,rail,f]],TILE_BRASS[0],.05);
   }
   function drawShellProductWall(displayZ,now,wood){
@@ -2710,10 +2766,11 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     drawBoxSprite(api,flight,6.5,8.2,-6.8,-.5,4.7,9.4,'height',scale);
     drawBoxSprite(api,flight,9.1,10.7,-.8,4.2,0,4.7,'height',scale);
     // Glass guard rails, sheared on to their planes from the flat render: round the landing's outer and back edges
-    // behind the head of the ground flight, then along the mezzanine's open right edge.
+    // behind the head of the ground flight, then along the mezzanine's open right edge
     if(!drawRailRun('z',10.78,-.8,4.7,1))drawWallFace(api,'shell.rail.glass.left',10.78,-.8,10.78,-2.8,4.7,1);
     if(!drawRailRun('x',8.93,-2.8,4.7,1))drawWallFace(api,'shell.rail.glass.left',8.93,-2.8,10.85,-2.8,4.7,1);
-    if(!drawRailRun('z',8.93,-2.8,4.7,1))drawWallFace(api,'shell.rail.glass.left',8.93,-2.8,8.93,-4.8,4.7,1);
+    // and on along the open edge to the front of the wall shelving, where the old black-framed glass stood.
+    if(!drawRailRun('z',8.93,-2.8,4.7,2,1.62))drawWallFace(api,'shell.rail.glass.left',8.93,-2.8,8.93,-6.04,4.7,1);
   }
   function drawCachedGround(floor){
     var key=[width,height,dpr,unit,centerX,centerY,angle,stationTier(4),stationTier(5)].join(':');
@@ -2925,7 +2982,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
         // runs on back behind the head of the flight, railed on its outer and back edges (Kevin, 2026-10-14: the old
         // notch was a stub). In the sprite shop the upper flight now starts a stride inside the mezzanine's front edge
         // and lands at the top floor's rear-right corner, on a notch out to the mezzanine's edge line.
-        var landing=fi===1?{outer:10.85,back:-2.8,front:-.37}:SHOP_SPRITES?{outer:9,back:-6.9,front:-5.7}:{outer:8.65,back:-5.58,front:-4.47};
+        var landing=fi===1?{outer:10.85,back:-2.8,front:-.37}:SHOP_SPRITES?TOP_LANDING:{outer:8.65,back:-5.58,front:-4.47};
         var finish=fi===1?wood:stone;
         var outline=[[left,rear],[right,rear],[right,landing.back],[landing.outer,landing.back],[landing.outer,landing.front],[right,landing.front],[right,front],[left,front]];
         for(var edge=0;edge<outline.length;edge++){
@@ -3009,8 +3066,9 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       shadowBandX(rear+.2,front-.2,left+.2,left+1.4,.018,.15);
       if(fi===0){poly([project(-9,.016,rear+.2),project(9,.016,rear+.2),project(9,.016,1.55),project(-9,.016,1.55)],'rgba(14,28,20,.07)');shadowBand(-9,9,1.55,1.3,.017,.12)}
       if(fi===1){poly([project(-6.5,.016,rear+.2),project(6.5,.016,rear+.2),project(6.5,.016,-.3),project(-6.5,.016,-.3)],'rgba(14,28,20,.07)');shadowBand(-6.5,6.5,-.3,-1.9,.017,.12)}
-      if(fi!==0&&!(SHOP_SPRITES&&fi===2)){
-      // Black-framed glass along the rear-right corner, not across the open front (the sprite shop's top floor has none).
+      if(fi!==0&&!SHOP_SPRITES){
+      // Black-framed glass along the rear-right corner, not across the open front. The sprite shop has none: on the
+      // mezzanine it crossed the end of the wall shelving (Kevin, 2026-10-17), so a glass rail closes that edge instead.
       glassPane([project(right,0,rear),project(right,0,rear+3),project(right,3.8,rear+3),project(right,3.8,rear)],'#adc7b21b');
       for(var mull=0;mull<4;mull++)worldLine([[right,0,rear+mull],[right,3.8,rear+mull]],'#263a32',.04);
       worldLine([[right,3.8,rear],[right,3.8,rear+3]],'#252b28',.045);
@@ -3158,7 +3216,7 @@ if(!SHOP_SPRITES){
         warmStrip([[left+.35,2.87,rear+.25],[right-.35,2.87,rear+.25]],fi===2);
       }
 }
-      if(fi===2)drawGrowExhaustFan(SHOP_SPRITES?fanBayCentre(left,right):-4.4,rear+.24,SHOP_SPRITES?2.15:2.4);
+      if(fi===2)drawGrowExhaustFan(SHOP_SPRITES?fanBayCentre(left,TOP_LANDING.outer):-4.4,rear+.24,SHOP_SPRITES?2.15:2.4);
       if(fi>0&&!SHOP_SPRITES)warmStrip([[left+.2,-.08,front+.025],[right-.2,-.08,front+.025]],false);
       if(fi<2)retailDetails(fi,rear,now);
 
@@ -3372,6 +3430,51 @@ if(!SHOP_SPRITES){
       [-1,1].forEach(function(side){worldLine([[tx+.12,2.1,tz],[tx+side*.85,3.2,tz]],'#816747',.085)});
       for(var leaf=0;leaf<18;leaf++){var a=leaf*2.399,r=.35+(leaf%4)*.18,lp=project(tx+Math.cos(a)*r,2.7+(leaf%5)*.19,tz+Math.sin(a)*r*.6);ellipse(lp.x,lp.y,unit*.33,unit*.24,leaf%3===0?'#98b96e':leaf%3===1?'#587c4d':'#769852')}
   }
+  // shell.door.exit.v2, in sprite px: the clean outline of the frame and its open leaf, with the opening cut out
+  // between the posts' inner faces (the dark halo and the slivers inside the opening lie outside it), and the two
+  // keyed-out reveals, drawn as shaded side faces receding on the render's own depth slope.
+  var EXIT_DOOR_OUTLINE=[[29,37],[55,20],[282,147],[285,172],[421,96],[436,104],[436,533],[286,614],[262,621],[241,608],[241,196],[76,105],[76,517],[52,531],[29,519]];
+  var EXIT_DOOR_REVEALS=[[[52,92],[77,77],[77,517],[52,531]],[[262,150],[285,137],[285,609.4],[262,621]]];
+  // The v2 exit door render, prepared once on its own canvas. The render came out of ChatGPT with an opaque dark halo
+  // round its silhouette and dark slivers inside the opening (the ragged edges), and its white-painted jamb reveals
+  // were keyed out with the background, so the leaf hung clear of the frame (Kevin, 2026-10-16: "figure out the exit
+  // door"). The file stays as rendered: it is composed through the clip that follows the frame's and leaf's clean
+  // edges, over two shaded side faces that refill the keyed-out reveals, so the posts read as solid and the leaf hangs
+  // off the right one. The render is also in perspective: its base runs at 22°, the header's underside at 29°, its
+  // front-top edge at 26° and the top face's far edge at 29°, so the shear that squares the base left the header
+  // climbing at about 36° on screen (Kevin, 2026-10-17: "the top frame angle still feels off"). So each 1-px column is
+  // re-sampled in up to three segments that put the base, the header's underside, its front-top edge and its top
+  // face's far edge on lines parallel to the base at fixed heights (3.3, 3.69 and 3.79 on the wall), and the leaf's
+  // base and top on lines from the right post's outer foot at the slope the draw's shear turns into the map's -z
+  // direction, the leaf 3.38 tall as rendered. Both posts come out the same height and every edge lands on the map's 30°.
+  function exitDoorSource(img){
+    if(exitDoorSource.canvas&&exitDoorSource.img===img)return exitDoorSource.canvas;
+    var W=img.naturalWidth,H=img.naturalHeight,flat=document.createElement('canvas');flat.width=W;flat.height=H;var g=flat.getContext('2d');
+    g.beginPath();EXIT_DOOR_OUTLINE.forEach(function(q,i){i?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1])});g.closePath();g.clip();
+    g.fillStyle='#1f4835';EXIT_DOOR_REVEALS.forEach(function(face){g.beginPath();face.forEach(function(q,i){i?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1])});g.closePath();g.fill()});
+    g.drawImage(img,0,0);
+    var out=document.createElement('canvas');out.width=W;out.height=H;var o=out.getContext('2d');
+    // Heights above the base line in sprite px (times the pins' scale, 0.00775 of a unit per px): the header's
+    // underside, its front-top edge and its top face's far edge; the leaf's height; the column where the leaf's plane begins.
+    var UNDER=425.5,FRONT=476.8,TOP=489.5,LEAF=436,HINGE=262;
+    function base(u){return 529+(616-529)/(255-45)*(u-45)} // the post feet's line, the pins' base
+    for(var u=0;u<W;u++){
+      var c=u+.5,b=base(c);
+      if(c<HINGE){
+        // The render's own lines at this column: the header's underside, its front-top edge and its top face's far edge.
+        var under=92+(196-92)/(241-52)*(c-52),front=37+(150-37)/(262-29)*(c-29),top=20+(147-20)/(282-55)*(c-55);
+        var s1=UNDER/(b-under),s2=(FRONT-UNDER)/(under-front),s3=(TOP-FRONT)/(front-top);
+        o.drawImage(flat,u,under,1,H-under,u,b-UNDER,1,(H-under)*s1);
+        o.drawImage(flat,u,front,1,under-front,u,b-FRONT,1,(under-front)*s2);
+        o.drawImage(flat,u,0,1,front,u,b-FRONT-front*s3,1,front*s3);
+      }else{
+        // The leaf and the right post's side face: the render's leaf base and top lines, hinged at the post's outer foot.
+        var lb=621-(621-533)/(436-262)*(c-HINGE),lt=172-(172-96)/(421-285)*(c-285),tb=base(HINGE)-.74*(c-HINGE),sl=LEAF/(lb-lt);
+        o.drawImage(flat,u,0,1,H,u,tb-lb*sl,1,H*sl);
+      }
+    }
+    exitDoorSource.canvas=out;exitDoorSource.img=img;return out;
+  }
   function addEntryDoor(jobs){
     var x=-10.65,z=10,frame=SHOP_SPRITES?['#3f7a58','#1f4a35','#2d6146']:['#414843','#171e1a','#2b342e'],brass=['#d8c18b','#8d7950','#b7a16d'];
     function add(px,pz,fn){jobs.push({depth:depthOf({x:px,z:pz}),draw:fn})}
@@ -3390,7 +3493,15 @@ if(!SHOP_SPRITES){
       // The exit door's frame stands in the rear wall line: its outer post feet (image points measured on the sprite;
       // the open leaf swings below them) are pinned to x 9.1 and 11.4 on z -7, posts kept upright.
       add(10.25,-6.86,function(){var name=shellSprite('shell.door.exit.v2')||shellSprite('shell.door.exit');if(!name)return;var v2=name==='shell.door.exit.v2',img=spriteImage(name),p0=project(9.1,0,-7),p1=project(11.4,0,-7),u0=v2?45:75,v0=v2?529:360,u1=v2?255:251,v1=v2?616:441;
-        var k=(p1.x-p0.x)/(u1-u0),shear=(p1.y-p0.y-k*(v1-v0))/(u1-u0);ctx.save();ctx.transform(k,shear,0,k,p0.x-k*u0,p0.y-k*v0-shear*u0);ctx.drawImage(img,0,0);ctx.restore()});
+        var k=(p1.x-p0.x)/(u1-u0),shear=(p1.y-p0.y-k*(v1-v0))/(u1-u0);ctx.save();
+        // The merch cabinet stands against the lounge wall in front of the frame's left post (it paints with the floor,
+        // before the sorted jobs), so the door is not painted where the cabinet's render covers it.
+        var cab=exitCabinetPlacement();
+        if(cab){ctx.beginPath();ctx.rect(0,0,width,height);EXIT_CABINET_OUTLINE.forEach(function(q,i){var s=cab.map(q[0],q[1]);i?ctx.lineTo(s.x,s.y):ctx.moveTo(s.x,s.y)});ctx.closePath();ctx.clip('evenodd')}
+        // The v2 render is prepared once by exitDoorSource (clean outline, refilled reveals, perspective squared), then
+        // drawn like any pinned render: the pins' uniform scale plus the shear that lays its base on the wall's floor line.
+        ctx.transform(k,shear,0,k,p0.x-k*u0,p0.y-k*v0-shear*u0);
+        ctx.drawImage(v2?exitDoorSource(img):img,0,0);ctx.restore()});
     }else{
     // Glazed storefront bays continue the door frame behind the kiosk row.
     for(var bay=0;bay<4;bay++)(function(start,end){
@@ -3647,9 +3758,26 @@ if(!SHOP_SPRITES){
     if(open){var spill=project(dx,.03,-1.3);glow(spill.x,spill.y,unit*.8,'#ff9ab83a',unit*.36)}
     // A red carpet runs out from the curtain, with a short velvet rope on brass stanchions down its right-hand side;
     // the posts and rope sort with the guests who wait on the carpet.
-    if(open&&SHOP_SPRITES&&fixtureSprite('lounge.carpet.entry')){
-      // Sprite shop: the v2 runner with its brass stanchions and velvet ropes, sorted with the guests waiting on it.
-      sceneJobs.push({depth:depthOf({x:dx,z:face+.3}),draw:function(){sceneElevation=0;drawBoxSprite(sunnyApi(sceneTime),'lounge.carpet.entry',dx-.6,dx+.6,face+.02,face+1.95,0,1,true)}});
+    if(open&&SHOP_SPRITES){
+      // Sprite shop: a runner at the guests' scale (the v2 carpet render is 5:1 and needs over five units of floor, with a
+      // post in the middle of its door end, so it can't fit between the curtain and the third kiosk). Gold edge, red
+      // band, cream pinstripe and red field in the render's colours, from the curtain to where guests step on at z 2.2.
+      var runEnd=LOUNGE_CARPET_END,runZ=(face+runEnd)/2,runD=runEnd-face;
+      [[1.1,'#b98b41'],[1.02,'#722739'],[.94,'#ecd9b0'],[.88,'#722739']].forEach(function(band){var inset=1.1-band[0];groundPatch(dx,runZ+inset/2,band[0],runD-inset,band[1])});
+      // The order line's brass stanchions down its right-hand side with a velvet rope, open at the near end where guests
+      // turn on to it; posts and rope sort with the guests waiting on the carpet.
+      var ropeX=dx+.72,ropePosts=[face+.3,face+1.4,face+2.5];
+      ropePosts.forEach(function(pz){sceneJobs.push({depth:depthOf({x:ropeX,z:pz}),draw:function(){
+        sceneElevation=0;var stanchion=shellSprite('shell.queue.post');if(!stanchion)return;
+        var img=spriteImage(stanchion),base=project(ropeX,.05,pz),top=project(ropeX,1.02,pz),foot=project(ropeX,-.06,pz),h=foot.y-top.y,w=h*img.naturalWidth/img.naturalHeight;
+        ellipse(base.x-unit*.12,base.y+unit*.04,unit*.2,unit*.06,'#14201824');ctx.drawImage(img,foot.x-w*.62,top.y,w,h);
+      }})});
+      // Each span is one stroke, so the highlight runs unbroken instead of being capped over at every segment.
+      for(var span=0;span<ropePosts.length-1;span++)(function(z1,z2){
+        function sag(lift,dx,dz){var pts=[];for(var i=0;i<=10;i++){var t=i/10;pts.push([ropeX+dx,lift?lift-.62*t*(1-t):.012,z1+(z2-z1)*t+dz])}return pts}
+        sceneJobs.push({depth:depthOf({x:ropeX,z:(z1+z2)/2}),draw:function(){sceneElevation=0;
+          worldLine(sag(0,-.14,.08),'#1420181c',.06);worldLine(sag(.84,0,0),'#6b1f35',.1);worldLine(sag(.855,0,0),'#a84a62',.03)}});
+      })(ropePosts[span],ropePosts[span+1]);
     }else if(open){
       groundPatch(dx,face+.95,1.1,1.9,'#7a1f2e');groundPatch(dx,face+.95,.96,1.78,'#8e2537');
       worldLine([[dx-.55,.018,face+.02],[dx-.55,.018,face+1.9]],'#c9a45a',.03);worldLine([[dx+.55,.018,face+.02],[dx+.55,.018,face+1.9]],'#c9a45a',.03);
@@ -3687,8 +3815,10 @@ if(!SHOP_SPRITES){
     if(rise>0){ctx.save();ctx.globalAlpha=.15+.85*(1-rise)}
     var hdr=SHOP_SPRITES?2.05:2.5,jambL=-11.03;drawBox((jambL+dx-.7)/2,zc,0,dx-.7-jambL,fd,H,plaster);drawBox(dx,zc,hdr,1.4,fd,H-hdr,plaster);drawBox((dx+.7-6.7)/2,zc,0,-6.7-(dx+.7),fd,H,plaster);drawBox((6.7+rx+.16)/2,zc,0,rx+.16-6.7,fd,H,plaster);
     [[jambL,dx-.7],[dx+.7,-6.7],[6.7,rx+.16]].forEach(function(run){tileFace(false,run[0],run[1],face)});
-    // The right end wall's tile band goes on after the facade so its corner is tiled on both faces, with no bare plaster strip.
-    tileFace(true,-7,face,rx+.16);
+    // The right end wall's tile band goes on after the facade so its corner is tiled on both faces, with no bare plaster
+    // strip; it stops at the back door's jambs rather than running across the doorway (Kevin, 2026-10-16: "the lounge
+    // exit door is blocked"), so the drapes and the dark opening reach the floor.
+    tileFace(true,-7,ez-ew-.04,rx+.16);tileFace(true,ez+ew+.04,face,rx+.16);
     worldLine([[dx-.74,.02,face+.02],[dx-.74,2.54,face+.02],[dx+.74,2.54,face+.02],[dx+.74,.02,face+.02]],'#171e1a',.07);
     if(SHOP_SPRITES&&pinnedDoor('shell.lounge.door.v2',dx,face,LOUNGE_DOOR_PIN)){
       // Sprite shop: Kevin's curtained oak doorway (2026-10-14) stands whether the lounge is open or still to be bought;
@@ -3736,11 +3866,20 @@ if(!SHOP_SPRITES){
       else wallText(bx+.04,ly,bz,letter,unit*.44,.34,'#5a4750',true,'800');
     });
   }
+  // Sprite shop: the ChatGPT render of the arched merch cabinet, standing against the lounge's right wall. Its glazed
+  // face's bottom corners (measured on the sprite) are pinned to the floor at x 9.27, z -4.8 and -6.84: the render's
+  // side runs about 0.84 deep behind that face on a 33° base slope (a shade steeper than the floor's 30°), and 9.27 is
+  // where that lands its back foot on the wall's base line at x 8.41. At 9.03 the back foot hung 0.3 inside the wall,
+  // which the eye read as the cabinet floating (Kevin, 2026-10-16: "bring down the cabinet").
+  var EXIT_CABINET_OUTLINE=[[12,119],[85,77],[200,12],[296,47],[296,546],[85,666],[12,615]]; // the render's silhouette, a hair inside its edge
+  function exitCabinetPlacement(){
+    if(!SHOP_SPRITES||!shellSprite('shell.merch.cabinet'))return null;
+    var p0=project(9.27,0,-4.8),p1=project(9.27,0,-6.84),u0=85,v0=667,u1=298,v1=547,k=(p1.x-p0.x)/(u1-u0),shear=(p1.y-p0.y-k*(v1-v0))/(u1-u0),e=p0.x-k*u0,f=p0.y-k*v0-shear*u0;
+    return{k:k,shear:shear,e:e,f:f,map:function(u,v){return{x:k*u+e,y:shear*u+k*v+f}}};
+  }
   function drawExitCabinet(){
-    // Sprite shop: the ChatGPT render of the arched merch cabinet, standing on the drawn cabinet's footprint.
-    // Its glazed face's bottom corners (measured on the sprite) are pinned to the floor at x 9.03, z -4.8 and -6.84.
-    if(SHOP_SPRITES&&shellSprite('shell.merch.cabinet')){var img=spriteImage('shell.merch.cabinet'),p0=project(9.03,0,-4.8),p1=project(9.03,0,-6.84),u0=85,v0=667,u1=298,v1=547;
-      var k=(p1.x-p0.x)/(u1-u0),shear=(p1.y-p0.y-k*(v1-v0))/(u1-u0);ctx.save();ctx.transform(k,shear,0,k,p0.x-k*u0,p0.y-k*v0-shear*u0);ctx.drawImage(img,0,0);ctx.restore();return}
+    var cab=exitCabinetPlacement();
+    if(cab){ctx.save();ctx.transform(cab.k,cab.shear,0,cab.k,cab.e,cab.f);ctx.drawImage(spriteImage('shell.merch.cabinet'),0,0);ctx.restore();return}
     // Arched display cabinet in the corner between the lounge's right wall and the exit wall: an oak case with a
     // fluted back, three lit glass shelves of merchandise behind a glazed arch, and oak spandrels that turn the
     // rectangular case into a rounded niche. Its rear end sits against the rear wall beside the exit door.
@@ -3908,7 +4047,7 @@ if(!SHOP_SPRITES){
       if(c.phase==='lounge'){if(c.loungeFade>0)jobs.push({depth:depthOf(visual),draw:function(){drawGuestThroughDrapes(visual,now)}})}
       else if(leaverBehindColumn(c)){}
       else if(c.loungeFadeIn!==undefined&&c.loungeFadeIn<1)jobs.push({depth:depthOf(visual),draw:function(){drawGuestThroughDrapes(visual,now,true)}})
-      else if(!customerBehindBuilding(c))jobs.push({depth:depthOf(visual),draw:function(){drawFadedCustomer(visual,now)}})
+      else if(!customerBehindBuilding(c)){visual.badgeLater=true;jobs.push({depth:depthOf(visual),draw:function(){drawFadedCustomer(visual,now)}});if(customerBadged(visual))jobs.push({depth:depthOf(visual)+1.5,draw:function(){drawCustomerBadge(visual)}})}
     });
     if(state.kiosk)Array.from({length:kioskCount()},function(_,index){return index}).forEach(function(index){var dx=index*1.8;jobs.push({depth:depthOf({x:-9.6,z:6.8-dx}),draw:function(){
       function point(x,y,z){return [-9.75+(z-7.95),y,6.8-dx-(x-(-1.3+dx))]}
@@ -4182,7 +4321,7 @@ if(!SHOP_SPRITES){
     // While the shop is still a building site the guide row counts sites instead of naming a bottleneck.
     if(!state.shopOpen){var raised=(state.doorBuilt?1:0)+state.lines.filter(function(n){return n>0}).length,nextSite=!state.doorBuilt?'Security':raised<7?shortNames[slow]:null;$('flowLabel').textContent='Under construction';$('flowText').textContent=raised+' of 7 sites raised'+(nextSite?' · next: '+nextSite:' · ready to open');$('flowText').title='Tap a site on the map to raise it. Customers arrive once the shop opens.';$('flowAction').textContent=nextSite?'Build '+nextSite:'Open the shop';$('flowAction').dataset.mode='fix'}
     var line=LINES[selected],open=isOpen(selected),level=state.lines[selected],price=cost(selected),affordable=open&&(!level||state.money>=price);
-    $('rate').dataset.paused=String(state.gameSpeed===0);$('money').textContent=fmt(state.money);$('rate').textContent=state.gameSpeed===0?'Paused':fmt((state.empire.activeStore?storeRate(state.empire,state.empire.activeStore-1):production()+branchRate(state.empire))*state.gameSpeed)+'/s';document.querySelector('.stat.output small').textContent=state.empire.activeStore?'BRANCH INCOME':'CAPACITY';
+    $('rate').dataset.paused=String(state.gameSpeed===0);$('money').textContent=fmt(state.money);$('rate').textContent=state.gameSpeed===0?'Paused':fmt((state.empire.activeStore?storeRate(state.empire,state.empire.activeStore-1):production()+branchIncome(state.empire))*state.gameSpeed)+'/s';document.querySelector('.stat.output small').textContent=state.empire.activeStore?'BRANCH INCOME':'CAPACITY';
     var paused=state.gameSpeed===0;speedButtons.forEach(function(button){var value=Number(button.getAttribute('data-speed'));button.setAttribute('aria-pressed',String(value===state.gameSpeed||(value===1&&paused)))});
     var glyph=paused?'pause':'play';if(speedOne.getAttribute('data-glyph')!==glyph){speedOne.setAttribute('data-glyph',glyph);speedOne.innerHTML=paused?PAUSE_GLYPH:PLAY_GLYPH}speedOne.setAttribute('aria-label',paused?'Paused. Resume normal speed':'Normal speed. Press again to pause');speedOne.title=paused?'Paused · press to resume':'Normal speed · press again to pause';speedOne.parentElement.setAttribute('data-paused',String(paused));
     if(securitySelected){renderSecuritySelection()}else if(loungeSelected){renderLoungeSelection()}else{
@@ -4425,7 +4564,7 @@ if(!SHOP_SPRITES){
   }
   function renderLoungeSelection(){
     var level=state.lounge,tier=loungeTier(level),next=LOUNGE_TIERS[level]||null,price=loungeUpgradeCost(level),maxed=!next,affordable=!maxed&&state.money>=price;
-    var seated=loungeSeated(),seats=loungeSeats(level),jar=flowerValue(),take=loungeTake(level,jar),waiting=loungeWaiting().length,nowRate=loungeCurrentRate(level,seated,jar,state.loungeStaff)*state.gameSpeed;
+    var seated=loungeSeated(),seats=loungeSeats(level),jar=flowerValue()*specialFactor('lounge'),take=loungeTake(level,jar),waiting=loungeWaiting().length,nowRate=loungeCurrentRate(level,seated,jar,state.loungeStaff)*state.gameSpeed;
     $('machineNumber').textContent='BACK ROOM · '+(!tier?'UNDER CONSTRUCTION':seated>=seats?'FULL'+(waiting?' · '+waiting+' ON THE ROPE':''):seated?seated+' OF '+seats+' SEATED':'SEATS FREE');
     $('machineName').textContent='SMOKING LOUNGE';$('machineLevel').textContent=level;$('machineRate').textContent=tier?fmt(nowRate)+'/s · '+fmt(take.total)+' / session':'Under construction';
     var ICON_SEAT='<svg viewBox="0 0 24 24"><path d="M6 11V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v5M4 11h16v4H4zM6 15v5M18 15v5"/></svg>',ICON_GUESTS='<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M15 20c0-2.6 1.5-4.4 3.7-4.9 1.4.3 2.3 1.6 2.3 3.4"/></svg>',ICON_TICKET='<svg viewBox="0 0 24 24"><path d="M4 8a2 2 0 0 0 2-2h12a2 2 0 0 0 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 0-2 2H6a2 2 0 0 0-2-2v-3a2 2 0 0 0 0-4zM9 6v12"/></svg>',ICON_JAR='<svg viewBox="0 0 24 24"><path d="M8 4h8v3H8zM7 7h10v11a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2zM7 11h10"/></svg>',ICON_SESSIONS='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg>',ICON_RATE='<svg viewBox="0 0 24 24"><path d="M4 17l5-6 4 3 7-8M15 6h5v5"/></svg>',ICON_BANKED='<svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v4c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 10v4c0 1.7 3.1 3 7 3s7-1.3 7-3v-4M5 14v4c0 1.7 3.1 3 7 3s7-1.3 7-3v-4"/></svg>';
@@ -4745,7 +4884,7 @@ if(!SHOP_SPRITES){
     '<summary><svg class="prestige-sprout" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V11M12 14C3 14 3 7 3 7s9-1 9 7ZM12 11c0-8 9-9 9-9s0 9-9 9Z"/></svg><span>New beginnings</span><small id="prestigeStatus"></small><svg class="prestige-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></summary>'+
     '<div class="prestige-body"><div class="prestige-rank-track" id="prestigeComparison" role="group"><div class="prestige-rank"><span id="prestigeCurrentRank"></span><strong id="prestigeCurrentRate"></strong><small>base sales</small></div><svg id="prestigeArrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h17m-6-6 6 6-6 6"/></svg><div class="prestige-rank is-next" id="prestigeNext"><span id="prestigeNextRank"></span><strong id="prestigeNextRate"></strong><small>base sales</small></div></div>'+
     '<p class="prestige-gain" id="prestigeGain"></p><div class="prestige-funding" id="prestigeFunding"><div><span>All-time revenue</span><b id="prestigeRevenue"></b></div><progress id="prestigeProgress" max="100" value="0" aria-label="All-time revenue toward the next share"></progress><small id="prestigeFundingStatus"></small></div>'+
-    '<dl class="prestige-carryover" id="prestigeCarryover"><div><dt>Keep</dt><dd>Shares (permanent sales bonus), founder perks, event badges, strain library &amp; sound setting</dd></div><div><dt>Restart</dt><dd>Cash, stores &amp; all shop progress</dd></div></dl><button id="prestigeStart" type="button" aria-describedby="prestigeFundingStatus prestigeCarryover"></button></div>';
+    '<dl class="prestige-carryover" id="prestigeCarryover"><div><dt>Keep</dt><dd>Shares (permanent sales bonus), founder perks, event badges, discovered cultivars &amp; sound setting</dd></div><div><dt>Restart</dt><dd>Cash, stores &amp; all shop progress</dd></div></dl><button id="prestigeStart" type="button" aria-describedby="prestigeFundingStatus prestigeCarryover"></button></div>';
   document.querySelector('[data-empire-section="growth"]').append(prestigePanel);
   // Founder perks spend points from reopening; shares are never spent, so buying a perk never lowers the sales bonus.
   var perkPanel=document.createElement('section');perkPanel.className='strain-library founder-perks';perkPanel.setAttribute('aria-labelledby','perksTitle');
@@ -4762,14 +4901,14 @@ if(!SHOP_SPRITES){
   if(reminders.available){var remindersButton=document.createElement('button');remindersButton.id='remindersToggle';remindersButton.type='button';remindersButton.hidden=true;
     remindersButton.onclick=function(){if(state.reminders){state.reminders=false;reminders.clear();save();remindersButton.textContent='Reminders off';return}reminders.enable().then(function(ok){state.reminders=ok;save();remindersButton.textContent=ok?'Reminders on':'Reminders off';notify(ok?'REMINDERS ON':'NOTIFICATIONS ARE OFF IN IOS SETTINGS')})};
     remindersButton.textContent=state.reminders?'Reminders on':'Reminders off';document.body.append(remindersButton)}
-  function scheduleReminders(){if(!reminders.available||!state.reminders)return;var d=dailyStatus(state.empire,Date.now(),1),c=state.breed&&CULTIVARS.filter(function(x){return x.id===state.breed.id})[0];
-    reminders.schedule(planReminders({now:Date.now(),offlineCapMs:offlineCap()*1000,dailyAvailable:d.available,dailyClock:state.empire.clock,breedReady:c?state.breed.ready:NaN,breedName:c?c.name:''}))}
+  function scheduleReminders(){if(!reminders.available||!state.reminders)return;var d=dailyStatus(state.empire,Date.now(),1);
+    reminders.schedule(planReminders({now:Date.now(),offlineCapMs:offlineCap()*1000,dailyAvailable:d.available,dailyClock:state.empire.clock}))}
   var soundButton=document.createElement('button');soundButton.id='soundToggle';soundButton.type='button';soundButton.onclick=function(){state.sound=!state.sound;playSound('sale',state.sound);save();renderUI()};document.querySelector('.shop-reset').prepend(soundButton);
   var prestigeDialog=document.createElement('div');prestigeDialog.id='prestigeModal';prestigeDialog.className='modal-wrap';prestigeDialog.hidden=true;prestigeDialog.innerHTML='<div class="modal" role="dialog" aria-modal="true" aria-labelledby="prestigeTitle"><h2 id="prestigeTitle">Reopen your empire?</h2><p id="prestigePreview"></p><p>Clears cash, stores, staff, stock, strains, reputation, collections, goals and events. Only your shares, event badges, strain library and sound preference carry over.</p><div><button id="prestigeCancel">Keep playing</button><button id="prestigeConfirm">Reopen from scratch</button></div></div>';document.body.append(prestigeDialog);
   $('prestigeStart').onclick=function(){var o=prestigeOffer(state);if(!o.eligible)return;$('prestigePreview').textContent='+'+o.gain+' share'+(o.gain===1?'':'s')+': '+o.multiplier.toFixed(2).replace(/0$/,'')+'× base main-shop and branch income from now on.';prestigeDialog.hidden=false;$('prestigeCancel').focus()};
   $('prestigeCancel').onclick=function(){prestigeDialog.hidden=true;$('prestigeStart').focus()};
   prestigeDialog.addEventListener('keydown',function(e){if(e.key==='Escape')$('prestigeCancel').click();if(e.key==='Tab'){e.preventDefault();(document.activeElement===$('prestigeCancel')?$('prestigeConfirm'):$('prestigeCancel')).focus()}});
-  $('prestigeConfirm').onclick=function(){var offer=prestigeOffer(state);if(!offer.eligible)return;var rank=offer.rank+1,sound=state.sound;state.perks.points+=offer.gain;resetRun(rank,sound,{shares:offer.total,lifetimeAll:offer.allTime,badges:state.empire.badges,library:state.library,breed:state.breed,perks:state.perks});prestigeDialog.hidden=true;save();showTray('factory');renderUI();notify('Reopened · +'+offer.gain+' shares · '+offer.multiplier.toFixed(2).replace(/0$/,'')+'× sales','upgrade')};
+  $('prestigeConfirm').onclick=function(){var offer=prestigeOffer(state);if(!offer.eligible)return;var rank=offer.rank+1,sound=state.sound;state.perks.points+=offer.gain;resetRun(rank,sound,{shares:offer.total,lifetimeAll:offer.allTime,badges:state.empire.badges,crosses:state.crosses,perks:state.perks});prestigeDialog.hidden=true;save();showTray('factory');renderUI();notify('Reopened · +'+offer.gain+' shares · '+offer.multiplier.toFixed(2).replace(/0$/,'')+'× sales','upgrade')};
   var droneRow=document.createElement('div');droneRow.className='shop-upgrade';droneRow.innerHTML='<div class="shop-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="11" y="11" width="10" height="9" rx="2"/><path d="m11 12-5-5m15 5 5-5m-15 12-5 6m15-6 5 6M2 7h8m12 0h8M2 25h8m12 0h8M13 24h6"/></svg></div><div class="shop-copy"><h2>Auto drone</h2><strong id="autoDroneBenefit">Send a ready order every 10s</strong></div><button id="buyAutoDrone"><span>Install</span><b id="autoDronePrice"></b></button>';
   document.querySelector('[data-pane="boosts"]').append(droneRow);
   var droneControl=document.createElement('div');droneControl.className='auto-drone-control';droneControl.innerHTML='<span class="drone-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 10h6v4H9zM4 6h3M17 6h3M5.5 6v4h3.5M18.5 6v4H15M9 14l-3 4M15 14l3 4"/></svg></span><div><strong>Auto drone</strong><small id="autoDroneStatus"></small></div><button id="autoDroneToggle" type="button" class="drone-switch"></button><button id="autoDroneBulk" type="button" hidden></button>';document.querySelector('.dispatch-desk').append(droneControl);
@@ -4832,7 +4971,7 @@ if(!SHOP_SPRITES){
     $('careerBonus').textContent='Permanent sale bonus: +'+(p.career*5)+'% · '+p.career+' / 6 milestones';
     $('careerClaim').disabled=!m||state.lifetime<m.goal;
     $('careerClaim').textContent=m?'Collect '+fmt(m.reward)+' + 5% sale bonus':'Career complete';
-    $('branchSummary').textContent=(1+p.stores.filter(function(s){return s.level>0}).length)+'/'+(STORES.length+1)+' open · '+fmt(branchRate(p)*state.gameSpeed)+'/s';
+    $('branchSummary').textContent=(1+p.stores.filter(function(s){return s.level>0}).length)+'/'+(STORES.length+1)+' open · '+fmt(branchIncome(p)*state.gameSpeed)+'/s';
     STORES.forEach(function(store,i){var level=p.stores[i].level,locked=state.lifetime<store.goal,max=level>=10;
       // Store row: level pips and an income figure instead of a sentence; unopened stores show a lock and the opening price.
       var pips='';for(var pip=0;pip<10;pip++)pips+='<i'+(pip<level?' class="on"':'')+'></i>';
@@ -4862,12 +5001,15 @@ if(!SHOP_SPRITES){
     $('eventCount').textContent=e.claimed?'Reward collected':e.joined?e.progress+' / '+e.goal+(e.open?' completed':e.progress>=e.goal?' · Complete':' · Event ended'):'Join to start counting progress';
     $('eventAction').textContent=e.claimed?'Collected':e.joined?(e.progress>=e.goal?'Collect '+fmt(e.reward):e.open?'Challenge in progress':'Event ended'):e.open?'Join event':'Waiting for next event';
     $('eventAction').disabled=e.claimed||(e.joined?e.progress<e.goal:!e.open);
-    var w=seasonStatus(p,Date.now(),rewardScale()),unit=w.kind==='pickup'?' customers':w.kind==='online'?' orders':'',show=function(v){return w.kind==='revenue'?fmt(v):abbr(v)+unit};
-    $('seasonKicker').textContent=SEASONS.some(function(s){return w.badge===s.id})?'Seasonal event':'This week';$('seasonName').textContent=w.name;$('seasonCopy').textContent=w.copy;
+    var special=weeklySpecial(Date.now());$('weeklySpecial').innerHTML='<b>This week: '+special.name+'</b> · '+special.detail;
+    var w=seasonStatus(p,Date.now(),rewardScale());$('seasonCard').classList.toggle('is-between',!w);
+    if(!w){var upcoming=nextSeason(Date.now());$('seasonKicker').textContent='Next seasonal event';$('seasonName').textContent=upcoming.name;$('seasonCopy').textContent=upcoming.copy;var wait=upcoming.start-Date.now();$('seasonTime').textContent='Starts in '+(wait>=86400000?Math.floor(wait/86400000)+'d '+Math.floor(wait%86400000/3600000)+'h':duration(wait));$('seasonClaim').disabled=true}
+    else{var unit=w.kind==='pickup'?' customers':w.kind==='online'?' orders':'',show=function(v){return w.kind==='revenue'?fmt(v):abbr(v)+unit};
+    $('seasonKicker').textContent='Seasonal event';$('seasonName').textContent=w.name;$('seasonCopy').textContent=w.copy;
     $('seasonTime').textContent='Ends in '+(w.remaining>=86400000?Math.floor(w.remaining/86400000)+'d '+Math.floor(w.remaining%86400000/3600000)+'h':duration(w.remaining));
     Array.prototype.forEach.call($('seasonTiers').children,function(li,i){var done=i<w.claimed,ready=i<w.reached&&!done,share=Math.min(1,w.progress/w.targets[i]);li.className=done?'is-collected':ready?'is-ready':'';li.style.setProperty('--fill',(share*100).toFixed(1)+'%');li.innerHTML='<span>'+show(w.targets[i])+'</span><b>'+(done?'Collected':ready?'Ready':Math.round(share*100)+'%')+'</b>'+(i===2?'<small>+ '+w.name+' badge</small>':'')});
-    $('seasonClaim').textContent=w.next>=0?'Collect '+fmt(w.reward):w.claimed>=3?'Ladder complete':show(w.progress)+' so far';$('seasonClaim').disabled=w.next<0;
-    $('seasonBadges').textContent=p.badges.length?'Badges: '+p.badges.map(function(b){var d=SEASONS.concat(WEEKLY).filter(function(s){return s.id===b})[0];return d?d.name:b}).join(' · '):'Finish a ladder to earn its badge.';
+    $('seasonClaim').textContent=w.next>=0?'Collect '+fmt(w.reward):w.claimed>=3?'Ladder complete':show(w.progress)+' so far';$('seasonClaim').disabled=w.next<0}
+    $('seasonBadges').textContent=p.badges.length?'Badges: '+p.badges.map(function(b){var d=SEASONS.concat(RETIRED_WEEKLY).filter(function(s){return s.id===b})[0];return d?d.name:b}).join(' · '):'Finish a ladder to earn its badge.';
     $('eventTrophies').textContent=p.trophies+' event '+(p.trophies===1?'trophy':'trophies')+' · '+p.rewards.filter(Boolean).length+' / 3 scene keepsakes collected';
   }
   $('seasonClaim').onclick=function(){var reward=claimSeason(state,Date.now(),rewardScale());if(reward){save();renderUI();notify((state.empire.season.claimed===3?'LADDER COMPLETE · BADGE · +':'EVENT STEP · +')+fmt(reward),'upgrade')}};
@@ -5057,7 +5199,7 @@ if(!SHOP_SPRITES){
   $('trainLoungeStaffMax').onclick=function(){trainLoungeHost(10000)};
   $('fulfillOnlineMax').onclick=function(){sendOnlineOrders(state.lines[3]>=10?Infinity:10)};
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){updateMarkers.key=null;render.invalidated=true});
-  window.addEventListener('resize',resize);$('buyMachine').onclick=buySelected;$('buyMachineMax').onclick=buySelectedMax;$('upgradeStorage').onclick=upgradeStorage;$('boost').onclick=boostAll;$('claim').onclick=claimOrder;$('resetOpen').onclick=function(){$('resetModal').hidden=false};$('resetCancel').onclick=function(){$('resetModal').hidden=true};$('resetConfirm').onclick=function(){resetRun(0,state.sound)};function resetRun(rank,sound,carry){if(rank>0)telemetry.send('prestige',{rank:rank});state=fresh();moment=null;if(shopPlayUI)shopPlayUI.reset();state.empire.prestige=rank;state.sound=sound;if(carry){state.empire.shares=carry.shares;state.empire.lifetimeAll=carry.lifetimeAll;state.empire.badges=carry.badges.slice();state.library=carry.library.slice();state.breed=carry.breed;state.perks=carry.perks;var start=perkStart(state.perks);state.money+=start.money;state.offlineLevel=start.offlineLevel;state.startLine=start.line}
+  window.addEventListener('resize',resize);$('buyMachine').onclick=buySelected;$('buyMachineMax').onclick=buySelectedMax;$('upgradeStorage').onclick=upgradeStorage;$('boost').onclick=boostAll;$('claim').onclick=claimOrder;$('resetOpen').onclick=function(){$('resetModal').hidden=false};$('resetCancel').onclick=function(){$('resetModal').hidden=true};$('resetConfirm').onclick=function(){resetRun(0,state.sound)};function resetRun(rank,sound,carry){if(rank>0)telemetry.send('prestige',{rank:rank});state=fresh();moment=null;if(shopPlayUI)shopPlayUI.reset();state.empire.prestige=rank;state.sound=sound;if(carry){state.empire.shares=carry.shares;state.empire.lifetimeAll=carry.lifetimeAll;state.empire.badges=carry.badges.slice();state.crosses=carry.crosses;state.perks=carry.perks;var start=perkStart(state.perks);state.money+=start.money;state.offlineLevel=start.offlineLevel;state.startLine=start.line}
     // A prestige reopens a standing shop; Start over goes back to the building site and replays the intro.
     if(rank>0){state.lines=LINES.map(function(){return state.startLine||1});delete state.startLine;state.doorBuilt=true;state.shopOpen=true}
     syncDominantFormat();readyWork=0;work=[0,0,0,0,0,0];batchRemainder=[0,0,0,0];customers=[];arrival=0;customerId=0;deliveryDrones=[];particles=[];tickets=[];taskClocks.fill(0);taskActivity.fill(0);cropGrowth=[.15,.4,.7,.95];tierFlashes.fill(0);buildRise.fill(0);confetti=[];recentPickupRatings=[];animationTime=0;sceneTime=0;crateTime=0;cargoOdo=0;render.last=undefined;securitySelected=false;loungeSelected=false;selected=0;updateMarkers.key=null;save();$('resetModal').hidden=true;notify(rank>0?'FACTORY RESET':'STARTING OVER');syncMapView();paintThumbnails();renderUI();if(!state.shopOpen)setTimeout(function(){startGuide.open()},400)};
@@ -5104,5 +5246,5 @@ if(!SHOP_SPRITES){
   document.body.dataset.pageHidden=String(document.hidden);
   document.addEventListener('visibilitychange',function(){document.body.dataset.pageHidden=String(document.hidden);tickTime=performance.now();tickRemainder=0;if(document.hidden){releasePanKeys();save();scheduleReminders()}else{if(reminders.available)reminders.clear();collectOffline();if(state.empire.returnReport){renderUI()}renderUI()}});
 
-  if(document.modelContext&&document.modelContext.registerTool){document.modelContext.registerTool({name:'read_factory_status',title:'Read factory status',description:'Read cash, production, and machine levels.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:function(){return{orderCounters:state.orderCounters,reservedWalkInBags:customers.filter(function(c){return c.ordered&&!c.bag}).reduce(function(n,c){return n+(c.bags||1)},0),orderCounterPositions:orderCounterPositions(state.orderCounters),autoDrone:state.autoDrone,deliveryDrones:deliveryDrones.length,productMenu:state.productMenu,prestige:state.empire.prestige,shares:state.empire.shares,perks:state.perks,offlineLevel:state.offlineLevel,rushTime:state.rushTime,spenderClock:state.spenderClock,contract:state.contract,viewedStore:state.empire.activeStore,branchLevels:state.empire.stores.map(function(s){return s.level}),branchProjects:state.empire.stores.map(function(s){return s.projects}),network:state.empire.network,reputation:state.empire.reputation,management:state.empire.stores,goalsCompleted:state.empire.goalsCompleted,branchIncome:branchRate(state.empire)*state.gameSpeed,cash:Math.floor(state.money),lifetime:Math.floor(state.lifetime),perSecond:production()*state.gameSpeed,gameSpeed:state.gameSpeed,paused:state.gameSpeed===0,lineLevels:state.lines,shopOpen:state.shopOpen,doorBuilt:state.doorBuilt,stock:state.stock,customersServed:state.sold,employeeLevels:state.staff,onlineCompleted:state.onlineCompleted,camera:{zoom:zoom,panX:panX,panY:panY,angle:angle},orderRoute:queueRoute(false),pickupRoute:queueRoute(true),lounge:{level:state.lounge,seats:loungeSeats(state.lounge),seated:loungeSeated(),waiting:loungeWaiting().length,sessions:state.loungeSessions,earned:state.loungeEarned,rate:loungeCurrentRate(state.lounge,loungeSeated(),flowerValue())*state.gameSpeed,nextCost:loungeUpgradeCost(state.lounge)},customers:customers.map(function(c){return{kind:c.kind,id:c.id,phase:c.phase,ordered:c.ordered,bag:c.bag,bags:c.bags||0,kiosk:!!c.kiosk,lounge:!!c.lounge,orderCounter:c.orderCounter,pickupTicket:c.pickupTicket||0,walking:!!c.walking,x:c.x,z:c.z,serviceElapsed:c.serviceElapsed||0}})}}});}
+  if(document.modelContext&&document.modelContext.registerTool){document.modelContext.registerTool({name:'read_factory_status',title:'Read factory status',description:'Read cash, production, and machine levels.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:function(){return{orderCounters:state.orderCounters,reservedWalkInBags:customers.filter(function(c){return c.ordered&&!c.bag}).reduce(function(n,c){return n+(c.bags||1)},0),orderCounterPositions:orderCounterPositions(state.orderCounters),autoDrone:state.autoDrone,deliveryDrones:deliveryDrones.length,productMenu:state.productMenu,prestige:state.empire.prestige,shares:state.empire.shares,perks:state.perks,offlineLevel:state.offlineLevel,rushTime:state.rushTime,spenderClock:state.spenderClock,crosses:state.crosses,breedingLevel:state.breedingLevel,weeklySpecial:weeklySpecial(Date.now()).id,contract:state.contract,viewedStore:state.empire.activeStore,branchLevels:state.empire.stores.map(function(s){return s.level}),branchProjects:state.empire.stores.map(function(s){return s.projects}),network:state.empire.network,reputation:state.empire.reputation,management:state.empire.stores,goalsCompleted:state.empire.goalsCompleted,branchIncome:branchIncome(state.empire)*state.gameSpeed,cash:Math.floor(state.money),lifetime:Math.floor(state.lifetime),perSecond:production()*state.gameSpeed,gameSpeed:state.gameSpeed,paused:state.gameSpeed===0,lineLevels:state.lines,shopOpen:state.shopOpen,doorBuilt:state.doorBuilt,stock:state.stock,customersServed:state.sold,employeeLevels:state.staff,onlineCompleted:state.onlineCompleted,camera:{zoom:zoom,panX:panX,panY:panY,angle:angle},orderRoute:queueRoute(false),pickupRoute:queueRoute(true),lounge:{level:state.lounge,seats:loungeSeats(state.lounge),seated:loungeSeated(),waiting:loungeWaiting().length,sessions:state.loungeSessions,earned:state.loungeEarned,rate:loungeCurrentRate(state.lounge,loungeSeated(),flowerValue())*state.gameSpeed,nextCost:loungeUpgradeCost(state.lounge)},customers:customers.map(function(c){return{kind:c.kind,id:c.id,phase:c.phase,ordered:c.ordered,bag:c.bag,bags:c.bags||0,kiosk:!!c.kiosk,lounge:!!c.lounge,orderCounter:c.orderCounter,pickupTicket:c.pickupTicket||0,walking:!!c.walking,x:c.x,z:c.z,serviceElapsed:c.serviceElapsed||0}})}}});}
 })();
