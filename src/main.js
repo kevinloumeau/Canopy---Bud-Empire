@@ -934,8 +934,12 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   var exteriorFixtures={
     sconces:[{x:-10.98,y:2.3,z:8.72},{x:-10.98,y:2.3,z:11.28}],
     // Entrance bollards stay on the far side of the approach so arriving guests always pass in front of them.
-    bollards:[{x:-12.8,z:10.35},{x:-12.75,z:6.2},{x:9.05,z:-8.45},{x:11.3,z:-8.9}],
-    exitLamp:{x:10.25,y:3.38,z:-7.34},
+    // The bollard that stood on the pavement in view through the exit doorway is gone (Kevin, 2026-10-17: "remove that
+    // post on the sidewalk"); the other exit bollard stands behind the open leaf.
+    bollards:[{x:-12.8,z:10.35},{x:-12.75,z:6.2},{x:11.3,z:-8.9}],
+    // The hooded exit lamp hangs above the door frame (its top face reaches 3.79), not on its header (Kevin, 2026-10-17:
+    // "move the light above the frame").
+    exitLamp:{x:10.25,y:4.08,z:-7.34},
     entryStrip:[[-10.9,3.27,8.85],[-10.9,3.27,11.15]]
   };
   // Sprite shop: draws a fixture sprite `w` units wide with the image point (ax, ay) (fractions of its size) on screen
@@ -3369,7 +3373,47 @@ if(!SHOP_SPRITES){
   // between the posts' inner faces (the dark halo and the slivers inside the opening lie outside it), and the two
   // keyed-out reveals, drawn as shaded side faces receding on the render's own depth slope.
   var EXIT_DOOR_OUTLINE=[[29,37],[55,20],[282,147],[285,172],[421,96],[436,104],[436,533],[286,614],[262,621],[241,608],[241,196],[76,105],[76,517],[52,531],[29,519]];
-  var EXIT_DOOR_REVEALS=[[[52,92],[77,77],[77,517],[52,531]],[[262,160],[285,146],[285,606],[262,621]]];
+  var EXIT_DOOR_REVEALS=[[[52,92],[77,77],[77,517],[52,531]],[[262,150],[285,137],[285,609.4],[262,621]]];
+  // The v2 exit door render, prepared once on its own canvas. The render came out of ChatGPT with an opaque dark halo
+  // round its silhouette and dark slivers inside the opening (the ragged edges), and its white-painted jamb reveals
+  // were keyed out with the background, so the leaf hung clear of the frame (Kevin, 2026-10-16: "figure out the exit
+  // door"). The file stays as rendered: it is composed through the clip that follows the frame's and leaf's clean
+  // edges, over two shaded side faces that refill the keyed-out reveals, so the posts read as solid and the leaf hangs
+  // off the right one. The render is also in perspective: its base runs at 22°, the header's underside at 29°, its
+  // front-top edge at 26° and the top face's far edge at 29°, so the shear that squares the base left the header
+  // climbing at about 36° on screen (Kevin, 2026-10-17: "the top frame angle still feels off"). So each 1-px column is
+  // re-sampled in up to three segments that put the base, the header's underside, its front-top edge and its top
+  // face's far edge on lines parallel to the base at fixed heights (3.3, 3.69 and 3.79 on the wall), and the leaf's
+  // base and top on lines from the right post's outer foot at the slope the draw's shear turns into the map's -z
+  // direction, the leaf 3.38 tall as rendered. Both posts come out the same height and every edge lands on the map's 30°.
+  function exitDoorSource(img){
+    if(exitDoorSource.canvas&&exitDoorSource.img===img)return exitDoorSource.canvas;
+    var W=img.naturalWidth,H=img.naturalHeight,flat=document.createElement('canvas');flat.width=W;flat.height=H;var g=flat.getContext('2d');
+    g.beginPath();EXIT_DOOR_OUTLINE.forEach(function(q,i){i?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1])});g.closePath();g.clip();
+    g.fillStyle='#1f4835';EXIT_DOOR_REVEALS.forEach(function(face){g.beginPath();face.forEach(function(q,i){i?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1])});g.closePath();g.fill()});
+    g.drawImage(img,0,0);
+    var out=document.createElement('canvas');out.width=W;out.height=H;var o=out.getContext('2d');
+    // Heights above the base line in sprite px (times the pins' scale, 0.00775 of a unit per px): the header's
+    // underside, its front-top edge and its top face's far edge; the leaf's height; the column where the leaf's plane begins.
+    var UNDER=425.5,FRONT=476.8,TOP=489.5,LEAF=436,HINGE=262;
+    function base(u){return 529+(616-529)/(255-45)*(u-45)} // the post feet's line, the pins' base
+    for(var u=0;u<W;u++){
+      var c=u+.5,b=base(c);
+      if(c<HINGE){
+        // The render's own lines at this column: the header's underside, its front-top edge and its top face's far edge.
+        var under=92+(196-92)/(241-52)*(c-52),front=37+(150-37)/(262-29)*(c-29),top=20+(147-20)/(282-55)*(c-55);
+        var s1=UNDER/(b-under),s2=(FRONT-UNDER)/(under-front),s3=(TOP-FRONT)/(front-top);
+        o.drawImage(flat,u,under,1,H-under,u,b-UNDER,1,(H-under)*s1);
+        o.drawImage(flat,u,front,1,under-front,u,b-FRONT,1,(under-front)*s2);
+        o.drawImage(flat,u,0,1,front,u,b-FRONT-front*s3,1,front*s3);
+      }else{
+        // The leaf and the right post's side face: the render's leaf base and top lines, hinged at the post's outer foot.
+        var lb=621-(621-533)/(436-262)*(c-HINGE),lt=172-(172-96)/(421-285)*(c-285),tb=base(HINGE)-.74*(c-HINGE),sl=LEAF/(lb-lt);
+        o.drawImage(flat,u,0,1,H,u,tb-lb*sl,1,H*sl);
+      }
+    }
+    exitDoorSource.canvas=out;exitDoorSource.img=img;return out;
+  }
   function addEntryDoor(jobs){
     var x=-10.65,z=10,frame=SHOP_SPRITES?['#3f7a58','#1f4a35','#2d6146']:['#414843','#171e1a','#2b342e'],brass=['#d8c18b','#8d7950','#b7a16d'];
     function add(px,pz,fn){jobs.push({depth:depthOf({x:px,z:pz}),draw:fn})}
@@ -3393,17 +3437,10 @@ if(!SHOP_SPRITES){
         // before the sorted jobs), so the door is not painted where the cabinet's render covers it.
         var cab=exitCabinetPlacement();
         if(cab){ctx.beginPath();ctx.rect(0,0,width,height);EXIT_CABINET_OUTLINE.forEach(function(q,i){var s=cab.map(q[0],q[1]);i?ctx.lineTo(s.x,s.y):ctx.moveTo(s.x,s.y)});ctx.closePath();ctx.clip('evenodd')}
+        // The v2 render is prepared once by exitDoorSource (clean outline, refilled reveals, perspective squared), then
+        // drawn like any pinned render: the pins' uniform scale plus the shear that lays its base on the wall's floor line.
         ctx.transform(k,shear,0,k,p0.x-k*u0,p0.y-k*v0-shear*u0);
-        if(v2){
-          // The v2 render came out of ChatGPT with an opaque dark halo round its silhouette and dark slivers inside the
-          // opening (the ragged edges), and its white-painted jamb reveals were keyed out with the background, so the
-          // leaf hung clear of the frame. The file stays as rendered: it is drawn through a clip that follows the
-          // frame's and leaf's clean edges, over two shaded side faces that refill the keyed-out reveals, so the posts
-          // read as solid and the leaf hangs off the right one (Kevin, 2026-10-16: "figure out the exit door").
-          ctx.beginPath();EXIT_DOOR_OUTLINE.forEach(function(q,i){i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1])});ctx.closePath();ctx.clip();
-          ctx.fillStyle='#1f4835';EXIT_DOOR_REVEALS.forEach(function(face){ctx.beginPath();face.forEach(function(q,i){i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1])});ctx.closePath();ctx.fill()});
-        }
-        ctx.drawImage(img,0,0);ctx.restore()});
+        ctx.drawImage(v2?exitDoorSource(img):img,0,0);ctx.restore()});
     }else{
     // Glazed storefront bays continue the door frame behind the kiosk row.
     for(var bay=0;bay<4;bay++)(function(start,end){
