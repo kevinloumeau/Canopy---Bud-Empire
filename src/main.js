@@ -2156,13 +2156,14 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // The grow line drops at the top floor's right and its outlet runs straight forward into the back of the harvest
     // bench standing in front of it (no dog-leg round the bench's end); the connector is a straight along z.
     1:{name:'tube.run.grow',x:5.6,z:-3,yTop:10.85,ySlab:9.4,yBot:5.21,end:-.3},
-    3:{name:'tube.run.pack',x:.1,z:-1.3,yTop:6.15,ySlab:4.7,yBot:1.55,end:PACK_STUB_X}};
+    // The pack line's inlet comes out of the pack bench's end (`feed`), so no collar stands loose beside the bench.
+    3:{name:'tube.run.pack',x:.1,z:-1.3,yTop:6.15,ySlab:4.7,yBot:1.55,end:PACK_STUB_X,feed:-2.4}};
   // World geometry of a run from its render: the arm lengths follow from the bore, since the image has one scale.
   function tubeRunGeometry(run){
     if(run.path)return run;
     var m=TUBE_KIT[run.name],f=TUBE_DIA/(m.width*Math.SQRT1_2),arm=(m.axis-m.inlet[0])*f,out=Math.abs(m.outlet[0]-m.axis)*f;
     run.port=[run.x,run.ySlab,run.z];
-    var head=[[run.x-arm,run.yTop,run.z],[run.x,run.yTop,run.z],[run.x,run.yBot,run.z]];
+    var head=(run.feed!==undefined?[[run.feed,run.yTop,run.z]]:[]).concat([[run.x-arm,run.yTop,run.z],[run.x,run.yTop,run.z],[run.x,run.yBot,run.z]]);
     if(m.outDir==='z'){run.connector=[[run.x,run.yBot,run.z+out],[run.x,run.yBot,run.end]];run.path=head.concat(run.connector)}
     else run.path=head.concat([[run.x+out,run.yBot,run.z],[run.end,run.yBot,run.z]]);
     return run;
@@ -2170,9 +2171,11 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // The pack line is one flow: the visible mezzanine leg and drop, a buried stretch inside the product wall and up to
   // the slab, then the stub into the pickup counter. Its parcels are spaced over the whole length, so the ones that
   // come out of the stub are the ones that went into the wall, at the same rhythm.
-  var PACK_STUB=[[PACK_STUB_X,4,1.3],[PACK_STUB_X,1.45,1.3]]; // the parcels show below the stub's top collar
+  // No slab covers the counters (the mezzanine stops at the product wall), so the stub leaves the wall's tile band below
+  // the ceiling, crosses over the shelving and turns down into the counter.
+  var PACK_STUB=[[PACK_STUB_X,3.8,LOUNGE_FRONT],[PACK_STUB_X,3.8,1.3],[PACK_STUB_X,1.45,1.3]];
   function polyLength(pts){var s=0;for(var i=1;i<pts.length;i++)s+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1],pts[i][2]-pts[i-1][2]);return s}
-  var PACK_BURIED=polyLength([[PACK_STUB_X,1.55,-1.3],[PACK_STUB_X,4,-1.3],[PACK_STUB_X,4,1.3]]),PACK_STUB_AT=polyLength(tubeRunGeometry(TUBE_RUNS[3]).path)+PACK_BURIED,PACK_FLOW=PACK_STUB_AT+polyLength(PACK_STUB);
+  var PACK_BURIED=polyLength([[PACK_STUB_X,1.55,-1.3],[PACK_STUB_X,3.8,-1.3],[PACK_STUB_X,3.8,LOUNGE_FRONT]]),PACK_STUB_AT=polyLength(tubeRunGeometry(TUBE_RUNS[3]).path)+PACK_BURIED,PACK_FLOW=PACK_STUB_AT+polyLength(PACK_STUB);
   TUBE_RUNS[3].flow={total:PACK_FLOW,offset:0};
   function drawTubeRun(run){
     if(!shellSprite(run.name))return false;
@@ -2181,15 +2184,20 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var top=project(run.x,run.yTop,run.z),slab=project(run.x,run.ySlab,run.z),bot=project(run.x,run.yBot,run.z),x0=top.x-m.axis*k;
     // Row -> screen y, rigid at the bends and the ring, the plain glass between them taking up the rest.
     var rows=[0,m.bend[0],m.ring[0],m.ring[1],m.bend[1],H],ys=[top.y-m.top*k,top.y+(m.bend[0]-m.top)*k,slab.y-(m.ring[2]-m.ring[0])*k,slab.y+(m.ring[1]-m.ring[2])*k,bot.y-(m.bot-m.bend[1])*k,bot.y+(H-m.bot)*k];
+    // A fed run takes its inlet from the kit: a straight from inside the bench and the elbow render turning down to
+    // the floor ring. The assembly render is then shown only from the ring down.
+    var fed=run.feed!==undefined&&shellSprite('tube.straight')&&shellSprite('tube.elbow');
+    if(fed){drawTubeSprites([[run.x,run.ySlab,run.z],[run.x,run.yTop,run.z],[run.feed,run.yTop,run.z]],TUBE_DIA,{noCap0:true});ctx.save();ctx.beginPath();ctx.rect(-10000,ys[2],20000,20000);ctx.clip()}
     for(var b=0;b<5;b++){var r0=rows[b],r1=rows[b+1],y0=ys[b],y1=ys[b+1];if(r1<=r0||y1<=y0+.01)continue;ctx.drawImage(img,0,r0,W,r1-r0,x0,y0,W*k,y1-y0)}
+    if(fed)ctx.restore();
     if(run.connector&&shellSprite('tube.straight'))drawTubeSprites(run.connector,TUBE_DIA,{noCap0:true});
     return true;
   }
-  // Downstairs the pack line is hidden by the product wall; this short drop from the slab above into the pickup
+  // Downstairs the pack line is hidden by the product wall; this short run out of the wall and down into the pickup
   // counter's back is all that shows, drawn after the wall with its own parcels.
   function drawPackStub(){
-    if(!shellSprite('tube.straight'))return;
-    drawTubeSprites([[PACK_STUB_X,4.5,1.3],[PACK_STUB_X,1.45,1.3]]);
+    if(!shellSprite('tube.straight')||!shellSprite('tube.elbow'))return;
+    drawTubeSprites(PACK_STUB);
     transferTube(PACK_STUB,3,[],4,true,{total:PACK_FLOW,offset:PACK_STUB_AT});
   }
   function drawFloorTransfer(stage,upper){
@@ -2198,7 +2206,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       // The one aligned image is drawn twice, clipped at the floor ring's screen line: the part above the slab with
       // that floor, the rest with the floor below, so the slab itself hides the buried section.
       tubeRunGeometry(run);
-      var q=project(run.port[0],run.port[1],run.port[2]);
+      // The split runs along the ring's lower edge, so the whole brass ring sits on the floor above.
+      var m=TUBE_KIT[run.name],q=project(run.port[0],run.port[1],run.port[2]);q.y+=(m.ring[1]-m.ring[2])*unit*TUBE_DIA/m.width;
       ctx.save();ctx.beginPath();
       if(upper)ctx.rect(-10000,-10000,20000,10000+q.y);else ctx.rect(-10000,q.y,20000,20000);
       ctx.clip();drawTubeRun(run);transferTube(run.path,stage,[],stage===3?4:stage,true,run.flow);ctx.restore();
@@ -2443,12 +2452,24 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var kOld=(r-l)/1146,cx=l+5*kOld,cy=b-1149*kOld+679*kOld,k=kOld*1.2*2;
     ctx.save();ctx.translate(cx-k*76.5,cy-k*232);ctx.scale(k,k);ctx.drawImage(img,0,0);ctx.restore();return true;
   }
+  // Measured on the deck render: the underside of the slab's steel rim, taken at -.24 below the deck level, has its front
+  // edge at z 1.26 and its right edge at x -10.7; the rear support leaves it near that corner and falls at -.43 (y over x)
+  // to the mezzanine's end. The jar feed climbs the same slope along the front of the support and runs on into the slab.
+  var DECK_FRONT=1.26,DECK_RIGHT=-10.7,DECK_FEED=[[-4.3,-.9,.85],[-7.99,-.9,.85],[-10.68,.25,.85]];
   function onlinePackingCounter(now,previewOnly){
     var x=DECK_X,z=DECK_Z,oak=['#cbb085','#7f6a4b','#ac9168'],green=['#86a795','#3e6250','#648a70'];
     if(!deliveryBuilt()&&!previewOnly){onlineCounterSite(now,x,z,oak);return}
     // Sprite shop: the finished deck render, with the live dispatch readout and the jar feed still drawn over it.
-    if(SHOP_SPRITES&&!previewOnly&&drawDeckSprite(now,'deck.delivery.built')){
-      transferTube([[-4.55,-.9,1],[-7.4,-.9,1],[-7.4,1.5,DECK_Z],[-9.05,1.5,DECK_Z]],3);return;
+    if(SHOP_SPRITES&&!previewOnly&&shellSprite('deck.delivery.built')&&spriteImage('deck.delivery.built')){
+      // The jar feed runs along the mezzanine rail, climbs beside the deck's rear support and rises into the deck's
+      // underside: it is cut along the slab's front and right edges, so its last stretch disappears inside the deck.
+      drawDeckSprite(now,'deck.delivery.built');
+      var l=project(DECK_RIGHT-8,-.24,DECK_FRONT),c=project(DECK_RIGHT,-.24,DECK_FRONT),r=project(DECK_RIGHT,-.24,DECK_FRONT-8),far=width+height;
+      ctx.save();ctx.beginPath();ctx.moveTo(l.x-far,l.y);ctx.lineTo(l.x,l.y);ctx.lineTo(c.x,c.y);ctx.lineTo(r.x,r.y);ctx.lineTo(r.x+far,r.y);ctx.lineTo(r.x+far,c.y+far);ctx.lineTo(l.x-far,c.y+far);ctx.closePath();ctx.clip();
+      // The feed leaves the pack bench's end without a collar, and the turn onto the support is a shallow one the right-angle elbow render cannot make, so the two straights meet
+      // collar to collar there, like a coupling.
+      drawTubeSprites(DECK_FEED.slice(0,2),TUBE_DIA,{noCap0:true});drawTubeSprites(DECK_FEED.slice(1));transferTube(DECK_FEED,3,[],undefined,true);ctx.restore();
+      return;
     }
     // Cantilevered launch deck, attached to the rear sign supports.
     var padZ=z-2.25,steel=['#526659','#253b30','#3a5142'];
@@ -3250,7 +3271,8 @@ if(!SHOP_SPRITES){
       // The ground-floor counters sort with the customers; the upper stations paint with their floors.
       floor.ids.forEach(fi===0?function(i){
         var p=machinePos[i],desks=i===4?orderCounterPositions(state.orderCounters):[p];
-        if(state.lines[i]>0)desks.forEach(function(q){slabDownlight(q.x,1.45,4.45,1.31)});
+        // The sprite shop has no slab over the counters, so they keep the light's warm pool but no ceiling fixture.
+        if(state.lines[i]>0)desks.forEach(function(q){if(!SHOP_SPRITES){slabDownlight(q.x,1.45,4.45,1.31);return}var top=project(q.x,1.32,1.45);glow(top.x,top.y,unit*1.35,'#ffe6b01e',unit*.62)});
         desks.forEach(function(q,index){jobs.push({depth:depthOf(q),draw:function(){sceneElevation=0;suppressDownlights=true;try{drawStation(i,i===4?index:undefined)}finally{suppressDownlights=false}}})});
       }:drawStation);
       if(fi===0)[-5.3,-2.7,7.4].forEach(function(gx){globePendant(gx,1.0,4.45)});
