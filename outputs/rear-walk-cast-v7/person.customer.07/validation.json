@@ -1,0 +1,114 @@
+{
+  "id": "person.customer.07",
+  "frames": 8,
+  "head_locked": true,
+  "head_cut": 358,
+  "collar_join_end": 390,
+  "checks": [
+    {
+      "index": 0,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 1,
+      "translation": [
+        3,
+        0
+      ],
+      "head_sha256": "f65e24a351bfbd7a51e8245ef6e8464d98d4de16ecd9e97ca32fc16760550937"
+    },
+    {
+      "index": 1,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 1.0501730103806228,
+      "translation": [
+        0,
+        0
+      ],
+      "head_sha256": "f65e24a351bfbd7a51e8245ef6e8464d98d4de16ecd9e97ca32fc16760550937"
+    },
+    {
+      "index": 2,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 1.0556521739130436,
+      "translation": [
+        0,
+        -1
+      ],
+      "head_sha256": "f65e24a351bfbd7a51e8245ef6e8464d98d4de16ecd9e97ca32fc16760550937"
+    },
+    {
+      "index": 3,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 1.0049668874172186,
+      "translation": [
+        -7,
+        4
+      ],
+      "head_sha256": "f65e24a351bfbd7a51e8245ef6e8464d98d4de16ecd9e97ca32fc16760550937"
+    },
+    {
+      "index": 4,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 1.0083056478405317,
+      "translation": [
+        -9,
+        0
+      ],
+      "head_sha256": "f65e24a351bfbd7a51e8245ef6e8464d98d4de16ecd9e97ca32fc16760550937"
+    },
+    {
+      "index": 5,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 1.0305602716468591,
+      "translation": [
+        3,
+        -21
+      ],
+      "head_sha256": "f65e24a351bfbd7a51e8245ef6e8464d98d4de16ecd9e97ca32fc16760550937"
+    },
+    {
+      "index": 6,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 1.0501730103806228,
+      "translation": [
+        1,
+        1
+      ],
+      "head_sha256": "f65e24a351bfbd7a51e8245ef6e8464d98d4de16ecd9e97ca32fc16760550937"
+    },
+    {
+      "index": 7,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 1.0033057851239668,
+      "translation": [
+        29,
+        23
+      ],
+      "head_sha256": "f65e24a351bfbd7a51e8245ef6e8464d98d4de16ecd9e97ca32fc16760550937"
+    }
+  ],
+  "status": "awaiting-contact-sheet-review"
+}
