@@ -33,10 +33,14 @@ const STATION_SIZE = { seeds: { w: 3.6, drop: .6 }, grow: { w: 4.3, drop: .62 },
 // every upright stays upright, and the aspect change is split between width and height so pots and plants stretch
 // as little as possible. The PNGs stay as rendered. Tier 2 already follows the map's slopes.
 const RENDER_AXES = { 'station.grow.tier1': [.424, -.6], 'station.grow.tier3': [.458, -.552] };
+// A tier render framed differently from the rest of its station's set gets its own size: Kevin's ChatGPT tier 3
+// pickup desk (2026-10-17, the PICKUP arch restored) is cropped tighter round its arch and side cabinet, so at the
+// station's width it came out small; this lays its counter over the earlier tier 3 desk's footprint.
+const TIER_SIZE = { 'station.pickup.tier3': { w: 4.1, drop: .62, ox: -.35 } };
 function lazySprite(name, file, size) {
   if (SPRITES[name] || !SUNNY || typeof Image === 'undefined') return;
   const img = new Image(); img.decoding = 'async'; img.onerror = () => { SPRITES[name].missing = true; }; img.src = file;
-  SPRITES[name] = Object.assign({ img }, size, RENDER_AXES[name] ? { axes: RENDER_AXES[name] } : null);
+  SPRITES[name] = Object.assign({ img }, size, TIER_SIZE[name], RENDER_AXES[name] ? { axes: RENDER_AXES[name] } : null);
 }
 // The shear that squares a render's floor edges (slopes mL down-right, mR up-right) to the map's. With x' = sx·x and
 // y' = sy·y + k·x the two edge slopes become (sy·m + k) / sx; matching both fixes sy / sx and k, and the remaining
@@ -141,14 +145,23 @@ export function drawPersonSprite(api, x, z, identity, employee, facing, ground, 
     lazySprite(v3, 'sprites/people/' + v3 + '.png', PERSON_V3_SIZE);
     if (spriteReady(v3)) { name = v3; flip = false; }
   }
-  // Walking up the screen (away from the camera) the figure shows its back: Kevin's walk-v5 rear stills, one
-  // mid-stride pose each facing up-right (mirrored for up-left), empty-handed only, so anyone carrying a bag keeps
-  // the front cycle. With a single pose there is nothing to pin, so it glides with the step's rise and settle.
+  // Walking up the screen (away from the camera) the figure shows its back, facing up-right (mirrored for up-left),
+  // empty-handed only, so anyone carrying a bag keeps the front cycle. Where Kevin's eight-frame rear walk exists
+  // (person.<role>.<nn>.walk.back.00-07.png: contact, down, passing, reach on each foot, head-locked) it steps and is
+  // pinned like the front cycle; frame 00 is asked for first, so a person without the set costs one missed request.
+  // Otherwise the walk-v5 rear still glides with the step's rise and settle.
   let rearShown = false;
   if (!employee && amount > .3 && heading && !bag && heading.x + heading.z < -.05) {
-    const rear = personName(role, nn, true) + '.back';
+    const rear = personName(role, nn, true) + '.back', cyc = rear + '.0';
     lazySprite(rear, 'sprites/people/' + rear + '.png', PERSON_V3_SIZE);
-    if (spriteReady(rear)) { name = rear; flip = heading.x - heading.z < 0; lift = amount * .04 * (1 - Math.cos(2 * phase)) / 2; rearShown = true; }
+    lazySprite(cyc + 0, 'sprites/people/' + cyc + '0.png', PERSON_V3_SIZE);
+    const eighth = phase / (Math.PI / 4), key = Math.round(eighth), frame = cyc + ((key % 8) + 8) % 8;
+    if (spriteReady(cyc + 0)) for (let k = 1; k < 8; k++) lazySprite(cyc + k, 'sprites/people/' + cyc + k + '.png', PERSON_V3_SIZE);
+    if (spriteReady(frame)) {
+      name = frame; lift = 0; rearShown = true;
+      const back = (eighth - key) * (Math.PI / 4) / WALK_STEP_RATE * WALK_PIN; x -= heading.x * back; z -= heading.z * back;
+    } else if (spriteReady(rear)) { name = rear; lift = amount * .04 * (1 - Math.cos(2 * phase)) / 2; rearShown = true; }
+    if (rearShown) flip = heading.x - heading.z < 0;
   }
   // Kevin's 2026-10-15 walk cycles: four frames a step pair (contact, pass, contact, pass), stored facing right and
   // mirrored to face left. The step phase picks the frame, and the frames carry the rise and settle, so no bob.
@@ -178,7 +191,7 @@ export function drawPersonSprite(api, x, z, identity, employee, facing, ground, 
 // Shop fixtures from the interior batch, sized in world units like the stations.
 const FIXTURE_SIZE = { 'station.security.site': { w: 2.2, drop: .45 }, 'event.festival.stall': { w: 2.6, drop: .45 }, 'station.orders.compact.tier1': { w: 2.15, drop: .45 }, 'station.orders.compact.tier2': { w: 2.15, drop: .45 }, 'station.orders.compact.tier3': { w: 2.2, drop: .45 }, 'shop.kiosk': { w: 1, drop: 0 }, 'shop.displaycase': { w: 4, drop: .55 }, 'shop.planter.small': { w: .95, drop: .12 },
   // Latest main-shop-v2 batch: placed by main.js on world boxes or wall anchors, so their sizes here are unused.
-  ...Object.fromEntries(['lounge.sofa', 'lounge.coffee.table', 'lounge.lamp.on', 'lounge.lamp.off', 'lounge.rug.floor', 'lounge.carpet.entry', 'lounge.sign.lit', 'lounge.sign.dark', 'street.bollard', 'street.sconce', 'shell.exit.lamp', 'shell.fan.housing', 'drone.courier.loaded', 'prop.jar', 'prop.pickup.bag', 'prop.carton', 'prop.tote', 'prop.cap', 'prop.tee'].map(n => [n, { w: 1, drop: 0 }])) };
+  ...Object.fromEntries(['lounge.sofa', 'lounge.coffee.table', 'lounge.lamp.on', 'lounge.lamp.off', 'lounge.rug.floor', 'lounge.carpet.entry', 'lounge.carpet.runner', 'lounge.sign.lit', 'lounge.sign.dark', 'street.bollard', 'street.sconce', 'shell.exit.lamp', 'shell.fan.housing', 'drone.courier.loaded', 'prop.jar', 'prop.pickup.bag', 'prop.carton', 'prop.tote', 'prop.cap', 'prop.tee'].map(n => [n, { w: 1, drop: 0 }])) };
 // The narrower order desk used once the bank has two or three counters, at the station's tier.
 export function compactOrderSprite(level) { return fixtureSprite('station.orders.compact.tier' + stationTier(level)) || null; }
 export function fixtureSprite(name) { if (!FIXTURE_SIZE[name]) return null; lazySprite(name, 'sprites/interior/' + name + '.png', FIXTURE_SIZE[name]); return spriteReady(name) ? name : null; }
