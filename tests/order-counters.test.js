@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {migrateOrderCounters,orderCounterCost,buyOrderCounter,orderCounterPositions,assignOrderCounter,atOrderCounter,orderAvailability,ORDER_QUEUE_GATE} from '../src/order-counters.js';
+import {migrateOrderCounters,orderCounterCost,buyOrderCounter,orderCounterPositions,assignOrderCounter,atOrderCounter,orderAvailability,ORDER_QUEUE_GATE,ORDER_SPOT_Z} from '../src/order-counters.js';
 
 test('old saves retain one counter and malformed expansion levels cannot add counters',()=>{
   for(const value of [undefined,null,NaN,Infinity,'3',{},-2,0])assert.equal(migrateOrderCounters(value),1);
@@ -26,7 +26,7 @@ test('customers must pass security, reach the queue head, and walk to their own 
   assert.equal(assignOrderCounter([unchecked,kiosk,head,later],3),null);
   head.z=ORDER_QUEUE_GATE.z;head.walking=true;assert.equal(assignOrderCounter([head],3),null);
   head.walking=false;assignOrderCounter([head],3);assert.equal(atOrderCounter(head,3),false);
-  head.x=orderCounterPositions(3)[0].x;head.z=4.9;assert.equal(atOrderCounter(head,3),true);
+  head.x=orderCounterPositions(3)[0].x;head.z=ORDER_SPOT_Z;assert.equal(atOrderCounter(head,3),true);
   head.walking=true;assert.equal(atOrderCounter(head,3),false);
 });
 test('parallel counters and kiosks reserve whole baskets without overbooking bags or pickup places',()=>{
