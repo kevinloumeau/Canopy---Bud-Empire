@@ -1,0 +1,77 @@
+/* Colour tokens, loaded right after style.css (which must stay first for its font @import) (UI reskin plan, Phase 1).
+   --ui-*  the refined glass design that later phases move each surface onto; components.css and ?ui=kit use them today.
+   --p-*   today's most-used colours, values unchanged, named family-lightness (HSL L%). Later phases fold them into --ui-*;
+           a literal used fewer than five times stays inline until its surface is restyled. */
+:root{
+  --ui-glass:rgba(20,38,28,.66);
+  --ui-glass-strong:rgba(18,34,25,.8);
+  --ui-sheen:#ffffff14;
+  --ui-edge:#ffffff24;
+  --ui-shadow:0 8px 24px rgba(10,20,14,.22);
+  --ui-blur:blur(18px) saturate(1.4);
+  --ui-well:rgba(0,0,0,.14);
+  --ui-well-soft:rgba(255,255,255,.04);
+  --ui-ink:#f2f0e6;
+  --ui-soft:rgba(242,240,230,.62);
+  --ui-on-ink:#16261c;
+  --ui-brass:#e2c68a;
+  --ui-brass-ink:#2a2211;
+  --ui-brass-wash:rgba(226,198,138,.1);
+  --ui-gold:#e7b94a;
+  --ui-leaf:#4f7a3e;
+  --ui-on-leaf:#f5f2e6;
+  --ui-leaf-glow:#7fa765;
+  --ui-coral:#e07a5f;
+  --ui-coral-wash:rgba(224,122,95,.25);
+
+  --p-cream-95: #fff7e7; /* 6 uses */
+  --p-cream-92: #f8f0dc; /* 6 uses */
+  --p-sage-96: #f8fbed; /* 12 uses */
+  --p-sage-95: #f6faed; /* 12 uses */
+  --p-sage-94: #f0f5e8; /* 11 uses */
+  --p-sage-94-2: #f3f6e8; /* 5 uses */
+  --p-sage-93: #f0f4e8; /* 27 uses */
+  --p-sage-91: #edf3df; /* 15 uses */
+  --p-sage-91-2: #eaf3df; /* 5 uses */
+  --p-sage-90: #e9eddf; /* 6 uses */
+  --p-sage-84: #d3e0cb; /* 10 uses */
+  --p-sage-82: #cbdcc5; /* 27 uses */
+  --p-sage-82-2: #cddcc4; /* 7 uses */
+  --p-sage-80: #c6d8bf; /* 17 uses */
+  --p-sage-79: #c5d5bc; /* 6 uses */
+  --p-sage-77: #c4cfbb; /* 5 uses */
+  --p-sage-76: #bdcdb5; /* 17 uses */
+  --p-sage-74: #b6c8af; /* 5 uses */
+  --p-sage-74-2: #b7c5b4; /* 5 uses */
+  --p-sage-70: #aebfa8; /* 22 uses */
+  --p-sage-69: #aebda5; /* 6 uses */
+  --p-sage-66: #9fb59a; /* 12 uses */
+  --p-sage-65: #9fb09a; /* 8 uses */
+  --p-sage-49: #789167; /* 5 uses */
+  --p-lime-90: #e8f2d7; /* 12 uses */
+  --p-lime-85: #dcefc0; /* 6 uses */
+  --p-lime-84: #d7f2b8; /* 5 uses */
+  --p-lime-81: #d0e6b6; /* 5 uses */
+  --p-lime-78: #c4e8a7; /* 7 uses */
+  --p-lime-76: #c7e39f; /* 7 uses */
+  --p-lime-75: #c3dca5; /* 11 uses */
+  --p-lime-74: #c4dc9f; /* 6 uses */
+  --p-lime-72: #b6e58c; /* 6 uses */
+  --p-lime-71: #b7d197; /* 6 uses */
+  --p-lime-70: #b6d690; /* 20 uses */
+  --p-lime-63: #d7ff43; /* 5 uses */
+  --p-gold-77: #e3d1a6; /* 44 uses */
+  --p-gold-76: #e8d29c; /* 13 uses */
+  --p-gold-76-2: #e5d3a0; /* 8 uses */
+  --p-gold-76-3: #f3d98f; /* 8 uses */
+  --p-gold-75: #efcf8d; /* 13 uses */
+  --p-gold-72: #f0cf7f; /* 9 uses */
+  --p-gold-60: #e7b94a; /* 6 uses */
+  --p-forest-35: #55733e; /* 21 uses */
+  --p-forest-34: #4d6050; /* 6 uses */
+  --p-forest-30: #435649; /* 9 uses */
+  --p-forest-22: #304035; /* 6 uses */
+  --p-forest-19: #223f31; /* 5 uses */
+  --p-forest-19-2: #30332e; /* 5 uses */
+  --p-forest-13: #142c22; /* 11 uses */
+}

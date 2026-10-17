@@ -2,40 +2,40 @@
 .sheet .tray-tabs{grid-template-columns:repeat(6,minmax(0,1fr))!important}
 .sheet .empire-views{position:sticky;top:0;z-index:2;background:#263f32;display:flex;gap:6px;padding:4px 8px 12px;border-bottom:1px solid #c1d7b733}
 .sheet .empire-views button{flex:1;min-height:44px;border:1px solid transparent;border-radius:8px;background:transparent;color:#d0dfc9;font-size:12px}
-.sheet .empire-views button[aria-pressed=true]{background:#dce9be22;color:#f6faed;border-color:#c1d7b74d}
-.empire-content{padding:16px 9px 8px;color:#f0f4e8;font-size:13px;line-height:1.5}
+.sheet .empire-views button[aria-pressed=true]{background:#dce9be22;color:var(--p-sage-95);border-color:#c1d7b74d}
+.empire-content{padding:16px 9px 8px;color:var(--p-sage-93);font-size:13px;line-height:1.5}
 .empire-content[hidden]{display:none}
 .empire-content h2{font-size:18px;line-height:1.25;margin:0 0 8px;font-weight:650;letter-spacing:-.02em}
 .empire-content h3{font-size:15px;margin:0 0 3px}
-.empire-content p{margin:6px 0 12px;color:#cbdcc5}
+.empire-content p{margin:6px 0 12px;color:var(--p-sage-82)}
 .empire-content .empire-section-heading{margin-top:28px}
 .empire-content .empire-note{font-size:12px;color:#bfd2b9}
-.empire-content progress{display:block;width:100%;height:7px;margin:12px 0;accent-color:#b6d690;border:0;border-radius:4px;overflow:hidden;background:#142c22}
-.empire-content progress::-webkit-progress-bar{background:#142c22}
-.empire-content progress::-webkit-progress-value{background:#b6d690}
-.empire-content progress::-moz-progress-bar{background:#b6d690}
-.sheet .empire-content button{min-height:44px;border:1px solid #c1d7b76b;border-radius:8px;padding:9px 12px;background:#dce9be20;color:#f0f4e8;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer}
-.sheet .empire-content .empire-primary{width:100%;background:#c3dca5;color:#203728;font-weight:700}
-.sheet .empire-content button:disabled{background:#223f31;color:#b6c8af;border-color:#75936b55;opacity:.8;cursor:default}
+.empire-content progress{display:block;width:100%;height:7px;margin:12px 0;accent-color:var(--p-lime-70);border:0;border-radius:4px;overflow:hidden;background:var(--p-forest-13)}
+.empire-content progress::-webkit-progress-bar{background:var(--p-forest-13)}
+.empire-content progress::-webkit-progress-value{background:var(--p-lime-70)}
+.empire-content progress::-moz-progress-bar{background:var(--p-lime-70)}
+.sheet .empire-content button{min-height:44px;border:1px solid #c1d7b76b;border-radius:8px;padding:9px 12px;background:#dce9be20;color:var(--p-sage-93);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer}
+.sheet .empire-content .empire-primary{width:100%;background:var(--p-lime-75);color:#203728;font-weight:700}
+.sheet .empire-content button:disabled{background:var(--p-forest-19);color:var(--p-sage-74);border-color:#75936b55;opacity:.8;cursor:default}
 .empire-branch{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:17px 0;border-top:1px solid #c1d7b733}
 .empire-branch strong{font-size:12px;color:#d8e8c8;font-variant-numeric:tabular-nums}
 .empire-branch p{font-size:12px;margin-bottom:0}
 .empire-branch button{max-width:112px}
 .daily-track{list-style:none;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:18px 0}
-.daily-track li{padding:10px 3px;border:1px solid #c1d7b733;border-radius:8px;text-align:center;color:#cbdcc5}
+.daily-track li{padding:10px 3px;border:1px solid #c1d7b733;border-radius:8px;text-align:center;color:var(--p-sage-82)}
 .daily-track span{display:block;font-size:11px}
 .daily-track b{font-size:13px;font-variant-numeric:tabular-nums}
-.daily-track li.current{border-color:#c3dca5;background:#c3dca522;color:#f0f4e8}
+.daily-track li.current{border-color:var(--p-lime-75);background:#c3dca522;color:var(--p-sage-93)}
 .daily-track li.collected span::after{content:' ✓'}
-.event-time{display:block;margin:18px 0;font-variant-numeric:tabular-nums;color:#e3d1a6}
-.empire-content button:focus-visible,.empire-views button:focus-visible{outline:2px solid #e3d1a6;outline-offset:2px}
+.event-time{display:block;margin:18px 0;font-variant-numeric:tabular-nums;color:var(--p-gold-77)}
+.empire-content button:focus-visible,.empire-views button:focus-visible{outline:2px solid var(--p-gold-77);outline-offset:2px}
 @media(hover:hover){.empire-content button:not(:disabled):hover,.empire-views button:hover{filter:brightness(1.12)}}
 @media(max-width:480px){.sheet .tray-tabs button{font-size:10px;letter-spacing:0;padding-inline:1px}.empire-content{padding-inline:7px}}
 
 /* Locations belong to the camera UI; the shop itself stays free of store labels. */
 /* Compact illustrated location rail. Only the current store shows its name. */
 .store-switcher{position:absolute;z-index:8;top:calc(var(--hud-height,110px) + 12px);left:20px;display:flex;align-items:center;gap:2px;width:max-content;max-width:calc(100% - 82px);padding:4px;background:#223b30f5;border:1px solid #9eb99466;border-radius:12px;color:#eff4e7}
-.store-switcher button{position:relative;display:flex;align-items:center;justify-content:center;gap:6px;flex:0 0 auto;min-width:44px;height:44px;padding:8px 10px;border:0;border-radius:8px;background:transparent;color:#cbdcc5;font:inherit;cursor:pointer}
+.store-switcher button{position:relative;display:flex;align-items:center;justify-content:center;gap:6px;flex:0 0 auto;min-width:44px;height:44px;padding:8px 10px;border:0;border-radius:8px;background:transparent;color:var(--p-sage-82);font:inherit;cursor:pointer}
 .store-switcher .location-icon,.location-manage svg{width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .location-name{display:none;font-size:12px;font-weight:650;white-space:nowrap}
 .store-switcher button[aria-pressed=true]{background:#c3dca522;color:#f0e1b6}
@@ -63,45 +63,45 @@ body[data-store-view=branch] .customer-mood{display:none}
 .store-picker .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 .branch-projects{grid-column:1/-1;border-top:1px solid #c1d7b733;padding-top:8px}
-.branch-projects summary{min-height:44px;display:list-item;align-content:center;cursor:pointer;color:#e3d1a6;font-weight:650}
-.branch-projects summary:focus-visible{outline:2px solid #e3d1a6;outline-offset:2px}
+.branch-projects summary{min-height:44px;display:list-item;align-content:center;cursor:pointer;color:var(--p-gold-77);font-weight:650}
+.branch-projects summary:focus-visible{outline:2px solid var(--p-gold-77);outline-offset:2px}
 .branch-project{display:grid;grid-template-columns:minmax(0,1fr) 106px;gap:12px;align-items:center;padding:14px 0;border-top:1px solid #c1d7b733}
-.branch-project h4{margin:0;font-size:13px;color:#f0f4e8}
+.branch-project h4{margin:0;font-size:13px;color:var(--p-sage-93)}
 .branch-project p{margin:4px 0 6px}
 .branch-project strong{font-size:11px}
 
 .branch-management{grid-column:1/-1;min-width:0}
-.branch-management .specialty{color:#e3d1a6;font-weight:650}
+.branch-management .specialty{color:var(--p-gold-77);font-weight:650}
 .branch-management summary{min-height:44px;align-content:center;cursor:pointer}
-.branch-management summary:focus-visible{outline:2px solid #e3d1a6;outline-offset:2px}
+.branch-management summary:focus-visible{outline:2px solid var(--p-gold-77);outline-offset:2px}
 .short-goal{padding:18px 0;border-bottom:1px solid #c1d7b733}
 #returnSummary{padding-bottom:22px;margin-bottom:24px;border-bottom:1px solid #c1d7b733}
 #returnEarnings{list-style:none;padding:0;margin:16px 0}
 #returnEarnings li{display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-variant-numeric:tabular-nums}
-#nextInvestment{color:#e3d1a6}
+#nextInvestment{color:var(--p-gold-77)}
 
 
 /* Keep branch decisions visible and explanations optional. */
-.branch-facts{display:flex;align-items:baseline;justify-content:space-between;gap:12px;font-size:12px;color:#cbdcc5}
-.branch-help{font-size:12px;color:#cbdcc5}
+.branch-facts{display:flex;align-items:baseline;justify-content:space-between;gap:12px;font-size:12px;color:var(--p-sage-82)}
+.branch-help{font-size:12px;color:var(--p-sage-82)}
 .branch-help summary{min-height:44px;align-content:center;cursor:pointer}
 .branch-help p{font-size:12px;margin:4px 0 10px}
-.branch-help summary:focus-visible{outline:2px solid #e3d1a6;outline-offset:2px}
+.branch-help summary:focus-visible{outline:2px solid var(--p-gold-77);outline-offset:2px}
 .branch-management[hidden],.branch-projects[hidden],.branch-actions button[hidden]{display:none!important}
 .branch-project h4{margin-bottom:5px}
 
 .reputation-summary{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:13px;font-variant-numeric:tabular-nums}
-.reputation-summary span{font-size:12px;color:#cbdcc5}
+.reputation-summary span{font-size:12px;color:var(--p-sage-82)}
 
 
 /* A store list with a single working area, rather than three repeated forms. */
 .empire-branch{display:block;padding:0;border-top:1px solid #c1d7b733}
-.sheet .empire-content .branch-toggle{display:grid;grid-template-columns:minmax(0,1fr) auto 10px;align-items:center;gap:12px;width:100%;max-width:none;min-height:70px;padding:12px 0;border:0;border-radius:0;background:transparent;text-align:left;color:#f0f4e8}
+.sheet .empire-content .branch-toggle{display:grid;grid-template-columns:minmax(0,1fr) auto 10px;align-items:center;gap:12px;width:100%;max-width:none;min-height:70px;padding:12px 0;border:0;border-radius:0;background:transparent;text-align:left;color:var(--p-sage-93)}
 .branch-toggle .branch-name{font-size:15px;font-weight:700}
-.branch-toggle strong{font-size:11px;color:#cbdcc5;font-weight:500}
-.branch-toggle::after{content:'';width:6px;height:6px;border-right:1.5px solid #cbdcc5;border-bottom:1.5px solid #cbdcc5;transform:rotate(-45deg);justify-self:center}
+.branch-toggle strong{font-size:11px;color:var(--p-sage-82);font-weight:500}
+.branch-toggle::after{content:'';width:6px;height:6px;border-right:1.5px solid var(--p-sage-82);border-bottom:1.5px solid var(--p-sage-82);transform:rotate(-45deg);justify-self:center}
 .branch-toggle[aria-expanded=true]::after{transform:rotate(45deg)}
-.branch-toggle[aria-expanded=true] .branch-name{color:#e3d1a6}
+.branch-toggle[aria-expanded=true] .branch-name{color:var(--p-gold-77)}
 .branch-body{padding:0 0 14px}
 .branch-body[hidden]{display:none}
 .branch-body .branch-actions{display:flex;gap:8px;margin:0 0 14px}
@@ -109,7 +109,7 @@ body[data-store-view=branch] .customer-mood{display:none}
 .branch-body .branch-actions button:only-child{flex:initial}
 .branch-body .branch-facts{margin:8px 0 12px}
 .branch-body .branch-projects{margin-top:6px;padding-top:0}
-.branch-body .branch-projects summary{color:#cbdcc5;font-size:12px}
+.branch-body .branch-projects summary{color:var(--p-sage-82);font-size:12px}
 .branch-body .branch-help summary{min-height:38px}
 .branch-toggle{scroll-margin-top:65px}
 

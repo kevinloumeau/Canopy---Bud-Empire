@@ -1,25 +1,25 @@
 /* Big spender tag and rush pill: gold accents on the game's dark glass, matching the station plaques. */
-.world .marker.spender-tag,.world .marker.spender-tag:not(.selected){left:0;top:0;display:block;min-height:34px;padding:7px 12px;line-height:1.2;opacity:1;border-radius:999px;background:#2a2410e6;border:1px solid #f0cf7f;color:#f6dc95;font-weight:700;font-size:.8rem;white-space:nowrap;box-shadow:0 4px 14px #0006,0 0 14px #f0cf7f33;cursor:pointer;z-index:4}
+.world .marker.spender-tag,.world .marker.spender-tag:not(.selected){left:0;top:0;display:block;min-height:34px;padding:7px 12px;line-height:1.2;opacity:1;border-radius:999px;background:#2a2410e6;border:1px solid var(--p-gold-72);color:#f6dc95;font-weight:700;font-size:.8rem;white-space:nowrap;box-shadow:0 4px 14px #0006,0 0 14px #f0cf7f33;cursor:pointer;z-index:4}
 /* The plaque styles above it are smaller than a fingertip; an invisible margin brings the tap area to 44px. */
 .world .marker.spender-tag::before{content:'';position:absolute;inset:-5px -4px}
 .world .marker.spender-tag[hidden]{display:none!important}
-.marker.spender-tag span{color:#f0cf7f}
+.marker.spender-tag span{color:var(--p-gold-72)}
 @media (prefers-reduced-motion:no-preference){.marker.spender-tag{animation:spender-bob 1.6s ease-in-out infinite}}
 @keyframes spender-bob{50%{margin-top:-4px}}
-.rush-pill{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 108px);transform:translateX(-50%);z-index:30;padding:6px 14px;border-radius:999px;background:#2a2410e6;border:1px solid #f0cf7f;color:#f6dc95;font:600 .78rem 'DM Mono',ui-monospace,monospace;box-shadow:0 4px 14px #0006;pointer-events:none;white-space:nowrap}
+.rush-pill{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 108px);transform:translateX(-50%);z-index:30;padding:6px 14px;border-radius:999px;background:#2a2410e6;border:1px solid var(--p-gold-72);color:#f6dc95;font:600 .78rem 'DM Mono',ui-monospace,monospace;box-shadow:0 4px 14px #0006;pointer-events:none;white-space:nowrap}
 .rush-pill[hidden]{display:none}
 body[data-store-view=branch] .rush-pill{display:none}
 /* Multi-day event card: kicker, name, countdown, a three-step ladder whose cells fill with progress, and the claim button. */
 .season-card{display:grid;gap:6px;padding:12px;margin:0 0 14px;border:1px solid #f0cf7f55;border-radius:12px;background:linear-gradient(160deg,#f0cf7f14,#0000 60%)}
 .season-card h2{margin:0}
 .season-card p{margin:0}
-.season-kicker{color:#f0cf7f;font:600 11px 'DM Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase}
+.season-kicker{color:var(--p-gold-72);font:600 11px 'DM Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase}
 .season-tiers{list-style:none;margin:4px 0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .season-tiers li{--fill:0%;display:grid;gap:2px;padding:7px 8px;border-radius:8px;border:1px solid #ffffff1f;background:linear-gradient(90deg,#c4e8a733 var(--fill),#0000 var(--fill)),#ffffff08;min-width:0}
 .season-tiers li span{font:600 12px 'DM Mono',ui-monospace,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .season-tiers li b{font-size:11px;font-weight:600;opacity:.8}
-.season-tiers li small{font-size:11px;color:#f0cf7f}
-.season-tiers li.is-ready{border-color:#c4e8a7}
+.season-tiers li small{font-size:11px;color:var(--p-gold-72)}
+.season-tiers li.is-ready{border-color:var(--p-lime-78)}
 .season-tiers li.is-collected{border-color:#f0cf7f88;background:#f0cf7f1f}
 .season-badges{font-size:12px;opacity:.8}
 /* Founder perks panel (cards share the library-card look). */
@@ -32,12 +32,12 @@ body[data-store-view=branch] .rush-pill{display:none}
 .library-card{display:grid;gap:2px;align-content:start;padding:8px;border-radius:10px;border:1px solid #ffffff14;background:#ffffff06;min-width:0}
 .library-card b{font-size:13px}
 .library-card small{font-size:11px;opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.library-card em{font-style:normal;font-size:11px;color:#c4e8a7}
-.library-card button{margin-top:4px;min-height:44px;padding:4px 8px;border-radius:8px;border:1px solid #ffffff22;background:#55733e;color:#f6f1df;font-size:11px;font-weight:600;line-height:1.2}
+.library-card em{font-style:normal;font-size:11px;color:var(--p-lime-78)}
+.library-card button{margin-top:4px;min-height:44px;padding:4px 8px;border-radius:8px;border:1px solid #ffffff22;background:var(--p-forest-35);color:#f6f1df;font-size:11px;font-weight:600;line-height:1.2}
 .library-card button:disabled{background:#ffffff0d;color:#f6f1dfaa;cursor:default}
 .library-card[data-state=known]{border-color:#c4e8a766;background:#c4e8a712}
-.library-card[data-state=known] button{background:transparent;border-color:transparent;color:#c4e8a7}
-.library-card[data-state=ready]{border-color:#f0cf7f}
+.library-card[data-state=known] button{background:transparent;border-color:transparent;color:var(--p-lime-78)}
+.library-card[data-state=ready]{border-color:var(--p-gold-72)}
 .modal .settings-row[hidden]{display:none}
 .founder-perks{margin:10px 0}
 .founder-perks .library-card small{white-space:normal}
@@ -53,19 +53,19 @@ body[data-store-view=branch] .rush-pill{display:none}
 .breed-copy{display:grid;gap:2px;min-width:0;flex:1}
 .breed-copy b{font-size:14px}
 .breed-copy small{font-size:11px;opacity:.75}
-.breed-status{font-style:normal;font-size:12px;color:#c4e8a7}
+.breed-status{font-style:normal;font-size:12px;color:var(--p-lime-78)}
 .breed-parents{display:grid;gap:3px;margin-top:3px}
 .breed-parents[hidden]{display:none}
 .breed-parents span{--fill:0%;font:500 11px 'DM Mono',ui-monospace,monospace;padding:3px 6px;border-radius:6px;background:linear-gradient(90deg,#c4e8a72e var(--fill),#ffffff08 var(--fill))}
-.breed-card button{flex:none;min-height:44px;max-width:44%;padding:4px 12px;border-radius:10px;border:1px solid #ffffff22;background:#55733e;color:#f6f1df;font-size:12px;font-weight:700;line-height:1.2}
+.breed-card button{flex:none;min-height:44px;max-width:44%;padding:4px 12px;border-radius:10px;border:1px solid #ffffff22;background:var(--p-forest-35);color:#f6f1df;font-size:12px;font-weight:700;line-height:1.2}
 .breed-card button:disabled{background:#ffffff0d;color:#f6f1dfaa;cursor:default}
 .breed-card[data-state=growing]{border-color:#f0cf7f66;background:#f0cf7f10}
-.breed-card[data-state=growing] .breed-status{color:#f0cf7f}
+.breed-card[data-state=growing] .breed-status{color:var(--p-gold-72)}
 .breed-card[data-state=open]{border-color:#c4e8a766}
 .breed-card[data-state=known]{background:#c4e8a70d}
 .breed-card[data-state=known] .breed-status{color:#f6f1dfb3}
 .breed-card[data-state=bench] .breed-status,.breed-card[data-state=prepare] .breed-status{color:#f6f1dfb3}
 /* Weekly special: one line at the top of Events. Between seasons the season card previews the next one. */
 .weekly-special{margin:0 0 10px;padding:9px 12px;border-radius:10px;background:#c4e8a714;border:1px solid #c4e8a73d;font-size:13px}
-.weekly-special b{color:#c4e8a7}
+.weekly-special b{color:var(--p-lime-78)}
 .season-card.is-between .season-tiers,.season-card.is-between #seasonClaim{display:none}
