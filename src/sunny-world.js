@@ -415,7 +415,7 @@ function streetJobs(api) {
   // truck parks nose-first with the traffic on the rear pavement, hatch toward the walkers.
   at(-17, 14, () => { if (!prop(api, 'street.awning.cafe', -17, 14)) { umbrella(api, -17, 12.5); umbrella(api, -17, 15.5); } }, 2.3, 1.6, [2.6, .8, .9, 1.6, 1.3]);
   at(-18.5, -8, () => bin(api, -18.5, -8), .4, .4, [1.1, 1, 1, .3, .3]); at(-18.5, 10.5, () => hydrant(api, -18.5, 10.5), .3, .3, [.95, 1, 1, .2, .2]);
-  at(-17.6, -3, () => prop(api, 'street.newsboxes', -17.6, -3, true), 1.3, 1, [1.7, 1.1, 1, .45, 1.15]); at(9.5, -13.6, () => prop(api, 'street.foodtruck', 9.5, -13.6), 3.75, 1.1, () => groundShadow(api, 9.5, P, -13.6, 3.4, 1.1, 2.8));
+  at(-17.6, -3, () => prop(api, 'street.newsboxes', -17.6, -3, true), 1.3, 1, () => sunShadow(api, -18.1, P, -3.5, .4, 1.5, 2.8, .9, 1)); // the row's feet stand back from the render's centre; the boxes stand about 2.8 tall at(9.5, -13.6, () => prop(api, 'street.foodtruck', 9.5, -13.6), 3.75, 1.1, () => groundShadow(api, 9.5, P, -13.6, 3.4, 1.1, 2.8));
   [[18, -6], [18, 6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => at(x, z, () => planter(api, x, z), 1.6, 1.2, [1.2, 1, .8, 1, .55]));
   at(0, 16.5, () => bench(api, 0, 16.5, true), 1.2, .5, [.9, .9, 1, 1.05, .3]); // mirrored to run along the front street
   at(18, 0, () => bench(api, 18, 0), .5, 1.2, [.9, .9, 1, .3, 1.05]); at(14, 16, () => bikeRack(api, 14, 16), 1.3, .6, () => sunShadow(api, 14.8, P, 16, 1.1, .35, .9, .6, .6));
@@ -595,16 +595,16 @@ function poolTexture() {
   g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
   return (POOL_TEX = c);
 }
-// A cast shadow's shape: darkest where it leaves the object, thinning and fading toward its tip, soft along both sides.
+// A cast shadow's shape: an even core where it leaves the object, thinning and fading toward its tip, soft along both sides.
 // The image's x runs along the sun from the object outward, its y across.
 function streakTexture() {
   if (STREAK_TEX || typeof document === 'undefined') return STREAK_TEX;
   const W = 128, H = 64, c = document.createElement('canvas'); c.width = W; c.height = H;
   const g = c.getContext('2d'), img = g.createImageData(W, H);
   for (let i = 0; i < W; i++) {
-    const u = (i + .5) / W, along = Math.min(1, u / .1) * Math.pow(1 - u, .8), half = 1 - .3 * u;
+    const u = (i + .5) / W, along = Math.min(1, u / .08) * (u < .4 ? 1 : Math.pow((1 - u) / .6, 1.4)), half = 1 - .25 * u;
     for (let j = 0; j < H; j++) {
-      const v = Math.abs((j + .5) / H * 2 - 1) / half, across = v >= 1 ? 0 : (1 - v * v) * (1 - v * v), o = (j * W + i) * 4;
+      const v = Math.abs((j + .5) / H * 2 - 1) / half, t = v >= 1 ? 0 : v < .55 ? 1 : (1 - v) / .45, across = t * t * (3 - 2 * t), o = (j * W + i) * 4;
       img.data[o] = 46; img.data[o + 1] = 52; img.data[o + 2] = 36; img.data[o + 3] = Math.round(255 * along * across);
     }
   }
@@ -626,12 +626,14 @@ export function sunShadow(api, x, y, z, hx, hz, height, contact = 1, cast = 1) {
   if (contact > 0) softShadow(api, x, y, z, hx + .3, hz + .3, .55 * contact * (.6 + .4 * day), poolTexture());
   if (!(height > 0) || !(cast > 0) || !(day > 0)) return;
   const tex = streakTexture(); if (!tex) return;
-  const along = Math.abs(hx * SUN.x) + Math.abs(hz * SUN.z), across = Math.abs(hx * SUN.z) + Math.abs(hz * SUN.x);
-  const reach = height * SUN_REACH, o = api.project(x, y, z), ea = api.project(x + SUN.x, y, z + SUN.z), eb = api.project(x - SUN.z, y, z + SUN.x), ctx = api.ctx;
+  // The streak is swept along SUN from the footprint's long side, so a row (a bench, the news boxes) throws one band the
+  // length of the row instead of an oval centred on it: the image's x runs along SUN, its y along the long axis.
+  const xLong = hx >= hz, hl = xLong ? hx : hz, hs = xLong ? hz : hx, reach = height * SUN_REACH, ctx = api.ctx;
+  const o = api.project(x, y, z), ea = api.project(x + SUN.x, y, z + SUN.z), eb = xLong ? api.project(x + 1, y, z) : api.project(x, y, z + 1);
   ctx.save(); ctx.transform(ea.x - o.x, ea.y - o.y, eb.x - o.x, eb.y - o.y, o.x, o.y);
   ctx.globalAlpha *= .62 * cast * day;
-  const len = along * 1.5 + reach + .1, half = across + .12;
-  ctx.translate(-along * .5, -half); ctx.scale(len / tex.width, half * 2 / tex.height); ctx.drawImage(tex, 0, 0); ctx.restore();
+  const len = hs * 1.4 + reach + .1, half = hl + .12;
+  ctx.translate(-hs * .7, -half); ctx.scale(len / tex.width, half * 2 / tex.height); ctx.drawImage(tex, 0, 0); ctx.restore();
 }
 // A tree: the trunk's own shadow, and the crown's as a soft round pool thrown along SUN by the crown's height.
 function treeShadow(api, x, z, crown, top) {
