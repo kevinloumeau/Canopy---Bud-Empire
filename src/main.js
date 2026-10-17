@@ -2154,9 +2154,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // The grow line drops at the top floor's right and its outlet runs straight forward into the back of the harvest
     // bench standing in front of it (no dog-leg round the bench's end); the connector is a straight along z.
     1:{name:'tube.run.grow',x:5.6,z:-3,yTop:10.85,ySlab:9.4,yBot:5.21,end:-.3},
-    // The pack line's inlet runs low behind the pack bench: the render is cut (`cut`) short of its open inlet collar
-    // and a straight carries on into the bench (`feed`), so no collar stands loose beside the bench.
-    3:{name:'tube.run.pack',x:.1,z:-1.3,yTop:5.75,ySlab:4.7,yBot:1.55,end:PACK_STUB_X,feed:-2.4,cut:-.6}};
+    // The pack line's inlet comes out of the pack bench's end (`feed`), so no collar stands loose beside the bench.
+    3:{name:'tube.run.pack',x:.1,z:-1.3,yTop:6.15,ySlab:4.7,yBot:1.55,end:PACK_STUB_X,feed:-2.4}};
   // World geometry of a run from its render: the arm lengths follow from the bore, since the image has one scale.
   function tubeRunGeometry(run){
     if(run.path)return run;
@@ -2183,10 +2182,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var top=project(run.x,run.yTop,run.z),slab=project(run.x,run.ySlab,run.z),bot=project(run.x,run.yBot,run.z),x0=top.x-m.axis*k;
     // Row -> screen y, rigid at the bends and the ring, the plain glass between them taking up the rest.
     var rows=[0,m.bend[0],m.ring[0],m.ring[1],m.bend[1],H],ys=[top.y-m.top*k,top.y+(m.bend[0]-m.top)*k,slab.y-(m.ring[2]-m.ring[0])*k,slab.y+(m.ring[1]-m.ring[2])*k,bot.y-(m.bot-m.bend[1])*k,bot.y+(H-m.bot)*k];
-    // A fed run is cut short of its inlet collar; a plain straight, laid first so the render's arm overlaps its open
-    // end, carries on from the cut into the bench.
-    var fed=run.feed!==undefined&&shellSprite('tube.straight');
-    if(fed){drawTubeSprites([[run.cut+.15,run.yTop,run.z],[run.feed,run.yTop,run.z]],TUBE_DIA,{noCap0:true});var cut=project(run.cut,run.yTop,run.z);ctx.save();ctx.beginPath();ctx.rect(cut.x,-10000,20000,20000);ctx.clip()}
+    // A fed run takes its inlet from the kit: a straight from inside the bench and the elbow render turning down to
+    // the floor ring. The assembly render is then shown only from the ring down.
+    var fed=run.feed!==undefined&&shellSprite('tube.straight')&&shellSprite('tube.elbow');
+    if(fed){drawTubeSprites([[run.x,run.ySlab,run.z],[run.x,run.yTop,run.z],[run.feed,run.yTop,run.z]],TUBE_DIA,{noCap0:true});ctx.save();ctx.beginPath();ctx.rect(-10000,ys[2],20000,20000);ctx.clip()}
     for(var b=0;b<5;b++){var r0=rows[b],r1=rows[b+1],y0=ys[b],y1=ys[b+1];if(r1<=r0||y1<=y0+.01)continue;ctx.drawImage(img,0,r0,W,r1-r0,x0,y0,W*k,y1-y0)}
     if(fed)ctx.restore();
     if(run.connector&&shellSprite('tube.straight'))drawTubeSprites(run.connector,TUBE_DIA,{noCap0:true});
@@ -2205,7 +2204,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       // The one aligned image is drawn twice, clipped at the floor ring's screen line: the part above the slab with
       // that floor, the rest with the floor below, so the slab itself hides the buried section.
       tubeRunGeometry(run);
-      var q=project(run.port[0],run.port[1],run.port[2]);
+      // The split runs along the ring's lower edge, so the whole brass ring sits on the floor above.
+      var m=TUBE_KIT[run.name],q=project(run.port[0],run.port[1],run.port[2]);q.y+=(m.ring[1]-m.ring[2])*unit*TUBE_DIA/m.width;
       ctx.save();ctx.beginPath();
       if(upper)ctx.rect(-10000,-10000,20000,10000+q.y);else ctx.rect(-10000,q.y,20000,20000);
       ctx.clip();drawTubeRun(run);transferTube(run.path,stage,[],stage===3?4:stage,true,run.flow);ctx.restore();
