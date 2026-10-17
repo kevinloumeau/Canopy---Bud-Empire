@@ -362,7 +362,7 @@ const hazeRGBA = a => 'rgba(' + HAZE[0] + ',' + HAZE[1] + ',' + HAZE[2] + ',' + 
 export const SUNNY_VIEW = { centre: { x: [-32, 42], z: [-30, 34] }, reach: { rx: [-55, 69], rz: [-58, 63] } };
 // Kept toward the kerb, clear of the facades behind them.
 const FAR_TREES = [[-12, -22.4], [-1, -22.4], [10, -22.4], [14.5, -22.4], [-26.4, -13], [-26.4, -2], [-26.4, 9], [-26.4, 20]];
-const NEAR_TREES = [[-15, -13.5], [-5, -13.5], [5, -13.5], [16.5, -13.5], [-17, 4]]; // the right rear tree sits past the food truck's cab // behind / left of the shop only; nothing under the delivery deck's legs
+const NEAR_TREES = [[-15, -13.5], [-5, -13.5], [5, -13.5], [16.5, -13.5], [-17, 4]]; // behind / left of the shop only; nothing under the delivery deck's legs
 export const LAMPS = [[-18.5, -14.5], [18.5, -14.5], [-18.5, 17.5], [18.5, 17.5], [0, -14.5], [-18.5, 1]];
 // Walkers: [x0, z0, x1, z1, count]; each walks the segment back and forth on its own phase.
 // Lanes keep clear of the trees, lamps and furniture: the rear and left walks run between the slab and the props, the
@@ -409,11 +409,10 @@ function streetJobs(api) {
   LAMPS.forEach(([x, z]) => at(x, z, () => lamp(api, x, z), .4));
   // Left-side street life: a coffee cart and café seating by the entrance, bins and a hydrant.
   at(-18, 7.5, () => cart(api, -18, 7.5), 1.3, 1);
-  // Kevin's café set (2026-10-15) stands in for the two drawn umbrellas; the news boxes face the shop, and his food
-  // truck parks nose-first with the traffic on the rear pavement, hatch toward the walkers.
+  // Kevin's café set (2026-10-15) stands in for the two drawn umbrellas; the news boxes face the shop.
   at(-17, 14, () => { if (!prop(api, 'street.awning.cafe', -17, 14)) { umbrella(api, -17, 12.5); umbrella(api, -17, 15.5); } }, 2.3, 1.6);
   at(-18.5, -8, () => bin(api, -18.5, -8), .4); at(-18.5, 10.5, () => hydrant(api, -18.5, 10.5), .3);
-  at(-17.6, -3, () => prop(api, 'street.newsboxes', -17.6, -3, true), 1.3, 1); at(9.5, -13.6, () => prop(api, 'street.foodtruck', 9.5, -13.6), 3.75, 1.1);
+  at(-17.6, -3, () => prop(api, 'street.newsboxes', -17.6, -3, true), 1.3, 1);
   [[18, -6], [18, 6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => at(x, z, () => planter(api, x, z), 1.6, 1.2));
   at(0, 16.5, () => bench(api, 0, 16.5, true), 1.2, .5); // mirrored to run along the front street
   at(18, 0, () => bench(api, 18, 0), .5, 1.2); at(14, 16, () => bikeRack(api, 14, 16), 1.3, .6);
@@ -616,9 +615,8 @@ const PROPS = { 'street.lamp': { h: 4.6, drop: .1 }, 'street.bench': { w: 2.4, d
   'street.busstop': { w: 3.6, drop: .4 }, 'street.tree.02': { h: 5.4, drop: .4 },
   // Kevin's 2026-10-15 props, sized against the 2.3-unit adult: a 1.4 m meter, 3.2 m signal post, 2.8 m signpost, a
   // row of three news boxes, a 1.2 m pallet, a potted olive and the café set (umbrella, two tables, four chairs).
-  // The food truck is a vehicle, placed by its wheels like the van (7.5 wide, nose +x, hatch facing +z).
   'street.meter': { h: 1.9, drop: .08 }, 'street.trafficlight': { h: 4.3, drop: .1 }, 'street.signpost': { h: 3.8, drop: .1 }, 'street.newsboxes': { w: 2.6, drop: .4 },
-  'street.deliveryboxes': { w: 2.3, drop: .5 }, 'street.planter.round': { h: 2.5, drop: .18 }, 'street.awning.cafe': { w: 4.6, drop: .55 }, 'street.foodtruck': { w: 7.48, drop: 1.4, ox: -.09 } };
+  'street.deliveryboxes': { w: 2.3, drop: .5 }, 'street.planter.round': { h: 2.5, drop: .18 }, 'street.awning.cafe': { w: 4.6, drop: .55 } };
 function prop(api, name, x, z, flip) {
   if (!PROPS[name]) return false;
   lazySprite(name, 'sprites/street/' + name + '.png', PROPS[name]);
