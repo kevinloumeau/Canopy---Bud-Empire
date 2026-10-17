@@ -1,0 +1,51 @@
+[
+  {
+    "id": "person.customer.02",
+    "phase": 4,
+    "prompt": "Task: one full-body clay sprite, rear walk frame 04.\nImage 1: fixed character identity, clothing, props, proportions and camera. Preserve this person exactly: Brown tight curls, mustard-yellow hoodie with full-length sleeves and hood down, cream backpack with both straps and front pocket, charcoal trousers, brown shoes. No sunglasses.\nImage 2: skeletal pose reference ONLY. Transfer its leg and arm arrangement onto the person in image 1. Never copy image 2's identity, head, jacket or colors.\nPose: Opposite contact: the foreground leg runs down-right to the forward boot; the farther leg runs down-left to the trailing boot. Uncrossed inverted-V leg silhouette. Near arm back down at hip, far arm forward mostly hidden.\nLock: same rear upper-right-facing head and torso, 30-degree dimetric camera, body scale, lighting and materials as image 1. Only limbs articulate. Preserve attached props. No camera turn, no additional figure.\nOutput: ONE centered full body with generous margins on genuinely transparent background, no text or glow.",
+    "source": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-35584ee4-667e-4962-9e43-7125a4597db2.png",
+    "path": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/rear-walk-cast-v7/person.customer.02/raw/person.customer.02.walk.empty.04.back-right.png"
+  },
+  {
+    "id": "person.customer.02",
+    "phase": 1,
+    "prompt": "Task: one full-body clay sprite, rear walk frame 01.\nImage 1: fixed character identity, clothing, props, proportions and camera. Preserve this person exactly: Brown tight curls, mustard-yellow hoodie with full-length sleeves and hood down, cream backpack with both straps and front pocket, charcoal trousers, brown shoes. No sunglasses.\nImage 2: skeletal pose reference ONLY. Transfer its leg and arm arrangement onto the person in image 1. Never copy image 2's identity, head, jacket or colors.\nPose: Down: the foreground leg bends and trails back, its boot lifted slightly; the farther leg supports with its boot flat under the hips. Compact step.\nLock: same rear upper-right-facing head and torso, 30-degree dimetric camera, body scale, lighting and materials as image 1. Only limbs articulate. Preserve attached props. No camera turn, no additional figure.\nOutput: ONE centered full body with generous margins on genuinely transparent background, no text or glow.",
+    "source": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-f213c938-2009-4f8b-a363-b82079fbaf24.png",
+    "path": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/rear-walk-cast-v7/person.customer.02/raw/person.customer.02.walk.empty.01.back-right.png"
+  },
+  {
+    "id": "person.customer.02",
+    "phase": 2,
+    "prompt": "Task: one full-body clay sprite, rear walk frame 02.\nImage 1: fixed character identity, clothing, props, proportions and camera. Preserve this person exactly: Brown tight curls, mustard-yellow hoodie with full-length sleeves and hood down, cream backpack with both straps and front pocket, charcoal trousers, brown shoes. No sunglasses.\nImage 2: skeletal pose reference ONLY. Transfer its leg and arm arrangement onto the person in image 1. Never copy image 2's identity, head, jacket or colors.\nPose: Passing: the foreground knee bends and its lifted boot passes close beside the supporting farther calf. The far boot is flat beneath the body. Arms near vertical.\nLock: same rear upper-right-facing head and torso, 30-degree dimetric camera, body scale, lighting and materials as image 1. Only limbs articulate. Preserve attached props. No camera turn, no additional figure.\nOutput: ONE centered full body with generous margins on genuinely transparent background, no text or glow.",
+    "source": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-da631a21-0b1b-47b4-9bd9-fa1b46fd7ee3.png",
+    "path": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/rear-walk-cast-v7/person.customer.02/raw/person.customer.02.walk.empty.02.back-right.png"
+  },
+  {
+    "id": "person.customer.02",
+    "phase": 3,
+    "prompt": "Task: one full-body clay sprite, rear walk frame 03.\nImage 1: fixed character identity, clothing, props, proportions and camera. Preserve this person exactly: Brown tight curls, mustard-yellow hoodie with full-length sleeves and hood down, cream backpack with both straps and front pocket, charcoal trousers, brown shoes. No sunglasses.\nImage 2: skeletal pose reference ONLY. Transfer its leg and arm arrangement onto the person in image 1. Never copy image 2's identity, head, jacket or colors.\nPose: Reach: foreground leg reaches a little forward to screen-right with boot close to the ground. Farther leg supports nearly vertically. Near arm hangs back beside hip, far arm forward mostly hidden. Low relaxed reach, no high knee.\nLock: same rear upper-right-facing head and torso, 30-degree dimetric camera, body scale, lighting and materials as image 1. Only limbs articulate. Preserve attached props. No camera turn, no additional figure.\nOutput: ONE centered full body with generous margins on genuinely transparent background, no text or glow.",
+    "source": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-d4c209db-6c8d-4e7b-a7ec-72b93c52709d.png",
+    "path": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/rear-walk-cast-v7/person.customer.02/raw/person.customer.02.walk.empty.03.back-right.png"
+  },
+  {
+    "id": "person.customer.02",
+    "phase": 5,
+    "prompt": "Task: one full-body clay sprite, rear walk frame 05.\nImage 1: fixed character identity, clothing, props, proportions and camera. Preserve this person exactly: Brown tight curls, mustard-yellow hoodie with full-length sleeves and hood down, cream backpack with both straps and front pocket, charcoal trousers, brown shoes. No sunglasses.\nImage 2: skeletal pose reference ONLY. Transfer its leg and arm arrangement onto the person in image 1. Never copy image 2's identity, head, jacket or colors.\nPose: Opposite down: foreground leg supports, boot flat beneath body, knee softly bent. Farther leg trails with knee bent and heel lifted. Near arm down beside thigh, far arm mostly hidden.\nLock: same rear upper-right-facing head and torso, 30-degree dimetric camera, body scale, lighting and materials as image 1. Only limbs articulate. Preserve attached props. No camera turn, no additional figure.\nOutput: ONE centered full body with generous margins on genuinely transparent background, no text or glow.",
+    "source": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-58afd6df-f291-43dd-8201-64bb42cbe1cb.png",
+    "path": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/rear-walk-cast-v7/person.customer.02/raw/person.customer.02.walk.empty.05.back-right.png"
+  },
+  {
+    "id": "person.customer.02",
+    "phase": 6,
+    "prompt": "Task: one full-body clay sprite, rear walk frame 06.\nImage 1: fixed character identity, clothing, props, proportions and camera. Preserve this person exactly: Brown tight curls, mustard-yellow hoodie with full-length sleeves and hood down, cream backpack with both straps and front pocket, charcoal trousers, brown shoes. No sunglasses.\nImage 2: skeletal pose reference ONLY. Transfer its leg and arm arrangement onto the person in image 1. Never copy image 2's identity, head, jacket or colors.\nPose: Opposite passing: foreground leg nearly straight supports beneath hips; farther knee bent, lifted boot beside foreground calf, partly hidden behind it. Arms near vertical.\nLock: same rear upper-right-facing head and torso, 30-degree dimetric camera, body scale, lighting and materials as image 1. Only limbs articulate. Preserve attached props. No camera turn, no additional figure.\nOutput: ONE centered full body with generous margins on genuinely transparent background, no text or glow.",
+    "source": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-872a97fb-8fef-44be-99c1-0f745755c2f0.png",
+    "path": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/rear-walk-cast-v7/person.customer.02/raw/person.customer.02.walk.empty.06.back-right.png"
+  },
+  {
+    "id": "person.customer.02",
+    "phase": 7,
+    "prompt": "Task: one full-body clay sprite, rear walk frame 07.\nImage 1: fixed character identity, clothing, props, proportions and camera. Preserve this person exactly: Brown tight curls, mustard-yellow hoodie with full-length sleeves and hood down, cream backpack with both straps and front pocket, charcoal trousers, brown shoes. No sunglasses.\nImage 2: skeletal pose reference ONLY. Transfer its leg and arm arrangement onto the person in image 1. Never copy image 2's identity, head, jacket or colors.\nPose: Opposite reach: foreground leg supports near vertically and overlaps the far thigh. Farther leg reaches gently forward; its boot appears just to the right of support boot, slightly above ground. Near arm forward, far arm back. Compact step.\nLock: same rear upper-right-facing head and torso, 30-degree dimetric camera, body scale, lighting and materials as image 1. Only limbs articulate. Preserve attached props. No camera turn, no additional figure.\nOutput: ONE centered full body with generous margins on genuinely transparent background, no text or glow.",
+    "source": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-8ddabf96-04b0-4be4-bf2f-5220416365cb.png",
+    "path": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/rear-walk-cast-v7/person.customer.02/raw/person.customer.02.walk.empty.07.back-right.png"
+  }
+]
