@@ -10,7 +10,9 @@ const svg=paths=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 const ICONS=[
  svg('<path d="M3 15c2-2 4-2 6 0s4 2 6 0 4-2 6 0M3 19c2-2 4-2 6 0s4 2 6 0 4-2 6 0M12 11V3M12 11c-3.3 0-5.5-2.2-5.5-5.5C9.8 5.5 12 7.7 12 11Zm0 0c3.3 0 5.5-2.2 5.5-5.5C14.2 5.5 12 7.7 12 11Z"/>'),
  svg('<path d="M4 21V9l8-6 8 6v12M3 21h18M9 21v-6a3 3 0 0 1 6 0v6M4 12h16"/>'),
- svg('<path d="M3 21h18M5 21V9h5v12M10 21V4h6v17M16 21v-8h3v8M7 12h1M7 15h1M12 8h2M12 11h2M12 14h2"/>')
+ svg('<path d="M3 21h18M5 21V9h5v12M10 21V4h6v17M16 21v-8h3v8M7 12h1M7 15h1M12 8h2M12 11h2M12 14h2"/>'),
+ svg('<path d="M3 21h18M12 21V5a2 2 0 0 1 4 0v16M12 13H9a2 2 0 0 1-2-2V8M16 11h2a2 2 0 0 0 2-2V7"/>'),
+ svg('<path d="M2 20h20L14.5 6l-3.5 6-2-3zM12.5 9.5l2 1.5 2-1.5"/>')
 ];
 const LOCK=svg('<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>');
 const CHECK=svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>');
@@ -149,9 +151,9 @@ export function mountEmpireStores({getState,format}){
   const c=cards[i],d=describe(i);
   let chip='',tone='',dot=false;
   if(d.locked){chip=Math.round(d.unlockPct)+'% there';tone='locked';}
-  else if(!d.lvl){chip=d.afford?'Ready to open':'Need '+format(d.cost-d.state.money);tone=d.afford?'ready gold':'';}
+  else if(!d.lvl){chip=d.afford?format(d.cost):'Need '+format(d.cost-d.state.money);tone=d.afford?'ready gold':'';}
   else if(d.max){chip='Max level';tone='max';}
-  else{chip=(d.afford?'Upgrade · ':'Next · ')+format(d.cost);tone=d.afford?'ready':'';dot=(d.opening&&d.opening.ready)||d.projectReady;}
+  else{chip=(d.afford?'':'Next · ')+format(d.cost);tone=d.afford?'ready':'';dot=(d.opening&&d.opening.ready)||d.projectReady;}
   const sig=[chip,tone,dot,d.locked&&Math.round(d.unlockPct)].join('|');
   if(sig===c.sig)return;c.sig=sig;
   set(c.status,chip);c.status.className='store-status'+(tone?' '+tone.split(' ').map(t=>'is-'+t).join(' '):'');
