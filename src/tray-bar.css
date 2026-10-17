@@ -1,5 +1,5 @@
 /* Bottom bar refinement: icon-led tabs, a one-line mood strip, and a collapsed state that is only a handle. */
-:root{--tray-tab-ink:#d3e0cb;--tray-tab-active:#f6faed;--tray-badge:#e9c96a}
+:root{--tray-tab-ink:var(--p-sage-84);--tray-tab-active:var(--p-sage-95);--tray-badge:#e9c96a}
 
 /* Six equal tabs: drawn icon above a short label, sharing the HUD's 1.6 stroke. */
 .sheet .tray-tabs{

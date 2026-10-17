@@ -1,44 +1,44 @@
 /* Store sub-tabs use the same icon rail as Stations and Shop. */
 .operation-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:0 0 12px;padding:3px;background:#0c231c40;border-radius:17px}
-.sheet .empire-content .operation-tabs button{display:grid;grid-template-rows:22px auto;justify-items:center;row-gap:4px;min-width:0;min-height:54px;padding:8px 0 7px;border:0;border-radius:14px;background:transparent;color:#d3e0cb;font:inherit;box-shadow:none}
+.sheet .empire-content .operation-tabs button{display:grid;grid-template-rows:22px auto;justify-items:center;row-gap:4px;min-width:0;min-height:54px;padding:8px 0 7px;border:0;border-radius:14px;background:transparent;color:var(--p-sage-84);font:inherit;box-shadow:none}
 .sheet .empire-content .operation-tabs button svg{width:22px;height:22px;opacity:.85}
-.sheet .empire-content .operation-tabs button em{font:500 11px 'DM Mono',monospace;font-style:normal;color:#9fb59a;line-height:1.2}
-.sheet .empire-content .operation-tabs button[aria-pressed=true]{background:linear-gradient(155deg,#e3f5db38,#c4e5b41a);box-shadow:inset 0 1px 0 #f1ffe752,inset 0 0 0 1px #e4fbd31c;color:#f6faed}
+.sheet .empire-content .operation-tabs button em{font:500 11px 'DM Mono',monospace;font-style:normal;color:var(--p-sage-66);line-height:1.2}
+.sheet .empire-content .operation-tabs button[aria-pressed=true]{background:linear-gradient(155deg,#e3f5db38,#c4e5b41a);box-shadow:inset 0 1px 0 #f1ffe752,inset 0 0 0 1px #e4fbd31c;color:var(--p-sage-95)}
 .sheet .empire-content .operation-tabs button[aria-pressed=true] svg{opacity:1}
-.sheet .empire-content .operation-tabs button[aria-pressed=true] em{color:#e8f2d7}
+.sheet .empire-content .operation-tabs button[aria-pressed=true] em{color:var(--p-lime-90)}
 @media(hover:hover){.sheet .empire-content .operation-tabs button:not([aria-pressed=true]):hover{background:#dce9be10}}
 .op-pane[hidden]{display:none}
-.op-pane h4{font-size:13px;margin:18px 0 10px;color:#f0f4e8}
-.operation-details summary:focus-visible{outline:2px solid #e3d1a6;outline-offset:2px}
+.op-pane h4{font-size:13px;margin:18px 0 10px;color:var(--p-sage-93)}
+.operation-details summary:focus-visible{outline:2px solid var(--p-gold-77);outline-offset:2px}
 .operation-stats,.operation-row,.shelf-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0}
 .operation-stats{font-size:12px;padding-top:0}
 .operation-row,.shelf-row{border-bottom:1px solid #c1d7b722;font-size:12px}
 .operation-row>span,.shelf-row>div:first-child{min-width:0;flex:1}
-.operation-row small,.shelf-row small{display:block;color:#cbdcc5;font-size:11px;line-height:1.45;margin-top:4px}
+.operation-row small,.shelf-row small{display:block;color:var(--p-sage-82);font-size:11px;line-height:1.45;margin-top:4px}
 .sheet .empire-content .operation-row button{flex-shrink:0;max-width:125px;padding:8px;font-size:11px}
 .sheet .empire-content .shelf-row .shelf-unlock{flex-shrink:0;padding:8px 10px;font-size:11px}
 .shelf-stepper{display:flex;align-items:center;gap:8px;font-variant-numeric:tabular-nums}
 .shelf-stepper[hidden],.shelf-unlock[hidden]{display:none!important}
 .sheet .empire-content .shelf-stepper button{width:44px;padding:5px;font-size:17px}
 .shelf-stepper span{min-width:18px;text-align:center}
-.empire-content .operation-hint{font-size:12px;color:#cbdcc5;line-height:1.45;margin:8px 0 12px}
+.empire-content .operation-hint{font-size:12px;color:var(--p-sage-82);line-height:1.45;margin:8px 0 12px}
 /* Pills replace the repetitive select dropdowns: one visible row of choices, one tap to pick. */
 .pill-field{margin:12px 0}
 .pill-field .pill-label{display:block;margin:0 0 6px;font-size:12px;color:#d6e3cd}
 .pill-group{display:flex;flex-wrap:wrap;gap:6px}
-.sheet .empire-content .pill-group button{flex:1 1 auto;min-width:0;max-width:none;min-height:40px;padding:8px 10px;border:1px solid #a1b99155;border-radius:10px;background:#20392d;color:#d3e0cb;font:inherit;font-size:12px;font-weight:600;box-shadow:none}
-.sheet .empire-content .pill-group button[aria-pressed=true]{background:linear-gradient(155deg,#e3f5db38,#c4e5b41a);border-color:#c1d7b74d;color:#f6faed;box-shadow:inset 0 1px 0 #f1ffe752}
+.sheet .empire-content .pill-group button{flex:1 1 auto;min-width:0;max-width:none;min-height:40px;padding:8px 10px;border:1px solid #a1b99155;border-radius:10px;background:#20392d;color:var(--p-sage-84);font:inherit;font-size:12px;font-weight:600;box-shadow:none}
+.sheet .empire-content .pill-group button[aria-pressed=true]{background:linear-gradient(155deg,#e3f5db38,#c4e5b41a);border-color:#c1d7b74d;color:var(--p-sage-95);box-shadow:inset 0 1px 0 #f1ffe752}
 .pill-group button:disabled{opacity:.4;cursor:not-allowed}
-.pill-group button:focus-visible{outline:2px solid #e3d1a6;outline-offset:2px}
+.pill-group button:focus-visible{outline:2px solid var(--p-gold-77);outline-offset:2px}
 @media(hover:hover){.sheet .empire-content .pill-group button:not(:disabled):not([aria-pressed=true]):hover{background:#dce9be14}}
 .pill-swatch{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:1px;box-shadow:inset 0 0 0 1px #00000030}
-.choice-effect{font-size:11px;line-height:1.4;color:#cbdcc5;margin:-6px 0 10px}
+.choice-effect{font-size:11px;line-height:1.4;color:var(--p-sage-82);margin:-6px 0 10px}
 .operation-details{border-top:1px solid #c1d7b733;margin-top:14px}
-.operation-details>summary{display:list-item;min-height:48px;align-content:center;cursor:pointer;font-size:13px;font-weight:600;color:#e3d1a6}
-.operation-details>summary>span{float:right;font-size:11px;color:#cbdcc5;font-weight:400}
+.operation-details>summary{display:list-item;min-height:48px;align-content:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--p-gold-77)}
+.operation-details>summary>span{float:right;font-size:11px;color:var(--p-sage-82);font-weight:400}
 .sheet .empire-content .operation-primary{width:100%;margin-top:10px;background:#c3dca522}
-.operation-muted{font-weight:400;font-size:11px;color:#cbdcc5;display:block;margin-top:4px}
-.relationship{color:#e3d1a6;font-size:12px;margin:12px 0}
+.operation-muted{font-weight:400;font-size:11px;color:var(--p-sage-82);display:block;margin-top:4px}
+.relationship{color:var(--p-gold-77);font-size:12px;margin:12px 0}
 .opening-task{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;font-size:12px;padding:0 0 12px}
 .opening-task progress{grid-column:1/-1;margin:0}
 .opening-task[hidden]{display:none}

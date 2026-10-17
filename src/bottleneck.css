@@ -1,0 +1,21 @@
+/* Bottleneck card, first surface on the glass components (UI reskin plan). Loaded last so it wins over the older
+   flow-guide rules in illustrated.css, stations-compact.css, legibility.css and experience.css.
+   One row: station icon, label and reason, then the fix button (name over price); a meter underneath shows how much
+   of the next station's pace the bottleneck manages. */
+.sheet .flow-guide{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:10px;row-gap:8px;flex-shrink:0;min-height:0;margin:0 0 8px;padding:10px 10px 10px 12px;border:1px solid var(--ui-edge);border-radius:14px;background:var(--ui-brass-wash);color:var(--ui-ink);font-size:13px;line-height:1.25;box-shadow:none}
+.sheet .flow-guide::before{content:none}
+.sheet .flow-guide .flow-icon{flex:none;align-self:center;width:22px;height:22px;border-radius:0;background:none;color:var(--ui-brass)}
+.sheet .flow-guide .flow-icon svg{width:22px;height:22px}
+.sheet .flow-guide .flow-copy{display:grid;gap:2px;min-width:0;line-height:1.25}
+.sheet .flow-guide .flow-copy small{font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ui-brass)}
+.sheet .flow-guide #flowText{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;white-space:normal;text-overflow:clip;font-size:13px;font-weight:600;line-height:1.25;color:var(--ui-ink)}
+.sheet .flow-guide #flowText b{font-weight:500;color:var(--ui-soft)}
+.sheet .flow-guide button#flowAction{display:grid;align-self:center;align-content:center;justify-items:end;gap:1px;min-width:0;max-width:44vw;min-height:40px;padding:6px 12px;border:0;border-radius:11px;background:var(--ui-brass);color:var(--ui-brass-ink);font-size:11px;font-weight:600;line-height:1.15;text-align:right;white-space:nowrap}
+.sheet .flow-guide button#flowAction:not(.has-price){font-size:12.5px}
+.sheet .flow-guide button#flowAction span{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.sheet .flow-guide button#flowAction b{font:500 13.5px 'DM Mono',monospace;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.sheet .flow-guide button#flowAction:hover{background:var(--ui-brass);filter:brightness(1.06)}
+.sheet .flow-guide button#flowAction[data-mode=view]{background:none;border:1px solid var(--ui-edge);color:var(--ui-ink)}
+.sheet .flow-guide .flow-meter{grid-column:1/-1;display:block;height:4px;border-radius:4px;background:var(--ui-well);overflow:hidden}
+.sheet .flow-guide .flow-meter i{display:block;height:100%;width:0;border-radius:inherit;background:var(--ui-brass);transition:width .4s ease}
+@media(hover:hover){.sheet .flow-guide:hover{border-color:#e2c68a55}}
