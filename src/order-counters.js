@@ -5,6 +5,8 @@ export const ORDER_COUNTER_COSTS=[2500,12500];
 export const COUNTER_SHIFT=1.2;
 export const PICKUP_X=4+COUNTER_SHIFT;
 export const ORDER_QUEUE_GATE={x:-2+COUNTER_SHIFT,z:6.1};
+// Customers order standing this close to the desk front (Kevin, 2026-10-17: they stood a step too far back).
+export const ORDER_SPOT_Z=4.55;
 const POSITIONS=[{x:-4+COUNTER_SHIFT,z:2.5},{x:-6.6+COUNTER_SHIFT,z:2.5},{x:-1.4+COUNTER_SHIFT,z:2.5}];
 
 export function migrateOrderCounters(value){
@@ -29,12 +31,12 @@ export function assignOrderCounter(customers,count){
   const index=positions.findIndex((_,i)=>!customers.some(c=>!c.ordered&&c.phase!=='leaving'&&c.orderCounter===i));
   if(index<0)return null;
   head.orderCounter=index;head.laneDistance=null;
-  head.waypoints=[{x:positions[index].x,z:5.65},{x:positions[index].x,z:4.9}];
+  head.waypoints=[{x:positions[index].x,z:5.65},{x:positions[index].x,z:ORDER_SPOT_Z}];
   return head;
 }
 export function atOrderCounter(c,count){
   const position=orderCounterPositions(count)[c.orderCounter];
-  return !!position&&!c.kiosk&&!c.ordered&&c.phase==='ordering'&&!c.walking&&Math.hypot(c.x-position.x,c.z-4.9)<.01;
+  return !!position&&!c.kiosk&&!c.ordered&&c.phase==='ordering'&&!c.walking&&Math.hypot(c.x-position.x,c.z-ORDER_SPOT_Z)<.01;
 }
 // All staffed counters and kiosks share this reservation budget. Counting bags
 // (rather than customers) prevents simultaneous baskets promising the same stock.

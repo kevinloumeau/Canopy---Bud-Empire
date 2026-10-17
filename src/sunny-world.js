@@ -95,6 +95,8 @@ const PERSON_SIZE = { h: 2.3 * 640 / 600, drop: 2.3 * 8 / 600 + .03 };
 // people-complete-v3: every customer and walker also comes as 224x320 variants, posed stand/walk, with or without the
 // pickup bag in hand, facing left or right (so no mirroring). Figures are about 295 px tall with their feet 5 px up.
 const PERSON_V3_SIZE = { h: 2.3 * 320 / 295, drop: 2.3 * 5 / 295 + .03 };
+// Height of the top of a person's head above the floor: every cut-out's figure starts 16 px down its 320 px canvas.
+export const PERSON_HEAD_Y = PERSON_V3_SIZE.h * (320 - 16) / 320 - PERSON_V3_SIZE.drop;
 // The stride the walk frames show: the planted foot travels about 36 px of the 224x320 frame from contact to pass,
 // a quarter of the cycle, so one cycle (two steps) covers about 1.6 world units of pavement and the step phase turns
 // 3.9 radians per unit walked. Feet only stay put when the frames change at the pace of the ground going by.
