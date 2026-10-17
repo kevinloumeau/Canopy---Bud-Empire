@@ -364,6 +364,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // Up to seven guests wait for a seat at the curtains: the first on the carpet, the rest in a line along the lounge's
   // front wall to the right of the door, clear of the carpet's stanchions.
   var LOUNGE_DOOR={x:-9.5,z:-.45},LOUNGE_EXIT={x:8.57,z:-3.3},LOUNGE_RIGHT=8.25,LOUNGE_ROPE=7;
+  // The red carpet runs from the curtain to just past where lounge guests turn on to it (z 2.2), clear of the third kiosk.
+  var LOUNGE_CARPET_END=2.6;
   function loungeWaitSpot(place){return place<=0?LOUNGE_DOOR:{x:LOUNGE_DOOR.x+1.3+(place-1)*.65,z:LOUNGE_DOOR.z+.1}}
   function loungeSeated(){return customers.filter(function(c){return c.phase==='lounge'}).length}
   function loungeWaiting(){return customers.filter(function(c){return c.phase==='toLounge'&&!c.waypoints.length}).sort(function(a,b){return a.id-b.id})}
@@ -3655,9 +3657,26 @@ if(!SHOP_SPRITES){
     if(open){var spill=project(dx,.03,-1.3);glow(spill.x,spill.y,unit*.8,'#ff9ab83a',unit*.36)}
     // A red carpet runs out from the curtain, with a short velvet rope on brass stanchions down its right-hand side;
     // the posts and rope sort with the guests who wait on the carpet.
-    if(open&&SHOP_SPRITES&&fixtureSprite('lounge.carpet.entry')){
-      // Sprite shop: the v2 runner with its brass stanchions and velvet ropes, sorted with the guests waiting on it.
-      sceneJobs.push({depth:depthOf({x:dx,z:face+.3}),draw:function(){sceneElevation=0;drawBoxSprite(sunnyApi(sceneTime),'lounge.carpet.entry',dx-.6,dx+.6,face+.02,face+1.95,0,1,true)}});
+    if(open&&SHOP_SPRITES){
+      // Sprite shop: a runner at the guests' scale (the v2 carpet render is 5:1 and needs over five units of floor, with a
+      // post in the middle of its door end, so it can't fit between the curtain and the third kiosk). Gold edge, red
+      // band, cream pinstripe and red field in the render's colours, from the curtain to where guests step on at z 2.2.
+      var runEnd=LOUNGE_CARPET_END,runZ=(face+runEnd)/2,runD=runEnd-face;
+      [[1.1,'#b98b41'],[1.02,'#722739'],[.94,'#ecd9b0'],[.88,'#722739']].forEach(function(band){var inset=1.1-band[0];groundPatch(dx,runZ+inset/2,band[0],runD-inset,band[1])});
+      // The order line's brass stanchions down its right-hand side with a velvet rope, open at the near end where guests
+      // turn on to it; posts and rope sort with the guests waiting on the carpet.
+      var ropeX=dx+.72,ropePosts=[face+.3,face+1.4,face+2.5];
+      ropePosts.forEach(function(pz){sceneJobs.push({depth:depthOf({x:ropeX,z:pz}),draw:function(){
+        sceneElevation=0;var stanchion=shellSprite('shell.queue.post');if(!stanchion)return;
+        var img=spriteImage(stanchion),base=project(ropeX,.05,pz),top=project(ropeX,1.02,pz),foot=project(ropeX,-.06,pz),h=foot.y-top.y,w=h*img.naturalWidth/img.naturalHeight;
+        ellipse(base.x-unit*.12,base.y+unit*.04,unit*.2,unit*.06,'#14201824');ctx.drawImage(img,foot.x-w*.62,top.y,w,h);
+      }})});
+      // Each span is one stroke, so the highlight runs unbroken instead of being capped over at every segment.
+      for(var span=0;span<ropePosts.length-1;span++)(function(z1,z2){
+        function sag(lift,dx,dz){var pts=[];for(var i=0;i<=10;i++){var t=i/10;pts.push([ropeX+dx,lift?lift-.62*t*(1-t):.012,z1+(z2-z1)*t+dz])}return pts}
+        sceneJobs.push({depth:depthOf({x:ropeX,z:(z1+z2)/2}),draw:function(){sceneElevation=0;
+          worldLine(sag(0,-.14,.08),'#1420181c',.06);worldLine(sag(.84,0,0),'#6b1f35',.1);worldLine(sag(.855,0,0),'#a84a62',.03)}});
+      })(ropePosts[span],ropePosts[span+1]);
     }else if(open){
       groundPatch(dx,face+.95,1.1,1.9,'#7a1f2e');groundPatch(dx,face+.95,.96,1.78,'#8e2537');
       worldLine([[dx-.55,.018,face+.02],[dx-.55,.018,face+1.9]],'#c9a45a',.03);worldLine([[dx+.55,.018,face+.02],[dx+.55,.018,face+1.9]],'#c9a45a',.03);
