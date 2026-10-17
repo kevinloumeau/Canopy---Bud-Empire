@@ -594,7 +594,7 @@ function streetShadows(api, front) {
   if (front) groundShadow(api, 0, P, 16.5, 1.2, .35, .9);
   if (front) groundShadow(api, 18, P, 0, .35, 1.2, .9);
   if (front) { softShadow(api, 17.2, P, -7.5, .85, .85, .3); [-3.2, 3.2].forEach(x => softShadow(api, x, P, 16.5, .6, .6, .3)); }
-  else { groundShadow(api, 9.5, P, -13.6, 3.3, 1.2, 1.6); softShadow(api, -17.6, P, -3, .5, 1.1, .3); }
+  else softShadow(api, -17.6, P, -3, .5, 1.1, .3);
 }
 function streetTree(api, x, z) {
   const p = api.project, u = api.unit;
