@@ -145,14 +145,23 @@ export function drawPersonSprite(api, x, z, identity, employee, facing, ground, 
     lazySprite(v3, 'sprites/people/' + v3 + '.png', PERSON_V3_SIZE);
     if (spriteReady(v3)) { name = v3; flip = false; }
   }
-  // Walking up the screen (away from the camera) the figure shows its back: Kevin's walk-v5 rear stills, one
-  // mid-stride pose each facing up-right (mirrored for up-left), empty-handed only, so anyone carrying a bag keeps
-  // the front cycle. With a single pose there is nothing to pin, so it glides with the step's rise and settle.
+  // Walking up the screen (away from the camera) the figure shows its back, facing up-right (mirrored for up-left),
+  // empty-handed only, so anyone carrying a bag keeps the front cycle. Where Kevin's eight-frame rear walk exists
+  // (person.<role>.<nn>.walk.back.00-07.png: contact, down, passing, reach on each foot, head-locked) it steps and is
+  // pinned like the front cycle; frame 00 is asked for first, so a person without the set costs one missed request.
+  // Otherwise the walk-v5 rear still glides with the step's rise and settle.
   let rearShown = false;
   if (!employee && amount > .3 && heading && !bag && heading.x + heading.z < -.05) {
-    const rear = personName(role, nn, true) + '.back';
+    const rear = personName(role, nn, true) + '.back', cyc = rear + '.0';
     lazySprite(rear, 'sprites/people/' + rear + '.png', PERSON_V3_SIZE);
-    if (spriteReady(rear)) { name = rear; flip = heading.x - heading.z < 0; lift = amount * .04 * (1 - Math.cos(2 * phase)) / 2; rearShown = true; }
+    lazySprite(cyc + 0, 'sprites/people/' + cyc + '0.png', PERSON_V3_SIZE);
+    const eighth = phase / (Math.PI / 4), key = Math.round(eighth), frame = cyc + ((key % 8) + 8) % 8;
+    if (spriteReady(cyc + 0)) for (let k = 1; k < 8; k++) lazySprite(cyc + k, 'sprites/people/' + cyc + k + '.png', PERSON_V3_SIZE);
+    if (spriteReady(frame)) {
+      name = frame; lift = 0; rearShown = true;
+      const back = (eighth - key) * (Math.PI / 4) / WALK_STEP_RATE * WALK_PIN; x -= heading.x * back; z -= heading.z * back;
+    } else if (spriteReady(rear)) { name = rear; lift = amount * .04 * (1 - Math.cos(2 * phase)) / 2; rearShown = true; }
+    if (rearShown) flip = heading.x - heading.z < 0;
   }
   // Kevin's 2026-10-15 walk cycles: four frames a step pair (contact, pass, contact, pass), stored facing right and
   // mirrored to face left. The step phase picks the frame, and the frames carry the rise and settle, so no bob.
