@@ -2887,6 +2887,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   var sceneJobs=[];
   function sunnyApi(now){return{get ctx(){return ctx},daylight:1-nightAmount(),width:width,height:height,unit:unit,now:motionPreference.matches?0:now,project:project,poly:poly,line:worldLine,ellipse:ellipse,blob:blobEllipse,noise:seedNoise,depth:depthOf,box:drawBox,shade:shadeColor,person:function(x,z,id,moving){drawPerson(x,z,now,id,moving,false,false)}}}
+  // The pothos curtain is kept whole but drawn smaller and lowered, so its rail sits just under the top-floor soffit
+  // and the full vine tips end above the tube mouth, belt and stations instead of draping over them.
+  var HANGING_VINE_SCALE=.55,HANGING_RAIL_MID=140/513,HANGING_DROP=.2;
   function drawTower(now){
     sceneElevation=0;signFaces.length=0;
     // Backdrop: the same quiet studio gradient day and night, a halo behind the shop and a vignette at the edges. After
@@ -2940,7 +2943,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       // In the sprite shop the canopy is Ludo's pothos curtain on its brass rail, hung under the top-floor soffit.
       if(fi===2&&SHOP_SPRITES&&shellSprite('shell.plant.hanging')){
         sceneElevation=0;var hangL=project(-2.3,9.1,-1.35),hangR=project(2.3,9.1,-1.35);
-        var vines=spriteImage('shell.plant.hanging'),vw=Math.abs(hangR.x-hangL.x)*1.04;ctx.save();ctx.translate((hangL.x+hangR.x)/2,0);ctx.scale(-1,1);ctx.drawImage(vines,-vw/2,Math.min(hangL.y,hangR.y)-unit*.1,vw,vw*vines.naturalHeight/vines.naturalWidth);ctx.restore();
+        // Kept as a supporting accent: a shorter rail whose vines fade out well above the tube mouth, belt and stations.
+        var vines=spriteImage('shell.plant.hanging'),fullW=Math.abs(hangR.x-hangL.x)*1.04,vw=fullW*HANGING_VINE_SCALE,railY=Math.min(hangL.y,hangR.y)-unit*.1+fullW*HANGING_RAIL_MID+unit*HANGING_DROP;
+        ctx.save();ctx.translate((hangL.x+hangR.x)/2,0);ctx.scale(-1,1);ctx.drawImage(vines,-vw/2,railY-vw*HANGING_RAIL_MID,vw,vw*vines.naturalHeight/vines.naturalWidth);ctx.restore();
         sceneElevation=floor.y;
       }
       if(fi===2&&!SHOP_SPRITES){
