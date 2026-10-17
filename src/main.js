@@ -2627,7 +2627,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var wallH=fi===2?3.9:4.7;
     // The grow room's glazing is drawn slim rather than from the window module, whose frame overpowered the plants;
     // the exhaust fan gets a solid bay of its own instead of hanging on glass.
-    if(fi===2&&SHOP_SPRITES){drawSlimGlazing(false,rear,left,right,wallH,FAN_X);drawSlimGlazing(true,left,rear,rear+3.5,wallH);return}
+    if(fi===2&&SHOP_SPRITES){drawSlimGlazing(false,rear,left,TOP_LANDING.outer,wallH,FAN_X);drawSlimGlazing(true,left,rear,rear+3.5,wallH);return}
     // The ground floor's wall runs on behind the exit door, so its doorway (the render's open frame: x 9.48-11.21,
     // 3.25 high on the wall line) is cut out of the modules and the pavement outside shows through the open door
     // (Kevin, 2026-10-14: no black rectangle, the frame intact, the render itself untouched).
@@ -2644,7 +2644,9 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // with its face toward +x from the plane x; otherwise along x with its face toward +z.
   // One bay per pane of Kevin's 2026-10-15 glazing render (three panes a module), so the modules tile at their own
   // proportions; the exhaust fan's solid panel is two panes wide, centred on the pane joint nearest FAN_X.
-  var FAN_X=-4.9,GLAZING_BAY=1.07;
+  // The rear glazing runs on past the top floor's corner to the outer edge of the stair's landing notch, so no slab
+  // or street shows between its end and the landing (Kevin, 2026-10-17).
+  var FAN_X=-4.9,GLAZING_BAY=1.07,TOP_LANDING={outer:9,back:-6.9,front:-5.7};
   function glazingBays(a0,a1){var n=Math.max(2,Math.round((a1-a0)/GLAZING_BAY));return{n:n,step:(a1-a0)/n}}
   function fanPanel(a0,a1){var g=glazingBays(a0,a1),j=Math.max(0,Math.min(g.n-2,Math.round((FAN_X-a0)/g.step)-1));return{from:a0+j*g.step,to:a0+(j+2)*g.step}}
   function drawSlimGlazing(alongZ,plane,a0,a1,h,solidX){
@@ -2659,6 +2661,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       if(alongZ?drawWallFace(api,module,plane,t1,plane,t0,0,h,.025,u1):drawWallFace(api,module,t0,plane,t1,plane,0,h,.025,u1))drawn++;else break;
     }
     if(drawn){
+      // Each module is cut before its own right post, so the run's open end gets that post back as its closing frame.
+      if(!alongZ&&drawn*3>=bays)drawWallFace(api,module,a1-.07,plane,a1+.07,plane,0,h,.955,1);
       if(solid){var q=plane+.03,S=function(t,y){return alongZ?project(q,y,t):project(t,y,q)};poly([S(solid.from+.07,plinth),S(solid.to-.07,plinth),S(solid.to-.07,h-.08),S(solid.from+.07,h-.08)],'#2f5d4a')}
       return;
     }
@@ -2678,7 +2682,20 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var api=sunnyApi(sceneTime);
     if(fi===2)return; // the top floor's rear wall stays clear of shelving
     var runs=fi===1?[[-9,-4.5],[-4.5,0],[0,4.5],[4.5,9]]:[[-8.2,-3.8]];
+    if(shellSprite('shell.shelf.wall.right')){runs.forEach(function(r){drawPinnedShelf(r[0],r[1],rear+SHELF_PIN.depth)});return}
     drawShelfRun(api,runs,rear+.95,3.6,.75);
+  }
+  // The wall shelf render stood flat in the wall plane, its top and green end panel squashed into the front (Kevin,
+  // 2026-10-17: "the cabinets look flat"). It is pinned by its front base line instead: B0 the front-bottom-left
+  // corner, B1 the front-bottom-right, measured on the render with its front base at slope .40 and its end's base at
+  // -.60. Verticals stay vertical; the horizontal scale lays the front on the run and a vertical scale (about 15% up)
+  // plus a shear turns both base edges on to the map's floor slopes, so the top and the end panel read as real depth.
+  // The render's end is about .55 deep at that scale, so the fronts stand that far off the wall.
+  var SHELF_PIN={bx:4,by:350.4,ex:569.5,ey:576.4,front:.3997,end:-.5995,depth:.6};
+  function drawPinnedShelf(x0,x1,z){
+    var img=spriteImage('shell.shelf.wall.right'),S=SHELF_PIN,p0=project(x0,0,z),p1=project(x1,0,z),o=project(0,0,0),ex=project(1,0,0),ez=project(0,0,1);
+    var tX=(ex.y-o.y)/(ex.x-o.x),tZ=(ez.y-o.y)/(ez.x-o.x),a=(p1.x-p0.x)/(S.ex-S.bx),d=a*(tX-tZ)/(S.front-S.end),b=a*tX-d*S.front;
+    ctx.save();ctx.transform(a,b,0,d,p0.x-a*S.bx,p0.y-b*S.bx-d*S.by);ctx.drawImage(img,0,0);ctx.restore();
   }
   // Oak carcasses first so the units stand out from the wall with a lit top and end panels, then the flat shelf
   // fronts on their face plane.
@@ -2734,10 +2751,11 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     drawBoxSprite(api,flight,6.5,8.2,-6.8,-.5,4.7,9.4,'height',scale);
     drawBoxSprite(api,flight,9.1,10.7,-.8,4.2,0,4.7,'height',scale);
     // Glass guard rails, sheared on to their planes from the flat render: round the landing's outer and back edges
-    // behind the head of the ground flight, then along the mezzanine's open right edge.
+    // behind the head of the ground flight, then along the mezzanine's open right edge
     if(!drawRailRun('z',10.78,-.8,4.7,1))drawWallFace(api,'shell.rail.glass.left',10.78,-.8,10.78,-2.8,4.7,1);
     if(!drawRailRun('x',8.93,-2.8,4.7,1))drawWallFace(api,'shell.rail.glass.left',8.93,-2.8,10.85,-2.8,4.7,1);
-    if(!drawRailRun('z',8.93,-2.8,4.7,1))drawWallFace(api,'shell.rail.glass.left',8.93,-2.8,8.93,-4.8,4.7,1);
+    // and on along the open edge to the front of the wall shelving, where the old black-framed glass stood.
+    if(!drawRailRun('z',8.93,-2.8,4.7,2,1.62))drawWallFace(api,'shell.rail.glass.left',8.93,-2.8,8.93,-6.04,4.7,1);
   }
   function drawCachedGround(floor){
     var key=[width,height,dpr,unit,centerX,centerY,angle,stationTier(4),stationTier(5)].join(':');
@@ -2949,7 +2967,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
         // runs on back behind the head of the flight, railed on its outer and back edges (Kevin, 2026-10-14: the old
         // notch was a stub). In the sprite shop the upper flight now starts a stride inside the mezzanine's front edge
         // and lands at the top floor's rear-right corner, on a notch out to the mezzanine's edge line.
-        var landing=fi===1?{outer:10.85,back:-2.8,front:-.37}:SHOP_SPRITES?{outer:9,back:-6.9,front:-5.7}:{outer:8.65,back:-5.58,front:-4.47};
+        var landing=fi===1?{outer:10.85,back:-2.8,front:-.37}:SHOP_SPRITES?TOP_LANDING:{outer:8.65,back:-5.58,front:-4.47};
         var finish=fi===1?wood:stone;
         var outline=[[left,rear],[right,rear],[right,landing.back],[landing.outer,landing.back],[landing.outer,landing.front],[right,landing.front],[right,front],[left,front]];
         for(var edge=0;edge<outline.length;edge++){
@@ -3033,8 +3051,9 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       shadowBandX(rear+.2,front-.2,left+.2,left+1.4,.018,.15);
       if(fi===0){poly([project(-9,.016,rear+.2),project(9,.016,rear+.2),project(9,.016,1.55),project(-9,.016,1.55)],'rgba(14,28,20,.07)');shadowBand(-9,9,1.55,1.3,.017,.12)}
       if(fi===1){poly([project(-6.5,.016,rear+.2),project(6.5,.016,rear+.2),project(6.5,.016,-.3),project(-6.5,.016,-.3)],'rgba(14,28,20,.07)');shadowBand(-6.5,6.5,-.3,-1.9,.017,.12)}
-      if(fi!==0&&!(SHOP_SPRITES&&fi===2)){
-      // Black-framed glass along the rear-right corner, not across the open front (the sprite shop's top floor has none).
+      if(fi!==0&&!SHOP_SPRITES){
+      // Black-framed glass along the rear-right corner, not across the open front. The sprite shop has none: on the
+      // mezzanine it crossed the end of the wall shelving (Kevin, 2026-10-17), so a glass rail closes that edge instead.
       glassPane([project(right,0,rear),project(right,0,rear+3),project(right,3.8,rear+3),project(right,3.8,rear)],'#adc7b21b');
       for(var mull=0;mull<4;mull++)worldLine([[right,0,rear+mull],[right,3.8,rear+mull]],'#263a32',.04);
       worldLine([[right,3.8,rear],[right,3.8,rear+3]],'#252b28',.045);
@@ -3182,7 +3201,7 @@ if(!SHOP_SPRITES){
         warmStrip([[left+.35,2.87,rear+.25],[right-.35,2.87,rear+.25]],fi===2);
       }
 }
-      if(fi===2)drawGrowExhaustFan(SHOP_SPRITES?fanBayCentre(left,right):-4.4,rear+.24,SHOP_SPRITES?2.15:2.4);
+      if(fi===2)drawGrowExhaustFan(SHOP_SPRITES?fanBayCentre(left,TOP_LANDING.outer):-4.4,rear+.24,SHOP_SPRITES?2.15:2.4);
       if(fi>0&&!SHOP_SPRITES)warmStrip([[left+.2,-.08,front+.025],[right-.2,-.08,front+.025]],false);
       if(fi<2)retailDetails(fi,rear,now);
 
