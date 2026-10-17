@@ -2832,21 +2832,9 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   }
   var sceneJobs=[];
   function sunnyApi(now){return{get ctx(){return ctx},width:width,height:height,unit:unit,now:motionPreference.matches?0:now,project:project,poly:poly,line:worldLine,ellipse:ellipse,blob:blobEllipse,noise:seedNoise,depth:depthOf,box:drawBox,shade:shadeColor,person:function(x,z,id,moving){drawPerson(x,z,now,id,moving,false,false)}}}
-  // The pothos curtain sprite hangs about 360 px of vines under its rail. Only the top of that drop is kept, fading
-  // out along the rail's slope, so the plant stays an accent instead of a curtain over the tube, belt and stations.
-  var HANGING_VINE_SCALE=.75,HANGING_RAIL_MID=140/513,HANGING_KEEP=235,HANGING_FADE=60;
-  function hangingVines(img){
-    if(img.trimmedVines)return img.trimmedVines;
-    var w=img.naturalWidth,h=img.naturalHeight,s=w/513,c=document.createElement('canvas');
-    // Rail line in the source: about (0,275) on the left rising to (513,5) on the right.
-    var railAt=function(x){return (275-x/513*270)*s},keep=HANGING_KEEP*s,fade=HANGING_FADE*s;
-    c.width=w;c.height=Math.min(h,Math.ceil(railAt(0)+keep+fade));var g=c.getContext('2d');
-    // Paint the sloped fade mask column by column, then keep the vines only where the mask is opaque.
-    for(var x=0;x<w;x+=4){var top=railAt(x)+keep,grad=g.createLinearGradient(0,top,0,top+fade);
-      grad.addColorStop(0,'#000');grad.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=grad;g.fillRect(x,0,4,c.height);}
-    g.globalCompositeOperation='source-in';g.drawImage(img,0,0);
-    return img.trimmedVines=c;
-  }
+  // The pothos curtain is kept whole but drawn smaller and lowered, so its rail sits just under the top-floor soffit
+  // and the full vine tips end above the tube mouth, belt and stations instead of draping over them.
+  var HANGING_VINE_SCALE=.55,HANGING_RAIL_MID=140/513,HANGING_DROP=.2;
   function drawTower(now){
     sceneElevation=0;signFaces.length=0;
     // Backdrop: the same quiet studio gradient day and night, a halo behind the shop and a vignette at the edges. After
@@ -2901,8 +2889,8 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       if(fi===2&&SHOP_SPRITES&&shellSprite('shell.plant.hanging')){
         sceneElevation=0;var hangL=project(-2.3,9.1,-1.35),hangR=project(2.3,9.1,-1.35);
         // Kept as a supporting accent: a shorter rail whose vines fade out well above the tube mouth, belt and stations.
-        var vines=hangingVines(spriteImage('shell.plant.hanging')),fullW=Math.abs(hangR.x-hangL.x)*1.04,vw=fullW*HANGING_VINE_SCALE,railY=Math.min(hangL.y,hangR.y)-unit*.1+fullW*HANGING_RAIL_MID;
-        ctx.save();ctx.translate((hangL.x+hangR.x)/2,0);ctx.scale(-1,1);ctx.drawImage(vines,-vw/2,railY-vw*HANGING_RAIL_MID,vw,vw*vines.height/vines.width);ctx.restore();
+        var vines=spriteImage('shell.plant.hanging'),fullW=Math.abs(hangR.x-hangL.x)*1.04,vw=fullW*HANGING_VINE_SCALE,railY=Math.min(hangL.y,hangR.y)-unit*.1+fullW*HANGING_RAIL_MID+unit*HANGING_DROP;
+        ctx.save();ctx.translate((hangL.x+hangR.x)/2,0);ctx.scale(-1,1);ctx.drawImage(vines,-vw/2,railY-vw*HANGING_RAIL_MID,vw,vw*vines.naturalHeight/vines.naturalWidth);ctx.restore();
         sceneElevation=floor.y;
       }
       if(fi===2&&!SHOP_SPRITES){
