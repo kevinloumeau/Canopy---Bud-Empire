@@ -33,10 +33,14 @@ const STATION_SIZE = { seeds: { w: 3.6, drop: .6 }, grow: { w: 4.3, drop: .62 },
 // every upright stays upright, and the aspect change is split between width and height so pots and plants stretch
 // as little as possible. The PNGs stay as rendered. Tier 2 already follows the map's slopes.
 const RENDER_AXES = { 'station.grow.tier1': [.424, -.6], 'station.grow.tier3': [.458, -.552] };
+// A tier render framed differently from the rest of its station's set gets its own size: Kevin's ChatGPT tier 3
+// pickup desk (2026-10-17, the PICKUP arch restored) is cropped tighter round its arch and side cabinet, so at the
+// station's width it came out small; this lays its counter over the earlier tier 3 desk's footprint.
+const TIER_SIZE = { 'station.pickup.tier3': { w: 4.1, drop: .62, ox: -.35 } };
 function lazySprite(name, file, size) {
   if (SPRITES[name] || !SUNNY || typeof Image === 'undefined') return;
   const img = new Image(); img.decoding = 'async'; img.onerror = () => { SPRITES[name].missing = true; }; img.src = file;
-  SPRITES[name] = Object.assign({ img }, size, RENDER_AXES[name] ? { axes: RENDER_AXES[name] } : null);
+  SPRITES[name] = Object.assign({ img }, size, TIER_SIZE[name], RENDER_AXES[name] ? { axes: RENDER_AXES[name] } : null);
 }
 // The shear that squares a render's floor edges (slopes mL down-right, mR up-right) to the map's. With x' = sx·x and
 // y' = sy·y + k·x the two edge slopes become (sy·m + k) / sx; matching both fixes sy / sx and k, and the remaining
