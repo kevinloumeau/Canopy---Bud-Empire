@@ -1,6 +1,6 @@
 import {BOOST_MAX} from './depth.js';
 // Reuse the original purchase nodes so prices, handlers and saves remain authoritative.
-export function mountShopBrowser({getState,components,kiosks,queueLimit,recommend,openDeliveries,deliveryDesk}) {
+export function mountShopBrowser({getState,components,kiosks,queueLimit,recommend,recommendInfo,openDeliveries,deliveryDesk}) {
   const pane=document.querySelector('[data-pane="boosts"]');
   pane.classList.add('shop-browser');
   const categories=['Production','Service','Customers','Products','Online'];
@@ -22,7 +22,8 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
   const icons={Production:'<path d="M4 8h16v11H4zM4 8l3-4h10l3 4M12 4v4"/>',Service:'<path d="M4 17h16M6 17a6 6 0 0 1 12 0M12 8v3M10 8h4"/>',Customers:'<circle cx="9" cy="8" r="3"/><circle cx="16" cy="9" r="2.4"/><path d="M3 20a6 6 0 0 1 12 0M13 20a4.5 4.5 0 0 1 8 0"/>',Products:'<path d="M12 21c-4.5-2.5-7-6-7-10a7 7 0 0 1 14 0c0 4-2.5 7.5-7 10ZM12 21V9"/>',Online:'<path d="M9 10h6v4H9zM4 6h3M17 6h3M5.5 6v4h3.5M18.5 6v4H15M9 14l-3 5M15 14l3 5M12 14v6"/>'};
   header.innerHTML='<nav class="shop-categories" aria-label="Upgrade categories">'+categories.map((name,i)=>'<button type="button" data-shop-category="'+i+'" aria-pressed="'+(i===0)+'"><svg class="shop-category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(icons[name]||'')+'</svg><em>'+name+'</em></button>').join('')+'</nav>';
   const recommendation=document.createElement('button');recommendation.type='button';recommendation.className='shop-recommendation';
-  recommendation.innerHTML='<span><small>RECOMMENDED · BOTTLENECK</small><strong></strong></span><span aria-hidden="true">↗</span>';
+  // Same shape as the bottleneck card: brass icon, label and name, then the price on a brass chip.
+  recommendation.innerHTML='<svg class="shop-rec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M12 8l1.2 2.8L16 12l-2.8 1.2L12 16l-1.2-2.8L8 12l2.8-1.2Z"/></svg><span class="shop-rec-copy"><small>Recommended</small><strong></strong></span><span class="shop-rec-go"><b></b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></span>';
   recommendation.onclick=()=>recommend(true);
   const list=document.createElement('div');list.className='shop-items';
   const empty=document.createElement('p');empty.className='shop-empty';empty.textContent='Nothing affordable here yet. Turn off the filter to see what’s next.';
@@ -63,7 +64,15 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
       count.hidden=!d.built||!d.waiting;count.textContent=d.waiting;desk.setAttribute('aria-label','Delivery desk, '+note.textContent)}
     empty.hidden=count>0||done>0;
     empty.textContent='Nothing here yet.';
-    recommendation.querySelector('strong').textContent=recommend(false);
+    const info=recommendInfo&&recommendInfo();
+    if(info){
+      recommendation.querySelector('small').textContent='Recommended · '+info.where;
+      recommendation.querySelector('strong').textContent=info.name;
+      recommendation.querySelector('.shop-rec-go b').textContent=info.price;
+      recommendation.classList.toggle('is-short',!info.affordable);
+      recommendation.setAttribute('aria-label','Recommended: '+info.name+', '+info.where+', '+info.price);
+      rows.forEach(row=>row.node.classList.toggle('is-pick',row.id===info.id));
+    }else recommendation.querySelector('strong').textContent=recommend(false);
   }
   function show(index){category=index;header.querySelectorAll('[data-shop-category]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.shopCategory)===index)));render();}
   function categoryOf(id){const row=rows.find(r=>r.id===id);return row?row.category:0;}
