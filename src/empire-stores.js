@@ -151,9 +151,9 @@ export function mountEmpireStores({getState,format}){
   const c=cards[i],d=describe(i);
   let chip='',tone='',dot=false;
   if(d.locked){chip=Math.round(d.unlockPct)+'% there';tone='locked';}
-  else if(!d.lvl){chip=d.afford?'Ready to open':'Need '+format(d.cost-d.state.money);tone=d.afford?'ready gold':'';}
+  else if(!d.lvl){chip=d.afford?format(d.cost):'Need '+format(d.cost-d.state.money);tone=d.afford?'ready gold':'';}
   else if(d.max){chip='Max level';tone='max';}
-  else{chip=(d.afford?'Upgrade · ':'Next · ')+format(d.cost);tone=d.afford?'ready':'';dot=(d.opening&&d.opening.ready)||d.projectReady;}
+  else{chip=(d.afford?'':'Next · ')+format(d.cost);tone=d.afford?'ready':'';dot=(d.opening&&d.opening.ready)||d.projectReady;}
   const sig=[chip,tone,dot,d.locked&&Math.round(d.unlockPct)].join('|');
   if(sig===c.sig)return;c.sig=sig;
   set(c.status,chip);c.status.className='store-status'+(tone?' '+tone.split(' ').map(t=>'is-'+t).join(' '):'');

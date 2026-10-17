@@ -41,3 +41,23 @@
 @media(hover:hover){.sheet .empire-screen .store-card:hover,.sheet .empire-screen .story-entry:hover,.sheet .empire-screen .empire-more:hover{background:var(--ui-sheen)}}
 .sheet .empire-screen .story-entry small{font-family:'Bricolage Grotesque',system-ui,sans-serif}
 .sheet .empire-screen .store-card .store-locked,.sheet .empire-screen .store-card .store-income,.sheet .empire-screen .store-card .store-level b{font-weight:400}
+/* A store you can afford shows its price on a button-shaped chip, like the Shop rows: brass to open, leaf to upgrade.
+   The line under the name then shows what the store earns once open, so the price is not said twice. */
+.sheet .empire-screen .store-status.is-ready{padding:7px 11px;border-radius:10px;background:var(--ui-leaf);color:var(--ui-on-leaf);font:500 13px 'DM Mono',monospace;letter-spacing:-.02em}
+.sheet .empire-screen .store-status.is-ready.is-gold{background:var(--ui-brass);color:var(--ui-brass-ink)}
+.sheet .empire-screen .store-card .store-copy{row-gap:0}
+.sheet .empire-screen .store-card.has-ready .store-locked:not(.is-locked){display:none}
+.sheet .empire-screen .store-card.has-ready .store-income.muted{display:inline-flex;align-items:center;gap:4px;padding:0}
+.sheet .empire-screen .store-card.has-ready .store-income.muted::after{content:'when open';font-family:'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:0}
+/* "Your stores" and its summary share one line; the summary sits right-aligned over the rows' price column. */
+.sheet .empire-screen .empire-section-heading{line-height:20px;margin-top:4px}
+.sheet .empire-screen #branchSummary{margin:-20px 0 0 auto;padding-right:33px;line-height:20px;text-align:right;width:max-content;max-width:60%}
+/* The price chip spans both lines of the row so the name and the figure under it stay close together. */
+.sheet .empire-screen .store-card .store-copy{display:contents}
+.sheet .empire-screen .store-card .store-detail{display:none}
+.sheet .empire-screen .store-list .branch-toggle.store-card{grid-template-columns:22px minmax(0,1fr) auto 10px;grid-template-areas:"icon name status chev" "icon meta status chev" "icon meter meter chev";row-gap:2px}
+.sheet .empire-screen .store-card .branch-name{grid-area:name;align-self:end}
+.sheet .empire-screen .store-card .store-meta{grid-area:meta;align-self:start}
+.sheet .empire-screen .store-card .store-status{grid-area:status;align-self:center}
+.sheet .empire-screen .store-card .store-meter{grid-area:meter}
+.sheet .empire-screen .store-card::after{grid-area:chev}
