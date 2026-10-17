@@ -2667,19 +2667,20 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     ctx.save();ctx.transform(k,shear,0,k,p0.x-k*S.bx,p0.y-shear*S.bx-k*S.by);ctx.drawImage(img,0,0);ctx.restore();
     return true;
   }
-  // The product wall in the darker drawn tile of the counter walls and the lounge's band (Kevin, 2026-10-14), floor to
-  // slab, in place of the wall module's cream plaster and lighter dado. The band's grout course and brass rail run on
-  // across it at the same heights, and the stack-bond joints sit on the same .2 grid, so the two meet as one wall.
+  // The product wall in the darker drawn tile of the counter walls and the lounge's band (Kevin, 2026-10-14), one
+  // unbroken run from the lounge's plaster to the lounge's right end. Like the lounge section beside it (Kevin,
+  // 2026-10-16: "the back wall tile should be bottom part of the wall and then solid green on top like the section by
+  // the lounge"), the tile is a dado to the band's height under the brass rail, with the facade's green plaster from
+  // there to the slab; the band's grout course and the stack-bond joints sit on the same .2 grid, so the two meet as one wall.
   function drawTileWall(x0,x1,z,h){
     var f=z+.004,rail=LOUNGE_TILE-.03;
-    poly([project(x0,0,f),project(x1,0,f),project(x1,h,f),project(x0,h,f)],SHOP_GREEN_TILE[1]);
+    poly([project(x0,LOUNGE_TILE,f),project(x1,LOUNGE_TILE,f),project(x1,h,f),project(x0,h,f)],SHOP_GREEN_PLASTER[1]);
+    poly([project(x0,0,f),project(x1,0,f),project(x1,LOUNGE_TILE,f),project(x0,LOUNGE_TILE,f)],SHOP_GREEN_TILE[1]);
     f+=.004;
     ctx.beginPath();
-    for(var tx=Math.ceil((x0+.04)/TILE_PITCH)*TILE_PITCH;tx<x1-.04;tx+=TILE_PITCH){var a=project(tx,0,f),b=project(tx,h-.02,f);ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y)}
+    for(var tx=Math.ceil((x0+.04)/TILE_PITCH)*TILE_PITCH;tx<x1-.04;tx+=TILE_PITCH){var a=project(tx,0,f),b=project(tx,LOUNGE_TILE-.06,f);ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y)}
     ctx.strokeStyle=TILE_GROUT;ctx.lineWidth=Math.max(.65,unit*.012);ctx.lineCap='round';ctx.stroke();
-    var courses=Math.max(1,Math.round((h-LOUNGE_TILE)/(LOUNGE_TILE/2))),step=(h-LOUNGE_TILE)/courses;
     worldLine([[x0,LOUNGE_TILE/2,f],[x1,LOUNGE_TILE/2,f]],TILE_GROUT,.012);
-    for(var c=1;c<courses;c++)worldLine([[x0,LOUNGE_TILE+c*step,f],[x1,LOUNGE_TILE+c*step,f]],TILE_GROUT,.012);
     worldLine([[x0,rail,f],[x1,rail,f]],TILE_BRASS[0],.05);
   }
   function drawShellProductWall(displayZ,now,wood){
@@ -3678,8 +3679,10 @@ if(!SHOP_SPRITES){
     if(rise>0){ctx.save();ctx.globalAlpha=.15+.85*(1-rise)}
     var hdr=SHOP_SPRITES?2.05:2.5,jambL=-11.03;drawBox((jambL+dx-.7)/2,zc,0,dx-.7-jambL,fd,H,plaster);drawBox(dx,zc,hdr,1.4,fd,H-hdr,plaster);drawBox((dx+.7-6.7)/2,zc,0,-6.7-(dx+.7),fd,H,plaster);drawBox((6.7+rx+.16)/2,zc,0,rx+.16-6.7,fd,H,plaster);
     [[jambL,dx-.7],[dx+.7,-6.7],[6.7,rx+.16]].forEach(function(run){tileFace(false,run[0],run[1],face)});
-    // The right end wall's tile band goes on after the facade so its corner is tiled on both faces, with no bare plaster strip.
-    tileFace(true,-7,face,rx+.16);
+    // The right end wall's tile band goes on after the facade so its corner is tiled on both faces, with no bare plaster
+    // strip; it stops at the back door's jambs rather than running across the doorway (Kevin, 2026-10-16: "the lounge
+    // exit door is blocked"), so the drapes and the dark opening reach the floor.
+    tileFace(true,-7,ez-ew-.04,rx+.16);tileFace(true,ez+ew+.04,face,rx+.16);
     worldLine([[dx-.74,.02,face+.02],[dx-.74,2.54,face+.02],[dx+.74,2.54,face+.02],[dx+.74,.02,face+.02]],'#171e1a',.07);
     if(SHOP_SPRITES&&pinnedDoor('shell.lounge.door.v2',dx,face,LOUNGE_DOOR_PIN)){
       // Sprite shop: Kevin's curtained oak doorway (2026-10-14) stands whether the lounge is open or still to be bought;
