@@ -2595,11 +2595,12 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // The grow room's glazing is drawn slim rather than from the window module, whose frame overpowered the plants;
     // the exhaust fan gets a solid bay of its own instead of hanging on glass.
     if(fi===2&&SHOP_SPRITES){drawSlimGlazing(false,rear,left,right,wallH,FAN_X);drawSlimGlazing(true,left,rear,rear+3.5,wallH);return}
-    // The ground floor's wall runs on behind the exit door, so its doorway (the render's open frame: x 9.48-11.21,
-    // 3.25 high on the wall line) is cut out of the modules and the pavement outside shows through the open door
-    // (Kevin, 2026-10-14: no black rectangle, the frame intact, the render itself untouched).
+    // The ground floor's wall runs on behind the exit door, so its doorway (the render's open frame between the posts'
+    // inner faces: x 9.44-11.25, 3.3 high on the wall line, just under the header) is cut out of the modules and the
+    // pavement outside shows through the open door (Kevin, 2026-10-14: no black rectangle, the frame intact, the
+    // render itself untouched).
     var doorway=fi===0;
-    if(doorway){ctx.save();ctx.beginPath();ctx.rect(0,0,width,height);[project(9.5,0,rear),project(11.2,0,rear),project(11.2,3.22,rear),project(9.5,3.22,rear)].forEach(function(q,i){i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y)});ctx.closePath();ctx.clip('evenodd')}
+    if(doorway){ctx.save();ctx.beginPath();ctx.rect(0,0,width,height);[project(9.44,0,rear),project(11.25,0,rear),project(11.25,3.3,rear),project(9.44,3.3,rear)].forEach(function(q,i){i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y)});ctx.closePath();ctx.clip('evenodd')}
     for(var k=0;k<n;k++){var kind=kinds[k%kinds.length],capped=kind.indexOf('tile')>=0;drawWallFace(api,'shell.'+kind,left+k*step,rear,left+(k+1)*step,rear,0,wallH,capped?.04:0,capped?.95:1)}
     if(doorway)ctx.restore();
     // Side walls along z: the image's left edge is the near (larger z) end.
@@ -3364,6 +3365,11 @@ if(!SHOP_SPRITES){
       [-1,1].forEach(function(side){worldLine([[tx+.12,2.1,tz],[tx+side*.85,3.2,tz]],'#816747',.085)});
       for(var leaf=0;leaf<18;leaf++){var a=leaf*2.399,r=.35+(leaf%4)*.18,lp=project(tx+Math.cos(a)*r,2.7+(leaf%5)*.19,tz+Math.sin(a)*r*.6);ellipse(lp.x,lp.y,unit*.33,unit*.24,leaf%3===0?'#98b96e':leaf%3===1?'#587c4d':'#769852')}
   }
+  // shell.door.exit.v2, in sprite px: the clean outline of the frame and its open leaf, with the opening cut out
+  // between the posts' inner faces (the dark halo and the slivers inside the opening lie outside it), and the two
+  // keyed-out reveals, drawn as shaded side faces receding on the render's own depth slope.
+  var EXIT_DOOR_OUTLINE=[[29,37],[55,20],[282,147],[285,172],[421,96],[436,104],[436,533],[286,614],[262,621],[241,608],[241,196],[76,105],[76,517],[52,531],[29,519]];
+  var EXIT_DOOR_REVEALS=[[[52,92],[77,77],[77,517],[52,531]],[[262,160],[285,146],[285,606],[262,621]]];
   function addEntryDoor(jobs){
     var x=-10.65,z=10,frame=SHOP_SPRITES?['#3f7a58','#1f4a35','#2d6146']:['#414843','#171e1a','#2b342e'],brass=['#d8c18b','#8d7950','#b7a16d'];
     function add(px,pz,fn){jobs.push({depth:depthOf({x:px,z:pz}),draw:fn})}
@@ -3382,7 +3388,22 @@ if(!SHOP_SPRITES){
       // The exit door's frame stands in the rear wall line: its outer post feet (image points measured on the sprite;
       // the open leaf swings below them) are pinned to x 9.1 and 11.4 on z -7, posts kept upright.
       add(10.25,-6.86,function(){var name=shellSprite('shell.door.exit.v2')||shellSprite('shell.door.exit');if(!name)return;var v2=name==='shell.door.exit.v2',img=spriteImage(name),p0=project(9.1,0,-7),p1=project(11.4,0,-7),u0=v2?45:75,v0=v2?529:360,u1=v2?255:251,v1=v2?616:441;
-        var k=(p1.x-p0.x)/(u1-u0),shear=(p1.y-p0.y-k*(v1-v0))/(u1-u0);ctx.save();ctx.transform(k,shear,0,k,p0.x-k*u0,p0.y-k*v0-shear*u0);ctx.drawImage(img,0,0);ctx.restore()});
+        var k=(p1.x-p0.x)/(u1-u0),shear=(p1.y-p0.y-k*(v1-v0))/(u1-u0);ctx.save();
+        // The merch cabinet stands against the lounge wall in front of the frame's left post (it paints with the floor,
+        // before the sorted jobs), so the door is not painted where the cabinet's render covers it.
+        var cab=exitCabinetPlacement();
+        if(cab){ctx.beginPath();ctx.rect(0,0,width,height);EXIT_CABINET_OUTLINE.forEach(function(q,i){var s=cab.map(q[0],q[1]);i?ctx.lineTo(s.x,s.y):ctx.moveTo(s.x,s.y)});ctx.closePath();ctx.clip('evenodd')}
+        ctx.transform(k,shear,0,k,p0.x-k*u0,p0.y-k*v0-shear*u0);
+        if(v2){
+          // The v2 render came out of ChatGPT with an opaque dark halo round its silhouette and dark slivers inside the
+          // opening (the ragged edges), and its white-painted jamb reveals were keyed out with the background, so the
+          // leaf hung clear of the frame. The file stays as rendered: it is drawn through a clip that follows the
+          // frame's and leaf's clean edges, over two shaded side faces that refill the keyed-out reveals, so the posts
+          // read as solid and the leaf hangs off the right one (Kevin, 2026-10-16: "figure out the exit door").
+          ctx.beginPath();EXIT_DOOR_OUTLINE.forEach(function(q,i){i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1])});ctx.closePath();ctx.clip();
+          ctx.fillStyle='#1f4835';EXIT_DOOR_REVEALS.forEach(function(face){ctx.beginPath();face.forEach(function(q,i){i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1])});ctx.closePath();ctx.fill()});
+        }
+        ctx.drawImage(img,0,0);ctx.restore()});
     }else{
     // Glazed storefront bays continue the door frame behind the kiosk row.
     for(var bay=0;bay<4;bay++)(function(start,end){
@@ -3730,11 +3751,20 @@ if(!SHOP_SPRITES){
       else wallText(bx+.04,ly,bz,letter,unit*.44,.34,'#5a4750',true,'800');
     });
   }
+  // Sprite shop: the ChatGPT render of the arched merch cabinet, standing against the lounge's right wall. Its glazed
+  // face's bottom corners (measured on the sprite) are pinned to the floor at x 9.27, z -4.8 and -6.84: the render's
+  // side runs about 0.84 deep behind that face on a 33° base slope (a shade steeper than the floor's 30°), and 9.27 is
+  // where that lands its back foot on the wall's base line at x 8.41. At 9.03 the back foot hung 0.3 inside the wall,
+  // which the eye read as the cabinet floating (Kevin, 2026-10-16: "bring down the cabinet").
+  var EXIT_CABINET_OUTLINE=[[12,119],[85,77],[200,12],[296,47],[296,546],[85,666],[12,615]]; // the render's silhouette, a hair inside its edge
+  function exitCabinetPlacement(){
+    if(!SHOP_SPRITES||!shellSprite('shell.merch.cabinet'))return null;
+    var p0=project(9.27,0,-4.8),p1=project(9.27,0,-6.84),u0=85,v0=667,u1=298,v1=547,k=(p1.x-p0.x)/(u1-u0),shear=(p1.y-p0.y-k*(v1-v0))/(u1-u0),e=p0.x-k*u0,f=p0.y-k*v0-shear*u0;
+    return{k:k,shear:shear,e:e,f:f,map:function(u,v){return{x:k*u+e,y:shear*u+k*v+f}}};
+  }
   function drawExitCabinet(){
-    // Sprite shop: the ChatGPT render of the arched merch cabinet, standing on the drawn cabinet's footprint.
-    // Its glazed face's bottom corners (measured on the sprite) are pinned to the floor at x 9.03, z -4.8 and -6.84.
-    if(SHOP_SPRITES&&shellSprite('shell.merch.cabinet')){var img=spriteImage('shell.merch.cabinet'),p0=project(9.03,0,-4.8),p1=project(9.03,0,-6.84),u0=85,v0=667,u1=298,v1=547;
-      var k=(p1.x-p0.x)/(u1-u0),shear=(p1.y-p0.y-k*(v1-v0))/(u1-u0);ctx.save();ctx.transform(k,shear,0,k,p0.x-k*u0,p0.y-k*v0-shear*u0);ctx.drawImage(img,0,0);ctx.restore();return}
+    var cab=exitCabinetPlacement();
+    if(cab){ctx.save();ctx.transform(cab.k,cab.shear,0,cab.k,cab.e,cab.f);ctx.drawImage(spriteImage('shell.merch.cabinet'),0,0);ctx.restore();return}
     // Arched display cabinet in the corner between the lounge's right wall and the exit wall: an oak case with a
     // fluted back, three lit glass shelves of merchandise behind a glazed arch, and oak spandrels that turn the
     // rectangular case into a rounded niche. Its rear end sits against the rear wall beside the exit door.
