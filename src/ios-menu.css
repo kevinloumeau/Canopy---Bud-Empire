@@ -12,7 +12,7 @@
 .shop-browser .shop-desk>svg:first-child{flex:0 0 26px;width:26px;height:26px;color:#b7cf98}
 .shop-browser .shop-desk-copy{display:grid;gap:1px;min-width:0;flex:1}
 .shop-browser .shop-desk-copy b{font-size:14px;font-weight:700}
-.shop-browser .shop-desk-copy small{font-size:12px;color:#aebfa8}
+.shop-browser .shop-desk-copy small{font-size:12px;color:var(--p-sage-70)}
 .shop-browser .shop-desk-count{flex:0 0 auto;min-width:24px;padding:2px 8px;border-radius:999px;background:#e9c96a;color:#2b2416;font:600 12px DM Mono,monospace;font-style:normal;text-align:center}
 .shop-browser .shop-desk-chevron{flex:0 0 16px;width:16px;height:16px;opacity:.7}
 
@@ -24,7 +24,7 @@
 .station-team .team-copy small{font-size:11px;color:#b9c8b0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .station-team button{display:grid;place-items:center;gap:0;min-height:44px;padding:3px 4px;border-radius:11px;font-size:11px;line-height:1.1}
 .station-team button span,.station-team button b{font-size:11.5px;white-space:nowrap}
-.station-team #teamTrain:not(:disabled){background:#55733e;border:1px solid #91ab73;color:#fff7e7}
+.station-team #teamTrain:not(:disabled){background:var(--p-forest-35);border:1px solid #91ab73;color:var(--p-cream-95)}
 .station-team #teamMax{background:#1c2f26;border:1px solid #4a6a58;color:#e2ead8}
 .station-team button:disabled{opacity:.5}
 
