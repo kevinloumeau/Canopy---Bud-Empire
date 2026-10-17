@@ -33,10 +33,14 @@ const STATION_SIZE = { seeds: { w: 3.6, drop: .6 }, grow: { w: 4.3, drop: .62 },
 // every upright stays upright, and the aspect change is split between width and height so pots and plants stretch
 // as little as possible. The PNGs stay as rendered. Tier 2 already follows the map's slopes.
 const RENDER_AXES = { 'station.grow.tier1': [.424, -.6], 'station.grow.tier3': [.458, -.552] };
+// A tier render framed differently from the rest of its station's set gets its own size: Kevin's ChatGPT tier 3
+// pickup desk (2026-10-17, the PICKUP arch restored) is cropped tighter round its arch and side cabinet, so at the
+// station's width it came out small; this lays its counter over the earlier tier 3 desk's footprint.
+const TIER_SIZE = { 'station.pickup.tier3': { w: 4.1, drop: .62, ox: -.35 } };
 function lazySprite(name, file, size) {
   if (SPRITES[name] || !SUNNY || typeof Image === 'undefined') return;
   const img = new Image(); img.decoding = 'async'; img.onerror = () => { SPRITES[name].missing = true; }; img.src = file;
-  SPRITES[name] = Object.assign({ img }, size, RENDER_AXES[name] ? { axes: RENDER_AXES[name] } : null);
+  SPRITES[name] = Object.assign({ img }, size, TIER_SIZE[name], RENDER_AXES[name] ? { axes: RENDER_AXES[name] } : null);
 }
 // The shear that squares a render's floor edges (slopes mL down-right, mR up-right) to the map's. With x' = sx·x and
 // y' = sy·y + k·x the two edge slopes become (sy·m + k) / sx; matching both fixes sy / sx and k, and the remaining
@@ -178,7 +182,7 @@ export function drawPersonSprite(api, x, z, identity, employee, facing, ground, 
 // Shop fixtures from the interior batch, sized in world units like the stations.
 const FIXTURE_SIZE = { 'station.security.site': { w: 2.2, drop: .45 }, 'event.festival.stall': { w: 2.6, drop: .45 }, 'station.orders.compact.tier1': { w: 2.15, drop: .45 }, 'station.orders.compact.tier2': { w: 2.15, drop: .45 }, 'station.orders.compact.tier3': { w: 2.2, drop: .45 }, 'shop.kiosk': { w: 1, drop: 0 }, 'shop.displaycase': { w: 4, drop: .55 }, 'shop.planter.small': { w: .95, drop: .12 },
   // Latest main-shop-v2 batch: placed by main.js on world boxes or wall anchors, so their sizes here are unused.
-  ...Object.fromEntries(['lounge.sofa', 'lounge.coffee.table', 'lounge.lamp.on', 'lounge.lamp.off', 'lounge.rug.floor', 'lounge.carpet.entry', 'lounge.sign.lit', 'lounge.sign.dark', 'street.bollard', 'street.sconce', 'shell.exit.lamp', 'shell.fan.housing', 'drone.courier.loaded', 'prop.jar', 'prop.pickup.bag', 'prop.carton', 'prop.tote', 'prop.cap', 'prop.tee'].map(n => [n, { w: 1, drop: 0 }])) };
+  ...Object.fromEntries(['lounge.sofa', 'lounge.coffee.table', 'lounge.lamp.on', 'lounge.lamp.off', 'lounge.rug.floor', 'lounge.carpet.entry', 'lounge.carpet.runner', 'lounge.sign.lit', 'lounge.sign.dark', 'street.bollard', 'street.sconce', 'shell.exit.lamp', 'shell.fan.housing', 'drone.courier.loaded', 'prop.jar', 'prop.pickup.bag', 'prop.carton', 'prop.tote', 'prop.cap', 'prop.tee'].map(n => [n, { w: 1, drop: 0 }])) };
 // The narrower order desk used once the bank has two or three counters, at the station's tier.
 export function compactOrderSprite(level) { return fixtureSprite('station.orders.compact.tier' + stationTier(level)) || null; }
 export function fixtureSprite(name) { if (!FIXTURE_SIZE[name]) return null; lazySprite(name, 'sprites/interior/' + name + '.png', FIXTURE_SIZE[name]); return spriteReady(name) ? name : null; }
