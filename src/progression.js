@@ -204,10 +204,10 @@ export function affordableImprovement(state,additional=[]){
   options.sort((a,b)=>a.cost-b.cost);return options.find(o=>o.cost<=state.money)||options[0]||null;
 }
 
-// Multi-day events. Calendar seasons (4/20 week, Harvest, Spooky, Holiday, Solstice) take over their dates; every other
-// week runs a rotating weekly theme, so there is always one. Each has a three-step ladder with income-scaled rewards and
-// a trophy per step; the last step adds the event's badge to a collection that survives reopening. Progress counts from
-// the moment the player first opens the game during the event, so it never starts half-missed.
+// Multi-day events. Calendar seasons (4/20 week, Harvest, Spooky, Holiday, Solstice) take over their dates. Each has a
+// three-step ladder with income-scaled rewards and a trophy per step; the last step adds the event's badge to a
+// collection that survives reopening. Progress counts from the moment the player first opens the game during the event,
+// so it never starts half-missed. Between seasons there is no ladder; the weekly special below runs every week.
 const BADGE_ID=/^[a-z0-9-]{1,24}$/;
 export const SEASONS=[
   {id:'420',name:'4/20 Week',kind:'pickup',from:[4,17],to:[4,23],copy:'The biggest week of the year. Serve walk-in customers to climb the ladder.'},
@@ -216,7 +216,8 @@ export const SEASONS=[
   {id:'spooky',name:'Spooky Season',kind:'pickup',from:[10,25],to:[10,31],copy:'Costumed customers all week. Serve walk-ins to climb the ladder.'},
   {id:'holiday',name:'Holiday Rush',kind:'online',from:[12,15],to:[12,31],copy:'Gift orders pile up. Send online orders to climb the ladder.'}
 ];
-export const WEEKLY=[
+// Weekly ladder themes from before the iOS weekly special; kept so badges earned from them still show their names.
+export const RETIRED_WEEKLY=[
   {id:'neighbors',name:'Neighborhood Week',kind:'pickup',copy:'Regulars bring friends. Serve walk-in customers to climb the ladder.'},
   {id:'delivery',name:'Delivery Week',kind:'online',copy:'The web shop is busy. Send online orders to climb the ladder.'},
   {id:'bigsales',name:'Big Sales Week',kind:'revenue',copy:'Everyone is shopping. Earn revenue to climb the ladder.'}
@@ -232,12 +233,16 @@ function migrateSeason(r){
 export function seasonWindow(now=Date.now()){
   const d=new Date(now),y=d.getUTCFullYear(),day=Date.UTC(y,d.getUTCMonth(),d.getUTCDate());
   for(const s of SEASONS){const from=Date.UTC(y,s.from[0]-1,s.from[1]),to=Date.UTC(y,s.to[0]-1,s.to[1])+DAY;if(day>=from&&day<to)return {...s,id:s.id+'-'+y,badge:s.id,start:from,end:to};}
-  // Weeks run Monday to Sunday UTC; 1970-01-05 was a Monday.
-  const week=Math.floor((now-4*DAY)/(7*DAY)),start=4*DAY+week*7*DAY,theme=WEEKLY[((week%WEEKLY.length)+WEEKLY.length)%WEEKLY.length];
-  return {...theme,id:theme.id+'-'+week,badge:theme.id,start,end:start+7*DAY};
+  return null;
+}
+// The next calendar season after now, for the card shown between seasons.
+export function nextSeason(now=Date.now()){
+  const y=new Date(now).getUTCFullYear();
+  for(const yy of [y,y+1])for(const s of SEASONS){const start=Date.UTC(yy,s.from[0]-1,s.from[1]);if(start>now)return {...s,start};}
+  return null;
 }
 export function seasonStatus(p,now=Date.now(),scale=1){
-  const w=seasonWindow(time(p,now));
+  const w=seasonWindow(time(p,now));if(!w)return null;
   if(!p.season||p.season.id!==w.id){
     const income=Math.max(4,scale*4),targets=w.kind==='revenue'?REVENUE_HOURS.map(h=>Math.max(1000,Math.round(income*h*3600))):FIXED_TARGETS[w.kind].slice();
     p.season={id:w.id,kind:w.kind,start:p.counters[w.kind],targets,claimed:0};
@@ -248,6 +253,19 @@ export function seasonStatus(p,now=Date.now(),scale=1){
     reward:next>=0?scaledReward(SEASON_REWARDS[next],scale):scaledReward(SEASON_REWARDS[Math.min(2,r.claimed)],scale),hasBadge:p.badges.includes(w.badge)};
 }
 export function claimSeason(state,now=Date.now(),scale=1){
-  const p=state.empire,s=seasonStatus(p,now,scale);if(s.next<0)return 0;
+  const p=state.empire,s=seasonStatus(p,now,scale);if(!s||s.next<0)return 0;
   p.season.claimed++;p.trophies++;state.money+=s.reward;if(p.season.claimed===3&&!p.badges.includes(s.badge))p.badges.push(s.badge);return s.reward;
 }
+
+// Weekly special, as in the iOS app: a free bonus that rotates every week, with nothing to join or collect.
+// The week index uses the app's own formula so the web game and the app always show the same special.
+export const WEEKLY_SPECIALS=[
+  {id:'green-thumb',name:'Green Thumb Week',detail:'Grow room output +15%',kind:'grow',factor:1.15},
+  {id:'terpene-fair',name:'Terpene Fair',detail:'Boutique strains pay +15%',kind:'boutique',factor:1.15},
+  {id:'street-fair',name:'Street Fair',detail:'Walk-ins arrive 12% faster',kind:'traffic',factor:1.12},
+  {id:'courier-rally',name:'Courier Rally',detail:'Online orders pay +20%',kind:'online',factor:1.2},
+  {id:'neighborhood-days',name:'Neighborhood Days',detail:'Branch income +15%',kind:'branch',factor:1.15},
+  {id:'high-tea',name:'High Tea Week',detail:'Lounge sessions pay +25%',kind:'lounge',factor:1.25}
+];
+export function weeklySpecial(now=Date.now()){const week=Math.floor((now/DAY+4)/7),n=WEEKLY_SPECIALS.length;return WEEKLY_SPECIALS[((week%n)+n)%n];}
+export const specialFactor=(kind,now=Date.now())=>{const s=weeklySpecial(now);return s.kind===kind?s.factor:1;};

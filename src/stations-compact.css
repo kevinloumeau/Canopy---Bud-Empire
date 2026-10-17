@@ -12,7 +12,7 @@
  .sheet .machine-nav button>em{font-size:11px;line-height:1.2;text-align:center;padding:0;white-space:nowrap}
  .sheet .machine-nav button.is-bottleneck em{white-space:nowrap}
  .sheet .machine-nav .slow-tag{display:none}
- .sheet .machine-nav button.is-bottleneck .station-card-name{color:#efcf8d}
+ .sheet .machine-nav button.is-bottleneck .station-card-name{color:var(--p-gold-75)}
  .sheet .machine-nav button.can-upgrade::after{right:3px;bottom:auto;top:4px;width:9px;height:12px}
  .sheet .machine-nav button small{display:none}
 
@@ -58,7 +58,7 @@
  .sheet .machine-nav .station-card-name{font-size:11px;letter-spacing:-.02em;white-space:nowrap;text-align:center;line-height:1.2}
  .sheet .machine-nav button>em{font-size:11px;line-height:1.2;text-align:center;padding:0;white-space:nowrap}
  .sheet .machine-nav .slow-tag{display:none}
- .sheet .machine-nav button.is-bottleneck .station-card-name{color:#efcf8d}
+ .sheet .machine-nav button.is-bottleneck .station-card-name{color:var(--p-gold-75)}
  .sheet .machine-nav button.can-upgrade::after{right:3px;bottom:auto;top:4px;width:9px;height:12px}
  .sheet .machine-nav button small{display:none}
 }
@@ -70,7 +70,7 @@
 .sheet .machine-nav .station-card-name{font-size:11px;font-weight:600}
 .sheet .machine-nav button>em{font:500 11px 'DM Mono',monospace;color:#b7c9b1;letter-spacing:-.01em}
 .sheet .machine-nav button[aria-pressed=true]{background:linear-gradient(140deg,#badb9d33,#d3eacb12);border-color:#d2ebb964}
-.sheet .machine-nav button[aria-pressed=true]>em{color:#e8f2d7}
+.sheet .machine-nav button[aria-pressed=true]>em{color:var(--p-lime-90)}
 .sheet .machine-nav button.can-upgrade::after{content:'';position:absolute;top:5px;right:5px;bottom:auto;left:auto;width:6px;height:6px;border-radius:50%;background:#c5e89e;mask:none;-webkit-mask:none;animation:none;box-shadow:0 0 6px #c5e89e66}
 .sheet .machine-nav button.is-locked{opacity:.55}
 @media(min-width:780px){.sheet .machine-nav button{min-height:54px;padding:10px 2px 9px}}
@@ -80,20 +80,20 @@
 .sheet .machine-nav{gap:0;padding:2px 0 6px;margin-bottom:4px;background:#0c231c40;border-radius:16px}
 .sheet .machine-nav button{background:transparent;border-color:transparent;box-shadow:none;border-radius:14px;padding:8px 0 7px;min-height:50px;row-gap:2px}
 .sheet .machine-nav button[aria-pressed=true]{background:linear-gradient(155deg,#e3f5db38,#c4e5b41a);border-color:transparent;box-shadow:inset 0 1px 0 #f1ffe752,inset 0 0 0 1px #e4fbd31c}
-.sheet .machine-nav .station-card-name{font-size:11px;font-weight:600;color:#d3e0cb}
-.sheet .machine-nav button[aria-pressed=true] .station-card-name{color:#f6faed}
-.sheet .machine-nav button>em{font:500 11px 'DM Mono',monospace;color:#9fb59a}
+.sheet .machine-nav .station-card-name{font-size:11px;font-weight:600;color:var(--p-sage-84)}
+.sheet .machine-nav button[aria-pressed=true] .station-card-name{color:var(--p-sage-95)}
+.sheet .machine-nav button>em{font:500 11px 'DM Mono',monospace;color:var(--p-sage-66)}
 .sheet .machine-nav button.can-upgrade>em{color:#c5e89e}
 .sheet .machine-nav button.can-upgrade::after{display:none}
-.sheet .machine-nav button.is-bottleneck .station-card-name{color:#efcf8d}
+.sheet .machine-nav button.is-bottleneck .station-card-name{color:var(--p-gold-75)}
 .sheet .machine-nav button.is-locked{opacity:.45}
 @media(hover:hover){.sheet .machine-nav button:not([aria-pressed=true]):hover{background:#dce9be10;filter:none}}
 
 /* Icon-led strip: a line icon over the level, name for assistive tech, and the upgrade arrow back on the icon's shoulder. */
 .sheet .machine-nav button{grid-template-rows:22px auto;grid-template-areas:"icon" "status";row-gap:4px;padding:8px 0 7px;min-height:54px}
-.sheet .machine-nav .station-icon{grid-area:icon;width:22px;height:22px;color:#d3e0cb;opacity:.85}
-.sheet .machine-nav button[aria-pressed=true] .station-icon{color:#f6faed;opacity:1}
-.sheet .machine-nav button.is-bottleneck .station-icon{color:#efcf8d;opacity:1}
+.sheet .machine-nav .station-icon{grid-area:icon;width:22px;height:22px;color:var(--p-sage-84);opacity:.85}
+.sheet .machine-nav button[aria-pressed=true] .station-icon{color:var(--p-sage-95);opacity:1}
+.sheet .machine-nav button.is-bottleneck .station-icon{color:var(--p-gold-75);opacity:1}
 .sheet .machine-nav .station-card-name{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .sheet .machine-nav button>em{grid-area:status}
 .sheet .machine-nav button.can-upgrade::after{content:'';display:block;position:absolute;top:4px;left:calc(50% + 7px);right:auto;bottom:auto;width:11px;height:11px;border-radius:0;background:#c5e89e;box-shadow:none;
@@ -103,7 +103,7 @@
 /* Bottleneck line: one quiet tappable row with a gold marker and a chevron, not a sentence plus a button. */
 /* Bottleneck card: amber accent, station icon, eyebrow + name, and a solid fix button. */
 .sheet .flow-guide{position:relative;display:flex;align-items:center;gap:10px;min-height:52px;margin:0 0 8px;padding:7px 7px 7px 12px;border-radius:14px;border:1px solid #e3c07a2e;background:linear-gradient(100deg,#e3c07a1c,#2c3d2f00 60%),#1d2d23cc;color:#efe4c6;font-size:12px;cursor:pointer;overflow:hidden;transition:background-color .16s ease,border-color .16s ease}
-.sheet .flow-guide::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:3px;background:#efcf8d;box-shadow:0 0 10px #efcf8d80}
+.sheet .flow-guide::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--p-gold-75);box-shadow:0 0 10px #efcf8d80}
 .sheet .flow-guide .flow-icon{flex:0 0 34px;display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;background:#e3c07a22;color:#f2d99a}
 .sheet .flow-guide .flow-icon svg{width:20px;height:20px}
 .sheet .flow-guide .flow-copy{flex:1;min-width:0;display:grid;gap:1px;line-height:1.2}
@@ -114,7 +114,7 @@
 .sheet .flow-guide button#flowAction::after{content:none}
 .sheet .flow-guide button#flowAction:hover{background:#f2d692}
 .sheet .flow-guide button#flowAction[data-mode=view]{background:#3b5340;color:#e6efd3}
-.sheet .flow-guide:focus-visible{outline:2px solid #e3d1a6;outline-offset:2px}
+.sheet .flow-guide:focus-visible{outline:2px solid var(--p-gold-77);outline-offset:2px}
 @media(hover:hover){.sheet .flow-guide:hover{border-color:#e3c07a55}}
 @media(max-width:779px){.flow-guide{padding:6px 6px 6px 12px;font-size:12px}.flow-guide button{min-height:32px;padding:0 12px}}
 
@@ -146,11 +146,11 @@
 }
 
 /* Column headings replace the repeated Train / Max words on every button. */
-.sheet .employee-columns{display:grid;grid-template-columns:1fr auto auto;gap:5px;padding:2px 2px 4px;font-size:11px;letter-spacing:.02em;color:#aebfa8;text-align:center}
+.sheet .employee-columns{display:grid;grid-template-columns:1fr auto auto;gap:5px;padding:2px 2px 4px;font-size:11px;letter-spacing:.02em;color:var(--p-sage-70);text-align:center}
 .sheet .employee-columns span{grid-column:auto;min-width:78px}
 .sheet .employee-columns span:first-child{grid-column:2}
 .sheet .employee-train-actions button{min-width:78px}
-.sheet .employee-train-actions button span{font-size:11px;color:#c3dca5}
+.sheet .employee-train-actions button span{font-size:11px;color:var(--p-lime-75)}
 .sheet .employee-train-actions button:disabled span{color:inherit}
 @media(min-width:780px){.sheet .employee-columns{padding:6px 2px 4px;grid-template-columns:1fr 106px 106px;gap:6px}.sheet .employee-columns span{min-width:0}}
 
@@ -158,12 +158,12 @@
 .shop-browser .shop-items{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:2px 0 4px}
 [data-pane="boosts"].shop-browser .shop-item{display:grid;grid-template-columns:22px minmax(0,1fr);grid-template-areas:"icon title" "copy copy" "level level" "button button";gap:3px 6px;align-content:start;margin:0;padding:8px 8px 7px;border:1px solid #d6efd21a;border-radius:13px;background:#dcefd408}
 [data-pane="boosts"].shop-browser .shop-item[hidden]{display:none}
-.shop-browser .shop-item .shop-symbol{grid-area:icon;width:22px;height:22px;color:#b7d197}
+.shop-browser .shop-item .shop-symbol{grid-area:icon;width:22px;height:22px;color:var(--p-lime-71)}
 .shop-browser .shop-item .shop-symbol svg{width:20px;height:20px}
 .shop-browser .shop-item .shop-copy,.shop-browser .shop-item .storage-copy{display:contents}
-.shop-browser .shop-item h2,.shop-browser .shop-item .storage-copy>b{grid-area:title;align-self:center;font-size:12px;line-height:1.2;font-weight:600;color:#edf3df;margin:0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.shop-browser .shop-item h2,.shop-browser .shop-item .storage-copy>b{grid-area:title;align-self:center;font-size:12px;line-height:1.2;font-weight:600;color:var(--p-sage-91);margin:0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .shop-browser .shop-item strong{grid-area:copy;font-size:11px;line-height:1.3;color:#c5d3bb;margin-top:1px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
-.shop-browser .shop-level{grid-area:level;display:block;font:500 10.5px 'DM Mono',monospace;color:#9fb59a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shop-browser .shop-level{grid-area:level;display:block;font:500 10.5px 'DM Mono',monospace;color:var(--p-sage-66);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .shop-browser .shop-item button{grid-area:button;width:100%;min-height:34px;margin-top:3px;padding:3px 6px;display:flex;justify-content:center;align-items:baseline;gap:5px;font-size:11px;border-radius:10px}
 .shop-browser .shop-item button span{font-size:11px}
 .shop-browser .shop-item button b{font-size:12px}
