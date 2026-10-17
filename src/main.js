@@ -22,7 +22,7 @@ import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import { createGlPost } from './gl-post.js';
-import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, LAMPS as STREET_LAMPS, compactOrderSprite, PERSON_HEAD_Y, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern, softShadow } from './sunny-world.js';
+import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, LAMPS as STREET_LAMPS, compactOrderSprite, PERSON_HEAD_Y, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern, softShadow, sunShadow, SUN, SUN_REACH } from './sunny-world.js';
 import * as economy from './economy.js';
 import * as strains from './strains.js';
 import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent, seasonStatus, claimSeason, SEASONS, RETIRED_WEEKLY, nextSeason, weeklySpecial, specialFactor } from './progression.js';
@@ -816,7 +816,9 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     }else ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=Math.max(.4,Math.min(1,unit*.021));ctx.lineJoin='round';ctx.stroke()}}
   // Key light sits high on the upper right, so every free-standing object throws a soft shadow down and to the left. The
   // shadow is the convex hull of the footprint and the footprint displaced by the object's height, faded along its length.
+  // The sprite look has one sun for every shadow, the renders' own (SUN in sunny-world.js): right on screen, a touch up.
   var SHADOW_DX=-.46,SHADOW_DY=.2;
+  if(SHOP_SPRITES){var sunDir=rotate(SUN.x,SUN.z);SHADOW_DX=sunDir.x*SUN_REACH;SHADOW_DY=sunDir.z*FLOOR_SQUASH*SUN_REACH}
   function convexHull(pts){pts=pts.slice().sort(function(a,b){return a.x-b.x||a.y-b.y});function cross(o,a,b){return (a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x)}var lower=[],upper=[];pts.forEach(function(q){while(lower.length>=2&&cross(lower[lower.length-2],lower[lower.length-1],q)<=0)lower.pop();lower.push(q)});for(var i=pts.length-1;i>=0;i--){var q=pts[i];while(upper.length>=2&&cross(upper[upper.length-2],upper[upper.length-1],q)<=0)upper.pop();upper.push(q)}return lower.slice(0,-1).concat(upper.slice(0,-1))}
   function castShadow(base,h,alpha){
     var dx=h*unit*SHADOW_DX,dy=h*unit*SHADOW_DY,shifted=base.map(function(q){return{x:q.x+dx,y:q.y+dy}}),hull=convexHull(base.concat(shifted));
@@ -1406,10 +1408,15 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     drawBox(cx,cz,h-.07,w+.04,d+.05,.07,TILE_BRASS);
     drawBox(cx,cz,h,w+.1,d+.12,.1,['#ece2c8','#b3a78a','#d2c6a6']);
   }
+  // The sprite stations' shadows under the map's one sun (see SUN in sunny-world.js): half-x, half-z and height of each
+  // bench's footprint as its render shows it, in station order (seeds, grow, harvest, pack, orders, pickup, ID desk).
+  var STATION_SHADOW=[[1.65,.8,1.5],[2,.95,1.6],[1.75,.85,1.5],[1.65,.8,1.5],[1.2,.6,1.3],[1.6,.8,1.4],[.75,.55,1.3]];
+  function stationShadow(now,i,x,z,compact){if(!SHOP_SPRITES)return;var s=STATION_SHADOW[i];sunShadow(sunnyApi(now),x,0,z,compact?s[0]*.82:s[0],compact?s[1]*.82:s[1],s[2],1.1,.9)}
   function drawOrderCounterBank(now,only){
     orderCounterPositions(state.orderCounters).map(function(p,index){return {x:p.x,z:p.z,index:index}}).sort(function(a,b){return depthOf(a)-depthOf(b)}).forEach(function(p){
       if(only!==undefined&&p.index!==only)return;
       var active=customers.some(function(c){return c.orderCounter===p.index&&atOrderCounter(c,state.orderCounters)&&c.serviceElapsed>0});
+      stationShadow(now,4,p.x,p.z,state.orderCounters>1);
       if(state.lines[4]>0)drawPerson(p.x-.35,p.z-1.5,now,4,false,true,false,{amount:0,phase:0,facing:.3,identity:4+p.index*23,taskOffset:p.index*1.7,workActivity:active?1:0});
       if(SHOP_SPRITES){if(selected===4&&state.orderCounters>1)selectionRing(p,true);if(drawSprite(sunnyApi(now),state.orderCounters>1?compactOrderSprite(state.lines[4])||stationSprite(4,state.lines[4])||'counter':stationSprite(4,state.lines[4]),p.x,p.z))return}
       if(state.orderCounters===1){drawStage(p,4,now);return}
@@ -1637,9 +1644,11 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     function shape(coords,color){poly(coords.map(function(q){return point(q[0],q[1])}),color)}
     function block(dx,y,w,h,r,color){var q=point(dx,y);if(occluding()){var scene=ctx;ctx=emissiveCtx;ctx.globalAlpha=scene.globalAlpha;ctx.beginPath();roundedRectPath(q.x,q.y,w*u,h*u,r*u);ctx.fillStyle='#000';ctx.fill();ctx=scene}ctx.beginPath();roundedRectPath(q.x,q.y,w*u,h*u,r*u);if(h>=.25&&/^#[0-9a-f]{6}$/i.test(color)){var g=ctx.createLinearGradient(q.x,q.y,q.x,q.y+h*u);g.addColorStop(0,shadeColor(color,1.06));g.addColorStop(1,shadeColor(color,.9));ctx.fillStyle=g}else ctx.fillStyle=color;ctx.fill()}
     function limb(coords,color,w){var q=coords.map(function(c){return point(c[0],c[1])});ctx.beginPath();q.forEach(function(v,i){if(i)ctx.lineTo(v.x,v.y);else ctx.moveTo(v.x,v.y)});ctx.lineWidth=w*u;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle=color;ctx.stroke();if(occluding())occludeStroke(q,w*u)}
+    // Under the sprite look a drawn stand-in takes the same sun shadow as the sprite figures.
+    if(SHOP_SPRITES&&now)sunShadow(sunnyApi(now),x,0,z,.24,.2,2.3,.9,.8);else{
     ellipse(p.x,p.y+u*.025,u*.32,u*.085,'#071d2025');
     // Cast shadow stretching down-left from the feet, matching the key light used for furniture.
-    ctx.save();ctx.translate(p.x+u*.34,p.y+u*.14);ctx.rotate(-.42);var sg=ctx.createLinearGradient(-u*.45,0,u*.45,0);sg.addColorStop(0,'rgba(14,28,20,.16)');sg.addColorStop(1,'rgba(14,28,20,.03)');ctx.beginPath();ctx.ellipse(0,0,u*.5,u*.12,0,0,Math.PI*2);ctx.fillStyle=sg;ctx.fill();ctx.restore();
+    ctx.save();ctx.translate(p.x+u*.34,p.y+u*.14);ctx.rotate(-.42);var sg=ctx.createLinearGradient(-u*.45,0,u*.45,0);sg.addColorStop(0,'rgba(14,28,20,.16)');sg.addColorStop(1,'rgba(14,28,20,.03)');ctx.beginPath();ctx.ellipse(0,0,u*.5,u*.12,0,0,Math.PI*2);ctx.fillStyle=sg;ctx.fill();ctx.restore();}
     // Flat, elongated silhouettes with geometric shoes and a restrained walking stride.
     [-1,1].forEach(function(side){var stride=step*side*.13,fx=side*.11+stride,fy=.065+Math.max(0,side*step)*.055;
       limb([[side*.105,.76],[side*.11+stride*.4,.4],[fx,fy+.04]],expressive?skin:pants,.14);
@@ -2871,7 +2880,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     if(alongZ)drawBox(plane+.02,(a0+a1)/2,slatTop,.1,a1-a0,.09,rail);else drawBox((a0+a1)/2,plane+.02,slatTop,a1-a0,.1,.09,rail);
   }
   var sceneJobs=[];
-  function sunnyApi(now){return{get ctx(){return ctx},width:width,height:height,unit:unit,now:motionPreference.matches?0:now,project:project,poly:poly,line:worldLine,ellipse:ellipse,blob:blobEllipse,noise:seedNoise,depth:depthOf,box:drawBox,shade:shadeColor,person:function(x,z,id,moving){drawPerson(x,z,now,id,moving,false,false)}}}
+  function sunnyApi(now){return{get ctx(){return ctx},daylight:1-nightAmount(),width:width,height:height,unit:unit,now:motionPreference.matches?0:now,project:project,poly:poly,line:worldLine,ellipse:ellipse,blob:blobEllipse,noise:seedNoise,depth:depthOf,box:drawBox,shade:shadeColor,person:function(x,z,id,moving){drawPerson(x,z,now,id,moving,false,false)}}}
   function drawTower(now){
     sceneElevation=0;signFaces.length=0;
     // Backdrop: the same quiet studio gradient day and night, a halo behind the shop and a vignette at the edges. After
@@ -3226,7 +3235,7 @@ if(!SHOP_SPRITES){
       if(fi===1){sceneElevation=0;drawFloorTransfer(3,true);drawFloorTransfer(1,false);sceneElevation=floor.y}
       if(fi===2){sceneElevation=0;drawFloorTransfer(1,true);sceneElevation=floor.y}
       if(fi===2)drawGrowGantry('posts');
-      function drawStation(i,only){if(i===4){drawOrderCounterBank(now,only);if(selected===4&&state.orderCounters===1)selectionRing(machinePos[4]);return}if(i===5)drawCounterDivider();var p=machinePos[i],spot=staffSpots[i]||{dx:-.95,dz:-1.65,front:false},gait=spot.facing?{amount:0,phase:0,facing:spot.facing}:undefined,staffed=state.lines[i]>0;if(staffed&&!spot.front)drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait);var pop=tierFlashes[i]>0&&!motionPreference.matches?Math.sin(Math.PI*Math.min(1,(1-tierFlashes[i])/.45))*.16:0,base=project(p.x,0,p.z);if(selected===i&&SHOP_SPRITES)selectionRing(p);if(pop){ctx.save();ctx.translate(base.x,base.y);ctx.scale(1+pop,1+pop);ctx.translate(-base.x,-base.y)}if(!(SHOP_SPRITES&&drawSprite(sunnyApi(now),stationSprite(i,state.lines[i])||(i===1?'grow':''),p.x,p.z)))drawStage(p,i,now);if(pop)ctx.restore();if(staffed&&spot.front)drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait);if(selected===i&&!SHOP_SPRITES)selectionRing(p)}
+      function drawStation(i,only){if(i===4){drawOrderCounterBank(now,only);if(selected===4&&state.orderCounters===1)selectionRing(machinePos[4]);return}if(i===5)drawCounterDivider();var p=machinePos[i],spot=staffSpots[i]||{dx:-.95,dz:-1.65,front:false},gait=spot.facing?{amount:0,phase:0,facing:spot.facing}:undefined,staffed=state.lines[i]>0;stationShadow(now,i,p.x,p.z);if(staffed&&!spot.front)drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait);var pop=tierFlashes[i]>0&&!motionPreference.matches?Math.sin(Math.PI*Math.min(1,(1-tierFlashes[i])/.45))*.16:0,base=project(p.x,0,p.z);if(selected===i&&SHOP_SPRITES)selectionRing(p);if(pop){ctx.save();ctx.translate(base.x,base.y);ctx.scale(1+pop,1+pop);ctx.translate(-base.x,-base.y)}if(!(SHOP_SPRITES&&drawSprite(sunnyApi(now),stationSprite(i,state.lines[i])||(i===1?'grow':''),p.x,p.z)))drawStage(p,i,now);if(pop)ctx.restore();if(staffed&&spot.front)drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait);if(selected===i&&!SHOP_SPRITES)selectionRing(p)}
       // The ground-floor counters sort with the customers; the upper stations paint with their floors.
       floor.ids.forEach(fi===0?function(i){
         var p=machinePos[i],desks=i===4?orderCounterPositions(state.orderCounters):[p];
@@ -3376,7 +3385,7 @@ if(!SHOP_SPRITES){
       try{drawIdDesk()}finally{if(rise>0){sceneElevation+=lift;ctx.restore()}}
     }});
     function drawIdDesk(){
-      if(SHOP_SPRITES&&drawSprite(sunnyApi(now),stationSprite(6,state.idStaff),x,z))return;
+      if(SHOP_SPRITES&&stationSprite(6,state.idStaff)){stationShadow(now,6,x,z);drawSprite(sunnyApi(now),stationSprite(6,state.idStaff),x,z);return}
       drawBox(x,z,0,.64,1.25,.12,steel);drawBox(x,z,.12,.6,1.2,.85,wood);
       drawBox(x,z,.97,.78,1.38,.13,['#efe4c8','#a9a18c','#d4c7a6']);
       drawBox(x-.12,z,1.1,.24,.32,.08,['#b7ccac','#527563','#88a488']);
@@ -4073,7 +4082,7 @@ if(!SHOP_SPRITES){
     // Ground planters share guest depth sorting, so foliage occludes people behind it.
     [{x:-10.35,z:5.9,compact:true}].forEach(function(p){
       jobs.push({depth:depthOf(p),draw:function(){
-        if(SHOP_SPRITES&&drawSprite(sunnyApi(now),fixtureSprite('shop.planter.small'),p.x,p.z))return;
+        if(SHOP_SPRITES&&fixtureSprite('shop.planter.small')){sunShadow(sunnyApi(now),p.x,0,p.z,.3,.3,1.4,1,.8);drawSprite(sunnyApi(now),'shop.planter.small',p.x,p.z);return}
         drawBox(p.x,p.z,0,p.compact?.45:.95,p.compact?.45:1,p.compact?.4:.65,['#bc9d73','#6f5943','#998063']);
         plant(p.x,p.z,p.compact?.4:.65,p.compact?.7:1.1);
       }});
@@ -4083,7 +4092,7 @@ if(!SHOP_SPRITES){
     function drawDisplayCase(x,z,width){
       // Sprite shop: the case runs along the right wall in front of the exit, turned to face into the floor (the
       // render mirrored, so its long glass side is the one the camera sees), per Kevin on 2026-10-13.
-      if(SHOP_SPRITES&&fixtureSprite('shop.displaycase')){var cx=10.05,cz=8.7;jobs.push({depth:depthOf({x:cx,z:cz}),draw:function(){softShadow(sunnyApi(now),cx,0,cz,1.4,2.6,.22);drawSprite(sunnyApi(now),'shop.displaycase',cx,cz,true)}});return}
+      if(SHOP_SPRITES&&fixtureSprite('shop.displaycase')){var cx=10.05,cz=8.7;jobs.push({depth:depthOf({x:cx,z:cz}),draw:function(){sunShadow(sunnyApi(now),cx,0,cz,.7,2.1,1.4,1,.9);drawSprite(sunnyApi(now),'shop.displaycase',cx,cz,true)}});return}
       jobs.push({depth:depthOf({x:x,z:z}),draw:function(){
         if(SHOP_SPRITES&&drawSprite(sunnyApi(now),fixtureSprite('shop.displaycase'),x+.9,z,false))return;
         var oak=['#cfb184','#836949','#b09266'],stone=['#e2dfd0','#969c8e','#c3c8b8'],brass=['#d7c28b','#8c774c','#b7a16c'],half=width/2,bed=.95,inner=half-bed;
@@ -4132,7 +4141,7 @@ if(!SHOP_SPRITES){
     if(festival.joined&&festival.open&&!festival.claimed){
       jobs.push({depth:depthOf({x:9,z:6}),draw:function(){
         var color=festival.slot%3===0?'#e3bc7d':festival.slot%3===1?'#b3a4c8':'#afbc75';
-        if(SHOP_SPRITES&&drawSprite(sunnyApi(now),fixtureSprite('event.festival.stall'),9,6.2)){drawPerson(9,5,now,18,false,false,false);return}
+        if(SHOP_SPRITES&&fixtureSprite('event.festival.stall')){sunShadow(sunnyApi(now),9,0,6.2,1.1,.7,2.6,1,.9);drawSprite(sunnyApi(now),'event.festival.stall',9,6.2);drawPerson(9,5,now,18,false,false,false);return}
         drawBox(9,6,0,2,1.2,1,['#c2a073','#7a5a40','#a3815b']);
         for(var k=0;k<3;k++){if(festival.slot%3===2)plant(8.4+k*.6,6,1,.6);else jar(8.4+k*.6,6,1,k+1);}
         drawPerson(9,5,now,18,false,false,false);
@@ -4158,11 +4167,12 @@ if(!SHOP_SPRITES){
     if(shopPlayUI){var asking=moment&&customers.find(function(c){return c.id===moment.customerId&&!c.ordered}),point=asking?project(asking.renderX===undefined?asking.x:asking.renderX,2.8,asking.renderZ===undefined?asking.z:asking.renderZ):null;shopPlayUI.position(point,!!point&&point.x>24&&point.x<width-24&&point.y>90&&point.y<visibleHeight())}
     glCompose(now);updateMarkers();updateSpenderTag(false);requestAnimationFrame(render);
   }
-  // A final pass over the composed frame: at day a faint warm wash from the key light's corner ties the palette
+  // A final pass over the composed frame: at day a faint warm wash from the key light's corner (upper left under the
+  // sprite look, where the renders' sun is) ties the palette
   // together, and a whisper of world-anchored grain keeps large flat fills reading as material at every zoom.
   function atmosphereFinish(nightT){
     if(nightT<1){
-      var sun=cachedGradient('sun|'+q4(width)+'|'+q4(height),function(){var g=ctx.createLinearGradient(width,0,width*.25,height*.8);g.addColorStop(0,'rgba(255,233,190,.075)');g.addColorStop(.5,'rgba(255,233,190,.02)');g.addColorStop(1,'rgba(255,233,190,0)');return g});
+      var sun=cachedGradient('sun|'+q4(width)+'|'+q4(height),function(){var g=SHOP_SPRITES?ctx.createLinearGradient(0,0,width*.75,height*.8):ctx.createLinearGradient(width,0,width*.25,height*.8);g.addColorStop(0,'rgba(255,233,190,.075)');g.addColorStop(.5,'rgba(255,233,190,.02)');g.addColorStop(1,'rgba(255,233,190,0)');return g});
       ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=1-nightT;ctx.fillStyle=sun;ctx.fillRect(0,0,width,height);ctx.restore();
     }
     ctx.save();ctx.globalAlpha=.05;ctx.fillStyle=surfaceTexture();ctx.fillRect(0,0,width,height);ctx.restore();
