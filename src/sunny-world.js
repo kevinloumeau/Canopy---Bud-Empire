@@ -172,8 +172,7 @@ export function drawPersonSprite(api, x, z, identity, employee, facing, ground, 
     name = spriteReady(name) ? name : spriteReady(base) ? base : null;
   }
   if (!name) return false;
-  const p = api.project(x, 0, z), u = api.unit;
-  api.ellipse(p.x + u * .06, p.y + u * .03, u * .34, u * .1, 'rgba(14,28,20,.22)');
+  sunShadow(api, x, 0, z, .24, .2, 2.3, .9, .8);
   return drawSprite(api, name, x, z, flip, 1, lift);
 }
 // Shop fixtures from the interior batch, sized in world units like the stations.
@@ -402,32 +401,38 @@ function orderJobs(jobs) {
   for (let i = 0; i < n; i++) visit(i);
   return out;
 }
-// Everything that stands on the streets, with its footprint (half-extents along x and z about its ground point).
+// Everything that stands on the streets, with its footprint (half-extents along x and z about its ground point) and,
+// for what stands still, its shadow: [height, contact, cast, half-x, half-z] (the footprint's half-extents unless given)
+// or a function that draws it. Buildings take theirs from the baked block shadows.
 function streetJobs(api) {
   const jobs = [];
-  const at = (x, z, f, hx = .5, hz = hx) => jobs.push({ x0: x - hx, x1: x + hx, z0: z - hz, z1: z + hz, depth: api.depth({ x, z }), draw: f });
+  const at = (x, z, f, hx = .5, hz = hx, shade) => jobs.push({ x0: x - hx, x1: x + hx, z0: z - hz, z1: z + hz, depth: api.depth({ x, z }), draw: f,
+    shadow: typeof shade === 'function' ? shade : shade && (() => sunShadow(api, x, P, z, shade[3] === undefined ? hx : shade[3], shade[4] === undefined ? hz : shade[4], shade[0], shade[1], shade[2])) });
   BUILDINGS.forEach(b => { const f = BUILDING_SPRITES[b[2]]; at(b[0] - f.w / 2, b[1] - f.d / 2, () => building(api, b), f.w / 2, f.d / 2); });
-  FAR_TREES.concat(NEAR_TREES).forEach(([x, z]) => at(x, z, () => streetTree(api, x, z), 1.3));
-  LAMPS.forEach(([x, z]) => at(x, z, () => lamp(api, x, z), .4));
+  FAR_TREES.concat(NEAR_TREES).forEach(([x, z]) => at(x, z, () => streetTree(api, x, z), 1.3, 1.3, () => treeShadow(api, x, z, 2.4, 4.8)));
+  LAMPS.forEach(([x, z]) => at(x, z, () => lamp(api, x, z), .4, .4, [4.6, .9, .75, .2, .2]));
   // Left-side street life: a coffee cart and café seating by the entrance, bins and a hydrant.
-  at(-18, 7.5, () => cart(api, -18, 7.5), 1.3, 1);
+  at(-18, 7.5, () => cart(api, -18, 7.5), 1.3, 1, () => sunShadow(api, -18.35, P, 7.27, 1.05, .6, 2.3, 1, 1));
   // Kevin's café set (2026-10-15) stands in for the two drawn umbrellas; the news boxes face the shop.
-  at(-17, 14, () => { if (!prop(api, 'street.awning.cafe', -17, 14)) { umbrella(api, -17, 12.5); umbrella(api, -17, 15.5); } }, 2.3, 1.6);
-  at(-18.5, -8, () => bin(api, -18.5, -8), .4); at(-18.5, 10.5, () => hydrant(api, -18.5, 10.5), .3);
-  at(-17.6, -3, () => prop(api, 'street.newsboxes', -17.6, -3, true), 1.3, 1);
-  [[18, -6], [18, 6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => at(x, z, () => planter(api, x, z), 1.6, 1.2));
-  at(0, 16.5, () => bench(api, 0, 16.5, true), 1.2, .5); // mirrored to run along the front street
-  at(18, 0, () => bench(api, 18, 0), .5, 1.2); at(14, 16, () => bikeRack(api, 14, 16), 1.3, .6);
-  at(18.5, -11, () => busStop(api, 18.5, -11), .9, 1.8); at(18.5, 12, () => bin(api, 18.5, 12), .4); at(12, 15.4, () => hydrant(api, 12, 15.4), .3);
+  at(-17, 14, () => { if (!prop(api, 'street.awning.cafe', -17, 14)) { umbrella(api, -17, 12.5); umbrella(api, -17, 15.5); } }, 2.3, 1.6, () => sunShadow(api, -17.6, P, 13.4, 1.6, 1.3, 2.6, .8, .9));
+  at(-18.5, -8, () => bin(api, -18.5, -8), .4, .4, [1.1, 1, 1, .3, .3]); at(-18.5, 10.5, () => hydrant(api, -18.5, 10.5), .3, .3, [.95, 1, 1, .2, .2]);
+  at(-17.6, -3, () => prop(api, 'street.newsboxes', -17.6, -3, true), 1.3, 1, () => sunShadow(api, -18.1, P, -3.5, .4, 1.5, 2.8, .9, 1)); // the row's feet stand back from the render's centre; the boxes stand about 2.8 tall
+  // Shadow footprints below are measured against each render's feet (Kevin, 2026-10-17: a shadow beside a prop reads as a
+  // floating blob); several renders are centred off their footprint or run along z.
+  [[18, -6], [18, 6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => at(x, z, () => planter(api, x, z), 1.6, 1.2, () => sunShadow(api, x - .7, P, z - .65, .55, 1.8, 1.2, 1, .8)));
+  at(0, 16.5, () => bench(api, 0, 16.5, true), 1.2, .5, () => sunShadow(api, -.36, P, 16.38, 1.1, .32, .9, .9, 1)); // mirrored to run along the front street
+  at(18, 0, () => bench(api, 18, 0), .5, 1.2, () => sunShadow(api, 17.73, P, -.33, .32, 1.1, .9, .9, 1)); at(14, 16, () => bikeRack(api, 14, 16), 1.3, .6, () => sunShadow(api, 14.24, P, 15.47, .45, 1.25, 1.2, .7, .7));
+  at(18.5, -11, () => busStop(api, 18.5, -11), .9, 1.8, [2.6, .8, .9, .7, 1.6]); at(18.5, 12, () => bin(api, 18.5, 12), .4, .4, [1.1, 1, 1, .3, .3]); at(12, 15.4, () => hydrant(api, 12, 15.4), .3, .3, [.95, 1, 1, .2, .2]);
   // 2026-10-15 street dressing: a delivery pallet by the bus stop, a fingerpost and two meters on the right kerb,
   // olive pots either side of the front bench, and a pedestrian light at the front crossing.
-  at(17.2, -7.5, () => prop(api, 'street.deliveryboxes', 17.2, -7.5), 1.15, .9);
-  at(19.4, 3.6, () => prop(api, 'street.signpost', 19.4, 3.6), .3); [8.4, 10.2].forEach(z => at(19.3, z, () => prop(api, 'street.meter', 19.3, z), .25));
-  [-3.2, 3.2].forEach(x => at(x, 16.5, () => prop(api, 'street.planter.round', x, 16.5), .6));
-  at(-10.8, 17.4, () => prop(api, 'street.trafficlight', -10.8, 17.4), .3);
+  at(17.2, -7.5, () => prop(api, 'street.deliveryboxes', 17.2, -7.5), 1.15, .9, () => sunShadow(api, 16.81, P, -7.89, .8, .65, 1.3, 1.1, 1));
+  at(19.4, 3.6, () => prop(api, 'street.signpost', 19.4, 3.6), .3, .3, [3.8, .6, .7, .12, .12]); [8.4, 10.2].forEach(z => at(19.3, z, () => prop(api, 'street.meter', 19.3, z), .25, .25, [1.9, .6, .8, .12, .12]));
+  [-3.2, 3.2].forEach(x => at(x, 16.5, () => prop(api, 'street.planter.round', x, 16.5), .6, .6, () => { sunShadow(api, x, P, 16.5, .45, .45, .8, 1, .8); softShadow(api, x + SUN.x * .9, P, 16.5 + SUN.z * .9, .75, .7, .22 * daylight(api)); }));
+  at(-10.8, 17.4, () => prop(api, 'street.trafficlight', -10.8, 17.4), .3, .3, () => sunShadow(api, -10.63, P, 16.98, .12, .12, 4.3, .6, .7)); // the post stands right of the render's centre
   drawCars(api, at); drawWalkers(api, at);
   return jobs;
 }
+
 
 export function drawSunnyWorld(api, front, alpha) {
   if (!(alpha > 0)) return;
@@ -456,8 +461,11 @@ export function drawSunnyWorld(api, front, alpha) {
   }
   // Buildings, trees, props, cars and walkers share one footprint-aware sort (orderJobs), so a car on the far street
   // never paints over a near tree, nor a car on the front or right street over the terraces beyond it.
-  streetShadows(api, front);
-  orderJobs(streetJobs(api).filter(j => behindShop(j) !== front)).forEach(j => j.draw());
+  // Shadows go down first, all of them, so a long one never paints over something already standing behind it.
+  const jobs = streetJobs(api).filter(j => behindShop(j) !== front);
+  if (!front) blockShadows(api);
+  jobs.forEach(j => j.shadow && j.shadow());
+  orderJobs(jobs).forEach(j => j.draw());
   ctx.restore();
 }
 
@@ -564,9 +572,15 @@ function building(api, [x1, z1, name]) {
 
 // Soft shadows on the ground plane. The ground is an affine image of the world plane, so a blurred disc drawn under
 // that transform lies flat on it. The disc is pre-rendered once (radial gradients misbehave under the skewed
-// transform, and Safari has no canvas filter). Each object gets a tight contact shadow under its footprint and a
-// fainter cast shadow thrown down-right, away from the sprites' upper-left key light.
-let SHADOW_TEX = null;
+// transform, and Safari has no canvas filter).
+//
+// One sun lights the whole map. Kevin's renders are lit from the viewer's left and a little in front: faces turned
+// down-left are the bright ones, faces turned down-right sit in shade, tree crowns catch it on their upper left. So
+// every shadow falls the other way, straight right on screen: along SUN on the ground, SUN_REACH units for each
+// unit of height (a high sun keeps them short and readable). Each object gets a tight contact shadow under its
+// footprint, which stays after dark as ambient occlusion, and a cast shadow along SUN that fades out with the daylight.
+export const SUN = { x: Math.SQRT1_2, z: -Math.SQRT1_2 }, SUN_REACH = .42;
+let SHADOW_TEX = null, POOL_TEX = null, STREAK_TEX = null;
 function shadowTexture() {
   if (SHADOW_TEX || typeof document === 'undefined') return SHADOW_TEX;
   const c = document.createElement('canvas'); c.width = c.height = 128;
@@ -575,34 +589,109 @@ function shadowTexture() {
   g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
   return (SHADOW_TEX = c);
 }
-export function softShadow(api, x, y, z, rx, rz, alpha) {
-  const tex = shadowTexture(); if (!tex) return;
+// A contact pool: evenly dark across the middle, where the object stands, softening only toward its rim, so the part
+// that shows past the object's base reads as the floor darkening under it rather than a faint smudge.
+function poolTexture() {
+  if (POOL_TEX || typeof document === 'undefined') return POOL_TEX;
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d'), grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  [[0, 1], [.45, 1], [.6, .8], [.75, .46], [.88, .17], [1, 0]].forEach(([t, a]) => grad.addColorStop(t, 'rgba(40,46,32,' + a + ')'));
+  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
+  return (POOL_TEX = c);
+}
+// A cast shadow's shape: an even core where it leaves the object, thinning and fading toward its tip, soft along both sides.
+// The image's x runs along the sun from the object outward, its y across.
+function streakTexture() {
+  if (STREAK_TEX || typeof document === 'undefined') return STREAK_TEX;
+  const W = 128, H = 64, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d'), img = g.createImageData(W, H);
+  for (let i = 0; i < W; i++) {
+    const u = (i + .5) / W, along = Math.min(1, u / .08) * (u < .4 ? 1 : Math.pow((1 - u) / .6, 1.4)), half = 1 - .25 * u;
+    for (let j = 0; j < H; j++) {
+      const v = Math.abs((j + .5) / H * 2 - 1) / half, t = v >= 1 ? 0 : v < .55 ? 1 : (1 - v) / .45, across = t * t * (3 - 2 * t), o = (j * W + i) * 4;
+      img.data[o] = 46; img.data[o + 1] = 52; img.data[o + 2] = 36; img.data[o + 3] = Math.round(255 * along * across);
+    }
+  }
+  g.putImageData(img, 0, 0);
+  return (STREAK_TEX = c);
+}
+const daylight = api => (api.daylight === undefined ? 1 : api.daylight);
+export function softShadow(api, x, y, z, rx, rz, alpha, tex = shadowTexture()) {
+  if (!tex) return;
   const o = api.project(x, y, z), ex = api.project(x + 1, y, z), ez = api.project(x, y, z + 1), ctx = api.ctx;
-  ctx.save(); ctx.transform(ex.x - o.x, ex.y - o.y, ez.x - o.x, ez.y - o.y, o.x, o.y);
-  ctx.globalAlpha *= alpha; ctx.drawImage(tex, -rx, -rz, rx * 2, rz * 2); ctx.restore();
+  ctx.save(); ctx.transform(ex.x - o.x, ex.y - o.y, ez.x - o.x, ez.y - o.y, o.x, o.y); ctx.scale(rx / 64, rz / 64);
+  ctx.globalAlpha *= alpha; ctx.drawImage(tex, -64, -64); ctx.restore();
 }
-// Contact plus cast for a footprint of half-sizes hx × hz with a given height.
-function groundShadow(api, x, y, z, hx, hz, height) {
-  softShadow(api, x, y, z, hx * 1.25, hz * 1.25, .42);
-  const reach = height * .45;
-  softShadow(api, x + reach * .6, y, z - reach * .15, hx + reach * .7, hz * 1.1 + reach * .2, .22);
+// The shadow of an object standing at (x, y, z) on a footprint of half-sizes hx × hz, `height` tall: a contact pool
+// under the footprint and a streak along SUN from its middle out past its sunward-far edge by the height's reach.
+// `contact` and `cast` scale the two (1 is a person-weight shadow).
+export function sunShadow(api, x, y, z, hx, hz, height, contact = 1, cast = 1) {
+  const day = daylight(api);
+  if (contact > 0) softShadow(api, x, y, z, hx + .3, hz + .3, .55 * contact * (.6 + .4 * day), poolTexture());
+  if (!(height > 0) || !(cast > 0) || !(day > 0)) return;
+  const tex = streakTexture(); if (!tex) return;
+  // The streak is swept along SUN from the footprint's long side, so a row (a bench, the news boxes) throws one band the
+  // length of the row instead of an oval centred on it: the image's x runs along SUN, its y along the long axis.
+  const xLong = hx >= hz, hl = xLong ? hx : hz, hs = xLong ? hz : hx, reach = height * SUN_REACH, ctx = api.ctx;
+  const o = api.project(x, y, z), ea = api.project(x + SUN.x, y, z + SUN.z), eb = xLong ? api.project(x + 1, y, z) : api.project(x, y, z + 1);
+  ctx.save(); ctx.transform(ea.x - o.x, ea.y - o.y, eb.x - o.x, eb.y - o.y, o.x, o.y);
+  ctx.globalAlpha *= .62 * cast * day;
+  const len = hs * 1.4 + reach + .1, half = hl + .12;
+  ctx.translate(-hs * .7, -half); ctx.scale(len / tex.width, half * 2 / tex.height); ctx.drawImage(tex, 0, 0); ctx.restore();
 }
-function streetShadows(api, front) {
-  const rear = ([x, z]) => z < -9 || x < -13;
-  if (!front) FAR_TREES.concat(NEAR_TREES).forEach(([x, z]) => { softShadow(api, x, P, z, .9, .9, .35); softShadow(api, x + 1.5, P, z - .3, 2.2, 1.8, .2); });
-  LAMPS.filter(l => rear(l) !== front).forEach(([x, z]) => { softShadow(api, x, P, z, .35, .35, .45); softShadow(api, x + 1.6, P, z - .3, 1.6, .35, .16); });
-  // Planters get a tight contact shadow under their base; a cast shadow out to the side made them read as floating.
-  if (front) [[18, -6], [18, 6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => softShadow(api, x + .05, P, z + .05, 1.25, .55, .3));
-  if (front) groundShadow(api, 0, P, 16.5, 1.2, .35, .9);
-  if (front) groundShadow(api, 18, P, 0, .35, 1.2, .9);
-  if (front) { softShadow(api, 17.2, P, -7.5, .85, .85, .3); [-3.2, 3.2].forEach(x => softShadow(api, x, P, 16.5, .6, .6, .3)); }
-  else softShadow(api, -17.6, P, -3, .5, 1.1, .3);
+// A tree: the trunk's own shadow, and the crown's as a soft round pool thrown along SUN by the crown's height.
+function treeShadow(api, x, z, crown, top) {
+  const day = daylight(api);
+  sunShadow(api, x, P, z, .25, .25, crown * .7, .8, .7);
+  if (day > 0) { const r = top * SUN_REACH * .82; softShadow(api, x + SUN.x * r, P, z + SUN.z * r, 1.7, 1.6, .5 * day); }
+}
+// Contact plus cast for a footprint of half-sizes hx × hz with a given height (vehicles and low street furniture).
+function groundShadow(api, x, y, z, hx, hz, height) { sunShadow(api, x, y, z, hx, hz, height, 1.15, 1); }
+
+// The long shadows of the town's buildings, which never move: drawn once into a canvas laid
+// out on the ground plane (1 px = 1 / BAKE_PX of a world unit), softened once with a canvas shadow blur (which Safari
+// supports, unlike ctx.filter), and laid down with the ground's affine transform each frame in one drawImage. Each
+// block's shadow is the hull of its footprint and that footprint carried along SUN by its height, so overlapping
+// terraces union into one shade rather than stacking. The blur also leaves a soft fringe round every footprint, which
+// grounds the facades facing the camera. (The shop's own tower would throw its shadow back under its walls and floors,
+// where none of it shows, so it is left out.)
+const BAKE = { x0: -64, x1: 74, z0: -66, z1: 66 }, BAKE_PX = 6;
+let BAKED = null;
+function bakedShadows() {
+  if (BAKED !== null || typeof document === 'undefined') return BAKED;
+  const W = Math.round((BAKE.x1 - BAKE.x0) * BAKE_PX), H = Math.round((BAKE.z1 - BAKE.z0) * BAKE_PX);
+  const solid = document.createElement('canvas'); solid.width = W; solid.height = H;
+  const g = solid.getContext('2d'), px = x => (x - BAKE.x0) * BAKE_PX, pz = z => (z - BAKE.z0) * BAKE_PX;
+  const block = (x0, x1, z0, z1, h, alpha) => {
+    const dx = SUN.x * h * SUN_REACH, dz = SUN.z * h * SUN_REACH;
+    const pts = [[x0, z0], [x1, z0], [x1, z1], [x0, z1]], all = pts.concat(pts.map(([x, z]) => [x + dx, z + dz]));
+    g.globalAlpha = alpha; g.beginPath(); hull(all).forEach(([x, z], i) => (i ? g.lineTo(px(x), pz(z)) : g.moveTo(px(x), pz(z)))); g.closePath(); g.fill();
+  };
+  g.fillStyle = '#000';
+  BUILDINGS.forEach(([x1, z1, name]) => { const f = BUILDING_SPRITES[name]; block(x1 - f.w, x1, z1 - f.d, z1, f.h, 1 - hazeAt(x1 - f.w / 2, z1 - f.d / 2)); });
+  // Soften: the blurred copy of the solid shapes, thrown back onto the canvas from off its edge, in the shadow colour.
+  const out = document.createElement('canvas'); out.width = W; out.height = H;
+  const o = out.getContext('2d');
+  o.shadowColor = 'rgb(46,52,36)'; o.shadowBlur = BAKE_PX * 1.1; o.shadowOffsetX = W; o.drawImage(solid, -W, 0);
+  return (BAKED = out);
+}
+function hull(pts) {
+  pts = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]), lo = [], hi = [];
+  pts.forEach(q => { while (lo.length >= 2 && cross(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); });
+  for (let i = pts.length - 1; i >= 0; i--) { const q = pts[i]; while (hi.length >= 2 && cross(hi[hi.length - 2], hi[hi.length - 1], q) <= 0) hi.pop(); hi.push(q); }
+  return lo.slice(0, -1).concat(hi.slice(0, -1));
+}
+function blockShadows(api) {
+  const day = daylight(api), tex = day > 0 && bakedShadows(); if (!tex) return;
+  const o = api.project(BAKE.x0, P, BAKE.z0), ex = api.project(BAKE.x0 + 1, P, BAKE.z0), ez = api.project(BAKE.x0, P, BAKE.z0 + 1), ctx = api.ctx;
+  ctx.save(); ctx.transform(ex.x - o.x, ex.y - o.y, ez.x - o.x, ez.y - o.y, o.x, o.y); ctx.scale(1 / BAKE_PX, 1 / BAKE_PX);
+  ctx.globalAlpha *= .5 * day; ctx.drawImage(tex, 0, 0); ctx.restore();
 }
 function streetTree(api, x, z) {
   const p = api.project, u = api.unit;
   if (((Math.round(x) + Math.round(z)) & 3) === 1 && prop(api, 'street.tree.02', x, z)) return;
   if (drawSprite(api, 'tree', x, z)) return;
-  const sh = p(x, P, z); api.ellipse(sh.x - u * .8, sh.y + u * .2, u * 1.8, u * .7, 'rgba(40,50,30,.18)');
   // Tree pit: dark soil under an iron grate.
   api.poly([p(x - .8, P + .003, z - .8), p(x + .8, P + .003, z - .8), p(x + .8, P + .003, z + .8), p(x - .8, P + .003, z + .8)], '#5a4a38');
   for (let k = -.6; k <= .6; k += .3) api.line([[x - .8, P + .005, z + k], [x + .8, P + .005, z + k]], '#3a3f3c', .03);
@@ -764,13 +853,11 @@ function car(api, x, z, along, dir, colour, roll) {
   const p = api.project, u = api.unit, ax = along === 'x', Lc = 2.6, W = 1.3, van = colour === 'van';
   const name = carSprite(colour, ax ? (dir > 0 ? 'fr' : 'br') : (dir > 0 ? 'fl' : 'bl'));
   if (name) {
-    const hl = van ? 2.6 : 2.1, hw = van ? 1.3 : 1.05, haze = hazeAt(x, z), ctx = api.ctx, q = p(x, G, z);
-    ctx.save(); ctx.globalAlpha *= 1 - haze; groundShadow(api, x, G, z, ax ? hl : hw, ax ? hw : hl, 1.4); ctx.restore();
+    const haze = hazeAt(x, z), ctx = api.ctx, q = p(x, G, z);
     ctx.save(); ctx.translate(0, q.y - p(x, 0, z).y);
     drawSprite(api, name, x, z, false, 1, 0, haze); drawWheels(api, name, name.slice(7), x, z, roll || 0, haze); ctx.restore(); return;
   }
   const color = CAR_PAINT[colour] || colour;
-  const sh = p(x, G, z); api.ellipse(sh.x - u * .4, sh.y + u * .2, u * 1.8, u * .7, 'rgba(30,30,30,.22)');
   [[-.85, 1], [.85, 1], [-.85, -1], [.85, -1]].forEach(([a, s]) => { const q = ax ? p(x + a, G + .25, z + s * W / 2) : p(x + s * W / 2, G + .25, z + a); api.ellipse(q.x, q.y, u * .24, u * .24, '#25282b'); });
   const dark = api.shade(color, .72), mid = api.shade(color, .86);
   api.box(x, z, G + .25, ax ? Lc : W, ax ? W : Lc, .6, [color, ax ? dark : mid, ax ? mid : dark]);
@@ -785,7 +872,10 @@ function drawCars(api, at) {
     const r = ROADS[ri], s = (((phase + dir * t) % 1) + 1) % 1 * CAR_LOOP - CAR_LOOP / 2, lane = (r.along === 'x' ? dir : -dir) * 1.5, ax = r.along === 'x';
     const x = ax ? s : r.at + lane, z = ax ? r.at + lane : s, hl = colour === 'van' ? 2.4 : 2.1, hw = .95;
     // roll: how far this car has driven since the clock started, for its wheels.
-    at(x, z, () => car(api, x, z, r.along, dir, colour, (dir * phase + t) * CAR_LOOP), ax ? hl : hw, ax ? hw : hl);
+    at(x, z, () => car(api, x, z, r.along, dir, colour, (dir * phase + t) * CAR_LOOP), ax ? hl : hw, ax ? hw : hl, () => {
+      const ctx = api.ctx, sl = colour === 'van' ? 2.5 : 2, sw = colour === 'van' ? 1.2 : 1;
+      ctx.save(); ctx.globalAlpha *= 1 - hazeAt(x, z); groundShadow(api, x, G, z, ax ? sl : sw, ax ? sw : sl, colour === 'van' ? 2.6 : 1.7); ctx.restore();
+    });
   });
 }
 
