@@ -2137,7 +2137,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     1:{name:'tube.run.grow',x:5.6,z:-3,yTop:10.85,ySlab:9.4,yBot:5.21,end:-.3},
     // The pack line's inlet runs low behind the pack bench: the render is cut (`cut`) short of its open inlet collar
     // and a straight carries on into the bench (`feed`), so no collar stands loose beside the bench.
-    3:{name:'tube.run.pack',x:.1,z:-1.3,yTop:5.75,ySlab:4.7,yBot:1.55,end:PACK_STUB_X,feed:-2.4,cut:-.75}};
+    3:{name:'tube.run.pack',x:.1,z:-1.3,yTop:5.75,ySlab:4.7,yBot:1.55,end:PACK_STUB_X,feed:-2.4,cut:-.6}};
   // World geometry of a run from its render: the arm lengths follow from the bore, since the image has one scale.
   function tubeRunGeometry(run){
     if(run.path)return run;
@@ -2164,11 +2164,12 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var top=project(run.x,run.yTop,run.z),slab=project(run.x,run.ySlab,run.z),bot=project(run.x,run.yBot,run.z),x0=top.x-m.axis*k;
     // Row -> screen y, rigid at the bends and the ring, the plain glass between them taking up the rest.
     var rows=[0,m.bend[0],m.ring[0],m.ring[1],m.bend[1],H],ys=[top.y-m.top*k,top.y+(m.bend[0]-m.top)*k,slab.y-(m.ring[2]-m.ring[0])*k,slab.y+(m.ring[1]-m.ring[2])*k,bot.y-(m.bot-m.bend[1])*k,bot.y+(H-m.bot)*k];
-    // A fed run is cut short of its inlet collar, and a plain straight carries on from the cut into the bench.
+    // A fed run is cut short of its inlet collar; a plain straight, laid first so the render's arm overlaps its open
+    // end, carries on from the cut into the bench.
     var fed=run.feed!==undefined&&shellSprite('tube.straight');
-    if(fed){var cut=project(run.cut,run.yTop,run.z);ctx.save();ctx.beginPath();ctx.rect(cut.x,-10000,20000,20000);ctx.clip()}
+    if(fed){drawTubeSprites([[run.cut+.15,run.yTop,run.z],[run.feed,run.yTop,run.z]],TUBE_DIA,{noCap0:true});var cut=project(run.cut,run.yTop,run.z);ctx.save();ctx.beginPath();ctx.rect(cut.x,-10000,20000,20000);ctx.clip()}
     for(var b=0;b<5;b++){var r0=rows[b],r1=rows[b+1],y0=ys[b],y1=ys[b+1];if(r1<=r0||y1<=y0+.01)continue;ctx.drawImage(img,0,r0,W,r1-r0,x0,y0,W*k,y1-y0)}
-    if(fed){ctx.restore();drawTubeSprites([[run.cut,run.yTop,run.z],[run.feed,run.yTop,run.z]],TUBE_DIA,{noCap0:true})}
+    if(fed)ctx.restore();
     if(run.connector&&shellSprite('tube.straight'))drawTubeSprites(run.connector,TUBE_DIA,{noCap0:true});
     return true;
   }
