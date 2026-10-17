@@ -370,6 +370,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var LOUNGE_DOOR={x:-9.5,z:-.45},LOUNGE_EXIT={x:8.57,z:-3.3},LOUNGE_RIGHT=8.25,LOUNGE_ROPE=7;
   // The red carpet runs from the curtain to just past where lounge guests turn on to it (z 2.2), clear of the third kiosk.
   var LOUNGE_CARPET_END=2.6;
+  // The runner render's top face in sprite px: its near-left, near-right and far-left corners, and its length over width.
+  var LOUNGE_RUNNER_PIN={left:[0,274],bottom:[146,360],top:[474,0],ratio:3.25};
   function loungeWaitSpot(place){return place<=0?LOUNGE_DOOR:{x:LOUNGE_DOOR.x+1.3+(place-1)*.65,z:LOUNGE_DOOR.z+.1}}
   function loungeSeated(){return customers.filter(function(c){return c.phase==='lounge'}).length}
   function loungeWaiting(){return customers.filter(function(c){return c.phase==='toLounge'&&!c.waypoints.length}).sort(function(a,b){return a.id-b.id})}
@@ -3768,11 +3770,18 @@ if(!SHOP_SPRITES){
     // A red carpet runs out from the curtain, with a short velvet rope on brass stanchions down its right-hand side;
     // the posts and rope sort with the guests who wait on the carpet.
     if(open&&SHOP_SPRITES){
-      // Sprite shop: a runner at the guests' scale (the v2 carpet render is 5:1 and needs over five units of floor, with a
-      // post in the middle of its door end, so it can't fit between the curtain and the third kiosk). Gold edge, red
-      // band, cream pinstripe and red field in the render's colours, from the curtain to where guests step on at z 2.2.
-      var runEnd=LOUNGE_CARPET_END,runZ=(face+runEnd)/2,runD=runEnd-face;
-      [[1.1,'#b98b41'],[1.02,'#722739'],[.94,'#ecd9b0'],[.88,'#722739']].forEach(function(band){var inset=1.1-band[0];groundPatch(dx,runZ+inset/2,band[0],runD-inset,band[1])});
+      // Sprite shop: Kevin's 2026-10-17 runner render (lounge.carpet.runner, posts left out), laid on the floor from the
+      // curtain to where guests step on at z 2.2. Its corners are pinned in sprite px (left, bottom and top of the top
+      // face, at the render's true 30°) and mapped on to the run's corners, so its 1:3.25 shape sets the width. Until it
+      // loads, flat bands in its colours (gold edge, red band, cream pinstripe, red field) stand in.
+      var runEnd=LOUNGE_CARPET_END,runZ=(face+runEnd)/2,runD=runEnd-face,runW=runD/LOUNGE_RUNNER_PIN.ratio,runner=fixtureSprite('lounge.carpet.runner');
+      if(runner){
+        var pin=LOUNGE_RUNNER_PIN,o=project(dx-runW/2,0,runEnd),pb=project(dx+runW/2,0,runEnd),pt=project(dx-runW/2,0,face+.02);
+        var ax=pin.bottom[0]-pin.left[0],ay=pin.bottom[1]-pin.left[1],bx=pin.top[0]-pin.left[0],by=pin.top[1]-pin.left[1],det=ax*by-ay*bx;
+        var ux=pb.x-o.x,uy=pb.y-o.y,vx=pt.x-o.x,vy=pt.y-o.y;
+        var m=[(ux*by-vx*ay)/det,(uy*by-vy*ay)/det,(vx*ax-ux*bx)/det,(vy*ax-uy*bx)/det];
+        ctx.save();ctx.transform(m[0],m[1],m[2],m[3],o.x,o.y);ctx.drawImage(spriteImage(runner),-pin.left[0],-pin.left[1]);ctx.restore();
+      }else [[1.1,'#b98b41'],[1.02,'#722739'],[.94,'#ecd9b0'],[.88,'#722739']].forEach(function(band){var inset=1.1-band[0];groundPatch(dx,runZ+inset/2,band[0],runD-inset,band[1])});
       // The order line's brass stanchions down its right-hand side with a velvet rope, open at the near end where guests
       // turn on to it; posts and rope sort with the guests waiting on the carpet.
       var ropeX=dx+.72,ropePosts=[face+.3,face+1.4,face+2.5];
