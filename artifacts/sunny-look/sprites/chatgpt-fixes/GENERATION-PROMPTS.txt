@@ -1,0 +1,65 @@
+Built-in image_gen tool. Final asset prompts and targeted refinements.
+
+door
+Use case: precise-object-edit. Inputs: image 1 current.png edit target; image 2 angle-guide.png orientation context only (do not copy its scene); image 3 style reference. Edit current.png. Keep the doorway exactly the same size, angle and position. Change the drapes from green to rich burgundy velvet (#6e1f2b), heavy folds, tied back to each side with brass tie-backs. Keep the warm golden glow coming from inside the doorway. Keep the oak door frame. Remove any leftover checkerboard or white halo around the edges.
+RULES: Output one single object on a fully transparent background (real alpha, not a checkerboard pattern), PNG.
+Camera: true isometric 2:1, rotated 45° around the vertical axis, 30° down, orthographic, no perspective. Match the angle, footprint and orientation of current.png / angle-guide.png exactly. Do not rotate or mirror it.
+Look: soft 3D render like the style reference: matte clay and painted wood, rounded slightly chunky toy-like shapes, gentle ambient occlusion, warm soft light from the upper left, small soft contact shadow, no outlines.
+Palette: forest green #2f5d4a, brass #c9a35c, cream #f4f1e4, light oak #c9a070, dark walnut for flagship pieces.
+No people, no floor tile, no walls or background, no extra objects, no text except what is asked.
+
+pickup
+Use case: precise-object-edit. Input 1 current.png edit target, input 2 tier2-for-shape.png arch geometry reference, input 3 angle-guide.png scene orientation reference only, input 4 style reference. Edit current.png. It is the flagship pickup desk but it is missing its sign arch. Add a tall brass arch over the desk with a forest green sign reading PICKUP, positioned and sized like the arch in tier2-for-shape.png (same side, same height, same angle). Keep the dark walnut desk, the wrapped parcels and the warm light strip exactly as they are. The only text is PICKUP. Preserve the desk footprint, parcel placement, side cabinet and orientation of image 1. Arch at the front edge matching image 2. Ensure full arch and desk fit uncropped with transparent margin.
+RULES: Output one single object on a fully transparent background (real alpha, not a checkerboard pattern), PNG.
+Camera: true isometric 2:1, rotated 45° around the vertical axis, 30° down, orthographic, no perspective. Match the angle, footprint and orientation of current.png / angle-guide.png exactly. Do not rotate or mirror it.
+Look: soft 3D render like the style reference: matte clay and painted wood, rounded slightly chunky toy-like shapes, gentle ambient occlusion, warm soft light from the upper left, small soft contact shadow, no outlines.
+Palette: forest green #2f5d4a, brass #c9a35c, cream #f4f1e4, light oak #c9a070, dark walnut for flagship pieces.
+No people, no floor tile, no walls or background, no extra objects, no text except what is asked.
+
+pack
+Use case: precise-object-edit. Input 1 current.png target needing simplification; input 2 tier2-for-shape.png EXACT shape/footprint/angle guide; input 3 angle-guide.png orientation context only; input 4 style ref. Redraw this packing bench as the flagship (tier 3) version, using tier2-for-shape.png for the exact shape, footprint and angle. Change only the materials and contents: dark walnut cabinet with brass inlays and a warm light strip under the top; on top, a small brass scale, a neat stack of folded cream boxes, a row of five labelled glass jars of green buds and a roll of brass stickers. Tidy and premium, NOT a pile of colourful items, no candy, no fruit. Five jars exactly, tiny blank cream labels (no readable extra text). Keep open-ended rectangular bench silhouette and top orientation of tier2 reference. Full object uncropped.
+RULES: Output one single object on a fully transparent background (real alpha, not a checkerboard pattern), PNG.
+Camera: true isometric 2:1, rotated 45° around the vertical axis, 30° down, orthographic, no perspective. Match the angle, footprint and orientation of current.png / angle-guide.png exactly. Do not rotate or mirror it.
+Look: soft 3D render like the style reference: matte clay and painted wood, rounded slightly chunky toy-like shapes, gentle ambient occlusion, warm soft light from the upper left, small soft contact shadow, no outlines.
+Palette: forest green #2f5d4a, brass #c9a35c, cream #f4f1e4, light oak #c9a070, dark walnut for flagship pieces.
+No people, no floor tile, no walls or background, no extra objects, no text except what is asked.
+
+pack-refine
+Edit this packing bench with ONE narrow correction: replace the three assembled bulky cream cardboard boxes at the upper-left of its worktop with ONE neat short stack of FLAT FOLDED cream cardboard box blanks (collapsed flat packaging, not built cuboid boxes). Preserve everything else precisely: five glass jars of buds and blank cream labels, brass scale, sticker roll, walnut cabinet, brass trim, light strips, camera, footprint and orientation. No new objects.
+RULES: Output one single object on a fully transparent background (real alpha, not a checkerboard pattern), PNG.
+Camera: true isometric 2:1, rotated 45° around the vertical axis, 30° down, orthographic, no perspective. Match the angle, footprint and orientation of current.png / angle-guide.png exactly. Do not rotate or mirror it.
+Look: soft 3D render like the style reference: matte clay and painted wood, rounded slightly chunky toy-like shapes, gentle ambient occlusion, warm soft light from the upper left, small soft contact shadow, no outlines.
+Palette: forest green #2f5d4a, brass #c9a35c, cream #f4f1e4, light oak #c9a070, dark walnut for flagship pieces.
+No people, no floor tile, no walls or background, no extra objects, no text except what is asked.
+
+site
+Use case: precise-object-edit. Input 1 angle-guide.png is exact deck layout reference, input 2 current-site.png is sprite to fix, input 3 style reference. Redraw the rooftop delivery deck from angle-guide.png as ONE single solid, connected structure: a raised wooden deck platform on sturdy green steel legs that reach the ground, a short open staircase attached to the RIGHT side of the deck leading up to it, and a small square drone landing pad on its own posts rising directly from the back corner of the same deck (physically joined to it, not floating). Under construction: yellow-black hazard tape around the pad railing, stacked cardboard cartons, a plain sheet-covered counter, and a cream sign on two posts reading COMING SOON. Every part touches and connects; nothing hovers in the air. Same layout and angle as angle-guide.png. Show full support legs down to ground level, with feet at same level as staircase bottom. Pad is above rear counter, supported on continuous posts that visibly extend down to the deck. Counter and parcels rest firmly on deck. No background scene from guide. Entire structure fully visible with margin.
+RULES: Output one single object on a fully transparent background (real alpha, not a checkerboard pattern), PNG.
+Camera: true isometric 2:1, rotated 45° around the vertical axis, 30° down, orthographic, no perspective. Match the angle, footprint and orientation of current.png / angle-guide.png exactly. Do not rotate or mirror it.
+Look: soft 3D render like the style reference: matte clay and painted wood, rounded slightly chunky toy-like shapes, gentle ambient occlusion, warm soft light from the upper left, small soft contact shadow, no outlines.
+Palette: forest green #2f5d4a, brass #c9a35c, cream #f4f1e4, light oak #c9a070, dark walnut for flagship pieces.
+No people, no floor tile, no walls or background, no extra objects, no text except what is asked.
+
+site-refine
+Edit only the counter's exposed wooden cabinet: cover this counter with a plain cream construction dust sheet draped over its top and down its front and sides with soft folds. Cartons and gray block still rest on the sheet-covered top. Preserve every other element and all geometry exactly: raised deck platform, ground-reaching green legs, attached right-hand staircase, upper landing pad and its connected support posts, brass railing with yellow-black hazard tape and COMING SOON sign. Full object on real alpha transparency.
+RULES: Output one single object on a fully transparent background (real alpha, not a checkerboard pattern), PNG.
+Camera: true isometric 2:1, rotated 45° around the vertical axis, 30° down, orthographic, no perspective. Match the angle, footprint and orientation of current.png / angle-guide.png exactly. Do not rotate or mirror it.
+Look: soft 3D render like the style reference: matte clay and painted wood, rounded slightly chunky toy-like shapes, gentle ambient occlusion, warm soft light from the upper left, small soft contact shadow, no outlines.
+Palette: forest green #2f5d4a, brass #c9a35c, cream #f4f1e4, light oak #c9a070, dark walnut for flagship pieces.
+No people, no floor tile, no walls or background, no extra objects, no text except what is asked.
+
+built
+Use case: precise-object-edit. Image 1 accepted construction deck is the EXACT structure to retain. Image 2 angle-guide layout context only. Image 3 old built sprite for color reference only. Image 4 style reference. Redraw this exact same deck structure from image 1, same shape, size, angle and layout, now finished: the deck is clean light oak, the counter is green and cream with brass trim, the landing pad is yellow-and-dark-green striped with a small orange cone, a brass railing runs around the pad, and the sign reads ONLINE ORDERS. No hazard tape and no cartons. One solid connected structure standing on the ground; nothing floats. Remove cream dust sheet to reveal finished counter. Remove gray block and all parcels. The yellow and dark green stripes belong on the horizontal landing pad FLOOR; railings are plain brass. Keep continuous upper pad posts and braces down to main deck, green ground-reaching legs and same right-hand attached staircase. Full structure uncropped.
+RULES: Output one single object on a fully transparent background (real alpha, not a checkerboard pattern), PNG.
+Camera: true isometric 2:1, rotated 45° around the vertical axis, 30° down, orthographic, no perspective. Match the angle, footprint and orientation of current.png / angle-guide.png exactly. Do not rotate or mirror it.
+Look: soft 3D render like the style reference: matte clay and painted wood, rounded slightly chunky toy-like shapes, gentle ambient occlusion, warm soft light from the upper left, small soft contact shadow, no outlines.
+Palette: forest green #2f5d4a, brass #c9a35c, cream #f4f1e4, light oak #c9a070, dark walnut for flagship pieces.
+No people, no floor tile, no walls or background, no extra objects, no text except what is asked.
+
+built-refine
+Precise localized edit: REMOVE the tablet and glass jar from the counter worktop. Leave the cream countertop completely bare. Keep EVERYTHING else exactly unchanged, especially ONLINE ORDERS text, connected platform and legs, attached staircase, green and cream counter with brass trim, striped raised landing pad, orange cone, plain brass railings, angle and orientation. Real alpha transparency.
+RULES: Output one single object on a fully transparent background (real alpha, not a checkerboard pattern), PNG.
+Camera: true isometric 2:1, rotated 45° around the vertical axis, 30° down, orthographic, no perspective. Match the angle, footprint and orientation of current.png / angle-guide.png exactly. Do not rotate or mirror it.
+Look: soft 3D render like the style reference: matte clay and painted wood, rounded slightly chunky toy-like shapes, gentle ambient occlusion, warm soft light from the upper left, small soft contact shadow, no outlines.
+Palette: forest green #2f5d4a, brass #c9a35c, cream #f4f1e4, light oak #c9a070, dark walnut for flagship pieces.
+No people, no floor tile, no walls or background, no extra objects, no text except what is asked.

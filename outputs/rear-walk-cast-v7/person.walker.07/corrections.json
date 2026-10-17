@@ -1,0 +1,26 @@
+[
+  {
+    "phase": 0,
+    "prompt": "Edit ONLY the legs of this ONE sprite into a wide contact pose. Keep the current NEAR leg as the foreground leg: the leg attached beneath the SCREEN-RIGHT cargo pocket extends diagonally across the other leg toward LOWER LEFT, trailing heel raised and sole visible. The FAR leg attached to the SCREEN-LEFT hip reaches toward upper-right behind the foreground leg, its sage shoe forward. The two legs overlap in an X silhouette in projection. Do not reverse which thigh is in front. Keep her head, long hair, striped tee, shorts, socks, shoes and skateboard identical. Keep the right hand gripping the rigid skateboard and left arm unchanged. Entire sprite, same rear camera, transparent background.",
+    "source": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-8316e07a-1099-4b71-bf3b-10f2769a4ea1.png",
+    "file": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/rear-walk-cast-v7/person.walker.07/raw/person.walker.07.walk.empty.00.back-right.png"
+  },
+  {
+    "phase": 1,
+    "prompt": "Edit ONLY legs of this single sprite into the DOWN walk pose after this contact. Keep the NEAR leg attached below the screen-right cargo pocket IN FRONT of the other leg, its thigh crossing diagonally toward screen-left. Bend that foreground knee gently, lifting its trailing sage shoe low behind to screen-left, sole visible. The FAR leg stays behind the foreground thigh and straightens down to a flat supporting shoe on screen-right. Shorten stride moderately. The lifted shoe stays low, not a high kick. Preserve head, hair, striped tee, cargo shorts, socks, shoes, arm positions and identical skateboard under right arm. Same rear camera, transparent background.",
+    "source": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-6739188a-cc1b-46bd-a718-a41f45a5ea25.png",
+    "file": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/rear-walk-cast-v7/person.walker.07/raw/person.walker.07.walk.empty.01.back-right.png"
+  },
+  {
+    "phase": 2,
+    "prompt": "Edit ONLY the legs of this ONE sprite to the next passing pose. Keep the NEAR RIGHT thigh beneath the large screen-right cargo pocket in the FOREGROUND overlapping the far thigh. Bring that foreground knee inward directly below the hips, bending the knee enough that its lifted sage sneaker tucks close beside the calf of the supporting far leg, sole visible. The FAR LEFT leg remains nearly straight behind it and supports flat on the ground at screen-right. This is a compact passing silhouette; feet only about one shoe-width apart. Keep head, hair, outfit, right-hand skateboard grip and board identical. Free left arm relaxed down. Same rear upper-right camera, transparent background.",
+    "source": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-0a84b078-6bcb-4c81-9d8a-7f00c19ffcde.png",
+    "file": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/rear-walk-cast-v7/person.walker.07/raw/person.walker.07.walk.empty.02.back-right.png"
+  },
+  {
+    "phase": 3,
+    "prompt": "Correct only the screen-RIGHT lower leg and sneaker in this ONE sprite. This is a LOW FORWARD REACH before foot contact: extend that shoe slightly toward upper-right, toe pointing forward-right, with its sole facing DOWN and heel close to the ground. Do not present the sole toward the viewer or curl the heel backward. Keep the screen-left leg nearly straight supporting beneath the hips; keep the legs uncrossed and close, about one shoe width apart. Preserve head, hair, striped shirt, cargo shorts, socks, left arm, and exact skateboard/right-hand grip and camera. Entire character, transparent background.",
+    "source": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-7e932db7-0a21-445b-a471-b8411222fdc8.png",
+    "file": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/rear-walk-cast-v7/person.walker.07/raw/person.walker.07.walk.empty.03.back-right.png"
+  }
+]

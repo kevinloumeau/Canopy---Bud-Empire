@@ -1,0 +1,20 @@
+[
+  {
+    "phase": 5,
+    "prompt": "Edit ONLY the man's legs in this ONE sprite. Advance from this contact to weight bearing on the SCREEN-RIGHT leg: keep the right trouser leg in front, nearly vertical beneath the right hip, its brown shoe flat. Bend the SCREEN-LEFT leg backward at its knee, lifting that heel behind and to the left, sole visible. The left thigh and knee remain BEHIND the right supporting leg. Do not cross the right leg over to the left. Preserve exact man, head, blue denim jacket, arms, red leash, dog and camera. Do not alter the dog or disconnect its leash. Transparent background, entire man and dog inside the frame.",
+    "source": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-8bc01f77-13de-4ff2-bc49-eee5d35bfcc0.png",
+    "file": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/rear-walk-cast-v7/person.walker.06/raw/person.walker.06.walk.empty.05.back-right.png"
+  },
+  {
+    "phase": 5,
+    "prompt": "Edit ONLY the man's legs in this ONE sprite. Make a gentle weight-acceptance walk pose: the screen-RIGHT leg stays in front, supporting nearly straight beneath the right hip, brown shoe flat. The screen-LEFT leg stays BEHIND the right leg and trails diagonally down-left, with only a SMALL 20-degree knee bend. Its shoe is LOW, no more than half a shoe-height above the supporting shoe. No high back kick, no 90-degree knee bend. Narrow the stance slightly from this reference. Preserve the head, denim jacket, arms, leash and dog exactly. One entire sprite, transparent background.",
+    "source": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-c3b47928-f835-4bbf-bc39-9fd2ae0685f2.png",
+    "file": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/rear-walk-cast-v7/person.walker.06/raw/person.walker.06.walk.empty.05.back-right.png"
+  },
+  {
+    "phase": 3,
+    "prompt": "Make two small pose corrections to this single sprite. MAN: keep his leg positions, but rotate his screen-right brown shoe so the toe reaches toward upper-right with the sole facing down, close to ground; it is a low forward reach, not a backward heel kick. DOG: place its screen-left hind paw beneath its rump as a grounded supporting paw, with the paw pad hidden. Keep the screen-right hind paw trailing back with its pad visible. Preserve all other parts of the man, his clothing and pose, and the dog's body/head/tail shape, size and location. Preserve the red leash connection. Same rear upper-right camera. Entire man and dog, transparent background.",
+    "source": "/Users/kevinloumeau/.codex/generated_images/01a14699-1858-7a12-be4a-20157306abf3/exec-edc04934-debb-4946-ab1c-5bbf907fc77d.png",
+    "file": "/Users/kevinloumeau/Library/Mobile Documents/com~apple~CloudDocs/03_Projects/2026/Canopy - Bud Empire/Canopy - Bud Empire/outputs/rear-walk-cast-v7/person.walker.06/raw/person.walker.06.walk.empty.03.back-right.png"
+  }
+]

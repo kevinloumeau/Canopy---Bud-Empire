@@ -110,5 +110,11 @@
       "head_sha256": "994375db4a68719520e8c34ac1ae8ab92cb2025b13fa043f7f536d92462e3afb"
     }
   ],
-  "status": "awaiting-contact-sheet-review"
+  "status": "contact-sheet-reviewed",
+  "visual_review": {
+    "identity_and_rear_direction": "reviewed",
+    "opposing_contacts_00_04": "reviewed",
+    "head_consistency": "reviewed; fixed head region also verified by hash",
+    "in_game_motion": "not tested"
+  }
 }

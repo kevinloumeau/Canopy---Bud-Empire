@@ -1,0 +1,3213 @@
+[
+  {
+    "id": "person.customer.02",
+    "frame_count": 8,
+    "head_identical": true,
+    "unique_frames": 8,
+    "minimum_edge_clearance": 36,
+    "checks": [
+      {
+        "file": "person.customer.02/frames/person.customer.02.walk.empty.00.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          214,
+          76,
+          818,
+          1456
+        ],
+        "edge_clearance": 76,
+        "head_sha256": "994375db4a68719520e8c34ac1ae8ab92cb2025b13fa043f7f536d92462e3afb",
+        "file_sha256": "4d5576f68ed359d13bfe4bf611173ee2ca461b55da110f8d7c1152bd7427a7b1"
+      },
+      {
+        "file": "person.customer.02/frames/person.customer.02.walk.empty.01.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          210,
+          76,
+          880,
+          1461
+        ],
+        "edge_clearance": 75,
+        "head_sha256": "994375db4a68719520e8c34ac1ae8ab92cb2025b13fa043f7f536d92462e3afb",
+        "file_sha256": "e30853b2979bfc79e6caaa9fd2923fc9a589ac6146d74d624c23b5982b3ab36a"
+      },
+      {
+        "file": "person.customer.02/frames/person.customer.02.walk.empty.02.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          222,
+          76,
+          839,
+          1495
+        ],
+        "edge_clearance": 41,
+        "head_sha256": "994375db4a68719520e8c34ac1ae8ab92cb2025b13fa043f7f536d92462e3afb",
+        "file_sha256": "58faf4d4cce43b2acec0d1f994f07e84253385ee8ac2014a0a142e389189bf91"
+      },
+      {
+        "file": "person.customer.02/frames/person.customer.02.walk.empty.03.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          271,
+          76,
+          899,
+          1500
+        ],
+        "edge_clearance": 36,
+        "head_sha256": "994375db4a68719520e8c34ac1ae8ab92cb2025b13fa043f7f536d92462e3afb",
+        "file_sha256": "a6082a68e1e877cd5731539e541b24cfec9b789acaa1583067d36e17d42ad435"
+      },
+      {
+        "file": "person.customer.02/frames/person.customer.02.walk.empty.04.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          151,
+          76,
+          890,
+          1451
+        ],
+        "edge_clearance": 76,
+        "head_sha256": "994375db4a68719520e8c34ac1ae8ab92cb2025b13fa043f7f536d92462e3afb",
+        "file_sha256": "b6ec8f93dfa68b597c61fb4cec52cd984de62c4f7e3843a836b7dd0ccd17058a"
+      },
+      {
+        "file": "person.customer.02/frames/person.customer.02.walk.empty.05.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          241,
+          76,
+          808,
+          1425
+        ],
+        "edge_clearance": 76,
+        "head_sha256": "994375db4a68719520e8c34ac1ae8ab92cb2025b13fa043f7f536d92462e3afb",
+        "file_sha256": "fca586897664e3fe88a8e9ef3fcca42720131edb81252e608eb489850187a006"
+      },
+      {
+        "file": "person.customer.02/frames/person.customer.02.walk.empty.06.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          219,
+          76,
+          819,
+          1495
+        ],
+        "edge_clearance": 41,
+        "head_sha256": "994375db4a68719520e8c34ac1ae8ab92cb2025b13fa043f7f536d92462e3afb",
+        "file_sha256": "fed9b46c8fa56ab2012d6bbebda7784ee40970c50d7d8b406606afa7cd5c87db"
+      },
+      {
+        "file": "person.customer.02/frames/person.customer.02.walk.empty.07.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          173,
+          76,
+          874,
+          1450
+        ],
+        "edge_clearance": 76,
+        "head_sha256": "994375db4a68719520e8c34ac1ae8ab92cb2025b13fa043f7f536d92462e3afb",
+        "file_sha256": "038fb99e394aae93436715264c77f6264a970142a0cb78c18d26f72b466ea4c9"
+      }
+    ]
+  },
+  {
+    "id": "person.customer.03",
+    "frame_count": 8,
+    "head_identical": true,
+    "unique_frames": 8,
+    "minimum_edge_clearance": 58,
+    "checks": [
+      {
+        "file": "person.customer.03/frames/person.customer.03.walk.empty.00.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          253,
+          93,
+          844,
+          1453
+        ],
+        "edge_clearance": 83,
+        "head_sha256": "235d68cdcebe24db6cb8fd24a8d2ca0b2e8f88b7d61a714472473ab771124c84",
+        "file_sha256": "8c17a500be9b5d6bd047ee8a5993b9392fe2cd67a998bdac3825aff37adf4d29"
+      },
+      {
+        "file": "person.customer.03/frames/person.customer.03.walk.empty.01.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          247,
+          93,
+          876,
+          1405
+        ],
+        "edge_clearance": 93,
+        "head_sha256": "235d68cdcebe24db6cb8fd24a8d2ca0b2e8f88b7d61a714472473ab771124c84",
+        "file_sha256": "29ea97e441d5ec65e1248730635fba1c4f4fc40a5565bbf39bc26c8e8ca1a697"
+      },
+      {
+        "file": "person.customer.03/frames/person.customer.03.walk.empty.02.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          255,
+          93,
+          845,
+          1443
+        ],
+        "edge_clearance": 93,
+        "head_sha256": "235d68cdcebe24db6cb8fd24a8d2ca0b2e8f88b7d61a714472473ab771124c84",
+        "file_sha256": "f516e8acb0a7aef1b6c09c87da5860d9701eab321efb5b377b35c83bc5969e16"
+      },
+      {
+        "file": "person.customer.03/frames/person.customer.03.walk.empty.03.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          334,
+          93,
+          876,
+          1409
+        ],
+        "edge_clearance": 93,
+        "head_sha256": "235d68cdcebe24db6cb8fd24a8d2ca0b2e8f88b7d61a714472473ab771124c84",
+        "file_sha256": "ff05af9c88ee8490a427ba243329540267099fb9512014c7f011067f6a3e06d9"
+      },
+      {
+        "file": "person.customer.03/frames/person.customer.03.walk.empty.04.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          151,
+          93,
+          936,
+          1447
+        ],
+        "edge_clearance": 88,
+        "head_sha256": "235d68cdcebe24db6cb8fd24a8d2ca0b2e8f88b7d61a714472473ab771124c84",
+        "file_sha256": "4e48be7163c8f0c704cf9c329244ded8e4bb6d64aa2fffb078ecd2fca8bbc9c7"
+      },
+      {
+        "file": "person.customer.03/frames/person.customer.03.walk.empty.05.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          242,
+          93,
+          823,
+          1413
+        ],
+        "edge_clearance": 93,
+        "head_sha256": "235d68cdcebe24db6cb8fd24a8d2ca0b2e8f88b7d61a714472473ab771124c84",
+        "file_sha256": "1f68bfbe10ac98635a61e06a95bb22d1bd0fbb7274849c13a8f0175f72e4fc29"
+      },
+      {
+        "file": "person.customer.03/frames/person.customer.03.walk.empty.06.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          270,
+          93,
+          847,
+          1478
+        ],
+        "edge_clearance": 58,
+        "head_sha256": "235d68cdcebe24db6cb8fd24a8d2ca0b2e8f88b7d61a714472473ab771124c84",
+        "file_sha256": "e2fe2232bed56e22a526b996f99dd28474683c6d99c8f989d7ac0ee72bf9a154"
+      },
+      {
+        "file": "person.customer.03/frames/person.customer.03.walk.empty.07.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          217,
+          93,
+          877,
+          1453
+        ],
+        "edge_clearance": 83,
+        "head_sha256": "235d68cdcebe24db6cb8fd24a8d2ca0b2e8f88b7d61a714472473ab771124c84",
+        "file_sha256": "d41b8e61cbdb18b1ffe8bee2fa95252002915ec0f56e768769f1cf6514cfc19f"
+      }
+    ]
+  },
+  {
+    "id": "person.customer.04",
+    "frame_count": 8,
+    "head_identical": true,
+    "unique_frames": 8,
+    "minimum_edge_clearance": 47,
+    "checks": [
+      {
+        "file": "person.customer.04/frames/person.customer.04.walk.empty.00.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          255,
+          92,
+          819,
+          1450
+        ],
+        "edge_clearance": 86,
+        "head_sha256": "02bf23b0e3c6ac55deb0578d57079a8e8ea6c7a0a24574df18c3f3d75eff4ccb",
+        "file_sha256": "da8bf6619db116d9b51636d922918d30a4c027226fe79a8200479a24558ae2dd"
+      },
+      {
+        "file": "person.customer.04/frames/person.customer.04.walk.empty.01.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          236,
+          92,
+          870,
+          1375
+        ],
+        "edge_clearance": 92,
+        "head_sha256": "02bf23b0e3c6ac55deb0578d57079a8e8ea6c7a0a24574df18c3f3d75eff4ccb",
+        "file_sha256": "7a6b5196ab7a45bdbfeb334d0d21affeb439e2109d46c137adc9227fedc0e23a"
+      },
+      {
+        "file": "person.customer.04/frames/person.customer.04.walk.empty.02.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          252,
+          92,
+          839,
+          1483
+        ],
+        "edge_clearance": 53,
+        "head_sha256": "02bf23b0e3c6ac55deb0578d57079a8e8ea6c7a0a24574df18c3f3d75eff4ccb",
+        "file_sha256": "9dd2f9b904db65aaadd6a4f882766a6a66554661a4031af28993173f394e8154"
+      },
+      {
+        "file": "person.customer.04/frames/person.customer.04.walk.empty.03.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          293,
+          92,
+          866,
+          1387
+        ],
+        "edge_clearance": 92,
+        "head_sha256": "02bf23b0e3c6ac55deb0578d57079a8e8ea6c7a0a24574df18c3f3d75eff4ccb",
+        "file_sha256": "8bff55bd6a1f3e90406206f142b20b39cc86bd6c0d9ea7d427c2ae29dc6755ae"
+      },
+      {
+        "file": "person.customer.04/frames/person.customer.04.walk.empty.04.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          97,
+          92,
+          977,
+          1390
+        ],
+        "edge_clearance": 47,
+        "head_sha256": "02bf23b0e3c6ac55deb0578d57079a8e8ea6c7a0a24574df18c3f3d75eff4ccb",
+        "file_sha256": "8a65fbc52393fcb06004f1ceba7f30a0bcf7dfd74fc8786f0c9d06fe23125132"
+      },
+      {
+        "file": "person.customer.04/frames/person.customer.04.walk.empty.05.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          249,
+          92,
+          822,
+          1392
+        ],
+        "edge_clearance": 92,
+        "head_sha256": "02bf23b0e3c6ac55deb0578d57079a8e8ea6c7a0a24574df18c3f3d75eff4ccb",
+        "file_sha256": "1f6062f284025aca16410e480108e0265ce74f20b7677ee19b5c2da0bdd80227"
+      },
+      {
+        "file": "person.customer.04/frames/person.customer.04.walk.empty.06.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          254,
+          92,
+          826,
+          1486
+        ],
+        "edge_clearance": 50,
+        "head_sha256": "02bf23b0e3c6ac55deb0578d57079a8e8ea6c7a0a24574df18c3f3d75eff4ccb",
+        "file_sha256": "cda31d36b8c8d00ddbf78a7540da226ee0377a94ba275f3855f4caba08b0054c"
+      },
+      {
+        "file": "person.customer.04/frames/person.customer.04.walk.empty.07.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          216,
+          92,
+          906,
+          1479
+        ],
+        "edge_clearance": 57,
+        "head_sha256": "02bf23b0e3c6ac55deb0578d57079a8e8ea6c7a0a24574df18c3f3d75eff4ccb",
+        "file_sha256": "ce22b743ba1f66ade1da8d16d9567c7a41a6afac9067caa9ecb476c4aaf660a3"
+      }
+    ]
+  },
+  {
+    "id": "person.customer.05",
+    "frame_count": 8,
+    "head_identical": true,
+    "unique_frames": 8,
+    "minimum_edge_clearance": 69,
+    "checks": [
+      {
+        "file": "person.customer.05/frames/person.customer.05.walk.empty.00.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          272,
+          73,
+          842,
+          1467
+        ],
+        "edge_clearance": 69,
+        "head_sha256": "ff704c49e38b01034aaed2cd888f710a8bd647d23148b469f22bf48b1ac493a5",
+        "file_sha256": "865b22b55a62051c6e105d2243e7c6187382fd143ad86c8af04446dfbb6c6df1"
+      },
+      {
+        "file": "person.customer.05/frames/person.customer.05.walk.empty.01.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          273,
+          73,
+          864,
+          1413
+        ],
+        "edge_clearance": 73,
+        "head_sha256": "ff704c49e38b01034aaed2cd888f710a8bd647d23148b469f22bf48b1ac493a5",
+        "file_sha256": "138296a3a6ab64e99427eb32b61897f0739ba2046564ac80bf341ecc06f02ae7"
+      },
+      {
+        "file": "person.customer.05/frames/person.customer.05.walk.empty.02.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          288,
+          73,
+          832,
+          1443
+        ],
+        "edge_clearance": 73,
+        "head_sha256": "ff704c49e38b01034aaed2cd888f710a8bd647d23148b469f22bf48b1ac493a5",
+        "file_sha256": "5a0460460cb67e961cfc707a0d0c0b4b75d0f303ba917ad5498e1f39b87faef0"
+      },
+      {
+        "file": "person.customer.05/frames/person.customer.05.walk.empty.03.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          329,
+          73,
+          893,
+          1405
+        ],
+        "edge_clearance": 73,
+        "head_sha256": "ff704c49e38b01034aaed2cd888f710a8bd647d23148b469f22bf48b1ac493a5",
+        "file_sha256": "797b4bd89e372d4703c00872e52b47f9184f509d5bd2baa9334fcc24e589fe14"
+      },
+      {
+        "file": "person.customer.05/frames/person.customer.05.walk.empty.04.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          136,
+          73,
+          942,
+          1448
+        ],
+        "edge_clearance": 73,
+        "head_sha256": "ff704c49e38b01034aaed2cd888f710a8bd647d23148b469f22bf48b1ac493a5",
+        "file_sha256": "7105a91fa23c87cbb201d1b959e4d84e7b8c0941cfec668e6c5e8ebbe718a118"
+      },
+      {
+        "file": "person.customer.05/frames/person.customer.05.walk.empty.05.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          234,
+          73,
+          812,
+          1437
+        ],
+        "edge_clearance": 73,
+        "head_sha256": "ff704c49e38b01034aaed2cd888f710a8bd647d23148b469f22bf48b1ac493a5",
+        "file_sha256": "fcd51c593b64a760d80ac430b2c672501c240ad3357975911e02acc6f038891d"
+      },
+      {
+        "file": "person.customer.05/frames/person.customer.05.walk.empty.06.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          271,
+          73,
+          834,
+          1439
+        ],
+        "edge_clearance": 73,
+        "head_sha256": "ff704c49e38b01034aaed2cd888f710a8bd647d23148b469f22bf48b1ac493a5",
+        "file_sha256": "b506ccd3698fb2576efb85801aff0e203ebaca53c029d9aa54f5cb625bfa89b5"
+      },
+      {
+        "file": "person.customer.05/frames/person.customer.05.walk.empty.07.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          269,
+          73,
+          868,
+          1450
+        ],
+        "edge_clearance": 73,
+        "head_sha256": "ff704c49e38b01034aaed2cd888f710a8bd647d23148b469f22bf48b1ac493a5",
+        "file_sha256": "2edc0b53acad4de726ddcda2789a7ac85d3d2d3f86e011feaa32d5cc284ddf0b"
+      }
+    ]
+  },
+  {
+    "id": "person.customer.06",
+    "frame_count": 8,
+    "head_identical": true,
+    "unique_frames": 8,
+    "minimum_edge_clearance": 113,
+    "checks": [
+      {
+        "file": "person.customer.06/frames/person.customer.06.walk.empty.00.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          236,
+          117,
+          823,
+          1423
+        ],
+        "edge_clearance": 113,
+        "head_sha256": "749c9e4f166d5783db834a46659a1f34c571a1168111e230151be540d66e0573",
+        "file_sha256": "6892496ecfa769034ae34aee390ca5fe16ce3599d1d8a89dc0aab8caba4ce641"
+      },
+      {
+        "file": "person.customer.06/frames/person.customer.06.walk.empty.01.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          236,
+          117,
+          855,
+          1372
+        ],
+        "edge_clearance": 117,
+        "head_sha256": "749c9e4f166d5783db834a46659a1f34c571a1168111e230151be540d66e0573",
+        "file_sha256": "c4bdd683f7391ed2f5024e624d208d3877758130519b3e12ebbafcbb2a63d823"
+      },
+      {
+        "file": "person.customer.06/frames/person.customer.06.walk.empty.02.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          265,
+          117,
+          800,
+          1421
+        ],
+        "edge_clearance": 115,
+        "head_sha256": "749c9e4f166d5783db834a46659a1f34c571a1168111e230151be540d66e0573",
+        "file_sha256": "bb3e894e8dd3f220d576d5241620095c6ad88eef6367d3a5ec91c1b02b97cafd"
+      },
+      {
+        "file": "person.customer.06/frames/person.customer.06.walk.empty.03.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          274,
+          117,
+          830,
+          1342
+        ],
+        "edge_clearance": 117,
+        "head_sha256": "749c9e4f166d5783db834a46659a1f34c571a1168111e230151be540d66e0573",
+        "file_sha256": "d591daaa758f9d698d17f2c3ba4e9ecbc554fad01eade9b33b0bffeefefb1831"
+      },
+      {
+        "file": "person.customer.06/frames/person.customer.06.walk.empty.04.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          196,
+          117,
+          880,
+          1393
+        ],
+        "edge_clearance": 117,
+        "head_sha256": "749c9e4f166d5783db834a46659a1f34c571a1168111e230151be540d66e0573",
+        "file_sha256": "780c4b13330e6b834ddcc71227d7d82c2ebdf23c40448eab9e52422edf39b5e9"
+      },
+      {
+        "file": "person.customer.06/frames/person.customer.06.walk.empty.05.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          254,
+          117,
+          800,
+          1388
+        ],
+        "edge_clearance": 117,
+        "head_sha256": "749c9e4f166d5783db834a46659a1f34c571a1168111e230151be540d66e0573",
+        "file_sha256": "5870c0dcee453fb0d5e468c8200406501f5a8a6b10c75dedf3e3f1b67a80bbb8"
+      },
+      {
+        "file": "person.customer.06/frames/person.customer.06.walk.empty.06.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          259,
+          117,
+          807,
+          1373
+        ],
+        "edge_clearance": 117,
+        "head_sha256": "749c9e4f166d5783db834a46659a1f34c571a1168111e230151be540d66e0573",
+        "file_sha256": "96360269af20125e6802a0be1ba3cb62c387960081860f25c8790519bfbde68a"
+      },
+      {
+        "file": "person.customer.06/frames/person.customer.06.walk.empty.07.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          209,
+          117,
+          842,
+          1401
+        ],
+        "edge_clearance": 117,
+        "head_sha256": "749c9e4f166d5783db834a46659a1f34c571a1168111e230151be540d66e0573",
+        "file_sha256": "dfa7ea4771ae3d9a8151068a3492949618115a6b93953a3eb61e45d4ea5be965"
+      }
+    ]
+  },
+  {
+    "id": "person.customer.07",
+    "frame_count": 8,
+    "head_identical": true,
+    "unique_frames": 8,
+    "minimum_edge_clearance": 35,
+    "checks": [
+      {
+        "file": "person.customer.07/frames/person.customer.07.walk.empty.00.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          266,
+          59,
+          839,
+          1468
+        ],
+        "edge_clearance": 59,
+        "head_sha256": "f65e24a351bfbd7a51e8245ef6e8464d98d4de16ecd9e97ca32fc16760550937",
+        "file_sha256": "56bf27f6ed413aaa267c8900231abff9cb4569fd9758bdf0a67718965a25bc47"
+      },
+      {
+        "file": "person.customer.07/frames/person.customer.07.walk.empty.01.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          251,
+          59,
+          881,
+          1429
+        ],
+        "edge_clearance": 59,
+        "head_sha256": "f65e24a351bfbd7a51e8245ef6e8464d98d4de16ecd9e97ca32fc16760550937",
+        "file_sha256": "5f6c3355a4d9713114567f04968a718c806b59de9d47d2cfefcaced352042039"
+      },
+      {
+        "file": "person.customer.07/frames/person.customer.07.walk.empty.02.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          265,
+          59,
+          846,
+          1501
+        ],
+        "edge_clearance": 35,
+        "head_sha256": "f65e24a351bfbd7a51e8245ef6e8464d98d4de16ecd9e97ca32fc16760550937",
+        "file_sha256": "fbdfa80b341d9b29748574977e6980dcc3ba69c504b496e4342b70df3c531df8"
+      },
+      {
+        "file": "person.customer.07/frames/person.customer.07.walk.empty.03.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          317,
+          59,
+          843,
+          1455
+        ],
+        "edge_clearance": 59,
+        "head_sha256": "f65e24a351bfbd7a51e8245ef6e8464d98d4de16ecd9e97ca32fc16760550937",
+        "file_sha256": "1d3e0b0830ee036a951b11a1564bfc4efb560769ea3302762c3130ec20e7bc22"
+      },
+      {
+        "file": "person.customer.07/frames/person.customer.07.walk.empty.04.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          151,
+          59,
+          984,
+          1463
+        ],
+        "edge_clearance": 40,
+        "head_sha256": "f65e24a351bfbd7a51e8245ef6e8464d98d4de16ecd9e97ca32fc16760550937",
+        "file_sha256": "1b0dbd48cfec4e354efe0410ad838a50bf40c03a9f182dc0391eb802a8337091"
+      },
+      {
+        "file": "person.customer.07/frames/person.customer.07.walk.empty.05.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          272,
+          59,
+          841,
+          1413
+        ],
+        "edge_clearance": 59,
+        "head_sha256": "f65e24a351bfbd7a51e8245ef6e8464d98d4de16ecd9e97ca32fc16760550937",
+        "file_sha256": "24d1935135987163971b86387f70c9a2d09caa13948bae57009ba8e3b3c9c597"
+      },
+      {
+        "file": "person.customer.07/frames/person.customer.07.walk.empty.06.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          270,
+          59,
+          844,
+          1500
+        ],
+        "edge_clearance": 36,
+        "head_sha256": "f65e24a351bfbd7a51e8245ef6e8464d98d4de16ecd9e97ca32fc16760550937",
+        "file_sha256": "782d12b0b42a678d8c5cc54f5404938868e7206b9a802b8750212ba102cd9d95"
+      },
+      {
+        "file": "person.customer.07/frames/person.customer.07.walk.empty.07.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          229,
+          59,
+          894,
+          1466
+        ],
+        "edge_clearance": 59,
+        "head_sha256": "f65e24a351bfbd7a51e8245ef6e8464d98d4de16ecd9e97ca32fc16760550937",
+        "file_sha256": "c3efda685c19c73d55a143ae0d4f31bdd15b193e7517fc89745010a8d96f9a3c"
+      }
+    ]
+  },
+  {
+    "id": "person.customer.08",
+    "frame_count": 8,
+    "head_identical": true,
+    "unique_frames": 8,
+    "minimum_edge_clearance": 47,
+    "checks": [
+      {
+        "file": "person.customer.08/frames/person.customer.08.walk.empty.00.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          271,
+          75,
+          844,
+          1457
+        ],
+        "edge_clearance": 75,
+        "head_sha256": "863548e95af9aac537e711b7e6dfce5ac0660ee674a9c19b7400b22de56e96e9",
+        "file_sha256": "87102dcad9cc546b93cc10f9229dbb938a0d351082a8da80b5ed913d11a67db5"
+      },
+      {
+        "file": "person.customer.08/frames/person.customer.08.walk.empty.01.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          254,
+          75,
+          893,
+          1410
+        ],
+        "edge_clearance": 75,
+        "head_sha256": "863548e95af9aac537e711b7e6dfce5ac0660ee674a9c19b7400b22de56e96e9",
+        "file_sha256": "0ef6c10ced34140076f8885b18f746cd6e4ab1de91f9cfb7addba4cc69b829e0"
+      },
+      {
+        "file": "person.customer.08/frames/person.customer.08.walk.empty.02.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          268,
+          75,
+          846,
+          1453
+        ],
+        "edge_clearance": 75,
+        "head_sha256": "863548e95af9aac537e711b7e6dfce5ac0660ee674a9c19b7400b22de56e96e9",
+        "file_sha256": "f8309879b6d006e482ebc573fbd96096f9d014169fe2ab07e5a119178867a833"
+      },
+      {
+        "file": "person.customer.08/frames/person.customer.08.walk.empty.03.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          327,
+          75,
+          867,
+          1414
+        ],
+        "edge_clearance": 75,
+        "head_sha256": "863548e95af9aac537e711b7e6dfce5ac0660ee674a9c19b7400b22de56e96e9",
+        "file_sha256": "c9a3f5dd0ef0c5399ff0c4e78f85bce031ab7d129db51c7dc0fe2a6b78bef30b"
+      },
+      {
+        "file": "person.customer.08/frames/person.customer.08.walk.empty.04.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          147,
+          75,
+          937,
+          1439
+        ],
+        "edge_clearance": 75,
+        "head_sha256": "863548e95af9aac537e711b7e6dfce5ac0660ee674a9c19b7400b22de56e96e9",
+        "file_sha256": "6a57d3d42894352d937754c9c7a140942d89e5117b47d96bb3c2eec8854e7961"
+      },
+      {
+        "file": "person.customer.08/frames/person.customer.08.walk.empty.05.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          290,
+          75,
+          825,
+          1454
+        ],
+        "edge_clearance": 75,
+        "head_sha256": "863548e95af9aac537e711b7e6dfce5ac0660ee674a9c19b7400b22de56e96e9",
+        "file_sha256": "cc4650dc2cc7f1859869fb1214a5caf76fee9d622673ed27a4c696aeb9c94a05"
+      },
+      {
+        "file": "person.customer.08/frames/person.customer.08.walk.empty.06.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          269,
+          75,
+          850,
+          1489
+        ],
+        "edge_clearance": 47,
+        "head_sha256": "863548e95af9aac537e711b7e6dfce5ac0660ee674a9c19b7400b22de56e96e9",
+        "file_sha256": "19a22a5d06b004d7e48d5b60046c5a6689788a6f34f81e11b353af99b9ec9d1e"
+      },
+      {
+        "file": "person.customer.08/frames/person.customer.08.walk.empty.07.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          245,
+          75,
+          890,
+          1455
+        ],
+        "edge_clearance": 75,
+        "head_sha256": "863548e95af9aac537e711b7e6dfce5ac0660ee674a9c19b7400b22de56e96e9",
+        "file_sha256": "ceac6b1bf09f431eab426a5e5b0854221969bd75aa1ac6315e79796181e99bd2"
+      }
+    ]
+  },
+  {
+    "id": "person.customer.09",
+    "frame_count": 8,
+    "head_identical": true,
+    "unique_frames": 8,
+    "minimum_edge_clearance": 61,
+    "checks": [
+      {
+        "file": "person.customer.09/frames/person.customer.09.walk.empty.00.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          207,
+          62,
+          854,
+          1453
+        ],
+        "edge_clearance": 62,
+        "head_sha256": "55200c1cbad1e41097d3a88dbb601ea0126b5e021bce7905afc189855704c651",
+        "file_sha256": "e05f088e9d4c356a4f656359be959e3b4827f6ed87119a483b8ff485178fd071"
+      },
+      {
+        "file": "person.customer.09/frames/person.customer.09.walk.empty.01.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          205,
+          62,
+          878,
+          1425
+        ],
+        "edge_clearance": 62,
+        "head_sha256": "55200c1cbad1e41097d3a88dbb601ea0126b5e021bce7905afc189855704c651",
+        "file_sha256": "49996f4366fccdfd376608cc2d8d4c6ab034d317e6fd0ed41680b8275670a0b8"
+      },
+      {
+        "file": "person.customer.09/frames/person.customer.09.walk.empty.02.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          207,
+          62,
+          851,
+          1465
+        ],
+        "edge_clearance": 62,
+        "head_sha256": "55200c1cbad1e41097d3a88dbb601ea0126b5e021bce7905afc189855704c651",
+        "file_sha256": "c5cef2e04ea0801877a2369b5a2750b46acc177f819419a0c66dbb6c7a7a04fb"
+      },
+      {
+        "file": "person.customer.09/frames/person.customer.09.walk.empty.03.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          292,
+          62,
+          868,
+          1384
+        ],
+        "edge_clearance": 62,
+        "head_sha256": "55200c1cbad1e41097d3a88dbb601ea0126b5e021bce7905afc189855704c651",
+        "file_sha256": "c133238c136eceec7dc649f484d76a942534d8b00355c14b734e3d546dac52a4"
+      },
+      {
+        "file": "person.customer.09/frames/person.customer.09.walk.empty.04.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          124,
+          62,
+          926,
+          1425
+        ],
+        "edge_clearance": 62,
+        "head_sha256": "55200c1cbad1e41097d3a88dbb601ea0126b5e021bce7905afc189855704c651",
+        "file_sha256": "5fc7135c10dc81353b8f885a717c7cd4560b16b5893546c4b75c5bad0b86df51"
+      },
+      {
+        "file": "person.customer.09/frames/person.customer.09.walk.empty.05.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          225,
+          62,
+          828,
+          1475
+        ],
+        "edge_clearance": 61,
+        "head_sha256": "55200c1cbad1e41097d3a88dbb601ea0126b5e021bce7905afc189855704c651",
+        "file_sha256": "2f16cee1fa8da37a33fce619e525d4016d3d81c5e5274af45b65bbc409e5e0dc"
+      },
+      {
+        "file": "person.customer.09/frames/person.customer.09.walk.empty.06.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          222,
+          62,
+          842,
+          1461
+        ],
+        "edge_clearance": 62,
+        "head_sha256": "55200c1cbad1e41097d3a88dbb601ea0126b5e021bce7905afc189855704c651",
+        "file_sha256": "86c3b1abcc8708eef7010b3d5bdf43638e3817e7b43ef71138d9044f77a9f40d"
+      },
+      {
+        "file": "person.customer.09/frames/person.customer.09.walk.empty.07.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          173,
+          62,
+          908,
+          1454
+        ],
+        "edge_clearance": 62,
+        "head_sha256": "55200c1cbad1e41097d3a88dbb601ea0126b5e021bce7905afc189855704c651",
+        "file_sha256": "9a42cc99bcf258619bd0f547f11449c3e93580690b9f5a05795c67e1fb5c3fe2"
+      }
+    ]
+  },
+  {
+    "id": "person.customer.10",
+    "frame_count": 8,
+    "head_identical": true,
+    "unique_frames": 8,
+    "minimum_edge_clearance": 31,
+    "checks": [
+      {
+        "file": "person.customer.10/frames/person.customer.10.walk.empty.00.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          274,
+          88,
+          828,
+          1465
+        ],
+        "edge_clearance": 71,
+        "head_sha256": "62095c9f688f626e613b3ba01ce974e8eb3cdb26cbabf3f9e7b8383d046a29d7",
+        "file_sha256": "ba30d915ab67dc6f132a9024d0899a298ccd7ef78c97af48d9cac72933382b3c"
+      },
+      {
+        "file": "person.customer.10/frames/person.customer.10.walk.empty.01.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          274,
+          88,
+          879,
+          1433
+        ],
+        "edge_clearance": 88,
+        "head_sha256": "62095c9f688f626e613b3ba01ce974e8eb3cdb26cbabf3f9e7b8383d046a29d7",
+        "file_sha256": "5bcbcf1966dc5dc0750a5ed094f187208791c19cb83c9230cf2ae8e4ba26dabe"
+      },
+      {
+        "file": "person.customer.10/frames/person.customer.10.walk.empty.02.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          276,
+          88,
+          829,
+          1466
+        ],
+        "edge_clearance": 70,
+        "head_sha256": "62095c9f688f626e613b3ba01ce974e8eb3cdb26cbabf3f9e7b8383d046a29d7",
+        "file_sha256": "77186770efbece9dbd51c9ffc43d9dd7e735cf49962f2ad6ce82f694613f7cc6"
+      },
+      {
+        "file": "person.customer.10/frames/person.customer.10.walk.empty.03.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          335,
+          88,
+          880,
+          1423
+        ],
+        "edge_clearance": 88,
+        "head_sha256": "62095c9f688f626e613b3ba01ce974e8eb3cdb26cbabf3f9e7b8383d046a29d7",
+        "file_sha256": "b264ef1dc1bbe21a43f6d9bdc40c274cfc1489d54fc8ef4198723ceb9417a2e3"
+      },
+      {
+        "file": "person.customer.10/frames/person.customer.10.walk.empty.04.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          164,
+          88,
+          963,
+          1461
+        ],
+        "edge_clearance": 61,
+        "head_sha256": "62095c9f688f626e613b3ba01ce974e8eb3cdb26cbabf3f9e7b8383d046a29d7",
+        "file_sha256": "64ba269be23c8685490f7cbc6432034505070e481a11d60d3608f52ebca50e7b"
+      },
+      {
+        "file": "person.customer.10/frames/person.customer.10.walk.empty.05.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          261,
+          88,
+          830,
+          1446
+        ],
+        "edge_clearance": 88,
+        "head_sha256": "62095c9f688f626e613b3ba01ce974e8eb3cdb26cbabf3f9e7b8383d046a29d7",
+        "file_sha256": "bb688dfb43cedbc47d22ef226a31f56374a5b3bfc22ba757205c8ab97816674c"
+      },
+      {
+        "file": "person.customer.10/frames/person.customer.10.walk.empty.06.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          301,
+          88,
+          820,
+          1505
+        ],
+        "edge_clearance": 31,
+        "head_sha256": "62095c9f688f626e613b3ba01ce974e8eb3cdb26cbabf3f9e7b8383d046a29d7",
+        "file_sha256": "3e5a6d7e48833e6620bc42c213bf10817817a28c141f44dc0d5bc9f1c50935af"
+      },
+      {
+        "file": "person.customer.10/frames/person.customer.10.walk.empty.07.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          260,
+          88,
+          881,
+          1450
+        ],
+        "edge_clearance": 86,
+        "head_sha256": "62095c9f688f626e613b3ba01ce974e8eb3cdb26cbabf3f9e7b8383d046a29d7",
+        "file_sha256": "bb62d21147004638120f49bf4389990911301fcf1f4e08e91d32717fe13900ff"
+      }
+    ]
+  },
+  {
+    "id": "person.customer.11",
+    "frame_count": 8,
+    "head_identical": true,
+    "unique_frames": 8,
+    "minimum_edge_clearance": 58,
+    "checks": [
+      {
+        "file": "person.customer.11/frames/person.customer.11.walk.empty.00.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          255,
+          79,
+          804,
+          1454
+        ],
+        "edge_clearance": 79,
+        "head_sha256": "9fb593b5298f7b0872b36206ff8322f45951b19768e60355f9528ac95fd1e799",
+        "file_sha256": "40aabc580e9dc44ab6d9606928b77d0854dbf3242441d87ede29940ad6427ec0"
+      },
+      {
+        "file": "person.customer.11/frames/person.customer.11.walk.empty.01.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          242,
+          79,
+          882,
+          1392
+        ],
+        "edge_clearance": 79,
+        "head_sha256": "9fb593b5298f7b0872b36206ff8322f45951b19768e60355f9528ac95fd1e799",
+        "file_sha256": "57bf804819de764d8d304a056fc5c77c1bc989bbdc360f8b72df12884a53bb15"
+      },
+      {
+        "file": "person.customer.11/frames/person.customer.11.walk.empty.02.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          254,
+          79,
+          828,
+          1478
+        ],
+        "edge_clearance": 58,
+        "head_sha256": "9fb593b5298f7b0872b36206ff8322f45951b19768e60355f9528ac95fd1e799",
+        "file_sha256": "997e8a77ef7abf12bbcdc45723a847fe15e7025f739bf085faaa02f75d010f60"
+      },
+      {
+        "file": "person.customer.11/frames/person.customer.11.walk.empty.03.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          285,
+          79,
+          873,
+          1382
+        ],
+        "edge_clearance": 79,
+        "head_sha256": "9fb593b5298f7b0872b36206ff8322f45951b19768e60355f9528ac95fd1e799",
+        "file_sha256": "5b9cec3446152b577862dfb87015886366dcabb9f7ecce06c8a39077b348475f"
+      },
+      {
+        "file": "person.customer.11/frames/person.customer.11.walk.empty.04.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          135,
+          79,
+          927,
+          1445
+        ],
+        "edge_clearance": 79,
+        "head_sha256": "9fb593b5298f7b0872b36206ff8322f45951b19768e60355f9528ac95fd1e799",
+        "file_sha256": "850d5325f219fab0d2e4df90fc0ecc0c14127eae470751aa43b5b36802b9e1d4"
+      },
+      {
+        "file": "person.customer.11/frames/person.customer.11.walk.empty.05.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          247,
+          79,
+          819,
+          1404
+        ],
+        "edge_clearance": 79,
+        "head_sha256": "9fb593b5298f7b0872b36206ff8322f45951b19768e60355f9528ac95fd1e799",
+        "file_sha256": "d0e30317f5492b101ae38dd67a4dcb6729467346277f3276105e8313eba85119"
+      },
+      {
+        "file": "person.customer.11/frames/person.customer.11.walk.empty.06.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          262,
+          79,
+          817,
+          1450
+        ],
+        "edge_clearance": 79,
+        "head_sha256": "9fb593b5298f7b0872b36206ff8322f45951b19768e60355f9528ac95fd1e799",
+        "file_sha256": "6c493019a1c7373f1600e034ab8ed49d7e0c2ee0b7148feb3ff258ca0be115be"
+      },
+      {
+        "file": "person.customer.11/frames/person.customer.11.walk.empty.07.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          186,
+          79,
+          892,
+          1470
+        ],
+        "edge_clearance": 66,
+        "head_sha256": "9fb593b5298f7b0872b36206ff8322f45951b19768e60355f9528ac95fd1e799",
+        "file_sha256": "a04b1c63432716f457e06c118381d08cc75d03fc444232aafe9a55001d18415c"
+      }
+    ]
+  },
+  {
+    "id": "person.customer.12",
+    "frame_count": 8,
+    "head_identical": true,
+    "unique_frames": 8,
+    "minimum_edge_clearance": 9,
+    "checks": [
+      {
+        "file": "person.customer.12/frames/person.customer.12.walk.empty.00.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          236,
+          91,
+          823,
+          1464
+        ],
+        "edge_clearance": 72,
+        "head_sha256": "a380560b7af7d5dd2a8e6df21f5865d74782eebb64a1e0946d20d98a6f3d79b0",
+        "file_sha256": "8af8cd4f1c71f170557c5d2682aa61b1cc6faa2e3e127efa960ebca33eecd20d"
+      },
+      {
+        "file": "person.customer.12/frames/person.customer.12.walk.empty.01.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          213,
+          91,
+          905,
+          1496
+        ],
+        "edge_clearance": 40,
+        "head_sha256": "a380560b7af7d5dd2a8e6df21f5865d74782eebb64a1e0946d20d98a6f3d79b0",
+        "file_sha256": "27a7f8caf44c994c5c2982aa85bae2bb7b5dee45a4c1178db26d752401e9edf5"
+      },
+      {
+        "file": "person.customer.12/frames/person.customer.12.walk.empty.02.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          230,
+          91,
+          837,
+          1527
+        ],
+        "edge_clearance": 9,
+        "head_sha256": "a380560b7af7d5dd2a8e6df21f5865d74782eebb64a1e0946d20d98a6f3d79b0",
+        "file_sha256": "5a7f154f2c61fe7ca8f6a3a387c2e6feb34bc02f2eb60a0e023c7ccab672b3d1"
+      },
+      {
+        "file": "person.customer.12/frames/person.customer.12.walk.empty.03.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          208,
+          91,
+          856,
+          1395
+        ],
+        "edge_clearance": 91,
+        "head_sha256": "a380560b7af7d5dd2a8e6df21f5865d74782eebb64a1e0946d20d98a6f3d79b0",
+        "file_sha256": "2f3caaddadffbc30ed506140307be79ab65b989160b0c88403dad1432bdd1798"
+      },
+      {
+        "file": "person.customer.12/frames/person.customer.12.walk.empty.04.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          198,
+          91,
+          901,
+          1429
+        ],
+        "edge_clearance": 91,
+        "head_sha256": "a380560b7af7d5dd2a8e6df21f5865d74782eebb64a1e0946d20d98a6f3d79b0",
+        "file_sha256": "718bf134fb838479f19f449405841ea0a5e29034f98925d0be1bd5e5b251ee0f"
+      },
+      {
+        "file": "person.customer.12/frames/person.customer.12.walk.empty.05.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          227,
+          91,
+          807,
+          1405
+        ],
+        "edge_clearance": 91,
+        "head_sha256": "a380560b7af7d5dd2a8e6df21f5865d74782eebb64a1e0946d20d98a6f3d79b0",
+        "file_sha256": "aab677acee3ecfa4695e649701663e4a853ac3ae4aaefda790d9a1ef6f64e943"
+      },
+      {
+        "file": "person.customer.12/frames/person.customer.12.walk.empty.06.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          232,
+          91,
+          834,
+          1509
+        ],
+        "edge_clearance": 27,
+        "head_sha256": "a380560b7af7d5dd2a8e6df21f5865d74782eebb64a1e0946d20d98a6f3d79b0",
+        "file_sha256": "5c810b4c9609515c57e24a242d74e2bb7460c3e6ec1b9d5983b3dffe209b15d7"
+      },
+      {
+        "file": "person.customer.12/frames/person.customer.12.walk.empty.07.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          203,
+          91,
+          901,
+          1434
+        ],
+        "edge_clearance": 91,
+        "head_sha256": "a380560b7af7d5dd2a8e6df21f5865d74782eebb64a1e0946d20d98a6f3d79b0",
+        "file_sha256": "33123510be1103fa7cac17bb4c1ee1c212af686a24c2f4ac03dc61c50a5da4de"
+      }
+    ]
+  },
+  {
+    "id": "person.customer.13",
+    "frame_count": 8,
+    "head_identical": true,
+    "unique_frames": 8,
+    "minimum_edge_clearance": 34,
+    "checks": [
+      {
+        "file": "person.customer.13/frames/person.customer.13.walk.empty.00.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          236,
+          77,
+          841,
+          1475
+        ],
+        "edge_clearance": 61,
+        "head_sha256": "4e34ea1ca7686e72f0f9e17c4e8e616390c490ae4b0cad7037ab840d33715d10",
+        "file_sha256": "998999f4e21f1594ca68917bf53029130904041911a58c840e3e74e5a00ab87e"
+      },
+      {
+        "file": "person.customer.13/frames/person.customer.13.walk.empty.01.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          227,
+          77,
+          889,
+          1409
+        ],
+        "edge_clearance": 77,
+        "head_sha256": "4e34ea1ca7686e72f0f9e17c4e8e616390c490ae4b0cad7037ab840d33715d10",
+        "file_sha256": "a0c17fe45f7faff1575029eb484bdf4cd4a876ecd7bd954f5eba87fbd593db6c"
+      },
+      {
+        "file": "person.customer.13/frames/person.customer.13.walk.empty.02.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          241,
+          77,
+          833,
+          1455
+        ],
+        "edge_clearance": 77,
+        "head_sha256": "4e34ea1ca7686e72f0f9e17c4e8e616390c490ae4b0cad7037ab840d33715d10",
+        "file_sha256": "2ea1785467bef42c866b19f95c34ec7686f8c74626bcf1b1c214877be155c5b4"
+      },
+      {
+        "file": "person.customer.13/frames/person.customer.13.walk.empty.03.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          299,
+          77,
+          871,
+          1399
+        ],
+        "edge_clearance": 77,
+        "head_sha256": "4e34ea1ca7686e72f0f9e17c4e8e616390c490ae4b0cad7037ab840d33715d10",
+        "file_sha256": "d5300ba5db7c95309f95b443be160f61be8f510a8bed8509d0c4c1e76be38a4c"
+      },
+      {
+        "file": "person.customer.13/frames/person.customer.13.walk.empty.04.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          113,
+          77,
+          941,
+          1447
+        ],
+        "edge_clearance": 77,
+        "head_sha256": "4e34ea1ca7686e72f0f9e17c4e8e616390c490ae4b0cad7037ab840d33715d10",
+        "file_sha256": "dcaa1cd73065ef5b5ed1cfba5be0a773f4749995004a6b5a9f3f48e5c182ca29"
+      },
+      {
+        "file": "person.customer.13/frames/person.customer.13.walk.empty.05.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          266,
+          77,
+          840,
+          1453
+        ],
+        "edge_clearance": 77,
+        "head_sha256": "4e34ea1ca7686e72f0f9e17c4e8e616390c490ae4b0cad7037ab840d33715d10",
+        "file_sha256": "c3680573b519df6718a29ebe6d35abcdd6f54e5de9b946b5b972ef5a09099022"
+      },
+      {
+        "file": "person.customer.13/frames/person.customer.13.walk.empty.06.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          246,
+          77,
+          846,
+          1501
+        ],
+        "edge_clearance": 35,
+        "head_sha256": "4e34ea1ca7686e72f0f9e17c4e8e616390c490ae4b0cad7037ab840d33715d10",
+        "file_sha256": "4e73d8d13a470e8fb224d81355947f7cd1ca548c59c038287c9c4e6ca9e9f66c"
+      },
+      {
+        "file": "person.customer.13/frames/person.customer.13.walk.empty.07.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          185,
+          77,
+          896,
+          1502
+        ],
+        "edge_clearance": 34,
+        "head_sha256": "4e34ea1ca7686e72f0f9e17c4e8e616390c490ae4b0cad7037ab840d33715d10",
+        "file_sha256": "0cd062d019d4d857938c07804cded8391ac8334469cebea9fd52c9d151dd659d"
+      }
+    ]
+  },
+  {
+    "id": "person.walker.01",
+    "frame_count": 8,
+    "head_identical": true,
+    "unique_frames": 8,
+    "minimum_edge_clearance": 45,
+    "checks": [
+      {
+        "file": "person.walker.01/frames/person.walker.01.walk.empty.00.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          261,
+          80,
+          823,
+          1448
+        ],
+        "edge_clearance": 80,
+        "head_sha256": "c6a6fffd136afaa798c42b3a7533c8f4fcd789cba2c92a31eb464944b8f056e6",
+        "file_sha256": "0fdcf105dd3a26229bdef2b1da82c958d98eaee9c81f778b989a7cbfb03e463d"
+      },
+      {
+        "file": "person.walker.01/frames/person.walker.01.walk.empty.01.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          238,
+          80,
+          879,
+          1416
+        ],
+        "edge_clearance": 80,
+        "head_sha256": "c6a6fffd136afaa798c42b3a7533c8f4fcd789cba2c92a31eb464944b8f056e6",
+        "file_sha256": "dbfcf2da68563874b583b8ab5cd681be900c90976e77487b14a724cd67780e95"
+      },
+      {
+        "file": "person.walker.01/frames/person.walker.01.walk.empty.02.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          257,
+          80,
+          824,
+          1491
+        ],
+        "edge_clearance": 45,
+        "head_sha256": "c6a6fffd136afaa798c42b3a7533c8f4fcd789cba2c92a31eb464944b8f056e6",
+        "file_sha256": "32370bc4bd32dbd292a9f547fc181f5e5401163f8a76b3cab3ff2b8cfec2ca9d"
+      },
+      {
+        "file": "person.walker.01/frames/person.walker.01.walk.empty.03.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          290,
+          80,
+          869,
+          1420
+        ],
+        "edge_clearance": 80,
+        "head_sha256": "c6a6fffd136afaa798c42b3a7533c8f4fcd789cba2c92a31eb464944b8f056e6",
+        "file_sha256": "82150aaf57e754db19da993743b2d423f0fd85b6fa696e7c5cc04c2a5f2a900f"
+      },
+      {
+        "file": "person.walker.01/frames/person.walker.01.walk.empty.04.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          132,
+          80,
+          948,
+          1456
+        ],
+        "edge_clearance": 76,
+        "head_sha256": "c6a6fffd136afaa798c42b3a7533c8f4fcd789cba2c92a31eb464944b8f056e6",
+        "file_sha256": "a4e2415aab02bd57fdb1907a88a84557b551423398e3fbfd9018c6fe81dc75e3"
+      },
+      {
+        "file": "person.walker.01/frames/person.walker.01.walk.empty.05.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          254,
+          80,
+          833,
+          1442
+        ],
+        "edge_clearance": 80,
+        "head_sha256": "c6a6fffd136afaa798c42b3a7533c8f4fcd789cba2c92a31eb464944b8f056e6",
+        "file_sha256": "473e3c238780108e03a044fdb6754510ca5c6807c0eb5ee5a5ee881a2f806d09"
+      },
+      {
+        "file": "person.walker.01/frames/person.walker.01.walk.empty.06.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          262,
+          80,
+          837,
+          1476
+        ],
+        "edge_clearance": 60,
+        "head_sha256": "c6a6fffd136afaa798c42b3a7533c8f4fcd789cba2c92a31eb464944b8f056e6",
+        "file_sha256": "3f736fa30abe63fe9e7722422404d88c68362d3ded25bae554c43ab210cd574b"
+      },
+      {
+        "file": "person.walker.01/frames/person.walker.01.walk.empty.07.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          197,
+          80,
+          873,
+          1452
+        ],
+        "edge_clearance": 80,
+        "head_sha256": "c6a6fffd136afaa798c42b3a7533c8f4fcd789cba2c92a31eb464944b8f056e6",
+        "file_sha256": "63feec5faf2ec706cd5e19a049cef7697e9eaaed3ba4fa3f3cb5cdae2333a0cc"
+      }
+    ]
+  },
+  {
+    "id": "person.walker.02",
+    "frame_count": 8,
+    "head_identical": true,
+    "unique_frames": 8,
+    "minimum_edge_clearance": 34,
+    "checks": [
+      {
+        "file": "person.walker.02/frames/person.walker.02.walk.empty.00.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          209,
+          83,
+          840,
+          1465
+        ],
+        "edge_clearance": 71,
+        "head_sha256": "51bc48e17407f9e41c91c8cf60f4070485ce5e535ddae43b87d46acd200d76aa",
+        "file_sha256": "5219cdc39de3c7e22b3b61f80b2d3a5c9930f89fa436dc00330fb918f3acd999"
+      },
+      {
+        "file": "person.walker.02/frames/person.walker.02.walk.empty.01.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          204,
+          83,
+          886,
+          1418
+        ],
+        "edge_clearance": 83,
+        "head_sha256": "51bc48e17407f9e41c91c8cf60f4070485ce5e535ddae43b87d46acd200d76aa",
+        "file_sha256": "149c95180b32053663617c98ad81b07475b7680a87148158c24aee454efe17c1"
+      },
+      {
+        "file": "person.walker.02/frames/person.walker.02.walk.empty.02.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          203,
+          83,
+          846,
+          1486
+        ],
+        "edge_clearance": 50,
+        "head_sha256": "51bc48e17407f9e41c91c8cf60f4070485ce5e535ddae43b87d46acd200d76aa",
+        "file_sha256": "e57aa273f26246ee93f9b4962721ff8d09aa44ba8652ace4428cbcfbb415a44f"
+      },
+      {
+        "file": "person.walker.02/frames/person.walker.02.walk.empty.03.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          262,
+          83,
+          863,
+          1450
+        ],
+        "edge_clearance": 83,
+        "head_sha256": "51bc48e17407f9e41c91c8cf60f4070485ce5e535ddae43b87d46acd200d76aa",
+        "file_sha256": "f47dc9b4217b50e0a5e2798eb4127a5ac21e573af571e78d93f0b7c2259ade43"
+      },
+      {
+        "file": "person.walker.02/frames/person.walker.02.walk.empty.04.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          116,
+          83,
+          885,
+          1473
+        ],
+        "edge_clearance": 63,
+        "head_sha256": "51bc48e17407f9e41c91c8cf60f4070485ce5e535ddae43b87d46acd200d76aa",
+        "file_sha256": "5101c4caf752d09f321c4927c174d971bb8675bb8d2d3134451293882f6a6c41"
+      },
+      {
+        "file": "person.walker.02/frames/person.walker.02.walk.empty.05.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          240,
+          83,
+          823,
+          1431
+        ],
+        "edge_clearance": 83,
+        "head_sha256": "51bc48e17407f9e41c91c8cf60f4070485ce5e535ddae43b87d46acd200d76aa",
+        "file_sha256": "413c709702b92ef8a644d491c52ad8e6d14a388990915cef4486e786110407ba"
+      },
+      {
+        "file": "person.walker.02/frames/person.walker.02.walk.empty.06.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          210,
+          83,
+          837,
+          1502
+        ],
+        "edge_clearance": 34,
+        "head_sha256": "51bc48e17407f9e41c91c8cf60f4070485ce5e535ddae43b87d46acd200d76aa",
+        "file_sha256": "4a856f8d5763608d2d8f1baa1ad3b77d10bd6e16cba3dccbec874b3db0ff096d"
+      },
+      {
+        "file": "person.walker.02/frames/person.walker.02.walk.empty.07.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          147,
+          83,
+          896,
+          1464
+        ],
+        "edge_clearance": 72,
+        "head_sha256": "51bc48e17407f9e41c91c8cf60f4070485ce5e535ddae43b87d46acd200d76aa",
+        "file_sha256": "b21cd7b65cc54c25b37d3af6f585882dcbecf74e03ef118c2c0631d4e1c2ca1b"
+      }
+    ]
+  },
+  {
+    "id": "person.walker.03",
+    "frame_count": 8,
+    "head_identical": true,
+    "unique_frames": 8,
+    "minimum_edge_clearance": 35,
+    "checks": [
+      {
+        "file": "person.walker.03/frames/person.walker.03.walk.empty.00.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          224,
+          73,
+          818,
+          1446
+        ],
+        "edge_clearance": 73,
+        "head_sha256": "50948bcccca39653e6be641f7662049b2cee14e2646946d9c465c6b7e0060124",
+        "file_sha256": "06192fd3b4812984777f8b789b3274c0a0cad883e4db116ea5fd1af98402707d"
+      },
+      {
+        "file": "person.walker.03/frames/person.walker.03.walk.empty.01.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          213,
+          73,
+          860,
+          1424
+        ],
+        "edge_clearance": 73,
+        "head_sha256": "50948bcccca39653e6be641f7662049b2cee14e2646946d9c465c6b7e0060124",
+        "file_sha256": "fc35da64de8d5face4e1ff1c2c74b3e973a189a3a27a0a86d3a6ad966d796ce3"
+      },
+      {
+        "file": "person.walker.03/frames/person.walker.03.walk.empty.02.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          223,
+          73,
+          823,
+          1450
+        ],
+        "edge_clearance": 73,
+        "head_sha256": "50948bcccca39653e6be641f7662049b2cee14e2646946d9c465c6b7e0060124",
+        "file_sha256": "266af4ab3074d63416e3b09c6b29b2909791b37c9c23ded8162f4d4c2f57a5d1"
+      },
+      {
+        "file": "person.walker.03/frames/person.walker.03.walk.empty.03.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          262,
+          73,
+          933,
+          1485
+        ],
+        "edge_clearance": 51,
+        "head_sha256": "50948bcccca39653e6be641f7662049b2cee14e2646946d9c465c6b7e0060124",
+        "file_sha256": "c5ec3941d14425438b22ae7b66d09ce84e81626e278cdf1628711758d3c67f13"
+      },
+      {
+        "file": "person.walker.03/frames/person.walker.03.walk.empty.04.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          82,
+          73,
+          989,
+          1474
+        ],
+        "edge_clearance": 35,
+        "head_sha256": "50948bcccca39653e6be641f7662049b2cee14e2646946d9c465c6b7e0060124",
+        "file_sha256": "e1ba7b81faa2f4209f59c5bb2196083854c4ebe098f88740cbcb8569c0af149d"
+      },
+      {
+        "file": "person.walker.03/frames/person.walker.03.walk.empty.05.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          234,
+          73,
+          826,
+          1459
+        ],
+        "edge_clearance": 73,
+        "head_sha256": "50948bcccca39653e6be641f7662049b2cee14e2646946d9c465c6b7e0060124",
+        "file_sha256": "0f1e958cda766a4651551fe48e7fc31d32c65c8ebbcd160233d6e34c44dc96d9"
+      },
+      {
+        "file": "person.walker.03/frames/person.walker.03.walk.empty.06.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          224,
+          73,
+          811,
+          1491
+        ],
+        "edge_clearance": 45,
+        "head_sha256": "50948bcccca39653e6be641f7662049b2cee14e2646946d9c465c6b7e0060124",
+        "file_sha256": "81a308613bd236e54e14a0c5b570fd1673fbfac4ff60e63370653394c61335dd"
+      },
+      {
+        "file": "person.walker.03/frames/person.walker.03.walk.empty.07.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          170,
+          73,
+          893,
+          1478
+        ],
+        "edge_clearance": 58,
+        "head_sha256": "50948bcccca39653e6be641f7662049b2cee14e2646946d9c465c6b7e0060124",
+        "file_sha256": "8b9aee58da199e1b6d95e26b185ce8b5ae1103f4f9f0944e82090127511aad9f"
+      }
+    ]
+  },
+  {
+    "id": "person.walker.04",
+    "frame_count": 8,
+    "head_identical": true,
+    "unique_frames": 8,
+    "minimum_edge_clearance": 54,
+    "checks": [
+      {
+        "file": "person.walker.04/frames/person.walker.04.walk.empty.00.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          242,
+          64,
+          845,
+          1453
+        ],
+        "edge_clearance": 64,
+        "head_sha256": "bb1ee392a32379e21e6129302ec46287e04cf7d46a9ddfb6b28d5bcedfc797e8",
+        "file_sha256": "3dfbb0d77466afc27476f5e125146e7e71c128bdb81809710142962d30313f81"
+      },
+      {
+        "file": "person.walker.04/frames/person.walker.04.walk.empty.01.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          230,
+          64,
+          868,
+          1379
+        ],
+        "edge_clearance": 64,
+        "head_sha256": "bb1ee392a32379e21e6129302ec46287e04cf7d46a9ddfb6b28d5bcedfc797e8",
+        "file_sha256": "33d37a679325268a51fdcd782a9799e0110c385e94848597ea0e8a3d261e5afb"
+      },
+      {
+        "file": "person.walker.04/frames/person.walker.04.walk.empty.02.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          246,
+          64,
+          841,
+          1456
+        ],
+        "edge_clearance": 64,
+        "head_sha256": "bb1ee392a32379e21e6129302ec46287e04cf7d46a9ddfb6b28d5bcedfc797e8",
+        "file_sha256": "311f36312910b9c83c664140d2ea1869481d2fe2665205747b7bc701834e0640"
+      },
+      {
+        "file": "person.walker.04/frames/person.walker.04.walk.empty.03.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          285,
+          64,
+          854,
+          1436
+        ],
+        "edge_clearance": 64,
+        "head_sha256": "bb1ee392a32379e21e6129302ec46287e04cf7d46a9ddfb6b28d5bcedfc797e8",
+        "file_sha256": "78904a6a9a1353b078ca867bcf38c04e1584164430019f9e31925653f6b8eb3d"
+      },
+      {
+        "file": "person.walker.04/frames/person.walker.04.walk.empty.04.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          214,
+          64,
+          897,
+          1474
+        ],
+        "edge_clearance": 62,
+        "head_sha256": "bb1ee392a32379e21e6129302ec46287e04cf7d46a9ddfb6b28d5bcedfc797e8",
+        "file_sha256": "70d9d5436d7ce29eed07e04dcab057688a4cdc77c3e1b5fff128c55c711f2582"
+      },
+      {
+        "file": "person.walker.04/frames/person.walker.04.walk.empty.05.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          294,
+          64,
+          821,
+          1422
+        ],
+        "edge_clearance": 64,
+        "head_sha256": "bb1ee392a32379e21e6129302ec46287e04cf7d46a9ddfb6b28d5bcedfc797e8",
+        "file_sha256": "daadf708998da86fc9f4c5cb7ad5cc376e28e483072bcc8ec332f73ef2edb68c"
+      },
+      {
+        "file": "person.walker.04/frames/person.walker.04.walk.empty.06.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          264,
+          64,
+          838,
+          1482
+        ],
+        "edge_clearance": 54,
+        "head_sha256": "bb1ee392a32379e21e6129302ec46287e04cf7d46a9ddfb6b28d5bcedfc797e8",
+        "file_sha256": "ed82c4a27886ca6beab0bcbd4e4c09c2b39eced34e7948ba05769dd746b32629"
+      },
+      {
+        "file": "person.walker.04/frames/person.walker.04.walk.empty.07.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          213,
+          64,
+          886,
+          1418
+        ],
+        "edge_clearance": 64,
+        "head_sha256": "bb1ee392a32379e21e6129302ec46287e04cf7d46a9ddfb6b28d5bcedfc797e8",
+        "file_sha256": "2941c5c049a1cc87976a063e8e3556e3376f27fa40917ab7dd1d134053483a5a"
+      }
+    ]
+  },
+  {
+    "id": "person.walker.05",
+    "frame_count": 8,
+    "head_identical": true,
+    "unique_frames": 8,
+    "minimum_edge_clearance": 22,
+    "checks": [
+      {
+        "file": "person.walker.05/frames/person.walker.05.walk.empty.00.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          324,
+          71,
+          868,
+          1448
+        ],
+        "edge_clearance": 71,
+        "head_sha256": "0f93cc4fc98c69d3dd223d2620dbec589ee2d5321ff05e7c7efd177398d2a9ba",
+        "file_sha256": "cea99f8fd9bf9a02d7e48199af54e750cf45d532e3ef5510492f8c38e40ab038"
+      },
+      {
+        "file": "person.walker.05/frames/person.walker.05.walk.empty.01.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          300,
+          71,
+          905,
+          1380
+        ],
+        "edge_clearance": 71,
+        "head_sha256": "0f93cc4fc98c69d3dd223d2620dbec589ee2d5321ff05e7c7efd177398d2a9ba",
+        "file_sha256": "561d89c84d18a46c5f1aee683ea53e89f340c622f4c69109761cd72d80a414d4"
+      },
+      {
+        "file": "person.walker.05/frames/person.walker.05.walk.empty.02.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          327,
+          71,
+          869,
+          1399
+        ],
+        "edge_clearance": 71,
+        "head_sha256": "0f93cc4fc98c69d3dd223d2620dbec589ee2d5321ff05e7c7efd177398d2a9ba",
+        "file_sha256": "c259cad9f9b92b19806f144a3f80bd18ec75bad5c3783affb217621a7c32f45f"
+      },
+      {
+        "file": "person.walker.05/frames/person.walker.05.walk.empty.03.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          341,
+          71,
+          924,
+          1410
+        ],
+        "edge_clearance": 71,
+        "head_sha256": "0f93cc4fc98c69d3dd223d2620dbec589ee2d5321ff05e7c7efd177398d2a9ba",
+        "file_sha256": "f5d6a40ef55b9e498a9bcb4207a355aed6dd7f66fbb2dd806af24f4c6649b9f3"
+      },
+      {
+        "file": "person.walker.05/frames/person.walker.05.walk.empty.04.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          210,
+          71,
+          1002,
+          1405
+        ],
+        "edge_clearance": 22,
+        "head_sha256": "0f93cc4fc98c69d3dd223d2620dbec589ee2d5321ff05e7c7efd177398d2a9ba",
+        "file_sha256": "a1008cf90e9b80d0dea26ef39afb2e2a52f49c184397a9434ddc5cbc0551eaef"
+      },
+      {
+        "file": "person.walker.05/frames/person.walker.05.walk.empty.05.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          315,
+          71,
+          869,
+          1422
+        ],
+        "edge_clearance": 71,
+        "head_sha256": "0f93cc4fc98c69d3dd223d2620dbec589ee2d5321ff05e7c7efd177398d2a9ba",
+        "file_sha256": "1b1d059dca1358245fa7587527fb3d11696fae1766d5c8f6b06fe5a45ab0c038"
+      },
+      {
+        "file": "person.walker.05/frames/person.walker.05.walk.empty.06.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          319,
+          71,
+          881,
+          1472
+        ],
+        "edge_clearance": 64,
+        "head_sha256": "0f93cc4fc98c69d3dd223d2620dbec589ee2d5321ff05e7c7efd177398d2a9ba",
+        "file_sha256": "889e32b71d6b53bbcd8a475b14d309b70a2bdcd0d78b4d7e5bd883b8a559fad1"
+      },
+      {
+        "file": "person.walker.05/frames/person.walker.05.walk.empty.07.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          284,
+          71,
+          905,
+          1446
+        ],
+        "edge_clearance": 71,
+        "head_sha256": "0f93cc4fc98c69d3dd223d2620dbec589ee2d5321ff05e7c7efd177398d2a9ba",
+        "file_sha256": "331bdc3e3d23901199367d55a5fab0f20925424a098c6a49fa9f45f2ba022457"
+      }
+    ]
+  },
+  {
+    "id": "person.walker.06",
+    "frame_count": 8,
+    "head_identical": true,
+    "unique_frames": 8,
+    "minimum_edge_clearance": 77,
+    "checks": [
+      {
+        "file": "person.walker.06/frames/person.walker.06.walk.empty.00.back-right.png",
+        "size": [
+          1280,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          388,
+          101,
+          1142,
+          1417
+        ],
+        "edge_clearance": 101,
+        "head_sha256": "9df314df1837b91cce5632672c85e161f2d2c0eae41c346b254585c955a4c5ee",
+        "file_sha256": "7ca65e301b27d4e174dea8c0fdb8ffb95ec0f380518f2f13d1143e88384ee227"
+      },
+      {
+        "file": "person.walker.06/frames/person.walker.06.walk.empty.01.back-right.png",
+        "size": [
+          1280,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          371,
+          101,
+          1147,
+          1385
+        ],
+        "edge_clearance": 101,
+        "head_sha256": "9df314df1837b91cce5632672c85e161f2d2c0eae41c346b254585c955a4c5ee",
+        "file_sha256": "da9a2fab0bd965d381ed1aa3c394c3eddec760a85b7990513f563c3f1c4bd942"
+      },
+      {
+        "file": "person.walker.06/frames/person.walker.06.walk.empty.02.back-right.png",
+        "size": [
+          1280,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          386,
+          101,
+          1142,
+          1383
+        ],
+        "edge_clearance": 101,
+        "head_sha256": "9df314df1837b91cce5632672c85e161f2d2c0eae41c346b254585c955a4c5ee",
+        "file_sha256": "a4609afe3087f44c9769a4b9bbd0a0e364a3565322c25facab634a0a4279d7cb"
+      },
+      {
+        "file": "person.walker.06/frames/person.walker.06.walk.empty.03.back-right.png",
+        "size": [
+          1280,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          403,
+          101,
+          1165,
+          1388
+        ],
+        "edge_clearance": 101,
+        "head_sha256": "9df314df1837b91cce5632672c85e161f2d2c0eae41c346b254585c955a4c5ee",
+        "file_sha256": "f22d708c8a7d35a85b796549503eaf0b92bfe2361c86097e851f2f64d93f74f6"
+      },
+      {
+        "file": "person.walker.06/frames/person.walker.06.walk.empty.04.back-right.png",
+        "size": [
+          1280,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          311,
+          101,
+          1160,
+          1414
+        ],
+        "edge_clearance": 101,
+        "head_sha256": "9df314df1837b91cce5632672c85e161f2d2c0eae41c346b254585c955a4c5ee",
+        "file_sha256": "c5b0db82b508bdc3c290e3e77eae98b267353ff21fcd2972db87c9bfe37a92ae"
+      },
+      {
+        "file": "person.walker.06/frames/person.walker.06.walk.empty.05.back-right.png",
+        "size": [
+          1280,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          381,
+          101,
+          1161,
+          1397
+        ],
+        "edge_clearance": 101,
+        "head_sha256": "9df314df1837b91cce5632672c85e161f2d2c0eae41c346b254585c955a4c5ee",
+        "file_sha256": "ea540d05de27df7df7503a61bc0272406bf7639772a7958cbee0d3993d931f92"
+      },
+      {
+        "file": "person.walker.06/frames/person.walker.06.walk.empty.06.back-right.png",
+        "size": [
+          1280,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          384,
+          101,
+          1147,
+          1459
+        ],
+        "edge_clearance": 77,
+        "head_sha256": "9df314df1837b91cce5632672c85e161f2d2c0eae41c346b254585c955a4c5ee",
+        "file_sha256": "205cbd44ab3db2a67ff94e52d4db8bfc909d69abf8fdb0a31e6b291203136df6"
+      },
+      {
+        "file": "person.walker.06/frames/person.walker.06.walk.empty.07.back-right.png",
+        "size": [
+          1280,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          353,
+          101,
+          1160,
+          1428
+        ],
+        "edge_clearance": 101,
+        "head_sha256": "9df314df1837b91cce5632672c85e161f2d2c0eae41c346b254585c955a4c5ee",
+        "file_sha256": "4cc0cbe10f6ccc5155d673af230ffac0be2befa184a69f93948383183be814ad"
+      }
+    ]
+  },
+  {
+    "id": "person.walker.07",
+    "frame_count": 8,
+    "head_identical": true,
+    "unique_frames": 8,
+    "minimum_edge_clearance": 46,
+    "checks": [
+      {
+        "file": "person.walker.07/frames/person.walker.07.walk.empty.00.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          221,
+          70,
+          839,
+          1442
+        ],
+        "edge_clearance": 70,
+        "head_sha256": "707cf36aaa864d3b3908159d37ff849f5e46081a1ca7cce4eef32511d463868f",
+        "file_sha256": "fbcd7a52f6ef620eddd08c999375b77e5acd85ac16f4bddf60922f2089f7e8d3"
+      },
+      {
+        "file": "person.walker.07/frames/person.walker.07.walk.empty.01.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          220,
+          70,
+          842,
+          1379
+        ],
+        "edge_clearance": 70,
+        "head_sha256": "707cf36aaa864d3b3908159d37ff849f5e46081a1ca7cce4eef32511d463868f",
+        "file_sha256": "4f063ba4735d67a175df09d82f48a0d8746e36cefa08ebe305194badde642f94"
+      },
+      {
+        "file": "person.walker.07/frames/person.walker.07.walk.empty.02.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          217,
+          70,
+          844,
+          1381
+        ],
+        "edge_clearance": 70,
+        "head_sha256": "707cf36aaa864d3b3908159d37ff849f5e46081a1ca7cce4eef32511d463868f",
+        "file_sha256": "434a59cd3cdc05adadc8ec0c50c4357c6b576a0b16ff1f3983ef8054cdf19d98"
+      },
+      {
+        "file": "person.walker.07/frames/person.walker.07.walk.empty.03.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          284,
+          70,
+          835,
+          1424
+        ],
+        "edge_clearance": 70,
+        "head_sha256": "707cf36aaa864d3b3908159d37ff849f5e46081a1ca7cce4eef32511d463868f",
+        "file_sha256": "60a5725c2877e562dcf9b9ff972b341ef9d3f732cb8c25bec8a043fb1ca75324"
+      },
+      {
+        "file": "person.walker.07/frames/person.walker.07.walk.empty.04.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          189,
+          70,
+          868,
+          1461
+        ],
+        "edge_clearance": 70,
+        "head_sha256": "707cf36aaa864d3b3908159d37ff849f5e46081a1ca7cce4eef32511d463868f",
+        "file_sha256": "af8f18276b22f01f1c72ba46beb50cc9cf88372415b2c889fafc430cd284e440"
+      },
+      {
+        "file": "person.walker.07/frames/person.walker.07.walk.empty.05.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          224,
+          70,
+          837,
+          1446
+        ],
+        "edge_clearance": 70,
+        "head_sha256": "707cf36aaa864d3b3908159d37ff849f5e46081a1ca7cce4eef32511d463868f",
+        "file_sha256": "f2d5aa8066fc8b7eeaa02dd4530cd1b3e7d95f9f5bd86dcafb78a1eafc797e65"
+      },
+      {
+        "file": "person.walker.07/frames/person.walker.07.walk.empty.06.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          269,
+          70,
+          842,
+          1490
+        ],
+        "edge_clearance": 46,
+        "head_sha256": "707cf36aaa864d3b3908159d37ff849f5e46081a1ca7cce4eef32511d463868f",
+        "file_sha256": "b0323da154d36bf01229cdbf86c9ff15a4f19aef23cf35cf2a797aaffd908bed"
+      },
+      {
+        "file": "person.walker.07/frames/person.walker.07.walk.empty.07.back-right.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_bbox_alpha_gt_32": [
+          224,
+          70,
+          838,
+          1435
+        ],
+        "edge_clearance": 70,
+        "head_sha256": "707cf36aaa864d3b3908159d37ff849f5e46081a1ca7cce4eef32511d463868f",
+        "file_sha256": "eaa35ced6832e472cd24edd350f6e35239d4e3bf87815509dd275a6b7e6bf841"
+      }
+    ]
+  }
+]

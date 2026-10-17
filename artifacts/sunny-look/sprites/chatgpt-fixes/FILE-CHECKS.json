@@ -1,0 +1,102 @@
+[
+  {
+    "name": "shell.lounge.door.open.png",
+    "size": [
+      907,
+      1733
+    ],
+    "mode": "RGBA",
+    "alpha_range": [
+      0,
+      255
+    ],
+    "transparent_pixels": 847486,
+    "opaque_pixels": 1208,
+    "bbox": [
+      33,
+      30,
+      869,
+      1677
+    ]
+  },
+  {
+    "name": "station.pickup.tier3.png",
+    "size": [
+      1295,
+      1214
+    ],
+    "mode": "RGBA",
+    "alpha_range": [
+      0,
+      255
+    ],
+    "transparent_pixels": 875678,
+    "opaque_pixels": 1915,
+    "bbox": [
+      70,
+      14,
+      1292,
+      1201
+    ]
+  },
+  {
+    "name": "station.pack.tier3.png",
+    "size": [
+      1383,
+      1137
+    ],
+    "mode": "RGBA",
+    "alpha_range": [
+      0,
+      255
+    ],
+    "transparent_pixels": 839224,
+    "opaque_pixels": 587,
+    "bbox": [
+      0,
+      23,
+      1345,
+      1091
+    ]
+  },
+  {
+    "name": "deck.delivery.site.png",
+    "size": [
+      1330,
+      1182
+    ],
+    "mode": "RGBA",
+    "alpha_range": [
+      0,
+      255
+    ],
+    "transparent_pixels": 1015829,
+    "opaque_pixels": 2217,
+    "bbox": [
+      0,
+      0,
+      1308,
+      1182
+    ]
+  },
+  {
+    "name": "deck.delivery.built.png",
+    "size": [
+      1330,
+      1182
+    ],
+    "mode": "RGBA",
+    "alpha_range": [
+      0,
+      255
+    ],
+    "transparent_pixels": 1008982,
+    "opaque_pixels": 2317,
+    "bbox": [
+      0,
+      0,
+      1288,
+      1182
+    ]
+  }
+]

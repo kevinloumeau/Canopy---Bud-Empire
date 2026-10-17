@@ -1,0 +1,31 @@
+{
+  "size": [
+    1536,
+    1024
+  ],
+  "mode": "RGB",
+  "measured_gold_edge_lines": {
+    "long_upper": {
+      "slope_y_down": -0.5784702558240008,
+      "angle_degrees": 30.0481045399535,
+      "intercept": 780.2931363005498
+    },
+    "long_lower": {
+      "slope_y_down": -0.5811313434167359,
+      "angle_degrees": 30.1622136774542,
+      "intercept": 1104.7910762325178
+    },
+    "short_far": {
+      "slope_y_down": 0.5784274856660293,
+      "angle_degrees": 30.04626837641687,
+      "intercept": -421.3830819147514
+    },
+    "short_near": {
+      "slope_y_down": 0.5885635181061762,
+      "angle_degrees": 30.479514356132984,
+      "intercept": 589.3064763272
+    }
+  },
+  "target_absolute_slope": 0.577,
+  "review": "Bare runner; complete gold/red/cream trim on all sides; white background; faint contact shadow; no posts or ropes. Raster edge slopes measured, with rounded corners excluded."
+}

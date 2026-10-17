@@ -1,0 +1,120 @@
+{
+  "id": "person.walker.05",
+  "frames": 8,
+  "head_locked": true,
+  "head_cut": 379,
+  "collar_join_end": 411,
+  "checks": [
+    {
+      "index": 0,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 1,
+      "translation": [
+        35,
+        0
+      ],
+      "head_sha256": "0f93cc4fc98c69d3dd223d2620dbec589ee2d5321ff05e7c7efd177398d2a9ba"
+    },
+    {
+      "index": 1,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 0.9966442953020134,
+      "translation": [
+        54,
+        -16
+      ],
+      "head_sha256": "0f93cc4fc98c69d3dd223d2620dbec589ee2d5321ff05e7c7efd177398d2a9ba"
+    },
+    {
+      "index": 2,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 0.9850746268656716,
+      "translation": [
+        36,
+        -6
+      ],
+      "head_sha256": "0f93cc4fc98c69d3dd223d2620dbec589ee2d5321ff05e7c7efd177398d2a9ba"
+    },
+    {
+      "index": 3,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 0.9933110367892977,
+      "translation": [
+        32,
+        1
+      ],
+      "head_sha256": "0f93cc4fc98c69d3dd223d2620dbec589ee2d5321ff05e7c7efd177398d2a9ba"
+    },
+    {
+      "index": 4,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 0.9473684210526315,
+      "translation": [
+        87,
+        43
+      ],
+      "head_sha256": "0f93cc4fc98c69d3dd223d2620dbec589ee2d5321ff05e7c7efd177398d2a9ba"
+    },
+    {
+      "index": 5,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 1.010204081632653,
+      "translation": [
+        38,
+        4
+      ],
+      "head_sha256": "0f93cc4fc98c69d3dd223d2620dbec589ee2d5321ff05e7c7efd177398d2a9ba"
+    },
+    {
+      "index": 6,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 1.0241379310344827,
+      "translation": [
+        50,
+        9
+      ],
+      "head_sha256": "0f93cc4fc98c69d3dd223d2620dbec589ee2d5321ff05e7c7efd177398d2a9ba"
+    },
+    {
+      "index": 7,
+      "canvas": [
+        1024,
+        1536
+      ],
+      "scale": 0.9983193277310924,
+      "translation": [
+        36,
+        1
+      ],
+      "head_sha256": "0f93cc4fc98c69d3dd223d2620dbec589ee2d5321ff05e7c7efd177398d2a9ba"
+    }
+  ],
+  "status": "contact-sheet-reviewed",
+  "visual_review": {
+    "identity_and_rear_direction": "reviewed",
+    "opposing_contacts_00_04": "reviewed",
+    "head_consistency": "reviewed; fixed head region also verified by hash",
+    "in_game_motion": "not tested"
+  }
+}
