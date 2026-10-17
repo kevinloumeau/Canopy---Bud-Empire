@@ -2121,13 +2121,15 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     // The grow line drops at the top floor's right and its outlet runs straight forward into the back of the harvest
     // bench standing in front of it (no dog-leg round the bench's end); the connector is a straight along z.
     1:{name:'tube.run.grow',x:5.6,z:-3,yTop:10.85,ySlab:9.4,yBot:5.21,end:-.3},
-    3:{name:'tube.run.pack',x:.1,z:-1.3,yTop:6.15,ySlab:4.7,yBot:1.55,end:PACK_STUB_X}};
+    // The pack line's inlet runs low behind the pack bench: the render is cut (`cut`) short of its open inlet collar
+    // and a straight carries on into the bench (`feed`), so no collar stands loose beside the bench.
+    3:{name:'tube.run.pack',x:.1,z:-1.3,yTop:5.75,ySlab:4.7,yBot:1.55,end:PACK_STUB_X,feed:-2.4,cut:-.75}};
   // World geometry of a run from its render: the arm lengths follow from the bore, since the image has one scale.
   function tubeRunGeometry(run){
     if(run.path)return run;
     var m=TUBE_KIT[run.name],f=TUBE_DIA/(m.width*Math.SQRT1_2),arm=(m.axis-m.inlet[0])*f,out=Math.abs(m.outlet[0]-m.axis)*f;
     run.port=[run.x,run.ySlab,run.z];
-    var head=[[run.x-arm,run.yTop,run.z],[run.x,run.yTop,run.z],[run.x,run.yBot,run.z]];
+    var head=(run.feed!==undefined?[[run.feed,run.yTop,run.z]]:[]).concat([[run.x-arm,run.yTop,run.z],[run.x,run.yTop,run.z],[run.x,run.yBot,run.z]]);
     if(m.outDir==='z'){run.connector=[[run.x,run.yBot,run.z+out],[run.x,run.yBot,run.end]];run.path=head.concat(run.connector)}
     else run.path=head.concat([[run.x+out,run.yBot,run.z],[run.end,run.yBot,run.z]]);
     return run;
@@ -2148,7 +2150,11 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
     var top=project(run.x,run.yTop,run.z),slab=project(run.x,run.ySlab,run.z),bot=project(run.x,run.yBot,run.z),x0=top.x-m.axis*k;
     // Row -> screen y, rigid at the bends and the ring, the plain glass between them taking up the rest.
     var rows=[0,m.bend[0],m.ring[0],m.ring[1],m.bend[1],H],ys=[top.y-m.top*k,top.y+(m.bend[0]-m.top)*k,slab.y-(m.ring[2]-m.ring[0])*k,slab.y+(m.ring[1]-m.ring[2])*k,bot.y-(m.bot-m.bend[1])*k,bot.y+(H-m.bot)*k];
+    // A fed run is cut short of its inlet collar, and a plain straight carries on from the cut into the bench.
+    var fed=run.feed!==undefined&&shellSprite('tube.straight');
+    if(fed){var cut=project(run.cut,run.yTop,run.z);ctx.save();ctx.beginPath();ctx.rect(cut.x,-10000,20000,20000);ctx.clip()}
     for(var b=0;b<5;b++){var r0=rows[b],r1=rows[b+1],y0=ys[b],y1=ys[b+1];if(r1<=r0||y1<=y0+.01)continue;ctx.drawImage(img,0,r0,W,r1-r0,x0,y0,W*k,y1-y0)}
+    if(fed){ctx.restore();drawTubeSprites([[run.cut,run.yTop,run.z],[run.feed,run.yTop,run.z]],TUBE_DIA,{noCap0:true})}
     if(run.connector&&shellSprite('tube.straight'))drawTubeSprites(run.connector,TUBE_DIA,{noCap0:true});
     return true;
   }
@@ -2413,7 +2419,7 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
   // Measured on the deck render: the underside of the slab's steel rim, taken at -.24 below the deck level, has its front
   // edge at z 1.26 and its right edge at x -10.7; the rear support leaves it near that corner and falls at -.43 (y over x)
   // to the mezzanine's end. The jar feed climbs the same slope along the front of the support and runs on into the slab.
-  var DECK_FRONT=1.26,DECK_RIGHT=-10.7,DECK_FEED=[[-4.55,-.9,.85],[-7.99,-.9,.85],[-10.68,.25,.85]];
+  var DECK_FRONT=1.26,DECK_RIGHT=-10.7,DECK_FEED=[[-4.3,-.9,.85],[-7.99,-.9,.85],[-10.68,.25,.85]];
   function onlinePackingCounter(now,previewOnly){
     var x=DECK_X,z=DECK_Z,oak=['#cbb085','#7f6a4b','#ac9168'],green=['#86a795','#3e6250','#648a70'];
     if(!deliveryBuilt()&&!previewOnly){onlineCounterSite(now,x,z,oak);return}
@@ -2424,9 +2430,9 @@ import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkRew
       drawDeckSprite(now,'deck.delivery.built');
       var l=project(DECK_RIGHT-8,-.24,DECK_FRONT),c=project(DECK_RIGHT,-.24,DECK_FRONT),r=project(DECK_RIGHT,-.24,DECK_FRONT-8),far=width+height;
       ctx.save();ctx.beginPath();ctx.moveTo(l.x-far,l.y);ctx.lineTo(l.x,l.y);ctx.lineTo(c.x,c.y);ctx.lineTo(r.x,r.y);ctx.lineTo(r.x+far,r.y);ctx.lineTo(r.x+far,c.y+far);ctx.lineTo(l.x-far,c.y+far);ctx.closePath();ctx.clip();
-      // The turn onto the support is a shallow one the right-angle elbow render cannot make, so the two straights meet
+      // The feed leaves the pack bench's end without a collar, and the turn onto the support is a shallow one the right-angle elbow render cannot make, so the two straights meet
       // collar to collar there, like a coupling.
-      drawTubeSprites(DECK_FEED.slice(0,2));drawTubeSprites(DECK_FEED.slice(1));transferTube(DECK_FEED,3,[],undefined,true);ctx.restore();
+      drawTubeSprites(DECK_FEED.slice(0,2),TUBE_DIA,{noCap0:true});drawTubeSprites(DECK_FEED.slice(1));transferTube(DECK_FEED,3,[],undefined,true);ctx.restore();
       return;
     }
     // Cantilevered launch deck, attached to the rear sign supports.
