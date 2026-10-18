@@ -426,10 +426,13 @@ function orderJobs(jobs) {
 // or a function that draws it. Buildings take theirs from the baked block shadows.
 function streetJobs(api) {
   const jobs = [];
-  const at = (x, z, f, hx = .5, hz = hx, shade) => jobs.push({ x0: x - hx, x1: x + hx, z0: z - hz, z1: z + hz, depth: api.depth({ x, z }), draw: f,
+  let kind = 'building';
+  const at = (x, z, f, hx = .5, hz = hx, shade) => jobs.push({ kind, x0: x - hx, x1: x + hx, z0: z - hz, z1: z + hz, depth: api.depth({ x, z }), draw: f,
     shadow: typeof shade === 'function' ? shade : shade && (() => sunShadow(api, x, P, z, shade[3] === undefined ? hx : shade[3], shade[4] === undefined ? hz : shade[4], shade[0], shade[1], shade[2])) });
   BUILDINGS.forEach(b => { const f = BUILDING_SPRITES[b[2]]; at(b[0] - f.w / 2, b[1] - f.d / 2, () => building(api, b), f.w / 2, f.d / 2); });
+  kind = 'tree';
   FAR_TREES.concat(NEAR_TREES).forEach(([x, z]) => at(x, z, () => streetTree(api, x, z), 1.3, 1.3, () => treeShadow(api, x, z, 2.4, 4.8)));
+  kind = 'prop';
   LAMPS.forEach(([x, z]) => at(x, z, () => lamp(api, x, z), .4, .4, [4.6, .9, .75, .2, .2]));
   // Left-side street life: a coffee cart and café seating by the entrance, bins and a hydrant.
   at(-18, 7.5, () => cart(api, -18, 7.5), 1.3, 1, () => sunShadow(api, -18.35, P, 7.27, 1.05, .6, 2.3, 1, 1));
@@ -449,8 +452,29 @@ function streetJobs(api) {
   at(19.4, 3.6, () => prop(api, 'street.signpost', 19.4, 3.6), .3, .3, [3.8, .6, .7, .12, .12]); [8.4, 10.2].forEach(z => at(19.3, z, () => prop(api, 'street.meter', 19.3, z), .25, .25, [1.9, .6, .8, .12, .12]));
   [-3.2, 3.2].forEach(x => at(x, 16.5, () => prop(api, 'street.planter.round', x, 16.5), .6, .6, () => { sunShadow(api, x, P, 16.5, .45, .45, .8, 1, .8); softShadow(api, x + SUN.x * .9, P, 16.5 + SUN.z * .9, .75, .7, .22 * daylight(api)); }));
   at(-10.8, 17.4, () => prop(api, 'street.trafficlight', -10.8, 17.4), .3, .3, () => sunShadow(api, -10.63, P, 16.98, .12, .12, 4.3, .6, .7)); // the post stands right of the render's centre
-  drawCars(api, at); drawWalkers(api, at);
+  kind = 'car'; drawCars(api, at);
+  kind = 'walker'; drawWalkers(api, at);
   return jobs;
+}
+// The road paint and kerb paving (lane dashes, stop lines, zebra crossings, tactile strips) as flat rectangles, from
+// the same functions the 2D ground pass uses, for the 3D map.
+export function groundMarks() {
+  const out = [];
+  const quad = (x0, z0, x1, z1, y, colour) => out.push({ x0: Math.min(x0, x1), x1: Math.max(x0, x1), z0: Math.min(z0, z1), z1: Math.max(z0, z1), y, colour });
+  const api = { project: () => ({ x: 0, y: 0 }), width: 1, height: 1, unit: 1,
+    line: ([a, b], colour, w) => a[0] === b[0] ? quad(a[0] - w / 2, a[2], a[0] + w / 2, b[2], a[1], colour) : quad(a[0], a[2] - w / 2, b[0], a[2] + w / 2, a[1], colour) };
+  ROADS.forEach(r => roadMarkings(api, quad, r));
+  crossing(api, quad, 'x', 21.5, -8); crossing(api, quad, 'z', -22.5, 4); crossing(api, quad, 'x', -18.5, 8);
+  ROADS.filter(r => r.along === 'x').forEach(rz => ROADS.filter(r => r.along === 'z').forEach(rx => { const x = rx.at, z = rz.at; crossing(api, quad, 'x', z, x - 5.5); crossing(api, quad, 'x', z, x + 5.5); crossing(api, quad, 'z', x, z - 5.5); crossing(api, quad, 'z', x, z + 5.5); }));
+  return out;
+}
+// The street's standing things (each with its footprint, kind and draw call) for the 3D map, which records the
+// draws of the ones it shows as sprites.
+export function streetItems(api) { return streetJobs(api); }
+// The floor textures and how many world units one tile spans, for the 3D map's floors.
+export function floorTextureFiles() {
+  const file = name => TEXTURE_FILES[name] || 'sprites/shell/tex.floor.' + name + '.png';
+  return { sidewalk: { url: file('sidewalk'), size: 6 }, asphalt: { url: file('asphalt'), size: 8 }, herringbone: { url: file('herringbone'), size: 4 }, timber: { url: file('timber'), size: 4 }, concrete: { url: file('concrete'), size: 4 } };
 }
 
 
@@ -937,7 +961,7 @@ export function drawWalker(api, { g, s, x, z, facing, heading }) {
 export function townLayout() {
   return {
     roads: ROADS.map(r => ({ ...r })), roadWidth: RW, plazaY: P, streetY: G, extent: L,
-    colours: { paver: PAVER, asphalt: ASPHALT },
+    colours: { paver: PAVER, asphalt: ASPHALT }, marks: groundMarks(),
     buildings: BUILDINGS.map(([x1, z1, name]) => { const f = BUILDING_SPRITES[name]; return { x0: x1 - f.w, x1, z0: z1 - f.d, z1, h: f.h, wall: f.wall[0], roof: f.wall[1] }; }),
     trees: FAR_TREES.concat(NEAR_TREES).map(t => t.slice()), lamps: LAMPS.map(l => l.slice()),
     haze: { colour: HAZE.slice(), ramp: { west: HAZE_RAMP.west.slice(), east: HAZE_RAMP.east.slice(), north: HAZE_RAMP.north.slice(), south: HAZE_RAMP.south.slice() } },

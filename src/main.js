@@ -22,7 +22,7 @@ import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import { createGlPost } from './gl-post.js';
-import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, LAMPS as STREET_LAMPS, compactOrderSprite, PERSON_HEAD_Y, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, drawWalker, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern, softShadow, sunShadow, SUN, SUN_REACH, townLayout, carPlacements, walkerPlacements, stationSpriteSize, stationTier as spriteTier } from './sunny-world.js';
+import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, LAMPS as STREET_LAMPS, compactOrderSprite, PERSON_HEAD_Y, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, drawWalker, streetItems, floorTextureFiles, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern, softShadow, sunShadow, SUN, SUN_REACH, townLayout, carPlacements, walkerPlacements, stationSpriteSize, stationTier as spriteTier } from './sunny-world.js';
 import * as economy from './economy.js';
 import * as strains from './strains.js';
 import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent, seasonStatus, claimSeason, SEASONS, RETIRED_WEEKLY, nextSeason, weeklySpecial, specialFactor } from './progression.js';
@@ -755,6 +755,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       // The online orders deck, placed by its origin (the stair foot, on the mezzanine) at the scale every Blender model
       // shares (about 1.69 map units a metre), so its slab's right and front edges land where the sprite's do
       // (DECK_RIGHT, DECK_FRONT) with the deck at 7.05.
+      layout.floorTextures=floorTextureFiles();
       layout.fixtures=[{key:'deck',file:'online_deck.glb',x:-9.39,y:4.7,z:-.2,scale:1.69}];
       // The shell and fittings from the same numbers drawTower, drawLoungeFront and drawShellProductWall use.
       layout.shell={plaster:SHOP_GREEN_PLASTER[2],tile:SHOP_GREEN_TILE[2],tileH:LOUNGE_TILE,tilePitch:TILE_PITCH,glazingBay:GLAZING_BAY,fanX:FAN_X,topLanding:TOP_LANDING,
@@ -4153,8 +4154,15 @@ if(!SHOP_SPRITES){
     });
     var streetApi=sunnyApi(now);
     walkerPlacements(now).forEach(function(w){person(w.x,-.012,w.z,PERSON_COLOURS[(w.g*3+1)%PERSON_COLOURS.length],function(){drawWalker(streetApi,w)})});
+    // The street's trees, lamps, props and cars are its own renders too, stood up at their footprints' centres; the
+    // terraces stay solid. The 3D trees, lamps and cars underneath only cast shadows.
+    var backdrops=[];
+    streetItems(streetApi).forEach(function(j){if(j.kind!=='walker')capturePerson(j.kind==='building'?backdrops:figures,(j.x0+j.x1)/2,0,(j.z0+j.z1)/2,j.draw)});
+    // The 2D map fades figures behind the building and lays haze over distant renders as see-through copies; in 3D
+    // depth and the scene's haze do both, so only the solid draws are kept.
+    figures=figures.filter(function(f){return f.alpha>.99});backdrops=backdrops.filter(function(f){return f.alpha>.99});
     var look=(function(){var u=unit,c=Math.cos(angle),s=Math.sin(angle),rx=(width/2-centerX)/u,rz=(height/2-centerY)/(u*FLOOR_SQUASH);return{x:rx*c+rz*s,z:rz*c-rx*s}})();
-    map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt()},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt()},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
     customers.forEach(function(c){if(c.phase!=='lounge'&&customerBadged(c))drawCustomerBadge(Object.assign({},c,{x:c.renderX,z:c.renderZ}))});
     drawDeliveryDrones(frameDelta,now);drawParticles(frameDelta);drawTickets(frameDelta);drawConfetti(wallDelta);

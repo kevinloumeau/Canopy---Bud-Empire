@@ -54,7 +54,14 @@ export function createMap3D(canvas, layout) {
   function material(colour, opts = {}) {
     const key = colour + JSON.stringify(opts);
     if (materials.has(key)) return materials.get(key);
-    const m = new THREE.MeshLambertMaterial({ color: colour, ...opts });
+    const m = hazed(colour, opts);
+    materials.set(key, m);
+    return m;
+  }
+  function hazed(colour, opts = {}) {
+    return withHaze(new THREE.MeshLambertMaterial({ color: colour, ...opts }));
+  }
+  function withHaze(m) {
     m.onBeforeCompile = shader => {
       Object.assign(shader.uniforms, hazeUniforms);
       shader.vertexShader = 'varying vec3 vHazeWorld;\n' + shader.vertexShader.replace('#include <project_vertex>', `#include <project_vertex>
@@ -70,8 +77,31 @@ export function createMap3D(canvas, layout) {
         #include <dithering_fragment>`);
     };
     m.customProgramCacheKey = () => 'haze';
-    materials.set(key, m);
     return m;
+  }
+  // Floor textures (the 2D map's own tiles), laid in world units so neighbouring slabs line up: a box's top face runs
+  // u along x and v against z.
+  const floorImages = {}, textureLoader = new THREE.TextureLoader();
+  function floorTexture(name) {
+    const spec = (layout.floorTextures || {})[name];
+    if (!spec) return null;
+    if (!floorImages[name]) {
+      floorImages[name] = textureLoader.load(new URL(spec.url, document.baseURI).href);
+      floorImages[name].colorSpace = THREE.SRGBColorSpace;
+      floorImages[name].wrapS = floorImages[name].wrapT = THREE.RepeatWrapping;
+      floorImages[name].anisotropy = 8;
+    }
+    return { base: floorImages[name], size: spec.size };
+  }
+  function textured(mesh, name) {
+    const t = floorTexture(name);
+    if (!t) return mesh;
+    const map = t.base.clone(), w = mesh.scale.x, d = mesh.scale.z;
+    map.repeat.set(w / t.size, d / t.size);
+    map.offset.set((mesh.position.x - w / 2) / t.size, -(mesh.position.z + d / 2) / t.size);
+    // A clone shares its source with the loading texture, so it uploads when the image arrives.
+    mesh.material = hazed('#ffffff', { map });
+    return mesh;
   }
 
   const unitBox = new THREE.BoxGeometry(1, 1, 1).translate(0, .5, 0);
@@ -85,8 +115,8 @@ export function createMap3D(canvas, layout) {
   }
   function span(parent, x0, x1, y0, y1, z0, z1, colour, opts) { return box(parent, (x0 + x1) / 2, y0, (z0 + z1) / 2, Math.max(.001, x1 - x0), Math.max(.001, y1 - y0), Math.max(.001, z1 - z0), colour, opts); }
 
-  buildTown(world, layout, { box, span, material });
-  buildShop(world, layout, { box, span });
+  const terraces = buildTown(world, layout, { box, span, material, textured });
+  buildShop(world, layout, { box, span, material, textured });
   const transport = buildTransport(scene, world, layout.transport, { box, material });
   const shell = buildShell(world, layout, { box, span, material });
 
@@ -169,13 +199,29 @@ export function createMap3D(canvas, layout) {
     if (!t) { t = new THREE.Texture(img); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; t.needsUpdate = true; textures.set(img, t); }
     return t;
   }
+  // Terraces: their renders are drawn first as backdrops (no depth test) and their solids only write depth, so the
+  // render shows wherever nothing nearer stands, and anything behind a terrace stays hidden by it.
+  const backdrops = [];
+  function backdrop(i) {
+    if (!backdrops[i]) {
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(12), 3));
+      g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(8), 2));
+      g.setIndex(cardIndex);
+      const mesh = new THREE.Mesh(g, withHaze(new THREE.MeshBasicMaterial({ alphaTest: .5, side: THREE.DoubleSide, depthTest: false, depthWrite: false })));
+      mesh.frustumCulled = false; mesh.renderOrder = -1;
+      world.add(mesh);
+      backdrops[i] = mesh;
+    }
+    return backdrops[i];
+  }
   function card(i) {
     if (!cards[i]) {
       const g = new THREE.BufferGeometry();
       g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(12), 3));
       g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(8), 2));
       g.setIndex(cardIndex);
-      const mesh = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ alphaTest: .5, side: THREE.DoubleSide }));
+      const mesh = new THREE.Mesh(g, withHaze(new THREE.MeshBasicMaterial({ alphaTest: .5, side: THREE.DoubleSide })));
       mesh.frustumCulled = false;
       world.add(mesh);
       cards[i] = mesh;
@@ -184,7 +230,7 @@ export function createMap3D(canvas, layout) {
   }
   people.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   world.add(people);
-  const carBodies = new THREE.InstancedMesh(unitBox, material('#ffffff'), MAX_CARS), carCabins = new THREE.InstancedMesh(unitBox, material('#dfe8ea'), MAX_CARS);
+  const carBodies = new THREE.InstancedMesh(unitBox, material('#ffffff', { name: 'street' }), MAX_CARS), carCabins = new THREE.InstancedMesh(unitBox, material('#dfe8ea', { name: 'street' }), MAX_CARS);
   [carBodies, carCabins].forEach(m => { m.castShadow = true; m.count = 0; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); world.add(m); });
 
   const matrix = new THREE.Matrix4(), position = new THREE.Vector3(), scale = new THREE.Vector3(), quaternion = new THREE.Quaternion(), colour = new THREE.Color();
@@ -242,8 +288,8 @@ export function createMap3D(canvas, layout) {
     selectionRing.visible = ringShown;
 
     const figures = frame.figures || [], shade = 1 - night * .55;
-    figures.forEach((f, i) => {
-      const mesh = card(i), g = mesh.geometry, pos = g.attributes.position, uv = g.attributes.uv, [u0, v0, u1, v1] = f.uv;
+    const place = (f, mesh) => {
+      const g = mesh.geometry, pos = g.attributes.position, uv = g.attributes.uv, [u0, v0, u1, v1] = f.uv;
       pos.array.set(f.points); pos.needsUpdate = true;
       uv.array.set([u0, v0, u1, v0, u1, v1, u0, v1]); uv.needsUpdate = true;
       const mat = mesh.material, map = texture(f.img), fade = f.alpha < 1;
@@ -251,10 +297,16 @@ export function createMap3D(canvas, layout) {
       if (mat.transparent !== fade) { mat.transparent = fade; mat.needsUpdate = true; }
       mat.opacity = f.alpha; mat.color.setScalar(shade);
       mesh.visible = true;
-    });
+    };
+    figures.forEach((f, i) => place(f, card(i)));
     for (let i = figures.length; i < cards.length; i++) cards[i].visible = false;
+    const behind = frame.backdrops || [];
+    behind.forEach((f, i) => place(f, backdrop(i)));
+    for (let i = behind.length; i < backdrops.length; i++) backdrops[i].visible = false;
+    terraces.forEach(t => { t.renderOrder = frame.backdrops ? -2 : 0; t.material.colorWrite = !frame.backdrops; });
     // With figures standing in, the capsules only cast shadows.
     people.material.colorWrite = people.material.depthWrite = !frame.figures;
+    materials.forEach((m, key) => { if (key.endsWith('{"name":"street"}')) m.colorWrite = m.depthWrite = !frame.figures; });
 
     people.count = Math.min(MAX_PEOPLE, frame.people.length);
     for (let i = 0; i < people.count; i++) {
@@ -295,9 +347,9 @@ export function createMap3D(canvas, layout) {
 
 // The town round the shop: one asphalt floor at street level, every block between the streets a paved slab up to the
 // plaza level (so kerbs are the slabs' edges), the terraces as blocks of their wall colour, trees and lamps.
-function buildTown(world, layout, { box, span, material }) {
+function buildTown(world, layout, { box, span, material, textured }) {
   const { roads, roadWidth: rw, plazaY: P, streetY: G, extent: L } = layout;
-  span(world, -L, L, G - .4, G, -L, L, layout.colours.asphalt, { cast: false });
+  textured(span(world, -L, L, G - .4, G, -L, L, layout.colours.asphalt, { cast: false }), 'asphalt');
   const edges = along => {
     const at = roads.filter(r => r.along === along).map(r => r.at).sort((a, b) => a - b), out = [];
     let from = -L;
@@ -307,40 +359,48 @@ function buildTown(world, layout, { box, span, material }) {
   };
   // Roads along x run at fixed z, so they cut the blocks' z range; roads along z cut the x range.
   const zBands = edges('x'), xBands = edges('z');
-  xBands.forEach(([x0, x1]) => zBands.forEach(([z0, z1]) => span(world, x0, x1, G, P, z0, z1, layout.colours.paver, { cast: false })));
-  // Lane markings: a pale dashed centre line down each street.
-  roads.forEach(r => {
-    for (let s = -L + 2; s < L - 2; s += 4) {
-      if (r.along === 'x') span(world, s, s + 2, G, G + .015, r.at - .06, r.at + .06, '#e8e2cf', { cast: false });
-      else span(world, r.at - .06, r.at + .06, G, G + .015, s, s + 2, '#e8e2cf', { cast: false });
-    }
+  xBands.forEach(([x0, x1]) => zBands.forEach(([z0, z1]) => textured(span(world, x0, x1, G, P, z0, z1, layout.colours.paver, { cast: false }), 'sidewalk')));
+  // Road paint and tactile paving from the 2D ground pass, one instanced mesh per colour.
+  const byColour = {};
+  (layout.marks || []).forEach(m => (byColour[m.colour] = byColour[m.colour] || []).push(m));
+  const mm = new THREE.Matrix4(), mp = new THREE.Vector3(), ms = new THREE.Vector3(), mq = new THREE.Quaternion();
+  Object.entries(byColour).forEach(([c, list]) => {
+    // rgba paint (the tactile strips) keeps its see-through share.
+    const rgba = /rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/.exec(c);
+    const paint = rgba ? material('#' + [1, 2, 3].map(k => (+rgba[k]).toString(16).padStart(2, '0')).join(''), { transparent: true, opacity: +rgba[4], depthWrite: false }) : material(c);
+    const mesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1).translate(0, .5, 0), paint, list.length);
+    list.forEach((m, i) => mesh.setMatrixAt(i, mm.compose(mp.set((m.x0 + m.x1) / 2, m.y - .004, (m.z0 + m.z1) / 2), mq, ms.set(m.x1 - m.x0, .012, m.z1 - m.z0))));
+    mesh.receiveShadow = true;
+    world.add(mesh);
   });
+  const terraces = [];
   layout.buildings.forEach(b => {
-    span(world, b.x0, b.x1, P, b.h, b.z0, b.z1, b.wall);
-    span(world, b.x0 - .15, b.x1 + .15, b.h, b.h + .35, b.z0 - .15, b.z1 + .15, b.roof);
+    terraces.push(span(world, b.x0, b.x1, P, b.h, b.z0, b.z1, b.wall, { opts: { name: 'terrace' } }));
+    terraces.push(span(world, b.x0 - .15, b.x1 + .15, b.h, b.h + .35, b.z0 - .15, b.z1 + .15, b.roof, { opts: { name: 'terrace' } }));
   });
   const crownGeometry = new THREE.IcosahedronGeometry(1.6, 1);
   layout.trees.forEach(([x, z]) => {
-    box(world, x, P, z, .35, 2.2, .35, '#7a5a3e');
-    const crown = new THREE.Mesh(crownGeometry, material('#7fa35a'));
+    box(world, x, P, z, .35, 2.2, .35, '#7a5a3e', { opts: { name: 'street' } });
+    const crown = new THREE.Mesh(crownGeometry, material('#7fa35a', { name: 'street' }));
     crown.position.set(x, P + 3.6, z); crown.scale.set(1, .8, 1);
     crown.castShadow = crown.receiveShadow = true;
     world.add(crown);
   });
   layout.lamps.forEach(([x, z]) => {
-    box(world, x, P, z, .18, 4.4, .18, '#3b4a43');
-    box(world, x, P + 4.3, z, .5, .3, .5, '#f1e3b6');
+    box(world, x, P, z, .18, 4.4, .18, '#3b4a43', { opts: { name: 'street' } });
+    box(world, x, P + 4.3, z, .5, .3, .5, '#f1e3b6', { opts: { name: 'street' } });
   });
+  return terraces;
 }
 
 // The shop: the timber floor on the plaza, the mezzanine and top floor as slabs on posts, the rear and short side
 // walls of the cutaway, and the entrance planter line. Positions are the 2D map's own (drawTower's floors).
-function buildShop(world, layout, { box, span }) {
+function buildShop(world, layout, { box, span, material, textured }) {
   const shop = new THREE.Group();
   world.add(shop);
   layout.floors.forEach((f, fi) => {
     const left = -f.w / 2, right = f.w / 2, rear = f.z - f.d / 2, front = f.z + f.d / 2;
-    span(shop, left, right, f.y - (fi ? .32 : .02), f.y, rear, front, fi === 2 ? '#e9e4d8' : fi ? '#e4ddcc' : '#c9965f', { cast: fi > 0 });
+    textured(span(shop, left, right, f.y - (fi ? .32 : .02), f.y, rear, front, fi === 2 ? '#e9e4d8' : fi ? '#e4ddcc' : '#c9965f', { cast: fi > 0 }), ['herringbone', 'timber', 'concrete'][fi]);
     // The walls themselves are the shell's (shell.js).
     // A brass rail along the open front edge of the upper floors.
     if (fi) {
@@ -352,13 +412,28 @@ function buildShop(world, layout, { box, span }) {
   });
   // Stairs as drawShellStairs places them: the ground flight up the right side to a landing off the mezzanine, then
   // the upper flight from the mezzanine to the top floor's rear-right corner.
+  // Each flight as the 2D render draws it: oak treads between two forest-green steel stringers, brass handrails.
+  const beamGeometry = new THREE.BoxGeometry(1, 1, 1);
+  const beam = (x, zA, yA, zB, yB, w, h, colour) => {
+    const len = Math.hypot(zB - zA, yB - yA), m = new THREE.Mesh(beamGeometry, material(colour));
+    m.position.set(x, (yA + yB) / 2, (zA + zB) / 2); m.rotation.x = -Math.atan2(yB - yA, zB - zA); m.scale.set(w, h, len);
+    m.castShadow = m.receiveShadow = true; shop.add(m);
+  };
   const flight = (x0, x1, zFoot, zHead, y0, y1, n) => {
-    const run = (zHead - zFoot) / n;
-    for (let k = 0; k < n; k++) span(shop, x0, x1, y0, y0 + (y1 - y0) * (k + 1) / n, Math.min(zFoot + run * k, zFoot + run * (k + 1)), Math.max(zFoot + run * k, zFoot + run * (k + 1)), '#c7a57c');
+    const run = (zHead - zFoot) / n, rise = (y1 - y0) / n;
+    for (let k = 0; k < n; k++) {
+      const za = zFoot + run * k, zb = za + run, top = y0 + rise * (k + 1);
+      span(shop, x0 + .08, x1 - .08, top - .07, top, Math.min(za, zb), Math.max(za, zb), '#d9a768');
+    }
+    [x0 + .05, x1 - .05].forEach(x => {
+      beam(x, zFoot, y0 + .05, zHead, y1 - .2, .1, .42, '#1f5a3c');
+      beam(x, zFoot, y0 + 1, zHead, y1 + .95, .05, .05, '#d0a54e');
+      for (let k = 0; k <= n; k += 3) { const z = zFoot + run * k, y = y0 + rise * k; span(shop, x - .02, x + .02, y, y + .97, z - .02, z + .02, '#d0a54e', { cast: false }); }
+    });
   };
   const [, mezz, top] = layout.floors;
   flight(9.1, 10.7, 4.2, -.8, 0, mezz.y, 12);
-  span(shop, 8.93, 10.85, mezz.y - .32, mezz.y, -2.8, -.8, '#e4ddcc', { cast: true });
+  textured(span(shop, 8.93, 10.85, mezz.y - .32, mezz.y, -2.8, -.8, '#e4ddcc', { cast: true }), 'timber');
   flight(6.5, 8.2, -.5, -6.8, mezz.y, top.y, 12);
   // The storefront along the entrance side (MARQUEE in main.js): a green plinth, glass, the sign band and pilasters.
   const m = layout.marquee;
