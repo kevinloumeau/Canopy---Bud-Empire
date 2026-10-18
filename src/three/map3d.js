@@ -98,7 +98,7 @@ export function createMap3D(canvas, layout) {
   function stationMesh(i) {
     if (!stationMeshes[i]) {
       const group = new THREE.Group(), body = box(group, 0, 0, 0, 1, 1, 1, TIER_COLOURS[1]), top = box(group, 0, 1, 0, 1, .08, 1, '#efe7d4');
-      group.userData = { body, top, model: null };
+      group.userData = { body, top };
       world.add(group);
       stationMeshes[i] = group;
     }
@@ -136,7 +136,12 @@ export function createMap3D(canvas, layout) {
       fixtures[f.key] = holder;
     }, undefined, e => console.warn('3D map: could not load ' + f.file, e));
   });
-  Object.entries(layout.stationModels || {}).forEach(([index, file]) => {
+  // Loaded on first need, so a shop only fetches the tiers it shows.
+  const requested = {};
+  function requestModel(index) {
+    const file = (layout.stationModels || {})[index];
+    if (!file || requested[index]) return;
+    requested[index] = true;
     loader.load(layout.modelBase + file, gltf => {
       const source = gltf.scene, bounds = new THREE.Box3().setFromObject(source), size = bounds.getSize(new THREE.Vector3()), centre = bounds.getCenter(new THREE.Vector3());
       const spec = layout.stationModelSize[index] || { w: size.x + size.z, ox: 0 }, s = spec.w / ((size.x + size.z) * Math.SQRT1_2);
@@ -149,7 +154,7 @@ export function createMap3D(canvas, layout) {
       holder.position.set(spec.ox * Math.SQRT1_2, 0, -spec.ox * Math.SQRT1_2);
       models[index] = holder;
     }, undefined, e => console.warn('3D map: could not load ' + file, e));
-  });
+  }
 
   // People and cars move every frame, so they are instanced: one draw call for all of them.
   const personGeometry = new THREE.CapsuleGeometry(.24, 1.55, 4, 10).translate(0, 1.03, 0);
@@ -214,9 +219,13 @@ export function createMap3D(canvas, layout) {
       group.visible = s.visible !== false;
       if (!group.visible) return;
       // A built station with a loaded model shows the model (one copy per slot, so the order desks can share one).
-      const model = s.built && s.index !== undefined && models[s.index];
-      if (model && !group.userData.model) group.add(group.userData.model = model.clone());
-      if (group.userData.model) group.userData.model.visible = !!model;
+      const key = s.index + '.' + Math.max(1, s.tier);
+      if (s.built) { requestModel(key); requestModel(s.index + '.3'); }
+      const modelKey = models[key] ? key : s.index + '.3';
+      const model = s.built && s.index !== undefined && models[modelKey];
+      const clones = group.userData.clones || (group.userData.clones = {});
+      if (model && !clones[modelKey]) group.add(clones[modelKey] = model.clone());
+      Object.entries(clones).forEach(([k, c]) => { c.visible = !!model && k === modelKey; });
       body.visible = !model;
       const h = s.built ? s.h : .12, lift = s.rise ? -s.rise * s.rise * 1.1 : 0;
       group.position.set(s.x, s.y + lift, s.z);

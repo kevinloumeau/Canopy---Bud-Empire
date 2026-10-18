@@ -86,6 +86,6 @@ for i, (x, y) in enumerate([(-.78, -.04), (-.62, -.22), (-.44, -.3)]):
 K.cyl("PotCream", .09, .11, .15, (.84, .12, TOP), K.CREAM, 32)
 K.cyl("PotBand", .112, .112, .03, (.84, .12, TOP + .1), K.GREEN, 32)
 K.cyl("PotSoil", .1, .1, .01, (.84, .12, TOP + .145), K.SOIL, 24)
-K.plant("Corner", .84, .12, TOP + .15, .28, .6)
+K.plant("Corner", .84, .12, TOP + .15, .28, .6, colas=False)
 
 K.finish(OUT, "harvest_bench", ortho=2.7, centre=(0, 0, .85))

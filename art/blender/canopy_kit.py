@@ -36,7 +36,7 @@ def glass(name, hexcol="#eaf3ef"):
 def begin(name):
     """Reset the scene and create the shared palette.  Returns the output folder."""
     global col, WOOD, WOOD_D, OAK, BRASS, STONE, GREEN, GREEN_D, GLOW, TERRA, TERRA_D, SOIL, LEAF_A, LEAF_B, STEM, BUD, PISTIL, DRY, CREAM, GLASS, KRAFT, DARK
-    global LEAF_MESHES, BUD_MESH, NUG_MESH
+    global LEAF_MESHES, BUD_MESH, NUG_MESH, DRY_D, FROST
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     out = os.path.abspath(argv[0]) if argv else os.path.dirname(bpy.data.filepath or os.getcwd())
     os.makedirs(out, exist_ok=True)
@@ -47,8 +47,8 @@ def begin(name):
     GREEN = mat("CanopyGreen", "#2d6a4c", .5); GREEN_D = mat("CanopyGreenDeep", "#1e4a37", .55)
     GLOW = mat("LightPanel", "#fff1cf", .4, 0, 2.5); TERRA = mat("Terracotta", "#c8794a", .75); TERRA_D = mat("TerracottaRim", "#b5683d", .75)
     SOIL = mat("Soil", "#4a3426", 1.); LEAF_A = mat("LeafDeep", "#3f7a34", .55, two_sided=True); LEAF_B = mat("LeafFresh", "#5f9a3f", .55, two_sided=True)
-    STEM = mat("Stem", "#6f8f3e", .6); BUD = mat("Bud", "#86ab4a", .75); PISTIL = mat("Pistil", "#b8763c", .75)
-    DRY = mat("DriedBud", "#8d9446", .85); CREAM = mat("Cream", "#f3ead6", .6); GLASS = glass("Glass"); KRAFT = mat("Kraft", "#c99460", .82); DARK = mat("Charcoal", "#2b2826", .5)
+    STEM = mat("Stem", "#6f8f3e", .6); BUD = mat("Bud", "#7f9f45", .7); PISTIL = mat("Pistil", "#c46a2e", .7)
+    DRY = mat("DriedBud", "#7f9a44", .75); DRY_D = mat("DriedBudDeep", "#506b2b", .8); FROST = mat("Trichomes", "#b9c283", .6); CREAM = mat("Cream", "#f3ead6", .6); GLASS = glass("Glass"); KRAFT = mat("Kraft", "#c99460", .82); DARK = mat("Charcoal", "#2b2826", .5)
     LEAF_MESHES = [fan_leaf_mesh("FanLeafDeep", LEAF_A), fan_leaf_mesh("FanLeafFresh", LEAF_B), fan_leaf_mesh("FanLeafSmall", LEAF_B, 5, .12)]
     BUD_MESH = bud_mesh("Cola")
     NUG_MESH = nug_mesh("Nug")
@@ -151,24 +151,41 @@ def bud_mesh(name, h=.2, r=.055):
 
 
 def nug_mesh(name, r=.042):
-    """A trimmed, dried bud: a rounded cluster of calyxes with a few pistils. Base at z=0."""
-    bm = bmesh.new(); rr = random.Random(11)
-    for i in range(26):
-        u, v = rr.uniform(-1, 1), rr.uniform(0, 6.283)
-        q = math.sqrt(1 - u * u)
-        p = Vector((q * math.cos(v) * r, q * math.sin(v) * r, (u + 1) * r * .62))
-        res = bmesh.ops.create_icosphere(bm, subdivisions=1, radius=rr.uniform(.012, .026))
-        bmesh.ops.translate(bm, verts=res["verts"], vec=p)
+    """A trimmed, dried bud: a knobbly popcorn shape made of a few lumps of tiny calyxes in deep green, mid green
+    and frosty cream, with curled orange pistil hairs.  Base at z=0, about 1.4 r tall."""
+    bm = bmesh.new(); rr = random.Random(11); H = r * 1.4
+    lumps = [(Vector((0, 0, H * .45)), r * .62)]
+    for i in range(6):
+        t = rr.uniform(.2, .85); a = i * 1.047 + rr.uniform(-.3, .3)
+        rad = r * .55 * math.sin(math.pi * t) + .004
+        lumps.append((Vector((math.cos(a) * rad, math.sin(a) * rad, H * t)), r * rr.uniform(.38, .5)))
+    lumps.append((Vector((rr.uniform(-.1, .1) * r, 0, H * .92)), r * .36))
+    tones = []
+    for c, lr in lumps:
+        for j in range(24):
+            u, v = rr.uniform(-.7, 1), rr.uniform(0, 6.283); q = math.sqrt(1 - u * u)
+            d = Vector((q * math.cos(v), q * math.sin(v), u))
+            res = bmesh.ops.create_icosphere(bm, subdivisions=1, radius=lr * rr.uniform(.3, .42))
+            for vv in res["verts"]: vv.co.z *= 1.25
+            bmesh.ops.translate(bm, verts=res["verts"], vec=c + d * lr * .78)
+            x = rr.random(); tones.append(1 if x < .4 else 3 if x > .9 else 0)
     me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
+    for m in (DRY, DRY_D, PISTIL, FROST): me.materials.append(m)
+    bm = bmesh.new(); bm.from_mesh(me); bm.faces.ensure_lookup_table()
+    per = len(bm.faces) // len(tones)
+    for i, tone in enumerate(tones):
+        for f in bm.faces[i * per:(i + 1) * per]: f.material_index = tone
+    for i in range(30):                          # pistils: curled orange hairs standing off the lumps
+        c, lr = lumps[rr.randrange(len(lumps))]
+        u, v = rr.uniform(-.3, 1), rr.uniform(0, 6.283); q = math.sqrt(1 - u * u)
+        out = Vector((q * math.cos(v), q * math.sin(v), u)); base = c + out * lr * 1.05
+        side = out.cross(Vector((0, 0, 1))); side = side.normalized() if side.length > .01 else Vector((1, 0, 0))
+        for k in range(4):
+            res = bmesh.ops.create_icosphere(bm, subdivisions=1, radius=.003 - .0005 * k)
+            bmesh.ops.translate(bm, verts=res["verts"], vec=base + out * (.005 * k) + side * (.002 * k * k))
+            for f in {f for v_ in res["verts"] for f in v_.link_faces}: f.material_index = 2
+    bm.to_mesh(me); bm.free()
     for p in me.polygons: p.use_smooth = True
-    me.materials.append(DRY)
-    bm = bmesh.new(); bm.from_mesh(me)
-    for i in range(16):
-        u, v = rr.uniform(-.6, 1), rr.uniform(0, 6.283); q = math.sqrt(1 - u * u)
-        res = bmesh.ops.create_icosphere(bm, subdivisions=1, radius=.005)
-        bmesh.ops.translate(bm, verts=res["verts"], vec=(q * math.cos(v) * r * 1.15, q * math.sin(v) * r * 1.15, (u + 1) * r * .62))
-        for f in {f for v_ in res["verts"] for f in v_.link_faces}: f.material_index = 1
-    bm.to_mesh(me); bm.free(); me.materials.append(PISTIL)
     return me
 
 def leaf_at(name, base, yaw, pitch, scale, mesh):
@@ -180,18 +197,21 @@ def leaf_at(name, base, yaw, pitch, scale, mesh):
     o.scale = (scale,) * 3
     return o
 
-def plant(tag, x, y, z0, H, sc=1.):
+def plant(tag, x, y, z0, H, sc=1., colas=True, spread=1.):
+    """A potted cannabis plant.  colas=False gives a leafy plant with no buds (a mother or young plant);
+    spread > 1 makes it bushier, with longer, flatter side branches and bigger leaves."""
     lean = Vector((rnd.uniform(-.03, .03), rnd.uniform(-.03, .03), 0))
     pts = [Vector((x, y, z0)) + lean * (t * t) + Vector((0, 0, H * t)) for t in (i / 8 for i in range(9))]
     tube(f"{tag}Stem", [tuple(p) for p in pts], .011, STEM, .006)
     top = pts[-1]
-    inst(f"{tag}Cola", BUD_MESH, tuple(top - Vector((0, 0, .03))), (0, 0, rnd.uniform(0, 6)), 1.15 * sc)
+    if colas:
+        inst(f"{tag}Cola", BUD_MESH, tuple(top - Vector((0, 0, .03))), (0, 0, rnd.uniform(0, 6)), 1.15 * sc)
     nodes = 8
     for k in range(nodes):
         t = .08 + .8 * k / (nodes - 1)
         p = pts[0].lerp(pts[-1], t)
         yaw0 = k * 2.4 + rnd.uniform(-.3, .3)
-        s = (1.3 - .6 * k / (nodes - 1)) * sc
+        s = (1.3 - .6 * k / (nodes - 1)) * sc * (1 + .4 * (spread - 1))
         for side in (0, math.pi):
             yaw = yaw0 + side
             pet = (.05 + .05 * (1 - k / nodes)) * sc
@@ -203,15 +223,22 @@ def plant(tag, x, y, z0, H, sc=1.):
         # side branches with small colas on the middle nodes
         if 1 <= k <= 5:
             yaw = yaw0 + math.pi / 4
-            d = Vector((math.cos(yaw), math.sin(yaw), 1.1)).normalized()
-            end = p + d * (.1 + .035 * (5 - k)) * sc
+            d = Vector((math.cos(yaw), math.sin(yaw), 1.1 / spread)).normalized()
+            end = p + d * (.1 + .035 * (5 - k)) * sc * spread
             leaf_at(f"{tag}BranchLeaf{k}", tuple(p.lerp(end, .5)), yaw + 1.2, -.1, .85 * sc, LEAF_MESHES[k % 2])
             tube(f"{tag}Branch{k}", [tuple(p), tuple(end)], .007, STEM, .004)
-            inst(f"{tag}SideCola{k}", BUD_MESH, tuple(end - Vector((0, 0, .02))), (0, 0, rnd.uniform(0, 6)), .62 * sc)
-            for j in range(3):
-                leaf_at(f"{tag}Sugar{k}{j}", tuple(end), yaw + j * 2.1, .9, .38 * sc, LEAF_MESHES[2])
-    for j in range(4):   # sugar leaves around the main cola
-        leaf_at(f"{tag}TopSugar{j}", tuple(top - Vector((0, 0, .02))), j * 1.57 + .4, .95, .45 * sc, LEAF_MESHES[2])
+            if colas:
+                inst(f"{tag}SideCola{k}", BUD_MESH, tuple(end - Vector((0, 0, .02))), (0, 0, rnd.uniform(0, 6)), .62 * sc / spread ** .5)
+                for j in range(3):
+                    leaf_at(f"{tag}Sugar{k}{j}", tuple(end), yaw + j * 2.1, .9, .38 * sc, LEAF_MESHES[2])
+            else:
+                leaf_at(f"{tag}BranchTip{k}", tuple(end), yaw, .35, .7 * sc, LEAF_MESHES[(k + 1) % 2])
+    if colas:
+        for j in range(4):   # sugar leaves around the main cola
+            leaf_at(f"{tag}TopSugar{j}", tuple(top - Vector((0, 0, .02))), j * 1.57 + .4, .95, .45 * sc, LEAF_MESHES[2])
+    else:
+        for j in range(5):   # a crown of young fan leaves where the cola would be
+            leaf_at(f"{tag}Crown{j}", tuple(top), j * 1.257 + .3, .75, .62 * sc, LEAF_MESHES[j % 2])
 
 def pot(tag, x, y, z):
     cyl(f"{tag}Pot", .12, .16, .2, (x, y, z), TERRA, 40)

@@ -741,8 +741,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       layout.floors=[{y:0,z:1.5,w:23,d:17},{y:4.7,z:-2.95,w:18,d:7.4},{y:9.4,z:-3.6,w:13,d:6.6}];layout.marquee={x:MARQUEE.x,zFront:MARQUEE.zFront,zRear:MARQUEE.zRear,y0:MARQUEE.y0,y1:MARQUEE.y1,top:MARQUEE.top,bottom:MARQUEE.bottom};
       // Blender models (art/blender/, exported to public/models/) by station index, sized from the tier 3 sprite they replace.
       layout.modelBase=new URL('models/',document.baseURI).href;
-      layout.stationModels={0:'seeds_bench.glb',1:'grow_bench.glb',2:'harvest_bench.glb',3:'pack_bench.glb',4:'order_desk.glb',5:'pickup_desk.glb',6:'id_desk.glb'};
-      layout.stationModelSize={};for(var key in layout.stationModels)layout.stationModelSize[key]=stationSpriteSize(+key,3);layout.stationModelSize[4]={w:2.2,ox:0};
+      // Keyed "station.tier"; a tier without its own model shows the tier 3 one. Each is sized to its tier's sprite.
+      layout.stationModels={'0.3':'seeds_bench.glb','1.1':'grow_bench_tier1.glb','1.2':'grow_bench_tier2.glb','1.3':'grow_bench.glb','2.1':'harvest_bench_tier1.glb','2.2':'harvest_bench_tier2.glb','2.3':'harvest_bench.glb',
+        '3.1':'pack_bench_tier1.glb','3.2':'pack_bench_tier2.glb','3.3':'pack_bench.glb','4.3':'order_desk.glb','5.1':'pickup_desk_tier1.glb','5.2':'pickup_desk_tier2.glb','5.3':'pickup_desk.glb','6.3':'id_desk.glb'};
+      layout.stationModelSize={};for(var key in layout.stationModels)layout.stationModelSize[key]=stationSpriteSize(+key.split('.')[0],+key.split('.')[1]);layout.stationModelSize['4.3']={w:2.2,ox:0};
       // The production line from the 2D map's own routes, so both maps carry the same tubes, belts and cargo rhythm.
       var grow=tubeRunGeometry(TUBE_RUNS[1]),pack=tubeRunGeometry(TUBE_RUNS[3]);
       layout.transport={bore:TUBE_DIA,gap:CARGO_GAP,
