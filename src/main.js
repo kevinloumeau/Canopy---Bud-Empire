@@ -741,8 +741,15 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       layout.floors=[{y:0,z:1.5,w:23,d:17},{y:4.7,z:-2.95,w:18,d:7.4},{y:9.4,z:-3.6,w:13,d:6.6}];layout.marquee={x:MARQUEE.x,zFront:MARQUEE.zFront,zRear:MARQUEE.zRear,y0:MARQUEE.y0,y1:MARQUEE.y1};
       // Blender models (art/blender/, exported to public/models/) by station index, sized from the tier 3 sprite they replace.
       layout.modelBase=new URL('models/',document.baseURI).href;
-      layout.stationModels={1:'grow_bench.glb',2:'harvest_bench.glb',3:'pack_bench.glb',5:'pickup_desk.glb'};
+      layout.stationModels={0:'seeds_bench.glb',1:'grow_bench.glb',2:'harvest_bench.glb',3:'pack_bench.glb',5:'pickup_desk.glb'};
       layout.stationModelSize={};for(var key in layout.stationModels)layout.stationModelSize[key]=stationSpriteSize(+key,3);
+      // The production line from the 2D map's own routes, so both maps carry the same tubes, belts and cargo rhythm.
+      var grow=tubeRunGeometry(TUBE_RUNS[1]),pack=tubeRunGeometry(TUBE_RUNS[3]);
+      layout.transport={bore:TUBE_DIA,gap:CARGO_GAP,
+        tubes:[{points:grow.path,stage:1,cargoStage:1,floorRings:[grow.port]},
+          {points:pack.path,stage:3,cargoStage:4,floorRings:[pack.port],window:{total:PACK_FLOW,offset:0},noCap0:true},
+          {points:PACK_STUB,stage:3,cargoStage:4,window:{total:PACK_FLOW,offset:PACK_STUB_AT}}],
+        belts:[{x1:-4.6,x2:4.6,z:-5.8,floor:9.4,height:1.05,width:BELT_W,stage:0},{x1:4.2,x2:-3.2,z:-3.7,floor:4.7,height:1.05,width:BELT_W,stage:2}]};
       map3d=m.createMap3D(canvas3d,layout);render.invalidated=true;
     }).catch(function(e){console.error('3D map could not load; keeping the 2D map',e);map3d=null});
   }
@@ -4090,7 +4097,7 @@ if(!SHOP_SPRITES){
     });
     walkerPlacements(now).forEach(function(w){people.push({x:w.x,y:-.012,z:w.z,colour:PERSON_COLOURS[(w.g*3+1)%PERSON_COLOURS.length]})});
     var look=(function(){var u=unit,c=Math.cos(angle),s=Math.sin(angle),rx=(width/2-centerX)/u,rz=(height/2-centerY)/(u*FLOOR_SQUASH);return{x:rx*c+rz*s,z:rz*c-rx*s}})();
-    map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,cars:carPlacements(now)});
+    map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,cars:carPlacements(now),cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
     customers.forEach(function(c){if(c.phase!=='lounge'&&customerBadged(c))drawCustomerBadge(Object.assign({},c,{x:c.renderX,z:c.renderZ}))});
     drawDeliveryDrones(frameDelta,now);drawParticles(frameDelta);drawTickets(frameDelta);drawConfetti(wallDelta);

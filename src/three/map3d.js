@@ -86,6 +86,7 @@ export function createMap3D(canvas, layout) {
 
   buildTown(world, layout, { box, span, material });
   buildShop(world, layout, { box, span });
+  const transport = buildTransport(scene, world, layout.transport, { box, material });
 
   // Stations: one solid per station slot, resized and recoloured from the frame (tier, built, rising in).
   const stationMeshes = [], selectionRing = new THREE.Mesh(new THREE.RingGeometry(.86, 1, 48).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#e2c68a', transparent: true, opacity: .85, depthWrite: false }));
@@ -211,6 +212,8 @@ export function createMap3D(canvas, layout) {
     }
     [carBodies, carCabins].forEach(m => { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; });
 
+    if (transport && frame.cargo) transport.update(frame.cargo);
+
     renderer.render(scene, camera);
     return true;
   }
@@ -297,4 +300,87 @@ function buildShop(world, layout, { box, span }) {
   span(shop, m.x - .04, m.x + .04, .9, m.y0, m.zRear, m.zFront, '#cfe3dc', { cast: false, opts: { transparent: true, opacity: .35 } });
   span(shop, m.x - .16, m.x + .16, m.y0, m.y1, m.zRear, m.zFront, '#1f6b47');
   [m.zRear, m.zFront].forEach(z => box(shop, m.x, 0, z, .34, m.y1, .34, '#174f36'));
+}
+
+// The production line: the glass tubes as real pipe along the 2D map's own routes (TUBE_RUNS and PACK_STUB in main.js),
+// rounded at each corner the way transferTube rounds them, with brass collars at the ends and floor rings where a tube
+// passes through a slab; the two belts; and the cargo, a parcel every `gap` units at the one shop-wide speed, exactly
+// as the 2D map spaces it, so the line keeps its rhythm in both maps.
+function buildTransport(scene, world, transport, { box, material }) {
+  if (!transport) return null;
+  const K = HEIGHT_SCALE, R = transport.bore / 2;
+  const glass = new THREE.MeshStandardMaterial({ color: '#cfeee2', emissive: '#2f5a4a', emissiveIntensity: .25, roughness: .08, metalness: 0, transparent: true, opacity: .46, depthWrite: false });
+  const brass = new THREE.MeshStandardMaterial({ color: '#d0a54e', roughness: .3, metalness: .9 });
+  const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+  // Corners rounded with a quadratic bend, in the map's units (heights unstretched), as transferTube does.
+  function rounded(points) {
+    const path = [points[0]], radius = .48;
+    for (let k = 1; k < points.length - 1; k++) {
+      const prev = points[k - 1], corner = points[k], next = points[k + 1];
+      const before = mix(corner, prev, Math.min(.4, radius / Math.hypot(...prev.map((v, i) => v - corner[i]))));
+      const after = mix(corner, next, Math.min(.4, radius / Math.hypot(...next.map((v, i) => v - corner[i]))));
+      path.push(before);
+      for (let n = 1; n <= 8; n++) { const t = n / 8; path.push(before.map((v, i) => (1 - t) * (1 - t) * v + 2 * (1 - t) * t * corner[i] + t * t * after[i])); }
+    }
+    path.push(points[points.length - 1]);
+    return path;
+  }
+  // The pipe is built in true space (heights stretched here rather than by the world group) so its bore stays round.
+  const trueSpace = p => new THREE.Vector3(p[0], p[1] * K, p[2]);
+  const ring = (p, dir, r, tube, mat) => {
+    const m = new THREE.Mesh(new THREE.TorusGeometry(r, tube, 10, 32), mat);
+    m.position.copy(trueSpace(p)); m.lookAt(m.position.clone().add(dir)); m.castShadow = true;
+    scene.add(m);
+  };
+  const runs = transport.tubes.map(tube => {
+    const path = rounded(tube.points), curve = new THREE.CurvePath();
+    for (let i = 1; i < path.length; i++) curve.add(new THREE.LineCurve3(trueSpace(path[i - 1]), trueSpace(path[i])));
+    const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, Math.max(24, path.length * 3), R, 18, false), glass);
+    mesh.renderOrder = 3;
+    scene.add(mesh);
+    const ends = [[tube.points[0], tube.points[1]], [tube.points[tube.points.length - 1], tube.points[tube.points.length - 2]]];
+    ends.forEach(([p, q], i) => { if (!(i === 0 && tube.noCap0)) ring(p, trueSpace(p).sub(trueSpace(q)).normalize(), R + .02, .07, brass); });
+    (tube.floorRings || []).forEach(p => ring(p, new THREE.Vector3(0, 1, 0), R + .1, .08, brass));
+    const segments = [];
+    let total = 0;
+    for (let i = 1; i < path.length; i++) { const len = Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1], path[i][2] - path[i - 1][2]); segments.push({ a: path[i - 1], b: path[i], len }); total += len; }
+    return { tube, segments, total };
+  });
+  const belts = transport.belts.map(b => {
+    const length = Math.abs(b.x2 - b.x1), mid = (b.x1 + b.x2) / 2;
+    [b.x1, b.x2].forEach(x => box(world, x - Math.sign(b.x2 - b.x1) * .25 * (x === b.x1 ? -1 : 1), b.floor, b.z, .12, b.height - .1, .5, '#344a40'));
+    box(world, mid, b.floor + b.height - .18, b.z, length, .16, b.width, '#536c5b');
+    box(world, mid, b.floor + b.height - .02, b.z, length - .1, .04, b.width - .2, '#2a4035', { cast: false });
+    return b;
+  });
+  const STAGE_COLOURS = ['#7fae5a', '#5f9a48', '#9bbd6a', '#c99460', '#c99460', '#c99460'];
+  const pods = new THREE.InstancedMesh(new THREE.SphereGeometry(.2, 12, 8), new THREE.MeshLambertMaterial({ color: '#ffffff' }), 64);
+  pods.castShadow = true; pods.count = 0; pods.renderOrder = 2;
+  pods.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  scene.add(pods);
+  const m = new THREE.Matrix4(), c = new THREE.Color();
+  function place(x, y, z, stage) {
+    if (pods.count >= 64) return;
+    m.makeTranslation(x, y * K, z); pods.setMatrixAt(pods.count, m); pods.setColorAt(pods.count, c.set(STAGE_COLOURS[stage] || '#c99460')); pods.count++;
+  }
+  return {
+    update({ odo, running }) {
+      pods.count = 0;
+      runs.forEach(({ tube, segments, total }) => {
+        const span = tube.window ? tube.window.total : total, start = tube.window ? tube.window.offset : 0;
+        const count = Math.max(2, Math.round(span / transport.gap)), spacing = span / count, o = running[tube.stage] ? odo : 0;
+        for (let k = 0; k < count; k++) {
+          let d = (o + k * spacing) % span - start;
+          if (d < 0 || d >= total) continue;
+          for (const part of segments) { if (d > part.len) { d -= part.len; continue; } const q = mix(part.a, part.b, d / part.len); place(q[0], q[1] - .05, q[2], tube.cargoStage); break; }
+        }
+      });
+      belts.forEach(b => {
+        const run = Math.abs(b.x2 - b.x1), count = Math.max(2, Math.round(run / transport.gap)), o = running[b.stage] ? odo : 0, forward = Math.sign(b.x2 - b.x1);
+        for (let k = 0; k < count; k++) place(b.x1 + forward * ((o + k * run / count) % run), b.floor + b.height + .2, b.z, b.stage);
+      });
+      pods.instanceMatrix.needsUpdate = true;
+      if (pods.instanceColor) pods.instanceColor.needsUpdate = true;
+    }
+  };
 }
