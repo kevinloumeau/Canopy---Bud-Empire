@@ -7,6 +7,8 @@
 // Nothing here reads or writes game state: main.js hands over the layout once and a frame description every frame.
 // This module is loaded on demand and imports only Three.js, so it never pulls the game's own modules into its chunk.
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { createMapCamera, frameMapCamera, HEIGHT_SCALE } from './camera.js';
 
 const MAX_PEOPLE = 160, MAX_CARS = 32;
@@ -93,12 +95,40 @@ export function createMap3D(canvas, layout) {
   function stationMesh(i) {
     if (!stationMeshes[i]) {
       const group = new THREE.Group(), body = box(group, 0, 0, 0, 1, 1, 1, TIER_COLOURS[1]), top = box(group, 0, 1, 0, 1, .08, 1, '#efe7d4');
-      group.userData = { body, top };
+      group.userData = { body, top, model: null };
       world.add(group);
       stationMeshes[i] = group;
     }
     return stationMeshes[i];
   }
+
+  // Blender stations. Each model is scaled so it spans the same width on screen as the sprite it replaces (an
+  // isometric footprint a by b projects (a + b) cos 45° wide), centred on its footprint, and un-stretched against the
+  // world's height scale so it keeps its true proportions, which is what the sprite renders show. Until a model has
+  // loaded (or if it fails), the grey box stands in.
+  const models = {};
+  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+  Object.entries(layout.stationModels || {}).forEach(([index, file]) => {
+    loader.load(layout.modelBase + file, gltf => {
+      const source = gltf.scene, bounds = new THREE.Box3().setFromObject(source), size = bounds.getSize(new THREE.Vector3()), centre = bounds.getCenter(new THREE.Vector3());
+      const spec = layout.stationModelSize[index] || { w: size.x + size.z, ox: 0 }, s = spec.w / ((size.x + size.z) * Math.SQRT1_2);
+      source.position.set(-centre.x, -bounds.min.y, -centre.z);
+      source.traverse(o => {
+        if (!o.isMesh) return;
+        o.castShadow = o.receiveShadow = true;
+        // Glass comes in with transmission, which costs Three.js a second render of the scene every frame; plain
+        // transparency reads the same at this size.
+        const m = o.material;
+        if (m && m.transmission > 0) { o.material = new THREE.MeshStandardMaterial({ color: m.color, roughness: .1, metalness: 0, transparent: true, opacity: .28, depthWrite: false }); o.castShadow = false; }
+      });
+      const holder = new THREE.Group();
+      holder.add(source);
+      holder.scale.set(s, s / HEIGHT_SCALE, s);
+      // The sprite's sideways nudge, along screen right.
+      holder.position.set(spec.ox * Math.SQRT1_2, 0, -spec.ox * Math.SQRT1_2);
+      models[index] = holder;
+    }, undefined, e => console.warn('3D map: could not load ' + file, e));
+  });
 
   // People and cars move every frame, so they are instanced: one draw call for all of them.
   const personGeometry = new THREE.CapsuleGeometry(.24, 1.55, 4, 10).translate(0, 1.03, 0);
@@ -140,10 +170,15 @@ export function createMap3D(canvas, layout) {
       const group = stationMesh(i), { body, top } = group.userData;
       group.visible = s.visible !== false;
       if (!group.visible) return;
+      // A built station with a loaded model shows the model (one copy per slot, so the order desks can share one).
+      const model = s.built && s.index !== undefined && models[s.index];
+      if (model && !group.userData.model) group.add(group.userData.model = model.clone());
+      if (group.userData.model) group.userData.model.visible = !!model;
+      body.visible = !model;
       const h = s.built ? s.h : .12, lift = s.rise ? -s.rise * s.rise * 1.1 : 0;
       group.position.set(s.x, s.y + lift, s.z);
       body.scale.set(s.w, h, s.d);
-      top.visible = s.built; top.position.y = h; top.scale.set(s.w + .12, .08, s.d + .12);
+      top.visible = s.built && !model; top.position.y = h; top.scale.set(s.w + .12, .08, s.d + .12);
       body.material = material(s.built ? TIER_COLOURS[Math.min(3, s.tier)] : '#e3b04b');
       if (s.selected && !ringShown) {
         ringShown = true;

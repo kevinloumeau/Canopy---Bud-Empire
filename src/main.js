@@ -22,7 +22,7 @@ import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import { createGlPost } from './gl-post.js';
-import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, LAMPS as STREET_LAMPS, compactOrderSprite, PERSON_HEAD_Y, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern, softShadow, sunShadow, SUN, SUN_REACH, townLayout, carPlacements, walkerPlacements } from './sunny-world.js';
+import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, LAMPS as STREET_LAMPS, compactOrderSprite, PERSON_HEAD_Y, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern, softShadow, sunShadow, SUN, SUN_REACH, townLayout, carPlacements, walkerPlacements, stationSpriteSize, stationTier as spriteTier } from './sunny-world.js';
 import * as economy from './economy.js';
 import * as strains from './strains.js';
 import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent, seasonStatus, claimSeason, SEASONS, RETIRED_WEEKLY, nextSeason, weeklySpecial, specialFactor } from './progression.js';
@@ -739,6 +739,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       var layout=townLayout();
       // The three floors as drawTower lays them out.
       layout.floors=[{y:0,z:1.5,w:23,d:17},{y:4.7,z:-2.95,w:18,d:7.4},{y:9.4,z:-3.6,w:13,d:6.6}];layout.marquee={x:MARQUEE.x,zFront:MARQUEE.zFront,zRear:MARQUEE.zRear,y0:MARQUEE.y0,y1:MARQUEE.y1};
+      // Blender models (art/blender/, exported to public/models/) by station index, sized from the tier 3 sprite they replace.
+      layout.modelBase=new URL('models/',document.baseURI).href;
+      layout.stationModels={1:'grow_bench.glb',2:'harvest_bench.glb',3:'pack_bench.glb',5:'pickup_desk.glb'};
+      layout.stationModelSize={};for(var key in layout.stationModels)layout.stationModelSize[key]=stationSpriteSize(+key,3);
       map3d=m.createMap3D(canvas3d,layout);render.invalidated=true;
     }).catch(function(e){console.error('3D map could not load; keeping the 2D map',e);map3d=null});
   }
@@ -4070,14 +4074,14 @@ if(!SHOP_SPRITES){
     var speed=state.lines.some(function(n){return n>0})?Math.min(.07,.02+production()*.00002):0;
     crateTime=(crateTime+frameDelta*speed*1.4)%1;cargoOdo=(cargoOdo+frameDelta*speed*14)%1e5;
     var stations=[],people=[];
-    function station(i,x,y,z,level,built,size){var tier=built?stationTier(level):0,b=STATION_BOXES[size];stations.push({x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(tier-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,selected:selected===i&&!securitySelected&&!loungeSelected})}
+    function station(i,x,y,z,level,built,size){var tier=built?spriteTier(level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(tier-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,selected:selected===i&&!securitySelected&&!loungeSelected})}
     for(var i=0;i<6;i++){
       var p=machinePos[i];
       if(i===4)orderCounterPositions(state.orderCounters).forEach(function(q){station(4,q.x,0,q.z,state.lines[4],state.lines[4]>0,4)});
       else station(i,p.x,p.y||0,p.z,state.lines[i],state.lines[i]>0,i);
       if(state.lines[i]>0)people.push({x:p.x-.9,y:p.y||0,z:p.z-1.45,colour:'#2f6b52'});
     }
-    stations.push({x:-9.1,y:0,z:9.3,w:.8,d:1.3,h:1.1,tier:state.doorBuilt?stationTier(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
+    stations.push({x:-9.1,y:0,z:9.3,w:.8,d:1.3,h:1.1,tier:state.doorBuilt?spriteTier(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
     if(state.doorBuilt)people.push({x:-8.25,y:0,z:8.75,colour:'#2f6b52'});
     customers.forEach(function(c){
       stepCustomerVisual(c,frameDelta);

@@ -51,6 +51,13 @@ export function squareUp(api, axes) {
   const sy = Math.sqrt(ratio), sx = 1 / sy;
   return { sx, sy, k: sx * tX - sy * axes[0] };
 }
+// The sprite's on-screen width (and any sideways nudge) for station i at a tier, so the 3D map can size each
+// Blender model to cover exactly what its sprite covered.
+export function stationSpriteSize(i, tier) {
+  const key = STATION_KEYS[i]; if (!key) return null;
+  const size = TIER_SIZE['station.' + key + '.tier' + tier] || STATION_SIZE[key];
+  return { w: size.w, ox: size.ox || 0 };
+}
 export function stationTier(level) { return level >= 20 ? 3 : level >= 10 ? 2 : 1; }
 // Returns the sprite name to draw for station i at this level, or null while none is available.
 export function stationSprite(i, level) {
