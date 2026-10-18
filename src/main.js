@@ -22,7 +22,7 @@ import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import { createGlPost } from './gl-post.js';
-import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, LAMPS as STREET_LAMPS, compactOrderSprite, PERSON_HEAD_Y, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern, softShadow, sunShadow, SUN, SUN_REACH } from './sunny-world.js';
+import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, LAMPS as STREET_LAMPS, compactOrderSprite, PERSON_HEAD_Y, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern, softShadow, sunShadow, SUN, SUN_REACH, townLayout, carPlacements, walkerPlacements } from './sunny-world.js';
 import * as economy from './economy.js';
 import * as strains from './strains.js';
 import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent, seasonStatus, claimSeason, SEASONS, RETIRED_WEEKLY, nextSeason, weeklySpecial, specialFactor } from './progression.js';
@@ -708,7 +708,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   function notify(message,kind){var cue=kind==='upgrade'?(/BUILT|OPEN|EXPANDED/.test(message)?'build':'upgrade'):/REWARD|MILESTONE|GOAL COMPLETE|EVENT COMPLETE|CHAPTER COMPLETE|WHILE AWAY|Prestige/.test(message)?'sparkle':/^Need |previous stage first/.test(message)?'denied':null;if(cue)playSound(cue,state.sound);if(kind!=='dispatch')dispatchSummary=null;$('toast').classList.toggle('is-upgrade',kind==='upgrade');$('toast').textContent=message;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){$('toast').classList.remove('show')},1600)}
 
-  var world=$('world'),canvas=document.createElement('canvas'),ctx=canvas.getContext('2d',{alpha:false});
+  // ?render=3d draws the main shop's map with Three.js (src/three/map3d.js) under a transparent 2D canvas that keeps the
+  // screen-space effects (queue badges, tickets, sparkles, confetti). The 2D map stays the default and the fallback.
+  var RENDER_3D=SHOP_SPRITES&&/[?&]render=3d\b/.test(location.search);
+  var world=$('world'),canvas=document.createElement('canvas'),ctx=canvas.getContext('2d',{alpha:RENDER_3D});
   if(!ctx){$('loadStatus').textContent='CANVAS COULD NOT START';$('loadRetry').hidden=false;return}
   world.insertBefore(canvas,world.firstChild);canvas.setAttribute('aria-hidden','true');
   var screenCtx=ctx;
@@ -725,6 +728,22 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(wanted){try{wanted=glPost.apply(canvas,now,nightAmount(),!motionPreference.matches,SUNNY&&!state.empire.activeStore?1-nightAmount():0)}catch(e){wanted=false;glPost=null}}
     if(glCanvas&&glCanvas.style.display!==(wanted?'block':'none'))glCanvas.style.display=wanted?'block':'none';
   }
+  var map3d=null,canvas3d=null;
+  if(RENDER_3D){
+    canvas3d=document.createElement('canvas');canvas3d.setAttribute('aria-hidden','true');
+    canvas3d.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none';
+    world.insertBefore(canvas3d,canvas);
+    // Built, the module's hashed name comes from index.html (scripts/make-classic.mjs); the dev server serves the source.
+    var map3dMeta=document.querySelector('meta[name="canopy-map3d"]'),map3dUrl=new URL(map3dMeta?map3dMeta.content:'./src/three/map3d.js',document.baseURI).href;
+    import(/* @vite-ignore */ map3dUrl).then(function(m){
+      var layout=townLayout();
+      // The three floors as drawTower lays them out.
+      layout.floors=[{y:0,z:1.5,w:23,d:17},{y:4.7,z:-2.95,w:18,d:7.4},{y:9.4,z:-3.6,w:13,d:6.6}];layout.marquee={x:MARQUEE.x,zFront:MARQUEE.zFront,zRear:MARQUEE.zRear,y0:MARQUEE.y0,y1:MARQUEE.y1};
+      map3d=m.createMap3D(canvas3d,layout);render.invalidated=true;
+    }).catch(function(e){console.error('3D map could not load; keeping the 2D map',e);map3d=null});
+  }
+  // The 3D map is drawing this frame: its canvas shows and the 2D canvas carries only the overlays.
+  function show3d(on){if(canvas3d&&canvas3d.style.display!==(on?'block':'none'))canvas3d.style.display=on?'block':'none'}
   var dpr=1,width=1,height=1,angle=SHOP_SPRITES||/[?&]cam=45\b/.test(location.search)?Math.PI/4:.57,zoom=1,panX=0,panY=0,centerX=0,centerY=0,unit=32;
   // The sprite shop's plaster and tile take the storefront's emerald so the drawn walls match the glazing.
   var SHOP_GREEN_PLASTER=SHOP_SPRITES?['#3f9468','#174f36','#226447']:['#698775','#314b40','#496a56'],SHOP_GREEN_TILE=SHOP_SPRITES?['#4a9a6e','#14482f','#1f5e40']:['#708b72','#2c4938','#4a6850'];
@@ -4033,6 +4052,65 @@ if(!SHOP_SPRITES){
     }
   }
   function depthOf(pos){return rotate(pos.x,pos.z).z}
+  // The shop-play prompt follows the customer it is asking about, and hides when they are off screen.
+  function positionShopPlay(){
+    if(shopPlayUI){var asking=moment&&customers.find(function(c){return c.id===moment.customerId&&!c.ordered}),point=asking?project(asking.renderX===undefined?asking.x:asking.renderX,2.8,asking.renderZ===undefined?asking.z:asking.renderZ):null;shopPlayUI.position(point,!!point&&point.x>24&&point.x<width-24&&point.y>90&&point.y<visibleHeight())}
+  }
+  function drawParticles(frameDelta){
+    for(var i=particles.length-1;i>=0;i--){var p=particles[i];p.life-=frameDelta*1.5;if(!motionPreference.matches){p.x+=p.vx*frameDelta;p.z+=p.vz*frameDelta;p.y+=p.vy*frameDelta;}p.vy-=frameDelta*5;var screen=project(p.x,p.y,p.z),size=Math.max(2,unit*.1);ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.fillRect(screen.x-size/2,screen.y-size/2,size,size);ctx.globalAlpha=1;if(p.life<=0)particles.splice(i,1)}
+  }
+  // The 3D map's frame (?render=3d): the scene goes to the WebGL canvas, and the 2D canvas, cleared to transparent, keeps
+  // what is drawn over the map in screen space. Taps, tags and badges use project(), which the 3D camera matches.
+  var STATION_BOXES=[{w:2.6,d:1.5,h:1.5},{w:3.2,d:1.6,h:1.7},{w:2.8,d:1.5,h:1.5},{w:2.6,d:1.5,h:1.5},{w:2.2,d:1.1,h:1.25},{w:2.4,d:1.2,h:1.25},{w:.8,d:1.3,h:1.1}];
+  var PERSON_COLOURS=['#d97b5f','#5f8fc9','#e0b75a','#8a6fb5','#6aa36a','#c95f86','#4fa3a0','#d48c3a'];
+  function renderFrame3d(now,frameDelta,wallDelta){
+    show3d(true);
+    var nightT=nightAmount();render.nightT=nightT;
+    tierFlashes.forEach(function(life,i){if(life>0)tierFlashes[i]=Math.max(0,life-frameDelta*.65)});
+    var speed=state.lines.some(function(n){return n>0})?Math.min(.07,.02+production()*.00002):0;
+    crateTime=(crateTime+frameDelta*speed*1.4)%1;cargoOdo=(cargoOdo+frameDelta*speed*14)%1e5;
+    var stations=[],people=[];
+    function station(i,x,y,z,level,built,size){var tier=built?stationTier(level):0,b=STATION_BOXES[size];stations.push({x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(tier-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,selected:selected===i&&!securitySelected&&!loungeSelected})}
+    for(var i=0;i<6;i++){
+      var p=machinePos[i];
+      if(i===4)orderCounterPositions(state.orderCounters).forEach(function(q){station(4,q.x,0,q.z,state.lines[4],state.lines[4]>0,4)});
+      else station(i,p.x,p.y||0,p.z,state.lines[i],state.lines[i]>0,i);
+      if(state.lines[i]>0)people.push({x:p.x-.9,y:p.y||0,z:p.z-1.45,colour:'#2f6b52'});
+    }
+    stations.push({x:-9.1,y:0,z:9.3,w:.8,d:1.3,h:1.1,tier:state.doorBuilt?stationTier(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
+    if(state.doorBuilt)people.push({x:-8.25,y:0,z:8.75,colour:'#2f6b52'});
+    customers.forEach(function(c){
+      stepCustomerVisual(c,frameDelta);
+      if(c.phase==='lounge')return;
+      people.push({x:c.renderX,y:0,z:c.renderZ,colour:PERSON_COLOURS[(c.id||0)%PERSON_COLOURS.length]});
+    });
+    walkerPlacements(now).forEach(function(w){people.push({x:w.x,y:-.012,z:w.z,colour:PERSON_COLOURS[(w.g*3+1)%PERSON_COLOURS.length]})});
+    var look=(function(){var u=unit,c=Math.cos(angle),s=Math.sin(angle),rx=(width/2-centerX)/u,rz=(height/2-centerY)/(u*FLOOR_SQUASH);return{x:rx*c+rz*s,z:rz*c-rx*s}})();
+    map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,cars:carPlacements(now)});
+    ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
+    customers.forEach(function(c){if(c.phase!=='lounge'&&customerBadged(c))drawCustomerBadge(Object.assign({},c,{x:c.renderX,z:c.renderZ}))});
+    drawDeliveryDrones(frameDelta,now);drawParticles(frameDelta);drawTickets(frameDelta);drawConfetti(wallDelta);
+    positionShopPlay();
+    if(glCanvas)glCanvas.style.display='none';
+    updateMarkers();updateSpenderTag(false);requestAnimationFrame(render);
+  }
+  // Eases a customer's drawn position toward the simulation's and updates their stride, facing and service progress.
+  function stepCustomerVisual(c,frameDelta){
+    var blend=1-Math.exp(-frameDelta*20),oldX=c.renderX===undefined?c.x:c.renderX,oldZ=c.renderZ===undefined?c.z:c.renderZ;
+    c.renderX=oldX+(c.x-oldX)*blend;c.renderZ=oldZ+(c.z-oldZ)*blend;
+    var dx=c.renderX-oldX,dz=c.renderZ-oldZ,distance=Math.hypot(dx,dz);
+    c.walkPhase=(c.walkPhase||0)+distance*5;if(distance>.001)c.walkHeading={x:dx/distance,z:dz/distance};
+    var strideTarget=frameDelta>0?Math.min(1,distance/frameDelta/2.2):(c.walkAmount||0);
+    c.walkAmount=(c.walkAmount||0)+(strideTarget-(c.walkAmount||0))*(1-Math.exp(-frameDelta*10));
+    var previousFacing=c.facing===undefined?.3:c.facing;
+    var direction=distance>.001?Math.max(-1,Math.min(1,rotate(dx,dz).x/distance)):(c.facing===undefined?.3:c.facing);
+    // At the kiosk head a customer turns to the screen beside them (up-left of where they stand) for as long as they order.
+    if(distance<=.001&&c.phase==='kiosk'&&!c.ordered&&c.laneDistance!==null&&c.laneDistance<.05)direction=-1;
+    c.facing=(c.facing===undefined?direction:c.facing)+(direction-(c.facing===undefined?direction:c.facing))*(1-Math.exp(-frameDelta*8));
+    c.turnLean=(c.turnLean||0)+((c.facing-previousFacing)*1.5-(c.turnLean||0))*(1-Math.exp(-frameDelta*12));
+    var serviceIndex=c.ordered?5:4,serviceTarget=c.serviceStation===serviceIndex?Math.min(1,(c.serviceElapsed||0)/economy.customerHandoff(serviceIndex,state.lines[serviceIndex],counterServiceDuration(serviceIndex))):0;
+    if(c.visualServiceStation!==serviceIndex){c.serviceVisual=0;c.visualServiceStation=serviceIndex;}c.serviceVisual=(c.serviceVisual||0)+(serviceTarget-(c.serviceVisual||0))*(1-Math.exp(-frameDelta*22));
+  }
   // A single failed frame (for example a zero-width canvas while the page is being laid out) must not stop the scene forever.
   function render(wallNow){var t0=performance.now();try{renderFrame(wallNow);render.frameMs=(render.frameMs||0)*.9+(performance.now()-t0)*.1;window.__canopyFrameMs=render.frameMs;if(render.frameMs>13&&dprCap>2){dprCap=2;resize()}}catch(e){if(!render.failed)console.error('Canopy frame failed; retrying',e);ctx=screenCtx;sceneElevation=0;render.failed=true;render.invalidated=true;requestAnimationFrame(render)}}
   function renderFrame(wallNow){
@@ -4049,7 +4127,7 @@ if(!SHOP_SPRITES){
     for(var slot=0;slot<4;slot++){var phase=(taskClocks[1]/9000+slot*.23)%1;var targetGrowth=state.stock[1]>=storageCapacity()?1:phase>.86?Math.max(0,(1-phase)/.14):Math.min(1,phase/.72);cropGrowth[slot]+=(targetGrowth-cropGrowth[slot])*(1-Math.exp(-frameDelta*4))}var now=animationTime;
     sceneTime=motionPreference.matches?0:now;
     if(state.empire.activeStore){
-      sceneElevation=0;
+      sceneElevation=0;show3d(false);
       drawBranchMap({get ctx(){return ctx},width:width,height:height,unit:unit,project:project,box:drawBox,line:worldLine,poly:poly,ellipse:ellipse,blob:blobEllipse,leaf:leafShape,noise:seedNoise,lit:lit,plant:plant,jar:jar,carton:carton,person:drawPerson,depth:depthOf,backdrop:branchBackdrop,night:nightAmount()>0?branchNight:null},state.empire.activeStore-1,state.empire.stores[state.empire.activeStore-1].level,motionPreference.matches?0:now,state.empire.stores[state.empire.activeStore-1].projects,{lighting:visualLight(),store:state.empire.stores[state.empire.activeStore-1],event:eventStatus(state.empire),rewards:state.empire.rewards,network:state.empire.network,neighborhood:neighborhood(state.empire,state.empire.activeStore-1)});
       // Main-store effects expire while visiting a branch rather than replaying on return.
       particles.forEach(function(p){p.life-=frameDelta*1.5});particles=particles.filter(function(p){return p.life>0});deliveryDrones.forEach(function(d){d.age+=frameDelta});deliveryDrones=deliveryDrones.filter(function(d){return d.age<d.delay+7.5});
@@ -4057,6 +4135,8 @@ if(!SHOP_SPRITES){
       if(shopPlayUI)shopPlayUI.position(null,false);
       glCompose(now);updateBranchMarker();updateSpenderTag(true);requestAnimationFrame(render);return;
     }
+    if(map3d&&map3d.ok){renderFrame3d(now,frameDelta,wallDelta);return}
+    show3d(false);
     drawTower(now);
     // Tier change: the station pops (see drawStation), a warm flash blooms over it, a ring spreads across the floor
     // and sparkles rise, over about a second and a half.
@@ -4069,20 +4149,7 @@ if(!SHOP_SPRITES){
     crateTime=(crateTime+frameDelta*speed*1.4)%1;cargoOdo=(cargoOdo+frameDelta*speed*14)%1e5;
     var jobs=sceneJobs;
     customers.forEach(function(c){
-      var blend=1-Math.exp(-frameDelta*20),oldX=c.renderX===undefined?c.x:c.renderX,oldZ=c.renderZ===undefined?c.z:c.renderZ;
-      c.renderX=oldX+(c.x-oldX)*blend;c.renderZ=oldZ+(c.z-oldZ)*blend;
-      var dx=c.renderX-oldX,dz=c.renderZ-oldZ,distance=Math.hypot(dx,dz);
-      c.walkPhase=(c.walkPhase||0)+distance*5;if(distance>.001)c.walkHeading={x:dx/distance,z:dz/distance};
-      var strideTarget=frameDelta>0?Math.min(1,distance/frameDelta/2.2):(c.walkAmount||0);
-      c.walkAmount=(c.walkAmount||0)+(strideTarget-(c.walkAmount||0))*(1-Math.exp(-frameDelta*10));
-      var previousFacing=c.facing===undefined?.3:c.facing;
-      var direction=distance>.001?Math.max(-1,Math.min(1,rotate(dx,dz).x/distance)):(c.facing===undefined?.3:c.facing);
-      // At the kiosk head a customer turns to the screen beside them (up-left of where they stand) for as long as they order.
-      if(distance<=.001&&c.phase==='kiosk'&&!c.ordered&&c.laneDistance!==null&&c.laneDistance<.05)direction=-1;
-      c.facing=(c.facing===undefined?direction:c.facing)+(direction-(c.facing===undefined?direction:c.facing))*(1-Math.exp(-frameDelta*8));
-      c.turnLean=(c.turnLean||0)+((c.facing-previousFacing)*1.5-(c.turnLean||0))*(1-Math.exp(-frameDelta*12));
-      var serviceIndex=c.ordered?5:4,serviceTarget=c.serviceStation===serviceIndex?Math.min(1,(c.serviceElapsed||0)/economy.customerHandoff(serviceIndex,state.lines[serviceIndex],counterServiceDuration(serviceIndex))):0;
-      if(c.visualServiceStation!==serviceIndex){c.serviceVisual=0;c.visualServiceStation=serviceIndex;}c.serviceVisual=(c.serviceVisual||0)+(serviceTarget-(c.serviceVisual||0))*(1-Math.exp(-frameDelta*22));
+      stepCustomerVisual(c,frameDelta);
       var visual=Object.assign({},c,{x:c.renderX,z:c.renderZ});
       if(c.phase==='lounge'){if(c.loungeFade>0)jobs.push({depth:depthOf(visual),draw:function(){drawGuestThroughDrapes(visual,now)}})}
       else if(leaverBehindColumn(c)){}
@@ -4201,10 +4268,10 @@ if(!SHOP_SPRITES){
       ctx.save();ctx.globalAlpha=nightT;nightEmitters(now);ctx.restore();
       nightBloom(nightT,now,nightEmitters);nightMotes(nightT,now);
     }
-    for(var i=particles.length-1;i>=0;i--){var p=particles[i];p.life-=frameDelta*1.5;if(!motionPreference.matches){p.x+=p.vx*frameDelta;p.z+=p.vz*frameDelta;p.y+=p.vy*frameDelta;}p.vy-=frameDelta*5;var screen=project(p.x,p.y,p.z),size=Math.max(2,unit*.1);ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.fillRect(screen.x-size/2,screen.y-size/2,size,size);ctx.globalAlpha=1;if(p.life<=0)particles.splice(i,1)}
+    drawParticles(frameDelta);
     drawTickets(frameDelta);drawConfetti(wallDelta);
     atmosphereFinish(nightT);
-    if(shopPlayUI){var asking=moment&&customers.find(function(c){return c.id===moment.customerId&&!c.ordered}),point=asking?project(asking.renderX===undefined?asking.x:asking.renderX,2.8,asking.renderZ===undefined?asking.z:asking.renderZ):null;shopPlayUI.position(point,!!point&&point.x>24&&point.x<width-24&&point.y>90&&point.y<visibleHeight())}
+    positionShopPlay();
     glCompose(now);updateMarkers();updateSpenderTag(false);requestAnimationFrame(render);
   }
   // A final pass over the composed frame: at day a faint warm wash from the key light's corner (upper left under the

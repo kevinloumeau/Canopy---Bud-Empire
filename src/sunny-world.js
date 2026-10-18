@@ -878,14 +878,20 @@ function car(api, x, z, along, dir, colour, roll) {
 }
 
 // Cars loop along their lane, each sorted by its own footprint (a 4.2-unit car, 4.8 for the van, 1.9 wide).
-function drawCars(api, at) {
-  const t = api.now * .00009 * 90 / CAR_LOOP; // about 8 units a second, four walkers' pace, whatever the loop's length
-  CARS.forEach(([ri, dir, phase, colour]) => {
+// Where each car is at `now`: shared by the 2D map's street pass and the 3D map (src/three/map3d.js).
+export function carPlacements(now) {
+  const t = now * .00009 * 90 / CAR_LOOP; // about 8 units a second, four walkers' pace, whatever the loop's length
+  return CARS.map(([ri, dir, phase, colour]) => {
     // Right-hand traffic: heading +x the kerb is on the +z side, heading +z it is on the -x side.
     const r = ROADS[ri], s = (((phase + dir * t) % 1) + 1) % 1 * CAR_LOOP - CAR_LOOP / 2, lane = (r.along === 'x' ? dir : -dir) * 1.5, ax = r.along === 'x';
-    const x = ax ? s : r.at + lane, z = ax ? r.at + lane : s, hl = colour === 'van' ? 2.4 : 2.1, hw = .95;
     // roll: how far this car has driven since the clock started, for its wheels.
-    at(x, z, () => car(api, x, z, r.along, dir, colour, (dir * phase + t) * CAR_LOOP), ax ? hl : hw, ax ? hw : hl, () => {
+    return { x: ax ? s : r.at + lane, z: ax ? r.at + lane : s, along: r.along, dir, colour, roll: (dir * phase + t) * CAR_LOOP, paint: CAR_PAINT[colour] || colour, van: colour === 'van' };
+  });
+}
+function drawCars(api, at) {
+  carPlacements(api.now).forEach(({ x, z, along, dir, colour, roll }) => {
+    const hl = colour === 'van' ? 2.4 : 2.1, hw = .95, ax = along === 'x';
+    at(x, z, () => car(api, x, z, along, dir, colour, roll), ax ? hl : hw, ax ? hw : hl, () => {
       const ctx = api.ctx, sl = colour === 'van' ? 2.5 : 2, sw = colour === 'van' ? 1.2 : 1;
       ctx.save(); ctx.globalAlpha *= 1 - hazeAt(x, z); groundShadow(api, x, G, z, ax ? sl : sw, ax ? sw : sl, colour === 'van' ? 2.6 : 1.7); ctx.restore();
     });
@@ -897,15 +903,35 @@ function drawCars(api, at) {
 // longer, used to be walked at a run), starts at their own point of the loop, faces the way they are going on screen,
 // and takes their steps from the ground covered so the feet never slide (see WALK_STEP_RATE).
 const WALK_BASE = WALKS.reduce((acc, w) => (acc.push(acc[acc.length - 1] + w[4]), acc), [0]);
-function drawWalkers(api, at) {
+// Where each pavement walker is at `now`, shared with the 3D map like carPlacements.
+export function walkerPlacements(now) {
+  const out = [];
   WALKS.forEach(([x0, z0, x1, z1, n], wi) => {
     const len = Math.hypot(x1 - x0, z1 - z0), screenDir = Math.sign((x1 - x0) - (z1 - z0));
     for (let k = 0; k < n; k++) {
       const g = WALK_BASE[wi] + k, pace = 1.5 + (g * 7 % 5) * .12, loop = len * 2;
-      const s = (api.now * .001 * pace + ((g * .37 + k / n) % 1) * loop) % loop, out = s < len, f = out ? s / len : 2 - s / len;
-      const px = x0 + (x1 - x0) * f, pz = z0 + (z1 - z0) * f, facing = screenDir * (out ? 1 : -1) || .3;
-      const heading = { x: (x1 - x0) / len * (out ? 1 : -1), z: (z1 - z0) / len * (out ? 1 : -1) };
-      at(px, pz, () => { if (!drawPersonSprite(api, px, pz, -(g + 1), false, facing, s + g * .44, api.now > 0 ? 1 : 0, walkerHasBag(g + 1), false, heading)) api.person(px, pz, 40 + g, api.now > 0); }, .4);
+      const s = (now * .001 * pace + ((g * .37 + k / n) % 1) * loop) % loop, outbound = s < len, f = outbound ? s / len : 2 - s / len;
+      out.push({ g, s, x: x0 + (x1 - x0) * f, z: z0 + (z1 - z0) * f, facing: screenDir * (outbound ? 1 : -1) || .3,
+        heading: { x: (x1 - x0) / len * (outbound ? 1 : -1), z: (z1 - z0) / len * (outbound ? 1 : -1) } });
     }
   });
+  return out;
+}
+function drawWalkers(api, at) {
+  walkerPlacements(api.now).forEach(({ g, s, x: px, z: pz, facing, heading }) => {
+    at(px, pz, () => { if (!drawPersonSprite(api, px, pz, -(g + 1), false, facing, s + g * .44, api.now > 0 ? 1 : 0, walkerHasBag(g + 1), false, heading)) api.person(px, pz, 40 + g, api.now > 0); }, .4);
+  });
+}
+
+// The block's layout for the 3D map: streets, terraces (footprints from their renders), trees, lamps and haze, in
+// the same world units the 2D passes above use.
+export function townLayout() {
+  return {
+    roads: ROADS.map(r => ({ ...r })), roadWidth: RW, plazaY: P, streetY: G, extent: L,
+    colours: { paver: PAVER, asphalt: ASPHALT },
+    buildings: BUILDINGS.map(([x1, z1, name]) => { const f = BUILDING_SPRITES[name]; return { x0: x1 - f.w, x1, z0: z1 - f.d, z1, h: f.h, wall: f.wall[0], roof: f.wall[1] }; }),
+    trees: FAR_TREES.concat(NEAR_TREES).map(t => t.slice()), lamps: LAMPS.map(l => l.slice()),
+    haze: { colour: HAZE.slice(), ramp: { west: HAZE_RAMP.west.slice(), east: HAZE_RAMP.east.slice(), north: HAZE_RAMP.north.slice(), south: HAZE_RAMP.south.slice() } },
+    sun: { x: SUN.x, z: SUN.z, reach: SUN_REACH }
+  };
 }
