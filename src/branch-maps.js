@@ -161,7 +161,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     poly([...arc.map(q=>p(q[0],0,q[1])),...arc.slice().reverse().map(q=>p(q[0],.6,q[1]))],stone[1]);
     poly([...arc.map(q=>p(q[0],0,q[1])).slice(0,11),...arc.slice(0,11).reverse().map(q=>p(q[0],.6,q[1]))],stone[2]);
     ellipse(hi.x,hi.y,unit*rim,unit*rim*.5,stone[0]);
-    const w=p(x,.55,z);ellipse(w.x,w.y,unit*r,unit*r*.5,'#6fa5a3');ellipse(w.x-unit*r*.25,w.y-unit*r*.1,unit*r*.45,unit*r*.18,'#8fc0ba66');
+    const w=p(x,api.realDepth?.61:.55,z);ellipse(w.x,w.y,unit*r,unit*r*.5,'#6fa5a3');ellipse(w.x-unit*r*.25,w.y-unit*r*.1,unit*r*.45,unit*r*.18,'#8fc0ba66');
     b(x,z,.55,.8,.8,.9,stone);b(x,z,1.45,1.5,1.5,.12,stone);b(x,z,1.57,.4,.4,.7,stone);b(x,z,2.27,.8,.8,.1,stone);
     const t=(now*.0004)%1;
     for(let k=0;k<6;k++){const a=k*Math.PI/3,pts=[];for(let s=0;s<=6;s++){const f=s/6;pts.push([x+Math.cos(a)*f*1.25,2.35+Math.sin(f*Math.PI)*.9-f*1.4,z+Math.sin(a)*f*1.25]);}l(pts,'#e6f5ee9a',.04);}
@@ -208,7 +208,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
   }
   // Text and marks on a wall face, sheared to the projection like the main map's wallText().
   // draw() receives the context and the screen pixels per world unit along the face, since faces are foreshortened.
-  function face(x,y,z,alongZ,draw){const ctx=api.ctx,q=p(x,y,z),axis=alongZ?p(x,y,z-1):p(x+1,y,z),run=Math.abs(axis.x-q.x);if(!(run>1e-6))return;ctx.save();ctx.translate(q.x,q.y);ctx.transform(1,(axis.y-q.y)/(axis.x-q.x),0,1,0,0);draw(ctx,run);ctx.restore();}
+  function face(x,y,z,alongZ,draw){if(api.face)return api.face(x,y,z,alongZ,draw);const ctx=api.ctx,q=p(x,y,z),axis=alongZ?p(x,y,z-1):p(x+1,y,z),run=Math.abs(axis.x-q.x);if(!(run>1e-6))return;ctx.save();ctx.translate(q.x,q.y);ctx.transform(1,(axis.y-q.y)/(axis.x-q.x),0,1,0,0);draw(ctx,run);ctx.restore();}
   function text(x,y,z,label,widthUnits,size,color,alongZ=false,weight='800'){face(x,y,z,alongZ,(ctx,run)=>{ctx.fillStyle=color;ctx.font=weight+' '+Math.max(5,unit*size)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,0,0,widthUnits*run);});}
   function leaf(x,y,z,size,color,alongZ=false){face(x,y,z,alongZ,ctx=>{ctx.fillStyle=color;for(let k=-2;k<=2;k++){ctx.save();ctx.rotate(k*.5);ctx.beginPath();ctx.ellipse(0,-unit*size*.42,unit*size*.13,unit*size*.46,0,0,Math.PI*2);ctx.fill();ctx.restore();}ctx.fillRect(-unit*size*.025,0,unit*size*.05,unit*size*.36);});}
   // Lounge furniture: sofas and armchairs in fabric, rugs under seating zones.
@@ -321,7 +321,8 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     const WL=-.4,RX0=-15.5,RX1=-7.75,RZ=12.5,ctx=api.ctx,alpha=a=>Math.round(Math.max(0,Math.min(1,a))*255).toString(16).padStart(2,'0');
     wood=['#cf9f62','#8a5f33','#b07f42'];dark=['#2f4237','#172620','#243529'];
     const stone=['#b9bba8','#6f7466','#9a9d8c'],grass=['#8aa07a','#4a6150','#6a8262'];
-    b(-2.25,0,-.65,36.5,25,.5,grass);
+    // With real depth (the 3D map, api.realDepth) the slab lies either side of the river instead of under it.
+    if(api.realDepth){b((RX0-20.5)/2,0,-.65,RX0+20.5,25,.5,grass);b((RX1+16)/2,0,-.65,16-RX1,25,.5,grass);}else b(-2.25,0,-.65,36.5,25,.5,grass);
     meadow(-2.25,0,36.5,25,190,7,-.15);
     // Far bank: a gravel promenade with lamps and benches, a boathouse with racked kayaks, and a small fishing dock.
     patch(-17.7,0,1.5,25,'#b3ae93',-.14);
@@ -758,6 +759,9 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
       // sampled into short round-capped segments whose width shrinks toward the tip, so the arms read as solid
       // stylized palm leaves with no points, spikes or pom-poms.
       const crown=p(tx,ty,z),u=unit*s,cx2=api.ctx;
+      // With real depth the fronds are world-space arcs radiating round the crown, rising then drooping.
+      if(api.realDepth)for(let i=0;i<7;i++){const a=i*Math.PI*2/7+.3,len=(1.9+(i%3)*.35)*s,at=f=>[tx+Math.cos(a)*len*f,ty+(.9*f-1.5*f*f)*s,z+Math.sin(a)*len*f];
+        for(let k=0;k<6;k++)l([at(k/6),at((k+1)/6)],['#527e57','#6d9a62','#5d8a58','#48704e'][i%4],.34*s*(1-k/6*.72));}
       cx2.save();cx2.lineCap='round';
       for(let i=0;i<7;i++){
         const t=i/6,phi=-Math.PI*.95+t*Math.PI*.9,len=u*(1.9+(i%3)*.35),side=Math.cos(phi);
@@ -918,7 +922,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
       const e=p(c[0],.3,c[2]);ellipse(e.x,e.y,unit*.2,unit*.22,'#b39268');ellipse(e.x,e.y,unit*.12,unit*.13,'#8a6a48');
       [[a[0],a[2]],[c[0],c[2]]].forEach(([bx,bz])=>{const q=p(bx,.02,bz);ellipse(q.x,q.y,unit*.24,unit*.1,'#1a241c33');});
     }
-    b(0,.5,-.55,34,25,.55,grass);
+    if(api.realDepth){b(-2.2,.5,-.55,29.6,25,.55,grass);b(16.8,.5,-.55,.4,25,.55,grass);}else b(0,.5,-.55,34,25,.55,grass);
     meadow(0,.5,34,25,190,11,0,['#55744e','#6c8a60','#7c9a6a']);
     // The tree line along the rear edge is painted first: everything built later stands in front of it.
     [[-16.2,-9.3,1.3],[-14,-9.6,1.05],[-11.3,-9.2,1.2],[-8.3,-9.5,.9],[-5.6,-9.8,1.1],[1.6,-9.7,1],[5.9,-9.9,.85],[12.4,-9.4,1.25],[15.8,-8.6,1]].forEach(([x,z,sz])=>pine(x,z,sz));

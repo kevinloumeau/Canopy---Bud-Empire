@@ -8,6 +8,7 @@
 // This module is loaded on demand and imports only Three.js, so it never pulls the game's own modules into its chunk.
 import * as THREE from 'three';
 import { buildShell } from './shell.js';
+import { createBranchLayer } from './branch3d.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { createMapCamera, frameMapCamera, HEIGHT_SCALE } from './camera.js';
@@ -248,7 +249,7 @@ export function createMap3D(canvas, layout) {
       g.attributes.position.array.set(points); g.attributes.position.needsUpdate = true;
       g.attributes.uv.array.set(uvs); g.attributes.uv.needsUpdate = true;
       g.computeVertexNormals();
-      mat.map = t; mat.needsUpdate = true; mesh.visible = true; mesh.userData.ready = true;
+      mat.map = t; mat.needsUpdate = true; mesh.userData.ready = true;
     }, undefined, () => console.warn('3D map: could not load ' + url));
     return mesh;
   }
@@ -305,8 +306,26 @@ export function createMap3D(canvas, layout) {
   canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); lost = true; });
   canvas.addEventListener('webglcontextrestored', () => { lost = false; });
 
-  function render(frame) {
-    if (lost) return false;
+  // The figures (people and street renders recorded from the 2D map) as cards, darkened with the night.
+  let shade = 1;
+  const place = (f, mesh) => {
+    const g = mesh.geometry, pos = g.attributes.position, uv = g.attributes.uv, [u0, v0, u1, v1] = f.uv;
+    pos.array.set(f.points); pos.needsUpdate = true;
+    uv.array.set([u0, v0, u1, v0, u1, v1, u0, v1]); uv.needsUpdate = true;
+    const mat = mesh.material, map = texture(f.img), fade = f.alpha < 1;
+    if (mat.map !== map) { mat.map = map; mat.needsUpdate = true; }
+    if (mat.transparent !== fade) { mat.transparent = fade; mat.needsUpdate = true; }
+    mat.opacity = f.alpha; mat.color.setScalar(shade);
+    mesh.visible = true;
+  };
+  function placeFigures(figures, night) {
+    shade = 1 - night * .55;
+    figures.forEach((f, i) => place(f, card(i)));
+    for (let i = figures.length; i < cards.length; i++) cards[i].visible = false;
+  }
+
+  // Size, camera, sun and the day-night light, shared by the main map and the branch scenes.
+  function view(frame, background) {
     const pixelRatio = Math.min(frame.dpr, 2);
     if (renderer.getPixelRatio() !== pixelRatio) renderer.setPixelRatio(pixelRatio);
     const size = renderer.getSize(new THREE.Vector2());
@@ -322,8 +341,42 @@ export function createMap3D(canvas, layout) {
     const night = frame.night || 0;
     hemi.intensity = dayHemi * (1 - night * .72);
     sun.intensity = daySun * (1 - night * .9);
-    scene.background.copy(daySky).lerp(nightSky, night);
+    scene.background.copy(background).lerp(nightSky, night);
     hazeUniforms.hazeColour.value.copy(scene.background);
+    return night;
+  }
+
+  // A branch visit hides the main block (every object but the lights, the figures and the branch layer) and shows the
+  // branch's own scene, recorded from its 2D drawing each frame (branch3d.js).
+  const branch = createBranchLayer(world), hiddenForBranch = [], branchBackground = new THREE.Color();
+  let inBranch = false;
+  function branchMode(on) {
+    if (on === inBranch) return;
+    inBranch = on;
+    if (on) {
+      const keep = new Set([world, hemi, sun, sun.target, branch.group, ...cards]);
+      [...scene.children, ...world.children].forEach(o => { if (!keep.has(o) && o.visible) { o.visible = false; hiddenForBranch.push(o); } });
+      backdrops.forEach(b => { b.visible = false; });
+    } else {
+      hiddenForBranch.forEach(o => { o.visible = true; });
+      hiddenForBranch.length = 0;
+    }
+    branch.group.visible = on;
+  }
+  function renderBranch(frame) {
+    if (lost) return false;
+    branchMode(true);
+    const night = view(frame, branchBackground.set(frame.background));
+    branch.update(frame.branch, night);
+    placeFigures(frame.figures || [], night);
+    renderer.render(scene, camera);
+    return true;
+  }
+
+  function render(frame) {
+    if (lost) return false;
+    branchMode(false);
+    const night = view(frame, daySky);
 
     let ringShown = false;
     frame.stations.forEach((s, i) => {
@@ -354,22 +407,11 @@ export function createMap3D(canvas, layout) {
     selectionRing.visible = ringShown;
 
     const figures = frame.figures || [], shade = 1 - night * .55;
-    flatMeshes.forEach(f => f.material.color.setScalar(shade));
+    placeFigures(figures, night);
+    flatMeshes.forEach(f => { f.visible = !!f.userData.ready; f.material.color.setScalar(shade); });
     decals.forEach(d => { d.visible = d.userData.ready && (d.userData.show !== 'loungeOpen' || !!frame.loungeOpen); });
     const key = JSON.stringify(frame.ropes || []);
     if (key !== ropeKey) { ropeKey = key; buildRopes(frame.ropes || []); }
-    const place = (f, mesh) => {
-      const g = mesh.geometry, pos = g.attributes.position, uv = g.attributes.uv, [u0, v0, u1, v1] = f.uv;
-      pos.array.set(f.points); pos.needsUpdate = true;
-      uv.array.set([u0, v0, u1, v0, u1, v1, u0, v1]); uv.needsUpdate = true;
-      const mat = mesh.material, map = texture(f.img), fade = f.alpha < 1;
-      if (mat.map !== map) { mat.map = map; mat.needsUpdate = true; }
-      if (mat.transparent !== fade) { mat.transparent = fade; mat.needsUpdate = true; }
-      mat.opacity = f.alpha; mat.color.setScalar(shade);
-      mesh.visible = true;
-    };
-    figures.forEach((f, i) => place(f, card(i)));
-    for (let i = figures.length; i < cards.length; i++) cards[i].visible = false;
     const behind = frame.backdrops || [];
     behind.forEach((f, i) => place(f, backdrop(i)));
     for (let i = behind.length; i < backdrops.length; i++) backdrops[i].visible = false;
@@ -410,6 +452,7 @@ export function createMap3D(canvas, layout) {
 
   return {
     render,
+    renderBranch,
     get ok() { return !lost; },
     dispose() { renderer.dispose(); materials.forEach(m => m.dispose()); }
   };

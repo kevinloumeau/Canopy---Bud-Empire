@@ -792,6 +792,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // The back-wall shelving stands just behind the counters; the smoking lounge is the room behind it (z −7 → −1.76).
   var DISPLAY_Z=-1.6,LOUNGE_FRONT=DISPLAY_Z+.65;
   var sceneElevation=0;
+  // While the 3D map records a branch scene, the drawing primitives hand their world shapes to it instead (recordBranch).
+  var branchRec=null;
   var beltNodes=[[-5,-3.2],[0,-3.2],[5,-3.2],[5.4,0],[5,3.2],[0,3.2],[-5,3.2],[-5.4,0]];
   var tierFlashes=[0,0,0,0,0,0],crateTime=0,cargoOdo=0,particles=[],deliveryDrones=[],sceneTime=0,animationTime=0;
   // Rise-in progress (1 → 0) for a freshly built station; index 6 is the security door.
@@ -864,14 +866,14 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // The sprite art is rendered with floor edges at about 30°, so the sprite shop flattens the floor plane by tan 30°
   // rather than the classic 2:1 (26.6°) the drawn shop uses.
   var FLOOR_SQUASH=SHOP_SPRITES?Math.tan(Math.PI/6):.5;
-  function project(x,y,z){var r=rotate(x,z);return{x:centerX+r.x*unit,y:centerY+r.z*unit*FLOOR_SQUASH-(y+sceneElevation)*unit,depth:r.z}}
+  function project(x,y,z){var r=rotate(x,z),q={x:centerX+r.x*unit,y:centerY+r.z*unit*FLOOR_SQUASH-(y+sceneElevation)*unit,depth:r.z};if(branchRec)branchRec.seen(q,x,y+sceneElevation,z);return q}
   // Gradients are rebuilt identically every frame while the camera is still, so reuse them per context, keyed by colour
   // and quarter-pixel geometry. The map is cleared when it grows large, so moving objects cannot leak entries.
   var gradientCaches=new WeakMap(),gradientCtx=null,gradientMap=null,hexCache=new Map();
   function cachedGradient(key,make){if(gradientCtx!==ctx){gradientCtx=ctx;gradientMap=gradientCaches.get(ctx);if(!gradientMap){gradientMap=new Map();gradientCaches.set(ctx,gradientMap)}}var g=gradientMap.get(key);if(g)return g;if(gradientMap.size>=12000)gradientMap.clear();g=make();gradientMap.set(key,g);return g}
   function isHexColor(fill){if(typeof fill!=='string')return false;var hit=hexCache.get(fill);if(hit===undefined){hit=/^#[0-9a-f]{6}$/i.test(fill);hexCache.set(fill,hit)}return hit}
   function q4(v){return Math.round(v*4)}
-  function poly(points,fill,stroke,opaque){if(occluding()&&(opaque||isHexColor(fill)))occludePoly(points);ctx.beginPath();ctx.moveTo(points[0].x,points[0].y);for(var i=1;i<points.length;i++)ctx.lineTo(points[i].x,points[i].y);ctx.closePath();if(isHexColor(fill)){
+  function poly(points,fill,stroke,opaque){if(branchRec){branchRec.poly(points,fill,litDepth>0);return}if(occluding()&&(opaque||isHexColor(fill)))occludePoly(points);ctx.beginPath();ctx.moveTo(points[0].x,points[0].y);for(var i=1;i<points.length;i++)ctx.lineTo(points[i].x,points[i].y);ctx.closePath();if(isHexColor(fill)){
       var lo=points[0].y,hi=lo;for(var k=1;k<points.length;k++){var py=points[k].y;if(py<lo)lo=py;else if(py>hi)hi=py}hi=Math.max(lo+1,hi);
       ctx.fillStyle=cachedGradient(fill+'|v|'+q4(lo)+'|'+q4(hi),function(){var shade=ctx.createLinearGradient(0,lo,0,hi);shade.addColorStop(0,fill);shade.addColorStop(1,shadeColor(fill,.9));return shade});
     }else ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=Math.max(.4,Math.min(1,unit*.021));ctx.lineJoin='round';ctx.stroke()}}
@@ -886,7 +888,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var c={x:(base[0].x+base[2].x)/2,y:(base[0].y+base[2].y)/2},g=cachedGradient('c|'+alpha+'|'+q4(c.x)+'|'+q4(c.y)+'|'+q4(dx)+'|'+q4(dy),function(){var g=ctx.createLinearGradient(c.x,c.y,c.x+dx,c.y+dy);g.addColorStop(0,'rgba(14,28,20,'+alpha+')');g.addColorStop(1,'rgba(14,28,20,'+(alpha*.25)+')');return g});
     poly(hull,g);
   }
-  function drawBox(x,z,y,w,d,h,palette){var p=palette||[colors.oliveTop,colors.oliveLeft,colors.oliveRight],b0=project(x-w/2,y,z-d/2),b1=project(x+w/2,y,z-d/2),b2=project(x+w/2,y,z+d/2),b3=project(x-w/2,y,z+d/2);
+  function drawBox(x,z,y,w,d,h,palette){if(branchRec){branchRec.box(x,z,y+sceneElevation,w,d,h,palette,litDepth>0);return}var p=palette||[colors.oliveTop,colors.oliveLeft,colors.oliveRight],b0=project(x-w/2,y,z-d/2),b1=project(x+w/2,y,z-d/2),b2=project(x+w/2,y,z+d/2),b3=project(x-w/2,y,z+d/2);
     // Furniture-sized boxes resting on a floor or counter cast; slabs, walls, rails and trim do not.
     var furniture=h>=.2&&h<=3.2&&w>=.15&&d>=.15&&w<=5&&d<=5&&y>=-.05&&y<=1.6;
     // Repeated furniture stops sharing pixel-identical fills: a tint nudge seeded by a coarse floor cell, so one
@@ -1223,6 +1225,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
 
   function ellipse(x,y,rx,ry,fill){
+    if(branchRec){branchRec.ellipse(x,y,rx,ry,fill,litDepth>0);return}
     if(occluding()&&rx>=unit*.04&&isHexColor(fill))occludeEllipse(x,y,rx,ry);
     ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);
     if(isHexColor(fill)&&rx>unit*.11){
@@ -1234,6 +1237,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // A hand-drawn ellipse: eight seeded lobes joined by quadratics, for foliage, soil and other soft silhouettes.
   // Shading and occlusion match ellipse(); amp is the radius wobble (default ±14%).
   function blobEllipse(x,y,rx,ry,fill,seed,amp){
+    if(branchRec){branchRec.ellipse(x,y,rx,ry,fill,litDepth>0);return}
     amp=amp===undefined?.14:amp;
     if(occluding()&&rx>=unit*.04&&isHexColor(fill))occludeEllipse(x,y,rx,ry);
     var pts=new Array(8);
@@ -1346,7 +1350,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   // Glass: translucent tint plus a diagonal sheen so panes read as glazing rather than flat film.
   function glassPane(points,tint){poly(points,tint);var xs=points.map(function(q){return q.x}),ys=points.map(function(q){return q.y}),x0=Math.min.apply(null,xs),x1=Math.max.apply(null,xs),y0=Math.min.apply(null,ys),y1=Math.max.apply(null,ys),g=ctx.createLinearGradient(x0,y0,x1,y1);g.addColorStop(0,'rgba(255,255,255,.14)');g.addColorStop(.32,'rgba(255,255,255,.02)');g.addColorStop(.5,'rgba(255,255,255,.08)');g.addColorStop(.68,'rgba(255,255,255,0)');poly(points,g)}
-  function worldLine(points,color,weight){var w=Math.max(.65,unit*weight),q=new Array(points.length);ctx.beginPath();for(var i=0;i<points.length;i++){var v=project(points[i][0],points[i][1],points[i][2]);q[i]=v;if(i)ctx.lineTo(v.x,v.y);else ctx.moveTo(v.x,v.y)}ctx.strokeStyle=color;ctx.lineWidth=w;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();if(weight>=.05&&occluding()&&isHexColor(color))occludeStroke(q,w)}
+  function worldLine(points,color,weight){if(branchRec){branchRec.line(points,color,weight,sceneElevation,litDepth>0);return}var w=Math.max(.65,unit*weight),q=new Array(points.length);ctx.beginPath();for(var i=0;i<points.length;i++){var v=project(points[i][0],points[i][1],points[i][2]);q[i]=v;if(i)ctx.lineTo(v.x,v.y);else ctx.moveTo(v.x,v.y)}ctx.strokeStyle=color;ctx.lineWidth=w;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();if(weight>=.05&&occluding()&&isHexColor(color))occludeStroke(q,w)}
   function constructionTape(a,b){
     // A vertical ribbon in world space stays attached to the stair posts when the camera moves.
     function point(t,lift){return project(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t+lift,a[2]+(b[2]-a[2])*t)}
@@ -4135,6 +4139,64 @@ if(!SHOP_SPRITES){
     ctx=figureRecorder.begin(list,{x:x,y:y,z:z});sceneElevation=y;
     try{draw()}catch(e){}finally{ctx=savedCtx;sceneElevation=savedElevation}
   }
+  function drawActiveBranch(api,now){
+    var i=state.empire.activeStore-1,store=state.empire.stores[i];
+    drawBranchMap(api,i,store.level,motionPreference.matches?0:now,store.projects,{lighting:visualLight(),store:store,event:eventStatus(state.empire),rewards:state.empire.rewards,network:state.empire.network,neighborhood:neighborhood(state.empire,i)});
+  }
+  // The point at the middle of the screen on the ground, which the 3D sun's shadow box follows.
+  function viewCentre(){var u=unit,c=Math.cos(angle),s=Math.sin(angle),rx=(width/2-centerX)/u,rz=(height/2-centerY)/(u*FLOOR_SQUASH);return{x:rx*c+rz*s,z:rz*c-rx*s}}
+  // A branch in 3D: its own 2D drawing runs at a fixed scale with the primitives recording world shapes (branchRec)
+  // and a context that paints nothing; screen-space ellipses and polygons are traced back to the world points they
+  // were projected from, and people are recorded as figures like the main map's.
+  // Its gradients keep their stops, so a gradient-filled shape (Riverside's water) records in its middle colour.
+  var silentCtx=(function(){var noop=function(){},canvasStub={width:1,height:1},gradient=function(){return{stops:[],addColorStop:function(o,c){this.stops.push(c)}}};
+    return new Proxy({},{get:function(t,k){if(k==='createLinearGradient'||k==='createRadialGradient'||k==='createConicGradient')return gradient;if(k==='measureText')return function(){return{width:0}};if(k==='canvas')return canvasStub;if(k==='getTransform')return function(){return{a:1,b:0,c:0,d:1,e:0,f:0}};return noop},set:function(){return true}})})();
+  // A gradient records as the average of its stops.
+  function gradientColour(fill){
+    if(!fill||!fill.stops)return fill;var r=0,g=0,b=0,a=0,n=fill.stops.length;if(!n)return null;
+    fill.stops.forEach(function(c){var h=c.charAt(0)==='#'?c.slice(1):'';if(h.length===3||h.length===4)h=h.split('').map(function(d){return d+d}).join('');
+      r+=parseInt(h.slice(0,2),16)||0;g+=parseInt(h.slice(2,4),16)||0;b+=parseInt(h.slice(4,6),16)||0;a+=h.length===8?parseInt(h.slice(6,8),16):255});
+    function hex(v){return Math.round(v/n).toString(16).padStart(2,'0')}
+    return '#'+hex(r)+hex(g)+hex(b)+hex(a);
+  }
+  function recordBranch(figures){
+    var U=32,saved=[unit,centerX,centerY,ctx,sceneElevation],seen=new Map(),out={unit:U,boxes:[],lines:[],polys:[],ellipses:[],faces:[],fixtures:[]};
+    function key(x,y){return Math.round(x*8)+','+Math.round(y*8)}
+    branchRec={
+      seen:function(q,x,y,z){seen.set(key(q.x,q.y),[x,y,z])},
+      box:function(x,z,y,w,d,h,palette,lit){out.boxes.push({x:x,y:y,z:z,w:w,d:d,h:h,c:palette?palette[0]:colors.oliveTop,lit:lit})},
+      line:function(points,colour,weight,elevation,lit){out.lines.push({pts:points.map(function(q){return[q[0],q[1]+elevation,q[2]]}),c:colour,w:weight,lit:lit})},
+      poly:function(points,fill,lit){fill=gradientColour(fill);if(typeof fill!=='string')return;var pts=[];for(var i=0;i<points.length;i++){var w=seen.get(key(points[i].x,points[i].y));if(!w)return;pts.push(w)}out.polys.push({pts:pts,c:fill,lit:lit})},
+      ellipse:function(x,y,rx,ry,fill,lit){fill=gradientColour(fill);if(typeof fill!=='string')return;var at=seen.get(key(x,y));if(at)out.ellipses.push({at:at,rx:rx/U,ry:ry/U,c:fill,lit:lit})}
+    };
+    // A potted plant as solids: the 2D one is leaves painted in screen space, which would record as flat discs.
+    function plant3d(x,z,y,size,strain){
+      y+=sceneElevation;size=size||1;out.boxes.push({x:x,y:y,z:z,w:.46,d:.46,h:.38,c:'#b67d59'});
+      var tones=strain===undefined?['#357c50','#4e9a57','#80b567']:[['#488857','#6baa64'],['#668b4a','#9cab61'],['#456f62','#7d9273'],['#386b62','#659b87']][strain].concat(['#a4cf71']);
+      out.lines.push({pts:[[x,y+.38,z],[x,y+.5+size,z]],c:'#86b96b',w:.045});
+      for(var layer=0;layer<3;layer++){var r=size*(.46-layer*.11);out.ellipses.push({at:[x,y+.5+size*(.2+layer*.32),z],rx:r,ry:r*.8,c:tones[layer]})}
+    }
+    unit=U;centerX=0;centerY=0;ctx=silentCtx;sceneElevation=0;
+    try{
+      drawActiveBranch({realDepth:true,ctx:silentCtx,width:width,height:height,unit:U,project:project,box:drawBox,line:worldLine,poly:poly,ellipse:ellipse,blob:blobEllipse,leaf:leafShape,noise:seedNoise,lit:lit,plant:plant3d,jar:jar,carton:carton,depth:depthOf,
+        person:function(x,z){var args=arguments,rec=branchRec;branchRec=null;capturePerson(figures,x,0,z,function(){drawPerson.apply(null,args)});branchRec=rec},
+        face:function(x,y,z,alongZ,draw){out.faces.push({x:x,y:y,z:z,alongZ:alongZ,draw:draw})},
+        night:function(fixtures){out.fixtures=fixtures}},sceneTime);
+    }finally{branchRec=null;unit=saved[0];centerX=saved[1];centerY=saved[2];ctx=saved[3];sceneElevation=saved[4]}
+    return out;
+  }
+  function renderBranch3d(now,frameDelta){
+    show3d(true);
+    var nightT=nightAmount();render.nightT=nightT;
+    var figures=[],scene=recordBranch(figures);
+    map3d.renderBranch({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:viewCentre(),background:BRANCH_THEMES[state.empire.activeStore-1].background,branch:scene,figures:figures.filter(function(f){return f.alpha>.99})});
+    ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
+    // Main-store effects expire while visiting a branch rather than replaying on return.
+    particles.forEach(function(p){p.life-=frameDelta*1.5});particles=particles.filter(function(p){return p.life>0});deliveryDrones.forEach(function(d){d.age+=frameDelta});deliveryDrones=deliveryDrones.filter(function(d){return d.age<d.delay+7.5});
+    if(shopPlayUI)shopPlayUI.position(null,false);
+    if(glCanvas)glCanvas.style.display='none';
+    updateBranchMarker();updateSpenderTag(true);requestAnimationFrame(render);
+  }
   function renderFrame3d(now,frameDelta,wallDelta){
     show3d(true);
     var nightT=nightAmount();render.nightT=nightT;
@@ -4191,7 +4253,7 @@ if(!SHOP_SPRITES){
     // The 2D map fades figures behind the building and lays haze over distant renders as see-through copies; in 3D
     // depth and the scene's haze do both, so only the solid draws are kept.
     figures=figures.filter(function(f){return f.alpha>.99});backdrops=backdrops.filter(function(f){return f.alpha>.99});
-    var look=(function(){var u=unit,c=Math.cos(angle),s=Math.sin(angle),rx=(width/2-centerX)/u,rz=(height/2-centerY)/(u*FLOOR_SQUASH);return{x:rx*c+rz*s,z:rz*c-rx*s}})();
+    var look=viewCentre();
     map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,ropes:ropes,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt()},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
     customers.forEach(function(c){if(c.phase!=='lounge'&&customerBadged(c))drawCustomerBadge(Object.assign({},c,{x:c.renderX,z:c.renderZ}))});
@@ -4233,8 +4295,9 @@ if(!SHOP_SPRITES){
     for(var slot=0;slot<4;slot++){var phase=(taskClocks[1]/9000+slot*.23)%1;var targetGrowth=state.stock[1]>=storageCapacity()?1:phase>.86?Math.max(0,(1-phase)/.14):Math.min(1,phase/.72);cropGrowth[slot]+=(targetGrowth-cropGrowth[slot])*(1-Math.exp(-frameDelta*4))}var now=animationTime;
     sceneTime=motionPreference.matches?0:now;
     if(state.empire.activeStore){
+      if(map3d&&map3d.ok){renderBranch3d(now,frameDelta);return}
       sceneElevation=0;show3d(false);
-      drawBranchMap({get ctx(){return ctx},width:width,height:height,unit:unit,project:project,box:drawBox,line:worldLine,poly:poly,ellipse:ellipse,blob:blobEllipse,leaf:leafShape,noise:seedNoise,lit:lit,plant:plant,jar:jar,carton:carton,person:drawPerson,depth:depthOf,backdrop:branchBackdrop,night:nightAmount()>0?branchNight:null},state.empire.activeStore-1,state.empire.stores[state.empire.activeStore-1].level,motionPreference.matches?0:now,state.empire.stores[state.empire.activeStore-1].projects,{lighting:visualLight(),store:state.empire.stores[state.empire.activeStore-1],event:eventStatus(state.empire),rewards:state.empire.rewards,network:state.empire.network,neighborhood:neighborhood(state.empire,state.empire.activeStore-1)});
+      drawActiveBranch({get ctx(){return ctx},width:width,height:height,unit:unit,project:project,box:drawBox,line:worldLine,poly:poly,ellipse:ellipse,blob:blobEllipse,leaf:leafShape,noise:seedNoise,lit:lit,plant:plant,jar:jar,carton:carton,person:drawPerson,depth:depthOf,backdrop:branchBackdrop,night:nightAmount()>0?branchNight:null},now);
       // Main-store effects expire while visiting a branch rather than replaying on return.
       particles.forEach(function(p){p.life-=frameDelta*1.5});particles=particles.filter(function(p){return p.life>0});deliveryDrones.forEach(function(d){d.age+=frameDelta});deliveryDrones=deliveryDrones.filter(function(d){return d.age<d.delay+7.5});
       atmosphereFinish(nightAmount());
