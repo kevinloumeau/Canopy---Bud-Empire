@@ -22,7 +22,7 @@ import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import { createGlPost } from './gl-post.js';
-import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, LAMPS as STREET_LAMPS, compactOrderSprite, PERSON_HEAD_Y, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern, softShadow, sunShadow, SUN, SUN_REACH, townLayout, carPlacements, walkerPlacements, stationSpriteSize, stationTier as spriteTier } from './sunny-world.js';
+import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, LAMPS as STREET_LAMPS, compactOrderSprite, PERSON_HEAD_Y, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, drawWalker, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern, softShadow, sunShadow, SUN, SUN_REACH, townLayout, carPlacements, walkerPlacements, stationSpriteSize, stationTier as spriteTier } from './sunny-world.js';
 import * as economy from './economy.js';
 import * as strains from './strains.js';
 import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent, seasonStatus, claimSeason, SEASONS, RETIRED_WEEKLY, nextSeason, weeklySpecial, specialFactor } from './progression.js';
@@ -771,6 +771,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var colors={bg:'#202226',floorTop:'#303238',floorLeft:'#1c1f23',floorRight:'#272a30',grid:'#41444a',beltEdge:'#111419',belt:'#313943',slat:'#5b6470',oliveTop:'#f4f5ec',oliveLeft:'#a9b6be',oliveRight:'#d5dce0',darkTop:'#56616a',darkLeft:'#252e36',darkRight:'#3b4650',metalTop:'#eef2f3',metalLeft:'#8b9ba8',metalRight:'#becbd4',acid:'#f5c344',orange:'#ff7628',boxTop:'#d3a36c',boxLeft:'#8e6741',boxRight:'#b17f50'};
   // Sprite shop: the harvest bench stands at x 4.8, directly in front of the grow line's drop, so the tube feeds its
   // back in a straight run (the drawn shop keeps the symmetric pair at x 3).
+  var STAFF_SPOTS={0:{dx:-.2,dz:-1.4,front:false,facing:1},1:{dx:-4,dz:-1,front:false,facing:-1},2:{dx:-.9,dz:-1.4,front:false,facing:-1},3:{dx:-.3,dz:-1.4,front:false,facing:-1},5:{dx:1.05,dz:-1.55,front:false,facing:.35}};
   var machinePos=[{x:-3,z:-3,y:9.4},{x:3,z:-3,y:9.4},{x:SHOP_SPRITES?4.8:3,z:-.3,y:4.7},{x:-3,z:-.3,y:4.7},{x:-4+COUNTER_SHIFT,z:2.5,y:0},{x:4+COUNTER_SHIFT,z:2.5,y:0}];
   // The front-of-house display case along the front-right of the shop floor, planters built into both ends.
   var DISPLAY_CASE={x:8,z:8.9,width:5.2};
@@ -3302,7 +3303,7 @@ if(!SHOP_SPRITES){
       // Staff positions (Kevin, 2026-10-14): the upper-floor staff stand behind their benches, between the bench and the
       // belt, drawn before the bench so its top hides their legs; each stands clear of the trays, pots and gantry posts on
       // the bench top and faces along it toward the work (facing >= 0 mirrors the right-facing renders).
-      var staffSpots={0:{dx:-.2,dz:-1.4,front:false,facing:1},1:{dx:-4,dz:-1,front:false,facing:-1},2:{dx:-.9,dz:-1.4,front:false,facing:-1},3:{dx:-.3,dz:-1.4,front:false,facing:-1},5:{dx:1.05,dz:-1.55,front:false,facing:.35}};
+      var staffSpots=STAFF_SPOTS;
       // Transfer tubes go down before the stations, so a station hides the stub that enters its side or back.
       if(fi===1){sceneElevation=0;drawFloorTransfer(3,true);drawFloorTransfer(1,false);sceneElevation=floor.y}
       if(fi===2){sceneElevation=0;drawFloorTransfer(1,true);sceneElevation=floor.y}
@@ -4084,6 +4085,37 @@ if(!SHOP_SPRITES){
   // what is drawn over the map in screen space. Taps, tags and badges use project(), which the 3D camera matches.
   var STATION_BOXES=[{w:2.6,d:1.5,h:1.5},{w:3.2,d:1.6,h:1.7},{w:2.8,d:1.5,h:1.5},{w:2.6,d:1.5,h:1.5},{w:2.2,d:1.1,h:1.25},{w:2.4,d:1.2,h:1.25},{w:.8,d:1.3,h:1.1}];
   var PERSON_COLOURS=['#d97b5f','#5f8fc9','#e0b75a','#8a6fb5','#6aa36a','#c95f86','#4fa3a0','#d48c3a'];
+  // Records the images one 2D figure draws (with every transform it applies) and turns each into four world points: a
+  // flat card standing upright at the figure's feet, spanning screen-right and up, so the 3D camera shows it exactly
+  // where the 2D map would while counters in front of it still hide it. Nothing else the figure draws is kept.
+  var figureRecorder=(function(){
+    var m=[1,0,0,1,0,0],stack=[],alpha=1,out=null,anchor=null,noop=function(){},gradient={addColorStop:noop};
+    function mul(a,b,c,d,e,f){m=[m[0]*a+m[2]*b,m[1]*a+m[3]*b,m[0]*c+m[2]*d,m[1]*c+m[3]*d,m[0]*e+m[2]*f+m[4],m[1]*e+m[3]*f+m[5]]}
+    var api={
+      save:function(){stack.push([m,alpha])},restore:function(){var t=stack.pop();if(t){m=t[0];alpha=t[1]}},
+      translate:function(x,y){mul(1,0,0,1,x,y)},scale:function(x,y){mul(x,0,0,y,0,0)},rotate:function(a){var c=Math.cos(a),s=Math.sin(a);mul(c,s,-s,c,0,0)},
+      transform:mul,setTransform:function(a,b,c,d,e,f){m=typeof a==='object'?[a.a,a.b,a.c,a.d,a.e,a.f]:[a,b,c,d,e,f]},resetTransform:function(){m=[1,0,0,1,0,0]},
+      createLinearGradient:function(){return gradient},createRadialGradient:function(){return gradient},createPattern:function(){return null},measureText:function(){return{width:0}},
+      drawImage:function(img){
+        var iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height,a=arguments,sx=0,sy=0,sw=iw,sh=ih,dx,dy,dw=iw,dh=ih;
+        if(!iw||!ih)return;
+        if(a.length>=9){sx=a[1];sy=a[2];sw=a[3];sh=a[4];dx=a[5];dy=a[6];dw=a[7];dh=a[8]}else{dx=a[1];dy=a[2];if(a.length>=5){dw=a[3];dh=a[4]}}
+        var foot=project(anchor.x,0,anchor.z),k=Math.SQRT1_2/unit,pts=[];
+        [[dx,dy+dh],[dx+dw,dy+dh],[dx+dw,dy],[dx,dy]].forEach(function(q){
+          var X=m[0]*q[0]+m[2]*q[1]+m[4]-foot.x,Y=m[1]*q[0]+m[3]*q[1]+m[5]-foot.y;
+          pts.push(anchor.x+X*k,anchor.y-Y/unit,anchor.z-X*k);
+        });
+        out.push({img:img,uv:[sx/iw,1-(sy+sh)/ih,(sx+sw)/iw,1-sy/ih],points:pts,alpha:alpha});
+      }
+    };
+    var proxy=new Proxy(api,{get:function(t,k){if(k==='globalAlpha')return alpha;if(k in t)return t[k];return noop},set:function(t,k,v){if(k==='globalAlpha')alpha=v;return true}});
+    return{begin:function(list,a){out=list;anchor=a;m=[1,0,0,1,0,0];stack.length=0;alpha=1;return proxy}};
+  })();
+  function capturePerson(list,x,y,z,draw){
+    var savedCtx=ctx,savedElevation=sceneElevation;
+    ctx=figureRecorder.begin(list,{x:x,y:y,z:z});sceneElevation=y;
+    try{draw()}catch(e){}finally{ctx=savedCtx;sceneElevation=savedElevation}
+  }
   function renderFrame3d(now,frameDelta,wallDelta){
     show3d(true);
     var nightT=nightAmount();render.nightT=nightT;
@@ -4092,22 +4124,35 @@ if(!SHOP_SPRITES){
     crateTime=(crateTime+frameDelta*speed*1.4)%1;cargoOdo=(cargoOdo+frameDelta*speed*14)%1e5;
     var stations=[],people=[];
     function station(i,x,y,z,level,built,size){var tier=built?spriteTier(level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(tier-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,selected:selected===i&&!securitySelected&&!loungeSelected})}
+    // People are the 2D map's own sprites, recorded as each would be drawn and stood up in the scene as flat figures
+    // (capturePerson); a capsule under each casts its shadow.
+    var figures=[];
+    function person(x,y,z,colour,draw){people.push({x:x,y:y,z:z,colour:colour});capturePerson(figures,x,y,z,draw)}
     for(var i=0;i<6;i++){
       var p=machinePos[i];
-      if(i===4)orderCounterPositions(state.orderCounters).forEach(function(q){station(4,q.x,0,q.z,state.lines[4],state.lines[4]>0,4)});
-      else station(i,p.x,p.y||0,p.z,state.lines[i],state.lines[i]>0,i);
-      if(state.lines[i]>0)people.push({x:p.x-.9,y:p.y||0,z:p.z-1.45,colour:'#2f6b52'});
+      if(i===4)orderCounterPositions(state.orderCounters).forEach(function(q,index){
+        station(4,q.x,0,q.z,state.lines[4],state.lines[4]>0,4);
+        var active=customers.some(function(c){return c.orderCounter===index&&atOrderCounter(c,state.orderCounters)&&c.serviceElapsed>0});
+        if(state.lines[4]>0)person(q.x-.35,0,q.z-1.5,'#2f6b52',function(){drawPerson(q.x-.35,q.z-1.5,now,4,false,true,false,{amount:0,phase:0,facing:.3,identity:4+index*23,taskOffset:index*1.7,workActivity:active?1:0})});
+      });
+      else{
+        station(i,p.x,p.y||0,p.z,state.lines[i],state.lines[i]>0,i);
+        if(state.lines[i]>0)(function(i,p){var spot=STAFF_SPOTS[i]||{dx:-.95,dz:-1.65},gait=spot.facing?{amount:0,phase:0,facing:spot.facing}:undefined;
+          person(p.x+spot.dx,p.y||0,p.z+spot.dz,'#2f6b52',function(){drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait)})})(i,p);
+      }
     }
     stations.push({index:6,x:-9.1,y:0,z:9.3,w:.8,d:1.3,h:1.1,tier:state.doorBuilt?spriteTier(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
-    if(state.doorBuilt)people.push({x:-8.25,y:0,z:8.75,colour:'#2f6b52'});
+    if(state.doorBuilt)person(-8.25,0,8.75,'#2f6b52',function(){drawPerson(-8.25,8.75,now,6,false,true,false)});
+    if(state.lounge>0){var hx=LOUNGE_DOOR.x-1.05,hz=LOUNGE_FRONT+.75;person(hx,0,hz,'#2f6b52',function(){drawPerson(hx,hz,now,8,false,true,false,{amount:0,phase:0,facing:-.3})})}
     customers.forEach(function(c){
       stepCustomerVisual(c,frameDelta);
       if(c.phase==='lounge')return;
-      people.push({x:c.renderX,y:0,z:c.renderZ,colour:PERSON_COLOURS[(c.id||0)%PERSON_COLOURS.length]});
+      person(c.renderX,0,c.renderZ,PERSON_COLOURS[(c.id||0)%PERSON_COLOURS.length],function(){drawPerson(c.renderX,c.renderZ,now,c.id,c.walking,false,c.bag,{phase:c.walkPhase||0,heading:c.walkHeading,amount:c.walkAmount||0,facing:c.facing===undefined?.3:c.facing,lean:c.turnLean||0,pickupAge:c.effectAge})});
     });
-    walkerPlacements(now).forEach(function(w){people.push({x:w.x,y:-.012,z:w.z,colour:PERSON_COLOURS[(w.g*3+1)%PERSON_COLOURS.length]})});
+    var streetApi=sunnyApi(now);
+    walkerPlacements(now).forEach(function(w){person(w.x,-.012,w.z,PERSON_COLOURS[(w.g*3+1)%PERSON_COLOURS.length],function(){drawWalker(streetApi,w)})});
     var look=(function(){var u=unit,c=Math.cos(angle),s=Math.sin(angle),rx=(width/2-centerX)/u,rz=(height/2-centerY)/(u*FLOOR_SQUASH);return{x:rx*c+rz*s,z:rz*c-rx*s}})();
-    map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt()},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt()},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
     customers.forEach(function(c){if(c.phase!=='lounge'&&customerBadged(c))drawCustomerBadge(Object.assign({},c,{x:c.renderX,z:c.renderZ}))});
     drawDeliveryDrones(frameDelta,now);drawParticles(frameDelta);drawTickets(frameDelta);drawConfetti(wallDelta);

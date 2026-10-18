@@ -153,8 +153,30 @@ export function createMap3D(canvas, layout) {
 
   // People and cars move every frame, so they are instanced: one draw call for all of them.
   const personGeometry = new THREE.CapsuleGeometry(.24, 1.55, 4, 10).translate(0, 1.03, 0);
-  const people = new THREE.InstancedMesh(personGeometry, material('#ffffff'), MAX_PEOPLE);
+  const people = new THREE.InstancedMesh(personGeometry, material('#ffffff', { name: 'people' }), MAX_PEOPLE);
   people.castShadow = true; people.count = 0;
+  // Figures: the people sprites as upright cards (main.js records where the 2D map would draw each one). They carry
+  // their own painted light, so they are unlit; the capsules underneath only cast the shadows.
+  const textures = new WeakMap(), cards = [];
+  const cardIndex = new THREE.BufferAttribute(new Uint16Array([0, 1, 2, 0, 2, 3]), 1);
+  function texture(img) {
+    let t = textures.get(img);
+    if (!t) { t = new THREE.Texture(img); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; t.needsUpdate = true; textures.set(img, t); }
+    return t;
+  }
+  function card(i) {
+    if (!cards[i]) {
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(12), 3));
+      g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(8), 2));
+      g.setIndex(cardIndex);
+      const mesh = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ alphaTest: .5, side: THREE.DoubleSide }));
+      mesh.frustumCulled = false;
+      world.add(mesh);
+      cards[i] = mesh;
+    }
+    return cards[i];
+  }
   people.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   world.add(people);
   const carBodies = new THREE.InstancedMesh(unitBox, material('#ffffff'), MAX_CARS), carCabins = new THREE.InstancedMesh(unitBox, material('#dfe8ea'), MAX_CARS);
@@ -209,6 +231,21 @@ export function createMap3D(canvas, layout) {
       }
     });
     selectionRing.visible = ringShown;
+
+    const figures = frame.figures || [], shade = 1 - night * .55;
+    figures.forEach((f, i) => {
+      const mesh = card(i), g = mesh.geometry, pos = g.attributes.position, uv = g.attributes.uv, [u0, v0, u1, v1] = f.uv;
+      pos.array.set(f.points); pos.needsUpdate = true;
+      uv.array.set([u0, v0, u1, v0, u1, v1, u0, v1]); uv.needsUpdate = true;
+      const mat = mesh.material, map = texture(f.img), fade = f.alpha < 1;
+      if (mat.map !== map) { mat.map = map; mat.needsUpdate = true; }
+      if (mat.transparent !== fade) { mat.transparent = fade; mat.needsUpdate = true; }
+      mat.opacity = f.alpha; mat.color.setScalar(shade);
+      mesh.visible = true;
+    });
+    for (let i = figures.length; i < cards.length; i++) cards[i].visible = false;
+    // With figures standing in, the capsules only cast shadows.
+    people.material.colorWrite = people.material.depthWrite = !frame.figures;
 
     people.count = Math.min(MAX_PEOPLE, frame.people.length);
     for (let i = 0; i < people.count; i++) {

@@ -925,9 +925,11 @@ export function walkerPlacements(now) {
   return out;
 }
 function drawWalkers(api, at) {
-  walkerPlacements(api.now).forEach(({ g, s, x: px, z: pz, facing, heading }) => {
-    at(px, pz, () => { if (!drawPersonSprite(api, px, pz, -(g + 1), false, facing, s + g * .44, api.now > 0 ? 1 : 0, walkerHasBag(g + 1), false, heading)) api.person(px, pz, 40 + g, api.now > 0); }, .4);
-  });
+  walkerPlacements(api.now).forEach(w => at(w.x, w.z, () => drawWalker(api, w), .4));
+}
+// One walker from walkerPlacements, as the street draws it; the 3D map records the same call to stand the figure up.
+export function drawWalker(api, { g, s, x, z, facing, heading }) {
+  if (!drawPersonSprite(api, x, z, -(g + 1), false, facing, s + g * .44, api.now > 0 ? 1 : 0, walkerHasBag(g + 1), false, heading)) api.person(x, z, 40 + g, api.now > 0);
 }
 
 // The block's layout for the 3D map: streets, terraces (footprints from their renders), trees, lamps and haze, in
