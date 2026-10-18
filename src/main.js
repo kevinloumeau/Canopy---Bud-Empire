@@ -738,11 +738,11 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     import(/* @vite-ignore */ map3dUrl).then(function(m){
       var layout=townLayout();
       // The three floors as drawTower lays them out.
-      layout.floors=[{y:0,z:1.5,w:23,d:17},{y:4.7,z:-2.95,w:18,d:7.4},{y:9.4,z:-3.6,w:13,d:6.6}];layout.marquee={x:MARQUEE.x,zFront:MARQUEE.zFront,zRear:MARQUEE.zRear,y0:MARQUEE.y0,y1:MARQUEE.y1};
+      layout.floors=[{y:0,z:1.5,w:23,d:17},{y:4.7,z:-2.95,w:18,d:7.4},{y:9.4,z:-3.6,w:13,d:6.6}];layout.marquee={x:MARQUEE.x,zFront:MARQUEE.zFront,zRear:MARQUEE.zRear,y0:MARQUEE.y0,y1:MARQUEE.y1,top:MARQUEE.top,bottom:MARQUEE.bottom};
       // Blender models (art/blender/, exported to public/models/) by station index, sized from the tier 3 sprite they replace.
       layout.modelBase=new URL('models/',document.baseURI).href;
-      layout.stationModels={0:'seeds_bench.glb',1:'grow_bench.glb',2:'harvest_bench.glb',3:'pack_bench.glb',5:'pickup_desk.glb'};
-      layout.stationModelSize={};for(var key in layout.stationModels)layout.stationModelSize[key]=stationSpriteSize(+key,3);
+      layout.stationModels={0:'seeds_bench.glb',1:'grow_bench.glb',2:'harvest_bench.glb',3:'pack_bench.glb',4:'order_desk.glb',5:'pickup_desk.glb',6:'id_desk.glb'};
+      layout.stationModelSize={};for(var key in layout.stationModels)layout.stationModelSize[key]=stationSpriteSize(+key,3);layout.stationModelSize[4]={w:2.2,ox:0};
       // The production line from the 2D map's own routes, so both maps carry the same tubes, belts and cargo rhythm.
       var grow=tubeRunGeometry(TUBE_RUNS[1]),pack=tubeRunGeometry(TUBE_RUNS[3]);
       layout.transport={bore:TUBE_DIA,gap:CARGO_GAP,
@@ -750,6 +750,16 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
           {points:pack.path,stage:3,cargoStage:4,floorRings:[pack.port],window:{total:PACK_FLOW,offset:0},noCap0:true},
           {points:PACK_STUB,stage:3,cargoStage:4,window:{total:PACK_FLOW,offset:PACK_STUB_AT}}],
         belts:[{x1:-4.6,x2:4.6,z:-5.8,floor:9.4,height:1.05,width:BELT_W,stage:0},{x1:4.2,x2:-3.2,z:-3.7,floor:4.7,height:1.05,width:BELT_W,stage:2}]};
+      // The online orders deck, placed by its origin (the stair foot, on the mezzanine) at the scale every Blender model
+      // shares (about 1.69 map units a metre), so its slab's right and front edges land where the sprite's do
+      // (DECK_RIGHT, DECK_FRONT) with the deck at 7.05.
+      layout.fixtures=[{key:'deck',file:'online_deck.glb',x:-9.39,y:4.7,z:-.2,scale:1.69}];
+      // The shell and fittings from the same numbers drawTower, drawLoungeFront and drawShellProductWall use.
+      layout.shell={plaster:SHOP_GREEN_PLASTER[2],tile:SHOP_GREEN_TILE[2],tileH:LOUNGE_TILE,tilePitch:TILE_PITCH,glazingBay:GLAZING_BAY,fanX:FAN_X,topLanding:TOP_LANDING,
+        loungeFront:LOUNGE_FRONT,loungeDoor:LOUNGE_DOOR,loungeExit:LOUNGE_EXIT,loungeRight:LOUNGE_RIGHT,loungeHeader:2.05,wallLeft:-6.7,wallRight:8.4,shelfLeft:-1.3+COUNTER_SHIFT,
+        exitDoor:{x0:9.44,x1:11.25,h:3.3},column:{x:9.8,z:-1.8},merchCabinet:{back:8.41,face:9.27,z0:-6.84,z1:-4.8},
+        planter:{x0:-11.7,x1:-10.75,z0:2,z1:5.6,tree:{x:-11.45,z:2.35}},lowWall:{x0:-11.3,x1:-4.6,z0:11.53,z1:11.85,h:1.05},hanging:{x0:-2.3,x1:2.3,y:9.05,z:-1.35},
+        lamps:[[-4,3.7,3.5,1.3],[4,3.7,3.5,1.3],[-4,3.7,8.5,1.1],[5,3.7,8.5,1.1],[-10,3,-4,.8],[-4,8.4,-3,1.2],[4,8.4,-3,1.2],[0,12.8,-4.5,1]]};
       map3d=m.createMap3D(canvas3d,layout);render.invalidated=true;
     }).catch(function(e){console.error('3D map could not load; keeping the 2D map',e);map3d=null});
   }
@@ -4088,7 +4098,7 @@ if(!SHOP_SPRITES){
       else station(i,p.x,p.y||0,p.z,state.lines[i],state.lines[i]>0,i);
       if(state.lines[i]>0)people.push({x:p.x-.9,y:p.y||0,z:p.z-1.45,colour:'#2f6b52'});
     }
-    stations.push({x:-9.1,y:0,z:9.3,w:.8,d:1.3,h:1.1,tier:state.doorBuilt?spriteTier(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
+    stations.push({index:6,x:-9.1,y:0,z:9.3,w:.8,d:1.3,h:1.1,tier:state.doorBuilt?spriteTier(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
     if(state.doorBuilt)people.push({x:-8.25,y:0,z:8.75,colour:'#2f6b52'});
     customers.forEach(function(c){
       stepCustomerVisual(c,frameDelta);
@@ -4097,7 +4107,7 @@ if(!SHOP_SPRITES){
     });
     walkerPlacements(now).forEach(function(w){people.push({x:w.x,y:-.012,z:w.z,colour:PERSON_COLOURS[(w.g*3+1)%PERSON_COLOURS.length]})});
     var look=(function(){var u=unit,c=Math.cos(angle),s=Math.sin(angle),rx=(width/2-centerX)/u,rz=(height/2-centerY)/(u*FLOOR_SQUASH);return{x:rx*c+rz*s,z:rz*c-rx*s}})();
-    map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,cars:carPlacements(now),cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt()},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
     customers.forEach(function(c){if(c.phase!=='lounge'&&customerBadged(c))drawCustomerBadge(Object.assign({},c,{x:c.renderX,z:c.renderZ}))});
     drawDeliveryDrones(frameDelta,now);drawParticles(frameDelta);drawTickets(frameDelta);drawConfetti(wallDelta);

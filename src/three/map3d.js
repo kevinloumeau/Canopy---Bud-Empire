@@ -7,6 +7,7 @@
 // Nothing here reads or writes game state: main.js hands over the layout once and a frame description every frame.
 // This module is loaded on demand and imports only Three.js, so it never pulls the game's own modules into its chunk.
 import * as THREE from 'three';
+import { buildShell } from './shell.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { createMapCamera, frameMapCamera, HEIGHT_SCALE } from './camera.js';
@@ -87,6 +88,7 @@ export function createMap3D(canvas, layout) {
   buildTown(world, layout, { box, span, material });
   buildShop(world, layout, { box, span });
   const transport = buildTransport(scene, world, layout.transport, { box, material });
+  const shell = buildShell(world, layout, { box, span, material });
 
   // Stations: one solid per station slot, resized and recoloured from the frame (tier, built, rising in).
   const stationMeshes = [], selectionRing = new THREE.Mesh(new THREE.RingGeometry(.86, 1, 48).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#e2c68a', transparent: true, opacity: .85, depthWrite: false }));
@@ -109,19 +111,37 @@ export function createMap3D(canvas, layout) {
   // loaded (or if it fails), the grey box stands in.
   const models = {};
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+  function prepare(source) {
+    source.traverse(o => {
+      if (!o.isMesh) return;
+      o.castShadow = o.receiveShadow = true;
+      // Glass comes in with transmission, which costs Three.js a second render of the scene every frame; plain
+      // transparency reads the same at this size.
+      const m = o.material;
+      if (m && m.transmission > 0) { o.material = new THREE.MeshStandardMaterial({ color: m.color, roughness: .1, metalness: 0, transparent: true, opacity: .28, depthWrite: false }); o.castShadow = false; }
+    });
+  }
+  // Fixtures (the online orders deck) are placed by their own origin at a fixed Blender-to-map scale rather than
+  // fitted to a sprite, since their footprint is irregular; `key` names the frame flag that shows them.
+  const fixtures = {};
+  (layout.fixtures || []).forEach(f => {
+    loader.load(layout.modelBase + f.file, gltf => {
+      prepare(gltf.scene);
+      const holder = new THREE.Group();
+      holder.add(gltf.scene);
+      holder.scale.set(f.scale, f.scale / HEIGHT_SCALE, f.scale);
+      holder.position.set(f.x, f.y, f.z);
+      holder.visible = false;
+      world.add(holder);
+      fixtures[f.key] = holder;
+    }, undefined, e => console.warn('3D map: could not load ' + f.file, e));
+  });
   Object.entries(layout.stationModels || {}).forEach(([index, file]) => {
     loader.load(layout.modelBase + file, gltf => {
       const source = gltf.scene, bounds = new THREE.Box3().setFromObject(source), size = bounds.getSize(new THREE.Vector3()), centre = bounds.getCenter(new THREE.Vector3());
       const spec = layout.stationModelSize[index] || { w: size.x + size.z, ox: 0 }, s = spec.w / ((size.x + size.z) * Math.SQRT1_2);
       source.position.set(-centre.x, -bounds.min.y, -centre.z);
-      source.traverse(o => {
-        if (!o.isMesh) return;
-        o.castShadow = o.receiveShadow = true;
-        // Glass comes in with transmission, which costs Three.js a second render of the scene every frame; plain
-        // transparency reads the same at this size.
-        const m = o.material;
-        if (m && m.transmission > 0) { o.material = new THREE.MeshStandardMaterial({ color: m.color, roughness: .1, metalness: 0, transparent: true, opacity: .28, depthWrite: false }); o.castShadow = false; }
-      });
+      prepare(source);
       const holder = new THREE.Group();
       holder.add(source);
       holder.scale.set(s, s / HEIGHT_SCALE, s);
@@ -213,6 +233,8 @@ export function createMap3D(canvas, layout) {
     [carBodies, carCabins].forEach(m => { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; });
 
     if (transport && frame.cargo) transport.update(frame.cargo);
+    if (shell) shell.update(frame);
+    Object.entries(fixtures).forEach(([key, holder]) => { holder.visible = !!(frame.fixtures && frame.fixtures[key]); });
 
     renderer.render(scene, camera);
     return true;
@@ -273,15 +295,13 @@ function buildShop(world, layout, { box, span }) {
   layout.floors.forEach((f, fi) => {
     const left = -f.w / 2, right = f.w / 2, rear = f.z - f.d / 2, front = f.z + f.d / 2;
     span(shop, left, right, f.y - (fi ? .32 : .02), f.y, rear, front, fi === 2 ? '#e9e4d8' : fi ? '#e4ddcc' : '#c9965f', { cast: fi > 0 });
-    // Rear wall and, above the ground floor, the short wall at the left end; heights as drawShellWalls draws them.
-    const wallH = fi === 2 ? 3.9 : 4.7, wall = fi === 2 ? '#2f6b52' : '#3f9468';
-    span(shop, left, right, f.y, f.y + wallH, rear - .25, rear, wall);
-    if (fi) span(shop, left - .25, left, f.y, f.y + wallH, rear, rear + 3.5, wall);
+    // The walls themselves are the shell's (shell.js).
     // A brass rail along the open front edge of the upper floors.
     if (fi) {
       span(shop, left, right, f.y, f.y + 1.05, front - .06, front, '#c9a35a', { opts: { transparent: true, opacity: .55 } });
       // Posts under the slab's front corners and middle.
-      [left + .3, 0, right - .3].forEach(x => box(shop, x, layout.floors[fi - 1].y, front - .3, .3, f.y - layout.floors[fi - 1].y - .32, .3, '#33372f'));
+      // The mezzanine has no middle post: the 2D map leaves the menu board and counters clear.
+      (fi === 1 ? [left + .3, right - .3] : [left + .3, 0, right - .3]).forEach(x => box(shop, x, layout.floors[fi - 1].y, front - .3, .3, f.y - layout.floors[fi - 1].y - .32, .3, '#33372f'));
     }
   });
   // Stairs as drawShellStairs places them: the ground flight up the right side to a landing off the mezzanine, then
