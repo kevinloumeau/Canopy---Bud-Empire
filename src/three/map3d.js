@@ -228,6 +228,72 @@ export function createMap3D(canvas, layout) {
     }
     return cards[i];
   }
+  // Flat renders from the 2D map: the storefront's elevations on the entrance wall's plane, and the mats on the floor,
+  // pinned by three image points to three floor points as the 2D map pins them. The elevations carry their own
+  // painted light like the figures; the mats are lit like the floor they lie on.
+  const flatMeshes = [], decals = [];
+  function flatMesh(url, lit, build) {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(12), 3));
+    g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(8), 2));
+    g.setIndex(cardIndex);
+    const opts = { alphaTest: .5, side: THREE.DoubleSide };
+    const mat = withHaze(lit ? new THREE.MeshLambertMaterial({ ...opts, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }) : new THREE.MeshBasicMaterial(opts));
+    const mesh = new THREE.Mesh(g, mat);
+    mesh.visible = false; mesh.frustumCulled = false; mesh.receiveShadow = lit;
+    world.add(mesh);
+    textureLoader.load(new URL(url, document.baseURI).href, t => {
+      t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+      const [points, uvs] = build(t.image);
+      g.attributes.position.array.set(points); g.attributes.position.needsUpdate = true;
+      g.attributes.uv.array.set(uvs); g.attributes.uv.needsUpdate = true;
+      g.computeVertexNormals();
+      mat.map = t; mat.needsUpdate = true; mesh.visible = true; mesh.userData.ready = true;
+    }, undefined, () => console.warn('3D map: could not load ' + url));
+    return mesh;
+  }
+  (layout.wallFaces || []).forEach(w => flatMeshes.push(flatMesh(w.url, false, () => [
+    [w.x0, w.y0, w.z0, w.x1, w.y0, w.z1, w.x1, w.y0 + w.h, w.z1, w.x0, w.y0 + w.h, w.z0], [0, 0, 1, 0, 1, 1, 0, 1]])));
+  (layout.decals || []).forEach(d => {
+    const mesh = flatMesh(d.url, true, img => {
+      // Image points (v down) to floor points: an affine map fixed by the three pins, applied to the image's corners.
+      const n = d.pixels ? d.image.map(([u, v]) => [u / img.naturalWidth, v / img.naturalHeight]) : d.image;
+      const [p0, p1, p2] = n, [w0, w1, w2] = d.world;
+      const a = p1[0] - p0[0], b = p2[0] - p0[0], c = p1[1] - p0[1], e = p2[1] - p0[1], det = a * e - b * c;
+      const at = (u, v) => {
+        const du = u - p0[0], dv = v - p0[1], s = (e * du - b * dv) / det, t = (a * dv - c * du) / det;
+        return [w0[0] + (w1[0] - w0[0]) * s + (w2[0] - w0[0]) * t, .012, w0[1] + (w1[1] - w0[1]) * s + (w2[1] - w0[1]) * t];
+      };
+      return [[...at(0, 1), ...at(1, 1), ...at(1, 0), ...at(0, 0)], [0, 0, 1, 0, 1, 1, 0, 1]];
+    });
+    mesh.userData.show = d.show;
+    decals.push(mesh);
+  });
+  // Solids that only cast the shadows of renders standing over them (the display case).
+  (layout.casters || []).forEach(c => box(world, c.x, 0, c.z, c.w, c.h, c.d, '#ffffff', { receive: false, opts: { name: 'street' } }));
+  // Queue ropes: sagging cords between the posts, rebuilt only when the pens change; thin hidden posts cast shadows.
+  const ropes = new THREE.Group();
+  world.add(ropes);
+  let ropeKey = '';
+  function buildRopes(list) {
+    ropes.children.forEach(c => c.geometry.dispose());
+    ropes.clear();
+    const posts = new Set();
+    list.forEach(r => {
+      const curve = new THREE.CatmullRomCurve3(r.points.map(p => new THREE.Vector3(p[0], p[1], p[2])));
+      const cord = new THREE.Mesh(new THREE.TubeGeometry(curve, 20, .045, 8, false), material(r.colour));
+      cord.castShadow = true; ropes.add(cord);
+      [r.points[0], r.points[r.points.length - 1]].forEach(p => {
+        const key = p[0].toFixed(2) + ',' + p[2].toFixed(2);
+        if (posts.has(key)) return;
+        posts.add(key);
+        const post = new THREE.Mesh(unitBox.clone(), material('#ffffff', { name: 'street' }));
+        post.position.set(p[0], 0, p[2]); post.scale.set(.07, 1, .07); post.castShadow = true;
+        ropes.add(post);
+      });
+    });
+  }
+
   people.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   world.add(people);
   const carBodies = new THREE.InstancedMesh(unitBox, material('#ffffff', { name: 'street' }), MAX_CARS), carCabins = new THREE.InstancedMesh(unitBox, material('#dfe8ea', { name: 'street' }), MAX_CARS);
@@ -288,6 +354,10 @@ export function createMap3D(canvas, layout) {
     selectionRing.visible = ringShown;
 
     const figures = frame.figures || [], shade = 1 - night * .55;
+    flatMeshes.forEach(f => f.material.color.setScalar(shade));
+    decals.forEach(d => { d.visible = d.userData.ready && (d.userData.show !== 'loungeOpen' || !!frame.loungeOpen); });
+    const key = JSON.stringify(frame.ropes || []);
+    if (key !== ropeKey) { ropeKey = key; buildRopes(frame.ropes || []); }
     const place = (f, mesh) => {
       const g = mesh.geometry, pos = g.attributes.position, uv = g.attributes.uv, [u0, v0, u1, v1] = f.uv;
       pos.array.set(f.points); pos.needsUpdate = true;
@@ -436,7 +506,9 @@ function buildShop(world, layout, { box, span, material, textured }) {
   textured(span(shop, 8.93, 10.85, mezz.y - .32, mezz.y, -2.8, -.8, '#e4ddcc', { cast: true }), 'timber');
   flight(6.5, 8.2, -.5, -6.8, mezz.y, top.y, 12);
   // The storefront along the entrance side (MARQUEE in main.js): a green plinth, glass, the sign band and pilasters.
+  // The sprite shop draws it from its own render instead (wallFaces, below).
   const m = layout.marquee;
+  if (layout.wallFaces) return;
   span(shop, m.x - .13, m.x + .13, 0, .9, m.zRear, m.zFront, '#1f6b47');
   span(shop, m.x - .04, m.x + .04, .9, m.y0, m.zRear, m.zFront, '#cfe3dc', { cast: false, opts: { transparent: true, opacity: .35 } });
   span(shop, m.x - .16, m.x + .16, m.y0, m.y1, m.zRear, m.zFront, '#1f6b47');

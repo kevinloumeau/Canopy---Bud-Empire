@@ -280,7 +280,8 @@ export function buildShell(world, layout, { box, span, material }) {
   const marqueeFace = new THREE.Mesh(new THREE.PlaneGeometry(signLen, m.y1 - m.y0), marqueeMat);
   marqueeFace.rotation.y = Math.PI / 2;
   marqueeFace.position.set(m.x + .17, (m.y0 + m.y1) / 2, (m.zFront + m.zRear) / 2);
-  shell.add(marqueeFace);
+  // The sprite shop's storefront render carries its own sign (main.js wallFaces).
+  if (!layout.wallFaces) shell.add(marqueeFace);
 
   // The aisle planter along the storefront and the low tiled wall at the entrance.
   const pl = s.planter;

@@ -763,6 +763,17 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
         exitDoor:{x0:9.44,x1:11.25,h:3.3},column:{x:9.8,z:-1.8},merchCabinet:{back:8.41,face:9.27,z0:-6.84,z1:-4.8},
         planter:{x0:-11.7,x1:-10.75,z0:2,z1:5.6,tree:{x:-11.45,z:2.35}},lowWall:{x0:-11.3,x1:-4.6,z0:11.53,z1:11.85,h:1.05},hanging:{x0:-2.3,x1:2.3,y:9.05,z:-1.35},
         lamps:[[-4,3.7,3.5,1.3],[4,3.7,3.5,1.3],[-4,3.7,8.5,1.1],[5,3.7,8.5,1.1],[-10,3,-4,.8],[-4,8.4,-3,1.2],[4,8.4,-3,1.2],[0,12.8,-4.5,1]]};
+      // Sprite shop: the storefront and its doorway are the 2D map's own flat elevations on the entrance wall's plane
+      // (addEntryDoor), the exit mat and the lounge's runner lie on the floor where the 2D map pins them, and the
+      // display case casts its shadow from a box under its figure.
+      if(SHOP_SPRITES){
+        layout.wallFaces=[{url:'sprites/shell/flat.storefront.png',x0:-10.65,z0:8.94,x1:-10.65,z1:LOUNGE_FRONT,y0:-.04,h:4.19},
+          {url:'sprites/shell/flat.storefront.door.png',x0:-10.65,z0:12.05,x1:-10.65,z1:8.8,y0:-.04,h:4.2}];
+        var matX=10.7,matZ=-4.35,runW=(LOUNGE_CARPET_END-LOUNGE_FRONT)/LOUNGE_RUNNER_PIN.ratio,pin=LOUNGE_RUNNER_PIN;
+        layout.decals=[{url:'sprites/shell/shell.mat.exit.png',image:[[0,0],[1,0],[0,1]],world:[[matX+.6,matZ+1.1],[matX+.6,matZ-1.1],[matX-.6,matZ+1.1]]},
+          {url:'sprites/interior/lounge.carpet.runner.png',pixels:true,image:[pin.left,pin.bottom,pin.top],world:[[LOUNGE_DOOR.x-runW/2,LOUNGE_CARPET_END],[LOUNGE_DOOR.x+runW/2,LOUNGE_CARPET_END],[LOUNGE_DOOR.x-runW/2,LOUNGE_FRONT+.02]],show:'loungeOpen'}];
+        layout.casters=[{x:10.05,z:8.7,w:.7,d:2.1,h:1.4}];
+      }
       map3d=m.createMap3D(canvas3d,layout);render.invalidated=true;
     }).catch(function(e){console.error('3D map could not load; keeping the 2D map',e);map3d=null});
   }
@@ -3693,14 +3704,17 @@ if(!SHOP_SPRITES){
 
     });
   }
+  // A Ludo brass stanchion, its base on the post's foot and its knob at the rope's height.
+  function drawStanchion(x,z){
+    var name=shellSprite('shell.queue.post');if(!name)return false;
+    var img=spriteImage(name),base=project(x,.05,z),top=project(x,1.02,z),foot=project(x,-.06,z),h=foot.y-top.y,w=h*img.naturalWidth/img.naturalHeight;
+    ellipse(base.x-unit*.12,base.y+unit*.04,unit*.2,unit*.06,'#14201824');ctx.drawImage(img,foot.x-w*.62,top.y,w,h);return true;
+  }
   function addQueueRails(jobs){
 
     function post(x,z){jobs.push({depth:depthOf({x:x,z:z}),draw:function(){
       var base=project(x,.05,z),cap=project(x,.85,z);
-      // Sprite shop: a single Ludo brass stanchion, its base on the post's foot and its knob at the rope's height.
-      var stanchion=SHOP_SPRITES&&shellSprite('shell.queue.post');
-      if(stanchion){var img=spriteImage(stanchion),top=project(x,1.02,z),foot=project(x,-.06,z),h=foot.y-top.y,w=h*img.naturalWidth/img.naturalHeight;
-        ellipse(base.x-unit*.12,base.y+unit*.04,unit*.2,unit*.06,'#14201824');ctx.drawImage(img,foot.x-w*.62,top.y,w,h);return}
+      if(SHOP_SPRITES&&drawStanchion(x,z))return;
       // The post's cast shadow leans down-left with the key light before its brass base goes down.
       ellipse(base.x-unit*.17,base.y+unit*.055,unit*.24,unit*.07,'#14201824');
       ellipse(base.x,base.y,unit*.2,unit*.09,'#8a805b');
@@ -3718,17 +3732,21 @@ if(!SHOP_SPRITES){
     }
     // Rails that meet share one post.
     function pen(rails){var posts={};rails.forEach(function(r){[[r[0],r[1]],[r[2],r[3]]].forEach(function(p){var key=p[0].toFixed(3)+','+p[1].toFixed(3);if(!posts[key]){posts[key]=true;post(p[0],p[1])}});rope(r[0],r[1],r[2],r[3])})}
+    queuePens().forEach(pen);
+  }
+  // The queue pens' rope runs, [x1, z1, x2, z2] each, shared by the 2D map and the 3D one.
+  function queuePens(){
     // Pickup pen: two alternating dividers leave turning pockets matching queueRoute(true).
     var near=4.65,far=1.25;
-    pen([[near,5.5,2.5,5.5],[far,6.7,3.4,6.7],[near,4.5,near,7.9],[far,4.5,far,7.9],[near,7.9,2.5,7.9]]);
     // Order pen: three full-width rows, open at the top so the gate's customers walk straight on to any counter, and
     // open at the bottom-left where the tail comes in from the door. Dividers sit between the rows of
     // queueRoute(false), each leaving a pocket at the end the line turns through (right, left, right).
     var ORDER_PEN=orderPen(),right=ORDER_PEN.right+.65,left=ORDER_PEN.left-.65,rows=ORDER_ROWS;
-    pen([[left,(ORDER_QUEUE_GATE.z+rows[0])/2,ORDER_PEN.right-.6,(ORDER_QUEUE_GATE.z+rows[0])/2],
-         [right,(rows[0]+rows[1])/2,ORDER_PEN.left+.6,(rows[0]+rows[1])/2],
-         [left,(rows[1]+rows[2])/2,ORDER_PEN.right-.6,(rows[1]+rows[2])/2],
-         [right,6.4,right,rows[2]],[left,(ORDER_QUEUE_GATE.z+rows[0])/2,left,(rows[1]+rows[2])/2]]);
+    return[[[near,5.5,2.5,5.5],[far,6.7,3.4,6.7],[near,4.5,near,7.9],[far,4.5,far,7.9],[near,7.9,2.5,7.9]],
+      [[left,(ORDER_QUEUE_GATE.z+rows[0])/2,ORDER_PEN.right-.6,(ORDER_QUEUE_GATE.z+rows[0])/2],
+       [right,(rows[0]+rows[1])/2,ORDER_PEN.left+.6,(rows[0]+rows[1])/2],
+       [left,(rows[1]+rows[2])/2,ORDER_PEN.right-.6,(rows[1]+rows[2])/2],
+       [right,6.4,right,rows[2]],[left,(ORDER_QUEUE_GATE.z+rows[0])/2,left,(rows[1]+rows[2])/2]]];
   }
   // The smoking lounge's face. The shelving wall continues left into a speakeasy doorway — dark lacquer with brass
   // mouldings, velvet curtains tied back to a narrow gap that shows a lamp-lit corner of the room, a neon LOUNGE sign on
@@ -3852,9 +3870,7 @@ if(!SHOP_SPRITES){
       // turn on to it; posts and rope sort with the guests waiting on the carpet.
       var ropeX=dx+.72,ropePosts=[face+.3,face+1.4,face+2.5];
       ropePosts.forEach(function(pz){sceneJobs.push({depth:depthOf({x:ropeX,z:pz}),draw:function(){
-        sceneElevation=0;var stanchion=shellSprite('shell.queue.post');if(!stanchion)return;
-        var img=spriteImage(stanchion),base=project(ropeX,.05,pz),top=project(ropeX,1.02,pz),foot=project(ropeX,-.06,pz),h=foot.y-top.y,w=h*img.naturalWidth/img.naturalHeight;
-        ellipse(base.x-unit*.12,base.y+unit*.04,unit*.2,unit*.06,'#14201824');ctx.drawImage(img,foot.x-w*.62,top.y,w,h);
+        sceneElevation=0;drawStanchion(ropeX,pz);
       }})});
       // Each span is one stroke, so the highlight runs unbroken instead of being capped over at every segment.
       for(var span=0;span<ropePosts.length-1;span++)(function(z1,z2){
@@ -4158,11 +4174,25 @@ if(!SHOP_SPRITES){
     // terraces stay solid. The 3D trees, lamps and cars underneath only cast shadows.
     var backdrops=[];
     streetItems(streetApi).forEach(function(j){if(j.kind!=='walker')capturePerson(j.kind==='building'?backdrops:figures,(j.x0+j.x1)/2,0,(j.z0+j.z1)/2,j.draw)});
+    // The queue pens and the lounge's line: each post is the 2D map's stanchion, and the ropes sag between them as 3D
+    // cords; the display case is its render.
+    var ropes=[];
+    if(SHOP_SPRITES){
+      var posts={};
+      var rail=function(x1,z1,x2,z2,colour){
+        var pts=[];for(var k=0;k<=10;k++){var t=k/10;pts.push([x1+(x2-x1)*t,.84-.62*t*(1-t),z1+(z2-z1)*t])}
+        ropes.push({points:pts,colour:colour});posts[x1.toFixed(3)+','+z1.toFixed(3)]=[x1,z1];posts[x2.toFixed(3)+','+z2.toFixed(3)]=[x2,z2];
+      };
+      queuePens().forEach(function(pen){pen.forEach(function(r){rail(r[0],r[1],r[2],r[3],'#2f6b45')})});
+      if(state.lounge>0){var ropeX=LOUNGE_DOOR.x+.72,rf=LOUNGE_FRONT;rail(ropeX,rf+.3,ropeX,rf+1.4,'#6b1f35');rail(ropeX,rf+1.4,ropeX,rf+2.5,'#6b1f35')}
+      Object.keys(posts).forEach(function(key){var q=posts[key];capturePerson(figures,q[0],0,q[1],function(){drawStanchion(q[0],q[1])})});
+      if(fixtureSprite('shop.displaycase'))capturePerson(figures,10.05,0,8.7,function(){drawSprite(streetApi,'shop.displaycase',10.05,8.7,true)});
+    }
     // The 2D map fades figures behind the building and lays haze over distant renders as see-through copies; in 3D
     // depth and the scene's haze do both, so only the solid draws are kept.
     figures=figures.filter(function(f){return f.alpha>.99});backdrops=backdrops.filter(function(f){return f.alpha>.99});
     var look=(function(){var u=unit,c=Math.cos(angle),s=Math.sin(angle),rx=(width/2-centerX)/u,rz=(height/2-centerY)/(u*FLOOR_SQUASH);return{x:rx*c+rz*s,z:rz*c-rx*s}})();
-    map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt()},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,ropes:ropes,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt()},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
     customers.forEach(function(c){if(c.phase!=='lounge'&&customerBadged(c))drawCustomerBadge(Object.assign({},c,{x:c.renderX,z:c.renderZ}))});
     drawDeliveryDrones(frameDelta,now);drawParticles(frameDelta);drawTickets(frameDelta);drawConfetti(wallDelta);
