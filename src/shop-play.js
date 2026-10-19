@@ -74,11 +74,21 @@ export function operationsAlerts(empire){
 const icon=path=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+path+'</svg>';
 const LEAF=icon('<path d="M12 21v-8"/><path d="M12 13c-4.5 0-7-2.5-7-7 4.5 0 7 2.5 7 7Z"/><path d="M12 15c0-4 2.3-6.5 7-6.5 0 4.2-2.5 6.5-7 6.5Z"/>');
 const LIST=icon('<path d="M5 7h14M5 12h14M5 17h9"/>');
+const CLOSE=icon('<path d="M6 6l12 12M18 6 6 18"/>');
+const CHEVRON=icon('<path d="m9 6 6 6-6 6"/>');
+const CHECK=icon('<path d="m5 12.5 4.5 4.5L19 7.5"/>');
+const SPARK=icon('<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.5 2.5M15.2 15.2l2.5 2.5M6.3 17.7l2.5-2.5M15.2 8.8l2.5-2.5"/>');
+const svg=html=>{const t=document.createElement('template');t.innerHTML=html;return t.content.firstChild;};
+// Minutes to the next recap, rounded up, so the label only changes once a minute.
+// The five-minute recap clock is called the floor, not a shift, so it never reads against the shift goals' "Shift N".
+export function shiftTimeLeft(seconds){const left=Math.max(0,SHIFT_SECONDS-seconds);return left<60?'Recap in under a minute':'Recap in '+Math.ceil(left/60)+' min';}
+// The panel, on the glass components: the budtender pick as one-row choices, this shift as open figures with a thin
+// progress line, last shift's advice as the brass next-action card, and operations as one grouped list of rows.
 export function mountShopPlay({getState,getMoment,getAlerts,names,format,choose,skip,navigate,changed,opening,closing}){
   const root=document.createElement('div');root.className='shop-play';
   root.innerHTML='<button type="button" id="shopActivity" class="shop-activity" aria-expanded="false" aria-controls="shopActivityPanel">'+LIST+'<span></span></button>'+
-    '<section id="shopActivityPanel" class="shop-activity-panel" aria-label="Shop activity" hidden><div class="shop-activity-heading"><h2>Shop activity</h2><button type="button" id="shopActivityClose" aria-label="Close shop activity">×</button></div>'+
-    '<div id="budtenderMoment"></div><section class="shift-recap" id="shiftRecap"></section><section class="operations-alerts"><h3>Operations</h3><div id="operationsAlerts"></div></section></section>'+
+    '<section id="shopActivityPanel" class="shop-activity-panel" aria-label="Shop activity" hidden><div class="shop-activity-heading"><h2>Shop activity</h2><button type="button" id="shopActivityClose" aria-label="Close shop activity">'+CLOSE+'</button></div>'+
+    '<div id="budtenderMoment"></div><section class="shift-recap" id="shiftRecap"></section><section class="operations-alerts"><div class="activity-head"><h3>Operations</h3><span id="operationsCount"></span></div><div id="operationsAlerts"></div></section></section>'+
     '<button type="button" id="momentBubble" class="moment-bubble" aria-label="Help this customer choose" hidden>'+LEAF+'</button><p class="shop-play-feedback" role="status" hidden></p>';
   document.getElementById('world').appendChild(root);
   const $=id=>root.querySelector('#'+id),panel=$('shopActivityPanel'),pill=$('shopActivity'),bubble=$('momentBubble'),feedback=root.querySelector('.shop-play-feedback');
@@ -97,36 +107,37 @@ export function mountShopPlay({getState,getMoment,getAlerts,names,format,choose,
   $('budtenderMoment').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.choice!==undefined)choose(Number(b.dataset.choice));else if(b.dataset.skip!==undefined)skip();render();});
   $('operationsAlerts').addEventListener('click',e=>{const b=e.target.closest('[data-alert]');if(!b)return;const alert=getAlerts().find(a=>a.id===b.dataset.alert);if(alert){close();navigate(alert)}});
   $('shiftRecap').addEventListener('click',e=>{if(!e.target.closest('button'))return;const recap=getState().shopPlay.recap;if(recap){close();navigate(shiftAdvice(recap))}});
-  const el=(tag,props)=>Object.assign(document.createElement(tag),props);
+  const el=(tag,props,...kids)=>{const node=Object.assign(document.createElement(tag),props);node.append(...kids);return node;};
+  const figure=(label,value)=>el('div',{},el('dt',{textContent:label}),el('dd',{textContent:value}));
   function render(){
-    const play=getState().shopPlay,moment=getMoment(),alerts=getAlerts();
-    const label=moment?moment.name+' needs a pick':play.recapUnread?'Shift recap ready':alerts.length?alerts[0].title:'Shop activity';
+    const play=getState().shopPlay,moment=getMoment(),alerts=getAlerts(),shift=play.shift;
+    const label=moment?moment.name+' needs a pick':play.recapUnread?'Floor recap ready':alerts.length?alerts[0].title:'Shop activity';
     pill.querySelector('span').textContent=label;pill.classList.toggle('is-moment',!!moment);
     const glyph=moment?'leaf':'list';if(pill.dataset.icon!==glyph){pill.dataset.icon=glyph;pill.querySelector('svg').outerHTML=moment?LEAF:LIST}
     panel.classList.toggle('has-moment',!!moment);panel.querySelector('h2').textContent=moment?moment.name+' needs a pick':'Shop activity';
     pill.classList.toggle('has-update',!!moment||play.recapUnread||alerts.length>0);pill.setAttribute('aria-label',label+' · Open shop activity');
-    const next=JSON.stringify([moment&&[moment.customerId,moment.choices,moment.opened],play.recap,alerts,Math.floor(play.shift.seconds/10)]);
+    const next=JSON.stringify([moment&&[moment.customerId,moment.choices,moment.opened],play.recap,alerts,shift.served,shift.matches,Math.floor(shift.earned),Math.floor(shift.seconds/10)]);
     if(next===key)return;key=next;
     const focused=document.activeElement,scroll=panel.scrollTop,box=$('budtenderMoment');
     const memory=root.contains(focused)?{choice:focused.dataset.choice,alert:focused.dataset.alert,customer:box.dataset.customerId,skip:focused.dataset.skip!==undefined,recap:!!focused.closest('#shiftRecap')}:null;
     box.dataset.customerId=moment?String(moment.customerId):'';box.replaceChildren();
     if(moment){
       const options=el('div',{className:'moment-options'});
-      moment.choices.forEach((option,i)=>{const b=el('button',{type:'button'});b.dataset.choice=i;b.append(el('strong',{textContent:names[option.strain]+' · '+option.formatName}),el('small',{textContent:option.trait}));options.appendChild(b)});
+      moment.choices.forEach((option,i)=>{const b=el('button',{type:'button'},el('strong',{textContent:names[option.strain]}),el('span',{className:'moment-format',textContent:option.formatName}),el('small',{textContent:option.trait}));b.dataset.choice=i;options.appendChild(b)});
       const pass=el('button',{type:'button',className:'moment-skip',textContent:'Let the team choose'});pass.dataset.skip='';
-      box.append(el('p',{className:'moment-quote',textContent:'“'+moment.request+'”'}),options,pass,el('small',{className:'moment-note',textContent:'Tap a pick to recommend it. A good match earns a tip.'}));
+      box.append(el('p',{className:'moment-quote',textContent:'“'+moment.request+'”'}),options,el('div',{className:'moment-foot'},el('small',{className:'moment-note',textContent:'A good match tips 20% at pickup.'}),pass));
     }
-    const recapBox=$('shiftRecap');recapBox.replaceChildren(el('h3',{textContent:play.recap?'Last shift · 5 minutes':'Your shift'}));
+    const recapBox=$('shiftRecap'),progress=el('progress',{max:SHIFT_SECONDS,value:shift.seconds});progress.setAttribute('aria-label','Time to the next floor recap');
+    recapBox.replaceChildren(el('div',{className:'activity-head'},el('h3',{textContent:'On the floor'}),el('span',{textContent:shiftTimeLeft(shift.seconds)})),progress,
+      el('dl',{className:'activity-figures'},figure('Served',String(shift.served)),figure('Great picks',String(shift.matches)),figure('Earned',format(shift.earned))));
     if(play.recap){
-      const r=play.recap;
-      recapBox.append(el('p',{textContent:r.served+' served · '+r.matches+' great matches · '+format(r.earned)+' earned'}),
-        el('p',{className:'recap-detail',textContent:r.deliveries+' deliveries · '+r.transfers+' transfers · peak queue '+r.queuePeak+(r.served?' · '+Math.round(r.waitTotal/r.served)+'s average wait':'')}),
-        el('button',{type:'button',textContent:shiftAdvice(r).text}));
-    }else recapBox.appendChild(el('p',{textContent:'Your recap arrives after five minutes of play.'}));
-    const progress=el('progress',{max:SHIFT_SECONDS,value:play.shift.seconds});progress.setAttribute('aria-label','Current shift progress');recapBox.appendChild(progress);
-    const list=$('operationsAlerts');list.replaceChildren();
-    if(!alerts.length)list.appendChild(el('p',{textContent:'All caught up.'}));
-    alerts.forEach(a=>{const b=el('button',{type:'button'});b.dataset.alert=a.id;b.append(el('strong',{textContent:a.title}),el('small',{textContent:a.detail+' →'}));list.appendChild(b)});
+      const r=play.recap,wait=r.served?' · '+Math.round(r.waitTotal/r.served)+'s wait':'';
+      const card=el('button',{type:'button',className:'activity-advice'},svg(SPARK),el('span',{className:'activity-advice-copy'},el('small',{textContent:'Last 5 min · '+format(r.earned)+' · '+r.served+' served'+wait}),el('strong',{textContent:shiftAdvice(r).text})),svg(CHEVRON));
+      recapBox.appendChild(card);
+    }
+    const list=$('operationsAlerts');list.replaceChildren();$('operationsCount').textContent=alerts.length?String(alerts.length):'';
+    if(!alerts.length)list.appendChild(el('p',{className:'activity-clear'},svg(CHECK),'All caught up'));
+    alerts.forEach(a=>{const b=el('button',{type:'button'},el('span',{className:'activity-row-copy'},el('strong',{textContent:a.title}),el('small',{textContent:a.detail})),svg(CHEVRON));b.dataset.alert=a.id;list.appendChild(b)});
     if(memory&&!focused.isConnected){
       let target;
       if(memory.choice!==undefined&&moment&&memory.customer===String(moment.customerId))target=box.querySelector('[data-choice="'+memory.choice+'"]');
