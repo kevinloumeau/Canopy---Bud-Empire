@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {nextSeason,weeklySpecial,specialFactor,WEEKLY_SPECIALS,DAY,HOUR,DAILY,CAREER,migrateProgression,dailyStatus,claimDaily,claimCareer,saleMultiplier,branchRate,buyStore,storeRate,storeCost,eventStatus,joinEvent,recordEvent,claimEvent,seasonWindow,seasonStatus,claimSeason,SEASON_REWARDS} from '../src/progression.js';
+import {nextSeason,weeklySpecial,specialFactor,WEEKLY_SPECIALS,DAY,HOUR,DAILY,CAREER,migrateProgression,dailyStatus,claimDaily,claimCareer,saleMultiplier,branchRate,buyStore,storeRate,storeCost,recordEvent,CONTRACTS,contractOffer,activeContract,contractTwist,contractFactor,startContract,skipContract,settleContract,useContractBoost,tickContractBoost,contractBoostFactor,contractTarget,seasonWindow,seasonStatus,claimSeason,SEASON_REWARDS} from '../src/progression.js';
 const start=21000*DAY;
 const fresh=()=>({money:1000000,lifetime:1000000,empire:migrateProgression(undefined,start)});
 test('legacy and malformed progression fields migrate without unlocking rewards',()=>{
@@ -33,21 +33,49 @@ test('branches respect unlocks, cash and level caps; each upgrade improves incom
  assert.equal(buyStore(s,0),false);assert.equal(s.empire.stores[1].level,0);
  const restored=migrateProgression(JSON.parse(JSON.stringify(s.empire)),start);assert.equal(branchRate(restored),branchRate(s.empire));
 });
-test('events count only matching actions after joining, and completed rewards survive expiry until rollover',()=>{
- const s=fresh(),p=s.empire,e=eventStatus(p,start);
- recordEvent(p,e.kind,100,start);assert.equal(p.event.progress,0);assert.equal(joinEvent(p,start),true);
- recordEvent(p,e.kind==='pickup'?'online':'pickup',100,start);assert.equal(p.event.progress,0);
- recordEvent(p,e.kind,e.goal,start+1000);assert.equal(eventStatus(p,start+21*60000).progress,e.goal);
- const cash=s.money;assert.equal(claimEvent(s,start+21*60000),e.reward);assert.equal(s.money,cash+e.reward);assert.equal(claimEvent(s,start+22*60000),0);
- assert.equal(p.trophies,1);assert.equal(eventStatus(p,start+HOUR).joined,false);
+test('a contract counts only its own kind while its clock runs, then banks a boost, a trophy and a keepsake',()=>{
+ const s=fresh(),p=s.empire,o=contractOffer(s,1);assert.equal(o.id,'night-market');assert.equal(o.target,60);
+ recordEvent(p,'pickup',100,start);assert.equal(activeContract(p,start),null,'nothing counts before starting');
+ assert.equal(startContract(s,start).id,'night-market');assert.equal(startContract(s,start),null,'one at a time');
+ assert.equal(contractTwist(p,start),'traffic');assert.equal(contractFactor(p,'traffic',start),1.5);
+ recordEvent(p,'online',100,start+1000);assert.equal(activeContract(p,start+1000).progress,0);
+ recordEvent(p,'pickup',59,start+1000);assert.equal(settleContract(p,start+2000),null);
+ recordEvent(p,'pickup',5,start+3000);const r=settleContract(p,start+3000);assert.equal(r.done.id,'night-market');
+ assert.deepEqual([p.contracts.bank,p.contracts.done,p.trophies,p.rewards[0]],[1,1,1,true]);assert.equal(contractTwist(p,start+3000),'');
+ assert.notEqual(contractOffer(s).id,'night-market','the next offer comes up');
 });
-test('expired and paused-time events cannot gain progress or be rejoined in the same window',()=>{
- const s=fresh(),p=s.empire,e=eventStatus(p,start);joinEvent(p,start);
- recordEvent(p,e.kind,1,start+100);recordEvent(p,e.kind,100,start+20*60000);
- assert.equal(p.event.progress,1);assert.equal(claimEvent(s,start+25*60000),0);assert.equal(joinEvent(p,start+25*60000),false);
- assert.equal(joinEvent(p,start+HOUR),true);assert.equal(p.event.progress,0);
+test('a contract that runs out costs nothing, stops counting and moves on to the next offer',()=>{
+ const s=fresh(),p=s.empire;startContract(s,start);
+ recordEvent(p,'pickup',1,start+100);recordEvent(p,'pickup',100,start+30*60000);
+ assert.equal(activeContract(p,start+30*60000).progress,1);assert.equal(contractTwist(p,start+30*60000),'');
+ const r=settleContract(p,start+30*60000);assert.equal(r.expired.id,'night-market');assert.deepEqual([p.contracts.bank,p.trophies],[0,0]);
+ assert.equal(activeContract(p,start+31*60000),null);
 });
-
+test('offers skip contracts the shop cannot work on yet, and another offer can be asked for',()=>{
+ const s=fresh();s.productMenu={unlocked:[true,false,false]};s.empire.contracts.round=1;
+ assert.equal(contractOffer(s).id,'vip-night','deliveries and edibles need their unlocks');
+ s.autoDrone={owned:true};assert.equal(contractOffer(s).id,'delivery-blitz');
+ assert.equal(skipContract(s,start),true);s.productMenu.unlocked[2]=true;assert.equal(contractOffer(s).id,'edibles-weekend');
+ startContract(s,start);assert.equal(skipContract(s,start),false,'no skipping a running contract');
+ assert.equal(contractTarget(CONTRACTS[4],1e9),5,'big spender counts never grow');assert.ok(contractTarget(CONTRACTS[0],64)>contractTarget(CONTRACTS[0],1));
+ assert.ok(contractTarget(CONTRACTS[0],1e12)<=CONTRACTS[0].base*CONTRACTS[0].cap);
+ assert.equal(contractTarget(CONTRACTS[0],1,20),360,'with a pace it asks for 60% of what the shop makes in the time');assert.equal(contractTarget(CONTRACTS[0],1,1),60,'never below the base');
+ assert.equal(contractOffer(s,1,d=>d.kind==='edible'?10:0).target,360);
+});
+test('a banked boost doubles sales for ten minutes of play and stacks time, not size',()=>{
+ const p=fresh().empire;assert.equal(useContractBoost(p),false);p.contracts.bank=2;
+ assert.equal(useContractBoost(p),true);assert.equal(contractBoostFactor(p),2);useContractBoost(p);assert.equal(p.contracts.boost,1200);assert.equal(contractBoostFactor(p),2);
+ tickContractBoost(p,1199);assert.equal(contractBoostFactor(p),2);tickContractBoost(p,5);assert.equal(contractBoostFactor(p),1);assert.equal(p.contracts.bank,0);
+});
+test('contracts survive a save, and old saves with an hourly event load clean',()=>{
+ const s=fresh();startContract(s,start);recordEvent(s.empire,'pickup',7,start);s.empire.contracts.bank=3;
+ const back=migrateProgression(JSON.parse(JSON.stringify(s.empire)),start);
+ assert.deepEqual([activeContract(back,start).progress,back.contracts.bank],[7,3]);
+ const old=migrateProgression({event:{slot:5,joined:true,progress:12,claimed:false},rewards:[true,false,true],trophies:4},start);
+ assert.equal(old.event,undefined);assert.deepEqual(old.contracts,{round:0,done:0,bank:0,boost:0,active:null});assert.deepEqual([old.rewards,old.trophies],[[true,false,true],4]);
+ assert.equal(migrateProgression({contracts:{active:{id:'nope'},bank:1e9,boost:-5}},start).contracts.active,null);
+ assert.equal(migrateProgression({contracts:{bank:1e9}},start).contracts.bank,9);
+});
 test('map selection is limited to owned stores and never changes economic progress',async()=>{
  const {selectedStore,selectStore}=await import('../src/progression.js');const s=fresh();
  assert.equal(selectedStore(s.empire),0);assert.equal(selectStore(s.empire,1),false);assert.equal(selectStore(s.empire,9),false);
@@ -127,11 +155,6 @@ test('every third goal closes a shift and pays its bonus once',async()=>{
  assert.equal(claimGoal(s,2),200+shiftStatus(p).bonus);assert.deepEqual([shiftStatus(p).number,shiftStatus(p).done],[2,0]);
  recordGoal(p,'pickup',1e6);assert.equal(claimGoal(s,0),150);
 });
-test('event scene rewards persist without duplicate cash claims',()=>{
- const s=fresh(),e=eventStatus(s.empire,start);joinEvent(s.empire,start);recordEvent(s.empire,e.kind,e.goal,start);claimEvent(s,start);
- assert.equal(s.empire.rewards[e.slot%3],true);assert.equal(claimEvent(s,start),0);assert.equal(migrateProgression(s.empire,start).rewards[e.slot%3],true);
-});
-
 test('multi-day events follow the calendar, climb a three-step ladder and award a lasting badge',()=>{
  assert.equal(seasonWindow(Date.UTC(2026,3,20)).name,'4/20 Week');assert.equal(seasonWindow(Date.UTC(2026,9,16)).name,'Harvest Season');assert.equal(seasonWindow(Date.UTC(2026,9,31,23)).name,'Spooky Season');
  assert.equal(seasonWindow(Date.UTC(2026,10,4)),null,'no ladder between seasons');assert.equal(seasonStatus(migrateProgression({},Date.UTC(2026,10,4)),Date.UTC(2026,10,4)),null);
