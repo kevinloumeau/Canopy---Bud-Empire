@@ -74,7 +74,7 @@ export function buildShell(world, layout, { box, span, material, model }) {
   // Under the rooftop lounge the glazing runs right up to the underside of the roof slab's lip (rooftop.js).
   const tRear = top.z - top.d / 2, tLeft = -top.w / 2, glassH = layout.rooftop ? layout.rooftop.y - .34 - top.y : 3.9;
   // The fan housing's height at model scale, and the glazing's top.
-  const fanBase = top.y + glassH, fanBandH = 1.24;
+  const fanBase = top.y + glassH, fanBandH = 1.44;
   const glass = new THREE.MeshStandardMaterial({ color: '#cfe6df', roughness: .1, metalness: 0, transparent: true, opacity: .26, depthWrite: false });
   function glazing(alongZ, a0, a1, at, fan) {
     const n = Math.max(2, Math.round((a1 - a0) / s.glazingBay)), step = (a1 - a0) / n, y = top.y;
@@ -111,29 +111,23 @@ export function buildShell(world, layout, { box, span, material, model }) {
 
   // The fan row is one model load drawn instanced (one draw per part for the whole row); the rotors' instances turn
   // with the big fan's rotor every frame. FAN_W is the housing's width in map units (.86 m); its origin is its centre.
-  // Kevin (2026-10-19): large fans filling from the transom up to the roof slab's top, tucked back under its corner so
-  // the roof overlaps them; raised (fanLift) so both tops tuck up under the slab edge.
-  const FAN_W = 1.46, bandY0 = top.y + 2.98, bandY1 = (layout.rooftop ? layout.rooftop.y : fanBase) - .03, fanScale = (bandY1 - bandY0) / fanBandH, fanLift = .8;
+  // Kevin (2026-10-19): large fans, touching, on a solid green band, their top frames resting just under the glazing's
+  // top rail (and so wholly under the roof slab). They stand just inside the glass so the pane and transom bar pass
+  // behind the casing rather than through it.
+  const FAN_W = 1.46, fanScale = 1.36, fanH = fanBandH * fanScale, fanTop = fanBase - .09, fanY = fanTop - fanH / 2;
   const fanStep = FAN_W * fanScale, rowA1 = s.topLanding.outer, rowCount = 2, rowA0 = rowA1 - rowCount * fanStep;
-  // Raised, the row's tops reach past the slab; where the slab sits over them (x inside it, above its underside) the
-  // backing stops and the fans are clipped, so the roof reads as overlapping them.
-  const slabX1 = layout.rooftop ? layout.rooftop.x1 : rowA0, slabUnder = layout.rooftop ? layout.rooftop.y - .34 : bandY1 + fanLift;
-  span(shell, rowA0, rowA1, bandY0, Math.min(slabUnder, bandY1 + fanLift), tRear - .14, tRear - .02, '#2f5d4a');
-  if (slabUnder < bandY1 + fanLift && slabX1 < rowA1) span(shell, Math.max(rowA0, slabX1), rowA1, slabUnder, bandY1 + fanLift, tRear - .14, tRear - .02, '#2f5d4a');
-  const rowSpots = Array.from({ length: rowCount }, (_, k) => new THREE.Matrix4().makeTranslation(rowA0 + fanStep * (k + .5), (bandY0 + bandY1) / 2 + fanLift, tRear - .06).scale(new THREE.Vector3(fanScale, fanScale, fanScale)));
+  span(shell, rowA0, rowA1, fanTop - fanH, fanTop, tRear - .14, tRear - .02, '#2f5d4a');
+  const rowSpots = Array.from({ length: rowCount }, (_, k) => new THREE.Matrix4().makeTranslation(rowA0 + fanStep * (k + .5), fanY, tRear + .035).scale(new THREE.Vector3(fanScale, fanScale, fanScale)));
   let fanRow = null;
   if (model && rowA1 > rowA0) model('exhaust_fan.glb', 0, 0, 0, (scene, holder) => {
     const parentInverse = new THREE.Matrix4().copy(holder.parent.matrixWorld).invert(), rel = new THREE.Matrix4();
     const rowRotor = scene.getObjectByName('Rotor'), spinning = [];
     holder.updateMatrixWorld(true);
-    // World-space planes cutting away the part inside or above the slab (x < its edge AND y > its underside).
-    const rowClip = [new THREE.Plane(new THREE.Vector3(1, 0, 0), -slabX1), new THREE.Plane(new THREE.Vector3(0, -1, 0), slabUnder)].map(p => p.applyMatrix4(holder.parent.matrixWorld));
     scene.traverse(o => {
       if (!o.isMesh) return;
       let inRotor = false;
       for (let p = o; p; p = p.parent) if (p === rowRotor) inRotor = true;
-      const mat = (Array.isArray(o.material) ? o.material : [o.material]).map(m => Object.assign(m.clone(), { clippingPlanes: rowClip, clipIntersection: true }));
-      const mesh = new THREE.InstancedMesh(o.geometry, Array.isArray(o.material) ? mat : mat[0], rowCount);
+      const mesh = new THREE.InstancedMesh(o.geometry, o.material, rowCount);
       rel.multiplyMatrices(parentInverse, o.matrixWorld);
       rowSpots.forEach((spot, i) => mesh.setMatrixAt(i, new THREE.Matrix4().multiplyMatrices(spot, rel)));
       // Bounds over every placement, not the part's own spot at the origin, so the row isn't culled off screen.
