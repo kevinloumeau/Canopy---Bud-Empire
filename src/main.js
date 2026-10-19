@@ -2500,13 +2500,27 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       return window.__canopySnap.status()};
     window.__canopySnap.status=function(){return{map3d:!!(map3d&&map3d.ok),loading:map3d?map3d.loading:-1}};
   }
+  // Dev numbers (?stats): a small readout over the map with the frames drawn a second, the frame's script time, the 3D
+  // map's draw calls and triangles and its estimated GPU memory, so a phone shows its own numbers. Players never pass
+  // ?stats; window.__canopyStats returns the same numbers to scripts.
+  var STATS=/[?&]stats\b/.test(location.search);
+  if(STATS||SNAP)window.__canopyStats=function(perModel){return map3d&&map3d.ok?map3d.stats(perModel):null};
+  if(STATS){
+    var statsBox=document.createElement('div');
+    statsBox.style.cssText='position:fixed;left:calc(env(safe-area-inset-left) + 6px);top:calc(env(safe-area-inset-top) + 6px);z-index:9999;pointer-events:none;font:10px/1.3 ui-monospace,Menlo,monospace;color:#fff;background:rgba(0,0,0,.62);padding:4px 7px;border-radius:6px;white-space:pre';
+    document.body.appendChild(statsBox);
+    var statsFrames=0,statsSince=performance.now();
+    setInterval(function(){var now=performance.now(),fps=(render.frames||0)-statsFrames,secs=(now-statsSince)/1000;statsFrames=render.frames||0;statsSince=now;
+      var s=window.__canopyStats(),heap=performance.memory?' js '+Math.round(performance.memory.usedJSHeapSize/1048576)+'MB':'';
+      statsBox.textContent=Math.round(fps/secs)+' fps '+(render.frameMs||0).toFixed(1)+' ms'+heap+(s?'\n'+s.calls+' draws '+Math.round(s.triangles/1000)+'K tris @'+s.pixelRatio+'x\n~'+Math.round(s.mb.total)+'MB gpu: '+Math.round(s.mb.geometry)+' geo '+Math.round(s.mb.texture)+' tex\n'+Math.round(s.mb.buffer)+' screen '+Math.round(s.mb.shadow)+' shadow '+s.textures+' tex':'')},1000);
+  }
   function render(wallNow){if(SNAP&&!render.snap)return;var t0=performance.now();try{renderFrame(wallNow);render.frameMs=(render.frameMs||0)*.9+(performance.now()-t0)*.1;window.__canopyFrameMs=render.frameMs;if(render.frameMs>13&&dprCap>2){dprCap=2;resize()}}catch(e){if(!render.failed)console.error('Canopy frame failed; retrying',e);ctx=screenCtx;sceneElevation=0;render.failed=true;render.invalidated=true;requestAnimationFrame(render)}}
   function renderFrame(wallNow){
     if(document.hidden){render.last=wallNow;requestAnimationFrame(render);return}
     keyboardPan(wallNow);
     var frameInterval=state.gameSpeed===0?250:1000/60;
     if(!render.invalidated&&render.drawnAt!==undefined&&wallNow-render.drawnAt<frameInterval-1){requestAnimationFrame(render);return}
-    render.drawnAt=wallNow;render.invalidated=false;
+    render.drawnAt=wallNow;render.invalidated=false;render.frames=(render.frames||0)+1;
     var wallDelta=Math.min(.1,Math.max(0,(wallNow-(render.last===undefined?wallNow:render.last))/1000)),frameDelta=wallDelta*state.gameSpeed;
     render.last=wallNow;
     // A freshly built station rises out of its site on wall time, so the reveal plays at the same pace at every game speed.
