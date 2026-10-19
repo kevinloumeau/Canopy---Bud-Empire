@@ -113,9 +113,9 @@ export function buildShell(world, layout, { box, span, material, model }) {
   // with the big fan's rotor every frame. FAN_W is the housing's width in map units (.86 m); its origin is its centre.
   // Kevin (2026-10-19): large fans, touching, on a solid green band, their top frames resting just under the glazing's
   // top rail (and so wholly under the roof slab). They stand just inside the glass so the pane and transom bar pass
-  // behind the casing rather than through it.
-  const FAN_W = 1.46, fanScale = 1.36, fanH = fanBandH * fanScale, fanTop = fanBase - .09, fanY = fanTop - fanH / 2;
-  const fanStep = FAN_W * fanScale, rowA1 = s.topLanding.outer, rowCount = 2, rowA0 = rowA1 - rowCount * fanStep;
+  // behind the casing rather than through it. Kevin 12:06Z: lowered further and shifted 20 cm right of the slab corner.
+  const FAN_W = 1.46, fanScale = 1.36, fanH = fanBandH * fanScale, fanTop = fanBase - .7, fanY = fanTop - fanH / 2;
+  const fanStep = FAN_W * fanScale, rowA1 = s.topLanding.outer + .5, rowCount = 2, rowA0 = rowA1 - rowCount * fanStep;
   span(shell, rowA0, rowA1, fanTop - fanH, fanTop, tRear - .14, tRear - .02, '#2f5d4a');
   const rowSpots = Array.from({ length: rowCount }, (_, k) => new THREE.Matrix4().makeTranslation(rowA0 + fanStep * (k + .5), fanY, tRear + .035).scale(new THREE.Vector3(fanScale, fanScale, fanScale)));
   let fanRow = null;
