@@ -1182,6 +1182,11 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   var recentPickupRatings=[];
   var taskClocks=[0,0,0,0,0,0],taskActivity=[0,0,0,0,0,0],cropGrowth=[.15,.4,.7,.95];
+  // Each station's work clock: it runs while the station is working, easing in and out, and drives its staff loop.
+  // Its 3D model's motion (station-motion.js) runs on its own clock whenever the station is built, so a station whose
+  // store is full or whose input ran dry still looks alive; only pausing the game stops it.
+  var motionClocks=[0,0,0,0,0,0];
+  function tickTaskClocks(dt){for(var task=0;task<6;task++){var target=stationWorking(task)?1:0;taskActivity[task]+=(target-taskActivity[task])*(1-Math.exp(-dt*5));taskClocks[task]+=dt*1000*taskActivity[task];if(state.lines[task]>0)motionClocks[task]+=dt}}
   function crop(x,z,y,slot,mature){
     var strain=visibleStrain(slot),phase=motionPreference.matches?.8:(taskClocks[1]/9000+slot*.23)%1;
     // A readable representative crop cycle, independent of high-speed batch counts.
@@ -2372,7 +2377,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var speed=state.lines.some(function(n){return n>0})?Math.min(.07,.02+production()*.00002):0;
     crateTime=(crateTime+frameDelta*speed*1.4)%1;cargoOdo=(cargoOdo+frameDelta*speed*14)%1e5;
     var stations=[],people=[];
-    function station(i,x,y,z,level,built,size){var tier=built?economy.stationLook(level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(tier-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,selected:selected===i&&!securitySelected&&!loungeSelected,clock:motionPreference.matches?6.3:taskClocks[i]/1000,act:taskActivity[i],full:i<4&&state.stock[i]>=storageCapacity()})}
+    function station(i,x,y,z,level,built,size){var tier=built?economy.stationLook(level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(tier-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,selected:selected===i&&!securitySelected&&!loungeSelected,clock:motionPreference.matches?6.3:motionClocks[i],act:taskActivity[i]})}
     // People are the 2D map's own sprites, recorded as each would be drawn and stood up in the scene as flat figures
     // (capturePerson); a capsule under each casts its shadow.
     var figures=[];
@@ -2497,7 +2502,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   if(SNAP){
     window.__canopySnap=function(view){view=view||{};
       if(view.light)state.lightMode=view.light;
-      for(var step=0;step<Math.round((view.advance||0)*20);step++)simulate(.05);
+      for(var step=0;step<Math.round((view.advance||0)*20);step++){simulate(.05);tickTaskClocks(.05)}
       if(view.zoom!==undefined||view.x!==undefined){zoom=Math.max(.65,Math.min(4,view.zoom||1));panX=panY=0;applyCamera();
         if(view.x!==undefined){var frame=cameraFrame(),p=project(view.x,view.y||0,view.z||0);panX=frame.x-p.x;panY=frame.y-p.y;applyCamera()}}
       render.snap=true;render.dry=view.draw===false;render.invalidated=true;render(performance.now());render.snap=render.dry=false;
@@ -2529,7 +2534,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     render.last=wallNow;
     // A freshly built station rises out of its site on wall time, so the reveal plays at the same pace at every game speed.
     for(var site=0;site<buildRise.length;site++)if(buildRise[site]>0){buildRise[site]=motionPreference.matches?0:Math.max(0,buildRise[site]-wallDelta*1.7);render.invalidated=true}
-    animationTime+=frameDelta*1000;for(var task=0;task<6;task++){var target=stationWorking(task)?1:0;taskActivity[task]+=(target-taskActivity[task])*(1-Math.exp(-frameDelta*5));taskClocks[task]+=frameDelta*1000*taskActivity[task]}
+    animationTime+=frameDelta*1000;tickTaskClocks(frameDelta);
     for(var slot=0;slot<4;slot++){var phase=(taskClocks[1]/9000+slot*.23)%1;var targetGrowth=state.stock[1]>=storageCapacity()?1:phase>.86?Math.max(0,(1-phase)/.14):Math.min(1,phase/.72);cropGrowth[slot]+=(targetGrowth-cropGrowth[slot])*(1-Math.exp(-frameDelta*4))}var now=animationTime;
     sceneTime=motionPreference.matches?0:now;
     if(!map3d||!map3d.ok){
