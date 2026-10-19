@@ -5,7 +5,7 @@ import {migrateJourney,advanceJourney,CHAPTERS} from './journey.js';
 import {mountJourney} from './journey-ui.js';
 import {manageDialog} from './dialog-focus.js';
 import {AUTO_DRONE_COST,BULK_DRONE_COST,buyAutoDrone,buyBulkDrone,autoDroneLimit,migrateAutoDrone,autoDroneReady} from './auto-drone.js';
-import {FORMATS,wantedFormat,strainForFormat,formatPremium,BOOST_MAX,boostCost,migrateMenu,chooseFormat,strainFormat,dominantFormat,menuFormatFactor,milestone,prestigeOffer,elapsedSteps,OFFLINE_STEP} from './depth.js';
+import {FORMATS,wantedFormat,formatPremium,BOOST_MAX,boostCost,migrateMenu,unlockFormat,menuFormatFactor,milestone,prestigeOffer,elapsedSteps,OFFLINE_STEP} from './depth.js';
 import {PERKS,migratePerks,perkLevel,perkCost,buyPerk,perkStart,spenderGap,rushLength} from './perks.js';
 import {makeSound} from './sfx.js';
 import {installQuietDom} from './quiet-dom.js';
@@ -73,7 +73,6 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var mapPicked=true;
   var selectedLine=document.querySelector('.selected-line'),buyActions=document.querySelector('.station-buy-actions');
   var state=load(),selected=0,toastTimer,dispatchSummary=null;
-  state.productMenu.active=dominantFormat(state.productMenu,state.menuStrains.filter(function(i){return state.strains[i]>0}));
   state.empire=migrateProgression(state.empire);state.empire.activeStore=selectedStore(state.empire);state.empire.retailBoost=retailBoost();advanceJourney(state);
   function visualLight(){return state.lightMode?{night:state.lightMode==='night',darkness:state.lightMode==='night'?.34:0}:atmosphere(state.empire.network)}
   var lightToggle=document.createElement('button');lightToggle.id='lightToggle';lightToggle.type='button';lightToggle.onclick=function(){state.lightMode=visualLight().darkness>.15?'day':'night';save();renderUI()};document.querySelector('.speed-controls').appendChild(lightToggle);
@@ -116,10 +115,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function menuStrains(){return state.menuStrains.filter(function(i){return state.strains[i]>0})}
   function menuChoice(sequence){var menu=menuStrains();return menu[sequence%menu.length]}
   // Regulars reach for the everyday strain; VIPs take the reserve when the menu offers one.
-  // A VIP takes the reserve strain however it is sold; everyone else takes a menu strain in the format they came for
-  // when there is one (see `wantedFormat`), and pays the format premium only when they got their way.
-  function strainFor(c){if(c.kind==='vip'){var reserve=strains.reserveStrain(menuStrains(),state.strains);if(reserve!==null)return reserve}var preferred=economy.preferredStrain(c.kind,menuStrains(),state.strains);return strainForFormat(state.productMenu,menuStrains(),preferred===null?menuChoice(c.id):preferred,wantedFormat(state.productMenu,c.id),c.id)}
-  function salePriceFor(c,strain){var f=formatOf(strain);if(c.kind==='vip')return flowerValue(strain);return Math.round(flowerValue(strain)/f.value*formatPremium(state.productMenu,strain,wantedFormat(state.productMenu,c.id)))}
+  // A VIP takes the reserve strain; everyone else takes their strain in the type they came for (see `wantedFormat`),
+  // since every strain sells in every stocked type, and pays that type's premium. A VIP pays the menu's mean value.
+  function strainFor(c){if(c.kind==='vip'){var reserve=strains.reserveStrain(menuStrains(),state.strains);if(reserve!==null)return reserve}var preferred=economy.preferredStrain(c.kind,menuStrains(),state.strains);return preferred===null?menuChoice(c.id):preferred}
+  function salePriceFor(c,strain){if(c.kind==='vip')return flowerValue(strain);return Math.round(flowerValue(strain)/formatFactor('value')*formatPremium(state.productMenu,wantedFormat(state.productMenu,c.id)))}
   // Satisfaction tips: patience stretches with Queue comfort, and Lasting effects sweeten every happy sale.
   function customerSaleBonus(c){var bonus=satisfyCustomer(state.empire,-1,c.kind,(c.normalStrain===undefined?c.strain:c.normalStrain)===0?'everyday':'boutique',Math.max(0,(c.waitSeconds||0)-(c.adviceWait||0)),1+state.comfortLevel*.15);if(bonus>1)bonus+=state.durationLevel*.03;
     // Strain identity: potency tips, the everyday and VIP perks, and Violet Haze's word of mouth on happy boutique sales.
@@ -207,10 +206,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     });
     var i=flowerFocus,strain=STRAINS[i],look=STRAIN_LOOKS[i],level=state.strains[i],active=state.menuStrains.indexOf(i)>=0,price=strainCost(i),maxed=level>=10,detail=$('strainDetail');
     var isNight=atmosphere(state.empire.network).night,type=strains.STRAIN_TYPE[i],timeNow=strains.timeFactor(type,isNight);
-    var nextValue=Math.round(strain.price*(1+level*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatOf(i).value*trendBoost(i)*displayBoost(i)*timeNow);
+    var nextValue=Math.round(strain.price*(1+level*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value')*trendBoost(i)*displayBoost(i)*timeNow);
     var stats=level?
-      '<span><b>'+fmt(flowerValue(i))+'</b><small>'+unitWord(1,strainFormat(state.productMenu,i))+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+(maxed?'Max':'+'+fmt(nextValue-flowerValue(i)))+'</b><small>'+(maxed?'level 10':'next lv')+'</small></span>':
-      '<span><b>'+fmt(Math.round(strain.price*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatOf(i).value*timeNow))+'</b><small>'+unitWord(1,strainFormat(state.productMenu,i))+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+fmt(strain.unlock)+'</b><small>unlock</small></span>';
+      '<span><b>'+fmt(flowerValue(i))+'</b><small>'+'per sale'+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+(maxed?'Max':'+'+fmt(nextValue-flowerValue(i)))+'</b><small>'+(maxed?'level 10':'next lv')+'</small></span>':
+      '<span><b>'+fmt(Math.round(strain.price*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value')*timeNow))+'</b><small>'+'per sale'+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+fmt(strain.unlock)+'</b><small>unlock</small></span>';
     var growPct=Math.round((1-strains.strainGrowFactor(i,Math.max(1,level)))*100),tipVip=Math.round((strains.tipFactor('vip',strains.potency(i,level)+state.terpeneLevel*.25)-1)*100),tier=strains.perkTier(level),perk=strains.PERKS[i];
     var traits='<ul class="strain-traits">'+
       '<li'+(growPct?' class="is-cost"':'')+'>'+(growPct?'Grow room −'+growPct+'%'+(level<10?' · masters with levels':''):'Easy to grow')+'</li>'+
@@ -225,24 +224,22 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       '<div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">'+look.kind+' · </span>'+strains.TYPES[type]+(level?' · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>'+level+' / 10':' · Locked')+'</small><h2>'+strain.name+'</h2><p>'+(level?look.buyers:'Unlock to put it on the menu. '+look.buyers)+'</p></div>'+
       '<div class="strain-stats">'+stats+'</div>'+
       '<div class="strain-hero-details">'+traits+perkLine+'</div>'+
-      (level?'<div class="product-line strain-format"><h2>Sell as</h2><div class="format-options">'+FORMATS.map(function(f,k){var own=strainFormat(state.productMenu,i)===k,unlocked=state.productMenu.unlocked[k];return '<button type="button" class="strain-format-pill" data-format="'+k+'" aria-pressed="'+own+'"'+(!unlocked&&state.money<f.cost?' disabled':'')+' title="'+f.detail+'"><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+productIcons[k]+'</svg><strong>'+f.name+'</strong><small>'+(own?'Selling':unlocked?'Switch':fmt(f.cost))+'</small></button>'}).join('')+'</div><p class="format-benefit">'+[['Standard value','Half the door wants it'],['+45% value for the 3 in 10 who want it','Faster pickup','Slower packing'],['+120% value for the 1 in 5 who want it','Lower demand','Slower packing']][strainFormat(state.productMenu,i)].join(' · ')+'</p></div>':'')+
+      (level?'<div class="product-line strain-format"><h2>Sells as</h2><div class="format-options">'+FORMATS.map(function(f,k){var stocked=state.productMenu.unlocked[k];return '<button type="button" class="strain-format-pill" data-format="'+k+'" aria-pressed="'+stocked+'"'+(!stocked&&state.money<f.cost?' disabled':'')+' title="'+f.detail+'"><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+productIcons[k]+'</svg><strong>'+f.name+'</strong><small>'+(stocked?'Selling':fmt(f.cost))+'</small></button>'}).join('')+'</div><p class="format-benefit">'+(function(){var next=FORMATS.findIndex(function(f,k){return !state.productMenu.unlocked[k]});return next<0?'Every strain sells in all three types, to whoever wants each.':'Stock '+FORMATS[next].name.toLowerCase()+' for every strain · '+['','+45% value for the 3 in 10 who want them · slower packing','+120% value for the 1 in 5 who want them · slow packing'][next]})()+'</p></div>':'')+
       '<div class="strain-hero-actions">'+(level?'<button type="button" id="flowerSelect" aria-pressed="'+active+'">'+(active?'On menu ✓':'Add to menu')+'</button>':'')+'<button type="button" id="flowerBuy" class="is-primary">'+(maxed?'Fully upgraded':(level?'Upgrade':'Unlock')+' · '+fmt(price))+'</button></div>'+
     '</div>';
-    var heroKey=heroHtml+'|'+(maxed||state.money<price)+'|'+(active&&menu.length===1)+'|'+state.productMenu.formats.join(',')+'|'+state.productMenu.unlocked.join(',');
+    var heroKey=heroHtml+'|'+(maxed||state.money<price)+'|'+(active&&menu.length===1)+'|'+state.productMenu.unlocked.join(',');
     Array.prototype.forEach.call(document.querySelectorAll('.menu-board .trend-clock'),function(el){el.textContent=trendClock});
     if(detail.dataset.key===heroKey)return;
     detail.innerHTML=heroHtml;detail.dataset.key=heroKey;
     Array.prototype.forEach.call(detail.querySelectorAll('.trend-clock'),function(el){el.textContent=trendClock});
     if(level){var sel=$('flowerSelect');sel.disabled=active&&menu.length===1;sel.title=sel.disabled?'Keep at least one strain on the menu':active?'Remove from menu':'Add to menu';sel.onclick=function(){selectStrain(i)}}
     var buy=$('flowerBuy');buy.disabled=maxed||state.money<price;buy.onclick=function(){buyStrain(i)};
-    Array.prototype.forEach.call(detail.querySelectorAll('.strain-format-pill'),function(pill){pill.onclick=function(){chooseStrainFormat(i,Number(pill.dataset.format))}});
+    Array.prototype.forEach.call(detail.querySelectorAll('.strain-format-pill'),function(pill){pill.onclick=function(){stockFormat(Number(pill.dataset.format))}});
   }
-  // Every strain sells in its own format. `format()` is the one most of the menu uses (units and legacy readouts);
-  // `formatOf(i)` is a strain's own; `formatFactor(p)` is the menu mix's mean for a property such as demand.
+  // Every strain sells in every stocked type. `format()` is flower (units and legacy readouts); `formatFactor(p)` is the
+  // door's mean for a property such as demand or value, each customer counting the type they buy.
   function format(){return FORMATS[state.productMenu.active]}
-  function formatOf(i){return FORMATS[strainFormat(state.productMenu,i)]}
-  function formatFactor(property){return menuFormatFactor(state.productMenu,menuStrains(),property)}
-  function syncDominantFormat(){state.productMenu.active=dominantFormat(state.productMenu,menuStrains())}
+  function formatFactor(property){return menuFormatFactor(state.productMenu,property)}
   // Sales units follow the format: flower is sold by weight (one packed unit is an eighth), pre-rolls by the joint, edibles by the piece.
   function unitWord(n,formatIndex){var f=formatIndex===undefined?state.productMenu.active:formatIndex;return f===1?(n===1?'joint':'joints'):f===2?(n===1?'edible':'edibles'):(n===1?'eighth':'eighths')}
   function unitShort(){var f=state.productMenu.active;return f===1?'joint':f===2?'edible':'⅛'}
@@ -258,7 +255,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function trackStationLevel(i){var lv=state.lines[i];[10,25,50,100].forEach(function(m){if(lv>=m)telemetry.once('station_level_'+m,{station:LINES[i].name})})}
   // Browsers only start audio inside a gesture: the first tap or key press primes the context while sound is on.
   ['pointerdown','keydown'].forEach(function(type){window.addEventListener(type,function prime(){playSound.unlock(state.sound)},{passive:true})});
-  function flowerValue(index){if(index===undefined){var menu=menuStrains();return menu.reduce(function(total,i){return total+flowerValue(i)},0)/menu.length}var i=index;return Math.round(STRAINS[i].price*(1+Math.max(0,state.strains[i]-1)*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatOf(i).value*trendBoost(i)*displayBoost(i)*strains.timeFactor(strains.STRAIN_TYPE[i],atmosphere(state.empire.network).night)*(1+crossBonus(state.crosses))*(i>0?specialFactor('boutique'):1))}
+  function flowerValue(index){if(index===undefined){var menu=menuStrains();return menu.reduce(function(total,i){return total+flowerValue(i)},0)/menu.length}var i=index;return Math.round(STRAINS[i].price*(1+Math.max(0,state.strains[i]-1)*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value')*trendBoost(i)*displayBoost(i)*strains.timeFactor(strains.STRAIN_TYPE[i],atmosphere(state.empire.network).night)*(1+crossBonus(state.crosses))*(i>0?specialFactor('boutique'):1))}
   function onlineValue(sequence){return Math.round(flowerValue(menuChoice(sequence===undefined?state.onlineCompleted:sequence))*4/3*(1+state.onlineBonusLevel*.05)*specialFactor('online'))}
   function strainCost(i){return state.strains[i]?Math.round(Math.max(250,STRAINS[i].unlock*.35)*Math.pow(1.85,state.strains[i]-1)):STRAINS[i].unlock}
   function buyStrain(i){
@@ -270,7 +267,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(!state.strains[i])return;
     var index=state.menuStrains.indexOf(i);
     if(index>=0){if(state.menuStrains.length===1)return;state.menuStrains.splice(index,1)}else state.menuStrains.push(i);
-    syncDominantFormat();save();renderUI();notify(STRAINS[i].name.toUpperCase()+(index>=0?' · REMOVED FROM MENU':' · ADDED TO MENU'));
+    save();renderUI();notify(STRAINS[i].name.toUpperCase()+(index>=0?' · REMOVED FROM MENU':' · ADDED TO MENU'));
   }
   // Breeding, as in the iOS app: the Menu tab's Breed view lists six cultivars, one per pair of base strains.
   // Crosses need the Breeding bench and both parents at level 5, and run on game time; each discovery is +2% sales.
@@ -497,7 +494,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(moment||!state.shopOpen||state.empire.activeStore||play.cooldown>0)return;
     var guest=customers.find(function(c){return !c.ordered&&!c.kiosk&&!c.lounge&&!c.momentOffered&&c.idChecked===true&&c.phase==='entering'});
     if(!guest)return;
-    var options=momentPicks(state,menuStrains());if(options.length<2)return;
+    var options=momentPicks(state,menuStrains());if(menuStrains().length<2)return;
     guest.momentOffered=true;moment=createMoment(play,guest,options);play.cooldown=60+(play.sequence%3)*15;
   }
   function simulate(dt){
@@ -3332,7 +3329,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     '<rect x="5" y="5" width="22" height="22" rx="4"/><path d="M5 16h22M16 5v22M9 10h3m8 0h3M9 21h3m8 0h3"/>'
   ];
   // Each strain's card carries its own Sell-as pills (see renderFlowers); a format's unlock is paid once, for every strain.
-  function chooseStrainFormat(strain,index){if(chooseFormat(state,index,strain)){syncDominantFormat();save();renderUI();notify(STRAINS[strain].name.toUpperCase()+' · SOLD AS '+FORMATS[index].name.toUpperCase(),'upgrade')}}
+  function stockFormat(index){if(state.productMenu.unlocked[index])return;if(unlockFormat(state,index)){save();renderUI();notify('EVERY STRAIN NOW SELLS AS '+FORMATS[index].name.toUpperCase(),'upgrade')}}
   var prestigePanel=document.createElement('details');prestigePanel.className='depth-panel prestige-panel';prestigePanel.innerHTML=
     '<summary><svg class="prestige-sprout" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V11M12 14C3 14 3 7 3 7s9-1 9 7ZM12 11c0-8 9-9 9-9s0 9-9 9Z"/></svg><span>New beginnings</span><small id="prestigeStatus"></small><svg class="prestige-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></summary>'+
     '<div class="prestige-body"><div class="prestige-rank-track" id="prestigeComparison" role="group"><div class="prestige-rank"><span id="prestigeCurrentRank"></span><strong id="prestigeCurrentRate"></strong><small>base sales</small></div><svg id="prestigeArrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h17m-6-6 6 6-6 6"/></svg><div class="prestige-rank is-next" id="prestigeNext"><span id="prestigeNextRank"></span><strong id="prestigeNextRate"></strong><small>base sales</small></div></div>'+
@@ -3663,7 +3660,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   window.addEventListener('resize',resize);$('buyMachine').onclick=buySelected;$('buyMachineMax').onclick=buySelectedMax;$('upgradeStorage').onclick=upgradeStorage;$('boost').onclick=boostAll;$('claim').onclick=claimOrder;$('resetOpen').onclick=function(){$('resetModal').hidden=false};$('resetCancel').onclick=function(){$('resetModal').hidden=true};$('resetConfirm').onclick=function(){resetRun(0,state.sound)};function resetRun(rank,sound,carry){if(rank>0)telemetry.send('prestige',{rank:rank});state=fresh();moment=null;if(shopPlayUI)shopPlayUI.reset();state.empire.prestige=rank;state.sound=sound;if(carry){state.empire.shares=carry.shares;state.empire.lifetimeAll=carry.lifetimeAll;state.empire.badges=carry.badges.slice();state.crosses=carry.crosses;state.perks=carry.perks;var start=perkStart(state.perks);state.money+=start.money;state.offlineLevel=start.offlineLevel;state.startLine=start.line}
     // A prestige reopens a standing shop; Start over goes back to the building site and replays the intro.
     if(rank>0){state.lines=LINES.map(function(){return state.startLine||1});delete state.startLine;state.doorBuilt=true;state.shopOpen=true}
-    syncDominantFormat();readyWork=0;work=[0,0,0,0,0,0];batchRemainder=[0,0,0,0];customers=[];arrival=0;customerId=0;deliveryDrones=[];particles=[];tickets=[];taskClocks.fill(0);taskActivity.fill(0);cropGrowth=[.15,.4,.7,.95];tierFlashes.fill(0);buildRise.fill(0);confetti=[];recentPickupRatings=[];animationTime=0;sceneTime=0;crateTime=0;cargoOdo=0;render.last=undefined;securitySelected=false;loungeSelected=false;selected=0;updateMarkers.key=null;save();$('resetModal').hidden=true;notify(rank>0?'FACTORY RESET':'STARTING OVER');syncMapView();paintThumbnails();renderUI();if(!state.shopOpen)setTimeout(function(){startGuide.open()},400)};
+    readyWork=0;work=[0,0,0,0,0,0];batchRemainder=[0,0,0,0];customers=[];arrival=0;customerId=0;deliveryDrones=[];particles=[];tickets=[];taskClocks.fill(0);taskActivity.fill(0);cropGrowth=[.15,.4,.7,.95];tierFlashes.fill(0);buildRise.fill(0);confetti=[];recentPickupRatings=[];animationTime=0;sceneTime=0;crateTime=0;cargoOdo=0;render.last=undefined;securitySelected=false;loungeSelected=false;selected=0;updateMarkers.key=null;save();$('resetModal').hidden=true;notify(rank>0?'FACTORY RESET':'STARTING OVER');syncMapView();paintThumbnails();renderUI();if(!state.shopOpen)setTimeout(function(){startGuide.open()},400)};
 
   // The intro waits behind the 21+ gate; a visitor who answers No never sees it.
   // `resume` picks the intro up at the first unbuilt site when a half-built shop is reloaded.
