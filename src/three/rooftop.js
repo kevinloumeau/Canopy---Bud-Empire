@@ -85,52 +85,59 @@ export function buildRooftop(world, layout, { box, span, material }) {
   const hw = lift.w / 2, hd = lift.d / 2, crown = y + 2.9, pier = .09;
   function shaft(lz, frame, inside) {
     const lx = lift.x, g = [lz - .6, lz + .6];
-    [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sz]) => box(frame, lx + sx * (hw - pier / 2), 0, lz + sz * (hd - pier / 2), pier, crown, pier, STEEL));
+    // Code-built stand-ins, each hidden once its Blender model loads (loadModels): the shaft's frame, its glass, the
+    // cab and the bridge.
+    const kf = new THREE.Group(), ki = new THREE.Group(), kb = new THREE.Group(); frame.add(kf); inside.add(ki); inside.add(kb);
+    [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sz]) => box(kf, lx + sx * (hw - pier / 2), 0, lz + sz * (hd - pier / 2), pier, crown, pier, STEEL));
     // Rings round the outside, so the shaft stays clear for the cab and its rider.
     const band = (h, t, c, out = .01) => {
       const a0 = lx - hw - out, a1 = lx + hw + out, b0 = lz - hd - out, b1 = lz + hd + out, w = .04;
-      span(frame, a0, a1, h, h + t, b0, b0 + w, c, { cast: false }); span(frame, a0, a1, h, h + t, b1 - w, b1, c, { cast: false });
-      span(frame, a0, a0 + w, h, h + t, b0, b1, c, { cast: false }); span(frame, a1 - w, a1, h, h + t, b0, b1, c, { cast: false });
+      span(kf, a0, a1, h, h + t, b0, b0 + w, c, { cast: false }); span(kf, a0, a1, h, h + t, b1 - w, b1, c, { cast: false });
+      span(kf, a0, a0 + w, h, h + t, b0, b1, c, { cast: false }); span(kf, a1 - w, a1, h, h + t, b0, b1, c, { cast: false });
     };
     [0, layout.floors[1].y, layout.floors[2].y, y].forEach(h => band(h + 2.62, .06, STEEL));
-    span(frame, lx - hw - .03, lx + hw + .03, crown, crown + .16, lz - hd - .03, lz + hd + .03, STEEL);
+    span(kf, lx - hw - .03, lx + hw + .03, crown, crown + .16, lz - hd - .03, lz + hd + .03, STEEL);
     band(crown + .16, .025, BRASS, .03);
-    span(frame, lx + hw, lx + hw + .6, y + 2.5, y + 2.55, lz - hd + .05, lz + hd - .05, STEEL);
+    span(kf, lx + hw, lx + hw + .6, y + 2.5, y + 2.55, lz - hd + .05, lz + hd - .05, STEEL);
     [[false, lz + hd], [false, lz - hd], [true, lx - hw], [true, lx + hw]].forEach(([alongZ, at]) => {
-      glassy(alongZ ? span(inside, at - .01, at + .01, .05, crown, lz - hd + .06, lz + hd - .06, '#cfe6df') : span(inside, lx - hw + .06, lx + hw - .06, .05, crown, at - .01, at + .01, '#cfe6df'));
+      glassy(alongZ ? span(ki, at - .01, at + .01, .05, crown, lz - hd + .06, lz + hd - .06, '#cfe6df') : span(ki, lx - hw + .06, lx + hw - .06, .05, crown, at - .01, at + .01, '#cfe6df'));
     });
     const cab = new THREE.Group(); inside.add(cab);
+    const cabK = new THREE.Group(); cab.add(cabK);
     const cw = lift.w - .3, cd = lift.d - .3, ch = 2.35;
-    span(cab, -cw / 2, cw / 2, 0, .12, -cd / 2, cd / 2, '#2b302d');
-    span(cab, -cw / 2, cw / 2, ch - .14, ch, -cd / 2, cd / 2, BRASS);
-    [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sz]) => box(cab, sx * (cw / 2 - .04), .12, sz * (cd / 2 - .04), .08, ch - .26, .08, BRASS));
-    span(cab, -cw / 2 + .05, -cw / 2 + .1, .12, ch - .14, -cd / 2 + .1, cd / 2 - .1, OAK_DARK, { cast: false });
+    span(cabK, -cw / 2, cw / 2, 0, .12, -cd / 2, cd / 2, '#2b302d');
+    span(cabK, -cw / 2, cw / 2, ch - .14, ch, -cd / 2, cd / 2, BRASS);
+    [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sz]) => box(cabK, sx * (cw / 2 - .04), .12, sz * (cd / 2 - .04), .08, ch - .26, .08, BRASS));
+    span(cabK, -cw / 2 + .05, -cw / 2 + .1, .12, ch - .14, -cd / 2 + .1, cd / 2 - .1, OAK_DARK, { cast: false });
     const cabLamp = new THREE.Mesh(new THREE.BoxGeometry(cw - .3, .04, cd - .3), glow('#fff2c8', '#ffd58a'));
-    cabLamp.position.y = ch - .16; cab.add(cabLamp); lights.push([cabLamp.material, .4, 1.2]);
+    cabLamp.position.y = ch - .16; cabK.add(cabLamp); lights.push([cabLamp.material, .4, 1.2]);
     cab.position.set(lx, 0, lz);
     // The bridge from the landing to the deck: boards, glass sides with brass rails, and the red runner on to the deck.
     const bx0 = lx + hw, bx1 = x0;
-    span(inside, bx0, bx1 + .05, y - .26, y, g[0], g[1], '#e4ddcc');
+    span(kb, bx0, bx1 + .05, y - .26, y, g[0], g[1], '#e4ddcc');
     g.forEach(z => {
-      span(inside, bx0, bx1, y + railH - .03, y + railH + .03, z - .05, z + .05, BRASS, { cast: false });
-      glassy(span(inside, bx0, bx1, y + .05, y + railH - .05, z - .01, z + .01, '#cfe6df'));
+      span(kb, bx0, bx1, y + railH - .03, y + railH + .03, z - .05, z + .05, BRASS, { cast: false });
+      glassy(span(kb, bx0, bx1, y + .05, y + railH - .05, z - .01, z + .01, '#cfe6df'));
     });
-    span(inside, bx0 + .05, x0 + 1.2, y + .006, y + .016, lz - .38, lz + .38, VELVET, { cast: false });
-    span(inside, bx0 + .05, x0 + 1.2, y + .004, y + .012, lz - .45, lz + .45, BRASS, { cast: false });
-    return cab;
+    span(kb, bx0 + .05, x0 + 1.2, y + .006, y + .016, lz - .38, lz + .38, VELVET, { cast: false });
+    span(kb, bx0 + .05, x0 + 1.2, y + .004, y + .012, lz - .45, lz + .45, BRASS, { cast: false });
+    return { cab, cabK, kf, ki, kb, frame, inside, lz, cabLamp };
   }
-  const cab = shaft(lift.z, roof, open);
+  const shafts = [shaft(lift.z, roof, open)];
   const second = new THREE.Group(); open.add(second);
-  const cab2 = r.lift2 ? shaft(r.lift2.z, second, second) : null;
+  if (r.lift2) shafts.push(shaft(r.lift2.z, second, second));
+  const cab = shafts[0].cab, cab2 = shafts[1] ? shafts[1].cab : null;
 
   const kOlive = new THREE.Group(); open.add(kOlive);
   // Planters along the left balustrade and in the corners, with soft shrubs; two olive trees in tall pots.
   const clump = new THREE.IcosahedronGeometry(1, 1);
   const bush = (g, bx, by, bz, rr, c) => { const b = new THREE.Mesh(clump, material(c)); b.position.set(bx, by, bz); b.scale.set(rr, rr * .8, rr); b.castShadow = b.receiveShadow = true; g.add(b); };
-  [[x0 + .2, x0 + .9, z0 + .2, (r.lift2 ? r.lift2.z : lift.z) - .9], [x0 + .2, x0 + .9, lift.z + .9, z1 - .2]].forEach(([a, b, c, d]) => {
-    span(open, a, b, y, y + .55, c, d, '#1f5e40');
-    span(open, a - .03, b + .03, y + .55, y + .6, c - .03, d + .03, '#e1dbc0', { cast: false });
-    for (let z = c + .35; z < d - .2; z += .55) bush(open, (a + b) / 2, y + .8, z, .32, (Math.round(z * 3) % 2) ? '#6b9250' : '#5f8648');
+  const kPlant = new THREE.Group(); open.add(kPlant);
+  const planters = [[x0 + .2, x0 + .9, z0 + .2, (r.lift2 ? r.lift2.z : lift.z) - .9], [x0 + .2, x0 + .9, lift.z + .9, z1 - .2]];
+  planters.forEach(([a, b, c, d]) => {
+    span(kPlant, a, b, y, y + .55, c, d, '#1f5e40');
+    span(kPlant, a - .03, b + .03, y + .55, y + .6, c - .03, d + .03, '#e1dbc0', { cast: false });
+    for (let z = c + .35; z < d - .2; z += .55) bush(kPlant, (a + b) / 2, y + .8, z, .32, (Math.round(z * 3) % 2) ? '#6b9250' : '#5f8648');
   });
   [[x1 - .5, z1 - .5], [x1 - .6, z0 + .6]].forEach(([px, pz]) => {
     const pot = new THREE.Mesh(new THREE.CylinderGeometry(.34, .26, .7, 20).translate(0, .35, 0), material('#d9cdb4'));
@@ -296,20 +303,21 @@ export function buildRooftop(world, layout, { box, span, material }) {
   // STAFF ONLY plaque and the sign is taped COMING SOON; once open it stands open behind the velvet drapes.
   const sh = layout.shell, face = sh.loungeFront, dx = sh.loungeDoor.x, head = sh.loungeHeader, hw2 = .7, thick = .81;
   const lobby = new THREE.Group(); roof.add(lobby);
-  span(lobby, dx - hw2 - .12, dx - hw2, 0, head + .12, face - .02, face + .1, '#1f4a35');
-  span(lobby, dx + hw2, dx + hw2 + .12, 0, head + .12, face - .02, face + .1, '#1f4a35');
-  span(lobby, dx - hw2 - .12, dx + hw2 + .12, head, head + .14, face - .02, face + .1, '#1f4a35');
+  const lobbyK = new THREE.Group(); lobby.add(lobbyK);
+  span(lobbyK, dx - hw2 - .12, dx - hw2, 0, head + .12, face - .02, face + .1, '#1f4a35');
+  span(lobbyK, dx + hw2, dx + hw2 + .12, 0, head + .12, face - .02, face + .1, '#1f4a35');
+  span(lobbyK, dx - hw2 - .12, dx + hw2 + .12, head, head + .14, face - .02, face + .1, '#1f4a35');
   // The hallway behind it: reveals through the wall's thickness, a runner on the floor, a back wall and a sconce.
   const back = face - thick - 1.5;
-  span(lobby, dx - hw2 - .1, dx - hw2, 0, head, back, face - .02, '#26302a', { cast: false });
-  span(lobby, dx + hw2, dx + hw2 + .1, 0, head, back, face - .02, '#26302a', { cast: false });
-  span(lobby, dx - hw2, dx + hw2, 0, head, back - .1, back, '#2f3a32', { cast: false });
-  span(lobby, dx - hw2, dx + hw2, head, head + .05, back, face - .02, '#1d241f', { cast: false });
-  span(lobby, dx - .38, dx + .38, .004, .014, back, face - .02, VELVET, { cast: false });
+  span(lobbyK, dx - hw2 - .1, dx - hw2, 0, head, back, face - .02, '#26302a', { cast: false });
+  span(lobbyK, dx + hw2, dx + hw2 + .1, 0, head, back, face - .02, '#26302a', { cast: false });
+  span(lobbyK, dx - hw2, dx + hw2, 0, head, back - .1, back, '#2f3a32', { cast: false });
+  span(lobbyK, dx - hw2, dx + hw2, head, head + .05, back, face - .02, '#1d241f', { cast: false });
+  span(lobbyK, dx - .38, dx + .38, .004, .014, back, face - .02, VELVET, { cast: false });
   const hallLamp = new THREE.Mesh(new THREE.SphereGeometry(.1, 12, 8), glow('#fff2c8', '#ffd58a'));
-  hallLamp.position.set(dx, head - .45, back + .06); lobby.add(hallLamp); lights.push([hallLamp.material, .6, 1.2]);
+  hallLamp.position.set(dx, head - .45, back + .06); lobbyK.add(hallLamp); lights.push([hallLamp.material, .6, 1.2]);
   // The leaf hangs from its left jamb and swings in toward the hallway.
-  const hinge = new THREE.Group(); hinge.position.set(dx - hw2 + .02, 0, face + .02); lobby.add(hinge);
+  const hinge = new THREE.Group(); hinge.position.set(dx - hw2 + .02, 0, face + .02); lobbyK.add(hinge);
   const leafW = hw2 * 2 - .04, leafH = head - .03;
   span(hinge, 0, leafW, .01, leafH, -.03, .03, '#2d6146');
   [[.32, .95], [1.15, 1.85]].forEach(([a, b]) => span(hinge, .14, leafW - .14, a, b, .03, .05, '#357052', { cast: false }));
@@ -339,7 +347,8 @@ export function buildRooftop(world, layout, { box, span, material }) {
   }
   paintDoorSigns();
   if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', paintDoorSigns);
-  let doorAngle = 0;
+  let doorAngle = 0, doorLeaf = null, doorStaff = null;
+  const shaftGlass = [];
   // The Blender furniture (the diorama's rooftop_*.glb, each origin on its footprint, at the stations' 1.69 map units
   // per metre). Each set swaps in for its code-built stand-in once it loads; the named parts take over the stand-ins'
   // glowing materials so the sign, the fire, the bar lamps and the dance floor still light up at night.
@@ -372,6 +381,42 @@ export function buildRooftop(world, layout, { box, span, material }) {
       set.hide.visible = false;
       loaded.add(set.parent);
     }, undefined, e => console.warn('3D map: could not load ' + set.file, e)));
+    // The elevator, its bridge, the lounge door and the deck planters (the diorama's lounge_*.glb and deck_planter*.glb).
+    const place = (parent, source, px, py, pz) => {
+      const holder = new THREE.Group(); holder.add(source);
+      holder.scale.set(1.69, 1.69 / HEIGHT_SCALE, 1.69); holder.position.set(px, py, pz); parent.add(holder);
+      source.traverse(o => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
+      return holder;
+    };
+    const load = (file, done) => loader.load(base + file, gltf => done(gltf.scene), undefined, e => console.warn('3D map: could not load ' + file, e));
+    load('lounge_elevator_shaft.glb', source => shafts.forEach((sh, i) => {
+      const copy = i ? source.clone() : source;
+      copy.traverse(o => { if (o.isMesh && o.material && /Glass/.test(o.material.name)) { o.material = glass; o.castShadow = o.receiveShadow = false; if (!i) shaftGlass.push(o); } });
+      place(sh.frame, copy, lift.x, 0, sh.lz); sh.kf.visible = sh.ki.visible = false;
+    }));
+    load('lounge_elevator_cab.glb', source => shafts.forEach((sh, i) => {
+      const copy = i ? source.clone() : source;
+      // No handrail across the riders: a bar at hip height reads as cutting through them.
+      copy.traverse(o => { if (/^Rail/.test(o.name)) o.visible = false; if (o.name === 'CabLamp') o.traverse(m => { if (m.isMesh) { m.material = sh.cabLamp.material; m.castShadow = false; } }); });
+      place(sh.cab, copy, 0, 0, 0); sh.cabK.visible = false;
+    }));
+    load('lounge_bridge.glb', source => shafts.forEach((sh, i) => {
+      const copy = i ? source.clone() : source;
+      copy.traverse(o => { if (o.isMesh && o.material && /Glass/.test(o.material.name)) { o.material = glass; o.castShadow = o.receiveShadow = false; } });
+      place(sh.inside, copy, (lift.x + lift.w / 2 + x0) / 2, y, sh.lz); sh.kb.visible = false;
+    }));
+    load('lounge_door.glb', source => {
+      const leaf = source.getObjectByName('DoorLeaf'), staff = source.getObjectByName('StaffPlaque'), sconce = source.getObjectByName('Sconce');
+      if (!leaf) return;
+      if (sconce) sconce.traverse(o => { if (o.isMesh) { o.material = hallLamp.material; o.castShadow = false; } });
+      place(lobby, source, dx, 0, face); doorLeaf = leaf; doorStaff = staff; lobbyK.visible = false;
+    });
+    const plantFiles = ['deck_planter.glb', 'deck_planter_short.glb'];
+    let planted = 0;
+    plantFiles.forEach((file, i) => load(file, source => {
+      const [a, b, c, d] = planters[i]; place(open, source, (a + b) / 2, y, (c + d) / 2);
+      if (++planted === plantFiles.length) kPlant.visible = false;
+    }));
   }
 
   // A copy of the deck as the map shows it at `tier`, for the menus' lounge picture (map3d.loungePicture): only what
@@ -413,6 +458,9 @@ export function buildRooftop(world, layout, { box, span, material }) {
       // The door stands open while the lounge is open and shuts (STAFF ONLY, sign taped) while it is a lot.
       doorAngle += ((tier ? 1.75 : 0) - doorAngle) * .15;
       hinge.rotation.y = doorAngle; plaque.visible = !tier; signTape.visible = !tier;
+      if (doorLeaf) { doorLeaf.rotation.y = doorAngle; if (doorStaff) doorStaff.visible = !tier; }
+      // Before the lounge is bought the first shaft is a bare frame: its glass goes in with the lounge.
+      shaftGlass.forEach(o => { o.visible = !!tier; });
       lights.forEach(([m, day, nightGlow]) => { m.emissiveIntensity = day + night * nightGlow; });
       flame.scale.y = .8 + Math.sin((frame.time || 0) / 130) * .2 + Math.sin((frame.time || 0) / 53) * .1;
       flame.visible = tier >= 1;

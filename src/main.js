@@ -393,8 +393,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function loungeSeated(){return customers.filter(function(c){return c.phase==='lounge'}).length}
   function loungeWaiting(){return customers.filter(function(c){return c.phase==='toLounge'&&!c.waypoints.length}).sort(function(a,b){return a.id-b.id})}
   function loungeSpareJars(){return state.stock[3]-reservedJars()}
-  // A guest steps through the gap in the drapes and fades as they go (`loungeFade` 1 → 0 over the last half unit),
-  // and fades back in at the back door on the way out.
+  // A guest walks through the open door and the drapes into the back hallway, where the walls hide them on their way
+  // to the elevator (`loungeFade` runs 1 → 0 over LOUNGE_STEP_IN seconds), and fades back in at the back door on the
+  // way out.
+  var LOUNGE_STEP_IN=1.6;
   // Every guest keeps their own pace: from 0.6 to 1.4 times the session, spread evenly by id so the average (and the
   // lounge's income) holds while arrivals and departures stagger.
   function loungeStayJitter(id){var f=((Number(id)||0)*0.6180339887)%1;return .6+f*.8}
@@ -444,7 +446,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var exitTarget=loungeExitCurtainTarget();loungeExitCurtain+=(exitTarget-loungeExitCurtain)*(1-Math.exp(-dt*(exitTarget>loungeExitCurtain?10:8)));
     customers.forEach(function(c){
       if(c.phase==='lounge'){
-        if(c.loungeFade>0){c.loungeFade=Math.max(0,c.loungeFade-dt/.8);c.z=c.fadeFromZ+(LOUNGE_FRONT-.2-c.fadeFromZ)*(1-c.loungeFade);c.x=LOUNGE_DOOR.x;c.walking=c.loungeFade>0}
+        if(c.loungeFade>0){c.loungeFade=Math.max(0,c.loungeFade-dt/LOUNGE_STEP_IN);c.z=c.fadeFromZ+(LOUNGE_FRONT-1.6-c.fadeFromZ)*(1-c.loungeFade);c.x=LOUNGE_DOOR.x;c.walking=c.loungeFade>0}
         else if(!c.lift)askLift(c,'waitUp');
         else if(c.lift==='roof'){c.roofWalk=Math.min(1,c.roofWalk+dt/ROOF_WALK);c.loungeLeft-=dt;if(c.loungeLeft<=0){c.lift='back';c.walkBack=0}}
         else if(c.lift==='back'){c.walkBack=Math.min(1,c.walkBack+dt/ROOF_WALK);if(c.walkBack>=1)askLift(c,'waitDown')}
@@ -786,14 +788,17 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       // Blender models (art/blender/, exported to public/models/) by station index, sized from the tier 3 sprite they replace.
       layout.modelBase=new URL('models/',document.baseURI).href;
       // Keyed "station.look" (economy.stationLook: Lv 1, 10, 30, 50, 75); a look without its own model shows the tier 3 one. Each is sized to its tier's sprite.
-      layout.stationModels={'0.1':'seeds_bench_tier1.glb','0.2':'seeds_bench_tier2.glb','0.3':'seeds_bench.glb','1.1':'grow_bench_tier1.glb','1.2':'grow_bench_tier2.glb','1.3':'grow_bench.glb','2.1':'harvest_bench_tier1.glb','2.2':'harvest_bench_tier2.glb','2.3':'harvest_bench.glb',
-        '3.1':'pack_bench_tier1.glb','3.2':'pack_bench_tier2.glb','3.3':'pack_bench.glb','4.1':'order_desk_tier1.glb','4.2':'order_desk_tier2.glb','4.3':'order_desk.glb','5.1':'pickup_desk_tier1.glb','5.2':'pickup_desk_tier2.glb','5.3':'pickup_desk.glb','6.1':'security_booth_tier1.glb','6.2':'security_booth_tier2.glb','6.3':'security_booth_tier3.glb','6.4':'security_booth_tier4.glb','6.5':'security_booth_tier5.glb'};
+      layout.stationModels={'0.1':'seeds_bench_tier1.glb','0.2':'seeds_bench_tier2.glb','0.3':'seeds_bench.glb','0.4':'seeds_bench_tier4.glb','0.5':'seeds_bench_tier5.glb','1.1':'grow_bench_tier1.glb','1.2':'grow_bench_tier2.glb','1.3':'grow_bench.glb','1.4':'grow_bench_tier4.glb','1.5':'grow_bench_tier5.glb','2.1':'harvest_bench_tier1.glb','2.2':'harvest_bench_tier2.glb','2.3':'harvest_bench.glb','2.4':'harvest_bench_tier4.glb','2.5':'harvest_bench_tier5.glb',
+        '3.1':'pack_bench_tier1.glb','3.2':'pack_bench_tier2.glb','3.3':'pack_bench.glb','3.4':'pack_bench_tier4.glb','3.5':'pack_bench_tier5.glb','4.1':'order_desk_tier1.glb','4.2':'order_desk_tier2.glb','4.3':'order_desk.glb','4.4':'order_desk_tier4.glb','4.5':'order_desk_tier5.glb','5.1':'pickup_desk_tier1.glb','5.2':'pickup_desk_tier2.glb','5.3':'pickup_desk.glb','5.4':'pickup_desk_tier4.glb','5.5':'pickup_desk_tier5.glb','6.1':'security_booth_tier1.glb','6.2':'security_booth_tier2.glb','6.3':'security_booth_tier3.glb','6.4':'security_booth_tier4.glb','6.5':'security_booth_tier5.glb'};
       stationModelFiles=layout.stationModels;layout.stationModelSize={};for(var key in layout.stationModels)layout.stationModelSize[key]=stationSpriteSize(+key.split('.')[0],+key.split('.')[1]);layout.stationModelSize['4.3']={w:2.2,ox:0};
+      // Looks 4 and 5 (Lv 50 and 75) share tier 3's footprint, origin and facing.
+      [0,1,2,3,4,5].forEach(function(i){[4,5].forEach(function(t){if(layout.stationModels[i+'.'+t])layout.stationModelSize[i+'.'+t]=layout.stationModelSize[i+'.3']})});
       // The lower order desks keep their sprites' size against tier 3's.
       [1,2].forEach(function(t){layout.stationModelSize['4.'+t]={w:2.2*stationSpriteSize(4,t).w/stationSpriteSize(4,3).w,ox:0}});
       // The security booths are built facing -Y; turned a quarter, their scanner, sign and customer side face the front door
       // (west, -x), the desk runs along the footprint's long z side, and the doorman's side faces the room.
-      [1,2,3,4,5].forEach(function(t){layout.stationModelSize['6.'+t]={w:1.7,ox:0,turn:-Math.PI/2}});
+      // w 2.69 puts the shared 1.45 x 0.8 mat at 1.69 map units a metre, the scale of the people and the other stations.
+      [1,2,3,4,5].forEach(function(t){layout.stationModelSize['6.'+t]={w:2.69,ox:0,turn:-Math.PI/2}});
       // The production line from the 2D map's own routes, so both maps carry the same tubes, belts and cargo rhythm.
       var grow=tubeRunGeometry(TUBE_RUNS[1]),pack=tubeRunGeometry(TUBE_RUNS[3]);
       layout.transport={bore:TUBE_DIA,gap:CARGO_GAP,
@@ -1659,10 +1664,11 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // waiting for someone to walk up from the door, and a well-staffed door clears people as fast as they arrive.
   // The ID desk stands 0.9 further in from the street door than it first did (Kevin, 2026-10-19: more room at the door);
   // guests are checked at ID_CHECK, in front of it.
-  // Turned to face the door (Kevin, 2026-10-19), the booth runs along z, so it sits half a step nearer the storefront to stay
-  // clear of the order line's last turn at (-8.2, 8.6); the doorman works its room side by the monitors, past the
-  // line's last row at z 9.3.
-  var ID_DESK={x:-8.2,z:9.8},ID_CHECK={x:-9.15,z:9.35},DOORMAN={x:-7.4,z:10.05};
+  // Turned to face the door (Kevin, 2026-10-19), the booth runs along z. At full size (1.69 map units to a Blender metre,
+  // like the other stations; Kevin: "the security booth scale is too small") it sits nearer the storefront so its rear
+  // end clears the order line's last turn at (-8.2, 8.6); guests stop at its scanner, and the doorman works its room
+  // side by the monitors, past the line's last row at z 9.3.
+  var ID_DESK={x:-8.2,z:10.15},ID_CHECK={x:-9.2,z:9.6},DOORMAN={x:-7.15,z:10.35};
   var ID_ROUTE=[ID_CHECK,{x:-10.6,z:9.6},{x:-11.7,z:9.3},{x:-12.4,z:7.8},{x:-12.4,z:-10}];
   function moveToIdCheck(c,dt){
     var queue=customers.filter(function(q){return q.idChecked===false}),index=queue.indexOf(c);
@@ -2378,9 +2384,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
           person(p.x+spot.dx,p.y||0,p.z+spot.dz,'#2f6b52',function(){drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait)})})(i,p);
       }
     }
-    stations.push({index:6,x:ID_DESK.x,y:0,z:ID_DESK.z,w:.8,d:1.3,h:1.1,tier:state.doorBuilt?economy.stationLook(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
+    stations.push({index:6,x:ID_DESK.x,y:0,z:ID_DESK.z,w:1.3,d:2.4,h:1.6,tier:state.doorBuilt?economy.stationLook(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
     // The doorman stands behind the booth, on the room side, facing the front door across the desk.
-    if(state.doorBuilt)person(DOORMAN.x,0,DOORMAN.z,'#2f6b52',function(){drawPerson(DOORMAN.x,DOORMAN.z,now,6,false,true,false,{amount:0,phase:0,facing:-1})});
+    if(state.doorBuilt)person(DOORMAN.x,0,DOORMAN.z,'#2f6b52',function(){drawPerson(DOORMAN.x,DOORMAN.z,now,6,false,true,false,{amount:0,phase:0,facing:1})});
     // The lounge host works the rooftop: behind the bar once there is one, otherwise by the elevator's bridge.
     if(state.lounge>0){var host=state.lounge>=2?{x:3.7,z:-8.75,f:.3}:{x:-5.2,z:-4,f:.3};person(host.x,ROOFTOP.y,host.z,'#2f6b52',function(){drawPerson(host.x,host.z,now,8,false,true,false,{amount:0,phase:0,facing:host.f})})}
     // Guests on the roof hold a spot for their session. A guest riding up or down stands in the elevator's cab, which
@@ -2418,7 +2424,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     liftY=lifts[0].y*ROOFTOP.y;liftY2=lifts[1].y*ROOFTOP.y;loungeSmokers=smokers;
     customers.forEach(function(c){
       stepCustomerVisual(c,frameDelta);
-      if(c.phase==='lounge')return;
+      if(c.phase==='lounge'&&!(c.loungeFade>0))return;
       person(c.renderX,0,c.renderZ,PERSON_COLOURS[(c.id||0)%PERSON_COLOURS.length],function(){drawPerson(c.renderX,c.renderZ,now,c.id,c.walking,false,c.bag,{phase:c.walkPhase||0,heading:c.walkHeading,amount:c.walkAmount||0,facing:c.facing===undefined?.3:c.facing,lean:c.turnLean||0,pickupAge:c.effectAge})});
     });
     var streetApi=sunnyApi(now);
@@ -2615,7 +2621,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function updateMarkers(){
     var key=[centerX,centerY,unit,width,height,state.idStaff,state.lines.join(),securitySelected,selected,state.lounge,loungeSelected].join("|");
     if(updateMarkers.key===key)return;updateMarkers.key=key;
-    var securityPos=project(ID_DESK.x,.62,9.91),loungePos=map3d&&map3d.ok?project(-2.7,ROOFTOP.y+1.2,-6.1):project(LOUNGE_DOOR.x,1.5,DISPLAY_Z+.5),labelSize=Math.max(8,Math.min(10,unit*.24))*(width>=780?.85:1)+'px';
+    var securityPos=project(ID_DESK.x,.62,ID_DESK.z+.1),loungePos=map3d&&map3d.ok?project(-2.7,ROOFTOP.y+1.2,-6.1):project(LOUNGE_DOOR.x,1.5,DISPLAY_Z+.5),labelSize=Math.max(8,Math.min(10,unit*.24))*(width>=780?.85:1)+'px';
     securityMarker.style.fontSize=labelSize;loungeMarker.style.fontSize=labelSize;
     var labels=[{el:securityMarker,x:securityPos.x,y:securityPos.y},{el:loungeMarker,x:loungePos.x,y:loungePos.y}];
     markerEls.forEach(function(el,i){var station=machinePos[i],pos=project(station.x,.63+station.y,station.z+1.23);el.style.fontSize=labelSize;labels.push({el:el,x:pos.x,y:pos.y})});
