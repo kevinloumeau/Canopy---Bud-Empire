@@ -73,9 +73,9 @@ export function buildShell(world, layout, { box, span, material, model }) {
   // Top floor: slim forest-green glazing on a low plinth, one bay per pane, with a solid two-pane bay for the fan.
   // Under the rooftop lounge the glazing runs right up to the underside of the roof slab's lip (rooftop.js).
   const tRear = top.z - top.d / 2, tLeft = -top.w / 2, glassH = layout.rooftop ? layout.rooftop.y - .34 - top.y : 3.9;
-  // The rear run's fan band (Kevin, 2026-10-19): the exhaust fans' housings (1.2 tall) line up with the roof slab's top
-  // edge, where the run passes the slab's corner out by the stair landing; below them the panes run up to the band.
-  const fanTop = layout.rooftop ? layout.rooftop.y - .03 : top.y + glassH, fanBandH = 1.24;
+  // The rear run's fan band (Kevin, 2026-10-19): the exhaust fans' housings (1.24 tall) fill the top of the glazing,
+  // right up to the ceiling, side by side on a solid green band; the panes stop under it.
+  const fanTop = top.y + glassH, fanBandH = 1.24;
   const glass = new THREE.MeshStandardMaterial({ color: '#cfe6df', roughness: .1, metalness: 0, transparent: true, opacity: .26, depthWrite: false });
   function glazing(alongZ, a0, a1, at, fan, band) {
     const n = Math.max(2, Math.round((a1 - a0) / s.glazingBay)), step = (a1 - a0) / n, y = top.y;
@@ -134,6 +134,8 @@ export function buildShell(world, layout, { box, span, material, model }) {
       const mesh = new THREE.InstancedMesh(o.geometry, o.material, rowCount);
       rel.multiplyMatrices(parentInverse, o.matrixWorld);
       rowSpots.forEach((spot, i) => mesh.setMatrixAt(i, new THREE.Matrix4().multiplyMatrices(spot, rel)));
+      // Bounds over every placement, not the part's own spot at the origin, so the row isn't culled off screen.
+      mesh.computeBoundingSphere();
       mesh.castShadow = false; mesh.receiveShadow = true;
       shell.add(mesh);
       if (inRotor) spinning.push({ part: o, mesh });
