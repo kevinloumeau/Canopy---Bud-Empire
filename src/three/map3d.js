@@ -1,4 +1,4 @@
-// The 3D map (the default for the sprite shop; ?render=2d keeps Canvas 2D). It draws the main shop's city block as a
+// The 3D map (the only map since the 2D one was removed on 2026-10-19). It draws the main shop's city block as a
 // Three.js scene through an orthographic camera matched pixel for pixel to the 2D map's project() (see camera.js), so
 // the game's pan, zoom, taps and DOM tags keep working unchanged. This phase is a grey-box: the plaza, sunken streets,
 // terraces, trees and lamps, the shop's three floors and walls, the stations, people and cars as simple solids, lit
@@ -16,6 +16,8 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { createMapCamera, frameMapCamera, HEIGHT_SCALE } from './camera.js';
 
+// Blender models are built in metres; the map draws 1.69 units a metre (layout.fixtures use the same scale).
+const BLENDER_SCALE = 1.69;
 const MAX_PEOPLE = 160, MAX_CARS = 32;
 const SUN_COLOUR = '#fff1d6', SKY = '#fffaf0', BOUNCE = '#b8ad94';
 
@@ -119,11 +121,26 @@ export function createMap3D(canvas, layout) {
   }
   function span(parent, x0, x1, y0, y1, z0, z1, colour, opts) { return box(parent, (x0 + x1) / 2, y0, (z0 + z1) / 2, Math.max(.001, x1 - x0), Math.max(.001, y1 - y0), Math.max(.001, z1 - z0), colour, opts); }
 
+  // Blender models placed by their own origin at the fixtures' Blender-to-map scale (1.69 map units a metre, heights
+  // un-stretched against the world's height scale). onReady gets the scene once it is in the world, so the code-built
+  // stand-in it replaces can be hidden; until then (or if it fails) the stand-in shows.
+  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+  function model(file, x, y, z, onReady, parent = world) {
+    loader.load(layout.modelBase + file, gltf => {
+      prepare(gltf.scene);
+      const holder = new THREE.Group();
+      holder.add(gltf.scene);
+      holder.scale.set(BLENDER_SCALE, BLENDER_SCALE / HEIGHT_SCALE, BLENDER_SCALE);
+      holder.position.set(x, y, z);
+      parent.add(holder);
+      if (onReady) onReady(gltf.scene, holder);
+    }, undefined, e => console.warn('3D map: could not load ' + file, e));
+  }
   const lampStandIns = [];
   const terraces = buildTown(world, layout, { box, span, material, textured, lampStandIns });
-  buildShop(world, layout, { box, span, material, textured });
+  buildShop(world, layout, { box, span, material, textured, model });
   const transport = buildTransport(scene, world, layout.transport, { box, material });
-  const shell = buildShell(world, layout, { box, span, material });
+  const shell = buildShell(world, layout, { box, span, material, model });
   const rooftop = buildRooftop(world, layout, { box, span, material });
   buildEntrance(world, layout, { box, span, material });
 
@@ -147,7 +164,6 @@ export function createMap3D(canvas, layout) {
   // world's height scale so it keeps its true proportions, which is what the sprite renders show. Until a model has
   // loaded (or if it fails), the grey box stands in.
   const models = {};
-  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
   function prepare(source) {
     source.traverse(o => {
       if (!o.isMesh) return;
@@ -643,7 +659,7 @@ function buildTown(world, layout, { box, span, material, textured, lampStandIns 
 
 // The shop: the timber floor on the plaza, the mezzanine and top floor as slabs on posts, the rear and short side
 // walls of the cutaway, and the entrance planter line. Positions are the 2D map's own (drawTower's floors).
-function buildShop(world, layout, { box, span, material, textured }) {
+function buildShop(world, layout, { box, span, material, textured, model }) {
   const shop = new THREE.Group();
   world.add(shop);
   layout.floors.forEach((f, fi) => {
@@ -662,33 +678,36 @@ function buildShop(world, layout, { box, span, material, textured }) {
   // the landing off the mezzanine, one from the mezzanine to a landing at the top floor's rear-right corner. Each is
   // oak wedge treads round a forest-green post, green balusters and a brass handrail, arriving facing the landing.
   // Rails are built in true space (heights stretched here, not by the world group) so their section stays round.
-  const trueSpace = new THREE.Group();
-  trueSpace.scale.y = 1 / HEIGHT_SCALE; shop.add(trueSpace);
-  const helix = (cx, cz, r, a0, a1, y0, y1, thick, colour) => {
+  // Each stair is its own group, hidden once the Blender spiral (spiral_stair.glb, origin at the post on the floor, the
+  // same treads) has loaded in its place.
+  const helix = (trueSpace, cx, cz, r, a0, a1, y0, y1, thick, colour) => {
     const pts = [];
     for (let k = 0; k <= 48; k++) { const t = k / 48, a = a0 + (a1 - a0) * t; pts.push(new THREE.Vector3(cx + Math.cos(a) * r, (y0 + (y1 - y0) * t) * HEIGHT_SCALE, cz + Math.sin(a) * r)); }
     const m = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 96, thick, 8, false), material(colour));
     m.castShadow = true; trueSpace.add(m);
   };
   const spiral = (cx, cz, y0, y1, n, arrive) => {
+    const g = new THREE.Group(), trueSpace = new THREE.Group();
+    trueSpace.scale.y = 1 / HEIGHT_SCALE; g.add(trueSpace); shop.add(g);
+    model('spiral_stair.glb', cx, y0, cz, () => { g.visible = false; });
     // n risers; the last one is the floor itself. Treads step 24° apart, from the back round the front to the landing.
     const r = 1.15, step = Math.PI * 24 / 180, rise = (y1 - y0) / n, angle = k => arrive + (n - 1 - k) * step;
-    box(shop, cx, y0, cz, .26, y1 - y0 + 1, .26, '#1f5a3c');
-    box(shop, cx, y0, cz, .56, .06, .56, '#d0a54e', { cast: false });
+    box(g, cx, y0, cz, .26, y1 - y0 + 1, .26, '#1f5a3c');
+    box(g, cx, y0, cz, .56, .06, .56, '#d0a54e', { cast: false });
     const cap = new THREE.Mesh(new THREE.SphereGeometry(.13, 16, 10), material('#d0a54e'));
-    cap.position.set(cx, y1 + 1.05, cz); cap.castShadow = true; shop.add(cap);
+    cap.position.set(cx, y1 + 1.05, cz); cap.castShadow = true; g.add(cap);
     for (let k = 0; k < n - 1; k++) {
       const a = angle(k), top = y0 + rise * (k + 1), w = step * 1.04;
       // Three's cylinder sweeps from +z towards +x, so a map angle a (cos a, sin a) is theta π/2 - a.
       const tread = new THREE.Mesh(new THREE.CylinderGeometry(r, r, .08, 6, 1, false, Math.PI / 2 - a - w / 2, w), material('#d9a768'));
-      tread.position.set(cx, top - .04, cz); tread.castShadow = tread.receiveShadow = true; shop.add(tread);
+      tread.position.set(cx, top - .04, cz); tread.castShadow = tread.receiveShadow = true; g.add(tread);
       // A green baluster at each tread's outer corner.
       const b = a - step / 2;
-      box(shop, cx + Math.cos(b) * (r - .06), top, cz + Math.sin(b) * (r - .06), .05, .95, .05, '#1f5a3c', { cast: false });
+      box(g, cx + Math.cos(b) * (r - .06), top, cz + Math.sin(b) * (r - .06), .05, .95, .05, '#1f5a3c', { cast: false });
     }
     const a0 = angle(0) + step / 2, a1 = angle(n - 2) - step / 2;
-    helix(cx, cz, r - .06, a0, a1, y0 + 1, y1 - rise + 1, .05, '#d0a54e');
-    helix(cx, cz, r - .02, a0, a1, y0 + rise - .14, y1 - .14, .09, '#1f5a3c');
+    helix(trueSpace, cx, cz, r - .06, a0, a1, y0 + 1, y1 - rise + 1, .05, '#d0a54e');
+    helix(trueSpace, cx, cz, r - .02, a0, a1, y0 + rise - .14, y1 - .14, .09, '#1f5a3c');
   };
   const [, mezz, top] = layout.floors;
   const up = -Math.PI / 2, rail = (x0, x1, z0, z1, y) => span(shop, x0, x1, y, y + 1.05, z0, z1, '#c9a35a', { opts: { transparent: true, opacity: .55 } });
