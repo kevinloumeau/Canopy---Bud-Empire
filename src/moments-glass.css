@@ -1,0 +1,82 @@
+/* Moments on the forest glass (UI reskin plan, Phase 5): welcome back, settings, age gate, start guide and reset. Loaded last.
+   One strong glass card each, a soft scrim behind, mono figures, and brass only on the one thing to tap next. */
+.return-overlay,.settings-wrap{background:rgba(8,18,12,.42);-webkit-backdrop-filter:none;backdrop-filter:none}
+.return-card,.modal.settings{
+ border:1px solid var(--ui-edge);border-radius:22px;color:var(--ui-ink);
+ background:linear-gradient(180deg,var(--ui-sheen),transparent 30%),var(--ui-glass-strong);
+ -webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);box-shadow:var(--ui-shadow);
+}
+
+/* Welcome back: the total is the hero, the time sits under it, branches are one row each, ready goals are a brass line. */
+.return-card{width:min(360px,100%);padding:18px 18px 16px}
+.return-card .return-kicker{margin:0 0 2px;font-size:.656rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ui-soft)}
+.return-card h2{margin:0;font-size:1.1875rem;font-weight:700;letter-spacing:-.025em;color:var(--ui-ink)}
+.return-card #returnTotal{margin:12px 0 2px;font:500 34px/1.05 'DM Mono',monospace;letter-spacing:-.04em;color:var(--ui-ink);font-variant-numeric:tabular-nums}
+.return-card #returnTime{margin:0 0 12px;font-size:12px;line-height:1.4;color:var(--ui-soft)}
+.return-card #returnEarnings{margin:0 0 12px;padding:2px 12px;border:0;border-radius:14px;background:var(--ui-well)}
+.return-card #returnEarnings[hidden]{display:none}
+.return-card #returnEarnings li{padding:9px 0;border-bottom:1px solid var(--ui-sheen);font-size:13px;color:var(--ui-soft)}
+.return-card #returnEarnings li:last-child{border-bottom:0}
+.return-card #returnEarnings strong{font:500 13.5px 'DM Mono',monospace;color:var(--ui-ink)}
+.return-card #returnGoals{display:flex;align-items:center;gap:8px;margin:0 0 12px;padding:10px 12px;border-radius:14px;background:var(--ui-brass-wash);color:var(--ui-brass);font-size:13px;font-weight:600}
+.return-card #returnGoals[hidden]{display:none}
+.return-card #returnGoals::before{content:'';flex:0 0 7px;height:7px;border-radius:50%;background:var(--ui-brass)}
+.return-card #dismissReturn{min-height:46px;margin:0;border:0;border-radius:12px;background:var(--ui-brass);color:var(--ui-brass-ink);font-size:14px;font-weight:700;box-shadow:none}
+.return-card #dismissReturn:active{transform:translateY(1px)}
+.return-card #dismissReturn:focus-visible{outline:2px solid var(--ui-ink);outline-offset:2px}
+
+/* Settings: one grouped list in a well, values in soft mono, the reset row set apart in coral. */
+.modal.settings{width:min(340px,100%);padding:16px}
+.modal.settings .settings-head{margin-bottom:12px}
+.settings-head h2{font-size:1.1875rem;font-weight:700;letter-spacing:-.025em;color:var(--ui-ink)}
+.modal .settings-close{width:34px;height:34px;border:1px solid var(--ui-edge);background:var(--ui-well-soft);color:var(--ui-soft);font-size:20px}
+.modal.settings .settings-list{padding:0 12px;border-radius:14px;background:var(--ui-well)}
+.modal .settings-row{min-height:48px;padding:0;border-top:1px solid var(--ui-sheen);color:var(--ui-ink);font-size:14px}
+.modal .settings-row b{font:500 12.5px 'DM Mono',monospace;color:var(--ui-soft)}
+.modal.settings .settings-foot{margin-top:12px;padding:0;border:0}
+.modal .settings-row.settings-danger{padding:0 12px;border:1px solid var(--ui-coral-wash);border-radius:14px;background:none}
+.modal .settings-row.settings-danger span,.modal .settings-row.settings-danger b{color:var(--ui-coral)}
+.settings-note{margin:10px 2px 0;font-size:11.5px;color:var(--ui-soft)}
+.modal .settings-row:focus-visible,.modal .settings-close:focus-visible{outline:2px solid var(--ui-brass);outline-offset:2px}
+@media(hover:hover){.modal .settings-row:hover{color:var(--ui-ink);background:var(--ui-well-soft)}.modal .settings-close:hover{color:var(--ui-ink)}}
+
+@media(prefers-reduced-transparency:reduce){.return-card,.modal.settings{background:#1d3226;-webkit-backdrop-filter:none;backdrop-filter:none}}
+
+/* Age gate, start guide and reset: the same strong glass card. The answer that moves the player on is brass. */
+.age-card,.guide-card,#resetModal .modal{
+ border:1px solid var(--ui-edge);color:var(--ui-ink);
+ background:linear-gradient(180deg,var(--ui-sheen),transparent 30%),var(--ui-glass-strong);
+ -webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);box-shadow:var(--ui-shadow);
+}
+.age-card{border-radius:22px}
+.age-eyebrow,#resetModal .modal small{font-family:inherit;font-size:.656rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ui-soft)}
+.age-card h1{color:var(--ui-ink);letter-spacing:-.025em}
+.age-card p,.guide-card p,#resetModal .modal p{color:var(--ui-soft)}
+.age-actions button{border:0;border-radius:12px;background:var(--ui-brass);color:var(--ui-brass-ink)}
+.age-actions button:hover{background:var(--ui-brass);filter:brightness(1.06)}
+.age-actions button.ghost{border:1px solid var(--ui-edge);background:none;color:var(--ui-ink)}
+.age-actions button.ghost:hover{background:var(--ui-well-soft);filter:none}
+.age-actions button:focus-visible,.guide-actions button:focus-visible{outline:2px solid var(--ui-ink);outline-offset:2px}
+.age-fine{color:var(--ui-soft);opacity:.8}
+
+.guide-ring{border-color:var(--ui-brass)}
+.guide-dots i{background:var(--ui-well)}
+.guide-dots i.is-on{background:var(--ui-brass)}
+.guide-card h2{color:var(--ui-ink);letter-spacing:-.025em}
+.guide-card .guide-eyebrow{color:var(--ui-brass)}
+.guide-skip{color:var(--ui-soft)}
+.guide-next,.start-guide.is-hero .guide-next{border:0;background:var(--ui-brass);color:var(--ui-brass-ink);box-shadow:none}
+.guide-beats li{border:0;background:var(--ui-well);color:var(--ui-ink)}
+.guide-beats svg{color:var(--ui-leaf-glow)}
+.start-guide.is-hero .guide-card{background:linear-gradient(180deg,var(--ui-sheen),transparent 30%),var(--ui-glass-strong)}
+@media(hover:hover){.guide-skip:hover{color:var(--ui-ink)}}
+
+/* Reset is the one coral moment: Cancel is the quiet way out, the reset itself an outlined coral button. */
+#resetModal .modal{width:min(340px,calc(100% - 32px));padding:18px;border-radius:22px}
+#resetModal .modal h2{margin:2px 0 8px;font-size:1.1875rem;letter-spacing:-.025em;color:var(--ui-ink)}
+#resetModal .modal p{font-size:13px;line-height:1.5}
+#resetModal .modal>div{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+#resetModal .modal button{min-height:44px;border-radius:12px;font:inherit;font-size:13.5px;font-weight:600;letter-spacing:0;text-transform:none}
+#resetModal #resetCancel{border:1px solid var(--ui-edge);background:none;color:var(--ui-ink)}
+#resetModal #resetConfirm{border:1px solid var(--ui-coral);background:none;color:var(--ui-coral)}
+@media(prefers-reduced-transparency:reduce){.age-card,.guide-card,#resetModal .modal{background:#1d3226;-webkit-backdrop-filter:none;backdrop-filter:none}}

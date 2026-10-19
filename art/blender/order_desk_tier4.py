@@ -104,7 +104,7 @@ pill("Sign", SW, SH, .076, SZ, K.GREEN_D)
 for dx in (-SW / 2 + .09, SW / 2 - .09):
     for d in (-1, 1):
         K.cyl(f"Rivet{dx:.2f}{d}", .02, .02, .01, (dx, AY + d * .042, SZ + SH / 2), K.BRASS, 16).rotation_euler.x = math.pi / 2
-txt = bpy.data.curves.new("SignText", "FONT"); txt.body = "ORDER"
+txt = bpy.data.curves.new("SignText", "FONT"); txt.body = "ORDER"; txt.resolution_u = 3
 txt.size = .2; txt.offset_y = 0; txt.extrude = .008; txt.align_x = "CENTER"; txt.align_y = "CENTER"; txt.space_character = 1.05
 fb = os.environ.get("CANOPY_FONT") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts", "Fredoka-SemiBold.ttf")
 if os.path.exists(fb): txt.font = bpy.data.fonts.load(fb)
