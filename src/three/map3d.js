@@ -12,6 +12,7 @@ import { buildRooftop } from './rooftop.js';
 import { buildEntrance } from './entrance.js';
 import { createBranchLayer } from './branch3d.js';
 import { rigStation, bindStation, moveStation } from './station-motion.js';
+import { compactModel } from './compact.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
@@ -130,6 +131,9 @@ export function createMap3D(canvas, layout) {
   // un-stretched against the world's height scale). onReady gets the scene once it is in the world, so the code-built
   // stand-in it replaces can be hidden; until then (or if it fails) the stand-in shows.
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+  // Each loaded model remembers its file, for the per-model numbers in stats().
+  const loadFile = loader.load.bind(loader);
+  loader.load = (url, onLoad, onProgress, onError) => loadFile(url, gltf => { gltf.scene.userData.file = url.split('/').pop(); onLoad(gltf); }, onProgress, onError);
   function model(file, x, y, z, onReady, parent = world) {
     loader.load(layout.modelBase + file, gltf => {
       prepare(gltf.scene);
@@ -139,6 +143,7 @@ export function createMap3D(canvas, layout) {
       holder.position.set(x, y, z);
       parent.add(holder);
       if (onReady) onReady(gltf.scene, holder);
+      compactModel(gltf.scene);
     }, undefined, e => console.warn('3D map: could not load ' + file, e));
   }
   const lampStandIns = [];
@@ -193,6 +198,7 @@ export function createMap3D(canvas, layout) {
       if (f.glow) gltf.scene.traverse(o => { const m = o.isMesh && o.material; if (m && m.name === f.glow && !fixtureGlows.includes(m)) { m.emissive.set('#ffe3b0'); fixtureGlows.push(m); } });
       // Screens (f.screen names the material): the picture itself glows, brighter after dark.
       if (f.screen) gltf.scene.traverse(o => { const m = o.isMesh && o.material; if (m && m.name === f.screen && !fixtureScreens.includes(m)) { m.emissive.set('#ffffff'); m.emissiveMap = m.map; m.needsUpdate = true; fixtureScreens.push(m); } });
+      compactModel(gltf.scene);
       const holder = new THREE.Group();
       holder.add(gltf.scene);
       holder.scale.set(f.scale, f.scale / HEIGHT_SCALE, f.scale);
@@ -214,6 +220,7 @@ export function createMap3D(canvas, layout) {
       source.position.set(-centre.x, -bounds.min.y, -centre.z);
       prepare(source);
       rigStation(source, +index.split('.')[0]);
+      compactModel(source);
       const holder = new THREE.Group();
       holder.add(source);
       holder.scale.set(s, s / HEIGHT_SCALE, s);
@@ -270,12 +277,22 @@ export function createMap3D(canvas, layout) {
   people.castShadow = true; people.count = 0;
   // Figures: the people sprites as upright cards (main.js records where the 2D map would draw each one). They carry
   // their own painted light, so they are unlit; the capsules underneath only cast the shadows.
-  const textures = new WeakMap(), cards = [];
+  const textures = new Map(), cards = [];
   const cardIndex = new THREE.BufferAttribute(new Uint16Array([0, 1, 2, 0, 2, 3]), 1);
+  // Every walk frame of every person is its own picture, so a long session would upload hundreds of them and keep them
+  // all on the GPU: a picture not drawn for a while gives its GPU copy back (and uploads again if it comes back).
+  const TEXTURE_IDLE = 8000;
+  let textureSweep = 0, frameClock = 0;
   function texture(img) {
     let t = textures.get(img);
     if (!t) { t = new THREE.Texture(img); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; t.needsUpdate = true; textures.set(img, t); }
+    t.userData.used = frameClock;
     return t;
+  }
+  function sweepTextures() {
+    if (frameClock - textureSweep < 2000) return;
+    textureSweep = frameClock;
+    textures.forEach((t, img) => { if (frameClock - t.userData.used > TEXTURE_IDLE) { t.dispose(); textures.delete(img); } });
   }
   // Terraces: their renders are drawn first as backdrops (no depth test) and their solids only write depth, so the
   // render shows wherever nothing nearer stands, and anything behind a terrace stays hidden by it.
@@ -386,6 +403,7 @@ export function createMap3D(canvas, layout) {
   const carSources = {}, carCopies = [];
   Object.entries(layout.carModels || {}).forEach(([kind, file]) => loader.load(layout.modelBase + file, gltf => {
     prepare(gltf.scene);
+    compactModel(gltf.scene);
     const wheel = gltf.scene.getObjectByName('WheelFL');
     carSources[kind] = { scene: gltf.scene, radius: wheel ? new THREE.Box3().setFromObject(wheel).getSize(new THREE.Vector3()).y / 2 : .25 };
   }, undefined, e => console.warn('3D map: could not load ' + file, e)));
@@ -416,7 +434,7 @@ export function createMap3D(canvas, layout) {
       // Parts merge only with the attributes they all share.
       if (list.some(g => !g.attributes.uv)) list.forEach(g => g.deleteAttribute('uv'));
       const mesh = new THREE.InstancedMesh(mergeGeometries(list), withHaze(mat), MAX_PROPS);
-      mesh.count = 0; mesh.castShadow = mesh.receiveShadow = true; mesh.frustumCulled = false;
+      mesh.count = 0; mesh.castShadow = mesh.receiveShadow = true; mesh.frustumCulled = false; mesh.userData.file = root.userData.file;
       // Props stay in the scene on a branch visit: the branch scenes place them too.
       mesh.userData.prop = true;
       world.add(mesh);
@@ -473,7 +491,8 @@ export function createMap3D(canvas, layout) {
       } else matrix.compose(position, propTurn, propScale);
       parts.forEach(m => m.setMatrixAt(m.count++, matrix));
     });
-    Object.values(propSources).forEach(parts => parts.forEach(m => { m.instanceMatrix.needsUpdate = true; }));
+    // An unused prop is hidden rather than drawn zero times, which still costs its state changes.
+    Object.values(propSources).forEach(parts => parts.forEach(m => { m.instanceMatrix.needsUpdate = true; m.visible = m.count > 0; }));
     glowMaterials.forEach(m => { m.emissive.set('#ffd9a0'); m.emissiveIntensity = night * 2.5; });
   }
   const carsModelled = () => !!layout.carModels && Object.keys(layout.carModels).every(k => carSources[k]);
@@ -504,7 +523,8 @@ export function createMap3D(canvas, layout) {
     pos.array.set(f.points); pos.needsUpdate = true;
     uv.array.set([u0, v0, u1, v0, u1, v1, u0, v1]); uv.needsUpdate = true;
     const mat = mesh.material, map = texture(f.img), fade = f.alpha < 1;
-    if (mat.map !== map) { mat.map = map; mat.needsUpdate = true; }
+    // Swapping one picture for another needs no new shader; only gaining a map does.
+    if (mat.map !== map) { if (!mat.map) mat.needsUpdate = true; mat.map = map; }
     if (mat.transparent !== fade) { mat.transparent = fade; mat.needsUpdate = true; }
     mat.opacity = f.alpha; mat.color.setScalar(shade);
     mesh.visible = true;
@@ -517,6 +537,8 @@ export function createMap3D(canvas, layout) {
 
   // Size, camera, sun and the day-night light, shared by the main map and the branch scenes.
   function view(frame, background) {
+    frameClock = performance.now();
+    sweepTextures();
     const pixelRatio = Math.min(frame.dpr, 2);
     if (renderer.getPixelRatio() !== pixelRatio) renderer.setPixelRatio(pixelRatio);
     const size = renderer.getSize(new THREE.Vector2());
@@ -731,6 +753,48 @@ export function createMap3D(canvas, layout) {
     return true;
   }
 
+  // Dev numbers for the ?stats readout (main.js) and scripts: the last frame's draw calls and triangles (shadow pass
+  // included), what is on the GPU, and an estimate of its memory: every geometry and texture still in the scene, the
+  // shadow map and the drawing buffer.
+  function stats(perModel) {
+    const info = renderer.info, geometries = new Set(), textures = new Set(), models = {};
+    let meshes = 0, visible = 0;
+    scene.traverse(o => {
+      if (!o.isMesh) return;
+      meshes++;
+      let shown = true, file = null;
+      for (let p = o; p; p = p.parent) { if (!p.visible) shown = false; if (!file && p.userData.file) file = p.userData.file; }
+      if (shown) {
+        visible++;
+        // perModel: meshes and triangles on screen by model file (copies summed).
+        if (perModel) {
+          const m = models[file || '(code)'] = models[file || '(code)'] || { meshes: 0, triangles: 0 }, g = o.geometry;
+          m.meshes++; m.triangles += (g.index ? g.index.count : g.attributes.position.count) / 3 * (o.isInstancedMesh ? o.count : 1);
+        }
+      }
+      geometries.add(o.geometry);
+      (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { for (const k in m) if (m[k] && m[k].isTexture) textures.add(m[k].source); });
+    });
+    let geometryBytes = 0, textureBytes = 0;
+    geometries.forEach(g => {
+      Object.values(g.attributes).forEach(a => { geometryBytes += a.array.byteLength; });
+      if (g.index) geometryBytes += g.index.array.byteLength;
+    });
+    scene.traverse(o => { if (o.isInstancedMesh) geometryBytes += o.instanceMatrix.array.byteLength + (o.instanceColor ? o.instanceColor.array.byteLength : 0); });
+    textures.forEach(src => { const d = src.data; if (d && d.width) textureBytes += d.width * d.height * 4 * 4 / 3; });
+    const buffer = renderer.getDrawingBufferSize(new THREE.Vector2()), shadow = sun.shadow.mapSize;
+    // Colour + depth, four samples each with antialias, plus the resolved colour.
+    const bufferBytes = buffer.x * buffer.y * 4 * (renderer.getContext().getContextAttributes().antialias ? 9 : 2);
+    const shadowBytes = renderer.shadowMap.enabled ? shadow.x * shadow.y * 8 : 0;
+    const mb = n => Math.round(n / 1048576 * 10) / 10;
+    return {
+      calls: info.render.calls, triangles: info.render.triangles, meshes, visible, programs: info.programs ? info.programs.length : 0,
+      geometries: info.memory.geometries, textures: info.memory.textures, pixelRatio: renderer.getPixelRatio(), buffer: buffer.x + 'x' + buffer.y,
+      mb: { geometry: mb(geometryBytes), texture: mb(textureBytes), buffer: mb(bufferBytes), shadow: mb(shadowBytes), total: mb(geometryBytes + textureBytes + bufferBytes + shadowBytes) },
+      ...(perModel ? { models } : {})
+    };
+  }
+
   return {
     render,
     renderBranch,
@@ -738,6 +802,7 @@ export function createMap3D(canvas, layout) {
     propReady,
     hasFixture: key => !!fixtures[key],
     stationPicture,
+    stats,
     get ok() { return !lost; },
     get loading() { return loading; },
     dispose() { renderer.dispose(); materials.forEach(m => m.dispose()); }

@@ -10,7 +10,8 @@
 //
 // Options: --url (default http://127.0.0.1:4173/), --size WxH, --dpr, --phone (390×844), --save fresh|showcase|file,
 // --light day|night, --advance seconds of play before the shot, --no-ui (map only), --live (no ?snap, for timing),
-// --away seconds since the last visit (shows the welcome back report from 900), --eval 'js' run in the page before the capture, printing what it returns (--wait ms after it, default 400).
+// --away seconds since the last visit (shows the welcome back report from 900), --eval 'js' run in the page before the capture, printing what it returns (--wait ms after it, default 400),
+// --stats (print the frame's draw calls, triangles and estimated GPU memory).
 // Chrome comes from CHROME, Playwright's Chromium (/opt/pw-browsers) or the default macOS path.
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
@@ -115,6 +116,8 @@ try {
   // --eval runs a script in the page just before the capture, e.g. to open a panel or show a toast.
   if (flags.eval) { const r = await evaluate(flags.eval); if (r !== undefined) console.log(JSON.stringify(r)); await sleep(Number(flags.wait || 400)); }
   const drawn = Date.now();
+  // --stats: the captured frame's draw calls, triangles and estimated GPU memory (map3d.stats, as ?stats shows them).
+  if (flags.stats) console.log(JSON.stringify(await evaluate('window.__canopyStats&&window.__canopyStats()')));
   const { data } = await send('Page.captureScreenshot', { format: 'png', fromSurface: true });
   await writeFile(out, Buffer.from(data, 'base64'));
   const s = ms => (ms / 1000).toFixed(1) + 's';
