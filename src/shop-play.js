@@ -79,8 +79,9 @@ const CHEVRON=icon('<path d="m9 6 6 6-6 6"/>');
 const CHECK=icon('<path d="m5 12.5 4.5 4.5L19 7.5"/>');
 const SPARK=icon('<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.5 2.5M15.2 15.2l2.5 2.5M6.3 17.7l2.5-2.5M15.2 8.8l2.5-2.5"/>');
 const svg=html=>{const t=document.createElement('template');t.innerHTML=html;return t.content.firstChild;};
-// Minutes left in the shift, rounded up, so the label only changes once a minute.
-export function shiftTimeLeft(seconds){const left=Math.max(0,SHIFT_SECONDS-seconds);return left<60?'Under a minute left':Math.ceil(left/60)+' min left';}
+// Minutes to the next recap, rounded up, so the label only changes once a minute.
+// The five-minute recap clock is called the floor, not a shift, so it never reads against the shift goals' "Shift N".
+export function shiftTimeLeft(seconds){const left=Math.max(0,SHIFT_SECONDS-seconds);return left<60?'Recap in under a minute':'Recap in '+Math.ceil(left/60)+' min';}
 // The panel, on the glass components: the budtender pick as one-row choices, this shift as open figures with a thin
 // progress line, last shift's advice as the brass next-action card, and operations as one grouped list of rows.
 export function mountShopPlay({getState,getMoment,getAlerts,names,format,choose,skip,navigate,changed,opening,closing}){
@@ -110,7 +111,7 @@ export function mountShopPlay({getState,getMoment,getAlerts,names,format,choose,
   const figure=(label,value)=>el('div',{},el('dt',{textContent:label}),el('dd',{textContent:value}));
   function render(){
     const play=getState().shopPlay,moment=getMoment(),alerts=getAlerts(),shift=play.shift;
-    const label=moment?moment.name+' needs a pick':play.recapUnread?'Shift recap ready':alerts.length?alerts[0].title:'Shop activity';
+    const label=moment?moment.name+' needs a pick':play.recapUnread?'Floor recap ready':alerts.length?alerts[0].title:'Shop activity';
     pill.querySelector('span').textContent=label;pill.classList.toggle('is-moment',!!moment);
     const glyph=moment?'leaf':'list';if(pill.dataset.icon!==glyph){pill.dataset.icon=glyph;pill.querySelector('svg').outerHTML=moment?LEAF:LIST}
     panel.classList.toggle('has-moment',!!moment);panel.querySelector('h2').textContent=moment?moment.name+' needs a pick':'Shop activity';
@@ -126,12 +127,12 @@ export function mountShopPlay({getState,getMoment,getAlerts,names,format,choose,
       const pass=el('button',{type:'button',className:'moment-skip',textContent:'Let the team choose'});pass.dataset.skip='';
       box.append(el('p',{className:'moment-quote',textContent:'“'+moment.request+'”'}),options,el('div',{className:'moment-foot'},el('small',{className:'moment-note',textContent:'A good match tips 20% at pickup.'}),pass));
     }
-    const recapBox=$('shiftRecap'),progress=el('progress',{max:SHIFT_SECONDS,value:shift.seconds});progress.setAttribute('aria-label','Current shift progress');
-    recapBox.replaceChildren(el('div',{className:'activity-head'},el('h3',{textContent:'This shift'}),el('span',{textContent:shiftTimeLeft(shift.seconds)})),progress,
+    const recapBox=$('shiftRecap'),progress=el('progress',{max:SHIFT_SECONDS,value:shift.seconds});progress.setAttribute('aria-label','Time to the next floor recap');
+    recapBox.replaceChildren(el('div',{className:'activity-head'},el('h3',{textContent:'On the floor'}),el('span',{textContent:shiftTimeLeft(shift.seconds)})),progress,
       el('dl',{className:'activity-figures'},figure('Served',String(shift.served)),figure('Great picks',String(shift.matches)),figure('Earned',format(shift.earned))));
     if(play.recap){
       const r=play.recap,wait=r.served?' · '+Math.round(r.waitTotal/r.served)+'s wait':'';
-      const card=el('button',{type:'button',className:'activity-advice'},svg(SPARK),el('span',{className:'activity-advice-copy'},el('small',{textContent:'Last shift · '+format(r.earned)+' · '+r.served+' served'+wait}),el('strong',{textContent:shiftAdvice(r).text})),svg(CHEVRON));
+      const card=el('button',{type:'button',className:'activity-advice'},svg(SPARK),el('span',{className:'activity-advice-copy'},el('small',{textContent:'Last 5 min · '+format(r.earned)+' · '+r.served+' served'+wait}),el('strong',{textContent:shiftAdvice(r).text})),svg(CHEVRON));
       recapBox.appendChild(card);
     }
     const list=$('operationsAlerts');list.replaceChildren();$('operationsCount').textContent=alerts.length?String(alerts.length):'';

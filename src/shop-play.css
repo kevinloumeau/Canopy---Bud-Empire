@@ -30,7 +30,7 @@
 .activity-head span{font:500 12px 'DM Mono',monospace;color:var(--ui-soft);font-variant-numeric:tabular-nums}
 .shift-recap,.operations-alerts{margin-top:18px}
 
-/* This shift: a thin progress line, then open figures. */
+/* On the floor: a thin progress line, then open figures. */
 .shop-play progress{display:block;width:100%;height:3px;margin:0;border:0;border-radius:3px;background:var(--ui-well);accent-color:var(--ui-leaf-glow);-webkit-appearance:none;appearance:none}
 .shop-play progress::-webkit-progress-bar{background:var(--ui-well);border-radius:3px}
 .shop-play progress::-webkit-progress-value{background:var(--ui-leaf-glow);border-radius:3px}
@@ -40,7 +40,7 @@
 .activity-figures dt{font-size:11.5px;color:var(--ui-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .activity-figures dd{margin:2px 0 0;font:500 20px/1.15 'DM Mono',monospace;letter-spacing:-.03em;color:var(--ui-ink);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* Last shift's advice is the next thing to tap, so it gets the brass card. */
+/* The last recap's advice is the next thing to tap, so it gets the brass card. */
 .activity-advice{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:10px;width:100%;margin-top:14px;padding:10px 8px 10px 12px;border:1px solid var(--ui-edge);border-radius:14px;background:var(--ui-brass-wash);color:var(--ui-ink);text-align:left;font:inherit;cursor:pointer}
 .activity-advice>svg:first-child{color:var(--ui-brass)}
 .activity-advice>svg:last-child{width:16px;height:16px;color:var(--ui-brass)}

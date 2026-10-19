@@ -37,7 +37,7 @@ test('a shift closes after five minutes with a recap and advice',()=>{
   assert.equal(tipFor(100),20);assert.equal(tipFor(1),1);
 });
 
-test('the shift clock counts whole minutes down to the last one',()=>{
-  assert.equal(shiftTimeLeft(0),'5 min left');assert.equal(shiftTimeLeft(174),'3 min left');
-  assert.equal(shiftTimeLeft(250),'Under a minute left');assert.equal(shiftTimeLeft(SHIFT_SECONDS+5),'Under a minute left');
+test('the recap clock counts whole minutes down to the last one',()=>{
+  assert.equal(shiftTimeLeft(0),'Recap in 5 min');assert.equal(shiftTimeLeft(174),'Recap in 3 min');
+  assert.equal(shiftTimeLeft(250),'Recap in under a minute');assert.equal(shiftTimeLeft(SHIFT_SECONDS+5),'Recap in under a minute');
 });
