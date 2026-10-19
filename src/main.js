@@ -874,8 +874,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // and a run of cases didn't look good either): the aisle planter's twins along the front baseboard and up the
   // right-hand edge, without the aisle planter's tree. Each is 3.6 long and 0.95 deep, long along z; `rot` lays it
   // along the front.
-  var FRONT_FIXTURES=[{file:'shop_planter.glb#low',x:2.4,z:11.33,rot:Math.PI/2},{file:'shop_planter.glb#low',x:6.4,z:11.33,rot:Math.PI/2},
-    {file:'shop_planter.glb#low',x:10.3,z:11.33,rot:Math.PI/2},{file:'shop_planter.glb#low',x:12.43,z:9.1,rot:0}];
+  var FRONT_FIXTURES=[{file:'edge_planter.glb',x:2.4,z:11.33,rot:Math.PI/2},{file:'edge_planter.glb',x:6.4,z:11.33,rot:Math.PI/2},
+    {file:'edge_planter.glb',x:10.3,z:11.33,rot:Math.PI/2},{file:'edge_planter.glb',x:12.43,z:9.1,rot:0}];
   function frontFixtures(){return FRONT_FIXTURES}
   // The back-wall shelving stands just behind the counters; the smoking lounge is the room behind it (z −7 → −1.76).
   var DISPLAY_Z=-1.6,LOUNGE_FRONT=DISPLAY_Z+.65;
