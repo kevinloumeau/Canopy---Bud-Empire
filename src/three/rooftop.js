@@ -189,6 +189,8 @@ export function buildRooftop(world, layout, { box, span, material }) {
   box(t1, x0 + .25, y, z1 - .2, .06, railH + .95, .06, STEEL); box(t1, x1 - .3, y, z1 - .2, .06, railH + .95, .06, STEEL);
   // Greenery over the pergola (Kevin, 2026-10-19, in place of its LOUNGE sign): leafy clumps along the slats and
   // beams, thicker toward the posts, with vines trailing down the front posts. One instanced mesh, two greens.
+  // The diorama's rooftop_pergola_vines.glb takes over once it loads (kVines is the stand-in it hides).
+  const kVines = new THREE.Group(); t1.add(kVines);
   const leafGeo = new THREE.IcosahedronGeometry(.17, 0);
   const leafMat = new THREE.MeshLambertMaterial({ color: '#ffffff' });
   const leafSpots = [];
@@ -217,7 +219,7 @@ export function buildRooftop(world, layout, { box, span, material }) {
     leafS.set(sc * 1.2, sc * .7 / HEIGHT_SCALE, sc); leafP.set(lx, ly, lz);
     leaves.setMatrixAt(i, leafM.compose(leafP, leafQ, leafS)); leaves.setColorAt(i, leafC.set(greens[i % greens.length]));
   });
-  leaves.castShadow = true; leaves.receiveShadow = true; t1.add(leaves);
+  leaves.castShadow = true; leaves.receiveShadow = true; kVines.add(leaves);
 
   // Smoke: each seated guest breathes out a soft puff now and then that drifts up and fades. A small pool of sprites
   // shared by every guest, four puffs each, so it stays cheap on phones.
@@ -417,11 +419,13 @@ export function buildRooftop(world, layout, { box, span, material }) {
   // The Blender furniture (the diorama's rooftop_*.glb, each origin on its footprint, at the stations' 1.69 map units
   // per metre). Each set swaps in for its code-built stand-in once it loads; the named parts take over the stand-ins'
   // glowing materials so the sign, the fire, the bar lamps and the dance floor still light up at night.
+  const vineMats = [];
   const loaded = new Set(), modelled = new Set(), flameGlow = glow('#fff0c8', '#ffc56a');
   lights.push([flameGlow, .3, 1.6]);
   function loadModels(loader, base) {
     const sets = [
       { file: 'rooftop_speakeasy.glb', parent: t1, hide: k1, at: [[x0 + 3.8, z0 + 1.825]] },
+      { file: 'rooftop_pergola_vines.glb', parent: t1, hide: kVines, at: [[x0 + 3.8, z0 + 1.825]] },
       { file: 'rooftop_bar.glb', parent: t2, hide: k2, at: [[(b.x0 + b.x1) / 2, b.z - .225]] },
       { file: 'rooftop_dj_booth.glb', parent: t3, hide: k3, at: [[d.x, d.z]] },
       { file: 'rooftop_parasol_table.glb', parent: t4, hide: k4, at: [[x0 + 2.8, z1 - 1.05], [x0 + 5.6, z1 - 1.05]] },
@@ -444,6 +448,8 @@ export function buildRooftop(world, layout, { box, span, material }) {
       barLamps.forEach((shade, i) => { const lamp = source.getObjectByName('BarLamp' + i); if (lamp) lamp.traverse(o => { if (o.isMesh) { o.material = shade.material; o.castShadow = false; } }); });
       // The candles and lanterns take the stand-ins' glow, so they light up after dark too.
       source.traverse(o => { if (o.isMesh && /^(CandleGlow|LanternGlow)/.test(o.name)) { o.material = flameGlow; o.castShadow = false; } });
+      // The vines' leaves darken after dark like the stand-in leaves (update, below).
+      source.traverse(o => { const m = o.isMesh && o.material; if (m && /^Vine/.test(m.name) && !vineMats.some(v => v[0] === m)) vineMats.push([m, m.color.clone()]); });
       compactModel(source);
       set.at.forEach(([ax, az, turn], i) => {
         const holder = new THREE.Group();
@@ -542,6 +548,7 @@ export function buildRooftop(world, layout, { box, span, material }) {
       flame.scale.y = .8 + Math.sin((frame.time || 0) / 130) * .2 + Math.sin((frame.time || 0) / 53) * .1;
       flame.visible = tier >= 1;
       leafMat.color.setScalar(1 - night * .45);
+      vineMats.forEach(([m, base]) => m.color.copy(base).multiplyScalar(1 - night * .45));
       // Each smoker's puffs run on their own clock (offset by id) so the roof never exhales in unison.
       const smokers = tier ? frame.loungeSmokers || [] : [], now = frame.time || 0;
       let used = 0;
