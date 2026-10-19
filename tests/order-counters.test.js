@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {migrateOrderCounters,orderCounterCost,buyOrderCounter,orderCounterPositions,assignOrderCounter,assignKiosk,atOrderCounter,orderAvailability,pickupLineSpots,pickupPlaces,ORDER_QUEUE_GATE,ORDER_SPOT_Z} from '../src/order-counters.js';
+import {migrateOrderCounters,orderCounterCost,buyOrderCounter,orderCounterPositions,assignOrderCounter,assignKiosk,takesKiosk,atOrderCounter,orderAvailability,pickupLineSpots,pickupPlaces,ORDER_QUEUE_GATE,ORDER_SPOT_Z} from '../src/order-counters.js';
 
 test('old saves retain one counter and malformed expansion levels cannot add counters',()=>{
   for(const value of [undefined,null,NaN,Infinity,'3',{},-2,0])assert.equal(migrateOrderCounters(value),1);
@@ -76,4 +76,15 @@ test('free kiosks are handed out in turn, so a quiet shop still uses every kiosk
   assert.equal(assignKiosk(busy,3,0).kioskIndex,2);
   // Two kiosks installed: the turn wraps within them.
   assert.equal(assignKiosk([kioskCustomer(3)],2,1).kioskIndex,0);
+});
+test('with the lounge open, half of the other shoppers still use a kiosk at every lounge level',async()=>{
+  const {wantsLounge}=await import('../src/lounge.js');
+  for(let level=0;level<=8;level++){
+    let turn=0,shoppers=0,kiosk=0;
+    for(let id=0;id<400;id++){
+      if(wantsLounge(level,id,'regular'))continue;
+      shoppers++;if(takesKiosk(turn++))kiosk++;
+    }
+    assert.ok(shoppers>0&&Math.abs(kiosk-shoppers/2)<=1,`lounge level ${level}: ${kiosk} of ${shoppers} shoppers used a kiosk`);
+  }
 });

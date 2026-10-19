@@ -1,4 +1,4 @@
-import {migrateOrderCounters,orderCounterPositions,COUNTER_SHIFT,PICKUP_X,orderCounterCost,buyOrderCounter,ORDER_QUEUE_GATE,assignOrderCounter,assignKiosk,atOrderCounter,orderAvailability,pickupPlaces} from './order-counters.js';
+import {migrateOrderCounters,orderCounterPositions,COUNTER_SHIFT,PICKUP_X,orderCounterCost,buyOrderCounter,ORDER_QUEUE_GATE,assignOrderCounter,assignKiosk,takesKiosk,atOrderCounter,orderAvailability,pickupPlaces} from './order-counters.js';
 import {LOUNGE_TIERS,LOUNGE_MAX,migrateLounge,loungeTier,loungeUpgradeCost,loungeSeats,loungeSessionSeconds,buyLoungeTier,wantsLounge,loungeAdmission,loungeTake,loungeRate,loungeCurrentRate,migrateLoungeHost,buyLoungeLift,LOUNGE_LIFT_COST,LOUNGE_LIFT_SPEED,loungeHostSpeed,loungeHostCost} from './lounge.js';
 import {migrateShopPlay,picks as momentPicks,createMoment,judgeChoice,tipFor,recordServed,tickShift,operationsAlerts,mountShopPlay} from './shop-play.js';
 import {migrateJourney,advanceJourney,CHAPTERS} from './journey.js';
@@ -514,7 +514,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       var arrivingKind=eventGuest?'vip':customerType(state.empire.reputation,customerId),lounge=wantsLounge(state.lounge,customerId,arrivingKind);
       // Every two to ten minutes a big spender walks in; tapping their tag pays a tip or starts a rush. Missing one costs nothing.
       var bigSpender=state.spenderClock<=0&&!lounge&&!eventGuest&&arrivingKind!=='vip';if(bigSpender)state.spenderClock=spenderGap(state.perks,120+(customerId*97)%480);
-      arrival=0;customers.push({bigSpender:bigSpender,eventGuest:eventGuest,kind:arrivingKind,id:customerId++,phase:'entering',idChecked:false,idCheckTime:0,lounge:lounge,kiosk:!lounge&&state.kiosk&&customerId%2===0&&customers.filter(function(c){return c.kiosk&&!c.ordered}).length<kioskCount()+KIOSK_WAIT_PLACES,kioskIndex:null,t:0,bag:false,ordered:false,x:-12.4,z:-10});
+      arrival=0;customers.push({bigSpender:bigSpender,eventGuest:eventGuest,kind:arrivingKind,id:customerId++,phase:'entering',idChecked:false,idCheckTime:0,lounge:lounge,kiosk:wantsKiosk(lounge),kioskIndex:null,t:0,bag:false,ordered:false,x:-12.4,z:-10});
     }
     tickLounge(dt);
     customers.forEach(function(c){moveQueuedCustomer(c,dt);if(!c.walking&&c.phase!=='leaving'&&c.phase!=='lounge')c.waitSeconds=(c.waitSeconds||0)+dt;if(c.bag)c.effectAge=(c.effectAge||0)+dt});
@@ -645,6 +645,14 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     $('expandOrderCounter').hidden=complete;
     $('orderCounterShopCount').textContent=count+' → '+Math.min(3,count+1)+' staffed counters';
     $('orderCounterShopInfo').textContent=complete?'Three counters open. Train Orders to speed up the team.':'Employee included. Take more orders at the same time.';
+  }
+  // Every other customer who is not a lounge guest uses a kiosk, while the kiosk line has room. The turn counts only
+  // those customers: keyed on the customer number, it fell on the same customers the lounge takes (every second one from
+  // Private booths), so with the lounge open the kiosks got few customers or none.
+  var kioskTurn=0;
+  function wantsKiosk(lounge){
+    if(lounge||!state.kiosk||!takesKiosk(kioskTurn++))return false;
+    return customers.filter(function(c){return c.kiosk&&!c.ordered}).length<kioskCount()+KIOSK_WAIT_PLACES;
   }
   function buyKiosk(){if(state.kiosk||state.money<25000)return;state.money-=25000;state.kiosk=true;save();renderUI();notify('SELF-ORDER KIOSK OPEN · customers can use kiosk or counter','upgrade')}
   function kioskCount(){return state.kiosk?(state.thirdKiosk?3:state.secondKiosk?2:1):0}

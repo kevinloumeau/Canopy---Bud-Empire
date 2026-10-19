@@ -37,6 +37,9 @@ export function assignOrderCounter(customers,count){
 // The kiosk line is one FIFO line too: a kiosk customer queues on the shared walkway with no kiosk of their own, and the
 // head of that line takes the first free kiosk once they are standing in it (never a kiosk picked at the door, which
 // left one kiosk idle while its would-be user waited behind another and walked through the people ahead to reach it).
+// Every other shopper who is not a lounge guest is offered a kiosk; `turn` counts only those shoppers, so the lounge,
+// which takes guests by their arrival number, never takes the kiosks' share too.
+export function takesKiosk(turn){return turn%2===0;}
 export function waitingForKiosk(c){return c.kiosk&&c.idChecked===true&&!c.ordered&&c.kioskIndex==null&&c.phase==='kiosk';}
 // Free kiosks are handed out in turn, starting after the one handed out last (`last`), so every installed kiosk gets
 // customers; always taking the nearest free one left the far kiosks idle whenever the first could keep up.
