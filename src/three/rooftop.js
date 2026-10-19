@@ -70,9 +70,9 @@ export function buildRooftop(world, layout, { box, span, material }) {
   box(site, 1.8, y, -5.4, 1.2, .9, 1.2, '#8e9a86');
   box(site, 3.6, y, -2.8, .9, .14, 1.4, '#9a7a52');
 
-  // The elevator: an art deco tower from the ground to a canopy top above the roof, glazed on every side, its
+  // The elevator: an art deco tower from the ground to a flat cornice above the roof, glazed on every side, its
   // brass cab riding inside with its passenger. Forest-green piers with brass fluting, a brass band at every floor
-  // and thin ones between, then a striped canopy roof with the CANOPY name on its valance, and a scalloped green canopy over the bridge's doorway. A short bridge crosses to the deck.
+  // and thin ones between, then a flat cornice with a CANOPY theatre blade sign, and a scalloped green canopy over the bridge's doorway. A short bridge crosses to the deck.
   const hw = lift.w / 2, hd = lift.d / 2, crown = y + 2.9, pier = .2;
   [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sz]) => {
     const px = lift.x + sx * (hw - pier / 2), pz = lift.z + sz * (hd - pier / 2);
@@ -90,54 +90,60 @@ export function buildRooftop(world, layout, { box, span, material }) {
   [0, layout.floors[1].y, layout.floors[2].y, y].forEach(h => band(h + 2.6, .14, STEEL));
   [0, layout.floors[1].y, layout.floors[2].y, y].forEach(h => band(h + 2.74, .04, BRASS));
   for (let h = 1.3; h < crown; h += 1.3) band(h, .025, BRASS);
-  // The top: a brass-capped cornice under a striped green canopy roof, its scalloped valance printed with the
-  // CANOPY name on all four sides and lit a little brighter after dark, a brass ball on the peak.
+  // The top: a flat brass-capped cornice, and a theatre blade sign standing out from the street face with CANOPY
+  // stacked down it in a ring of marquee bulbs, lit a little brighter after dark.
   const step = (w, d, y0, y1, c) => span(roof, lift.x - w, lift.x + w, y0, y1, lift.z - d, lift.z + d, c);
-  step(hw + .1, hd + .1, crown - .06, crown + .22, '#1f4a35');
-  step(hw + .14, hd + .14, crown + .22, crown + .28, BRASS);
-  const eave = hw + .42, peak = .95, roofY = crown + .62;
-  const stripeCanvas = document.createElement('canvas'); stripeCanvas.width = 256; stripeCanvas.height = 16;
-  { const c = stripeCanvas.getContext('2d'); for (let k = 0; k < 16; k++) { c.fillStyle = k % 2 ? '#f1e7cc' : '#2c6b4d'; c.fillRect(k * 16, 0, 16, 16); } }
-  const stripeTexture = new THREE.CanvasTexture(stripeCanvas); stripeTexture.colorSpace = THREE.SRGBColorSpace;
-  const tent = new THREE.Mesh(new THREE.ConeGeometry(eave * Math.SQRT2, peak, 4, 1, true), new THREE.MeshStandardMaterial({ map: stripeTexture, roughness: .85, side: THREE.DoubleSide }));
-  tent.rotation.y = Math.PI / 4; tent.position.set(lift.x, roofY + peak / 2, lift.z); tent.castShadow = true; roof.add(tent);
-  const finial = new THREE.Mesh(new THREE.SphereGeometry(.09, 16, 10), new THREE.MeshStandardMaterial({ color: BRASS, roughness: .3, metalness: .8 }));
-  finial.position.set(lift.x, roofY + peak + .04, lift.z); finial.castShadow = true; roof.add(finial);
-  // Brass struts from the cornice out to the eave's corners.
-  [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sz]) => {
-    const len = Math.hypot((eave - hw - .1) * Math.SQRT2, roofY - crown - .28);
-    const rod = new THREE.Mesh(new THREE.CylinderGeometry(.018, .018, len, 6), finial.material);
-    const mx = (hw + .1 + eave) / 2, my = (crown + .28 + roofY) / 2;
-    rod.position.set(lift.x + sx * mx, my, lift.z + sz * mx);
-    rod.lookAt(lift.x + sx * eave, roofY, lift.z + sz * eave); rod.rotateX(Math.PI / 2); roof.add(rod);
-  });
-  const crownCanvas = document.createElement('canvas'); crownCanvas.width = 512; crownCanvas.height = 112;
+  step(hw + .1, hd + .1, crown - .06, crown + .3, '#1f4a35');
+  step(hw + .14, hd + .14, crown + .3, crown + .36, BRASS);
+  step(hw - .1, hd - .1, crown + .36, crown + .5, '#1f4a35');
+  step(hw - .06, hd - .06, crown + .5, crown + .54, BRASS);
+  const finial = new THREE.Mesh(new THREE.SphereGeometry(.07, 16, 10), new THREE.MeshStandardMaterial({ color: BRASS, roughness: .3, metalness: .8 }));
+  const crownCanvas = document.createElement('canvas'); crownCanvas.width = 160; crownCanvas.height = 768;
   const crownTexture = new THREE.CanvasTexture(crownCanvas); crownTexture.colorSpace = THREE.SRGBColorSpace; crownTexture.anisotropy = 4;
-  const crownMat = new THREE.MeshBasicMaterial({ map: crownTexture, transparent: true, alphaTest: .5, side: THREE.DoubleSide });
+  const crownMat = new THREE.MeshBasicMaterial({ map: crownTexture });
   function paintCrown() {
-    const c = crownCanvas.getContext('2d'), W = 512, H = 112, n = 9, r = W / n / 2;
-    c.clearRect(0, 0, W, H);
-    c.fillStyle = '#2c6b4d'; c.beginPath(); c.moveTo(0, 0); c.lineTo(W, 0); c.lineTo(W, H - r);
-    for (let k = n - 1; k >= 0; k--) c.arc((k + .5) * 2 * r, H - r, r, 0, Math.PI);
-    c.closePath(); c.fill();
-    c.fillStyle = '#e2c27a'; c.fillRect(0, 0, W, 8);
-    c.font = '600 60px "Fredoka", "Bricolage Grotesque", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.fillStyle = '#f1e7cc'; c.fillText('CANOPY', W / 2, 48);
+    const c = crownCanvas.getContext('2d'), W = 160, H = 768;
+    c.fillStyle = '#1f4a35'; c.fillRect(0, 0, W, H);
+    c.strokeStyle = '#c99b46'; c.lineWidth = 10; c.strokeRect(5, 5, W - 10, H - 10);
+    c.fillStyle = '#ffe9b0';
+    for (let yy = 22; yy < H - 10; yy += 28) { c.beginPath(); c.arc(20, yy, 5, 0, Math.PI * 2); c.arc(W - 20, yy, 5, 0, Math.PI * 2); c.fill(); }
+    c.font = '600 104px "Fredoka", "Bricolage Grotesque", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillStyle = '#f1e7cc';
+    'CANOPY'.split('').forEach((ch, k) => c.fillText(ch, W / 2, 80 + k * 122));
     crownTexture.needsUpdate = true;
   }
   paintCrown();
   if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', paintCrown);
-  const valH = eave * 2 * 112 / 512;
-  [[0, 0, 1], [Math.PI / 2, 1, 0], [Math.PI, 0, -1], [-Math.PI / 2, -1, 0]].forEach(([ry, sx, sz]) => {
-    const v = new THREE.Mesh(new THREE.PlaneGeometry(eave * 2, valH), crownMat);
-    v.rotation.y = ry; v.position.set(lift.x + sx * eave, roofY - valH / 2 + .02, lift.z + sz * eave); roof.add(v);
+  // The blade: a green box out from the front face, its sign on the side the street sees, brass caps top and bottom.
+  const bladeOut = 1, bladeH = 3.6, bladeTop = crown + .25, bladeZ = lift.z + hd + .04, bladeT = .12;
+  span(roof, lift.x - bladeT / 2, lift.x + bladeT / 2, bladeTop - bladeH, bladeTop, bladeZ, bladeZ + bladeOut, '#1f4a35');
+  span(roof, lift.x - bladeT / 2 - .02, lift.x + bladeT / 2 + .02, bladeTop, bladeTop + .06, bladeZ, bladeZ + bladeOut + .04, BRASS);
+  span(roof, lift.x - bladeT / 2 - .02, lift.x + bladeT / 2 + .02, bladeTop - bladeH - .06, bladeTop - bladeH, bladeZ, bladeZ + bladeOut + .04, BRASS);
+  finial.position.set(lift.x, bladeTop + .12, bladeZ + bladeOut - .04); finial.castShadow = true; roof.add(finial);
+  // The leaf mark on the very top, a brass-edged cut-out turned to the street.
+  const leafCanvas = document.createElement('canvas'); leafCanvas.width = leafCanvas.height = 256;
+  {
+    const c = leafCanvas.getContext('2d'), bx = 128, by = 214;
+    const blades = [[0, 150, 24], [-.42, 128, 21], [.42, 128, 21], [-.88, 96, 17], [.88, 96, 17], [-1.3, 58, 12], [1.3, 58, 12]];
+    const draw = () => blades.forEach(([a, len, w]) => { c.save(); c.translate(bx, by); c.rotate(a); c.beginPath(); c.ellipse(0, -len / 2, w, len / 2, 0, 0, Math.PI * 2); c.restore(); c.fill(); c.stroke(); });
+    c.lineJoin = 'round'; c.strokeStyle = '#e2c27a'; c.lineWidth = 9; c.fillStyle = '#e2c27a'; draw();
+    c.strokeStyle = '#2f7a4a'; c.lineWidth = 1; c.fillStyle = '#3f9a5c'; draw();
+    c.strokeStyle = '#e2c27a'; c.lineWidth = 7; c.beginPath(); c.moveTo(bx, by - 6); c.lineTo(bx, 250); c.stroke();
+  }
+  const leafTexture = new THREE.CanvasTexture(leafCanvas); leafTexture.colorSpace = THREE.SRGBColorSpace;
+  const leafMark = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.6), new THREE.MeshBasicMaterial({ map: leafTexture, transparent: true, alphaTest: .4, side: THREE.DoubleSide }));
+  leafMark.rotation.y = Math.PI / 4; leafMark.position.set(lift.x, crown + .54 + .76, lift.z); roof.add(leafMark);
+  [1, -1].forEach(side => {
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(bladeOut - .06, bladeH - .06), crownMat);
+    face.rotation.y = side * Math.PI / 2; face.position.set(lift.x + side * (bladeT / 2 + .006), bladeTop - bladeH / 2, bladeZ + bladeOut / 2);
+    roof.add(face);
   });
   // A green canopy over the doorway on to the bridge, tipped down toward the deck, with a brass edge and two brass rods.
   const awning = new THREE.Group(); awning.position.set(lift.x + hw, y + 2.45, lift.z); awning.rotation.z = -.32; roof.add(awning);
   span(awning, 0, .75, -.04, .04, -hd - .15, hd + .15, '#2c6b4d');
   span(awning, .72, .8, -.12, .04, -hd - .15, hd + .15, BRASS, { cast: false });
   [-hd, hd].forEach(z => { const rod = new THREE.Mesh(new THREE.CylinderGeometry(.015, .015, .85, 6), finial.material); rod.position.set(.38, .3, z); rod.rotation.z = -.9; awning.add(rod); });
-  lights.push([{ set emissiveIntensity(v) { crownMat.color.setScalar(v); } }, .82, .18]);
+  lights.push([{ set emissiveIntensity(v) { crownMat.color.setScalar(v); leafMark.material.color.setScalar(v); } }, .82, .18]);
   [[false, lift.z + hd], [false, lift.z - hd], [true, lift.x - hw], [true, lift.x + hw]].forEach(([alongZ, at]) => {
     const pane = alongZ ? span(open, at - .01, at + .01, .05, crown, lift.z - hd + .06, lift.z + hd - .06, '#cfe6df') : span(open, lift.x - hw + .06, lift.x + hw - .06, .05, crown, at - .01, at + .01, '#cfe6df');
     glassy(pane);
