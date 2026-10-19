@@ -80,7 +80,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var speedOne=speedButtons.filter(function(b){return b.getAttribute('data-speed')==='1'})[0],PLAY_GLYPH=speedOne.innerHTML,PAUSE_GLYPH='<svg viewBox="0 0 18 16" fill="currentColor" aria-hidden="true"><path d="M5 3.5h3v9H5zM10 3.5h3v9h-3z"></path></svg>';
   speedButtons.forEach(function(button){button.onclick=function(){var value=Number(button.getAttribute('data-speed'));setGameSpeed(value===1&&state.gameSpeed===1?0:value)}});
   var tickTime=performance.now(),tickRemainder=0;
-  function tick(){var now=performance.now(),seconds=(now-tickTime)/1000;tickTime=now;if(document.hidden){tickRemainder=0;return}var elapsed=elapsedSteps(seconds+tickRemainder,state.gameSpeed);if(elapsed.offline){tickRemainder=0;collectOffline(elapsed.offline)}else{tickRemainder=Math.max(0,seconds+tickRemainder-Math.floor((seconds+tickRemainder+1e-8)/.05)*.05);for(var step=0;step<elapsed.steps;step++)simulate(.05)}}
+  function tick(){if(SNAP)return;var now=performance.now(),seconds=(now-tickTime)/1000;tickTime=now;if(document.hidden){tickRemainder=0;return}var elapsed=elapsedSteps(seconds+tickRemainder,state.gameSpeed);if(elapsed.offline){tickRemainder=0;collectOffline(elapsed.offline)}else{tickRemainder=Math.max(0,seconds+tickRemainder-Math.floor((seconds+tickRemainder+1e-8)/.05)*.05);for(var step=0;step<elapsed.steps;step++)simulate(.05)}}
   var saveFailed=false;
   function save(){
     state.lastSeen=Date.now();
@@ -491,7 +491,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(moment||!state.shopOpen||state.empire.activeStore||play.cooldown>0)return;
     var guest=customers.find(function(c){return !c.ordered&&!c.kiosk&&!c.lounge&&!c.momentOffered&&c.idChecked===true&&c.phase==='entering'});
     if(!guest)return;
-    var options=momentPicks(state,menuStrains());if(!options.length)return;
+    var options=momentPicks(state,menuStrains());if(options.length<2)return;
     guest.momentOffered=true;moment=createMoment(play,guest,options);play.cooldown=60+(play.sequence%3)*15;
   }
   function simulate(dt){
@@ -797,7 +797,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       layout.transport={bore:TUBE_DIA,gap:CARGO_GAP,
         tubes:[{points:grow.path,stage:1,cargoStage:1,floorRings:[grow.port]},
           {points:pack.path,stage:3,cargoStage:4,floorRings:[pack.port],window:{total:PACK_FLOW,offset:0},noCap0:true},
-          {points:PACK_STUB,stage:3,cargoStage:4,window:{total:PACK_FLOW,offset:PACK_STUB_AT}}],
+          {points:PACK_STUB,stage:3,cargoStage:4,window:{total:PACK_FLOW,offset:PACK_STUB_AT}},
+          // The online deck's feed, drawn at the deck's elevation (7.05) in 2D, shown while the deck is built.
+          {points:DECK_FEED.map(function(p){return [p[0],p[1]+7.05,p[2]]}),stage:3,cargoStage:5,noCap0:true,fixture:'deck'}],
         belts:[{x1:-4.6,x2:4.6,z:-5.8,floor:9.4,height:1.05,width:BELT_W,stage:0},{x1:4.2,x2:-3.2,z:-3.7,floor:4.7,height:1.05,width:BELT_W,stage:2}]};
       // The online orders deck, placed by its origin (the stair foot, on the mezzanine) at the scale every Blender model
       // shares (about 1.69 map units a metre), so its slab's right and front edges land where the sprite's do
@@ -1800,6 +1802,11 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       drawBox(x,z,y,.3,.27,.4,['#c4dec4','#719883','#a1bea8']);
       drawBox(x,z,y+.4,.34,.31,.07,['#dacba0','#9a8c62','#c0b182']);
       drawBox(x,z+.143,y+.1,.22,.014,.16,['#f3efda','#f3efda','#f3efda']);
+    }else if(stage===5){
+      // A taped kraft shipping box with a green address label, on its way up to the online orders deck.
+      drawBox(x,z,y,.38,.3,.26,['#d6ae72','#8f6f42','#b88d55']);
+      drawBox(x,z,y+.26,.08,.31,.012,['#eadcb4','#eadcb4','#eadcb4']);
+      drawBox(x+.1,z+.151,y+.08,.12,.01,.09,['#496f50','#496f50','#496f50']);
     }else{
       // Sprite shop: the v2 kraft pickup bag with its green label.
       if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),fixtureSprite('prop.pickup.bag'),x-.2,x+.2,z-.13,z+.13,y,y+.62,true))return;
@@ -2020,21 +2027,21 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   // Measured on the deck render: the underside of the slab's steel rim, taken at -.24 below the deck level, has its front
   // edge at z 1.26 and its right edge at x -10.7; the rear support leaves it near that corner and falls at -.43 (y over x)
-  // to the mezzanine's end. The jar feed climbs the same slope along the front of the support and runs on into the slab.
+  // to the mezzanine's end. The parcel feed climbs the same slope along the front of the support and runs on into the slab.
   var DECK_FRONT=1.26,DECK_RIGHT=-10.7,DECK_FEED=[[-4.3,-.9,.85],[-7.99,-.9,.85],[-10.68,.25,.85]];
   function onlinePackingCounter(now,previewOnly){
     var x=DECK_X,z=DECK_Z,oak=['#cbb085','#7f6a4b','#ac9168'],green=['#86a795','#3e6250','#648a70'];
     if(!deliveryBuilt()&&!previewOnly){onlineCounterSite(now,x,z,oak);return}
-    // Sprite shop: the finished deck render, with the live dispatch readout and the jar feed still drawn over it.
+    // Sprite shop: the finished deck render, with the live dispatch readout and the parcel feed still drawn over it.
     if(SHOP_SPRITES&&!previewOnly&&shellSprite('deck.delivery.built')&&spriteImage('deck.delivery.built')){
-      // The jar feed runs along the mezzanine rail, climbs beside the deck's rear support and rises into the deck's
+      // The parcel feed runs along the mezzanine rail, climbs beside the deck's rear support and rises into the deck's
       // underside: it is cut along the slab's front and right edges, so its last stretch disappears inside the deck.
       drawDeckSprite(now,'deck.delivery.built');
       var l=project(DECK_RIGHT-8,-.24,DECK_FRONT),c=project(DECK_RIGHT,-.24,DECK_FRONT),r=project(DECK_RIGHT,-.24,DECK_FRONT-8),far=width+height;
       ctx.save();ctx.beginPath();ctx.moveTo(l.x-far,l.y);ctx.lineTo(l.x,l.y);ctx.lineTo(c.x,c.y);ctx.lineTo(r.x,r.y);ctx.lineTo(r.x+far,r.y);ctx.lineTo(r.x+far,c.y+far);ctx.lineTo(l.x-far,c.y+far);ctx.closePath();ctx.clip();
       // The feed leaves the pack bench's end without a collar, and the turn onto the support is a shallow one the right-angle elbow render cannot make, so the two straights meet
       // collar to collar there, like a coupling.
-      drawTubeSprites(DECK_FEED.slice(0,2),TUBE_DIA,{noCap0:true});drawTubeSprites(DECK_FEED.slice(1));transferTube(DECK_FEED,3,[],undefined,true);ctx.restore();
+      drawTubeSprites(DECK_FEED.slice(0,2),TUBE_DIA,{noCap0:true});drawTubeSprites(DECK_FEED.slice(1));transferTube(DECK_FEED,3,[],5,true);ctx.restore();
       return;
     }
     // Cantilevered launch deck, attached to the rear sign supports.
@@ -2338,7 +2345,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function renderBranch3d(now,frameDelta){
     var nightT=nightAmount();render.nightT=nightT;
     var figures=[],scene=recordBranch(figures);
-    map3d.renderBranch({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:viewCentre(),background:BRANCH_THEMES[state.empire.activeStore-1].background,branch:scene,figures:figures.filter(function(f){return f.alpha>.99})});
+    map3d.renderBranch({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:viewCentre(),background:BRANCH_THEMES[state.empire.activeStore-1].background,branch:scene,figures:figures.filter(function(f){return f.alpha>.99})});
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
     // Main-store effects expire while visiting a branch rather than replaying on return.
     particles.forEach(function(p){p.life-=frameDelta*1.5});particles=particles.filter(function(p){return p.life>0});deliveryDrones.forEach(function(d){d.age+=frameDelta});deliveryDrones=deliveryDrones.filter(function(d){return d.age<d.delay+7.5});
@@ -2435,7 +2442,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // depth and the scene's haze do both, so only the solid draws are kept.
     figures=figures.filter(function(f){return f.alpha>.99});backdrops=backdrops.filter(function(f){return f.alpha>.99});
     var look=viewCentre();
-    map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,liftY:liftY,liftY2:liftY2,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    map3d.render({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,liftY:liftY,liftY2:liftY2,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     // A model that had not loaded when the tabs were painted: try again every half second until all are in.
     if(picturesPending&&!(now-(renderFrame3d.picturesTried||0)<500)){renderFrame3d.picturesTried=now;picturesPending=false;paintThumbnails()}
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -2462,7 +2469,23 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(c.visualServiceStation!==serviceIndex){c.serviceVisual=0;c.visualServiceStation=serviceIndex;}c.serviceVisual=(c.serviceVisual||0)+(serviceTarget-(c.serviceVisual||0))*(1-Math.exp(-frameDelta*22));
   }
   // A single failed frame (for example a zero-width canvas while the page is being laid out) must not stop the scene forever.
-  function render(wallNow){var t0=performance.now();try{renderFrame(wallNow);render.frameMs=(render.frameMs||0)*.9+(performance.now()-t0)*.1;window.__canopyFrameMs=render.frameMs;if(render.frameMs>13&&dprCap>2){dprCap=2;resize()}}catch(e){if(!render.failed)console.error('Canopy frame failed; retrying',e);ctx=screenCtx;sceneElevation=0;render.failed=true;render.invalidated=true;requestAnimationFrame(render)}}
+  // Dev quick capture (?snap, driven by scripts/snap3d.mjs): the frame loop and the clock stand still, and
+  // window.__canopySnap draws one frame on demand, so a cloud browser drawing WebGL on the CPU spends its time only on
+  // the frame it captures. view: {zoom, x, y, z} centres that map point at that zoom, light 'day' or 'night', advance
+  // runs the game that many seconds first, and draw:false sets the frame up (asking for its models) without drawing it.
+  // Players never pass ?snap.
+  var SNAP=/[?&]snap\b/.test(location.search);
+  if(SNAP){
+    window.__canopySnap=function(view){view=view||{};
+      if(view.light)state.lightMode=view.light;
+      for(var step=0;step<Math.round((view.advance||0)*20);step++)simulate(.05);
+      if(view.zoom!==undefined||view.x!==undefined){zoom=Math.max(.65,Math.min(4,view.zoom||1));panX=panY=0;applyCamera();
+        if(view.x!==undefined){var frame=cameraFrame(),p=project(view.x,view.y||0,view.z||0);panX=frame.x-p.x;panY=frame.y-p.y;applyCamera()}}
+      render.snap=true;render.dry=view.draw===false;render.invalidated=true;render(performance.now());render.snap=render.dry=false;
+      return window.__canopySnap.status()};
+    window.__canopySnap.status=function(){return{map3d:!!(map3d&&map3d.ok),loading:map3d?map3d.loading:-1}};
+  }
+  function render(wallNow){if(SNAP&&!render.snap)return;var t0=performance.now();try{renderFrame(wallNow);render.frameMs=(render.frameMs||0)*.9+(performance.now()-t0)*.1;window.__canopyFrameMs=render.frameMs;if(render.frameMs>13&&dprCap>2){dprCap=2;resize()}}catch(e){if(!render.failed)console.error('Canopy frame failed; retrying',e);ctx=screenCtx;sceneElevation=0;render.failed=true;render.invalidated=true;requestAnimationFrame(render)}}
   function renderFrame(wallNow){
     if(document.hidden){render.last=wallNow;requestAnimationFrame(render);return}
     keyboardPan(wallNow);

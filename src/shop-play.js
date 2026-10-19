@@ -22,10 +22,11 @@ export function picks(state,menuStrains){
 }
 const NAMES=['Avery','Eden','Noa','Remy','Sage','Robin'];
 // One customer, one request: a strain type most of the time, and every third request a format when the shop sells one
-// beyond flower. The right answer is always among the three choices, rotated so it is not always first.
+// beyond flower. The right answer is always among the three choices, rotated so it is not always first. With fewer than
+// two strains on the menu there is nothing to choose between, so nobody asks.
 export function createMoment(play,customer,options){
+  if(options.length<2)return null;
   const sequence=play.sequence++,want=options[sequence%options.length];
-  if(!want)return null;
   const formatRequest=sequence%3===2&&want.format>0;
   const request=formatRequest?['','Something rolled and ready.','Something without flower.'][want.format]:['A balanced house pick, please.','A bright daytime pick, please.','An evening-style pick, please.'][want.type];
   const matches=o=>formatRequest?o.format===want.format:o.type===want.type,others=options.filter(o=>!matches(o));

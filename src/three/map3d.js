@@ -27,6 +27,10 @@ export function createMap3D(canvas, layout) {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
   } catch (e) { return null; }
   if (!renderer.getContext()) return null;
+  // Files still loading (models and textures), so scripts/snap3d.mjs knows when a capture shows the finished scene.
+  let loading = 0;
+  const loads = THREE.DefaultLoadingManager, track = (url, done, total) => { loading = total - done; };
+  loads.onStart = loads.onProgress = track;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -547,7 +551,7 @@ export function createMap3D(canvas, layout) {
     const night = view(frame, branchBackground.set(frame.background));
     branch.update(frame.branch, night);
     placeFigures(frame.figures || [], night);
-    renderer.render(scene, camera);
+    if (!frame.dry) renderer.render(scene, camera);
     return true;
   }
 
@@ -637,12 +641,13 @@ export function createMap3D(canvas, layout) {
     }
     [carBodies, carCabins].forEach(m => { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; });
 
-    if (transport && frame.cargo) transport.update(frame.cargo);
+    if (transport && frame.cargo) transport.update(frame.cargo, frame.fixtures);
     if (shell) shell.update(frame);
     if (rooftop) rooftop.update(frame);
     Object.entries(fixtures).forEach(([key, holder]) => { holder.visible = !!(frame.fixtures && frame.fixtures[key]); });
 
-    renderer.render(scene, camera);
+    // A dry frame (snap3d.mjs, while models load) sets the scene up and asks for its models without drawing it.
+    if (!frame.dry) renderer.render(scene, camera);
     return true;
   }
 
@@ -654,6 +659,7 @@ export function createMap3D(canvas, layout) {
     hasFixture: key => !!fixtures[key],
     stationPicture,
     get ok() { return !lost; },
+    get loading() { return loading; },
     dispose() { renderer.dispose(); materials.forEach(m => m.dispose()); }
   };
 }
@@ -809,6 +815,7 @@ function buildTransport(scene, world, transport, { box, material }) {
     const m = new THREE.Mesh(new THREE.TorusGeometry(r, tube, 10, 32), mat);
     m.position.copy(trueSpace(p)); m.lookAt(m.position.clone().add(dir)); m.castShadow = true;
     scene.add(m);
+    return m;
   };
   const runs = transport.tubes.map(tube => {
     const path = rounded(tube.points), curve = new THREE.CurvePath();
@@ -816,13 +823,14 @@ function buildTransport(scene, world, transport, { box, material }) {
     const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, Math.max(24, path.length * 3), R, 18, false), glass);
     mesh.renderOrder = 3;
     scene.add(mesh);
+    const parts = [mesh];
     const ends = [[tube.points[0], tube.points[1]], [tube.points[tube.points.length - 1], tube.points[tube.points.length - 2]]];
-    ends.forEach(([p, q], i) => { if (!(i === 0 && tube.noCap0)) ring(p, trueSpace(p).sub(trueSpace(q)).normalize(), R + .02, .07, brass); });
-    (tube.floorRings || []).forEach(p => ring(p, new THREE.Vector3(0, 1, 0), R + .1, .08, brass));
+    ends.forEach(([p, q], i) => { if (!(i === 0 && tube.noCap0)) parts.push(ring(p, trueSpace(p).sub(trueSpace(q)).normalize(), R + .02, .07, brass)); });
+    (tube.floorRings || []).forEach(p => parts.push(ring(p, new THREE.Vector3(0, 1, 0), R + .1, .08, brass)));
     const segments = [];
     let total = 0;
     for (let i = 1; i < path.length; i++) { const len = Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1], path[i][2] - path[i - 1][2]); segments.push({ a: path[i - 1], b: path[i], len }); total += len; }
-    return { tube, segments, total };
+    return { tube, segments, total, parts };
   });
   const belts = transport.belts.map(b => {
     const length = Math.abs(b.x2 - b.x1), mid = (b.x1 + b.x2) / 2;
@@ -831,34 +839,125 @@ function buildTransport(scene, world, transport, { box, material }) {
     box(world, mid, b.floor + b.height - .02, b.z, length - .1, .04, b.width - .2, '#2a4035', { cast: false });
     return b;
   });
-  const STAGE_COLOURS = ['#7fae5a', '#5f9a48', '#9bbd6a', '#c99460', '#c99460', '#c99460'];
-  const pods = new THREE.InstancedMesh(new THREE.SphereGeometry(.2, 12, 8), new THREE.MeshLambertMaterial({ color: '#ffffff' }), 64);
-  pods.castShadow = true; pods.count = 0; pods.renderOrder = 2;
-  pods.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-  scene.add(pods);
-  const m = new THREE.Matrix4(), c = new THREE.Color();
-  function place(x, y, z, stage) {
-    if (pods.count >= 64) return;
-    m.makeTranslation(x, y * K, z); pods.setMatrixAt(pods.count, m); pods.setColorAt(pods.count, c.set(STAGE_COLOURS[stage] || '#c99460')); pods.count++;
+  // The cargo is the item actually passing between the two stations a run joins (its `cargoStage`, a belt's `stage`):
+  // seedlings in pots from the seeds bench to grow, grown plants down to harvest, trimmed buds on to pack, sealed pickup
+  // bags down to the counters and shipping boxes up to the online deck. Each is a few primitives merged into one
+  // vertex-coloured mesh, instanced, built in true space with its base at y 0 and small enough to ride inside the bore.
+  const cargoKinds = buildCargoKinds();
+  const cargoMeshes = cargoKinds.map(kind => {
+    const mesh = new THREE.InstancedMesh(kind.geometry, new THREE.MeshLambertMaterial({ vertexColors: true }), 32);
+    mesh.castShadow = true; mesh.count = 0; mesh.renderOrder = 2; mesh.frustumCulled = false;
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    scene.add(mesh);
+    return mesh;
+  });
+  const m = new THREE.Matrix4(), turn = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0), at = new THREE.Vector3(), one = new THREE.Vector3(1, 1, 1);
+  // (x, z) and the item's base height in world units; yaw turns it about its own upright so a run's items don't all
+  // face the same way.
+  function place(x, base, z, stage, yaw) {
+    const kind = Math.min(stage, cargoKinds.length - 1), mesh = cargoMeshes[kind];
+    if (mesh.count >= 32) return;
+    turn.setFromAxisAngle(up, yaw);
+    mesh.setMatrixAt(mesh.count++, m.compose(at.set(x, base * K, z), turn, one));
   }
   return {
-    update({ odo, running }) {
-      pods.count = 0;
-      runs.forEach(({ tube, segments, total }) => {
+    // A run that belongs to a fixture (the online deck's feed) shows only while that fixture is built.
+    update({ odo, running }, fixtures = {}) {
+      cargoMeshes.forEach(mesh => { mesh.count = 0; });
+      runs.forEach(({ tube, segments, total, parts }) => {
+        const shown = !tube.fixture || !!fixtures[tube.fixture];
+        parts.forEach(part => { part.visible = shown; });
+        if (!shown) return;
         const span = tube.window ? tube.window.total : total, start = tube.window ? tube.window.offset : 0;
         const count = Math.max(2, Math.round(span / transport.gap)), spacing = span / count, o = running[tube.stage] ? odo : 0;
         for (let k = 0; k < count; k++) {
           let d = (o + k * spacing) % span - start;
           if (d < 0 || d >= total) continue;
-          for (const part of segments) { if (d > part.len) { d -= part.len; continue; } const q = mix(part.a, part.b, d / part.len); place(q[0], q[1] - .05, q[2], tube.cargoStage); break; }
+          for (const part of segments) { if (d > part.len) { d -= part.len; continue; } const q = mix(part.a, part.b, d / part.len); place(q[0], q[1] - cargoKinds[tube.cargoStage].height / 2 / K, q[2], tube.cargoStage, k * 2.1); break; }
         }
       });
       belts.forEach(b => {
         const run = Math.abs(b.x2 - b.x1), count = Math.max(2, Math.round(run / transport.gap)), o = running[b.stage] ? odo : 0, forward = Math.sign(b.x2 - b.x1);
-        for (let k = 0; k < count; k++) place(b.x1 + forward * ((o + k * run / count) % run), b.floor + b.height + .2, b.z, b.stage);
+        for (let k = 0; k < count; k++) place(b.x1 + forward * ((o + k * run / count) % run), b.floor + b.height + .02, b.z, b.stage, k * 2.1);
       });
-      pods.instanceMatrix.needsUpdate = true;
-      if (pods.instanceColor) pods.instanceColor.needsUpdate = true;
+      cargoMeshes.forEach(mesh => { mesh.instanceMatrix.needsUpdate = true; });
     }
   };
+}
+
+// The cargo models, indexed by production stage: 0 seedling, 1 grown plant, 2 trimmed buds, 3 sealed jar, 4 pickup bag,
+// 5 shipping box. Sizes are true map units; the tube bore is .68 across, so nothing is taller or wider than about .55.
+function buildCargoKinds() {
+  const parts = [];
+  const add = (geometry, colour, x = 0, y = 0, z = 0, { sx = 1, sy = 1, sz = 1, rx = 0, ry = 0, rz = 0 } = {}) => {
+    const g = geometry.index ? geometry.toNonIndexed() : geometry;
+    g.deleteAttribute('uv');
+    g.scale(sx, sy, sz); g.rotateX(rx); g.rotateZ(rz); g.rotateY(ry); g.translate(x, y, z);
+    const c = new THREE.Color(colour), n = g.attributes.position.count, rgb = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) { rgb[i * 3] = c.r; rgb[i * 3 + 1] = c.g; rgb[i * 3 + 2] = c.b; }
+    g.setAttribute('color', new THREE.BufferAttribute(rgb, 3));
+    parts.push(g);
+  };
+  const finish = () => { const geometry = mergeGeometries(parts.splice(0)); geometry.computeBoundingBox(); return { geometry, height: geometry.boundingBox.max.y }; };
+  // A leaf points out from the stem along `yaw`, its centre `d` out, its tip tilted up by `tilt`.
+  const leaf = (colour, yaw, d, y, size, tilt = .5) => add(new THREE.SphereGeometry(1, 7, 4), colour, Math.cos(yaw) * d, y, -Math.sin(yaw) * d, { sx: size, sy: size * .16, sz: size * .38, rz: tilt, ry: yaw });
+  const pot = (r, h) => {
+    add(new THREE.CylinderGeometry(r, r * .78, h, 12), '#b8673f', 0, h / 2);
+    add(new THREE.CylinderGeometry(r * 1.08, r * 1.08, h * .18, 12), '#c97a50', 0, h * .91);
+    add(new THREE.CylinderGeometry(r * .92, r * .92, .012, 12), '#4a3424', 0, h * .97);
+  };
+  const kinds = [];
+
+  // Seedling: a small terracotta pot with a stem and two pairs of young leaves.
+  pot(.1, .13);
+  add(new THREE.CylinderGeometry(.012, .014, .14, 5), '#5b8a3c', 0, .2);
+  [[0, .22], [Math.PI, .23], [Math.PI / 2, .28], [-Math.PI / 2, .29]].forEach(([yaw, y], i) => leaf(i < 2 ? '#7fb552' : '#a6d073', yaw, .06, y, .065));
+  kinds.push(finish());
+
+  // Grown plant: a bigger pot, fan leaves in three tiers and three frosted colas, ready for harvest.
+  pot(.12, .15);
+  add(new THREE.CylinderGeometry(.016, .02, .34, 6), '#4f7a35', 0, .32);
+  [.24, .32, .4].forEach((y, tier) => {
+    for (let a = 0; a < 5; a++) {
+      const yaw = a * 1.257 + tier * .6, r = .1 - tier * .02;
+      leaf(tier % 2 ? '#4f8a3a' : '#3f7a33', yaw, r, y, .1 - tier * .015, .35);
+    }
+  });
+  [[0, .47, 0, .07], [.07, .4, .03, .05], [-.06, .41, -.04, .05]].forEach(([x, y, z, r]) => {
+    add(new THREE.IcosahedronGeometry(r, 1), '#9fc06c', x, y, z, { sy: 1.7 });
+    add(new THREE.IcosahedronGeometry(r * .45, 0), '#d99a55', x + r * .4, y + r * .5, z + r * .3);
+  });
+  kinds.push(finish());
+
+  // Trimmed buds: three dense nugs with orange pistils on a little kraft tray.
+  add(new THREE.BoxGeometry(.42, .03, .3), '#c9a46a', 0, .015);
+  [[-.1, .04, '#86a85c'], [.1, -.03, '#7a9c52'], [0, .02, '#93b465']].forEach(([x, z, colour], i) => {
+    const r = i === 2 ? .095 : .085, y = .03 + r * 1.1 + (i === 2 ? .04 : 0);
+    add(new THREE.IcosahedronGeometry(r, 1), colour, x, y, z, { sy: 1.25, ry: i });
+    add(new THREE.IcosahedronGeometry(r * .3, 0), '#d68f4a', x + r * .55, y + r * .4, z + r * .4);
+    add(new THREE.IcosahedronGeometry(r * .25, 0), '#e0a560', x - r * .4, y + r * .7, z - r * .5);
+  });
+  kinds.push(finish());
+
+  // Sealed jar: clear green glass, flower showing through, a gold lid and a cream label.
+  add(new THREE.CylinderGeometry(.13, .13, .3, 14), '#a9cdb3', 0, .15);
+  add(new THREE.CylinderGeometry(.14, .14, .07, 14), '#d2b25e', 0, .335);
+  add(new THREE.BoxGeometry(.14, .12, .02), '#f3efda', 0, .14, .125);
+  kinds.push(finish());
+
+  // Pickup bag: kraft paper with a folded top, rope handles and the shop's green label.
+  add(new THREE.BoxGeometry(.32, .38, .2), '#d9bd88', 0, .19);
+  add(new THREE.BoxGeometry(.33, .05, .21), '#bf9f68', 0, .36);
+  [-.06, .06].forEach(z => add(new THREE.TorusGeometry(.07, .01, 5, 10, Math.PI), '#8a6e44', 0, .385, z));
+  add(new THREE.BoxGeometry(.16, .14, .01), '#496f50', 0, .2, .101);
+  add(new THREE.BoxGeometry(.06, .06, .01), '#e7dcbc', 0, .2, .106);
+  kinds.push(finish());
+
+  // Shipping box: a taped kraft carton with a green address label, for the online orders deck.
+  add(new THREE.BoxGeometry(.38, .26, .3), '#c49a5e', 0, .13);
+  add(new THREE.BoxGeometry(.08, .012, .31), '#e6d6ad', 0, .262);
+  [-1, 1].forEach(side => add(new THREE.BoxGeometry(.08, .12, .01), '#e6d6ad', 0, .2, side * .151));
+  add(new THREE.BoxGeometry(.12, .09, .01), '#496f50', .1, .13, .152);
+  kinds.push(finish());
+  return kinds;
 }
