@@ -174,3 +174,18 @@ test('the weekly special rotates through the six iOS specials with the app\'s we
  const t=Date.UTC(2026,9,16);assert.equal(weeklySpecial(t),WEEKLY_SPECIALS[week(t)%6]);
  const s=weeklySpecial(t);assert.equal(specialFactor(s.kind,t),s.factor);assert.equal(specialFactor('nothing',t),1);
 });
+import {settleStars,starStatus,starCount,branchOpenable,starMultiplier,STAR_GOALS,STAR_BONUS} from '../src/progression.js';
+test('branch stars latch, credit old saves, open the next branch and add a lasting bonus',()=>{
+ const s=fresh(),p=s.empire;s.lifetime=1e9;s.money=1e12;
+ assert.equal(branchOpenable(p,1),false);assert.equal(buyStore(s,0),true);assert.equal(buyStore(s,1),false);
+ p.stores[0].served=STAR_GOALS[0].target[0];assert.deepEqual(settleStars(p),[{store:0,goal:0}]);assert.deepEqual(settleStars(p),[]);
+ p.stores[0].served=0;assert.equal(starCount(p,0),1);assert.equal(starStatus(p,0)[0].earned,true);
+ while(p.stores[0].level<10)buyStore(s,0);p.network.stores[0].relationship=3;
+ const before=storeRate(p,0);assert.equal(settleStars(p).length,2);assert.equal(starCount(p,0),3);
+ assert.equal(starMultiplier(p),1+STAR_BONUS);assert.ok(Math.abs(storeRate(p,0)/before-(1+STAR_BONUS))<1e-9);
+ assert.equal(buyStore(s,1),true);assert.equal(branchOpenable(p,2),false);
+ // An old save with no stars field is credited from its stores; an open branch stays open even unfinished.
+ const old=JSON.parse(JSON.stringify(p));delete old.stars;old.stores[0].served=STAR_GOALS[0].target[0];old.stores[2]={level:3};
+ const restored=migrateProgression(old,start);assert.equal(starCount(restored,0),3);assert.equal(branchOpenable(restored,2),true);
+ assert.deepEqual(migrateProgression({stars:[9,-1,'x']},start).stars,[0,0,0,0,0]);
+});

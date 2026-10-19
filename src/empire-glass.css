@@ -79,3 +79,23 @@
 .sheet .empire-screen .contract-card .contract-boost{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid var(--ui-edge);font:500 12px 'DM Mono',monospace;color:var(--ui-ink)}
 .sheet .empire-screen .contract-card #contractBoost{min-height:36px;padding:0 12px;border:0;border-radius:10px;background:var(--ui-brass);color:var(--ui-brass-ink);font-size:12.5px;font-weight:600;box-shadow:none}
 .sheet .empire-screen .contract-card #contractBoost{flex:none}
+
+/* Branch stars: three small outlined stars after the store name, filled in leaf once earned. The store screen lists the
+   three goals as one-row items with an open figure, and a line under them says what finishing the branch gives. */
+.store-name-stars:empty{display:none}
+.store-stars{display:inline-flex;gap:1px;margin-left:6px;vertical-align:-1px}
+.store-stars i,.star-mark{display:inline-flex;color:var(--ui-soft);opacity:.55}
+.store-stars i.on,.star-goal.is-earned .star-mark{color:var(--ui-leaf-glow);opacity:1}
+.store-stars svg{width:11px;height:11px}
+.store-stars i.on svg,.star-goal.is-earned .star-mark svg{fill:currentColor}
+.store-goals[hidden]{display:none}
+.star-goals{display:grid;margin:0;padding:0;list-style:none}
+.star-goal{display:grid;grid-template-columns:18px minmax(0,1fr) auto;align-items:center;gap:10px;min-height:36px;border-top:1px solid var(--ui-edge)}
+.star-goal:first-child{border-top:0}
+.star-mark svg{width:16px;height:16px}
+.star-title{font-size:13px;color:var(--ui-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.star-figure{font:500 12px 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-soft)}
+.star-goal.is-earned .star-title{color:var(--ui-soft)}
+.star-goal.is-earned .star-figure{color:var(--ui-leaf-glow)}
+.star-reward{margin:6px 0 0;font-size:11.5px;color:var(--ui-soft)}
+.store-goals.is-finished .star-reward{color:var(--ui-leaf-glow)}
