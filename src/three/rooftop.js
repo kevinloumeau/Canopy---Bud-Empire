@@ -105,7 +105,6 @@ export function buildRooftop(world, layout, { box, span, material }) {
     span(cab, -cw / 2, cw / 2, ch - .14, ch, -cd / 2, cd / 2, BRASS);
     [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sz]) => box(cab, sx * (cw / 2 - .04), .12, sz * (cd / 2 - .04), .08, ch - .26, .08, BRASS));
     span(cab, -cw / 2 + .05, -cw / 2 + .1, .12, ch - .14, -cd / 2 + .1, cd / 2 - .1, OAK_DARK, { cast: false });
-    span(cab, -cw / 2, cw / 2, 1, 1.05, -cd / 2, cd / 2, BRASS, { cast: false });
     const cabLamp = new THREE.Mesh(new THREE.BoxGeometry(cw - .3, .04, cd - .3), glow('#fff2c8', '#ffd58a'));
     cabLamp.position.y = ch - .16; cab.add(cabLamp); lights.push([cabLamp.material, .4, 1.2]);
     cab.position.set(lx, 0, lz);
@@ -293,7 +292,7 @@ export function buildRooftop(world, layout, { box, span, material }) {
   const tapeCanvas = document.createElement('canvas'); tapeCanvas.width = 512; tapeCanvas.height = 64;
   const tapeTexture = new THREE.CanvasTexture(tapeCanvas); tapeTexture.colorSpace = THREE.SRGBColorSpace; tapeTexture.anisotropy = 4;
   const tapeMat = new THREE.MeshBasicMaterial({ map: tapeTexture, transparent: true });
-  const signTape = new THREE.Group(); signTape.position.set(dx + 2.1, 1.95, face + .05); lobby.add(signTape);
+  const signTape = new THREE.Group(); signTape.position.set(dx + 2.1, 2.02, face + .05); lobby.add(signTape);
   [.12, -.1].forEach((tilt, k) => { const strip = new THREE.Mesh(new THREE.PlaneGeometry(2.3, .26), tapeMat); strip.rotation.z = tilt; strip.position.z = k * .006; signTape.add(strip); });
   function paintDoorSigns() {
     const font = '"Fredoka", "Bricolage Grotesque", sans-serif';

@@ -29,15 +29,18 @@ export function migrateLounge(value){
 export function loungeTier(level){return LOUNGE_TIERS[migrateLounge(level)-1]||null;}
 export function loungeUpgradeCost(level){return LOUNGE_TIERS[migrateLounge(level)]?.cost??null;}
 export function loungeSeats(level){return loungeTier(level)?.seats||0;}
-export function loungeSessionSeconds(level,host=0,lift=false){return (loungeTier(level)?.session||0)/loungeHostSpeed(host)/(lift?LOUNGE_LIFT_SPEED:1);}
-// The second elevator shaft: bought once the lounge is open, it halves the wait for the lift so tables turn over a
-// quarter faster.
+// Guests linger: a session runs LOUNGE_STAY times the tier's base, and the take per session is scaled up to match, so
+// the lounge earns the same per second while the rooftop stays busy. The host and the second lift raise the take, not
+// the pace, so guests never rush through.
+export const LOUNGE_STAY=3;
+export function loungeSessionSeconds(level){return (loungeTier(level)?.session||0)*LOUNGE_STAY;}
+// The second elevator shaft: bought once the lounge is open, it lifts the take per session by a quarter.
 export const LOUNGE_LIFT_COST=500000,LOUNGE_LIFT_SPEED=1.25;
 export function buyLoungeLift(state){
   if(!migrateLounge(state.lounge)||state.loungeLift===true||!Number.isFinite(state.money)||state.money<LOUNGE_LIFT_COST)return false;
   state.money-=LOUNGE_LIFT_COST;state.loungeLift=true;return true;
 }
-// The lounge host turns tables over faster: each training level shortens a session by the same 30% step staff get.
+// The lounge host works the room: each training level raises the take per session by the same 30% step staff get.
 export function migrateLoungeHost(value){
   return typeof value==='number'&&Number.isFinite(value)?Math.max(0,Math.min(10000,Math.floor(value))):0;
 }
@@ -65,12 +68,14 @@ export function loungeAdmission(level,seated,spareJars){
   const seats=loungeSeats(level);
   return {seats,open:seats>0,seat:seated<seats,jar:spareJars>=1,admit:seats>0&&seated<seats&&spareJars>=1};
 }
-// The take for one session: the cover at the curtain plus one jar sold at the lounge premium.
-export function loungeTake(level,jarValue){
+// The take for one session: the cover at the curtain plus one jar sold at the lounge premium, both scaled by the longer
+// stay, the host's training and the second lift.
+export function loungeBoost(host=0,lift=false){return loungeHostSpeed(host)*(lift?LOUNGE_LIFT_SPEED:1);}
+export function loungeTake(level,jarValue,host=0,lift=false){
   const tier=loungeTier(level);
   if(!tier)return {cover:0,spend:0,total:0};
-  const spend=Math.round(Math.max(0,jarValue)*tier.spend);
-  return {cover:tier.cover,spend,total:tier.cover+spend};
+  const k=LOUNGE_STAY*loungeBoost(host,lift),cover=Math.round(tier.cover*k),spend=Math.round(Math.max(0,jarValue)*tier.spend*k);
+  return {cover,spend,total:cover+spend};
 }
 // Earnings rate right now: each seated guest paid the take at the curtain and holds the seat for one session, so
 // every occupied seat is worth the take once per session. Capped at the seats the tier has.
@@ -78,10 +83,10 @@ export function loungeCurrentRate(level,seated,jarValue,host=0,lift=false){
   const tier=loungeTier(level);
   if(!tier)return 0;
   const occupied=Math.max(0,Math.min(tier.seats,Math.floor(Number(seated)||0)));
-  return loungeTake(level,jarValue).total*occupied/loungeSessionSeconds(level,host,lift);
+  return loungeTake(level,jarValue,host,lift).total*occupied/loungeSessionSeconds(level);
 }
 // Rough earnings rate with every seat busy, for the station card.
 export function loungeRate(level,jarValue,host=0,lift=false){
   const tier=loungeTier(level);
-  return tier?loungeTake(level,jarValue).total*tier.seats/loungeSessionSeconds(level,host,lift):0;
+  return tier?loungeTake(level,jarValue,host,lift).total*tier.seats/loungeSessionSeconds(level):0;
 }
