@@ -374,13 +374,15 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var LOUNGE_CARPET_END=2.6;
   // The 3D map's rooftop lounge (src/three/rooftop.js): a deck stepped back from the top floor like the floors below
   // it (its front 3.1 behind the top floor's, its rear over the back pavement on steel columns), one storey up, reached by a glass elevator
-  // standing in the old lounge room behind the curtain, its bridge landing at the deck's left edge. Guests ride up
-  // (`loungeRide` seconds after the curtain), spend their session at a spot on the roof, and ride down for the last
-  // LIFT_DOWN seconds before stepping out of the back door. The spots fill in tier order: Speakeasy round the fire
+  // standing in the old lounge room behind the curtain, its bridge landing at the deck's left edge. Each cab carries
+  // one guest at a time (tickLifts): a guest behind the curtain waits for a cab, rides up, walks to a spot for their
+  // session, walks back to the landing, waits for a cab down and steps out of the back door. The spots fill in tier order: Speakeasy round the fire
   // table, Dab bar at the stools, Vinyl nights on the dance floor, Terrace at the parasol tables.
   // The 2D map keeps its hidden lounge.
-  var liftY=0,liftY2=0;
-  var ROOFTOP={x0:-6.5,x1:6.5,z0:-9.6,z1:-3.4,y:14.1,lift:{x:-9.9,z:-5,w:1.4,d:1.4},lift2:{z:-6.6}},LIFT_UP=3.6,LIFT_DOWN=3.2,ROOF_WALK=3;
+  var liftY=0,liftY2=0,liftAsks=0;
+  // The cabs: where each one is (0 ground, 1 roof) and the trip it is on, empty to fetch a guest or carrying them.
+  var lifts=[{y:0,trip:null},{y:0,trip:null}];
+  var ROOFTOP={x0:-6.5,x1:6.5,z0:-9.6,z1:-3.4,y:14.1,lift:{x:-9.9,z:-5,w:1.4,d:1.4},lift2:{z:-6.6}},LIFT_TRIP=3,LIFT_SEATS=3,ROOF_WALK=3;
   var ROOFTOP_SPOTS=[[-3.9,-6.7,.3],[-1.3,-6.7,-.3],[-2.6,-6.25,.3],[-1,-7.85,-.3],[2.7,-7.45,-.3],[4.7,-7.45,-.3],[2.5,-6,.3],[3.5,-5.25,-.3],[2.2,-4.85,.3],[-4.5,-5,.3],[-2.9,-5,-.3],[-1.7,-5,.3],[-.1,-5,-.3],[-2.3,-3.95,.3]];
   // The runner render's top face in sprite px: its near-left, near-right and far-left corners, and its length over width.
   var LOUNGE_RUNNER_PIN={left:[0,274],bottom:[146,360],top:[474,0],ratio:3.25};
@@ -397,11 +399,39 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function enterLounge(c){
     var take=loungeTake(state.lounge,flowerValue(strainFor(c))*specialFactor('lounge'),state.loungeStaff,state.loungeLift);
     state.stock[3]-=1;add(take.total);state.loungeSessions++;state.loungeEarned+=take.total;state.shopPlay.shift.earned+=take.total;c.loungeLeft=loungeSessionSeconds(state.lounge)*loungeStayJitter(c.id);c.phase='lounge';c.walking=false;c.loungeTake=take.total;
-    c.loungeFade=1;c.fadeFromZ=c.z;c.facing=-.3;c.roofWalk=0;
-    // A short session would squeeze the ride and the walk so the guest still gets a sit down.
-    c.rideK=Math.min(1,c.loungeLeft*.75/(.8+LIFT_UP+LIFT_DOWN+2*ROOF_WALK));c.loungeRide=LIFT_UP*c.rideK;
+    c.loungeFade=1;c.fadeFromZ=c.z;c.facing=-.3;c.roofWalk=0;c.walkBack=0;c.lift=null;c.liftShaft=null;c.shaft=0;
     recordEvent(state.empire,'pickup',1);playSound('coin',state.sound);
     if(!motionPreference.matches)tickets.push({x:LOUNGE_DOOR.x,y:2.1,z:LOUNGE_DOOR.z,life:1,text:fmt(take.cover)});
+  }
+  function askLift(c,wait){c.lift=wait;c.liftAsk=++liftAsks;c.liftShaft=null}
+  // Each idle cab takes the guest who has waited longest, travelling empty to their floor first if it has to.
+  function tickLifts(dt){
+    var smooth=function(t){return t*t*t*(t*(t*6-15)+10)};
+    lifts.forEach(function(s,i){
+      if(i>0&&!state.loungeLift)return;
+      if(s.trip){
+        var trip=s.trip;trip.t=Math.min(1,trip.t+dt/LIFT_TRIP);s.y=trip.from+(trip.to-trip.from)*smooth(trip.t);
+        if(trip.t<1)return;
+        s.y=trip.to;s.trip=null;
+        if(trip.empty){board(s,i,trip.c);return}
+        trip.riders.forEach(function(c){if(c.phase!=='lounge')return;if(c.lift==='up'){c.lift='roof';c.roofWalk=0}else{c.lift=null;leaveLounge(c)}});
+        return;
+      }
+      var next=null;
+      customers.forEach(function(q){if(liftWaiting(q,i)&&(!next||q.liftAsk<next.liftAsk))next=q});
+      if(!next)return;
+      next.liftShaft=i;var floor=next.lift==='waitUp'?0:1;
+      if(Math.abs(s.y-floor)<.001)board(s,i,next);else s.trip={from:s.y,to:floor,t:0,c:next,empty:true};
+    });
+  }
+  // A guest waiting to go down only takes the cab they came up in.
+  function liftWaiting(q,i){return q.phase==='lounge'&&q.liftShaft===null&&(q.lift==='waitUp'||(q.lift==='waitDown'&&(q.shaft||0)===i))}
+  // The cab takes its guest and up to two more waiting on the same floor, then sets off.
+  function board(s,i,c){
+    var wait=c.lift,up=wait==='waitUp',riders=[c];
+    customers.filter(function(q){return q!==c&&q.lift===wait&&liftWaiting(q,i)}).sort(function(a,b){return a.liftAsk-b.liftAsk}).slice(0,LIFT_SEATS-1).forEach(function(q){riders.push(q)});
+    riders.forEach(function(q,k){q.liftShaft=i;q.lift=up?'up':'down';q.cabSlot=k;if(up)q.shaft=i});
+    s.trip={from:up?0:1,to:up?1:0,t:0,riders:riders,empty:false};
   }
   function leaveLounge(c){
     c.phase='leaving';c.t=0;c.routeKind='exit';c.x=LOUNGE_EXIT.x;c.z=LOUNGE_EXIT.z;c.renderX=c.x;c.renderZ=c.z;c.facing=.6;c.loungeFadeIn=0;
@@ -413,11 +443,12 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     customers.forEach(function(c){
       if(c.phase==='lounge'){
         if(c.loungeFade>0){c.loungeFade=Math.max(0,c.loungeFade-dt/.8);c.z=c.fadeFromZ+(LOUNGE_FRONT-.2-c.fadeFromZ)*(1-c.loungeFade);c.x=LOUNGE_DOOR.x;c.walking=c.loungeFade>0}
-        else if(c.loungeRide>0)c.loungeRide=Math.max(0,c.loungeRide-dt);
-        else c.roofWalk=Math.min(1,(c.roofWalk||0)+dt/(ROOF_WALK*(c.rideK||1)));
-        c.loungeLeft-=dt;if(c.loungeLeft<=0)leaveLounge(c);
+        else if(!c.lift)askLift(c,'waitUp');
+        else if(c.lift==='roof'){c.roofWalk=Math.min(1,c.roofWalk+dt/ROOF_WALK);c.loungeLeft-=dt;if(c.loungeLeft<=0){c.lift='back';c.walkBack=0}}
+        else if(c.lift==='back'){c.walkBack=Math.min(1,c.walkBack+dt/ROOF_WALK);if(c.walkBack>=1)askLift(c,'waitDown')}
       }else if(c.loungeFadeIn!==undefined&&c.loungeFadeIn<1)c.loungeFadeIn=Math.min(1,c.loungeFadeIn+dt/.3);
     });
+    tickLifts(dt);
     // The rope: the first guest waiting at the curtain goes in as soon as a seat and a jar are free.
     var waiting=loungeWaiting();
     if(waiting.length&&loungeAdmission(state.lounge,loungeSeated(),loungeSpareJars()).admit)enterLounge(waiting[0]);
@@ -2310,25 +2341,27 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     customers.forEach(function(c){if(c.phase==='lounge'&&c.roofSpot!==undefined&&c.roofSpot<spots.length&&!taken[c.roofSpot])taken[c.roofSpot]=c.id;else if(c.phase!=='lounge')c.roofSpot=undefined});
     customers.forEach(function(c){
       if(c.phase!=='lounge'||c.loungeFade>0)return;
-      var k=c.rideK||1,down=LIFT_DOWN*k,walk=ROOF_WALK*k;
-      var ride=c.loungeLeft<down?smooth(c.loungeLeft/down):c.loungeRide>0?smooth(1-c.loungeRide/(LIFT_UP*k)):null,colour=PERSON_COLOURS[(c.id||0)%PERSON_COLOURS.length];
-      // With the second shaft bought, every other guest takes it.
-      var second=state.loungeLift&&c.id%2===1,shaftZ=(second?ROOFTOP.lift2.z:lift.z)+.1;
-      if(ride!==null){if(second)liftY2=ride*ROOFTOP.y;else liftY=ride*ROOFTOP.y;var rx=lift.x,rz=shaftZ;person(rx,liftY+.12,rz,colour,function(){drawPerson(rx,rz,now,c.id,false,false,false,{amount:0,phase:0,facing:.3})});return}
+      var colour=PERSON_COLOURS[(c.id||0)%PERSON_COLOURS.length];
+      // Riding: in their cab. Waiting below: out of sight in the back hallway.
+      var sh=c.lift==='down'?(c.liftShaft||0):(c.shaft||0),shaftZ=(sh?ROOFTOP.lift2.z:lift.z)+.1;
+      if(!c.lift||c.lift==='waitUp')return;
+      if(c.lift==='up'||c.lift==='down'){var ry=lifts[sh].y*ROOFTOP.y+.12,rx=lift.x+((c.cabSlot||0)%2?.28:0)-((c.cabSlot||0)>1?.28:0),rz=shaftZ+((c.cabSlot||0)?-.2:0);person(rx,ry,rz,colour,function(){drawPerson(rx,rz,now,c.id,false,false,false,{amount:0,phase:0,facing:.3})});return}
       if(c.roofSpot===undefined||taken[c.roofSpot]!==c.id){for(var k=0;k<spots.length;k++)if(taken[k]===undefined){c.roofSpot=k;taken[k]=c.id;break}}
       var spot=spots[c.roofSpot];if(!spot||taken[c.roofSpot]!==c.id)return;
-      // Out of the cab, across the bridge and on to their spot; the same way back before the ride down.
-      var back=c.loungeLeft<down+walk,s=back?smooth((c.loungeLeft-down)/walk):smooth(c.roofWalk||0);
+      // Out of the cab, across the bridge and on to their spot; back to the landing a step from the cab door to wait.
+      var back=c.lift!=='roof',s=c.lift==='roof'?smooth(c.roofWalk):c.lift==='back'?1-smooth(c.walkBack):0;
       if(s>=1){person(spot[0],ROOFTOP.y,spot[1],colour,function(){drawPerson(spot[0],spot[1],now,c.id,false,false,false,{amount:0,phase:0,facing:spot[2]})});return}
-      if(second)liftY2=ROOFTOP.y;else liftY=ROOFTOP.y;
       var path=[{x:lift.x,z:shaftZ},{x:ROOFTOP.x0+.5,z:shaftZ},{x:spot[0],z:spot[1]}],lens=[],total=0;
       for(var p=1;p<path.length;p++){lens.push(Math.hypot(path[p].x-path[p-1].x,path[p].z-path[p-1].z));total+=lens[p-1]}
-      var along=s*total,seg=0;while(seg<lens.length-1&&along>lens[seg]){along-=lens[seg];seg++}
+      // Guests waiting for the cab down queue back along the bridge, first come nearest the door.
+      var landing=back?1:0;if(c.lift==='waitDown')customers.forEach(function(q){if(q!==c&&q.phase==='lounge'&&q.lift==='waitDown'&&(q.shaft||0)===(c.shaft||0)&&q.liftAsk<c.liftAsk)landing+=.45});
+      var along=Math.min(total,landing+s*(total-landing)),seg=0;while(seg<lens.length-1&&along>lens[seg]){along-=lens[seg];seg++}
       var a0=path[seg],a1=path[seg+1],f=lens[seg]?Math.min(1,along/lens[seg]):1,wx=a0.x+(a1.x-a0.x)*f,wz=a0.z+(a1.z-a0.z)*f;
       var hx=(a1.x-a0.x)/(lens[seg]||1),hz=(a1.z-a0.z)/(lens[seg]||1);if(back){hx=-hx;hz=-hz}
-      var moving=s>0&&s<1;
-      person(wx,ROOFTOP.y,wz,colour,function(){drawPerson(wx,wz,now,c.id,moving,false,false,{amount:moving?1:0,phase:s*total*5,heading:{x:hx,z:hz},facing:hx-hz>0?.3:-.3})});
+      var moving=c.lift==='roof'?s>0&&s<1:c.lift==='back';
+      person(wx,ROOFTOP.y,wz,colour,function(){drawPerson(wx,wz,now,c.id,moving,false,false,{amount:moving?1:0,phase:along*5,heading:{x:hx,z:hz},facing:hx-hz>0?.3:-.3})});
     });
+    liftY=lifts[0].y*ROOFTOP.y;liftY2=lifts[1].y*ROOFTOP.y;
     customers.forEach(function(c){
       stepCustomerVisual(c,frameDelta);
       if(c.phase==='lounge')return;
