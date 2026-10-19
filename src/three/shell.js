@@ -73,6 +73,8 @@ export function buildShell(world, layout, { box, span, material, model }) {
   // Top floor: slim forest-green glazing on a low plinth, one bay per pane, with a solid two-pane bay for the fan.
   // Under the rooftop lounge the glazing runs right up to the underside of the roof slab's lip (rooftop.js).
   const tRear = top.z - top.d / 2, tLeft = -top.w / 2, glassH = layout.rooftop ? layout.rooftop.y - .34 - top.y : 3.9;
+  // The fan housing's height at model scale, and the glazing's top.
+  const fanBase = top.y + glassH, fanBandH = 1.44;
   const glass = new THREE.MeshStandardMaterial({ color: '#cfe6df', roughness: .1, metalness: 0, transparent: true, opacity: .26, depthWrite: false });
   function glazing(alongZ, a0, a1, at, fan) {
     const n = Math.max(2, Math.round((a1 - a0) / s.glazingBay)), step = (a1 - a0) / n, y = top.y;
@@ -106,6 +108,46 @@ export function buildShell(world, layout, { box, span, material, model }) {
   }
   const hub = new THREE.Mesh(new THREE.CylinderGeometry(.1, .1, .06, 20).rotateX(Math.PI / 2), material('#d8c18b'));
   rotor.add(hub);
+
+  // The fan row is one model load drawn instanced (one draw per part for the whole row); the rotors' instances turn
+  // with the big fan's rotor every frame. FAN_W is the housing's width in map units (.86 m); its origin is its centre.
+  // Kevin (2026-10-19 12:30Z, drawn on a close-up): two big fans side by side on the rear wall plane, standing on the
+  // glazing's top rail and ending inside the corner post; the roof hides whatever of them its silhouette covers, and
+  // they rise into the slab's space. Seen down the camera's line of sight (map x, y, z move together as 1 : .816 : 1),
+  // the slab's lower right edge (x = x1, y = its underside) sweeps out the plane y - .816 x = const: everything of a fan
+  // above it is behind the roof on screen, so the fans are clipped there and the roof's outline stays exact.
+  // 12:39Z: housings in the frame green, flattened to the frame's depth and set back into the wall plane.
+  const FAN_W = 1.46, rowCount = layout.rooftop ? 2 : 0, fanScale = 1.8, fanStep = FAN_W * fanScale, fanDepth = .5;
+  const rowA1 = s.topLanding.outer - .035, rowA0 = rowA1 - rowCount * fanStep, fanY = fanBase + fanBandH * fanScale / 2, fanZ = tRear - .09;
+  const roofEdge = layout.rooftop ? new THREE.Plane(new THREE.Vector3(.816, -1, 0).normalize(), (fanBase - .816 * layout.rooftop.x1) / Math.hypot(.816, 1)) : null;
+  const fanClip = [];
+  const clipped = m => { const c = m.clone(); c.clippingPlanes = fanClip; return c; };
+  const frameGreen = new THREE.Color('#2c5a44');
+  const rowSpots = Array.from({ length: rowCount }, (_, k) => new THREE.Matrix4().makeTranslation(rowA0 + fanStep * (k + .5), fanY, fanZ).scale(new THREE.Vector3(fanScale, fanScale, fanScale * fanDepth)));
+  let fanRow = null;
+  if (model && rowCount) model('exhaust_fan.glb', 0, 0, 0, (scene, holder) => {
+    const parentInverse = new THREE.Matrix4().copy(holder.parent.matrixWorld).invert(), rel = new THREE.Matrix4();
+    const rowRotor = scene.getObjectByName('Rotor'), spinning = [];
+    fanClip.push(roofEdge.clone().applyMatrix4(holder.parent.matrixWorld));
+    holder.updateMatrixWorld(true);
+    scene.traverse(o => {
+      if (!o.isMesh) return;
+      let inRotor = false;
+      for (let p = o; p; p = p.parent) if (p === rowRotor) inRotor = true;
+      const own = /^(Housing|FrontFrame)/.test(o.name) ? Object.assign(o.material.clone(), { color: frameGreen }) : o.material;
+      const mesh = new THREE.InstancedMesh(o.geometry, Array.isArray(own) ? own.map(clipped) : clipped(own), rowCount);
+      rel.multiplyMatrices(parentInverse, o.matrixWorld);
+      rowSpots.forEach((spot, i) => mesh.setMatrixAt(i, new THREE.Matrix4().multiplyMatrices(spot, rel)));
+      // Bounds over every placement, not the part's own spot at the origin, so the row isn't culled off screen.
+      mesh.computeBoundingSphere();
+      mesh.castShadow = false; mesh.receiveShadow = true;
+      shell.add(mesh);
+      if (inRotor) spinning.push({ part: o, mesh });
+    });
+    // Detached, the holder's own matrix is what the parent's inverse took off above.
+    holder.parent.remove(holder);
+    fanRow = { rotor: rowRotor, holder, parentInverse: new THREE.Matrix4(), spinning };
+  });
 
   // Products for the shelving: one instanced jar mesh and one instanced pouch mesh for the whole shop.
   const jarGeometry = new THREE.CylinderGeometry(.09, .09, .22, 12).translate(0, .11, 0);
@@ -450,8 +492,17 @@ export function buildShell(world, layout, { box, span, material, model }) {
   return {
     update(frame) {
       const night = frame.night || 0, open = !!frame.loungeOpen;
-      rotor.rotation.z = -(frame.time || 0) * Math.PI * 2 / 26000;
+      rotor.rotation.z = -(frame.time || 0) * Math.PI * 2 / 2500; // one turn every 2.5 s (Kevin 2026-10-19)
       if (modelRotor) modelRotor.rotation.z = rotor.rotation.z;
+      if (fanRow && fanRow.rotor) {
+        fanRow.rotor.rotation.z = rotor.rotation.z;
+        fanRow.holder.updateMatrixWorld(true);
+        fanRow.spinning.forEach(({ part, mesh }) => {
+          const rel = new THREE.Matrix4().multiplyMatrices(fanRow.parentInverse, part.matrixWorld), m = new THREE.Matrix4();
+          rowSpots.forEach((spot, i) => mesh.setMatrixAt(i, m.multiplyMatrices(spot, rel)));
+          mesh.instanceMatrix.needsUpdate = true;
+        });
+      }
       frontDrapes.set(frame.loungeCurtain || 0, open);
       exitDrapes.set(frame.loungeExitCurtain || 0, open);
       if (closedDoor) closedDoor.visible = !open;
