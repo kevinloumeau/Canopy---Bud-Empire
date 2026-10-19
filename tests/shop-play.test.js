@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {migrateShopPlay,createMoment,judgeChoice,tickShift,recordServed,shiftAdvice,tipFor,shiftTimeLeft,SHIFT_SECONDS} from '../src/shop-play.js';
+import {migrateShopPlay,createMoment,judgeChoice,tickShift,recordServed,shiftAdvice,tipFor,shiftTimeLeft,SHIFT_SECONDS,MAX_ORDER_COUNTERS} from '../src/shop-play.js';
 
 test('old saves get a fresh shop activity state and bad values are clamped',()=>{
   const p=migrateShopPlay(undefined);
@@ -40,4 +40,14 @@ test('a shift closes after five minutes with a recap and advice',()=>{
 test('the recap clock counts whole minutes down to the last one',()=>{
   assert.equal(shiftTimeLeft(0),'Recap in 5 min');assert.equal(shiftTimeLeft(174),'Recap in 3 min');
   assert.equal(shiftTimeLeft(250),'Recap in under a minute');assert.equal(shiftTimeLeft(SHIFT_SECONDS+5),'Recap in under a minute');
+});
+
+test('advice never suggests an order counter or queue comfort the shop has already maxed',()=>{
+  const busy={served:100,waitTotal:1000,queuePeak:11,stockoutSeconds:0};
+  assert.match(shiftAdvice(busy,{counters:1}).text,/Add an order counter/);
+  const maxed=shiftAdvice(busy,{counters:MAX_ORDER_COUNTERS});
+  assert.doesNotMatch(maxed.text,/order counter/);assert.equal(maxed.station,4);
+  const slow={served:10,waitTotal:400,queuePeak:3,stockoutSeconds:0};
+  assert.match(shiftAdvice(slow,{comfortLevel:5}).text,/queue comfort/);
+  assert.doesNotMatch(shiftAdvice(slow,{comfortLevel:20}).text,/queue comfort/);
 });

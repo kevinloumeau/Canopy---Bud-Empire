@@ -49,10 +49,14 @@ export function tickShift(play,dt,{queue=0,stockout=false}={}){
   if(shift.seconds<SHIFT_SECONDS)return false;
   play.recap={...shift,seconds:SHIFT_SECONDS};play.recapUnread=true;play.shift=freshShift();return true;
 }
-export function shiftAdvice(recap){
+// Advice only names a fix the shop can still buy: once all three order counters are open, a busy shift points at
+// faster service instead, and once queue comfort is maxed, long waits point at the Orders team alone.
+export const MAX_ORDER_COUNTERS=3;
+export const MAX_COMFORT=20;
+export function shiftAdvice(recap,{counters=1,comfortLevel=0}={}){
   if(recap.stockoutSeconds>30)return {text:'Keep pickup stocked: check your Pack and Orders stations.',station:3};
-  if(recap.served&&recap.waitTotal/recap.served>25)return {text:'Customers waited a while. Train the Orders team or improve queue comfort.',station:4};
-  if(recap.queuePeak>8)return {text:'A busy shift. Add an order counter to spread the queue.',station:4};
+  if(recap.served&&recap.waitTotal/recap.served>25)return {text:comfortLevel>=MAX_COMFORT?'Customers waited a while. Train the Orders team to serve faster.':'Customers waited a while. Train the Orders team or improve queue comfort.',station:4};
+  if(recap.queuePeak>8)return {text:counters>=MAX_ORDER_COUNTERS?'A busy shift. Upgrade the Orders desk and team so every counter serves faster.':'A busy shift. Add an order counter to spread the queue.',station:4};
   return {text:'Try another customer recommendation next shift. Great matches earn extra tips.',moment:true};
 }
 export function operationsAlerts(empire){
@@ -106,7 +110,8 @@ export function mountShopPlay({getState,getMoment,getAlerts,names,format,choose,
   root.addEventListener('keydown',e=>{if(e.key==='Escape'){close();e.stopPropagation()}});
   $('budtenderMoment').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.choice!==undefined)choose(Number(b.dataset.choice));else if(b.dataset.skip!==undefined)skip();render();});
   $('operationsAlerts').addEventListener('click',e=>{const b=e.target.closest('[data-alert]');if(!b)return;const alert=getAlerts().find(a=>a.id===b.dataset.alert);if(alert){close();navigate(alert)}});
-  $('shiftRecap').addEventListener('click',e=>{if(!e.target.closest('button'))return;const recap=getState().shopPlay.recap;if(recap){close();navigate(shiftAdvice(recap))}});
+  $('shiftRecap').addEventListener('click',e=>{if(!e.target.closest('button'))return;const recap=getState().shopPlay.recap;if(recap){close();navigate(advice(recap))}});
+  const advice=recap=>{const state=getState();return shiftAdvice(recap,{counters:state.orderCounters,comfortLevel:state.comfortLevel});};
   const el=(tag,props,...kids)=>{const node=Object.assign(document.createElement(tag),props);node.append(...kids);return node;};
   const figure=(label,value)=>el('div',{},el('dt',{textContent:label}),el('dd',{textContent:value}));
   function render(){
@@ -116,7 +121,7 @@ export function mountShopPlay({getState,getMoment,getAlerts,names,format,choose,
     const glyph=moment?'leaf':'list';if(pill.dataset.icon!==glyph){pill.dataset.icon=glyph;pill.querySelector('svg').outerHTML=moment?LEAF:LIST}
     panel.classList.toggle('has-moment',!!moment);panel.querySelector('h2').textContent=moment?moment.name+' needs a pick':'Shop activity';
     pill.classList.toggle('has-update',!!moment||play.recapUnread||alerts.length>0);pill.setAttribute('aria-label',label+' · Open shop activity');
-    const next=JSON.stringify([moment&&[moment.customerId,moment.choices,moment.opened],play.recap,alerts,shift.served,shift.matches,Math.floor(shift.earned),Math.floor(shift.seconds/10)]);
+    const next=JSON.stringify([moment&&[moment.customerId,moment.choices,moment.opened],play.recap,alerts,shift.served,shift.matches,Math.floor(shift.earned),Math.floor(shift.seconds/10),getState().orderCounters,getState().comfortLevel]);
     if(next===key)return;key=next;
     const focused=document.activeElement,scroll=panel.scrollTop,box=$('budtenderMoment');
     const memory=root.contains(focused)?{choice:focused.dataset.choice,alert:focused.dataset.alert,customer:box.dataset.customerId,skip:focused.dataset.skip!==undefined,recap:!!focused.closest('#shiftRecap')}:null;
@@ -132,7 +137,7 @@ export function mountShopPlay({getState,getMoment,getAlerts,names,format,choose,
       el('dl',{className:'activity-figures'},figure('Served',String(shift.served)),figure('Great picks',String(shift.matches)),figure('Earned',format(shift.earned))));
     if(play.recap){
       const r=play.recap,wait=r.served?' · '+Math.round(r.waitTotal/r.served)+'s wait':'';
-      const card=el('button',{type:'button',className:'activity-advice'},svg(SPARK),el('span',{className:'activity-advice-copy'},el('small',{textContent:'Last 5 min · '+format(r.earned)+' · '+r.served+' served'+wait}),el('strong',{textContent:shiftAdvice(r).text})),svg(CHEVRON));
+      const card=el('button',{type:'button',className:'activity-advice'},svg(SPARK),el('span',{className:'activity-advice-copy'},el('small',{textContent:'Last 5 min · '+format(r.earned)+' · '+r.served+' served'+wait}),el('strong',{textContent:advice(r).text})),svg(CHEVRON));
       recapBox.appendChild(card);
     }
     const list=$('operationsAlerts');list.replaceChildren();$('operationsCount').textContent=alerts.length?String(alerts.length):'';
