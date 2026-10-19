@@ -38,10 +38,13 @@ export function assignOrderCounter(customers,count){
 // head of that line takes the first free kiosk once they are standing in it (never a kiosk picked at the door, which
 // left one kiosk idle while its would-be user waited behind another and walked through the people ahead to reach it).
 export function waitingForKiosk(c){return c.kiosk&&c.idChecked===true&&!c.ordered&&c.kioskIndex==null&&c.phase==='kiosk';}
-export function assignKiosk(customers,count){
+// Free kiosks are handed out in turn, starting after the one handed out last (`last`), so every installed kiosk gets
+// customers; always taking the nearest free one left the far kiosks idle whenever the first could keep up.
+export function assignKiosk(customers,count,last=-1){
   const head=customers.find(waitingForKiosk);
   if(!head||head.laneDistance==null||(head.waypoints&&head.waypoints.length))return null;
-  for(let index=0;index<count;index++){
+  for(let step=1;step<=count;step++){
+    const index=((last+step)%count+count)%count;
     if(customers.some(c=>c.kiosk&&!c.ordered&&c.phase!=='leaving'&&c.kioskIndex===index))continue;
     head.kioskIndex=index;return head;
   }

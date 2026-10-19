@@ -64,3 +64,16 @@ test('a kiosk customer still walking in from the ID desk is not handed a kiosk y
   assert.equal(assignKiosk(walking,3),null);assert.equal(walking[0].kioskIndex,null);
   walking[0].phase='kiosk';walking[0].waypoints=[];assert.equal(assignKiosk(walking,3),walking[0]);assert.equal(walking[0].kioskIndex,0);
 });
+test('free kiosks are handed out in turn, so a quiet shop still uses every kiosk',()=>{
+  const used=[];let last=-1;
+  for(let id=1;id<=6;id++){
+    // One customer at a time, each ordering before the next arrives: the nearest kiosk is always free.
+    const line=[kioskCustomer(id)],head=assignKiosk(line,3,last);used.push(head.kioskIndex);last=head.kioskIndex;
+  }
+  assert.deepEqual(used,[0,1,2,0,1,2]);
+  // A busy kiosk is skipped and the turn moves on to the next free one.
+  const busy=[kioskCustomer(1,{kioskIndex:1,laneDistance:0}),kioskCustomer(2)];
+  assert.equal(assignKiosk(busy,3,0).kioskIndex,2);
+  // Two kiosks installed: the turn wraps within them.
+  assert.equal(assignKiosk([kioskCustomer(3)],2,1).kioskIndex,0);
+});
