@@ -958,6 +958,7 @@ const WALK_BASE = WALKS.reduce((acc, w) => (acc.push(acc[acc.length - 1] + w[4])
 export const SUBWAY = { x: 18, z: 9.85, hx: 1.2, hz: 2.47 };
 const SUB_M = 1.69, SUB_Y = SUB_M / (1 / Math.cos(Math.atan(Math.SQRT1_2))); // metres to map units, across and up
 const SUB_MOUTH = SUBWAY.z + 1.35 * SUB_M, SUB_FOOT = SUB_MOUTH - 8 * .29 * SUB_M, SUB_DEEP = P - 1.6 * SUB_Y;
+const SUB_PASSAGE = SUBWAY.z - 1.35 * SUB_M + .35; // the far wall's face, where the passage opens, plus half a figure
 // Riders: a path from out of sight below the landing (through the passage in the far wall), up the stairs and out
 // onto the pavement, walked back and forth like the walks above, so each one comes up, goes about and heads back
 // down. Points are [x, y, z]; one runs to the bus stop, the other round the corner to the front crossing.
@@ -989,7 +990,9 @@ export function walkerPlacements(now) {
         heading: { x: (x1 - x0) / len * (outbound ? 1 : -1), z: (z1 - z0) / len * (outbound ? 1 : -1) } });
     }
   });
-  SUBWAY_RIDES.forEach((path, k) => out.push(riderPlacement(path, WALK_BASE[WALKS.length] + k, now)));
+  // Past the landing a rider is in the passage under the pavement, where a standing figure's head would poke up through
+  // the slab behind the well (Kevin, 2026-10-19), so they leave the map at the doorway and come back through it.
+  SUBWAY_RIDES.forEach((path, k) => { const r = riderPlacement(path, WALK_BASE[WALKS.length] + k, now); if (r.z > SUB_PASSAGE) out.push(r); });
   return out;
 }
 function drawWalkers(api, at) {
