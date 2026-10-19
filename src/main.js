@@ -789,6 +789,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       layout.stationModelSize={};for(var key in layout.stationModels)layout.stationModelSize[key]=stationSpriteSize(+key.split('.')[0],+key.split('.')[1]);layout.stationModelSize['4.3']={w:2.2,ox:0};
       // The lower order desks keep their sprites' size against tier 3's.
       [1,2].forEach(function(t){layout.stationModelSize['4.'+t]={w:2.2*stationSpriteSize(4,t).w/stationSpriteSize(4,3).w,ox:0}});
+      // The security booths are built facing -Y; turned a quarter, their scanner, sign and customer side face the front door
+      // (west, -x), the desk runs along the footprint's long z side, and the doorman's side faces the room.
+      [1,2,3,4,5].forEach(function(t){layout.stationModelSize['6.'+t]={w:1.7,ox:0,turn:-Math.PI/2}});
       // The production line from the 2D map's own routes, so both maps carry the same tubes, belts and cargo rhythm.
       var grow=tubeRunGeometry(TUBE_RUNS[1]),pack=tubeRunGeometry(TUBE_RUNS[3]);
       layout.transport={bore:TUBE_DIA,gap:CARGO_GAP,
@@ -1648,7 +1651,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // waiting for someone to walk up from the door, and a well-staffed door clears people as fast as they arrive.
   // The ID desk stands 0.9 further in from the street door than it first did (Kevin, 2026-10-19: more room at the door);
   // guests are checked at ID_CHECK, in front of it.
-  var ID_DESK={x:-8.2,z:9.3},ID_CHECK={x:-9.15,z:9.35};
+  // Turned to face the door (Kevin, 2026-10-19), the booth runs along z, so it sits half a step nearer the storefront to stay
+  // clear of the order line's last turn at (-8.2, 8.6); the doorman works its room side by the monitors, past the
+  // line's last row at z 9.3.
+  var ID_DESK={x:-8.2,z:9.8},ID_CHECK={x:-9.15,z:9.35},DOORMAN={x:-7.4,z:10.05};
   var ID_ROUTE=[ID_CHECK,{x:-10.6,z:9.6},{x:-11.7,z:9.3},{x:-12.4,z:7.8},{x:-12.4,z:-10}];
   function moveToIdCheck(c,dt){
     var queue=customers.filter(function(q){return q.idChecked===false}),index=queue.indexOf(c);
@@ -2360,7 +2366,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       }
     }
     stations.push({index:6,x:ID_DESK.x,y:0,z:ID_DESK.z,w:.8,d:1.3,h:1.1,tier:state.doorBuilt?economy.securityTier(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
-    if(state.doorBuilt)person(-8.25,0,8.75,'#2f6b52',function(){drawPerson(-8.25,8.75,now,6,false,true,false)});
+    // The doorman stands behind the booth, on the room side, facing the front door across the desk.
+    if(state.doorBuilt)person(DOORMAN.x,0,DOORMAN.z,'#2f6b52',function(){drawPerson(DOORMAN.x,DOORMAN.z,now,6,false,true,false,{amount:0,phase:0,facing:-1})});
     // The lounge host works the rooftop: behind the bar once there is one, otherwise by the elevator's bridge.
     if(state.lounge>0){var host=state.lounge>=2?{x:3.7,z:-8.75,f:.3}:{x:-5.2,z:-4,f:.3};person(host.x,ROOFTOP.y,host.z,'#2f6b52',function(){drawPerson(host.x,host.z,now,8,false,true,false,{amount:0,phase:0,facing:host.f})})}
     // Guests on the roof hold a spot for their session. A guest riding up or down stands in the elevator's cab, which

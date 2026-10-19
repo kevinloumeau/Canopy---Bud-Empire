@@ -8,8 +8,9 @@
        a marble-topped desk
 
 Every tier stands on the same brass-edged mat, so all five fill the same footprint and the 3D map scales them alike
-(the map sizes a model by its footprint; height is free). The customer is checked off the -X end and the doorman
-stands just behind the +Y side, so nothing is built off either.
+(the map sizes a model by its footprint; height is free). The -Y face is the front: the scanner, the sign and the
+glass guard face the customer there, and the map turns the model so that face looks at the front door. The doorman
+works the +Y side (drawers, monitors), which is the side the map's camera sees.
 
 Needs canopy_kit.py and station_parts.py in the same folder.  Run headless with
     blender -b -P security_booth.py -- OUT_DIR TIER
@@ -79,11 +80,11 @@ def lamp_scanner(x, y, z):
 
 
 def monitor(tag, x, y, z, s=1., yaw=0.):
-    """A slim monitor on a foot showing a lit camera feed, turned yaw about Z, facing -Y."""
+    """A slim monitor on a foot showing a lit camera feed, turned yaw about Z, facing the doorman (+Y)."""
     foot = K.box(f"{tag}Foot", (.16 * s, .12 * s, .02), (x, y, z), M["PLASTIC"], .008)
-    neck = K.box(f"{tag}Neck", (.05 * s, .035 * s, .16 * s), (x, y + .02 * s, z + .015), M["PLASTIC"], .01)
-    scr = K.box(f"{tag}", (.34 * s, .03, .22 * s), (x, y, z + .12 * s), M["PLASTIC"], .012); scr.rotation_euler.x = .18
-    feed = K.box(f"{tag}Feed", (.3 * s, .006, .18 * s), (x, y - .017, z + .14 * s), FEED, .003); feed.rotation_euler.x = .18
+    neck = K.box(f"{tag}Neck", (.05 * s, .035 * s, .16 * s), (x, y - .02 * s, z + .015), M["PLASTIC"], .01)
+    scr = K.box(f"{tag}", (.34 * s, .03, .22 * s), (x, y, z + .12 * s), M["PLASTIC"], .012); scr.rotation_euler.x = -.18
+    feed = K.box(f"{tag}Feed", (.3 * s, .006, .18 * s), (x, y + .017, z + .14 * s), FEED, .003); feed.rotation_euler.x = -.18
     for o in (foot, neck, scr, feed):
         o.rotation_euler.z = yaw
 
@@ -131,6 +132,13 @@ def walnut_desk(L, D, H, top):
     for i in range(2):
         framed_panel(f"Front{i}", -L / 2 + .07 + pw * (i + .5), -D / 2, pw - .05, .46, Z0 + .19)
     framed_panel("End", L / 2, 0, D - .16, .46, Z0 + .19, along_x=False)
+    # The doorman's side: a bank of drawers with brass pulls, since the map's camera looks at this face.
+    dw = (L - .16) / 3
+    for i in range(3):
+        for j, (z, h) in enumerate(((Z0 + .19, .22), (Z0 + .43, .22))):
+            cx = -L / 2 + .08 + dw * (i + .5)
+            K.box(f"Drawer{i}{j}", (dw - .03, .02, h - .03), (cx, D / 2 + .008, z), K.WOOD_D, .008)
+            K.box(f"Pull{i}{j}", (.1, .02, .016), (cx, D / 2 + .022, z + h / 2 - .02), K.BRASS, .005)
     for sx in (-1, 1):
         for sy in (-1, 1):
             K.cyl(f"Column{sx}{sy}", .03, .03, H - .23, (sx * L / 2, sy * D / 2, Z0 + .14), K.BRASS, 24)
@@ -167,7 +175,8 @@ if TIER == 1:
     K.box("PlinthBand", (L + .07, D + .07, .018), (PX, 0, Z0 + .08), K.BRASS, .006)
     K.box("Core", (L - .04, D - .04, H - .2), (PX, 0, Z0 + .1), K.WOOD_D, .01)
     for i in range(4):
-        K.box(f"SlatF{i}", (L / 4 - .02, .04, H - .2), (PX - L / 2 + L / 4 * (i + .5), -D / 2 + .02, Z0 + .1), LIGHT, .012)
+        for sy in (-1, 1):
+            K.box(f"Slat{i}{sy}", (L / 4 - .02, .04, H - .2), (PX - L / 2 + L / 4 * (i + .5), sy * (D / 2 - .02), Z0 + .1), LIGHT, .012)
     for i in range(3):
         K.box(f"SlatE{i}", (.04, D / 3 - .02, H - .2), (PX + L / 2 - .02, -D / 2 + D / 3 * (i + .5), Z0 + .1), LIGHT, .012)
     K.box("Top", (L + .12, D + .12, .1), (PX, 0, Z0 + H - .1), M["TOPSTONE"], .045, 5)
@@ -189,7 +198,8 @@ elif TIER == 2:
     K.box("Plinth", (L + .08, D + .08, .1), (0, 0, Z0), LIGHT, .02)
     K.box("Body", (L, D, H - .18), (0, 0, Z0 + .1), K.GREEN, .01)
     for i in range(1, 9):
-        K.box(f"Groove{i}", (.012, .012, H - .34), (-L / 2 + L / 9 * i, -D / 2 - .002, Z0 + .2), K.GREEN_D, .003)
+        for sy in (-1, 1):
+            K.box(f"Groove{i}{sy}", (.012, .012, H - .34), (-L / 2 + L / 9 * i, sy * (D / 2 + .002), Z0 + .2), K.GREEN_D, .003)
     for sx in (-1, 1):
         for sy in (-1, 1):
             x, y = sx * (L / 2 + .005), sy * (D / 2 + .005)
@@ -214,11 +224,11 @@ else:
     for sx in (-1, 1):
         post(f"RearPost{sx}", sx * PX, PY, PH)
     if TIER == 3:
-        monitor("Monitor", .28, .02, TOP, 1., -.15)
+        monitor("Monitor", .3, .12, TOP, 1., .15)
         header_sign("ID CHECK", PY, PH - .42, 2 * PX - .12)
     if TIER >= 4:
-        monitor("MonitorL", .15, .04, TOP, .9, .12)
-        monitor("MonitorR", .43, .06, TOP, .9, -.22)
+        monitor("MonitorL", .14, .13, TOP, .9, -.12)
+        monitor("MonitorR", .42, .1, TOP, .9, .22)
         # A low glass guard along the front edge of the top, brass-capped.
         K.box("GuardGlass", (L - .1, .014, .28), (.04, -D / 2 - .03, TOP), GUARD, .004)
         K.box("GuardCap", (L - .08, .03, .016), (.04, -D / 2 - .03, TOP + .28), K.BRASS, .006)
