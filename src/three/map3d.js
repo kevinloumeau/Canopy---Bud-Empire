@@ -13,6 +13,7 @@ import { buildEntrance } from './entrance.js';
 import { createBranchLayer } from './branch3d.js';
 import { rigStation, bindStation, moveStation } from './station-motion.js';
 import { compactModel } from './compact.js';
+import { screenState, paintScreen, W as SCREEN_W, H as SCREEN_H } from './kiosk-screen.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
@@ -212,7 +213,7 @@ export function createMap3D(canvas, layout) {
   if (rooftop) rooftop.loadModels(loader, layout.modelBase);
   // Fixtures (the online orders deck) are placed by their own origin at a fixed Blender-to-map scale rather than
   // fitted to a sprite, since their footprint is irregular; `key` names the frame flag that shows them.
-  const fixtures = {}, fixtureGlows = [], fixtureScreens = [];
+  const fixtures = {}, fixtureGlows = [], fixtureScreens = [], menuScreens = {};
   (layout.fixtures || []).forEach(f => {
     loader.load(layout.modelBase + f.file, gltf => {
       prepare(gltf.scene);
@@ -222,6 +223,8 @@ export function createMap3D(canvas, layout) {
       if (f.glow) gltf.scene.traverse(o => { const m = o.isMesh && o.material; if (m && m.name === f.glow && !fixtureGlows.includes(m)) { m.emissive.set('#ffe3b0'); fixtureGlows.push(m); } });
       // Screens (f.screen names the material): the picture itself glows, brighter after dark.
       if (f.screen) gltf.scene.traverse(o => { const m = o.isMesh && o.material; if (m && m.name === f.screen && !fixtureScreens.includes(m)) { m.emissive.set('#ffffff'); m.emissiveMap = m.map; m.needsUpdate = true; fixtureScreens.push(m); } });
+      // A touchscreen the customers use (f.menu, the kiosks): its own canvas picture, painted while someone orders.
+      if (f.menu) gltf.scene.traverse(o => { const m = o.isMesh && o.material; if (m && m.name === f.screen && !menuScreens[f.key]) menuScreens[f.key] = menuScreen(m); });
       compactModel(gltf.scene);
       const holder = new THREE.Group();
       holder.add(gltf.scene);
@@ -232,6 +235,25 @@ export function createMap3D(canvas, layout) {
       fixtures[f.key] = holder;
     }, undefined, e => console.warn('3D map: could not load ' + f.file, e));
   });
+  function menuScreen(material) {
+    const canvas = document.createElement('canvas');
+    canvas.width = SCREEN_W; canvas.height = SCREEN_H;
+    const texture = new THREE.CanvasTexture(canvas);
+    // Matches the baked menu: glTF UVs (no flip), crisp pixels.
+    texture.flipY = false; texture.colorSpace = THREE.SRGBColorSpace; texture.magFilter = THREE.NearestFilter;
+    return { material, base: material.map, texture, ctx: canvas.getContext('2d'), key: '' };
+  }
+  // p: how far the customer at this kiosk has got with their order (0..1), or null when nobody is ordering.
+  function showMenu(screen, p, clock) {
+    const m = screen.material, ordering = p != null && p >= 0;
+    if (ordering) {
+      const state = screenState(p, clock);
+      if (state.key !== screen.key) { paintScreen(screen.ctx, state); screen.texture.needsUpdate = true; screen.key = state.key; }
+    }
+    const map = ordering ? screen.texture : screen.base;
+    if (m.map !== map) { m.map = m.emissiveMap = map; }
+    if (ordering) m.emissiveIntensity += .15;
+  }
   // Loaded on first need, so a shop only fetches the tiers it shows.
   const requested = {};
   function requestModel(index) {
@@ -771,6 +793,7 @@ export function createMap3D(canvas, layout) {
     placeProps(frame.props, night);
     fixtureGlows.forEach(m => { m.emissiveIntensity = .16 + night * .7; });
     fixtureScreens.forEach(m => { m.emissiveIntensity = .35 + night * .55; });
+    Object.entries(menuScreens).forEach(([key, screen]) => showMenu(screen, frame.menus ? frame.menus[key] : null, frame.time || 0));
     lampStandIns.forEach(m => { m.visible = !propSources['street_lamp.glb']; });
     const modelled = carsModelled();
     frame.cars.forEach((c, i) => {

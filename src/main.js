@@ -667,6 +667,12 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     {key:'terpeneLevel',name:'Terpene lab',base:2800,max:20},{key:'breedingLevel',name:'Breeding bench',base:3200,max:20},{key:'displayLevel',name:'Display cases',base:2600,max:20},{key:'trendLevel',name:'Trend scout',base:3000,max:20},
     {key:'fleetLevel',name:'Drone fleet',base:4000,max:20},{key:'cargoLevel',name:'Cargo bays',base:3500,max:20},{key:'repeatLevel',name:'Repeat buyers',base:2200,max:20},{key:'offlineLevel',name:'Back-room safe',base:5000,max:5}];
   function kioskServiceDuration(){return .8+1.2/(1+state.kioskSpeedLevel*.15)}
+  // How far the customer standing at each kiosk has got with their order (0..1), for the 3D map's touchscreens.
+  function kioskMenus(){
+    var out={};
+    customers.forEach(function(c){if(c.kiosk&&c.kioskIndex!=null&&!c.ordered&&c.phase==='kiosk'&&Math.hypot(c.x+8.95,c.z-(6.8-c.kioskIndex*1.8))<.15)out['kiosk'+c.kioskIndex]=Math.min(1,(c.orderTime||0)/kioskServiceDuration())});
+    return out;
+  }
   function securityDuration(level){return economy.securityDuration(level===undefined?state.idStaff:level,state.scannerLevel)}
   function securityMaxed(){return state.idStaff>=economy.SECURITY_MAX_LEVEL}
   function arrivalInterval(){return (atmosphere(state.empire.network).night?1.2:.9)/(1+state.trafficLevel*.15)/formatFactor('demand')/strains.trafficFactor(menuStrains(),state.strainTrend.index)/strains.buzzFactor(state.vipBuzz)/(1+state.signLevel*.04)/specialFactor('traffic')}
@@ -822,7 +828,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       layout.fixtures=[{key:'deck',file:'online_deck.glb',x:-9.39,y:4.7,z:-.2,scale:1.69}];
       // The self-order kiosks, one Blender model per bought kiosk where the customer code queues them (6.8 - k * 1.8),
       // the screen facing +x toward the customer and lit like a screen (`screen` names its material).
-      [0,1,2].forEach(function(k){layout.fixtures.push({key:'kiosk'+k,file:'kiosk.glb',x:-9.75,y:0,z:6.8-k*1.8,scale:1.69,screen:'Screen'})});
+      [0,1,2].forEach(function(k){layout.fixtures.push({key:'kiosk'+k,file:'kiosk.glb',x:-9.75,y:0,z:6.8-k*1.8,scale:1.69,screen:'Screen',menu:true})});
       // The street's cars and van: one model each, painted per car in code (CarPaint, VanPaint).
       layout.carModels={car:'car.glb',van:'van.glb'};
       // The shell and fittings, placed by the same numbers the station and customer code uses.
@@ -2492,7 +2498,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // depth and the scene's haze do both, so only the solid draws are kept.
     figures=figures.filter(function(f){return f.alpha>.99});backdrops=backdrops.filter(function(f){return f.alpha>.99});
     var look=viewCentre();
-    map3d.render({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    map3d.render({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2},menus:kioskMenus(),cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     // A model that had not loaded when the tabs were painted: try again every half second until all are in.
     if(picturesPending&&!(now-(renderFrame3d.picturesTried||0)<500)){renderFrame3d.picturesTried=now;picturesPending=false;paintThumbnails()}
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
