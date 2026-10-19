@@ -1,4 +1,5 @@
-import {migrateOperations,staffLevel} from './operations.js';
+import {migrateOperations,staffLevel,REGULARS} from './operations.js';
+const REGULAR_NAMES=REGULARS.map(r=>r.name);
 // Persistent empire systems. Rewards never count as earned revenue.
 // Counts and money alike are abbreviated past a thousand — 15.1K, 2.4M — everywhere the app shows a number.
 export function abbr(n){
@@ -34,6 +35,37 @@ export function buyProject(state,i,j) {
   if(store.level<PROJECT_LEVELS[j]||store.projects[j]||state.money<cost)return false;
   const before=storeRate(state.empire,i);state.money-=cost;store.projects[j]=true;state.empire.network.stores[i].construction=6;state.empire.network.stores[i].incomeGain=storeRate(state.empire,i)-before;recordGoal(state.empire,'invest',1);return true;
 }
+// Branch stars: three goals per branch. Earned stars are kept for good (they survive reopening, like badges). All three
+// add a permanent sales bonus everywhere and open the next branch. Targets live in this table so they are easy to retune.
+export const STAR_GOALS=[
+  {kind:'served',target:[250,350,500,650,800]},
+  {kind:'level',target:[10,10,10,10,10]},
+  {kind:'story',target:[3,3,3,3,3]}
+];
+export const STAR_BONUS=.1;
+function starValue(p,i,kind){
+  if(kind==='served')return p.stores[i].served;
+  if(kind==='level')return p.stores[i].level;
+  return p.network?.stores?.[i]?.relationship||0;
+}
+export const starCount=(p,i)=>[0,1,2].filter(k=>(p.stars?.[i]||0)&1<<k).length;
+export const branchFinished=(p,i)=>starCount(p,i)===3;
+export const finishedBranches=p=>STORES.filter((_,i)=>branchFinished(p,i)).length;
+export function starMultiplier(p){return 1+finishedBranches(p)*STAR_BONUS;}
+// A branch opens once the one before it is finished. A branch already open stays open (older saves keep their stores).
+export function branchOpenable(p,i){return i===0||p.stores[i].level>0||branchFinished(p,i-1);}
+export function starStatus(p,i){
+  const name=REGULAR_NAMES[i];
+  return STAR_GOALS.map((g,k)=>{const target=g.target[i],earned=!!((p.stars?.[i]||0)&1<<k),value=Math.min(target,starValue(p,i,g.kind));
+    const title=g.kind==='served'?'Serve '+abbr(target)+' customers':g.kind==='level'?'Reach level '+target:'Finish '+name+'’s story';
+    return {kind:g.kind,target,progress:earned?target:value,earned,title};});
+}
+// Latches every goal met right now; returns [{store,goal}] for stars earned by this call so the UI can celebrate them.
+export function settleStars(p){
+  const earned=[];
+  STORES.forEach((_,i)=>{if(!p.stores[i].level&&!p.stars[i])return;STAR_GOALS.forEach((g,k)=>{if(p.stars[i]&1<<k)return;if(starValue(p,i,g.kind)>=g.target[i]){p.stars[i]|=1<<k;earned.push({store:i,goal:k});}});});
+  return earned;
+}
 export function nextStoreRate(p,i) {
   if(p.stores[i].level>=10)return storeRate(p,i);
   const copy={...p,stores:p.stores.map((s,j)=>j===i?{...s,level:s.level+1}:s)};
@@ -57,11 +89,14 @@ export function migrateProgression(raw, now=Date.now()) {
   const r=raw && typeof raw==='object' ? raw : {};
   const clock=num(r.clock, now);
   const event=r.event && typeof r.event==='object' ? r.event : {};
-  return {network:migrateOperations(r.network),version:4, retailBoost:Math.max(1,num(r.retailBoost,1,64)), prestige:num(r.prestige,0,999), ...prestigeShares(r), clock, activeStore:num(r.activeStore,0,STORES.length), career:num(r.career,0,CAREER.length), daily:{
+  const p={network:migrateOperations(r.network),version:4, retailBoost:Math.max(1,num(r.retailBoost,1,64)), prestige:num(r.prestige,0,999), ...prestigeShares(r), clock, activeStore:num(r.activeStore,0,STORES.length), career:num(r.career,0,CAREER.length), daily:{
     day:num(r.daily?.day,0), streak:num(r.daily?.streak,0,7)
   }, stores:STORES.map((_,i)=>({level:num(r.stores?.[i]?.level,0,10),projects:[0,1,2].map(j=>r.stores?.[i]?.projects?.[j]===true), manager:MANAGERS.some(m=>m.id===r.stores?.[i]?.manager)&&!(Array.isArray(r.stores)?r.stores:[]).slice(0,i).some(s=>s?.manager===r.stores?.[i]?.manager)?r.stores[i].manager:'none', featured:PRODUCTS.includes(r.stores?.[i]?.featured)?r.stores[i].featured:'everyday', loyalty:num(r.stores?.[i]?.loyalty,0,1000), served:num(r.stores?.[i]?.served), serviceClock:num(r.stores?.[i]?.serviceClock,0,11)})),
   event:{slot:num(event.slot,0), joined:event.joined===true, progress:num(event.progress), claimed:event.claimed===true}, season:migrateSeason(r.season), badges:(Array.isArray(r.badges)?r.badges:[]).filter(b=>typeof b==='string'&&BADGE_ID.test(b)).filter((b,i,a)=>a.indexOf(b)===i).slice(0,200),
-  trophies:num(r.trophies), rewards:[0,1,2].map(i=>r.rewards?.[i]===true), reputation:num(r.reputation,0,1000), counters:Object.fromEntries(GOAL_KINDS.map(k=>[k,num(r.counters?.[k])])), goals:[0,1,2].map(i=>({round:num(r.goals?.[i]?.round),start:num(r.goals?.[i]?.start),kind:GOAL_KINDS.includes(r.goals?.[i]?.kind)?r.goals[i].kind:legacyGoalKind(i,num(r.goals?.[i]?.round))})), goalsCompleted:num(r.goalsCompleted), returnReport:r.returnReport&&Array.isArray(r.returnReport.earnings)?{seconds:num(r.returnReport.seconds),earnings:[...Array(STORES.length+1)].map((_,i)=>num(r.returnReport.earnings[i])),goals:num(r.returnReport.goals,0,3)}:null};
+  trophies:num(r.trophies), rewards:[0,1,2].map(i=>r.rewards?.[i]===true), reputation:num(r.reputation,0,1000), counters:Object.fromEntries(GOAL_KINDS.map(k=>[k,num(r.counters?.[k])])), goals:[0,1,2].map(i=>({round:num(r.goals?.[i]?.round),start:num(r.goals?.[i]?.start),kind:GOAL_KINDS.includes(r.goals?.[i]?.kind)?r.goals[i].kind:legacyGoalKind(i,num(r.goals?.[i]?.round))})), goalsCompleted:num(r.goalsCompleted), returnReport:r.returnReport&&Array.isArray(r.returnReport.earnings)?{seconds:num(r.returnReport.seconds),earnings:[...Array(STORES.length+1)].map((_,i)=>num(r.returnReport.earnings[i])),goals:num(r.returnReport.goals,0,3)}:null,
+  stars:STORES.map((_,i)=>{const v=r.stars?.[i];return Number.isInteger(v)&&v>=0&&v<=7?v:0;})};
+  // Saves from before stars are credited with every goal they already meet.
+  settleStars(p);return p;
 }
 export function selectedStore(p) {const i=p.activeStore;return Number.isInteger(i)&&i>0&&i<=STORES.length&&p.stores[i-1].level>0?i:0;}
 export function selectStore(p,i) {if(!Number.isInteger(i)||i<0||i>STORES.length||(i>0&&!p.stores[i-1].level))return false;p.activeStore=i;return true;}
@@ -79,7 +114,7 @@ export function claimDaily(state, now=Date.now(), scale=1) {
   const p=state.empire, d=dailyStatus(p,now,scale);if(!d.available)return 0;
   p.daily={day:Math.floor(p.clock/DAY),streak:d.day};state.money+=d.reward;return d.reward;
 }
-export function saleMultiplier(p) {return (1+p.career*.05)*(1+(p.shares||0)*SHARE_BONUS);}
+export function saleMultiplier(p) {return (1+p.career*.05)*(1+(p.shares||0)*SHARE_BONUS)*starMultiplier(p);}
 // Reopening pays in shares: each is worth +5% base sales, and the all-time total grows with the square root of
 // all-time revenue, so a longer run earns more of them. Saves from the flat +20%-per-rank system convert at four
 // shares per rank (the same bonus) and are credited with the revenue those ranks required.
@@ -102,7 +137,7 @@ export function branchRate(p) {return STORES.reduce((sum,_,i)=>sum+storeRate(p,i
 export function buyStore(state,i) {
   if(!STORES[i])return false;
   const p=state.empire, cost=storeCost(p,i);
-  if(p.stores[i].level>=10 || state.lifetime<STORES[i].goal || state.money<cost)return false;
+  if(p.stores[i].level>=10 || state.lifetime<STORES[i].goal || !branchOpenable(p,i) || state.money<cost)return false;
   const before=storeRate(p,i);state.money-=cost;p.stores[i].level++;p.network.stores[i].construction=6;p.network.stores[i].incomeGain=storeRate(p,i)-before;recordGoal(p,'invest',1);return true;
 }
 export function eventStatus(p, now=Date.now(), scale=1) {
@@ -228,7 +263,7 @@ export function claimGoal(state,i,scale=1){
 export function affordableImprovement(state,additional=[]){
   const p=state.empire,options=additional.filter(o=>Number.isFinite(o.cost)&&o.cost>=0);
   STORES.forEach((s,i)=>{
-    if(p.stores[i].level<10&&state.lifetime>=s.goal)options.push({name:s.name+' '+(p.stores[i].level?'level '+(p.stores[i].level+1):'opening'),cost:storeCost(p,i)});
+    if(p.stores[i].level<10&&state.lifetime>=s.goal&&branchOpenable(p,i))options.push({name:s.name+' '+(p.stores[i].level?'level '+(p.stores[i].level+1):'opening'),cost:storeCost(p,i)});
     PROJECT_LEVELS.forEach((level,j)=>{if(p.stores[i].level>=level&&!p.stores[i].projects[j])options.push({name:STORE_PROJECTS[i][j],cost:projectCost(i,j)});});
   });
   options.sort((a,b)=>a.cost-b.cost);return options.find(o=>o.cost<=state.money)||options[0]||null;
