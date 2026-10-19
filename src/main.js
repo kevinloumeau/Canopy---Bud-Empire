@@ -379,7 +379,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // session, walks back to the landing, waits for a cab down and steps out of the back door. The spots fill in tier order: Speakeasy round the fire
   // table, Dab bar at the stools, Vinyl nights on the dance floor, Terrace at the parasol tables.
   // The 2D map keeps its hidden lounge.
-  var liftY=0,liftY2=0,liftAsks=0;
+  var liftY=0,liftY2=0,liftAsks=0,loungeSmokers=[];
   // The cabs: where each one is (0 ground, 1 roof) and the trip it is on, empty to fetch a guest or carrying them.
   var lifts=[{y:0,trip:null},{y:0,trip:null}];
   var ROOFTOP={x0:-6.5,x1:6.5,z0:-9.6,z1:-3.4,y:14.1,lift:{x:-9.9,z:-5,w:1.4,d:1.4},lift2:{z:-6.6}},LIFT_TRIP=3,LIFT_SEATS=3,ROOF_WALK=3;
@@ -387,7 +387,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // The runner render's top face in sprite px: its near-left, near-right and far-left corners, and its length over width.
   var LOUNGE_RUNNER_PIN={left:[0,274],bottom:[146,360],top:[474,0],ratio:3.25};
   // The rope runs down the red carpet in front of the door, on the guests' side of the room.
-  function loungeWaitSpot(place){return place<=0?LOUNGE_DOOR:{x:LOUNGE_DOOR.x,z:LOUNGE_DOOR.z+.4+Math.min(place,LOUNGE_ROPE-1)*.37}}
+  // Every other guest stands a half step to the side so the line reads as people, not one stacked sprite.
+  function loungeWaitSpot(place){return place<=0?LOUNGE_DOOR:{x:LOUNGE_DOOR.x+(place%2?.13:-.07),z:LOUNGE_DOOR.z+.4+Math.min(place,LOUNGE_ROPE-1)*.37}}
   function loungeSeated(){return customers.filter(function(c){return c.phase==='lounge'}).length}
   function loungeWaiting(){return customers.filter(function(c){return c.phase==='toLounge'&&!c.waypoints.length}).sort(function(a,b){return a.id-b.id})}
   function loungeSpareJars(){return state.stock[3]-reservedJars()}
@@ -414,7 +415,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
         if(trip.t<1)return;
         s.y=trip.to;s.trip=null;
         if(trip.empty){board(s,i,trip.c);return}
-        trip.riders.forEach(function(c){if(c.phase!=='lounge')return;if(c.lift==='up'){c.lift='roof';c.roofWalk=0}else{c.lift=null;leaveLounge(c)}});
+        trip.riders.forEach(function(c){if(c.phase!=='lounge')return;if(c.lift==='up'){c.lift='roof';c.roofWalk=-(c.cabSlot||0)*.3}else{c.lift=null;leaveLounge(c)}});
         return;
       }
       var next=null;
@@ -2364,7 +2365,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(state.lounge>0){var host=state.lounge>=2?{x:3.7,z:-8.75,f:.3}:{x:-5.2,z:-4,f:.3};person(host.x,ROOFTOP.y,host.z,'#2f6b52',function(){drawPerson(host.x,host.z,now,8,false,true,false,{amount:0,phase:0,facing:host.f})})}
     // Guests on the roof hold a spot for their session. A guest riding up or down stands in the elevator's cab, which
     // carries them between the old lounge room and the roof and waits wherever it last stopped.
-    var taken={},spots=ROOFTOP_SPOTS.slice(0,loungeSeats(state.lounge)||4),lift=ROOFTOP.lift;
+    var taken={},smokers=[],spots=ROOFTOP_SPOTS.slice(0,loungeSeats(state.lounge)||4),lift=ROOFTOP.lift;
     var smooth=function(t){t=Math.max(0,Math.min(1,t));return t*t*t*(t*(t*6-15)+10)};
     customers.forEach(function(c){if(c.phase==='lounge'&&c.roofSpot!==undefined&&c.roofSpot<spots.length&&!taken[c.roofSpot])taken[c.roofSpot]=c.id;else if(c.phase!=='lounge')c.roofSpot=undefined});
     customers.forEach(function(c){
@@ -2378,18 +2379,23 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       var spot=spots[c.roofSpot];if(!spot||taken[c.roofSpot]!==c.id)return;
       // Out of the cab, across the bridge and on to their spot; back to the landing a step from the cab door to wait.
       var back=c.lift!=='roof',s=c.lift==='roof'?smooth(c.roofWalk):c.lift==='back'?1-smooth(c.walkBack):0;
-      if(s>=1){person(spot[0],ROOFTOP.y,spot[1],colour,function(){drawPerson(spot[0],spot[1],now,c.id,false,false,false,{amount:0,phase:0,facing:spot[2]})});return}
-      var path=[{x:lift.x,z:shaftZ},{x:ROOFTOP.x0+.5,z:shaftZ},{x:spot[0],z:spot[1]}],lens=[],total=0;
+      if(s>=1){smokers.push({x:spot[0],z:spot[1],id:c.id,facing:spot[2]});person(spot[0],ROOFTOP.y,spot[1],colour,function(){drawPerson(spot[0],spot[1],now,c.id,false,false,false,{amount:0,phase:0,facing:spot[2]})});return}
+      // Riders step out one after another from where they stood in the cab (each a beat behind the one before).
+      var slot=c.cabSlot||0,cx0=lift.x+(slot%2?.28:0)-(slot>1?.28:0),cz0=shaftZ+(slot?-.2:0);
+      var path=[{x:cx0,z:cz0},{x:ROOFTOP.x0+.5,z:shaftZ},{x:spot[0],z:spot[1]}],lens=[],total=0;
       for(var p=1;p<path.length;p++){lens.push(Math.hypot(path[p].x-path[p-1].x,path[p].z-path[p-1].z));total+=lens[p-1]}
       // Guests waiting for the cab down queue back along the bridge, first come nearest the door.
-      var landing=back?1:0;if(c.lift==='waitDown')customers.forEach(function(q){if(q!==c&&q.phase==='lounge'&&q.lift==='waitDown'&&(q.shaft||0)===(c.shaft||0)&&q.liftAsk<c.liftAsk)landing+=.45});
+      // A guest still walking back heads for the end of that queue; places close up smoothly when the cab takes someone.
+      var landing=back?1:0;if(back)customers.forEach(function(q){if(q!==c&&q.phase==='lounge'&&q.lift==='waitDown'&&(q.shaft||0)===(c.shaft||0)&&(c.lift==='back'||q.liftAsk<c.liftAsk))landing+=.5});
+      if(back&&c.landing!==undefined)landing=c.landing+(landing-c.landing)*.12;
+      var shuffling=back&&c.landing!==undefined&&Math.abs(landing-c.landing)>.004;c.landing=back?landing:undefined;
       var along=Math.min(total,landing+s*(total-landing)),seg=0;while(seg<lens.length-1&&along>lens[seg]){along-=lens[seg];seg++}
       var a0=path[seg],a1=path[seg+1],f=lens[seg]?Math.min(1,along/lens[seg]):1,wx=a0.x+(a1.x-a0.x)*f,wz=a0.z+(a1.z-a0.z)*f;
       var hx=(a1.x-a0.x)/(lens[seg]||1),hz=(a1.z-a0.z)/(lens[seg]||1);if(back){hx=-hx;hz=-hz}
-      var moving=c.lift==='roof'?s>0&&s<1:c.lift==='back';
+      var moving=c.lift==='roof'?s>0&&s<1:c.lift==='back'||shuffling;
       person(wx,ROOFTOP.y,wz,colour,function(){drawPerson(wx,wz,now,c.id,moving,false,false,{amount:moving?1:0,phase:along*5,heading:{x:hx,z:hz},facing:hx-hz>0?.3:-.3})});
     });
-    liftY=lifts[0].y*ROOFTOP.y;liftY2=lifts[1].y*ROOFTOP.y;
+    liftY=lifts[0].y*ROOFTOP.y;liftY2=lifts[1].y*ROOFTOP.y;loungeSmokers=smokers;
     customers.forEach(function(c){
       stepCustomerVisual(c,frameDelta);
       if(c.phase==='lounge')return;
@@ -2423,7 +2429,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // depth and the scene's haze do both, so only the solid draws are kept.
     figures=figures.filter(function(f){return f.alpha>.99});backdrops=backdrops.filter(function(f){return f.alpha>.99});
     var look=viewCentre();
-    map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,liftY:liftY,liftY2:liftY2,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     // A model that had not loaded when the tabs were painted: try again every half second until all are in.
     if(picturesPending&&!(now-(renderFrame3d.picturesTried||0)<500)){renderFrame3d.picturesTried=now;picturesPending=false;paintThumbnails()}
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
