@@ -438,7 +438,9 @@ function streetJobs(api) {
   const model = (name, x, z, flip) => { jobs[jobs.length - 1].model = { file: name + '.glb', x, z, rot: flip ? -Math.PI / 2 : 0 }; };
   BUILDINGS.forEach(b => { const f = BUILDING_SPRITES[b[2]], x = b[0] - f.w / 2, z = b[1] - f.d / 2; at(x, z, () => building(api, b), f.w / 2, f.d / 2); jobs[jobs.length - 1].model = { file: buildingModel(b[2]), x, z, rot: 0, fit: { w: f.w, d: f.d } }; });
   kind = 'tree';
-  FAR_TREES.concat(NEAR_TREES).forEach(([x, z]) => at(x, z, () => streetTree(api, x, z), 1.3, 1.3, () => treeShadow(api, x, z, 2.4, 4.8)));
+  // The 3D map's Blender trees follow streetTree's own pick: the tall street tree where its `& 3` rule puts one, the
+  // round tree everywhere else (both drawn instanced, one set of draws for all of them).
+  FAR_TREES.concat(NEAR_TREES).forEach(([x, z]) => { at(x, z, () => streetTree(api, x, z), 1.3, 1.3, () => treeShadow(api, x, z, 2.4, 4.8)); model(streetTreeKind(x, z), x, z); });
   kind = 'prop';
   LAMPS.forEach(([x, z]) => { at(x, z, () => lamp(api, x, z), .4, .4, [4.6, .9, .75, .2, .2]); model('street_lamp', x, z); });
   // Left-side street life: a coffee cart and café seating by the entrance, bins and a hydrant.
@@ -745,9 +747,10 @@ function blockShadows(api) {
   ctx.save(); ctx.transform(ex.x - o.x, ex.y - o.y, ez.x - o.x, ez.y - o.y, o.x, o.y); ctx.scale(1 / BAKE_PX, 1 / BAKE_PX);
   ctx.globalAlpha *= .5 * day; ctx.drawImage(tex, 0, 0); ctx.restore();
 }
+const streetTreeKind = (x, z) => ((Math.round(x) + Math.round(z)) & 3) === 1 ? 'street_tree' : 'tree';
 function streetTree(api, x, z) {
   const p = api.project, u = api.unit;
-  if (((Math.round(x) + Math.round(z)) & 3) === 1 && prop(api, 'street.tree.02', x, z)) return;
+  if (streetTreeKind(x, z) === 'street_tree' && prop(api, 'street.tree.02', x, z)) return;
   if (drawSprite(api, 'tree', x, z)) return;
   // Tree pit: dark soil under an iron grate.
   api.poly([p(x - .8, P + .003, z - .8), p(x + .8, P + .003, z - .8), p(x + .8, P + .003, z + .8), p(x - .8, P + .003, z + .8)], '#5a4a38');
