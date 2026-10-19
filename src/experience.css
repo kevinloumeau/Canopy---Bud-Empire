@@ -182,3 +182,6 @@
 .sheet .panel-header #panelToggle{transition:width .3s cubic-bezier(.22,.9,.24,1),height .3s cubic-bezier(.22,.9,.24,1),background-color .16s ease,box-shadow .16s ease}
 .sheet .panel-header #panelToggle::after{transition:transform .3s cubic-bezier(.22,.9,.24,1),width .3s cubic-bezier(.22,.9,.24,1),height .3s cubic-bezier(.22,.9,.24,1),opacity .2s ease}
 @media(prefers-reduced-motion:reduce){.sheet .panel-header,.sheet .panel-header #panelToggle,.sheet .panel-header #panelToggle::after{transition:none}}
+.station-team.station-lift{margin-top:6px}
+.station-team.station-lift #buyLift{grid-column:span 2;display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border-radius:11px;border:1px solid #d0a54e88;background:linear-gradient(#d0a54e38,#d0a54e18);color:#f6efdc;font:inherit;font-size:11.5px;cursor:pointer}
+.station-team.station-lift #buyLift:disabled{opacity:.5;cursor:default}

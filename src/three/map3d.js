@@ -158,6 +158,7 @@ export function createMap3D(canvas, layout) {
       if (m && m.transmission > 0) { o.material = new THREE.MeshStandardMaterial({ color: m.color, roughness: .1, metalness: 0, transparent: true, opacity: .28, depthWrite: false }); o.castShadow = false; }
     });
   }
+  if (rooftop) rooftop.loadModels(loader, layout.modelBase);
   // Fixtures (the online orders deck) are placed by their own origin at a fixed Blender-to-map scale rather than
   // fitted to a sprite, since their footprint is irregular; `key` names the frame flag that shows them.
   const fixtures = {}, fixtureGlows = [];
