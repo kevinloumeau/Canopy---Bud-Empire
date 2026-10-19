@@ -2778,8 +2778,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var fix=recommendation(),fixPrice=fix?fix.price:0,canFix=fixPrice>0&&state.money>=fixPrice,fixElsewhere=fix&&!(fix.kind==='station'&&fix.index===slow);
     // At the floor the line above names what the button upgrades, so the button itself stays Upgrade.
     if(atFloor&&fix&&fix.kind==='station')$('flowText').textContent=shortNames[slow]+' can\'t go faster · upgrading '+fix.name+' brings bigger baskets';
+    // An undecided research fork only opens its choice in the Shop, so the line says so and the button says Choose, not Upgrade.
+    else if(fix&&fix.kind==='fork')$('flowText').textContent=(trafficBound?'Not enough customers':atFloor?shortNames[slow]+' can\'t go faster':shortNames[slow]+' is slow')+' · pick '+fix.name.charAt(0).toLowerCase()+fix.name.slice(1);
     else if(!trafficBound&&!atFloor&&fixElsewhere)$('flowText').textContent=shortNames[slow]+' is holding the shop back · this is the best buy for now';
-    flowButton(state.gameSpeed===0?'Resume':fixElsewhere&&!(atFloor&&fix.kind==='station')?fix.name:'Upgrade',state.gameSpeed===0?'':fmt(fixPrice));$('flowAction').dataset.mode=state.gameSpeed===0||!canFix?'view':'fix';
+    flowButton(state.gameSpeed===0?'Resume':fix&&fix.kind==='fork'?'Choose':fixElsewhere&&!(atFloor&&fix.kind==='station')?fix.name:'Upgrade',state.gameSpeed===0?'':fmt(fixPrice));$('flowAction').dataset.mode=state.gameSpeed===0||!canFix?'view':'fix';
     // The meter shows how much of the next station's pace the bottleneck manages (or of the counters' pace, for foot traffic).
     flowMeter(trafficBound?footTraffic/slowRate:nextRate?slowRate/nextRate:1);
     // While the shop is still a building site the guide row counts sites instead of naming a bottleneck.
