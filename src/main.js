@@ -2720,7 +2720,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     $('flowText').title=(trafficBound?'Customers arrive at '+footTraffic.toFixed(1)+'/s but the counters can serve '+slowRate.toFixed(1)+'/s. ':shortNames[slow]+' moves '+slowRate.toFixed(1)+'/s; '+nextName+' can do '+(nextRate||0).toFixed(1)+'/s, so everything queues here. ')+'Estimates include batches, handoff time and kiosks.';
     // The fix button follows the best-value purchase, which can differ from the slowest station when that station is capped.
     var fix=recommendation(),fixPrice=fix?fix.price:0,canFix=fixPrice>0&&state.money>=fixPrice,fixElsewhere=fix&&!(fix.kind==='station'&&fix.index===slow);
-    flowButton(state.gameSpeed===0?'Resume':fixElsewhere?fix.name:'Upgrade',state.gameSpeed===0?'':fmt(fixPrice));$('flowAction').dataset.mode=state.gameSpeed===0||!canFix?'view':'fix';
+    // At the floor the line above names what the button upgrades, so the button itself stays Upgrade.
+    if(atFloor&&fix&&fix.kind==='station')$('flowText').textContent=shortNames[slow]+' at top speed · upgrade '+fix.name;
+    flowButton(state.gameSpeed===0?'Resume':fixElsewhere&&!(atFloor&&fix.kind==='station')?fix.name:'Upgrade',state.gameSpeed===0?'':fmt(fixPrice));$('flowAction').dataset.mode=state.gameSpeed===0||!canFix?'view':'fix';
     // The meter shows how much of the next station's pace the bottleneck manages (or of the counters' pace, for foot traffic).
     flowMeter(trafficBound?footTraffic/slowRate:nextRate?slowRate/nextRate:1);
     // While the shop is still a building site the guide row counts sites instead of naming a bottleneck.
