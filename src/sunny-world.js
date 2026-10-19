@@ -2,17 +2,17 @@
 // on a sunlit city block that runs to the screen edges. The shop's slab and the sidewalk are one continuous paved plaza, a
 // kerb drops to sunken asphalt streets on all four sides, and muted low-rise neighbours sit beyond the far kerbs so
 // the shop stays the brightest, most detailed thing on screen. Cars circulate on the streets and pedestrians walk
-// the pavements. "?look=classic" brings the studio diorama back; nothing here touches saves or rules.
+// the pavements. Nothing here touches saves or rules.
 //
 // Two passes: `back` paints the ground and everything behind or beside-left of the shop (where the shop is nearer
 // and paints over any overlap); `front` paints only low furniture, cars and walkers on the front and right, placed
 // so nothing tall ever covers a station.
-// Kevin made the sunny all-sprite shop the default on 2026-10-13 (shipped to main 2026-10-15). "?look=sunny" and
-// "?sprites=shop" are still accepted; "?look=classic" opts out of the city block, "?sprites=drawn" of the shop sprites.
-const search = typeof location !== 'undefined' ? location.search : '';
-export const SUNNY = !/[?&]look=(classic|studio|drawn)\b/.test(search);
-// The shop's own sprites (stations, shell, people) come with the sunny look: mixed with the drawn shell they read as pasted on.
-export const SHOP_SPRITES = SUNNY && !/[?&]sprites=(drawn|off|none)\b/.test(search);
+// Kevin made the sunny all-sprite shop the default on 2026-10-13 (shipped to main 2026-10-15). Since the 2D map was
+// removed (2026-10-19, the game is iOS-first and the map is 3D only) both are always on: the studio diorama and the
+// drawn shop only ever drew in Canvas 2D, so "?look=classic" and "?sprites=drawn" no longer do anything.
+export const SUNNY = true;
+// The shop's own sprites (stations, shell, people), which the 3D map records as upright cards.
+export const SHOP_SPRITES = true;
 
 // Hero sprites (rendered in Ludo.ai from the sprite brief). Each is placed by its footprint centre: `w` is the
 // on-screen width in world units at zoom 1, `drop` how far the image's bottom edge sits below the footprint centre
