@@ -60,14 +60,15 @@ export function buildShell(world, layout, { box, span, material }) {
 
   // Ground floor: the rear wall runs the floor's width behind the lounge and beside the exit door, its doorway open.
   const gRear = ground.z - ground.d / 2;
-  wall(false, -ground.w / 2, ground.w / 2, gRear, .25, 0, mezz.y - .32, [[s.exitDoor.x0, s.exitDoor.x1, s.exitDoor.h]]);
+  wall(false, (ground.x || 0) - ground.w / 2, (ground.x || 0) + ground.w / 2, gRear, .25, 0, mezz.y - .32, [[s.exitDoor.x0, s.exitDoor.x1, s.exitDoor.h]]);
   // Mezzanine: rear wall and its short left wall, both tiled to the rail and plaster above.
   const mRear = mezz.z - mezz.d / 2, mLeft = -mezz.w / 2;
   wall(false, mLeft, mezz.w / 2, mRear, .25, mezz.y, top.y - mezz.y - .32);
   wall(true, mRear, mRear + 3.5, mLeft, .25, mezz.y, top.y - mezz.y - .32);
 
   // Top floor: slim forest-green glazing on a low plinth, one bay per pane, with a solid two-pane bay for the fan.
-  const tRear = top.z - top.d / 2, tLeft = -top.w / 2, glassH = 3.9;
+  // Under the rooftop lounge the glazing runs right up to the underside of the roof slab's lip (rooftop.js).
+  const tRear = top.z - top.d / 2, tLeft = -top.w / 2, glassH = layout.rooftop ? layout.rooftop.y - .34 - top.y : 3.9;
   const glass = new THREE.MeshStandardMaterial({ color: '#cfe6df', roughness: .1, metalness: 0, transparent: true, opacity: .26, depthWrite: false });
   function glazing(alongZ, a0, a1, at, fan) {
     const n = Math.max(2, Math.round((a1 - a0) / s.glazingBay)), step = (a1 - a0) / n, y = top.y;
