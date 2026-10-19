@@ -2716,11 +2716,15 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // Say why it is the bottleneck: how far behind the next-slowest station it runs, not a bare rate.
     var rates=LINES.map(function(_,i){return state.lines[i]?stationThroughput(i):Infinity}),slowRate=rates[slow],others=rates.filter(function(r,i){return i!==slow&&isFinite(r)}),nextRate=others.length?Math.min.apply(null,others):null,nextName=nextRate!==null?shortNames[rates.indexOf(nextRate)]:'';
     var behind=nextRate?Math.round((1-slowRate/nextRate)*100):0,footTraffic=basketSize()/arrivalInterval();
-    $('flowText').textContent=trafficBound?'Foot traffic · '+Math.round((1-footTraffic/slowRate)*100)+'% below capacity':behind>0?shortNames[slow]+' trails '+nextName+' by '+behind+'%':shortNames[slow]+' · slowest station';
+    var atFloor=slow>=4&&!trafficBound&&economy.customerHandoff(slow,state.lines[slow],counterServiceDuration(slow))<=economy.HANDOFF_FLOOR[slow]&&economy.customerHandoff(slow,state.lines[slow]+1,counterServiceDuration(slow,nextCapacity(slow)))<=economy.HANDOFF_FLOOR[slow];
+    // A counter at its handoff floor can't close the gap with more levels, so say it is at top speed instead of a % that never moves.
+    $('flowText').textContent=trafficBound?'Foot traffic · '+Math.round((1-footTraffic/slowRate)*100)+'% below capacity':atFloor?shortNames[slow]+' at top speed · bigger baskets help':behind>0?shortNames[slow]+' trails '+nextName+' by '+behind+'%':shortNames[slow]+' · slowest station';
     $('flowText').title=(trafficBound?'Customers arrive at '+footTraffic.toFixed(1)+'/s but the counters can serve '+slowRate.toFixed(1)+'/s. ':shortNames[slow]+' moves '+slowRate.toFixed(1)+'/s; '+nextName+' can do '+(nextRate||0).toFixed(1)+'/s, so everything queues here. ')+'Estimates include batches, handoff time and kiosks.';
     // The fix button follows the best-value purchase, which can differ from the slowest station when that station is capped.
     var fix=recommendation(),fixPrice=fix?fix.price:0,canFix=fixPrice>0&&state.money>=fixPrice,fixElsewhere=fix&&!(fix.kind==='station'&&fix.index===slow);
-    flowButton(state.gameSpeed===0?'Resume':fixElsewhere?fix.name:'Upgrade',state.gameSpeed===0?'':fmt(fixPrice));$('flowAction').dataset.mode=state.gameSpeed===0||!canFix?'view':'fix';
+    // At the floor the line above names what the button upgrades, so the button itself stays Upgrade.
+    if(atFloor&&fix&&fix.kind==='station')$('flowText').textContent=shortNames[slow]+' at top speed · upgrade '+fix.name;
+    flowButton(state.gameSpeed===0?'Resume':fixElsewhere&&!(atFloor&&fix.kind==='station')?fix.name:'Upgrade',state.gameSpeed===0?'':fmt(fixPrice));$('flowAction').dataset.mode=state.gameSpeed===0||!canFix?'view':'fix';
     // The meter shows how much of the next station's pace the bottleneck manages (or of the counters' pace, for foot traffic).
     flowMeter(trafficBound?footTraffic/slowRate:nextRate?slowRate/nextRate:1);
     // While the shop is still a building site the guide row counts sites instead of naming a bottleneck.
@@ -3632,11 +3636,14 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // and undone, so a counter already at its handoff floor (where more levels cannot speed it up) is never the answer; the
   // fix is then whatever lifts bags per customer, arrivals or prices. Purchases within about five minutes of income are
   // preferred, so a distant upgrade never heads the list when an affordable one does real work.
+  // Upgrades that only pay every few levels (the order desk's basket grows every second level) are looked at a few levels
+  // ahead and valued on the total they cost, so a counter at its handoff floor is never bought over and over for nothing.
   function recommendation(){
-    var base=incomeRate(),reach=Math.max(0,state.money)+base*300,best=null,bestReach=null;
-    function consider(r){if(!(r.gain>base*1e-4))return;r.value=r.gain/r.price;if(!best||r.value>best.value)best=r;if(r.price<=reach&&(!bestReach||r.value>bestReach.value))bestReach=r}
-    LINES.forEach(function(_,i){if(!state.lines[i]||!isOpen(i))return;state.lines[i]++;var gain=incomeRate()-base;state.lines[i]--;consider({kind:'station',index:i,name:['Seeds','Grow','Harvest','Pack','Orders','Pickup'][i],price:cost(i),gain:gain})});
-    COMPONENTS.forEach(function(c,i){if(!componentUnlocked(i)||state[c.key]>=c.max)return;state[c.key]++;var gain=incomeRate()-base;state[c.key]--;consider({kind:'component',index:i,name:c.name,price:componentCost(i),gain:gain})});
+    var base=incomeRate(),reach=Math.max(0,state.money)+base*300,best=null,bestReach=null,LOOKAHEAD=6;
+    function consider(r){r.value=r.gain/r.spend;if(!best||r.value>best.value)best=r;if(r.price<=reach&&(!bestReach||r.value>bestReach.value))bestReach=r}
+    function tryLevels(get,set,limit){var start=get();var found=economy.stepsToGain(function(k){set(start+k);var gain=incomeRate()-base;set(start);return gain},limit,base*1e-4);return found}
+    LINES.forEach(function(_,i){if(!state.lines[i]||!isOpen(i))return;var found=tryLevels(function(){return state.lines[i]},function(v){state.lines[i]=v},LOOKAHEAD);if(!found)return;var spend=0;for(var k=0;k<found.steps;k++)spend+=economy.stationCost(LINES[i].base,state.lines[i]+k);consider({kind:'station',index:i,name:['Seeds','Grow','Harvest','Pack','Orders','Pickup'][i],price:cost(i),spend:spend,gain:found.gain})});
+    COMPONENTS.forEach(function(c,i){if(!componentUnlocked(i)||state[c.key]>=c.max)return;var start=state[c.key],found=tryLevels(function(){return state[c.key]},function(v){state[c.key]=v},Math.min(LOOKAHEAD,c.max-start));if(!found)return;var spend=0;for(var k=0;k<found.steps;k++){state[c.key]=start+k;spend+=componentCost(i)}state[c.key]=start;consider({kind:'component',index:i,name:c.name,price:componentCost(i),spend:spend,gain:found.gain})});
     return bestReach||best||legacyRecommendation();
   }
   // One tap buys exactly what the button names, wherever it lives, and the card moves on to the next fix. Short of cash it
