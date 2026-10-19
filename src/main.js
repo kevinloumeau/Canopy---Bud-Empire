@@ -12,6 +12,7 @@ import {makeSound} from './sfx.js';
 import {installQuietDom} from './quiet-dom.js';
 import {createTelemetry} from './telemetry.js';
 import {createReminders,planReminders} from './reminders.js';
+import {migrateAchievements,checkAchievements,achievementBonus} from './achievements.js';
 import {CULTIVARS,PARENT_LEVEL,migrateCrosses,crossBonus,cultivarStatus,startCross,tickCross,sortedCultivars} from './breeding.js';
 installQuietDom();
 import {mountShopBrowser} from './shop-browser.js';
@@ -42,7 +43,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Contract progression is defined in depth.js, including post-city milestones.
   var $=function(id){return document.getElementById(id)};
   // A new shop starts as seven construction sites: the door and six stations are raised for free during the intro, then the sign flips.
-  function fresh(){return{shopPlay:migrateShopPlay(),money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),productMenu:migrateMenu(),sound:true,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,offlineLevel:0,spenderClock:180,rushTime:0,crosses:{done:[],active:null},reminders:false,perks:{points:0,levels:{}},scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeStaff:0,loungeLift:false,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
+  function fresh(){return{shopPlay:migrateShopPlay(),money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),productMenu:migrateMenu(),sound:true,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,offlineLevel:0,spenderClock:180,rushTime:0,crosses:{done:[],active:null},achievements:[],reminders:false,perks:{points:0,levels:{}},scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeStaff:0,loungeLift:false,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
   function readSave(){
     for(var key of ['shift-save','shift-save-backup']){
       try{var raw=localStorage.getItem(key);if(!raw)continue;var value=JSON.parse(raw);if(value&&typeof value==='object'&&!Array.isArray(value))return value}catch(e){}
@@ -54,7 +55,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // Saves from before the construction intro have no `shopOpen`; they are open shops with every station standing.
     next.shopOpen=old.shopOpen!==false;next.doorBuilt=next.shopOpen||old.doorBuilt===true;
     ['trafficLevel','pickupLevel','readyLevel','curingLevel','durationLevel','kioskSpeedLevel','onlineBonusLevel','comfortLevel','scannerLevel','webLevel','seedBatchLevel','growBatchLevel','harvestBatchLevel','packSpeedLevel','serviceLevel','signLevel','loyaltyLevel','basketLevel','terpeneLevel','breedingLevel','displayLevel','trendLevel','fleetLevel','cargoLevel','repeatLevel'].forEach(function(key){next[key]=Math.floor(finite(old[key],0,0,key==='pickupLevel'?12:20))});
-    next.offlineLevel=Math.floor(finite(old.offlineLevel,0,0,5));next.spenderClock=finite(old.spenderClock,180,0,600);next.rushTime=finite(old.rushTime,0,0,120);next.crosses=migrateCrosses(old.crosses,old.library,old.breed);next.reminders=old.reminders===true;next.perks=migratePerks(old.perks,next.empire.shares);
+    next.offlineLevel=Math.floor(finite(old.offlineLevel,0,0,5));next.spenderClock=finite(old.spenderClock,180,0,600);next.rushTime=finite(old.rushTime,0,0,120);next.crosses=migrateCrosses(old.crosses,old.library,old.breed);next.achievements=migrateAchievements(old.achievements);next.reminders=old.reminders===true;next.perks=migratePerks(old.perks,next.empire.shares);
     next.idStaff=Math.floor(finite(old.idStaff,0,0,economy.SECURITY_MAX_LEVEL));
     next.strains=STRAINS.map(function(_,i){return Math.floor(finite(old.strains&&old.strains[i],i===0?1:0,i===0?1:0,strains.STRAIN_MAX))});
     next.activeStrain=Math.floor(finite(old.activeStrain,0,0,STRAINS.length-1));if(!next.strains[next.activeStrain])next.activeStrain=0;
@@ -73,7 +74,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // False once the player closes the station menu or taps empty map: the panel keeps its station, the map shows no pick.
   var mapPicked=true;
   var selectedLine=document.querySelector('.selected-line'),buyActions=document.querySelector('.station-buy-actions');
-  var state=load(),selected=0,toastTimer,dispatchSummary=null;
+  var state=load(),achievementClock=0,selected=0,toastTimer,dispatchSummary=null;checkAchievements(state);
   state.empire=migrateProgression(state.empire);state.empire.activeStore=selectedStore(state.empire);state.empire.retailBoost=retailBoost();advanceJourney(state);
   function visualLight(){return state.lightMode?{night:state.lightMode==='night',darkness:state.lightMode==='night'?.34:0}:atmosphere(state.empire.network)}
   var lightToggle=document.createElement('button');lightToggle.id='lightToggle';lightToggle.type='button';lightToggle.onclick=function(){state.lightMode=visualLight().darkness>.15?'day':'night';save();renderUI()};document.querySelector('.speed-controls').appendChild(lightToggle);
@@ -256,7 +257,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function trackStationLevel(i){var lv=state.lines[i];[10,25,50,100].forEach(function(m){if(lv>=m)telemetry.once('station_level_'+m,{station:LINES[i].name})})}
   // Browsers only start audio inside a gesture: the first tap or key press primes the context while sound is on.
   ['pointerdown','keydown'].forEach(function(type){window.addEventListener(type,function prime(){playSound.unlock(state.sound)},{passive:true})});
-  function flowerValue(index){if(index===undefined){var menu=menuStrains();return menu.reduce(function(total,i){return total+flowerValue(i)},0)/menu.length}var i=index;return Math.round(STRAINS[i].price*(1+Math.max(0,state.strains[i]-1)*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value')*trendBoost(i)*displayBoost(i)*strains.timeFactor(strains.STRAIN_TYPE[i],atmosphere(state.empire.network).night)*(1+crossBonus(state.crosses))*(i>0?specialFactor('boutique'):1))}
+  function flowerValue(index){if(index===undefined){var menu=menuStrains();return menu.reduce(function(total,i){return total+flowerValue(i)},0)/menu.length}var i=index;return Math.round(STRAINS[i].price*(1+Math.max(0,state.strains[i]-1)*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value')*trendBoost(i)*displayBoost(i)*strains.timeFactor(strains.STRAIN_TYPE[i],atmosphere(state.empire.network).night)*(1+crossBonus(state.crosses))*(1+achievementBonus(state))*(i>0?specialFactor('boutique'):1))}
   function onlineValue(sequence){return Math.round(flowerValue(menuChoice(sequence===undefined?state.onlineCompleted:sequence))*4/3*(1+state.onlineBonusLevel*.05)*specialFactor('online'))}
   function strainCost(i){return state.strains[i]?Math.round(Math.max(250,STRAINS[i].unlock*.35)*Math.pow(1.85,state.strains[i]-1)):STRAINS[i].unlock}
   function buyStrain(i){
@@ -472,6 +473,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function simulate(dt){
     state.empire.retailBoost=retailBoost();accrueOnlineRequests(dt);
     tickMoment(dt);var shift=state.shopPlay.shift,sentBefore=transfersSent();
+    // Achievements are checked once a game second; a save that already meets some is credited quietly on load.
+    achievementClock+=dt;if(achievementClock>=1){achievementClock=0;var earned=checkAchievements(state);if(earned.length){telemetry.send('achievement',{id:earned[earned.length-1].id,count:state.achievements.length});notify('ACHIEVEMENT · '+earned[earned.length-1].name.toUpperCase()+' · +'+earned.length+'% SALES');save()}}
     var bred=tickCross(state,dt);if(bred){telemetry.send('cultivar',{id:bred.id,count:state.crosses.done.length});notify('DISCOVERED '+bred.name.toUpperCase()+' · +2% SALES','upgrade');save()}
     add(branchIncome(state.empire)*dt);tickBranches(state.empire,dt);var operationResult=tickOperations(state,dt);if(operationResult.revenue){add(operationResult.revenue);shift.earned+=operationResult.revenue}if(operationResult.deliveries){state.onlineCompleted+=operationResult.deliveries;shift.deliveries+=operationResult.deliveries;recordEvent(state.empire,'online',operationResult.deliveries)}
     shift.transfers+=transfersSent()-sentBefore;
@@ -754,7 +757,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // A new branch star gets a toast; the third names the bonus and the branch it opens.
   function celebrateStars(list){var last=list[list.length-1],i=last.store,p=state.empire,name=STORES[i].name,count=starCount(p,i);
     notify(count===3?name.toUpperCase()+' FINISHED · +'+Math.round(STAR_BONUS*100)+'% SALES EVERYWHERE'+(STORES[i+1]?' · '+STORES[i+1].name+' can open':''):name+' ★ '+count+' of 3','upgrade');renderUI()}
-  function notify(message,kind){var cue=kind==='upgrade'?(/BUILT|OPEN|EXPANDED/.test(message)?'build':'upgrade'):/REWARD|MILESTONE|GOAL COMPLETE|EVENT COMPLETE|CHAPTER COMPLETE|WHILE AWAY|Prestige/.test(message)?'sparkle':/^Need |previous stage first/.test(message)?'denied':null;if(cue)playSound(cue,state.sound);if(kind!=='dispatch')dispatchSummary=null;$('toast').classList.toggle('is-upgrade',kind==='upgrade');$('toast').textContent=message;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){$('toast').classList.remove('show')},1600)}
+  function notify(message,kind){var cue=kind==='upgrade'?(/BUILT|OPEN|EXPANDED/.test(message)?'build':'upgrade'):/REWARD|MILESTONE|ACHIEVEMENT|GOAL COMPLETE|EVENT COMPLETE|CHAPTER COMPLETE|WHILE AWAY|Prestige/.test(message)?'sparkle':/^Need |previous stage first/.test(message)?'denied':null;if(cue)playSound(cue,state.sound);if(kind!=='dispatch')dispatchSummary=null;$('toast').classList.toggle('is-upgrade',kind==='upgrade');$('toast').textContent=message;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){$('toast').classList.remove('show')},1600)}
 
   // The map draws with Three.js (src/three/map3d.js) under a transparent 2D canvas that keeps the screen-space effects
   // (queue badges, tickets, sparkles, confetti). There is no 2D map any more: until the 3D map has drawn, and while a
@@ -2799,8 +2802,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       }else renderUpgradeComparison('Seconds per handoff',handoffNow/Math.max(1,state.gameSpeed),handoffNext/Math.max(1,state.gameSpeed),true,!level,false);
     }
     paintUpgradePreview(selected);
-    var lookAt=economy.nextLookLevel(level);
-    $('nextAppearance').textContent=(lookAt?'New look at level '+lookAt+' · ':'')+(tier?'Tier bonus ×'+economy.tierBoost(level)+' · ':'')+(tier<6?'Output ×2 at level '+TIER_LEVELS[tier+1]+' · '+STATION_TIERS[tier+1]+(selected>=4?' · both counters at a tier double baskets':''):'Flagship equipment · upgrades keep increasing output');
+    renderUnlockRoad(level,selected);
     $('machineCost').textContent=level?fmt(price):'FREE';$('buyMachine').disabled=!affordable;$('buyMachine').querySelector('span').textContent=!open?'LOCKED':level?'UPGRADE':'BUILD';
     var maxUpgrade=level?maxStationUpgrade(selected):{levels:0,cost:0};
     $('buyMachineMax').disabled=!maxUpgrade.levels;
@@ -3037,7 +3039,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     $('upgradeFunding').textContent=maxed?'Fully fitted':affordable?(tier?'Ready to upgrade':'Ready to open'):fmt(Math.max(0,price-state.money))+' to go';
     $('upgradeProgress').value=maxed?100:Math.min(100,state.money/price*100);$('upgradeProgress').setAttribute('aria-valuetext',maxed?'Fully fitted':affordable?'Ready':fmt(Math.max(0,price-state.money))+' needed for '+next.name);
     paintUpgradePreview(-2);
-    $('nextAppearance').textContent=next?next.name+' · '+next.seats+' seats · 1 in '+next.share+' guests · jar ×'+next.spend:'Nothing left to fit in the back room.';
+    $('nextAppearance').classList.remove('unlock-road');$('nextAppearance').hidden=false;$('nextAppearance').textContent=next?next.name+' · '+next.seats+' seats · 1 in '+next.share+' guests · jar ×'+next.spend:'Nothing left to fit in the back room.';
     $('machineCost').textContent=maxed?'—':fmt(price);$('buyMachine').disabled=!affordable;$('buyMachine').querySelector('span').textContent=tier?'UPGRADE':'OPEN';$('buyMachine').style.setProperty('--funded',(maxed?0:Math.min(100,state.money/price*100))+'%');
     $('buyMachineMax').disabled=true;$('machineMaxLabel').textContent='MAX';$('machineMaxCost').textContent='—';$('buyMachineMax').setAttribute('aria-label','The lounge is fitted one level at a time');
     $('upgradeHint').textContent=maxed?'Every seat in the back room is spoken for.':!affordable?fmt(price-state.money)+' to go':tier?'+'+(next.seats-seats)+' seats · bigger take per session':'Open the curtain · every 4th guest slips in';$('upgradeHint').classList.toggle('ready',affordable);
@@ -3057,7 +3059,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(site){
       $('upgradeLevel').textContent='Not built';renderUpgradeComparison('Seconds per ID check',securityDuration(),securityDuration(),true,true,false);
       $('stationTier').textContent='Construction site';$('stationTier').style.color=TIER_COLORS[0];$('upgradeFunding').textContent='Ready to build';$('upgradeProgress').value=100;$('upgradeProgress').setAttribute('aria-valuetext','Ready to build');
-      paintUpgradePreview(-1);$('nextAppearance').textContent='A staffed door station: ID checks before customers join the line.';
+      paintUpgradePreview(-1);$('nextAppearance').classList.remove('unlock-road');$('nextAppearance').hidden=false;$('nextAppearance').textContent='A staffed door station: ID checks before customers join the line.';
       $('machineCost').textContent='FREE';$('buyMachine').disabled=false;$('buyMachine').querySelector('span').textContent='BUILD';$('buyMachine').style.setProperty('--funded','100%');
       $('buyMachineMax').disabled=true;$('machineMaxLabel').textContent='MAX';$('machineMaxCost').textContent='—';$('buyMachineMax').setAttribute('aria-label','Build the door first');
       $('upgradeHint').textContent='Under construction · tap the site by the entrance, or Build here, to raise the door.';$('upgradeHint').classList.add('ready');return;
@@ -3068,7 +3070,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     $('upgradeFunding').textContent=maxed?'Top of the security track':affordable?'Ready to train':fmt(Math.max(0,price-state.money))+' to go';
     $('upgradeProgress').value=maxed?100:Math.min(100,state.money/price*100);$('upgradeProgress').setAttribute('aria-valuetext',affordable?'Training ready':fmt(Math.max(0,price-state.money))+' needed for level '+(lvl+1));
     paintUpgradePreview(-1);
-    $('nextAppearance').textContent=nextLook?'New look at level '+nextLook+' · '+economy.SECURITY_TIERS[economy.stationLook(nextLook)-1]:'The flagship booth · scanner upgrades in the Shop still speed up every check.';
+    var road=$('nextAppearance');road.classList.add('unlock-road');road.hidden=false;road.innerHTML=nextLook?'<b>Lv '+nextLook+'</b><span>new look · '+economy.SECURITY_TIERS[economy.stationLook(nextLook)-1]+'</span>':'<b>Flagship booth</b><span>every level still speeds checks</span>';
     $('machineCost').textContent=maxed?'—':fmt(price);$('buyMachine').disabled=!affordable;$('buyMachine').querySelector('span').textContent=lvl?'TRAIN':'HIRE';
     $('buyMachineMax').disabled=!quote.levels;$('machineMaxLabel').textContent='MAX'+(quote.levels?' +'+quote.levels+' LV':'');$('machineMaxCost').textContent=quote.levels?fmt(quote.cost):'—';$('buyMachineMax').setAttribute('aria-label','Train security by '+quote.levels+' levels for '+fmt(quote.cost));
     $('buyMachine').style.setProperty('--funded',(maxed?0:Math.min(100,state.money/price*100))+'%');
@@ -3163,6 +3165,14 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // map), the sprite until then and in the 2D map. picturesPending asks the frame loop to repaint the station tabs.
   var picturesPending=false,stationModelFiles={};
   // A look without its own model yet shows the highest one that has one, as the map does.
+  // The unlock road: one row under the upgrade bar naming the next level that changes this station and what it gives.
+  // Counters double baskets through the retail tier, which needs both counters at that level.
+  function renderUnlockRoad(level,i){
+    var next=economy.nextUnlock(Math.max(1,level)),road=$('nextAppearance');road.classList.add('unlock-road');road.hidden=!level;
+    if(!next){road.innerHTML='<b>Flagship</b><span>every level still adds output</span>';return}
+    var other=i===4?5:i===5?4:-1,gives=other<0?'×2 output':'×2 baskets'+(state.lines[other]<next.level?' with '+(other===4?'Orders':'Pickup'):'');
+    road.innerHTML='<b>Lv '+next.level+'</b><span>'+gives+(next.look?' · new look':'')+'</span>';
+  }
   function stationModelKey(i,level){var t=economy.stationLook(level);while(t>1&&!stationModelFiles[i+'.'+t])t--;return i+'.'+t}
   function stationPicture(i,level){
     if(!map3d||!map3d.ok||!map3d.stationPicture||!(level>0))return null;
@@ -3381,7 +3391,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   $('prestigeStart').onclick=function(){var o=prestigeOffer(state);if(!o.eligible)return;$('prestigePreview').textContent='+'+o.gain+' share'+(o.gain===1?'':'s')+': '+o.multiplier.toFixed(2).replace(/0$/,'')+'× base main-shop and branch income from now on.';prestigeDialog.hidden=false;$('prestigeCancel').focus()};
   $('prestigeCancel').onclick=function(){prestigeDialog.hidden=true;$('prestigeStart').focus()};
   prestigeDialog.addEventListener('keydown',function(e){if(e.key==='Escape')$('prestigeCancel').click();if(e.key==='Tab'){e.preventDefault();(document.activeElement===$('prestigeCancel')?$('prestigeConfirm'):$('prestigeCancel')).focus()}});
-  $('prestigeConfirm').onclick=function(){var offer=prestigeOffer(state);if(!offer.eligible)return;var rank=offer.rank+1,sound=state.sound;state.perks.points+=offer.gain;resetRun(rank,sound,{shares:offer.total,lifetimeAll:offer.allTime,badges:state.empire.badges,stars:state.empire.stars,crosses:state.crosses,perks:state.perks});prestigeDialog.hidden=true;save();showTray('factory');renderUI();notify('Reopened · +'+offer.gain+' shares · '+offer.multiplier.toFixed(2).replace(/0$/,'')+'× sales','upgrade')};
+  $('prestigeConfirm').onclick=function(){var offer=prestigeOffer(state);if(!offer.eligible)return;var rank=offer.rank+1,sound=state.sound;state.perks.points+=offer.gain;resetRun(rank,sound,{shares:offer.total,lifetimeAll:offer.allTime,badges:state.empire.badges,stars:state.empire.stars,crosses:state.crosses,achievements:state.achievements,perks:state.perks});prestigeDialog.hidden=true;save();showTray('factory');renderUI();notify('Reopened · +'+offer.gain+' shares · '+offer.multiplier.toFixed(2).replace(/0$/,'')+'× sales','upgrade')};
   var droneRow=document.createElement('div');droneRow.className='shop-upgrade';droneRow.innerHTML='<div class="shop-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="11" y="11" width="10" height="9" rx="2"/><path d="m11 12-5-5m15 5 5-5m-15 12-5 6m15-6 5 6M2 7h8m12 0h8M2 25h8m12 0h8M13 24h6"/></svg></div><div class="shop-copy"><h2>Auto drone</h2><strong id="autoDroneBenefit">Send a ready order every 10s</strong></div><button id="buyAutoDrone"><span>Install</span><b id="autoDronePrice"></b></button>';
   document.querySelector('[data-pane="boosts"]').append(droneRow);
   var droneControl=document.createElement('div');droneControl.className='auto-drone-control';droneControl.innerHTML='<span class="drone-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 10h6v4H9zM4 6h3M17 6h3M5.5 6v4h3.5M18.5 6v4H15M9 14l-3 4M15 14l3 4"/></svg></span><div><strong>Auto drone</strong><small id="autoDroneStatus"></small></div><button id="autoDroneToggle" type="button" class="drone-switch"></button><button id="autoDroneBulk" type="button" hidden></button>';document.querySelector('.dispatch-desk').append(droneControl);
@@ -3709,7 +3719,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   $('trainLoungeStaffMax').onclick=function(){trainLoungeHost(10000)};
   $('fulfillOnlineMax').onclick=function(){sendOnlineOrders(state.lines[3]>=10?Infinity:10)};
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){updateMarkers.key=null;render.invalidated=true});
-  window.addEventListener('resize',resize);$('buyMachine').onclick=buySelected;$('buyMachineMax').onclick=buySelectedMax;$('upgradeStorage').onclick=upgradeStorage;$('boost').onclick=boostAll;$('claim').onclick=claimOrder;$('resetOpen').onclick=function(){$('resetModal').hidden=false};$('resetCancel').onclick=function(){$('resetModal').hidden=true};$('resetConfirm').onclick=function(){resetRun(0,state.sound)};function resetRun(rank,sound,carry){if(rank>0)telemetry.send('prestige',{rank:rank});state=fresh();moment=null;if(shopPlayUI)shopPlayUI.reset();state.empire.prestige=rank;state.sound=sound;if(carry){state.empire.shares=carry.shares;state.empire.lifetimeAll=carry.lifetimeAll;state.empire.badges=carry.badges.slice();if(carry.stars)state.empire.stars=carry.stars.slice();state.crosses=carry.crosses;state.perks=carry.perks;var start=perkStart(state.perks);state.money+=start.money;state.offlineLevel=start.offlineLevel;state.startLine=start.line}
+  window.addEventListener('resize',resize);$('buyMachine').onclick=buySelected;$('buyMachineMax').onclick=buySelectedMax;$('upgradeStorage').onclick=upgradeStorage;$('boost').onclick=boostAll;$('claim').onclick=claimOrder;$('resetOpen').onclick=function(){$('resetModal').hidden=false};$('resetCancel').onclick=function(){$('resetModal').hidden=true};$('resetConfirm').onclick=function(){resetRun(0,state.sound)};function resetRun(rank,sound,carry){if(rank>0)telemetry.send('prestige',{rank:rank});state=fresh();moment=null;if(shopPlayUI)shopPlayUI.reset();state.empire.prestige=rank;state.sound=sound;if(carry){state.empire.shares=carry.shares;state.empire.lifetimeAll=carry.lifetimeAll;state.empire.badges=carry.badges.slice();if(carry.stars)state.empire.stars=carry.stars.slice();state.crosses=carry.crosses;state.achievements=(carry.achievements||[]).slice();state.perks=carry.perks;var start=perkStart(state.perks);state.money+=start.money;state.offlineLevel=start.offlineLevel;state.startLine=start.line}
     // A prestige reopens a standing shop; Start over goes back to the building site and replays the intro.
     if(rank>0){state.lines=LINES.map(function(){return state.startLine||1});delete state.startLine;state.doorBuilt=true;state.shopOpen=true}
     readyWork=0;work=[0,0,0,0,0,0];batchRemainder=[0,0,0,0];customers=[];arrival=0;customerId=0;deliveryDrones=[];particles=[];tickets=[];taskClocks.fill(0);taskActivity.fill(0);cropGrowth=[.15,.4,.7,.95];tierFlashes.fill(0);buildRise.fill(0);confetti=[];recentPickupRatings=[];animationTime=0;sceneTime=0;crateTime=0;cargoOdo=0;render.last=undefined;securitySelected=false;loungeSelected=false;selected=0;updateMarkers.key=null;save();$('resetModal').hidden=true;notify(rank>0?'FACTORY RESET':'STARTING OVER');syncMapView();paintThumbnails();renderUI();if(!state.shopOpen)setTimeout(function(){startGuide.open()},400)};

@@ -9,6 +9,9 @@ export function stationTier(level){let tier=0;for(let n=1;n<TIER_LEVELS.length;n
 export const STATION_LOOK_LEVELS=[1,10,30,50,75];
 export function stationLook(level){let look=1;for(let n=1;n<STATION_LOOK_LEVELS.length;n++)if(level>=STATION_LOOK_LEVELS[n])look=n+1;return look;}
 export function nextLookLevel(level){return STATION_LOOK_LEVELS.find(l=>l>level)||null;}
+// The unlock road: the next level that changes a station, whether its output doubles and whether it gets a new look.
+// Every output tier from Lv 10 on doubles; the look changes on the tiers that are also look levels (10, 30, 50, 75).
+export function nextUnlock(level){const at=TIER_LEVELS.find(l=>l>Math.max(1,level));return at?{level:at,double:true,look:STATION_LOOK_LEVELS.includes(at)}:null;}
 export function tierBoost(level){return Math.pow(2,stationTier(level));}
 // The retail tier is the lower of the two counters; both must tier up to grow baskets, storage and web orders.
 export function retailTier(lines){return Math.min(stationTier(lines[4]),stationTier(lines[5]));}
