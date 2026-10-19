@@ -21,7 +21,7 @@ export function buildRooftop(world, layout, { box, span, material }) {
   tiers.forEach(g => roof.add(g));
   const [site, t1, t2, t3, t4, t5, t6, t7, t8] = tiers, levels = tiers.slice(1);
   // The code-built furniture each Blender model replaces, hidden once its model loads (loadModels, below).
-  const [k1, k2, k3, k4] = [t1, t2, t3, t4].map(t => { const k = new THREE.Group(); t.add(k); return k; });
+  const [k1, k2, k3, k4, k5, k6, k7, k8] = levels.map(t => { const k = new THREE.Group(); t.add(k); return k; });
   // Everything a bought lounge has, whatever its tier: deck boards, glass balustrade, elevator glazing and cab.
   const open = new THREE.Group(); roof.add(open);
   const glass = new THREE.MeshStandardMaterial({ color: '#cfe6df', roughness: .1, metalness: 0, transparent: true, opacity: .28, depthWrite: false });
@@ -289,9 +289,9 @@ export function buildRooftop(world, layout, { box, span, material }) {
   const drape = (px, pz, alongX, dir) => {
     const w = .42, h = p.h - .12, o = .1 * dir;
     // The drape hangs from the beam, gathered toward the post, pinched in by its tie-back at mid height.
-    const at = (a, b, y0, y1) => alongX ? span(t5, px + o + a * dir, px + o + b * dir, y + y0, y + y1, pz - .06, pz + .06, VELVET) : span(t5, px - .06, px + .06, y + y0, y + y1, pz + o + a * dir, pz + o + b * dir, VELVET);
+    const at = (a, b, y0, y1) => alongX ? span(k5, px + o + a * dir, px + o + b * dir, y + y0, y + y1, pz - .06, pz + .06, VELVET) : span(k5, px - .06, px + .06, y + y0, y + y1, pz + o + a * dir, pz + o + b * dir, VELVET);
     at(0, w, h - 1.1, h); at(0, w * .45, .95, h - 1.1); at(0, w * .8, 0, .95);
-    alongX ? span(t5, px + o, px + o + .2 * dir, y + 1.05, y + 1.12, pz - .08, pz + .08, BRASS, { cast: false }) : span(t5, px - .08, px + .08, y + 1.05, y + 1.12, pz + o, pz + o + .2 * dir, BRASS, { cast: false });
+    alongX ? span(k5, px + o, px + o + .2 * dir, y + 1.05, y + 1.12, pz - .08, pz + .08, BRASS, { cast: false }) : span(k5, px - .08, px + .08, y + 1.05, y + 1.12, pz + o, pz + o + .2 * dir, BRASS, { cast: false });
   };
   drape(p.x0, p.z1, true, 1); drape(p.x1, p.z1, true, -1); drape(p.x1, p.z1, false, -1); drape(p.x1, p.z0, false, 1);
   span(t5, p.x0, p.x1, y + p.h - .1, y + p.h - .05, p.z1 + .06, p.z1 + .1, BRASS, { cast: false });
@@ -300,35 +300,35 @@ export function buildRooftop(world, layout, { box, span, material }) {
   // board on the back bar.
   for (let k = 0; k < 4; k++) {
     const jx = b.x0 + .5 + k * (b.x1 - b.x0 - 1) / 3, jz = b.z - .22;
-    span(t6, jx - .26, jx + .26, y + 1.12, y + 1.15, jz - .13, jz + .13, OAK);
+    span(k6, jx - .26, jx + .26, y + 1.12, y + 1.15, jz - .13, jz + .13, OAK);
     [-.13, .13].forEach((ox, j) => {
       const jar = new THREE.Mesh(new THREE.CylinderGeometry(.075, .075, .2, 10).translate(0, .1, 0), new THREE.MeshLambertMaterial({ color: '#d7ece4', transparent: true, opacity: .5 }));
-      jar.position.set(jx + ox, y + 1.15, jz); t6.add(jar);
-      box(t6, jx + ox, y + 1.16, jz, .09, .1, .09, ['#5f8a3c', '#7a9a42', '#4f7a3a', '#8c9a4a'][(k + j) & 3]);
-      box(t6, jx + ox, y + 1.35, jz, .16, .03, .16, BRASS, { cast: false });
+      jar.position.set(jx + ox, y + 1.15, jz); k6.add(jar);
+      box(k6, jx + ox, y + 1.16, jz, .09, .1, .09, ['#5f8a3c', '#7a9a42', '#4f7a3a', '#8c9a4a'][(k + j) & 3]);
+      box(k6, jx + ox, y + 1.35, jz, .16, .03, .16, BRASS, { cast: false });
     });
   }
   const menuX = (b.x0 + b.x1) / 2;
-  span(t6, menuX - .75, menuX + .75, y + 1.97, y + 2.47, z0 + .3, z0 + .36, '#22302a');
-  span(t6, menuX - .8, menuX + .8, y + 1.94, y + 2.5, z0 + .26, z0 + .3, OAK_DARK);
-  for (let k = 0; k < 4; k++) span(t6, menuX - .6, menuX + (k & 1 ? .25 : .5), y + 2.36 - k * .1, y + 2.38 - k * .1, z0 + .36, z0 + .37, CREAM, { cast: false });
+  span(k6, menuX - .75, menuX + .75, y + 1.97, y + 2.47, z0 + .3, z0 + .36, '#22302a');
+  span(k6, menuX - .8, menuX + .8, y + 1.94, y + 2.5, z0 + .26, z0 + .3, OAK_DARK);
+  for (let k = 0; k < 4; k++) span(k6, menuX - .6, menuX + (k & 1 ? .25 : .5), y + 2.36 - k * .1, y + 2.38 - k * .1, z0 + .36, z0 + .37, CREAM, { cast: false });
   // Chef's table: a long oak table along the front rail between the parasols and the dance floor, laid with plates
   // of infused courses, a cream runner, brass candle lamps and stools on the rail side.
   const c7 = { x0: x0 + 6.9, x1: x0 + 9.1, z: z1 - .85 };
-  span(t7, c7.x0, c7.x1, y + .72, y + .78, c7.z - .3, c7.z + .3, OAK);
-  [[c7.x0 + .1, -.22], [c7.x0 + .1, .22], [c7.x1 - .1, -.22], [c7.x1 - .1, .22]].forEach(([lx, oz]) => box(t7, lx, y, c7.z + oz, .07, .72, .07, OAK_DARK));
-  span(t7, c7.x0 + .1, c7.x1 - .1, y + .78, y + .79, c7.z - .1, c7.z + .1, CREAM, { cast: false });
+  span(k7, c7.x0, c7.x1, y + .72, y + .78, c7.z - .3, c7.z + .3, OAK);
+  [[c7.x0 + .1, -.22], [c7.x0 + .1, .22], [c7.x1 - .1, -.22], [c7.x1 - .1, .22]].forEach(([lx, oz]) => box(k7, lx, y, c7.z + oz, .07, .72, .07, OAK_DARK));
+  span(k7, c7.x0 + .1, c7.x1 - .1, y + .78, y + .79, c7.z - .1, c7.z + .1, CREAM, { cast: false });
   for (let k = 0; k < 4; k++) {
     const px2 = c7.x0 + .3 + k * (c7.x1 - c7.x0 - .6) / 3;
     const plate = new THREE.Mesh(new THREE.CylinderGeometry(.12, .1, .02, 14).translate(0, .01, 0), material('#fbf8ee'));
-    plate.position.set(px2, y + .79, c7.z - .17 + (k & 1) * .34); t7.add(plate);
-    box(t7, px2, y + .8, c7.z - .17 + (k & 1) * .34, .08, .04, .08, '#6f9a45');
-    box(t7, px2, y, c7.z + .46, .07, .5, .07, BRASS); box(t7, px2, y + .5, c7.z + .46, .28, .06, .28, VELVET);
+    plate.position.set(px2, y + .79, c7.z - .17 + (k & 1) * .34); k7.add(plate);
+    box(k7, px2, y + .8, c7.z - .17 + (k & 1) * .34, .08, .04, .08, '#6f9a45');
+    box(k7, px2, y, c7.z + .46, .07, .5, .07, BRASS); box(k7, px2, y + .5, c7.z + .46, .28, .06, .28, VELVET);
   }
   [c7.x0 + .55, c7.x1 - .55].forEach(lx => {
-    box(t7, lx, y + .79, c7.z, .05, .22, .05, BRASS, { cast: false });
+    box(k7, lx, y + .79, c7.z, .05, .22, .05, BRASS, { cast: false });
     const candle = new THREE.Mesh(new THREE.SphereGeometry(.07, 10, 6), glow('#fff0c8', '#ffc56a'));
-    candle.position.set(lx, y + 1.05, c7.z); t7.add(candle); lights.push([candle.material, .3, 1.6]);
+    candle.position.set(lx, y + 1.05, c7.z); k7.add(candle); lights.push([candle.material, .3, 1.6]);
   });
   // Members' club: brass stanchions and a velvet rope lining the walk in from the bridge, a velvet rug edged in brass
   // under the parasols, and tall brass lanterns at the deck's far corners.
@@ -339,10 +339,10 @@ export function buildRooftop(world, layout, { box, span, material }) {
   span(t8, x0 + 1.6, x0 + 6.4, y + .006, y + .014, z1 - 1.95, z1 - .25, BRASS, { cast: false });
   span(t8, x0 + 1.7, x0 + 6.3, y + .008, y + .018, z1 - 1.85, z1 - .35, VELVET, { cast: false });
   [[x1 - .35, z1 - 1.1], [x0 + 6.6, z0 + .35]].forEach(([lx, lz]) => {
-    box(t8, lx, y, lz, .26, .1, .26, BRASS); box(t8, lx, y + .1, lz, .06, 1.25, .06, BRASS);
+    box(k8, lx, y, lz, .26, .1, .26, BRASS); box(k8, lx, y + .1, lz, .06, 1.25, .06, BRASS);
     const lantern = new THREE.Mesh(new THREE.BoxGeometry(.24, .34, .24).translate(0, .17, 0), glow('#fff1cf', '#ffcf7a'));
-    lantern.position.set(lx, y + 1.35, lz); lantern.castShadow = false; t8.add(lantern); lights.push([lantern.material, .35, 1.5]);
-    box(t8, lx, y + 1.69, lz, .3, .05, .3, BRASS, { cast: false });
+    lantern.position.set(lx, y + 1.35, lz); lantern.castShadow = false; k8.add(lantern); lights.push([lantern.material, .35, 1.5]);
+    box(k8, lx, y + 1.69, lz, .3, .05, .3, BRASS, { cast: false });
   });
 
   // The bulbs, one instanced mesh per tier so each appears with its tier.
@@ -416,7 +416,8 @@ export function buildRooftop(world, layout, { box, span, material }) {
   // The Blender furniture (the diorama's rooftop_*.glb, each origin on its footprint, at the stations' 1.69 map units
   // per metre). Each set swaps in for its code-built stand-in once it loads; the named parts take over the stand-ins'
   // glowing materials so the sign, the fire, the bar lamps and the dance floor still light up at night.
-  const loaded = new Set();
+  const loaded = new Set(), modelled = new Set(), flameGlow = glow('#fff0c8', '#ffc56a');
+  lights.push([flameGlow, .3, 1.6]);
   function loadModels(loader, base) {
     const sets = [
       { file: 'rooftop_speakeasy.glb', parent: t1, hide: k1, at: [[x0 + 3.8, z0 + 1.825]] },
@@ -424,7 +425,13 @@ export function buildRooftop(world, layout, { box, span, material }) {
       { file: 'rooftop_dj_booth.glb', parent: t3, hide: k3, at: [[d.x, d.z]] },
       { file: 'rooftop_parasol_table.glb', parent: t4, hide: k4, at: [[x0 + 2.8, z1 - 1.05], [x0 + 5.6, z1 - 1.05]] },
       { file: 'rooftop_olive.glb', parent: open, hide: kOlive, at: [[x1 - .5, z1 - .5], [x1 - .6, z0 + .6]] },
+      // One drape modelled off its post toward +x, turned for each of the four (as drape() above places them).
+      { file: 'rooftop_drapes.glb', parent: t5, hide: k5, at: [[p.x0, p.z1, 0], [p.x1, p.z1, Math.PI], [p.x1, p.z1, Math.PI / 2], [p.x1, p.z0, -Math.PI / 2]] },
+      { file: 'rooftop_jar_flight.glb', parent: t6, hide: k6, at: [[(b.x0 + b.x1) / 2, b.z - .225]] },
+      { file: 'rooftop_chefs_table.glb', parent: t7, hide: k7, at: [[x0 + 8, z1 - .85]] },
+      { file: 'rooftop_lantern.glb', parent: t8, hide: k8, at: [[x1 - .35, z1 - 1.1], [x0 + 6.6, z0 + .35]] },
     ];
+    sets.forEach(set => modelled.add(set.parent));
     sets.forEach(set => loader.load(base + set.file, gltf => {
       const source = gltf.scene;
       source.traverse(o => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
@@ -434,8 +441,11 @@ export function buildRooftop(world, layout, { box, span, material }) {
       if (fire) fire.traverse(o => { if (o.isMesh) { o.material = flame.material; o.castShadow = false; } });
       if (floor) floor.traverse(o => { if (o.isMesh) o.material = dance.material; });
       barLamps.forEach((shade, i) => { const lamp = source.getObjectByName('BarLamp' + i); if (lamp) lamp.traverse(o => { if (o.isMesh) { o.material = shade.material; o.castShadow = false; } }); });
-      set.at.forEach(([ax, az], i) => {
+      // The candles and lanterns take the stand-ins' glow, so they light up after dark too.
+      source.traverse(o => { if (o.isMesh && /^(CandleGlow|LanternGlow)/.test(o.name)) { o.material = flameGlow; o.castShadow = false; } });
+      set.at.forEach(([ax, az, turn], i) => {
         const holder = new THREE.Group();
+        if (turn) holder.rotation.y = turn;
         holder.add(i ? source.clone() : source);
         holder.scale.set(1.69, 1.69 / HEIGHT_SCALE, 1.69);
         holder.position.set(ax, y, az);
@@ -488,7 +498,7 @@ export function buildRooftop(world, layout, { box, span, material }) {
   // smoke. Null until every model that tier shows has loaded.
   function pictureCopy(tier, lifts) {
     const shown = Math.min(levels.length, Math.max(1, tier)), saved = [...tiers, open, second, gapFill, smoke];
-    if (![t1, t2, t3, t4].slice(0, shown).every(g => loaded.has(g)) || !loaded.has(open)) return null;
+    if (!levels.slice(0, shown).every(g => !modelled.has(g) || loaded.has(g)) || !loaded.has(open)) return null;
     const was = saved.map(g => g.visible);
     site.visible = false; open.visible = true; smoke.visible = false;
     levels.forEach((g, k) => { g.visible = k < shown; });
