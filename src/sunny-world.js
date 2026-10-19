@@ -432,7 +432,7 @@ function streetJobs(api) {
   // The 3D map's Blender model for the job just added: its file, where its feet stand (the render's anchor) and its
   // turn; a render drawn mirrored to run the other way is the model turned a quarter.
   const model = (name, x, z, flip) => { jobs[jobs.length - 1].model = { file: name + '.glb', x, z, rot: flip ? -Math.PI / 2 : 0 }; };
-  BUILDINGS.forEach(b => { const f = BUILDING_SPRITES[b[2]]; at(b[0] - f.w / 2, b[1] - f.d / 2, () => building(api, b), f.w / 2, f.d / 2); });
+  BUILDINGS.forEach(b => { const f = BUILDING_SPRITES[b[2]], x = b[0] - f.w / 2, z = b[1] - f.d / 2; at(x, z, () => building(api, b), f.w / 2, f.d / 2); jobs[jobs.length - 1].model = { file: buildingModel(b[2]), x, z, rot: 0 }; });
   kind = 'tree';
   FAR_TREES.concat(NEAR_TREES).forEach(([x, z]) => at(x, z, () => streetTree(api, x, z), 1.3, 1.3, () => treeShadow(api, x, z, 2.4, 4.8)));
   kind = 'prop';
@@ -598,6 +598,9 @@ function buildingSprite(api, name, x1, z1) {
 
 // Until its render has loaded, a muted low-rise block on the same footprint: walls, parapet, a sparse grid of pale
 // windows, a glazed ground floor under a plain awning, then a haze wash so it sits back from the shop.
+// The 3D map's Blender model for a terrace render: building.low.sage is building_low_sage.glb, its origin at the
+// footprint's centre with the door side toward +z like the render.
+const buildingModel = name => name.replace(/\./g, '_') + '.glb';
 function building(api, [x1, z1, name]) {
   const f = BUILDING_SPRITES[name], p = api.project, w = f.w, d = f.d, h = f.h, wall = f.wall, awning = '#8a9e8c';
   const x0 = x1 - w, z0 = z1 - d, x = x1 - w / 2, z = z1 - d / 2, near = p(x1, P, z1), far = p(x0, P + 14, z0);
@@ -968,7 +971,7 @@ export function townLayout() {
   return {
     roads: ROADS.map(r => ({ ...r })), roadWidth: RW, plazaY: P, streetY: G, extent: L,
     colours: { paver: PAVER, asphalt: ASPHALT }, marks: groundMarks(),
-    buildings: BUILDINGS.map(([x1, z1, name]) => { const f = BUILDING_SPRITES[name]; return { x0: x1 - f.w, x1, z0: z1 - f.d, z1, h: f.h, wall: f.wall[0], roof: f.wall[1] }; }),
+    buildings: BUILDINGS.map(([x1, z1, name]) => { const f = BUILDING_SPRITES[name]; return { x0: x1 - f.w, x1, z0: z1 - f.d, z1, h: f.h, wall: f.wall[0], roof: f.wall[1], model: buildingModel(name) }; }),
     trees: FAR_TREES.concat(NEAR_TREES).map(t => t.slice()), lamps: LAMPS.map(l => l.slice()),
     haze: { colour: HAZE.slice(), ramp: { west: HAZE_RAMP.west.slice(), east: HAZE_RAMP.east.slice(), north: HAZE_RAMP.north.slice(), south: HAZE_RAMP.south.slice() } },
     sun: { x: SUN.x, z: SUN.z, reach: SUN_REACH }

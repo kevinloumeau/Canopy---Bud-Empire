@@ -325,6 +325,13 @@ export function createMap3D(canvas, layout) {
       if (!o.isMesh) return;
       let g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
       g.applyMatrix4(o.matrixWorld);
+      // A mirrored part (negative scale) turns its triangles inside out once baked: three.js flips the facing for a
+      // mirrored object it draws, but not for one merged into a plain geometry, so wind those back.
+      if (o.matrixWorld.determinant() < 0) Object.values(g.attributes).forEach(a => {
+        for (let t = 0; t < a.count; t += 3) for (let k = 0; k < a.itemSize; k++) {
+          const v = a.getComponent(t + 1, k); a.setComponent(t + 1, k, a.getComponent(t + 2, k)); a.setComponent(t + 2, k, v);
+        }
+      });
       Object.keys(g.attributes).forEach(k => { if (k !== 'position' && k !== 'normal' && k !== 'uv') g.deleteAttribute(k); });
       if (!g.attributes.normal) g.computeVertexNormals();
       if (!byMaterial.has(o.material)) byMaterial.set(o.material, []);
@@ -333,7 +340,7 @@ export function createMap3D(canvas, layout) {
     return [...byMaterial].map(([mat, list]) => {
       // Parts merge only with the attributes they all share.
       if (list.some(g => !g.attributes.uv)) list.forEach(g => g.deleteAttribute('uv'));
-      const mesh = new THREE.InstancedMesh(mergeGeometries(list), mat, MAX_PROPS);
+      const mesh = new THREE.InstancedMesh(mergeGeometries(list), withHaze(mat), MAX_PROPS);
       mesh.count = 0; mesh.castShadow = mesh.receiveShadow = true; mesh.frustumCulled = false;
       world.add(mesh);
       return mesh;
@@ -500,7 +507,7 @@ export function createMap3D(canvas, layout) {
     const behind = frame.backdrops || [];
     behind.forEach((f, i) => place(f, backdrop(i)));
     for (let i = behind.length; i < backdrops.length; i++) backdrops[i].visible = false;
-    terraces.forEach(t => { t.renderOrder = frame.backdrops ? -2 : 0; t.material.colorWrite = !frame.backdrops; });
+    terraces.forEach(t => { t.visible = !propSources[t.userData.model]; t.renderOrder = frame.backdrops ? -2 : 0; t.material.colorWrite = !frame.backdrops; });
     // With figures standing in, the capsules only cast shadows.
     people.material.colorWrite = people.material.depthWrite = !frame.figures;
     materials.forEach((m, key) => { if (key.endsWith('{"name":"street"}')) m.colorWrite = m.depthWrite = !frame.figures; });
@@ -590,8 +597,11 @@ function buildTown(world, layout, { box, span, material, textured, lampStandIns 
   });
   const terraces = [];
   layout.buildings.forEach(b => {
-    terraces.push(span(world, b.x0, b.x1, P, b.h, b.z0, b.z1, b.wall, { opts: { name: 'terrace' } }));
-    terraces.push(span(world, b.x0 - .15, b.x1 + .15, b.h, b.h + .35, b.z0 - .15, b.z1 + .15, b.roof, { opts: { name: 'terrace' } }));
+    // Each block steps aside for its Blender model once that loads (b.model).
+    const wall = span(world, b.x0, b.x1, P, b.h, b.z0, b.z1, b.wall, { opts: { name: 'terrace' } });
+    const roof = span(world, b.x0 - .15, b.x1 + .15, b.h, b.h + .35, b.z0 - .15, b.z1 + .15, b.roof, { opts: { name: 'terrace' } });
+    wall.userData.model = roof.userData.model = b.model;
+    terraces.push(wall, roof);
   });
   const crownGeometry = new THREE.IcosahedronGeometry(1.6, 1);
   layout.trees.forEach(([x, z]) => {
