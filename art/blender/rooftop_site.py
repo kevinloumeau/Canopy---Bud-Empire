@@ -78,8 +78,8 @@ for k, t in enumerate((-.22, .22)):                             # two ropes over
 # A corner of the tarp turned back shows a crate under it.
 K.box("CrateCorner", (.16, .16, .16), (bx + bw / 2 - .07, by - bw / 2 + .07, 0), PALLET, .004, 1)
 
-# ---------- C: a loose pallet with two cement sacks, map (3.6, -2.8), .9 x 1.4 ----------
-cx, cy = 3.6 * H, 2.8 * H
+# ---------- C: a loose pallet with cement sacks, map (3.6, -4.5), .9 x 1.4 (clear of the front edge at z1 -3.4) ----------
+cx, cy = 3.6 * H, 4.5 * H
 top = pallet("LoosePallet", cx, cy, .9 * H, 1.4 * H, .14 * V)
 sk = bpy.data.meshes.new("SackMesh"); bm = bmesh.new()
 bmesh.ops.create_cube(bm, size=1.)

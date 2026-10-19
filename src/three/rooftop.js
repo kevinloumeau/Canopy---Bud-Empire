@@ -81,7 +81,7 @@ export function buildRooftop(world, layout, { box, span, material }) {
   const kSite = new THREE.Group(); site.add(kSite);
   box(kSite, -2.2, y, -4.6, 1.6, .18, 1.1, '#9a7a52'); box(kSite, -2.2, y + .18, -4.6, 1.5, .5, 1, '#c9a978');
   box(kSite, 1.8, y, -5.4, 1.2, .9, 1.2, '#8e9a86');
-  box(kSite, 3.6, y, -2.8, .9, .14, 1.4, '#9a7a52');
+  box(kSite, 3.6, y, -4.5, .9, .14, 1.4, '#9a7a52');
 
   // The elevator: a sleek glass shaft from the ground to just above the roof, its brass cab riding inside with its
   // passenger. Slim dark corner posts, a thin ring at each landing, a flat cap with a fine brass edge, and a thin
