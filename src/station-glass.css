@@ -1,0 +1,18 @@
+/* Station detail on the glass components (UI reskin plan). Loaded last so it wins over the tile grid in stations-compact.css.
+   The stats read as four open readouts under the Team row (figure over a short label, hairline dividers, no tiles). The "Ready to upgrade" / "to go" line
+   and its bar are gone; cash toward the next level shows as a thin fill along the Upgrade button's bottom edge instead. */
+.sheet #stationStatus{flex-shrink:0;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:auto;gap:0;min-height:0;margin:12px 0 4px;padding:0}
+.sheet #stationStatus>*,.sheet #stationStatus .status-chip,.sheet #stationStatus .stat,.sheet #stationStatus .stat.tier{grid-row:auto;grid-column:auto;display:grid;grid-template-columns:auto auto auto;justify-content:center;align-items:center;column-gap:5px;row-gap:3px;height:auto;min-width:0;padding:0 6px;border:0;border-left:1px solid var(--ui-edge);border-radius:0;background:none;color:var(--ui-ink);font-size:12px;letter-spacing:0;text-align:center}
+.sheet #stationStatus>:nth-child(4n+1){border-left:0}
+.sheet #stationStatus>:nth-child(n+5){margin-top:10px}
+.sheet #stationStatus b{min-width:0;font:600 14px/1.15 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-ink);font-variant-numeric:tabular-nums;text-align:center}
+.sheet #stationStatus small{display:block;grid-column:1/-1;grid-row:2;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;line-height:1.2;color:var(--ui-soft)}
+.sheet #stationStatus svg{width:13px;height:13px;stroke:var(--ui-soft)}
+.sheet #stationStatus .stat.tier svg{stroke:var(--ui-brass)}
+.sheet #stationStatus .stat.tier b{color:var(--ui-brass)}
+.sheet #stationStatus .tier-bar{width:24px;height:3px;background:var(--ui-well)}
+.sheet #stationStatus .tier-bar i{background:var(--ui-brass)}
+
+.sheet [data-pane=factory] .station-upgrade{display:none}
+.sheet .selected-line #buyMachine{position:relative;overflow:hidden}
+.sheet .selected-line #buyMachine:disabled::after{content:'';position:absolute;left:0;bottom:0;width:var(--funded,0%);height:3px;background:var(--ui-leaf-glow);opacity:.8;pointer-events:none}

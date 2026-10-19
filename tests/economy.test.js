@@ -74,3 +74,12 @@ test('branch income follows the main shop retail tier and survives migration',()
 });
 
 test('counter service efficiency improves every five levels',()=>{assert.deepEqual([0,1,5,6,10,11,29,30,31].map(counterLanes),[1,1,1,2,2,3,6,6,7])});
+
+test('station looks spread over the level track while output tiers stay where they were',async()=>{
+  const {stationLook,nextLookLevel,STATION_LOOK_LEVELS,TIER_LEVELS}=await import('../src/economy.js');
+  assert.deepEqual([1,9,10,29,30,49,50,74,75,100,500].map(stationLook),[1,1,2,2,3,3,4,4,5,5,5]);
+  assert.deepEqual([1,10,29,30,74,75].map(nextLookLevel),[10,30,30,50,75,null]);
+  // Every look change lands on an output tier, so the doubling and the new model arrive together.
+  for(const l of STATION_LOOK_LEVELS)assert.ok(TIER_LEVELS.includes(l));
+  assert.deepEqual(TIER_LEVELS,[1,10,20,30,50,75,100]);
+});
