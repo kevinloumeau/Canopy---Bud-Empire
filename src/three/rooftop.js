@@ -157,10 +157,16 @@ export function buildRooftop(world, layout, { box, span, material }) {
   box(t1, x0 + .25, y, z1 - .2, .06, railH + .95, .06, STEEL); box(t1, x1 - .3, y, z1 - .2, .06, railH + .95, .06, STEEL);
   // The neon LOUNGE sign on the pergola's front beam, toward the street.
   const signCanvas = document.createElement('canvas'); signCanvas.width = 512; signCanvas.height = 128;
-  const c = signCanvas.getContext('2d');
-  c.font = '800 80px "Bricolage Grotesque", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.shadowColor = '#ff6fa8'; c.shadowBlur = 20; c.fillStyle = '#ff8fbf'; c.fillText('LOUNGE', 256, 66); c.shadowBlur = 0; c.fillStyle = '#fff4f8'; c.fillText('LOUNGE', 256, 66);
   const signTexture = new THREE.CanvasTexture(signCanvas); signTexture.colorSpace = THREE.SRGBColorSpace;
+  // In Fredoka like the doorway's sign (shell.js loads it); repainted once it arrives.
+  function paintSign() {
+    const c = signCanvas.getContext('2d'); c.clearRect(0, 0, 512, 128);
+    c.font = '600 80px "Fredoka", "Bricolage Grotesque", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.shadowColor = '#ff6fa8'; c.shadowBlur = 20; c.fillStyle = '#ff8fbf'; c.fillText('LOUNGE', 256, 66); c.shadowBlur = 0; c.fillStyle = '#fff4f8'; c.fillText('LOUNGE', 256, 66);
+    signTexture.needsUpdate = true;
+  }
+  paintSign();
+  if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', paintSign);
   const signMat = new THREE.MeshBasicMaterial({ map: signTexture, transparent: true });
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, .55), signMat);
   sign.position.set((p.x0 + p.x1) / 2, y + p.h + .5, p.z1 + .09); t1.add(sign);
