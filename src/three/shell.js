@@ -112,12 +112,15 @@ export function buildShell(world, layout, { box, span, material, model }) {
 
   // The fan row is one model load drawn instanced (one draw per part for the whole row); the rotors' instances turn
   // with the big fan's rotor every frame. FAN_W is the housing's width in map units (.86 m); its origin is its centre.
-  const FAN_W = 1.46, rowA1 = s.topLanding.outer, rowCount = Math.max(1, Math.round((rowA1 - slabRight) / FAN_W)), rowA0 = rowA1 - rowCount * FAN_W;
-  const bandY0 = fanBase, bandY1 = fanBase + fanBandH;
-  span(shell, slabRight, rowA1, bandY0, bandY1, tRear - .14, tRear - .02, '#2f5d4a');
-  const rowSpots = Array.from({ length: rowCount }, (_, k) => new THREE.Matrix4().makeTranslation(rowA0 + FAN_W * (k + .5), (bandY0 + bandY1) / 2, tRear - .06));
+  // The fans fit between the slab's corner and the landing's edge, scaled down a little if need be, so none of them
+  // cuts into the roof.
+  const FAN_W = 1.46, rowA0 = slabRight + .04, rowA1 = s.topLanding.outer, rowCount = Math.max(1, Math.round((rowA1 - rowA0) / FAN_W));
+  const fanScale = Math.min(1, (rowA1 - rowA0) / (rowCount * FAN_W)), fanStep = (rowA1 - rowA0) / rowCount;
+  const bandY0 = fanBase, bandY1 = fanBase + fanBandH * fanScale;
+  span(shell, rowA0, rowA1, bandY0, bandY1, tRear - .14, tRear - .02, '#2f5d4a');
+  const rowSpots = Array.from({ length: rowCount }, (_, k) => new THREE.Matrix4().makeTranslation(rowA0 + fanStep * (k + .5), (bandY0 + bandY1) / 2, tRear - .06).scale(new THREE.Vector3(fanScale, fanScale, fanScale)));
   let fanRow = null;
-  if (model && bandY1 - bandY0 > 1) model('exhaust_fan.glb', 0, 0, 0, (scene, holder) => {
+  if (model && rowA1 > rowA0) model('exhaust_fan.glb', 0, 0, 0, (scene, holder) => {
     const parentInverse = new THREE.Matrix4().copy(holder.parent.matrixWorld).invert(), rel = new THREE.Matrix4();
     const rowRotor = scene.getObjectByName('Rotor'), spinning = [];
     holder.updateMatrixWorld(true);
