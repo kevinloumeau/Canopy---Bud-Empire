@@ -370,15 +370,16 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var LOUNGE_DOOR={x:-9.5,z:-.45},LOUNGE_EXIT={x:8.57,z:-3.3},LOUNGE_RIGHT=8.25,LOUNGE_ROPE=7;
   // The red carpet runs from the curtain to just past where lounge guests turn on to it (z 2.2), clear of the third kiosk.
   var LOUNGE_CARPET_END=2.6;
-  // The 3D map's rooftop lounge (src/three/rooftop.js): a deck on top of the top floor, reached by a glass elevator
+  // The 3D map's rooftop lounge (src/three/rooftop.js): a deck stepped back from the top floor like the floors below
+  // it (its front 3.1 behind the top floor's, its rear over the back pavement on steel columns), one storey up, reached by a glass elevator
   // standing in the old lounge room behind the curtain, its bridge landing at the deck's left edge. Guests ride up
   // (`loungeRide` seconds after the curtain), spend their session at a spot on the roof, and ride down for the last
   // LIFT_DOWN seconds before stepping out of the back door. The spots fill in tier order: Speakeasy round the fire
   // table, Dab bar at the stools, Vinyl nights on the dance floor, Terrace at the parasol tables.
   // The 2D map keeps its hidden lounge.
   var liftY=0;
-  var ROOFTOP={x0:-6.5,x1:6.5,z0:-6.9,z1:-.3,y:13.7,lift:{x:-9.9,z:-3.9,w:1.4,d:1.4}},LIFT_UP=3.2,LIFT_DOWN=2.6;
-  var ROOFTOP_SPOTS=[[-3.9,-4,.3],[-1.3,-4,-.3],[-2.6,-3.55,.3],[-1,-5.15,-.3],[2.7,-4.75,-.3],[4.7,-4.75,-.3],[2.5,-2.9,.3],[3.5,-2.15,-.3],[2.2,-1.75,.3],[-4.5,-1.9,.3],[-2.9,-1.9,-.3],[-1.7,-1.9,.3],[-.1,-1.9,-.3],[-2.3,-.85,.3]];
+  var ROOFTOP={x0:-6.5,x1:6.5,z0:-9.6,z1:-3.4,y:14.1,lift:{x:-9.9,z:-5,w:1.4,d:1.4}},LIFT_UP=3.2,LIFT_DOWN=2.6;
+  var ROOFTOP_SPOTS=[[-3.9,-6.7,.3],[-1.3,-6.7,-.3],[-2.6,-6.25,.3],[-1,-7.85,-.3],[2.7,-7.45,-.3],[4.7,-7.45,-.3],[2.5,-6,.3],[3.5,-5.25,-.3],[2.2,-4.85,.3],[-4.5,-5,.3],[-2.9,-5,-.3],[-1.7,-5,.3],[-.1,-5,-.3],[-2.3,-3.95,.3]];
   // The runner render's top face in sprite px: its near-left, near-right and far-left corners, and its length over width.
   var LOUNGE_RUNNER_PIN={left:[0,274],bottom:[146,360],top:[474,0],ratio:3.25};
   function loungeWaitSpot(place){return place<=0?LOUNGE_DOOR:{x:LOUNGE_DOOR.x+1.3+(place-1)*.65,z:LOUNGE_DOOR.z+.1}}
@@ -4244,7 +4245,7 @@ if(!SHOP_SPRITES){
     stations.push({index:6,x:-9.1,y:0,z:9.3,w:.8,d:1.3,h:1.1,tier:state.doorBuilt?spriteTier(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
     if(state.doorBuilt)person(-8.25,0,8.75,'#2f6b52',function(){drawPerson(-8.25,8.75,now,6,false,true,false)});
     // The lounge host works the rooftop: behind the bar once there is one, otherwise by the elevator's bridge.
-    if(state.lounge>0){var host=state.lounge>=2?{x:3.7,z:-6.05,f:.3}:{x:-5.2,z:-2.9,f:.3};person(host.x,ROOFTOP.y,host.z,'#2f6b52',function(){drawPerson(host.x,host.z,now,8,false,true,false,{amount:0,phase:0,facing:host.f})})}
+    if(state.lounge>0){var host=state.lounge>=2?{x:3.7,z:-8.75,f:.3}:{x:-5.2,z:-4,f:.3};person(host.x,ROOFTOP.y,host.z,'#2f6b52',function(){drawPerson(host.x,host.z,now,8,false,true,false,{amount:0,phase:0,facing:host.f})})}
     // Guests on the roof hold a spot for their session. A guest riding up or down stands in the elevator's cab, which
     // carries them between the old lounge room and the roof and waits wherever it last stopped.
     var taken={},spots=ROOFTOP_SPOTS.slice(0,loungeSeats(state.lounge)||4),lift=ROOFTOP.lift;
@@ -4582,7 +4583,7 @@ if(!SHOP_SPRITES){
   function updateMarkers(){
     var key=[centerX,centerY,unit,width,height,state.idStaff,state.lines.join(),securitySelected,selected,state.lounge,loungeSelected].join("|");
     if(updateMarkers.key===key)return;updateMarkers.key=key;
-    var securityPos=project(-9.1,.62,9.91),loungePos=map3d&&map3d.ok?project(-2.7,ROOFTOP.y+1.2,-3.3):project(LOUNGE_DOOR.x,1.5,DISPLAY_Z+.5),labelSize=Math.max(8,Math.min(10,unit*.24))*(width>=780?.85:1)+'px';
+    var securityPos=project(-9.1,.62,9.91),loungePos=map3d&&map3d.ok?project(-2.7,ROOFTOP.y+1.2,-6.1):project(LOUNGE_DOOR.x,1.5,DISPLAY_Z+.5),labelSize=Math.max(8,Math.min(10,unit*.24))*(width>=780?.85:1)+'px';
     securityMarker.style.fontSize=labelSize;loungeMarker.style.fontSize=labelSize;
     var labels=[{el:securityMarker,x:securityPos.x,y:securityPos.y},{el:loungeMarker,x:loungePos.x,y:loungePos.y}];
     markerEls.forEach(function(el,i){var station=machinePos[i],pos=project(station.x,.63+station.y,station.z+1.23);el.style.fontSize=labelSize;labels.push({el:el,x:pos.x,y:pos.y})});

@@ -27,9 +27,14 @@ export function buildRooftop(world, layout, { box, span, material }) {
   // The slab on top of the top floor's glazing, with a cream lip, and the deck boards on it.
   span(roof, x0, x1, y - .3, y, z0, z1, '#e4ddcc');
   span(roof, x0 - .05, x1 + .05, y - .34, y - .22, z0 - .05, z1 + .05, '#e1dbc0', { cast: false });
-  // Posts under the slab's open corners and along its front, like the floors below.
-  const below = layout.floors[2].y;
-  [[x0 + .3, z1 - .3], [0, z1 - .3], [x1 - .3, z1 - .3], [x1 - .3, (z0 + z1) / 2]].forEach(([px, pz]) => box(roof, px, below, pz, .3, y - .3 - below, .3, '#33372f'));
+  // The deck steps back from the top floor like the floors below it: posts stand on the top floor under its front,
+  // and its rear, out over the back pavement, rests on steel columns from the ground with a beam under the slab.
+  const below = layout.floors[2].y, rear = layout.floors[0].z - layout.floors[0].d / 2;
+  [[x0 + .3, z1 - .3], [x1 - .3, z1 - .3]].forEach(([px, pz]) => box(roof, px, below, pz, .3, y - .3 - below, .3, '#33372f'));
+  if (z0 < rear) {
+    [x0 + .3, 0, x1 - .3].forEach(px => box(roof, px, 0, z0 + .3, .32, y - .3, .32, STEEL));
+    span(roof, x0, x1, y - .62, y - .3, z0 + .14, z0 + .46, STEEL);
+  }
   const deckCanvas = document.createElement('canvas'); deckCanvas.width = 256; deckCanvas.height = 256;
   const dc = deckCanvas.getContext('2d');
   dc.fillStyle = '#b98654'; dc.fillRect(0, 0, 256, 256);
