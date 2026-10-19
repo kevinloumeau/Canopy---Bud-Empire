@@ -239,7 +239,7 @@ export function createMap3D(canvas, layout) {
   // The rooftop lounge as the map shows it at that tier (rooftop.js poses and trims a copy), wider than a station.
   // Null until the tier's Blender furniture is in.
   function loungePicture(tier, lifts) {
-    tier = Math.min(4, Math.max(1, tier || 1));
+    tier = Math.min(8, Math.max(1, tier || 1));
     const key = 'lounge.' + tier + '.' + (lifts ? 2 : 1);
     if (pictures[key]) return pictures[key];
     const copy = rooftop && rooftop.pictureCopy(tier, lifts);
