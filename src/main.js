@@ -3676,8 +3676,33 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var base=incomeRate(),reach=Math.max(0,state.money)+base*300,best=null,bestReach=null,LOOKAHEAD=6;
     function consider(r){r.value=r.gain/r.spend;if(!best||r.value>best.value)best=r;if(r.price<=reach&&(!bestReach||r.value>bestReach.value))bestReach=r}
     function tryLevels(get,set,limit){var start=get();var found=economy.stepsToGain(function(k){set(start+k);var gain=incomeRate()-base;set(start);return gain},limit,base*1e-4);return found}
-    LINES.forEach(function(_,i){if(!state.lines[i]||!isOpen(i))return;var found=tryLevels(function(){return state.lines[i]},function(v){state.lines[i]=v},LOOKAHEAD);if(!found)return;var spend=0;for(var k=0;k<found.steps;k++)spend+=economy.stationCost(LINES[i].base,state.lines[i]+k);consider({kind:'station',index:i,name:['Seeds','Grow','Harvest','Pack','Orders','Pickup'][i],price:cost(i),spend:spend,gain:found.gain})});
+    // Each tier level (10, 20, 30, 50, 75, 100) doubles a station's output, and lifting both counters to a tier doubles every
+    // basket; those jumps sit further off than the six-level look, so the next tier is priced as one bundle too.
+    LINES.forEach(function(_,i){if(!state.lines[i]||!isOpen(i))return;var name=['Seeds','Grow','Harvest','Pack','Orders','Pickup'][i],level=state.lines[i],spend=0,k;
+      var found=tryLevels(function(){return state.lines[i]},function(v){state.lines[i]=v},LOOKAHEAD);
+      if(found){for(k=0;k<found.steps;k++)spend+=economy.stationCost(LINES[i].base,level+k);consider({kind:'station',index:i,name:name,price:cost(i),spend:spend,gain:found.gain})}
+      var tier=TIER_LEVELS.find(function(l){return l>level});if(!tier||tier-level<=LOOKAHEAD)return;
+      state.lines[i]=tier;var tierGain=incomeRate()-base;state.lines[i]=level;if(!(tierGain>base*1e-4))return;
+      for(spend=0,k=level;k<tier;k++)spend+=economy.stationCost(LINES[i].base,k);consider({kind:'station',index:i,name:name,price:cost(i),spend:spend,gain:tierGain})});
+    // Stations tied for slowest only pay together: raising one alone leaves the others holding the line, so on its own
+    // it never shows a gain and the button kept buying shop upgrades instead. Price the tied group as one step and point
+    // the button at its cheapest member; each tap lifts one, and the rest stay tied until they are all raised.
+    var rates=LINES.map(function(_,i){return state.lines[i]&&isOpen(i)?stationThroughput(i):Infinity}),floor=Math.min.apply(null,rates);
+    var tied=LINES.map(function(_,i){return i}).filter(function(i){return isFinite(rates[i])&&rates[i]<=floor*(1+1e-6)});
+    if(tied.length>1){var levels=state.lines.slice(),targets=null,group=economy.stepsToGain(function(k){tied.forEach(function(i){state.lines[i]=levels[i]+k});var gain=incomeRate()-base;tied.forEach(function(i){state.lines[i]=levels[i]});return gain},LOOKAHEAD,base*1e-4);
+      if(group)targets=tied.map(function(i){return levels[i]+group.steps});
+      else{
+        // A floored counter tied with a producer only moves at its next tier, so try lifting every tied station to its own next tier.
+        targets=tied.map(function(i){return TIER_LEVELS.find(function(l){return l>levels[i]})||levels[i]+LOOKAHEAD});
+        tied.forEach(function(i,n){state.lines[i]=targets[n]});var tierGain=incomeRate()-base;tied.forEach(function(i){state.lines[i]=levels[i]});
+        group=tierGain>base*1e-4?{gain:tierGain}:null;
+      }
+      if(group){var spend=0;tied.forEach(function(i,n){for(var k=levels[i];k<targets[n];k++)spend+=economy.stationCost(LINES[i].base,k)});var first=tied.reduce(function(a,b){return cost(b)<cost(a)?b:a});consider({kind:'station',index:first,name:['Seeds','Grow','Harvest','Pack','Orders','Pickup'][first],price:cost(first),spend:spend,gain:group.gain})}}
     COMPONENTS.forEach(function(c,i){if(!componentUnlocked(i)||state[c.key]>=c.max)return;var start=state[c.key],found=tryLevels(function(){return state[c.key]},function(v){state[c.key]=v},Math.min(LOOKAHEAD,c.max-start));if(!found)return;var spend=0;for(var k=0;k<found.steps;k++){state[c.key]=start+k;spend+=componentCost(i)}state[c.key]=start;consider({kind:'component',index:i,name:c.name,price:componentCost(i),spend:spend,gain:found.gain})});
+    // A second or third order counter and the self-order kiosks take more orders at once once the desk is at its handoff
+    // floor, which no level can do.
+    var counterPrice=orderCounterCost(state.orderCounters);if(counterPrice!==null){state.orderCounters++;var counterGain=incomeRate()-base;state.orderCounters--;if(counterGain>base*1e-4)consider({kind:'counter',name:'Order counter',price:counterPrice,spend:counterPrice,gain:counterGain})}
+    var kioskStep=!state.kiosk?['kiosk',25000]:!state.secondKiosk?['secondKiosk',50000]:!state.thirdKiosk?['thirdKiosk',100000]:null;if(kioskStep){state[kioskStep[0]]=true;var kioskGain=incomeRate()-base;state[kioskStep[0]]=false;if(kioskGain>base*1e-4)consider({kind:'kiosk',name:'Kiosk',price:kioskStep[1],spend:kioskStep[1],gain:kioskGain})}
     var pick=bestReach||best||legacyRecommendation();
     // A fork still waiting on the player is named as the choice, not bought: the tap opens both sides in the Shop.
     if(pick.kind==='component'&&!componentAdvisable(pick.index)){var f=forkOf(COMPONENTS[pick.index].key);return{kind:'fork',fork:f.id,index:pick.index,name:f.name,price:pick.price}}
@@ -3686,7 +3711,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function openFork(index){showTray('boosts');if(shopBrowser&&shopBrowser.show)shopBrowser.show(shopBrowser.categoryOf('componentBuy'+index));renderUI();var card=$('componentBuy'+index).parentElement;if(card.scrollIntoView)card.scrollIntoView({block:'nearest'})}
   // One tap buys exactly what the button names, wherever it lives, and the card moves on to the next fix. Short of cash it
   // only says how much is missing, so a tap never opens a panel some times and buys other times.
-  function actOnRecommendation(){var r=recommendation();if(!r)return;if(r.kind==='fork')return openFork(r.index);if(state.money<r.price)return notify('Need '+fmt(r.price-state.money)+' more');if(r.kind==='component')upgradeComponent(r.index);else buyStationLevel(r.index)}
+  function actOnRecommendation(){var r=recommendation();if(!r)return;if(r.kind==='fork')return openFork(r.index);if(state.money<r.price)return notify('Need '+fmt(r.price-state.money)+' more');buyRecommendation(r)}
+  function buyRecommendation(r){if(r.kind==='component')upgradeComponent(r.index);else if(r.kind==='counter')expandOrderCounters();else if(r.kind==='kiosk')$('buyKiosk').onclick();else buyStationLevel(r.index)}
   $('flowAction').onclick=function(){if(state.gameSpeed===0)return setGameSpeed(1);if(!state.shopOpen){if(!state.doorBuilt)return buildStation('door');var next=state.lines.indexOf(0);return next<0?openShop():buildStation(next)}actOnRecommendation()};
   LINES.forEach(function(_,i){$('staffMax'+i).onclick=function(){trainStaffMax(i)}});
   $('trainIdChecker').onclick=function(){if(!state.doorBuilt)return buildStation('door');trainIdChecker(1)};
