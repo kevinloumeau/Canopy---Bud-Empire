@@ -27,6 +27,7 @@ export function createMap3D(canvas, layout) {
   let renderer;
   try {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
+    renderer.localClippingEnabled = true; // the shell's big fans are cut along the roof's far edge (shell.js)
   } catch (e) { return null; }
   if (!renderer.getContext()) return null;
   // Files still loading (models and textures), so scripts/snap3d.mjs knows when a capture shows the finished scene.

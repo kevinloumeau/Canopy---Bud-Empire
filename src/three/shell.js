@@ -111,22 +111,35 @@ export function buildShell(world, layout, { box, span, material, model }) {
 
   // The fan row is one model load drawn instanced (one draw per part for the whole row); the rotors' instances turn
   // with the big fan's rotor every frame. FAN_W is the housing's width in map units (.86 m); its origin is its centre.
-  // Kevin (2026-10-19 12:17Z, drawn on a close-up): two big fans side by side on the rear wall, ending at the corner
-  // post, tops right under the roof slab so its overhang covers their upper part. They stand just inside the glass so
-  // the panes and mullions pass behind the casings.
-  const FAN_W = 1.46, rowCount = layout.rooftop ? 2 : 0, fanScale = 1.8, fanStep = FAN_W * fanScale;
-  const rowA1 = s.topLanding.outer - .05, rowA0 = rowA1 - rowCount * fanStep, fanY = fanBase - fanBandH * fanScale / 2 - .02, fanZ = tRear + .035;
+  // Kevin (2026-10-19 12:30Z, drawn on a close-up): two big fans side by side on the rear wall plane, ending at the
+  // corner post, standing on the glazing's top above the windows. The roof must hide whatever of them its silhouette
+  // covers, so their depth is pushed back (FAN_PUSH, view units; the camera is orthographic, so they don't move on
+  // screen) behind the slab's far edge: the slab and anything on the roof draw over them, while below the roof's edge
+  // they show as usual. Above FAN_CUT they'd show past the slab's far edge on screen (the wall-plane height that lands
+  // on the same pixels as that edge), so they're clipped there and the roof reads as covering them.
+  const FAN_W = 1.46, FAN_PUSH = 4, rowCount = layout.rooftop ? 2 : 0, fanScale = 1.8, fanStep = FAN_W * fanScale;
+  const rowA1 = s.topLanding.outer - .05, rowA0 = rowA1 - rowCount * fanStep, fanY = fanBase + fanBandH * fanScale / 2 + .02, fanZ = tRear + .035;
+  const FAN_CUT = layout.rooftop ? layout.rooftop.y + .408 * (fanZ - layout.rooftop.z0) - .02 : 0, fanClip = [];
+  const pushedBack = m => {
+    const c = m.clone();
+    c.clippingPlanes = fanClip;
+    // Pushed last, after the clipping and fog varyings are set from the true position.
+    c.onBeforeCompile = shader => { shader.vertexShader = shader.vertexShader.replace(/}\s*$/, `  mvPosition.z -= ${FAN_PUSH.toFixed(1)};\n  gl_Position = projectionMatrix * mvPosition;\n}`); };
+    c.customProgramCacheKey = () => 'fanPush';
+    return c;
+  };
   const rowSpots = Array.from({ length: rowCount }, (_, k) => new THREE.Matrix4().makeTranslation(rowA0 + fanStep * (k + .5), fanY, fanZ).scale(new THREE.Vector3(fanScale, fanScale, fanScale)));
   let fanRow = null;
   if (model && rowCount) model('exhaust_fan.glb', 0, 0, 0, (scene, holder) => {
     const parentInverse = new THREE.Matrix4().copy(holder.parent.matrixWorld).invert(), rel = new THREE.Matrix4();
     const rowRotor = scene.getObjectByName('Rotor'), spinning = [];
+    fanClip.push(new THREE.Plane(new THREE.Vector3(0, -1, 0), FAN_CUT).applyMatrix4(holder.parent.matrixWorld));
     holder.updateMatrixWorld(true);
     scene.traverse(o => {
       if (!o.isMesh) return;
       let inRotor = false;
       for (let p = o; p; p = p.parent) if (p === rowRotor) inRotor = true;
-      const mesh = new THREE.InstancedMesh(o.geometry, o.material, rowCount);
+      const mesh = new THREE.InstancedMesh(o.geometry, Array.isArray(o.material) ? o.material.map(pushedBack) : pushedBack(o.material), rowCount);
       rel.multiplyMatrices(parentInverse, o.matrixWorld);
       rowSpots.forEach((spot, i) => mesh.setMatrixAt(i, new THREE.Matrix4().multiplyMatrices(spot, rel)));
       // Bounds over every placement, not the part's own spot at the origin, so the row isn't culled off screen.
