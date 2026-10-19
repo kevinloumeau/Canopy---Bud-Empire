@@ -29,3 +29,10 @@
  .sheet>[data-pane=factory] .selected-line.is-lounge{grid-template-columns:108px minmax(0,1fr)}
  .sheet .selected-line.is-lounge #upgradePreview{width:108px;height:92px}
 }
+/* Unlock road: one row under the upgrade bar, the next level as an open figure and what it gives beside it. */
+.sheet .machine-info .next-appearance{display:none}
+.sheet .selected-line #upgradeLevel{display:inline-block;margin-right:7px}
+.sheet .machine-info .next-appearance.unlock-road{display:inline-flex;align-items:baseline;gap:5px;margin:0;font-size:12px;color:var(--p-sage-80);line-height:1.4;max-width:100%;vertical-align:baseline}
+.sheet .machine-info .next-appearance.unlock-road[hidden]{display:none}
+.unlock-road b{font:600 12px 'DM Mono',monospace;color:var(--p-lime-85);font-variant-numeric:tabular-nums;white-space:nowrap}
+.unlock-road span{min-width:0}

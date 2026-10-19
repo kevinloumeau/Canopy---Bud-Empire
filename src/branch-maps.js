@@ -22,8 +22,8 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
   const jobs=[],fixtures=[];
   // In the 3D map, api.model places a Blender prop instead of the drawing below it once the model has loaded.
   const model=api.model||(()=>false),groundY=theme.land?theme.land.y:0;
-  const activeEvent=experience.event?.joined&&experience.event.open&&!experience.event.claimed;
-  const eventKind=(experience.event?.slot||0)%3;
+  const activeEvent=!!experience.contract?.open;
+  const eventKind=(experience.contract?.index||0)%3;
   const job=(x,z,draw)=>jobs.push({depth:depth({x,z}),draw});
   const patch=(x,z,w,d,color,y=.015)=>poly([p(x-w/2,y,z-d/2),p(x+w/2,y,z-d/2),p(x+w/2,y,z+d/2),p(x-w/2,y,z+d/2)],color);
   // Screen-blended light with a bright core and a long faint tail, so fixtures lift the ground they land on rather than tint it.
