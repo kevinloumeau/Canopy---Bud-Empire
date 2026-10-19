@@ -19,6 +19,14 @@ test('a moment always offers the right answer among at most three picks',()=>{
   assert.equal(createMoment(migrateShopPlay(),{id:1},[]),null);
 });
 
+test('nobody asks for a pick until the menu has two strains to choose between',()=>{
+  const play=migrateShopPlay();
+  assert.equal(createMoment(play,{id:1},[{strain:0,format:0,type:0}]),null);
+  assert.equal(play.sequence,0);
+  const m=createMoment(play,{id:2},[{strain:0,format:0,type:0},{strain:1,format:0,type:1}]);
+  assert.equal(m.choices.length,2);assert.ok(m.choices.some((_,i)=>judgeChoice(m,i).matched));
+});
+
 test('a shift closes after five minutes with a recap and advice',()=>{
   const play=migrateShopPlay();
   recordServed(play,{waitSeconds:40,momentMatched:true},100);

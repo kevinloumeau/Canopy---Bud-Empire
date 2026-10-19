@@ -74,3 +74,25 @@ test('branch income follows the main shop retail tier and survives migration',()
 });
 
 test('counter service efficiency improves every five levels',()=>{assert.deepEqual([0,1,5,6,10,11,29,30,31].map(counterLanes),[1,1,1,2,2,3,6,6,7])});
+
+test('security trains to level 75: old prices and speeds to level 9, then every level still shortens the check',async()=>{
+  const {securityCost,securityDuration,securityFloor,SECURITY_MAX_LEVEL,ID_CHECK_FLOOR}=await import('../src/economy.js');
+  assert.equal(SECURITY_MAX_LEVEL,75);
+  for(let l=0;l<9;l++)assert.equal(securityCost(l),staffCost(l));
+  for(let l=9;l<75;l++)assert.ok(securityCost(l+1)>securityCost(l));
+  assert.ok(securityCost(49)<5e6&&securityCost(49)>1e6);assert.ok(securityCost(74)<1e9);
+  // Never slower than the old door at any level a save could already hold, with or without the scanner.
+  for(const scanner of [0,5,20])for(let l=0;l<=9;l++)assert.ok(securityDuration(l,scanner)<=Math.max(ID_CHECK_FLOOR,.9/((1+l*.3)*(1+scanner*.12)))+1e-12);
+  // Every level helps, even with the scanner maxed.
+  for(const scanner of [0,20])for(let l=1;l<75;l++)assert.ok(securityDuration(l+1,scanner)<securityDuration(l,scanner));
+  assert.ok(Math.abs(securityFloor(75)-.1)<1e-12);assert.ok(Math.abs(securityDuration(75,0)-.1)<1e-12);
+});
+
+test('station looks spread over the level track while output tiers stay where they were',async()=>{
+  const {stationLook,nextLookLevel,STATION_LOOK_LEVELS,TIER_LEVELS}=await import('../src/economy.js');
+  assert.deepEqual([1,9,10,29,30,49,50,74,75,100,500].map(stationLook),[1,1,2,2,3,3,4,4,5,5,5]);
+  assert.deepEqual([1,10,29,30,74,75].map(nextLookLevel),[10,30,30,50,75,null]);
+  // Every look change lands on an output tier, so the doubling and the new model arrive together.
+  for(const l of STATION_LOOK_LEVELS)assert.ok(TIER_LEVELS.includes(l));
+  assert.deepEqual(TIER_LEVELS,[1,10,20,30,50,75,100]);
+});

@@ -102,7 +102,7 @@ def fan_leaf_mesh(name, m, n=7, L=.21):
     for k in range(n):
         a = -spread / 2 + spread * k / (n - 1)          # angle from the centre leaflet
         rel = 1 - .55 * (abs(a) / (spread / 2)) ** 1.4
-        ln, wd, steps = L * rel, L * rel * .095, 14
+        ln, wd, steps = L * rel, L * rel * .095, 8
         rot = Matrix.Rotation(-a, 3, "Z")
         mid, left, right = [], [], []
         for i in range(steps + 1):
@@ -125,67 +125,64 @@ def fan_leaf_mesh(name, m, n=7, L=.21):
     me.materials.append(m)
     return me
 
+def _blob(bm, rr, c, rad, squash=1.2, mat_index=0, jitter=.12):
+    """One calyx cluster: an 80-triangle icosphere, slightly squashed and jittered so it isn't a clean ball."""
+    res = bmesh.ops.create_icosphere(bm, subdivisions=2, radius=rad)
+    for v in res["verts"]:
+        v.co.z *= squash; v.co *= 1 + rr.uniform(-jitter, jitter)
+    bmesh.ops.translate(bm, verts=res["verts"], vec=c)
+    for f in {f for v in res["verts"] for f in v.link_faces}: f.material_index = mat_index; f.smooth = True
+
+def _hairs(bm, rr, pts, mat_index, r=.003):
+    """Pistils: each hair a thin three-sided strand of two segments (12 triangles), curling off its base point."""
+    for base, out in pts:
+        side = out.cross(Vector((0, 0, 1))); side = side.normalized() if side.length > .01 else Vector((1, 0, 0))
+        up = out.cross(side).normalized()
+        rings = []
+        for k in range(3):
+            c = base + out * (.007 * k) + side * (.003 * k * k); rad = r * (1 - .35 * k)
+            rings.append([bm.verts.new(c + (side * math.cos(t) + up * math.sin(t)) * rad) for t in (0, 2.094, 4.189)])
+        for k in range(2):
+            for j in range(3):
+                f = bm.faces.new((rings[k][j], rings[k][(j + 1) % 3], rings[k + 1][(j + 1) % 3], rings[k + 1][j])); f.material_index = mat_index
+
 def bud_mesh(name, h=.2, r=.055):
-    """A cola: a tapered cluster of small calyx spheres with a few orange pistils."""
-    bm = bmesh.new(); rr = random.Random(7)
-    for i in range(80):
-        z = h * (i / 80) ** .9
-        rad = r * (1 - z / h) ** .55 + .008
-        a = i * 2.4
-        s = rr.uniform(.018, .028) * (1 - .4 * z / h)
-        res = bmesh.ops.create_icosphere(bm, subdivisions=1, radius=s)
-        bmesh.ops.translate(bm, verts=res["verts"], vec=(math.cos(a) * rad * .7, math.sin(a) * rad * .7, z))
+    """A cola: six calyx clusters stacked on a taper (about 480 triangles) with a few orange pistil hairs.
+    Base at z=0, h tall.  Low-poly so whole benches of plants stay light in the game."""
+    bm = bmesh.new(); rr = random.Random(7); hairs = []
+    n = 6
+    for i in range(n):
+        t = i / (n - 1); z = h * (.1 + .78 * t); rad = r * (1 - .62 * t) * .78
+        a = i * 2.4; off = r * .22 * (1 - t)
+        c = Vector((math.cos(a) * off, math.sin(a) * off, z))
+        _blob(bm, rr, c, rad, 1.35)
+        for k in range(1 if i < n - 1 else 2):
+            b = rr.uniform(0, 6.3); out = Vector((math.cos(b), math.sin(b), .5)).normalized()
+            hairs.append((c + Vector((out.x * rad * .9, out.y * rad * .9, rad * .3)), out))
+    _hairs(bm, rr, hairs, 1, .0035)
     me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
-    for p in me.polygons: p.use_smooth = True
-    me.materials.append(BUD)
-    # pistils as a second material slot
-    bm = bmesh.new(); bm.from_mesh(me)
-    for i in range(10):
-        z = h * rr.uniform(.1, .95); rad = r * (1 - z / h) ** .55 + .02; a = rr.uniform(0, 6.3)
-        res = bmesh.ops.create_icosphere(bm, subdivisions=1, radius=.0045)
-        bmesh.ops.translate(bm, verts=res["verts"], vec=(math.cos(a) * rad, math.sin(a) * rad, z))
-        for f in {f for v in res["verts"] for f in v.link_faces}: f.material_index = 1
-    bm.to_mesh(me); bm.free()
-    me.materials.append(PISTIL)
+    me.materials.append(BUD); me.materials.append(PISTIL)
     return me
 
 
 def nug_mesh(name, r=.042):
-    """A trimmed, dried bud: a knobbly popcorn shape made of a few lumps of tiny calyxes in deep green, mid green
-    and frosty cream, with curled orange pistil hairs.  Base at z=0, about 1.4 r tall."""
-    bm = bmesh.new(); rr = random.Random(11); H = r * 1.4
-    lumps = [(Vector((0, 0, H * .45)), r * .62)]
+    """A trimmed, dried bud: four calyx clusters in deep green, mid green and frosty cream (about 320 triangles)
+    with six curled orange pistil hairs.  Base at z=0, about 1.4 r tall.  Low-poly so jars and trays full of buds
+    stay light in the game."""
+    bm = bmesh.new(); rr = random.Random(11); H = r * 1.4; hairs = []
+    lumps = [((0, 0, H * .42), r * .62, 0), ((r * .42, r * .1, H * .3), r * .45, 3),
+             ((-r * .3, r * .35, H * .38), r * .44, 0), ((-r * .05, -r * .25, H * .78), r * .4, 1)]
+    for c, rad, tone in lumps:
+        _blob(bm, rr, Vector(c), rad, 1.15, tone, .1)
     for i in range(6):
-        t = rr.uniform(.2, .85); a = i * 1.047 + rr.uniform(-.3, .3)
-        rad = r * .55 * math.sin(math.pi * t) + .004
-        lumps.append((Vector((math.cos(a) * rad, math.sin(a) * rad, H * t)), r * rr.uniform(.38, .5)))
-    lumps.append((Vector((rr.uniform(-.1, .1) * r, 0, H * .92)), r * .36))
-    tones = []
-    for c, lr in lumps:
-        for j in range(24):
-            u, v = rr.uniform(-.7, 1), rr.uniform(0, 6.283); q = math.sqrt(1 - u * u)
-            d = Vector((q * math.cos(v), q * math.sin(v), u))
-            res = bmesh.ops.create_icosphere(bm, subdivisions=1, radius=lr * rr.uniform(.3, .42))
-            for vv in res["verts"]: vv.co.z *= 1.25
-            bmesh.ops.translate(bm, verts=res["verts"], vec=c + d * lr * .78)
-            x = rr.random(); tones.append(1 if x < .4 else 3 if x > .9 else 0)
+        c, rad, _ = lumps[i % 4]; u, v = rr.uniform(0, .9), rr.uniform(0, 6.283); q = math.sqrt(1 - u * u)
+        out = Vector((q * math.cos(v), q * math.sin(v), u))
+        hairs.append((Vector(c) + out * rad * .95, out))
+    _hairs(bm, rr, hairs, 2, .0028)
+    zmin = min(v.co.z for v in bm.verts)
+    for v in bm.verts: v.co.z -= zmin
     me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
     for m in (DRY, DRY_D, PISTIL, FROST): me.materials.append(m)
-    bm = bmesh.new(); bm.from_mesh(me); bm.faces.ensure_lookup_table()
-    per = len(bm.faces) // len(tones)
-    for i, tone in enumerate(tones):
-        for f in bm.faces[i * per:(i + 1) * per]: f.material_index = tone
-    for i in range(30):                          # pistils: curled orange hairs standing off the lumps
-        c, lr = lumps[rr.randrange(len(lumps))]
-        u, v = rr.uniform(-.3, 1), rr.uniform(0, 6.283); q = math.sqrt(1 - u * u)
-        out = Vector((q * math.cos(v), q * math.sin(v), u)); base = c + out * lr * 1.05
-        side = out.cross(Vector((0, 0, 1))); side = side.normalized() if side.length > .01 else Vector((1, 0, 0))
-        for k in range(4):
-            res = bmesh.ops.create_icosphere(bm, subdivisions=1, radius=.003 - .0005 * k)
-            bmesh.ops.translate(bm, verts=res["verts"], vec=base + out * (.005 * k) + side * (.002 * k * k))
-            for f in {f for v_ in res["verts"] for f in v_.link_faces}: f.material_index = 2
-    bm.to_mesh(me); bm.free()
-    for p in me.polygons: p.use_smooth = True
     return me
 
 def leaf_at(name, base, yaw, pitch, scale, mesh):
