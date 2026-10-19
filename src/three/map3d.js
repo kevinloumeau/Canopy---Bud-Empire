@@ -8,6 +8,7 @@
 // This module is loaded on demand and imports only Three.js, so it never pulls the game's own modules into its chunk.
 import * as THREE from 'three';
 import { buildShell } from './shell.js';
+import { buildRooftop } from './rooftop.js';
 import { createBranchLayer } from './branch3d.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
@@ -122,6 +123,7 @@ export function createMap3D(canvas, layout) {
   buildShop(world, layout, { box, span, material, textured });
   const transport = buildTransport(scene, world, layout.transport, { box, material });
   const shell = buildShell(world, layout, { box, span, material });
+  const rooftop = buildRooftop(world, layout, { box, span, material });
 
   // Stations: one solid per station slot, resized and recoloured from the frame (tier, built, rising in).
   const stationMeshes = [], selectionRing = new THREE.Mesh(new THREE.RingGeometry(.86, 1, 48).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#e2c68a', transparent: true, opacity: .85, depthWrite: false }));
@@ -550,6 +552,7 @@ export function createMap3D(canvas, layout) {
 
     if (transport && frame.cargo) transport.update(frame.cargo);
     if (shell) shell.update(frame);
+    if (rooftop) rooftop.update(frame);
     Object.entries(fixtures).forEach(([key, holder]) => { holder.visible = !!(frame.fixtures && frame.fixtures[key]); });
 
     renderer.render(scene, camera);
