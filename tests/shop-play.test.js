@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {migrateShopPlay,createMoment,judgeChoice,tickShift,recordServed,shiftAdvice,tipFor,SHIFT_SECONDS} from '../src/shop-play.js';
+import {migrateShopPlay,createMoment,judgeChoice,tickShift,recordServed,shiftAdvice,tipFor,shiftTimeLeft,SHIFT_SECONDS} from '../src/shop-play.js';
 
 test('old saves get a fresh shop activity state and bad values are clamped',()=>{
   const p=migrateShopPlay(undefined);
@@ -35,4 +35,9 @@ test('a shift closes after five minutes with a recap and advice',()=>{
   assert.equal(play.recap.served,1);assert.equal(play.recap.matches,1);assert.equal(play.recap.queuePeak,9);assert.equal(play.shift.served,0);assert.ok(play.recapUnread);
   assert.equal(shiftAdvice(play.recap).station,4);
   assert.equal(tipFor(100),20);assert.equal(tipFor(1),1);
+});
+
+test('the shift clock counts whole minutes down to the last one',()=>{
+  assert.equal(shiftTimeLeft(0),'5 min left');assert.equal(shiftTimeLeft(174),'3 min left');
+  assert.equal(shiftTimeLeft(250),'Under a minute left');assert.equal(shiftTimeLeft(SHIFT_SECONDS+5),'Under a minute left');
 });
