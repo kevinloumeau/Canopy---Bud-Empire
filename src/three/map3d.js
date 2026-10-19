@@ -1128,7 +1128,7 @@ function buildTransport(scene, world, transport, { box, material }) {
     scene.add(mesh);
     const parts = [mesh];
     const ends = [[tube.points[0], tube.points[1]], [tube.points[tube.points.length - 1], tube.points[tube.points.length - 2]]];
-    ends.forEach(([p, q], i) => { if (!(i === 0 && tube.noCap0)) parts.push(ring(p, trueSpace(p).sub(trueSpace(q)).normalize(), R + .02, .07, brass)); });
+    ends.forEach(([p, q], i) => { if (!(i === 0 ? tube.noCap0 : tube.noCap1)) parts.push(ring(p, trueSpace(p).sub(trueSpace(q)).normalize(), R + .02, .07, brass)); });
     (tube.floorRings || []).forEach(p => parts.push(ring(p, new THREE.Vector3(0, 1, 0), R + .1, .08, brass)));
     const segments = [];
     let total = 0;
