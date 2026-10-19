@@ -34,6 +34,19 @@ export function assignOrderCounter(customers,count){
   head.waypoints=[{x:positions[index].x,z:5.65},{x:positions[index].x,z:ORDER_SPOT_Z}];
   return head;
 }
+// The kiosk line is one FIFO line too: a kiosk customer queues on the shared walkway with no kiosk of their own, and the
+// head of that line takes the first free kiosk once they are standing in it (never a kiosk picked at the door, which
+// left one kiosk idle while its would-be user waited behind another and walked through the people ahead to reach it).
+export function waitingForKiosk(c){return c.kiosk&&c.idChecked===true&&!c.ordered&&c.kioskIndex==null&&c.phase==='kiosk';}
+export function assignKiosk(customers,count){
+  const head=customers.find(waitingForKiosk);
+  if(!head||head.laneDistance==null||(head.waypoints&&head.waypoints.length))return null;
+  for(let index=0;index<count;index++){
+    if(customers.some(c=>c.kiosk&&!c.ordered&&c.phase!=='leaving'&&c.kioskIndex===index))continue;
+    head.kioskIndex=index;return head;
+  }
+  return null;
+}
 export function atOrderCounter(c,count){
   const position=orderCounterPositions(count)[c.orderCounter];
   return !!position&&!c.kiosk&&!c.ordered&&c.phase==='ordering'&&!c.walking&&Math.hypot(c.x-position.x,c.z-ORDER_SPOT_Z)<.01;

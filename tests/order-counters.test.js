@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {migrateOrderCounters,orderCounterCost,buyOrderCounter,orderCounterPositions,assignOrderCounter,atOrderCounter,orderAvailability,pickupLineSpots,pickupPlaces,ORDER_QUEUE_GATE,ORDER_SPOT_Z} from '../src/order-counters.js';
+import {migrateOrderCounters,orderCounterCost,buyOrderCounter,orderCounterPositions,assignOrderCounter,assignKiosk,atOrderCounter,orderAvailability,pickupLineSpots,pickupPlaces,ORDER_QUEUE_GATE,ORDER_SPOT_Z} from '../src/order-counters.js';
 
 test('old saves retain one counter and malformed expansion levels cannot add counters',()=>{
   for(const value of [undefined,null,NaN,Infinity,'3',{},-2,0])assert.equal(migrateOrderCounters(value),1);
@@ -46,4 +46,21 @@ test('a full pickup line holds the next order at the desks and kiosks until some
   assert.equal(orderAvailability(line,100,limit).places,0);
   // The head collects and walks off: exactly one spot opens for the next checked-out customer.
   line[0].bag=true;assert.equal(orderAvailability(line,100,limit).places,1);
+});
+function kioskCustomer(id,extra={}){return {id,idChecked:true,kiosk:true,ordered:false,bag:false,phase:'kiosk',walking:false,kioskIndex:null,laneDistance:1.3,waypoints:[],...extra};}
+test('the kiosk line sends its head to the first free kiosk, in line order, and nobody else',()=>{
+  const line=[kioskCustomer(1,{kioskIndex:0,laneDistance:0}),kioskCustomer(2,{kioskIndex:2,laneDistance:0}),kioskCustomer(3),kioskCustomer(4,{laneDistance:1.95})];
+  // Kiosk 1 is free: the customer at the front of the waiting line takes it, not the one behind.
+  assert.equal(assignKiosk(line,3),line[2]);assert.equal(line[2].kioskIndex,1);assert.equal(line[3].kioskIndex,null);
+  // Every kiosk is busy now, so the next customer keeps waiting.
+  assert.equal(assignKiosk(line,3),null);
+  // A kiosk frees when its customer orders; the next in line takes that one.
+  line[1].ordered=true;assert.equal(assignKiosk(line,3),line[3]);assert.equal(line[3].kioskIndex,2);
+  // Only kiosks that are installed are handed out.
+  const one=[kioskCustomer(5,{kioskIndex:0,laneDistance:0}),kioskCustomer(6)];assert.equal(assignKiosk(one,1),null);
+});
+test('a kiosk customer still walking in from the ID desk is not handed a kiosk yet',()=>{
+  const walking=[kioskCustomer(1,{phase:'entering',laneDistance:2.7,waypoints:[{x:-9.7,z:8.15}]})];
+  assert.equal(assignKiosk(walking,3),null);assert.equal(walking[0].kioskIndex,null);
+  walking[0].phase='kiosk';walking[0].waypoints=[];assert.equal(assignKiosk(walking,3),walking[0]);assert.equal(walking[0].kioskIndex,0);
 });
