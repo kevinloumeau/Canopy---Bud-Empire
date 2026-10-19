@@ -2571,6 +2571,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var smooth=function(v){v=Math.max(0,Math.min(1,v));return v*v*(3-2*v)};
     // A point straight behind the elevator tower on screen, s units further back.
     var towerX=ROOFTOP.lift.x,towerZ=(ROOFTOP.lift.z+ROOFTOP.lift2.z)/2,behind=function(s,y){return {x:towerX-s,y:y,z:towerZ-s}};
+    // Couriers from the odd spots leave the other way: straight out to the left on screen (-x and +z by the same
+    // amount keeps their depth), over the street and away.
+    var away=function(s,y){return {x:pad.x-s,y:y,z:pad.z+s}};
     var glide=function(from,to,u,arc){var e=smooth(u);return {x:from.x+(to.x-from.x)*e,y:from.y+(to.y-from.y)*e+arc*Math.sin(Math.PI*e),z:from.z+(to.z-from.z)*e}};
     for(var i=deliveryDrones.length-1;i>=0;i--){
       var drone=deliveryDrones[i];drone.age+=dt;var t=drone.age-drone.delay;
@@ -2586,7 +2589,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       else if(t<2){at=glide(behind(3,9.6+slot*.3),{x:bx,y:hover,z:bz},t/2,.6);alpha=Math.min(1,t/.6)}
       else if(t<2.6){at.y=hover-.1*Math.sin(Math.PI*(t-2)/.6)}
       else if(t<3.8){at.y=hover+2.4*smooth((t-2.6)/1.2)}
-      else if(t<7){at=glide(top,behind(3.6,11+slot*.3),(t-3.8)/3.2,.8);alpha=Math.min(1,(7-t)/.9)}
+      else if(t<7){at=glide(top,slot%2?away(7,11.4+slot*.3):behind(3.6,11+slot*.3),(t-3.8)/3.2,.8);alpha=Math.min(1,(7-t)/.9)}
       else if(t<7.4)continue;
       else{
         // Home again, empty: out from behind the tower, over its spot, and a short descent to settle on the pad.
