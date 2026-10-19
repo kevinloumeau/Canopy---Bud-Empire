@@ -21,7 +21,7 @@ import {mountStartGuide} from './start-guide.js';
 import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
-import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, PERSON_HEAD_Y, drawSprite, stationSprite, drawPersonSprite, drawWalker, streetItems, floorTextureFiles, fixtureSprite, shellSprite, spriteImage, drawBoxSprite, softShadow, sunShadow, SUN, SUN_REACH, townLayout, carPlacements, walkerPlacements, stationSpriteSize, stationTier as spriteTier } from './sunny-world.js';
+import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, PERSON_HEAD_Y, drawSprite, stationSprite, drawPersonSprite, drawWalker, streetItems, floorTextureFiles, fixtureSprite, shellSprite, spriteImage, spritesLoading, drawBoxSprite, softShadow, sunShadow, SUN, SUN_REACH, townLayout, carPlacements, walkerPlacements, stationSpriteSize, stationTier as spriteTier } from './sunny-world.js';
 import * as economy from './economy.js';
 import * as strains from './strains.js';
 import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, settleGoals, shiftStatus, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent, seasonStatus, claimSeason, SEASONS, RETIRED_WEEKLY, nextSeason, weeklySpecial, specialFactor } from './progression.js';
@@ -846,7 +846,26 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     }).catch(function(e){console.error('3D map could not load',e);mapStatus('The map could not load. Please retry.',true)});
   }
   // The loading card over the map: a message (with Retry when only a reload can help), or hidden once the map draws.
-  function mapStatus(text,retry){var card=$('loading');card.hidden=!text;if(text){$('loadStatus').textContent=text;$('loadRetry').hidden=!retry}}
+  function mapStatus(text,retry){var card=$('loading');clearTimeout(mapRevealTimer);mapSettleStart=0;card.classList.remove('reveal');card.hidden=!text;if(text){$('loadStatus').textContent=text;$('loadRetry').hidden=!retry}}
+  // The card stays over the map while the first frames draw underneath and ask for their models, textures and sprites;
+  // once nothing has been loading for a few frames (shaders compiled and textures uploaded by those frames too), the
+  // whole finished map fades in at once. A slow connection still gets the map after MAP_SETTLE_MAX ms.
+  // The first time the map appears, the stations pop up out of the floor one after another down the line (stationPop,
+  // 0 to 1 per station), starting as the card fades. Players who ask for reduced motion see them in place.
+  var introAt=0;
+  function stationPop(i){
+    // Until the card lifts they draw at full size underneath it, so their shaders and textures are ready for the pop.
+    if(!introAt)return 1;
+    var t=(performance.now()-introAt)/1000-.2-i*.11;
+    return t<=0?0:Math.min(1,t/.5);
+  }
+  var MAP_SETTLE_MAX=12000,mapSettleStart=0,mapQuietFrames=0,mapRevealTimer=0;
+  function mapSettled(wallNow){
+    if(!mapSettleStart){mapSettleStart=wallNow;mapQuietFrames=0}
+    mapQuietFrames=map3d.loading>0||spritesLoading()>0?0:mapQuietFrames+1;
+    return mapQuietFrames>=6||wallNow-mapSettleStart>MAP_SETTLE_MAX;
+  }
+  function mapReveal(){var card=$('loading');if(card.hidden)return;if(!introAt&&!SNAP&&!motionPreference.matches)introAt=performance.now();card.classList.add('reveal');clearTimeout(mapRevealTimer);mapRevealTimer=setTimeout(function(){card.hidden=true;card.classList.remove('reveal')},motionPreference.matches?0:500)}
   // Builds the 3D map on a fresh WebGL canvas. A lost context (the GPU reset, or iOS reclaimed it in the background)
   // is rebuilt the same way rather than trusted to come back, with the loading card up meanwhile.
   function startMap3d(){
@@ -2377,7 +2396,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var speed=state.lines.some(function(n){return n>0})?Math.min(.07,.02+production()*.00002):0;
     crateTime=(crateTime+frameDelta*speed*1.4)%1;cargoOdo=(cargoOdo+frameDelta*speed*14)%1e5;
     var stations=[],people=[];
-    function station(i,x,y,z,level,built,size){var tier=built?economy.stationLook(level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(tier-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,selected:selected===i&&!securitySelected&&!loungeSelected,clock:motionPreference.matches?6.3:motionClocks[i],act:taskActivity[i]})}
+    function station(i,x,y,z,level,built,size){var tier=built?economy.stationLook(level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(tier-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,pop:stationPop(i),selected:selected===i&&!securitySelected&&!loungeSelected,clock:motionPreference.matches?6.3:motionClocks[i],act:taskActivity[i]})}
     // People are the 2D map's own sprites, recorded as each would be drawn and stood up in the scene as flat figures
     // (capturePerson); a capsule under each casts its shadow.
     var figures=[];
@@ -2395,7 +2414,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
           person(p.x+spot.dx,p.y||0,p.z+spot.dz,'#2f6b52',function(){drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait)})})(i,p);
       }
     }
-    stations.push({index:6,x:ID_DESK.x,y:0,z:ID_DESK.z,w:1.3,d:2.4,h:1.6,tier:state.doorBuilt?economy.stationLook(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
+    stations.push({index:6,x:ID_DESK.x,y:0,z:ID_DESK.z,w:1.3,d:2.4,h:1.6,tier:state.doorBuilt?economy.stationLook(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,pop:stationPop(6),selected:securitySelected});
     // The doorman stands behind the booth, on the room side, facing the front door across the desk.
     if(state.doorBuilt)person(DOORMAN.x,0,DOORMAN.z,'#2f6b52',function(){drawPerson(DOORMAN.x,DOORMAN.z,now,6,false,true,false,{amount:0,phase:0,facing:1})});
     // The lounge host works the rooftop: behind the bar once there is one, otherwise by the elevator's bridge.
@@ -2533,6 +2552,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var wallDelta=Math.min(.1,Math.max(0,(wallNow-(render.last===undefined?wallNow:render.last))/1000)),frameDelta=wallDelta*state.gameSpeed;
     render.last=wallNow;
     // A freshly built station rises out of its site on wall time, so the reveal plays at the same pace at every game speed.
+    if(introAt){if(performance.now()-introAt>2000)introAt=0;render.invalidated=true}
     for(var site=0;site<buildRise.length;site++)if(buildRise[site]>0){buildRise[site]=motionPreference.matches?0:Math.max(0,buildRise[site]-wallDelta*1.7);render.invalidated=true}
     animationTime+=frameDelta*1000;tickTaskClocks(frameDelta);
     for(var slot=0;slot<4;slot++){var phase=(taskClocks[1]/9000+slot*.23)%1;var targetGrowth=state.stock[1]>=storageCapacity()?1:phase>.86?Math.max(0,(1-phase)/.14):Math.min(1,phase/.72);cropGrowth[slot]+=(targetGrowth-cropGrowth[slot])*(1-Math.exp(-frameDelta*4))}var now=animationTime;
@@ -2542,7 +2562,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
       requestAnimationFrame(render);return;
     }
-    if(!mapDrawn){mapDrawn=true;mapRebuilds=0;mapStatus(null)}
+    if(!mapDrawn&&(SNAP||mapSettled(wallNow))){mapDrawn=true;mapRebuilds=0;mapSettleStart=0;mapReveal()}
     if(state.empire.activeStore)renderBranch3d(now,frameDelta);else renderFrame3d(now,frameDelta,wallDelta);
   }
   // A courier's round trip, in seconds from its own start: it drops in empty over its parcel, takes it on board at

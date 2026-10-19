@@ -37,9 +37,17 @@ const RENDER_AXES = { 'station.grow.tier1': [.424, -.6], 'station.grow.tier3': [
 // pickup desk (2026-10-17, the PICKUP arch restored) is cropped tighter round its arch and side cabinet, so at the
 // station's width it came out small; this lays its counter over the earlier tier 3 desk's footprint.
 const TIER_SIZE = { 'station.pickup.tier3': { w: 4.1, drop: .62, ox: -.35 } };
+// Sprite files asked for and not yet in (or failed), so the loading card can stay up until the people and fixtures
+// the first frames asked for have arrived (spritesLoading, used by main.js) rather than popping in one by one.
+let spritesInFlight = 0;
+export function spritesLoading() { return spritesInFlight; }
 function lazySprite(name, file, size) {
   if (SPRITES[name] || !SUNNY || typeof Image === 'undefined') return;
-  const img = new Image(); img.decoding = 'async'; img.onerror = () => { SPRITES[name].missing = true; }; img.src = file;
+  const img = new Image(); img.decoding = 'async';
+  spritesInFlight++;
+  img.onload = () => { spritesInFlight--; };
+  img.onerror = () => { spritesInFlight--; SPRITES[name].missing = true; };
+  img.src = file;
   SPRITES[name] = Object.assign({ img }, size, TIER_SIZE[name], RENDER_AXES[name] ? { axes: RENDER_AXES[name] } : null);
 }
 // The shear that squares a render's floor edges (slopes mL down-right, mR up-right) to the map's. With x' = sx·x and

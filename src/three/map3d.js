@@ -131,9 +131,25 @@ export function createMap3D(canvas, layout) {
   // un-stretched against the world's height scale). onReady gets the scene once it is in the world, so the code-built
   // stand-in it replaces can be hidden; until then (or if it fails) the stand-in shows.
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
-  // Each loaded model remembers its file, for the per-model numbers in stats().
-  const loadFile = loader.load.bind(loader);
-  loader.load = (url, onLoad, onProgress, onError) => loadFile(url, gltf => { gltf.scene.userData.file = url.split('/').pop(); onLoad(gltf); }, onProgress, onError);
+  // Each loaded model remembers its file, for the per-model numbers in stats(). Its own setup (rigging, compactModel's
+  // merge) waits in a queue that runs a few milliseconds a frame, so models that arrive together are set up over
+  // several frames instead of stalling one.
+  const loadFile = loader.load.bind(loader), setups = [];
+  let setupPump = 0;
+  function runSetups() {
+    setupPump = 0;
+    const until = performance.now() + 6;
+    do {
+      const job = setups.shift();
+      try { job(); } catch (e) { console.warn('3D map: model setup failed', e); }
+    } while (setups.length && performance.now() < until);
+    if (setups.length) setupPump = requestAnimationFrame(runSetups);
+  }
+  loader.load = (url, onLoad, onProgress, onError) => loadFile(url, gltf => {
+    gltf.scene.userData.file = url.split('/').pop();
+    setups.push(() => onLoad(gltf));
+    if (!setupPump) setupPump = requestAnimationFrame(runSetups);
+  }, onProgress, onError);
   function model(file, x, y, z, onReady, parent = world) {
     loader.load(layout.modelBase + file, gltf => {
       prepare(gltf.scene);
@@ -698,10 +714,14 @@ export function createMap3D(canvas, layout) {
       body.visible = !model;
       const h = s.built ? s.h : .12, lift = s.rise ? -s.rise * s.rise * 1.1 : 0;
       group.position.set(s.x, s.y + lift, s.z);
+      // The first-load pop (frame pop, 0 to 1): grows out of the floor with a soft overshoot and settles.
+      const pop = s.pop === undefined ? 1 : s.pop, k = pop - 1, grow = pop >= 1 ? 1 : 1 + 2.4 * k * k * k + 1.4 * k * k;
+      group.scale.setScalar(Math.max(.001, grow));
+      if (pop <= 0) group.visible = false;
       body.scale.set(s.w, h, s.d);
       top.visible = s.built && !model; top.position.y = h; top.scale.set(s.w + .12, .08, s.d + .12);
       body.material = material(s.built ? TIER_COLOURS[Math.min(3, s.tier)] : '#e3b04b');
-      if (s.selected && !ringShown) {
+      if (s.selected && !ringShown && pop >= 1) {
         ringShown = true;
         selectionRing.position.set(s.x, s.y + .03, s.z);
         const r = Math.max(s.w, s.d) * .72;
@@ -826,8 +846,9 @@ export function createMap3D(canvas, layout) {
     fixturePicture,
     stats,
     get ok() { return !lost; },
-    get loading() { return loading; },
-    dispose() { renderer.dispose(); materials.forEach(m => m.dispose()); }
+    // Files still loading plus loaded models still waiting for their setup.
+    get loading() { return loading + setups.length; },
+    dispose() { cancelAnimationFrame(setupPump); setups.length = 0; renderer.dispose(); materials.forEach(m => m.dispose()); }
   };
 }
 
