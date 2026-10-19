@@ -22,7 +22,7 @@ rnd = random.Random(7); M, V = P.M, P.V
 BOX = K.mat("DeckPlanterGreen", "#1f5e40", .55); CAP = K.mat("DeckPlanterCap", "#e1dbc0", .45)
 EARTH = K.mat("PlanterSoil", "#514633", 1.); DARK = K.mat("PlanterFoot", "#2b302d", .5)
 SHRUBS = [K.mat("ShrubA", "#5a8644", .85, two_sided=True), K.mat("ShrubB", "#63904a", .85, two_sided=True), K.mat("ShrubC", "#6e9a52", .85, two_sided=True)]
-CORE = K.mat("ShrubCore", "#5f8a46", .9)
+CORE = K.mat("ShrubCore", "#4a7539", .9)
 
 W, D, H = .7 * M, LEN * M, .55 * V
 K.box("Foot", (W - .03, D - .03, .02), (0, 0, 0), DARK, .006, 1)
@@ -35,6 +35,6 @@ K.box("Soil", (W - .06, D - .06, .012), (0, 0, H + .05 * V - .008), EARTH, 0, 1)
 zs = [z for z in [.35 + .55 * i for i in range(10)] if z < LEN - .2] or [LEN / 2]
 for n, z in enumerate(zs):
     r = .32 * M * (1 if len(zs) > 1 or LEN > .9 else .7)
-    # A smooth mound with flat leaf rosettes over it, so it reads as a leafy shrub rather than a smooth ball.
-    VP.smooth_shrub(f"Shrub{n}", (rnd.uniform(-.01, .01), -(z - LEN / 2) * M, .8 * V - .02), r * 1.15, SHRUBS[n % 3:] + SHRUBS[:n % 3], CORE, rnd, n=10)
+    # Soft rounded leaf rosettes over a core, so it reads as a leafy shrub rather than a smooth ball.
+    VP.soft_shrub(f"Shrub{n}", (rnd.uniform(-.01, .01), -(z - LEN / 2) * M, .8 * V - .02), r * 1.3, SHRUBS[n % 3:] + SHRUBS[:n % 3], CORE, rnd, n=14)
 K.finish(OUT, NAME, ortho=1.2 + D, centre=(0, 0, .35))
