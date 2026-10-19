@@ -22,7 +22,6 @@
 .return-card #returnGoals[hidden]{display:none}
 .return-card #returnGoals::before{content:'';flex:0 0 7px;height:7px;border-radius:50%;background:var(--ui-brass)}
 .return-card #dismissReturn{min-height:46px;margin:0;border:0;border-radius:12px;background:var(--ui-brass);color:var(--ui-brass-ink);font-size:14px;font-weight:700;box-shadow:none}
-.return-card #dismissReturn:active{transform:translateY(1px)}
 .return-card #dismissReturn:focus-visible{outline:2px solid var(--ui-ink);outline-offset:2px}
 
 /* Settings: one grouped list in a well, values in soft mono, the reset row set apart in coral. */
@@ -80,3 +79,11 @@
 #resetModal #resetCancel{border:1px solid var(--ui-edge);background:none;color:var(--ui-ink)}
 #resetModal #resetConfirm{border:1px solid var(--ui-coral);background:none;color:var(--ui-coral)}
 @media(prefers-reduced-transparency:reduce){.age-card,.guide-card,#resetModal .modal{background:#1d3226;-webkit-backdrop-filter:none;backdrop-filter:none}}
+
+/* Pressed states (Phase 6): every glass control dips the same way the sheet's buttons already do. Rows darken instead
+   of shrinking so a full-width line doesn't jump. */
+.hud button,.map-controls button,.shop-activity,.return-card button,.age-actions button,.guide-actions button,#resetModal .modal button,.modal .settings-close{transition:transform .12s ease,background-color .16s ease,filter .16s ease}
+.hud button:not(:disabled):active,.map-controls button:active,.shop-activity:active,.return-card button:active,.age-actions button:active,
+.guide-actions button:active,#resetModal .modal button:active,.modal .settings-close:active{transform:scale(.96)}
+.modal .settings-row:active{background:var(--ui-well)}
+@media(prefers-reduced-motion:reduce){.hud button:active,.map-controls button:active,.shop-activity:active,.return-card button:active,.age-actions button:active,.guide-actions button:active,#resetModal .modal button:active,.modal .settings-close:active{transform:none}}
