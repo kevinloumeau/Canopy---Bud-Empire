@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {makeLifts,tickLifts,LIFT_SEATS,LIFT_CLEAR} from '../src/lounge-lifts.js';
+import {makeLifts,tickLifts,LIFT_SEATS,LIFT_CLEAR,CAB_SLOTS} from '../src/lounge-lifts.js';
 
 let asks=0;
 const guest=(id,lift,extra={})=>({id,phase:'lounge',lift,liftAsk:++asks,liftShaft:null,shaft:0,...extra});
@@ -16,11 +16,11 @@ function run(lifts,customers,seconds,onStep){
 }
 
 test('the cab waits on the ground until every guest it takes has stepped in',()=>{
-  const lifts=makeLifts(),customers=[1,2,3,4].map(id=>guest(id,'waitUp'));
+  const lifts=makeLifts(),customers=[1,2,3,4,5,6].map(id=>guest(id,'waitUp'));
   let leftWithBoarders=false;
   run(lifts,customers,30,()=>{if(lifts[0].y>0&&customers.some(c=>c.lift==='boarding'&&c.liftShaft===0&&lifts[0].boarding===null))leftWithBoarders=true});
   assert.equal(leftWithBoarders,false);
-  assert.ok(customers.slice(0,LIFT_SEATS).every(c=>c.lift==='roof'),'the first three rode up together');
+  assert.ok(customers.slice(0,LIFT_SEATS).every(c=>c.lift==='roof'),'a full cab rode up together');
 });
 
 test('on the roof the cab stays until every rider is out of the door before going back down',()=>{
@@ -55,4 +55,16 @@ test('a guest who vanishes mid-ride does not jam the cab',()=>{
   customers.splice(0,2);
   run(lifts,customers,10);
   assert.equal(lifts[0].boarding,null);assert.equal(lifts[0].unloading,null);assert.equal(lifts[0].trip,null);
+});
+
+test('a cab takes five guests, each with their own spot inside, and clears a long roof line faster',()=>{
+  assert.equal(LIFT_SEATS,5);assert.equal(CAB_SLOTS.length,LIFT_SEATS);
+  for(let a=0;a<CAB_SLOTS.length;a++)for(let b=a+1;b<CAB_SLOTS.length;b++)assert.ok(Math.hypot(CAB_SLOTS[a][0]-CAB_SLOTS[b][0],CAB_SLOTS[a][1]-CAB_SLOTS[b][1])>.35,'riders stand apart');
+  CAB_SLOTS.forEach(([x,z])=>assert.ok(Math.abs(x)<.4&&Math.abs(z)<.4,'inside the cab'));
+  const lifts=makeLifts();lifts[0].y=1;
+  const customers=[...Array(12).keys()].map(id=>guest(id,'waitDown'));
+  let t=0;const left=[];
+  while(left.length<12&&t<120){tickLifts(lifts,customers,.05,{leave:c=>{c.phase='leaving';left.push(c)}});t+=.05}
+  assert.equal(left.length,12);
+  assert.ok(t<27,`twelve guests took ${t.toFixed(1)} s to come down (it was about 37 s with three seats)`);
 });
