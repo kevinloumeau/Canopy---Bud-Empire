@@ -1,27 +1,31 @@
-/* Stock strip on forest glass: open figures (line icon + mono count) with a hairline fill track under each, no boxes.
-   The track shows stock against storage; a full stage fills it in brass instead of the old dotted underline, so the count stays readable.
-   Deliveries sit after a short hairline and only take a brass wash when requests are piling up (the next thing to tap). */
+/* Stock strip on forest glass: open figures (line icon + mono count), no boxes.
+   After each count a small mark says what the stage is doing: a sage triangle while it builds up, a coral one while it drains,
+   "max" when storage is full and the station feeding it has stopped. The stage made by the bottleneck station turns brass,
+   the same accent as the bottleneck card, and tapping it opens that station to upgrade. */
 .sheet #stockStatus{gap:0;padding:8px 4px 6px;border-top:1px solid var(--ui-edge);color:var(--ui-soft)}
-.sheet #stockStatus .stock-item{position:relative;flex:1 1 auto;gap:5px;padding:4px 6px 8px;border-radius:10px;background:none;box-shadow:none;color:var(--ui-soft);transition:background-color .2s ease,color .2s ease}
+.sheet #stockStatus .stock-item{position:relative;flex:1 1 auto;gap:5px;padding:4px 6px;border-radius:10px;background:none;box-shadow:none;color:var(--ui-soft);transition:background-color .2s ease,color .2s ease}
 .sheet #stockStatus .stock-item svg{width:16px;height:18px;opacity:.85}
 .sheet #stockStatus .stock-item b{font:500 13px 'DM Mono',monospace;color:var(--ui-ink);letter-spacing:-.03em}
 .sheet #stockStatus .stock-item b small{color:var(--ui-soft);font-weight:500}
 .sheet #stockStatus .stock-item b.stock-full{color:var(--ui-ink);text-decoration:none}
-.sheet #stockStatus .stock-item::after{content:'';position:absolute;left:8px;right:8px;bottom:2px;height:2px;border-radius:2px;pointer-events:none;
- background:linear-gradient(90deg,var(--stock-bar,rgba(242,240,230,.42)) calc(var(--fill,0)*100%),rgba(255,255,255,.08) 0)}
-.sheet #stockStatus .stock-item:has(b.stock-full)::after{--stock-bar:var(--ui-brass)}
+.sheet #stockStatus .stock-item:not(.stock-online)::after{content:'';flex:0 0 auto;width:7px;height:6px;margin-left:-2px}
+.sheet #stockStatus .stock-item[data-trend=up]::after{background:#9cc386;clip-path:polygon(50% 0,100% 100%,0 100%)}
+.sheet #stockStatus .stock-item[data-trend=down]::after{background:var(--ui-coral);clip-path:polygon(0 0,100% 0,50% 100%)}
+.sheet #stockStatus .stock-item[data-trend=full]::after{content:'max';width:auto;height:auto;font:500 9px 'DM Mono',monospace;letter-spacing:.02em;color:var(--ui-soft)}
+.sheet #stockStatus .stock-item.is-bottleneck{color:var(--ui-brass)}
+.sheet #stockStatus .stock-item.is-bottleneck svg{opacity:1}
+.sheet #stockStatus .stock-item.is-bottleneck b{color:var(--ui-brass)}
 @media(hover:hover){.sheet #stockStatus .stock-item:hover{background:var(--ui-well-soft)}}
 .sheet #stockStatus .stock-item:active{background:var(--ui-well)}
 
 /* Deliveries: same open figure after a short hairline; quiet when empty, brass as requests wait. */
-.sheet #stockStatus .stock-online{flex:0 0 auto;margin-left:6px;padding:4px 10px 8px;border-left:0;background:none;box-shadow:none}
-.sheet #stockStatus .stock-online::before{content:'';position:absolute;left:-4px;top:8px;bottom:10px;width:1px;background:var(--ui-edge)}
+.sheet #stockStatus .stock-online{flex:0 0 auto;margin-left:6px;padding:4px 10px;border-left:0;background:none;box-shadow:none}
+.sheet #stockStatus .stock-online::before{content:'';position:absolute;left:-4px;top:8px;bottom:8px;width:1px;background:var(--ui-edge)}
 .sheet #stockStatus .stock-online[data-heat="0"]{color:rgba(242,240,230,.4)}
 .sheet #stockStatus .stock-online[data-heat="0"] b{color:var(--ui-soft)}
 .sheet #stockStatus .stock-online[data-heat="1"],.sheet #stockStatus .stock-online[data-heat="2"]{color:var(--ui-brass)}
 .sheet #stockStatus .stock-online[data-heat="1"] b,.sheet #stockStatus .stock-online[data-heat="2"] b{color:var(--ui-ink)}
 .sheet #stockStatus .stock-online[data-heat="3"]{color:var(--ui-brass);background:var(--ui-brass-wash);box-shadow:none}
 .sheet #stockStatus .stock-online[data-heat="3"] b{color:var(--ui-brass);font-size:13px}
-.sheet #stockStatus .stock-online::after{--stock-bar:var(--ui-brass)}
 
-@media(max-width:360px){.sheet #stockStatus .stock-item{gap:4px;padding-inline:3px}.sheet #stockStatus .stock-item::after{left:5px;right:5px}}
+@media(max-width:360px){.sheet #stockStatus .stock-item{gap:4px;padding-inline:3px}}
