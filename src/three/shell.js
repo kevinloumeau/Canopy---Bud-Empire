@@ -207,7 +207,7 @@ export function buildShell(world, layout, { box, span, material, model }) {
   let signLit = null;
   if (typeof FontFace === 'function' && document.fonts) {
     new FontFace('Fredoka', `url(${new URL('../fonts/Fredoka-SemiBold.ttf', layout.modelBase).href})`, { weight: '600' }).load()
-      .then(font => { document.fonts.add(font); signLit = null; boardText = null; })
+      .then(font => { document.fonts.add(font); signLit = null; boardText = null; rolling = true; })
       .catch(() => {});
     new FontFace('Yellowtail', `url(${new URL('../fonts/Yellowtail-Regular.woff2', layout.modelBase).href})`).load()
       .then(font => { document.fonts.add(font); signLit = null; })
@@ -244,18 +244,48 @@ export function buildShell(world, layout, { box, span, material, model }) {
     const uv = o.geometry.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setY(i, 1 - uv.getY(i)); uv.needsUpdate = true;
     o.material = boardFace.material;
   }); });
-  let boardText = null;
-  function paintBoard(lines, dim) {
-    const key = lines.join('|') + dim.toFixed(2);
-    if (key === boardText) return; boardText = key;
-    const c = boardCanvas.getContext('2d'), cols = lines[0] ? lines[0].length : 21, rows = lines.length, cw = 1024 / cols, rh = 240 / rows;
+  // Split-flap letters: a cell whose letter changes rolls through the alphabet for a moment, rippling left to right
+  // and row by row, each step a flap folding down over the hinge, the way a Solari board does; on load the whole board
+  // flips in from blank. The canvas is repainted (and the texture marked for upload) only while something moves.
+  const FLAPS = ' ABCDEFGHIJKLMNOPQRSTUVWXYZ$0123456789.,', STEP = 55, ROLL = 9;
+  let cells = null, boardText = null, rolling = false;
+  function paintBoard(lines, now) {
+    const rows = lines.length, cols = lines[0] ? lines[0].length : 21;
+    if (!cells || cells.length !== rows || cells[0].length !== cols) cells = lines.map(l => [...l].map(() => ({ from: ' ', to: ' ', start: 0 })));
+    lines.forEach((line, r) => [...line].forEach((ch, k) => {
+      const cell = cells[r][k];
+      if (cell.to !== ch) { cell.from = cell.to; cell.to = ch; cell.start = now + k * 35 + r * 90; rolling = true; }
+    }));
+    if (!rolling && boardText !== null) return;
+    boardText = '';
+    const c = boardCanvas.getContext('2d'), cw = 1024 / cols, rh = 240 / rows;
     c.fillStyle = '#131617'; c.fillRect(0, 0, 1024, 240);
     c.font = `600 ${Math.round(rh * .66)}px ${SIGN_FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle';
-    lines.forEach((line, r) => [...line].forEach((ch, k) => {
-      const x = k * cw, y = r * rh;
-      c.fillStyle = '#363c3e'; c.fillRect(x + 2, y + 4, cw - 4, rh / 2 - 4);
-      c.fillStyle = '#2b3133'; c.fillRect(x + 2, y + rh / 2, cw - 4, rh / 2 - 4);
-      if (ch !== ' ') { c.fillStyle = '#efe4c8'; c.fillText(ch, x + cw / 2, y + rh / 2 + 1); }
+    // One half of a flap (top or bottom) carrying a letter, folded towards the hinge by `fold` (1 flat, 0 edge-on).
+    const half = (ch, x, y, top, fold) => {
+      const hinge = y + rh / 2, h = (rh / 2 - 4) * fold;
+      c.save(); c.beginPath(); c.rect(x + 2, top ? hinge - h : hinge, cw - 4, h); c.clip();
+      c.fillStyle = top ? '#363c3e' : '#2b3133'; c.fillRect(x + 2, top ? hinge - h : hinge, cw - 4, h);
+      if (ch !== ' ') { c.translate(0, hinge); c.scale(1, fold); c.fillStyle = '#efe4c8'; c.fillText(ch, x + cw / 2, 1); }
+      c.restore();
+    };
+    rolling = false;
+    cells.forEach((row, r) => row.forEach((cell, k) => {
+      const x = k * cw, y = r * rh, t = now - cell.start;
+      let shown = cell.to, next = cell.to, f = 1;
+      if (t < 0) { shown = next = cell.from; rolling = true; }
+      else if (cell.from !== cell.to && t < STEP * ROLL) {
+        // Roll through ROLL letters ending on the new one, a flap every STEP ms.
+        const i = Math.floor(t / STEP), base = FLAPS.indexOf(cell.to) + FLAPS.length - ROLL;
+        shown = i ? FLAPS[(base + i) % FLAPS.length] : cell.from; next = FLAPS[(base + i + 1) % FLAPS.length];
+        f = (t % STEP) / STEP; rolling = true;
+      } else cell.from = cell.to;
+      if (f >= 1) { half(shown, x, y, true, 1); half(shown, x, y, false, 1); }
+      else {
+        // Behind: the next letter's top and the current letter's bottom; in front, the falling flap.
+        half(next, x, y, true, 1); half(shown, x, y, false, 1);
+        if (f < .5) half(shown, x, y, true, 1 - f * 2); else half(next, x, y, false, f * 2 - 1);
+      }
       c.fillStyle = '#0d1113'; c.fillRect(x + 2, y + rh / 2 - 1, cw - 4, 2);
     }));
     boardTexture.needsUpdate = true;
@@ -299,7 +329,13 @@ export function buildShell(world, layout, { box, span, material, model }) {
   span(exitUnit, (d.x0 + d.x1) / 2 - .4, (d.x0 + d.x1) / 2 + .4, d.h + .3, d.h + .56, gRear, gRear + .08, '#1d3028');
   const exitLamp = new THREE.Mesh(new THREE.BoxGeometry(.66, .14, .04), new THREE.MeshLambertMaterial({ color: '#d84a3a', emissive: '#ff5a3c', emissiveIntensity: .4 }));
   exitLamp.position.set((d.x0 + d.x1) / 2, d.h + .43, gRear + .1); exitUnit.add(exitLamp);
-  swap(exitUnit, 'exit_door.glb', (d.x0 + d.x1) / 2, 0, gRear, scene => glowFrom(scene, 'ExitLamp', exitLamp.material));
+  swap(exitUnit, 'exit_door.glb', (d.x0 + d.x1) / 2, 0, gRear, scene => {
+    glowFrom(scene, 'ExitLamp', exitLamp.material);
+    // The model's leaf stands open into the shop; Kevin (2026-10-19) wants it to swing out, so it turns the other way
+    // about the same hinge, hung from the street face of the frame.
+    const leaf = scene.getObjectByName('DoorLeaf');
+    if (leaf) { leaf.rotation.y = -leaf.rotation.y; leaf.position.z = -leaf.position.z; }
+  });
 
   // The arched merch cabinet against the lounge's right wall, its glazed face toward the exit lane.
   const cab = s.merchCabinet, cabinet = unit(), cabGoods = goodsFor(cabinet);
@@ -413,7 +449,7 @@ export function buildShell(world, layout, { box, span, material, model }) {
       boardedExit.visible = !open;
       paintSign(open);
       signMat.color.setScalar(open ? 1 : .8);
-      if (frame.menuLines) paintBoard(frame.menuLines, 0);
+      if (frame.menuLines) paintBoard(frame.menuLines, performance.now());
       lampShades.forEach(l => { l.material.emissiveIntensity = open ? .5 + night * 1.2 : 0; });
       sconce.material.emissiveIntensity = .3 + night * 1.4;
       exitLamp.material.emissiveIntensity = .4 + night * 1.2;

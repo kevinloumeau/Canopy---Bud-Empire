@@ -99,7 +99,7 @@ def fan_leaf_mesh(name, m, n=7, L=.21):
     for k in range(n):
         a = -spread / 2 + spread * k / (n - 1)          # angle from the centre leaflet
         rel = 1 - .55 * (abs(a) / (spread / 2)) ** 1.4
-        ln, wd, steps = L * rel, L * rel * .095, 14
+        ln, wd, steps = L * rel, L * rel * .095, 8
         rot = Matrix.Rotation(-a, 3, "Z")
         mid, left, right = [], [], []
         for i in range(steps + 1):
@@ -122,29 +122,45 @@ def fan_leaf_mesh(name, m, n=7, L=.21):
     me.materials.append(m)
     return me
 
+def _blob(bm, rr, c, rad, squash=1.2, mat_index=0, jitter=.12):
+    """One calyx cluster: an 80-triangle icosphere, slightly squashed and jittered so it isn't a clean ball."""
+    res = bmesh.ops.create_icosphere(bm, subdivisions=2, radius=rad)
+    for v in res["verts"]:
+        v.co.z *= squash; v.co *= 1 + rr.uniform(-jitter, jitter)
+    bmesh.ops.translate(bm, verts=res["verts"], vec=c)
+    for f in {f for v in res["verts"] for f in v.link_faces}: f.material_index = mat_index; f.smooth = True
+
+def _hairs(bm, rr, pts, mat_index, r=.003):
+    """Pistils: each hair a thin three-sided strand of two segments (12 triangles), curling off its base point."""
+    for base, out in pts:
+        side = out.cross(Vector((0, 0, 1))); side = side.normalized() if side.length > .01 else Vector((1, 0, 0))
+        up = out.cross(side).normalized()
+        rings = []
+        for k in range(3):
+            c = base + out * (.007 * k) + side * (.003 * k * k); rad = r * (1 - .35 * k)
+            rings.append([bm.verts.new(c + (side * math.cos(t) + up * math.sin(t)) * rad) for t in (0, 2.094, 4.189)])
+        for k in range(2):
+            for j in range(3):
+                f = bm.faces.new((rings[k][j], rings[k][(j + 1) % 3], rings[k + 1][(j + 1) % 3], rings[k + 1][j])); f.material_index = mat_index
+
 def bud_mesh(name, h=.2, r=.055):
-    """A cola: a tapered cluster of small calyx spheres with a few orange pistils."""
-    bm = bmesh.new(); rr = random.Random(7)
-    for i in range(80):
-        z = h * (i / 80) ** .9
-        rad = r * (1 - z / h) ** .55 + .008
-        a = i * 2.4
-        s = rr.uniform(.018, .028) * (1 - .4 * z / h)
-        res = bmesh.ops.create_icosphere(bm, subdivisions=1, radius=s)
-        bmesh.ops.translate(bm, verts=res["verts"], vec=(math.cos(a) * rad * .7, math.sin(a) * rad * .7, z))
+    """A cola: six calyx clusters stacked on a taper (about 480 triangles) with a few orange pistil hairs.
+    Base at z=0, h tall.  Low-poly so whole benches of plants stay light in the game."""
+    bm = bmesh.new(); rr = random.Random(7); hairs = []
+    n = 6
+    for i in range(n):
+        t = i / (n - 1); z = h * (.1 + .78 * t); rad = r * (1 - .62 * t) * .78
+        a = i * 2.4; off = r * .22 * (1 - t)
+        c = Vector((math.cos(a) * off, math.sin(a) * off, z))
+        _blob(bm, rr, c, rad, 1.35)
+        for k in range(1 if i < n - 1 else 2):
+            b = rr.uniform(0, 6.3); out = Vector((math.cos(b), math.sin(b), .5)).normalized()
+            hairs.append((c + Vector((out.x * rad * .9, out.y * rad * .9, rad * .3)), out))
+    _hairs(bm, rr, hairs, 1, .0035)
     me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
-    for p in me.polygons: p.use_smooth = True
-    me.materials.append(BUD)
-    # pistils as a second material slot
-    bm = bmesh.new(); bm.from_mesh(me)
-    for i in range(10):
-        z = h * rr.uniform(.1, .95); rad = r * (1 - z / h) ** .55 + .02; a = rr.uniform(0, 6.3)
-        res = bmesh.ops.create_icosphere(bm, subdivisions=1, radius=.0045)
-        bmesh.ops.translate(bm, verts=res["verts"], vec=(math.cos(a) * rad, math.sin(a) * rad, z))
-        for f in {f for v in res["verts"] for f in v.link_faces}: f.material_index = 1
-    bm.to_mesh(me); bm.free()
-    me.materials.append(PISTIL)
+    me.materials.append(BUD); me.materials.append(PISTIL)
     return me
+
 
 LEAF_MESHES = [fan_leaf_mesh("FanLeafDeep", LEAF_A), fan_leaf_mesh("FanLeafFresh", LEAF_B), fan_leaf_mesh("FanLeafSmall", LEAF_B, 5, .12)]
 BUD_MESH = bud_mesh("Cola")

@@ -54,7 +54,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     next.shopOpen=old.shopOpen!==false;next.doorBuilt=next.shopOpen||old.doorBuilt===true;
     ['trafficLevel','pickupLevel','readyLevel','curingLevel','durationLevel','kioskSpeedLevel','onlineBonusLevel','comfortLevel','scannerLevel','webLevel','seedBatchLevel','growBatchLevel','harvestBatchLevel','packSpeedLevel','serviceLevel','signLevel','loyaltyLevel','basketLevel','terpeneLevel','breedingLevel','displayLevel','trendLevel','fleetLevel','cargoLevel','repeatLevel'].forEach(function(key){next[key]=Math.floor(finite(old[key],0,0,key==='pickupLevel'?12:20))});
     next.offlineLevel=Math.floor(finite(old.offlineLevel,0,0,5));next.spenderClock=finite(old.spenderClock,180,0,600);next.rushTime=finite(old.rushTime,0,0,120);next.crosses=migrateCrosses(old.crosses,old.library,old.breed);next.reminders=old.reminders===true;next.perks=migratePerks(old.perks,next.empire.shares);
-    next.idStaff=Math.floor(finite(old.idStaff,0,0,10000));
+    next.idStaff=Math.floor(finite(old.idStaff,0,0,economy.SECURITY_MAX_LEVEL));
     next.strains=STRAINS.map(function(_,i){return Math.floor(finite(old.strains&&old.strains[i],i===0?1:0,i===0?1:0,10))});
     next.activeStrain=Math.floor(finite(old.activeStrain,0,0,STRAINS.length-1));if(!next.strains[next.activeStrain])next.activeStrain=0;
     next.menuStrains=STRAINS.map(function(_,i){return i}).filter(function(i){return next.strains[i]>0&&(!Array.isArray(old.menuStrains)||old.menuStrains.indexOf(i)>=0)});if(!next.menuStrains.length)next.menuStrains=[0];next.strainTrend=strains.migrateTrend(old.strainTrend,STRAINS.length);next.vipBuzz=finite(old.vipBuzz,0,0,strains.VIP_BUZZ_SECONDS);
@@ -80,7 +80,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var speedOne=speedButtons.filter(function(b){return b.getAttribute('data-speed')==='1'})[0],PLAY_GLYPH=speedOne.innerHTML,PAUSE_GLYPH='<svg viewBox="0 0 18 16" fill="currentColor" aria-hidden="true"><path d="M5 3.5h3v9H5zM10 3.5h3v9h-3z"></path></svg>';
   speedButtons.forEach(function(button){button.onclick=function(){var value=Number(button.getAttribute('data-speed'));setGameSpeed(value===1&&state.gameSpeed===1?0:value)}});
   var tickTime=performance.now(),tickRemainder=0;
-  function tick(){var now=performance.now(),seconds=(now-tickTime)/1000;tickTime=now;if(document.hidden){tickRemainder=0;return}var elapsed=elapsedSteps(seconds+tickRemainder,state.gameSpeed);if(elapsed.offline){tickRemainder=0;collectOffline(elapsed.offline)}else{tickRemainder=Math.max(0,seconds+tickRemainder-Math.floor((seconds+tickRemainder+1e-8)/.05)*.05);for(var step=0;step<elapsed.steps;step++)simulate(.05)}}
+  function tick(){if(SNAP)return;var now=performance.now(),seconds=(now-tickTime)/1000;tickTime=now;if(document.hidden){tickRemainder=0;return}var elapsed=elapsedSteps(seconds+tickRemainder,state.gameSpeed);if(elapsed.offline){tickRemainder=0;collectOffline(elapsed.offline)}else{tickRemainder=Math.max(0,seconds+tickRemainder-Math.floor((seconds+tickRemainder+1e-8)/.05)*.05);for(var step=0;step<elapsed.steps;step++)simulate(.05)}}
   var saveFailed=false;
   function save(){
     state.lastSeen=Date.now();
@@ -379,7 +379,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // session, walks back to the landing, waits for a cab down and steps out of the back door. The spots fill in tier order: Speakeasy round the fire
   // table, Dab bar at the stools, Vinyl nights on the dance floor, Terrace at the parasol tables.
   // The 2D map keeps its hidden lounge.
-  var liftY=0,liftY2=0,liftAsks=0;
+  var liftY=0,liftY2=0,liftAsks=0,loungeSmokers=[];
   // The cabs: where each one is (0 ground, 1 roof) and the trip it is on, empty to fetch a guest or carrying them.
   var lifts=[{y:0,trip:null},{y:0,trip:null}];
   var ROOFTOP={x0:-6.5,x1:6.5,z0:-9.6,z1:-3.4,y:14.1,lift:{x:-9.9,z:-5,w:1.4,d:1.4},lift2:{z:-6.6}},LIFT_TRIP=3,LIFT_SEATS=3,ROOF_WALK=3;
@@ -387,7 +387,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // The runner render's top face in sprite px: its near-left, near-right and far-left corners, and its length over width.
   var LOUNGE_RUNNER_PIN={left:[0,274],bottom:[146,360],top:[474,0],ratio:3.25};
   // The rope runs down the red carpet in front of the door, on the guests' side of the room.
-  function loungeWaitSpot(place){return place<=0?LOUNGE_DOOR:{x:LOUNGE_DOOR.x,z:LOUNGE_DOOR.z+.4+Math.min(place,LOUNGE_ROPE-1)*.37}}
+  // Every other guest stands a half step to the side so the line reads as people, not one stacked sprite.
+  function loungeWaitSpot(place){return place<=0?LOUNGE_DOOR:{x:LOUNGE_DOOR.x+(place%2?.13:-.07),z:LOUNGE_DOOR.z+.4+Math.min(place,LOUNGE_ROPE-1)*.37}}
   function loungeSeated(){return customers.filter(function(c){return c.phase==='lounge'}).length}
   function loungeWaiting(){return customers.filter(function(c){return c.phase==='toLounge'&&!c.waypoints.length}).sort(function(a,b){return a.id-b.id})}
   function loungeSpareJars(){return state.stock[3]-reservedJars()}
@@ -414,7 +415,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
         if(trip.t<1)return;
         s.y=trip.to;s.trip=null;
         if(trip.empty){board(s,i,trip.c);return}
-        trip.riders.forEach(function(c){if(c.phase!=='lounge')return;if(c.lift==='up'){c.lift='roof';c.roofWalk=0}else{c.lift=null;leaveLounge(c)}});
+        trip.riders.forEach(function(c){if(c.phase!=='lounge')return;if(c.lift==='up'){c.lift='roof';c.roofWalk=-(c.cabSlot||0)*.3}else{c.lift=null;leaveLounge(c)}});
         return;
       }
       var next=null;
@@ -491,7 +492,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(moment||!state.shopOpen||state.empire.activeStore||play.cooldown>0)return;
     var guest=customers.find(function(c){return !c.ordered&&!c.kiosk&&!c.lounge&&!c.momentOffered&&c.idChecked===true&&c.phase==='entering'});
     if(!guest)return;
-    var options=momentPicks(state,menuStrains());if(!options.length)return;
+    var options=momentPicks(state,menuStrains());if(options.length<2)return;
     guest.momentOffered=true;moment=createMoment(play,guest,options);play.cooldown=60+(play.sequence%3)*15;
   }
   function simulate(dt){
@@ -572,9 +573,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function staffCost(i){return economy.staffCost(state.staff[i])}
   function idTrainingQuote(limit){
     var levels=0,total=0;
-    // Training stops once a check is as quick as it gets.
-    while(levels<limit&&state.idStaff+levels<10000&&rawSecurityDuration(state.idStaff+levels)>economy.ID_CHECK_FLOOR){
-      var price=Math.floor(20*Math.pow(1.6,state.idStaff+levels));
+    // Training stops at the top of the security track.
+    while(levels<limit&&state.idStaff+levels<economy.SECURITY_MAX_LEVEL){
+      var price=economy.securityCost(state.idStaff+levels);
       if(!Number.isFinite(price)||total+price>state.money)break;
       total+=price;levels++;
     }
@@ -596,8 +597,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   function trainIdChecker(limit){
     var quote=idTrainingQuote(limit);if(!quote.levels)return;
-    state.money-=quote.cost;state.idStaff+=quote.levels;recordGoal(state.empire,'upgrade',quote.levels);
-    notify('SECURITY · LEVEL '+state.idStaff,'upgrade');renderUI();save();
+    var tierBefore=economy.stationLook(state.idStaff);state.money-=quote.cost;state.idStaff+=quote.levels;recordGoal(state.empire,'upgrade',quote.levels);
+    var tier=economy.stationLook(state.idStaff);if(tier>tierBefore){buildRise[6]=.6;burst(DOOR_POS,'#f0d89a');paintThumbnails()}
+    notify(tier>tierBefore?'SECURITY · '+economy.SECURITY_TIERS[tier-1].toUpperCase():'SECURITY · LEVEL '+state.idStaff,'upgrade');renderUI();save();
   }
   function maxStaffTraining(i){
     var levels=0,total=0;if(!state.lines[i])return {levels:0,cost:0};
@@ -655,8 +657,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     {key:'terpeneLevel',name:'Terpene lab',base:2800,max:20},{key:'breedingLevel',name:'Breeding bench',base:3200,max:20},{key:'displayLevel',name:'Display cases',base:2600,max:20},{key:'trendLevel',name:'Trend scout',base:3000,max:20},
     {key:'fleetLevel',name:'Drone fleet',base:4000,max:20},{key:'cargoLevel',name:'Cargo bays',base:3500,max:20},{key:'repeatLevel',name:'Repeat buyers',base:2200,max:20},{key:'offlineLevel',name:'Back-room safe',base:5000,max:5}];
   function kioskServiceDuration(){return .8+1.2/(1+state.kioskSpeedLevel*.15)}
-  function rawSecurityDuration(level){return .9/((1+level*.3)*(1+state.scannerLevel*.12))}
-  function securityDuration(){return Math.max(economy.ID_CHECK_FLOOR,rawSecurityDuration(state.idStaff))}
+  function securityDuration(level){return economy.securityDuration(level===undefined?state.idStaff:level,state.scannerLevel)}
+  function securityMaxed(){return state.idStaff>=economy.SECURITY_MAX_LEVEL}
   function arrivalInterval(){return (atmosphere(state.empire.network).night?1.2:.9)/(1+state.trafficLevel*.15)/formatFactor('demand')/strains.trafficFactor(menuStrains(),state.strainTrend.index)/strains.buzzFactor(state.vipBuzz)/(1+state.signLevel*.04)/specialFactor('traffic')}
   // The waiting-area upgrade's places, capped at the spots the pickup line's route actually holds.
   function pickupPromised(){return 4+state.pickupLevel*2}
@@ -784,22 +786,30 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       layout.modelBase=new URL('models/',document.baseURI).href;
       // Keyed "station.look" (economy.stationLook: Lv 1, 10, 30, 50, 75); a look without its own model shows the tier 3 one. Each is sized to its tier's sprite.
       layout.stationModels={'0.1':'seeds_bench_tier1.glb','0.2':'seeds_bench_tier2.glb','0.3':'seeds_bench.glb','1.1':'grow_bench_tier1.glb','1.2':'grow_bench_tier2.glb','1.3':'grow_bench.glb','2.1':'harvest_bench_tier1.glb','2.2':'harvest_bench_tier2.glb','2.3':'harvest_bench.glb',
-        '3.1':'pack_bench_tier1.glb','3.2':'pack_bench_tier2.glb','3.3':'pack_bench.glb','4.1':'order_desk_tier1.glb','4.2':'order_desk_tier2.glb','4.3':'order_desk.glb','5.1':'pickup_desk_tier1.glb','5.2':'pickup_desk_tier2.glb','5.3':'pickup_desk.glb','6.1':'id_desk_tier1.glb','6.2':'id_desk_tier2.glb','6.3':'id_desk.glb'};
+        '3.1':'pack_bench_tier1.glb','3.2':'pack_bench_tier2.glb','3.3':'pack_bench.glb','4.1':'order_desk_tier1.glb','4.2':'order_desk_tier2.glb','4.3':'order_desk.glb','5.1':'pickup_desk_tier1.glb','5.2':'pickup_desk_tier2.glb','5.3':'pickup_desk.glb','6.1':'security_booth_tier1.glb','6.2':'security_booth_tier2.glb','6.3':'security_booth_tier3.glb','6.4':'security_booth_tier4.glb','6.5':'security_booth_tier5.glb'};
       stationModelFiles=layout.stationModels;layout.stationModelSize={};for(var key in layout.stationModels)layout.stationModelSize[key]=stationSpriteSize(+key.split('.')[0],+key.split('.')[1]);layout.stationModelSize['4.3']={w:2.2,ox:0};
       // The lower order desks keep their sprites' size against tier 3's.
       [1,2].forEach(function(t){layout.stationModelSize['4.'+t]={w:2.2*stationSpriteSize(4,t).w/stationSpriteSize(4,3).w,ox:0}});
+      // The security booths are built facing -Y; turned a quarter, their scanner, sign and customer side face the front door
+      // (west, -x), the desk runs along the footprint's long z side, and the doorman's side faces the room.
+      [1,2,3,4,5].forEach(function(t){layout.stationModelSize['6.'+t]={w:1.7,ox:0,turn:-Math.PI/2}});
       // The production line from the 2D map's own routes, so both maps carry the same tubes, belts and cargo rhythm.
       var grow=tubeRunGeometry(TUBE_RUNS[1]),pack=tubeRunGeometry(TUBE_RUNS[3]);
       layout.transport={bore:TUBE_DIA,gap:CARGO_GAP,
         tubes:[{points:grow.path,stage:1,cargoStage:1,floorRings:[grow.port]},
           {points:pack.path,stage:3,cargoStage:4,floorRings:[pack.port],window:{total:PACK_FLOW,offset:0},noCap0:true},
-          {points:PACK_STUB,stage:3,cargoStage:4,window:{total:PACK_FLOW,offset:PACK_STUB_AT}}],
+          {points:PACK_STUB,stage:3,cargoStage:4,window:{total:PACK_FLOW,offset:PACK_STUB_AT}},
+          // The online deck's feed, drawn at the deck's elevation (7.05) in 2D, shown while the deck is built.
+          {points:DECK_FEED.map(function(p){return [p[0],p[1]+7.05,p[2]]}),stage:3,cargoStage:5,noCap0:true,fixture:'deck'}],
         belts:[{x1:-4.6,x2:4.6,z:-5.8,floor:9.4,height:1.05,width:BELT_W,stage:0},{x1:4.2,x2:-3.2,z:-3.7,floor:4.7,height:1.05,width:BELT_W,stage:2}]};
       // The online orders deck, placed by its origin (the stair foot, on the mezzanine) at the scale every Blender model
       // shares (about 1.69 map units a metre), so its slab's right and front edges land where the sprite's do
       // (DECK_RIGHT, DECK_FRONT) with the deck at 7.05.
       layout.floorTextures=floorTextureFiles();
       layout.fixtures=[{key:'deck',file:'online_deck.glb',x:-9.39,y:4.7,z:-.2,scale:1.69}];
+      // The self-order kiosks, one Blender model per bought kiosk where the customer code queues them (6.8 - k * 1.8),
+      // the screen facing +x toward the customer and lit like a screen (`screen` names its material).
+      [0,1,2].forEach(function(k){layout.fixtures.push({key:'kiosk'+k,file:'kiosk.glb',x:-9.75,y:0,z:6.8-k*1.8,scale:1.69,screen:'Screen'})});
       // The street's cars and van: one model each, painted per car in code (CarPaint, VanPaint).
       layout.carModels={car:'car.glb',van:'van.glb'};
       // The shell and fittings, placed by the same numbers the station and customer code uses.
@@ -1648,7 +1658,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // waiting for someone to walk up from the door, and a well-staffed door clears people as fast as they arrive.
   // The ID desk stands 0.9 further in from the street door than it first did (Kevin, 2026-10-19: more room at the door);
   // guests are checked at ID_CHECK, in front of it.
-  var ID_DESK={x:-8.2,z:9.3},ID_CHECK={x:-9.15,z:9.35};
+  // Turned to face the door (Kevin, 2026-10-19), the booth runs along z, so it sits half a step nearer the storefront to stay
+  // clear of the order line's last turn at (-8.2, 8.6); the doorman works its room side by the monitors, past the
+  // line's last row at z 9.3.
+  var ID_DESK={x:-8.2,z:9.8},ID_CHECK={x:-9.15,z:9.35},DOORMAN={x:-7.4,z:10.05};
   var ID_ROUTE=[ID_CHECK,{x:-10.6,z:9.6},{x:-11.7,z:9.3},{x:-12.4,z:7.8},{x:-12.4,z:-10}];
   function moveToIdCheck(c,dt){
     var queue=customers.filter(function(q){return q.idChecked===false}),index=queue.indexOf(c);
@@ -1790,6 +1803,11 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       drawBox(x,z,y,.3,.27,.4,['#c4dec4','#719883','#a1bea8']);
       drawBox(x,z,y+.4,.34,.31,.07,['#dacba0','#9a8c62','#c0b182']);
       drawBox(x,z+.143,y+.1,.22,.014,.16,['#f3efda','#f3efda','#f3efda']);
+    }else if(stage===5){
+      // A taped kraft shipping box with a green address label, on its way up to the online orders deck.
+      drawBox(x,z,y,.38,.3,.26,['#d6ae72','#8f6f42','#b88d55']);
+      drawBox(x,z,y+.26,.08,.31,.012,['#eadcb4','#eadcb4','#eadcb4']);
+      drawBox(x+.1,z+.151,y+.08,.12,.01,.09,['#496f50','#496f50','#496f50']);
     }else{
       // Sprite shop: the v2 kraft pickup bag with its green label.
       if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),fixtureSprite('prop.pickup.bag'),x-.2,x+.2,z-.13,z+.13,y,y+.62,true))return;
@@ -2010,21 +2028,21 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   // Measured on the deck render: the underside of the slab's steel rim, taken at -.24 below the deck level, has its front
   // edge at z 1.26 and its right edge at x -10.7; the rear support leaves it near that corner and falls at -.43 (y over x)
-  // to the mezzanine's end. The jar feed climbs the same slope along the front of the support and runs on into the slab.
+  // to the mezzanine's end. The parcel feed climbs the same slope along the front of the support and runs on into the slab.
   var DECK_FRONT=1.26,DECK_RIGHT=-10.7,DECK_FEED=[[-4.3,-.9,.85],[-7.99,-.9,.85],[-10.68,.25,.85]];
   function onlinePackingCounter(now,previewOnly){
     var x=DECK_X,z=DECK_Z,oak=['#cbb085','#7f6a4b','#ac9168'],green=['#86a795','#3e6250','#648a70'];
     if(!deliveryBuilt()&&!previewOnly){onlineCounterSite(now,x,z,oak);return}
-    // Sprite shop: the finished deck render, with the live dispatch readout and the jar feed still drawn over it.
+    // Sprite shop: the finished deck render, with the live dispatch readout and the parcel feed still drawn over it.
     if(SHOP_SPRITES&&!previewOnly&&shellSprite('deck.delivery.built')&&spriteImage('deck.delivery.built')){
-      // The jar feed runs along the mezzanine rail, climbs beside the deck's rear support and rises into the deck's
+      // The parcel feed runs along the mezzanine rail, climbs beside the deck's rear support and rises into the deck's
       // underside: it is cut along the slab's front and right edges, so its last stretch disappears inside the deck.
       drawDeckSprite(now,'deck.delivery.built');
       var l=project(DECK_RIGHT-8,-.24,DECK_FRONT),c=project(DECK_RIGHT,-.24,DECK_FRONT),r=project(DECK_RIGHT,-.24,DECK_FRONT-8),far=width+height;
       ctx.save();ctx.beginPath();ctx.moveTo(l.x-far,l.y);ctx.lineTo(l.x,l.y);ctx.lineTo(c.x,c.y);ctx.lineTo(r.x,r.y);ctx.lineTo(r.x+far,r.y);ctx.lineTo(r.x+far,c.y+far);ctx.lineTo(l.x-far,c.y+far);ctx.closePath();ctx.clip();
       // The feed leaves the pack bench's end without a collar, and the turn onto the support is a shallow one the right-angle elbow render cannot make, so the two straights meet
       // collar to collar there, like a coupling.
-      drawTubeSprites(DECK_FEED.slice(0,2),TUBE_DIA,{noCap0:true});drawTubeSprites(DECK_FEED.slice(1));transferTube(DECK_FEED,3,[],undefined,true);ctx.restore();
+      drawTubeSprites(DECK_FEED.slice(0,2),TUBE_DIA,{noCap0:true});drawTubeSprites(DECK_FEED.slice(1));transferTube(DECK_FEED,3,[],5,true);ctx.restore();
       return;
     }
     // Cantilevered launch deck, attached to the rear sign supports.
@@ -2328,7 +2346,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function renderBranch3d(now,frameDelta){
     var nightT=nightAmount();render.nightT=nightT;
     var figures=[],scene=recordBranch(figures);
-    map3d.renderBranch({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:viewCentre(),background:BRANCH_THEMES[state.empire.activeStore-1].background,branch:scene,figures:figures.filter(function(f){return f.alpha>.99})});
+    map3d.renderBranch({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:viewCentre(),background:BRANCH_THEMES[state.empire.activeStore-1].background,branch:scene,figures:figures.filter(function(f){return f.alpha>.99})});
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
     // Main-store effects expire while visiting a branch rather than replaying on return.
     particles.forEach(function(p){p.life-=frameDelta*1.5});particles=particles.filter(function(p){return p.life>0});deliveryDrones.forEach(function(d){d.age+=frameDelta});deliveryDrones=deliveryDrones.filter(function(d){return d.age<d.delay+7.5});
@@ -2359,13 +2377,14 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
           person(p.x+spot.dx,p.y||0,p.z+spot.dz,'#2f6b52',function(){drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait)})})(i,p);
       }
     }
-    stations.push({index:6,x:ID_DESK.x,y:0,z:ID_DESK.z,w:.8,d:1.3,h:1.1,tier:state.doorBuilt?spriteTier(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
-    if(state.doorBuilt)person(-8.25,0,8.75,'#2f6b52',function(){drawPerson(-8.25,8.75,now,6,false,true,false)});
+    stations.push({index:6,x:ID_DESK.x,y:0,z:ID_DESK.z,w:.8,d:1.3,h:1.1,tier:state.doorBuilt?economy.stationLook(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
+    // The doorman stands behind the booth, on the room side, facing the front door across the desk.
+    if(state.doorBuilt)person(DOORMAN.x,0,DOORMAN.z,'#2f6b52',function(){drawPerson(DOORMAN.x,DOORMAN.z,now,6,false,true,false,{amount:0,phase:0,facing:-1})});
     // The lounge host works the rooftop: behind the bar once there is one, otherwise by the elevator's bridge.
     if(state.lounge>0){var host=state.lounge>=2?{x:3.7,z:-8.75,f:.3}:{x:-5.2,z:-4,f:.3};person(host.x,ROOFTOP.y,host.z,'#2f6b52',function(){drawPerson(host.x,host.z,now,8,false,true,false,{amount:0,phase:0,facing:host.f})})}
     // Guests on the roof hold a spot for their session. A guest riding up or down stands in the elevator's cab, which
     // carries them between the old lounge room and the roof and waits wherever it last stopped.
-    var taken={},spots=ROOFTOP_SPOTS.slice(0,loungeSeats(state.lounge)||4),lift=ROOFTOP.lift;
+    var taken={},smokers=[],spots=ROOFTOP_SPOTS.slice(0,loungeSeats(state.lounge)||4),lift=ROOFTOP.lift;
     var smooth=function(t){t=Math.max(0,Math.min(1,t));return t*t*t*(t*(t*6-15)+10)};
     customers.forEach(function(c){if(c.phase==='lounge'&&c.roofSpot!==undefined&&c.roofSpot<spots.length&&!taken[c.roofSpot])taken[c.roofSpot]=c.id;else if(c.phase!=='lounge')c.roofSpot=undefined});
     customers.forEach(function(c){
@@ -2379,18 +2398,23 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       var spot=spots[c.roofSpot];if(!spot||taken[c.roofSpot]!==c.id)return;
       // Out of the cab, across the bridge and on to their spot; back to the landing a step from the cab door to wait.
       var back=c.lift!=='roof',s=c.lift==='roof'?smooth(c.roofWalk):c.lift==='back'?1-smooth(c.walkBack):0;
-      if(s>=1){person(spot[0],ROOFTOP.y,spot[1],colour,function(){drawPerson(spot[0],spot[1],now,c.id,false,false,false,{amount:0,phase:0,facing:spot[2]})});return}
-      var path=[{x:lift.x,z:shaftZ},{x:ROOFTOP.x0+.5,z:shaftZ},{x:spot[0],z:spot[1]}],lens=[],total=0;
+      if(s>=1){smokers.push({x:spot[0],z:spot[1],id:c.id,facing:spot[2]});person(spot[0],ROOFTOP.y,spot[1],colour,function(){drawPerson(spot[0],spot[1],now,c.id,false,false,false,{amount:0,phase:0,facing:spot[2]})});return}
+      // Riders step out one after another from where they stood in the cab (each a beat behind the one before).
+      var slot=c.cabSlot||0,cx0=lift.x+(slot%2?.28:0)-(slot>1?.28:0),cz0=shaftZ+(slot?-.2:0);
+      var path=[{x:cx0,z:cz0},{x:ROOFTOP.x0+.5,z:shaftZ},{x:spot[0],z:spot[1]}],lens=[],total=0;
       for(var p=1;p<path.length;p++){lens.push(Math.hypot(path[p].x-path[p-1].x,path[p].z-path[p-1].z));total+=lens[p-1]}
       // Guests waiting for the cab down queue back along the bridge, first come nearest the door.
-      var landing=back?1:0;if(c.lift==='waitDown')customers.forEach(function(q){if(q!==c&&q.phase==='lounge'&&q.lift==='waitDown'&&(q.shaft||0)===(c.shaft||0)&&q.liftAsk<c.liftAsk)landing+=.45});
+      // A guest still walking back heads for the end of that queue; places close up smoothly when the cab takes someone.
+      var landing=back?1:0;if(back)customers.forEach(function(q){if(q!==c&&q.phase==='lounge'&&q.lift==='waitDown'&&(q.shaft||0)===(c.shaft||0)&&(c.lift==='back'||q.liftAsk<c.liftAsk))landing+=.5});
+      if(back&&c.landing!==undefined)landing=c.landing+(landing-c.landing)*.12;
+      var shuffling=back&&c.landing!==undefined&&Math.abs(landing-c.landing)>.004;c.landing=back?landing:undefined;
       var along=Math.min(total,landing+s*(total-landing)),seg=0;while(seg<lens.length-1&&along>lens[seg]){along-=lens[seg];seg++}
       var a0=path[seg],a1=path[seg+1],f=lens[seg]?Math.min(1,along/lens[seg]):1,wx=a0.x+(a1.x-a0.x)*f,wz=a0.z+(a1.z-a0.z)*f;
       var hx=(a1.x-a0.x)/(lens[seg]||1),hz=(a1.z-a0.z)/(lens[seg]||1);if(back){hx=-hx;hz=-hz}
-      var moving=c.lift==='roof'?s>0&&s<1:c.lift==='back';
+      var moving=c.lift==='roof'?s>0&&s<1:c.lift==='back'||shuffling;
       person(wx,ROOFTOP.y,wz,colour,function(){drawPerson(wx,wz,now,c.id,moving,false,false,{amount:moving?1:0,phase:along*5,heading:{x:hx,z:hz},facing:hx-hz>0?.3:-.3})});
     });
-    liftY=lifts[0].y*ROOFTOP.y;liftY2=lifts[1].y*ROOFTOP.y;
+    liftY=lifts[0].y*ROOFTOP.y;liftY2=lifts[1].y*ROOFTOP.y;loungeSmokers=smokers;
     customers.forEach(function(c){
       stepCustomerVisual(c,frameDelta);
       if(c.phase==='lounge')return;
@@ -2418,13 +2442,13 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       Object.keys(posts).forEach(function(key){var q=posts[key];if(postModel)props.push({file:'street_queue_post.glb',x:q[0],y:0,z:q[1]});else capturePerson(figures,q[0],0,q[1],function(){drawStanchion(q[0],q[1])})});
       frontFixtures().forEach(function(f){if(map3d.propReady(f.file))props.push({file:f.file,x:f.x,y:0,z:f.z,rot:f.rot})});
       // The self-order kiosks along the storefront glass are their render, stood up at each kiosk's footprint.
-      if(state.kiosk&&fixtureSprite('shop.kiosk'))for(var k=0;k<kioskCount();k++)(function(kz){capturePerson(figures,-9.75,0,kz,function(){drawBoxSprite(streetApi,fixtureSprite('shop.kiosk'),-10.04,-9.46,kz-.4,kz+.4,0,1.8,true)})})(6.8-k*1.8);
+      if(state.kiosk&&fixtureSprite('shop.kiosk'))for(var k=0;k<kioskCount();k++)if(!map3d.hasFixture('kiosk'+k))(function(kz){capturePerson(figures,-9.75,0,kz,function(){drawBoxSprite(streetApi,fixtureSprite('shop.kiosk'),-10.04,-9.46,kz-.4,kz+.4,0,1.8,true)})})(6.8-k*1.8);
     }
     // The 2D map fades figures behind the building and lays haze over distant renders as see-through copies; in 3D
     // depth and the scene's haze do both, so only the solid draws are kept.
     figures=figures.filter(function(f){return f.alpha>.99});backdrops=backdrops.filter(function(f){return f.alpha>.99});
     var look=viewCentre();
-    map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,liftY:liftY,liftY2:liftY2,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    map3d.render({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     // A model that had not loaded when the tabs were painted: try again every half second until all are in.
     if(picturesPending&&!(now-(renderFrame3d.picturesTried||0)<500)){renderFrame3d.picturesTried=now;picturesPending=false;paintThumbnails()}
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -2451,7 +2475,23 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(c.visualServiceStation!==serviceIndex){c.serviceVisual=0;c.visualServiceStation=serviceIndex;}c.serviceVisual=(c.serviceVisual||0)+(serviceTarget-(c.serviceVisual||0))*(1-Math.exp(-frameDelta*22));
   }
   // A single failed frame (for example a zero-width canvas while the page is being laid out) must not stop the scene forever.
-  function render(wallNow){var t0=performance.now();try{renderFrame(wallNow);render.frameMs=(render.frameMs||0)*.9+(performance.now()-t0)*.1;window.__canopyFrameMs=render.frameMs;if(render.frameMs>13&&dprCap>2){dprCap=2;resize()}}catch(e){if(!render.failed)console.error('Canopy frame failed; retrying',e);ctx=screenCtx;sceneElevation=0;render.failed=true;render.invalidated=true;requestAnimationFrame(render)}}
+  // Dev quick capture (?snap, driven by scripts/snap3d.mjs): the frame loop and the clock stand still, and
+  // window.__canopySnap draws one frame on demand, so a cloud browser drawing WebGL on the CPU spends its time only on
+  // the frame it captures. view: {zoom, x, y, z} centres that map point at that zoom, light 'day' or 'night', advance
+  // runs the game that many seconds first, and draw:false sets the frame up (asking for its models) without drawing it.
+  // Players never pass ?snap.
+  var SNAP=/[?&]snap\b/.test(location.search);
+  if(SNAP){
+    window.__canopySnap=function(view){view=view||{};
+      if(view.light)state.lightMode=view.light;
+      for(var step=0;step<Math.round((view.advance||0)*20);step++)simulate(.05);
+      if(view.zoom!==undefined||view.x!==undefined){zoom=Math.max(.65,Math.min(4,view.zoom||1));panX=panY=0;applyCamera();
+        if(view.x!==undefined){var frame=cameraFrame(),p=project(view.x,view.y||0,view.z||0);panX=frame.x-p.x;panY=frame.y-p.y;applyCamera()}}
+      render.snap=true;render.dry=view.draw===false;render.invalidated=true;render(performance.now());render.snap=render.dry=false;
+      return window.__canopySnap.status()};
+    window.__canopySnap.status=function(){return{map3d:!!(map3d&&map3d.ok),loading:map3d?map3d.loading:-1}};
+  }
+  function render(wallNow){if(SNAP&&!render.snap)return;var t0=performance.now();try{renderFrame(wallNow);render.frameMs=(render.frameMs||0)*.9+(performance.now()-t0)*.1;window.__canopyFrameMs=render.frameMs;if(render.frameMs>13&&dprCap>2){dprCap=2;resize()}}catch(e){if(!render.failed)console.error('Canopy frame failed; retrying',e);ctx=screenCtx;sceneElevation=0;render.failed=true;render.invalidated=true;requestAnimationFrame(render)}}
   function renderFrame(wallNow){
     if(document.hidden){render.last=wallNow;requestAnimationFrame(render);return}
     keyboardPan(wallNow);
@@ -2677,16 +2717,16 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     }
     renderOrderCounters();
     var doorSite=!state.doorBuilt,doorKey=doorSite?'site':String(state.idStaff);
-    securityMarker.classList.add('station-sign');securityMarker.classList.toggle('selected',securitySelected);securityMarker.classList.toggle('is-site',doorSite);securityMarker.classList.toggle('can-upgrade',!doorSite&&idTrainingQuote(1).levels>0);if(securityMarker.dataset.level!==doorKey){securityMarker.innerHTML='<span class=station-sign-name>Security</span><span class=station-sign-level>'+(doorSite?'Build':'Lv '+state.idStaff)+'</span>';securityMarker.dataset.level=doorKey;updateMarkers.key=null;}securityMarker.style.setProperty('--station-tier',TIER_COLORS[state.idStaff>=25?3:state.idStaff>=10?2:1]);securityMarker.setAttribute('aria-label',doorSite?'Security, under construction. Build the door':'Security, level '+state.idStaff+'. Open security station');securityMarker.setAttribute('aria-pressed',String(securitySelected));
+    securityMarker.classList.add('station-sign');securityMarker.classList.toggle('selected',securitySelected);securityMarker.classList.toggle('is-site',doorSite);securityMarker.classList.toggle('can-upgrade',!doorSite&&idTrainingQuote(1).levels>0);if(securityMarker.dataset.level!==doorKey){securityMarker.innerHTML='<span class=station-sign-name>Security</span><span class=station-sign-level>'+(doorSite?'Build':'Lv '+state.idStaff)+'</span>';securityMarker.dataset.level=doorKey;updateMarkers.key=null;}securityMarker.style.setProperty('--station-tier',TIER_COLORS[economy.stationLook(state.idStaff)]);securityMarker.setAttribute('aria-label',doorSite?'Security, under construction. Build the door':'Security, level '+state.idStaff+'. Open security station');securityMarker.setAttribute('aria-pressed',String(securitySelected));
     var loungeLot=!state.lounge,loungePrice=loungeUpgradeCost(state.lounge),loungeKey=String(state.lounge)+'|'+(loungePrice!==null&&state.money>=loungePrice);
     loungeMarker.classList.add('station-sign');loungeMarker.classList.toggle('selected',loungeSelected);loungeMarker.classList.toggle('is-lot',loungeLot);loungeMarker.classList.toggle('can-upgrade',loungePrice!==null&&state.money>=loungePrice);
     if(loungeMarker.dataset.level!==loungeKey){loungeMarker.innerHTML='<span class=station-sign-name>Lounge</span><span class=station-sign-level>'+(loungeLot?fmt(loungePrice):'Lv '+state.lounge)+'</span>';loungeMarker.dataset.level=loungeKey;updateMarkers.key=null;}
     loungeMarker.style.setProperty('--station-tier',TIER_COLORS[Math.min(3,state.lounge)]);loungeMarker.setAttribute('aria-label',loungeLot?'Smoking lounge, under construction. Opens for '+fmt(loungePrice):'Smoking lounge, level '+state.lounge+'. Open lounge station');loungeMarker.setAttribute('aria-pressed',String(loungeSelected));
     // Once a check is as quick as it gets, training buys nothing, so the single-level button says Maxed too.
-    var idPrice=Math.floor(20*Math.pow(1.6,state.idStaff)),idMax=idTrainingQuote(10000),idMaxed=state.idStaff>=10000||rawSecurityDuration(state.idStaff)<=economy.ID_CHECK_FLOOR;
+    var idPrice=economy.securityCost(state.idStaff),idMax=idTrainingQuote(10000),idMaxed=securityMaxed();
     $('idEmployeeInfo').innerHTML='<span>Lv '+state.idStaff+'</span><span>'+(idMaxed?'fastest':(securityDuration()).toFixed(2)+'s/check')+'</span>';
     $('trainIdChecker').disabled=idMaxed||state.money<idPrice;
-    $('trainIdChecker').querySelector('span').textContent=idMaxed?'Maxed':'+'+Math.round(.3/(1+state.idStaff*.3)*100)+'%';$('trainIdChecker').querySelector('b').textContent=idMaxed?'—':fmt(idPrice);
+    $('trainIdChecker').querySelector('span').textContent=idMaxed?'Maxed':'+'+Math.max(1,Math.round((securityDuration()/securityDuration(state.idStaff+1)-1)*100))+'%';$('trainIdChecker').querySelector('b').textContent=idMaxed?'—':fmt(idPrice);
     $('trainIdCheckerMax').disabled=!idMax.levels;$('trainIdCheckerMax').querySelector('span').textContent=idMax.levels?'+'+idMax.levels+' lv':'Maxed';$('trainIdCheckerMax').querySelector('b').textContent=idMax.levels?fmt(idMax.cost):'—';
     var hostPrice=loungeHostCost(state.loungeStaff),hostMax=loungeHostQuote(10000),hostOpen=state.lounge>0;
     $('loungeEmployeeInfo').innerHTML='<span>Lv '+state.loungeStaff+'</span><span>'+loungeHostSpeed(state.loungeStaff).toFixed(1)+'× take</span>';
@@ -2722,7 +2762,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var slowNow=slowestStation();
     markerEls.forEach(function(el,i){var locked=!isOpen(i),site=!state.lines[i];el.classList.toggle('selected',!securitySelected&&!loungeSelected&&i===selected);el.classList.toggle('locked',locked);el.classList.toggle('is-site',site);el.classList.toggle('is-bottleneck',i===slowNow&&!locked&&!site);el.classList.add('station-sign');el.classList.toggle('can-upgrade',!locked&&!site&&state.money>=cost(i));if(el.dataset.level!==String(state.lines[i])){el.innerHTML='<span class=station-sign-name>'+shortNames[i]+'</span><span class=station-sign-level>'+(site?'Build':'Lv '+state.lines[i])+'</span>';el.dataset.level=String(state.lines[i]);updateMarkers.key=null;}el.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);el.setAttribute('aria-label',LINES[i].name+(locked?', locked':site?', under construction. Build it':', level '+state.lines[i]));el.setAttribute('aria-pressed',String(!securitySelected&&!loungeSelected&&i===selected))});
     var loungeCard=document.querySelector('[data-lounge]');if(loungeCard){loungeCard.setAttribute('aria-pressed',String(loungeSelected));loungeCard.classList.toggle('is-lot',loungeLot);loungeCard.classList.toggle('can-upgrade',loungePrice!==null&&state.money>=loungePrice);loungeCard.querySelector('em').textContent=loungeLot?'Open':'Lv '+state.lounge;loungeCard.setAttribute('aria-label',loungeLot?'Smoking lounge, under construction':'Smoking lounge, level '+state.lounge);loungeCard.style.setProperty('--station-tier',TIER_COLORS[Math.min(3,state.lounge)])}
-    var securityCard=document.querySelector('[data-security]');if(securityCard){securityCard.setAttribute('aria-pressed',String(securitySelected));securityCard.classList.toggle('is-site',doorSite);securityCard.classList.toggle('can-upgrade',!doorSite&&idTrainingQuote(1).levels>0);securityCard.querySelector('em').textContent=doorSite?'Build':'Lv '+state.idStaff;securityCard.setAttribute('aria-label',doorSite?'Security, under construction':'Security, level '+state.idStaff);securityCard.style.setProperty('--station-tier',TIER_COLORS[state.idStaff>=25?3:state.idStaff>=10?2:1])}
+    var securityCard=document.querySelector('[data-security]');if(securityCard){securityCard.setAttribute('aria-pressed',String(securitySelected));securityCard.classList.toggle('is-site',doorSite);securityCard.classList.toggle('can-upgrade',!doorSite&&idTrainingQuote(1).levels>0);securityCard.querySelector('em').textContent=doorSite?'Build':'Lv '+state.idStaff;securityCard.setAttribute('aria-label',doorSite?'Security, under construction':'Security, level '+state.idStaff);securityCard.style.setProperty('--station-tier',TIER_COLORS[economy.stationLook(state.idStaff)])}
     updateStationOrbit(slow);
     machineTabs.forEach(function(tab,i){var locked=!isOpen(i),site=!state.lines[i],available=!locked&&!site&&state.money>=cost(i);tab.title=site?'Under construction':i===slow?'Slowest station · improve this to raise capacity':'';tab.setAttribute('aria-pressed',String(!securitySelected&&!loungeSelected&&i===selected));tab.classList.toggle('is-locked',locked);tab.classList.toggle('is-site',site);tab.classList.toggle('can-upgrade',available);tab.querySelector('em').innerHTML=locked?'Locked':site?'Build':'Lv '+state.lines[i]+(i===slow?'<span class="slow-tag"> · Slow</span>':'');tab.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);var progress=Math.min(100,state.lines[i]/100*100),progressText=site?'Under construction':state.lines[i]>=100?'Flagship equipment reached':'Level '+state.lines[i]+' of 100 toward flagship equipment';tab.querySelector('progress').value=progress;tab.querySelector('progress').setAttribute('aria-label',LINES[i].name+' equipment progress');tab.querySelector('progress').setAttribute('aria-valuetext',progressText);tab.querySelector('progress').title=progressText;tab.querySelector('.level-funding').textContent=progressText;tab.setAttribute('aria-label',LINES[i].name+(i===slow?', slowest station':'')+', level '+state.lines[i]+', '+STATION_TIERS[stationTier(i)]+(available?', upgrade ready':''))});
     updateCommerceControls();
@@ -2906,7 +2946,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     $('upgradeHint').textContent=maxed?'Every seat in the back room is spoken for.':!affordable?fmt(price-state.money)+' to go':tier?'+'+(next.seats-seats)+' seats · bigger take per session':'Open the curtain · every 4th guest slips in';$('upgradeHint').classList.toggle('ready',affordable);
   }
   function renderSecuritySelection(){
-    var lvl=state.idStaff,price=Math.floor(20*Math.pow(1.6,lvl)),maxed=lvl>=10000||rawSecurityDuration(lvl)<=economy.ID_CHECK_FLOOR,site=!state.doorBuilt,affordable=site||(!maxed&&state.money>=price),quote=site?{levels:0,cost:0}:idTrainingQuote(10000);
+    var lvl=state.idStaff,price=economy.securityCost(lvl),maxed=securityMaxed(),site=!state.doorBuilt,affordable=site||(!maxed&&state.money>=price),quote=site?{levels:0,cost:0}:idTrainingQuote(10000);
     $('machineNumber').textContent='DOOR · '+(site?'UNDER CONSTRUCTION':lvl?'CHECKING IDS':'NO GUARD YET');$('machineName').textContent='SECURITY';$('machineLevel').textContent=lvl;$('machineRate').textContent=securityDuration().toFixed(2)+'s / check';
     // Stat tiles, like the lounge card: a status chip, the check time, who is at the door, and the scanner's boost.
     var atDoor=customers.filter(function(c){return c.phase==='idCheck'}).length,held=customers.filter(function(c){return c.phase==='idCheck'&&!c.walking}).length,checking=customers.some(function(c){return c.idChecked===false&&c.idCheckTime>0});
@@ -2926,12 +2966,12 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       $('upgradeHint').textContent='Under construction · tap the site by the entrance, or Build here, to raise the door.';$('upgradeHint').classList.add('ready');return;
     }
     $('upgradeLevel').textContent=maxed?'Lv '+lvl:'Lv '+lvl+' → '+(lvl+1);
-    renderUpgradeComparison('Seconds per ID check',securityDuration(),Math.max(economy.ID_CHECK_FLOOR,rawSecurityDuration(lvl+1)),true,false,maxed);
-    $('stationTier').textContent=lvl>=25?'Head of security':lvl>=10?'Seasoned doorman':lvl?'Door staff':'Unstaffed door';$('stationTier').style.color=lvl>=25?TIER_COLORS[3]:lvl>=10?TIER_COLORS[2]:TIER_COLORS[1];
-    $('upgradeFunding').textContent=maxed?'As quick as a check gets':affordable?'Ready to train':fmt(Math.max(0,price-state.money))+' to go';
+    renderUpgradeComparison('Seconds per ID check',securityDuration(),securityDuration(lvl+1),true,false,maxed);
+    var booth=economy.stationLook(lvl),nextLook=economy.nextLookLevel(lvl);$('stationTier').textContent=lvl?economy.SECURITY_TIERS[booth-1]:'Unstaffed door';$('stationTier').style.color=TIER_COLORS[booth];
+    $('upgradeFunding').textContent=maxed?'Top of the security track':affordable?'Ready to train':fmt(Math.max(0,price-state.money))+' to go';
     $('upgradeProgress').value=maxed?100:Math.min(100,state.money/price*100);$('upgradeProgress').setAttribute('aria-valuetext',affordable?'Training ready':fmt(Math.max(0,price-state.money))+' needed for level '+(lvl+1));
     paintUpgradePreview(-1);
-    $('nextAppearance').textContent='Scanner upgrades in the Shop speed up every check.';
+    $('nextAppearance').textContent=nextLook?'New look at level '+nextLook+' · '+economy.SECURITY_TIERS[economy.stationLook(nextLook)-1]:'The flagship booth · scanner upgrades in the Shop still speed up every check.';
     $('machineCost').textContent=maxed?'—':fmt(price);$('buyMachine').disabled=!affordable;$('buyMachine').querySelector('span').textContent=lvl?'TRAIN':'HIRE';
     $('buyMachineMax').disabled=!quote.levels;$('machineMaxLabel').textContent='MAX'+(quote.levels?' +'+quote.levels+' LV':'');$('machineMaxCost').textContent=quote.levels?fmt(quote.cost):'—';$('buyMachineMax').setAttribute('aria-label','Train security by '+quote.levels+' levels for '+fmt(quote.cost));
     $('buyMachine').style.setProperty('--funded',(maxed?0:Math.min(100,state.money/price*100))+'%');
@@ -3026,7 +3066,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function stationModelKey(i,level){var t=economy.stationLook(level);while(t>1&&!stationModelFiles[i+'.'+t])t--;return i+'.'+t}
   function stationPicture(i,level){
     if(!map3d||!map3d.ok||!map3d.stationPicture||!(level>0))return null;
-    var picture=map3d.stationPicture(i===6?i+'.'+spriteTier(level):stationModelKey(i,level));if(!picture)picturesPending=true;return picture;
+    var picture=map3d.stationPicture(stationModelKey(i,level));if(!picture)picturesPending=true;return picture;
   }
   function paintUpgradePreview(index){
     var preview=$('upgradePreview');if(!preview)return;
