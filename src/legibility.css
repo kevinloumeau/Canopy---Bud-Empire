@@ -67,6 +67,9 @@ h1,h2,.guide-card h2,.empire-screen h2,.machine-info h1,.canopy-brand b{font-var
 .loading{background:#20372b;color:var(--p-sage-84);font-family:inherit;letter-spacing:0}
 .loading-simple::before{content:'';display:block;width:64px;height:64px;margin:0 auto 14px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none'%3E%3Cpath d='M24 38V24' stroke='%23dce9be' stroke-width='2.5' stroke-linecap='round'/%3E%3Cpath d='M24 31C14 32 11 26 12 21c8-1 13 3 12 10Z' fill='%23a8c884'/%3E%3Cpath d='M24 27c-1-9 4-14 12-14 1 8-3 14-12 14Z' fill='%23dce9be'/%3E%3C/svg%3E") center/contain no-repeat}
 .loading-simple p{font-size:14px;color:var(--p-sage-84)}
+/* The finished map fades in from under the card at once (mapReveal in main.js), rather than its models popping in. */
+.loading.reveal{opacity:0;pointer-events:none;transition:opacity .5s ease}
+@media(prefers-reduced-motion:reduce){.loading.reveal{transition:none}}
 @media(prefers-reduced-motion:no-preference){.loading-simple::before{animation:leaf-breathe 1.6s ease-in-out infinite}@keyframes leaf-breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}}
 
 /* Station signs: quieter glass plaques in the interface face, so they sit in the scene instead of on it. */
