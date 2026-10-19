@@ -146,7 +146,7 @@ export function createMap3D(canvas, layout) {
   const transport = buildTransport(scene, world, layout.transport, { box, material });
   const shell = buildShell(world, layout, { box, span, material, model });
   const rooftop = buildRooftop(world, layout, { box, span, material });
-  buildEntrance(world, layout, { box, span, material });
+  buildEntrance(world, layout, { box, span, material, model });
 
   // Stations: one solid per station slot, resized and recoloured from the frame (tier, built, rising in).
   const stationMeshes = [], selectionRing = new THREE.Mesh(new THREE.RingGeometry(.86, 1, 48).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#e2c68a', transparent: true, opacity: .85, depthWrite: false }));
