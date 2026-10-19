@@ -42,6 +42,9 @@ export const PERKS=[
   {name:'Word of mouth',effect:['Boutique sales earn +1 reputation','Boutique sales earn +2 reputation'],locked:'Level 5: boutique sales build reputation'},
   {name:'Velvet rope',effect:['VIPs pay 25% more','VIPs pay 50% more'],locked:'Level 5: VIPs pay more'}
 ];
+// Strain levels run past the signature perks: each level still adds 10% to its price and half a point of THC, so
+// strains stay worth buying through the middle of a run instead of maxing out in the first few hours.
+export const STRAIN_MAX=20;
 export function perkTier(level){return level>=10?2:level>=5?1:0;}
 export function everydayBonus(levels){return 1+.1*perkTier(levels[0]||0);}
 export function packBonus(levels){return 1+.15*perkTier(levels[1]||0);}
