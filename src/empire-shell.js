@@ -25,7 +25,8 @@ export function mountEmpireShell({fit,getState,format}){
  const toggles=[],articles=[];
  growth.querySelectorAll('.empire-branch').forEach((article,i)=>{const toggle=article.querySelector('.branch-toggle');toggles[i]=toggle;articles[i]=article;list.append(toggle);});
  const more=el('button','empire-more','<span>Rewards &amp; records</span><span class="empire-more-hint" id="empireMoreHint"></span>'+chevron);more.type='button';more.onclick=()=>show('details');
- screens.home.append(strip,storesHead,storesSummary,list,storesHelp,more);
+ // The contract card sits on Home, under the rewards, so starting one or firing a banked boost is one tap away.
+ screens.home.append(strip,$('contractCard'),storesHead,storesSummary,list,storesHelp,more);
  // The welcome-back report is a moment over the map, not a row in a tab.
  const summary=$('returnSummary');if(summary){const overlay=el('div','return-overlay');overlay.hidden=true;const card=el('div','return-card');card.append(summary);overlay.append(card);document.body.append(overlay);
   const reflect=()=>{overlay.hidden=summary.hidden;if(!summary.hidden){const b=$('dismissReturn');if(b)b.focus({preventScroll:true});}};
@@ -87,15 +88,15 @@ export function mountEmpireShell({fit,getState,format}){
  if(window.MutationObserver){const watcher=new MutationObserver(()=>{const open=articles.findIndex((_,i)=>$('branchBody'+i)&&!$('branchBody'+i).hidden);if(open>=0&&(current!=='store'||storeBar.heading.textContent!==toggles[open].querySelector('.branch-name').textContent)){openStore(open);}});articles.forEach((_,i)=>{const body=$('branchBody'+i);if(body)watcher.observe(body,{attributes:true,attributeFilter:['hidden']});});}
  const todayView=pane.querySelector('[data-empire-view=today]');if(todayView)todayView.addEventListener('click',()=>{if(current!=='home')show('home');});
  // Rewards strip mirrors the existing claim buttons; collecting clicks them.
- const sources=[['Daily','dailyClaim'],['Milestone','careerClaim'],['Bonus','claim'],['Event','eventAction'],['Week','seasonClaim'],['Goal','goalClaim0'],['Goal','goalClaim1'],['Goal','goalClaim2']];
+ const sources=[['Daily','dailyClaim'],['Milestone','careerClaim'],['Bonus','claim'],['Week','seasonClaim'],['Goal','goalClaim0'],['Goal','goalClaim1'],['Goal','goalClaim2']];
  const amount=text=>{const m=/\$[\d.,]+[KMB]?/.exec(text);return m?m[0]:text.trim().replace(/^Collect\s*/,'');};
  let signature='';
  function sync(){
   if(document.hidden)return;
   storesUI.sync();
   const ready=sources.map(([kind,id])=>{const b=$(id);return b&&!b.disabled&&!b.hidden&&/^Collect\b/.test(b.textContent.trim())?{kind,button:b,amount:amount(b.textContent)}:null;}).filter(Boolean);
-  const daily=$('dailyTime')?/in (\d+h \d+m)/.exec($('dailyTime').textContent):null,event=$('eventTime')?/in (\d+h \d+m)/.exec($('eventTime').textContent):null;
-  const next=ready.length?'':'Nothing to collect'+(daily?' · daily reward in '+daily[1]:'')+(event?' · event in '+event[1]:'');
+  const daily=$('dailyTime')?/in (\d+h \d+m)/.exec($('dailyTime').textContent):null;
+  const next=ready.length?'':'Nothing to collect'+(daily?' · daily reward in '+daily[1]:'');
   const sig=ready.map(r=>r.kind+r.amount).join('|')+'#'+next;
   if(sig===signature)return;signature=sig;
   chips.innerHTML='';ready.forEach(r=>{const chip=el('button','reward-chip','<small>'+r.kind+'</small><b>'+r.amount+'</b>');chip.type='button';chip.setAttribute('aria-label','Collect '+r.kind.toLowerCase()+' reward '+r.amount);chip.onclick=()=>r.button.click();chips.append(chip);});
