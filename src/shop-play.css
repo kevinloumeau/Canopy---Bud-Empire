@@ -1,53 +1,86 @@
-/* Shop activity pill, panel and budtender bubble, ported from the iOS build. */
-.shop-play{position:absolute;top:0;right:0;bottom:0;left:0;pointer-events:none;z-index:9;color:var(--p-sage-91-2);font-family:Bricolage Grotesque,sans-serif}
+/* Shop activity pill, panel and budtender bubble on the glass components (UI reskin plan): one frosted forest-glass
+   material, open figures for the shift, one-row choices and alerts in grouped lists, and brass only on the next thing
+   to tap (a customer waiting on a pick, last shift's advice). */
+.shop-play{position:absolute;top:0;right:0;bottom:0;left:0;pointer-events:none;z-index:9;color:var(--ui-ink);font-family:'Bricolage Grotesque',system-ui,sans-serif}
 .shop-play button,.shop-activity-panel{pointer-events:auto}
-.shop-activity{position:absolute;left:12px;top:calc(var(--hud-height,60px) + 12px);display:flex;align-items:center;gap:8px;max-width:calc(100% - 100px);min-height:44px;padding:9px 12px;border:1px solid #708c6a;border-radius:10px;background:#183528;color:var(--p-sage-91-2);font:700 12px Bricolage Grotesque,sans-serif;text-align:left;cursor:pointer}
-.shop-play svg{width:22px;height:22px;flex:none}
-.shop-activity span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.shop-activity.has-update{border-color:#d3bd7d}
-.shop-play button:focus-visible{outline:2px solid #eed69b;outline-offset:3px}
-.shop-play button:hover{background:#30573e}
-.shop-activity-panel{position:absolute;left:12px;top:calc(var(--hud-height,60px) + 64px);width:min(360px,calc(100% - 24px));max-height:calc(100dvh - var(--hud-height,60px) - var(--dock-height,90px) - 80px);overflow:auto;padding:16px;border-radius:14px;background:#19382b;box-shadow:0 8px 28px #071a1259;scrollbar-color:#89a279 #19382b;overscroll-behavior:contain}
-.shop-activity-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.shop-activity-heading h2{font-size:19px;margin:0}
-.shop-activity-heading button{width:44px;height:44px;flex:none;border:0;background:transparent;color:var(--p-sage-91-2);font-size:25px;cursor:pointer}
-.shop-play h3{font-size:15px;margin:18px 0 8px}
-.shop-play p{font-size:13px;line-height:1.45;margin:8px 0;color:var(--p-sage-91-2)}
-.shop-play small{display:block;font-size:12px;line-height:1.4;color:#c4d7b9}
-.shop-play progress{width:100%;height:5px;accent-color:var(--p-lime-78);margin:10px 0 0}
-.shop-play progress::-webkit-progress-bar{background:#426047;border-radius:4px}
-.shop-play progress::-webkit-progress-value{background:var(--p-lime-78);border-radius:4px}
-.moment-options{display:grid;gap:6px}
-.moment-options button,.operations-alerts button,.shift-recap button{width:100%;min-height:44px;padding:10px 12px;border:0;border-radius:8px;background:#294c37;color:var(--p-sage-91-2);text-align:left;font:600 13px Bricolage Grotesque,sans-serif;cursor:pointer}
-.moment-options strong,.operations-alerts strong{display:block}
-.moment-options small,.operations-alerts small{margin-top:3px}
-.moment-skip{min-height:44px;background:transparent;border:0;color:#d1dfc7;font:600 12px Bricolage Grotesque,sans-serif;padding:6px 0;cursor:pointer}
-.moment-note{margin-bottom:16px}
-.shift-recap,.operations-alerts{border-top:1px solid #59754d;padding-top:3px;margin-top:16px}
-.operations-alerts button+button{margin-top:6px}
-.shop-play .recap-detail{color:#c4d7b9;font-size:12px}
-.shift-recap button{margin-top:8px;line-height:1.4}
-.moment-bubble{position:absolute;width:44px;height:44px;display:grid;place-items:center;transform:translate(-50%,-100%);border:0;border-radius:12px 12px 12px 2px;background:#eed69b;color:#24412f;box-shadow:0 4px 12px #1029184d;cursor:pointer}
-.shop-play .moment-bubble:hover{background:#f8e6b9}
-.shop-play-feedback{position:absolute;left:50%;top:calc(var(--hud-height,60px) + 64px);transform:translate(-50%);width:max-content;max-width:calc(100% - 28px);padding:10px 14px;border-radius:10px;background:#e4eecf;color:#24412f!important;box-shadow:0 4px 15px #1029184d;text-align:center;pointer-events:none}
+.shop-play svg{width:20px;height:20px;flex:none}
+.shop-play button:focus-visible{outline:2px solid var(--ui-brass);outline-offset:2px}
 .shop-play [hidden]{display:none!important}
 .guide-open .shop-play,html:not(.age-ok) .shop-play{display:none}
-.shop-activity-panel .shop-play-feedback{position:static;transform:none;width:auto;max-width:none;margin:8px 0;box-shadow:none}
-@media(min-width:780px){.shop-activity{left:76px}.shop-activity-panel{left:76px;max-height:calc(100dvh - var(--hud-height,60px) - 90px)}}
-.shop-activity.is-moment{border-color:var(--p-gold-76);background:#3a3218;color:#f7ecc8}
-.shop-activity.is-moment svg{color:var(--p-gold-76)}
-.shop-activity.is-moment:hover{background:#4a4020}
+
+/* The pill on the map. */
+.shop-activity{position:absolute;left:12px;top:calc(var(--hud-height,60px) + 12px);display:flex;align-items:center;gap:8px;max-width:calc(100% - 100px);min-height:44px;padding:0 14px 0 12px;border:1px solid var(--ui-edge);border-radius:14px;background:var(--ui-glass);-webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);box-shadow:var(--ui-shadow);color:var(--ui-ink);font:600 13px 'Bricolage Grotesque',system-ui,sans-serif;text-align:left;cursor:pointer}
+.shop-activity svg{color:var(--ui-soft)}
+.shop-activity span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.shop-activity.has-update::after{content:'';flex:none;width:7px;height:7px;border-radius:50%;background:var(--ui-brass)}
+.shop-activity.is-moment{border-color:#e2c68a66;background:linear-gradient(var(--ui-brass-wash),var(--ui-brass-wash)),var(--ui-glass)}
+.shop-activity.is-moment svg{color:var(--ui-brass)}
+@media(hover:hover){.shop-activity:hover{background:var(--ui-glass-strong)}}
+
+/* The panel. */
+.shop-activity-panel{position:absolute;left:12px;top:calc(var(--hud-height,60px) + 64px);width:min(360px,calc(100% - 24px));max-height:calc(100dvh - var(--hud-height,60px) - var(--dock-height,90px) - 80px);overflow:auto;padding:6px 14px 16px;border:1px solid var(--ui-edge);border-radius:18px;background:var(--ui-glass-strong);-webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);box-shadow:var(--ui-shadow);scrollbar-width:thin;scrollbar-color:var(--ui-edge) transparent;overscroll-behavior:contain}
+.shop-activity-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-right:-8px}
+.shop-activity-heading h2{margin:0;font-size:17px;font-weight:600;letter-spacing:-.01em;color:var(--ui-ink)}
+.shop-activity-heading button{display:grid;place-items:center;width:44px;height:44px;flex:none;border:0;border-radius:12px;background:none;color:var(--ui-soft);cursor:pointer}
+@media(hover:hover){.shop-activity-heading button:hover{color:var(--ui-ink);background:var(--ui-sheen)}}
+.shop-play h3{margin:0;font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ui-soft)}
+.shop-play p{margin:0;font-size:13px;line-height:1.4;color:var(--ui-ink)}
+.shop-play small{display:block;font-size:12px;line-height:1.35;color:var(--ui-soft)}
+.activity-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 2px 8px}
+.activity-head span{font:500 12px 'DM Mono',monospace;color:var(--ui-soft);font-variant-numeric:tabular-nums}
+.shift-recap,.operations-alerts{margin-top:18px}
+
+/* On the floor: a thin progress line, then open figures. */
+.shop-play progress{display:block;width:100%;height:3px;margin:0;border:0;border-radius:3px;background:var(--ui-well);accent-color:var(--ui-leaf-glow);-webkit-appearance:none;appearance:none}
+.shop-play progress::-webkit-progress-bar{background:var(--ui-well);border-radius:3px}
+.shop-play progress::-webkit-progress-value{background:var(--ui-leaf-glow);border-radius:3px}
+.shop-play progress::-moz-progress-bar{background:var(--ui-leaf-glow);border-radius:3px}
+.activity-figures{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 2px 0}
+.activity-figures div{min-width:0}
+.activity-figures dt{font-size:11.5px;color:var(--ui-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.activity-figures dd{margin:2px 0 0;font:500 20px/1.15 'DM Mono',monospace;letter-spacing:-.03em;color:var(--ui-ink);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* The last recap's advice is the next thing to tap, so it gets the brass card. */
+.activity-advice{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:10px;width:100%;margin-top:14px;padding:10px 8px 10px 12px;border:1px solid var(--ui-edge);border-radius:14px;background:var(--ui-brass-wash);color:var(--ui-ink);text-align:left;font:inherit;cursor:pointer}
+.activity-advice>svg:first-child{color:var(--ui-brass)}
+.activity-advice>svg:last-child{width:16px;height:16px;color:var(--ui-brass)}
+.activity-advice-copy{display:grid;gap:3px;min-width:0}
+.activity-advice small{font-size:11.5px;font-weight:600;color:var(--ui-brass);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.activity-advice strong{font-size:13px;font-weight:600;line-height:1.3}
+@media(hover:hover){.activity-advice:hover{border-color:#e2c68a55}}
+
+/* Operations and the budtender's picks: grouped lists of single rows. */
+#operationsAlerts,.moment-options{display:block;border:1px solid var(--ui-edge);border-radius:14px;background:var(--ui-well-soft);overflow:hidden}
+.activity-head #operationsCount{min-width:0}
+#operationsAlerts button,.moment-options button{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:10px;width:100%;min-height:52px;padding:8px 10px 8px 12px;border:0;border-radius:0;background:none;color:var(--ui-ink);text-align:left;font:inherit;cursor:pointer}
+#operationsAlerts button+button,.moment-options button+button{box-shadow:inset 0 1px var(--ui-sheen)}
+@media(hover:hover){#operationsAlerts button:hover,.moment-options button:hover{background:var(--ui-sheen)}}
+#operationsAlerts button>svg{width:16px;height:16px;color:var(--ui-soft)}
+.activity-row-copy{display:grid;gap:2px;min-width:0}
+.activity-row-copy strong{font-size:13.5px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.activity-row-copy small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.activity-clear{display:flex;align-items:center;gap:8px;min-height:48px;padding:0 12px;color:var(--ui-soft)!important}
+.activity-clear svg{width:16px;height:16px;color:var(--ui-leaf-glow)}
+
+/* A customer waiting on a pick takes the whole panel. */
 .shop-activity-panel.has-moment .shift-recap,.shop-activity-panel.has-moment .operations-alerts{display:none}
-.shop-activity-panel.has-moment{padding:14px 16px 16px}
-.shop-activity-panel.has-moment .shop-activity-heading h2{font-size:17px}
-.shop-play .moment-quote{margin:2px 0 12px;font-size:15px;line-height:1.35;font-style:italic;color:#f3ecd2}
-.shop-play .moment-options{gap:8px}
-.shop-play .moment-options button{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;min-height:52px;padding:8px 12px;border:1.5px solid var(--p-gold-76);background:#2b4a36;color:#f4f7ea}
-.shop-play .moment-options button:hover{background:#3a5f45}
-.shop-play .moment-options strong{font-size:14px}
-.shop-play .moment-options small{margin:0;padding:3px 9px;border-radius:99px;background:var(--p-gold-76);color:#2b2410;font-weight:700;font-size:11px}
-.shop-play .moment-skip{display:block;width:100%;margin-top:6px;text-align:center;text-decoration:underline;text-underline-offset:3px;color:#c4d7b9}
-.shop-play .moment-note{margin:2px 0 0;text-align:center;font-size:11px;color:#a9bf9b}
-.shop-play .moment-bubble{border-radius:50%;transform:translate(-50%,-115%);background:var(--p-gold-76);color:#2b2410;animation:momentPulse 1.8s ease-out infinite}
+.shop-activity-panel.has-moment{padding-bottom:6px}
+.shop-play .moment-quote{margin:2px 2px 12px;font-size:16px;line-height:1.35;font-style:italic;color:var(--ui-ink)}
+.moment-options button{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;row-gap:2px}
+.moment-options strong{grid-column:1;font-size:14px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.moment-options .moment-format{grid-column:1;font-size:12px;color:var(--ui-soft)}
+.moment-options small{grid-column:2;grid-row:1/3;padding:4px 10px;border-radius:99px;box-shadow:inset 0 0 0 1px #e2c68a66;color:var(--ui-brass);font-size:11.5px;font-weight:600;white-space:nowrap}
+.moment-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 2px 0}
+.shop-play .moment-note{font-size:11.5px}
+.moment-skip{flex:none;min-height:44px;padding:0;border:0;background:none;color:var(--ui-ink);font:600 12.5px 'Bricolage Grotesque',system-ui,sans-serif;text-decoration:underline;text-decoration-color:var(--ui-edge);text-underline-offset:4px;cursor:pointer}
+
+/* The bubble over the customer asking, and the toast after a pick. */
+.moment-bubble{position:absolute;width:44px;height:44px;display:grid;place-items:center;transform:translate(-50%,-115%);border:0;border-radius:50%;background:var(--ui-brass);color:var(--ui-brass-ink);box-shadow:0 4px 12px #1029184d;cursor:pointer;animation:momentPulse 1.8s ease-out infinite}
+.shop-play .moment-bubble svg{width:22px;height:22px}
+@media(hover:hover){.shop-play .moment-bubble:hover{background:#ecd6a4}}
 @media(prefers-reduced-motion:reduce){.shop-play .moment-bubble{animation:none}}
-@keyframes momentPulse{0%{box-shadow:0 4px 12px #1029184d,0 0 #e8d29c99}70%,to{box-shadow:0 4px 12px #1029184d,0 0 0 12px #e8d29c00}}
+@keyframes momentPulse{0%{box-shadow:0 4px 12px #1029184d,0 0 #e2c68a99}70%,to{box-shadow:0 4px 12px #1029184d,0 0 0 12px #e2c68a00}}
+.shop-play-feedback{position:absolute;left:50%;top:calc(var(--hud-height,60px) + 64px);transform:translate(-50%);width:max-content;max-width:calc(100% - 28px);padding:10px 14px;border:1px solid var(--ui-edge);border-radius:12px;background:var(--ui-glass-strong);-webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);color:var(--ui-ink)!important;box-shadow:var(--ui-shadow);text-align:center;pointer-events:none}
+.shop-activity-panel .shop-play-feedback{position:static;transform:none;width:auto;max-width:none;margin:2px 0 10px;border-color:#e2c68a44;background:var(--ui-brass-wash);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+
+@media(min-width:780px){.shop-activity{left:76px}.shop-activity-panel{left:76px;max-height:calc(100dvh - var(--hud-height,60px) - 90px)}}
