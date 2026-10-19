@@ -1,4 +1,4 @@
-/* Moments on the forest glass (UI reskin plan, Phase 5): welcome back and settings. Loaded last.
+/* Moments on the forest glass (UI reskin plan, Phase 5): welcome back, settings, age gate, start guide and reset. Loaded last.
    One strong glass card each, a soft scrim behind, mono figures, and brass only on the one thing to tap next. */
 .return-overlay,.settings-wrap{background:rgba(8,18,12,.42);-webkit-backdrop-filter:none;backdrop-filter:none}
 .return-card,.modal.settings{
@@ -41,3 +41,42 @@
 @media(hover:hover){.modal .settings-row:hover{color:var(--ui-ink);background:var(--ui-well-soft)}.modal .settings-close:hover{color:var(--ui-ink)}}
 
 @media(prefers-reduced-transparency:reduce){.return-card,.modal.settings{background:#1d3226;-webkit-backdrop-filter:none;backdrop-filter:none}}
+
+/* Age gate, start guide and reset: the same strong glass card. The answer that moves the player on is brass. */
+.age-card,.guide-card,#resetModal .modal{
+ border:1px solid var(--ui-edge);color:var(--ui-ink);
+ background:linear-gradient(180deg,var(--ui-sheen),transparent 30%),var(--ui-glass-strong);
+ -webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);box-shadow:var(--ui-shadow);
+}
+.age-card{border-radius:22px}
+.age-eyebrow,#resetModal .modal small{font-family:inherit;font-size:.656rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ui-soft)}
+.age-card h1{color:var(--ui-ink);letter-spacing:-.025em}
+.age-card p,.guide-card p,#resetModal .modal p{color:var(--ui-soft)}
+.age-actions button{border:0;border-radius:12px;background:var(--ui-brass);color:var(--ui-brass-ink)}
+.age-actions button:hover{background:var(--ui-brass);filter:brightness(1.06)}
+.age-actions button.ghost{border:1px solid var(--ui-edge);background:none;color:var(--ui-ink)}
+.age-actions button.ghost:hover{background:var(--ui-well-soft);filter:none}
+.age-actions button:focus-visible,.guide-actions button:focus-visible{outline:2px solid var(--ui-ink);outline-offset:2px}
+.age-fine{color:var(--ui-soft);opacity:.8}
+
+.guide-ring{border-color:var(--ui-brass)}
+.guide-dots i{background:var(--ui-well)}
+.guide-dots i.is-on{background:var(--ui-brass)}
+.guide-card h2{color:var(--ui-ink);letter-spacing:-.025em}
+.guide-card .guide-eyebrow{color:var(--ui-brass)}
+.guide-skip{color:var(--ui-soft)}
+.guide-next,.start-guide.is-hero .guide-next{border:0;background:var(--ui-brass);color:var(--ui-brass-ink);box-shadow:none}
+.guide-beats li{border:0;background:var(--ui-well);color:var(--ui-ink)}
+.guide-beats svg{color:var(--ui-leaf-glow)}
+.start-guide.is-hero .guide-card{background:linear-gradient(180deg,var(--ui-sheen),transparent 30%),var(--ui-glass-strong)}
+@media(hover:hover){.guide-skip:hover{color:var(--ui-ink)}}
+
+/* Reset is the one coral moment: Cancel is the quiet way out, the reset itself an outlined coral button. */
+#resetModal .modal{width:min(340px,calc(100% - 32px));padding:18px;border-radius:22px}
+#resetModal .modal h2{margin:2px 0 8px;font-size:1.1875rem;letter-spacing:-.025em;color:var(--ui-ink)}
+#resetModal .modal p{font-size:13px;line-height:1.5}
+#resetModal .modal>div{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+#resetModal .modal button{min-height:44px;border-radius:12px;font:inherit;font-size:13.5px;font-weight:600;letter-spacing:0;text-transform:none}
+#resetModal #resetCancel{border:1px solid var(--ui-edge);background:none;color:var(--ui-ink)}
+#resetModal #resetConfirm{border:1px solid var(--ui-coral);background:none;color:var(--ui-coral)}
+@media(prefers-reduced-transparency:reduce){.age-card,.guide-card,#resetModal .modal{background:#1d3226;-webkit-backdrop-filter:none;backdrop-filter:none}}
