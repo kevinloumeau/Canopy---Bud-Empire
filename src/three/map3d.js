@@ -83,9 +83,17 @@ export function createMap3D(canvas, layout) {
         #endif
         vHazeWorld = (modelMatrix * hazeLocal).xyz;`);
       shader.fragmentShader = 'varying vec3 vHazeWorld;\nuniform vec3 hazeColour;\nuniform vec4 hazeX;\nuniform vec4 hazeZ;\n' + shader.fragmentShader.replace('#include <dithering_fragment>', `
-        float hazeAmount = max(max(clamp((vHazeWorld.x - hazeX.x) / (hazeX.y - hazeX.x), 0.0, 1.0), clamp((vHazeWorld.x - hazeX.z) / (hazeX.w - hazeX.z), 0.0, 1.0)),
-          max(clamp((vHazeWorld.z - hazeZ.x) / (hazeZ.y - hazeZ.x), 0.0, 1.0), clamp((vHazeWorld.z - hazeZ.z) / (hazeZ.w - hazeZ.z), 0.0, 1.0)));
-        gl_FragColor.rgb = mix(gl_FragColor.rgb, hazeColour, hazeAmount);
+        // Measured at the ground point behind the fragment along the view ray (the camera looks down so that a point h
+        // up covers the ground h further back on both x and z), the haze is the same for whatever stands on a pixel: a
+        // tall far terrace fades up its height into the sky instead of standing as a flat haze-coloured block over a
+        // clearer street, and no wall is cut off where it crosses the ramp. smoothstep eases both ends of each ramp.
+        vec2 hazeGround = vHazeWorld.xz - vHazeWorld.y;
+        float hazeClear = (1.0 - smoothstep(hazeX.x, hazeX.y, hazeGround.x)) * (1.0 - smoothstep(hazeX.z, hazeX.w, hazeGround.x))
+          * (1.0 - smoothstep(hazeZ.x, hazeZ.y, hazeGround.y)) * (1.0 - smoothstep(hazeZ.z, hazeZ.w, hazeGround.y));
+        float hazeAmount = 1.0 - hazeClear;
+        // The colour is mixed in after the output conversion, so the haze is converted too: then a fully hazed wall,
+        // the ground's far edge and the sky behind them are one colour and nothing shows where the geometry stops.
+        gl_FragColor.rgb = mix(gl_FragColor.rgb, linearToOutputTexel(vec4(hazeColour, 1.0)).rgb, hazeAmount);
         #include <dithering_fragment>`);
     };
     m.customProgramCacheKey = () => 'haze';
@@ -446,7 +454,7 @@ export function createMap3D(canvas, layout) {
   // Street props (main.js passes frame.props: file, feet and turn, from the street's jobs and the queue posts). Each
   // file loads on first need and is baked into one geometry per material, drawn instanced over all its placements, so
   // forty props cost a few dozen draws rather than a thousand. Lamps glow through their LampGlow material after dark.
-  const MAX_PROPS = 64, propSources = {}, propRequested = {}, glowMaterials = new Set();
+  const MAX_PROPS = 160, propSources = {}, propRequested = {}, glowMaterials = new Set();
   function bake(root) {
     root.updateMatrixWorld(true);
     const byMaterial = new Map();
@@ -461,14 +469,18 @@ export function createMap3D(canvas, layout) {
           const v = a.getComponent(t + 1, k); a.setComponent(t + 1, k, a.getComponent(t + 2, k)); a.setComponent(t + 2, k, v);
         }
       });
-      Object.keys(g.attributes).forEach(k => { if (k !== 'position' && k !== 'normal' && k !== 'uv') g.deleteAttribute(k); });
+      // Vertex colours stay: the city models (art/blender/city) paint every part through one material that way.
+      Object.keys(g.attributes).forEach(k => { if (k !== 'position' && k !== 'normal' && k !== 'uv' && k !== 'color') g.deleteAttribute(k); });
       if (!g.attributes.normal) g.computeVertexNormals();
       if (!byMaterial.has(o.material)) byMaterial.set(o.material, []);
       byMaterial.get(o.material).push(g);
     });
     const parts = [...byMaterial].map(([mat, list]) => {
       // Parts merge only with the attributes they all share.
-      if (list.some(g => !g.attributes.uv)) list.forEach(g => g.deleteAttribute('uv'));
+      ['uv', 'color'].forEach(k => { if (list.some(g => !g.attributes[k])) list.forEach(g => g.deleteAttribute(k)); });
+      // A car's body paint takes each copy's own tint (p.tint, the parked cars): the material goes white and every copy
+      // carries its colour, the model's own unless tinted.
+      if (/Paint$/.test(mat.name)) { mat.userData.paint = mat.color.clone(); mat.color.set('#ffffff'); }
       const mesh = new THREE.InstancedMesh(mergeGeometries(list), withHaze(mat), MAX_PROPS);
       mesh.count = 0; mesh.castShadow = mesh.receiveShadow = true; mesh.frustumCulled = false; mesh.userData.file = root.userData.file;
       // Props stay in the scene on a branch visit: the branch scenes place them too.
@@ -525,10 +537,10 @@ export function createMap3D(canvas, layout) {
         position.x -= (b.min.x + b.max.x) / 2 * sx; position.z -= (b.min.z + b.max.z) / 2 * sz;
         matrix.compose(position, propTurn, fitScale.set(sx, sx / HEIGHT_SCALE, sz));
       } else matrix.compose(position, propTurn, propScale);
-      parts.forEach(m => m.setMatrixAt(m.count++, matrix));
+      parts.forEach(m => { if (m.material.userData.paint) m.setColorAt(m.count, p.tint ? colour.set(p.tint) : m.material.userData.paint); m.setMatrixAt(m.count++, matrix); });
     });
     // An unused prop is hidden rather than drawn zero times, which still costs its state changes.
-    Object.values(propSources).forEach(parts => parts.forEach(m => { m.instanceMatrix.needsUpdate = true; m.visible = m.count > 0; }));
+    Object.values(propSources).forEach(parts => parts.forEach(m => { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; m.visible = m.count > 0; }));
     glowMaterials.forEach(m => { m.emissive.set('#ffd9a0'); m.emissiveIntensity = night * 2.5; });
   }
   const carsModelled = () => !!layout.carModels && Object.keys(layout.carModels).every(k => carSources[k]);
@@ -890,7 +902,8 @@ function buildTown(world, layout, { box, span, material, textured, lampStandIns 
     const rgba = /rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/.exec(c);
     const paint = rgba ? material('#' + [1, 2, 3].map(k => (+rgba[k]).toString(16).padStart(2, '0')).join(''), { transparent: true, opacity: +rgba[4], depthWrite: false }) : material(c);
     const mesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1).translate(0, .5, 0), paint, list.length);
-    list.forEach((m, i) => mesh.setMatrixAt(i, mm.compose(mp.set((m.x0 + m.x1) / 2, m.y - .004, (m.z0 + m.z1) / 2), mq, ms.set(m.x1 - m.x0, .012, m.z1 - m.z0))));
+    // A mark with a height (m.h: kerb stones, drain grates) stands from m.y; paint is a sliver just under its m.y.
+    list.forEach((m, i) => mesh.setMatrixAt(i, mm.compose(mp.set((m.x0 + m.x1) / 2, m.h ? m.y : m.y - .004, (m.z0 + m.z1) / 2), mq, ms.set(m.x1 - m.x0, m.h || .012, m.z1 - m.z0))));
     mesh.receiveShadow = true;
     world.add(mesh);
   });
@@ -902,6 +915,7 @@ function buildTown(world, layout, { box, span, material, textured, lampStandIns 
     wall.userData.model = roof.userData.model = b.model;
     terraces.push(wall, roof);
   });
+  world.add(silhouettes(layout.silhouettes || [], P, material));
   const crownGeometry = new THREE.IcosahedronGeometry(1.6, 1);
   layout.trees.forEach(([x, z]) => {
     box(world, x, P, z, .35, 2.2, .35, '#7a5a3e', { opts: { name: 'street' } });
@@ -916,6 +930,42 @@ function buildTown(world, layout, { box, span, material, textured, lampStandIns 
     lampStandIns.push(box(world, x, P + 4.3, z, .5, .3, .5, '#f1e3b6', { opts: { name: 'street' } }));
   });
   return terraces;
+}
+
+// The town beyond the first ring (layout.silhouettes): each lot one box in its muted colour with a pale parapet and a
+// dark band of windows per storey on its two faces toward the camera, all merged into one vertex-coloured mesh (one
+// draw), casting no shadow. Heights match the Blender terraces' storeys: 2.75 m ground, 2.45 m above, 1.69 units a metre.
+function silhouettes(list, P, material) {
+  const pos = [], nor = [], col = [], c = new THREE.Color(), dark = new THREE.Color(), cap = new THREE.Color('#e6dcc6');
+  const quad = (a, b, d, e, n, colour) => {
+    [a, b, d, a, d, e].forEach(v => { pos.push(...v); nor.push(...n); col.push(colour.r, colour.g, colour.b); });
+  };
+  const box = (x0, x1, y0, y1, z0, z1, colour) => {
+    quad([x0, y1, z1], [x1, y1, z1], [x1, y1, z0], [x0, y1, z0], [0, 1, 0], colour);
+    quad([x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1], [0, 0, 1], colour);
+    quad([x1, y0, z1], [x1, y0, z0], [x1, y1, z0], [x1, y1, z1], [1, 0, 0], colour);
+    quad([x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0], [0, 0, -1], colour);
+    quad([x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0], [-1, 0, 0], colour);
+  };
+  const up = 1.69 / HEIGHT_SCALE, ground = 2.75 * up, storey = 2.45 * up;
+  list.forEach(b => {
+    c.set(b.colour).convertSRGBToLinear(); dark.copy(c).multiplyScalar(.62);
+    const top = P + ground + (b.storeys - 1) * storey + .35 * up;
+    box(b.x0, b.x1, P, top, b.z0, b.z1, c);
+    box(b.x0 - .12, b.x1 + .12, top, top + .3, b.z0 - .12, b.z1 + .12, cap);
+    for (let k = 0; k < b.storeys; k++) {
+      const y0 = P + (k ? ground + (k - 1) * storey : 0) + (k ? .9 : .5) * up, y1 = y0 + (k ? 1.1 : 1.7) * up;
+      quad([b.x0 + .5, y0, b.z1 + .03], [b.x1 - .5, y0, b.z1 + .03], [b.x1 - .5, y1, b.z1 + .03], [b.x0 + .5, y1, b.z1 + .03], [0, 0, 1], dark);
+      quad([b.x1 + .03, y0, b.z1 - .5], [b.x1 + .03, y0, b.z0 + .5], [b.x1 + .03, y1, b.z0 + .5], [b.x1 + .03, y1, b.z1 - .5], [1, 0, 0], dark);
+    }
+  });
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  const mesh = new THREE.Mesh(g, material('#ffffff', { vertexColors: true, name: 'silhouette' }));
+  mesh.receiveShadow = true; mesh.castShadow = false;
+  return mesh;
 }
 
 // The shop: the timber floor on the plaza, the mezzanine and top floor as slabs on posts, the rear and short side
