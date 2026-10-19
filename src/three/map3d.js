@@ -9,6 +9,7 @@
 import * as THREE from 'three';
 import { buildShell } from './shell.js';
 import { buildRooftop } from './rooftop.js';
+import { buildEntrance } from './entrance.js';
 import { createBranchLayer } from './branch3d.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
@@ -124,6 +125,7 @@ export function createMap3D(canvas, layout) {
   const transport = buildTransport(scene, world, layout.transport, { box, material });
   const shell = buildShell(world, layout, { box, span, material });
   const rooftop = buildRooftop(world, layout, { box, span, material });
+  buildEntrance(world, layout, { box, span, material });
 
   // Stations: one solid per station slot, resized and recoloured from the frame (tier, built, rising in).
   const stationMeshes = [], selectionRing = new THREE.Mesh(new THREE.RingGeometry(.86, 1, 48).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#e2c68a', transparent: true, opacity: .85, depthWrite: false }));
@@ -158,10 +160,14 @@ export function createMap3D(canvas, layout) {
   }
   // Fixtures (the online orders deck) are placed by their own origin at a fixed Blender-to-map scale rather than
   // fitted to a sprite, since their footprint is irregular; `key` names the frame flag that shows them.
-  const fixtures = {};
+  const fixtures = {}, fixtureGlows = [];
   (layout.fixtures || []).forEach(f => {
     loader.load(layout.modelBase + f.file, gltf => {
       prepare(gltf.scene);
+      // Parts a fixture's model has that the map draws differently (f.hide, by object name).
+      (f.hide || []).forEach(name => { const o = gltf.scene.getObjectByName(name); if (o) o.visible = false; });
+      // Backlit panels (f.glow names the material): a soft warm light from behind, faint by day and fuller at night.
+      if (f.glow) gltf.scene.traverse(o => { const m = o.isMesh && o.material; if (m && m.name === f.glow && !fixtureGlows.includes(m)) { m.emissive.set('#ffe3b0'); fixtureGlows.push(m); } });
       const holder = new THREE.Group();
       holder.add(gltf.scene);
       holder.scale.set(f.scale, f.scale / HEIGHT_SCALE, f.scale);
@@ -537,6 +543,7 @@ export function createMap3D(canvas, layout) {
     if (people.instanceColor) people.instanceColor.needsUpdate = true;
 
     placeProps(frame.props, night);
+    fixtureGlows.forEach(m => { m.emissiveIntensity = .16 + night * .7; });
     lampStandIns.forEach(m => { m.visible = !propSources['street_lamp.glb']; });
     const modelled = carsModelled();
     frame.cars.forEach((c, i) => {
@@ -639,7 +646,7 @@ function buildShop(world, layout, { box, span, material, textured }) {
   const shop = new THREE.Group();
   world.add(shop);
   layout.floors.forEach((f, fi) => {
-    const left = -f.w / 2, right = f.w / 2, rear = f.z - f.d / 2, front = f.z + f.d / 2;
+    const left = (f.x || 0) - f.w / 2, right = (f.x || 0) + f.w / 2, rear = f.z - f.d / 2, front = f.z + f.d / 2;
     textured(span(shop, left, right, f.y - (fi ? .32 : .02), f.y, rear, front, fi === 2 ? '#e9e4d8' : fi ? '#e4ddcc' : '#c9965f', { cast: fi > 0 }), ['herringbone', 'timber', 'concrete'][fi]);
     // The walls themselves are the shell's (shell.js).
     // A brass rail along the open front edge of the upper floors.
