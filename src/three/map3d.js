@@ -234,10 +234,30 @@ export function createMap3D(canvas, layout) {
   function stationPicture(key) {
     if (pictures[key]) return pictures[key];
     if (!models[key]) { requestModel(key); return null; }
-    const W = 480, H = 600, stretch = new THREE.Group(), copy = models[key].clone();
-    stretch.scale.y = HEIGHT_SCALE; stretch.add(copy); pictureScene.add(stretch);
+    return (pictures[key] = renderPicture(models[key].clone(), 480, 600));
+  }
+  // The rooftop lounge as the map shows it at that tier (rooftop.js poses and trims a copy), wider than a station.
+  // Null until the tier's Blender furniture is in.
+  function loungePicture(tier, lifts) {
+    tier = Math.min(4, Math.max(1, tier || 1));
+    const key = 'lounge.' + tier + '.' + (lifts ? 2 : 1);
+    if (pictures[key]) return pictures[key];
+    const copy = rooftop && rooftop.pictureCopy(tier, lifts);
+    return copy ? (pictures[key] = renderPicture(copy, 600, 480)) : null;
+  }
+  // A fixture (the online deck) by itself, as the map shows it once built. Null until its model is in.
+  function fixturePicture(key) {
+    if (pictures['fixture.' + key]) return pictures['fixture.' + key];
+    if (!fixtures[key]) return null;
+    const copy = fixtures[key].clone(); copy.visible = true;
+    return (pictures['fixture.' + key] = renderPicture(copy, 600, 480));
+  }
+  // Renders an object (in map units, before the world's height stretch) from the map's camera into a W×H canvas,
+  // framing its projected outline with a small margin.
+  function renderPicture(object, W, H) {
+    const stretch = new THREE.Group();
+    stretch.scale.y = HEIGHT_SCALE; stretch.add(object); pictureScene.add(stretch);
     stretch.updateMatrixWorld(true);
-    // Frame the model's projected outline with a small margin, keeping the canvas's aspect.
     const box = new THREE.Box3().setFromObject(stretch), corners = [];
     for (let k = 0; k < 8; k++) corners.push(new THREE.Vector3(k & 1 ? box.max.x : box.min.x, k & 2 ? box.max.y : box.min.y, k & 4 ? box.max.z : box.min.z));
     pictureCamera.updateMatrixWorld(true);
@@ -261,7 +281,7 @@ export function createMap3D(canvas, layout) {
     const pc = picture.getContext('2d'), image = pc.createImageData(W, H);
     for (let y = 0; y < H; y++) image.data.set(pixels.subarray((H - 1 - y) * W * 4, (H - y) * W * 4), y * W * 4);
     pc.putImageData(image, 0, 0);
-    return (pictures[key] = picture);
+    return picture;
   }
 
   // People and cars move every frame, so they are instanced: one draw call for all of them.
@@ -665,6 +685,8 @@ export function createMap3D(canvas, layout) {
     propReady,
     hasFixture: key => !!fixtures[key],
     stationPicture,
+    loungePicture,
+    fixturePicture,
     get ok() { return !lost; },
     get loading() { return loading; },
     dispose() { renderer.dispose(); materials.forEach(m => m.dispose()); }

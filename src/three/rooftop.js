@@ -343,6 +343,7 @@ export function buildRooftop(world, layout, { box, span, material }) {
   // The Blender furniture (the diorama's rooftop_*.glb, each origin on its footprint, at the stations' 1.69 map units
   // per metre). Each set swaps in for its code-built stand-in once it loads; the named parts take over the stand-ins'
   // glowing materials so the sign, the fire, the bar lamps and the dance floor still light up at night.
+  const loaded = new Set();
   function loadModels(loader, base) {
     const sets = [
       { file: 'rooftop_speakeasy.glb', parent: t1, hide: k1, at: [[x0 + 3.8, z0 + 1.825]] },
@@ -369,11 +370,39 @@ export function buildRooftop(world, layout, { box, span, material }) {
       });
       if (fire) flame = fire;
       set.hide.visible = false;
+      loaded.add(set.parent);
     }, undefined, e => console.warn('3D map: could not load ' + set.file, e)));
+  }
+
+  // A copy of the deck as the map shows it at `tier`, for the menus' lounge picture (map3d.loungePicture): only what
+  // stands on the deck, so the elevator shaft, its bridge and the columns down to the street are left out, and no
+  // smoke. Null until every model that tier shows has loaded.
+  function pictureCopy(tier, lifts) {
+    const shown = [t1, t2, t3, t4].slice(0, Math.min(4, Math.max(1, tier)));
+    if (!shown.every(g => loaded.has(g)) || !loaded.has(open)) return null;
+    const was = [site, t1, t2, t3, t4, open, second, gapFill, smoke].map(g => g.visible);
+    site.visible = false; open.visible = true; smoke.visible = false;
+    [t1, t2, t3, t4].forEach((g, k) => { g.visible = k < shown.length; });
+    second.visible = !!lifts; gapFill.visible = !lifts;
+    const copy = roof.clone();
+    [site, t1, t2, t3, t4, open, second, gapFill, smoke].forEach((g, k) => { g.visible = was[k]; });
+    copy.updateMatrixWorld(true);
+    const drop = [], bounds = new THREE.Box3();
+    copy.traverse(o => {
+      if (o === copy) return;
+      if (!o.visible || o.isSprite) { drop.push(o); return; }
+      if (!o.isMesh || o.isInstancedMesh) return;
+      if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+      bounds.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);
+      if (bounds.max.y < y - .05 || bounds.min.x < x0 - .2) drop.push(o);
+    });
+    drop.forEach(o => o.parent && o.parent.remove(o));
+    return copy;
   }
 
   return {
     loadModels,
+    pictureCopy,
     update(frame) {
       const tier = frame.loungeOpen ? Math.max(1, frame.loungeTier || 1) : 0, night = frame.night || 0;
       site.visible = !tier; open.visible = !!tier;

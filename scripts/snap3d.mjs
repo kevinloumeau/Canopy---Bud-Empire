@@ -9,7 +9,8 @@
 //   node scripts/snap3d.mjs out.png --phone --light night --advance 20 --save my-save.json --no-ui
 //
 // Options: --url (default http://127.0.0.1:4173/), --size WxH, --dpr, --phone (390×844), --save fresh|showcase|file,
-// --light day|night, --advance seconds of play before the shot, --no-ui (map only), --live (no ?snap, for timing).
+// --light day|night, --advance seconds of play before the shot, --no-ui (map only), --live (no ?snap, for timing),
+// --eval js to run in the page once the map is up (to open a panel, say: --eval "document.querySelector('[data-lounge]').click()").
 // Chrome comes from CHROME, Playwright's Chromium (/opt/pw-browsers) or the default macOS path.
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
@@ -95,6 +96,7 @@ try {
   await until(map, 'the 3D map');
   // Map only: hide everything but the map's canvases (the HUD, panels, dock, map buttons and station tags).
   if (flags['no-ui']) await evaluate(`(()=>{const w=document.getElementById('world');for(const c of w.children)if(c.tagName!=='CANVAS')c.style.visibility='hidden';for(let e=w;e&&e!==document.body;e=e.parentElement)for(const s of e.parentElement.children)if(s!==e&&s.tagName!=='SCRIPT')s.style.visibility='hidden'})()`);
+  if (flags.eval) await evaluate(String(flags.eval));
   const loaded = Date.now();
   if (flags.live) {
     // The game's own loop keeps drawing; wait for the files the 3D map asks for (it asks as stations come into view).

@@ -16,3 +16,16 @@
 .sheet [data-pane=factory] .station-upgrade{display:none}
 .sheet .selected-line #buyMachine{position:relative;overflow:hidden}
 .sheet .selected-line #buyMachine:disabled::after{content:'';position:absolute;left:0;bottom:0;width:var(--funded,0%);height:3px;background:var(--ui-leaf-glow);opacity:.8;pointer-events:none}
+/* The lounge: its picture is the whole rooftop deck, wider than a station, and its levels have no MAX. */
+.sheet>[data-pane=factory] .selected-line.is-lounge{grid-template-columns:156px minmax(0,1fr)}
+.sheet .selected-line.is-lounge #upgradePreview{width:156px;height:124px}
+.sheet .selected-line .station-buy-actions.single{grid-template-columns:minmax(0,1fr)}
+.sheet .selected-line .station-buy-actions.single #buyMachineMax{display:none}
+@media(max-width:779px){
+ .sheet>[data-pane=factory] .selected-line.is-lounge{grid-template-columns:132px minmax(0,1fr)}
+ .sheet .selected-line.is-lounge #upgradePreview{width:132px;height:108px}
+}
+@media(max-width:360px){
+ .sheet>[data-pane=factory] .selected-line.is-lounge{grid-template-columns:108px minmax(0,1fr)}
+ .sheet .selected-line.is-lounge #upgradePreview{width:108px;height:92px}
+}
