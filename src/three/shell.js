@@ -107,6 +107,33 @@ export function buildShell(world, layout, { box, span, material, model }) {
   const hub = new THREE.Mesh(new THREE.CylinderGeometry(.1, .1, .06, 20).rotateX(Math.PI / 2), material('#d8c18b'));
   rotor.add(hub);
 
+  // Kevin (2026-10-19): a row of the same exhaust fans along the rear glazing's top band, between the transom and the
+  // roof slab. One model load, drawn instanced (one draw per part for the whole row); the rotors' instances turn with
+  // the big fan's rotor every frame.
+  const bandY0 = top.y + 2.98, bandY1 = top.y + glassH - .08, rowA0 = tLeft, rowA1 = s.topLanding.outer;
+  const rowCount = Math.max(1, Math.floor((rowA1 - rowA0) / 2.2));
+  const rowSpots = Array.from({ length: rowCount }, (_, k) => new THREE.Matrix4().makeTranslation(rowA0 + (rowA1 - rowA0) * (k + .5) / rowCount, (bandY0 + bandY1) / 2, tRear + .02));
+  let fanRow = null;
+  if (model && bandY1 - bandY0 > 1) model('exhaust_fan.glb', 0, 0, 0, (scene, holder) => {
+    const parentInverse = new THREE.Matrix4().copy(holder.parent.matrixWorld).invert(), rel = new THREE.Matrix4();
+    const rowRotor = scene.getObjectByName('Rotor'), spinning = [];
+    holder.updateMatrixWorld(true);
+    scene.traverse(o => {
+      if (!o.isMesh) return;
+      let inRotor = false;
+      for (let p = o; p; p = p.parent) if (p === rowRotor) inRotor = true;
+      const mesh = new THREE.InstancedMesh(o.geometry, o.material, rowCount);
+      rel.multiplyMatrices(parentInverse, o.matrixWorld);
+      rowSpots.forEach((spot, i) => mesh.setMatrixAt(i, new THREE.Matrix4().multiplyMatrices(spot, rel)));
+      mesh.castShadow = false; mesh.receiveShadow = true;
+      shell.add(mesh);
+      if (inRotor) spinning.push({ part: o, mesh });
+    });
+    // Detached, the holder's own matrix is what the parent's inverse took off above.
+    holder.parent.remove(holder);
+    fanRow = { rotor: rowRotor, holder, parentInverse: new THREE.Matrix4(), spinning };
+  });
+
   // Products for the shelving: one instanced jar mesh and one instanced pouch mesh for the whole shop.
   const jarGeometry = new THREE.CylinderGeometry(.09, .09, .22, 12).translate(0, .11, 0);
   const pouchGeometry = new THREE.BoxGeometry(.18, .26, .07).translate(0, .13, 0);
@@ -452,6 +479,15 @@ export function buildShell(world, layout, { box, span, material, model }) {
       const night = frame.night || 0, open = !!frame.loungeOpen;
       rotor.rotation.z = -(frame.time || 0) * Math.PI * 2 / 26000;
       if (modelRotor) modelRotor.rotation.z = rotor.rotation.z;
+      if (fanRow && fanRow.rotor) {
+        fanRow.rotor.rotation.z = rotor.rotation.z;
+        fanRow.holder.updateMatrixWorld(true);
+        fanRow.spinning.forEach(({ part, mesh }) => {
+          const rel = new THREE.Matrix4().multiplyMatrices(fanRow.parentInverse, part.matrixWorld), m = new THREE.Matrix4();
+          rowSpots.forEach((spot, i) => mesh.setMatrixAt(i, m.multiplyMatrices(spot, rel)));
+          mesh.instanceMatrix.needsUpdate = true;
+        });
+      }
       frontDrapes.set(frame.loungeCurtain || 0, open);
       exitDrapes.set(frame.loungeExitCurtain || 0, open);
       if (closedDoor) closedDoor.visible = !open;
