@@ -318,68 +318,135 @@ const BUILDING_SPRITES = {
   'building.townhouse.sage': { door: 124, foot: 0.559, base: 0.999, w: 7.51, d: 5.89, wall: SAGE, h: 9 },
   'building.workshop.low': { door: 125.2, foot: 0.577, base: 0.999, w: 7.71, d: 7.23, wall: STONE, h: 4.5 }
 };
-// Neighbours: [near-corner x, near-corner z, render]. Every block round the shop is terraced edge to edge, two units
-// back from the kerbs: a row's fronts share one z and a column's one x, each building butted to the last (a joint
-// overlaps by a few tenths rather than leaving an alley), corner shops at the junctions. A second ring of terraces
-// stands across the back streets (a whole block behind the first ring, never on its heels, so their fronts and the
-// street between show above the first ring's roofs), and the outermost of them stand in the haze.
+// Neighbours: [near-corner x, near-corner z, render, 3D model]. Every block round the shop is terraced edge to edge, two
+// units back from the kerbs: a row's fronts share one z and a column's one x, each building butted to the last (a joint
+// overlaps by a few tenths rather than leaving an alley), corner shops at the junctions. The render names the lot (its
+// footprint); the optional 3D model is one of the city terraces (art/blender/city/city_buildings.py) built on that
+// lot with 2 to 5 storeys and a shop on the ground floor (Kevin, 2026-10-19: break up the identical two- and
+// three-storey blocks, shops rather than plain house fronts). The tall ones stand behind and left of the shop; the
+// front row, the right column and the front corners stay two or three storeys so they never hide it.
 const BUILDINGS = [
   // Far row, facing the shop across the rear street.
-  [-7.72, -23.5, 'building.rowhouse.terracotta'],
+  [-7.72, -23.5, 'building.rowhouse.terracotta', 'city_terra_4'],
   [0.8, -23.5, 'building.low.sage'],
-  [10.02, -23.5, 'building.apartment.brick'],
-  [17.5, -23.5, 'building.corner'],
-  // Left column, packed from the front street's kerb so its head clears the rear street.
+  [10.02, -23.5, 'building.apartment.brick', 'city_brick_5'],
+  [17.5, -23.5, 'building.corner', 'city_corner_4'],
+  // Left column, packed from the front street's kerb so its head clears the rear street...
   [-27.5, 16.5, 'building.corner'],
-  [-27.5, 9.65, 'building.low.stone'],
+  [-27.5, 9.65, 'building.low.stone', 'city_stone_4'],
   [-27.5, 2.11, 'building.low.sage'],
-  [-27.5, -5.44, 'building.mid.stone'],
+  [-27.5, -5.44, 'building.mid.stone', 'city_cream_5'],
+  // ...and a second column on its heels filling the block out to the side back street, its roofs showing over the first.
+  [-35.4, 16.5, 'building.townhouse.sage', 'city_sage_4'],
+  [-35.4, 10.86, 'building.low.tan', 'city_tan_3'],
+  [-35.4, 3.59, 'building.low.stone', 'city_stone_3'],
+  [-35.4, -4.1, 'building.workshop.low', 'city_brick_4'],
   // Right column, likewise.
-  [37, 16.5, 'building.low.stone'],
+  [37, 16.5, 'building.low.stone', 'city_stone_3'],
   [37, 8.96, 'building.mid.stone'],
-  [37, 2.2, 'building.low.sage'],
+  [37, 2.2, 'building.low.sage', 'city_mauve_2'],
   [37, -5.35, 'building.low.tan'],
   // Front row, across the front street, facing away.
   [-8.03, 35.5, 'building.apartment.brick'],
-  [0.63, 35.5, 'building.rowhouse.terracotta'],
+  [0.63, 35.5, 'building.rowhouse.terracotta', 'city_terra_2'],
   [9.2, 35.5, 'building.low.sage'],
   [17.46, 35.5, 'building.mid.stone'],
   // Corner blocks of the first ring.
   [-27.5, -23.5, 'building.corner'],
-  [-34.83, -23.5, 'building.rowhouse.terracotta'],
+  [-34.83, -23.5, 'building.rowhouse.terracotta', 'city_terra_4'],
   [36.97, -23.5, 'building.apartment.brick'],
-  [-27.5, 35.5, 'building.townhouse.sage'],
-  [-34.61, 35.5, 'building.low.tan'],
-  [37, 35.5, 'building.low.stone'],
-  // Second ring: the row beyond the rear back street...
-  [-10.04, -41.5, 'building.townhouse.sage'],
-  [-3.06, -41.5, 'building.low.tan'],
-  [3.97, -41.5, 'building.low.stone'],
-  [10.88, -41.5, 'building.townhouse.sage'],
-  [18.55, -41.5, 'building.shop.narrow'],
-  [-27.5, -41.5, 'building.corner'],
-  [-34.83, -41.5, 'building.low.sage'],
-  [36.77, -41.5, 'building.low.sage'],
-  [55.46, -41.5, 'building.mid.stone'],
-  [62.57, -41.5, 'building.townhouse.sage'],
-  // ...the columns beyond the side back streets...
-  [-53.5, 16.5, 'building.apartment.brick'],
-  [-53.5, 9.81, 'building.low.tan'],
-  [-53.5, 2.69, 'building.rowhouse.terracotta'],
-  [-53.5, -3.59, 'building.townhouse.sage'],
-  [-53.5, -23.5, 'building.apartment.brick'],
-  [56.5, 16.5, 'building.apartment.brick'],
-  [56.5, 9.81, 'building.low.tan'],
-  [56.5, 2.69, 'building.rowhouse.terracotta'],
-  [56.5, -3.59, 'building.townhouse.sage'],
-  // ...the outer columns' front corners, so no block by the haze stands empty...
-  [-53.5, 35.5, 'building.corner'],
-  [56.5, 35.5, 'building.corner'],
-  // ...and the far row's run beyond the right back street, fading out.
-  [55.28, -23.5, 'building.shop.narrow'],
-  [62.51, -23.5, 'building.low.stone'],
-  [70.39, -23.5, 'building.shop.narrow']
+  [-27.5, 35.5, 'building.townhouse.sage', 'city_sage_3'],
+  [-34.61, 35.5, 'building.low.tan', 'city_tan_3'],
+  [37, 35.5, 'building.low.sage', 'city_mauve_2']
 ];
+// The 3D terraces' Blender bounds in metres along three.js x and z ([x0, x1, z0, z1], origin at the body's centre,
+// shopfronts and awnings included) and their roof and top heights, from art/blender/city/city_meta.json. A model is
+// fitted to its lot by these bounds (map3d's p.fit), so the same numbers say where its roof is in map units.
+const MODEL_BOUNDS = {
+  building_apartment_brick: [-2.902, 2.902, -2.1975, 2.2575, 7.338, 7.6], building_corner: [-2.387, 3.007, -2.245, 2.865, 5.388, 5.65],
+  building_low_sage: [-2.6945, 2.6945, -2.452, 3.122, 6.628, 6.89], building_low_stone: [-2.3575, 2.3575, -2.449, 2.569, 6.298, 6.56],
+  building_low_tan: [-2.3425, 2.3825, -2.325, 2.385, 5.808, 6.07], building_mid_stone: [-2.603, 2.603, -2.2185, 2.2785, 7.548, 7.81],
+  building_rowhouse_terracotta: [-2.7215, 2.7215, -2.0765, 2.5965, 6.938, 7.2], building_shop_narrow: [-2.5495, 2.5495, -1.943, 2.613, 6.778, 7.04],
+  building_townhouse_sage: [-2.322, 2.322, -1.8425, 2.0425, 7.898, 8.16], building_workshop_low: [-2.401, 2.401, -2.239, 2.359, 3.148, 3.41],
+  city_brick_4: [-2.3811, 3.1511, -2.2391, 3.0091, 10.418, 10.69], city_brick_5: [-2.9018, 3.4118, -2.1976, 2.9676, 12.868, 13.14],
+  city_corner_4: [-2.387, 3.157, -2.245, 3.015, 10.418, 10.69], city_cream_5: [-2.603, 3.113, -2.2183, 2.9883, 12.868, 13.14],
+  city_mauve_2: [-2.6947, 2.6947, -2.4521, 3.2221, 5.518, 6.21], city_sage_3: [-2.3219, 3.0919, -1.8426, 2.6126, 7.968, 8.24],
+  city_sage_4: [-2.3219, 2.3219, -1.8426, 2.6126, 10.418, 10.69], city_stone_3: [-2.3574, 3.1274, -2.4491, 3.2191, 7.968, 8.24],
+  city_stone_4: [-2.3574, 2.3974, -2.4491, 3.2191, 10.418, 10.69], city_tan_3: [-2.3426, 2.3426, -2.3249, 3.0949, 7.968, 8.66],
+  city_terra_2: [-2.7213, 3.4913, -2.0763, 2.8463, 5.518, 5.79], city_terra_4: [-2.7213, 2.7213, -2.0763, 2.8463, 10.418, 11.11]
+};
+const HEIGHT_UP = Math.sqrt(1.5); // the 3D map's height stretch (camera.js HEIGHT_SCALE): world height = map height × this
+// A terrace's 3D model: its city model if it names one, else the render's own (building.low.sage is building_low_sage).
+const modelOf = b => b[3] || b[2].replace(/\./g, '_');
+// Where a terrace's model lands on its lot: map x and z of a point given in the model's metres, the roof's height in map
+// units and the model's scale (map units per metre across x).
+function lotFit(b) {
+  const f = BUILDING_SPRITES[b[2]], [bx0, bx1, bz0, bz1, roof, top] = MODEL_BOUNDS[modelOf(b)], sx = f.w / (bx1 - bx0), sz = f.d / (bz1 - bz0);
+  const x0 = b[0] - f.w, z0 = b[1] - f.d;
+  return { sx, x: mx => x0 + (mx - bx0) * sx, z: mz => z0 + (mz - bz0) * sz, roof: P + roof * sx / HEIGHT_UP, top: P + top * sx / HEIGHT_UP, w: -2 * bx0, d: -2 * bz0 };
+}
+// Rooftop clutter on every terrace (Kevin, 2026-10-19: HVAC units, water towers, skylights, stair bulkheads, dishes):
+// a few pieces per roof in its four quarters, picked by a fixed seed per building so the skyline never reshuffles. A
+// water tower only stands on four storeys and up, in the back quarter where it hides nothing; the corner shops lose
+// their cut-off front quarter.
+const PROP_HALF = { roof_hvac: .75, roof_skylight: .65, roof_vents: .45, roof_access: .85, roof_dish: .45, roof_watertower: .86 };
+const ROOF_PROPS = (() => {
+  const out = [];
+  BUILDINGS.forEach((b, i) => {
+    const fit = lotFit(b), name = modelOf(b), tall = fit.top - P > 15, hw = fit.w / 2 - .42, hd = fit.d / 2 - .42;
+    let seed = (i + 1) * 2654435761 >>> 0;
+    const rand = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 4294967296);
+    // Quarters in model metres: back-left, back-right, front-left, front-right (front is +z).
+    const quarters = [[-1, -1], [1, -1], [-1, 1], [1, 1]].filter(([qx, qz]) => !(/corner/.test(name) && qx > 0 && qz > 0));
+    const kinds = ['roof_hvac', 'roof_skylight', 'roof_vents', 'roof_access', 'roof_dish', 'roof_hvac', 'roof_skylight'];
+    const n = 2 + Math.floor(rand() * 2);
+    quarters.sort(() => rand() - .5);
+    quarters.slice(0, n).forEach(([qx, qz], k) => {
+      let file = kinds[Math.floor(rand() * kinds.length)];
+      if (k === 0 && tall && rand() < .7) { file = 'roof_watertower'; qx = -1; qz = -1; }
+      // Each piece sits toward its quarter's outer corner, clear of the middle where the next quarter's piece reaches.
+      const half = PROP_HALF[file], mx = qx * Math.max(half + .05, hw - half) + (rand() - .5) * .15, mz = qz * Math.max(half + .05, hd - half) + (rand() - .5) * .15;
+      out.push({ file: file + '.glb', x: fit.x(mx), y: fit.roof, z: fit.z(mz), rot: rand() < .5 ? 0 : Math.PI / 2, scale: fit.sx / 1.69 });
+    });
+  });
+  // One piece per quarter at most, so two never share a spot when a water tower took the back one.
+  const seen = new Set();
+  return out.filter(p => { const key = Math.round(p.x) + ',' + Math.round(p.z); if (seen.has(key)) return false; seen.add(key); return true; });
+})();
+// Past the first ring of streets the town carries on as plain silhouettes (Kevin, 2026-10-19: lower detail and muted so
+// the eye stays on the shop): every block beyond the back streets filled with lots of two to six storeys, each one
+// box with a parapet and a dark band of windows per storey, all drawn in a single mesh. The far and left sides stand
+// taller; the blocks on the camera's side stay low so nothing rises between the viewer and the shop.
+const BLOCK_SPAN = 72;
+function bandsAlong(along) {
+  const at = ROADS.filter(r => r.along === along).map(r => r.at).sort((a, b) => a - b), out = [];
+  let from = -BLOCK_SPAN;
+  at.forEach(a => { out.push([from, a - RW / 2]); from = a + RW / 2; });
+  out.push([from, BLOCK_SPAN]);
+  return out;
+}
+const MUTED = ['#c9b9a6', '#bba596', '#b7bdb1', '#c4bdb0', '#b49384', '#c7a993', '#bfb6b6', '#cfc4ad'];
+const SILHOUETTES = (() => {
+  const xs = bandsAlong('z'), zs = bandsAlong('x'), out = [];
+  let seed = 97;
+  const rand = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 4294967296);
+  xs.forEach(([bx0, bx1], i) => zs.forEach(([bz0, bz1], j) => {
+    const outer = i === 0 || j === 0 || i === xs.length - 1 || j === zs.length - 1;
+    if (!outer) return;
+    const near = i === xs.length - 1 || j === zs.length - 1, x0 = bx0 + 2, x1 = bx1 - 2, z0 = bz0 + 2, z1 = bz1 - 2;
+    // Rows from the block's front (+z) back, lots from its right (+x) end, so the fronts line up along the kerbs.
+    for (let zb = z1; zb - 5 > z0 - .01;) {
+      const d = Math.min(zb - z0, 6 + rand() * 2.5);
+      for (let xb = x1; xb - 5 > x0 - .01;) {
+        const w = Math.min(xb - x0, 6.5 + rand() * 3), storeys = near ? 1 + Math.floor(rand() * 2) : 2 + Math.floor(rand() * 5);
+        out.push({ x0: xb - w, x1: xb, z0: zb - d, z1: zb, storeys, colour: MUTED[Math.floor(rand() * MUTED.length)] });
+        xb -= w;
+      }
+      zb -= d;
+    }
+  }));
+  return out;
+})();
 // The town ends in haze. Beyond the back streets the ground, the far terraces and the cars fade into the sky colour
 // over a dozen units (HAZE_RAMP: where each side starts to fade and where it is gone), so no edge of the paving and
 // no end of a street is ever on screen. SUNNY_VIEW is the camera's matching limit, in world units: the point under
@@ -388,7 +455,7 @@ const BUILDINGS = [
 // view never runs past the haze at any zoom; main.js applies it.
 const HAZE = [220, 217, 203];
 // Kevin (2026-10-19) had the haze pulled in to start just past the first ring's back streets.
-const HAZE_RAMP = { west: [-46, -55], east: [45, 55], north: [-40, -50], south: [35, 44] };
+const HAZE_RAMP = { west: [-46, -58], east: [45, 58], north: [-40, -54], south: [35, 47] };
 const ramp = (v, [from, to]) => Math.max(0, Math.min(1, (v - from) / (to - from)));
 function hazeAt(x, z) { return Math.max(ramp(x, HAZE_RAMP.west), ramp(x, HAZE_RAMP.east), ramp(z, HAZE_RAMP.north), ramp(z, HAZE_RAMP.south)); }
 const hazeRGBA = a => 'rgba(' + HAZE[0] + ',' + HAZE[1] + ',' + HAZE[2] + ',' + a + ')';
@@ -444,7 +511,9 @@ function streetJobs(api) {
   // The 3D map's Blender model for the job just added: its file, where its feet stand (the render's anchor) and its
   // turn; a render drawn mirrored to run the other way is the model turned a quarter.
   const model = (name, x, z, flip) => { jobs[jobs.length - 1].model = { file: name + '.glb', x, z, rot: flip ? -Math.PI / 2 : 0 }; };
-  BUILDINGS.forEach(b => { const f = BUILDING_SPRITES[b[2]], x = b[0] - f.w / 2, z = b[1] - f.d / 2; at(x, z, () => building(api, b), f.w / 2, f.d / 2); jobs[jobs.length - 1].model = { file: buildingModel(b[2]), x, z, rot: 0, fit: { w: f.w, d: f.d } }; });
+  BUILDINGS.forEach(b => { const f = BUILDING_SPRITES[b[2]], x = b[0] - f.w / 2, z = b[1] - f.d / 2; at(x, z, () => building(api, b), f.w / 2, f.d / 2); jobs[jobs.length - 1].model = { file: modelOf(b) + '.glb', x, z, rot: 0, fit: { w: f.w, d: f.d } }; });
+  kind = 'prop';
+  ROOF_PROPS.concat(CITY_PROPS).forEach(p => { at(p.x, p.z, () => {}, .5, .5); jobs[jobs.length - 1].model = p; });
   kind = 'tree';
   // The 3D map's Blender trees follow streetTree's own pick: the tall street tree where its `& 3` rule puts one, the
   // round tree everywhere else (both drawn instanced, one set of draws for all of them).
@@ -490,7 +559,7 @@ export function groundMarks() {
   const api = { project: () => ({ x: 0, y: 0 }), width: 1, height: 1, unit: 1,
     line: ([a, b], colour, w) => a[0] === b[0] ? quad(a[0] - w / 2, a[2], a[0] + w / 2, b[2], a[1], colour) : quad(a[0], a[2] - w / 2, b[0], a[2] + w / 2, a[1], colour) };
   ROADS.forEach(r => roadMarkings(api, quad, r));
-  crossing(api, quad, 'x', 21.5, -8); crossing(api, quad, 'z', -22.5, 4); crossing(api, quad, 'x', -18.5, 8);
+  MID_CROSSINGS.forEach(([along, at, pos]) => crossing(api, quad, along, at, pos));
   ROADS.filter(r => r.along === 'x').forEach(rz => ROADS.filter(r => r.along === 'z').forEach(rx => { const x = rx.at, z = rz.at; crossing(api, quad, 'x', z, x - 5.5); crossing(api, quad, 'x', z, x + 5.5); crossing(api, quad, 'z', x, z - 5.5); crossing(api, quad, 'z', x, z + 5.5); }));
   return out;
 }
@@ -523,7 +592,7 @@ export function drawSunnyWorld(api, front, alpha) {
     ROADS.forEach(r => roadSurface(api, quad, r));
     ROADS.forEach(r => roadKerbs(api, quad, r));
     ROADS.forEach(r => roadMarkings(api, quad, r));
-    crossing(api, quad, 'x', 21.5, -8); crossing(api, quad, 'z', -22.5, 4); crossing(api, quad, 'x', -18.5, 8);
+    MID_CROSSINGS.forEach(([along, at, pos]) => crossing(api, quad, along, at, pos));
     // Zebra crossings on all four arms of every junction (the walkers' lanes round the shop run through the ones at the
     // shop's own corners).
     ROADS.filter(r => r.along === 'x').forEach(rz => ROADS.filter(r => r.along === 'z').forEach(rx => { const x = rx.at, z = rz.at; crossing(api, quad, 'x', z, x - 5.5); crossing(api, quad, 'x', z, x + 5.5); crossing(api, quad, 'z', x, z - 5.5); crossing(api, quad, 'z', x, z + 5.5); }));
@@ -581,15 +650,88 @@ function roadKerbs(api, quad, { along, at }) {
   });
 }
 
+// Mid-block zebras: [the street's axis, the street, where along it].
+const MID_CROSSINGS = [['x', 21.5, -8], ['z', -22.5, 4], ['x', -18.5, 8]];
+// A junction arm's zebra spans 3.9 to 7.1 from the junction's centre (crossings at ±5.5, 3.2 wide), so the stop bar
+// stands just behind it at 7.6, across the lane that drives into the junction (traffic keeps right: heading +x the lane
+// is on the +z side, heading +z on the -x side). The yellow centre line runs dashed between junctions, laid out from
+// each block's middle so both ends finish alike, turns solid for the last stretch before each stop bar and breaks for
+// the mid-block zebras, so no dash runs into a crossing or past a stop bar.
+const STOP_AT = 7.6, DASH = 1.6, DASH_GAP = 1.4, SOLID_RUN = 3;
 function roadMarkings(api, quad, { along, at }) {
-  const cross = ROADS.filter(r => r.along !== along).map(r => r.at);
-  for (let k = -L; k < L; k += 3) {
-    if (cross.some(c => Math.abs(k + .8 - c) < RW / 2 + .5)) continue;
-    if (along === 'x') api.line([[k, G + .004, at], [k + 1.6, G + .004, at]], '#f2d16b', .06); else api.line([[at, G + .004, k], [at, G + .004, k + 1.6]], '#f2d16b', .06);
+  const cross = ROADS.filter(r => r.along !== along).map(r => r.at).sort((a, b) => a - b), y = G + .004;
+  const centre = (k0, k1) => along === 'x' ? quad(k0, at - .05, k1, at + .05, y, '#f2d16b') : quad(at - .05, k0, at + .05, k1, y, '#f2d16b');
+  const zebras = MID_CROSSINGS.filter(([a, r]) => a === along && r === at).map(c => c[2]);
+  const stops = [-L - STOP_AT].concat(cross, [L + STOP_AT]);
+  for (let i = 0; i + 1 < stops.length; i++) {
+    const s0 = stops[i] + STOP_AT + .15, s1 = stops[i + 1] - STOP_AT - .15;
+    if (s1 - s0 < 2) continue;
+    // Solid runs into the stop bars (not at the map's ends), dashes between, broken round a mid-block zebra.
+    const d0 = i > 0 ? s0 + SOLID_RUN : s0, d1 = i + 2 < stops.length ? s1 - SOLID_RUN : s1;
+    if (i > 0) centre(s0, d0);
+    if (i + 2 < stops.length) centre(d1, s1);
+    const runs = [];
+    let from = d0;
+    zebras.filter(z => z > d0 && z < d1).forEach(z => { runs.push([from, z - 2.4]); from = z + 2.4; });
+    runs.push([from, d1]);
+    runs.forEach(([r0, r1]) => {
+      const n = Math.floor((r1 - r0 + DASH_GAP) / (DASH + DASH_GAP));
+      if (n < 1) return;
+      const start = (r0 + r1) / 2 - (n * (DASH + DASH_GAP) - DASH_GAP) / 2;
+      for (let k = 0; k < n; k++) centre(start + k * (DASH + DASH_GAP), start + k * (DASH + DASH_GAP) + DASH);
+    });
   }
-  // Stop lines before each intersection.
-  cross.forEach(c => [-1, 1].forEach(s => { const e = c + s * (RW / 2 + .4), l0 = s > 0 ? at : at - RW / 2, l1 = s > 0 ? at + RW / 2 : at;
-    if (along === 'x') quad(e - .15, l0, e + .15, l1, G + .005, '#f4f1e8'); else quad(l0, e - .15, l1, e + .15, G + .005, '#f4f1e8'); }));
+  // Stop bars before each junction, on the lane driving into it.
+  cross.forEach(c => [-1, 1].forEach(s => {
+    const e = c + s * STOP_AT, inbound = -s, l0 = along === 'x' ? (inbound > 0 ? at : at - RW / 2) : (inbound > 0 ? at - RW / 2 : at), l1 = l0 + RW / 2;
+    if (along === 'x') quad(e - .15, l0 + .1, e + .15, l1 - .1, G + .005, '#f4f1e8'); else quad(l0 + .1, e - .15, l1 - .1, e + .15, G + .005, '#f4f1e8');
+  }));
+  // A give-way bar on both lanes a metre before each mid-block zebra.
+  zebras.forEach(z => [-1, 1].forEach(s => {
+    const e = z + s * 2.2;
+    if (along === 'x') quad(e - .1, at - RW / 2 + .1, e + .1, at + RW / 2 - .1, G + .005, '#f4f1e8'); else quad(at - RW / 2 + .1, e - .1, at + RW / 2 - .1, e + .1, G + .005, '#f4f1e8');
+  }));
+}
+
+// Kerbs for the 3D map: a pale kerb stone down every block's edge, standing from the street up just proud of the
+// pavement so the edge reads as a kerb rather than a cut slab, flush and darker where a zebra lands (a curb cut, the
+// tactile strip beside it), and a drain grate in the gutter on the approach to every zebra and every dozen units between.
+const KERB_W = .32;
+function kerbsAndDrains() {
+  const out = [];
+  const box = (x0, x1, z0, z1, y0, y1, colour) => out.push({ x0: Math.min(x0, x1), x1: Math.max(x0, x1), z0: Math.min(z0, z1), z1: Math.max(z0, z1), y: y0, h: y1 - y0, colour });
+  const zebraAt = (along, at) => {
+    const list = MID_CROSSINGS.filter(([a, r]) => a === along && r === at).map(c => c[2]);
+    ROADS.filter(r => r.along !== along).forEach(r => list.push(r.at - 5.5, r.at + 5.5));
+    return list.sort((a, b) => a - b);
+  };
+  ROADS.forEach(({ along, at }) => {
+    const cross = ROADS.filter(r => r.along !== along).map(r => r.at).sort((a, b) => a - b), zebras = zebraAt(along, at);
+    const segs = [];
+    let from = -L; cross.forEach(c => { segs.push([from, c - RW / 2]); from = c + RW / 2; }); segs.push([from, L]);
+    [-1, 1].forEach(side => {
+      const edge = at + side * RW / 2, inner = edge + side * (KERB_W - .04), outer = edge - side * .04;
+      segs.forEach(([s0, s1]) => {
+        // Cut the run round each zebra's landing.
+        const cuts = zebras.filter(z => z > s0 && z < s1);
+        let k = s0;
+        cuts.forEach(z => {
+          if (z - 1.7 > k) box(...(along === 'x' ? [k, z - 1.7, inner, outer] : [inner, outer, k, z - 1.7]), G, P + .03, KERB);
+          box(...(along === 'x' ? [z - 1.7, z + 1.7, inner, outer] : [inner, outer, z - 1.7, z + 1.7]), G, P + .004, '#c7bc9f');
+          k = z + 1.7;
+        });
+        if (s1 > k) box(...(along === 'x' ? [k, s1, inner, outer] : [inner, outer, k, s1]), G, P + .03, KERB);
+        // Drains: just upstream of each zebra landing and at even steps along the gutter between.
+        const gutter = edge - side * .42, drains = cuts.map(z => z + (z < (s0 + s1) / 2 ? 2.4 : -2.4));
+        for (let d = s0 + 6; d < s1 - 6; d += 12) if (!cuts.some(z => Math.abs(z - d) < 4)) drains.push(d);
+        drains.forEach(d => {
+          box(...(along === 'x' ? [d - .45, d + .45, gutter - .22, gutter + .22] : [gutter - .22, gutter + .22, d - .45, d + .45]), G, G + .012, '#6d6f6c');
+          box(...(along === 'x' ? [d - .36, d + .36, gutter - .14, gutter + .14] : [gutter - .14, gutter + .14, d - .36, d + .36]), G, G + .016, '#2e3133');
+        });
+      });
+    });
+  });
+  return out;
 }
 
 // A zebra crossing across a street at position `pos` along it, with tactile paving on both kerbs.
@@ -618,9 +760,6 @@ function buildingSprite(api, name, x1, z1) {
 
 // Until its render has loaded, a muted low-rise block on the same footprint: walls, parapet, a sparse grid of pale
 // windows, a glazed ground floor under a plain awning, then a haze wash so it sits back from the shop.
-// The 3D map's Blender model for a terrace render: building.low.sage is building_low_sage.glb, its origin at the
-// footprint's centre with the door side toward +z like the render.
-const buildingModel = name => name.replace(/\./g, '_') + '.glb';
 function building(api, [x1, z1, name]) {
   const f = BUILDING_SPRITES[name], p = api.project, w = f.w, d = f.d, h = f.h, wall = f.wall, awning = '#8a9e8c';
   const x0 = x1 - w, z0 = z1 - d, x = x1 - w / 2, z = z1 - d / 2, near = p(x1, P, z1), far = p(x0, P + 14, z0);
@@ -856,6 +995,80 @@ function busStop(api, x, z) {
 const CAR_VIEW = { fl: { w: 4.65, drop: .93, ox: -.22 }, fr: { w: 4.54, drop: .92, ox: .23 }, bl: { w: 4.69, drop: .98, ox: -.26 }, br: { w: 4.95, drop: 1.03, ox: .24 } };
 const VAN_VIEW = { fl: { w: 5.98, drop: 1.21, ox: .01 }, fr: { w: 5.88, drop: 1.2, ox: .08 }, bl: { w: 6.29, drop: 1.22, ox: -.22 }, br: { w: 6.67, drop: 1.24, ox: .37 } };
 const CAR_PAINT = { blue: '#4f8fd0', red: '#e0564a', orange: '#e8913c', yellow: '#f2c14e', green: '#6ea845', purple: '#8a6fd1', white: '#f4f1e4', van: '#f4f1e4' };
+// Street dressing round the first ring of blocks (Kevin, 2026-10-19: bins, news boxes, hydrants, meters, bollards, bike
+// racks, scooters, mixed trees and shrub planters, and cars parked along the kerbs). Each kerb of a block other than the
+// shop's own (already dressed by hand above) gets a run of pieces 0.55 in from the kerb, trees a little further in,
+// cycling a fixed pattern from a seeded start so neighbouring runs differ; nothing lands on a zebra's landing or
+// within reach of a tree or lamp already there, nor where the haze has the ground. Cars park on the quiet back streets
+// only (the four streets round the shop carry the traffic and have no room at the kerb), facing the way their lane
+// runs, with gaps. The kerbside pieces and parked cars are low-poly versions (art/blender/city/city_props.py, a few
+// hundred triangles at most) since there are dozens of them; each parked car is painted by its tint.
+const DRESSING = ['tree', 'meter', 'hydrant', 'bin', 'scooter', 'shrub', 'bikerack', 'recycling', 'meter', 'tree', 'newsboxes', 'shrub', 'bollards', 'scooter'];
+const PARKED_PAINT = ['#4f8fd0', '#e0564a', '#f2c14e', '#6ea845', '#f4f1e4', '#8a6fd1', '#e8913c', '#3d4a52', '#b8c2c4'];
+const CITY_PROPS = (() => {
+  const out = [], taken = FAR_TREES.concat(NEAR_TREES, LAMPS).map(([x, z]) => ({ x, z, r: 1.4 }));
+  let seed = 41;
+  const rand = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 4294967296);
+  const free = (x, z, r) => !taken.some(t => Math.hypot(t.x - x, t.z - z) < t.r + r) && hazeAt(x, z) < .45;
+  const put = (file, x, z, rot, r, extra) => { out.push({ file: file + '.glb', x, z, rot, ...extra }); taken.push({ x, z, r }); };
+  const inner = [bandsAlong('z').slice(1, -1), bandsAlong('x').slice(1, -1)];
+  const shop = ([x0, x1], [z0, z1]) => x0 < 0 && x1 > 0 && z0 < 0 && z1 > 0;
+  ROADS.forEach(({ along, at }) => {
+    const cross = ROADS.filter(r => r.along !== along).map(r => r.at).sort((a, b) => a - b);
+    const zebras = MID_CROSSINGS.filter(([a, r]) => a === along && r === at).map(c => c[2]);
+    cross.forEach(c => zebras.push(c - 5.5, c + 5.5));
+    [-1, 1].forEach(side => {
+      const kerb = at + side * RW / 2;
+      // The blocks this kerb fronts: those of the inner ring touching it, not the shop's.
+      const across = inner[along === 'x' ? 1 : 0].filter(([a0, a1]) => Math.abs((side > 0 ? a0 : a1) - kerb) < .01);
+      if (!across.length) return;
+      inner[along === 'x' ? 0 : 1].forEach(([s0, s1]) => {
+        if (shop(...(along === 'x' ? [[s0, s1], across[0]] : [across[0], [s0, s1]]))) return;
+        // Faces the street: on an x street the pieces on the +z kerb turn to face -z, and so on.
+        const rot = along === 'x' ? (side > 0 ? Math.PI : 0) : (side > 0 ? -Math.PI / 2 : Math.PI / 2);
+        let k = Math.floor(rand() * DRESSING.length);
+        for (let u = s0 + 1.6; u < s1 - 1.6; u += 3 + rand() * 1.8) {
+          if (zebras.some(z => Math.abs(z - u) < 2.4)) continue;
+          const kind = DRESSING[k++ % DRESSING.length], depth = kind === 'tree' || kind === 'shrub' ? .95 : .55;
+          const off = kerb + side * depth, x = along === 'x' ? u : off, z = along === 'x' ? off : u, r = kind === 'tree' ? 1.3 : .7;
+          if (!free(x, z, r)) continue;
+          if (kind === 'tree') {
+            // Three kinds of street tree, each a little bigger or smaller: the tall one in its own pit, the round one in
+            // its own pit, or the round one in a square iron grate.
+            const pick = rand(), scale = .8 + rand() * .45;
+            if (pick < .35) put('street_tree', x, z, rand() * 6.28, r, { scale });
+            else if (pick < .65) put('tree', x, z, rand() * 6.28, r, { scale });
+            else { out.push({ file: 'tree.glb#lawn', x, z, rot: rand() * 6.28, scale }, { file: 'street_tree_grate.glb', x, z, rot: 0 }); taken.push({ x, z, r }); }
+          } else if (kind === 'meter') { put('street_lp_meter', x, z, rot, r); }
+          else if (kind === 'hydrant') put('street_lp_hydrant', x, z, rot, r);
+          else if (kind === 'bin') put('street_lp_bin', x, z, rot, r);
+          else if (kind === 'recycling') put('street_recycling', x, z, rot, r);
+          else if (kind === 'newsboxes') put('street_lp_newsboxes', x, z, rot, r);
+          else if (kind === 'bikerack') put('street_lp_bikerack', x, z, rot, r);
+          else if (kind === 'shrub') put('street_shrub_planter', x, z, rot, r);
+          else if (kind === 'scooter') put(rand() < .5 ? 'street_scooter_mint' : 'street_scooter_red', x, z, rot + (rand() - .5) * .5, r);
+          else if (kind === 'bollards') [-.7, 0, .7].forEach(d => put('street_lp_bollard', along === 'x' ? x + d : x, along === 'x' ? z : z + d, 0, .3));
+        }
+      });
+    });
+  });
+  // Parked cars on the back streets, between the junctions' stop bars.
+  ROADS.slice(4).forEach(({ along, at }) => {
+    const cross = ROADS.filter(r => r.along !== along).map(r => r.at).sort((a, b) => a - b), stops = [-L].concat(cross, [L]);
+    for (let i = 0; i + 1 < stops.length; i++) [-1, 1].forEach(side => {
+      const heading = along === 'x' ? side : -side, lane = at + side * 1.9;
+      const rot = along === 'x' ? (heading > 0 ? 0 : Math.PI) : (heading > 0 ? -Math.PI / 2 : Math.PI / 2);
+      for (let u = stops[i] + STOP_AT + 3.4; u < stops[i + 1] - STOP_AT - 3.4; u += 5.4 + rand() * 1.5) {
+        const x = along === 'x' ? u : lane, z = along === 'x' ? lane : u;
+        if (rand() < .3 || hazeAt(x, z) > .5) continue;
+        const van = rand() < .18;
+        out.push({ file: van ? 'van.glb' : 'street_lp_car.glb', x, y: G, z, rot, tint: van ? undefined : PARKED_PAINT[Math.floor(rand() * PARKED_PAINT.length)] });
+        if (van) u += 1;
+      }
+    });
+  });
+  return out;
+})();
 function carSprite(colour, view) {
   const name = 'street.' + (colour === 'van' ? 'van' : 'car.' + colour) + '.' + view;
   lazySprite(name, 'sprites/street/' + name + '.png', (colour === 'van' ? VAN_VIEW : CAR_VIEW)[view]);
@@ -1020,8 +1233,9 @@ export function drawWalker(api, { g, s, x, z, facing, heading }) {
 export function townLayout() {
   return {
     roads: ROADS.map(r => ({ ...r })), roadWidth: RW, plazaY: P, streetY: G, extent: L,
-    colours: { paver: PAVER, asphalt: ASPHALT }, marks: groundMarks(),
-    buildings: BUILDINGS.map(([x1, z1, name]) => { const f = BUILDING_SPRITES[name]; return { x0: x1 - f.w, x1, z0: z1 - f.d, z1, h: f.h, wall: f.wall[0], roof: f.wall[1], model: buildingModel(name) }; }),
+    colours: { paver: PAVER, asphalt: ASPHALT }, marks: groundMarks().concat(kerbsAndDrains()),
+    buildings: BUILDINGS.map(b => { const f = BUILDING_SPRITES[b[2]]; return { x0: b[0] - f.w, x1: b[0], z0: b[1] - f.d, z1: b[1], h: lotFit(b).top, wall: f.wall[0], roof: f.wall[1], model: modelOf(b) + '.glb' }; }),
+    silhouettes: SILHOUETTES.map(b => ({ ...b })),
     trees: FAR_TREES.concat(NEAR_TREES).map(t => t.slice()), lamps: LAMPS.map(l => l.slice()),
     haze: { colour: HAZE.slice(), ramp: { west: HAZE_RAMP.west.slice(), east: HAZE_RAMP.east.slice(), north: HAZE_RAMP.north.slice(), south: HAZE_RAMP.south.slice() } },
     sun: { x: SUN.x, z: SUN.z, reach: SUN_REACH },
