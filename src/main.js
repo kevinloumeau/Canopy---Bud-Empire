@@ -807,6 +807,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       // (DECK_RIGHT, DECK_FRONT) with the deck at 7.05.
       layout.floorTextures=floorTextureFiles();
       layout.fixtures=[{key:'deck',file:'online_deck.glb',x:-9.39,y:4.7,z:-.2,scale:1.69}];
+      // The self-order kiosks, one Blender model per bought kiosk where the customer code queues them (6.8 - k * 1.8),
+      // the screen facing +x toward the customer and lit like a screen (`screen` names its material).
+      [0,1,2].forEach(function(k){layout.fixtures.push({key:'kiosk'+k,file:'kiosk.glb',x:-9.75,y:0,z:6.8-k*1.8,scale:1.69,screen:'Screen'})});
       // The street's cars and van: one model each, painted per car in code (CarPaint, VanPaint).
       layout.carModels={car:'car.glb',van:'van.glb'};
       // The shell and fittings, placed by the same numbers the station and customer code uses.
@@ -2439,13 +2442,13 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       Object.keys(posts).forEach(function(key){var q=posts[key];if(postModel)props.push({file:'street_queue_post.glb',x:q[0],y:0,z:q[1]});else capturePerson(figures,q[0],0,q[1],function(){drawStanchion(q[0],q[1])})});
       frontFixtures().forEach(function(f){if(map3d.propReady(f.file))props.push({file:f.file,x:f.x,y:0,z:f.z,rot:f.rot})});
       // The self-order kiosks along the storefront glass are their render, stood up at each kiosk's footprint.
-      if(state.kiosk&&fixtureSprite('shop.kiosk'))for(var k=0;k<kioskCount();k++)(function(kz){capturePerson(figures,-9.75,0,kz,function(){drawBoxSprite(streetApi,fixtureSprite('shop.kiosk'),-10.04,-9.46,kz-.4,kz+.4,0,1.8,true)})})(6.8-k*1.8);
+      if(state.kiosk&&fixtureSprite('shop.kiosk'))for(var k=0;k<kioskCount();k++)if(!map3d.hasFixture('kiosk'+k))(function(kz){capturePerson(figures,-9.75,0,kz,function(){drawBoxSprite(streetApi,fixtureSprite('shop.kiosk'),-10.04,-9.46,kz-.4,kz+.4,0,1.8,true)})})(6.8-k*1.8);
     }
     // The 2D map fades figures behind the building and lays haze over distant renders as see-through copies; in 3D
     // depth and the scene's haze do both, so only the solid draws are kept.
     figures=figures.filter(function(f){return f.alpha>.99});backdrops=backdrops.filter(function(f){return f.alpha>.99});
     var look=viewCentre();
-    map3d.render({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    map3d.render({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     // A model that had not loaded when the tabs were painted: try again every half second until all are in.
     if(picturesPending&&!(now-(renderFrame3d.picturesTried||0)<500)){renderFrame3d.picturesTried=now;picturesPending=false;paintThumbnails()}
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
