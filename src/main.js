@@ -856,8 +856,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var SHOP_GREEN_PLASTER=SHOP_SPRITES?['#3f9468','#174f36','#226447']:['#698775','#314b40','#496a56'],SHOP_GREEN_TILE=SHOP_SPRITES?['#4a9a6e','#14482f','#1f5e40']:['#708b72','#2c4938','#4a6850'];
   var colors={bg:'#202226',floorTop:'#303238',floorLeft:'#1c1f23',floorRight:'#272a30',grid:'#41444a',beltEdge:'#111419',belt:'#313943',slat:'#5b6470',oliveTop:'#f4f5ec',oliveLeft:'#a9b6be',oliveRight:'#d5dce0',darkTop:'#56616a',darkLeft:'#252e36',darkRight:'#3b4650',metalTop:'#eef2f3',metalLeft:'#8b9ba8',metalRight:'#becbd4',acid:'#f5c344',orange:'#ff7628',boxTop:'#d3a36c',boxLeft:'#8e6741',boxRight:'#b17f50'};
   // Sprite shop: the harvest bench stands at x 4.8, directly in front of the grow line's drop, so the tube feeds its
-  // back in a straight run (the drawn shop keeps the symmetric pair at x 3).
-  var STAFF_SPOTS={0:{dx:-.2,dz:-1.4,front:false,facing:1},1:{dx:-4,dz:-1,front:false,facing:-1},2:{dx:-.9,dz:-1.4,front:false,facing:-1},3:{dx:-.3,dz:-1.4,front:false,facing:-1},5:{dx:1.05,dz:-1.55,front:false,facing:.35}};
+  // back in a straight run (the drawn shop keeps the symmetric pair at x 3). The grower works the grow bench's left end,
+  // clear of the pots, watering along the row.
+  var STAFF_SPOTS={0:{dx:-.2,dz:-1.4,front:false,facing:1},1:{dx:-2.85,dz:-.25,front:false,facing:1},2:{dx:-.9,dz:-1.4,front:false,facing:-1},3:{dx:-.3,dz:-1.4,front:false,facing:-1},5:{dx:1.05,dz:-1.55,front:false,facing:.35}};
   var machinePos=[{x:-3,z:-3,y:9.4},{x:3,z:-3,y:9.4},{x:SHOP_SPRITES?4.8:3,z:-.3,y:4.7},{x:-3,z:-.3,y:4.7},{x:-4+COUNTER_SHIFT,z:2.5,y:0},{x:4+COUNTER_SHIFT,z:2.5,y:0}];
   // The front edges of the floor, round the pickup pen (Kevin, 2026-10-19: one lone case left the corner looking empty,
   // and a run of cases didn't look good either): the aisle planter's twins along the front baseboard and up the
