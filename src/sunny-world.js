@@ -451,7 +451,11 @@ function streetJobs(api) {
   at(-17.6, -3, () => prop(api, 'street.newsboxes', -17.6, -3, true), 1.3, 1, () => sunShadow(api, -18.1, P, -3.5, .4, 1.5, 2.8, .9, 1)); model('street_newsboxes', -17.6, -3, true); // the row's feet stand back from the render's centre; the boxes stand about 2.8 tall
   // Shadow footprints below are measured against each render's feet (Kevin, 2026-10-17: a shadow beside a prop reads as a
   // floating blob); several renders are centred off their footprint or run along z.
-  [[18, -6], [18, 6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => { at(x, z, () => planter(api, x, z), 1.6, 1.2, () => sunShadow(api, x - .7, P, z - .65, .55, 1.8, 1.2, 1, .8)); model('street_planter', x, z); });
+  [[18, -6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => { at(x, z, () => planter(api, x, z), 1.6, 1.2, () => sunShadow(api, x - .7, P, z - .65, .55, 1.8, 1.2, 1, .8)); model('street_planter', x, z); });
+  // Kevin (2026-10-19) turned the planter behind the subway a quarter to run along x, its back face flush with the
+  // well's back railing (the model is 3.22 long by 1.14 deep).
+  const sz = SUBWAY.z - SUBWAY.hz - .05 - .57;
+  at(17.9, sz, () => {}, 1.61, .57); model('street_planter', 17.9, sz, true);
   at(0, 16.5, () => bench(api, 0, 16.5, true), 1.2, .5, () => sunShadow(api, -.36, P, 16.38, 1.1, .32, .9, .9, 1)); model('street_bench', 0, 16.5, true); // mirrored to run along the front street
   at(18, 0, () => bench(api, 18, 0), .5, 1.2, () => sunShadow(api, 17.73, P, -.33, .32, 1.1, .9, .9, 1)); model('street_bench', 18, 0);
   at(14, 16, () => bikeRack(api, 14, 16), 1.3, .6, () => sunShadow(api, 14.24, P, 15.47, .45, 1.25, 1.2, .7, .7)); model('street_bikerack', 14.8, 16);
@@ -958,6 +962,7 @@ const WALK_BASE = WALKS.reduce((acc, w) => (acc.push(acc[acc.length - 1] + w[4])
 export const SUBWAY = { x: 18, z: 9.85, hx: 1.2, hz: 2.47 };
 const SUB_M = 1.69, SUB_Y = SUB_M / (1 / Math.cos(Math.atan(Math.SQRT1_2))); // metres to map units, across and up
 const SUB_MOUTH = SUBWAY.z + 1.35 * SUB_M, SUB_FOOT = SUB_MOUTH - 8 * .29 * SUB_M, SUB_DEEP = P - 1.6 * SUB_Y;
+const SUB_PASSAGE = SUBWAY.z - 1.35 * SUB_M + .35; // the far wall's face, where the passage opens, plus half a figure
 // Riders: a path from out of sight below the landing (through the passage in the far wall), up the stairs and out
 // onto the pavement, walked back and forth like the walks above, so each one comes up, goes about and heads back
 // down. Points are [x, y, z]; one runs to the bus stop, the other round the corner to the front crossing.
@@ -989,7 +994,9 @@ export function walkerPlacements(now) {
         heading: { x: (x1 - x0) / len * (outbound ? 1 : -1), z: (z1 - z0) / len * (outbound ? 1 : -1) } });
     }
   });
-  SUBWAY_RIDES.forEach((path, k) => out.push(riderPlacement(path, WALK_BASE[WALKS.length] + k, now)));
+  // Past the landing a rider is in the passage under the pavement, where a standing figure's head would poke up through
+  // the slab behind the well (Kevin, 2026-10-19), so they leave the map at the doorway and come back through it.
+  SUBWAY_RIDES.forEach((path, k) => { const r = riderPlacement(path, WALK_BASE[WALKS.length] + k, now); if (r.z > SUB_PASSAGE) out.push(r); });
   return out;
 }
 function drawWalkers(api, at) {
