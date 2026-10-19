@@ -177,7 +177,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function displayBoost(i){return i>0?1+state.displayLevel*.02:1}
   function thcLabel(i){var v=strainPotency(i);return (Math.round(v*10)/10).toFixed(v%1?1:0)+'%'}
   function buildStrainMenu(){
-    $('strainNav').innerHTML=STRAINS.map(function(strain,i){return '<button type="button" role="tab" id="strainTab'+i+'" style="--strain:'+strain.color+'"><span class="strain-card-art"></span><b>'+typeGlyph(strains.STRAIN_TYPE[i])+strain.name.replace(' ','<br>')+'</b><small></small><em class="strain-pips" aria-hidden="true">'+Array.from({length:10},function(){return '<i></i>'}).join('')+'</em></button>'}).join('');
+    $('strainNav').innerHTML=STRAINS.map(function(strain,i){return '<button type="button" role="tab" id="strainTab'+i+'" style="--strain:'+strain.color+'"><span class="strain-card-art"></span><b>'+typeGlyph(strains.STRAIN_TYPE[i])+strain.name.replace(' ',' <br>')+'</b><small></small><em class="strain-pips" aria-hidden="true">'+Array.from({length:10},function(){return '<i></i>'}).join('')+'</em></button>'}).join('');
     STRAINS.forEach(function(_,i){$('strainTab'+i).onclick=function(){flowerFocus=i;renderFlowers();var hero=document.querySelector('.strain-hero');if(hero&&hero.scrollIntoView)hero.scrollIntoView({block:'nearest',behavior:motionPreference.matches?'auto':'smooth'})}});
     flowerFocus=menuStrains()[0]||0;
   }
@@ -874,8 +874,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // and a run of cases didn't look good either): the aisle planter's twins along the front baseboard and up the
   // right-hand edge, without the aisle planter's tree. Each is 3.6 long and 0.95 deep, long along z; `rot` lays it
   // along the front.
-  var FRONT_FIXTURES=[{file:'shop_planter.glb#low',x:2.4,z:11.33,rot:Math.PI/2},{file:'shop_planter.glb#low',x:6.4,z:11.33,rot:Math.PI/2},
-    {file:'shop_planter.glb#low',x:10.3,z:11.33,rot:Math.PI/2},{file:'shop_planter.glb#low',x:12.43,z:9.1,rot:0}];
+  var FRONT_FIXTURES=[{file:'edge_planter.glb',x:2.4,z:11.33,rot:Math.PI/2},{file:'edge_planter.glb',x:6.4,z:11.33,rot:Math.PI/2},
+    {file:'edge_planter.glb',x:10.3,z:11.33,rot:Math.PI/2},{file:'edge_planter.glb',x:12.43,z:9.1,rot:0}];
   function frontFixtures(){return FRONT_FIXTURES}
   // The back-wall shelving stands just behind the counters; the smoking lounge is the room behind it (z −7 → −1.76).
   var DISPLAY_Z=-1.6,LOUNGE_FRONT=DISPLAY_Z+.65;
@@ -3299,7 +3299,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     COMPONENTS.forEach(function(c,i){if(document.getElementById('componentBuy'+i))return;var card=document.createElement('div');card.className='shop-upgrade shop-feature';card.innerHTML='<div class="shop-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+icons[c.key]+'</svg></div><div class="shop-copy"><h2>'+c.name+'</h2><strong id="componentBenefit'+i+'"></strong><small>'+blurbs[c.key]+'</small><small id="componentLevel'+i+'"></small></div><button id="componentBuy'+i+'"><span>Upgrade</span><b id="componentPrice'+i+'"></b></button>';pane.insertBefore(card,anchor)});
   })();
   $('expandOrderCounter').onclick=expandOrderCounters;$('buyOrderCounter').onclick=expandOrderCounters;
-  var shopBrowser=mountShopBrowser({getState:function(){return state},components:COMPONENTS,kiosks:kioskCount,queueLimit:queueLimit,openDeliveries:function(){showTray('orders')},deliveryDesk:function(){return{built:deliveryBuilt(),waiting:onlineRequestsReady()}},recommendInfo:function(){var r=recommendation(),shelf=['Production','Service','Customers','Products','Online'];return{name:r.name,where:r.kind==='component'?shelf[shopBrowser&&shopBrowser.categoryOf?shopBrowser.categoryOf('componentBuy'+r.index):2]:'Stations',price:fmt(r.price),id:r.kind==='component'?'componentBuy'+r.index:null,affordable:state.money>=r.price}},recommend:function(open){var r=recommendation();if(open){actOnRecommendation();return ''}return r.name+' · '+(r.kind==='component'?'in '+['Production','Service','Customers','Products','Online'][shopBrowser&&shopBrowser.categoryOf?shopBrowser.categoryOf('componentBuy'+r.index):2]+' · ':'upgrade ')+fmt(r.price)}});
+  var shopBrowser=mountShopBrowser({getState:function(){return state},components:COMPONENTS,kiosks:kioskCount,queueLimit:queueLimit,openDeliveries:function(){showTray('orders')},deliveryDesk:function(){return{built:deliveryBuilt(),waiting:onlineRequestsReady(),price:fmt(AUTO_DRONE_COST),ready:state.money>=AUTO_DRONE_COST,progress:Math.min(1,state.money/AUTO_DRONE_COST),toGo:fmt(Math.max(0,AUTO_DRONE_COST-state.money))}},recommendInfo:function(){var r=recommendation(),shelf=['Production','Service','Customers','Products','Online'];return{name:r.name,where:r.kind==='component'?shelf[shopBrowser&&shopBrowser.categoryOf?shopBrowser.categoryOf('componentBuy'+r.index):2]:'Stations',price:fmt(r.price),id:r.kind==='component'?'componentBuy'+r.index:null,affordable:state.money>=r.price}},recommend:function(open){var r=recommendation();if(open){actOnRecommendation();return ''}return r.name+' · '+(r.kind==='component'?'in '+['Production','Service','Customers','Products','Online'][shopBrowser&&shopBrowser.categoryOf?shopBrowser.categoryOf('componentBuy'+r.index):2]+' · ':'upgrade ')+fmt(r.price)}});
   var operationsUI=mountOperations({getState:function(){return state},format:fmt,changed:function(message){save();renderUI();if(message)notify(message,'upgrade')},visit:function(i,manage){visitStore(i+1,!manage);if(manage)manageViewedStore()}});
   function renderManagement(){
     var p=state.empire,report=p.returnReport,investment=recommendation();
