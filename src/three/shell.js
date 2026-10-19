@@ -396,29 +396,38 @@ export function buildShell(world, layout, { box, span, material, model }) {
   box(planter, pl.tree.x, .63, pl.tree.z, .16, 2.4, .16, '#816747');
   [[0, 3.2, 0, .75, '#769852'], [-.35, 2.9, .3, .55, '#587c4d'], [.3, 3.05, -.3, .55, '#98b96e']].forEach(([ox, y, oz, r, c]) => bush(pl.tree.x + ox, y, pl.tree.z + oz, r, c));
   // Hanging pothos under the top floor's soffit: a brass rail and short trailing strands.
-  const hang = s.hanging;
-  span(shell, hang.x0, hang.x1, hang.y - .04, hang.y, hang.z - .03, hang.z + .03, BRASS, { cast: false });
+  // Each hanging plant is its own unit (rail or basket, with its leaves) so its Blender model can replace it.
+  const hang = s.hanging, rail = unit(), railLeaves = [];
+  span(rail, hang.x0, hang.x1, hang.y - .04, hang.y, hang.z - .03, hang.z + .03, BRASS, { cast: false });
   for (let v = 0; v < 18; v++) {
     const x = hang.x0 + (hang.x1 - hang.x0) * (v + .5) / 18, len = .5 + (1 - Math.abs(v - 8.5) / 9) * .7 + (v % 3) * .12;
-    for (let k = 0; k < 6; k++) { const t = k / 5; leafSpots.push([x + Math.sin(v * 1.7 + t * 3) * .06, hang.y - .05 - len * t, hang.z + (v % 2 ? .06 : -.06) + t * .08, (v + k) % 3, .8]); }
+    for (let k = 0; k < 6; k++) { const t = k / 5; railLeaves.push([x + Math.sin(v * 1.7 + t * 3) * .06, hang.y - .05 - len * t, hang.z + (v % 2 ? .06 : -.06) + t * .08, (v + k) % 3, .8]); }
   }
+  leafSpots.push([rail, railLeaves]);
+  swap(rail, 'pothos_rail.glb', (hang.x0 + hang.x1) / 2, hang.y, hang.z);
   // Hanging baskets against the rear walls of the upper floors.
   [[mezz, mRear], [top, tRear]].forEach(([f, rear]) => (f === top ? [-2, 2] : [-7, 5]).forEach(x => {
     const z = rear + .9, y = f.y + Math.min(3.95, f === top ? 3.5 : 3.95);
-    span(shell, x - .01, x + .01, y - .7, y, z - .01, z + .01, '#343f33', { cast: false });
-    box(shell, x, y - 1, z, .55, .3, .48, '#b6ac8a');
-    for (let k = 0; k < 14; k++) { const a = k * 2.399; leafSpots.push([x + Math.cos(a) * .28, y - .72 - (k % 4) * .18, z + Math.sin(a) * .22, k % 3, .9]); }
+    const basket = unit(), spots = [];
+    span(basket, x - .01, x + .01, y - .7, y, z - .01, z + .01, '#343f33', { cast: false });
+    box(basket, x, y - 1, z, .55, .3, .48, '#b6ac8a');
+    for (let k = 0; k < 14; k++) { const a = k * 2.399; spots.push([x + Math.cos(a) * .28, y - .72 - (k % 4) * .18, z + Math.sin(a) * .22, k % 3, .9]); }
+    leafSpots.push([basket, spots]);
+    swap(basket, 'hanging_basket.glb', x, y, z);
   }));
   const leafColours = ['#5f8648', '#7aa257', '#9cc46e'].map(c => new THREE.Color(c));
-  const leaves = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.13, 0), material('#ffffff'), leafSpots.length);
+  const leafGeometry = new THREE.IcosahedronGeometry(.13, 0), leafMaterial = material('#ffffff');
   const mtx = new THREE.Matrix4(), q = new THREE.Quaternion(), pos = new THREE.Vector3(), scl = new THREE.Vector3();
-  leafSpots.forEach(([x, y, z, c, k], i) => {
-    q.setFromEuler(new THREE.Euler(i * .7, i * 1.3, 0));
-    leaves.setMatrixAt(i, mtx.compose(pos.set(x, y, z), q, scl.set(1.3 * k, .7 * k, 1 * k)));
-    leaves.setColorAt(i, leafColours[c]);
+  leafSpots.forEach(([g, spots]) => {
+    const leaves = new THREE.InstancedMesh(leafGeometry, leafMaterial, spots.length);
+    spots.forEach(([x, y, z, c, k], i) => {
+      q.setFromEuler(new THREE.Euler(i * .7, i * 1.3, 0));
+      leaves.setMatrixAt(i, mtx.compose(pos.set(x, y, z), q, scl.set(1.3 * k, .7 * k, 1 * k)));
+      leaves.setColorAt(i, leafColours[c]);
+    });
+    leaves.castShadow = true; leaves.receiveShadow = true;
+    g.add(leaves);
   });
-  leaves.castShadow = true; leaves.receiveShadow = true;
-  shell.add(leaves);
 
   // The goods on every shelf, in the shop's product colours.
   const goodsColours = ['#527e60', '#b28b64', '#75999a', '#d5bd8c'].map(c => new THREE.Color(c));

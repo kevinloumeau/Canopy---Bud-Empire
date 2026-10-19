@@ -177,7 +177,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function displayBoost(i){return i>0?1+state.displayLevel*.02:1}
   function thcLabel(i){var v=strainPotency(i);return (Math.round(v*10)/10).toFixed(v%1?1:0)+'%'}
   function buildStrainMenu(){
-    $('strainNav').innerHTML=STRAINS.map(function(strain,i){return '<button type="button" role="tab" id="strainTab'+i+'" style="--strain:'+strain.color+'"><span class="strain-card-art"></span><b>'+typeGlyph(strains.STRAIN_TYPE[i])+strain.name.replace(' ','<br>')+'</b><small></small><em class="strain-pips" aria-hidden="true">'+Array.from({length:10},function(){return '<i></i>'}).join('')+'</em></button>'}).join('');
+    $('strainNav').innerHTML=STRAINS.map(function(strain,i){return '<button type="button" role="tab" id="strainTab'+i+'" style="--strain:'+strain.color+'"><span class="strain-card-art"></span><b>'+typeGlyph(strains.STRAIN_TYPE[i])+strain.name.replace(' ',' <br>')+'</b><small></small><em class="strain-pips" aria-hidden="true">'+Array.from({length:10},function(){return '<i></i>'}).join('')+'</em></button>'}).join('');
     STRAINS.forEach(function(_,i){$('strainTab'+i).onclick=function(){flowerFocus=i;renderFlowers();var hero=document.querySelector('.strain-hero');if(hero&&hero.scrollIntoView)hero.scrollIntoView({block:'nearest',behavior:motionPreference.matches?'auto':'smooth'})}});
     flowerFocus=menuStrains()[0]||0;
   }
@@ -704,19 +704,19 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     queueDeliveryWave(batch.count);
     recordEvent(state.empire,'online',batch.count);add(batch.reward);if(!automatic)notifyDispatch(batch);burst({x:DECK_X,z:DECK_Z,y:7.05},'#dbc38b');slideReceipts(batch.count);renderUI();save();
   }
-  // Rapid dispatches share a short loading window, never a growing launch queue.
+  // Each order is a parcel set on its own spot on the launch pad; couriers come in one after another to fetch them. With
+  // every spot taken, further orders ride along with a waiting parcel (shown as ×N), so the pad never fills up.
+  var DRONE_SPOTS=[[-.36,-.34],[.36,-.34],[-.36,.34],[.36,.34]],DRONE_PICKUP=2.2,DRONE_LIFE=10.8;
   function queueDeliveryWave(count){
-    var wave=deliveryDrones.filter(function(drone){return drone.age<.45});
-    var age=wave.length?wave[0].age:0;
+    var queued=0;
     for(var n=0;n<count;n++){
-      if(wave.length<5){
-        // Couriers in a wave lift off one after another, not as a block.
-        var drone={age:age,delay:wave.length*.42,slot:wave.length,orders:1};
-        wave.push(drone);deliveryDrones.push(drone);playSound('whoosh',state.sound);
-      }else{
-        var carrier=wave.reduce(function(a,b){return a.orders<=b.orders?a:b});carrier.orders++;
-      }
+      var pending=deliveryDrones.filter(function(d){return d.age<d.delay+DRONE_PICKUP}),used=pending.map(function(d){return d.spot}),spot=-1;
+      for(var k=0;k<DRONE_SPOTS.length;k++)if(used.indexOf(k)<0){spot=k;break}
+      if(spot<0){pending.reduce(function(a,b){return a.orders<=b.orders?a:b}).orders++;continue}
+      var next=pending.reduce(function(m,d){return Math.max(m,d.delay-d.age)},-1.1);
+      deliveryDrones.push({age:0,boxAt:queued*.2,delay:Math.max(queued*.2,next+1.1),spot:spot,slot:spot,orders:1});queued++;
     }
+    if(queued){playSound('whoosh',state.sound);if(SHOP_SPRITES){fixtureSprite('drone.courier.empty');fixtureSprite('drone.courier.loaded')}}
   }
   // Dispatch desk: the three numbers that matter, and the backlog as a row of parcels (lit ones can ship now).
   var dispatchKey='';
@@ -876,8 +876,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // and a run of cases didn't look good either): the aisle planter's twins along the front baseboard and up the
   // right-hand edge, without the aisle planter's tree. Each is 3.6 long and 0.95 deep, long along z; `rot` lays it
   // along the front.
-  var FRONT_FIXTURES=[{file:'shop_planter.glb#low',x:2.4,z:11.33,rot:Math.PI/2},{file:'shop_planter.glb#low',x:6.4,z:11.33,rot:Math.PI/2},
-    {file:'shop_planter.glb#low',x:10.3,z:11.33,rot:Math.PI/2},{file:'shop_planter.glb#low',x:12.43,z:9.1,rot:0}];
+  var FRONT_FIXTURES=[{file:'edge_planter.glb',x:2.4,z:11.33,rot:Math.PI/2},{file:'edge_planter.glb',x:6.4,z:11.33,rot:Math.PI/2},
+    {file:'edge_planter.glb',x:10.3,z:11.33,rot:Math.PI/2},{file:'edge_planter.glb',x:12.43,z:9.1,rot:0}];
   function frontFixtures(){return FRONT_FIXTURES}
   // The back-wall shelving stands just behind the counters; the smoking lounge is the room behind it (z −7 → −1.76).
   var DISPLAY_Z=-1.6,LOUNGE_FRONT=DISPLAY_Z+.65;
@@ -2351,7 +2351,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     map3d.renderBranch({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:viewCentre(),background:BRANCH_THEMES[state.empire.activeStore-1].background,branch:scene,figures:figures.filter(function(f){return f.alpha>.99})});
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
     // Main-store effects expire while visiting a branch rather than replaying on return.
-    particles.forEach(function(p){p.life-=frameDelta*1.5});particles=particles.filter(function(p){return p.life>0});deliveryDrones.forEach(function(d){d.age+=frameDelta});deliveryDrones=deliveryDrones.filter(function(d){return d.age<d.delay+7.5});
+    particles.forEach(function(p){p.life-=frameDelta*1.5});particles=particles.filter(function(p){return p.life>0});deliveryDrones.forEach(function(d){d.age+=frameDelta});deliveryDrones=deliveryDrones.filter(function(d){return d.age<d.delay+DRONE_LIFE});
     if(shopPlayUI)shopPlayUI.position(null,false);
     updateBranchMarker();updateSpenderTag(true);requestAnimationFrame(render);
   }
@@ -2515,36 +2515,43 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(!mapDrawn){mapDrawn=true;mapRebuilds=0;mapStatus(null)}
     if(state.empire.activeStore)renderBranch3d(now,frameDelta);else renderFrame3d(now,frameDelta,wallDelta);
   }
+  // A courier's round trip, in seconds from its own start: it drops in empty over its parcel, takes it on board at
+  // DRONE_PICKUP, climbs, flies off over the street, then comes back empty and sets down on the pad.
   function drawDeliveryDrones(dt,now){
+    var pad=launchPad(),still=motionPreference.matches;
+    var smooth=function(v){v=Math.max(0,Math.min(1,v));return v*v*(3-2*v)};
     for(var i=deliveryDrones.length-1;i>=0;i--){
-      var drone=deliveryDrones[i];drone.age+=dt;var t=drone.age-drone.delay;if(t<0)continue;
-      if(t>7.5){deliveryDrones.splice(i,1);continue}
-      var lift=Math.min(1,Math.max(0,(t-2.45)/1.5));lift=lift*lift*(3-2*lift);
-      var fly=Math.max(0,(t-3.95)/3.55),travel=fly*fly;
-      var slot=drone.slot||0,side=slot%2?1:-1,lane=Math.ceil(slot/2);
-      var spread=1;
-      if(motionPreference.matches){lift=0;travel=0;}
-      // Each slot fans out on its own heading and bobs on its own phase so a bulk launch reads as separate aircraft.
-      var bob=motionPreference.matches?0:Math.sin(t*2.1+slot*1.9)*.07*Math.min(1,lift+travel);
-      var pad=launchPad(),x=pad.x-travel*(20+slot*1.6)+(slot%3-1)*.72,z=pad.z+travel*(5-(slot%2?1.2:0)+Math.floor(slot/3)*.9)+Math.floor(slot/3)*.62,y=pad.y+.9+lift*(2.4+slot*.18)+travel*7+bob;
-      ctx.save();ctx.globalAlpha=motionPreference.matches?Math.min(1,t/.25,(7.5-t)/.7):Math.min(1,(7.5-t)/.7);
-      // A taped parcel hangs beneath a compact four-rotor courier.
-      if(t<2&&!motionPreference.matches){
-        var load=Math.min(1,t/1.9),ease=load*load*(3-2*load);
-        // Every courier loads its own crate, with no parcel count/position jump.
-        drawBox(x,z,pad.y,.62,.465,.08,['#e5bc80','#a57c4f','#c99c65']);
-        ctx.save();ctx.globalAlpha*=1-Math.max(0,(load-.7)/.3);
-        pickupBag(x,z+.3*(1-ease),pad.y+.08+.2*(1-ease));ctx.restore();
-        if(load>.65){ctx.save();ctx.globalAlpha*=(load-.65)/.35;carton(x,z,pad.y,.62);ctx.restore()}
-        ctx.restore();continue;
+      var drone=deliveryDrones[i];drone.age+=dt;var t=drone.age-drone.delay;
+      if(t>(still?3.5:DRONE_LIFE)){deliveryDrones.splice(i,1);continue}
+      var spot=DRONE_SPOTS[drone.spot||0],slot=drone.slot||0,bx=pad.x+spot[0],bz=pad.z+spot[1],hover=pad.y+.95;
+      // The packed parcel drops on to its spot and waits there until its courier takes it.
+      if(drone.age>=drone.boxAt&&t<DRONE_PICKUP){
+        var drop=still?1:Math.min(1,(drone.age-drone.boxAt)/.35);carton(bx,bz,pad.y+.5*(1-drop)*(1-drop),.5);
       }
-      drawCourierDrone(x,y,z,now,slot,drone.orders);
-      ctx.restore();
+      if(t<0)continue;
+      var x=bx,y=hover,z=bz,alpha=1,loaded=t>=DRONE_PICKUP;
+      // Out over the street along the slot's own heading, as a fraction u of the full trip.
+      var away=function(u){var e=u*u;return {x:bx-e*(20+slot*1.6),z:bz+e*(5-(slot%2?1.2:0)),y:hover+2.4+e*7}};
+      if(still){alpha=Math.min(1,t/.25,(3.5-t)/.5)}
+      // It comes in from behind the deck, the opposite side to where loaded couriers leave, so the two never cross.
+      else if(t<2){var a=smooth(t/2);x=bx+2.6*(1-a);z=bz-2.6*(1-a);y=hover+3.6*(1-a);alpha=Math.min(1,t/.45)}
+      else if(t<2.6){y=hover-.1*Math.sin(Math.PI*(t-2)/.6)}
+      else if(t<3.8){y=hover+2.4*smooth((t-2.6)/1.2)}
+      else if(t<7){var o=away((t-3.8)/3.2);x=o.x;y=o.y;z=o.z;alpha=Math.min(1,(7-t)/.6)}
+      else if(t<7.4)continue;
+      else{
+        // Home again, empty: back down the same heading, a short descent and a settle on the pad before it powers down.
+        loaded=false;var r=Math.min(1,(t-7.4)/2.6),back=away(.7*(1-r)*(1-r));x=back.x;z=back.z;y=back.y;
+        if(t>10)y=hover+2.4*(1-smooth((t-10)/.5))-.35*smooth((t-10.2)/.4);
+        alpha=Math.min(1,(t-7.4)/.5,(DRONE_LIFE-t)/.25);
+      }
+      if(!still&&(t<2.6||t>=3.8))y+=Math.sin(t*2.1+slot*1.9)*.05;
+      ctx.save();ctx.globalAlpha=Math.max(0,alpha);drawCourierDrone(x,y,z,now,slot,loaded?drone.orders:1,!loaded);ctx.restore();
     }
   }
-  function drawCourierDrone(x,y,z,now,slot,orders){
-      var droneArt=SHOP_SPRITES&&fixtureSprite('drone.courier.loaded');
-      if(droneArt)spriteAt('drone.courier.loaded',project(x,y+.2,z),1.75,.5,.46);else carton(x,z,y-.9,.62);
+  function drawCourierDrone(x,y,z,now,slot,orders,empty){
+      var art=empty?'drone.courier.empty':'drone.courier.loaded',droneArt=SHOP_SPRITES&&fixtureSprite(art);
+      if(droneArt)spriteAt(art,project(x,y+.2,z),1.75,.5,.46);else if(!empty)carton(x,z,y-.9,.62);
       if(orders>1){
         var cargoLabel=project(x,y-.55,z+.36);
         ctx.fillStyle='#f5efd7';ctx.font='600 '+Math.max(9,unit*.23)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText('×'+orders,cargoLabel.x,cargoLabel.y);
@@ -3301,7 +3308,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     COMPONENTS.forEach(function(c,i){if(document.getElementById('componentBuy'+i))return;var card=document.createElement('div');card.className='shop-upgrade shop-feature';card.innerHTML='<div class="shop-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+icons[c.key]+'</svg></div><div class="shop-copy"><h2>'+c.name+'</h2><strong id="componentBenefit'+i+'"></strong><small>'+blurbs[c.key]+'</small><small id="componentLevel'+i+'"></small></div><button id="componentBuy'+i+'"><span>Upgrade</span><b id="componentPrice'+i+'"></b></button>';pane.insertBefore(card,anchor)});
   })();
   $('expandOrderCounter').onclick=expandOrderCounters;$('buyOrderCounter').onclick=expandOrderCounters;
-  var shopBrowser=mountShopBrowser({getState:function(){return state},components:COMPONENTS,kiosks:kioskCount,queueLimit:queueLimit,openDeliveries:function(){showTray('orders')},deliveryDesk:function(){return{built:deliveryBuilt(),waiting:onlineRequestsReady()}},recommendInfo:function(){var r=recommendation(),shelf=['Production','Service','Customers','Products','Online'];return{name:r.name,where:r.kind==='component'?shelf[shopBrowser&&shopBrowser.categoryOf?shopBrowser.categoryOf('componentBuy'+r.index):2]:'Stations',price:fmt(r.price),id:r.kind==='component'?'componentBuy'+r.index:null,affordable:state.money>=r.price}},recommend:function(open){var r=recommendation();if(open){actOnRecommendation();return ''}return r.name+' · '+(r.kind==='component'?'in '+['Production','Service','Customers','Products','Online'][shopBrowser&&shopBrowser.categoryOf?shopBrowser.categoryOf('componentBuy'+r.index):2]+' · ':'upgrade ')+fmt(r.price)}});
+  var shopBrowser=mountShopBrowser({getState:function(){return state},components:COMPONENTS,kiosks:kioskCount,queueLimit:queueLimit,openDeliveries:function(){showTray('orders')},deliveryDesk:function(){return{built:deliveryBuilt(),waiting:onlineRequestsReady(),price:fmt(AUTO_DRONE_COST),ready:state.money>=AUTO_DRONE_COST,progress:Math.min(1,state.money/AUTO_DRONE_COST),toGo:fmt(Math.max(0,AUTO_DRONE_COST-state.money))}},recommendInfo:function(){var r=recommendation(),shelf=['Production','Service','Customers','Products','Online'];return{name:r.name,where:r.kind==='component'?shelf[shopBrowser&&shopBrowser.categoryOf?shopBrowser.categoryOf('componentBuy'+r.index):2]:'Stations',price:fmt(r.price),id:r.kind==='component'?'componentBuy'+r.index:null,affordable:state.money>=r.price}},recommend:function(open){var r=recommendation();if(open){actOnRecommendation();return ''}return r.name+' · '+(r.kind==='component'?'in '+['Production','Service','Customers','Products','Online'][shopBrowser&&shopBrowser.categoryOf?shopBrowser.categoryOf('componentBuy'+r.index):2]+' · ':'upgrade ')+fmt(r.price)}});
   var operationsUI=mountOperations({getState:function(){return state},format:fmt,changed:function(message){save();renderUI();if(message)notify(message,'upgrade')},visit:function(i,manage){visitStore(i+1,!manage);if(manage)manageViewedStore()}});
   function renderManagement(){
     var p=state.empire,report=p.returnReport,investment=recommendation();
