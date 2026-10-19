@@ -510,7 +510,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       var kioskAvailable=orderAvailability(customers,state.stock[4],pickupLimit());
       if(kioskCustomer&&kioskAvailable.places>0&&kioskAvailable.bags>0){
         kioskCustomer.orderTime=(kioskCustomer.orderTime||0)+dt;
-        if(kioskCustomer.orderTime>=kioskServiceDuration()){kioskCustomer.strain=strainFor(kioskCustomer);kioskCustomer.bags=Math.min(kioskCustomer.kind==='vip'?strains.VIP_BASKET:1,kioskAvailable.bags);kioskCustomer.salePrice=salePriceFor(kioskCustomer,kioskCustomer.strain);kioskCustomer.ordered=true;kioskCustomer.phase='toPickup'}
+        if(kioskCustomer.orderTime>=kioskServiceDuration()){kioskCustomer.strain=strainFor(kioskCustomer);kioskCustomer.bags=Math.min(basketSize()*(kioskCustomer.kind==='vip'?strains.VIP_BASKET:1),kioskAvailable.bags);kioskCustomer.salePrice=salePriceFor(kioskCustomer,kioskCustomer.strain);kioskCustomer.ordered=true;kioskCustomer.phase='toPickup'}
       }
     }
     for(var i=3;i>=0;i--){
@@ -756,7 +756,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     import(/* @vite-ignore */ map3dUrl).then(function(m){
       var layout=townLayout();
       // The three floors as drawTower lays them out; the ground floor's herringbone runs out to the store edge (11.95).
-      layout.floors=[{y:0,z:2.475,w:23,d:18.95},{y:4.7,z:-2.95,w:18,d:7.4},{y:9.4,z:-3.6,w:13,d:6.6}];layout.marquee={x:MARQUEE.x,zFront:MARQUEE.zFront,zRear:MARQUEE.zRear,y0:MARQUEE.y0,y1:MARQUEE.y1,top:MARQUEE.top,bottom:MARQUEE.bottom};
+      layout.floors=[{y:0,x:.75,z:2.475,w:24.5,d:18.95},{y:4.7,z:-2.95,w:18,d:7.4},{y:9.4,z:-3.6,w:13,d:6.6}];layout.marquee={x:MARQUEE.x,zFront:MARQUEE.zFront,zRear:MARQUEE.zRear,y0:MARQUEE.y0,y1:MARQUEE.y1,top:MARQUEE.top,bottom:MARQUEE.bottom};
       // Blender models (art/blender/, exported to public/models/) by station index, sized from the tier 3 sprite they replace.
       layout.modelBase=new URL('models/',document.baseURI).href;
       // Keyed "station.tier"; a tier without its own model shows the tier 3 one. Each is sized to its tier's sprite.
@@ -784,7 +784,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       layout.shell={plaster:SHOP_GREEN_PLASTER[2],tile:SHOP_GREEN_TILE[2],tileH:LOUNGE_TILE,tilePitch:TILE_PITCH,glazingBay:GLAZING_BAY,fanX:FAN_X,topLanding:TOP_LANDING,
         loungeFront:LOUNGE_FRONT,loungeDoor:LOUNGE_DOOR,loungeExit:LOUNGE_EXIT,loungeRight:LOUNGE_RIGHT,loungeHeader:2.05,wallLeft:-6.7,wallRight:8.4,shelfLeft:-1.3+COUNTER_SHIFT,
         exitDoor:{x0:9.44,x1:11.25,h:3.3},column:{x:9.8,z:-1.8},merchCabinet:{back:8.41,face:9.27,z0:-6.84,z1:-4.8},
-        planter:{x0:-11.7,x1:-10.75,z0:2,z1:5.6,tree:{x:-11.45,z:2.35}},baseboard:{x0:-10.65,x1:11.5,front:11.95,rear:-7,h:.32},hanging:{x0:-2.3,x1:2.3,y:9.05,z:-1.35},
+        planter:{x0:-11.7,x1:-10.75,z0:2,z1:5.6,tree:{x:-11.45,z:2.35}},baseboard:{x0:-10.65,x1:13,front:11.95,rear:-7,h:.32},hanging:{x0:-2.3,x1:2.3,y:9.05,z:-1.35},
         lamps:[[-4,3.7,3.5,1.3],[4,3.7,3.5,1.3],[-4,3.7,8.5,1.1],[5,3.7,8.5,1.1],[-10,3,-4,.8],[-4,8.4,-3,1.2],[4,8.4,-3,1.2],[0,12.8,-4.5,1]]};
       // Sprite shop: the storefront and its doorway are the 2D map's own flat elevations on the entrance wall's plane
       // (addEntryDoor), the exit mat and the lounge's runner lie on the floor where the 2D map pins them, and the
@@ -794,7 +794,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
         // its bottom centre) have loaded.
         layout.wallFaces=[{url:'sprites/shell/flat.storefront.png',x0:-10.65,z0:8.94,x1:-10.65,z1:LOUNGE_FRONT,y0:-.04,h:4.19,model:'storefront'},
           {url:'sprites/shell/flat.storefront.door.png',x0:-10.65,z0:12.05,x1:-10.65,z1:8.8,y0:-.04,h:4.2,model:'storefrontDoor'}];
-        layout.fixtures.push({key:'displayCase',file:'display_case.glb',x:10.05,y:0,z:8.7,scale:1.69},{key:'storefront',file:'storefront.glb',x:-10.65,y:0,z:(8.94+LOUNGE_FRONT)/2,scale:1.69},{key:'storefrontDoor',file:'storefront_door.glb',x:-10.65,y:0,z:(12.05+8.8)/2,scale:1.69});
+        layout.fixtures.push({key:'displayCase',file:'display_case.glb',x:10.05,y:0,z:8.7,scale:1.69},{key:'storefront',file:'storefront.glb',x:-10.65,y:0,z:(8.94+LOUNGE_FRONT)/2,scale:1.69,glow:'SignCream'},{key:'storefrontDoor',file:'storefront_door.glb',x:-10.65,y:0,z:(12.05+8.8)/2,scale:1.69,hide:['Canopy','CanopyEdge','CanopyEdgeSide','LampStem','LampShade','LampBulb']});
+        // The street door's striped awning and the neon leaf blade sign off its post (src/three/entrance.js): the door
+        // opens between the storefront's last mullion (8.8) and the post (10.94..11.43), under the header (3.5..4.06).
+        layout.entrance={x:-10.65,sign:{x0:-11.9,x1:-10.95,y0:2.05,y1:3.1,z:11.19}};
         var matX=10.7,matZ=-4.35,runW=(LOUNGE_CARPET_END-LOUNGE_FRONT)/LOUNGE_RUNNER_PIN.ratio,pin=LOUNGE_RUNNER_PIN;
         layout.decals=[{url:'sprites/shell/shell.mat.exit.png',image:[[0,0],[1,0],[0,1]],world:[[matX+.6,matZ+1.1],[matX+.6,matZ-1.1],[matX-.6,matZ+1.1]]},
           {url:'sprites/interior/lounge.carpet.runner.png',pixels:true,image:[pin.left,pin.bottom,pin.top],world:[[LOUNGE_DOOR.x-runW/2,LOUNGE_CARPET_END],[LOUNGE_DOOR.x+runW/2,LOUNGE_CARPET_END],[LOUNGE_DOOR.x-runW/2,LOUNGE_FRONT+.02]],show:'loungeOpen'}];
@@ -1127,7 +1130,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     exteriorFixtures.sconces.forEach(function(f){halo(f.x-.2,f.y-.06,f.z,.9,.55,WARM);beam(f.x-.32,f.y-.12,f.z,.03,.14,.9,.3,WARM);pool(f.x-.6,.03,f.z,1.5,.7,WARM)});
     exteriorFixtures.bollards.forEach(function(b){halo(b.x,.62,b.z,.5,.55,WARM);pool(b.x,.03,b.z,1.3,.6,WARM)});
     halo(e.x,e.y-.14,e.z,.8,.55,WARM);beam(e.x,e.y-.12,e.z-.06,.03,.28,1.2,.3,WARM);pool(e.x,.03,e.z-.8,1.7,.65,WARM);
-    pool(-11.2,.03,10,1.7,.5,WARM);pool(-9.1,.04,9.91,1.9,.7,WARM);halo(-9.1,2.4,9.91,.9,.45,'#ffe2a5');
+    pool(-11.2,.03,10,1.7,.5,WARM);pool(ID_DESK.x,.04,9.91,1.9,.7,WARM);halo(ID_DESK.x,2.4,9.91,.9,.45,'#ffe2a5');
     // The glazed storefront and marquee spill onto the sidewalk along the whole entrance wall.
     pool(-12.3,.03,4.6,2.4,.3,'#ffe3a8');pool(-12.3,.03,8.2,2.4,.32,'#ffe3a8');
     // Shop floor: slab downlights over the counters, the retail counters, floor downlights, the vitrine, the lounge door.
@@ -1491,7 +1494,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // dark-green tile with its brass rail and cream cap along the herringbone's front edge from the storefront, and up the
   // right-hand edge to the rear wall beside the exit door. Drawn in one-unit pieces so walkers sort against it.
   function storeBaseboard(){
-    var front=11.95,right=11.5,d=.14,h=.32;
+    var front=11.95,right=STORE_RIGHT,d=.14,h=.32;
     var piece=function(cx,cz,w,dd){sceneJobs.push({depth:depthOf({x:cx,z:cz}),draw:function(){
       drawBox(cx,cz,0,w,dd,h-.1,SHOP_GREEN_TILE);drawBox(cx,cz,h-.1,w+.02,dd+.02,.03,TILE_BRASS);drawBox(cx,cz,h-.07,w+.04,dd+.06,.07,['#ece2c8','#b3a78a','#d2c6a6'])}})};
     for(var x=-10.65;x<right-.01;x+=1){var x1=Math.min(right,x+1);piece((x+x1)/2,front-d/2,x1-x,d)}
@@ -1821,6 +1824,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // beside them), crosses the threshold at z ≈ 9 and continues outside along the storefront.
   // The pen's rows grow with the line: 2.4 wide for the starter line of six, full width (4.5) from twenty places.
   var ORDER_ROWS=[7.0,8.15,9.3],ORDER_PEN_RIGHT=-2.0+COUNTER_SHIFT,PICKUP_AISLE_Z=5.5;
+  // The ground floor runs out to x 13 on the right (Kevin, 2026-10-19: the exit route past the stairs was too narrow), so
+  // leaving guests walk a lane at x 12.2, clear of the spiral stair (x 9.05-11.35), before turning in to the exit door.
+  var STORE_RIGHT=13,EXIT_LANE_X=12.2;
   function orderPen(){return {right:ORDER_PEN_RIGHT,left:ORDER_PEN_RIGHT-Math.min(4.5,1.5+queueLimit()*.15)}}
   function queueRoute(ordered){
     var ORDER_PEN=orderPen();
@@ -1861,7 +1867,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // The doorman's line is one route from the desk back out through the door and along the street, everyone 0.7
   // apart: the next customer is already on the approach while the head is being checked, so the desk is never idle
   // waiting for someone to walk up from the door, and a well-staffed door clears people as fast as they arrive.
-  var ID_ROUTE=[{x:-10.05,z:9.35},{x:-10.6,z:9.6},{x:-11.7,z:9.3},{x:-12.4,z:7.8},{x:-12.4,z:-10}];
+  // The ID desk stands 0.9 further in from the street door than it first did (Kevin, 2026-10-19: more room at the door);
+  // guests are checked at ID_CHECK, in front of it.
+  var ID_DESK={x:-8.2,z:9.3},ID_CHECK={x:-9.15,z:9.35};
+  var ID_ROUTE=[ID_CHECK,{x:-10.6,z:9.6},{x:-11.7,z:9.3},{x:-12.4,z:7.8},{x:-12.4,z:-10}];
   function moveToIdCheck(c,dt){
     var queue=customers.filter(function(q){return q.idChecked===false}),index=queue.indexOf(c);
     var startX=c.x,startZ=c.z,budget=dt*economy.walkSpeed(state.trafficLevel);
@@ -1880,12 +1889,12 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
         // else, so the rope never backs up through the kiosks to the door.
         if(c.lounge&&loungeSeats(state.lounge)>0&&loungeWaiting().length+customers.filter(function(q){return q.phase==='toLounge'&&q.waypoints.length}).length<LOUNGE_ROPE){
           // Past the doorman, along the kiosk row and back to the curtain.
-          c.phase='toLounge';c.routeKind='lounge';c.waypoints=[{x:-10.05,z:8.5},{x:-9.7,z:8.15},{x:-8.2,z:8.6},{x:-7.95,z:7.6},{x:-7.95,z:2.2},{x:LOUNGE_DOOR.x,z:2.2},LOUNGE_DOOR];return;
+          c.phase='toLounge';c.routeKind='lounge';c.waypoints=[{x:ID_CHECK.x,z:8.5},{x:-9.7,z:8.15},{x:-8.2,z:8.6},{x:-7.95,z:7.6},{x:-7.95,z:2.2},{x:LOUNGE_DOOR.x,z:2.2},LOUNGE_DOOR];return;
         }
         c.lounge=false;
         var route=c.kiosk?kioskRoute(c.kioskIndex):queueRoute(false),join=laneJoinIndex(route);
         // Step down the desk's door side and join the lane in the corridor in front of it, clear of the doorman.
-        c.routeKind=c.kiosk?'kiosk':'order';c.laneDistance=routeLength(route.slice(0,join+1));c.waypoints=[{x:-10.05,z:8.5},route[join]];
+        c.routeKind=c.kiosk?'kiosk':'order';c.laneDistance=routeLength(route.slice(0,join+1));c.waypoints=[{x:ID_CHECK.x,z:8.5},route[join]];
       }
     }
   }
@@ -1918,7 +1927,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       // rather than walking along the counter front through the other customers. Everyone then goes down the middle
       // walkway to the line's tail.
       var toPickup=[{x:-.25+COUNTER_SHIFT,z:PICKUP_AISLE_Z},{x:-.25+COUNTER_SHIFT,z:8.15},{x:1.9+COUNTER_SHIFT,z:8.15},{x:1.9+COUNTER_SHIFT,z:8.1}];
-      c.waypoints=(kind==='order'||kind==='kiosk')?[route[route.length-1]]:kind==='pickup'?(c.kiosk?[{x:-8,z:6.8-(c.kioskIndex||0)*1.8},{x:-7.4,z:PICKUP_AISLE_Z}].concat(toPickup):[{x:c.x,z:PICKUP_AISLE_Z}].concat(toPickup)):[{x:PICKUP_X,z:4},{x:8.1,z:5},{x:11.15,z:5},{x:11.15,z:-4.3},{x:10.25,z:-5.6},{x:10.25,z:-8.1},{x:7,z:-8.1},{x:-10.5,z:-8.1}];
+      c.waypoints=(kind==='order'||kind==='kiosk')?[route[route.length-1]]:kind==='pickup'?(c.kiosk?[{x:-8,z:6.8-(c.kioskIndex||0)*1.8},{x:-7.4,z:PICKUP_AISLE_Z}].concat(toPickup):[{x:c.x,z:PICKUP_AISLE_Z}].concat(toPickup)):[{x:PICKUP_X,z:4},{x:8.1,z:5},{x:EXIT_LANE_X,z:5},{x:EXIT_LANE_X,z:-4.6},{x:10.25,z:-6},{x:10.25,z:-8.1},{x:7,z:-8.1},{x:-10.5,z:-8.1}];
     }
     while(c.waypoints.length&&budget>0){var point=c.waypoints[0],dx=point.x-c.x,dz=point.z-c.z,distance=Math.hypot(dx,dz),step=Math.min(distance,budget);if(distance>.0001){c.x+=dx/distance*step;c.z+=dz/distance*step}budget-=step;if(distance<=step+.0001)c.waypoints.shift();else break}
     if(!c.waypoints.length){
@@ -2906,8 +2915,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     ctx.drawImage(groundCache.surface,0,0,width,height);
     function paintGround(){
         // One continuous oak plank floor: long boards run front to back, with staggered end joints and a faint grain.
-        var rear=floor.z-floor.d/2,front=floor.z+floor.d/2,left=-floor.w/2,right=floor.w/2;
-        drawBox(0,floor.z,-.24,floor.w,floor.d,.24,['#c9a97e','#7f6446','#a68a62']);
+        var rear=floor.z-floor.d/2,front=floor.z+floor.d/2,left=(floor.x||0)-floor.w/2,right=(floor.x||0)+floor.w/2;
+        drawBox(floor.x||0,floor.z,-.24,floor.w,floor.d,.24,['#c9a97e','#7f6446','#a68a62']);
         // Herringbone oak: columns of boards laid at alternating 45° angles, three tones of the same plank, fine joints.
         ctx.save();ctx.beginPath();[project(left,.012,rear),project(right,.012,rear),project(right,.012,front),project(left,.012,front)].forEach(function(q,i){i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y)});ctx.closePath();ctx.clip();
         var colW=1.15,step=.56,tones=['#00000009','#ffffff0b','#00000004'];
@@ -3052,9 +3061,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // floors paint and drawn by the frame after them, so a guest walking behind a counter is hidden by it and one in
     // front stands on it.
     sceneJobs=[];var jobs=sceneJobs;
-    [{y:0,z:1.5,w:23,d:17,ids:[4,5]},{y:4.7,z:-2.95,w:18,d:7.4,ids:[3,2]},{y:9.4,z:-3.6,w:13,d:6.6,ids:[0,1]}].forEach(function(floor,fi){
+    [{y:0,x:.75,z:1.5,w:24.5,d:17,ids:[4,5]},{y:4.7,z:-2.95,w:18,d:7.4,ids:[3,2]},{y:9.4,z:-3.6,w:13,d:6.6,ids:[0,1]}].forEach(function(floor,fi){
       sceneElevation=floor.y;
-      var rear=floor.z-floor.d/2,front=floor.z+floor.d/2,left=-floor.w/2,right=floor.w/2;
+      var rear=floor.z-floor.d/2,front=floor.z+floor.d/2,left=(floor.x||0)-floor.w/2,right=(floor.x||0)+floor.w/2;
       // The drawn pothos canopy has no Ludo counterpart and reads as a tangle of lines beside the sprites, so the sprite shop leaves it out.
       // In the sprite shop the canopy is Ludo's pothos curtain on its brass rail, hung under the top-floor soffit.
       if(fi===2&&SHOP_SPRITES&&shellSprite('shell.plant.hanging')){
@@ -3101,7 +3110,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
         }
         sceneElevation=floor.y;
       }
-      if(fi===0){drawCachedGround(floor);if(SHOP_SPRITES){var groundTex=floorPattern(sunnyApi(now),'herringbone',4);if(groundTex){var front=11.95;poly([project(-floor.w/2,0,floor.z-floor.d/2),project(floor.w/2,0,floor.z-floor.d/2),project(floor.w/2,0,front),project(-floor.w/2,0,front)],groundTex)}drawStoreFrontEdge(floor);if(!drawFlatSprite('shell.mat.entrance',-11.1,-10.2,9.05,11.35,'z'))groundPatch(-10.65,10.2,.9,2.2,'#3f5f4c');storeBaseboard()}drawSideAislePlanter()}
+      if(fi===0){drawCachedGround(floor);if(SHOP_SPRITES){var groundTex=floorPattern(sunnyApi(now),'herringbone',4);if(groundTex){var front=11.95;poly([project(left,0,rear),project(right,0,rear),project(right,0,front),project(left,0,front)],groundTex)}drawStoreFrontEdge(floor);if(!drawFlatSprite('shell.mat.entrance',-11.1,-10.2,9.05,11.35,'z'))groundPatch(-10.65,10.2,.9,2.2,'#3f5f4c');storeBaseboard()}drawSideAislePlanter()}
 
       else{
         // One continuous floor outline includes the stair landing, with no internal slab edge.
@@ -3499,7 +3508,7 @@ if(!SHOP_SPRITES){
   }
   function addIdCheckStation(jobs,now){
     // The desk sits wholly on the timber floor (front edge z 9.925 < 10), just inside the door.
-    var x=-9.1,z=9.3,steel=['#414843','#171e1a','#2b342e'],wood=['#bc9d73','#6f5943','#998063'];
+    var x=ID_DESK.x,z=ID_DESK.z,steel=['#414843','#171e1a','#2b342e'],wood=['#bc9d73','#6f5943','#998063'];
     jobs.push({depth:depthOf({x:-12.4,z:7.1})-.01,draw:function(){
       groundPatch(-12.4,7.1,.65,.7,'#c7d6a754');
       worldLine([[-12.7,.04,7.45],[-12.1,.04,7.45]],'#e5d7ae',.05);
@@ -3534,7 +3543,7 @@ if(!SHOP_SPRITES){
   // front from the entrance portal along that edge.
   function drawStoreFrontEdge(floor){
     var front=11.95;
-    drawBox(0,front-.07,0,floor.w,.14,.14,['#d8b47e','#8f6a42','#b48a5c']);
+    drawBox(floor.x||0,front-.07,0,floor.w,.14,.14,['#d8b47e','#8f6a42','#b48a5c']);
     // The tiled wall itself is a depth-sorted job (see the floor pass) so it stands in front of the door and mat.
   }
   function drawSideAislePlanter(){
@@ -4258,7 +4267,7 @@ if(!SHOP_SPRITES){
           person(p.x+spot.dx,p.y||0,p.z+spot.dz,'#2f6b52',function(){drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait)})})(i,p);
       }
     }
-    stations.push({index:6,x:-9.1,y:0,z:9.3,w:.8,d:1.3,h:1.1,tier:state.doorBuilt?spriteTier(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
+    stations.push({index:6,x:ID_DESK.x,y:0,z:ID_DESK.z,w:.8,d:1.3,h:1.1,tier:state.doorBuilt?spriteTier(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
     if(state.doorBuilt)person(-8.25,0,8.75,'#2f6b52',function(){drawPerson(-8.25,8.75,now,6,false,true,false)});
     // The lounge host works the rooftop: behind the bar once there is one, otherwise by the elevator's bridge.
     if(state.lounge>0){var host=state.lounge>=2?{x:3.7,z:-8.75,f:.3}:{x:-5.2,z:-4,f:.3};person(host.x,ROOFTOP.y,host.z,'#2f6b52',function(){drawPerson(host.x,host.z,now,8,false,true,false,{amount:0,phase:0,facing:host.f})})}
@@ -4301,6 +4310,8 @@ if(!SHOP_SPRITES){
       var postModel=map3d.propReady('street_queue_post.glb');
       Object.keys(posts).forEach(function(key){var q=posts[key];if(postModel)props.push({file:'street_queue_post.glb',x:q[0],y:0,z:q[1]});else capturePerson(figures,q[0],0,q[1],function(){drawStanchion(q[0],q[1])})});
       if(fixtureSprite('shop.displaycase')&&!map3d.hasFixture('displayCase'))capturePerson(figures,10.05,0,8.7,function(){drawSprite(streetApi,'shop.displaycase',10.05,8.7,true)});
+      // The self-order kiosks along the storefront glass are their render, stood up at each kiosk's footprint.
+      if(state.kiosk&&fixtureSprite('shop.kiosk'))for(var k=0;k<kioskCount();k++)(function(kz){capturePerson(figures,-9.75,0,kz,function(){drawBoxSprite(streetApi,fixtureSprite('shop.kiosk'),-10.04,-9.46,kz-.4,kz+.4,0,1.8,true)})})(6.8-k*1.8);
     }
     // The 2D map fades figures behind the building and lays haze over distant renders as see-through copies; in 3D
     // depth and the scene's haze do both, so only the solid draws are kept.
@@ -4389,7 +4400,7 @@ if(!SHOP_SPRITES){
       // The head is as deep as the pedestal so the two front faces align and the head sits centred over the base.
       kb(-1.3+dx,7.95,1.3,.85,.46,1.05,steel);kb(-1.3+dx,8.195,2.1,.73,.025,.19,['#355444','#263b31','#355444']);
       var serving=customers.find(function(c){return c.kiosk&&(c.kioskIndex||0)===index&&!c.ordered&&Math.hypot(c.x+8.95,c.z-(6.8-dx))<.15});
-      var progress=serving?Math.min(1,(serving.orderTime||0)/.65):0;
+      var progress=serving?Math.min(1,(serving.orderTime||0)/kioskServiceDuration()):0;
       // The backlit screen, its bars, the status light and the header label all emit, so they are registered together.
       lit(function(){
         kb(-1.3+dx,8.19,1.4,.69,.018,.85,['#dbe9c5','#dbe9c5','#dbe9c5']);
@@ -4599,7 +4610,7 @@ if(!SHOP_SPRITES){
   function updateMarkers(){
     var key=[centerX,centerY,unit,width,height,state.idStaff,state.lines.join(),securitySelected,selected,state.lounge,loungeSelected].join("|");
     if(updateMarkers.key===key)return;updateMarkers.key=key;
-    var securityPos=project(-9.1,.62,9.91),loungePos=map3d&&map3d.ok?project(-2.7,ROOFTOP.y+1.2,-6.1):project(LOUNGE_DOOR.x,1.5,DISPLAY_Z+.5),labelSize=Math.max(8,Math.min(10,unit*.24))*(width>=780?.85:1)+'px';
+    var securityPos=project(ID_DESK.x,.62,9.91),loungePos=map3d&&map3d.ok?project(-2.7,ROOFTOP.y+1.2,-6.1):project(LOUNGE_DOOR.x,1.5,DISPLAY_Z+.5),labelSize=Math.max(8,Math.min(10,unit*.24))*(width>=780?.85:1)+'px';
     securityMarker.style.fontSize=labelSize;loungeMarker.style.fontSize=labelSize;
     var labels=[{el:securityMarker,x:securityPos.x,y:securityPos.y},{el:loungeMarker,x:loungePos.x,y:loungePos.y}];
     markerEls.forEach(function(el,i){var station=machinePos[i],pos=project(station.x,.63+station.y,station.z+1.23);el.style.fontSize=labelSize;labels.push({el:el,x:pos.x,y:pos.y})});
@@ -5152,7 +5163,7 @@ if(!SHOP_SPRITES){
   function selectMachine(i){securitySelected=false;loungeSelected=false;selected=i;showTray('factory');renderUI();if(machineTabs[i]&&machineTabs[i].scrollIntoView)machineTabs[i].scrollIntoView({block:'nearest',inline:'nearest'});if(navigator.vibrate)navigator.vibrate(8)}
   // Construction: the door and each station are raised for free, in line order, with the intro explaining what each one does.
   // Building never charges cash because a shop with no pickup counter cannot earn any.
-  var DOOR_POS={x:-9.1,z:9.3};
+  var DOOR_POS=ID_DESK;
   function isBuilt(key){return key==='door'?state.doorBuilt:state.lines[key]>0}
   function buildStation(key){
     if(isBuilt(key))return false;

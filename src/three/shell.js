@@ -60,7 +60,7 @@ export function buildShell(world, layout, { box, span, material }) {
 
   // Ground floor: the rear wall runs the floor's width behind the lounge and beside the exit door, its doorway open.
   const gRear = ground.z - ground.d / 2;
-  wall(false, -ground.w / 2, ground.w / 2, gRear, .25, 0, mezz.y - .32, [[s.exitDoor.x0, s.exitDoor.x1, s.exitDoor.h]]);
+  wall(false, (ground.x || 0) - ground.w / 2, (ground.x || 0) + ground.w / 2, gRear, .25, 0, mezz.y - .32, [[s.exitDoor.x0, s.exitDoor.x1, s.exitDoor.h]]);
   // Mezzanine: rear wall and its short left wall, both tiled to the rail and plaster above.
   const mRear = mezz.z - mezz.d / 2, mLeft = -mezz.w / 2;
   wall(false, mLeft, mezz.w / 2, mRear, .25, mezz.y, top.y - mezz.y - .32);
