@@ -20,8 +20,7 @@ export async function runExperienceChecks(mode){
   await click($('goalClaim1'));assert(!document.querySelector('[data-pane=orders]').hidden,'Gated goal navigates to deliveries');
   assert(!$('deliverySite').hidden&&$('deliverySite').style.display!=='none','Delivery construction visible');
   assert($('deliveryFunding').value>0&&$('deliveryFunding').value<1,'Funding reflects current cash');
-  await click($('goalsOpen'));const cash=status().cash;await click($('nextInvestmentLink'));assert($('machineName').textContent==='CUSTOMER PICKUP','Recommendation selects Pickup');assert(status().cash===cash,'Recommendation never spends');
-  result.push('starter story, consistent recommendation, locked delivery funding and navigation');
+  result.push('starter story, locked delivery funding and navigation');
  }else{
   assert($('storyTitle').textContent==='Someone knows your name','Legacy progress recognized');
   await click($('storyAction'));assert($('opTab02').getAttribute('aria-pressed')==='true','Mara action opens People');

@@ -15,10 +15,8 @@
 .goals-dropdown .short-goal button.ready{border-color:transparent;background:var(--ui-brass);color:var(--ui-brass-ink);font-weight:700}
 .goals-dropdown .short-goal button:disabled{border-color:var(--ui-edge);background:transparent;color:var(--ui-soft);opacity:.75}
 @media(hover:hover){.goals-dropdown .short-goal button:not(:disabled):hover{background:var(--ui-sheen)}.goals-dropdown .short-goal button.ready:hover{background:var(--ui-brass);filter:brightness(1.06)}}
-#goalsCompleted{margin:0 0 8px;color:var(--ui-soft);font-size:11.5px;text-align:right}
+#goalsCompleted{margin:0 0 10px;color:var(--ui-soft);font-size:11.5px;text-align:right}
 #goalsCompleted:empty{display:none}
-#nextInvestmentLink{display:block;width:100%;min-height:44px;padding:11px 0;border:0;border-top:1px solid var(--ui-edge);border-radius:0;background:transparent;text-align:left;cursor:pointer}
-.goals-dropdown #nextInvestment{margin:0;line-height:1.5;font-size:12px;color:var(--ui-soft)}
 /* The shop story shrinks to one quiet card under the goals; tapping it takes you to the chapter's next step. */
 .shop-story{display:flex;align-items:center;gap:12px;width:100%;margin:4px 0 2px;padding:10px 10px 10px 12px;border:1px solid var(--ui-edge);border-radius:14px;background:var(--ui-well-soft);color:var(--ui-ink);font:inherit;text-align:left;cursor:pointer}
 .story-copy{flex:1;min-width:0}
@@ -37,8 +35,8 @@
 .story-entry>svg{width:24px;height:24px;flex:0 0 auto;color:var(--p-gold-76)}
 .story-entry>span:nth-child(2){flex:1;min-width:0}.story-entry small{display:block;font-size:11px;color:#bbcfad}.story-entry b{display:block;margin-top:3px;color:#eef3e3;font-size:13px;font-weight:600;line-height:1.3}
 .story-entry .story-entry-count{font:11px 'DM Mono',monospace;color:#d1dfc4}
-.story-entry>span:last-child{font-size:22px}.story-entry:focus-visible,#storyAction:focus-visible,#nextInvestmentLink:focus-visible,#goalsClose:focus-visible{outline:2px solid var(--p-gold-76);outline-offset:3px}
-@media(hover:hover){.story-entry:hover b,#nextInvestmentLink:hover #nextInvestment{color:var(--ui-ink)}}
+.story-entry>span:last-child{font-size:22px}.story-entry:focus-visible,#storyAction:focus-visible,#goalsClose:focus-visible{outline:2px solid var(--p-gold-76);outline-offset:3px}
+@media(hover:hover){.story-entry:hover b{color:var(--ui-ink)}}
 .sheet .flow-copy{min-width:0}.sheet .flow-guide #flowText{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.3}
 .sheet #flowText b{white-space:normal}
 .sheet .flow-label,.sheet .menu-board-summary small,.sheet .buyer small,.sheet .strain-stats small,.sheet .dispatch-stat small,.sheet .receipt-note{font-size:11px;letter-spacing:.015em}

@@ -5074,9 +5074,10 @@ if(!SHOP_SPRITES){
   goalsWrap.innerHTML='<div class="settings-head"><h2 id="goalsTitle">Shift goals</h2><span id="shiftGoalsReady"></span><button type="button" id="goalsClose" aria-label="Close shift goals">×</button></div><div class="goals-body"></div>';
   document.body.append(goalsWrap);
   var goalsBody=goalsWrap.querySelector('.goals-body'),nextStepsHeading=today.querySelector('h2:not(.empire-section-heading)');if(nextStepsHeading)nextStepsHeading.remove();
-  var investmentLink=document.createElement('button');investmentLink.type='button';investmentLink.id='nextInvestmentLink';investmentLink.append($('nextInvestment'));investmentLink.onclick=function(){closeGoals();var r=recommendation();if(r.kind==='station')selectMachine(r.index);else{showTray('boosts');shopBrowser.show(shopBrowser.categoryOf('componentBuy'+r.index));renderUI();}};
-  // Shift goals lead the panel; the shop's next improvement and the story card follow underneath.
-  var goalsDone=document.createElement('p');goalsDone.id='goalsCompleted';goalsBody.append($('shortGoals'),goalsDone,investmentLink);$('goalsClose').onclick=closeGoals;
+  // The next improvement already leads the bottleneck card in the sheet, so the goals panel leaves it out.
+  $('nextInvestment').hidden=true;
+  // Shift goals lead the panel; the story card follows underneath.
+  var goalsDone=document.createElement('p');goalsDone.id='goalsCompleted';goalsBody.append($('shortGoals'),goalsDone);$('goalsClose').onclick=closeGoals;
   function placeGoals(){var r=goalsButton.getBoundingClientRect(),wide=window.innerWidth>=480;goalsWrap.style.top=Math.round(r.bottom+8)+'px';goalsWrap.style.right=wide?Math.max(8,Math.round(window.innerWidth-r.right-4))+'px':'8px';goalsWrap.style.left=wide?'auto':'8px';goalsWrap.style.setProperty('--caret',Math.round(r.left+r.width/2-(wide?goalsWrap.getBoundingClientRect().left:8))+'px')}
   function openGoals(){goalsWrap.hidden=false;renderUI();placeGoals();$('goalsClose').focus({preventScroll:true});goalsButton.setAttribute('aria-expanded','true')}
   function closeGoals(){if(goalsWrap.hidden)return;var restore=goalsWrap.contains(document.activeElement);goalsWrap.hidden=true;goalsButton.setAttribute('aria-expanded','false');if(restore)goalsButton.focus({preventScroll:true})}
