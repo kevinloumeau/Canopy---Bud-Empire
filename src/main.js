@@ -69,6 +69,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     next.lastSeen=finite(old.lastSeen,Date.now(),0,Date.now());next.lines=LINES.map(function(_,i){return Math.floor(finite(old.lines&&old.lines[i],1,next.shopOpen?1:0,10000))});next.storageLevel=Math.min(20,Math.max(0,Math.floor(Number(old.storageLevel)||0)));next.stock=Array.from({length:5},function(_,i){return Math.floor(finite(old.stock&&old.stock[i],0,0,i===4?100+next.readyLevel*50:100+next.storageLevel*100))});next.staff=LINES.map(function(_,i){return Math.floor(finite(old.staff&&old.staff[i],0,0,10000))});next.kiosk=old.kiosk===true;next.lounge=migrateLounge(old.lounge);next.shopPlay=migrateShopPlay(old.shopPlay);next.loungeStaff=migrateLoungeHost(old.loungeStaff);next.loungeLift=next.lounge>0&&old.loungeLift===true;next.loungeSessions=Math.floor(finite(old.loungeSessions,0,0,1e9));next.loungeEarned=finite(old.loungeEarned,0,0,1e15);next.secondKiosk=next.kiosk&&old.secondKiosk===true;next.thirdKiosk=next.secondKiosk&&old.thirdKiosk===true;next.queueLevel=Math.min(7,Math.max(0,Math.floor(Number(old.queueLevel)||0)));next.theme='dispensary';next.gameSpeed=[0,1,2,4].indexOf(old.gameSpeed)>=0?old.gameSpeed:1;return next}catch(e){return fresh()}}
   var firstRun=false;try{firstRun=!localStorage.getItem('shift-save')}catch(e){}
   var securitySelected=false,loungeSelected=false;
+  var selectedLine=document.querySelector('.selected-line'),buyActions=document.querySelector('.station-buy-actions');
   var state=load(),selected=0,toastTimer,dispatchSummary=null;
   state.productMenu.active=dominantFormat(state.productMenu,state.menuStrains.filter(function(i){return state.strains[i]>0}));
   state.empire=migrateProgression(state.empire);state.empire.activeStore=selectedStore(state.empire);state.empire.retailBoost=retailBoost();advanceJourney(state);
@@ -2695,6 +2696,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     $('rate').dataset.paused=String(state.gameSpeed===0);$('money').textContent=fmt(state.money);$('rate').textContent=state.gameSpeed===0?'Paused':fmt((state.empire.activeStore?storeRate(state.empire,state.empire.activeStore-1):production()+branchIncome(state.empire))*state.gameSpeed)+'/s';document.querySelector('.stat.output small').textContent=state.empire.activeStore?'BRANCH INCOME':'CAPACITY';
     var paused=state.gameSpeed===0;speedButtons.forEach(function(button){var value=Number(button.getAttribute('data-speed'));button.setAttribute('aria-pressed',String(value===state.gameSpeed||(value===1&&paused)))});
     var glyph=paused?'pause':'play';if(speedOne.getAttribute('data-glyph')!==glyph){speedOne.setAttribute('data-glyph',glyph);speedOne.innerHTML=paused?PAUSE_GLYPH:PLAY_GLYPH}speedOne.setAttribute('aria-label',paused?'Paused. Resume normal speed':'Normal speed. Press again to pause');speedOne.title=paused?'Paused · press to resume':'Normal speed · press again to pause';speedOne.parentElement.setAttribute('data-paused',String(paused));
+    // The lounge's picture is the whole rooftop, wider than a station's, and each level is bought outright, so no MAX.
+    selectedLine.classList.toggle('is-lounge',loungeSelected);buyActions.classList.toggle('single',loungeSelected);
     if(securitySelected){renderSecuritySelection()}else if(loungeSelected){renderLoungeSelection()}else{
     $('machineNumber').textContent=!open?'BUILD PREVIOUS STAGE':level?'STAGE 0'+(selected+1)+' · '+stationStatus(selected):'STAGE 0'+(selected+1)+' · UNDER CONSTRUCTION';
     $('machineName').textContent=line.name;$('machineLevel').textContent=level;$('machineRate').textContent=!level?'Under construction':selected<4?batchSize(selected).toFixed(1)+' avg / batch · '+([2,3,2,2][selected]/cycleSpeed(selected)).toFixed(1)+'s':capacity(selected).toFixed(1)+'× service';
@@ -3034,7 +3037,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     try{
       ctx=art.getContext('2d',{willReadFrequently:true});unit=100;angle=.57;sceneElevation=0;
       var anchor=rotate(DECK_X,DECK_Z);centerX=450-anchor.x*unit;centerY=720-anchor.z*unit*.5;
-      onlinePackingCounter(0,true);drawCourierDrone(DECK_X,4.6,DECK_Z-2.25,0,0,1);
+      // The deck's own 3D model once the 3D map has it, as the map will show it built; the drawn deck until then.
+      var picture=map3d&&map3d.ok&&map3d.fixturePicture?map3d.fixturePicture('deck'):null;
+      if(picture)drawPictureFit(ctx,picture,900,900);
+      else{if(map3d&&map3d.ok)key='';onlinePackingCounter(0,true);drawCourierDrone(DECK_X,4.6,DECK_Z-2.25,0,0,1)}
       var pixels=ctx.getImageData(0,0,900,900).data,left=900,right=0,top=900,bottom=0;
       for(var y=0;y<900;y++)for(var x=0;x<900;x++)if(pixels[(y*900+x)*4+3]>180){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y)}
       var pc=preview.getContext('2d');pc.clearRect(0,0,preview.width,preview.height);
@@ -3100,9 +3106,16 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(!map3d||!map3d.ok||!map3d.stationPicture||!(level>0))return null;
     var picture=map3d.stationPicture(stationModelKey(i,level));if(!picture)picturesPending=true;return picture;
   }
+  // The rooftop lounge as the map shows it at its tier (map3d.loungePicture); unbought, the Speakeasy it opens as.
+  function loungePicture(){
+    if(!map3d||!map3d.ok||!map3d.loungePicture)return null;
+    var picture=map3d.loungePicture(Math.max(1,state.lounge),state.loungeLift);if(!picture)picturesPending=true;return picture;
+  }
+  // Draws a picture into a w×h canvas, as large as fits, centred and standing on the bottom edge.
+  function drawPictureFit(c,picture,w,h){var fit=Math.min(w/picture.width,h/picture.height),pw=picture.width*fit,ph=picture.height*fit;c.drawImage(picture,(w-pw)/2,h-ph,pw,ph)}
   function paintUpgradePreview(index){
     var preview=$('upgradePreview');if(!preview)return;
-    var key=[index,index===-2?state.lounge:index<0?state.idStaff:stationTier(index),state.menuStrains.join(','),state.productMenu.active].join('|');
+    var key=[index,index===-2?state.lounge+(state.loungeLift?'+':''):index<0?state.idStaff:stationTier(index),state.menuStrains.join(','),state.productMenu.active].join('|');
     if(preview.dataset.art===key)return;
     // Render at native resolution, then frame the opaque equipment rather than its overhead light pool.
     var art=document.createElement('canvas');art.width=480;art.height=600;
@@ -3111,10 +3124,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       ctx=art.getContext('2d',{willReadFrequently:true});unit=90;centerX=240;centerY=480;angle=.57;
       // The sprite shop shows the station's own sprite, so the panel matches the room.
       var spriteName=SHOP_SPRITES&&index!==-2?stationSprite(index<0?6:index,index<0?state.idStaff:Math.max(1,state.lines[index])):null,spriteArt=spriteName&&spriteImage(spriteName);
-      var picture=index===-2?null:index<0?stationPicture(6,state.doorBuilt?state.idStaff:0):stationPicture(index,Math.max(1,state.lines[index]));
+      var picture=index===-2?loungePicture():index<0?stationPicture(6,state.doorBuilt?state.idStaff:0):stationPicture(index,Math.max(1,state.lines[index]));
       if(SHOP_SPRITES&&index!==-2&&!spriteArt)key=''; // repaint once the sprite has loaded
       if(picturesPending&&!picture)key=''; // and once the 3D model's picture is ready
-      if(picture)ctx.drawImage(picture,0,0,480,600);
+      if(picture)drawPictureFit(ctx,picture,480,600);
       else if(spriteArt){var fit=Math.min(440/spriteArt.naturalWidth,560/spriteArt.naturalHeight);ctx.drawImage(spriteArt,240-spriteArt.naturalWidth*fit/2,580-spriteArt.naturalHeight*fit,spriteArt.naturalWidth*fit,spriteArt.naturalHeight*fit)}
       else if(index===-2)drawLoungeThumb(state.lounge);
       else if(index<0){drawBox(0,0,-.24,2.6,2.6,.24,['#cbb085','#7f6a4b','#ac9168']);drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5']);drawPerson(-.55,-.45,0,7,false,true,false)}
@@ -3202,7 +3215,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     }
     else{drawBox(0,.14,0,1.36,.08,1.72,['#c9a874','#7d6240','#a9895c']);constructionTape([-.75,.8,face+.06],[.75,.7,face+.06]);wallText(0,2.2,face+.01,'LOUNGE',unit*1.2,.32,'#4b3f45',false,'800')}
   }
-  function paintLoungeThumbnail(){var card=document.querySelector('[data-lounge] canvas');if(!card)return;var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;ctx=card.getContext('2d');if(ctx){ctx.clearRect(0,0,80,100);unit=22;centerX=40;centerY=94;angle=.57;drawLoungeThumb()}ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
+  function paintLoungeThumbnail(){var card=document.querySelector('[data-lounge] canvas');if(!card)return;var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;ctx=card.getContext('2d');var picture=loungePicture();if(ctx&&picture){ctx.clearRect(0,0,80,100);drawPictureFit(ctx,picture,80,100)}else if(ctx){ctx.clearRect(0,0,80,100);unit=22;centerX=40;centerY=94;angle=.57;drawLoungeThumb()}ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
   function paintThumbnails(){paintSecurityThumbnail();paintLoungeThumbnail();var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;machineTabs.forEach(function(tab,i){ctx=tab.querySelector('canvas').getContext('2d');if(!ctx)return;ctx.clearRect(0,0,80,100);var picture=state.lines[i]?stationPicture(i,state.lines[i]):null;if(picture){ctx.drawImage(picture,0,0,80,100);return}unit=25;centerX=40;centerY=97;angle=.57;drawStage({x:0,z:0},i,0)});ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
   function selectLounge(){securitySelected=false;loungeSelected=true;showTray('factory');renderUI();var card=document.querySelector('[data-lounge]');if(card&&card.scrollIntoView)card.scrollIntoView({block:'nearest',inline:'nearest'});if(navigator.vibrate)navigator.vibrate(8)}
   // Each lounge tier is bought outright; the first one raises the doorway out of its hoarding.
