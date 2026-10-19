@@ -791,9 +791,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
           {points:pack.path,stage:3,cargoStage:4,floorRings:[pack.port],window:{total:PACK_FLOW,offset:0},noCap0:true},
           {points:PACK_STUB,stage:3,cargoStage:4,window:{total:PACK_FLOW,offset:PACK_STUB_AT}},
           // The online deck's feed, shown while the deck is built: along the mezzanine rail at the 2D map's height, up the
-          // same slope, then level just under the deck's slab (its underside is at 7.04) so its mouth and the parcels end
-          // beneath the platform instead of poking up through it; it stops short of the rear support's diagonal.
-          {points:[[-4.3,6.15,.85],[-7.99,6.15,.85],[-9.3,6.7,.85],[-10.75,6.7,.85]],stage:3,cargoStage:5,noCap0:true,fixture:'deck'}],
+          // same slope, level under the deck, then bending straight up into the slab (underside 7.04, boards 7.2), where its
+          // open end and the parcels disappear; it tucks back from the slab's front edge (z .84) so none of it shows above.
+          {points:[[-4.3,6.15,.85],[-7.99,6.15,.85],[-9.3,6.6,.85],[-10.75,6.6,.42],[-10.75,7.12,.42]],stage:3,cargoStage:5,noCap0:true,noCap1:true,fixture:'deck'}],
         belts:[{x1:-4.6,x2:4.6,z:-5.8,floor:9.4,height:1.05,width:BELT_W,stage:0},{x1:4.2,x2:-3.2,z:-3.7,floor:4.7,height:1.05,width:BELT_W,stage:2}]};
       // The online orders deck, placed by its origin (the stair foot, on the mezzanine) at the scale every Blender model
       // shares (about 1.69 map units a metre), so its slab's right and front edges land where the sprite's do
