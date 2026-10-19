@@ -492,7 +492,7 @@ export function buildShell(world, layout, { box, span, material, model }) {
   return {
     update(frame) {
       const night = frame.night || 0, open = !!frame.loungeOpen;
-      rotor.rotation.z = -(frame.time || 0) * Math.PI * 2 / 26000;
+      rotor.rotation.z = -(frame.time || 0) * Math.PI * 2 / 2500; // one turn every 2.5 s (Kevin 2026-10-19)
       if (modelRotor) modelRotor.rotation.z = rotor.rotation.z;
       if (fanRow && fanRow.rotor) {
         fanRow.rotor.rotation.z = rotor.rotation.z;
