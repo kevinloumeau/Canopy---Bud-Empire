@@ -643,7 +643,7 @@ function buildShop(world, layout, { box, span, material, textured }) {
   const shop = new THREE.Group();
   world.add(shop);
   layout.floors.forEach((f, fi) => {
-    const left = -f.w / 2, right = f.w / 2, rear = f.z - f.d / 2, front = f.z + f.d / 2;
+    const left = (f.x || 0) - f.w / 2, right = (f.x || 0) + f.w / 2, rear = f.z - f.d / 2, front = f.z + f.d / 2;
     textured(span(shop, left, right, f.y - (fi ? .32 : .02), f.y, rear, front, fi === 2 ? '#e9e4d8' : fi ? '#e4ddcc' : '#c9965f', { cast: fi > 0 }), ['herringbone', 'timber', 'concrete'][fi]);
     // The walls themselves are the shell's (shell.js).
     // A brass rail along the open front edge of the upper floors.

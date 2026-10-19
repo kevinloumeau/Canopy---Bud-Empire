@@ -750,7 +750,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     import(/* @vite-ignore */ map3dUrl).then(function(m){
       var layout=townLayout();
       // The three floors as drawTower lays them out; the ground floor's herringbone runs out to the store edge (11.95).
-      layout.floors=[{y:0,z:2.475,w:23,d:18.95},{y:4.7,z:-2.95,w:18,d:7.4},{y:9.4,z:-3.6,w:13,d:6.6}];layout.marquee={x:MARQUEE.x,zFront:MARQUEE.zFront,zRear:MARQUEE.zRear,y0:MARQUEE.y0,y1:MARQUEE.y1,top:MARQUEE.top,bottom:MARQUEE.bottom};
+      layout.floors=[{y:0,x:.75,z:2.475,w:24.5,d:18.95},{y:4.7,z:-2.95,w:18,d:7.4},{y:9.4,z:-3.6,w:13,d:6.6}];layout.marquee={x:MARQUEE.x,zFront:MARQUEE.zFront,zRear:MARQUEE.zRear,y0:MARQUEE.y0,y1:MARQUEE.y1,top:MARQUEE.top,bottom:MARQUEE.bottom};
       // Blender models (art/blender/, exported to public/models/) by station index, sized from the tier 3 sprite they replace.
       layout.modelBase=new URL('models/',document.baseURI).href;
       // Keyed "station.tier"; a tier without its own model shows the tier 3 one. Each is sized to its tier's sprite.
@@ -778,7 +778,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       layout.shell={plaster:SHOP_GREEN_PLASTER[2],tile:SHOP_GREEN_TILE[2],tileH:LOUNGE_TILE,tilePitch:TILE_PITCH,glazingBay:GLAZING_BAY,fanX:FAN_X,topLanding:TOP_LANDING,
         loungeFront:LOUNGE_FRONT,loungeDoor:LOUNGE_DOOR,loungeExit:LOUNGE_EXIT,loungeRight:LOUNGE_RIGHT,loungeHeader:2.05,wallLeft:-6.7,wallRight:8.4,shelfLeft:-1.3+COUNTER_SHIFT,
         exitDoor:{x0:9.44,x1:11.25,h:3.3},column:{x:9.8,z:-1.8},merchCabinet:{back:8.41,face:9.27,z0:-6.84,z1:-4.8},
-        planter:{x0:-11.7,x1:-10.75,z0:2,z1:5.6,tree:{x:-11.45,z:2.35}},baseboard:{x0:-10.65,x1:11.5,front:11.95,rear:-7,h:.32},hanging:{x0:-2.3,x1:2.3,y:9.05,z:-1.35},
+        planter:{x0:-11.7,x1:-10.75,z0:2,z1:5.6,tree:{x:-11.45,z:2.35}},baseboard:{x0:-10.65,x1:13,front:11.95,rear:-7,h:.32},hanging:{x0:-2.3,x1:2.3,y:9.05,z:-1.35},
         lamps:[[-4,3.7,3.5,1.3],[4,3.7,3.5,1.3],[-4,3.7,8.5,1.1],[5,3.7,8.5,1.1],[-10,3,-4,.8],[-4,8.4,-3,1.2],[4,8.4,-3,1.2],[0,12.8,-4.5,1]]};
       // Sprite shop: the storefront and its doorway are the 2D map's own flat elevations on the entrance wall's plane
       // (addEntryDoor), the exit mat and the lounge's runner lie on the floor where the 2D map pins them, and the
@@ -791,7 +791,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
         layout.fixtures.push({key:'displayCase',file:'display_case.glb',x:10.05,y:0,z:8.7,scale:1.69},{key:'storefront',file:'storefront.glb',x:-10.65,y:0,z:(8.94+LOUNGE_FRONT)/2,scale:1.69},{key:'storefrontDoor',file:'storefront_door.glb',x:-10.65,y:0,z:(12.05+8.8)/2,scale:1.69,hide:['Canopy','CanopyEdge','CanopyEdgeSide','LampStem','LampShade','LampBulb']});
         // The street door's striped awning and the neon leaf blade sign off its post (src/three/entrance.js): the door
         // opens between the storefront's last mullion (8.8) and the post (10.94..11.43), under the header (3.5..4.06).
-        layout.entrance={x:-10.65,z0:8.82,z1:10.92,top:3.92,front:3.2,reach:1.35,drop:.36,sign:{x0:-11.85,x1:-10.95,y0:2.25,y1:3.05,z:11.19}};
+        layout.entrance={x:-10.65,z0:8.82,z1:10.92,top:4.45,front:3.5,reach:1.6,drop:.36,sign:{x0:-11.85,x1:-10.95,y0:2.25,y1:3.05,z:11.19}};
         var matX=10.7,matZ=-4.35,runW=(LOUNGE_CARPET_END-LOUNGE_FRONT)/LOUNGE_RUNNER_PIN.ratio,pin=LOUNGE_RUNNER_PIN;
         layout.decals=[{url:'sprites/shell/shell.mat.exit.png',image:[[0,0],[1,0],[0,1]],world:[[matX+.6,matZ+1.1],[matX+.6,matZ-1.1],[matX-.6,matZ+1.1]]},
           {url:'sprites/interior/lounge.carpet.runner.png',pixels:true,image:[pin.left,pin.bottom,pin.top],world:[[LOUNGE_DOOR.x-runW/2,LOUNGE_CARPET_END],[LOUNGE_DOOR.x+runW/2,LOUNGE_CARPET_END],[LOUNGE_DOOR.x-runW/2,LOUNGE_FRONT+.02]],show:'loungeOpen'}];
@@ -1488,7 +1488,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // dark-green tile with its brass rail and cream cap along the herringbone's front edge from the storefront, and up the
   // right-hand edge to the rear wall beside the exit door. Drawn in one-unit pieces so walkers sort against it.
   function storeBaseboard(){
-    var front=11.95,right=11.5,d=.14,h=.32;
+    var front=11.95,right=STORE_RIGHT,d=.14,h=.32;
     var piece=function(cx,cz,w,dd){sceneJobs.push({depth:depthOf({x:cx,z:cz}),draw:function(){
       drawBox(cx,cz,0,w,dd,h-.1,SHOP_GREEN_TILE);drawBox(cx,cz,h-.1,w+.02,dd+.02,.03,TILE_BRASS);drawBox(cx,cz,h-.07,w+.04,dd+.06,.07,['#ece2c8','#b3a78a','#d2c6a6'])}})};
     for(var x=-10.65;x<right-.01;x+=1){var x1=Math.min(right,x+1);piece((x+x1)/2,front-d/2,x1-x,d)}
@@ -1818,6 +1818,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // beside them), crosses the threshold at z ≈ 9 and continues outside along the storefront.
   // The pen's rows grow with the line: 2.4 wide for the starter line of six, full width (4.5) from twenty places.
   var ORDER_ROWS=[7.0,8.15,9.3],ORDER_PEN_RIGHT=-2.0+COUNTER_SHIFT,PICKUP_AISLE_Z=5.5;
+  // The ground floor runs out to x 13 on the right (Kevin, 2026-10-19: the exit route past the stairs was too narrow), so
+  // leaving guests walk a lane at x 12.2, clear of the spiral stair (x 9.05-11.35), before turning in to the exit door.
+  var STORE_RIGHT=13,EXIT_LANE_X=12.2;
   function orderPen(){return {right:ORDER_PEN_RIGHT,left:ORDER_PEN_RIGHT-Math.min(4.5,1.5+queueLimit()*.15)}}
   function queueRoute(ordered){
     var ORDER_PEN=orderPen();
@@ -1915,7 +1918,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       // rather than walking along the counter front through the other customers. Everyone then goes down the middle
       // walkway to the line's tail.
       var toPickup=[{x:-.25+COUNTER_SHIFT,z:PICKUP_AISLE_Z},{x:-.25+COUNTER_SHIFT,z:8.15},{x:1.9+COUNTER_SHIFT,z:8.15},{x:1.9+COUNTER_SHIFT,z:8.1}];
-      c.waypoints=(kind==='order'||kind==='kiosk')?[route[route.length-1]]:kind==='pickup'?(c.kiosk?[{x:-8,z:6.8-(c.kioskIndex||0)*1.8},{x:-7.4,z:PICKUP_AISLE_Z}].concat(toPickup):[{x:c.x,z:PICKUP_AISLE_Z}].concat(toPickup)):[{x:PICKUP_X,z:4},{x:8.1,z:5},{x:11.15,z:5},{x:11.15,z:-4.3},{x:10.25,z:-5.6},{x:10.25,z:-8.1},{x:7,z:-8.1},{x:-10.5,z:-8.1}];
+      c.waypoints=(kind==='order'||kind==='kiosk')?[route[route.length-1]]:kind==='pickup'?(c.kiosk?[{x:-8,z:6.8-(c.kioskIndex||0)*1.8},{x:-7.4,z:PICKUP_AISLE_Z}].concat(toPickup):[{x:c.x,z:PICKUP_AISLE_Z}].concat(toPickup)):[{x:PICKUP_X,z:4},{x:8.1,z:5},{x:EXIT_LANE_X,z:5},{x:EXIT_LANE_X,z:-4.6},{x:10.25,z:-6},{x:10.25,z:-8.1},{x:7,z:-8.1},{x:-10.5,z:-8.1}];
     }
     while(c.waypoints.length&&budget>0){var point=c.waypoints[0],dx=point.x-c.x,dz=point.z-c.z,distance=Math.hypot(dx,dz),step=Math.min(distance,budget);if(distance>.0001){c.x+=dx/distance*step;c.z+=dz/distance*step}budget-=step;if(distance<=step+.0001)c.waypoints.shift();else break}
     if(!c.waypoints.length){
@@ -2903,8 +2906,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     ctx.drawImage(groundCache.surface,0,0,width,height);
     function paintGround(){
         // One continuous oak plank floor: long boards run front to back, with staggered end joints and a faint grain.
-        var rear=floor.z-floor.d/2,front=floor.z+floor.d/2,left=-floor.w/2,right=floor.w/2;
-        drawBox(0,floor.z,-.24,floor.w,floor.d,.24,['#c9a97e','#7f6446','#a68a62']);
+        var rear=floor.z-floor.d/2,front=floor.z+floor.d/2,left=(floor.x||0)-floor.w/2,right=(floor.x||0)+floor.w/2;
+        drawBox(floor.x||0,floor.z,-.24,floor.w,floor.d,.24,['#c9a97e','#7f6446','#a68a62']);
         // Herringbone oak: columns of boards laid at alternating 45° angles, three tones of the same plank, fine joints.
         ctx.save();ctx.beginPath();[project(left,.012,rear),project(right,.012,rear),project(right,.012,front),project(left,.012,front)].forEach(function(q,i){i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y)});ctx.closePath();ctx.clip();
         var colW=1.15,step=.56,tones=['#00000009','#ffffff0b','#00000004'];
@@ -3049,9 +3052,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // floors paint and drawn by the frame after them, so a guest walking behind a counter is hidden by it and one in
     // front stands on it.
     sceneJobs=[];var jobs=sceneJobs;
-    [{y:0,z:1.5,w:23,d:17,ids:[4,5]},{y:4.7,z:-2.95,w:18,d:7.4,ids:[3,2]},{y:9.4,z:-3.6,w:13,d:6.6,ids:[0,1]}].forEach(function(floor,fi){
+    [{y:0,x:.75,z:1.5,w:24.5,d:17,ids:[4,5]},{y:4.7,z:-2.95,w:18,d:7.4,ids:[3,2]},{y:9.4,z:-3.6,w:13,d:6.6,ids:[0,1]}].forEach(function(floor,fi){
       sceneElevation=floor.y;
-      var rear=floor.z-floor.d/2,front=floor.z+floor.d/2,left=-floor.w/2,right=floor.w/2;
+      var rear=floor.z-floor.d/2,front=floor.z+floor.d/2,left=(floor.x||0)-floor.w/2,right=(floor.x||0)+floor.w/2;
       // The drawn pothos canopy has no Ludo counterpart and reads as a tangle of lines beside the sprites, so the sprite shop leaves it out.
       // In the sprite shop the canopy is Ludo's pothos curtain on its brass rail, hung under the top-floor soffit.
       if(fi===2&&SHOP_SPRITES&&shellSprite('shell.plant.hanging')){
@@ -3098,7 +3101,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
         }
         sceneElevation=floor.y;
       }
-      if(fi===0){drawCachedGround(floor);if(SHOP_SPRITES){var groundTex=floorPattern(sunnyApi(now),'herringbone',4);if(groundTex){var front=11.95;poly([project(-floor.w/2,0,floor.z-floor.d/2),project(floor.w/2,0,floor.z-floor.d/2),project(floor.w/2,0,front),project(-floor.w/2,0,front)],groundTex)}drawStoreFrontEdge(floor);if(!drawFlatSprite('shell.mat.entrance',-11.1,-10.2,9.05,11.35,'z'))groundPatch(-10.65,10.2,.9,2.2,'#3f5f4c');storeBaseboard()}drawSideAislePlanter()}
+      if(fi===0){drawCachedGround(floor);if(SHOP_SPRITES){var groundTex=floorPattern(sunnyApi(now),'herringbone',4);if(groundTex){var front=11.95;poly([project(left,0,rear),project(right,0,rear),project(right,0,front),project(left,0,front)],groundTex)}drawStoreFrontEdge(floor);if(!drawFlatSprite('shell.mat.entrance',-11.1,-10.2,9.05,11.35,'z'))groundPatch(-10.65,10.2,.9,2.2,'#3f5f4c');storeBaseboard()}drawSideAislePlanter()}
 
       else{
         // One continuous floor outline includes the stair landing, with no internal slab edge.
@@ -3531,7 +3534,7 @@ if(!SHOP_SPRITES){
   // front from the entrance portal along that edge.
   function drawStoreFrontEdge(floor){
     var front=11.95;
-    drawBox(0,front-.07,0,floor.w,.14,.14,['#d8b47e','#8f6a42','#b48a5c']);
+    drawBox(floor.x||0,front-.07,0,floor.w,.14,.14,['#d8b47e','#8f6a42','#b48a5c']);
     // The tiled wall itself is a depth-sorted job (see the floor pass) so it stands in front of the door and mat.
   }
   function drawSideAislePlanter(){
