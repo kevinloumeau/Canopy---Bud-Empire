@@ -392,8 +392,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function loungeSeated(){return customers.filter(function(c){return c.phase==='lounge'}).length}
   function loungeWaiting(){return customers.filter(function(c){return c.phase==='toLounge'&&!c.waypoints.length}).sort(function(a,b){return a.id-b.id})}
   function loungeSpareJars(){return state.stock[3]-reservedJars()}
-  // A guest steps through the gap in the drapes and fades as they go (`loungeFade` 1 → 0 over the last half unit),
-  // and fades back in at the back door on the way out.
+  // A guest walks through the open door and the drapes into the back hallway, where the walls hide them on their way
+  // to the elevator (`loungeFade` runs 1 → 0 over LOUNGE_STEP_IN seconds), and fades back in at the back door on the
+  // way out.
+  var LOUNGE_STEP_IN=1.6;
   // Every guest keeps their own pace: from 0.6 to 1.4 times the session, spread evenly by id so the average (and the
   // lounge's income) holds while arrivals and departures stagger.
   function loungeStayJitter(id){var f=((Number(id)||0)*0.6180339887)%1;return .6+f*.8}
@@ -443,7 +445,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var exitTarget=loungeExitCurtainTarget();loungeExitCurtain+=(exitTarget-loungeExitCurtain)*(1-Math.exp(-dt*(exitTarget>loungeExitCurtain?10:8)));
     customers.forEach(function(c){
       if(c.phase==='lounge'){
-        if(c.loungeFade>0){c.loungeFade=Math.max(0,c.loungeFade-dt/.8);c.z=c.fadeFromZ+(LOUNGE_FRONT-.2-c.fadeFromZ)*(1-c.loungeFade);c.x=LOUNGE_DOOR.x;c.walking=c.loungeFade>0}
+        if(c.loungeFade>0){c.loungeFade=Math.max(0,c.loungeFade-dt/LOUNGE_STEP_IN);c.z=c.fadeFromZ+(LOUNGE_FRONT-1.6-c.fadeFromZ)*(1-c.loungeFade);c.x=LOUNGE_DOOR.x;c.walking=c.loungeFade>0}
         else if(!c.lift)askLift(c,'waitUp');
         else if(c.lift==='roof'){c.roofWalk=Math.min(1,c.roofWalk+dt/ROOF_WALK);c.loungeLeft-=dt;if(c.loungeLeft<=0){c.lift='back';c.walkBack=0}}
         else if(c.lift==='back'){c.walkBack=Math.min(1,c.walkBack+dt/ROOF_WALK);if(c.walkBack>=1)askLift(c,'waitDown')}
@@ -2421,7 +2423,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     liftY=lifts[0].y*ROOFTOP.y;liftY2=lifts[1].y*ROOFTOP.y;loungeSmokers=smokers;
     customers.forEach(function(c){
       stepCustomerVisual(c,frameDelta);
-      if(c.phase==='lounge')return;
+      if(c.phase==='lounge'&&!(c.loungeFade>0))return;
       person(c.renderX,0,c.renderZ,PERSON_COLOURS[(c.id||0)%PERSON_COLOURS.length],function(){drawPerson(c.renderX,c.renderZ,now,c.id,c.walking,false,c.bag,{phase:c.walkPhase||0,heading:c.walkHeading,amount:c.walkAmount||0,facing:c.facing===undefined?.3:c.facing,lean:c.turnLean||0,pickupAge:c.effectAge})});
     });
     var streetApi=sunnyApi(now);
