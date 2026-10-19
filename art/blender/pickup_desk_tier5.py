@@ -117,7 +117,7 @@ K.box("SignBorder", (1.08, .06, .3), (SX, AY, H - .33), M["POLISH"], .02)
 K.box("Sign", (1.04, .07, .26), (SX, AY, H - .31), K.GREEN_D, .02)
 for dx in (-.4, .4):
     K.tube(f"SignHanger{dx}", [(SX + dx, AY, H - .05), (SX + dx, AY, H + .02)], .01, K.BRASS)
-txt = bpy.data.curves.new("SignText", "FONT"); txt.body = "PICKUP"
+txt = bpy.data.curves.new("SignText", "FONT"); txt.body = "PICKUP"; txt.resolution_u = 3
 txt.size = .15; txt.extrude = .006; txt.align_x = "CENTER"; txt.align_y = "CENTER"; txt.space_character = 1.08
 fb = os.environ.get("CANOPY_FONT") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts", "Fredoka-SemiBold.ttf")
 if os.path.exists(fb): txt.font = bpy.data.fonts.load(fb)

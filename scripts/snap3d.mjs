@@ -10,7 +10,8 @@
 //
 // Options: --url (default http://127.0.0.1:4173/), --size WxH, --dpr, --phone (390×844), --save fresh|showcase|file,
 // --light day|night, --advance seconds of play before the shot, --no-ui (map only), --live (no ?snap, for timing),
-// --eval js to run in the page once the map is up (to open a panel, say: --eval "document.querySelector('[data-lounge]').click()").
+// --away seconds since the last visit (shows the welcome back report from 900), --eval 'js' run in the page before the capture, printing what it returns (--wait ms after it, default 400),
+// --stats (print the frame's draw calls, triangles and estimated GPU memory).
 // Chrome comes from CHROME, Playwright's Chromium (/opt/pw-browsers) or the default macOS path.
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
@@ -47,7 +48,7 @@ const showcase = {
 };
 const saveName = flags.save || 'showcase';
 const save = saveName === 'fresh' ? null : saveName === 'showcase' ? showcase : JSON.parse(await readFile(saveName, 'utf8'));
-const seed = `try{${save ? `localStorage.setItem('shift-save',${JSON.stringify(JSON.stringify({ ...save, lastSeen: Date.now() }))});` : ''}localStorage.setItem('canopy-age-ok','1');localStorage.setItem('shift-guide-seen','1');localStorage.setItem('canopy-telemetry','off');}catch(e){}`;
+const seed = `try{${save ? `localStorage.setItem('shift-save',${JSON.stringify(JSON.stringify({ ...save, lastSeen: Date.now() - Number(flags.away || 0) * 1000 }))});` : ''}localStorage.setItem('canopy-age-ok','1');localStorage.setItem('shift-guide-seen','1');localStorage.setItem('canopy-telemetry','off');}catch(e){}`;
 
 const chrome = process.env.CHROME || ['/opt/pw-browsers/chromium', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'].find(existsSync);
 const profile = await mkdtemp(join(tmpdir(), 'snap3d-'));
@@ -96,7 +97,6 @@ try {
   await until(map, 'the 3D map');
   // Map only: hide everything but the map's canvases (the HUD, panels, dock, map buttons and station tags).
   if (flags['no-ui']) await evaluate(`(()=>{const w=document.getElementById('world');for(const c of w.children)if(c.tagName!=='CANVAS')c.style.visibility='hidden';for(let e=w;e&&e!==document.body;e=e.parentElement)for(const s of e.parentElement.children)if(s!==e&&s.tagName!=='SCRIPT')s.style.visibility='hidden'})()`);
-  if (flags.eval) await evaluate(String(flags.eval));
   const loaded = Date.now();
   if (flags.live) {
     // The game's own loop keeps drawing; wait for the files the 3D map asks for (it asks as stations come into view).
@@ -113,7 +113,11 @@ try {
     await evaluate('document.fonts.ready');
     await evaluate('window.__canopySnap()');
   }
+  // --eval runs a script in the page just before the capture, e.g. to open a panel or show a toast.
+  if (flags.eval) { const r = await evaluate(flags.eval); if (r !== undefined) console.log(JSON.stringify(r)); await sleep(Number(flags.wait || 400)); }
   const drawn = Date.now();
+  // --stats: the captured frame's draw calls, triangles and estimated GPU memory (map3d.stats, as ?stats shows them).
+  if (flags.stats) console.log(JSON.stringify(await evaluate('window.__canopyStats&&window.__canopyStats()')));
   const { data } = await send('Page.captureScreenshot', { format: 'png', fromSurface: true });
   await writeFile(out, Buffer.from(data, 'base64'));
   const s = ms => (ms / 1000).toFixed(1) + 's';

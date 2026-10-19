@@ -47,7 +47,7 @@ BOT = [(-L, .34), (-1.22, .24), (-1.1, .18), (-.95, .16), (.95, .16), (1.1, .18)
 XS = [-L, -1.25, -1.2, -1.12, -1.0, -.82, -.5, -.15, .2, .45, .62, .78, .93, 1.05, 1.15, 1.22, 1.255, L]
 SECTIONS = [(x, V.interp(WIDTH, x), V.interp(BOT, x), V.interp(TOP, x), 4) for x in XS]
 WX, WR = .82, .27
-body = V.loft("Body", SECTIONS, PAINT, n=24, arches=[(WX, WR, .335), (-WX, WR, .335)], arch_m=WELL)
+body = V.loft("Body", SECTIONS, PAINT, n=16, arches=[(WX, WR, .335), (-WX, WR, .335)], arch_m=WELL)
 SY = .56
 
 # ---------- cabin: a tapered loft on the body; the pillars are its surface between the windows ----------
@@ -61,7 +61,7 @@ def cab_h(x):
     if x <= XRT: return H * (1 - ((XRT - x) / (XRT - XR)) ** 1.15) if x > XR else 0
     return H
 CXS = [XR, XR + .03, XR + .07, XR + .12, XRT, XRT + .05, -.45, -.1, XFT - .05, XFT, XFT + .06, XFT + .13, XFT + .2, XF - .02, XF]
-cab = V.cabin("Cabin", CXS, ZB, cab_h, WB, WT, PAINT, n=20, e=5)
+cab = V.cabin("Cabin", CXS, ZB, cab_h, WB, WT, PAINT, n=16, e=5)
 
 def side(x, z, s, lift=0.): return tuple(V.on_side(cab, x, z, s, lift))
 def end(y, z, e, lift):
@@ -76,11 +76,11 @@ def c_line(z): return XR + (z - ZB) / H * (XRT - XR)
 for s in (-1, 1):
     m = .045                                      # frame margin is the pillar / sill / header width
     V.panel(f"FrontWindow{s}", side(-.24, ZW0, s), side(a_line(ZW0) - .02, ZW0, s), side(a_line(ZW1) - .01, ZW1, s),
-            side(-.27, ZW1, s), GLASS, margin=m, radius=.05, outward=(0, s, 0), onto=cab)
+            side(-.27, ZW1, s), GLASS, margin=m, radius=.05, lift=.014, outward=(0, s, 0), onto=cab)
     V.panel(f"RearWindow{s}", side(c_line(ZW0) + .2, ZW0, s), side(-.3, ZW0, s), side(-.33, ZW1, s),
-            side(c_line(ZW1) + .16, ZW1, s), GLASS, margin=m, radius=.06, outward=(0, s, 0), onto=cab)
+            side(c_line(ZW1) + .16, ZW1, s), GLASS, margin=m, radius=.06, lift=.014, outward=(0, s, 0), onto=cab)
 V.panel("Windscreen", front(-.48, .92), front(.48, .92), front(.42, 1.3), front(-.42, 1.3), GLASS,
-        margin=.05, radius=.06, outward=(1, 0, .5), onto=cab)
+        margin=.05, radius=.06, lift=.012, outward=(1, 0, .5), onto=cab)
 V.panel("BackLight", back(.45, .92), back(-.45, .92), back(-.39, 1.28), back(.39, 1.28), GLASS,
         margin=.06, radius=.06, outward=(-1, 0, .3), onto=cab)
 
@@ -89,14 +89,14 @@ V.slab("Roof", XRT - .09, XFT + .08, WT + .04, .18, ZB + H - .05, .13, ROOF, bev
 
 # ---------- wipers, door seams, handles, mirrors on short stalks at the door ----------
 for y0 in (-.34, .04):
-    p0 = front(y0, .97, .012); K.tube(f"Wiper{y0}", [p0, (p0[0] - .07, y0 + .26, p0[2] + .1)], .008, SEAM)
+    p0 = front(y0, .97, .012); V.thin(K.tube(f"Wiper{y0}", [p0, (p0[0] - .07, y0 + .26, p0[2] + .1)], .008, SEAM))
 for s in (-1, 1):
     for x in (.43, -.3):
-        K.tube(f"Seam{s}{x:.2f}", [tuple(V.on_side(body, x - .02 * (z - .34), z, s, .002)) for z in (.34, .55, .78)], .005, SEAM)
+        V.thin(K.tube(f"Seam{s}{x:.2f}", [tuple(V.on_side(body, x - .02 * (z - .34), z, s, .002)) for z in (.34, .55, .78)], .005, SEAM))
     hp = V.on_side(body, -.22, .72, s, .006)
-    K.box(f"Handle{s}", (.1, .02, .022), (hp.x, hp.y, hp.z - .011), CHROME, .008)
+    V.plain_box(f"Handle{s}", (.1, .02, .022), (hp.x, hp.y, hp.z - .011), CHROME, .008)
     root = V.on_side(body, .36, .8, s)
-    K.tube(f"MirrorStalk{s}", [tuple(root), (.35, s * (SY + .05), .86)], .016, CHROME)
+    V.thin(K.tube(f"MirrorStalk{s}", [tuple(root), (.35, s * (SY + .05), .86)], .016, CHROME))
     V.ball(f"Mirror{s}", .068, (.34, s * (SY + .08), .9), CHROME, (.6, 1, .9))
 
 # ---------- lamps, indicators, tails, badge, wrap-around bumpers, number plates ----------
@@ -108,9 +108,9 @@ for s in (-1, 1):
 p = V.on_end(body, 0, .5, 1); V.ball("Badge", .034, (p.x, 0, p.z), CHROME, (.4, 1.3, 1))
 V.bumper("BumperFront", 1.27, .55, .28, .05, CHROME, .2, 1)
 V.bumper("BumperRear", 1.27, .55, .28, .05, CHROME, .2, -1)
-p = V.on_end(body, 0, .42, -1); K.box("PlateRecess", (.04, .3, .11), (p.x + .005, 0, .365), DARK, .02)
-K.box("PlateRear", (.02, .25, .075), (p.x - .012, 0, .382), K.CREAM, .008)
-p = V.on_end(body, 0, .36, 1); K.box("PlateFront", (.02, .24, .06), (p.x + .005, 0, .33), K.CREAM, .008)
+p = V.on_end(body, 0, .42, -1); V.plain_box("PlateRecess", (.04, .3, .11), (p.x + .005, 0, .365), DARK, .02)
+V.plain_box("PlateRear", (.02, .25, .075), (p.x - .012, 0, .382), K.CREAM, .008)
+p = V.on_end(body, 0, .36, 1); V.plain_box("PlateFront", (.02, .24, .06), (p.x + .005, 0, .33), K.CREAM, .008)
 
 # ---------- wheels: hub origins, axles along Y, tucked under the arches ----------
 WY = .45

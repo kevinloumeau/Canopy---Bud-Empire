@@ -9,6 +9,7 @@ try: sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 except NameError: pass
 import canopy_kit as K
 import tree_parts as T
+T.LITE = True          # phone budget: lighter canopy lumps, fewer scallops, unbevelled grate
 
 OUT = K.begin("Tree")
 rnd = random.Random(11)
@@ -27,6 +28,6 @@ for i, (n, z, rad, r, ms) in enumerate(((6, C - .35, .62, .5, (DEEP, MID)), (5, 
         a = a0 + j * 2 * math.pi / n
         m = ms[j % 2]
         T.lump(f"Crown{i}{j}", (rad * math.cos(a), rad * math.sin(a), z + rnd.uniform(-.07, .07)), r * rnd.uniform(.92, 1.08), m, .82,
-               k=i + j, yaw=a, bumps=5 if i < 3 else 0, rnd=rnd)
+               k=i + j, yaw=a, bumps=(4 if i == 0 else 0) if T.LITE else (5 if i < 3 else 0), rnd=rnd)
 T.lump("CrownCore", (0, 0, C), .85, DEEP, .8, k=1)
 K.finish(OUT, "tree", ortho=4.6, centre=(0, 0, 1.75))

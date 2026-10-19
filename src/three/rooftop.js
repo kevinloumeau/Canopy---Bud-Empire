@@ -8,6 +8,7 @@
 // Every position comes from layout.rooftop (ROOFTOP in main.js), which also places the guests' standing spots.
 import * as THREE from 'three';
 import { HEIGHT_SCALE } from './camera.js';
+import { compactModel } from './compact.js';
 
 const BRASS = '#d0a54e', OAK = '#b98d5c', OAK_DARK = '#6e4a2c', STEEL = '#1f4a35', CREAM = '#efe4cf', VELVET = '#6b2436';
 
@@ -443,6 +444,7 @@ export function buildRooftop(world, layout, { box, span, material }) {
       barLamps.forEach((shade, i) => { const lamp = source.getObjectByName('BarLamp' + i); if (lamp) lamp.traverse(o => { if (o.isMesh) { o.material = shade.material; o.castShadow = false; } }); });
       // The candles and lanterns take the stand-ins' glow, so they light up after dark too.
       source.traverse(o => { if (o.isMesh && /^(CandleGlow|LanternGlow)/.test(o.name)) { o.material = flameGlow; o.castShadow = false; } });
+      compactModel(source);
       set.at.forEach(([ax, az, turn], i) => {
         const holder = new THREE.Group();
         if (turn) holder.rotation.y = turn;
@@ -460,6 +462,7 @@ export function buildRooftop(world, layout, { box, span, material }) {
       const holder = new THREE.Group(); holder.add(source);
       holder.scale.set(1.69, 1.69 / HEIGHT_SCALE, 1.69); holder.position.set(px, py, pz); parent.add(holder);
       source.traverse(o => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
+      compactModel(source);
       return holder;
     };
     const load = (file, done) => loader.load(base + file, gltf => done(gltf.scene), undefined, e => console.warn('3D map: could not load ' + file, e));
