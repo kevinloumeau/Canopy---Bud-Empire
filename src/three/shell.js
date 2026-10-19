@@ -11,12 +11,16 @@ import * as THREE from 'three';
 const SIGN_FONT = '"Fredoka", "Bricolage Grotesque", sans-serif';
 const TILE_GROUT = '#cfdcc4', BRASS = '#d0a54e', OAK = '#b98d5c', OAK_DARK = '#6e4a2c', CREAM = '#f1ead6', VELVET = '#6b2436';
 
-export function buildShell(world, layout, { box, span, material }) {
+export function buildShell(world, layout, { box, span, material, model }) {
   const s = layout.shell;
   if (!s) return null;
   const shell = new THREE.Group();
   world.add(shell);
   const [ground, mezz, top] = layout.floors;
+  // The fittings the diorama thread modelled in Blender (shelving, cabinets, board, door, column, fan, planter) are each
+  // built in code in their own group first, and that group is hidden once its model has loaded in the same place.
+  const unit = () => { const g = new THREE.Group(); shell.add(g); return g; };
+  const swap = (g, file, x, y, z, onReady) => model && model(file, x, y, z, (scene, holder) => { g.visible = false; if (onReady) onReady(scene, holder); });
   const plaster = s.plaster, tile = s.tile, tileH = s.tileH;
 
   // The tile dado as one texture a unit wide: stack-bond joints every TILE_PITCH, one course line and the brass rail.
@@ -60,14 +64,15 @@ export function buildShell(world, layout, { box, span, material }) {
 
   // Ground floor: the rear wall runs the floor's width behind the lounge and beside the exit door, its doorway open.
   const gRear = ground.z - ground.d / 2;
-  wall(false, -ground.w / 2, ground.w / 2, gRear, .25, 0, mezz.y - .32, [[s.exitDoor.x0, s.exitDoor.x1, s.exitDoor.h]]);
+  wall(false, (ground.x || 0) - ground.w / 2, (ground.x || 0) + ground.w / 2, gRear, .25, 0, mezz.y - .32, [[s.exitDoor.x0, s.exitDoor.x1, s.exitDoor.h]]);
   // Mezzanine: rear wall and its short left wall, both tiled to the rail and plaster above.
   const mRear = mezz.z - mezz.d / 2, mLeft = -mezz.w / 2;
   wall(false, mLeft, mezz.w / 2, mRear, .25, mezz.y, top.y - mezz.y - .32);
   wall(true, mRear, mRear + 3.5, mLeft, .25, mezz.y, top.y - mezz.y - .32);
 
   // Top floor: slim forest-green glazing on a low plinth, one bay per pane, with a solid two-pane bay for the fan.
-  const tRear = top.z - top.d / 2, tLeft = -top.w / 2, glassH = 3.9;
+  // Under the rooftop lounge the glazing runs right up to the underside of the roof slab's lip (rooftop.js).
+  const tRear = top.z - top.d / 2, tLeft = -top.w / 2, glassH = layout.rooftop ? layout.rooftop.y - .34 - top.y : 3.9;
   const glass = new THREE.MeshStandardMaterial({ color: '#cfe6df', roughness: .1, metalness: 0, transparent: true, opacity: .26, depthWrite: false });
   function glazing(alongZ, a0, a1, at, fan) {
     const n = Math.max(2, Math.round((a1 - a0) / s.glazingBay)), step = (a1 - a0) / n, y = top.y;
@@ -89,6 +94,8 @@ export function buildShell(world, layout, { box, span, material }) {
   const fan = new THREE.Group(), fanX = fanBay ? (fanBay[0] + fanBay[1]) / 2 : s.fanX;
   fan.position.set(fanX, top.y + 2.15, tRear + .02);
   shell.add(fan);
+  let modelRotor = null;
+  swap(fan, 'exhaust_fan.glb', fanX, top.y + 2.15, tRear + .02, scene => { modelRotor = scene.getObjectByName('Rotor'); });
   box(fan, 0, -.72, .06, 1.44, 1.44, .14, '#2f6b52');
   const throat = new THREE.Mesh(new THREE.CylinderGeometry(.56, .56, .05, 40).rotateX(Math.PI / 2), material('#1d3028'));
   throat.position.z = .14; fan.add(throat);
@@ -103,17 +110,20 @@ export function buildShell(world, layout, { box, span, material }) {
   // Products for the shelving: one instanced jar mesh and one instanced pouch mesh for the whole shop.
   const jarGeometry = new THREE.CylinderGeometry(.09, .09, .22, 12).translate(0, .11, 0);
   const pouchGeometry = new THREE.BoxGeometry(.18, .26, .07).translate(0, .13, 0);
-  const jarSpots = [], pouchSpots = [];
+  // Each fitting's goods are instanced in its own group, so they go with it when its model (which has its own) loads.
+  const goodsUnits = [];
+  const goodsFor = g => { const u = { g, jars: [], pouches: [] }; goodsUnits.push(u); return u; };
   // A shelf unit standing against a wall along x (its back at zBack, facing +z): oak carcass, shelves, bays and goods.
-  function shelving(x0, x1, zBack, depth, y, h, bays, shelves) {
-    span(shell, x0, x1, y, y + h, zBack, zBack + .05, OAK_DARK, { cast: false });
-    span(shell, x0, x1, y, y + .14, zBack, zBack + depth, OAK);
-    span(shell, x0 - .02, x1 + .02, y + h - .1, y + h, zBack, zBack + depth + .02, OAK);
+  function shelving(g, x0, x1, zBack, depth, y, h, bays, shelves) {
+    const { jars: jarSpots, pouches: pouchSpots } = goodsFor(g);
+    span(g, x0, x1, y, y + h, zBack, zBack + .05, OAK_DARK, { cast: false });
+    span(g, x0, x1, y, y + .14, zBack, zBack + depth, OAK);
+    span(g, x0 - .02, x1 + .02, y + h - .1, y + h, zBack, zBack + depth + .02, OAK);
     const bw = (x1 - x0) / bays;
-    for (let b = 0; b <= bays; b++) span(shell, x0 + b * bw - .035, x0 + b * bw + .035, y, y + h, zBack, zBack + depth, OAK);
+    for (let b = 0; b <= bays; b++) span(g, x0 + b * bw - .035, x0 + b * bw + .035, y, y + h, zBack, zBack + depth, OAK);
     for (let r = 1; r <= shelves; r++) {
       const sy = y + .14 + (h - .24) * r / (shelves + 1);
-      span(shell, x0, x1, sy - .04, sy, zBack, zBack + depth, '#c79f6c', { cast: false });
+      span(g, x0, x1, sy - .04, sy, zBack, zBack + depth, '#c79f6c', { cast: false });
       for (let b = 0; b < bays; b++) for (let k = 0; k < 4; k++) {
         const px = x0 + b * bw + bw * (k + .5) / 4, pz = zBack + depth * .55;
         ((b + r + k) % 3 ? jarSpots : pouchSpots).push([px, sy, pz, (b * 7 + r * 3 + k) % 4]);
@@ -139,23 +149,26 @@ export function buildShell(world, layout, { box, span, material }) {
   span(shell, rx - .16, rx + .16, 0, wallTop, ez + ew, face, plaster);
   dado(true, gRear, ez - ew - .04, rx + .16); dado(true, ez + ew + .04, face, rx + .16);
   span(shell, rx - .1, rx + .1, 0, eh, ez - ew, ez + ew, '#0d1310', { cast: false });
-  span(shell, -11.18, rx - .16, .002, .012, gRear, zc0, '#2a1b22', { cast: false });
-  span(shell, -10.95, -9.25, .012, .022, -5.3, -2.9, '#5a2638', { cast: false });
-  span(shell, -10.75, -9.45, .022, .03, -5.1, -3.1, '#7a3a4c', { cast: false });
-  [[-6.15, -5.55, 1], [-2.65, -2.05, -1]].forEach(([z0, z1, dir]) => {
-    span(shell, -10.9, -9.3, 0, .48, z0, z1, VELVET);
-    const back = dir > 0 ? [z0, z0 + .16] : [z1 - .16, z1];
-    span(shell, -10.9, -9.3, .48, .95, back[0], back[1], '#5c1e30');
-    span(shell, -10.9, -10.72, .48, .7, z0, z1, '#5c1e30'); span(shell, -9.48, -9.3, .48, .7, z0, z1, '#5c1e30');
-  });
-  span(shell, -10.55, -9.65, 0, .4, -4.35, -3.85, '#3a2a1e');
+  // With the rooftop lounge (rooftop.js) this room is the elevator lobby, so its sofas, rug and lamps go upstairs.
   const lampShades = [];
-  [[-10.7, -6.6], [-10.7, -1.55], [-9.6, -4.1]].forEach(([x, z]) => {
-    box(shell, x, 0, z, .4, .62, .4, '#3a2a1e');
-    box(shell, x, .62, z, .04, .4, .04, '#d8c18b', { cast: false });
-    const shade = new THREE.Mesh(new THREE.CylinderGeometry(.13, .2, .26, 16).translate(0, .13, 0), new THREE.MeshLambertMaterial({ color: '#f3d9a6', emissive: '#ffb36a', emissiveIntensity: 0 }));
-    shade.position.set(x, 1, z); shell.add(shade); lampShades.push(shade);
-  });
+  if (!layout.rooftop) {
+    span(shell, -11.18, rx - .16, .002, .012, gRear, zc0, '#2a1b22', { cast: false });
+    span(shell, -10.95, -9.25, .012, .022, -5.3, -2.9, '#5a2638', { cast: false });
+    span(shell, -10.75, -9.45, .022, .03, -5.1, -3.1, '#7a3a4c', { cast: false });
+    [[-6.15, -5.55, 1], [-2.65, -2.05, -1]].forEach(([z0, z1, dir]) => {
+      span(shell, -10.9, -9.3, 0, .48, z0, z1, VELVET);
+      const back = dir > 0 ? [z0, z0 + .16] : [z1 - .16, z1];
+      span(shell, -10.9, -9.3, .48, .95, back[0], back[1], '#5c1e30');
+      span(shell, -10.9, -10.72, .48, .7, z0, z1, '#5c1e30'); span(shell, -9.48, -9.3, .48, .7, z0, z1, '#5c1e30');
+    });
+    span(shell, -10.55, -9.65, 0, .4, -4.35, -3.85, '#3a2a1e');
+    [[-10.7, -6.6], [-10.7, -1.55], [-9.6, -4.1]].forEach(([x, z]) => {
+      box(shell, x, 0, z, .4, .62, .4, '#3a2a1e');
+      box(shell, x, .62, z, .04, .4, .04, '#d8c18b', { cast: false });
+      const shade = new THREE.Mesh(new THREE.CylinderGeometry(.13, .2, .26, 16).translate(0, .13, 0), new THREE.MeshLambertMaterial({ color: '#f3d9a6', emissive: '#ffb36a', emissiveIntensity: 0 }));
+      shade.position.set(x, 1, z); shell.add(shade); lampShades.push(shade);
+    });
+  }
 
   // Velvet drapes on the entrance and the back door; their inner edges slide with the 2D map's curtain amounts.
   const drapeMat = material(VELVET);
@@ -181,39 +194,56 @@ export function buildShell(world, layout, { box, span, material }) {
   }
   const unitBoxGeometry = new THREE.BoxGeometry(1, 1, 1).translate(0, .5, 0);
   const frontDrapes = drapes(false), exitDrapes = drapes(true);
-  const closedDoor = span(shell, dx - .7, dx + .7, 0, s.loungeHeader, face, face + .08, '#2d6146');
+  // With the rooftop lounge a real door (rooftop.js) fills the doorway instead of this panel.
+  const closedDoor = layout.rooftop ? null : span(shell, dx - .7, dx + .7, 0, s.loungeHeader, face, face + .08, '#2d6146');
   const boardedExit = span(shell, rx + .16, rx + .21, 0, eh - .24, ez - ew + .15, ez + ew - .15, '#3a2a1e');
 
-  // The neon LOUNGE sign beside the doorway, lit while the lounge is open.
-  const signCanvas = document.createElement('canvas'); signCanvas.width = 512; signCanvas.height = 128;
+  // The neon sign beside the doorway, "Rooftop" in amber script over LOUNGE in pink, lit while the lounge is open.
+  const signCanvas = document.createElement('canvas'); signCanvas.width = 512; signCanvas.height = 184;
   const signTexture = new THREE.CanvasTexture(signCanvas); signTexture.colorSpace = THREE.SRGBColorSpace;
   const signMat = new THREE.MeshBasicMaterial({ map: signTexture, transparent: true });
-  const sign = new THREE.Mesh(new THREE.PlaneGeometry(2, .5), signMat);
-  sign.position.set(dx + 2.1, 1.95, face + .03); shell.add(sign);
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(2, .72), signMat);
+  sign.position.set(dx + 2.1, 2.02, face + .03); shell.add(sign);
   let signLit = null;
   if (typeof FontFace === 'function' && document.fonts) {
     new FontFace('Fredoka', `url(${new URL('../fonts/Fredoka-SemiBold.ttf', layout.modelBase).href})`, { weight: '600' }).load()
       .then(font => { document.fonts.add(font); signLit = null; boardText = null; })
       .catch(() => {});
+    new FontFace('Yellowtail', `url(${new URL('../fonts/Yellowtail-Regular.woff2', layout.modelBase).href})`).load()
+      .then(font => { document.fonts.add(font); signLit = null; })
+      .catch(() => {});
   }
   function paintSign(lit) {
     if (signLit === lit) return; signLit = lit;
-    const c = signCanvas.getContext('2d'); c.clearRect(0, 0, 512, 128);
-    c.fillStyle = '#1a1216'; c.beginPath(); c.roundRect(6, 14, 500, 100, 18); c.fill();
-    c.font = `600 76px ${SIGN_FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle';
-    if (lit) { c.shadowColor = '#ff6fa8'; c.shadowBlur = 22; c.fillStyle = '#ff8fbf'; c.fillText('LOUNGE', 256, 66); c.shadowBlur = 0; c.fillStyle = '#fff4f8'; c.fillText('LOUNGE', 256, 66); }
-    else { c.fillStyle = '#5a4750'; c.fillText('LOUNGE', 256, 66); }
+    const c = signCanvas.getContext('2d'); c.clearRect(0, 0, 512, 184);
+    c.fillStyle = '#1a1216'; c.beginPath(); c.roundRect(6, 8, 500, 168, 22); c.fill();
+    const neon = (text, x, y, glow, tube, dim) => {
+      if (lit) { c.shadowColor = glow; c.shadowBlur = 22; c.fillStyle = glow; c.fillText(text, x, y); c.shadowBlur = 0; c.fillStyle = tube; c.fillText(text, x, y); }
+      else { c.fillStyle = dim; c.fillText(text, x, y); }
+    };
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.save(); c.translate(256, 56); c.rotate(-.06); c.font = '400 88px "Yellowtail", cursive';
+    neon('Rooftop', 0, 0, '#ffbf5a', '#fff1d6', '#5d5040'); c.restore();
+    c.font = `600 72px ${SIGN_FONT}`;
+    neon('LOUNGE', 256, 128, '#ff8fbf', '#fff4f8', '#5a4750');
     signTexture.needsUpdate = true;
   }
 
   // Product wall: the flip menu board centred between the plaster and the shelving, then the five-bay shelving.
-  const board = { x: (s.wallLeft + s.shelfLeft) / 2, y: 1.8, w: 5.1, h: 1.24 };
-  span(shell, board.x - board.w / 2 - .14, board.x + board.w / 2 + .14, board.y - .12, board.y + board.h + .12, face, face + .1, OAK);
-  span(shell, board.x - board.w / 2 + .04, board.x + board.w / 2 - .04, board.y + .04, board.y + board.h - .04, face + .1, face + .12, BRASS, { cast: false });
+  const board = { x: (s.wallLeft + s.shelfLeft) / 2, y: 1.8, w: 5.1, h: 1.24 }, boardUnit = unit();
+  span(boardUnit, board.x - board.w / 2 - .14, board.x + board.w / 2 + .14, board.y - .12, board.y + board.h + .12, face, face + .1, OAK);
+  span(boardUnit, board.x - board.w / 2 + .04, board.x + board.w / 2 - .04, board.y + .04, board.y + board.h - .04, face + .1, face + .12, BRASS, { cast: false });
   const boardCanvas = document.createElement('canvas'); boardCanvas.width = 1024; boardCanvas.height = 240;
   const boardTexture = new THREE.CanvasTexture(boardCanvas); boardTexture.colorSpace = THREE.SRGBColorSpace; boardTexture.anisotropy = 4;
   const boardFace = new THREE.Mesh(new THREE.PlaneGeometry(board.w - .14, board.h - .14), new THREE.MeshBasicMaterial({ map: boardTexture }));
-  boardFace.position.set(board.x, board.y + board.h / 2, face + .125); shell.add(boardFace);
+  boardFace.position.set(board.x, board.y + board.h / 2, face + .125); boardUnit.add(boardFace);
+  // The Blender board (origin on the floor under it, in the wall plane) shows the same live flip letters on its face.
+  swap(boardUnit, 'menu_board.glb', board.x, 0, face, scene => { const f = scene.getObjectByName('BoardFace'); if (f) f.traverse(o => {
+    if (!o.isMesh) return;
+    // glTF UVs run top-down; the canvas texture is flipped the other way, so turn the quad's v round to match.
+    const uv = o.geometry.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setY(i, 1 - uv.getY(i)); uv.needsUpdate = true;
+    o.material = boardFace.material;
+  }); });
   let boardText = null;
   function paintBoard(lines, dim) {
     const key = lines.join('|') + dim.toFixed(2);
@@ -230,47 +260,62 @@ export function buildShell(world, layout, { box, span, material }) {
     }));
     boardTexture.needsUpdate = true;
   }
-  shelving(s.shelfLeft, s.wallRight, face, .64, 0, 3.3, 5, 4);
+  const productWall = unit();
+  shelving(productWall, s.shelfLeft, s.wallRight, face, .64, 0, 3.3, 5, 4);
+  swap(productWall, 'product_shelving.glb', (s.shelfLeft + s.wallRight) / 2, 0, face + .32);
 
   // Mezzanine: oak wall shelving on the rear wall and the arch cabinet on the left wall.
-  shelving(-9, 9, mRear, .6, mezz.y, 2.6, 8, 3);
-  span(shell, -8.85, -8.2, mezz.y, mezz.y + 2.4, -5.9, -3.8, OAK);
+  const wallShelves = unit();
+  shelving(wallShelves, -9, 9, mRear, .6, mezz.y, 2.6, 8, 3);
+  swap(wallShelves, 'wall_shelving.glb', 0, mezz.y, mRear + .3);
+  const archUnit = unit(), archGoods = goodsFor(archUnit);
+  swap(archUnit, 'arch_shelves.glb', -8.525, mezz.y, -4.85);
+  span(archUnit, -8.85, -8.2, mezz.y, mezz.y + 2.4, -5.9, -3.8, OAK);
   const arch = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.05, .65, 32, 1, false, 0, Math.PI).rotateZ(Math.PI / 2), material(OAK));
-  arch.position.set(-8.525, mezz.y + 2.4, -4.85); arch.castShadow = true; shell.add(arch);
-  span(shell, -8.21, -8.19, mezz.y + .2, mezz.y + 2.3, -5.7, -4, '#e8dcc4', { cast: false });
-  for (let r = 0; r < 3; r++) for (let k = 0; k < 3; k++) jarSpots.push([-8.35, mezz.y + .5 + r * .7, -5.45 + k * .6, (r + k) % 4]);
-  for (let r = 0; r < 3; r++) span(shell, -8.85, -8.2, mezz.y + .45 + r * .7, mezz.y + .5 + r * .7, -5.8, -3.9, '#ecdbc1', { cast: false });
+  arch.position.set(-8.525, mezz.y + 2.4, -4.85); arch.castShadow = true; archUnit.add(arch);
+  span(archUnit, -8.21, -8.19, mezz.y + .2, mezz.y + 2.3, -5.7, -4, '#e8dcc4', { cast: false });
+  for (let r = 0; r < 3; r++) for (let k = 0; k < 3; k++) archGoods.jars.push([-8.35, mezz.y + .5 + r * .7, -5.45 + k * .6, (r + k) % 4]);
+  for (let r = 0; r < 3; r++) span(archUnit, -8.85, -8.2, mezz.y + .45 + r * .7, mezz.y + .5 + r * .7, -5.8, -3.9, '#ecdbc1', { cast: false });
 
   // Column at the foot of the stair: a green tiled base, cream cap and shaft up to the mezzanine slab.
-  const col = s.column;
-  box(shell, col.x, 0, col.z, .78, 1.73, .73, '#25523b');
-  box(shell, col.x, 1.73, col.z, .8, .12, .76, '#e1dbc0');
-  box(shell, col.x, 1.85, col.z, .75, wallTop - 1.85, .7, CREAM);
-  const sconce = new THREE.Mesh(new THREE.SphereGeometry(.13, 12, 8), new THREE.MeshLambertMaterial({ color: '#fff2c8', emissive: '#ffd58a', emissiveIntensity: 0 }));
-  sconce.position.set(col.x, 2.6, col.z + .42); shell.add(sconce);
+  const col = s.column, column = unit();
+  box(column, col.x, 0, col.z, .78, 1.73, .73, '#25523b');
+  box(column, col.x, 1.73, col.z, .8, .12, .76, '#e1dbc0');
+  box(column, col.x, 1.85, col.z, .75, wallTop - 1.85, .7, CREAM);
+  const sconceMat = new THREE.MeshLambertMaterial({ color: '#fff2c8', emissive: '#ffd58a', emissiveIntensity: 0 });
+  const sconce = new THREE.Mesh(new THREE.SphereGeometry(.13, 12, 8), sconceMat);
+  sconce.position.set(col.x, 2.6, col.z + .42); column.add(sconce);
+  // Lamps in the models glow like the drawn ones: their material takes the drawn lamp's emissive and is driven with it.
+  const glowFrom = (scene, name, mat) => { const o = scene.getObjectByName(name); if (o) o.traverse(m => { if (m.isMesh) { const c = m.material.clone(); c.emissive = mat.emissive.clone(); m.material = c; glows.push([c, mat]); } }); };
+  const glows = [];
+  swap(column, 'shop_column.glb', col.x, 0, col.z, scene => glowFrom(scene, 'Sconce', sconceMat));
 
   // The exit door in the rear wall's doorway: green posts and header, the leaf standing open, the lamp above.
-  const d = s.exitDoor;
-  span(shell, d.x0 - .14, d.x0, 0, d.h + .14, gRear - .1, gRear + .12, '#1f4a35');
-  span(shell, d.x1, d.x1 + .14, 0, d.h + .14, gRear - .1, gRear + .12, '#1f4a35');
-  span(shell, d.x0 - .14, d.x1 + .14, d.h, d.h + .2, gRear - .1, gRear + .12, '#1f4a35');
-  span(shell, d.x0, d.x0 + .06, .02, d.h - .02, gRear + .1, gRear + .95, '#2d6146');
-  span(shell, (d.x0 + d.x1) / 2 - .4, (d.x0 + d.x1) / 2 + .4, d.h + .3, d.h + .56, gRear, gRear + .08, '#1d3028');
+  const d = s.exitDoor, exitUnit = unit();
+  span(exitUnit, d.x0 - .14, d.x0, 0, d.h + .14, gRear - .1, gRear + .12, '#1f4a35');
+  span(exitUnit, d.x1, d.x1 + .14, 0, d.h + .14, gRear - .1, gRear + .12, '#1f4a35');
+  span(exitUnit, d.x0 - .14, d.x1 + .14, d.h, d.h + .2, gRear - .1, gRear + .12, '#1f4a35');
+  span(exitUnit, d.x0, d.x0 + .06, .02, d.h - .02, gRear + .1, gRear + .95, '#2d6146');
+  span(exitUnit, (d.x0 + d.x1) / 2 - .4, (d.x0 + d.x1) / 2 + .4, d.h + .3, d.h + .56, gRear, gRear + .08, '#1d3028');
   const exitLamp = new THREE.Mesh(new THREE.BoxGeometry(.66, .14, .04), new THREE.MeshLambertMaterial({ color: '#d84a3a', emissive: '#ff5a3c', emissiveIntensity: .4 }));
-  exitLamp.position.set((d.x0 + d.x1) / 2, d.h + .43, gRear + .1); shell.add(exitLamp);
+  exitLamp.position.set((d.x0 + d.x1) / 2, d.h + .43, gRear + .1); exitUnit.add(exitLamp);
+  swap(exitUnit, 'exit_door.glb', (d.x0 + d.x1) / 2, 0, gRear, scene => glowFrom(scene, 'ExitLamp', exitLamp.material));
 
   // The arched merch cabinet against the lounge's right wall, its glazed face toward the exit lane.
-  const cab = s.merchCabinet;
-  span(shell, cab.back, cab.face, 0, .2, cab.z0, cab.z1, OAK_DARK);
-  span(shell, cab.back, cab.face, .2, 2.6, cab.z0, cab.z0 + .1, OAK); span(shell, cab.back, cab.face, .2, 2.6, cab.z1 - .1, cab.z1, OAK);
-  span(shell, cab.back, cab.back + .12, .2, 2.6, cab.z0, cab.z1, OAK);
+  const cab = s.merchCabinet, cabinet = unit(), cabGoods = goodsFor(cabinet);
+  swap(cabinet, 'merch_cabinet.glb', (cab.back + cab.face) / 2, 0, (cab.z0 + cab.z1) / 2, scene => {
+    const g = scene.getObjectByName('CabinetGlass'); if (g) g.traverse(o => { if (o.isMesh) { o.material = glass; o.castShadow = false; } });
+  });
+  span(cabinet, cab.back, cab.face, 0, .2, cab.z0, cab.z1, OAK_DARK);
+  span(cabinet, cab.back, cab.face, .2, 2.6, cab.z0, cab.z0 + .1, OAK); span(cabinet, cab.back, cab.face, .2, 2.6, cab.z1 - .1, cab.z1, OAK);
+  span(cabinet, cab.back, cab.back + .12, .2, 2.6, cab.z0, cab.z1, OAK);
   const cabArch = new THREE.Mesh(new THREE.CylinderGeometry((cab.z1 - cab.z0) / 2, (cab.z1 - cab.z0) / 2, cab.face - cab.back, 32, 1, false, 0, Math.PI).rotateZ(Math.PI / 2), material(OAK));
-  cabArch.position.set((cab.face + cab.back) / 2, 2.6, (cab.z0 + cab.z1) / 2); cabArch.castShadow = true; shell.add(cabArch);
+  cabArch.position.set((cab.face + cab.back) / 2, 2.6, (cab.z0 + cab.z1) / 2); cabArch.castShadow = true; cabinet.add(cabArch);
   for (let r = 0; r < 3; r++) {
-    span(shell, cab.back + .12, cab.face - .05, .55 + r * .68, .6 + r * .68, cab.z0 + .1, cab.z1 - .1, '#ecdbc1', { cast: false });
-    for (let k = 0; k < 4; k++) (k % 2 ? pouchSpots : jarSpots).push([(cab.back + cab.face) / 2, .6 + r * .68, cab.z0 + .35 + k * (cab.z1 - cab.z0 - .7) / 3, (r + k) % 4]);
+    span(cabinet, cab.back + .12, cab.face - .05, .55 + r * .68, .6 + r * .68, cab.z0 + .1, cab.z1 - .1, '#ecdbc1', { cast: false });
+    for (let k = 0; k < 4; k++) (k % 2 ? cabGoods.pouches : cabGoods.jars).push([(cab.back + cab.face) / 2, .6 + r * .68, cab.z0 + .35 + k * (cab.z1 - cab.z0 - .7) / 3, (r + k) % 4]);
   }
-  const cabGlass = span(shell, cab.face - .03, cab.face, .2, 2.6, cab.z0 + .1, cab.z1 - .1, '#cfe6df', { cast: false });
+  const cabGlass = span(cabinet, cab.face - .03, cab.face, .2, 2.6, cab.z0 + .1, cab.z1 - .1, '#cfe6df', { cast: false });
   cabGlass.material = glass;
 
   // Storefront sign: two lit bars on the marquee's inner face, cream with green letters over green with cream.
@@ -291,22 +336,28 @@ export function buildShell(world, layout, { box, span, material }) {
   // The sprite shop's storefront render carries its own sign (main.js wallFaces).
   if (!layout.wallFaces) shell.add(marqueeFace);
 
-  // The aisle planter along the storefront and the low tiled wall at the entrance.
-  const pl = s.planter;
-  span(shell, pl.x0, pl.x1, 0, .56, pl.z0, pl.z1, '#1f5e40');
-  span(shell, pl.x0 - .04, pl.x1 + .04, .56, .63, pl.z0 - .04, pl.z1 + .04, '#2b302d');
-  span(shell, pl.x0 + .1, pl.x1 - .1, .63, .66, pl.z0 + .1, pl.z1 - .1, '#514633', { cast: false });
-  const lw = s.lowWall;
-  span(shell, lw.x0, lw.x1, 0, lw.h, lw.z0, lw.z1, '#1f5e40');
-  span(shell, lw.x0 - .03, lw.x1 + .03, lw.h, lw.h + .06, lw.z0 - .03, lw.z1 + .03, '#e1dbc0');
+  // The aisle planter along the storefront, and the baseboard round the store's open edges.
+  const pl = s.planter, planter = unit();
+  swap(planter, 'shop_planter.glb', (pl.x0 + pl.x1) / 2, 0, (pl.z0 + pl.z1) / 2);
+  span(planter, pl.x0, pl.x1, 0, .56, pl.z0, pl.z1, '#1f5e40');
+  span(planter, pl.x0 - .04, pl.x1 + .04, .56, .63, pl.z0 - .04, pl.z1 + .04, '#2b302d');
+  span(planter, pl.x0 + .1, pl.x1 - .1, .63, .66, pl.z0 + .1, pl.z1 - .1, '#514633', { cast: false });
+  // Kevin (2026-10-19) swapped the entrance's low wall for a shin-high baseboard in its style (green tile, brass rail,
+  // cream cap) along the herringbone's front edge and up the right-hand edge to the rear wall by the exit door.
+  const bb = s.baseboard, bd = .14;
+  [[bb.x0, bb.x1, bb.front - bd, bb.front], [bb.x1 - bd, bb.x1, bb.rear, bb.front - bd]].forEach(([x0, x1, z0, z1]) => {
+    span(shell, x0, x1, 0, bb.h - .1, z0, z1, '#1f5e40');
+    span(shell, x0 - .01, x1 + .01, bb.h - .1, bb.h - .07, z0 - .01, z1 + .01, BRASS, { cast: false });
+    span(shell, x0 - .02, x1 + .02, bb.h - .07, bb.h, z0 - .03, z1 + .03, '#e1dbc0');
+  });
 
   // Foliage: one instanced leaf mesh for the planter's shrubs and tree, the hanging plants and the baskets.
   const leafSpots = [];
   // The planter's shrubs and its tree are soft rounded clumps, like the town's trees.
   const clump = new THREE.IcosahedronGeometry(1, 1);
-  const bush = (x, y, z, r, c) => { const b = new THREE.Mesh(clump, material(c)); b.position.set(x, y, z); b.scale.set(r, r * .8, r); b.castShadow = b.receiveShadow = true; shell.add(b); };
+  const bush = (x, y, z, r, c) => { const b = new THREE.Mesh(clump, material(c)); b.position.set(x, y, z); b.scale.set(r, r * .8, r); b.castShadow = b.receiveShadow = true; planter.add(b); };
   [-1.2, -.5, .2, .9, 1.6].forEach((dz, n) => bush((pl.x0 + pl.x1) / 2 + (n % 2 ? .08 : -.08), .9, (pl.z0 + pl.z1) / 2 + dz, .3, n % 2 ? '#6b9250' : '#5f8648'));
-  box(shell, pl.tree.x, .63, pl.tree.z, .16, 2.4, .16, '#816747');
+  box(planter, pl.tree.x, .63, pl.tree.z, .16, 2.4, .16, '#816747');
   [[0, 3.2, 0, .75, '#769852'], [-.35, 2.9, .3, .55, '#587c4d'], [.3, 3.05, -.3, .55, '#98b96e']].forEach(([ox, y, oz, r, c]) => bush(pl.tree.x + ox, y, pl.tree.z + oz, r, c));
   // Hanging pothos under the top floor's soffit: a brass rail and short trailing strands.
   const hang = s.hanging;
@@ -335,12 +386,13 @@ export function buildShell(world, layout, { box, span, material }) {
 
   // The goods on every shelf, in the shop's product colours.
   const goodsColours = ['#527e60', '#b28b64', '#75999a', '#d5bd8c'].map(c => new THREE.Color(c));
-  [[jarGeometry, jarSpots, '#ffffff'], [pouchGeometry, pouchSpots, '#ffffff']].forEach(([geometry, spots]) => {
+  goodsUnits.forEach(u => [[jarGeometry, u.jars], [pouchGeometry, u.pouches]].forEach(([geometry, spots]) => {
+    if (!spots.length) return;
     const mesh = new THREE.InstancedMesh(geometry, material('#ffffff'), spots.length);
     spots.forEach(([x, y, z, c], i) => { mesh.setMatrixAt(i, mtx.compose(pos.set(x, y, z), q.identity(), scl.set(1, 1, 1))); mesh.setColorAt(i, goodsColours[c]); });
     mesh.castShadow = true;
-    shell.add(mesh);
-  });
+    u.g.add(mesh);
+  }));
 
   // Warm interior lamps: faint by day, the shop's own light after dark. None casts shadows, to keep phones cool.
   const lamps = s.lamps.map(([x, y, z, power]) => {
@@ -354,15 +406,18 @@ export function buildShell(world, layout, { box, span, material }) {
     update(frame) {
       const night = frame.night || 0, open = !!frame.loungeOpen;
       rotor.rotation.z = -(frame.time || 0) * Math.PI * 2 / 26000;
+      if (modelRotor) modelRotor.rotation.z = rotor.rotation.z;
       frontDrapes.set(frame.loungeCurtain || 0, open);
       exitDrapes.set(frame.loungeExitCurtain || 0, open);
-      closedDoor.visible = !open; boardedExit.visible = !open;
+      if (closedDoor) closedDoor.visible = !open;
+      boardedExit.visible = !open;
       paintSign(open);
       signMat.color.setScalar(open ? 1 : .8);
       if (frame.menuLines) paintBoard(frame.menuLines, 0);
       lampShades.forEach(l => { l.material.emissiveIntensity = open ? .5 + night * 1.2 : 0; });
       sconce.material.emissiveIntensity = .3 + night * 1.4;
       exitLamp.material.emissiveIntensity = .4 + night * 1.2;
+      glows.forEach(([m, from]) => { m.emissiveIntensity = from.emissiveIntensity; });
       marqueeMat.emissiveIntensity = .15 + night * .7;
       lamps.forEach(l => { l.intensity = l.userData.power * (.2 + night * 5); });
     }
