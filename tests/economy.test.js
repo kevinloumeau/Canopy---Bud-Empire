@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {customerHandoff,HANDOFF_FLOOR,counterLanes,stationTier,tierBoost,retailBoost,batchSize,capacity,stationCost,staffCost,basketSize,storageCapacity,readyCapacity,onlineSize,counterServiceDuration,patience,walkSpeed,preferredStrain,rewardScale} from '../src/economy.js';
+import {customerHandoff,HANDOFF_FLOOR,counterLanes,stationTier,tierBoost,retailBoost,batchSize,capacity,stationCost,staffCost,basketSize,storageCapacity,readyCapacity,onlineSize,counterServiceDuration,patience,walkSpeed,preferredStrain,rewardScale,stepsToGain} from '../src/economy.js';
 import {migrateProgression,satisfyCustomer,dailyStatus,claimDaily,eventStatus,claimEvent,goalStatus,claimGoal,recordGoal,storeRate,buyStore,STORES} from '../src/progression.js';
 
 test('tiers double output at 10/20/30/50/75/100 and per-level gains stay linear between them',()=>{
@@ -95,4 +95,15 @@ test('station looks spread over the level track while output tiers stay where th
   // Every look change lands on an output tier, so the doubling and the new model arrive together.
   for(const l of STATION_LOOK_LEVELS)assert.ok(TIER_LEVELS.includes(l));
   assert.deepEqual(TIER_LEVELS,[1,10,20,30,50,75,100]);
+});
+
+test('a pickup counter at its handoff floor gains nothing per level, so the fix is found a few levels ahead elsewhere',()=>{
+  // Pickup past its floor: another level leaves the handoff, and so its throughput, exactly where it was.
+  const handoff=l=>customerHandoff(5,l,counterServiceDuration(5,capacity(l,5,1)));
+  assert.equal(handoff(131),HANDOFF_FLOOR[5]);assert.equal(handoff(136),HANDOFF_FLOOR[5]);
+  const pickupRate=(orders,pickup)=>basketSize([150,150,150,150,orders,pickup])/handoff(pickup);
+  assert.equal(stepsToGain(k=>pickupRate(41,131+k)-pickupRate(41,131),6),null);
+  // The order desk adds a bag per basket every second level: one level ahead shows nothing, two levels ahead pays.
+  assert.equal(pickupRate(42,131),pickupRate(41,131));
+  assert.deepEqual(stepsToGain(k=>pickupRate(41+k,131)-pickupRate(41,131),6).steps,2);
 });

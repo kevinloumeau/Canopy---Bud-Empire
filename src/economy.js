@@ -36,6 +36,10 @@ export function walkSpeed(trafficLevel){return 2.8*(1+1.2*(1-Math.exp(-Math.max(
 // of one at pickup. Past that point the shop grows through more counters, kiosks, baskets and prices, not faster hands.
 export const HANDOFF_FLOOR={4:1,5:.7};
 export function customerHandoff(station,level,duration){return Math.max(HANDOFF_FLOOR[station]||0,duration/counterLanes(level));}
+// How many more levels an upgrade needs before it pays: some only move every few levels (the order desk adds a bag to
+// each basket every second level), so looking one level ahead can miss them. gainAfter(k) is the income gained by k more
+// levels; returns the first k whose gain beats the threshold, or null if none does within the limit.
+export function stepsToGain(gainAfter,limit,threshold=0){for(let k=1;k<=limit;k++){const gain=gainAfter(k);if(gain>threshold)return{steps:k,gain};}return null;}
 // The doorman's floor: no ID check takes less than a quarter of a second.
 export const ID_CHECK_FLOOR=.25;
 // Security trains to level 75, its booth changing at the station look levels (1, 10, 30, 50, 75). The first nine
