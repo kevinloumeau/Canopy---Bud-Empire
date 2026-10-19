@@ -211,6 +211,35 @@ export function createMap3D(canvas, layout) {
       if (m && m.transmission > 0) { o.material = new THREE.MeshStandardMaterial({ color: m.color, roughness: .1, metalness: 0, transparent: true, opacity: .28, depthWrite: false }); o.castShadow = false; }
     });
   }
+  // The sign plates (Sign, SignBorder: the order desks' and security booth's pill signs) were built with every face
+  // wound inward. Cycles draws both sides so the Blender renders look right, but here the front faces are culled
+  // and the plate's inside back shows instead: the brass rim covers the green face. A closed mesh with a negative
+  // signed volume is inside out, so it is turned the right way round (and left alone once re-exported correctly).
+  function fixInsideOut(source) {
+    const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+    source.traverse(o => {
+      if (!o.isMesh || !/^Sign(Border)?$/.test(o.name)) return;
+      const g = o.geometry, pos = g.attributes.position, idx = g.index;
+      if (!idx) return;
+      let volume = 0;
+      for (let i = 0; i < idx.count; i += 3) {
+        a.fromBufferAttribute(pos, idx.getX(i)); b.fromBufferAttribute(pos, idx.getX(i + 1)); c.fromBufferAttribute(pos, idx.getX(i + 2));
+        volume += a.dot(b.cross(c));
+      }
+      if (volume >= 0) return;
+      for (let i = 0; i < idx.count; i += 3) { const t = idx.getX(i + 1); idx.setX(i + 1, idx.getX(i + 2)); idx.setX(i + 2, t); }
+      const n = g.attributes.normal;
+      if (n) for (let i = 0; i < n.count; i++) n.setXYZ(i, -n.getX(i), -n.getY(i), -n.getZ(i));
+    });
+  }
+  // With no environment to reflect, full metal renders near black (the order desks' brass arch and sign rim read as
+  // black iron); at a lower metalness brass keeps its colour under the sun, as in the Blender renders.
+  function softenMetal(source) {
+    source.traverse(o => {
+      const m = o.isMesh && o.material;
+      if (m && m.metalness > .5) { m.metalness = .35; m.roughness = Math.max(.35, m.roughness); }
+    });
+  }
   if (rooftop) rooftop.loadModels(loader, layout.modelBase);
   // Fixtures (the online orders deck) are placed by their own origin at a fixed Blender-to-map scale rather than
   // fitted to a sprite, since their footprint is irregular; `key` names the frame flag that shows them.
@@ -266,6 +295,8 @@ export function createMap3D(canvas, layout) {
       const spec = layout.stationModelSize[index] || { w: size.x + size.z, ox: 0 }, s = spec.w / ((size.x + size.z) * Math.SQRT1_2);
       source.position.set(-centre.x, -bounds.min.y, -centre.z);
       prepare(source);
+      fixInsideOut(source);
+      softenMetal(source);
       rigStation(source, +index.split('.')[0]);
       compactModel(source);
       const holder = new THREE.Group();
@@ -529,13 +560,8 @@ export function createMap3D(canvas, layout) {
           gltf.scene.traverse(o => { if (parts.test(o.name)) drop.push(o); });
           drop.forEach(o => o.parent && o.parent.remove(o));
         }
-        gltf.scene.traverse(o => {
-          if (!o.isMesh) return;
-          if (o.material.name === 'LampGlow') glowMaterials.add(o.material);
-          // With no environment to reflect, full metal renders near black; the posts' brass and the lamps' iron keep
-          // their colour under the sun at a lower metalness.
-          if (o.material.metalness > .5) { o.material.metalness = .35; o.material.roughness = Math.max(.35, o.material.roughness); }
-        });
+        gltf.scene.traverse(o => { if (o.isMesh && o.material.name === 'LampGlow') glowMaterials.add(o.material); });
+        softenMetal(gltf.scene);
         propSources[file] = bake(gltf.scene);
       }, undefined, e => console.warn('3D map: could not load ' + file, e));
     }
