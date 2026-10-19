@@ -44,9 +44,3 @@ for (const [index, files] of Object.entries(MODELS)) for (const file of files) t
   assert.ok(new THREE.Box3().setFromObject(source).max.distanceTo(box.max) < 1e-6);
   assert.equal(meshes.length > 0, true);
 });
-
-test('a full grow store shows grown plants', async () => {
-  const source = rigStation(await load('grow_bench.glb'), 1), rig = bindStation(source.clone(), 1);
-  for (let i = 0; i < 200; i++) moveStation(rig, { clock: 8.5, act: 0, full: true }, .05);
-  rig.parts.filter(o => o.userData.motion.m === 'plant').forEach(p => assert.ok(p.scale.x > .99));
-});

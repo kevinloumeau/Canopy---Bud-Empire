@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 
-// Station work motion: named parts of the Blender station models move with the station's own work clock (main.js's
-// taskClocks, which only run while the station is working), so a station reads as busy and freezes when it stalls.
+// Station work motion: named parts of the Blender station models move through a slow work cycle on the station's own
+// clock (main.js's motionClocks, which run whenever the station is built and the game isn't paused). Screens and keys
+// follow the station's activity, so a desk only lights up with a customer at it.
 // rigStation runs once on a loaded model: it wraps each plant, sprout or bag in a pivot at its base and tags the parts
 // (userData.motion, which survives clone()). bindStation collects one clone's tagged parts; moveStation poses them.
 // Everything is transforms and one emissive per screen: no new meshes, no draw calls, no per-frame allocation.
@@ -85,7 +86,7 @@ const ease = v => { v = clamp01(v); return v * v * (3 - 2 * v); };
 // Grow plants: up from a seedling over most of the cycle, full for a beat, then cut back for the next crop.
 export function growth(phase) { return phase < .72 ? phase / .72 : phase > .86 ? (1 - phase) / .14 : 1; }
 
-// s: the frame's station ({ clock: work seconds, act: 0..1 working, full: output store full }); dt in wall seconds.
+// s: the frame's station ({ clock: seconds, act: 0..1 working }); dt in wall seconds.
 export function moveStation(rig, s, dt) {
   const clock = s.clock || 0, period = CYCLE[rig.index] || 6, phase = (clock / period) % 1, follow = 1 - Math.exp(-dt * 4);
   rig.act += ((s.act || 0) - rig.act) * follow;
@@ -94,8 +95,8 @@ export function moveStation(rig, s, dt) {
     const o = parts[i], t = o.userData.motion;
     switch (t.m) {
       case 'plant': {
-        const target = s.full ? 1 : growth((clock / period + t.k * .23) % 1);
-        // Eased toward its target, so a store filling up lets the crop finish growing rather than jump.
+        const target = growth((clock / period + t.k * .23) % 1);
+        // Eased toward its target, so a model swapped in mid-cycle settles rather than jumps.
         const g = rig.grow[t.k] = rig.grow[t.k] === undefined ? target : rig.grow[t.k] + (target - rig.grow[t.k]) * follow;
         o.scale.setScalar(.2 + .8 * ease(g));
         o.userData.g = g;
