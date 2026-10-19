@@ -171,6 +171,9 @@
 .world .marker.station-sign.is-lot.selected{background:#f0a7c8;color:#2a1a22;border-style:solid}
 .world .marker.station-sign.is-lot.selected .station-sign-level{color:#4a2634}
 .world .marker.station-sign.is-lot.selected::after{background:#4a2634}
+/* The unbuilt lounge's tag stays one row, the size of the station tags: its name, then the opening price. */
+.world .marker.station-sign.is-lot{white-space:nowrap}
+.world .marker.station-sign.is-lot .station-sign-level,.world .marker.station-sign.is-lot:not(.selected) .station-sign-level{display:inline;margin-left:.4em}
 .sheet .machine-nav button.is-lot{border-style:dashed;border-color:#f0a7c866}
 .sheet .machine-nav button.is-lot em,.sheet .machine-nav button.is-lot.can-upgrade em{color:#f7c6da}
 .sheet .machine-nav button.is-site .machine-thumb{opacity:.9}

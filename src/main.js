@@ -376,6 +376,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // LIFT_DOWN seconds before stepping out of the back door. The spots fill in tier order: Speakeasy round the fire
   // table, Dab bar at the stools, Vinyl nights on the dance floor, Terrace at the parasol tables.
   // The 2D map keeps its hidden lounge.
+  var liftY=0;
   var ROOFTOP={x0:-6.5,x1:6.5,z0:-6.9,z1:-.3,y:13.7,lift:{x:-9.9,z:-3.9,w:1.4,d:1.4}},LIFT_UP=3.2,LIFT_DOWN=2.6;
   var ROOFTOP_SPOTS=[[-3.9,-4,.3],[-1.3,-4,-.3],[-2.6,-3.55,.3],[-1,-5.15,-.3],[2.7,-4.75,-.3],[4.7,-4.75,-.3],[2.5,-2.9,.3],[3.5,-2.15,-.3],[2.2,-1.75,.3],[-4.5,-1.9,.3],[-2.9,-1.9,-.3],[-1.7,-1.9,.3],[-.1,-1.9,-.3],[-2.3,-.85,.3]];
   // The runner render's top face in sprite px: its near-left, near-right and far-left corners, and its length over width.
@@ -4244,14 +4245,15 @@ if(!SHOP_SPRITES){
     if(state.doorBuilt)person(-8.25,0,8.75,'#2f6b52',function(){drawPerson(-8.25,8.75,now,6,false,true,false)});
     // The lounge host works the rooftop: behind the bar once there is one, otherwise by the elevator's bridge.
     if(state.lounge>0){var host=state.lounge>=2?{x:3.7,z:-6.05,f:.3}:{x:-5.2,z:-2.9,f:.3};person(host.x,ROOFTOP.y,host.z,'#2f6b52',function(){drawPerson(host.x,host.z,now,8,false,true,false,{amount:0,phase:0,facing:host.f})})}
-    // Guests on the roof hold a spot for their session; the cab is called up while anyone rides up and down while
-    // anyone rides down.
-    var liftTarget,taken={},spots=ROOFTOP_SPOTS.slice(0,loungeSeats(state.lounge)||4);
+    // Guests on the roof hold a spot for their session. A guest riding up or down stands in the elevator's cab, which
+    // carries them between the old lounge room and the roof and waits wherever it last stopped.
+    var taken={},spots=ROOFTOP_SPOTS.slice(0,loungeSeats(state.lounge)||4),lift=ROOFTOP.lift;
+    var smooth=function(t){t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)};
     customers.forEach(function(c){if(c.phase==='lounge'&&c.roofSpot!==undefined&&c.roofSpot<spots.length&&!taken[c.roofSpot])taken[c.roofSpot]=c.id;else if(c.phase!=='lounge')c.roofSpot=undefined});
     customers.forEach(function(c){
-      if(c.phase!=='lounge')return;
-      if(c.loungeFade>0||c.loungeRide>0){if(c.loungeFade<=0)liftTarget=1;return}
-      if(c.loungeLeft<LIFT_DOWN){if(liftTarget===undefined)liftTarget=0;return}
+      if(c.phase!=='lounge'||c.loungeFade>0)return;
+      var ride=c.loungeLeft<LIFT_DOWN?1-smooth(1-c.loungeLeft/LIFT_DOWN):c.loungeRide>0?smooth(1-c.loungeRide/LIFT_UP):null;
+      if(ride!==null){liftY=ride*ROOFTOP.y;var rx=lift.x,rz=lift.z+.1;person(rx,liftY+.12,rz,PERSON_COLOURS[(c.id||0)%PERSON_COLOURS.length],function(){drawPerson(rx,rz,now,c.id,false,false,false,{amount:0,phase:0,facing:.3})});return}
       if(c.roofSpot===undefined||taken[c.roofSpot]!==c.id){for(var k=0;k<spots.length;k++)if(taken[k]===undefined){c.roofSpot=k;taken[k]=c.id;break}}
       var spot=spots[c.roofSpot];if(!spot||taken[c.roofSpot]!==c.id)return;
       person(spot[0],ROOFTOP.y,spot[1],PERSON_COLOURS[(c.id||0)%PERSON_COLOURS.length],function(){drawPerson(spot[0],spot[1],now,c.id,false,false,false,{amount:0,phase:0,facing:spot[2]})});
@@ -4287,7 +4289,7 @@ if(!SHOP_SPRITES){
     // depth and the scene's haze do both, so only the solid draws are kept.
     figures=figures.filter(function(f){return f.alpha>.99});backdrops=backdrops.filter(function(f){return f.alpha>.99});
     var look=viewCentre();
-    map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,liftTarget:liftTarget,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,liftY:liftY,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
     customers.forEach(function(c){if(c.phase!=='lounge'&&customerBadged(c))drawCustomerBadge(Object.assign({},c,{x:c.renderX,z:c.renderZ}))});
     drawDeliveryDrones(frameDelta,now);drawParticles(frameDelta);drawTickets(frameDelta);drawConfetti(wallDelta);
@@ -4689,7 +4691,7 @@ if(!SHOP_SPRITES){
     securityMarker.classList.add('station-sign');securityMarker.classList.toggle('selected',securitySelected);securityMarker.classList.toggle('is-site',doorSite);securityMarker.classList.toggle('can-upgrade',!doorSite&&state.idStaff<10000&&state.money>=Math.floor(20*Math.pow(1.6,state.idStaff)));if(securityMarker.dataset.level!==doorKey){securityMarker.innerHTML='<span class=station-sign-name>Security</span><span class=station-sign-level>'+(doorSite?'Build':'Lv '+state.idStaff)+'</span>';securityMarker.dataset.level=doorKey;updateMarkers.key=null;}securityMarker.style.setProperty('--station-tier',TIER_COLORS[state.idStaff>=25?3:state.idStaff>=10?2:1]);securityMarker.setAttribute('aria-label',doorSite?'Security, under construction. Build the door':'Security, level '+state.idStaff+'. Open security station');securityMarker.setAttribute('aria-pressed',String(securitySelected));
     var loungeLot=!state.lounge,loungePrice=loungeUpgradeCost(state.lounge),loungeKey=String(state.lounge)+'|'+(loungePrice!==null&&state.money>=loungePrice);
     loungeMarker.classList.add('station-sign');loungeMarker.classList.toggle('selected',loungeSelected);loungeMarker.classList.toggle('is-lot',loungeLot);loungeMarker.classList.toggle('can-upgrade',loungePrice!==null&&state.money>=loungePrice);
-    if(loungeMarker.dataset.level!==loungeKey){loungeMarker.innerHTML='<span class=station-sign-name>Lounge</span><span class=station-sign-level>'+(loungeLot?'Open · '+fmt(loungePrice):'Lv '+state.lounge)+'</span>';loungeMarker.dataset.level=loungeKey;updateMarkers.key=null;}
+    if(loungeMarker.dataset.level!==loungeKey){loungeMarker.innerHTML='<span class=station-sign-name>Lounge</span><span class=station-sign-level>'+(loungeLot?fmt(loungePrice):'Lv '+state.lounge)+'</span>';loungeMarker.dataset.level=loungeKey;updateMarkers.key=null;}
     loungeMarker.style.setProperty('--station-tier',TIER_COLORS[Math.min(3,state.lounge)]);loungeMarker.setAttribute('aria-label',loungeLot?'Smoking lounge, under construction. Opens for '+fmt(loungePrice):'Smoking lounge, level '+state.lounge+'. Open lounge station');loungeMarker.setAttribute('aria-pressed',String(loungeSelected));
     var idPrice=Math.floor(20*Math.pow(1.6,state.idStaff)),idMax=idTrainingQuote(10000);
     $('idEmployeeInfo').innerHTML='<span>Lv '+state.idStaff+'</span><span>'+(securityDuration()).toFixed(2)+'s / check</span>';

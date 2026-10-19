@@ -66,7 +66,7 @@ export function buildRooftop(world, layout, { box, span, material }) {
   box(site, 3.6, y, -2.8, .9, .14, 1.4, '#9a7a52');
 
   // The elevator: a green steel tower from the ground to a crown above the roof, glazed on every side, its brass cab
-  // riding inside. A short bridge crosses from its landing to the deck.
+  // riding inside with its passenger. A short bridge crosses from its landing to the deck.
   const hw = lift.w / 2, hd = lift.d / 2, crown = y + 2.9;
   [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sz]) => box(roof, lift.x + sx * (hw - .06), 0, lift.z + sz * (hd - .06), .12, crown, .12, STEEL));
   [0, layout.floors[1].y, layout.floors[2].y, y].forEach(h => span(roof, lift.x - hw, lift.x + hw, h + 2.6, h + 2.72, lift.z - hd, lift.z + hd, STEEL, { cast: false }));
@@ -224,17 +224,14 @@ export function buildRooftop(world, layout, { box, span, material }) {
   const roofLight = new THREE.PointLight('#ffc98a', 0, 14, 1.2);
   roofLight.position.set((x0 + x1) / 2, y + 2.6, (z0 + z1) / 2); world.add(roofLight);
 
-  let cabY = 0, lastTime = null;
+  let cabY = 0;
   return {
     update(frame) {
-      const time = performance.now(), dt = lastTime === null ? 0 : Math.min(.1, Math.max(0, (time - lastTime) / 1000)); lastTime = time;
       const tier = frame.loungeOpen ? Math.max(1, frame.loungeTier || 1) : 0, night = frame.night || 0;
       site.visible = !tier; open.visible = !!tier;
       t1.visible = tier >= 1; t2.visible = tier >= 2; t3.visible = tier >= 3; t4.visible = tier >= 4;
-      // The cab eases toward the floor it is called to, and waits there.
-      const target = frame.liftTarget === undefined ? cabY : frame.liftTarget * y;
-      cabY += (target - cabY) * Math.min(1, dt * 1.6);
-      if (Math.abs(target - cabY) < .01) cabY = target;
+      // The cab carries whoever is riding (main.js moves it with them) and waits where it last stopped.
+      cabY = frame.liftY || 0;
       cab.position.y = cabY;
       lights.forEach(([m, day, nightGlow]) => { m.emissiveIntensity = day + night * nightGlow; });
       flame.scale.y = .8 + Math.sin((frame.time || 0) / 130) * .2 + Math.sin((frame.time || 0) / 53) * .1;
