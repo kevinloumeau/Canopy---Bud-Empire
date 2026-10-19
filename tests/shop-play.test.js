@@ -15,8 +15,23 @@ test('a moment always offers the right answer among at most three picks',()=>{
     const play=migrateShopPlay({sequence:n}),m=createMoment(play,{id:7},options);
     assert.equal(play.sequence,n+1);assert.ok(m.choices.length<=3);
     assert.ok(m.choices.some((_,i)=>judgeChoice(m,i).matched),'sequence '+n);
+    assert.ok(m.choices.some((_,i)=>!judgeChoice(m,i).matched),'a wrong answer too, sequence '+n);
   }
   assert.equal(createMoment(migrateShopPlay(),{id:1},[]),null);
+});
+
+test('an all-edibles menu never asks for something without flower, and every pick has a wrong answer',()=>{
+  const edibles=[{strain:0,format:2,type:0},{strain:1,format:2,type:1},{strain:2,format:2,type:1}];
+  for(let n=0;n<12;n++){
+    const m=createMoment(migrateShopPlay({sequence:n}),{id:3},edibles);
+    assert.equal(m.formatRequest,false,'sequence '+n);
+    assert.ok(m.choices.some((_,i)=>!judgeChoice(m,i).matched),'sequence '+n);
+  }
+  const same=[{strain:0,format:2,type:1},{strain:1,format:2,type:1}];
+  assert.equal(createMoment(migrateShopPlay(),{id:4},same),null);
+  const mixed=[{strain:0,format:2,type:1},{strain:1,format:0,type:1},{strain:2,format:2,type:1}];
+  const m=createMoment(migrateShopPlay({sequence:5}),{id:5},mixed);
+  assert.equal(m.formatRequest,true);assert.ok(m.choices.some((_,i)=>!judgeChoice(m,i).matched));
 });
 
 test('nobody asks for a pick until the menu has two strains to choose between',()=>{
@@ -50,4 +65,17 @@ test('advice never suggests an order counter or queue comfort the shop has alrea
   const slow={served:10,waitTotal:400,queuePeak:3,stockoutSeconds:0};
   assert.match(shiftAdvice(slow,{comfortLevel:5}).text,/queue comfort/);
   assert.doesNotMatch(shiftAdvice(slow,{comfortLevel:20}).text,/queue comfort/);
+});
+
+test('picks offer every strain in every stocked type, three different strains where the menu has them',async()=>{
+  const {picks}=await import('../src/shop-play.js');
+  const state={strains:[1,1,1,0],productMenu:{unlocked:[true,false,true],active:0}};
+  const options=picks(state,[0,1,2,3]);
+  assert.equal(options.length,6);assert.deepEqual([...new Set(options.map(o=>o.format))],[0,2]);
+  for(let n=0;n<12;n++){
+    const m=createMoment(migrateShopPlay({sequence:n}),{id:n},options);
+    assert.equal(new Set(m.choices.map(c=>c.strain)).size,3,'sequence '+n);
+    assert.ok(m.choices.some((_,i)=>judgeChoice(m,i).matched)&&m.choices.some((_,i)=>!judgeChoice(m,i).matched),'sequence '+n);
+  }
+  assert.equal(createMoment(migrateShopPlay(),{id:1},picks(state,[0])),null,'one strain in two types is still no choice');
 });
