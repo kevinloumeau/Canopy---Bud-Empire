@@ -73,9 +73,8 @@ export function buildShell(world, layout, { box, span, material, model }) {
   // Top floor: slim forest-green glazing on a low plinth, one bay per pane, with a solid two-pane bay for the fan.
   // Under the rooftop lounge the glazing runs right up to the underside of the roof slab's lip (rooftop.js).
   const tRear = top.z - top.d / 2, tLeft = -top.w / 2, glassH = layout.rooftop ? layout.rooftop.y - .34 - top.y : 3.9;
-  // The fan row (Kevin, 2026-10-19): exhaust fans side by side standing on top of the rear glazing, up along the roof
-  // slab's edge where the run passes the slab's corner by the stair landing, on a solid green band (1.24 tall).
-  const fanBase = top.y + glassH, fanBandH = 1.24, slabRight = layout.rooftop ? layout.rooftop.x1 + .05 : -top.w / 2;
+  // The fan housing's height at model scale, and the glazing's top.
+  const fanBase = top.y + glassH, fanBandH = 1.24;
   const glass = new THREE.MeshStandardMaterial({ color: '#cfe6df', roughness: .1, metalness: 0, transparent: true, opacity: .26, depthWrite: false });
   function glazing(alongZ, a0, a1, at, fan) {
     const n = Math.max(2, Math.round((a1 - a0) / s.glazingBay)), step = (a1 - a0) / n, y = top.y;
@@ -112,11 +111,10 @@ export function buildShell(world, layout, { box, span, material, model }) {
 
   // The fan row is one model load drawn instanced (one draw per part for the whole row); the rotors' instances turn
   // with the big fan's rotor every frame. FAN_W is the housing's width in map units (.86 m); its origin is its centre.
-  // The fans fit between the slab's corner and the landing's edge, scaled down a little if need be, so none of them
-  // cuts into the roof.
-  const FAN_W = 1.46, rowA0 = slabRight + .04, rowA1 = s.topLanding.outer, rowCount = Math.max(1, Math.round((rowA1 - rowA0) / FAN_W));
-  const fanScale = Math.min(1, (rowA1 - rowA0) / (rowCount * FAN_W)), fanStep = (rowA1 - rowA0) / rowCount;
-  const bandY0 = fanBase, bandY1 = fanBase + fanBandH * fanScale;
+  // Kevin (2026-10-19): large fans filling from the transom up to the roof slab's top, tucked back under its corner so
+  // the roof overlaps them.
+  const FAN_W = 1.46, bandY0 = top.y + 2.98, bandY1 = (layout.rooftop ? layout.rooftop.y : fanBase) - .03, fanScale = (bandY1 - bandY0) / fanBandH;
+  const fanStep = FAN_W * fanScale, rowA1 = s.topLanding.outer, rowCount = 2, rowA0 = rowA1 - rowCount * fanStep;
   span(shell, rowA0, rowA1, bandY0, bandY1, tRear - .14, tRear - .02, '#2f5d4a');
   const rowSpots = Array.from({ length: rowCount }, (_, k) => new THREE.Matrix4().makeTranslation(rowA0 + fanStep * (k + .5), (bandY0 + bandY1) / 2, tRear - .06).scale(new THREE.Vector3(fanScale, fanScale, fanScale)));
   let fanRow = null;
