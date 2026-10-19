@@ -1,0 +1,71 @@
+/* HUD, map tags and toasts on the forest glass (UI reskin plan, Phase 2). Loaded last so it settles the older layers.
+   The top bar floats as one glass pill clear of the screen edge; --hud-height is measured to its bottom edge (main.js),
+   so every overlay that hangs off it keeps its gap. Brass marks only what wants a tap: ready goals and the selected tag. */
+.hud{
+ top:calc(6px + env(safe-area-inset-top,0px));left:8px;right:8px;
+ padding:6px 6px 6px 12px!important;border:1px solid var(--ui-edge);border-radius:18px;
+ background:linear-gradient(180deg,var(--ui-sheen),transparent 40%),var(--ui-glass);
+ -webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);
+ box-shadow:var(--ui-shadow);color:var(--ui-ink);pointer-events:auto;
+}
+.hud>.stat strong,.hud>.stat #money{color:var(--ui-ink)}
+.hud>.stat.output strong{color:var(--ui-soft)}
+.hud .canopy-brand span,.hud .canopy-brand svg{width:24px;height:24px}
+
+/* Speed is a segmented control: one well, the pressed speed reads as an ink chip. */
+.hud .speed-controls{padding:3px;gap:2px;border:0;border-radius:14px;background:var(--ui-well);box-shadow:none}
+.hud .speed-controls button,.hud .speed-controls #lightToggle,.hud .speed-controls #settingsOpen{border:0;border-radius:11px;background:none;color:var(--ui-soft);box-shadow:none}
+.hud .speed-controls button[aria-pressed=true]{background:var(--ui-ink);color:var(--ui-on-ink);box-shadow:none}
+.hud .speed-controls[data-paused=true] [data-speed="1"][aria-pressed=true]{background:var(--ui-brass-wash);color:var(--ui-brass);box-shadow:inset 0 0 0 1px var(--ui-brass)}
+.hud .speed-controls button:focus-visible{outline:2px solid var(--ui-brass);outline-offset:2px}
+
+/* Goals: a quiet icon button that turns brass once a goal can be claimed. */
+.hud .customer-info #goalsOpen{border:1px solid var(--ui-edge);border-radius:12px;background:var(--ui-well-soft);color:var(--ui-soft)}
+.hud .customer-info #goalsOpen.has-ready{border-color:transparent;background:var(--ui-brass-wash);color:var(--ui-brass);box-shadow:inset 0 0 0 1px var(--ui-brass)}
+.hud .customer-info #goalsOpen #goalsBadge{background:var(--ui-brass);color:var(--ui-brass-ink)}
+@media(hover:hover){.hud .speed-controls button:not([aria-pressed=true]):hover,.hud .customer-info #goalsOpen:hover{background:var(--ui-well-soft);color:var(--ui-ink)}}
+
+@media(max-width:700px){.hud{gap:8px}}
+@media(min-width:701px){.hud{top:12px;left:16px;right:16px;padding:8px 10px 8px 16px!important;border-radius:20px}}
+@media(min-width:780px){.hud{right:450px}}
+
+/* Map buttons share the material. */
+.map-controls button,.map-controls .store-switcher #locationToggle{
+ border:1px solid var(--ui-edge);border-radius:14px;
+ background:linear-gradient(180deg,var(--ui-sheen),transparent 40%),var(--ui-glass);
+ -webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);color:var(--ui-ink);box-shadow:var(--ui-shadow);
+}
+
+/* Station tags: glass with ink names and mono levels; the selected tag is brass. Upgrade arrows are leaf, the bottleneck
+   keeps its brass edge, and build sites and lots read as dashed brass. */
+.world .marker.station-sign,.world .marker.station-sign:not(.selected){
+ border:1px solid var(--ui-edge);border-radius:10px;background:var(--ui-glass-strong);color:var(--ui-ink);
+ -webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);box-shadow:0 3px 10px rgba(10,20,14,.28);
+}
+.world .marker.station-sign .station-sign-level{color:var(--ui-soft)}
+.world .marker.station-sign.can-upgrade::after{background:var(--ui-leaf-glow)}
+.world .marker.station-sign.selected{background:var(--ui-brass);color:var(--ui-brass-ink);border-color:transparent;box-shadow:0 4px 14px rgba(10,20,14,.34)}
+.world .marker.station-sign.selected .station-sign-level{color:var(--ui-brass-ink);opacity:.75}
+.world .marker.station-sign.selected::after{background:var(--ui-brass-ink)}
+.world .marker.is-bottleneck:not(.selected){border-color:var(--ui-brass);color:var(--ui-ink);box-shadow:0 0 0 1px var(--ui-brass),0 3px 12px rgba(10,20,14,.3)}
+.world .marker.station-sign.is-site,.world .marker.station-sign.is-site:not(.selected),
+.world .marker.station-sign.is-lot,.world .marker.station-sign.is-lot:not(.selected){border:1px dashed var(--ui-brass);background:var(--ui-glass-strong);color:var(--ui-ink)}
+.world .marker.station-sign.is-site .station-sign-level,.world .marker.station-sign.is-lot .station-sign-level{color:var(--ui-brass)}
+.world .marker.station-sign.is-site::after,.world .marker.station-sign.is-lot::after{background:var(--ui-brass)}
+.world .marker.station-sign.is-site.selected,.world .marker.station-sign.is-lot.selected{border-style:solid;border-color:transparent;background:var(--ui-brass);color:var(--ui-brass-ink)}
+.world .marker.station-sign.is-site.selected .station-sign-level,.world .marker.station-sign.is-lot.selected .station-sign-level{color:var(--ui-brass-ink)}
+.world .marker.station-sign.is-site.selected::after,.world .marker.station-sign.is-lot.selected::after{background:var(--ui-brass-ink)}
+.world .marker.station-sign.locked{opacity:.6}
+
+/* Toasts: a glass chip under the bar. Upgrades get a leaf glyph, nothing else is tinted. */
+.toast{
+ border:1px solid var(--ui-edge);border-radius:14px;padding:9px 14px;
+ background:linear-gradient(180deg,var(--ui-sheen),transparent 40%),var(--ui-glass-strong);
+ -webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);
+ color:var(--ui-ink);font:600 13px/1.35 'Bricolage Grotesque',sans-serif;box-shadow:var(--ui-shadow);
+ top:calc(var(--hud-height,66px) + 8px);
+}
+.toast.is-upgrade::before{color:var(--ui-leaf-glow)}
+
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.hud,.toast,.map-controls button{background:#1d3226}}
+@media(prefers-reduced-transparency:reduce){.hud,.toast,.map-controls button,.world .marker.station-sign{background:#1d3226;-webkit-backdrop-filter:none;backdrop-filter:none}}
