@@ -4,6 +4,11 @@ export const TIER_LEVELS=[1,10,20,30,50,75,100];
 export const TIER_COLORS=['#b4c5a0','#92d5a4','#8ad6d9','#efd18c','#afbfdb','#c5a7cd','#f2e6bf'];
 export function stationTier(level){let tier=0;for(let n=1;n<TIER_LEVELS.length;n++)if(level>=TIER_LEVELS[n])tier=n;return tier;}
 // Each tier doubles a station's output, so upgrades keep mattering after the linear per-level gain fades.
+// A station's look (its Blender model, 1 to 5) changes at fewer, wider-spaced levels than its output tiers, so a new
+// look keeps arriving for hours instead of the last one landing in the first half hour.
+export const STATION_LOOK_LEVELS=[1,10,30,50,75];
+export function stationLook(level){let look=1;for(let n=1;n<STATION_LOOK_LEVELS.length;n++)if(level>=STATION_LOOK_LEVELS[n])look=n+1;return look;}
+export function nextLookLevel(level){return STATION_LOOK_LEVELS.find(l=>l>level)||null;}
 export function tierBoost(level){return Math.pow(2,stationTier(level));}
 // The retail tier is the lower of the two counters; both must tier up to grow baskets, storage and web orders.
 export function retailTier(lines){return Math.min(stationTier(lines[4]),stationTier(lines[5]));}

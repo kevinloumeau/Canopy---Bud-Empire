@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {migrateOrderCounters,orderCounterCost,buyOrderCounter,orderCounterPositions,assignOrderCounter,atOrderCounter,orderAvailability,ORDER_QUEUE_GATE,ORDER_SPOT_Z} from '../src/order-counters.js';
+import {migrateOrderCounters,orderCounterCost,buyOrderCounter,orderCounterPositions,assignOrderCounter,atOrderCounter,orderAvailability,pickupLineSpots,pickupPlaces,ORDER_QUEUE_GATE,ORDER_SPOT_Z} from '../src/order-counters.js';
 
 test('old saves retain one counter and malformed expansion levels cannot add counters',()=>{
   for(const value of [undefined,null,NaN,Infinity,'3',{},-2,0])assert.equal(migrateOrderCounters(value),1);
@@ -34,4 +34,16 @@ test('parallel counters and kiosks reserve whole baskets without overbooking bag
   assert.deepEqual(orderAvailability(queue,10,3),{bags:3,places:1});
   queue.push(customer(4,{ordered:true,bags:3}));assert.deepEqual(orderAvailability(queue,10,3),{bags:0,places:0});
   assert.deepEqual(orderAvailability(queue,2,1),{bags:0,places:0});
+});
+test('a full pickup line holds the next order at the desks and kiosks until someone collects',()=>{
+  // Today's pickup route is 9.5 long with people 0.8 apart: twelve spots, so the waiting-area upgrade stops there.
+  assert.equal(pickupLineSpots(9.5,.8),12);assert.equal(pickupLineSpots(8,.8),11);
+  assert.equal(pickupPlaces(4,9.5,.8),4);assert.equal(pickupPlaces(28,9.5,.8),12);
+  assert.equal(pickupPlaces(28,NaN,.8),1);assert.equal(pickupPlaces(0,9.5,.8),1);
+  const limit=pickupPlaces(28,9.5,.8),line=[];
+  for(let i=0;i<limit;i++)line.push(customer(i,{ordered:true,bags:1,kiosk:i%2===0}));
+  // Counter and kiosk orders share one check, so neither can push a thirteenth customer into the line.
+  assert.equal(orderAvailability(line,100,limit).places,0);
+  // The head collects and walks off: exactly one spot opens for the next checked-out customer.
+  line[0].bag=true;assert.equal(orderAvailability(line,100,limit).places,1);
 });
