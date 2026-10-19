@@ -68,3 +68,13 @@ test('lounge host shortens sessions and raises the rate',()=>{
   assert.equal(loungeCurrentRate(1,4,80,2),loungeRate(1,80,2));
   assert.equal(loungeHostCost(0),20);assert.equal(loungeHostCost(3),Math.floor(20*Math.pow(1.6,3)));
 });
+test('the second elevator shaft is bought once, only with the lounge open, and turns tables a quarter faster',async()=>{
+  const {buyLoungeLift,LOUNGE_LIFT_COST,LOUNGE_LIFT_SPEED}=await import('../src/lounge.js');
+  assert.equal(buyLoungeLift({lounge:0,money:1e9}),false);
+  const state={lounge:1,money:LOUNGE_LIFT_COST-1};
+  assert.equal(buyLoungeLift(state),false);
+  state.money=LOUNGE_LIFT_COST;assert.equal(buyLoungeLift(state),true);assert.equal(state.money,0);assert.equal(state.loungeLift,true);
+  state.money=1e9;assert.equal(buyLoungeLift(state),false);assert.equal(state.money,1e9);
+  assert.ok(Math.abs(loungeSessionSeconds(1,0,true)*LOUNGE_LIFT_SPEED-loungeSessionSeconds(1,0))<1e-9);
+  assert.ok(loungeCurrentRate(1,2,100,0,true)>loungeCurrentRate(1,2,100,0));
+});

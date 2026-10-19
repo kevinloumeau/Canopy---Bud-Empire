@@ -71,7 +71,8 @@ export function buildShell(world, layout, { box, span, material, model }) {
   wall(true, mRear, mRear + 3.5, mLeft, .25, mezz.y, top.y - mezz.y - .32);
 
   // Top floor: slim forest-green glazing on a low plinth, one bay per pane, with a solid two-pane bay for the fan.
-  const tRear = top.z - top.d / 2, tLeft = -top.w / 2, glassH = 3.9;
+  // Under the rooftop lounge the glazing runs right up to the underside of the roof slab's lip (rooftop.js).
+  const tRear = top.z - top.d / 2, tLeft = -top.w / 2, glassH = layout.rooftop ? layout.rooftop.y - .34 - top.y : 3.9;
   const glass = new THREE.MeshStandardMaterial({ color: '#cfe6df', roughness: .1, metalness: 0, transparent: true, opacity: .26, depthWrite: false });
   function glazing(alongZ, a0, a1, at, fan) {
     const n = Math.max(2, Math.round((a1 - a0) / s.glazingBay)), step = (a1 - a0) / n, y = top.y;
@@ -193,7 +194,8 @@ export function buildShell(world, layout, { box, span, material, model }) {
   }
   const unitBoxGeometry = new THREE.BoxGeometry(1, 1, 1).translate(0, .5, 0);
   const frontDrapes = drapes(false), exitDrapes = drapes(true);
-  const closedDoor = span(shell, dx - .7, dx + .7, 0, s.loungeHeader, face, face + .08, '#2d6146');
+  // With the rooftop lounge a real door (rooftop.js) fills the doorway instead of this panel.
+  const closedDoor = layout.rooftop ? null : span(shell, dx - .7, dx + .7, 0, s.loungeHeader, face, face + .08, '#2d6146');
   const boardedExit = span(shell, rx + .16, rx + .21, 0, eh - .24, ez - ew + .15, ez + ew - .15, '#3a2a1e');
 
   // The neon LOUNGE sign beside the doorway, lit while the lounge is open.
@@ -398,7 +400,8 @@ export function buildShell(world, layout, { box, span, material, model }) {
       if (modelRotor) modelRotor.rotation.z = rotor.rotation.z;
       frontDrapes.set(frame.loungeCurtain || 0, open);
       exitDrapes.set(frame.loungeExitCurtain || 0, open);
-      closedDoor.visible = !open; boardedExit.visible = !open;
+      if (closedDoor) closedDoor.visible = !open;
+      boardedExit.visible = !open;
       paintSign(open);
       signMat.color.setScalar(open ? 1 : .8);
       if (frame.menuLines) paintBoard(frame.menuLines, 0);
