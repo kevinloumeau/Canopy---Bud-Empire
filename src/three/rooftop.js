@@ -217,13 +217,13 @@ export function buildRooftop(world, layout, { box, span, material }) {
   leaves.castShadow = true; leaves.receiveShadow = true; t1.add(leaves);
 
   // Smoke: each seated guest breathes out a soft puff now and then that drifts up and fades. A small pool of sprites
-  // shared by every guest, two puffs each, so it stays cheap on phones.
+  // shared by every guest, four puffs each, so it stays cheap on phones.
   const smokeCanvas = document.createElement('canvas'); smokeCanvas.width = smokeCanvas.height = 64;
   const sc = smokeCanvas.getContext('2d'), grad = sc.createRadialGradient(32, 32, 0, 32, 32, 32);
-  grad.addColorStop(0, 'rgba(255,255,255,.9)'); grad.addColorStop(.45, 'rgba(255,255,255,.4)'); grad.addColorStop(1, 'rgba(255,255,255,0)');
+  grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(.5, 'rgba(255,255,255,.6)'); grad.addColorStop(1, 'rgba(255,255,255,0)');
   sc.fillStyle = grad; sc.fillRect(0, 0, 64, 64);
   const smokeTexture = new THREE.CanvasTexture(smokeCanvas);
-  const SMOKE_PUFFS = 2, SMOKE_PERIOD = 5200, SMOKE_LIFE = 3400;
+  const SMOKE_PUFFS = 4, SMOKE_PERIOD = 4400, SMOKE_LIFE = 4200;
   const puffs = [];
   const smoke = new THREE.Group(); open.add(smoke);
   function puff(i) {
@@ -443,12 +443,12 @@ export function buildRooftop(world, layout, { box, span, material }) {
         for (let k = 0; k < SMOKE_PUFFS; k++) {
           const t = ((now + (g.id * 1777) % SMOKE_PERIOD + k * SMOKE_PERIOD / SMOKE_PUFFS) % SMOKE_PERIOD) / SMOKE_LIFE;
           if (t >= 1) continue;
-          const sprite = puff(used++), size = .28 + t * .75, drift = Math.sin(t * 3 + g.id) * .12;
+          const sprite = puff(used++), size = .75 + t * 2.3, drift = Math.sin(t * 3 + g.id + k) * .2;
           sprite.visible = true;
-          sprite.position.set(g.x + (g.facing || 0) * .4 + drift + t * .25, y + 1.7 + t * 1.15, g.z + .1 - t * .1);
+          sprite.position.set(g.x + (g.facing || 0) * .4 + drift + t * .25, y + 1.65 + t * 2, g.z + .1 - t * .15);
           sprite.scale.set(size, size / HEIGHT_SCALE, 1);
-          sprite.material.opacity = Math.min(1, t * 5) * Math.pow(1 - t, 1.2) * .6;
-          sprite.material.color.setScalar(.86 - night * .35);
+          sprite.material.opacity = Math.min(1, t * 6) * Math.pow(1 - t, .8) * .95;
+          sprite.material.color.setScalar(.72 - night * .25);
         }
       });
       for (let i = used; i < puffs.length; i++) puffs[i].visible = false;
