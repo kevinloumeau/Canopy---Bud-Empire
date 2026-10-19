@@ -1079,6 +1079,16 @@ function buildShop(world, layout, { box, span, material, textured, model }) {
   spiral(7.75, -4.4, mezz.y, top.y, 14, up);
   textured(span(shop, 6.45, 9, top.y - .32, top.y, -6.9, -5.55, '#e9e4d8', { cast: true }), 'concrete');
   rail(8.94, 9, -6.9, -5.55, top.y);
+  // The same glass along every other open edge: both floors' sides past their short rear walls (shell.js) and the
+  // landings, with a gap where each spiral arrives (the stair's top tread, at its post's x).
+  const side = (x, z0, z1, y) => rail(x - .03, x + .03, z0, z1, y), across = (x0, x1, z, y) => rail(x0, x1, z - .03, z + .03, y);
+  const mRear = mezz.z - mezz.d / 2, mFront = mezz.z + mezz.d / 2, tRear = top.z - top.d / 2, tFront = top.z + top.d / 2;
+  side(-mezz.w / 2 + .03, mRear + 3.5, mFront - .06, mezz.y);
+  side(mezz.w / 2 - .03, mRear, -2.8, mezz.y); side(mezz.w / 2 - .03, -.8, mFront - .06, mezz.y);
+  across(9, 11.35, -2.77, mezz.y); across(9, 9.6, -.83, mezz.y); across(10.8, 11.35, -.83, mezz.y);
+  side(-top.w / 2 + .03, tRear + 3.5, tFront - .06, top.y);
+  side(top.w / 2 - .03, -5.55, tFront - .06, top.y);
+  across(top.w / 2, 7.15, -5.58, top.y); across(8.35, 9, -5.58, top.y);
   // The storefront along the entrance side (MARQUEE in main.js): a green plinth, glass, the sign band and pilasters.
   // The sprite shop draws it from its own render instead (wallFaces, below).
   const m = layout.marquee;
