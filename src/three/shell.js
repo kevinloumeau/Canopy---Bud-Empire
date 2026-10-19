@@ -73,6 +73,9 @@ export function buildShell(world, layout, { box, span, material, model }) {
   // Top floor: slim forest-green glazing on a low plinth, one bay per pane, with a solid two-pane bay for the fan.
   // Under the rooftop lounge the glazing runs right up to the underside of the roof slab's lip (rooftop.js).
   const tRear = top.z - top.d / 2, tLeft = -top.w / 2, glassH = layout.rooftop ? layout.rooftop.y - .34 - top.y : 3.9;
+  // The rear run's fan band (Kevin, 2026-10-19): the exhaust fans' housings (1.2 tall) line up with the roof slab's top
+  // edge, where the run passes the slab's corner out by the stair landing; below them the panes run up to the band.
+  const fanTop = layout.rooftop ? layout.rooftop.y - .03 : top.y + glassH, fanBandH = 1.24;
   const glass = new THREE.MeshStandardMaterial({ color: '#cfe6df', roughness: .1, metalness: 0, transparent: true, opacity: .26, depthWrite: false });
   function glazing(alongZ, a0, a1, at, fan, band) {
     const n = Math.max(2, Math.round((a1 - a0) / s.glazingBay)), step = (a1 - a0) / n, y = top.y;
@@ -81,13 +84,14 @@ export function buildShell(world, layout, { box, span, material, model }) {
     const bar = (p0, p1, y0, y1, d = .09) => alongZ ? span(shell, at - d, at + d * .3, y0, y1, p0, p1, '#2c5a44') : span(shell, p0, p1, y0, y1, at - d, at + d * .3, '#2c5a44');
     bar(a0, a1, y, y + .3, .16);
     for (let k = 0; k <= n; k++) { const p = a0 + k * step; bar(p - .035, p + .035, y + .3, y + glassH); }
-    bar(a0, a1, y + 2.92, y + 2.98); bar(a0, a1, y + glassH - .08, y + glassH);
+    const transom = band ? fanTop - fanBandH : y + 2.98;
+    bar(a0, a1, transom - .06, transom); bar(a0, a1, y + glassH - .08, y + glassH);
     // The rear run's panes stop at the transom; above it a solid green band carries the row of exhaust fans (Kevin,
     // 2026-10-19: the fans sit directly above the panes, not on the glass).
-    const paneTop = band ? y + 2.92 : y + glassH;
+    const paneTop = band ? transom - .06 : y + glassH;
     const pane = alongZ ? span(shell, at - .02, at, y + .3, paneTop, a0, a1, '#cfe6df', { cast: false }) : span(shell, a0, a1, y + .3, paneTop, at - .02, at, '#cfe6df', { cast: false });
     pane.material = glass; pane.receiveShadow = false;
-    if (band) span(shell, a0, a1, y + 2.98, y + glassH - .08, at - .06, at - .02, '#2f5d4a');
+    if (band) span(shell, a0, a1, transom, fanTop, at - .06, at - .02, '#2f5d4a');
     if (solid) span(shell, solid[0] + .035, solid[1] - .035, y + .3, y + glassH - .08, at - .06, at - .02, '#2f5d4a');
     return solid;
   }
@@ -113,10 +117,11 @@ export function buildShell(world, layout, { box, span, material, model }) {
 
   // Kevin (2026-10-19): a row of the same exhaust fans side by side along the rear glazing's solid top band, between
   // the transom and the roof slab. One model load, drawn instanced (one draw per part for the whole row); the rotors'
-  // instances turn with the big fan's rotor every frame. FAN_W is the housing's width in map units (.86 m).
-  const FAN_W = 1.46, bandY0 = top.y + 2.98, bandY1 = top.y + glassH - .08, rowA0 = tLeft, rowA1 = s.topLanding.outer;
+  // instances turn with the big fan's rotor every frame. FAN_W is the housing's width in map units (.86 m); the
+  // model's origin is its housing's centre.
+  const FAN_W = 1.46, bandY0 = fanTop - fanBandH, bandY1 = fanTop, rowA0 = tLeft, rowA1 = s.topLanding.outer;
   const rowCount = Math.max(1, Math.floor((rowA1 - rowA0) / FAN_W));
-  const rowSpots = Array.from({ length: rowCount }, (_, k) => new THREE.Matrix4().makeTranslation(rowA0 + (rowA1 - rowA0) * (k + .5) / rowCount, (bandY0 + bandY1) / 2, tRear - .06));
+  const rowSpots = Array.from({ length: rowCount }, (_, k) => new THREE.Matrix4().makeTranslation(rowA0 + (rowA1 - rowA0) * (k + .5) / rowCount, bandY1 - fanBandH / 2, tRear - .06));
   let fanRow = null;
   if (model && bandY1 - bandY0 > 1) model('exhaust_fan.glb', 0, 0, 0, (scene, holder) => {
     const parentInverse = new THREE.Matrix4().copy(holder.parent.matrixWorld).invert(), rel = new THREE.Matrix4();
