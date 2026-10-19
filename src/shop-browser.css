@@ -1,5 +1,5 @@
 .shop-browser .shop-browser-header{padding:2px 0 8px;background:transparent}
-.shop-browser .shop-categories{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;padding:3px;background:#0c231c40;border-radius:17px}
+.shop-browser .shop-categories{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;padding:3px;background:#0c231c40;border-radius:17px}
 /* Category tabs mirror the station strip: one translucent rail, borderless items, icon over a mono label, selected item lit. */
 .shop-browser .shop-categories button{display:grid;grid-template-rows:22px auto;justify-items:center;row-gap:4px;min-width:0;min-height:54px;padding:8px 0 7px;border:0;border-radius:14px;background:transparent;color:var(--p-sage-84);font:inherit;box-shadow:none}
 .shop-browser .shop-categories button .shop-category-icon{width:22px;height:22px;opacity:.85}
@@ -50,3 +50,10 @@
 /* The recommended card flashes when the bottleneck banner sends you here. */
 .shop-browser .shop-item.is-recommended{animation:shop-recommend 1.6s ease-out}
 @keyframes shop-recommend{0%{box-shadow:0 0 0 2px var(--p-gold-75),0 0 18px #efcf8d80}100%{box-shadow:0 0 0 0 #efcf8d00}}
+/* Research forks: a quiet label over an undecided pair and an "or" between its sides; a closed side sinks and fades. */
+.shop-browser .shop-fork-head{display:flex;gap:8px;align-items:baseline;margin:14px 4px 2px;font-size:11px;color:var(--p-sage-66)}
+.shop-browser .shop-fork-head b{font-weight:600;color:var(--p-sage-91)}
+.shop-browser .shop-fork-or{display:flex;align-items:center;gap:8px;margin:-1px 4px;font:500 10px 'DM Mono',monospace;color:var(--p-sage-66);text-transform:uppercase;letter-spacing:.08em}
+.shop-browser .shop-fork-or::before,.shop-browser .shop-fork-or::after{content:'';flex:1;height:1px;background:var(--p-forest-30)}
+.shop-browser .shop-item.is-fork-open{border-bottom:0}
+.shop-browser .shop-item.is-fork-closed{opacity:.45;filter:saturate(.5)}
