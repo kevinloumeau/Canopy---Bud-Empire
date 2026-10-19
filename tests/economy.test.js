@@ -106,3 +106,11 @@ test('a pickup counter at its handoff floor gains nothing per level, so the fix 
   assert.equal(pickupRate(42,131),pickupRate(41,131));
   assert.deepEqual(stepsToGain(k=>pickupRate(41+k,131)-pickupRate(41,131),6).steps,2);
 });
+
+test('stations tied for slowest only show a gain when raised together',()=>{
+  // Seeds, Harvest and Pack all start at level 1 with two-second batches, so the shop runs at their shared pace.
+  const rate=(levels)=>Math.min(...levels.map((l,i)=>capacity(l,0,1)/[2,3,2,2][i]));
+  const start=[1,3,1,1];
+  assert.equal(stepsToGain(k=>rate([1+k,3,1,1])-rate(start),6),null);
+  assert.equal(stepsToGain(k=>rate([1+k,3,1+k,1+k])-rate(start),6).steps,1);
+});

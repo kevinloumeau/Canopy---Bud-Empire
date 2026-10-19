@@ -1,4 +1,5 @@
 import {abbr} from './progression.js';
+import {ACHIEVEMENTS,achievementRows} from './achievements.js';
 // Empire navigation shell: one list, then one screen at a time.
 // Reparents the existing Empire controls (main.js and operations-ui.js keep rendering them by id)
 // into three screens: Home (rewards strip + store list), Store (one branch), Details (records).
@@ -46,7 +47,21 @@ export function mountEmpireShell({fit,getState,format}){
  screens.details.append(board);
  let boardSig='';
  function syncBoard(){if(!getState)return;const s=getState();const values={revenue:format?format(s.lifetime||0):String(Math.round(s.lifetime||0)),served:abbr(s.sold||0),deliveries:abbr(s.onlineCompleted||0),trophies:String((s.empire&&s.empire.trophies)||0),prestige:String((s.empire&&s.empire.shares)||0)};const sig=Object.values(values).join('|');if(sig===boardSig)return;boardSig=sig;stats.forEach(([,key])=>{board.querySelector('[data-score="'+key+'"]').textContent=values[key];});}
- setInterval(()=>{if(!document.hidden&&current==='details')syncBoard();},500);
+ setInterval(()=>{if(!document.hidden&&current==='details'){syncBoard();syncAwards();}},500);
+ // Achievements: the nearest few still to earn, then the earned ones folded away. Each earned one is +1% sales.
+ const awards=el('section','empire-group achievements');awards.setAttribute('aria-label','Achievements');
+ awards.innerHTML='<div class="achievement-head"><h2 class="empire-group-title">Achievements</h2><b id="achievementTotal"></b></div><ul class="achievement-list" id="achievementNext"></ul><details class="empire-help achievement-earned"><summary id="achievementEarnedLabel"></summary><ul class="achievement-list" id="achievementDone"></ul></details>';
+ const tick='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+ const short=(n,r)=>(r.id.startsWith('rev-')?'$':'')+abbr(Math.floor(n)).replace(/\.0+([KMBT])$/,'$1').replace(/(\.\d)0([KMBT])$/,'$1$2');
+ const row=r=>'<li class="achievement'+(r.done?' is-done':'')+'"><span class="achievement-copy"><b>'+r.name+'</b><small>'+r.goal+'</small></span>'+(r.done?'<span class="achievement-figure" aria-label="Earned">'+tick+'</span>':'<span class="achievement-figure">'+short(r.value,r)+' / '+short(r.target,r)+'</span>')+'</li>';
+ let awardSig='';
+ function syncAwards(){if(!getState)return;const rows=achievementRows(getState()),todo=rows.filter(r=>!r.done).slice(0,4),done=rows.filter(r=>r.done);
+  const sig=todo.map(r=>r.id+':'+Math.floor(r.value)).join('|')+'#'+done.length;if(sig===awardSig)return;awardSig=sig;
+  $('achievementTotal').textContent=done.length+' / '+ACHIEVEMENTS.length+' · +'+done.length+'% sales';
+  $('achievementNext').innerHTML=todo.map(row).join('');$('achievementNext').hidden=!todo.length;
+  $('achievementEarnedLabel').textContent=done.length?'Earned ('+done.length+')':'Each one earned adds +1% to every sale';
+  $('achievementDone').innerHTML=done.map(row).join('');}
+ screens.details.append(awards);
  const shopMilestone=document.querySelector('.shop-milestone');
  screens.details.append(
   group(null,[$('careerName'),$('careerDetail'),$('careerProgress'),$('careerBonus'),$('careerClaim')]),
@@ -65,7 +80,7 @@ export function mountEmpireShell({fit,getState,format}){
 
  // Navigation.
  let current='home';
- function show(name){current=name;if(name==='details')syncBoard();Object.keys(screens).forEach(k=>screens[k].hidden=k!==name);pane.dataset.empireScreen=name;pane.scrollTop=0;if(scrollers[name])scrollers[name].scrollTop=0;if(name!=='store')closeBranches();if(fit)fit();}
+ function show(name){current=name;if(name==='details'){syncBoard();syncAwards();}Object.keys(screens).forEach(k=>screens[k].hidden=k!==name);pane.dataset.empireScreen=name;pane.scrollTop=0;if(scrollers[name])scrollers[name].scrollTop=0;if(name!=='store')closeBranches();if(fit)fit();}
  function closeBranches(){articles.forEach((article,i)=>{const body=$('branchBody'+i),nav=article.querySelector('.operation-tabs');if(body)body.hidden=true;if(nav)nav.hidden=true;toggles[i].setAttribute('aria-expanded','false');});}
  function openStore(i){articles.forEach((article,j)=>{const body=$('branchBody'+j),nav=article.querySelector('.operation-tabs');if(body)body.hidden=j!==i;if(nav)nav.hidden=j!==i;toggles[j].setAttribute('aria-expanded',String(j===i));});storeBar.heading.textContent=toggles[i].querySelector('.branch-name').textContent;show('store');}
  toggles.forEach((toggle,i)=>{toggle.onclick=()=>openStore(i);toggle.removeAttribute('aria-expanded');toggle.setAttribute('aria-haspopup','false');});
