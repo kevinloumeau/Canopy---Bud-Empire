@@ -2327,7 +2327,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     return '#'+hex(r)+hex(g)+hex(b)+hex(a);
   }
   function recordBranch(figures){
-    var U=32,saved=[unit,centerX,centerY,ctx,sceneElevation],seen=new Map(),out={unit:U,boxes:[],lines:[],polys:[],ellipses:[],faces:[],fixtures:[]};
+    var U=32,saved=[unit,centerX,centerY,ctx,sceneElevation],seen=new Map(),out={unit:U,boxes:[],lines:[],polys:[],ellipses:[],faces:[],fixtures:[],props:[]};
     function key(x,y){return Math.round(x*8)+','+Math.round(y*8)}
     branchRec={
       seen:function(q,x,y,z){seen.set(key(q.x,q.y),[x,y,z])},
@@ -2348,14 +2348,16 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       drawActiveBranch({realDepth:true,ctx:silentCtx,width:width,height:height,unit:U,project:project,box:drawBox,line:worldLine,poly:poly,ellipse:ellipse,blob:blobEllipse,leaf:leafShape,noise:seedNoise,lit:lit,plant:plant3d,jar:jar,carton:carton,depth:depthOf,
         person:function(x,z){var args=arguments,rec=branchRec;branchRec=null;capturePerson(figures,x,0,z,function(){drawPerson.apply(null,args)});branchRec=rec},
         face:function(x,y,z,alongZ,draw){out.faces.push({x:x,y:y,z:z,alongZ:alongZ,draw:draw})},
-        night:function(fixtures){out.fixtures=fixtures}},sceneTime);
+        night:function(fixtures){out.fixtures=fixtures},
+        // A Blender prop in place of the 2D drawing, once its model has loaded (until then the drawing stands in).
+        model:function(file,x,z,y,rot,scale){if(!map3d.propReady(file))return false;out.props.push({file:file,x:x,y:(y||0)+sceneElevation,z:z,rot:rot||0,scale:scale});return true}},sceneTime);
     }finally{branchRec=null;unit=saved[0];centerX=saved[1];centerY=saved[2];ctx=saved[3];sceneElevation=saved[4]}
     return out;
   }
   function renderBranch3d(now,frameDelta){
     var nightT=nightAmount();render.nightT=nightT;
     var figures=[],scene=recordBranch(figures);
-    map3d.renderBranch({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:viewCentre(),background:BRANCH_THEMES[state.empire.activeStore-1].background,branch:scene,figures:figures.filter(function(f){return f.alpha>.99})});
+    map3d.renderBranch({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:viewCentre(),background:BRANCH_THEMES[state.empire.activeStore-1].background,land:BRANCH_THEMES[state.empire.activeStore-1].land,landKey:state.empire.activeStore,branch:scene,figures:figures.filter(function(f){return f.alpha>.99})});
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
     // Main-store effects expire while visiting a branch rather than replaying on return.
     particles.forEach(function(p){p.life-=frameDelta*1.5});particles=particles.filter(function(p){return p.life>0});deliveryDrones.forEach(function(d){d.age+=frameDelta});deliveryDrones=deliveryDrones.filter(function(d){return d.age<d.delay+DRONE_LIFE});
