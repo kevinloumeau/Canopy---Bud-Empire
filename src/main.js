@@ -2433,7 +2433,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       person(c.renderX,0,c.renderZ,PERSON_COLOURS[(c.id||0)%PERSON_COLOURS.length],function(){drawPerson(c.renderX,c.renderZ,now,c.id,c.walking,false,c.bag,{phase:c.walkPhase||0,heading:c.walkHeading,amount:c.walkAmount||0,facing:c.facing===undefined?.3:c.facing,lean:c.turnLean||0,pickupAge:c.effectAge})});
     });
     var streetApi=sunnyApi(now);
-    walkerPlacements(now).forEach(function(w){person(w.x,-.012,w.z,PERSON_COLOURS[(w.g*3+1)%PERSON_COLOURS.length],function(){drawWalker(streetApi,w)})});
+    walkerPlacements(now).forEach(function(w){person(w.x,w.y===undefined?-.012:w.y,w.z,PERSON_COLOURS[(w.g*3+1)%PERSON_COLOURS.length],function(){drawWalker(streetApi,w)})});
     // The street's trees, lamps and props are its own renders too, stood up at their footprints' centres, and so are
     // the cars until their Blender models load; the terraces stay solid. The 3D trees and lamps underneath only cast shadows.
     // A prop with a loaded Blender model is drawn as that instead of its card.
