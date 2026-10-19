@@ -3,11 +3,11 @@ import {atmosphere} from './operations.js';
 // `frame` is each scene's projected bounding box in world units at unit scale (width, height, centre), measured by
 // drawing it through a recording projection; the camera fits it to the viewport.
 export const BRANCH_THEMES = [
-  {name:'Riverside', description:'A cedar riverwalk shop with a timber loft and rooftop glasshouse, a footbridge to the far-bank promenade and boathouse, and waterside seating.', background:'#2f4c49', focus:{x:0,y:1.3,z:1.4}, frame:{w:44.3,h:24.9,cx:-1.9,cy:-2.2}},
-  {name:'Old Town', description:'A three-storey brick boutique on a cobbled market square, beside a bakery and a clock tower, with a fountain, stalls and an upstairs botanical atelier.', background:'#3f3831', focus:{x:0,y:.3,z:1}, frame:{w:43.3,h:30.7,cx:-.85,cy:-4.7}},
-  {name:'City Center', description:'A glass flagship beneath its own tower on a downtown plaza, with roof gardens, a reflecting pool, a metro entrance and a busy street.', background:'#2c3a44', focus:{x:0,y:1.3,z:-1}, frame:{w:44.9,h:32.7,cx:-.05,cy:-5.45}},
-  {name:'Desert Oasis', description:'An adobe courtyard shop in the desert, with a rooftop lounge and glass grow room, saguaros and agaves in a gravel garden, and a sun-baked parking court.', background:'#2e4f48', focus:{x:0,y:1.3,z:1.4}, frame:{w:43.3,h:23.6,cx:-.85,cy:-1.15}},
-  {name:'Alpine', description:'A stone-and-timber mountain lodge among the pines, with a glass conservatory wing under a rooftop terrace, a fireside pergola patio, and a waterfall garden with a creek-side deck.', background:'#233b31', focus:{x:0,y:1.3,z:1.4}, frame:{w:43.3,h:23.7,cx:-.85,cy:-1.2}}
+  {name:'Riverside', description:'A cedar riverwalk shop with a timber loft and rooftop glasshouse, a footbridge to the far-bank promenade and boathouse, and waterside seating.', background:'#2f4c49', focus:{x:0,y:1.3,z:1.4}, frame:{w:44.3,h:24.9,cx:-1.9,cy:-2.2},land:{colour:'#8aa07a',y:-.15,plot:[-20.5,16,-12.5,12.5],water:[{x0:-15.5,x1:-7.75,y:-.4,colour:'#41a4a3'}],trees:true}},
+  {name:'Old Town', description:'A three-storey brick boutique on a cobbled market square, beside a bakery and a clock tower, with a fountain, stalls and an upstairs botanical atelier.', background:'#3f3831', focus:{x:0,y:.3,z:1}, frame:{w:43.3,h:30.7,cx:-.85,cy:-4.7},land:{colour:'#cdbb9b',y:0,plot:[-17,17,-12,13],water:[]}},
+  {name:'City Center', description:'A glass flagship beneath its own tower on a downtown plaza, with roof gardens, a reflecting pool, a metro entrance and a busy street.', background:'#2c3a44', focus:{x:0,y:1.3,z:-1}, frame:{w:44.9,h:32.7,cx:-.05,cy:-5.45},land:{colour:'#bdc7c2',y:0,plot:[-16,18,-13,13],water:[]}},
+  {name:'Desert Oasis', description:'An adobe courtyard shop in the desert, with a rooftop lounge and glass grow room, saguaros and agaves in a gravel garden, and a sun-baked parking court.', background:'#2e4f48', focus:{x:0,y:1.3,z:1.4}, frame:{w:43.3,h:23.6,cx:-.85,cy:-1.15},land:{colour:'#dcc79c',y:0,plot:[-17,17,-12,13],water:[]}},
+  {name:'Alpine', description:'A stone-and-timber mountain lodge among the pines, with a glass conservatory wing under a rooftop terrace, a fireside pergola patio, and a waterfall garden with a creek-side deck.', background:'#233b31', focus:{x:0,y:1.3,z:1.4}, frame:{w:43.3,h:23.7,cx:-.85,cy:-1.2},land:{colour:'#7f9a74',y:0,plot:[-17,17,-12,13],water:[{x0:12.6,x1:16.6,y:-.3,colour:'#579aa0',z0:12.5}],trees:true}}
 ];
 
 export function drawBranchMap(api, index, level, now, projects=[], experience={}) {
@@ -20,6 +20,8 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
   const cream=['#e5ddc4','#a7a18c','#cdc7af'], brass=['#dcc089','#8d7348','#b39665'];
   const rust=['#c98466','#7d4a3a','#a4624e','#dba58a'], sage=['#7f9c8a','#46605a','#658074','#a9c1b0'];
   const jobs=[],fixtures=[];
+  // In the 3D map, api.model places a Blender prop instead of the drawing below it once the model has loaded.
+  const model=api.model||(()=>false),groundY=theme.land?theme.land.y:0;
   const activeEvent=experience.event?.joined&&experience.event.open&&!experience.event.claimed;
   const eventKind=(experience.event?.slot||0)%3;
   const job=(x,z,draw)=>jobs.push({depth:depth({x,z}),draw});
@@ -28,6 +30,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
   function glow(x,y,z,size,color=lightColor){if(api.night)fixtures.push({x,y,z,size});const q=p(x,y,z),g=api.ctx.createRadialGradient(q.x,q.y,0,q.x,q.y,unit*size),a='45';g.addColorStop(0,color+a);g.addColorStop(.3,color+'24');g.addColorStop(.65,color+'0b');g.addColorStop(1,color+'00');api.ctx.save();api.ctx.globalCompositeOperation='screen';ellipse(q.x,q.y,unit*size,unit*size*.55,g);api.ctx.restore();}
   function planter(x,z,w=1.1,size=1.3,y=0){b(x,z,y,w,w,.55,wood);b(x,z,y+.55,w+.09,w+.09,.1,dark);if(style.plants===2){l([[x,y+.6,z],[x,y+.6+size,z]],'#79a67f',.18);l([[x-.3,y+size*.85,z],[x-.3,y+size*.5,z],[x+.3,y+size*.5,z],[x+.3,y+size,z]],'#79a67f',.13);}else plant(x,z,y+.6,size);if(projects[2]||style.plants===1){for(let k=0;k<5;k++){const xx=x-w*.35+k*w*.175,q=p(xx,y+.85+(k%2)*.12,z+w*.32);l([[xx,y+.63,z+w*.32],[xx,y+.85+(k%2)*.12,z+w*.32]],'#71925c',.025);ellipse(q.x,q.y,unit*.1,unit*.07,k%2?'#eccba1':'#c89388');}}}
   function tree(x,z,size=1){
+    if(model(((Math.round(x)+Math.round(z))&1?'tree':'street_tree')+'.glb#lawn',x,z,groundY,x*1.3+z*.7,size*.72))return;
     // Soft canopy shadow pooling down-left of the trunk, matching the key light everything else obeys.
     {const sh=p(x,.02,z);ellipse(sh.x-unit*.5*size,sh.y+unit*.12,unit*1.35*size,unit*.5*size,'#141f1826');}
     b(x,z,0,1.6,1.6,.28,cream);l([[x,.2,z],[x,3*size,z]],'#826243',.16);
@@ -39,11 +42,12 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
   }
   function bench(x,z,w=2.8,y=0){
     if(style.layout===1&&y===0){display(x,z,0,wood);return;}
+    if(model('street_bench.glb',x,z,y,0,w/2.8))return;
     [-w*.36,w*.36].forEach(dx=>b(x+dx,z,y,.12,.65,.55,dark));
     for(let i=0;i<4;i++)b(x,z-.3+i*.2,y+.54,w,.15,.1,wood);
     b(x,z-.43,y+.64,w,.1,.7,wood);
   }
-  function lamp(x,z,y=0){l([[x,y,z],[x,y+3.2,z]],'#37453b',.1);b(x,z,y+3.16,.52,.5,.1,brass);b(x,z,y+3.26,.36,.34,.52,['#fff0c2','#d7c18d','#ebd8a5']);b(x,z,y+3.8,.57,.53,.1,dark);glow(x,y+3.5,z,.9);}
+  function lamp(x,z,y=0){if(model('street_lamp.glb',x,z,y)){glow(x,y+3.5,z,.9);return;}l([[x,y,z],[x,y+3.2,z]],'#37453b',.1);b(x,z,y+3.16,.52,.5,.1,brass);b(x,z,y+3.26,.36,.34,.52,['#fff0c2','#d7c18d','#ebd8a5']);b(x,z,y+3.8,.57,.53,.1,dark);glow(x,y+3.5,z,.9);}
   function shelf(x,z,w,y=0,finish=wood){
     b(x,z,y,w,.24,3.4,finish);
     for(let row=0;row<3;row++){
@@ -86,6 +90,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
   function floor(x,z,w,d,y=0,finish=wood){b(x,z,y-.25,w,d,.25,finish);for(let i=x-w/2+.6;i<x+w/2;i+=.65)l([[i,y+.012,z-d/2],[i,y+.012,z+d/2]],'#6f62552a',.017);}
   function glass(x,z,w,h,y=0){poly([p(x-w/2,y,z),p(x+w/2,y,z),p(x+w/2,y+h,z),p(x-w/2,y+h,z)],'#b9d8ce20');l([[x-w/2,y,z],[x-w/2,y+h,z],[x+w/2,y+h,z],[x+w/2,y,z]],'#435b56',.06);}
   function cafeTable(x,z,y=0){
+    if(y===0&&model('street_cafe_table.glb',x,z,y))return;
     b(x,z,y,.15,.15,.86,dark);b(x,z,y+.86,1.3,1.3,.12,wood);
     [-1,1].forEach(side=>{const sx=x+side*1.25;b(sx,z,y,.55,.55,.53,wood);b(sx,z-.28,y+.53,.58,.08,.62,wood);});
     b(x+.27,z,y+.99,.21,.21,.22,cream);jar(x-.24,z,y+1,index);
@@ -121,7 +126,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     for(let i=0;i<12;i++)l([[x-w*.45+i*w*.075,.038,z-d*.38],[x-w*.45+i*w*.075,.038,z+d*.38]],'#5c705754',.023);
   }
   function ring(x,z,y,r,color){const pts=[];for(let i=0;i<=32;i++){const a=i*Math.PI/16;pts.push([x+Math.cos(a)*r,y,z+Math.sin(a)*r]);}l(pts,color,.018);}
-  function bollard(x,z){b(x,z,.02,.2,.2,.58,dark);b(x,z,.6,.23,.23,.13,['#f3e0b7','#b7b090','#e2d1a9']);glow(x,.7,z,.5);}
+  function bollard(x,z){if(model('street_bollard.glb',x,z,0)){glow(x,.7,z,.5);return;}b(x,z,.02,.2,.2,.58,dark);b(x,z,.6,.23,.23,.13,['#f3e0b7','#b7b090','#e2d1a9']);glow(x,.7,z,.5);}
   // District-scale pieces: the shops sit inside a wider block of neighbours, water, streets and landmarks.
   function glassX(x,z,d,h,y=0){poly([p(x,y,z-d/2),p(x,y,z+d/2),p(x,y+h,z+d/2),p(x,y+h,z-d/2)],'#b9d8ce20');l([[x,y,z-d/2],[x,y+h,z-d/2],[x,y+h,z+d/2],[x,y,z+d/2]],'#435b56',.06);}
   // Pitched roof with its ridge along x: back slope, gable end, then the lit front slope.
@@ -199,6 +204,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
   }
   // A glass bus shelter with a bench, a route flag and a lit roof panel.
   function busShelter(x,z,w=3){
+    if(model('street_busstop.glb',x,z,0)){glow(x,2.4,z,1.1);return;}
     [-1,1].forEach(s=>{l([[x+s*(w/2-.1),0,z-.7],[x+s*(w/2-.1),2.5,z-.7]],'#4d5b56',.07);l([[x+s*(w/2-.1),0,z+.7],[x+s*(w/2-.1),2.5,z+.7]],'#4d5b56',.07);});
     poly([p(x-w/2,.1,z-.7),p(x+w/2,.1,z-.7),p(x+w/2,2.4,z-.7),p(x-w/2,2.4,z-.7)],'#b9d8ce26');l([[x-w/2,.1,z-.7],[x-w/2,2.4,z-.7],[x+w/2,2.4,z-.7],[x+w/2,.1,z-.7]],'#5a6c66',.05);
     glassX(x-w/2,z,1.4,2.3,.1);

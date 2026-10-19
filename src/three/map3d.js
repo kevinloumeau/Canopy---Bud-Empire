@@ -417,6 +417,8 @@ export function createMap3D(canvas, layout) {
       if (list.some(g => !g.attributes.uv)) list.forEach(g => g.deleteAttribute('uv'));
       const mesh = new THREE.InstancedMesh(mergeGeometries(list), withHaze(mat), MAX_PROPS);
       mesh.count = 0; mesh.castShadow = mesh.receiveShadow = true; mesh.frustumCulled = false;
+      // Props stay in the scene on a branch visit: the branch scenes place them too.
+      mesh.userData.prop = true;
       world.add(mesh);
       return mesh;
     });
@@ -432,9 +434,10 @@ export function createMap3D(canvas, layout) {
       const [url, variant] = file.split('#');
       loader.load(layout.modelBase + url, gltf => {
         prepare(gltf.scene);
-        if (variant === 'low') {
-          const drop = [];
-          gltf.scene.traverse(o => { if (/^(Crown|Trunk)/.test(o.name)) drop.push(o); });
+        // `file#lawn` is a tree without its paved pit (Pit* parts), for trees standing in grass.
+        if (variant === 'low' || variant === 'lawn') {
+          const drop = [], parts = variant === 'low' ? /^(Crown|Trunk)/ : /^Pit/;
+          gltf.scene.traverse(o => { if (parts.test(o.name)) drop.push(o); });
           drop.forEach(o => o.parent && o.parent.remove(o));
         }
         gltf.scene.traverse(o => {
@@ -458,7 +461,8 @@ export function createMap3D(canvas, layout) {
       if (!parts || parts[0].count >= MAX_PROPS) return;
       propTurn.setFromAxisAngle(yAxis, p.rot || 0);
       position.set(p.x, p.y === undefined ? layout.plazaY : p.y, p.z);
-      if (p.fit) {
+      if (p.scale) matrix.compose(position, propTurn, fitScale.copy(propScale).multiplyScalar(p.scale));
+      else if (p.fit) {
         // A terrace fills its render's footprint exactly (cornices, stoops and awnings included), so neighbours butt
         // the way the 2D renders do instead of running into each other; it keeps its front's proportions.
         const b = parts.box, sx = p.fit.w / (b.max.x - b.min.x), sz = p.fit.d / (b.max.z - b.min.z);
@@ -531,28 +535,85 @@ export function createMap3D(canvas, layout) {
     return night;
   }
 
-  // A branch visit hides the main block (every object but the lights, the figures and the branch layer) and shows the
-  // branch's own scene, recorded from its 2D drawing each frame (branch3d.js).
-  const branch = createBranchLayer(world), hiddenForBranch = [], branchBackground = new THREE.Color();
-  let inBranch = false;
+  // A branch visit hides the main block (every object but the lights, the figures, the props and the branch layer)
+  // and shows the branch's own scene, recorded from its 2D drawing each frame (branch3d.js). The plot sits in open
+  // land of its own ground colour (frame.land, BRANCH_THEMES in branch-maps.js) that fades into the same sunny haze as
+  // the main block's edges, with its river or creek running on out of the plot, instead of floating on a dark ground.
+  const branch = createBranchLayer(world), hiddenForBranch = [], branchBackground = new THREE.Color(), lands = {}, mainHaze = [hazeUniforms.hazeX.value.clone(), hazeUniforms.hazeZ.value.clone()];
+  let inBranch = false, land = null;
   function branchMode(on) {
     if (on === inBranch) return;
     inBranch = on;
     if (on) {
       const keep = new Set([world, hemi, sun, sun.target, branch.group, ...cards]);
-      [...scene.children, ...world.children].forEach(o => { if (!keep.has(o) && o.visible) { o.visible = false; hiddenForBranch.push(o); } });
+      [...scene.children, ...world.children].forEach(o => { if (!keep.has(o) && !o.userData.prop && !o.userData.land && o.visible) { o.visible = false; hiddenForBranch.push(o); } });
       backdrops.forEach(b => { b.visible = false; });
     } else {
       hiddenForBranch.forEach(o => { o.visible = true; });
       hiddenForBranch.length = 0;
+      if (land) land.visible = false;
+      land = null;
+      hazeUniforms.hazeX.value.copy(mainHaze[0]); hazeUniforms.hazeZ.value.copy(mainHaze[1]);
     }
     branch.group.visible = on;
+  }
+  const LAND_REACH = 90, HAZE_FROM = 2, HAZE_TO = 13;
+  // Axis-aligned rectangles [x0, x1, z0, z1] less one rectangle: up to four pieces round the hole.
+  function subtract(rects, [hx0, hx1, hz0, hz1]) {
+    const out = [];
+    rects.forEach(([x0, x1, z0, z1]) => {
+      if (hx0 >= x1 || hx1 <= x0 || hz0 >= z1 || hz1 <= z0) { out.push([x0, x1, z0, z1]); return; }
+      if (hz0 > z0) out.push([x0, x1, z0, hz0]);
+      if (hz1 < z1) out.push([x0, x1, hz1, z1]);
+      const a = Math.max(z0, hz0), b = Math.min(z1, hz1);
+      if (hx0 > x0) out.push([x0, hx0, a, b]);
+      if (hx1 < x1) out.push([hx1, x1, a, b]);
+    });
+    return out;
+  }
+  function buildLand(spec) {
+    const group = new THREE.Group(), [px0, px1, pz0, pz1] = spec.plot, cx = (px0 + px1) / 2, cz = (pz0 + pz1) / 2, R = LAND_REACH;
+    group.userData.land = true;
+    let ground = subtract([[cx - R, cx + R, cz - R, cz + R]], spec.plot);
+    const rivers = (spec.water || []).map(w => [w.x0, w.x1, w.z0 === undefined ? cz - R : w.z0, w.z1 === undefined ? cz + R : w.z1]);
+    rivers.forEach(r => { ground = subtract(ground, r); });
+    ground.forEach(([x0, x1, z0, z1]) => span(group, x0, x1, spec.y - 1.2, spec.y, z0, z1, spec.colour, { cast: false }));
+    (spec.water || []).forEach((w, i) => subtract([rivers[i]], spec.plot).forEach(([x0, x1, z0, z1]) => span(group, x0, x1, spec.y - 1.2, w.y, z0, z1, w.colour, { cast: false })));
+    // A loose belt of trees round the plot, thinning into the haze, so the land reads as countryside. The camera looks
+    // in from the +x, +z corner, so the near sides keep their trees far out where they cannot hide the plot.
+    const props = [];
+    if (spec.trees) {
+      let seed = 7;
+      const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+      for (let i = 0; i < 64; i++) {
+        const side = i % 4, near = side === 1 || side === 3, t = rand(), out = near ? 7.5 + rand() * 4 : 2 + rand() * 8;
+        const x = side === 0 ? px0 - out : side === 1 ? px1 + out : px0 - 8 + t * (px1 - px0 + 16);
+        const z = side === 2 ? pz0 - out : side === 3 ? pz1 + out : pz0 - 8 + t * (pz1 - pz0 + 16);
+        if (x > px0 - 1.5 && x < px1 + 1.5 && z > pz0 - 1.5 && z < pz1 + 1.5) continue;
+        if ((x > px1 && z > pz1 - 4) || (z > pz1 && x > px1 - 4)) continue;
+        if (rivers.some(([x0, x1, z0, z1]) => x > x0 - 1.6 && x < x1 + 1.6 && z > z0 - 1.6 && z < z1 + 1.6)) continue;
+        props.push({ file: i % 3 ? 'tree.glb#lawn' : 'street_tree.glb#lawn', x, y: spec.y, z, rot: rand() * 6.28, scale: (near ? .6 : .75) + rand() * .35 });
+      }
+    }
+    group.userData.props = props;
+    group.userData.haze = [new THREE.Vector4(px0 - HAZE_FROM, px0 - HAZE_TO, px1 + HAZE_FROM, px1 + HAZE_TO), new THREE.Vector4(pz0 - HAZE_FROM, pz0 - HAZE_TO, pz1 + HAZE_FROM, pz1 + HAZE_TO)];
+    world.add(group);
+    return group;
   }
   function renderBranch(frame) {
     if (lost) return false;
     branchMode(true);
-    const night = view(frame, branchBackground.set(frame.background));
+    const next = frame.land ? (lands[frame.landKey] || (lands[frame.landKey] = buildLand(frame.land))) : null;
+    if (next !== land) {
+      if (land) land.visible = false;
+      land = next;
+      if (land) { land.visible = true; hazeUniforms.hazeX.value.copy(land.userData.haze[0]); hazeUniforms.hazeZ.value.copy(land.userData.haze[1]); }
+    }
+    const night = view(frame, land ? daySky : branchBackground.set(frame.background));
     branch.update(frame.branch, night);
+    const props = (frame.branch.props || []).concat(land ? land.userData.props : []);
+    props.forEach(p => propReady(p.file));
+    placeProps(props, night);
     placeFigures(frame.figures || [], night);
     if (!frame.dry) renderer.render(scene, camera);
     return true;
