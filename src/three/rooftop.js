@@ -9,6 +9,7 @@
 import * as THREE from 'three';
 import { HEIGHT_SCALE } from './camera.js';
 import { compactModel } from './compact.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 const BRASS = '#d0a54e', OAK = '#b98d5c', OAK_DARK = '#6e4a2c', STEEL = '#1f4a35', CREAM = '#efe4cf', VELVET = '#6b2436';
 
@@ -153,7 +154,7 @@ export function buildRooftop(world, layout, { box, span, material }) {
 
   // String lights: warm bulbs on sagging wires between the balustrade's corner posts and the pergola.
   const bulbs = [];
-  const wireMat = new THREE.LineBasicMaterial({ color: '#2b302d' });
+  const wireMat = new THREE.MeshLambertMaterial({ color: '#2b302d' });
   function stringLights(group, ax, az, ay, bx, bz, by, n) {
     const points = [];
     for (let k = 0; k <= n * 2; k++) {
@@ -161,7 +162,9 @@ export function buildRooftop(world, layout, { box, span, material }) {
       points.push(new THREE.Vector3(...pt));
       if (k % 2 === 0) bulbs.push([group, pt[0], pt[1] - .07, pt[2]]);
     }
-    group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), wireMat));
+    // A slim cable rather than a hairline, so it keeps its weight at every zoom.
+    const wire = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), n * 4, .014, 4), wireMat);
+    group.add(wire);
   }
 
   // Speakeasy: the pergola over the rear left, an L of cream sofas with velvet cushions, the brass fire table.
@@ -355,11 +358,11 @@ export function buildRooftop(world, layout, { box, span, material }) {
   const bulbMat = glow('#fff1cf', '#ffcf7a'); lights.push([bulbMat, .2, 1.6]);
   const byGroup = new Map();
   bulbs.forEach(([g, ...xyz]) => { if (!byGroup.has(g)) byGroup.set(g, []); byGroup.get(g).push(xyz); });
-  const mtx = new THREE.Matrix4();
+  const mtx = new THREE.Matrix4(), bulbMeshes = [];
   byGroup.forEach((spots, g) => {
     const mesh = new THREE.InstancedMesh(bulbGeometry, bulbMat, spots.length);
     spots.forEach(([bx2, by2, bz2], i) => mesh.setMatrixAt(i, mtx.makeTranslation(bx2, by2, bz2)));
-    g.add(mesh);
+    g.add(mesh); bulbMeshes.push(mesh);
   });
 
   // A warm light over the deck after dark.
@@ -466,6 +469,25 @@ export function buildRooftop(world, layout, { box, span, material }) {
       set.hide.visible = false;
       loaded.add(set.parent);
     }, undefined, e => console.warn('3D map: could not load ' + set.file, e)));
+    // The festoon bulb (string_bulb.glb): its globe takes over the bulbs' spheres, keeping their glow, and its black
+    // socket is instanced at the same spots.
+    loader.load(base + 'string_bulb.glb', gltf => {
+      const source = gltf.scene; source.updateMatrixWorld(true);
+      const unitOf = name => {
+        const node = source.getObjectByName(name), parts = [];
+        if (!node) return null;
+        node.traverse(o => { if (o.isMesh) { const g = o.geometry.clone().applyMatrix4(o.matrixWorld); Object.keys(g.attributes).forEach(a => { if (a !== 'position' && a !== 'normal') g.deleteAttribute(a); }); parts.push(g.index ? g.toNonIndexed() : g); } });
+        return mergeGeometries(parts).scale(1.69, 1.69 / HEIGHT_SCALE, 1.69);
+      };
+      const globe = unitOf('Bulb'), socket = unitOf('Socket');
+      if (!globe || !socket) return;
+      const rubber = new THREE.MeshLambertMaterial({ color: '#22262a' });
+      bulbMeshes.forEach(mesh => {
+        mesh.geometry = globe;
+        const cap = new THREE.InstancedMesh(socket, rubber, mesh.count);
+        cap.instanceMatrix.copy(mesh.instanceMatrix); mesh.parent.add(cap);
+      });
+    }, undefined, e => console.warn('3D map: could not load string_bulb.glb', e));
     // The elevator, its bridge, the lounge door and the deck planters (the diorama's lounge_*.glb and deck_planter*.glb).
     const place = (parent, source, px, py, pz) => {
       const holder = new THREE.Group(); holder.add(source);

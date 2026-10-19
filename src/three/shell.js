@@ -5,6 +5,7 @@
 // Every position comes from the 2D map (drawTower, drawLoungeFront, drawShellProductWall and friends in main.js),
 // passed in as layout.shell, so the two maps keep the same plan.
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 // Signs drawn here use Fredoka like the Blender station signs (art/blender/fonts); the storefront's marquee keeps
 // Bricolage Grotesque like the Blender storefront. Until Fredoka has loaded the signs paint in Bricolage.
@@ -223,6 +224,7 @@ export function buildShell(world, layout, { box, span, material, model }) {
     });
     const pelmet = exit ? span(shell, g.plane - .05, g.plane + .09, g.top - .1, g.top + .06, g.centre - ew - .02, g.centre + ew + .02, '#4a1b29') : span(shell, g.centre - .75, g.centre + .75, g.top - .1, g.top + .06, g.plane - .05, g.plane + .09, '#4a1b29');
     return {
+      pair, pelmet, exit,
       set(open, shown) {
         pelmet.visible = shown;
         pair.forEach(({ side, m }) => {
@@ -236,6 +238,41 @@ export function buildShell(world, layout, { box, span, material, model }) {
   }
   const unitBoxGeometry = new THREE.BoxGeometry(1, 1, 1).translate(0, .5, 0);
   const frontDrapes = drapes(false), exitDrapes = drapes(true);
+  // The Blender drapes (lounge_drapes.glb): a pleated panel and a swagged pelmet with its brass rod, each modelled in
+  // a unit box, so they take over the boxes' geometry and keep the code's sizes and curtain movement. The back door's
+  // are turned to face into the shop.
+  if (model) model('lounge_drapes.glb', 0, 0, 0, (scene, holder) => {
+    holder.removeFromParent();
+    scene.updateMatrixWorld(true);
+    const unitOf = name => {
+      const node = scene.getObjectByName(name), parts = [];
+      if (!node) return null;
+      const inverse = new THREE.Matrix4().copy(node.matrixWorld).invert();
+      node.traverse(o => {
+        if (!o.isMesh) return;
+        const g = o.geometry.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(inverse, o.matrixWorld));
+        const c = o.material.color, n = g.attributes.position.count, rgb = new Float32Array(n * 3);
+        for (let i = 0; i < n; i++) rgb.set([c.r, c.g, c.b], i * 3);
+        g.setAttribute('color', new THREE.BufferAttribute(rgb, 3));
+        Object.keys(g.attributes).forEach(a => { if (!['position', 'normal', 'color'].includes(a)) g.deleteAttribute(a); });
+        parts.push(g);
+      });
+      const g = mergeGeometries(parts);
+      g.computeBoundingBox();
+      const b = g.boundingBox, size = b.getSize(new THREE.Vector3());
+      g.translate(-(b.min.x + b.max.x) / 2, -b.min.y, -(b.min.z + b.max.z) / 2).scale(1 / size.x, 1 / size.y, 1 / size.z);
+      g.computeVertexNormals();
+      return g;
+    };
+    const drape = unitOf('Drape'), valance = unitOf('Pelmet');
+    if (!drape || !valance) return;
+    const cloth = material('#ffffff', { vertexColors: true });
+    [frontDrapes, exitDrapes].forEach(d => {
+      const turn = g => d.exit ? g.clone().rotateY(-Math.PI / 2) : g;
+      d.pair.forEach(({ m }) => { m.geometry = turn(drape); m.material = cloth; });
+      d.pelmet.geometry = turn(valance); d.pelmet.material = cloth;
+    });
+  });
   // With the rooftop lounge a real door (rooftop.js) fills the doorway instead of this panel.
   const closedDoor = layout.rooftop ? null : span(shell, dx - .7, dx + .7, 0, s.loungeHeader, face, face + .08, '#2d6146');
   const boardedExit = span(shell, rx + .16, rx + .21, 0, eh - .24, ez - ew + .15, ez + ew - .15, '#3a2a1e');

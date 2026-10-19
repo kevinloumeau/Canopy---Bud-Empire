@@ -1145,11 +1145,13 @@ function buildTransport(scene, world, transport, { box, material }) {
     for (let i = 1; i < path.length; i++) { const len = Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1], path[i][2] - path[i - 1][2]); segments.push({ a: path[i - 1], b: path[i], len }); total += len; }
     return { tube, segments, total, parts };
   });
+  // Each belt is built in code until the diorama's conveyor_parts.glb loads (loadModels, below).
+  const beltStandIns = new THREE.Group(); world.add(beltStandIns);
   const belts = transport.belts.map(b => {
     const length = Math.abs(b.x2 - b.x1), mid = (b.x1 + b.x2) / 2;
-    [b.x1, b.x2].forEach(x => box(world, x - Math.sign(b.x2 - b.x1) * .25 * (x === b.x1 ? -1 : 1), b.floor, b.z, .12, b.height - .1, .5, '#344a40'));
-    box(world, mid, b.floor + b.height - .18, b.z, length, .16, b.width, '#536c5b');
-    box(world, mid, b.floor + b.height - .02, b.z, length - .1, .04, b.width - .2, '#2a4035', { cast: false });
+    [b.x1, b.x2].forEach(x => box(beltStandIns, x - Math.sign(b.x2 - b.x1) * .25 * (x === b.x1 ? -1 : 1), b.floor, b.z, .12, b.height - .1, .5, '#344a40'));
+    box(beltStandIns, mid, b.floor + b.height - .18, b.z, length, .16, b.width, '#536c5b');
+    box(beltStandIns, mid, b.floor + b.height - .02, b.z, length - .1, .04, b.width - .2, '#2a4035', { cast: false });
     return b;
   });
   // The cargo is the item actually passing between the two stations a run joins (its `cargoStage`, a belt's `stage`):
@@ -1177,6 +1179,29 @@ function buildTransport(scene, world, transport, { box, material }) {
     // The diorama's cargo_items.glb: one empty per kind (Cargo0..Cargo5, base centre at its origin, true metres) whose
     // meshes merge into that kind's vertex-coloured geometry, in place of the code-built stand-in.
     loadModels(loader, base) {
+      // The belts: whole map-unit Sections stretched to each belt's length, an End drum at each end and a Leg pair
+      // under each end (and the middle of a long belt), each piece origin as conveyor_parts.py describes.
+      loader.load(base + 'conveyor_parts.glb', gltf => {
+        const piece = name => { const o = gltf.scene.getObjectByName(name); if (o) o.position.set(0, 0, 0); return o; };
+        const section = piece('Section'), end = piece('End'), leg = piece('Leg');
+        if (!section || !end || !leg) return;
+        const add = (source, x, y, z, sx, sy, turn) => {
+          const holder = new THREE.Group(), copy = source.clone();
+          copy.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+          holder.add(copy); holder.scale.set(1.69 * sx, 1.69 * sy / K, 1.69); holder.position.set(x, y, z);
+          if (turn) holder.rotation.y = turn;
+          world.add(holder);
+        };
+        belts.forEach(b => {
+          const lo = Math.min(b.x1, b.x2), hi = Math.max(b.x1, b.x2), length = hi - lo, count = Math.max(1, Math.round(length));
+          const top = b.floor + b.height;
+          for (let i = 0; i < count; i++) add(section, lo + (i + .5) * length / count, top, b.z, length / count, 1);
+          add(end, hi, top, b.z, 1, 1); add(end, lo, top, b.z, 1, 1, Math.PI);
+          const legs = [lo + .25, hi - .25].concat(length > 5 ? [(lo + hi) / 2] : []);
+          legs.forEach(x => add(leg, x, b.floor, b.z, 1, (b.height - .18) / .87));
+        });
+        beltStandIns.visible = false;
+      }, undefined, e => console.warn('3D map: could not load conveyor_parts.glb', e));
       loader.load(base + 'cargo_items.glb', gltf => {
         gltf.scene.updateMatrixWorld(true);
         cargoKinds.forEach((kind, k) => {
