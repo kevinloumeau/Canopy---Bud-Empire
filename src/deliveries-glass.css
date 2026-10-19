@@ -11,7 +11,8 @@
 .shop-browser .shop-desk.is-unbuilt .shop-desk-copy b{font-size:13px;font-weight:600;line-height:1.25;color:var(--ui-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .shop-browser .shop-desk.is-unbuilt .shop-desk-copy small{font:400 11.5px/1.3 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .shop-browser .shop-desk.is-unbuilt .shop-desk-chevron{display:none}
-.shop-browser .shop-desk-price{display:flex;align-items:center;min-height:34px;padding:0 12px;border-radius:10px;background:var(--ui-brass);color:var(--ui-brass-ink);font:500 13.5px 'DM Mono',monospace;letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.shop-browser .shop-desk-price{display:flex;align-items:center;gap:4px;min-height:34px;padding:0 8px 0 12px;border-radius:10px;background:var(--ui-brass);color:var(--ui-brass-ink);font:500 13.5px 'DM Mono',monospace;letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.shop-browser .shop-desk-price svg{width:14px;height:14px}
 .shop-browser .shop-desk-price[hidden],.shop-browser .shop-desk-meter[hidden]{display:none}
 .shop-browser .shop-desk.is-short .shop-desk-price{background:none;box-shadow:inset 0 0 0 1px var(--ui-edge);color:var(--ui-ink)}
 .shop-browser .shop-desk-meter{position:absolute;left:12px;right:12px;bottom:5px;height:2px;border-radius:2px;background:#ffffff14;overflow:hidden}
