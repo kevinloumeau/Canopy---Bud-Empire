@@ -1,117 +1,86 @@
 /* Menu tab on the glass components (UI reskin plan). Loaded last so it wins over flower-menu.css and the older sheet rules.
-   One material throughout: quiet wells for readouts, sheen and a hairline for whatever is selected, the strain's own colour
-   only as a small accent, leaf for the buy button. No lime fills or dark slabs. */
-.sheet [data-pane="flowers"] .menu-board-summary{min-height:48px;padding:6px 12px;border:0;border-radius:12px;background:var(--ui-well)}
-.sheet [data-pane="flowers"] .menu-board-summary b{font:500 16px/1.15 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-ink)}
-.sheet [data-pane="flowers"] .menu-board-summary small,.sheet [data-pane="flowers"] .buyer small,.sheet [data-pane="flowers"] .strain-stats small{font:600 10px/1.2 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ui-soft)}
-.sheet [data-pane="flowers"] .buyer{border:1px solid var(--ui-edge);border-radius:12px;background:var(--ui-well-soft)}
-.sheet [data-pane="flowers"] .buyer b{font-family:'DM Mono',monospace;font-weight:500;letter-spacing:-.02em;color:var(--ui-ink)}
-.sheet [data-pane="flowers"] .buyer.is-trend.is-live{border-color:color-mix(in srgb,var(--strain) 45%,transparent);background:color-mix(in srgb,var(--strain) 8%,transparent)}
+   Kevin asked for less text, more depth and fewer boxes, so the tab is laid out open on the sheet's glass: readouts are
+   columns split by hairlines, the strains stand on a shelf as jars with a glow behind the selected one, and the detail
+   below has no card of its own. The only boxes left are the two switches (Strains/Breed, sell as) and the two buttons. */
+
+/* Readouts: three open columns, value over label. */
+.sheet [data-pane="flowers"] .menu-board-head{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;gap:0;padding:2px 0 4px}
+.sheet [data-pane="flowers"] .menu-buyers{display:contents}
+.sheet [data-pane="flowers"] .menu-board-summary,.sheet [data-pane="flowers"] .buyer{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;align-content:center;column-gap:7px;row-gap:3px;min-width:0;min-height:34px;margin:0;padding:0 12px;border:0;border-radius:0;background:none;box-shadow:none}
+.sheet [data-pane="flowers"] .menu-board-summary{grid-template-columns:minmax(0,1fr);padding-left:2px}
+.sheet [data-pane="flowers"] .buyer{border-left:1px solid var(--ui-edge)}
+.sheet [data-pane="flowers"] .buyer>svg,.sheet [data-pane="flowers"] .buyer>.bud{grid-column:1;grid-row:1/3;align-self:center;width:16px;height:16px}
+.sheet [data-pane="flowers"] .buyer .bud svg{width:16px;height:16px}
+.sheet [data-pane="flowers"] .buyer.is-trend>svg{display:none}
+.sheet [data-pane="flowers"] .menu-board-summary b,.sheet [data-pane="flowers"] .buyer>b{grid-column:2;grid-row:1;justify-self:start;font:500 14px/1 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-ink)}
+.sheet [data-pane="flowers"] .menu-board-summary b{grid-column:1}
+.sheet [data-pane="flowers"] .menu-board-summary small,.sheet [data-pane="flowers"] .buyer>small{grid-column:2;grid-row:2;font:600 9.5px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ui-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet [data-pane="flowers"] .menu-board-summary small{grid-column:1}
+.sheet [data-pane="flowers"] .buyer.is-trend.is-live>b{color:color-mix(in srgb,var(--strain) 75%,var(--ui-ink))}
 
 /* Strains / Breed: the same segmented well as the Shop categories. */
-.sheet [data-pane="flowers"] .menu-views{padding:3px;border:0;border-radius:14px;background:var(--ui-well)}
-.sheet [data-pane="flowers"] .menu-views button{min-height:38px;border:0;border-radius:11px;background:none;box-shadow:none;color:var(--ui-soft);font:600 13px 'Bricolage Grotesque',system-ui,sans-serif}
-.sheet [data-pane="flowers"] .menu-views button[aria-selected=true]{background:var(--ui-sheen);box-shadow:inset 0 0 0 1px var(--ui-edge);color:var(--ui-ink)}
+.sheet [data-pane="flowers"] .menu-views{padding:3px;border:0;border-radius:12px;background:var(--ui-well)}
+.sheet [data-pane="flowers"] .menu-views button{min-height:32px;border:0;border-radius:9px;background:none;box-shadow:none;color:var(--ui-soft);font:600 12.5px 'Bricolage Grotesque',system-ui,sans-serif}
+.sheet [data-pane="flowers"] .menu-views button[aria-selected=true]{background:var(--ui-sheen);box-shadow:inset 0 0 0 1px var(--ui-edge),inset 0 1px 0 #ffffff1c;color:var(--ui-ink)}
 
-/* Strain cards: glass tiles; the selected one lifts to sheen with a hairline in its strain colour. */
-.sheet [data-pane="flowers"] .strain-nav button{border:1px solid var(--ui-edge);border-radius:14px;background:var(--ui-well-soft);color:var(--ui-ink);box-shadow:none;transform:none}
-.sheet [data-pane="flowers"] .strain-nav button[aria-selected=true]{border-color:color-mix(in srgb,var(--strain) 55%,var(--ui-edge));background:var(--ui-sheen);box-shadow:none;transform:none}
-.sheet [data-pane="flowers"] .strain-nav button b{color:var(--ui-ink);font-weight:600}
-.sheet [data-pane="flowers"] .strain-nav button small{font:500 11px/1.3 'DM Mono',monospace;letter-spacing:-.02em;color:color-mix(in srgb,var(--strain) 80%,var(--ui-ink))}
-.sheet [data-pane="flowers"] .strain-nav button.is-on-menu::after{width:7px;height:7px;box-shadow:0 0 0 2px #ffffff10}
-.sheet [data-pane="flowers"] .strain-nav button.is-locked b{color:var(--ui-soft)}
-.sheet [data-pane="flowers"] .strain-nav button .price-tag{padding:2px 8px;border-radius:8px;background:none;box-shadow:inset 0 0 0 1px var(--ui-edge);color:var(--ui-ink)}
+/* The shelf: jars standing in a row with no tile around them. The selected jar sits in its strain's glow with a short
+   bar under its name; on-menu strains show their level pips, locked ones their unlock price. */
+.sheet [data-pane="flowers"] .strain-nav{grid-template-columns:repeat(4,minmax(0,1fr));gap:2px;padding:0 0 10px;border-bottom:1px solid var(--ui-edge)}
+.sheet [data-pane="flowers"] .strain-nav button{position:relative;display:grid;grid-template-rows:auto auto auto;justify-items:center;align-content:start;gap:4px;min-height:0;padding:6px 2px 4px;border:0;border-radius:14px;background:none;box-shadow:none;transform:none;color:var(--ui-soft)}
+.sheet [data-pane="flowers"] .strain-nav button::before{z-index:1}
+.sheet [data-pane="flowers"] .strain-nav .strain-card-art{position:relative;width:28px;height:35px;filter:drop-shadow(0 7px 6px #0a140e8c);transition:transform .2s ease}
+.sheet [data-pane="flowers"] .strain-nav button[aria-selected=true] .strain-card-art{filter:drop-shadow(0 0 10px color-mix(in srgb,var(--strain) 60%,transparent)) drop-shadow(0 7px 6px #0a140e8c)}
+.sheet [data-pane="flowers"] .strain-nav button[aria-selected=true] .strain-card-art{transform:translateY(-2px) scale(1.08)}
+.sheet [data-pane="flowers"] .strain-nav button b{min-height:0;font-size:11.5px;font-weight:600;line-height:1.2;text-align:center;color:var(--ui-soft);overflow-wrap:normal}
+.sheet [data-pane="flowers"] .strain-nav button b .type-glyph{display:none}
+.sheet [data-pane="flowers"] .strain-nav button[aria-selected=true] b{color:var(--ui-ink)}
+.sheet [data-pane="flowers"] .strain-nav button[aria-selected=true]::after{content:'';position:absolute;top:auto;right:auto;left:50%;bottom:-11px;width:28px;height:2px;border-radius:2px;background:var(--strain);transform:translateX(-50%);box-shadow:none}
+.sheet [data-pane="flowers"] .strain-nav button.is-on-menu:not([aria-selected=true])::after{display:none}
+.sheet [data-pane="flowers"] .strain-nav button.is-on-menu small{display:none}
+.sheet [data-pane="flowers"] .strain-nav .strain-pips{display:grid;grid-template-columns:repeat(10,3px);gap:2px;justify-content:center;margin:0}
+.sheet [data-pane="flowers"] .strain-nav .strain-pips i{width:3px;height:3px}
+.sheet [data-pane="flowers"] .strain-nav button.is-locked .strain-pips{display:none}
+.sheet [data-pane="flowers"] .strain-nav button.is-locked .strain-card-art{opacity:.7}
+.sheet [data-pane="flowers"] .strain-nav button .price-tag{margin:0;padding:0;clip-path:none;border-radius:0;background:none;box-shadow:none;font:500 11px/1 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-ink)}
 .sheet [data-pane="flowers"] .strain-nav button .price-tag::before{display:none}
-@media(hover:hover){.sheet [data-pane="flowers"] .strain-nav button:hover{background:var(--ui-sheen)}}
-.sheet [data-pane="flowers"] .strain-nav button:focus-visible{outline:2px solid var(--ui-brass)}
+.sheet [data-pane="flowers"] .strain-nav button.is-trending::before{top:4px;left:calc(50% - 26px);font-size:11px}
+@media(hover:hover){.sheet [data-pane="flowers"] .strain-nav button:not([aria-selected=true]):hover b{color:var(--ui-ink)}}
+.sheet [data-pane="flowers"] .strain-nav button:focus-visible{outline:2px solid var(--ui-brass);outline-offset:-2px}
 
-/* Detail card. */
-.sheet [data-pane="flowers"] .strain-hero{border:1px solid var(--ui-edge);border-radius:16px;background:var(--ui-well-soft);box-shadow:none}
+/* Detail: open on the glass, no card. */
+.sheet [data-pane="flowers"] .strain-hero{position:relative;padding:12px 2px 4px;border:0;border-radius:0;background:none;box-shadow:none}
+.sheet [data-pane="flowers"] .strain-hero-art{position:relative;filter:drop-shadow(0 0 16px color-mix(in srgb,var(--strain) 55%,transparent)) drop-shadow(0 10px 10px #0a140e99)}
+
 .sheet [data-pane="flowers"] .strain-hero .strain-kind{font:500 11px/1.3 'DM Mono',monospace;letter-spacing:.02em;color:var(--ui-soft)}
 .sheet [data-pane="flowers"] .strain-hero-info h2{color:var(--ui-ink)}
 .sheet [data-pane="flowers"] .strain-hero-info p{color:var(--ui-soft)}
-.sheet [data-pane="flowers"] .strain-stats span{border:0;border-radius:10px;background:var(--ui-well)}
-.sheet [data-pane="flowers"] .strain-stats b{font:500 13px 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-ink)}
-.sheet [data-pane="flowers"] .strain-traits li{border:1px solid var(--ui-edge);background:none;color:var(--ui-soft)}
+.sheet [data-pane="flowers"] .strain-stats{gap:0}
+.sheet [data-pane="flowers"] .strain-stats span{gap:3px;padding:2px 12px;border:0;border-left:1px solid var(--ui-edge);border-radius:0;background:none;box-shadow:none}
+.sheet [data-pane="flowers"] .strain-stats span:first-child{padding-left:0;border-left:0}
+.sheet [data-pane="flowers"] .strain-stats b{font:500 15px/1.1 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-ink)}
+.sheet [data-pane="flowers"] .strain-stats small{font:600 9.5px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ui-soft)}
+.sheet [data-pane="flowers"] .strain-hero .strain-traits,.sheet [data-pane="flowers"] .format-benefit{display:none}
 .sheet [data-pane="flowers"] .strain-perk{color:var(--ui-soft)}
 .sheet [data-pane="flowers"] .strain-perk b{color:var(--ui-brass);font-weight:600}
-.sheet [data-pane="flowers"] .strain-format h2{font:600 10.5px/1.2 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--ui-soft)}
-.sheet [data-pane="flowers"] .strain-hero .strain-format .format-options button{border:0;background:none;box-shadow:inset 0 0 0 1px var(--ui-edge);color:var(--ui-ink)}
-.sheet [data-pane="flowers"] .strain-hero .strain-format .format-options button svg{color:var(--ui-soft)}
-.sheet [data-pane="flowers"] .strain-hero .strain-format .format-options button small{font:500 11.5px 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-soft)}
-.sheet [data-pane="flowers"] .strain-hero .strain-format .format-options button[aria-pressed=true]{background:var(--ui-sheen);box-shadow:inset 0 0 0 1px #ffffff40}
-.sheet [data-pane="flowers"] .strain-hero .strain-format .format-options button[aria-pressed=true] svg{color:var(--ui-ink)}
+
+/* Sell as: one segmented well instead of three boxes. */
+.sheet [data-pane="flowers"] .strain-format h2{font:600 10px/1.2 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--ui-soft)}
+.sheet [data-pane="flowers"] .strain-hero .strain-format .format-options{gap:2px;padding:3px;border-radius:12px;background:var(--ui-well)}
+.sheet [data-pane="flowers"] .strain-hero .strain-format .format-options button{min-height:42px;border:0;border-radius:9px;background:none;box-shadow:none;color:var(--ui-soft)}
+.sheet [data-pane="flowers"] .strain-hero .strain-format .format-options button svg{color:currentColor}
+.sheet [data-pane="flowers"] .strain-hero .strain-format .format-options button strong{color:inherit}
+.sheet [data-pane="flowers"] .strain-hero .strain-format .format-options button small{font:500 11px 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-soft)}
+.sheet [data-pane="flowers"] .strain-hero .strain-format .format-options button[aria-pressed=true]{background:var(--ui-sheen);box-shadow:inset 0 0 0 1px var(--ui-edge),inset 0 1px 0 #ffffff1c;color:var(--ui-ink)}
+.sheet [data-pane="flowers"] .strain-hero .strain-format .format-options button[aria-pressed=true] svg{color:var(--strain)}
+.sheet [data-pane="flowers"] .strain-hero .strain-format .format-options button[aria-pressed=true] small{display:none}
+.sheet [data-pane="flowers"] .strain-hero .strain-format .format-options button[aria-pressed=true] strong{grid-row:1/3;align-self:center}
 .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options button:disabled{opacity:.55}
-.sheet [data-pane="flowers"] .format-benefit{color:var(--ui-soft)}
 
 /* Actions: the menu toggle is a quiet outline, the buy is the leaf button every other tab uses. */
 .sheet [data-pane="flowers"] .strain-hero-actions button{min-height:44px;border:0;border-radius:12px;background:none;box-shadow:inset 0 0 0 1px var(--ui-edge);color:var(--ui-ink);font:600 13.5px 'Bricolage Grotesque',system-ui,sans-serif}
-.sheet [data-pane="flowers"] .strain-hero-actions button[aria-pressed=true]{background:var(--ui-sheen)}
-.sheet [data-pane="flowers"] .strain-hero-actions .is-primary{background:var(--ui-leaf);box-shadow:none;color:var(--ui-on-leaf)}
+.sheet [data-pane="flowers"] .strain-hero-actions button[aria-pressed=true]{background:var(--ui-well-soft)}
+.sheet [data-pane="flowers"] .strain-hero-actions .is-primary{background:var(--ui-leaf);box-shadow:inset 0 1px 0 #ffffff2e,0 8px 18px -10px #0a140e;color:var(--ui-on-leaf)}
 .sheet [data-pane="flowers"] .strain-hero-actions .is-primary:disabled{background:none;box-shadow:inset 0 0 0 1px var(--ui-edge);color:var(--ui-soft);opacity:1}
 @media(hover:hover){.sheet [data-pane="flowers"] .strain-hero-actions button:hover:not(:disabled){filter:brightness(1.08)}}
 .sheet [data-pane="flowers"] .strain-hero-actions button:focus-visible{outline:2px solid var(--ui-brass);outline-offset:2px}
 .sheet [data-pane="flowers"] .strain-guide summary{color:var(--ui-soft)}
-
-/* Depth and less text (Kevin: "a bit flat, very text heavy").
-   Light comes from above: a top highlight on raised surfaces, a soft drop shadow, and the strain's colour as a glow behind
-   its jar. Cards say on-menu with the dot and level with pips, so the words go; the long benefit line and trait chips
-   stay in the tooltips and the guide. */
-.sheet [data-pane="flowers"] .strain-nav button{box-shadow:inset 0 1px 0 #ffffff12,0 6px 14px -10px #0a140e}
-.sheet [data-pane="flowers"] .strain-nav button[aria-selected=true]{background:radial-gradient(120% 70% at 50% 0%,color-mix(in srgb,var(--strain) 26%,transparent),transparent 70%),var(--ui-sheen);box-shadow:inset 0 1px 0 #ffffff26,0 10px 22px -12px #0a140e}
-.sheet [data-pane="flowers"] .strain-nav .strain-card-art{filter:drop-shadow(0 6px 6px #0a140e80)}
-.sheet [data-pane="flowers"] .strain-nav button.is-on-menu small{display:none}
-.sheet [data-pane="flowers"] .strain-nav .strain-pips{display:grid;grid-template-columns:repeat(10,4px);gap:2px;justify-content:center;margin-top:4px}
-.sheet [data-pane="flowers"] .strain-nav button.is-locked .strain-pips{display:none}
-.sheet [data-pane="flowers"] .strain-hero{position:relative;background:radial-gradient(70% 90% at 0% 0%,color-mix(in srgb,var(--strain) 22%,transparent),transparent 65%),linear-gradient(180deg,#ffffff0d,#ffffff03);box-shadow:inset 0 1px 0 #ffffff1c,0 14px 30px -18px #0a140e}
-.sheet [data-pane="flowers"] .strain-hero-art{filter:drop-shadow(0 10px 10px #0a140e99)}
-.sheet [data-pane="flowers"] .strain-stats span{box-shadow:inset 0 1px 2px #0000002e}
-.sheet [data-pane="flowers"] .strain-hero .strain-traits{display:none}
-.sheet [data-pane="flowers"] .format-benefit{display:none}
-.sheet [data-pane="flowers"] .strain-hero .strain-format .format-options button[aria-pressed=true]{box-shadow:inset 0 0 0 1px #ffffff40,inset 0 1px 0 #ffffff2e,0 6px 14px -10px #0a140e}
-.sheet [data-pane="flowers"] .strain-hero .strain-format .format-options button[aria-pressed=true] svg{color:var(--strain)}
-.sheet [data-pane="flowers"] .strain-hero-actions .is-primary:not(:disabled){box-shadow:inset 0 1px 0 #ffffff2e,0 8px 18px -10px #0a140e}
-.sheet [data-pane="flowers"] .buyer,.sheet [data-pane="flowers"] .menu-board-summary{box-shadow:inset 0 1px 0 #ffffff0f}
-.sheet [data-pane="flowers"] .strain-hero{background:radial-gradient(60% 80% at 8% 20%,color-mix(in srgb,var(--strain) 34%,transparent),transparent 70%),linear-gradient(180deg,#ffffff10,#ffffff03)}
-.sheet [data-pane="flowers"] .strain-hero .strain-format .format-options button[aria-pressed=true] small{display:none}
-.sheet [data-pane="flowers"] .strain-hero .strain-format .format-options button[aria-pressed=true] strong{grid-row:1/3;align-self:center}
-
-/* Compact top (Kevin: "this section can be compressed"): one-line readout chips, a slimmer Strains/Breed switch, and the
-   strains as a 2×2 grid of row tiles (small jar, name on one line, level pips; the on-menu dot or unlock price at the end). */
-.sheet [data-pane="flowers"] .menu-board-head{align-items:center;gap:6px}
-.sheet [data-pane="flowers"] .menu-buyers{gap:6px}
-.sheet [data-pane="flowers"] .menu-board-summary,.sheet [data-pane="flowers"] .buyer{display:flex;align-items:baseline;gap:5px;min-height:32px;padding:0 10px;box-sizing:border-box;align-items:center;min-width:0}
-.sheet [data-pane="flowers"] .menu-board-summary b,.sheet [data-pane="flowers"] .buyer b{font-size:13px;line-height:1}
-.sheet [data-pane="flowers"] .menu-board-summary small,.sheet [data-pane="flowers"] .buyer small{font-size:9.5px;letter-spacing:.06em;line-height:1}
-.sheet [data-pane="flowers"] .buyer>svg{width:15px;height:15px}
-.sheet [data-pane="flowers"] .buyer .bud,.sheet [data-pane="flowers"] .buyer .bud svg{width:15px;height:15px}
-.sheet [data-pane="flowers"] .menu-views button{min-height:32px;font-size:12.5px}
-.sheet [data-pane="flowers"] .menu-views{border-radius:12px}
-.sheet [data-pane="flowers"] .menu-views button{border-radius:9px}
-.sheet [data-pane="flowers"] .strain-nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
-.sheet [data-pane="flowers"] .strain-nav button{grid-template-columns:24px minmax(0,1fr) auto;grid-template-rows:auto auto;grid-template-areas:"art name end" "art pips end";justify-items:start;align-items:center;align-content:center;column-gap:9px;row-gap:4px;min-height:52px;padding:7px 12px 7px 9px;border-radius:12px;text-align:left}
-.sheet [data-pane="flowers"] .strain-nav .strain-card-art{grid-area:art;width:24px;height:30px}
-.sheet [data-pane="flowers"] .strain-nav button b{grid-area:name;min-height:0;max-width:100%;font-size:12.5px;line-height:1.2;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal}
-.sheet [data-pane="flowers"] .strain-nav button b br{display:none}
-.sheet [data-pane="flowers"] .strain-nav button b .type-glyph{display:none}
-.sheet [data-pane="flowers"] .strain-nav .strain-pips{grid-area:pips;margin:0;justify-content:start}
-.sheet [data-pane="flowers"] .strain-nav button small{grid-area:end;justify-self:end}
-.sheet [data-pane="flowers"] .strain-nav button .price-tag{margin:0;padding:3px 8px;clip-path:none;border-radius:8px;font:500 11px 'DM Mono',monospace}
-.sheet [data-pane="flowers"] .strain-nav button.is-locked{grid-template-areas:"art name end" "art name end"}
-.sheet [data-pane="flowers"] .strain-nav button.is-on-menu::after{top:50%;right:12px;transform:translateY(-50%)}
-.sheet [data-pane="flowers"] .strain-nav button.is-trending::before{top:3px;left:3px;font-size:10px}
-.sheet [data-pane="flowers"] .strain-nav button[aria-selected=true]{background:radial-gradient(80% 120% at 0% 50%,color-mix(in srgb,var(--strain) 26%,transparent),transparent 70%),var(--ui-sheen)}
-/* Readouts: three equal chips, value over label, no wrap onto a second row. */
-.sheet [data-pane="flowers"] .menu-board-head{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
-.sheet [data-pane="flowers"] .menu-buyers{display:contents}
-.sheet [data-pane="flowers"] .menu-board-summary,.sheet [data-pane="flowers"] .buyer{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;align-content:center;column-gap:6px;row-gap:3px;min-height:40px;padding:4px 10px}
-.sheet [data-pane="flowers"] .menu-board-summary{grid-template-columns:minmax(0,1fr)}
-.sheet [data-pane="flowers"] .buyer>svg,.sheet [data-pane="flowers"] .buyer>.bud{grid-row:1/3;align-self:center}
-.sheet [data-pane="flowers"] .buyer.is-trend>svg{display:none}
-.sheet [data-pane="flowers"] .menu-board-summary small,.sheet [data-pane="flowers"] .buyer small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-/* Locked tile: unlock price sits under the name so the name has room. */
-.sheet [data-pane="flowers"] .strain-nav button.is-locked{grid-template-columns:24px minmax(0,1fr);grid-template-areas:"art name" "art end"}
-.sheet [data-pane="flowers"] .strain-nav button.is-locked small{justify-self:start}
-.sheet [data-pane="flowers"] .buyer>svg,.sheet [data-pane="flowers"] .buyer>.bud{grid-column:1}
-.sheet [data-pane="flowers"] .buyer>b{grid-column:2;grid-row:1;justify-self:start}
-.sheet [data-pane="flowers"] .buyer>small{grid-column:2;grid-row:2}
