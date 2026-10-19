@@ -15,8 +15,11 @@
 .goals-dropdown .short-goal button.ready{border-color:transparent;background:var(--ui-brass);color:var(--ui-brass-ink);font-weight:700}
 .goals-dropdown .short-goal button:disabled{border-color:var(--ui-edge);background:transparent;color:var(--ui-soft);opacity:.75}
 @media(hover:hover){.goals-dropdown .short-goal button:not(:disabled):hover{background:var(--ui-sheen)}.goals-dropdown .short-goal button.ready:hover{background:var(--ui-brass);filter:brightness(1.06)}}
-#goalsCompleted{margin:0 0 10px;color:var(--ui-soft);font-size:11.5px;text-align:right}
-#goalsCompleted:empty{display:none}
+/* Every three goals collected close a shift: three pips fill as goals are collected, and the line names the bonus. */
+#shiftProgress{display:flex;align-items:center;gap:10px;margin:0 0 10px;padding:9px 0 0;border-top:1px solid var(--ui-edge);color:var(--ui-soft);font-size:11.5px;line-height:1.35}
+#shiftProgress>span:first-child{color:var(--ui-ink);font-weight:600;white-space:nowrap}
+#shiftProgress>span:last-child{flex:1;text-align:right}
+.shift-pips{display:flex;gap:4px}.shift-pips i{width:14px;height:4px;border-radius:2px;background:var(--ui-edge)}.shift-pips i.done{background:var(--p-lime-74)}
 /* The shop story shrinks to one quiet card under the goals; tapping it takes you to the chapter's next step. */
 .shop-story{display:flex;align-items:center;gap:12px;width:100%;margin:4px 0 2px;padding:10px 10px 10px 12px;border:1px solid var(--ui-edge);border-radius:14px;background:var(--ui-well-soft);color:var(--ui-ink);font:inherit;text-align:left;cursor:pointer}
 .story-copy{flex:1;min-width:0}
