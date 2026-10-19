@@ -198,3 +198,16 @@
 .station-team.station-lift{margin-top:6px}
 .station-team.station-lift #buyLift{grid-column:span 2;display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border-radius:11px;border:1px solid #d0a54e88;background:linear-gradient(#d0a54e38,#d0a54e18);color:#f6efdc;font:inherit;font-size:11.5px;cursor:pointer}
 .station-team.station-lift #buyLift:disabled{opacity:.5;cursor:default}
+/* Crew ability row: brass while the ability is ready to tap, a quiet countdown while it runs or recharges. */
+.station-team.station-ability{margin-top:6px;grid-template-columns:24px minmax(0,1fr) 88px}
+.station-team.station-ability #useAbility{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:11px;border:1px solid #4a6a58;background:#1c2f26;color:#e2ead8;font:inherit;font-size:11.5px;font-variant-numeric:tabular-nums;cursor:pointer}
+.station-team.station-ability[data-status=ready] #useAbility{border-color:#d0a54e88;background:linear-gradient(#d0a54e38,#d0a54e18);color:#f6efdc}
+.station-team.station-ability[data-status=ready] .team-icon svg{color:#e2bd6a}
+.station-team.station-ability[data-status=active] .team-icon svg{color:#e2bd6a}
+.station-team.station-ability #useAbility:disabled{cursor:default;opacity:.75}
+.station-team.station-ability[data-status=locked] #useAbility{opacity:.5}
+/* The ability's line wraps to two rows rather than cut off its effect. */
+.station-team.station-ability .team-copy small{white-space:normal;line-height:1.25}
+/* A station card whose crew ability is ready carries a small brass dot, so a returning player can see what to tap. */
+.sheet .machine-nav button.ability-ready{position:relative}
+.sheet .machine-nav button.ability-ready::before{content:"";position:absolute;top:6px;left:6px;width:7px;height:7px;border-radius:50%;background:#e2bd6a;box-shadow:0 0 0 2px #d0a54e33;pointer-events:none}

@@ -59,6 +59,7 @@
   <link rel="stylesheet" href="/src/ios-menu.css" />
   <link rel="stylesheet" href="/src/shop-play.css" />
   <link rel="stylesheet" href="/src/bottleneck.css" />
+  <link rel="stylesheet" href="/src/reopen.css" />
   <link rel="stylesheet" href="/src/shop-glass.css" />
   <link rel="stylesheet" href="/src/empire-glass.css" />
   <link rel="stylesheet" href="/src/deliveries-glass.css" />
@@ -136,6 +137,7 @@
     <section class="sheet" id="sheet">
       <div class="panel-header"><button id="panelBack" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg><span>Shop</span></button><b id="panelTitle">Stations</b><button id="panelExpand" type="button" aria-label="Fill the screen with this panel" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 14l6-6 6 6M6 20l6-6 6 6"/></svg></button><button id="panelToggle" aria-label="Expand or collapse controls" aria-expanded="true">⌄</button></div>
       <div data-pane="factory">
+        <button class="reopen-card" id="reopenCard" type="button" hidden><svg class="reopen-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V11M12 14C3 14 3 7 3 7s9-1 9 7ZM12 11c0-8 9-9 9-9s0 9-9 9Z"/></svg><span class="reopen-copy"><small>Time to reopen</small><span id="reopenText"></span></span><b id="reopenGain"></b></button>
         <div class="flow-guide"><span class="flow-icon" id="flowIcon" aria-hidden="true"></span><span class="flow-copy"><small id="flowLabel">Bottleneck</small><span id="flowText"></span></span><button id="flowAction" type="button">View station</button><span class="flow-meter" aria-hidden="true"><i id="flowMeter"></i></span></div>
         <nav class="machine-nav" aria-label="Select production stage"><button data-security aria-pressed="false"><small>00</small><canvas class="machine-thumb" width="80" height="100" aria-hidden="true"></canvas><svg class="station-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v13H4zM8.5 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-3 6c1-2.2 5-2.2 6 0M14 10h4m-4 3h3"/></svg><span class="station-card-name">Security</span><em>Lv 0</em></button><button data-machine="0" aria-pressed="true"><small>01</small><canvas class="machine-thumb" width="80" height="100" aria-hidden="true"></canvas><svg class="station-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21V11M12 14C3 14 3 7 3 7s9-1 9 7ZM12 11c0-8 9-9 9-9s0 9-9 9Z"/></svg><span class="station-card-name">Seeds</span><em>Not built</em></button>
 <button data-machine="1" aria-pressed="false"><small>02</small><canvas class="machine-thumb" width="80" height="100" aria-hidden="true"></canvas><svg class="station-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 18V4m0 7L5 6m7 9 7-6M7 18h10l-1 4H8Z"/></svg><span class="station-card-name">Grow</span><em>Not built</em></button>
@@ -154,6 +156,11 @@
           <span class="team-copy"><b id="teamName">Team</b><small id="teamInfo"></small></span>
           <button type="button" id="teamTrain"><span></span><b></b></button>
           <button type="button" id="teamMax"><span></span><b></b></button>
+        </div>
+        <div id="stationAbility" class="station-team station-ability" hidden>
+          <span class="team-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3 5 14h6l-1 7 8-11h-6l1-7Z"/></svg></span>
+          <span class="team-copy"><b id="abilityName">Crew ability</b><small id="abilityInfo"></small></span>
+          <button type="button" id="useAbility"><span>Use</span></button>
         </div>
         <div id="stationLift" class="station-team station-lift" hidden>
           <span class="team-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18H6zM12 3v18M9 9.5l-1.5 2h3zM15 14.5l-1.5-2h3z"/></svg></span>
