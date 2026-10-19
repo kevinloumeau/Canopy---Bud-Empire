@@ -178,7 +178,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function displayBoost(i){return i>0?1+state.displayLevel*.02:1}
   function thcLabel(i){var v=strainPotency(i);return (Math.round(v*10)/10).toFixed(v%1?1:0)+'%'}
   function buildStrainMenu(){
-    $('strainNav').innerHTML=STRAINS.map(function(strain,i){return '<button type="button" role="tab" id="strainTab'+i+'" style="--strain:'+strain.color+'"><span class="strain-card-art"></span><b>'+typeGlyph(strains.STRAIN_TYPE[i])+strain.name.replace(' ','<br>')+'</b><small></small><em class="strain-pips" aria-hidden="true">'+Array.from({length:10},function(){return '<i></i>'}).join('')+'</em></button>'}).join('');
+    $('strainNav').innerHTML=STRAINS.map(function(strain,i){return '<button type="button" role="tab" id="strainTab'+i+'" style="--strain:'+strain.color+'"><span class="strain-card-art"></span><b>'+typeGlyph(strains.STRAIN_TYPE[i])+strain.name.replace(' ',' <br>')+'</b><small></small><em class="strain-pips" aria-hidden="true">'+Array.from({length:10},function(){return '<i></i>'}).join('')+'</em></button>'}).join('');
     STRAINS.forEach(function(_,i){$('strainTab'+i).onclick=function(){flowerFocus=i;renderFlowers();var hero=document.querySelector('.strain-hero');if(hero&&hero.scrollIntoView)hero.scrollIntoView({block:'nearest',behavior:motionPreference.matches?'auto':'smooth'})}});
     flowerFocus=menuStrains()[0]||0;
   }
