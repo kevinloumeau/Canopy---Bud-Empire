@@ -1,0 +1,10 @@
+/* Reopen card: one brass row above the bottleneck card, shown only when a fresh shop pays back fast. */
+.sheet .reopen-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:10px;width:100%;min-height:48px;margin:0 0 8px;padding:8px 8px 8px 12px;border:1px solid var(--ui-brass);border-radius:14px;background:var(--ui-brass-wash);color:var(--ui-ink);font:inherit;text-align:left;cursor:pointer}
+.sheet .reopen-card[hidden]{display:none}
+.sheet .reopen-card .reopen-icon{width:22px;height:22px;fill:none;stroke:var(--ui-brass);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.sheet .reopen-card .reopen-copy{display:grid;gap:2px;min-width:0;line-height:1.25}
+.sheet .reopen-card small{font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ui-brass)}
+.sheet .reopen-card #reopenText{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:13px;font-weight:600}
+.sheet .reopen-card b{display:grid;align-items:center;min-height:36px;padding:0 12px;border-radius:11px;background:var(--ui-brass);color:var(--ui-brass-ink);font:500 13px 'DM Mono',monospace;white-space:nowrap}
+.sheet .reopen-card:active{transform:scale(.985)}
+@media(hover:hover){.sheet .reopen-card:hover b{filter:brightness(1.06)}}
