@@ -510,7 +510,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       var kioskAvailable=orderAvailability(customers,state.stock[4],pickupLimit());
       if(kioskCustomer&&kioskAvailable.places>0&&kioskAvailable.bags>0){
         kioskCustomer.orderTime=(kioskCustomer.orderTime||0)+dt;
-        if(kioskCustomer.orderTime>=kioskServiceDuration()){kioskCustomer.strain=strainFor(kioskCustomer);kioskCustomer.bags=Math.min(kioskCustomer.kind==='vip'?strains.VIP_BASKET:1,kioskAvailable.bags);kioskCustomer.salePrice=salePriceFor(kioskCustomer,kioskCustomer.strain);kioskCustomer.ordered=true;kioskCustomer.phase='toPickup'}
+        if(kioskCustomer.orderTime>=kioskServiceDuration()){kioskCustomer.strain=strainFor(kioskCustomer);kioskCustomer.bags=Math.min(basketSize()*(kioskCustomer.kind==='vip'?strains.VIP_BASKET:1),kioskAvailable.bags);kioskCustomer.salePrice=salePriceFor(kioskCustomer,kioskCustomer.strain);kioskCustomer.ordered=true;kioskCustomer.phase='toPickup'}
       }
     }
     for(var i=3;i>=0;i--){
@@ -4301,6 +4301,8 @@ if(!SHOP_SPRITES){
       var postModel=map3d.propReady('street_queue_post.glb');
       Object.keys(posts).forEach(function(key){var q=posts[key];if(postModel)props.push({file:'street_queue_post.glb',x:q[0],y:0,z:q[1]});else capturePerson(figures,q[0],0,q[1],function(){drawStanchion(q[0],q[1])})});
       if(fixtureSprite('shop.displaycase')&&!map3d.hasFixture('displayCase'))capturePerson(figures,10.05,0,8.7,function(){drawSprite(streetApi,'shop.displaycase',10.05,8.7,true)});
+      // The self-order kiosks along the storefront glass are their render, stood up at each kiosk's footprint.
+      if(state.kiosk&&fixtureSprite('shop.kiosk'))for(var k=0;k<kioskCount();k++)(function(kz){capturePerson(figures,-9.75,0,kz,function(){drawBoxSprite(streetApi,fixtureSprite('shop.kiosk'),-10.04,-9.46,kz-.4,kz+.4,0,1.8,true)})})(6.8-k*1.8);
     }
     // The 2D map fades figures behind the building and lays haze over distant renders as see-through copies; in 3D
     // depth and the scene's haze do both, so only the solid draws are kept.
@@ -4389,7 +4391,7 @@ if(!SHOP_SPRITES){
       // The head is as deep as the pedestal so the two front faces align and the head sits centred over the base.
       kb(-1.3+dx,7.95,1.3,.85,.46,1.05,steel);kb(-1.3+dx,8.195,2.1,.73,.025,.19,['#355444','#263b31','#355444']);
       var serving=customers.find(function(c){return c.kiosk&&(c.kioskIndex||0)===index&&!c.ordered&&Math.hypot(c.x+8.95,c.z-(6.8-dx))<.15});
-      var progress=serving?Math.min(1,(serving.orderTime||0)/.65):0;
+      var progress=serving?Math.min(1,(serving.orderTime||0)/kioskServiceDuration()):0;
       // The backlit screen, its bars, the status light and the header label all emit, so they are registered together.
       lit(function(){
         kb(-1.3+dx,8.19,1.4,.69,.018,.85,['#dbe9c5','#dbe9c5','#dbe9c5']);
