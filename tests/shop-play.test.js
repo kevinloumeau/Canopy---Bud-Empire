@@ -15,8 +15,23 @@ test('a moment always offers the right answer among at most three picks',()=>{
     const play=migrateShopPlay({sequence:n}),m=createMoment(play,{id:7},options);
     assert.equal(play.sequence,n+1);assert.ok(m.choices.length<=3);
     assert.ok(m.choices.some((_,i)=>judgeChoice(m,i).matched),'sequence '+n);
+    assert.ok(m.choices.some((_,i)=>!judgeChoice(m,i).matched),'a wrong answer too, sequence '+n);
   }
   assert.equal(createMoment(migrateShopPlay(),{id:1},[]),null);
+});
+
+test('an all-edibles menu never asks for something without flower, and every pick has a wrong answer',()=>{
+  const edibles=[{strain:0,format:2,type:0},{strain:1,format:2,type:1},{strain:2,format:2,type:1}];
+  for(let n=0;n<12;n++){
+    const m=createMoment(migrateShopPlay({sequence:n}),{id:3},edibles);
+    assert.equal(m.formatRequest,false,'sequence '+n);
+    assert.ok(m.choices.some((_,i)=>!judgeChoice(m,i).matched),'sequence '+n);
+  }
+  const same=[{strain:0,format:2,type:1},{strain:1,format:2,type:1}];
+  assert.equal(createMoment(migrateShopPlay(),{id:4},same),null);
+  const mixed=[{strain:0,format:2,type:1},{strain:1,format:0,type:1},{strain:2,format:2,type:1}];
+  const m=createMoment(migrateShopPlay({sequence:5}),{id:5},mixed);
+  assert.equal(m.formatRequest,true);assert.ok(m.choices.some((_,i)=>!judgeChoice(m,i).matched));
 });
 
 test('nobody asks for a pick until the menu has two strains to choose between',()=>{

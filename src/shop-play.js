@@ -22,15 +22,20 @@ export function picks(state,menuStrains){
 }
 const NAMES=['Avery','Eden','Noa','Remy','Sage','Robin'];
 // One customer, one request: a strain type most of the time, and every third request a format when the shop sells one
-// beyond flower. The right answer is always among the three choices, rotated so it is not always first. With fewer than
-// two strains on the menu there is nothing to choose between, so nobody asks.
+// beyond flower. A request is only made when the menu has both a right and a wrong answer for it (a menu that is all
+// edibles never hears "Something without flower."), so the three choices always hold at least one of each, rotated so
+// the right one is not always first. With fewer than two strains on the menu there is nothing to choose between.
 export function createMoment(play,customer,options){
   if(options.length<2)return null;
   const sequence=play.sequence++,want=options[sequence%options.length];
-  const formatRequest=sequence%3===2&&want.format>0;
+  const byFormat={ok:want.format>0&&options.some(o=>o.format!==want.format),matches:o=>o.format===want.format};
+  const byType={ok:options.some(o=>o.type!==want.type),matches:o=>o.type===want.type};
+  const preferred=sequence%3===2?[byFormat,byType]:[byType,byFormat],ask=preferred.find(r=>r.ok);
+  if(!ask)return null;
+  const formatRequest=ask===byFormat;
   const request=formatRequest?['','Something rolled and ready.','Something without flower.'][want.format]:['A balanced house pick, please.','A bright daytime pick, please.','An evening-style pick, please.'][want.type];
-  const matches=o=>formatRequest?o.format===want.format:o.type===want.type,others=options.filter(o=>!matches(o));
-  const choices=[want,...others.slice(sequence%Math.max(1,others.length)),...options.filter(o=>o!==want)].filter((o,i,all)=>all.findIndex(x=>x.strain===o.strain&&x.format===o.format)===i).slice(0,3);
+  const others=options.filter(o=>!ask.matches(o));
+  const choices=[want,...others.slice(sequence%others.length),...options.filter(o=>o!==want)].filter((o,i,all)=>all.findIndex(x=>x.strain===o.strain&&x.format===o.format)===i).slice(0,3);
   for(let i=0;i<sequence%choices.length;i++)choices.push(choices.shift());
   return {customerId:customer.id,name:NAMES[sequence%NAMES.length],request,choices,remaining:MOMENT_SECONDS,opened:false,formatRequest,target:formatRequest?want.format:want.type};
 }
