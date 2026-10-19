@@ -38,6 +38,15 @@ export const HANDOFF_FLOOR={4:1,5:.7};
 export function customerHandoff(station,level,duration){return Math.max(HANDOFF_FLOOR[station]||0,duration/counterLanes(level));}
 // The doorman's floor: no ID check takes less than a quarter of a second.
 export const ID_CHECK_FLOOR=.25;
+// Security trains to level 75, its booth changing at the station look levels (1, 10, 30, 50, 75). The first nine
+// levels keep their old prices and speeds (they used to be the whole track); past them each level costs 20% more and
+// the floor itself comes down, from a quarter of a second to a tenth at level 75, so every level still shortens the
+// check however far the ID scanner has gone.
+export const SECURITY_MAX_LEVEL=75;
+export const SECURITY_TIERS=['Door podium','ID desk','ID check booth','Monitored booth','Flagship booth'];
+export function securityCost(level){return Math.floor(level<9?20*Math.pow(1.6,level):20*Math.pow(1.6,9)*Math.pow(1.2,level-9));}
+export function securityFloor(level){return ID_CHECK_FLOOR*Math.pow(.4,Math.min(SECURITY_MAX_LEVEL,Math.max(0,level))/SECURITY_MAX_LEVEL);}
+export function securityDuration(level,scannerLevel){return Math.max(securityFloor(level),.9/((1+level*.3)*(1+(scannerLevel||0)*.12)));}
 // Regulars want the everyday strain; VIPs reach for the priciest boutique strain on the menu.
 export function preferredStrain(type,menu,levels){
   const boutique=menu.filter(i=>i>0&&levels[i]>0);

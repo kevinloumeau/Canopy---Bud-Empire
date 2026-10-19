@@ -210,6 +210,8 @@ export function createMap3D(canvas, layout) {
       holder.scale.set(s, s / HEIGHT_SCALE, s);
       // The sprite's sideways nudge, along screen right.
       holder.position.set(spec.ox * Math.SQRT1_2, 0, -spec.ox * Math.SQRT1_2);
+      // A model built facing another way is turned about its centre (spec.turn, radians about the vertical).
+      if (spec.turn) holder.rotation.y = spec.turn;
       models[index] = holder;
     }, undefined, e => console.warn('3D map: could not load ' + file, e));
   }
