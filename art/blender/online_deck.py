@@ -104,7 +104,7 @@ K.box("SignBoard", (G1 - G0 - .1, .05, .3), ((G0 + G1) / 2, GY, PH + .66), DECKW
 K.box("SignFace", (G1 - G0 - .18, .01, .22), ((G0 + G1) / 2, GY - .03, PH + .7), SIGNBOARD, .004)
 txt = bpy.data.curves.new("SignText", "FONT"); txt.body = "ONLINE ORDERS"
 txt.size = .12; txt.extrude = .004; txt.align_x = "CENTER"; txt.align_y = "CENTER"
-fb = os.environ.get("CANOPY_FONT") or "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+fb = os.environ.get("CANOPY_FONT") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts", "Fredoka-SemiBold.ttf")
 if os.path.exists(fb): txt.font = bpy.data.fonts.load(fb)
 to = K.link(bpy.data.objects.new("SignText", txt), K.GREEN_D)
 to.location = ((G0 + G1) / 2, GY - .037, PH + .81); to.rotation_euler = (math.pi / 2, 0, 0)

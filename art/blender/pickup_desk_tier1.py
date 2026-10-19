@@ -6,7 +6,7 @@ back, a potted plant, three jars and a green mat, with a green end cabinet at +x
 Needs canopy_kit.py in the same folder.  Run headless with
     blender -b -P pickup_desk_tier1.py -- OUT_DIR
 or open it in Blender's Scripting tab and press Run.
-Set CANOPY_FONT to a .ttf/.otf to change the sign's lettering.
+Signs use fonts/Fredoka-SemiBold.ttf next to this file; set CANOPY_FONT to a .ttf/.otf to change it.
 """
 import os, sys, math
 try: sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # find canopy_kit.py next to this file
@@ -117,7 +117,7 @@ K.box("SignBorder", (SW + .04, .07, SH + .04), ((ax0 + ax1) / 2, AY, SZ - .02), 
 K.box("Sign", (SW, .09, SH), ((ax0 + ax1) / 2, AY, SZ), K.GREEN_D, .02)
 txt = bpy.data.curves.new("SignText", "FONT"); txt.body = "PICKUP"
 txt.size = .19; txt.extrude = .008; txt.align_x = "CENTER"; txt.align_y = "CENTER"; txt.space_character = 1.05
-fb = os.environ.get("CANOPY_FONT") or "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"
+fb = os.environ.get("CANOPY_FONT") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts", "Fredoka-SemiBold.ttf")
 if os.path.exists(fb): txt.font = bpy.data.fonts.load(fb)
 for side, (yy, rz) in enumerate(((AY - .047, 0), (AY + .047, math.pi))):   # lettering on both faces
     o = bpy.data.objects.new(f"SignText{side}", txt)

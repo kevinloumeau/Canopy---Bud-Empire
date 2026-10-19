@@ -67,7 +67,7 @@ def order_sign(M, AY, SW, SH, SZ, bulge=0.):
     pill("Sign", SW, SH, .076, 0, AY, SZ, K.GREEN_D, bulge=bulge)
     txt = bpy.data.curves.new("SignText", "FONT"); txt.body = "ORDER"
     txt.size = .23; txt.extrude = .008; txt.align_x = "CENTER"; txt.align_y = "CENTER"; txt.space_character = 1.05
-    fb = os.environ.get("CANOPY_FONT") or "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"
+    fb = os.environ.get("CANOPY_FONT") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts", "Fredoka-SemiBold.ttf")
     if os.path.exists(fb): txt.font = bpy.data.fonts.load(fb)
     for side, (yy, rz) in enumerate(((AY - .042, 0), (AY + .042, math.pi))):   # lettering on both faces
         o = bpy.data.objects.new(f"SignText{side}", txt)

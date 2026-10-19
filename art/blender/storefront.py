@@ -25,7 +25,7 @@ LETTER = K.mat("SignLetters", "#1f5e40", .5)
 L, H, D = 9.9 / 1.69, 4.19 / 1.69, .2       # length (y), height (z), depth into the shop (+x)
 Y0, Y1 = -L / 2, L / 2
 WORDS = ["FLOWER", "PRE-ROLLS", "EDIBLES", "HOUSE GROWN"]
-FONT = os.environ.get("CANOPY_FONT") or "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+FONT = os.environ.get("CANOPY_FONT") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts", "Bricolage-ExtraBold.ttf")
 
 def slab(name, x0, x1, y0, y1, z0, z1, m, bevel=.008):
     """A box by its extents (x outward-to-inward, y along the wall, z up)."""

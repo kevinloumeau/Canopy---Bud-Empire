@@ -6,6 +6,9 @@
 // passed in as layout.shell, so the two maps keep the same plan.
 import * as THREE from 'three';
 
+// Signs drawn here use Fredoka like the Blender station signs (art/blender/fonts); the storefront's marquee keeps
+// Bricolage Grotesque like the Blender storefront. Until Fredoka has loaded the signs paint in Bricolage.
+const SIGN_FONT = '"Fredoka", "Bricolage Grotesque", sans-serif';
 const TILE_GROUT = '#cfdcc4', BRASS = '#d0a54e', OAK = '#b98d5c', OAK_DARK = '#6e4a2c', CREAM = '#f1ead6', VELVET = '#6b2436';
 
 export function buildShell(world, layout, { box, span, material }) {
@@ -191,11 +194,16 @@ export function buildShell(world, layout, { box, span, material }) {
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(2, .5), signMat);
   sign.position.set(dx + 2.1, 1.95, face + .03); shell.add(sign);
   let signLit = null;
+  if (typeof FontFace === 'function' && document.fonts) {
+    new FontFace('Fredoka', `url(${new URL('../fonts/Fredoka-SemiBold.ttf', layout.modelBase).href})`, { weight: '600' }).load()
+      .then(font => { document.fonts.add(font); signLit = null; boardText = null; })
+      .catch(() => {});
+  }
   function paintSign(lit) {
     if (signLit === lit) return; signLit = lit;
     const c = signCanvas.getContext('2d'); c.clearRect(0, 0, 512, 128);
     c.fillStyle = '#1a1216'; c.beginPath(); c.roundRect(6, 14, 500, 100, 18); c.fill();
-    c.font = '800 74px "Bricolage Grotesque", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.font = `600 76px ${SIGN_FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle';
     if (lit) { c.shadowColor = '#ff6fa8'; c.shadowBlur = 22; c.fillStyle = '#ff8fbf'; c.fillText('LOUNGE', 256, 66); c.shadowBlur = 0; c.fillStyle = '#fff4f8'; c.fillText('LOUNGE', 256, 66); }
     else { c.fillStyle = '#5a4750'; c.fillText('LOUNGE', 256, 66); }
     signTexture.needsUpdate = true;
@@ -215,7 +223,7 @@ export function buildShell(world, layout, { box, span, material }) {
     if (key === boardText) return; boardText = key;
     const c = boardCanvas.getContext('2d'), cols = lines[0] ? lines[0].length : 21, rows = lines.length, cw = 1024 / cols, rh = 240 / rows;
     c.fillStyle = '#131617'; c.fillRect(0, 0, 1024, 240);
-    c.font = `800 ${Math.round(rh * .66)}px "Bricolage Grotesque", sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.font = `600 ${Math.round(rh * .66)}px ${SIGN_FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle';
     lines.forEach((line, r) => [...line].forEach((ch, k) => {
       const x = k * cw, y = r * rh;
       c.fillStyle = '#363c3e'; c.fillRect(x + 2, y + 4, cw - 4, rh / 2 - 4);
