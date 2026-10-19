@@ -97,14 +97,35 @@ test('bulk orders consume packing stock, pay once per dispatch and advance deliv
  const {dispatchBulk,bulkReward,goalStatus}=await import('../src/progression.js');const s=fresh();s.stock=[0,0,0,60,0];s.onlineCompleted=0;
  assert.equal(dispatchBulk(s,start),0);s.empire.stores[2].level=2;s.empire.stores[2].manager='dispatcher';const reward=bulkReward(s.empire),cash=s.money;
  assert.equal(dispatchBulk(s,start),reward);assert.equal(s.money,cash+reward);assert.equal(s.stock[3],30);assert.equal(s.onlineCompleted,1);
- dispatchBulk(s,start);assert.equal(s.stock[3],0);assert.equal(dispatchBulk(s,start),0);assert.equal(goalStatus(s.empire,1).progress,2);
+ dispatchBulk(s,start);assert.equal(s.stock[3],0);assert.equal(dispatchBulk(s,start),0);assert.equal(s.empire.counters.online,2);
 });
 test('goals rotate on claim, do not reuse prior progress or count rewards as revenue',async()=>{
- const {recordGoal,goalStatus,claimGoal}=await import('../src/progression.js');const s=fresh(),p=s.empire;
+ const {recordGoal,goalStatus,claimGoal,settleGoals}=await import('../src/progression.js');const s=fresh(),p=s.empire;
+ settleGoals(s);
  assert.equal(claimGoal(s,0),0);recordGoal(p,'pickup',10);const money=s.money;assert.equal(claimGoal(s,0),150);assert.equal(s.money,money+150);assert.equal(claimGoal(s,0),0);assert.equal(goalStatus(p,0).progress,0);
- p.stores[0].level=1;recordGoal(p,'revenue',500);claimGoal(s,2);assert.equal(goalStatus(p,2).kind,'invest');assert.equal(p.counters.revenue,500);
- buyStore(s,0);assert.equal(goalStatus(p,2).progress,1);claimGoal(s,2);assert.equal(goalStatus(p,2).kind,'revenue');assert.equal(goalStatus(p,2).progress,0);
- const restored=migrateProgression(JSON.parse(JSON.stringify(p)));assert.deepEqual(restored.goals,p.goals);assert.equal(restored.goalsCompleted,3);
+ recordGoal(p,'revenue',500);claimGoal(s,2);assert.equal(goalStatus(p,2).kind,'revenue');assert.equal(goalStatus(p,2).progress,0);assert.equal(p.counters.revenue,500);
+ const restored=migrateProgression(JSON.parse(JSON.stringify(p)));assert.deepEqual(restored.goals,p.goals);assert.equal(restored.goalsCompleted,2);
+});
+test('a new shop gets goals it can work on, and the growth slot widens as the shop does',async()=>{
+ const {recordGoal,goalStatus,claimGoal,settleGoals}=await import('../src/progression.js');const s=fresh(),p=s.empire;
+ // Old saves kept a delivery goal in slot two; with no pad and no progress it becomes an upgrade goal.
+ assert.equal(goalStatus(p,1).kind,'online');assert.ok(settleGoals(s));assert.equal(goalStatus(p,1).kind,'upgrade');assert.equal(goalStatus(p,1).target,2);
+ recordGoal(p,'upgrade',2);s.autoDrone={owned:true};p.stores[0].level=1;assert.ok(claimGoal(s,1)>0);
+ assert.equal(goalStatus(p,1).kind,'online');recordGoal(p,'online',goalStatus(p,1).target);claimGoal(s,1);assert.equal(goalStatus(p,1).kind,'invest');
+ buyStore(s,0);assert.equal(goalStatus(p,1).progress,1);
+ // A delivery goal with progress is never swapped away, even if it could not be started today.
+ const legacy=migrateProgression({goals:[{},{round:0,start:0},{}],counters:{online:1}});assert.equal(legacy.goals[1].kind,'online');
+ const t={money:0,empire:legacy};assert.equal(settleGoals(t),false);assert.equal(goalStatus(legacy,1).progress,1);
+ // The third slot of the pickup cycle is a big spender.
+ for(let k=0;k<2;k++){recordGoal(p,'pickup',1e6);claimGoal(s,0);}assert.equal(goalStatus(p,0).kind,'spender');assert.match(goalStatus(p,0).hint,/gold tag/);
+});
+test('every third goal closes a shift and pays its bonus once',async()=>{
+ const {recordGoal,claimGoal,shiftStatus,settleGoals}=await import('../src/progression.js');const s=fresh(),p=s.empire;settleGoals(s);
+ assert.deepEqual([shiftStatus(p).number,shiftStatus(p).done],[1,0]);
+ recordGoal(p,'pickup',1e6);recordGoal(p,'revenue',1e6);recordGoal(p,'upgrade',100);
+ assert.equal(claimGoal(s,0),150);assert.equal(claimGoal(s,1),200);assert.equal(shiftStatus(p).done,2);
+ assert.equal(claimGoal(s,2),200+shiftStatus(p).bonus);assert.deepEqual([shiftStatus(p).number,shiftStatus(p).done],[2,0]);
+ recordGoal(p,'pickup',1e6);assert.equal(claimGoal(s,0),150);
 });
 test('event scene rewards persist without duplicate cash claims',()=>{
  const s=fresh(),e=eventStatus(s.empire,start);joinEvent(s.empire,start);recordEvent(s.empire,e.kind,e.goal,start);claimEvent(s,start);
