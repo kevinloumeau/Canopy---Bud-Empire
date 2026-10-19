@@ -749,8 +749,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var map3dMeta=document.querySelector('meta[name="canopy-map3d"]'),map3dUrl=new URL(map3dMeta?map3dMeta.content:'./src/three/map3d.js',document.baseURI).href;
     import(/* @vite-ignore */ map3dUrl).then(function(m){
       var layout=townLayout();
-      // The three floors as drawTower lays them out.
-      layout.floors=[{y:0,z:1.5,w:23,d:17},{y:4.7,z:-2.95,w:18,d:7.4},{y:9.4,z:-3.6,w:13,d:6.6}];layout.marquee={x:MARQUEE.x,zFront:MARQUEE.zFront,zRear:MARQUEE.zRear,y0:MARQUEE.y0,y1:MARQUEE.y1,top:MARQUEE.top,bottom:MARQUEE.bottom};
+      // The three floors as drawTower lays them out; the ground floor's herringbone runs out to the store edge (11.95).
+      layout.floors=[{y:0,z:2.475,w:23,d:18.95},{y:4.7,z:-2.95,w:18,d:7.4},{y:9.4,z:-3.6,w:13,d:6.6}];layout.marquee={x:MARQUEE.x,zFront:MARQUEE.zFront,zRear:MARQUEE.zRear,y0:MARQUEE.y0,y1:MARQUEE.y1,top:MARQUEE.top,bottom:MARQUEE.bottom};
       // Blender models (art/blender/, exported to public/models/) by station index, sized from the tier 3 sprite they replace.
       layout.modelBase=new URL('models/',document.baseURI).href;
       // Keyed "station.tier"; a tier without its own model shows the tier 3 one. Each is sized to its tier's sprite.
@@ -778,7 +778,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       layout.shell={plaster:SHOP_GREEN_PLASTER[2],tile:SHOP_GREEN_TILE[2],tileH:LOUNGE_TILE,tilePitch:TILE_PITCH,glazingBay:GLAZING_BAY,fanX:FAN_X,topLanding:TOP_LANDING,
         loungeFront:LOUNGE_FRONT,loungeDoor:LOUNGE_DOOR,loungeExit:LOUNGE_EXIT,loungeRight:LOUNGE_RIGHT,loungeHeader:2.05,wallLeft:-6.7,wallRight:8.4,shelfLeft:-1.3+COUNTER_SHIFT,
         exitDoor:{x0:9.44,x1:11.25,h:3.3},column:{x:9.8,z:-1.8},merchCabinet:{back:8.41,face:9.27,z0:-6.84,z1:-4.8},
-        planter:{x0:-11.7,x1:-10.75,z0:2,z1:5.6,tree:{x:-11.45,z:2.35}},lowWall:{x0:-11.3,x1:-4.6,z0:11.53,z1:11.85,h:1.05},hanging:{x0:-2.3,x1:2.3,y:9.05,z:-1.35},
+        planter:{x0:-11.7,x1:-10.75,z0:2,z1:5.6,tree:{x:-11.45,z:2.35}},baseboard:{x0:-10.65,x1:11.5,front:11.95,rear:-7,h:.32},hanging:{x0:-2.3,x1:2.3,y:9.05,z:-1.35},
         lamps:[[-4,3.7,3.5,1.3],[4,3.7,3.5,1.3],[-4,3.7,8.5,1.1],[5,3.7,8.5,1.1],[-10,3,-4,.8],[-4,8.4,-3,1.2],[4,8.4,-3,1.2],[0,12.8,-4.5,1]]};
       // Sprite shop: the storefront and its doorway are the 2D map's own flat elevations on the entrance wall's plane
       // (addEntryDoor), the exit mat and the lounge's runner lie on the floor where the 2D map pins them, and the
@@ -1480,6 +1480,16 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     for(var tile=0;tile<seams;tile++){var tx=cx-width/2+.07+tile*.24;worldLine([[tx,.09,2.65],[tx,1.05,2.65]],'#d4d6b7',.016)}
     [.38,.72].forEach(function(y){worldLine([[cx-width/2,y,2.65],[cx+width/2,y,2.65]],'#d4d6b7',.016)});
     drawBox(cx,2.5,1.07,width+.12,.4,.11,['#e0d4b4','#a99c7b','#c5ba9a']);
+  }
+  // The store edge's baseboard (Kevin, 2026-10-19, in place of the low wall at the entrance): a shin-high run of the
+  // dark-green tile with its brass rail and cream cap along the herringbone's front edge from the storefront, and up the
+  // right-hand edge to the rear wall beside the exit door. Drawn in one-unit pieces so walkers sort against it.
+  function storeBaseboard(){
+    var front=11.95,right=11.5,d=.14,h=.32;
+    var piece=function(cx,cz,w,dd){sceneJobs.push({depth:depthOf({x:cx,z:cz}),draw:function(){
+      drawBox(cx,cz,0,w,dd,h-.1,SHOP_GREEN_TILE);drawBox(cx,cz,h-.1,w+.02,dd+.02,.03,TILE_BRASS);drawBox(cx,cz,h-.07,w+.04,dd+.06,.07,['#ece2c8','#b3a78a','#d2c6a6'])}})};
+    for(var x=-10.65;x<right-.01;x+=1){var x1=Math.min(right,x+1);piece((x+x1)/2,front-d/2,x1-x,d)}
+    for(var z=front-d;z>-7+.01;z-=1){var z0=Math.max(-7,z-1);piece(right-d/2,(z+z0)/2,d,z-z0)}
   }
   // A low dark-green tiled wall with a cream cap, drawn on its true footprint (the sprite shop's divider and store edge).
   // Every drawn tile face in the sprite shop uses the one scheme of the wall renders: slim vertical stack-bond tiles
@@ -3085,7 +3095,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
         }
         sceneElevation=floor.y;
       }
-      if(fi===0){drawCachedGround(floor);if(SHOP_SPRITES){var groundTex=floorPattern(sunnyApi(now),'herringbone',4);if(groundTex){var front=11.95;poly([project(-floor.w/2,0,floor.z-floor.d/2),project(floor.w/2,0,floor.z-floor.d/2),project(floor.w/2,0,front),project(-floor.w/2,0,front)],groundTex)}drawStoreFrontEdge(floor);if(!drawFlatSprite('shell.mat.entrance',-11.1,-10.2,9.05,11.35,'z'))groundPatch(-10.65,10.2,.9,2.2,'#3f5f4c');jobs.push({depth:depthOf({x:-11.3,z:11.53}),draw:function(){tiledLowWall((-11.3-4.6)/2,11.95-.26,6.7,.32,1.05)}})}drawSideAislePlanter()}
+      if(fi===0){drawCachedGround(floor);if(SHOP_SPRITES){var groundTex=floorPattern(sunnyApi(now),'herringbone',4);if(groundTex){var front=11.95;poly([project(-floor.w/2,0,floor.z-floor.d/2),project(floor.w/2,0,floor.z-floor.d/2),project(floor.w/2,0,front),project(-floor.w/2,0,front)],groundTex)}drawStoreFrontEdge(floor);if(!drawFlatSprite('shell.mat.entrance',-11.1,-10.2,9.05,11.35,'z'))groundPatch(-10.65,10.2,.9,2.2,'#3f5f4c');storeBaseboard()}drawSideAislePlanter()}
 
       else{
         // One continuous floor outline includes the stair landing, with no internal slab edge.
@@ -4724,7 +4734,7 @@ if(!SHOP_SPRITES){
     // The caption under the send button doubles as the hint line, so the card never changes height.
     if($('dispatchHint').textContent){$('onlineMaxInfo').textContent=$('dispatchHint').textContent;$('onlineMaxInfo').classList.add('is-hint')}else $('onlineMaxInfo').classList.remove('is-hint');var webItem=$('stockCountOnline').closest('.stock-item'),webCount=onlineRequestsReady();$('stockCountOnline').textContent=webCount;webItem.dataset.heat=String(requestHeat(webCount));$('stockCountOnline').classList.toggle('stock-full',webCount>=onlineRequestCap());webItem.title=webCount+' deliver'+(webCount===1?'y':'ies')+' requested · '+onlineRequestCap()+' max';$('onlineBadge').hidden=$('fulfillOnlineMax').disabled;
     renderCustomerRatings();
-    var waiting=customers.filter(inOrderFlow).length;$('queueCount').textContent=waiting+'/'+queueLimit();$('queueCount').classList.toggle('queue-full',waiting>=queueLimit());firstTimeHints(waiting);$('queueCount').parentElement.title=waiting>=queueLimit()?'Line is full · new customers walk away. Upgrade the order desk or its employees to add places.':'Customers waiting to order';$('pickupCount').textContent=customers.filter(function(c){return c.phase==='pickup'||c.phase==='toPickup'}).length;$('servedCount').textContent=state.sold.toLocaleString();state.stock.forEach(function(n,i){var packed=i===3,oz=state.productMenu.active===0,v=packed&&oz?n/8:n;$('stockCount'+i).innerHTML=compactCount(v)+(packed?'<small>'+(oz?'oz':state.productMenu.active===1?'jt':'ed')+'</small>':'');$('stockCount'+i).title=i===4?n+' / '+readyCapacity()+' packed orders ready for walk-in pickup':i===3?qtyLabel(n)+' packed of '+qtyLabel(storageCapacity())+(n>=storageCapacity()?' · Storage full':''):n+' / '+storageCapacity()+(n>=storageCapacity()?' · Storage full':'');$('stockCount'+i).classList.toggle('stock-full',n>=(i===4?readyCapacity():storageCapacity()))});var order=milestone(state.contract);
+    var waiting=customers.filter(inOrderFlow).length;firstTimeHints(waiting);state.stock.forEach(function(n,i){var packed=i===3,oz=state.productMenu.active===0,v=packed&&oz?n/8:n;$('stockCount'+i).innerHTML=compactCount(v)+(packed?'<small>'+(oz?'oz':state.productMenu.active===1?'jt':'ed')+'</small>':'');$('stockCount'+i).title=i===4?n+' / '+readyCapacity()+' packed orders ready for walk-in pickup':i===3?qtyLabel(n)+' packed of '+qtyLabel(storageCapacity())+(n>=storageCapacity()?' · Storage full':''):n+' / '+storageCapacity()+(n>=storageCapacity()?' · Storage full':'');$('stockCount'+i).classList.toggle('stock-full',n>=(i===4?readyCapacity():storageCapacity()))});var order=milestone(state.contract);
     if(order){$('orderName').textContent=state.lifetime>=order.goal?'ORDER READY TO CLAIM':order.name;$('orderProgress').textContent=fmt(Math.min(state.lifetime,order.goal))+' / '+fmt(order.goal);$('orderFill').style.width=Math.min(100,state.lifetime/order.goal*100)+'%';$('claimReward').textContent='+'+fmt(order.reward);$('claim').disabled=state.lifetime<order.goal}
     else{$('orderName').textContent='ALL ORDERS FILLED';$('orderProgress').textContent='COMPLETE';$('orderFill').style.width='100%';$('claimReward').textContent='✓';$('claim').disabled=true}
     $('orderBadge').hidden=!order||state.lifetime<order.goal;

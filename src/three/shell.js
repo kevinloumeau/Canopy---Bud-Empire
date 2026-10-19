@@ -295,14 +295,19 @@ export function buildShell(world, layout, { box, span, material }) {
   // The sprite shop's storefront render carries its own sign (main.js wallFaces).
   if (!layout.wallFaces) shell.add(marqueeFace);
 
-  // The aisle planter along the storefront and the low tiled wall at the entrance.
+  // The aisle planter along the storefront, and the baseboard round the store's open edges.
   const pl = s.planter;
   span(shell, pl.x0, pl.x1, 0, .56, pl.z0, pl.z1, '#1f5e40');
   span(shell, pl.x0 - .04, pl.x1 + .04, .56, .63, pl.z0 - .04, pl.z1 + .04, '#2b302d');
   span(shell, pl.x0 + .1, pl.x1 - .1, .63, .66, pl.z0 + .1, pl.z1 - .1, '#514633', { cast: false });
-  const lw = s.lowWall;
-  span(shell, lw.x0, lw.x1, 0, lw.h, lw.z0, lw.z1, '#1f5e40');
-  span(shell, lw.x0 - .03, lw.x1 + .03, lw.h, lw.h + .06, lw.z0 - .03, lw.z1 + .03, '#e1dbc0');
+  // Kevin (2026-10-19) swapped the entrance's low wall for a shin-high baseboard in its style (green tile, brass rail,
+  // cream cap) along the herringbone's front edge and up the right-hand edge to the rear wall by the exit door.
+  const bb = s.baseboard, bd = .14;
+  [[bb.x0, bb.x1, bb.front - bd, bb.front], [bb.x1 - bd, bb.x1, bb.rear, bb.front - bd]].forEach(([x0, x1, z0, z1]) => {
+    span(shell, x0, x1, 0, bb.h - .1, z0, z1, '#1f5e40');
+    span(shell, x0 - .01, x1 + .01, bb.h - .1, bb.h - .07, z0 - .01, z1 + .01, BRASS, { cast: false });
+    span(shell, x0 - .02, x1 + .02, bb.h - .07, bb.h, z0 - .03, z1 + .03, '#e1dbc0');
+  });
 
   // Foliage: one instanced leaf mesh for the planter's shrubs and tree, the hanging plants and the baskets.
   const leafSpots = [];

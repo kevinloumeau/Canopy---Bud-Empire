@@ -650,31 +650,46 @@ function buildShop(world, layout, { box, span, material, textured }) {
       (fi === 1 ? [left + .3, right - .3] : [left + .3, 0, right - .3]).forEach(x => box(shop, x, layout.floors[fi - 1].y, front - .3, .3, f.y - layout.floors[fi - 1].y - .32, .3, '#33372f'));
     }
   });
-  // Stairs as drawShellStairs places them: the ground flight up the right side to a landing off the mezzanine, then
-  // the upper flight from the mezzanine to the top floor's rear-right corner.
-  // Each flight as the 2D render draws it: oak treads between two forest-green steel stringers, brass handrails.
-  const beamGeometry = new THREE.BoxGeometry(1, 1, 1);
-  const beam = (x, zA, yA, zB, yB, w, h, colour) => {
-    const len = Math.hypot(zB - zA, yB - yA), m = new THREE.Mesh(beamGeometry, material(colour));
-    m.position.set(x, (yA + yB) / 2, (zA + zB) / 2); m.rotation.x = -Math.atan2(yB - yA, zB - zA); m.scale.set(w, h, len);
-    m.castShadow = m.receiveShadow = true; shop.add(m);
+  // Two spiral stairs on the right-hand side, where the 2D map's straight flights run: one from the ground floor up to
+  // the landing off the mezzanine, one from the mezzanine to a landing at the top floor's rear-right corner. Each is
+  // oak wedge treads round a forest-green post, green balusters and a brass handrail, arriving facing the landing.
+  // Rails are built in true space (heights stretched here, not by the world group) so their section stays round.
+  const trueSpace = new THREE.Group();
+  trueSpace.scale.y = 1 / HEIGHT_SCALE; shop.add(trueSpace);
+  const helix = (cx, cz, r, a0, a1, y0, y1, thick, colour) => {
+    const pts = [];
+    for (let k = 0; k <= 48; k++) { const t = k / 48, a = a0 + (a1 - a0) * t; pts.push(new THREE.Vector3(cx + Math.cos(a) * r, (y0 + (y1 - y0) * t) * HEIGHT_SCALE, cz + Math.sin(a) * r)); }
+    const m = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 96, thick, 8, false), material(colour));
+    m.castShadow = true; trueSpace.add(m);
   };
-  const flight = (x0, x1, zFoot, zHead, y0, y1, n) => {
-    const run = (zHead - zFoot) / n, rise = (y1 - y0) / n;
-    for (let k = 0; k < n; k++) {
-      const za = zFoot + run * k, zb = za + run, top = y0 + rise * (k + 1);
-      span(shop, x0 + .08, x1 - .08, top - .07, top, Math.min(za, zb), Math.max(za, zb), '#d9a768');
+  const spiral = (cx, cz, y0, y1, n, arrive) => {
+    // n risers; the last one is the floor itself. Treads step 24° apart, from the back round the front to the landing.
+    const r = 1.15, step = Math.PI * 24 / 180, rise = (y1 - y0) / n, angle = k => arrive + (n - 1 - k) * step;
+    box(shop, cx, y0, cz, .26, y1 - y0 + 1, .26, '#1f5a3c');
+    box(shop, cx, y0, cz, .56, .06, .56, '#d0a54e', { cast: false });
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(.13, 16, 10), material('#d0a54e'));
+    cap.position.set(cx, y1 + 1.05, cz); cap.castShadow = true; shop.add(cap);
+    for (let k = 0; k < n - 1; k++) {
+      const a = angle(k), top = y0 + rise * (k + 1), w = step * 1.04;
+      // Three's cylinder sweeps from +z towards +x, so a map angle a (cos a, sin a) is theta π/2 - a.
+      const tread = new THREE.Mesh(new THREE.CylinderGeometry(r, r, .08, 6, 1, false, Math.PI / 2 - a - w / 2, w), material('#d9a768'));
+      tread.position.set(cx, top - .04, cz); tread.castShadow = tread.receiveShadow = true; shop.add(tread);
+      // A green baluster at each tread's outer corner.
+      const b = a - step / 2;
+      box(shop, cx + Math.cos(b) * (r - .06), top, cz + Math.sin(b) * (r - .06), .05, .95, .05, '#1f5a3c', { cast: false });
     }
-    [x0 + .05, x1 - .05].forEach(x => {
-      beam(x, zFoot, y0 + .05, zHead, y1 - .2, .1, .42, '#1f5a3c');
-      beam(x, zFoot, y0 + 1, zHead, y1 + .95, .05, .05, '#d0a54e');
-      for (let k = 0; k <= n; k += 3) { const z = zFoot + run * k, y = y0 + rise * k; span(shop, x - .02, x + .02, y, y + .97, z - .02, z + .02, '#d0a54e', { cast: false }); }
-    });
+    const a0 = angle(0) + step / 2, a1 = angle(n - 2) - step / 2;
+    helix(cx, cz, r - .06, a0, a1, y0 + 1, y1 - rise + 1, .05, '#d0a54e');
+    helix(cx, cz, r - .02, a0, a1, y0 + rise - .14, y1 - .14, .09, '#1f5a3c');
   };
   const [, mezz, top] = layout.floors;
-  flight(9.1, 10.7, 4.2, -.8, 0, mezz.y, 12);
-  textured(span(shop, 8.93, 10.85, mezz.y - .32, mezz.y, -2.8, -.8, '#e4ddcc', { cast: true }), 'timber');
-  flight(6.5, 8.2, -.5, -6.8, mezz.y, top.y, 12);
+  const up = -Math.PI / 2, rail = (x0, x1, z0, z1, y) => span(shop, x0, x1, y, y + 1.05, z0, z1, '#c9a35a', { opts: { transparent: true, opacity: .55 } });
+  spiral(10.2, .35, 0, mezz.y, 14, up);
+  textured(span(shop, 8.93, 11.35, mezz.y - .32, mezz.y, -2.8, -.8, '#e4ddcc', { cast: true }), 'timber');
+  rail(11.29, 11.35, -2.8, -.8, mezz.y);
+  spiral(7.75, -4.4, mezz.y, top.y, 14, up);
+  textured(span(shop, 6.45, 9, top.y - .32, top.y, -6.9, -5.55, '#e9e4d8', { cast: true }), 'concrete');
+  rail(8.94, 9, -6.9, -5.55, top.y);
   // The storefront along the entrance side (MARQUEE in main.js): a green plinth, glass, the sign band and pilasters.
   // The sprite shop draws it from its own render instead (wallFaces, below).
   const m = layout.marquee;

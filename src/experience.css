@@ -65,7 +65,6 @@
 @media(max-width:360px){
  .hud{padding-inline:8px;column-gap:4px}
  .hud>.stat strong{font-size:14px}
- .hud .customer-info>span:first-child::before{display:none}
  .hud .customer-info #goalsOpen{margin-left:4px}
 }
 .order-counter-expansion{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:16px;flex-shrink:0;margin:12px 0 4px;padding:12px 0 4px;border-top:1px solid #b9c9a626}
