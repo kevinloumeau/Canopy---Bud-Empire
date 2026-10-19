@@ -5,6 +5,7 @@
 // is a taped-off slab and the shaft a bare steel frame.
 // Every position comes from layout.rooftop (ROOFTOP in main.js), which also places the guests' standing spots.
 import * as THREE from 'three';
+import { HEIGHT_SCALE } from './camera.js';
 
 const BRASS = '#d0a54e', OAK = '#b98d5c', OAK_DARK = '#6e4a2c', STEEL = '#1f4a35', CREAM = '#efe4cf', VELVET = '#6b2436';
 
@@ -17,6 +18,8 @@ export function buildRooftop(world, layout, { box, span, material }) {
   const tiers = [new THREE.Group(), new THREE.Group(), new THREE.Group(), new THREE.Group(), new THREE.Group()];
   tiers.forEach(g => roof.add(g));
   const [site, t1, t2, t3, t4] = tiers;
+  // The code-built furniture each Blender model replaces, hidden once its model loads (loadModels, below).
+  const [k1, k2, k3, k4] = [t1, t2, t3, t4].map(t => { const k = new THREE.Group(); t.add(k); return k; });
   // Everything a bought lounge has, whatever its tier: deck boards, glass balustrade, elevator glazing and cab.
   const open = new THREE.Group(); roof.add(open);
   const glass = new THREE.MeshStandardMaterial({ color: '#cfe6df', roughness: .1, metalness: 0, transparent: true, opacity: .28, depthWrite: false });
@@ -121,6 +124,7 @@ export function buildRooftop(world, layout, { box, span, material }) {
   const second = new THREE.Group(); open.add(second);
   const cab2 = r.lift2 ? shaft(r.lift2.z, second, second) : null;
 
+  const kOlive = new THREE.Group(); open.add(kOlive);
   // Planters along the left balustrade and in the corners, with soft shrubs; two olive trees in tall pots.
   const clump = new THREE.IcosahedronGeometry(1, 1);
   const bush = (g, bx, by, bz, rr, c) => { const b = new THREE.Mesh(clump, material(c)); b.position.set(bx, by, bz); b.scale.set(rr, rr * .8, rr); b.castShadow = b.receiveShadow = true; g.add(b); };
@@ -131,9 +135,9 @@ export function buildRooftop(world, layout, { box, span, material }) {
   });
   [[x1 - .5, z1 - .5], [x1 - .6, z0 + .6]].forEach(([px, pz]) => {
     const pot = new THREE.Mesh(new THREE.CylinderGeometry(.34, .26, .7, 20).translate(0, .35, 0), material('#d9cdb4'));
-    pot.position.set(px, y, pz); pot.castShadow = pot.receiveShadow = true; open.add(pot);
-    box(open, px, y + .7, pz, .1, 1.1, .1, '#7a6142');
-    [[0, 2.05, 0, .55, '#8aa66a'], [-.25, 1.8, .2, .4, '#7a9a5c'], [.22, 1.9, -.2, .42, '#9cb57a']].forEach(([ox, oy, oz, rr, c]) => bush(open, px + ox, y + oy, pz + oz, rr, c));
+    pot.position.set(px, y, pz); pot.castShadow = pot.receiveShadow = true; kOlive.add(pot);
+    box(kOlive, px, y + .7, pz, .1, 1.1, .1, '#7a6142');
+    [[0, 2.05, 0, .55, '#8aa66a'], [-.25, 1.8, .2, .4, '#7a9a5c'], [.22, 1.9, -.2, .42, '#9cb57a']].forEach(([ox, oy, oz, rr, c]) => bush(kOlive, px + ox, y + oy, pz + oz, rr, c));
   });
 
   // String lights: warm bulbs on sagging wires between the balustrade's corner posts and the pergola.
@@ -151,10 +155,10 @@ export function buildRooftop(world, layout, { box, span, material }) {
 
   // Speakeasy: the pergola over the rear left, an L of cream sofas with velvet cushions, the brass fire table.
   const p = { x0: x0 + 1.4, x1: x0 + 6.2, z0: z0 + .25, z1: z0 + 3.4, h: 2.75 };
-  [[p.x0, p.z0], [p.x1, p.z0], [p.x1, p.z1], [p.x0, p.z1]].forEach(([px, pz]) => box(t1, px, y, pz, .14, p.h, .14, STEEL));
-  span(t1, p.x0 - .1, p.x1 + .1, y + p.h, y + p.h + .16, p.z0 - .07, p.z0 + .07, STEEL);
-  span(t1, p.x0 - .1, p.x1 + .1, y + p.h, y + p.h + .16, p.z1 - .07, p.z1 + .07, STEEL);
-  for (let x = p.x0 + .1; x < p.x1; x += .38) span(t1, x - .04, x + .04, y + p.h + .16, y + p.h + .26, p.z0 - .3, p.z1 + .3, OAK);
+  [[p.x0, p.z0], [p.x1, p.z0], [p.x1, p.z1], [p.x0, p.z1]].forEach(([px, pz]) => box(k1, px, y, pz, .14, p.h, .14, STEEL));
+  span(k1, p.x0 - .1, p.x1 + .1, y + p.h, y + p.h + .16, p.z0 - .07, p.z0 + .07, STEEL);
+  span(k1, p.x0 - .1, p.x1 + .1, y + p.h, y + p.h + .16, p.z1 - .07, p.z1 + .07, STEEL);
+  for (let x = p.x0 + .1; x < p.x1; x += .38) span(k1, x - .04, x + .04, y + p.h + .16, y + p.h + .26, p.z0 - .3, p.z1 + .3, OAK);
   const sofa = (g, ax0, ax1, az0, az1, back) => {
     span(g, ax0, ax1, y, y + .22, az0, az1, OAK_DARK);
     span(g, ax0 + .03, ax1 - .03, y + .22, y + .48, az0 + .03, az1 - .03, CREAM);
@@ -162,15 +166,15 @@ export function buildRooftop(world, layout, { box, span, material }) {
     if (back === 'x0') span(g, ax0, ax0 + .22, y + .22, y + .92, az0, az1, CREAM);
     if (back === 'x1') span(g, ax1 - .22, ax1, y + .22, y + .92, az0, az1, CREAM);
   };
-  sofa(t1, p.x0 + .25, p.x1 - .5, p.z0 + .15, p.z0 + .95, 'z0');
-  sofa(t1, p.x0 + .25, p.x0 + 1.05, p.z0 + .95, p.z1 - .3, 'x0');
-  [[p.x0 + 1, p.z0 + .45], [p.x0 + 2.6, p.z0 + .45], [p.x0 + 3.6, p.z0 + .45], [p.x0 + .55, p.z0 + 1.7]].forEach(([cx, cz]) => box(t1, cx, y + .48, cz, .32, .3, .14, VELVET));
+  sofa(k1, p.x0 + .25, p.x1 - .5, p.z0 + .15, p.z0 + .95, 'z0');
+  sofa(k1, p.x0 + .25, p.x0 + 1.05, p.z0 + .95, p.z1 - .3, 'x0');
+  [[p.x0 + 1, p.z0 + .45], [p.x0 + 2.6, p.z0 + .45], [p.x0 + 3.6, p.z0 + .45], [p.x0 + .55, p.z0 + 1.7]].forEach(([cx, cz]) => box(k1, cx, y + .48, cz, .32, .3, .14, VELVET));
   const fx = p.x0 + 2.5, fz = p.z0 + 2.05;
-  span(t1, fx - .9, fx + .9, y, y + .38, fz - .45, fz + .45, '#3a3f3a');
-  span(t1, fx - .92, fx + .92, y + .38, y + .44, fz - .47, fz + .47, '#d8d2c2');
-  span(t1, fx - .6, fx + .6, y + .44, y + .47, fz - .15, fz + .15, BRASS, { cast: false });
-  const flame = new THREE.Mesh(new THREE.BoxGeometry(1.1, .12, .1).translate(0, .06, 0), new THREE.MeshBasicMaterial({ color: '#ffb35a', transparent: true, opacity: .9 }));
-  flame.position.set(fx, y + .47, fz); t1.add(flame);
+  span(k1, fx - .9, fx + .9, y, y + .38, fz - .45, fz + .45, '#3a3f3a');
+  span(k1, fx - .92, fx + .92, y + .38, y + .44, fz - .47, fz + .47, '#d8d2c2');
+  span(k1, fx - .6, fx + .6, y + .44, y + .47, fz - .15, fz + .15, BRASS, { cast: false });
+  let flame = new THREE.Mesh(new THREE.BoxGeometry(1.1, .12, .1).translate(0, .06, 0), new THREE.MeshBasicMaterial({ color: '#ffb35a', transparent: true, opacity: .9 }));
+  flame.position.set(fx, y + .47, fz); k1.add(flame);
   stringLights(t1, p.x0, p.z1, y + p.h, x0 + .25, z1 - .2, y + railH + .9, 9);
   stringLights(t1, p.x1, p.z1, y + p.h, x1 - .3, z1 - .2, y + railH + .9, 12);
   box(t1, x0 + .25, y, z1 - .2, .06, railH + .95, .06, STEEL); box(t1, x1 - .3, y, z1 - .2, .06, railH + .95, .06, STEEL);
@@ -183,59 +187,61 @@ export function buildRooftop(world, layout, { box, span, material }) {
     c.font = '600 80px "Fredoka", "Bricolage Grotesque", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
     c.shadowColor = '#ff6fa8'; c.shadowBlur = 20; c.fillStyle = '#ff8fbf'; c.fillText('LOUNGE', 256, 66); c.shadowBlur = 0; c.fillStyle = '#fff4f8'; c.fillText('LOUNGE', 256, 66);
     signTexture.needsUpdate = true;
+    if (signFlipped) signFlipped.needsUpdate = true;
   }
+  let signFlipped = null, signFaceMat = null;
   paintSign();
   if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', paintSign);
   const signMat = new THREE.MeshBasicMaterial({ map: signTexture, transparent: true });
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, .55), signMat);
-  sign.position.set((p.x0 + p.x1) / 2, y + p.h + .5, p.z1 + .09); t1.add(sign);
-  span(t1, (p.x0 + p.x1) / 2 - 1.1, (p.x0 + p.x1) / 2 + 1.1, y + p.h + .16, y + p.h + .22, p.z1 - .02, p.z1 + .06, '#1a1216', { cast: false });
+  sign.position.set((p.x0 + p.x1) / 2, y + p.h + .5, p.z1 + .09); k1.add(sign);
+  span(k1, (p.x0 + p.x1) / 2 - 1.1, (p.x0 + p.x1) / 2 + 1.1, y + p.h + .16, y + p.h + .22, p.z1 - .02, p.z1 + .06, '#1a1216', { cast: false });
 
   // Dab bar: a green-tiled bar along the rear right with a cream top, a brass foot rail, three stools, a back bar.
   const b = { x0: x1 - 4.4, x1: x1 - 1.2, z: z0 + 1.5 };
-  span(t2, b.x0, b.x1, y, y + 1.05, b.z - .45, b.z, '#25523b');
-  span(t2, b.x0 - .06, b.x1 + .06, y + 1.05, y + 1.12, b.z - .55, b.z + .1, '#ece4d2');
-  span(t2, b.x0, b.x1, y + .18, y + .22, b.z + .16, b.z + .2, BRASS, { cast: false });
-  span(t2, b.x0, b.x1, y, y + 1.9, z0 + .2, z0 + .55, OAK_DARK);
-  [.8, 1.35].forEach(h => span(t2, b.x0 + .1, b.x1 - .1, y + h, y + h + .05, z0 + .2, z0 + .7, OAK, { cast: false }));
-  for (let x = b.x0 + .5; x < b.x1 - .2; x += .6) [.85, 1.4].forEach((h, k) => box(t2, x + k * .15, y + h + .05, z0 + .48, .14, .24, .14, ['#527e60', '#b28b64', '#75999a', '#d5bd8c'][Math.round(x * 3 + k) & 3]));
+  span(k2, b.x0, b.x1, y, y + 1.05, b.z - .45, b.z, '#25523b');
+  span(k2, b.x0 - .06, b.x1 + .06, y + 1.05, y + 1.12, b.z - .55, b.z + .1, '#ece4d2');
+  span(k2, b.x0, b.x1, y + .18, y + .22, b.z + .16, b.z + .2, BRASS, { cast: false });
+  span(k2, b.x0, b.x1, y, y + 1.9, z0 + .2, z0 + .55, OAK_DARK);
+  [.8, 1.35].forEach(h => span(k2, b.x0 + .1, b.x1 - .1, y + h, y + h + .05, z0 + .2, z0 + .7, OAK, { cast: false }));
+  for (let x = b.x0 + .5; x < b.x1 - .2; x += .6) [.85, 1.4].forEach((h, k) => box(k2, x + k * .15, y + h + .05, z0 + .48, .14, .24, .14, ['#527e60', '#b28b64', '#75999a', '#d5bd8c'][Math.round(x * 3 + k) & 3]));
   [b.x0 + .6, (b.x0 + b.x1) / 2, b.x1 - .6].forEach(sx => {
-    box(t2, sx, y, b.z + .55, .06, .72, .06, BRASS);
+    box(k2, sx, y, b.z + .55, .06, .72, .06, BRASS);
     const seat = new THREE.Mesh(new THREE.CylinderGeometry(.2, .2, .08, 16).translate(0, .04, 0), material(VELVET));
-    seat.position.set(sx, y + .72, b.z + .55); seat.castShadow = true; t2.add(seat);
+    seat.position.set(sx, y + .72, b.z + .55); seat.castShadow = true; k2.add(seat);
   });
   const barLamps = [b.x0 + .7, (b.x0 + b.x1) / 2, b.x1 - .7].map(lx => {
-    box(t2, lx, y + 1.95, b.z - .25, .02, .6, .02, '#343f33', { cast: false });
+    box(k2, lx, y + 1.95, b.z - .25, .02, .6, .02, '#343f33', { cast: false });
     const shade = new THREE.Mesh(new THREE.SphereGeometry(.13, 12, 8), glow('#f3d9a6', '#ffb36a'));
-    shade.position.set(lx, y + 1.9, b.z - .25); t2.add(shade); lights.push([shade.material, .3, 1.4]);
+    shade.position.set(lx, y + 1.9, b.z - .25); k2.add(shade); lights.push([shade.material, .3, 1.4]);
     return shade;
   });
-  box(t2, (b.x0 + b.x1) / 2, y + 1.9, z0 + .2, .02, .7, b.z - z0, '#343f33', { cast: false });
-  span(t2, b.x0 - .1, b.x1 + .1, y + 2.55, y + 2.6, z0 + .2, b.z - .2, STEEL, { cast: false });
+  box(k2, (b.x0 + b.x1) / 2, y + 1.9, z0 + .2, .02, .7, b.z - z0, '#343f33', { cast: false });
+  span(k2, b.x0 - .1, b.x1 + .1, y + 2.55, y + 2.6, z0 + .2, b.z - .2, STEEL, { cast: false });
   void barLamps;
 
   // Vinyl nights: the DJ booth at the right edge, facing across the deck, with its speakers and a dance floor.
   const d = { x: x1 - .9, z: z1 - 2.2 };
-  span(t3, d.x - .35, d.x + .35, y, y + 1, d.z - .8, d.z + .8, '#1d2422');
-  span(t3, d.x - .4, d.x + .4, y + 1, y + 1.06, d.z - .85, d.z + .85, BRASS, { cast: false });
-  [-.4, .4].forEach(o => { const deckDisc = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .03, 20), material('#2e3330')); deckDisc.position.set(d.x, y + 1.08, d.z + o); t3.add(deckDisc); });
-  [d.z - 1.05, d.z + 1.05].forEach(sz => { box(t3, d.x + .1, y, sz, .45, 1.35, .45, '#262b29'); const cone = new THREE.Mesh(new THREE.CircleGeometry(.15, 16).rotateY(-Math.PI / 2), material('#4a514d')); cone.position.set(d.x - .13, y + .9, sz); t3.add(cone); });
+  span(k3, d.x - .35, d.x + .35, y, y + 1, d.z - .8, d.z + .8, '#1d2422');
+  span(k3, d.x - .4, d.x + .4, y + 1, y + 1.06, d.z - .85, d.z + .85, BRASS, { cast: false });
+  [-.4, .4].forEach(o => { const deckDisc = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .03, 20), material('#2e3330')); deckDisc.position.set(d.x, y + 1.08, d.z + o); k3.add(deckDisc); });
+  [d.z - 1.05, d.z + 1.05].forEach(sz => { box(k3, d.x + .1, y, sz, .45, 1.35, .45, '#262b29'); const cone = new THREE.Mesh(new THREE.CircleGeometry(.15, 16).rotateY(-Math.PI / 2), material('#4a514d')); cone.position.set(d.x - .13, y + .9, sz); k3.add(cone); });
   const dance = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.2).rotateX(-Math.PI / 2), glow('#4a3a33', '#d06aa0'));
-  dance.position.set(d.x - 2.4, y + .012, d.z); dance.receiveShadow = true; t3.add(dance); lights.push([dance.material, .05, .45]);
+  dance.position.set(d.x - 2.4, y + .012, d.z); dance.receiveShadow = true; k3.add(dance); lights.push([dance.material, .05, .45]);
   stringLights(t3, x1 - .3, z1 - .2, y + railH + .9, x1 - .3, z0 + 1, y + railH + 1.6, 10);
   box(t3, x1 - .3, y, z0 + 1, .06, railH + 1.65, .06, STEEL);
 
   // Terrace: bistro tables under two forest-and-cream parasols along the front.
   [[x0 + 2.8, z1 - 1.05], [x0 + 5.6, z1 - 1.05]].forEach(([tx, tz]) => {
     const top = new THREE.Mesh(new THREE.CylinderGeometry(.42, .42, .05, 20).translate(0, .025, 0), material('#ece4d2'));
-    top.position.set(tx, y + .74, tz); top.castShadow = true; t4.add(top);
-    box(t4, tx, y, tz, .07, .74, .07, '#2b302d');
-    [[-.62, 0], [.62, 0]].forEach(([ox, oz]) => { box(t4, tx + ox, y, tz + oz, .38, .45, .38, OAK); box(t4, tx + ox, y + .45, tz + oz, .4, .05, .4, CREAM); });
-    box(t4, tx, y + .79, tz, .05, 1.8, .05, '#e1dbc0');
+    top.position.set(tx, y + .74, tz); top.castShadow = true; k4.add(top);
+    box(k4, tx, y, tz, .07, .74, .07, '#2b302d');
+    [[-.62, 0], [.62, 0]].forEach(([ox, oz]) => { box(k4, tx + ox, y, tz + oz, .38, .45, .38, OAK); box(k4, tx + ox, y + .45, tz + oz, .4, .05, .4, CREAM); });
+    box(k4, tx, y + .79, tz, .05, 1.8, .05, '#e1dbc0');
     const canopy = new THREE.Mesh(new THREE.ConeGeometry(1.25, .45, 8, 1, true).translate(0, -.22, 0), new THREE.MeshLambertMaterial({ color: '#f1e7cc', side: THREE.DoubleSide }));
-    canopy.position.set(tx, y + 2.85, tz); canopy.castShadow = true; t4.add(canopy);
+    canopy.position.set(tx, y + 2.85, tz); canopy.castShadow = true; k4.add(canopy);
     const stripe = new THREE.Mesh(new THREE.ConeGeometry(1.27, .1, 8, 1, true).translate(0, -.42, 0), material('#1f6b47'));
-    stripe.position.copy(canopy.position); t4.add(stripe);
+    stripe.position.copy(canopy.position); k4.add(stripe);
   });
 
   // The bulbs, one instanced mesh per tier so each appears with its tier.
@@ -304,7 +310,44 @@ export function buildRooftop(world, layout, { box, span, material }) {
   paintDoorSigns();
   if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', paintDoorSigns);
   let doorAngle = 0;
+  // The Blender furniture (the diorama's rooftop_*.glb, each origin on its footprint, at the stations' 1.69 map units
+  // per metre). Each set swaps in for its code-built stand-in once it loads; the named parts take over the stand-ins'
+  // glowing materials so the sign, the fire, the bar lamps and the dance floor still light up at night.
+  function loadModels(loader, base) {
+    const sets = [
+      { file: 'rooftop_speakeasy.glb', parent: t1, hide: k1, at: [[x0 + 3.8, z0 + 1.825]] },
+      { file: 'rooftop_bar.glb', parent: t2, hide: k2, at: [[(b.x0 + b.x1) / 2, b.z - .225]] },
+      { file: 'rooftop_dj_booth.glb', parent: t3, hide: k3, at: [[d.x, d.z]] },
+      { file: 'rooftop_parasol_table.glb', parent: t4, hide: k4, at: [[x0 + 2.8, z1 - 1.05], [x0 + 5.6, z1 - 1.05]] },
+      { file: 'rooftop_olive.glb', parent: open, hide: kOlive, at: [[x1 - .5, z1 - .5], [x1 - .6, z0 + .6]] },
+    ];
+    sets.forEach(set => loader.load(base + set.file, gltf => {
+      const source = gltf.scene;
+      source.traverse(o => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
+      const signFace = source.getObjectByName('SignFace'), fire = source.getObjectByName('Flame'), floor = source.getObjectByName('DanceFloor');
+      // The model's sign face runs its UVs the other way round, so it gets the canvas mirrored back.
+      if (signFace) {
+        const flipped = signTexture.clone(); flipped.wrapS = THREE.RepeatWrapping; flipped.repeat.x = -1; flipped.offset.x = 1; flipped.needsUpdate = true;
+        signFlipped = flipped; const faceMat = signMat.clone(); faceMat.map = flipped; signFaceMat = faceMat;
+        signFace.traverse(o => { if (o.isMesh) { o.material = faceMat; o.castShadow = false; } });
+      }
+      if (fire) fire.traverse(o => { if (o.isMesh) { o.material = flame.material; o.castShadow = false; } });
+      if (floor) floor.traverse(o => { if (o.isMesh) o.material = dance.material; });
+      barLamps.forEach((shade, i) => { const lamp = source.getObjectByName('BarLamp' + i); if (lamp) lamp.traverse(o => { if (o.isMesh) { o.material = shade.material; o.castShadow = false; } }); });
+      set.at.forEach(([ax, az], i) => {
+        const holder = new THREE.Group();
+        holder.add(i ? source.clone() : source);
+        holder.scale.set(1.69, 1.69 / HEIGHT_SCALE, 1.69);
+        holder.position.set(ax, y, az);
+        set.parent.add(holder);
+      });
+      if (fire) flame = fire;
+      set.hide.visible = false;
+    }, undefined, e => console.warn('3D map: could not load ' + set.file, e)));
+  }
+
   return {
+    loadModels,
     update(frame) {
       const tier = frame.loungeOpen ? Math.max(1, frame.loungeTier || 1) : 0, night = frame.night || 0;
       site.visible = !tier; open.visible = !!tier;
@@ -319,6 +362,7 @@ export function buildRooftop(world, layout, { box, span, material }) {
       flame.scale.y = .8 + Math.sin((frame.time || 0) / 130) * .2 + Math.sin((frame.time || 0) / 53) * .1;
       flame.visible = tier >= 1;
       signMat.color.setScalar(.75 + night * .25);
+      if (signFaceMat) signFaceMat.color.setScalar(.75 + night * .25);
       roofLight.intensity = tier ? night * 6 : 0;
     }
   };
