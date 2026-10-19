@@ -2327,7 +2327,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     return '#'+hex(r)+hex(g)+hex(b)+hex(a);
   }
   function recordBranch(figures){
-    var U=32,saved=[unit,centerX,centerY,ctx,sceneElevation],seen=new Map(),out={unit:U,boxes:[],lines:[],polys:[],ellipses:[],faces:[],fixtures:[]};
+    var U=32,saved=[unit,centerX,centerY,ctx,sceneElevation],seen=new Map(),out={unit:U,boxes:[],lines:[],polys:[],ellipses:[],faces:[],fixtures:[],props:[]};
     function key(x,y){return Math.round(x*8)+','+Math.round(y*8)}
     branchRec={
       seen:function(q,x,y,z){seen.set(key(q.x,q.y),[x,y,z])},
@@ -2348,14 +2348,16 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       drawActiveBranch({realDepth:true,ctx:silentCtx,width:width,height:height,unit:U,project:project,box:drawBox,line:worldLine,poly:poly,ellipse:ellipse,blob:blobEllipse,leaf:leafShape,noise:seedNoise,lit:lit,plant:plant3d,jar:jar,carton:carton,depth:depthOf,
         person:function(x,z){var args=arguments,rec=branchRec;branchRec=null;capturePerson(figures,x,0,z,function(){drawPerson.apply(null,args)});branchRec=rec},
         face:function(x,y,z,alongZ,draw){out.faces.push({x:x,y:y,z:z,alongZ:alongZ,draw:draw})},
-        night:function(fixtures){out.fixtures=fixtures}},sceneTime);
+        night:function(fixtures){out.fixtures=fixtures},
+        // A Blender prop in place of the 2D drawing, once its model has loaded (until then the drawing stands in).
+        model:function(file,x,z,y,rot,scale){if(!map3d.propReady(file))return false;out.props.push({file:file,x:x,y:(y||0)+sceneElevation,z:z,rot:rot||0,scale:scale});return true}},sceneTime);
     }finally{branchRec=null;unit=saved[0];centerX=saved[1];centerY=saved[2];ctx=saved[3];sceneElevation=saved[4]}
     return out;
   }
   function renderBranch3d(now,frameDelta){
     var nightT=nightAmount();render.nightT=nightT;
     var figures=[],scene=recordBranch(figures);
-    map3d.renderBranch({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:viewCentre(),background:BRANCH_THEMES[state.empire.activeStore-1].background,branch:scene,figures:figures.filter(function(f){return f.alpha>.99})});
+    map3d.renderBranch({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:viewCentre(),background:BRANCH_THEMES[state.empire.activeStore-1].background,land:BRANCH_THEMES[state.empire.activeStore-1].land,landKey:state.empire.activeStore,branch:scene,figures:figures.filter(function(f){return f.alpha>.99})});
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
     // Main-store effects expire while visiting a branch rather than replaying on return.
     particles.forEach(function(p){p.life-=frameDelta*1.5});particles=particles.filter(function(p){return p.life>0});deliveryDrones.forEach(function(d){d.age+=frameDelta});deliveryDrones=deliveryDrones.filter(function(d){return d.age<d.delay+DRONE_LIFE});
@@ -2500,13 +2502,27 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       return window.__canopySnap.status()};
     window.__canopySnap.status=function(){return{map3d:!!(map3d&&map3d.ok),loading:map3d?map3d.loading:-1}};
   }
+  // Dev numbers (?stats): a small readout over the map with the frames drawn a second, the frame's script time, the 3D
+  // map's draw calls and triangles and its estimated GPU memory, so a phone shows its own numbers. Players never pass
+  // ?stats; window.__canopyStats returns the same numbers to scripts.
+  var STATS=/[?&]stats\b/.test(location.search);
+  if(STATS||SNAP)window.__canopyStats=function(perModel){return map3d&&map3d.ok?map3d.stats(perModel):null};
+  if(STATS){
+    var statsBox=document.createElement('div');
+    statsBox.style.cssText='position:fixed;left:calc(env(safe-area-inset-left) + 6px);top:calc(env(safe-area-inset-top) + 6px);z-index:9999;pointer-events:none;font:10px/1.3 ui-monospace,Menlo,monospace;color:#fff;background:rgba(0,0,0,.62);padding:4px 7px;border-radius:6px;white-space:pre';
+    document.body.appendChild(statsBox);
+    var statsFrames=0,statsSince=performance.now();
+    setInterval(function(){var now=performance.now(),fps=(render.frames||0)-statsFrames,secs=(now-statsSince)/1000;statsFrames=render.frames||0;statsSince=now;
+      var s=window.__canopyStats(),heap=performance.memory?' js '+Math.round(performance.memory.usedJSHeapSize/1048576)+'MB':'';
+      statsBox.textContent=Math.round(fps/secs)+' fps '+(render.frameMs||0).toFixed(1)+' ms'+heap+(s?'\n'+s.calls+' draws '+Math.round(s.triangles/1000)+'K tris @'+s.pixelRatio+'x\n~'+Math.round(s.mb.total)+'MB gpu: '+Math.round(s.mb.geometry)+' geo '+Math.round(s.mb.texture)+' tex\n'+Math.round(s.mb.buffer)+' screen '+Math.round(s.mb.shadow)+' shadow '+s.textures+' tex':'')},1000);
+  }
   function render(wallNow){if(SNAP&&!render.snap)return;var t0=performance.now();try{renderFrame(wallNow);render.frameMs=(render.frameMs||0)*.9+(performance.now()-t0)*.1;window.__canopyFrameMs=render.frameMs;if(render.frameMs>13&&dprCap>2){dprCap=2;resize()}}catch(e){if(!render.failed)console.error('Canopy frame failed; retrying',e);ctx=screenCtx;sceneElevation=0;render.failed=true;render.invalidated=true;requestAnimationFrame(render)}}
   function renderFrame(wallNow){
     if(document.hidden){render.last=wallNow;requestAnimationFrame(render);return}
     keyboardPan(wallNow);
     var frameInterval=state.gameSpeed===0?250:1000/60;
     if(!render.invalidated&&render.drawnAt!==undefined&&wallNow-render.drawnAt<frameInterval-1){requestAnimationFrame(render);return}
-    render.drawnAt=wallNow;render.invalidated=false;
+    render.drawnAt=wallNow;render.invalidated=false;render.frames=(render.frames||0)+1;
     var wallDelta=Math.min(.1,Math.max(0,(wallNow-(render.last===undefined?wallNow:render.last))/1000)),frameDelta=wallDelta*state.gameSpeed;
     render.last=wallNow;
     // A freshly built station rises out of its site on wall time, so the reveal plays at the same pace at every game speed.
