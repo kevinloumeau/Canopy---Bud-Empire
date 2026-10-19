@@ -11,12 +11,17 @@ export default defineConfig({
     modulePreload: false,
     rollupOptions: {
       // Two pages: the game at the root and the launch page beside it at /welcome/.
+      // The 3D map is its own entry, not a dynamic-import chunk: Vite's import() helper needs import.meta,
+      // which the classic deferred script make-classic.mjs turns the game into cannot contain. make-classic.mjs writes its
+      // hashed file name into index.html and main.js loads it from there.
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
-        welcome: fileURLToPath(new URL('./welcome/index.html', import.meta.url))
+        welcome: fileURLToPath(new URL('./welcome/index.html', import.meta.url)),
+        map3d: fileURLToPath(new URL('./src/three/map3d.js', import.meta.url))
       },
+      preserveEntrySignatures: 'exports-only',
       output: {
-        entryFileNames: 'assets/shift-[hash].js',
+        entryFileNames: chunk => chunk.name === 'map3d' ? 'assets/map3d-[hash].js' : 'assets/shift-[hash].js',
         assetFileNames: 'assets/shift-[hash].[ext]'
       }
     }

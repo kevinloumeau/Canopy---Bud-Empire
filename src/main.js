@@ -22,7 +22,7 @@ import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import { createGlPost } from './gl-post.js';
-import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, LAMPS as STREET_LAMPS, compactOrderSprite, PERSON_HEAD_Y, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern, softShadow, sunShadow, SUN, SUN_REACH } from './sunny-world.js';
+import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, LAMPS as STREET_LAMPS, compactOrderSprite, PERSON_HEAD_Y, drawSunnyWorld, drawSprite, stationSprite, drawPersonSprite, drawWalker, streetItems, floorTextureFiles, fixtureSprite, shellSprite, spriteImage, drawSpan, drawBoxSprite, drawWallFace, floorPattern, softShadow, sunShadow, SUN, SUN_REACH, townLayout, carPlacements, walkerPlacements, stationSpriteSize, stationTier as spriteTier } from './sunny-world.js';
 import * as economy from './economy.js';
 import * as strains from './strains.js';
 import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, settleGoals, shiftStatus, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent, seasonStatus, claimSeason, SEASONS, RETIRED_WEEKLY, nextSeason, weeklySpecial, specialFactor } from './progression.js';
@@ -708,7 +708,11 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   function notify(message,kind){var cue=kind==='upgrade'?(/BUILT|OPEN|EXPANDED/.test(message)?'build':'upgrade'):/REWARD|MILESTONE|GOAL COMPLETE|EVENT COMPLETE|CHAPTER COMPLETE|WHILE AWAY|Prestige/.test(message)?'sparkle':/^Need |previous stage first/.test(message)?'denied':null;if(cue)playSound(cue,state.sound);if(kind!=='dispatch')dispatchSummary=null;$('toast').classList.toggle('is-upgrade',kind==='upgrade');$('toast').textContent=message;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){$('toast').classList.remove('show')},1600)}
 
-  var world=$('world'),canvas=document.createElement('canvas'),ctx=canvas.getContext('2d',{alpha:false});
+  // The sprite shop's map draws with Three.js (src/three/map3d.js) under a transparent 2D canvas that keeps the
+  // screen-space effects (queue badges, tickets, sparkles, confetti). ?render=2d keeps the Canvas 2D map, which also
+  // draws while the 3D module loads and whenever WebGL cannot start or its context is lost.
+  var RENDER_3D=SHOP_SPRITES&&!/[?&]render=2d\b/.test(location.search);
+  var world=$('world'),canvas=document.createElement('canvas'),ctx=canvas.getContext('2d',{alpha:RENDER_3D});
   if(!ctx){$('loadStatus').textContent='CANVAS COULD NOT START';$('loadRetry').hidden=false;return}
   world.insertBefore(canvas,world.firstChild);canvas.setAttribute('aria-hidden','true');
   var screenCtx=ctx;
@@ -725,18 +729,79 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(wanted){try{wanted=glPost.apply(canvas,now,nightAmount(),!motionPreference.matches,SUNNY&&!state.empire.activeStore?1-nightAmount():0)}catch(e){wanted=false;glPost=null}}
     if(glCanvas&&glCanvas.style.display!==(wanted?'block':'none'))glCanvas.style.display=wanted?'block':'none';
   }
+  var map3d=null,canvas3d=null;
+  if(RENDER_3D){
+    canvas3d=document.createElement('canvas');canvas3d.setAttribute('aria-hidden','true');
+    canvas3d.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none';
+    world.insertBefore(canvas3d,canvas);
+    // Built, the module's hashed name comes from index.html (scripts/make-classic.mjs); the dev server serves the source.
+    var map3dMeta=document.querySelector('meta[name="canopy-map3d"]'),map3dUrl=new URL(map3dMeta?map3dMeta.content:'./src/three/map3d.js',document.baseURI).href;
+    import(/* @vite-ignore */ map3dUrl).then(function(m){
+      var layout=townLayout();
+      // The three floors as drawTower lays them out.
+      layout.floors=[{y:0,z:1.5,w:23,d:17},{y:4.7,z:-2.95,w:18,d:7.4},{y:9.4,z:-3.6,w:13,d:6.6}];layout.marquee={x:MARQUEE.x,zFront:MARQUEE.zFront,zRear:MARQUEE.zRear,y0:MARQUEE.y0,y1:MARQUEE.y1,top:MARQUEE.top,bottom:MARQUEE.bottom};
+      // Blender models (art/blender/, exported to public/models/) by station index, sized from the tier 3 sprite they replace.
+      layout.modelBase=new URL('models/',document.baseURI).href;
+      // Keyed "station.tier"; a tier without its own model shows the tier 3 one. Each is sized to its tier's sprite.
+      layout.stationModels={'0.1':'seeds_bench_tier1.glb','0.2':'seeds_bench_tier2.glb','0.3':'seeds_bench.glb','1.1':'grow_bench_tier1.glb','1.2':'grow_bench_tier2.glb','1.3':'grow_bench.glb','2.1':'harvest_bench_tier1.glb','2.2':'harvest_bench_tier2.glb','2.3':'harvest_bench.glb',
+        '3.1':'pack_bench_tier1.glb','3.2':'pack_bench_tier2.glb','3.3':'pack_bench.glb','4.1':'order_desk_tier1.glb','4.2':'order_desk_tier2.glb','4.3':'order_desk.glb','5.1':'pickup_desk_tier1.glb','5.2':'pickup_desk_tier2.glb','5.3':'pickup_desk.glb','6.1':'id_desk_tier1.glb','6.2':'id_desk_tier2.glb','6.3':'id_desk.glb'};
+      layout.stationModelSize={};for(var key in layout.stationModels)layout.stationModelSize[key]=stationSpriteSize(+key.split('.')[0],+key.split('.')[1]);layout.stationModelSize['4.3']={w:2.2,ox:0};
+      // The lower order desks keep their sprites' size against tier 3's.
+      [1,2].forEach(function(t){layout.stationModelSize['4.'+t]={w:2.2*stationSpriteSize(4,t).w/stationSpriteSize(4,3).w,ox:0}});
+      // The production line from the 2D map's own routes, so both maps carry the same tubes, belts and cargo rhythm.
+      var grow=tubeRunGeometry(TUBE_RUNS[1]),pack=tubeRunGeometry(TUBE_RUNS[3]);
+      layout.transport={bore:TUBE_DIA,gap:CARGO_GAP,
+        tubes:[{points:grow.path,stage:1,cargoStage:1,floorRings:[grow.port]},
+          {points:pack.path,stage:3,cargoStage:4,floorRings:[pack.port],window:{total:PACK_FLOW,offset:0},noCap0:true},
+          {points:PACK_STUB,stage:3,cargoStage:4,window:{total:PACK_FLOW,offset:PACK_STUB_AT}}],
+        belts:[{x1:-4.6,x2:4.6,z:-5.8,floor:9.4,height:1.05,width:BELT_W,stage:0},{x1:4.2,x2:-3.2,z:-3.7,floor:4.7,height:1.05,width:BELT_W,stage:2}]};
+      // The online orders deck, placed by its origin (the stair foot, on the mezzanine) at the scale every Blender model
+      // shares (about 1.69 map units a metre), so its slab's right and front edges land where the sprite's do
+      // (DECK_RIGHT, DECK_FRONT) with the deck at 7.05.
+      layout.floorTextures=floorTextureFiles();
+      layout.fixtures=[{key:'deck',file:'online_deck.glb',x:-9.39,y:4.7,z:-.2,scale:1.69}];
+      // The street's cars and van: one model each, painted per car in code (CarPaint, VanPaint).
+      layout.carModels={car:'car.glb',van:'van.glb'};
+      // The shell and fittings from the same numbers drawTower, drawLoungeFront and drawShellProductWall use.
+      layout.shell={plaster:SHOP_GREEN_PLASTER[2],tile:SHOP_GREEN_TILE[2],tileH:LOUNGE_TILE,tilePitch:TILE_PITCH,glazingBay:GLAZING_BAY,fanX:FAN_X,topLanding:TOP_LANDING,
+        loungeFront:LOUNGE_FRONT,loungeDoor:LOUNGE_DOOR,loungeExit:LOUNGE_EXIT,loungeRight:LOUNGE_RIGHT,loungeHeader:2.05,wallLeft:-6.7,wallRight:8.4,shelfLeft:-1.3+COUNTER_SHIFT,
+        exitDoor:{x0:9.44,x1:11.25,h:3.3},column:{x:9.8,z:-1.8},merchCabinet:{back:8.41,face:9.27,z0:-6.84,z1:-4.8},
+        planter:{x0:-11.7,x1:-10.75,z0:2,z1:5.6,tree:{x:-11.45,z:2.35}},lowWall:{x0:-11.3,x1:-4.6,z0:11.53,z1:11.85,h:1.05},hanging:{x0:-2.3,x1:2.3,y:9.05,z:-1.35},
+        lamps:[[-4,3.7,3.5,1.3],[4,3.7,3.5,1.3],[-4,3.7,8.5,1.1],[5,3.7,8.5,1.1],[-10,3,-4,.8],[-4,8.4,-3,1.2],[4,8.4,-3,1.2],[0,12.8,-4.5,1]]};
+      // Sprite shop: the storefront and its doorway are the 2D map's own flat elevations on the entrance wall's plane
+      // (addEntryDoor), the exit mat and the lounge's runner lie on the floor where the 2D map pins them, and the
+      // display case casts its shadow from a box under its figure.
+      if(SHOP_SPRITES){
+        // The flat elevations stand in until the Blender storefront and doorway (outer face on the same plane, origin at
+        // its bottom centre) have loaded.
+        layout.wallFaces=[{url:'sprites/shell/flat.storefront.png',x0:-10.65,z0:8.94,x1:-10.65,z1:LOUNGE_FRONT,y0:-.04,h:4.19,model:'storefront'},
+          {url:'sprites/shell/flat.storefront.door.png',x0:-10.65,z0:12.05,x1:-10.65,z1:8.8,y0:-.04,h:4.2,model:'storefrontDoor'}];
+        layout.fixtures.push({key:'displayCase',file:'display_case.glb',x:10.05,y:0,z:8.7,scale:1.69},{key:'storefront',file:'storefront.glb',x:-10.65,y:0,z:(8.94+LOUNGE_FRONT)/2,scale:1.69},{key:'storefrontDoor',file:'storefront_door.glb',x:-10.65,y:0,z:(12.05+8.8)/2,scale:1.69});
+        var matX=10.7,matZ=-4.35,runW=(LOUNGE_CARPET_END-LOUNGE_FRONT)/LOUNGE_RUNNER_PIN.ratio,pin=LOUNGE_RUNNER_PIN;
+        layout.decals=[{url:'sprites/shell/shell.mat.exit.png',image:[[0,0],[1,0],[0,1]],world:[[matX+.6,matZ+1.1],[matX+.6,matZ-1.1],[matX-.6,matZ+1.1]]},
+          {url:'sprites/interior/lounge.carpet.runner.png',pixels:true,image:[pin.left,pin.bottom,pin.top],world:[[LOUNGE_DOOR.x-runW/2,LOUNGE_CARPET_END],[LOUNGE_DOOR.x+runW/2,LOUNGE_CARPET_END],[LOUNGE_DOOR.x-runW/2,LOUNGE_FRONT+.02]],show:'loungeOpen'}];
+        layout.casters=[{x:10.05,z:8.7,w:.7,d:2.1,h:1.4}];
+      }
+      map3d=m.createMap3D(canvas3d,layout);render.invalidated=true;
+    }).catch(function(e){console.error('3D map could not load; keeping the 2D map',e);map3d=null});
+  }
+  // The 3D map is drawing this frame: its canvas shows and the 2D canvas carries only the overlays.
+  function show3d(on){if(canvas3d&&canvas3d.style.display!==(on?'block':'none'))canvas3d.style.display=on?'block':'none'}
   var dpr=1,width=1,height=1,angle=SHOP_SPRITES||/[?&]cam=45\b/.test(location.search)?Math.PI/4:.57,zoom=1,panX=0,panY=0,centerX=0,centerY=0,unit=32;
   // The sprite shop's plaster and tile take the storefront's emerald so the drawn walls match the glazing.
   var SHOP_GREEN_PLASTER=SHOP_SPRITES?['#3f9468','#174f36','#226447']:['#698775','#314b40','#496a56'],SHOP_GREEN_TILE=SHOP_SPRITES?['#4a9a6e','#14482f','#1f5e40']:['#708b72','#2c4938','#4a6850'];
   var colors={bg:'#202226',floorTop:'#303238',floorLeft:'#1c1f23',floorRight:'#272a30',grid:'#41444a',beltEdge:'#111419',belt:'#313943',slat:'#5b6470',oliveTop:'#f4f5ec',oliveLeft:'#a9b6be',oliveRight:'#d5dce0',darkTop:'#56616a',darkLeft:'#252e36',darkRight:'#3b4650',metalTop:'#eef2f3',metalLeft:'#8b9ba8',metalRight:'#becbd4',acid:'#f5c344',orange:'#ff7628',boxTop:'#d3a36c',boxLeft:'#8e6741',boxRight:'#b17f50'};
   // Sprite shop: the harvest bench stands at x 4.8, directly in front of the grow line's drop, so the tube feeds its
   // back in a straight run (the drawn shop keeps the symmetric pair at x 3).
+  var STAFF_SPOTS={0:{dx:-.2,dz:-1.4,front:false,facing:1},1:{dx:-4,dz:-1,front:false,facing:-1},2:{dx:-.9,dz:-1.4,front:false,facing:-1},3:{dx:-.3,dz:-1.4,front:false,facing:-1},5:{dx:1.05,dz:-1.55,front:false,facing:.35}};
   var machinePos=[{x:-3,z:-3,y:9.4},{x:3,z:-3,y:9.4},{x:SHOP_SPRITES?4.8:3,z:-.3,y:4.7},{x:-3,z:-.3,y:4.7},{x:-4+COUNTER_SHIFT,z:2.5,y:0},{x:4+COUNTER_SHIFT,z:2.5,y:0}];
   // The front-of-house display case along the front-right of the shop floor, planters built into both ends.
   var DISPLAY_CASE={x:8,z:8.9,width:5.2};
   // The back-wall shelving stands just behind the counters; the smoking lounge is the room behind it (z −7 → −1.76).
   var DISPLAY_Z=-1.6,LOUNGE_FRONT=DISPLAY_Z+.65;
   var sceneElevation=0;
+  // While the 3D map records a branch scene, the drawing primitives hand their world shapes to it instead (recordBranch).
+  var branchRec=null;
   var beltNodes=[[-5,-3.2],[0,-3.2],[5,-3.2],[5.4,0],[5,3.2],[0,3.2],[-5,3.2],[-5.4,0]];
   var tierFlashes=[0,0,0,0,0,0],crateTime=0,cargoOdo=0,particles=[],deliveryDrones=[],sceneTime=0,animationTime=0;
   // Rise-in progress (1 → 0) for a freshly built station; index 6 is the security door.
@@ -809,14 +874,14 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // The sprite art is rendered with floor edges at about 30°, so the sprite shop flattens the floor plane by tan 30°
   // rather than the classic 2:1 (26.6°) the drawn shop uses.
   var FLOOR_SQUASH=SHOP_SPRITES?Math.tan(Math.PI/6):.5;
-  function project(x,y,z){var r=rotate(x,z);return{x:centerX+r.x*unit,y:centerY+r.z*unit*FLOOR_SQUASH-(y+sceneElevation)*unit,depth:r.z}}
+  function project(x,y,z){var r=rotate(x,z),q={x:centerX+r.x*unit,y:centerY+r.z*unit*FLOOR_SQUASH-(y+sceneElevation)*unit,depth:r.z};if(branchRec)branchRec.seen(q,x,y+sceneElevation,z);return q}
   // Gradients are rebuilt identically every frame while the camera is still, so reuse them per context, keyed by colour
   // and quarter-pixel geometry. The map is cleared when it grows large, so moving objects cannot leak entries.
   var gradientCaches=new WeakMap(),gradientCtx=null,gradientMap=null,hexCache=new Map();
   function cachedGradient(key,make){if(gradientCtx!==ctx){gradientCtx=ctx;gradientMap=gradientCaches.get(ctx);if(!gradientMap){gradientMap=new Map();gradientCaches.set(ctx,gradientMap)}}var g=gradientMap.get(key);if(g)return g;if(gradientMap.size>=12000)gradientMap.clear();g=make();gradientMap.set(key,g);return g}
   function isHexColor(fill){if(typeof fill!=='string')return false;var hit=hexCache.get(fill);if(hit===undefined){hit=/^#[0-9a-f]{6}$/i.test(fill);hexCache.set(fill,hit)}return hit}
   function q4(v){return Math.round(v*4)}
-  function poly(points,fill,stroke,opaque){if(occluding()&&(opaque||isHexColor(fill)))occludePoly(points);ctx.beginPath();ctx.moveTo(points[0].x,points[0].y);for(var i=1;i<points.length;i++)ctx.lineTo(points[i].x,points[i].y);ctx.closePath();if(isHexColor(fill)){
+  function poly(points,fill,stroke,opaque){if(branchRec){branchRec.poly(points,fill,litDepth>0);return}if(occluding()&&(opaque||isHexColor(fill)))occludePoly(points);ctx.beginPath();ctx.moveTo(points[0].x,points[0].y);for(var i=1;i<points.length;i++)ctx.lineTo(points[i].x,points[i].y);ctx.closePath();if(isHexColor(fill)){
       var lo=points[0].y,hi=lo;for(var k=1;k<points.length;k++){var py=points[k].y;if(py<lo)lo=py;else if(py>hi)hi=py}hi=Math.max(lo+1,hi);
       ctx.fillStyle=cachedGradient(fill+'|v|'+q4(lo)+'|'+q4(hi),function(){var shade=ctx.createLinearGradient(0,lo,0,hi);shade.addColorStop(0,fill);shade.addColorStop(1,shadeColor(fill,.9));return shade});
     }else ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=Math.max(.4,Math.min(1,unit*.021));ctx.lineJoin='round';ctx.stroke()}}
@@ -831,7 +896,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var c={x:(base[0].x+base[2].x)/2,y:(base[0].y+base[2].y)/2},g=cachedGradient('c|'+alpha+'|'+q4(c.x)+'|'+q4(c.y)+'|'+q4(dx)+'|'+q4(dy),function(){var g=ctx.createLinearGradient(c.x,c.y,c.x+dx,c.y+dy);g.addColorStop(0,'rgba(14,28,20,'+alpha+')');g.addColorStop(1,'rgba(14,28,20,'+(alpha*.25)+')');return g});
     poly(hull,g);
   }
-  function drawBox(x,z,y,w,d,h,palette){var p=palette||[colors.oliveTop,colors.oliveLeft,colors.oliveRight],b0=project(x-w/2,y,z-d/2),b1=project(x+w/2,y,z-d/2),b2=project(x+w/2,y,z+d/2),b3=project(x-w/2,y,z+d/2);
+  function drawBox(x,z,y,w,d,h,palette){if(branchRec){branchRec.box(x,z,y+sceneElevation,w,d,h,palette,litDepth>0);return}var p=palette||[colors.oliveTop,colors.oliveLeft,colors.oliveRight],b0=project(x-w/2,y,z-d/2),b1=project(x+w/2,y,z-d/2),b2=project(x+w/2,y,z+d/2),b3=project(x-w/2,y,z+d/2);
     // Furniture-sized boxes resting on a floor or counter cast; slabs, walls, rails and trim do not.
     var furniture=h>=.2&&h<=3.2&&w>=.15&&d>=.15&&w<=5&&d<=5&&y>=-.05&&y<=1.6;
     // Repeated furniture stops sharing pixel-identical fills: a tint nudge seeded by a coarse floor cell, so one
@@ -1168,6 +1233,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
 
   function ellipse(x,y,rx,ry,fill){
+    if(branchRec){branchRec.ellipse(x,y,rx,ry,fill,litDepth>0);return}
     if(occluding()&&rx>=unit*.04&&isHexColor(fill))occludeEllipse(x,y,rx,ry);
     ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);
     if(isHexColor(fill)&&rx>unit*.11){
@@ -1179,6 +1245,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // A hand-drawn ellipse: eight seeded lobes joined by quadratics, for foliage, soil and other soft silhouettes.
   // Shading and occlusion match ellipse(); amp is the radius wobble (default ±14%).
   function blobEllipse(x,y,rx,ry,fill,seed,amp){
+    if(branchRec){branchRec.ellipse(x,y,rx,ry,fill,litDepth>0);return}
     amp=amp===undefined?.14:amp;
     if(occluding()&&rx>=unit*.04&&isHexColor(fill))occludeEllipse(x,y,rx,ry);
     var pts=new Array(8);
@@ -1291,7 +1358,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   // Glass: translucent tint plus a diagonal sheen so panes read as glazing rather than flat film.
   function glassPane(points,tint){poly(points,tint);var xs=points.map(function(q){return q.x}),ys=points.map(function(q){return q.y}),x0=Math.min.apply(null,xs),x1=Math.max.apply(null,xs),y0=Math.min.apply(null,ys),y1=Math.max.apply(null,ys),g=ctx.createLinearGradient(x0,y0,x1,y1);g.addColorStop(0,'rgba(255,255,255,.14)');g.addColorStop(.32,'rgba(255,255,255,.02)');g.addColorStop(.5,'rgba(255,255,255,.08)');g.addColorStop(.68,'rgba(255,255,255,0)');poly(points,g)}
-  function worldLine(points,color,weight){var w=Math.max(.65,unit*weight),q=new Array(points.length);ctx.beginPath();for(var i=0;i<points.length;i++){var v=project(points[i][0],points[i][1],points[i][2]);q[i]=v;if(i)ctx.lineTo(v.x,v.y);else ctx.moveTo(v.x,v.y)}ctx.strokeStyle=color;ctx.lineWidth=w;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();if(weight>=.05&&occluding()&&isHexColor(color))occludeStroke(q,w)}
+  function worldLine(points,color,weight){if(branchRec){branchRec.line(points,color,weight,sceneElevation,litDepth>0);return}var w=Math.max(.65,unit*weight),q=new Array(points.length);ctx.beginPath();for(var i=0;i<points.length;i++){var v=project(points[i][0],points[i][1],points[i][2]);q[i]=v;if(i)ctx.lineTo(v.x,v.y);else ctx.moveTo(v.x,v.y)}ctx.strokeStyle=color;ctx.lineWidth=w;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();if(weight>=.05&&occluding()&&isHexColor(color))occludeStroke(q,w)}
   function constructionTape(a,b){
     // A vertical ribbon in world space stays attached to the stair posts when the camera moves.
     function point(t,lift){return project(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t+lift,a[2]+(b[2]-a[2])*t)}
@@ -3262,7 +3329,7 @@ if(!SHOP_SPRITES){
       // Staff positions (Kevin, 2026-10-14): the upper-floor staff stand behind their benches, between the bench and the
       // belt, drawn before the bench so its top hides their legs; each stands clear of the trays, pots and gantry posts on
       // the bench top and faces along it toward the work (facing >= 0 mirrors the right-facing renders).
-      var staffSpots={0:{dx:-.2,dz:-1.4,front:false,facing:1},1:{dx:-4,dz:-1,front:false,facing:-1},2:{dx:-.9,dz:-1.4,front:false,facing:-1},3:{dx:-.3,dz:-1.4,front:false,facing:-1},5:{dx:1.05,dz:-1.55,front:false,facing:.35}};
+      var staffSpots=STAFF_SPOTS;
       // Transfer tubes go down before the stations, so a station hides the stub that enters its side or back.
       if(fi===1){sceneElevation=0;drawFloorTransfer(3,true);drawFloorTransfer(1,false);sceneElevation=floor.y}
       if(fi===2){sceneElevation=0;drawFloorTransfer(1,true);sceneElevation=floor.y}
@@ -3649,14 +3716,17 @@ if(!SHOP_SPRITES){
 
     });
   }
+  // A Ludo brass stanchion, its base on the post's foot and its knob at the rope's height.
+  function drawStanchion(x,z){
+    var name=shellSprite('shell.queue.post');if(!name)return false;
+    var img=spriteImage(name),base=project(x,.05,z),top=project(x,1.02,z),foot=project(x,-.06,z),h=foot.y-top.y,w=h*img.naturalWidth/img.naturalHeight;
+    ellipse(base.x-unit*.12,base.y+unit*.04,unit*.2,unit*.06,'#14201824');ctx.drawImage(img,foot.x-w*.62,top.y,w,h);return true;
+  }
   function addQueueRails(jobs){
 
     function post(x,z){jobs.push({depth:depthOf({x:x,z:z}),draw:function(){
       var base=project(x,.05,z),cap=project(x,.85,z);
-      // Sprite shop: a single Ludo brass stanchion, its base on the post's foot and its knob at the rope's height.
-      var stanchion=SHOP_SPRITES&&shellSprite('shell.queue.post');
-      if(stanchion){var img=spriteImage(stanchion),top=project(x,1.02,z),foot=project(x,-.06,z),h=foot.y-top.y,w=h*img.naturalWidth/img.naturalHeight;
-        ellipse(base.x-unit*.12,base.y+unit*.04,unit*.2,unit*.06,'#14201824');ctx.drawImage(img,foot.x-w*.62,top.y,w,h);return}
+      if(SHOP_SPRITES&&drawStanchion(x,z))return;
       // The post's cast shadow leans down-left with the key light before its brass base goes down.
       ellipse(base.x-unit*.17,base.y+unit*.055,unit*.24,unit*.07,'#14201824');
       ellipse(base.x,base.y,unit*.2,unit*.09,'#8a805b');
@@ -3674,17 +3744,21 @@ if(!SHOP_SPRITES){
     }
     // Rails that meet share one post.
     function pen(rails){var posts={};rails.forEach(function(r){[[r[0],r[1]],[r[2],r[3]]].forEach(function(p){var key=p[0].toFixed(3)+','+p[1].toFixed(3);if(!posts[key]){posts[key]=true;post(p[0],p[1])}});rope(r[0],r[1],r[2],r[3])})}
+    queuePens().forEach(pen);
+  }
+  // The queue pens' rope runs, [x1, z1, x2, z2] each, shared by the 2D map and the 3D one.
+  function queuePens(){
     // Pickup pen: two alternating dividers leave turning pockets matching queueRoute(true).
     var near=4.65,far=1.25;
-    pen([[near,5.5,2.5,5.5],[far,6.7,3.4,6.7],[near,4.5,near,7.9],[far,4.5,far,7.9],[near,7.9,2.5,7.9]]);
     // Order pen: three full-width rows, open at the top so the gate's customers walk straight on to any counter, and
     // open at the bottom-left where the tail comes in from the door. Dividers sit between the rows of
     // queueRoute(false), each leaving a pocket at the end the line turns through (right, left, right).
     var ORDER_PEN=orderPen(),right=ORDER_PEN.right+.65,left=ORDER_PEN.left-.65,rows=ORDER_ROWS;
-    pen([[left,(ORDER_QUEUE_GATE.z+rows[0])/2,ORDER_PEN.right-.6,(ORDER_QUEUE_GATE.z+rows[0])/2],
-         [right,(rows[0]+rows[1])/2,ORDER_PEN.left+.6,(rows[0]+rows[1])/2],
-         [left,(rows[1]+rows[2])/2,ORDER_PEN.right-.6,(rows[1]+rows[2])/2],
-         [right,6.4,right,rows[2]],[left,(ORDER_QUEUE_GATE.z+rows[0])/2,left,(rows[1]+rows[2])/2]]);
+    return[[[near,5.5,2.5,5.5],[far,6.7,3.4,6.7],[near,4.5,near,7.9],[far,4.5,far,7.9],[near,7.9,2.5,7.9]],
+      [[left,(ORDER_QUEUE_GATE.z+rows[0])/2,ORDER_PEN.right-.6,(ORDER_QUEUE_GATE.z+rows[0])/2],
+       [right,(rows[0]+rows[1])/2,ORDER_PEN.left+.6,(rows[0]+rows[1])/2],
+       [left,(rows[1]+rows[2])/2,ORDER_PEN.right-.6,(rows[1]+rows[2])/2],
+       [right,6.4,right,rows[2]],[left,(ORDER_QUEUE_GATE.z+rows[0])/2,left,(rows[1]+rows[2])/2]]];
   }
   // The smoking lounge's face. The shelving wall continues left into a speakeasy doorway — dark lacquer with brass
   // mouldings, velvet curtains tied back to a narrow gap that shows a lamp-lit corner of the room, a neon LOUNGE sign on
@@ -3808,9 +3882,7 @@ if(!SHOP_SPRITES){
       // turn on to it; posts and rope sort with the guests waiting on the carpet.
       var ropeX=dx+.72,ropePosts=[face+.3,face+1.4,face+2.5];
       ropePosts.forEach(function(pz){sceneJobs.push({depth:depthOf({x:ropeX,z:pz}),draw:function(){
-        sceneElevation=0;var stanchion=shellSprite('shell.queue.post');if(!stanchion)return;
-        var img=spriteImage(stanchion),base=project(ropeX,.05,pz),top=project(ropeX,1.02,pz),foot=project(ropeX,-.06,pz),h=foot.y-top.y,w=h*img.naturalWidth/img.naturalHeight;
-        ellipse(base.x-unit*.12,base.y+unit*.04,unit*.2,unit*.06,'#14201824');ctx.drawImage(img,foot.x-w*.62,top.y,w,h);
+        sceneElevation=0;drawStanchion(ropeX,pz);
       }})});
       // Each span is one stroke, so the highlight runs unbroken instead of being capped over at every segment.
       for(var span=0;span<ropePosts.length-1;span++)(function(z1,z2){
@@ -4033,6 +4105,190 @@ if(!SHOP_SPRITES){
     }
   }
   function depthOf(pos){return rotate(pos.x,pos.z).z}
+  // The shop-play prompt follows the customer it is asking about, and hides when they are off screen.
+  function positionShopPlay(){
+    if(shopPlayUI){var asking=moment&&customers.find(function(c){return c.id===moment.customerId&&!c.ordered}),point=asking?project(asking.renderX===undefined?asking.x:asking.renderX,2.8,asking.renderZ===undefined?asking.z:asking.renderZ):null;shopPlayUI.position(point,!!point&&point.x>24&&point.x<width-24&&point.y>90&&point.y<visibleHeight())}
+  }
+  function drawParticles(frameDelta){
+    for(var i=particles.length-1;i>=0;i--){var p=particles[i];p.life-=frameDelta*1.5;if(!motionPreference.matches){p.x+=p.vx*frameDelta;p.z+=p.vz*frameDelta;p.y+=p.vy*frameDelta;}p.vy-=frameDelta*5;var screen=project(p.x,p.y,p.z),size=Math.max(2,unit*.1);ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.fillRect(screen.x-size/2,screen.y-size/2,size,size);ctx.globalAlpha=1;if(p.life<=0)particles.splice(i,1)}
+  }
+  // The 3D map's frame: the scene goes to the WebGL canvas, and the 2D canvas, cleared to transparent, keeps
+  // what is drawn over the map in screen space. Taps, tags and badges use project(), which the 3D camera matches.
+  var STATION_BOXES=[{w:2.6,d:1.5,h:1.5},{w:3.2,d:1.6,h:1.7},{w:2.8,d:1.5,h:1.5},{w:2.6,d:1.5,h:1.5},{w:2.2,d:1.1,h:1.25},{w:2.4,d:1.2,h:1.25},{w:.8,d:1.3,h:1.1}];
+  var PERSON_COLOURS=['#d97b5f','#5f8fc9','#e0b75a','#8a6fb5','#6aa36a','#c95f86','#4fa3a0','#d48c3a'];
+  // Records the images one 2D figure draws (with every transform it applies) and turns each into four world points: a
+  // flat card standing upright at the figure's feet, spanning screen-right and up, so the 3D camera shows it exactly
+  // where the 2D map would while counters in front of it still hide it. Nothing else the figure draws is kept.
+  var figureRecorder=(function(){
+    var m=[1,0,0,1,0,0],stack=[],alpha=1,out=null,anchor=null,noop=function(){},gradient={addColorStop:noop};
+    function mul(a,b,c,d,e,f){m=[m[0]*a+m[2]*b,m[1]*a+m[3]*b,m[0]*c+m[2]*d,m[1]*c+m[3]*d,m[0]*e+m[2]*f+m[4],m[1]*e+m[3]*f+m[5]]}
+    var api={
+      save:function(){stack.push([m,alpha])},restore:function(){var t=stack.pop();if(t){m=t[0];alpha=t[1]}},
+      translate:function(x,y){mul(1,0,0,1,x,y)},scale:function(x,y){mul(x,0,0,y,0,0)},rotate:function(a){var c=Math.cos(a),s=Math.sin(a);mul(c,s,-s,c,0,0)},
+      transform:mul,setTransform:function(a,b,c,d,e,f){m=typeof a==='object'?[a.a,a.b,a.c,a.d,a.e,a.f]:[a,b,c,d,e,f]},resetTransform:function(){m=[1,0,0,1,0,0]},
+      createLinearGradient:function(){return gradient},createRadialGradient:function(){return gradient},createPattern:function(){return null},measureText:function(){return{width:0}},
+      drawImage:function(img){
+        var iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height,a=arguments,sx=0,sy=0,sw=iw,sh=ih,dx,dy,dw=iw,dh=ih;
+        if(!iw||!ih)return;
+        if(a.length>=9){sx=a[1];sy=a[2];sw=a[3];sh=a[4];dx=a[5];dy=a[6];dw=a[7];dh=a[8]}else{dx=a[1];dy=a[2];if(a.length>=5){dw=a[3];dh=a[4]}}
+        var foot=project(anchor.x,0,anchor.z),k=Math.SQRT1_2/unit,pts=[];
+        [[dx,dy+dh],[dx+dw,dy+dh],[dx+dw,dy],[dx,dy]].forEach(function(q){
+          var X=m[0]*q[0]+m[2]*q[1]+m[4]-foot.x,Y=m[1]*q[0]+m[3]*q[1]+m[5]-foot.y;
+          pts.push(anchor.x+X*k,anchor.y-Y/unit,anchor.z-X*k);
+        });
+        out.push({img:img,uv:[sx/iw,1-(sy+sh)/ih,(sx+sw)/iw,1-sy/ih],points:pts,alpha:alpha});
+      }
+    };
+    var proxy=new Proxy(api,{get:function(t,k){if(k==='globalAlpha')return alpha;if(k in t)return t[k];return noop},set:function(t,k,v){if(k==='globalAlpha')alpha=v;return true}});
+    return{begin:function(list,a){out=list;anchor=a;m=[1,0,0,1,0,0];stack.length=0;alpha=1;return proxy}};
+  })();
+  function capturePerson(list,x,y,z,draw){
+    var savedCtx=ctx,savedElevation=sceneElevation;
+    ctx=figureRecorder.begin(list,{x:x,y:y,z:z});sceneElevation=y;
+    try{draw()}catch(e){}finally{ctx=savedCtx;sceneElevation=savedElevation}
+  }
+  function drawActiveBranch(api,now){
+    var i=state.empire.activeStore-1,store=state.empire.stores[i];
+    drawBranchMap(api,i,store.level,motionPreference.matches?0:now,store.projects,{lighting:visualLight(),store:store,event:eventStatus(state.empire),rewards:state.empire.rewards,network:state.empire.network,neighborhood:neighborhood(state.empire,i)});
+  }
+  // The point at the middle of the screen on the ground, which the 3D sun's shadow box follows.
+  function viewCentre(){var u=unit,c=Math.cos(angle),s=Math.sin(angle),rx=(width/2-centerX)/u,rz=(height/2-centerY)/(u*FLOOR_SQUASH);return{x:rx*c+rz*s,z:rz*c-rx*s}}
+  // A branch in 3D: its own 2D drawing runs at a fixed scale with the primitives recording world shapes (branchRec)
+  // and a context that paints nothing; screen-space ellipses and polygons are traced back to the world points they
+  // were projected from, and people are recorded as figures like the main map's.
+  // Its gradients keep their stops, so a gradient-filled shape (Riverside's water) records in its middle colour.
+  var silentCtx=(function(){var noop=function(){},canvasStub={width:1,height:1},gradient=function(){return{stops:[],addColorStop:function(o,c){this.stops.push(c)}}};
+    return new Proxy({},{get:function(t,k){if(k==='createLinearGradient'||k==='createRadialGradient'||k==='createConicGradient')return gradient;if(k==='measureText')return function(){return{width:0}};if(k==='canvas')return canvasStub;if(k==='getTransform')return function(){return{a:1,b:0,c:0,d:1,e:0,f:0}};return noop},set:function(){return true}})})();
+  // A gradient records as the average of its stops.
+  function gradientColour(fill){
+    if(!fill||!fill.stops)return fill;var r=0,g=0,b=0,a=0,n=fill.stops.length;if(!n)return null;
+    fill.stops.forEach(function(c){var h=c.charAt(0)==='#'?c.slice(1):'';if(h.length===3||h.length===4)h=h.split('').map(function(d){return d+d}).join('');
+      r+=parseInt(h.slice(0,2),16)||0;g+=parseInt(h.slice(2,4),16)||0;b+=parseInt(h.slice(4,6),16)||0;a+=h.length===8?parseInt(h.slice(6,8),16):255});
+    function hex(v){return Math.round(v/n).toString(16).padStart(2,'0')}
+    return '#'+hex(r)+hex(g)+hex(b)+hex(a);
+  }
+  function recordBranch(figures){
+    var U=32,saved=[unit,centerX,centerY,ctx,sceneElevation],seen=new Map(),out={unit:U,boxes:[],lines:[],polys:[],ellipses:[],faces:[],fixtures:[]};
+    function key(x,y){return Math.round(x*8)+','+Math.round(y*8)}
+    branchRec={
+      seen:function(q,x,y,z){seen.set(key(q.x,q.y),[x,y,z])},
+      box:function(x,z,y,w,d,h,palette,lit){out.boxes.push({x:x,y:y,z:z,w:w,d:d,h:h,c:palette?palette[0]:colors.oliveTop,lit:lit})},
+      line:function(points,colour,weight,elevation,lit){out.lines.push({pts:points.map(function(q){return[q[0],q[1]+elevation,q[2]]}),c:colour,w:weight,lit:lit})},
+      poly:function(points,fill,lit){fill=gradientColour(fill);if(typeof fill!=='string')return;var pts=[];for(var i=0;i<points.length;i++){var w=seen.get(key(points[i].x,points[i].y));if(!w)return;pts.push(w)}out.polys.push({pts:pts,c:fill,lit:lit})},
+      ellipse:function(x,y,rx,ry,fill,lit){fill=gradientColour(fill);if(typeof fill!=='string')return;var at=seen.get(key(x,y));if(at)out.ellipses.push({at:at,rx:rx/U,ry:ry/U,c:fill,lit:lit})}
+    };
+    // A potted plant as solids: the 2D one is leaves painted in screen space, which would record as flat discs.
+    function plant3d(x,z,y,size,strain){
+      y+=sceneElevation;size=size||1;out.boxes.push({x:x,y:y,z:z,w:.46,d:.46,h:.38,c:'#b67d59'});
+      var tones=strain===undefined?['#357c50','#4e9a57','#80b567']:[['#488857','#6baa64'],['#668b4a','#9cab61'],['#456f62','#7d9273'],['#386b62','#659b87']][strain].concat(['#a4cf71']);
+      out.lines.push({pts:[[x,y+.38,z],[x,y+.5+size,z]],c:'#86b96b',w:.045});
+      for(var layer=0;layer<3;layer++){var r=size*(.46-layer*.11);out.ellipses.push({at:[x,y+.5+size*(.2+layer*.32),z],rx:r,ry:r*.8,c:tones[layer]})}
+    }
+    unit=U;centerX=0;centerY=0;ctx=silentCtx;sceneElevation=0;
+    try{
+      drawActiveBranch({realDepth:true,ctx:silentCtx,width:width,height:height,unit:U,project:project,box:drawBox,line:worldLine,poly:poly,ellipse:ellipse,blob:blobEllipse,leaf:leafShape,noise:seedNoise,lit:lit,plant:plant3d,jar:jar,carton:carton,depth:depthOf,
+        person:function(x,z){var args=arguments,rec=branchRec;branchRec=null;capturePerson(figures,x,0,z,function(){drawPerson.apply(null,args)});branchRec=rec},
+        face:function(x,y,z,alongZ,draw){out.faces.push({x:x,y:y,z:z,alongZ:alongZ,draw:draw})},
+        night:function(fixtures){out.fixtures=fixtures}},sceneTime);
+    }finally{branchRec=null;unit=saved[0];centerX=saved[1];centerY=saved[2];ctx=saved[3];sceneElevation=saved[4]}
+    return out;
+  }
+  function renderBranch3d(now,frameDelta){
+    show3d(true);
+    var nightT=nightAmount();render.nightT=nightT;
+    var figures=[],scene=recordBranch(figures);
+    map3d.renderBranch({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:viewCentre(),background:BRANCH_THEMES[state.empire.activeStore-1].background,branch:scene,figures:figures.filter(function(f){return f.alpha>.99})});
+    ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
+    // Main-store effects expire while visiting a branch rather than replaying on return.
+    particles.forEach(function(p){p.life-=frameDelta*1.5});particles=particles.filter(function(p){return p.life>0});deliveryDrones.forEach(function(d){d.age+=frameDelta});deliveryDrones=deliveryDrones.filter(function(d){return d.age<d.delay+7.5});
+    if(shopPlayUI)shopPlayUI.position(null,false);
+    if(glCanvas)glCanvas.style.display='none';
+    updateBranchMarker();updateSpenderTag(true);requestAnimationFrame(render);
+  }
+  function renderFrame3d(now,frameDelta,wallDelta){
+    show3d(true);
+    var nightT=nightAmount();render.nightT=nightT;
+    tierFlashes.forEach(function(life,i){if(life>0)tierFlashes[i]=Math.max(0,life-frameDelta*.65)});
+    var speed=state.lines.some(function(n){return n>0})?Math.min(.07,.02+production()*.00002):0;
+    crateTime=(crateTime+frameDelta*speed*1.4)%1;cargoOdo=(cargoOdo+frameDelta*speed*14)%1e5;
+    var stations=[],people=[];
+    function station(i,x,y,z,level,built,size){var tier=built?spriteTier(level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(tier-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,selected:selected===i&&!securitySelected&&!loungeSelected})}
+    // People are the 2D map's own sprites, recorded as each would be drawn and stood up in the scene as flat figures
+    // (capturePerson); a capsule under each casts its shadow.
+    var figures=[];
+    function person(x,y,z,colour,draw){people.push({x:x,y:y,z:z,colour:colour});capturePerson(figures,x,y,z,draw)}
+    for(var i=0;i<6;i++){
+      var p=machinePos[i];
+      if(i===4)orderCounterPositions(state.orderCounters).forEach(function(q,index){
+        station(4,q.x,0,q.z,state.lines[4],state.lines[4]>0,4);
+        var active=customers.some(function(c){return c.orderCounter===index&&atOrderCounter(c,state.orderCounters)&&c.serviceElapsed>0});
+        if(state.lines[4]>0)person(q.x-.35,0,q.z-1.5,'#2f6b52',function(){drawPerson(q.x-.35,q.z-1.5,now,4,false,true,false,{amount:0,phase:0,facing:.3,identity:4+index*23,taskOffset:index*1.7,workActivity:active?1:0})});
+      });
+      else{
+        station(i,p.x,p.y||0,p.z,state.lines[i],state.lines[i]>0,i);
+        if(state.lines[i]>0)(function(i,p){var spot=STAFF_SPOTS[i]||{dx:-.95,dz:-1.65},gait=spot.facing?{amount:0,phase:0,facing:spot.facing}:undefined;
+          person(p.x+spot.dx,p.y||0,p.z+spot.dz,'#2f6b52',function(){drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait)})})(i,p);
+      }
+    }
+    stations.push({index:6,x:-9.1,y:0,z:9.3,w:.8,d:1.3,h:1.1,tier:state.doorBuilt?spriteTier(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
+    if(state.doorBuilt)person(-8.25,0,8.75,'#2f6b52',function(){drawPerson(-8.25,8.75,now,6,false,true,false)});
+    if(state.lounge>0){var hx=LOUNGE_DOOR.x-1.05,hz=LOUNGE_FRONT+.75;person(hx,0,hz,'#2f6b52',function(){drawPerson(hx,hz,now,8,false,true,false,{amount:0,phase:0,facing:-.3})})}
+    customers.forEach(function(c){
+      stepCustomerVisual(c,frameDelta);
+      if(c.phase==='lounge')return;
+      person(c.renderX,0,c.renderZ,PERSON_COLOURS[(c.id||0)%PERSON_COLOURS.length],function(){drawPerson(c.renderX,c.renderZ,now,c.id,c.walking,false,c.bag,{phase:c.walkPhase||0,heading:c.walkHeading,amount:c.walkAmount||0,facing:c.facing===undefined?.3:c.facing,lean:c.turnLean||0,pickupAge:c.effectAge})});
+    });
+    var streetApi=sunnyApi(now);
+    walkerPlacements(now).forEach(function(w){person(w.x,-.012,w.z,PERSON_COLOURS[(w.g*3+1)%PERSON_COLOURS.length],function(){drawWalker(streetApi,w)})});
+    // The street's trees, lamps and props are its own renders too, stood up at their footprints' centres, and so are
+    // the cars until their Blender models load; the terraces stay solid. The 3D trees and lamps underneath only cast shadows.
+    // A prop with a loaded Blender model is drawn as that instead of its card.
+    var backdrops=[],props=[],carModels=map3d.carsModelled();
+    streetItems(streetApi).forEach(function(j){if(j.model){props.push(j.model);if(map3d.propReady(j.model.file))return}if(j.kind!=='walker'&&!(j.kind==='car'&&carModels))capturePerson(j.kind==='building'?backdrops:figures,(j.x0+j.x1)/2,0,(j.z0+j.z1)/2,j.draw)});
+    // The queue pens and the lounge's line: each post is the 2D map's stanchion, and the ropes sag between them as 3D
+    // cords; the display case is its render until its Blender model loads.
+    var ropes=[];
+    if(SHOP_SPRITES){
+      var posts={};
+      var rail=function(x1,z1,x2,z2,colour){
+        var pts=[];for(var k=0;k<=10;k++){var t=k/10;pts.push([x1+(x2-x1)*t,.84-.62*t*(1-t),z1+(z2-z1)*t])}
+        ropes.push({points:pts,colour:colour});posts[x1.toFixed(3)+','+z1.toFixed(3)]=[x1,z1];posts[x2.toFixed(3)+','+z2.toFixed(3)]=[x2,z2];
+      };
+      queuePens().forEach(function(pen){pen.forEach(function(r){rail(r[0],r[1],r[2],r[3],'#2f6b45')})});
+      if(state.lounge>0){var ropeX=LOUNGE_DOOR.x+.72,rf=LOUNGE_FRONT;rail(ropeX,rf+.3,ropeX,rf+1.4,'#6b1f35');rail(ropeX,rf+1.4,ropeX,rf+2.5,'#6b1f35')}
+      var postModel=map3d.propReady('street_queue_post.glb');
+      Object.keys(posts).forEach(function(key){var q=posts[key];if(postModel)props.push({file:'street_queue_post.glb',x:q[0],y:0,z:q[1]});else capturePerson(figures,q[0],0,q[1],function(){drawStanchion(q[0],q[1])})});
+      if(fixtureSprite('shop.displaycase')&&!map3d.hasFixture('displayCase'))capturePerson(figures,10.05,0,8.7,function(){drawSprite(streetApi,'shop.displaycase',10.05,8.7,true)});
+    }
+    // The 2D map fades figures behind the building and lays haze over distant renders as see-through copies; in 3D
+    // depth and the scene's haze do both, so only the solid draws are kept.
+    figures=figures.filter(function(f){return f.alpha>.99});backdrops=backdrops.filter(function(f){return f.alpha>.99});
+    var look=viewCentre();
+    map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
+    customers.forEach(function(c){if(c.phase!=='lounge'&&customerBadged(c))drawCustomerBadge(Object.assign({},c,{x:c.renderX,z:c.renderZ}))});
+    drawDeliveryDrones(frameDelta,now);drawParticles(frameDelta);drawTickets(frameDelta);drawConfetti(wallDelta);
+    positionShopPlay();
+    if(glCanvas)glCanvas.style.display='none';
+    updateMarkers();updateSpenderTag(false);requestAnimationFrame(render);
+  }
+  // Eases a customer's drawn position toward the simulation's and updates their stride, facing and service progress.
+  function stepCustomerVisual(c,frameDelta){
+    var blend=1-Math.exp(-frameDelta*20),oldX=c.renderX===undefined?c.x:c.renderX,oldZ=c.renderZ===undefined?c.z:c.renderZ;
+    c.renderX=oldX+(c.x-oldX)*blend;c.renderZ=oldZ+(c.z-oldZ)*blend;
+    var dx=c.renderX-oldX,dz=c.renderZ-oldZ,distance=Math.hypot(dx,dz);
+    c.walkPhase=(c.walkPhase||0)+distance*5;if(distance>.001)c.walkHeading={x:dx/distance,z:dz/distance};
+    var strideTarget=frameDelta>0?Math.min(1,distance/frameDelta/2.2):(c.walkAmount||0);
+    c.walkAmount=(c.walkAmount||0)+(strideTarget-(c.walkAmount||0))*(1-Math.exp(-frameDelta*10));
+    var previousFacing=c.facing===undefined?.3:c.facing;
+    var direction=distance>.001?Math.max(-1,Math.min(1,rotate(dx,dz).x/distance)):(c.facing===undefined?.3:c.facing);
+    // At the kiosk head a customer turns to the screen beside them (up-left of where they stand) for as long as they order.
+    if(distance<=.001&&c.phase==='kiosk'&&!c.ordered&&c.laneDistance!==null&&c.laneDistance<.05)direction=-1;
+    c.facing=(c.facing===undefined?direction:c.facing)+(direction-(c.facing===undefined?direction:c.facing))*(1-Math.exp(-frameDelta*8));
+    c.turnLean=(c.turnLean||0)+((c.facing-previousFacing)*1.5-(c.turnLean||0))*(1-Math.exp(-frameDelta*12));
+    var serviceIndex=c.ordered?5:4,serviceTarget=c.serviceStation===serviceIndex?Math.min(1,(c.serviceElapsed||0)/economy.customerHandoff(serviceIndex,state.lines[serviceIndex],counterServiceDuration(serviceIndex))):0;
+    if(c.visualServiceStation!==serviceIndex){c.serviceVisual=0;c.visualServiceStation=serviceIndex;}c.serviceVisual=(c.serviceVisual||0)+(serviceTarget-(c.serviceVisual||0))*(1-Math.exp(-frameDelta*22));
+  }
   // A single failed frame (for example a zero-width canvas while the page is being laid out) must not stop the scene forever.
   function render(wallNow){var t0=performance.now();try{renderFrame(wallNow);render.frameMs=(render.frameMs||0)*.9+(performance.now()-t0)*.1;window.__canopyFrameMs=render.frameMs;if(render.frameMs>13&&dprCap>2){dprCap=2;resize()}}catch(e){if(!render.failed)console.error('Canopy frame failed; retrying',e);ctx=screenCtx;sceneElevation=0;render.failed=true;render.invalidated=true;requestAnimationFrame(render)}}
   function renderFrame(wallNow){
@@ -4049,14 +4305,17 @@ if(!SHOP_SPRITES){
     for(var slot=0;slot<4;slot++){var phase=(taskClocks[1]/9000+slot*.23)%1;var targetGrowth=state.stock[1]>=storageCapacity()?1:phase>.86?Math.max(0,(1-phase)/.14):Math.min(1,phase/.72);cropGrowth[slot]+=(targetGrowth-cropGrowth[slot])*(1-Math.exp(-frameDelta*4))}var now=animationTime;
     sceneTime=motionPreference.matches?0:now;
     if(state.empire.activeStore){
-      sceneElevation=0;
-      drawBranchMap({get ctx(){return ctx},width:width,height:height,unit:unit,project:project,box:drawBox,line:worldLine,poly:poly,ellipse:ellipse,blob:blobEllipse,leaf:leafShape,noise:seedNoise,lit:lit,plant:plant,jar:jar,carton:carton,person:drawPerson,depth:depthOf,backdrop:branchBackdrop,night:nightAmount()>0?branchNight:null},state.empire.activeStore-1,state.empire.stores[state.empire.activeStore-1].level,motionPreference.matches?0:now,state.empire.stores[state.empire.activeStore-1].projects,{lighting:visualLight(),store:state.empire.stores[state.empire.activeStore-1],event:eventStatus(state.empire),rewards:state.empire.rewards,network:state.empire.network,neighborhood:neighborhood(state.empire,state.empire.activeStore-1)});
+      if(map3d&&map3d.ok){renderBranch3d(now,frameDelta);return}
+      sceneElevation=0;show3d(false);
+      drawActiveBranch({get ctx(){return ctx},width:width,height:height,unit:unit,project:project,box:drawBox,line:worldLine,poly:poly,ellipse:ellipse,blob:blobEllipse,leaf:leafShape,noise:seedNoise,lit:lit,plant:plant,jar:jar,carton:carton,person:drawPerson,depth:depthOf,backdrop:branchBackdrop,night:nightAmount()>0?branchNight:null},now);
       // Main-store effects expire while visiting a branch rather than replaying on return.
       particles.forEach(function(p){p.life-=frameDelta*1.5});particles=particles.filter(function(p){return p.life>0});deliveryDrones.forEach(function(d){d.age+=frameDelta});deliveryDrones=deliveryDrones.filter(function(d){return d.age<d.delay+7.5});
       atmosphereFinish(nightAmount());
       if(shopPlayUI)shopPlayUI.position(null,false);
       glCompose(now);updateBranchMarker();updateSpenderTag(true);requestAnimationFrame(render);return;
     }
+    if(map3d&&map3d.ok){renderFrame3d(now,frameDelta,wallDelta);return}
+    show3d(false);
     drawTower(now);
     // Tier change: the station pops (see drawStation), a warm flash blooms over it, a ring spreads across the floor
     // and sparkles rise, over about a second and a half.
@@ -4069,20 +4328,7 @@ if(!SHOP_SPRITES){
     crateTime=(crateTime+frameDelta*speed*1.4)%1;cargoOdo=(cargoOdo+frameDelta*speed*14)%1e5;
     var jobs=sceneJobs;
     customers.forEach(function(c){
-      var blend=1-Math.exp(-frameDelta*20),oldX=c.renderX===undefined?c.x:c.renderX,oldZ=c.renderZ===undefined?c.z:c.renderZ;
-      c.renderX=oldX+(c.x-oldX)*blend;c.renderZ=oldZ+(c.z-oldZ)*blend;
-      var dx=c.renderX-oldX,dz=c.renderZ-oldZ,distance=Math.hypot(dx,dz);
-      c.walkPhase=(c.walkPhase||0)+distance*5;if(distance>.001)c.walkHeading={x:dx/distance,z:dz/distance};
-      var strideTarget=frameDelta>0?Math.min(1,distance/frameDelta/2.2):(c.walkAmount||0);
-      c.walkAmount=(c.walkAmount||0)+(strideTarget-(c.walkAmount||0))*(1-Math.exp(-frameDelta*10));
-      var previousFacing=c.facing===undefined?.3:c.facing;
-      var direction=distance>.001?Math.max(-1,Math.min(1,rotate(dx,dz).x/distance)):(c.facing===undefined?.3:c.facing);
-      // At the kiosk head a customer turns to the screen beside them (up-left of where they stand) for as long as they order.
-      if(distance<=.001&&c.phase==='kiosk'&&!c.ordered&&c.laneDistance!==null&&c.laneDistance<.05)direction=-1;
-      c.facing=(c.facing===undefined?direction:c.facing)+(direction-(c.facing===undefined?direction:c.facing))*(1-Math.exp(-frameDelta*8));
-      c.turnLean=(c.turnLean||0)+((c.facing-previousFacing)*1.5-(c.turnLean||0))*(1-Math.exp(-frameDelta*12));
-      var serviceIndex=c.ordered?5:4,serviceTarget=c.serviceStation===serviceIndex?Math.min(1,(c.serviceElapsed||0)/economy.customerHandoff(serviceIndex,state.lines[serviceIndex],counterServiceDuration(serviceIndex))):0;
-      if(c.visualServiceStation!==serviceIndex){c.serviceVisual=0;c.visualServiceStation=serviceIndex;}c.serviceVisual=(c.serviceVisual||0)+(serviceTarget-(c.serviceVisual||0))*(1-Math.exp(-frameDelta*22));
+      stepCustomerVisual(c,frameDelta);
       var visual=Object.assign({},c,{x:c.renderX,z:c.renderZ});
       if(c.phase==='lounge'){if(c.loungeFade>0)jobs.push({depth:depthOf(visual),draw:function(){drawGuestThroughDrapes(visual,now)}})}
       else if(leaverBehindColumn(c)){}
@@ -4201,10 +4447,10 @@ if(!SHOP_SPRITES){
       ctx.save();ctx.globalAlpha=nightT;nightEmitters(now);ctx.restore();
       nightBloom(nightT,now,nightEmitters);nightMotes(nightT,now);
     }
-    for(var i=particles.length-1;i>=0;i--){var p=particles[i];p.life-=frameDelta*1.5;if(!motionPreference.matches){p.x+=p.vx*frameDelta;p.z+=p.vz*frameDelta;p.y+=p.vy*frameDelta;}p.vy-=frameDelta*5;var screen=project(p.x,p.y,p.z),size=Math.max(2,unit*.1);ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.fillRect(screen.x-size/2,screen.y-size/2,size,size);ctx.globalAlpha=1;if(p.life<=0)particles.splice(i,1)}
+    drawParticles(frameDelta);
     drawTickets(frameDelta);drawConfetti(wallDelta);
     atmosphereFinish(nightT);
-    if(shopPlayUI){var asking=moment&&customers.find(function(c){return c.id===moment.customerId&&!c.ordered}),point=asking?project(asking.renderX===undefined?asking.x:asking.renderX,2.8,asking.renderZ===undefined?asking.z:asking.renderZ):null;shopPlayUI.position(point,!!point&&point.x>24&&point.x<width-24&&point.y>90&&point.y<visibleHeight())}
+    positionShopPlay();
     glCompose(now);updateMarkers();updateSpenderTag(false);requestAnimationFrame(render);
   }
   // A final pass over the composed frame: at day a faint warm wash from the key light's corner (upper left under the

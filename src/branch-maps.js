@@ -161,7 +161,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     poly([...arc.map(q=>p(q[0],0,q[1])),...arc.slice().reverse().map(q=>p(q[0],.6,q[1]))],stone[1]);
     poly([...arc.map(q=>p(q[0],0,q[1])).slice(0,11),...arc.slice(0,11).reverse().map(q=>p(q[0],.6,q[1]))],stone[2]);
     ellipse(hi.x,hi.y,unit*rim,unit*rim*.5,stone[0]);
-    const w=p(x,.55,z);ellipse(w.x,w.y,unit*r,unit*r*.5,'#6fa5a3');ellipse(w.x-unit*r*.25,w.y-unit*r*.1,unit*r*.45,unit*r*.18,'#8fc0ba66');
+    const w=p(x,api.realDepth?.61:.55,z);ellipse(w.x,w.y,unit*r,unit*r*.5,'#6fa5a3');ellipse(w.x-unit*r*.25,w.y-unit*r*.1,unit*r*.45,unit*r*.18,'#8fc0ba66');
     b(x,z,.55,.8,.8,.9,stone);b(x,z,1.45,1.5,1.5,.12,stone);b(x,z,1.57,.4,.4,.7,stone);b(x,z,2.27,.8,.8,.1,stone);
     const t=(now*.0004)%1;
     for(let k=0;k<6;k++){const a=k*Math.PI/3,pts=[];for(let s=0;s<=6;s++){const f=s/6;pts.push([x+Math.cos(a)*f*1.25,2.35+Math.sin(f*Math.PI)*.9-f*1.4,z+Math.sin(a)*f*1.25]);}l(pts,'#e6f5ee9a',.04);}
@@ -208,7 +208,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
   }
   // Text and marks on a wall face, sheared to the projection like the main map's wallText().
   // draw() receives the context and the screen pixels per world unit along the face, since faces are foreshortened.
-  function face(x,y,z,alongZ,draw){const ctx=api.ctx,q=p(x,y,z),axis=alongZ?p(x,y,z-1):p(x+1,y,z),run=Math.abs(axis.x-q.x);if(!(run>1e-6))return;ctx.save();ctx.translate(q.x,q.y);ctx.transform(1,(axis.y-q.y)/(axis.x-q.x),0,1,0,0);draw(ctx,run);ctx.restore();}
+  function face(x,y,z,alongZ,draw){if(api.face)return api.face(x,y,z,alongZ,draw);const ctx=api.ctx,q=p(x,y,z),axis=alongZ?p(x,y,z-1):p(x+1,y,z),run=Math.abs(axis.x-q.x);if(!(run>1e-6))return;ctx.save();ctx.translate(q.x,q.y);ctx.transform(1,(axis.y-q.y)/(axis.x-q.x),0,1,0,0);draw(ctx,run);ctx.restore();}
   function text(x,y,z,label,widthUnits,size,color,alongZ=false,weight='800'){face(x,y,z,alongZ,(ctx,run)=>{ctx.fillStyle=color;ctx.font=weight+' '+Math.max(5,unit*size)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,0,0,widthUnits*run);});}
   function leaf(x,y,z,size,color,alongZ=false){face(x,y,z,alongZ,ctx=>{ctx.fillStyle=color;for(let k=-2;k<=2;k++){ctx.save();ctx.rotate(k*.5);ctx.beginPath();ctx.ellipse(0,-unit*size*.42,unit*size*.13,unit*size*.46,0,0,Math.PI*2);ctx.fill();ctx.restore();}ctx.fillRect(-unit*size*.025,0,unit*size*.05,unit*size*.36);});}
   // Lounge furniture: sofas and armchairs in fabric, rugs under seating zones.
@@ -321,7 +321,8 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     const WL=-.4,RX0=-15.5,RX1=-7.75,RZ=12.5,ctx=api.ctx,alpha=a=>Math.round(Math.max(0,Math.min(1,a))*255).toString(16).padStart(2,'0');
     wood=['#cf9f62','#8a5f33','#b07f42'];dark=['#2f4237','#172620','#243529'];
     const stone=['#b9bba8','#6f7466','#9a9d8c'],grass=['#8aa07a','#4a6150','#6a8262'];
-    b(-2.25,0,-.65,36.5,25,.5,grass);
+    // With real depth (the 3D map, api.realDepth) the slab lies either side of the river instead of under it.
+    if(api.realDepth){b((RX0-20.5)/2,0,-.65,RX0+20.5,25,.5,grass);b((RX1+16)/2,0,-.65,16-RX1,25,.5,grass);}else b(-2.25,0,-.65,36.5,25,.5,grass);
     meadow(-2.25,0,36.5,25,190,7,-.15);
     // Far bank: a gravel promenade with lamps and benches, a boathouse with racked kayaks, and a small fishing dock.
     patch(-17.7,0,1.5,25,'#b3ae93',-.14);
@@ -559,15 +560,26 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     // The clock tower stands at the corner behind the boutique: sorted as a job so the neighbourhood annex, which is
     // nearer, still lands in front of it.
     job(14.4,-8.2,()=>{
-      const tx=12.6,tz=-10,fz=tz+1.61,fx=tx+1.61;
+      // The 2D map paints the shaft's door, words and clocks a little inside its faces; with real depth they sit on them.
+      const tx=12.6,tz=-10,fz=api.realDepth?tz+1.81:tz+1.61,fx=api.realDepth?tx+1.81:tx+1.61;
       b(tx,tz,0,3.6,3.6,8.8,stone);b(tx,tz,8.8,4,4,.3,stone);b(tx,tz,9.1,3.2,3.2,2.7,stone);b(tx,tz,11.8,3.6,3.6,.25,stone);
       poly([p(tx-.5,0,fz),p(tx+.5,0,fz),p(tx+.5,1.9,fz),p(tx-.5,1.9,fz)],green[1]);l([[tx-.5,0,fz+.01],[tx-.5,1.9,fz+.01],[tx+.5,1.9,fz+.01],[tx+.5,0,fz+.01]],'#dcc294',.04);
       ['GOOD','PLANTS','BETTER','PEOPLE'].forEach((t,i)=>text(tx,5.55-i*.52,fz,t,3.2,.3,'#5a5a48'));leaf(tx,3.15,fz,.5,'#5a6a4e');roseVine(tx-1.5,fz,8.6,6);
+      if(api.realDepth){
+        // Each dial a disc on its face (a camera-facing disc would stand inside the stone), its ticks and hands proud of it.
+        const disc=(r,c,face,at)=>poly(Array.from({length:28},(_,k)=>{const a=k*Math.PI/14;return at(Math.sin(a)*r,7.3+Math.cos(a)*r*1.05,face)}),c);
+        const front=(u,y,f)=>p(tx+u,y,f),side=(u,y,f)=>p(f,y,tz-u);
+        [[front,fz,.95],[side,fx,.95]].forEach(([at,f,r])=>{disc(r,'#4a4a40',f+.005,at);disc(r*.84,'#efe3c4',f+.01,at);});
+        for(let k=0;k<12;k++){const a=k*Math.PI/6;b(tx+Math.sin(a)*.65,fz+.03,7.3+Math.cos(a)*.7-.03,.07,.04,.07,['#4a4a40','#4a4a40','#4a4a40']);}
+        l([[tx,7.3,fz+.05],[tx,7.9,fz+.05]],'#3a3a30',.05);l([[tx,7.3,fz+.05],[tx+.5,7.15,fz+.05]],'#3a3a30',.05);
+        l([[fx+.05,7.3,tz],[fx+.05,7.9,tz]],'#3a3a30',.05);l([[fx+.05,7.3,tz],[fx+.05,7.15,tz+.5]],'#3a3a30',.05);
+      }else{
       const cf=p(tx,7.3,fz);ellipse(cf.x,cf.y,unit*.95,unit*1.1,'#4a4a40');ellipse(cf.x,cf.y,unit*.8,unit*.95,'#efe3c4');
       for(let k=0;k<12;k++){const a=k*Math.PI/6,q=p(tx+Math.sin(a)*.65,7.3+Math.cos(a)*.78,fz+.01);ellipse(q.x,q.y,unit*.04,unit*.04,'#4a4a40');}
       l([[tx,7.3,fz+.01],[tx,7.9,fz+.01]],'#3a3a30',.05);l([[tx,7.3,fz+.01],[tx+.5,7.15,fz+.01]],'#3a3a30',.05);
       const cs=p(fx,7.3,tz);ellipse(cs.x,cs.y,unit*.6,unit*1.1,'#4a4a40');ellipse(cs.x,cs.y,unit*.5,unit*.95,'#efe3c4');l([[fx+.01,7.3,tz],[fx+.01,7.9,tz]],'#3a3a30',.05);l([[fx+.01,7.3,tz],[fx+.01,7.15,tz+.5]],'#3a3a30',.05);
-      arch(tx,fz-.01,9.4,1.3,2.1);poly([p(fx+.01,9.5,tz-.45),p(fx+.01,9.5,tz+.45),p(fx+.01,11.4,tz+.45),p(fx+.01,11.4,tz-.45)],'#2f3d3a');
+      }
+      arch(tx,tz+1.6,9.4,1.3,2.1);poly([p(tx+1.62,9.5,tz-.45),p(tx+1.62,9.5,tz+.45),p(tx+1.62,11.4,tz+.45),p(tx+1.62,11.4,tz-.45)],'#2f3d3a');
       b(tx,tz,10.2,.5,.5,.6,brass);
       poly([p(tx-1.9,12.05,tz+1.9),p(tx+1.9,12.05,tz+1.9),p(tx,14.9,tz)],'#4f7460');poly([p(tx+1.9,12.05,tz+1.9),p(tx+1.9,12.05,tz-1.9),p(tx,14.9,tz)],'#3a5848');
       l([[tx,14.9,tz],[tx,15.7,tz]],brass[0],.06);poly([p(tx,15.7,tz),p(tx+.75,15.45,tz),p(tx,15.2,tz)],'#c9a45a');
@@ -758,6 +770,9 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
       // sampled into short round-capped segments whose width shrinks toward the tip, so the arms read as solid
       // stylized palm leaves with no points, spikes or pom-poms.
       const crown=p(tx,ty,z),u=unit*s,cx2=api.ctx;
+      // With real depth the fronds are world-space arcs radiating round the crown, rising then drooping.
+      if(api.realDepth)for(let i=0;i<7;i++){const a=i*Math.PI*2/7+.3,len=(1.9+(i%3)*.35)*s,at=f=>[tx+Math.cos(a)*len*f,ty+(.9*f-1.5*f*f)*s,z+Math.sin(a)*len*f];
+        for(let k=0;k<6;k++)l([at(k/6),at((k+1)/6)],['#527e57','#6d9a62','#5d8a58','#48704e'][i%4],.34*s*(1-k/6*.72));}
       cx2.save();cx2.lineCap='round';
       for(let i=0;i<7;i++){
         const t=i/6,phi=-Math.PI*.95+t*Math.PI*.9,len=u*(1.9+(i%3)*.35),side=Math.cos(phi);
@@ -918,7 +933,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
       const e=p(c[0],.3,c[2]);ellipse(e.x,e.y,unit*.2,unit*.22,'#b39268');ellipse(e.x,e.y,unit*.12,unit*.13,'#8a6a48');
       [[a[0],a[2]],[c[0],c[2]]].forEach(([bx,bz])=>{const q=p(bx,.02,bz);ellipse(q.x,q.y,unit*.24,unit*.1,'#1a241c33');});
     }
-    b(0,.5,-.55,34,25,.55,grass);
+    if(api.realDepth){b(-2.2,.5,-.55,29.6,25,.55,grass);b(16.8,.5,-.55,.4,25,.55,grass);}else b(0,.5,-.55,34,25,.55,grass);
     meadow(0,.5,34,25,190,11,0,['#55744e','#6c8a60','#7c9a6a']);
     // The tree line along the rear edge is painted first: everything built later stands in front of it.
     [[-16.2,-9.3,1.3],[-14,-9.6,1.05],[-11.3,-9.2,1.2],[-8.3,-9.5,.9],[-5.6,-9.8,1.1],[1.6,-9.7,1],[5.9,-9.9,.85],[12.4,-9.4,1.25],[15.8,-8.6,1]].forEach(([x,z,sz])=>pine(x,z,sz));
@@ -996,11 +1011,13 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     poly([p(12.6,-.65,12.5),p(16.6,-.65,12.5),p(16.6,WY,12.5),p(12.6,WY,12.5)],'#2f6b70');
     poly([p(12.6,WY,-1),p(12.6,WY,12.5),p(12.6,-.02,12.5),p(12.6,-.02,-1)],'#4a5a45');
     poly([p(16.6,WY,-1),p(16.6,WY,12.5),p(16.6,-.02,12.5),p(16.6,-.02,-1)],'#4a5a45');
-    poly([p(13.8,2.35,-1.6),p(15.15,2.35,-1.6),p(15.3,1.45,-1.35),p(13.65,1.45,-1.35)],'#bfe3de7c');
+    // In 3D a see-through sheet in front of grey rock all but vanishes, so there the falls run nearly solid.
+    const fallA=api.realDepth?'dd':'7c',fallB=api.realDepth?'e6':'8c';
+    poly([p(13.8,2.35,-1.6),p(15.15,2.35,-1.6),p(15.3,1.45,-1.35),p(13.65,1.45,-1.35)],'#bfe3de'+fallA);
     {const lf=p(14.45,1.45,-1.32);ellipse(lf.x,lf.y,unit*.85,unit*.16,'#eefaf3aa');}
-    poly([p(13.4,1.45,-1.05),p(15.55,1.45,-1.05),p(15.7,WY,-1.02),p(13.25,WY,-1.02)],'#bfe3de8c');
+    poly([p(13.4,1.45,-1.05),p(15.55,1.45,-1.05),p(15.7,WY,-1.02),p(13.25,WY,-1.02)],'#bfe3de'+fallB);
     for(let k=0;k<6;k++){const t=(now*.0005+k*.17)%1;l([[13.6+k*.36,1.45-t*1.7,-1.01],[13.6+k*.36,1.22-t*1.7,-1.01]],'#eefaf3'+Math.round(210*(1-t*.35)).toString(16).padStart(2,'0'),.07);}
-    {const f=p(14.5,WY+.01,-.55);ellipse(f.x,f.y,unit*1.2,unit*.34,'#e6f5ee77');ellipse(f.x-unit*.6,f.y+unit*.08,unit*.5,unit*.16,'#eefaf399');ellipse(f.x+unit*.55,f.y+unit*.1,unit*.4,unit*.13,'#eefaf388');}
+    {const f=p(14.5,WY+.01,-.55);ellipse(f.x,f.y,unit*1.2,unit*.34,api.realDepth?'#e6f5eecc':'#e6f5ee77');ellipse(f.x-unit*.6,f.y+unit*.08,unit*.5,unit*.16,'#eefaf399');ellipse(f.x+unit*.55,f.y+unit*.1,unit*.4,unit*.13,'#eefaf388');}
     // Mist drifts up off the plunge pool and thins as it rises.
     for(let k=0;k<3;k++){const t=(now*.00035+k/3)%1,m=p(14.5+Math.sin(k*2.4+now*.001)*.3,WY+.3+t*1.6,-.8);ellipse(m.x,m.y,unit*(.5+t*.5),unit*(.22+t*.2),'#e6f5ee'+Math.round(40*(1-t)).toString(16).padStart(2,'0'));}
     for(let i=0;i<10;i++){const drift=((i*1.1+now*.0005)%12),z=-.6+drift,a=.4*Math.min(1,drift/1.5,(12-drift)/1.5);if(a<.03)continue;l([[13.3+(i*1.3%2.8),WY+.01,z],[13.35+(i*1.3%2.8),WY+.01,z+.7]],'#e4f3ea'+Math.round(a*255).toString(16).padStart(2,'0'),.035);}
