@@ -253,8 +253,12 @@ export function createMap3D(canvas, layout) {
     }, undefined, () => console.warn('3D map: could not load ' + url));
     return mesh;
   }
-  (layout.wallFaces || []).forEach(w => flatMeshes.push(flatMesh(w.url, false, () => [
-    [w.x0, w.y0, w.z0, w.x1, w.y0, w.z1, w.x1, w.y0 + w.h, w.z1, w.x0, w.y0 + w.h, w.z0], [0, 0, 1, 0, 1, 1, 0, 1]])));
+  (layout.wallFaces || []).forEach(w => {
+    const mesh = flatMesh(w.url, false, () => [
+      [w.x0, w.y0, w.z0, w.x1, w.y0, w.z1, w.x1, w.y0 + w.h, w.z1, w.x0, w.y0 + w.h, w.z0], [0, 0, 1, 0, 1, 1, 0, 1]]);
+    mesh.userData.model = w.model;
+    flatMeshes.push(mesh);
+  });
   (layout.decals || []).forEach(d => {
     const mesh = flatMesh(d.url, true, img => {
       // Image points (v down) to floor points: an affine map fixed by the three pins, applied to the image's corners.
@@ -299,6 +303,29 @@ export function createMap3D(canvas, layout) {
   world.add(people);
   const carBodies = new THREE.InstancedMesh(unitBox, material('#ffffff', { name: 'street' }), MAX_CARS), carCabins = new THREE.InstancedMesh(unitBox, material('#dfe8ea', { name: 'street' }), MAX_CARS);
   [carBodies, carCabins].forEach(m => { m.castShadow = true; m.count = 0; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); world.add(m); });
+  // Blender cars (layout.carModels): one car and one van, copied per car with its own paint, nose along +x at the
+  // shared Blender scale, and the wheels turned by the distance driven. The boxes stand in until both have loaded.
+  const CAR_SCALE = 1.69, axle = new THREE.Vector3(0, 0, 1), spin = new THREE.Quaternion();
+  const carSources = {}, carCopies = [];
+  Object.entries(layout.carModels || {}).forEach(([kind, file]) => loader.load(layout.modelBase + file, gltf => {
+    prepare(gltf.scene);
+    const wheel = gltf.scene.getObjectByName('WheelFL');
+    carSources[kind] = { scene: gltf.scene, radius: wheel ? new THREE.Box3().setFromObject(wheel).getSize(new THREE.Vector3()).y / 2 : .25 };
+  }, undefined, e => console.warn('3D map: could not load ' + file, e)));
+  const carsModelled = () => !!layout.carModels && Object.keys(layout.carModels).every(k => carSources[k]);
+  function carCopy(i, c) {
+    const kind = c.van ? 'van' : 'car', source = carSources[kind];
+    let copy = carCopies[i];
+    if (copy && copy.kind === kind && copy.paint === c.paint) return copy;
+    if (copy) world.remove(copy.holder);
+    const holder = new THREE.Group(), body = source.scene.clone(true);
+    body.traverse(o => { if (o.isMesh && /Paint$/.test(o.material.name)) { o.material = o.material.clone(); o.material.color.set(c.paint); } });
+    holder.add(body);
+    holder.scale.set(CAR_SCALE, CAR_SCALE / HEIGHT_SCALE, CAR_SCALE);
+    world.add(holder);
+    const wheels = ['WheelFL', 'WheelFR', 'WheelBL', 'WheelBR'].map(n => body.getObjectByName(n)).filter(Boolean).map(w => ({ w, rest: w.quaternion.clone() }));
+    return (carCopies[i] = { kind, paint: c.paint, holder, wheels, radius: source.radius });
+  }
 
   const matrix = new THREE.Matrix4(), position = new THREE.Vector3(), scale = new THREE.Vector3(), quaternion = new THREE.Quaternion(), colour = new THREE.Color();
   const dayHemi = hemi.intensity, daySun = sun.intensity, nightSky = new THREE.Color('#2b3a48'), daySky = hazeColour.clone();
@@ -408,7 +435,8 @@ export function createMap3D(canvas, layout) {
 
     const figures = frame.figures || [], shade = 1 - night * .55;
     placeFigures(figures, night);
-    flatMeshes.forEach(f => { f.visible = !!f.userData.ready; f.material.color.setScalar(shade); });
+    // An elevation gives way to its Blender model once that has loaded.
+    flatMeshes.forEach(f => { f.visible = !!f.userData.ready && !(f.userData.model && fixtures[f.userData.model]); f.material.color.setScalar(shade); });
     decals.forEach(d => { d.visible = d.userData.ready && (d.userData.show !== 'loungeOpen' || !!frame.loungeOpen); });
     const key = JSON.stringify(frame.ropes || []);
     if (key !== ropeKey) { ropeKey = key; buildRopes(frame.ropes || []); }
@@ -431,7 +459,19 @@ export function createMap3D(canvas, layout) {
     people.instanceMatrix.needsUpdate = true;
     if (people.instanceColor) people.instanceColor.needsUpdate = true;
 
-    carBodies.count = carCabins.count = Math.min(MAX_CARS, frame.cars.length);
+    const modelled = carsModelled();
+    frame.cars.forEach((c, i) => {
+      if (!modelled) return;
+      const copy = carCopy(i, c), ax = c.along === 'x';
+      copy.holder.visible = true;
+      copy.holder.position.set(c.x, layout.streetY, c.z);
+      copy.holder.rotation.y = ax ? (c.dir > 0 ? 0 : Math.PI) : (c.dir > 0 ? -Math.PI / 2 : Math.PI / 2);
+      // Rolling forward along +x turns the wheels clockwise about the axle (z) as seen from +z.
+      spin.setFromAxisAngle(axle, -c.roll / (copy.radius * CAR_SCALE));
+      copy.wheels.forEach(({ w, rest }) => w.quaternion.multiplyQuaternions(spin, rest));
+    });
+    for (let i = modelled ? frame.cars.length : 0; i < carCopies.length; i++) if (carCopies[i]) carCopies[i].holder.visible = false;
+    carBodies.count = carCabins.count = modelled ? 0 : Math.min(MAX_CARS, frame.cars.length);
     for (let i = 0; i < carBodies.count; i++) {
       const c = frame.cars[i], ax = c.along === 'x', van = c.van, length = van ? 4.6 : 4, wide = 1.8;
       position.set(c.x, layout.streetY + .25, c.z); scale.set(ax ? length : wide, van ? 1.7 : .75, ax ? wide : length);
@@ -453,6 +493,8 @@ export function createMap3D(canvas, layout) {
   return {
     render,
     renderBranch,
+    carsModelled,
+    hasFixture: key => !!fixtures[key],
     get ok() { return !lost; },
     dispose() { renderer.dispose(); materials.forEach(m => m.dispose()); }
   };
