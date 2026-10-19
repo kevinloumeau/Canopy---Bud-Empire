@@ -57,7 +57,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     ['trafficLevel','pickupLevel','readyLevel','curingLevel','durationLevel','kioskSpeedLevel','onlineBonusLevel','comfortLevel','scannerLevel','webLevel','seedBatchLevel','growBatchLevel','harvestBatchLevel','packSpeedLevel','serviceLevel','signLevel','loyaltyLevel','basketLevel','terpeneLevel','breedingLevel','displayLevel','trendLevel','fleetLevel','cargoLevel','repeatLevel'].forEach(function(key){next[key]=Math.floor(finite(old[key],0,0,key==='pickupLevel'?12:20))});
     next.offlineLevel=Math.floor(finite(old.offlineLevel,0,0,5));next.spenderClock=finite(old.spenderClock,180,0,600);next.rushTime=finite(old.rushTime,0,0,120);next.crosses=migrateCrosses(old.crosses,old.library,old.breed);next.reminders=old.reminders===true;next.perks=migratePerks(old.perks,next.empire.shares);next.run=migrateRun(old.run);next.trainerClock=finite(old.trainerClock,0,0,240);
     next.idStaff=Math.floor(finite(old.idStaff,0,0,economy.SECURITY_MAX_LEVEL));
-    next.strains=STRAINS.map(function(_,i){return Math.floor(finite(old.strains&&old.strains[i],i===0?1:0,i===0?1:0,10))});
+    next.strains=STRAINS.map(function(_,i){return Math.floor(finite(old.strains&&old.strains[i],i===0?1:0,i===0?1:0,strains.STRAIN_MAX))});
     next.activeStrain=Math.floor(finite(old.activeStrain,0,0,STRAINS.length-1));if(!next.strains[next.activeStrain])next.activeStrain=0;
     next.menuStrains=STRAINS.map(function(_,i){return i}).filter(function(i){return next.strains[i]>0&&(!Array.isArray(old.menuStrains)||old.menuStrains.indexOf(i)>=0)});if(!next.menuStrains.length)next.menuStrains=[0];next.strainTrend=strains.migrateTrend(old.strainTrend,STRAINS.length);next.vipBuzz=finite(old.vipBuzz,0,0,strains.VIP_BUZZ_SECONDS);
     next.journey=migrateJourney(old.journey);next.orderCounters=migrateOrderCounters(old.orderCounters);
@@ -204,13 +204,13 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       var artKey=(level?'u':'l');if(art.dataset.key!==artKey){art.innerHTML=strainArt(i,!level);art.dataset.key=artKey}
       tab.classList.toggle('is-on-menu',active);tab.classList.toggle('is-locked',!level);tab.classList.toggle('is-trending',i===trend);tab.setAttribute('aria-selected',String(flowerFocus===i));tab.tabIndex=flowerFocus===i?0:-1;
       var tag=tab.querySelector('small');tag.textContent=!level?fmt(strain.unlock):active?'On menu':'Off menu';tag.classList.toggle('price-tag',!level);
-      Array.prototype.forEach.call(tab.querySelectorAll('.strain-pips i'),function(pip,k){pip.classList.toggle('is-filled',k<level)});
+      Array.prototype.forEach.call(tab.querySelectorAll('.strain-pips i'),function(pip,k){pip.classList.toggle('is-filled',k<level);pip.classList.toggle('is-second',k<level-10)});
     });
-    var i=flowerFocus,strain=STRAINS[i],look=STRAIN_LOOKS[i],level=state.strains[i],active=state.menuStrains.indexOf(i)>=0,price=strainCost(i),maxed=level>=10,detail=$('strainDetail');
+    var i=flowerFocus,strain=STRAINS[i],look=STRAIN_LOOKS[i],level=state.strains[i],active=state.menuStrains.indexOf(i)>=0,price=strainCost(i),maxed=level>=strains.STRAIN_MAX,detail=$('strainDetail');
     var isNight=atmosphere(state.empire.network).night,type=strains.STRAIN_TYPE[i],timeNow=strains.timeFactor(type,isNight);
     var nextValue=Math.round(strain.price*(1+level*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value')*trendBoost(i)*displayBoost(i)*timeNow);
     var stats=level?
-      '<span><b>'+fmt(flowerValue(i))+'</b><small>'+'per sale'+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+(maxed?'Max':'+'+fmt(nextValue-flowerValue(i)))+'</b><small>'+(maxed?'level 10':'next lv')+'</small></span>':
+      '<span><b>'+fmt(flowerValue(i))+'</b><small>'+'per sale'+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+(maxed?'Max':'+'+fmt(nextValue-flowerValue(i)))+'</b><small>'+(maxed?'level '+strains.STRAIN_MAX:'next lv')+'</small></span>':
       '<span><b>'+fmt(Math.round(strain.price*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value')*timeNow))+'</b><small>'+'per sale'+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+fmt(strain.unlock)+'</b><small>unlock</small></span>';
     var growPct=Math.round((1-strains.strainGrowFactor(i,Math.max(1,level)))*100),tipVip=Math.round((strains.tipFactor('vip',strains.potency(i,level)+state.terpeneLevel*.25)-1)*100),tier=strains.perkTier(level),perk=strains.PERKS[i];
     var traits='<ul class="strain-traits">'+
@@ -223,7 +223,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var perkLine='<p class="strain-perk'+(tier?' is-unlocked':'')+'"><b>'+(tier?'★ '+perk.name:'☆ '+perk.name)+'</b> · '+(tier?perk.effect[tier-1]+(tier<2?' · level 10 doubles it':''):perk.locked)+'</p>';
     var heroHtml='<div class="strain-hero'+(level?'':' is-locked')+(active?' is-on-menu':'')+(i===trend?' is-trending':'')+'" style="--strain:'+strain.color+'">'+
       '<div class="strain-hero-art">'+strainArt(i,!level)+'</div>'+
-      '<div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">'+look.kind+' · </span>'+strains.TYPES[type]+(level?' · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>'+level+' / 10':' · Locked')+'</small><h2>'+strain.name+'</h2><p>'+(level?look.buyers:'Unlock to put it on the menu. '+look.buyers)+'</p></div>'+
+      '<div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">'+look.kind+' · </span>'+strains.TYPES[type]+(level?' · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>'+level+' / '+strains.STRAIN_MAX:' · Locked')+'</small><h2>'+strain.name+'</h2><p>'+(level?look.buyers:'Unlock to put it on the menu. '+look.buyers)+'</p></div>'+
       '<div class="strain-stats">'+stats+'</div>'+
       '<div class="strain-hero-details">'+traits+perkLine+'</div>'+
       (level?'<div class="product-line strain-format"><h2>Sells as</h2><div class="format-options">'+FORMATS.map(function(f,k){var stocked=state.productMenu.unlocked[k];return '<button type="button" class="strain-format-pill" data-format="'+k+'" aria-pressed="'+stocked+'"'+(!stocked&&state.money<f.cost?' disabled':'')+' title="'+f.detail+'"><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+productIcons[k]+'</svg><strong>'+f.name+'</strong><small>'+(stocked?'Selling':fmt(f.cost))+'</small></button>'}).join('')+'</div><p class="format-benefit">'+(function(){var next=FORMATS.findIndex(function(f,k){return !state.productMenu.unlocked[k]});return next<0?'Every strain sells in all three types, to whoever wants each.':'Stock '+FORMATS[next].name.toLowerCase()+' for every strain · '+['','+45% value for the 3 in 10 who want them · slower packing','+120% value for the 1 in 5 who want them · slow packing'][next]})()+'</p></div>':'')+
@@ -261,7 +261,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function onlineValue(sequence){return Math.round(flowerValue(menuChoice(sequence===undefined?state.onlineCompleted:sequence))*4/3*(1+state.onlineBonusLevel*.05)*specialFactor('online'))}
   function strainCost(i){return state.strains[i]?Math.round(Math.max(250,STRAINS[i].unlock*.35)*Math.pow(1.85,state.strains[i]-1)):STRAINS[i].unlock}
   function buyStrain(i){
-    if(i<0||i>=STRAINS.length||state.strains[i]>=10||state.money<strainCost(i))return;
+    if(i<0||i>=STRAINS.length||state.strains[i]>=strains.STRAIN_MAX||state.money<strainCost(i))return;
     var unlocking=!state.strains[i];state.money-=strainCost(i);state.strains[i]++;if(unlocking)state.menuStrains.push(i);
     notify(STRAINS[i].name.toUpperCase()+(unlocking?' UNLOCKED':' · LEVEL '+state.strains[i]),'upgrade');save();renderUI();
   }
@@ -2577,6 +2577,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var smooth=function(v){v=Math.max(0,Math.min(1,v));return v*v*(3-2*v)};
     // A point straight behind the elevator tower on screen, s units further back.
     var towerX=ROOFTOP.lift.x,towerZ=(ROOFTOP.lift.z+ROOFTOP.lift2.z)/2,behind=function(s,y){return {x:towerX-s,y:y,z:towerZ-s}};
+    // Couriers from the odd spots leave the other way: straight out to the left on screen (-x and +z by the same
+    // amount keeps their depth), over the street and away.
+    var away=function(s,y){return {x:pad.x-s,y:y,z:pad.z+s}};
     var glide=function(from,to,u,arc){var e=smooth(u);return {x:from.x+(to.x-from.x)*e,y:from.y+(to.y-from.y)*e+arc*Math.sin(Math.PI*e),z:from.z+(to.z-from.z)*e}};
     for(var i=deliveryDrones.length-1;i>=0;i--){
       var drone=deliveryDrones[i];drone.age+=dt;var t=drone.age-drone.delay;
@@ -2592,7 +2595,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       else if(t<2){at=glide(behind(3,9.6+slot*.3),{x:bx,y:hover,z:bz},t/2,.6);alpha=Math.min(1,t/.6)}
       else if(t<2.6){at.y=hover-.1*Math.sin(Math.PI*(t-2)/.6)}
       else if(t<3.8){at.y=hover+2.4*smooth((t-2.6)/1.2)}
-      else if(t<7){at=glide(top,behind(3.6,11+slot*.3),(t-3.8)/3.2,.8);alpha=Math.min(1,(7-t)/.9)}
+      else if(t<7){at=glide(top,slot%2?away(7,11.4+slot*.3):behind(3.6,11+slot*.3),(t-3.8)/3.2,.8);alpha=Math.min(1,(7-t)/.9)}
       else if(t<7.4)continue;
       else{
         // Home again, empty: out from behind the tower, over its spot, and a short descent to settle on the pad.
@@ -3677,13 +3680,39 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var base=incomeRate(),reach=Math.max(0,state.money)+base*300,best=null,bestReach=null,LOOKAHEAD=6;
     function consider(r){r.value=r.gain/r.spend;if(!best||r.value>best.value)best=r;if(r.price<=reach&&(!bestReach||r.value>bestReach.value))bestReach=r}
     function tryLevels(get,set,limit){var start=get();var found=economy.stepsToGain(function(k){set(start+k);var gain=incomeRate()-base;set(start);return gain},limit,base*1e-4);return found}
-    LINES.forEach(function(_,i){if(!state.lines[i]||!isOpen(i))return;var found=tryLevels(function(){return state.lines[i]},function(v){state.lines[i]=v},LOOKAHEAD);if(!found)return;var spend=0;for(var k=0;k<found.steps;k++)spend+=economy.stationCost(LINES[i].base,state.lines[i]+k);consider({kind:'station',index:i,name:['Seeds','Grow','Harvest','Pack','Orders','Pickup'][i],price:cost(i),spend:spend,gain:found.gain})});
+    // Each tier level (10, 20, 30, 50, 75, 100) doubles a station's output, and lifting both counters to a tier doubles every
+    // basket; those jumps sit further off than the six-level look, so the next tier is priced as one bundle too.
+    LINES.forEach(function(_,i){if(!state.lines[i]||!isOpen(i))return;var name=['Seeds','Grow','Harvest','Pack','Orders','Pickup'][i],level=state.lines[i],spend=0,k;
+      var found=tryLevels(function(){return state.lines[i]},function(v){state.lines[i]=v},LOOKAHEAD);
+      if(found){for(k=0;k<found.steps;k++)spend+=economy.stationCost(LINES[i].base,level+k);consider({kind:'station',index:i,name:name,price:cost(i),spend:spend,gain:found.gain})}
+      var tier=TIER_LEVELS.find(function(l){return l>level});if(!tier||tier-level<=LOOKAHEAD)return;
+      state.lines[i]=tier;var tierGain=incomeRate()-base;state.lines[i]=level;if(!(tierGain>base*1e-4))return;
+      for(spend=0,k=level;k<tier;k++)spend+=economy.stationCost(LINES[i].base,k);consider({kind:'station',index:i,name:name,price:cost(i),spend:spend,gain:tierGain})});
+    // Stations tied for slowest only pay together: raising one alone leaves the others holding the line, so on its own
+    // it never shows a gain and the button kept buying shop upgrades instead. Price the tied group as one step and point
+    // the button at its cheapest member; each tap lifts one, and the rest stay tied until they are all raised.
+    var rates=LINES.map(function(_,i){return state.lines[i]&&isOpen(i)?stationThroughput(i):Infinity}),floor=Math.min.apply(null,rates);
+    var tied=LINES.map(function(_,i){return i}).filter(function(i){return isFinite(rates[i])&&rates[i]<=floor*(1+1e-6)});
+    if(tied.length>1){var levels=state.lines.slice(),targets=null,group=economy.stepsToGain(function(k){tied.forEach(function(i){state.lines[i]=levels[i]+k});var gain=incomeRate()-base;tied.forEach(function(i){state.lines[i]=levels[i]});return gain},LOOKAHEAD,base*1e-4);
+      if(group)targets=tied.map(function(i){return levels[i]+group.steps});
+      else{
+        // A floored counter tied with a producer only moves at its next tier, so try lifting every tied station to its own next tier.
+        targets=tied.map(function(i){return TIER_LEVELS.find(function(l){return l>levels[i]})||levels[i]+LOOKAHEAD});
+        tied.forEach(function(i,n){state.lines[i]=targets[n]});var tierGain=incomeRate()-base;tied.forEach(function(i){state.lines[i]=levels[i]});
+        group=tierGain>base*1e-4?{gain:tierGain}:null;
+      }
+      if(group){var spend=0;tied.forEach(function(i,n){for(var k=levels[i];k<targets[n];k++)spend+=economy.stationCost(LINES[i].base,k)});var first=tied.reduce(function(a,b){return cost(b)<cost(a)?b:a});consider({kind:'station',index:first,name:['Seeds','Grow','Harvest','Pack','Orders','Pickup'][first],price:cost(first),spend:spend,gain:group.gain})}}
     COMPONENTS.forEach(function(c,i){if(!componentUnlocked(i)||state[c.key]>=c.max)return;var start=state[c.key],found=tryLevels(function(){return state[c.key]},function(v){state[c.key]=v},Math.min(LOOKAHEAD,c.max-start));if(!found)return;var spend=0;for(var k=0;k<found.steps;k++){state[c.key]=start+k;spend+=componentCost(i)}state[c.key]=start;consider({kind:'component',index:i,name:c.name,price:componentCost(i),spend:spend,gain:found.gain})});
+    // A second or third order counter and the self-order kiosks take more orders at once once the desk is at its handoff
+    // floor, which no level can do.
+    var counterPrice=orderCounterCost(state.orderCounters);if(counterPrice!==null){state.orderCounters++;var counterGain=incomeRate()-base;state.orderCounters--;if(counterGain>base*1e-4)consider({kind:'counter',name:'Order counter',price:counterPrice,spend:counterPrice,gain:counterGain})}
+    var kioskStep=!state.kiosk?['kiosk',25000]:!state.secondKiosk?['secondKiosk',50000]:!state.thirdKiosk?['thirdKiosk',100000]:null;if(kioskStep){state[kioskStep[0]]=true;var kioskGain=incomeRate()-base;state[kioskStep[0]]=false;if(kioskGain>base*1e-4)consider({kind:'kiosk',name:'Kiosk',price:kioskStep[1],spend:kioskStep[1],gain:kioskGain})}
     return bestReach||best||legacyRecommendation();
   }
   // One tap buys exactly what the button names, wherever it lives, and the card moves on to the next fix. Short of cash it
   // only says how much is missing, so a tap never opens a panel some times and buys other times.
-  function actOnRecommendation(){var r=recommendation();if(!r)return;if(state.money<r.price)return notify('Need '+fmt(r.price-state.money)+' more');if(r.kind==='component')upgradeComponent(r.index);else buyStationLevel(r.index)}
+  function actOnRecommendation(){var r=recommendation();if(!r)return;if(state.money<r.price)return notify('Need '+fmt(r.price-state.money)+' more');buyRecommendation(r)}
+  function buyRecommendation(r){if(r.kind==='component')upgradeComponent(r.index);else if(r.kind==='counter')expandOrderCounters();else if(r.kind==='kiosk')$('buyKiosk').onclick();else buyStationLevel(r.index)}
   $('flowAction').onclick=function(){if(state.gameSpeed===0)return setGameSpeed(1);if(!state.shopOpen){if(!state.doorBuilt)return buildStation('door');var next=state.lines.indexOf(0);return next<0?openShop():buildStation(next)}actOnRecommendation()};
   LINES.forEach(function(_,i){$('staffMax'+i).onclick=function(){trainStaffMax(i)}});
   $('trainIdChecker').onclick=function(){if(!state.doorBuilt)return buildStation('door');trainIdChecker(1)};

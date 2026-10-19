@@ -1,5 +1,5 @@
 import {sharesFor,SHARE_BASE,SHARE_BONUS} from './progression.js';
-export const BOOST_MAX=12;
+export const BOOST_MAX=20;
 export const boostCost=level=>Math.min(Number.MAX_SAFE_INTEGER,Math.floor(250*2.25**level));
 export const FORMATS=[
   {name:'Flower',cost:0,value:1,demand:1,packing:1,service:1,share:5,detail:'Half the door wants it · standard service'},

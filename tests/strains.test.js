@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {growFactor,strainGrowFactor,trafficFactor,potency,tipFactor,trendPrice,nextTrend,migrateTrend,tickTrend,TREND_SECONDS,perkTier,everydayBonus,packBonus,reputationBonus,vipBonus,reserveStrain,buzzFactor,VIP_BUZZ_TRAFFIC,timeFactor,peakType,STRAIN_TYPE,SATIVA,INDICA,HYBRID} from '../src/strains.js';
+import {growFactor,strainGrowFactor,trafficFactor,potency,tipFactor,trendPrice,nextTrend,migrateTrend,tickTrend,TREND_SECONDS,perkTier,everydayBonus,packBonus,reputationBonus,vipBonus,reserveStrain,buzzFactor,VIP_BUZZ_TRAFFIC,timeFactor,peakType,STRAIN_TYPE,SATIVA,INDICA,HYBRID,STRAIN_MAX} from '../src/strains.js';
 
 test('boutique strains slow the grow room and mastery claws most of it back',()=>{
   assert.equal(strainGrowFactor(0,1),1);assert.equal(strainGrowFactor(0,10),1);
@@ -48,4 +48,10 @@ test('sativas peak by day, indicas by night, hybrids never move',()=>{
   assert.ok(Math.abs(timeFactor(INDICA,true)-1.15)<1e-9);assert.ok(Math.abs(timeFactor(INDICA,false)-.91)<1e-9);
   assert.equal(peakType(false),SATIVA);assert.equal(peakType(true),INDICA);
   assert.deepEqual(STRAIN_TYPE,[HYBRID,SATIVA,HYBRID,INDICA]);
+});
+
+test('strain levels run past the level-10 signature perk',()=>{
+  assert.ok(STRAIN_MAX>=20);
+  assert.equal(perkTier(STRAIN_MAX),2);
+  assert.ok(potency(0,STRAIN_MAX)>potency(0,10));
 });
