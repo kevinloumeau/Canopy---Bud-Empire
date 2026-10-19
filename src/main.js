@@ -440,7 +440,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(moment||!state.shopOpen||state.empire.activeStore||play.cooldown>0)return;
     var guest=customers.find(function(c){return !c.ordered&&!c.kiosk&&!c.lounge&&!c.momentOffered&&c.idChecked===true&&c.phase==='entering'});
     if(!guest)return;
-    var options=momentPicks(state,menuStrains());if(!options.length)return;
+    var options=momentPicks(state,menuStrains());if(options.length<2)return;
     guest.momentOffered=true;moment=createMoment(play,guest,options);play.cooldown=60+(play.sequence%3)*15;
   }
   function simulate(dt){
