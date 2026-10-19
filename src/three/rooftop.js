@@ -70,13 +70,74 @@ export function buildRooftop(world, layout, { box, span, material }) {
   box(site, 1.8, y, -5.4, 1.2, .9, 1.2, '#8e9a86');
   box(site, 3.6, y, -2.8, .9, .14, 1.4, '#9a7a52');
 
-  // The elevator: a green steel tower from the ground to a crown above the roof, glazed on every side, its brass cab
-  // riding inside with its passenger. A short bridge crosses from its landing to the deck.
-  const hw = lift.w / 2, hd = lift.d / 2, crown = y + 2.9;
-  [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sz]) => box(roof, lift.x + sx * (hw - .06), 0, lift.z + sz * (hd - .06), .12, crown, .12, STEEL));
-  [0, layout.floors[1].y, layout.floors[2].y, y].forEach(h => span(roof, lift.x - hw, lift.x + hw, h + 2.6, h + 2.72, lift.z - hd, lift.z + hd, STEEL, { cast: false }));
-  span(roof, lift.x - hw - .1, lift.x + hw + .1, crown, crown + .5, lift.z - hd - .1, lift.z + hd + .1, '#2c5a44');
-  span(roof, lift.x - hw - .16, lift.x + hw + .16, crown + .5, crown + .58, lift.z - hd - .16, lift.z + hd + .16, '#e1dbc0');
+  // The elevator: an art deco tower from the ground to a stepped crown above the roof, glazed on every side, its
+  // brass cab riding inside with its passenger. Forest-green piers with brass fluting, a brass band at every floor
+  // and thin ones between, then a crown of setbacks carrying the CANOPY sunburst sign toward the street, a brass
+  // finial, and a scalloped green canopy over the bridge's doorway. A short bridge crosses to the deck.
+  const hw = lift.w / 2, hd = lift.d / 2, crown = y + 2.9, pier = .2;
+  [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sz]) => {
+    const px = lift.x + sx * (hw - pier / 2), pz = lift.z + sz * (hd - pier / 2);
+    box(roof, px, 0, pz, pier, crown, pier, STEEL);
+    // Brass fluting on the pier's two outward faces.
+    box(roof, px + sx * (pier / 2 + .005), 0, pz, .012, crown, .05, BRASS, { cast: false });
+    box(roof, px, 0, pz + sz * (pier / 2 + .005), .05, crown, .012, BRASS, { cast: false });
+  });
+  const band = (h, t, c) => span(roof, lift.x - hw - .03, lift.x + hw + .03, h, h + t, lift.z - hd - .03, lift.z + hd + .03, c, { cast: false });
+  [0, layout.floors[1].y, layout.floors[2].y, y].forEach(h => band(h + 2.6, .14, STEEL));
+  [0, layout.floors[1].y, layout.floors[2].y, y].forEach(h => band(h + 2.74, .04, BRASS));
+  for (let h = 1.3; h < crown; h += 1.3) band(h, .025, BRASS);
+  // The crown: three setbacks, the lowest carrying the sign on its two street faces.
+  const step = (w, d, y0, y1, c) => span(roof, lift.x - w, lift.x + w, y0, y1, lift.z - d, lift.z + d, c);
+  step(hw + .12, hd + .12, crown, crown + 1.15, '#1f4a35');
+  step(hw + .16, hd + .16, crown + 1.15, crown + 1.23, BRASS);
+  step(hw + .16, hd + .16, crown - .06, crown, BRASS);
+  step(hw - .08, hd - .08, crown + 1.23, crown + 1.6, '#2c5a44');
+  step(hw - .04, hd - .04, crown + 1.6, crown + 1.65, BRASS);
+  step(hw - .3, hd - .3, crown + 1.65, crown + 1.95, '#1f4a35');
+  step(hw - .26, hd - .26, crown + 1.95, crown + 2, BRASS);
+  const finial = new THREE.Mesh(new THREE.CylinderGeometry(.03, .09, .7, 12).translate(0, .35, 0), new THREE.MeshStandardMaterial({ color: BRASS, roughness: .3, metalness: .8 }));
+  finial.position.set(lift.x, crown + 2, lift.z); finial.castShadow = true; roof.add(finial);
+  const ball = new THREE.Mesh(new THREE.SphereGeometry(.1, 16, 10), finial.material);
+  ball.position.set(lift.x, crown + 2.72, lift.z); roof.add(ball);
+  // The CANOPY sign: a gold sunburst rising behind the name on forest green, lit a little brighter after dark.
+  const crownCanvas = document.createElement('canvas'); crownCanvas.width = 512; crownCanvas.height = 384;
+  const crownTexture = new THREE.CanvasTexture(crownCanvas); crownTexture.colorSpace = THREE.SRGBColorSpace; crownTexture.anisotropy = 4;
+  const crownMat = new THREE.MeshBasicMaterial({ map: crownTexture });
+  function paintCrown() {
+    const c = crownCanvas.getContext('2d'), W = 512, H = 384;
+    c.fillStyle = '#1f4a35'; c.fillRect(0, 0, W, H);
+    c.save(); c.translate(W / 2, H * .98);
+    for (let k = 0; k < 13; k++) {
+      const a0 = Math.PI + k * Math.PI / 13, a1 = a0 + Math.PI / 26;
+      c.fillStyle = k % 2 ? '#c99b46' : '#e2c27a';
+      c.beginPath(); c.moveTo(0, 0); c.arc(0, 0, H * .92, a0, a1); c.closePath(); c.fill();
+    }
+    c.restore();
+    c.fillStyle = '#1f4a35'; c.beginPath(); c.arc(W / 2, H * .98, H * .36, Math.PI, 0); c.fill();
+    c.strokeStyle = '#e2c27a'; c.lineWidth = 8; c.strokeRect(10, 10, W - 20, H - 20);
+    c.lineWidth = 3; c.strokeRect(24, 24, W - 48, H - 48);
+    c.fillStyle = '#1f4a35'; c.fillRect(36, 132, W - 72, 132);
+    c.strokeStyle = '#e2c27a'; c.lineWidth = 4; c.strokeRect(36, 132, W - 72, 132);
+    c.font = '600 112px "Fredoka", "Bricolage Grotesque", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillStyle = '#f1e7cc'; c.fillText('CANOPY', W / 2, 202);
+    // A small leaf in the arch under the name.
+    c.fillStyle = '#9cc46e'; c.beginPath(); c.ellipse(W / 2, H * .86, 16, 30, 0, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = '#1f4a35'; c.lineWidth = 3; c.beginPath(); c.moveTo(W / 2, H * .86 - 26); c.lineTo(W / 2, H * .86 + 30); c.stroke();
+    crownTexture.needsUpdate = true;
+  }
+  paintCrown();
+  if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', paintCrown);
+  const signW = lift.w + .1, signH = 1.0, signY = crown + .58;
+  const crownFront = new THREE.Mesh(new THREE.PlaneGeometry(signW, signH), crownMat);
+  crownFront.position.set(lift.x, signY, lift.z + hd + .125); roof.add(crownFront);
+  const crownSide = new THREE.Mesh(new THREE.PlaneGeometry(signW, signH), crownMat);
+  crownSide.rotation.y = Math.PI / 2; crownSide.position.set(lift.x + hw + .125, signY, lift.z); roof.add(crownSide);
+  // A green canopy over the doorway on to the bridge, tipped down toward the deck, with a brass edge and two brass rods.
+  const awning = new THREE.Group(); awning.position.set(lift.x + hw, y + 2.45, lift.z); awning.rotation.z = -.32; roof.add(awning);
+  span(awning, 0, .75, -.04, .04, -hd - .15, hd + .15, '#2c6b4d');
+  span(awning, .72, .8, -.12, .04, -hd - .15, hd + .15, BRASS, { cast: false });
+  [-hd, hd].forEach(z => { const rod = new THREE.Mesh(new THREE.CylinderGeometry(.015, .015, .85, 6), finial.material); rod.position.set(.38, .3, z); rod.rotation.z = -.9; awning.add(rod); });
+  lights.push([{ set emissiveIntensity(v) { crownMat.color.setScalar(v); } }, .82, .18]);
   [[false, lift.z + hd], [false, lift.z - hd], [true, lift.x - hw], [true, lift.x + hw]].forEach(([alongZ, at]) => {
     const pane = alongZ ? span(open, at - .01, at + .01, .05, crown, lift.z - hd + .06, lift.z + hd - .06, '#cfe6df') : span(open, lift.x - hw + .06, lift.x + hw - .06, .05, crown, at - .01, at + .01, '#cfe6df');
     glassy(pane);
@@ -235,6 +296,56 @@ export function buildRooftop(world, layout, { box, span, material }) {
   const roofLight = new THREE.PointLight('#ffc98a', 0, 14, 1.2);
   roofLight.position.set((x0 + x1) / 2, y + 2.6, (z0 + z1) / 2); world.add(roofLight);
 
+
+  // The lounge door under the LOUNGE sign (Kevin, 2026-10-19): a real door in the facade's doorway, always there,
+  // opening on to a short back hallway that leads to the elevator. Before the lounge is bought it is shut with a
+  // STAFF ONLY plaque and the sign is taped COMING SOON; once open it stands open behind the velvet drapes.
+  const sh = layout.shell, face = sh.loungeFront, dx = sh.loungeDoor.x, head = sh.loungeHeader, hw2 = .7, thick = .81;
+  const lobby = new THREE.Group(); roof.add(lobby);
+  span(lobby, dx - hw2 - .12, dx - hw2, 0, head + .12, face - .02, face + .1, '#1f4a35');
+  span(lobby, dx + hw2, dx + hw2 + .12, 0, head + .12, face - .02, face + .1, '#1f4a35');
+  span(lobby, dx - hw2 - .12, dx + hw2 + .12, head, head + .14, face - .02, face + .1, '#1f4a35');
+  // The hallway behind it: reveals through the wall's thickness, a runner on the floor, a back wall and a sconce.
+  const back = face - thick - 1.5;
+  span(lobby, dx - hw2 - .1, dx - hw2, 0, head, back, face - .02, '#26302a', { cast: false });
+  span(lobby, dx + hw2, dx + hw2 + .1, 0, head, back, face - .02, '#26302a', { cast: false });
+  span(lobby, dx - hw2, dx + hw2, 0, head, back - .1, back, '#2f3a32', { cast: false });
+  span(lobby, dx - hw2, dx + hw2, head, head + .05, back, face - .02, '#1d241f', { cast: false });
+  span(lobby, dx - .38, dx + .38, .004, .014, back, face - .02, VELVET, { cast: false });
+  const hallLamp = new THREE.Mesh(new THREE.SphereGeometry(.1, 12, 8), glow('#fff2c8', '#ffd58a'));
+  hallLamp.position.set(dx, head - .45, back + .06); lobby.add(hallLamp); lights.push([hallLamp.material, .6, 1.2]);
+  // The leaf hangs from its left jamb and swings in toward the hallway.
+  const hinge = new THREE.Group(); hinge.position.set(dx - hw2 + .02, 0, face + .02); lobby.add(hinge);
+  const leafW = hw2 * 2 - .04, leafH = head - .03;
+  span(hinge, 0, leafW, .01, leafH, -.03, .03, '#2d6146');
+  [[.32, .95], [1.15, 1.85]].forEach(([a, b]) => span(hinge, .14, leafW - .14, a, b, .03, .05, '#357052', { cast: false }));
+  span(hinge, .08, leafW - .08, .02, .2, .03, .045, BRASS, { cast: false });
+  span(hinge, leafW - .2, leafW - .12, .95, 1.1, .03, .1, BRASS, { cast: false });
+  const plaqueCanvas = document.createElement('canvas'); plaqueCanvas.width = 256; plaqueCanvas.height = 96;
+  const plaqueTexture = new THREE.CanvasTexture(plaqueCanvas); plaqueTexture.colorSpace = THREE.SRGBColorSpace;
+  const plaque = new THREE.Mesh(new THREE.PlaneGeometry(.66, .25), new THREE.MeshBasicMaterial({ map: plaqueTexture }));
+  plaque.position.set(leafW * .62, 1.5, .056); hinge.add(plaque);
+  // COMING SOON tape across the LOUNGE sign beside the doorway (shell.js), two strips crossing at a slant.
+  const tapeCanvas = document.createElement('canvas'); tapeCanvas.width = 512; tapeCanvas.height = 64;
+  const tapeTexture = new THREE.CanvasTexture(tapeCanvas); tapeTexture.colorSpace = THREE.SRGBColorSpace; tapeTexture.anisotropy = 4;
+  const tapeMat = new THREE.MeshBasicMaterial({ map: tapeTexture, transparent: true });
+  const signTape = new THREE.Group(); signTape.position.set(dx + 2.1, 1.95, face + .05); lobby.add(signTape);
+  [.12, -.1].forEach((tilt, k) => { const strip = new THREE.Mesh(new THREE.PlaneGeometry(2.3, .26), tapeMat); strip.rotation.z = tilt; strip.position.z = k * .006; signTape.add(strip); });
+  function paintDoorSigns() {
+    const font = '"Fredoka", "Bricolage Grotesque", sans-serif';
+    let c = plaqueCanvas.getContext('2d');
+    c.fillStyle = '#ece4d2'; c.fillRect(0, 0, 256, 96); c.strokeStyle = BRASS; c.lineWidth = 6; c.strokeRect(3, 3, 250, 90);
+    c.fillStyle = '#1f3a2c'; c.font = `600 40px ${font}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('STAFF ONLY', 128, 51);
+    plaqueTexture.needsUpdate = true;
+    c = tapeCanvas.getContext('2d'); c.clearRect(0, 0, 512, 64);
+    c.fillStyle = '#e8b13a'; c.fillRect(0, 6, 512, 52);
+    c.fillStyle = '#2b2414'; c.font = `600 34px ${font}`; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText('COMING SOON  ·  COMING SOON', 256, 33);
+    tapeTexture.needsUpdate = true;
+  }
+  paintDoorSigns();
+  if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', paintDoorSigns);
+  let doorAngle = 0;
   let cabY = 0;
   return {
     update(frame) {
@@ -244,6 +355,9 @@ export function buildRooftop(world, layout, { box, span, material }) {
       // The cab carries whoever is riding (main.js moves it with them) and waits where it last stopped.
       cabY = frame.liftY || 0;
       cab.position.y = cabY;
+      // The door stands open while the lounge is open and shuts (STAFF ONLY, sign taped) while it is a lot.
+      doorAngle += ((tier ? 1.75 : 0) - doorAngle) * .15;
+      hinge.rotation.y = doorAngle; plaque.visible = !tier; signTape.visible = !tier;
       lights.forEach(([m, day, nightGlow]) => { m.emissiveIntensity = day + night * nightGlow; });
       flame.scale.y = .8 + Math.sin((frame.time || 0) / 130) * .2 + Math.sin((frame.time || 0) / 53) * .1;
       flame.visible = tier >= 1;
