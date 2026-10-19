@@ -2,7 +2,7 @@
 // main.js keeps rendering the existing controls by id (branchToggle, branchLevel, branchBuy, branchVisit,
 // openingClaim, projectBuy, bulkDispatch); this module reparents them into a clearer structure and adds
 // derived, read-only figures (level, income now / after upgrade, affordability, unlock progress).
-import {abbr,STORES,STORE_PROJECTS,PROJECT_LEVELS,PROJECT_BONUSES,projectCost,storeCost,storeRate,nextStoreRate,saleMultiplier} from './progression.js';
+import {abbr,STORES,STORE_PROJECTS,PROJECT_LEVELS,PROJECT_BONUSES,projectCost,storeCost,storeRate,nextStoreRate,saleMultiplier,branchOpenable,starStatus,starCount,STAR_BONUS} from './progression.js';
 import {openingStatus,LINES,STAFF,REGULARS,COSMETICS,shelfCapacity,shelfUsed,staffLevel} from './operations.js';
 import {MANAGERS} from './progression.js';
 
@@ -21,6 +21,8 @@ const STYLE_GLYPHS={
  plants:[svg('<path d="M12 21v-9M12 12c-4 0-7-3-7-7 4 0 7 3 7 7Zm0 0c4 0 7-3 7-7-4 0-7 3-7 7Z"/>'),svg('<circle cx="12" cy="9" r="2.5"/><path d="M12 3.5v3M12 11.5v3M6.5 9h3M14.5 9h3M8 5l2 2M14 11l2 2M16 5l-2 2M10 11l-2 2M12 14.5V21"/>'),svg('<path d="M12 21V4a2 2 0 0 0-4 0v0M8 21V12M12 8h3a2 2 0 0 1 0 4h-3M8 12H6a2 2 0 0 1 0-4h2M6 21h10"/>')],
  layout:[svg('<rect x="3" y="12" width="18" height="7" rx="2"/><path d="M6 12V8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4M3 19v2M21 19v2"/>'),svg('<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M9 10v10M15 10v10"/>')]
 };
+const STAR='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></svg>';
+const starRow=n=>'<span class="store-stars" aria-hidden="true">'+[0,1,2].map(k=>'<i'+(k<n?' class="on"':'')+'>'+STAR+'</i>').join('')+'</span>';
 const PERSON=svg('<path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM5 21a7 7 0 0 1 14 0"/>');
 const EXPANSIONS=[[3,'Display wing'],[5,'Specialist employee'],[7,'Terrace']];
 
@@ -40,11 +42,11 @@ export function mountEmpireStores({getState,format}){
   const icon=el('span','store-icon',ICONS[i]+'<i class="store-dot" hidden></i>');
   // Name and status share the top line; the figures row below keeps the full width so nothing clips at 375px.
   const status=el('span','store-status');
-  const copy=el('span','store-copy');copy.append(name,status,el('small','store-detail',store.detail));
+  const stars=el('span','store-name-stars');name.append(stars);const copy=el('span','store-copy');copy.append(name,status,el('small','store-detail',store.detail));
   const meta=el('span','store-meta');meta.append(figures);
   const meter=el('span','store-meter','<i></i>');meter.hidden=true;
   toggle.innerHTML='';toggle.append(icon,copy,meta,meter);
-  cards[i]={toggle,status,meter,dot:icon.querySelector('.store-dot'),sig:''};
+  cards[i]={toggle,status,meter,stars,dot:icon.querySelector('.store-dot'),sig:''};
 
   // ---- Store screen: hero, grand opening, at-a-glance stats, bulk delivery, projects. ----
   const overview=$('opPane'+i+'0'),buy=$('branchBuy'+i),visit=$('branchVisit'+i),opening=overview.querySelector('.opening-task'),projects=overview.querySelector('.branch-projects');
@@ -64,8 +66,9 @@ export function mountEmpireStores({getState,format}){
   if(i===2&&dispatch&&dispatch.closest('.branch-management')){bulk=el('section','store-bulk');bulk.innerHTML='<h4 class="store-section-title">Bulk delivery</h4>';const row=el('div','store-bulk-row');const detail=$('bulkDetail');row.append(detail,dispatch);bulk.append(row);}
   if(projects){projects.open=true;const summary=projects.querySelector('summary');summary.addEventListener('click',e=>e.preventDefault());summary.classList.add('store-section-title');
    STORE_PROJECTS[i].forEach((_,j)=>{const row=$('projectBuy'+i+j).closest('.branch-project');row.prepend(el('span','project-mark',CHECK));});}
-  const body=overview;body.prepend(hero);hero.after(openingCard);openingCard.after(stats);if(bulk)stats.after(bulk);
-  heroes[i]={hero,level,income,buy,visit,hint,openingCard,openingCount:openingTitle.querySelector('.store-section-count'),stats,projects,sig:''};
+  const goals=el('section','store-panel store-goals');goals.setAttribute('aria-label',store.name+' stars');goals.innerHTML='<h4 class="store-section-title">Stars <span class="store-section-count"></span></h4><ul class="star-goals"></ul><p class="star-reward"></p>';
+  const body=overview;body.prepend(hero);hero.after(openingCard);openingCard.after(stats);stats.after(goals);if(bulk)stats.after(bulk);
+  heroes[i]={hero,level,income,buy,visit,hint,goals,goalsSig:'',openingCard,openingCount:openingTitle.querySelector('.store-section-count'),stats,projects,sig:''};
   mountStock(i);mountPeople(i);mountStyle(i);
  });
 
@@ -136,13 +139,13 @@ export function mountEmpireStores({getState,format}){
 
  function describe(i){
   const state=getState(),p=state.empire,store=p.stores[i],def=STORES[i],lvl=store.level;
-  const locked=state.lifetime<def.goal,max=lvl>=10,cost=storeCost(p,i),afford=state.money>=cost;
+  const gated=!branchOpenable(p,i),locked=state.lifetime<def.goal||gated,max=lvl>=10,cost=storeCost(p,i),afford=state.money>=cost,prevStars=i?starCount(p,i-1):3;
   const rate=storeRate(p,i)*state.gameSpeed,next=nextStoreRate(p,i)*state.gameSpeed;
   const baseRate=def.rate*saleMultiplier(p)*Math.max(1,p.retailBoost||1);
   const opening=lvl?openingStatus(p,i):null,step=lvl?p.network.stores[i].opening:0;
   const projectReady=lvl?STORE_PROJECTS[i].some((_,j)=>!store.projects[j]&&lvl>=PROJECT_LEVELS[j]&&state.money>=projectCost(i,j)):false;
   const expansion=EXPANSIONS.find(([at])=>lvl<at);
-  return {state,p,store,def,lvl,locked,max,cost,afford,rate,next,baseRate,opening,step,projectReady,expansion,
+  return {state,p,store,def,lvl,gated,prevStars,locked,max,cost,afford,rate,next,baseRate,opening,step,projectReady,expansion,
    unlockPct:Math.min(100,state.lifetime/def.goal*100),
    loyaltyNote:store.loyalty>=60?'VIP following':'VIPs at 60'};
  }
@@ -150,24 +153,32 @@ export function mountEmpireStores({getState,format}){
  function syncCard(i){
   const c=cards[i],d=describe(i);
   let chip='',tone='',dot=false;
-  if(d.locked){chip=Math.round(d.unlockPct)+'% there';tone='locked';}
+  if(d.gated){chip=STORES[i-1].name+' '+d.prevStars+'/3 ★';tone='locked';}
+  else if(d.locked){chip=Math.round(d.unlockPct)+'% there';tone='locked';}
   else if(!d.lvl){chip=d.afford?format(d.cost):'Need '+format(d.cost-d.state.money);tone=d.afford?'ready gold':'';}
   else if(d.max){chip='Max level';tone='max';}
   else{chip=(d.afford?'':'Next · ')+format(d.cost);tone=d.afford?'ready':'';dot=(d.opening&&d.opening.ready)||d.projectReady;}
-  const sig=[chip,tone,dot,d.locked&&Math.round(d.unlockPct)].join('|');
+  const starred=d.lvl?starCount(d.p,i):0;
+  const sig=[chip,tone,dot,d.locked&&Math.round(d.unlockPct),starred].join('|');
   if(sig===c.sig)return;c.sig=sig;
+  c.stars.innerHTML=d.lvl?starRow(starred):'';c.stars.title=d.lvl?starred+' of 3 stars':'';
   set(c.status,chip);c.status.className='store-status'+(tone?' '+tone.split(' ').map(t=>'is-'+t).join(' '):'');
-  c.dot.hidden=!dot;c.meter.hidden=!d.locked;if(d.locked)c.meter.firstChild.style.width=d.unlockPct+'%';
+  c.dot.hidden=!dot;c.meter.hidden=!d.locked;if(d.locked)c.meter.firstChild.style.width=(d.gated?d.prevStars/3*100:d.unlockPct)+'%';
   c.toggle.classList.toggle('is-locked',d.locked);c.toggle.classList.toggle('has-ready',!!tone&&tone!=='max'&&tone!=='locked');
  }
 
  function pips(lvl){let out='';for(let k=0;k<10;k++)out+='<i'+(k<lvl?' class="on"':'')+'></i>';return '<span class="store-pips" aria-hidden="true">'+out+'</span>';}
  function syncHero(i){
   const h=heroes[i],d=describe(i);
-  const sig=[d.lvl,d.locked,d.max,d.afford,d.cost,Math.round(d.rate*100),Math.round(d.next*100),Math.round(d.baseRate*100),d.step,d.opening&&d.opening.progress,d.opening&&d.opening.ready,d.store.loyalty,d.store.served,Math.round(d.unlockPct),d.state.money>=d.cost?1:Math.round((d.cost-d.state.money)/50),d.projectReady].join('|');
+  const sig=[d.lvl,d.gated,d.prevStars,d.locked,d.max,d.afford,d.cost,Math.round(d.rate*100),Math.round(d.next*100),Math.round(d.baseRate*100),d.step,d.opening&&d.opening.progress,d.opening&&d.opening.ready,d.store.loyalty,d.store.served,Math.round(d.unlockPct),d.state.money>=d.cost?1:Math.round((d.cost-d.state.money)/50),d.projectReady].join('|');
   if(sig===h.sig)return;h.sig=sig;
   h.hero.classList.toggle('is-locked',d.locked);h.hero.classList.toggle('is-closed',!d.locked&&!d.lvl);h.hero.classList.toggle('is-ready',!d.locked&&!d.max&&d.afford);h.hero.classList.toggle('is-max',d.max);
-  if(d.locked){
+  if(d.gated){
+   const prev=STORES[i-1].name;
+   h.level.innerHTML='<span class="hero-lock">'+LOCK+'</span><span class="hero-level-copy"><b>Finish '+prev+'</b><small>'+d.prevStars+' of 3 stars earned there</small></span><span class="hero-meter"><i style="width:'+(d.prevStars/3*100)+'%"></i></span>';
+   h.income.innerHTML='<b>'+format(d.baseRate)+'/s</b><span>when open</span>';
+   h.hint.textContent='Earn all three stars at '+prev+' to open this location.';
+  }else if(d.locked){
    h.level.innerHTML='<span class="hero-lock">'+LOCK+'</span><span class="hero-level-copy"><b>Unlocks at '+format(d.def.goal)+' lifetime revenue</b><small>'+format(d.state.lifetime)+' earned · '+Math.round(d.unlockPct)+'%</small></span><span class="hero-meter"><i style="width:'+d.unlockPct+'%"></i></span>';
    h.income.innerHTML='<b>'+format(d.baseRate)+'/s</b><span>when open</span>';
    h.hint.textContent='Keep selling at the main shop to unlock this location.';
@@ -191,9 +202,24 @@ export function mountEmpireStores({getState,format}){
    set(v('served'),abbr(d.store.served));set(s('served'),'customers');
    set(v('next'),d.expansion?'Lv '+d.expansion[0]:'Built');set(s('next'),d.expansion?d.expansion[1]:'All expansions');
   }
+  syncGoals(i,d);
   if(h.projects){h.projects.classList.toggle('has-ready',d.projectReady);
    STORE_PROJECTS[i].forEach((_,j)=>{const row=$('projectBuy'+i+j).closest('.branch-project'),owned=d.store.projects[j],lockedAt=d.lvl<PROJECT_LEVELS[j];
     row.classList.toggle('is-installed',!!owned);row.classList.toggle('is-locked',!owned&&lockedAt);row.classList.toggle('is-ready',!owned&&!lockedAt&&d.state.money>=projectCost(i,j));});}
+ }
+
+ // Stars: three one-row goals with an open figure; the reward line says what all three give.
+ function syncGoals(i,d){
+  const h=heroes[i],goals=starStatus(d.p,i),count=goals.filter(g=>g.earned).length,show=!!d.lvl||count>0;
+  const sig=[show,goals.map(g=>g.progress+':'+g.earned).join()].join('|');if(sig===h.goalsSig)return;h.goalsSig=sig;
+  h.goals.hidden=!show;if(!show)return;
+  set(h.goals.querySelector('.store-section-count'),count+' / 3');
+  h.goals.querySelector('.star-goals').innerHTML=goals.map(g=>{
+   const figure=g.earned?'Done':g.kind==='level'?'Lv '+g.progress+' / '+g.target:abbr(g.progress)+' / '+abbr(g.target);
+   return '<li class="star-goal'+(g.earned?' is-earned':'')+'"><span class="star-mark">'+STAR+'</span><span class="star-title">'+g.title+'</span><b class="star-figure">'+figure+'</b></li>';}).join('');
+  const next=STORES[i+1],bonus='+'+Math.round(STAR_BONUS*100)+'% sales everywhere';
+  set(h.goals.querySelector('.star-reward'),count===3?'Finished · '+bonus+(next?' · '+next.name+' unlocked':''):'All three: '+bonus+(next?' and '+next.name+' opens':''));
+  h.goals.classList.toggle('is-finished',count===3);
  }
 
  function sync(){STORES.forEach((_,i)=>{syncCard(i);syncHero(i);syncTabs(i);});}
