@@ -57,7 +57,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     ['trafficLevel','pickupLevel','readyLevel','curingLevel','durationLevel','kioskSpeedLevel','onlineBonusLevel','comfortLevel','scannerLevel','webLevel','seedBatchLevel','growBatchLevel','harvestBatchLevel','packSpeedLevel','serviceLevel','signLevel','loyaltyLevel','basketLevel','terpeneLevel','breedingLevel','displayLevel','trendLevel','fleetLevel','cargoLevel','repeatLevel'].forEach(function(key){next[key]=Math.floor(finite(old[key],0,0,key==='pickupLevel'?12:20))});
     next.offlineLevel=Math.floor(finite(old.offlineLevel,0,0,5));next.spenderClock=finite(old.spenderClock,180,0,600);next.rushTime=finite(old.rushTime,0,0,120);next.crosses=migrateCrosses(old.crosses,old.library,old.breed);next.achievements=migrateAchievements(old.achievements);next.reminders=old.reminders===true;next.perks=migratePerks(old.perks,next.empire.shares);
     next.idStaff=Math.floor(finite(old.idStaff,0,0,economy.SECURITY_MAX_LEVEL));
-    next.strains=STRAINS.map(function(_,i){return Math.floor(finite(old.strains&&old.strains[i],i===0?1:0,i===0?1:0,10))});
+    next.strains=STRAINS.map(function(_,i){return Math.floor(finite(old.strains&&old.strains[i],i===0?1:0,i===0?1:0,strains.STRAIN_MAX))});
     next.activeStrain=Math.floor(finite(old.activeStrain,0,0,STRAINS.length-1));if(!next.strains[next.activeStrain])next.activeStrain=0;
     next.menuStrains=STRAINS.map(function(_,i){return i}).filter(function(i){return next.strains[i]>0&&(!Array.isArray(old.menuStrains)||old.menuStrains.indexOf(i)>=0)});if(!next.menuStrains.length)next.menuStrains=[0];next.strainTrend=strains.migrateTrend(old.strainTrend,STRAINS.length);next.vipBuzz=finite(old.vipBuzz,0,0,strains.VIP_BUZZ_SECONDS);
     next.journey=migrateJourney(old.journey);next.orderCounters=migrateOrderCounters(old.orderCounters);
@@ -204,13 +204,13 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       var artKey=(level?'u':'l');if(art.dataset.key!==artKey){art.innerHTML=strainArt(i,!level);art.dataset.key=artKey}
       tab.classList.toggle('is-on-menu',active);tab.classList.toggle('is-locked',!level);tab.classList.toggle('is-trending',i===trend);tab.setAttribute('aria-selected',String(flowerFocus===i));tab.tabIndex=flowerFocus===i?0:-1;
       var tag=tab.querySelector('small');tag.textContent=!level?fmt(strain.unlock):active?'On menu':'Off menu';tag.classList.toggle('price-tag',!level);
-      Array.prototype.forEach.call(tab.querySelectorAll('.strain-pips i'),function(pip,k){pip.classList.toggle('is-filled',k<level)});
+      Array.prototype.forEach.call(tab.querySelectorAll('.strain-pips i'),function(pip,k){pip.classList.toggle('is-filled',k<level);pip.classList.toggle('is-second',k<level-10)});
     });
-    var i=flowerFocus,strain=STRAINS[i],look=STRAIN_LOOKS[i],level=state.strains[i],active=state.menuStrains.indexOf(i)>=0,price=strainCost(i),maxed=level>=10,detail=$('strainDetail');
+    var i=flowerFocus,strain=STRAINS[i],look=STRAIN_LOOKS[i],level=state.strains[i],active=state.menuStrains.indexOf(i)>=0,price=strainCost(i),maxed=level>=strains.STRAIN_MAX,detail=$('strainDetail');
     var isNight=atmosphere(state.empire.network).night,type=strains.STRAIN_TYPE[i],timeNow=strains.timeFactor(type,isNight);
     var nextValue=Math.round(strain.price*(1+level*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value')*trendBoost(i)*displayBoost(i)*timeNow);
     var stats=level?
-      '<span><b>'+fmt(flowerValue(i))+'</b><small>'+'per sale'+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+(maxed?'Max':'+'+fmt(nextValue-flowerValue(i)))+'</b><small>'+(maxed?'level 10':'next lv')+'</small></span>':
+      '<span><b>'+fmt(flowerValue(i))+'</b><small>'+'per sale'+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+(maxed?'Max':'+'+fmt(nextValue-flowerValue(i)))+'</b><small>'+(maxed?'level '+strains.STRAIN_MAX:'next lv')+'</small></span>':
       '<span><b>'+fmt(Math.round(strain.price*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value')*timeNow))+'</b><small>'+'per sale'+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+fmt(strain.unlock)+'</b><small>unlock</small></span>';
     var growPct=Math.round((1-strains.strainGrowFactor(i,Math.max(1,level)))*100),tipVip=Math.round((strains.tipFactor('vip',strains.potency(i,level)+state.terpeneLevel*.25)-1)*100),tier=strains.perkTier(level),perk=strains.PERKS[i];
     var traits='<ul class="strain-traits">'+
@@ -223,7 +223,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var perkLine='<p class="strain-perk'+(tier?' is-unlocked':'')+'"><b>'+(tier?'★ '+perk.name:'☆ '+perk.name)+'</b> · '+(tier?perk.effect[tier-1]+(tier<2?' · level 10 doubles it':''):perk.locked)+'</p>';
     var heroHtml='<div class="strain-hero'+(level?'':' is-locked')+(active?' is-on-menu':'')+(i===trend?' is-trending':'')+'" style="--strain:'+strain.color+'">'+
       '<div class="strain-hero-art">'+strainArt(i,!level)+'</div>'+
-      '<div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">'+look.kind+' · </span>'+strains.TYPES[type]+(level?' · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>'+level+' / 10':' · Locked')+'</small><h2>'+strain.name+'</h2><p>'+(level?look.buyers:'Unlock to put it on the menu. '+look.buyers)+'</p></div>'+
+      '<div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">'+look.kind+' · </span>'+strains.TYPES[type]+(level?' · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>'+level+' / '+strains.STRAIN_MAX:' · Locked')+'</small><h2>'+strain.name+'</h2><p>'+(level?look.buyers:'Unlock to put it on the menu. '+look.buyers)+'</p></div>'+
       '<div class="strain-stats">'+stats+'</div>'+
       '<div class="strain-hero-details">'+traits+perkLine+'</div>'+
       (level?'<div class="product-line strain-format"><h2>Sells as</h2><div class="format-options">'+FORMATS.map(function(f,k){var stocked=state.productMenu.unlocked[k];return '<button type="button" class="strain-format-pill" data-format="'+k+'" aria-pressed="'+stocked+'"'+(!stocked&&state.money<f.cost?' disabled':'')+' title="'+f.detail+'"><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+productIcons[k]+'</svg><strong>'+f.name+'</strong><small>'+(stocked?'Selling':fmt(f.cost))+'</small></button>'}).join('')+'</div><p class="format-benefit">'+(function(){var next=FORMATS.findIndex(function(f,k){return !state.productMenu.unlocked[k]});return next<0?'Every strain sells in all three types, to whoever wants each.':'Stock '+FORMATS[next].name.toLowerCase()+' for every strain · '+['','+45% value for the 3 in 10 who want them · slower packing','+120% value for the 1 in 5 who want them · slow packing'][next]})()+'</p></div>':'')+
@@ -261,7 +261,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function onlineValue(sequence){return Math.round(flowerValue(menuChoice(sequence===undefined?state.onlineCompleted:sequence))*4/3*(1+state.onlineBonusLevel*.05)*specialFactor('online'))}
   function strainCost(i){return state.strains[i]?Math.round(Math.max(250,STRAINS[i].unlock*.35)*Math.pow(1.85,state.strains[i]-1)):STRAINS[i].unlock}
   function buyStrain(i){
-    if(i<0||i>=STRAINS.length||state.strains[i]>=10||state.money<strainCost(i))return;
+    if(i<0||i>=STRAINS.length||state.strains[i]>=strains.STRAIN_MAX||state.money<strainCost(i))return;
     var unlocking=!state.strains[i];state.money-=strainCost(i);state.strains[i]++;if(unlocking)state.menuStrains.push(i);
     notify(STRAINS[i].name.toUpperCase()+(unlocking?' UNLOCKED':' · LEVEL '+state.strains[i]),'upgrade');save();renderUI();
   }
