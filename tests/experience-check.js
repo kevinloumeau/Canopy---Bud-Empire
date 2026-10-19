@@ -16,7 +16,6 @@ export async function runExperienceChecks(mode){
  if(mode==='starter'){
   assert($('storyTitle').textContent==='The first familiar faces','New-player chapter');
   assert($('nextInvestment').textContent.includes('Pickup'),'Shared bottleneck guidance');
-  document.querySelector('.story-goals').open=true;
   assert($('goalClaim1').textContent==='View delivery pad','Delivery objective explains prerequisite');
   await click($('goalClaim1'));assert(!document.querySelector('[data-pane=orders]').hidden,'Gated goal navigates to deliveries');
   assert(!$('deliverySite').hidden&&$('deliverySite').style.display!=='none','Delivery construction visible');
