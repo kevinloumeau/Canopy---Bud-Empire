@@ -377,8 +377,16 @@ export function createMap3D(canvas, layout) {
   function propReady(file) {
     if (!propRequested[file]) {
       propRequested[file] = true;
-      loader.load(layout.modelBase + file, gltf => {
+      // `file#low` is the model without its tree (Crown*, Trunk* parts): the shop planters along the floor's front
+      // edges keep only their shrubs so they never hide the queue behind them.
+      const [url, variant] = file.split('#');
+      loader.load(layout.modelBase + url, gltf => {
         prepare(gltf.scene);
+        if (variant === 'low') {
+          const drop = [];
+          gltf.scene.traverse(o => { if (/^(Crown|Trunk)/.test(o.name)) drop.push(o); });
+          drop.forEach(o => o.parent && o.parent.remove(o));
+        }
         gltf.scene.traverse(o => {
           if (!o.isMesh) return;
           if (o.material.name === 'LampGlow') glowMaterials.add(o.material);

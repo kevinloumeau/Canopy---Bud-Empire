@@ -824,9 +824,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var machinePos=[{x:-3,z:-3,y:9.4},{x:3,z:-3,y:9.4},{x:SHOP_SPRITES?4.8:3,z:-.3,y:4.7},{x:-3,z:-.3,y:4.7},{x:-4+COUNTER_SHIFT,z:2.5,y:0},{x:4+COUNTER_SHIFT,z:2.5,y:0}];
   // The front edges of the floor, round the pickup pen (Kevin, 2026-10-19: one lone case left the corner looking empty,
   // and a run of cases didn't look good either): the aisle planter's twins along the front baseboard and up the
-  // right-hand edge. Each is 3.6 long and 0.95 deep, long along z; `rot` lays it along the front.
-  var FRONT_FIXTURES=[{file:'shop_planter.glb',x:2.4,z:11.33,rot:Math.PI/2},{file:'shop_planter.glb',x:6.4,z:11.33,rot:Math.PI/2},
-    {file:'shop_planter.glb',x:10.3,z:11.33,rot:Math.PI/2},{file:'shop_planter.glb',x:12.43,z:9.1,rot:0}];
+  // right-hand edge, without the aisle planter's tree. Each is 3.6 long and 0.95 deep, long along z; `rot` lays it
+  // along the front.
+  var FRONT_FIXTURES=[{file:'shop_planter.glb#low',x:2.4,z:11.33,rot:Math.PI/2},{file:'shop_planter.glb#low',x:6.4,z:11.33,rot:Math.PI/2},
+    {file:'shop_planter.glb#low',x:10.3,z:11.33,rot:Math.PI/2},{file:'shop_planter.glb#low',x:12.43,z:9.1,rot:0}];
   function frontFixtures(){return FRONT_FIXTURES}
   // The back-wall shelving stands just behind the counters; the smoking lounge is the room behind it (z −7 → −1.76).
   var DISPLAY_Z=-1.6,LOUNGE_FRONT=DISPLAY_Z+.65;
