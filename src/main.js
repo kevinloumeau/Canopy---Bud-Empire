@@ -2381,7 +2381,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     }
     stations.push({index:6,x:ID_DESK.x,y:0,z:ID_DESK.z,w:1.3,d:2.4,h:1.6,tier:state.doorBuilt?economy.stationLook(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
     // The doorman stands behind the booth, on the room side, facing the front door across the desk.
-    if(state.doorBuilt)person(DOORMAN.x,0,DOORMAN.z,'#2f6b52',function(){drawPerson(DOORMAN.x,DOORMAN.z,now,6,false,true,false,{amount:0,phase:0,facing:-1})});
+    if(state.doorBuilt)person(DOORMAN.x,0,DOORMAN.z,'#2f6b52',function(){drawPerson(DOORMAN.x,DOORMAN.z,now,6,false,true,false,{amount:0,phase:0,facing:1})});
     // The lounge host works the rooftop: behind the bar once there is one, otherwise by the elevator's bridge.
     if(state.lounge>0){var host=state.lounge>=2?{x:3.7,z:-8.75,f:.3}:{x:-5.2,z:-4,f:.3};person(host.x,ROOFTOP.y,host.z,'#2f6b52',function(){drawPerson(host.x,host.z,now,8,false,true,false,{amount:0,phase:0,facing:host.f})})}
     // Guests on the roof hold a spot for their session. A guest riding up or down stands in the elevator's cab, which
