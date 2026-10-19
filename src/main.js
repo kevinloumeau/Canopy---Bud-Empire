@@ -792,7 +792,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       [1,2].forEach(function(t){layout.stationModelSize['4.'+t]={w:2.2*stationSpriteSize(4,t).w/stationSpriteSize(4,3).w,ox:0}});
       // The security booths are built facing -Y; turned a quarter, their scanner, sign and customer side face the front door
       // (west, -x), the desk runs along the footprint's long z side, and the doorman's side faces the room.
-      [1,2,3,4,5].forEach(function(t){layout.stationModelSize['6.'+t]={w:1.7,ox:0,turn:-Math.PI/2}});
+      // w 2.69 puts the shared 1.45 x 0.8 mat at 1.69 map units a metre, the scale of the people and the other stations.
+      [1,2,3,4,5].forEach(function(t){layout.stationModelSize['6.'+t]={w:2.69,ox:0,turn:-Math.PI/2}});
       // The production line from the 2D map's own routes, so both maps carry the same tubes, belts and cargo rhythm.
       var grow=tubeRunGeometry(TUBE_RUNS[1]),pack=tubeRunGeometry(TUBE_RUNS[3]);
       layout.transport={bore:TUBE_DIA,gap:CARGO_GAP,
@@ -1658,10 +1659,11 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // waiting for someone to walk up from the door, and a well-staffed door clears people as fast as they arrive.
   // The ID desk stands 0.9 further in from the street door than it first did (Kevin, 2026-10-19: more room at the door);
   // guests are checked at ID_CHECK, in front of it.
-  // Turned to face the door (Kevin, 2026-10-19), the booth runs along z, so it sits half a step nearer the storefront to stay
-  // clear of the order line's last turn at (-8.2, 8.6); the doorman works its room side by the monitors, past the
-  // line's last row at z 9.3.
-  var ID_DESK={x:-8.2,z:9.8},ID_CHECK={x:-9.15,z:9.35},DOORMAN={x:-7.4,z:10.05};
+  // Turned to face the door (Kevin, 2026-10-19), the booth runs along z. At full size (1.69 map units to a Blender metre,
+  // like the other stations; Kevin: "the security booth scale is too small") it sits nearer the storefront so its rear
+  // end clears the order line's last turn at (-8.2, 8.6); guests stop at its scanner, and the doorman works its room
+  // side by the monitors, past the line's last row at z 9.3.
+  var ID_DESK={x:-8.2,z:10.15},ID_CHECK={x:-9.2,z:9.6},DOORMAN={x:-7.15,z:10.35};
   var ID_ROUTE=[ID_CHECK,{x:-10.6,z:9.6},{x:-11.7,z:9.3},{x:-12.4,z:7.8},{x:-12.4,z:-10}];
   function moveToIdCheck(c,dt){
     var queue=customers.filter(function(q){return q.idChecked===false}),index=queue.indexOf(c);
@@ -2377,7 +2379,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
           person(p.x+spot.dx,p.y||0,p.z+spot.dz,'#2f6b52',function(){drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait)})})(i,p);
       }
     }
-    stations.push({index:6,x:ID_DESK.x,y:0,z:ID_DESK.z,w:.8,d:1.3,h:1.1,tier:state.doorBuilt?economy.stationLook(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
+    stations.push({index:6,x:ID_DESK.x,y:0,z:ID_DESK.z,w:1.3,d:2.4,h:1.6,tier:state.doorBuilt?economy.stationLook(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
     // The doorman stands behind the booth, on the room side, facing the front door across the desk.
     if(state.doorBuilt)person(DOORMAN.x,0,DOORMAN.z,'#2f6b52',function(){drawPerson(DOORMAN.x,DOORMAN.z,now,6,false,true,false,{amount:0,phase:0,facing:-1})});
     // The lounge host works the rooftop: behind the bar once there is one, otherwise by the elevator's bridge.
@@ -2607,7 +2609,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function updateMarkers(){
     var key=[centerX,centerY,unit,width,height,state.idStaff,state.lines.join(),securitySelected,selected,state.lounge,loungeSelected].join("|");
     if(updateMarkers.key===key)return;updateMarkers.key=key;
-    var securityPos=project(ID_DESK.x,.62,9.91),loungePos=map3d&&map3d.ok?project(-2.7,ROOFTOP.y+1.2,-6.1):project(LOUNGE_DOOR.x,1.5,DISPLAY_Z+.5),labelSize=Math.max(8,Math.min(10,unit*.24))*(width>=780?.85:1)+'px';
+    var securityPos=project(ID_DESK.x,.62,ID_DESK.z+.1),loungePos=map3d&&map3d.ok?project(-2.7,ROOFTOP.y+1.2,-6.1):project(LOUNGE_DOOR.x,1.5,DISPLAY_Z+.5),labelSize=Math.max(8,Math.min(10,unit*.24))*(width>=780?.85:1)+'px';
     securityMarker.style.fontSize=labelSize;loungeMarker.style.fontSize=labelSize;
     var labels=[{el:securityMarker,x:securityPos.x,y:securityPos.y},{el:loungeMarker,x:loungePos.x,y:loungePos.y}];
     markerEls.forEach(function(el,i){var station=machinePos[i],pos=project(station.x,.63+station.y,station.z+1.23);el.style.fontSize=labelSize;labels.push({el:el,x:pos.x,y:pos.y})});
