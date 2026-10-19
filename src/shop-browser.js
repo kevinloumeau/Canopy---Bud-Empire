@@ -30,7 +30,7 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
   const milestone=pane.querySelector('.shop-milestone'),reset=pane.querySelector('.shop-reset');
   // Online opens with the delivery desk itself, so Deliveries needs no tab of its own.
   const desk=document.createElement('button');desk.type='button';desk.className='shop-desk';desk.hidden=true;
-  desk.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 10h7l1.5 3.5h-10zM8.5 10 5 7m10.5 3L19 7M8.5 13.5 5 17m10.5-3.5L19 17M2 7h6m8 0h6M2 17h6m8 0h6"/></svg><span class="shop-desk-copy"><b>Delivery desk</b><small></small></span><i class="shop-desk-count" hidden></i><svg class="shop-desk-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>';
+  desk.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 10h7l1.5 3.5h-10zM8.5 10 5 7m10.5 3L19 7M8.5 13.5 5 17m10.5-3.5L19 17M2 7h6m8 0h6M2 17h6m8 0h6"/></svg><span class="shop-desk-copy"><em>Delivery desk</em><b>Delivery desk</b><small></small></span><i class="shop-desk-count" hidden></i><span class="shop-desk-price" hidden></span><i class="shop-desk-meter" hidden><i></i></i><svg class="shop-desk-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>';
   desk.onclick=()=>{if(openDeliveries)openDeliveries()};
   list.prepend(desk);
   pane.prepend(header,recommendation,list,empty);
@@ -59,9 +59,14 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
     const sequence=order.filter(o=>!o.isDone).concat(order.filter(o=>o.isDone)).map(o=>o.row);
     const key=sequence.map(r=>r.id).join(',');if(key!==render.key){render.key=key;sequence.forEach(r=>list.appendChild(r.node))}
     desk.hidden=category!==4||!deliveryDesk;
-    if(!desk.hidden){const d=deliveryDesk(),note=desk.querySelector('small'),count=desk.querySelector('.shop-desk-count');
-      note.textContent=d.built?d.waiting?d.waiting+' waiting to send':'No orders waiting':'Build the delivery pad';
-      count.hidden=!d.built||!d.waiting;count.textContent=d.waiting;desk.setAttribute('aria-label','Delivery desk, '+note.textContent)}
+    if(!desk.hidden){const d=deliveryDesk(),note=desk.querySelector('small'),title=desk.querySelector('b'),count=desk.querySelector('.shop-desk-count'),price=desk.querySelector('.shop-desk-price'),meter=desk.querySelector('.shop-desk-meter');
+      // Unbuilt, the desk is the shelf's next step: a brass card above the list with its price and savings so far.
+      const unbuilt=!d.built;desk.classList.toggle('is-unbuilt',unbuilt);desk.classList.toggle('is-short',unbuilt&&!d.ready);
+      if(unbuilt&&desk.parentElement===list)list.before(desk);else if(!unbuilt&&desk.parentElement!==list)list.prepend(desk);
+      title.textContent=unbuilt?'Build the delivery pad':'Delivery desk';
+      note.textContent=unbuilt?(d.ready?'Opens web orders':'Opens web orders · '+d.toGo+' to go'):d.waiting?d.waiting+' waiting to send':'No orders waiting';
+      price.hidden=meter.hidden=!unbuilt;price.textContent=d.price||'';meter.firstChild.style.width=Math.round((d.progress||0)*100)+'%';
+      count.hidden=!d.built||!d.waiting;count.textContent=d.waiting;desk.setAttribute('aria-label',unbuilt?'Build the delivery pad, '+d.price+', '+note.textContent:'Delivery desk, '+note.textContent)}
     empty.hidden=count>0||done>0;
     empty.textContent='Nothing here yet.';
     const info=recommendInfo&&recommendInfo();
