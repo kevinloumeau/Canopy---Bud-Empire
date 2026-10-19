@@ -797,7 +797,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
         layout.fixtures.push({key:'displayCase',file:'display_case.glb',x:10.05,y:0,z:8.7,scale:1.69},{key:'storefront',file:'storefront.glb',x:-10.65,y:0,z:(8.94+LOUNGE_FRONT)/2,scale:1.69},{key:'storefrontDoor',file:'storefront_door.glb',x:-10.65,y:0,z:(12.05+8.8)/2,scale:1.69,hide:['Canopy','CanopyEdge','CanopyEdgeSide','LampStem','LampShade','LampBulb']});
         // The street door's striped awning and the neon leaf blade sign off its post (src/three/entrance.js): the door
         // opens between the storefront's last mullion (8.8) and the post (10.94..11.43), under the header (3.5..4.06).
-        layout.entrance={x:-10.65,z0:8.82,z1:10.92,top:4.45,front:3.5,reach:1.6,drop:.36,sign:{x0:-11.85,x1:-10.95,y0:2.25,y1:3.05,z:11.19}};
+        layout.entrance={x:-10.65,z0:8.82,z1:10.92,header:3.5,top:3.88,front:3.3,reach:1.5,drop:.3,sign:{x0:-11.9,x1:-10.95,y0:2.05,y1:3.1,z:11.19}};
         var matX=10.7,matZ=-4.35,runW=(LOUNGE_CARPET_END-LOUNGE_FRONT)/LOUNGE_RUNNER_PIN.ratio,pin=LOUNGE_RUNNER_PIN;
         layout.decals=[{url:'sprites/shell/shell.mat.exit.png',image:[[0,0],[1,0],[0,1]],world:[[matX+.6,matZ+1.1],[matX+.6,matZ-1.1],[matX-.6,matZ+1.1]]},
           {url:'sprites/interior/lounge.carpet.runner.png',pixels:true,image:[pin.left,pin.bottom,pin.top],world:[[LOUNGE_DOOR.x-runW/2,LOUNGE_CARPET_END],[LOUNGE_DOOR.x+runW/2,LOUNGE_CARPET_END],[LOUNGE_DOOR.x-runW/2,LOUNGE_FRONT+.02]],show:'loungeOpen'}];
@@ -1130,7 +1130,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     exteriorFixtures.sconces.forEach(function(f){halo(f.x-.2,f.y-.06,f.z,.9,.55,WARM);beam(f.x-.32,f.y-.12,f.z,.03,.14,.9,.3,WARM);pool(f.x-.6,.03,f.z,1.5,.7,WARM)});
     exteriorFixtures.bollards.forEach(function(b){halo(b.x,.62,b.z,.5,.55,WARM);pool(b.x,.03,b.z,1.3,.6,WARM)});
     halo(e.x,e.y-.14,e.z,.8,.55,WARM);beam(e.x,e.y-.12,e.z-.06,.03,.28,1.2,.3,WARM);pool(e.x,.03,e.z-.8,1.7,.65,WARM);
-    pool(-11.2,.03,10,1.7,.5,WARM);pool(-9.1,.04,9.91,1.9,.7,WARM);halo(-9.1,2.4,9.91,.9,.45,'#ffe2a5');
+    pool(-11.2,.03,10,1.7,.5,WARM);pool(ID_DESK.x,.04,9.91,1.9,.7,WARM);halo(ID_DESK.x,2.4,9.91,.9,.45,'#ffe2a5');
     // The glazed storefront and marquee spill onto the sidewalk along the whole entrance wall.
     pool(-12.3,.03,4.6,2.4,.3,'#ffe3a8');pool(-12.3,.03,8.2,2.4,.32,'#ffe3a8');
     // Shop floor: slab downlights over the counters, the retail counters, floor downlights, the vitrine, the lounge door.
@@ -1867,7 +1867,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // The doorman's line is one route from the desk back out through the door and along the street, everyone 0.7
   // apart: the next customer is already on the approach while the head is being checked, so the desk is never idle
   // waiting for someone to walk up from the door, and a well-staffed door clears people as fast as they arrive.
-  var ID_ROUTE=[{x:-10.05,z:9.35},{x:-10.6,z:9.6},{x:-11.7,z:9.3},{x:-12.4,z:7.8},{x:-12.4,z:-10}];
+  // The ID desk stands 0.9 further in from the street door than it first did (Kevin, 2026-10-19: more room at the door);
+  // guests are checked at ID_CHECK, in front of it.
+  var ID_DESK={x:-8.2,z:9.3},ID_CHECK={x:-9.15,z:9.35};
+  var ID_ROUTE=[ID_CHECK,{x:-10.6,z:9.6},{x:-11.7,z:9.3},{x:-12.4,z:7.8},{x:-12.4,z:-10}];
   function moveToIdCheck(c,dt){
     var queue=customers.filter(function(q){return q.idChecked===false}),index=queue.indexOf(c);
     var startX=c.x,startZ=c.z,budget=dt*economy.walkSpeed(state.trafficLevel);
@@ -1886,12 +1889,12 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
         // else, so the rope never backs up through the kiosks to the door.
         if(c.lounge&&loungeSeats(state.lounge)>0&&loungeWaiting().length+customers.filter(function(q){return q.phase==='toLounge'&&q.waypoints.length}).length<LOUNGE_ROPE){
           // Past the doorman, along the kiosk row and back to the curtain.
-          c.phase='toLounge';c.routeKind='lounge';c.waypoints=[{x:-10.05,z:8.5},{x:-9.7,z:8.15},{x:-8.2,z:8.6},{x:-7.95,z:7.6},{x:-7.95,z:2.2},{x:LOUNGE_DOOR.x,z:2.2},LOUNGE_DOOR];return;
+          c.phase='toLounge';c.routeKind='lounge';c.waypoints=[{x:ID_CHECK.x,z:8.5},{x:-9.7,z:8.15},{x:-8.2,z:8.6},{x:-7.95,z:7.6},{x:-7.95,z:2.2},{x:LOUNGE_DOOR.x,z:2.2},LOUNGE_DOOR];return;
         }
         c.lounge=false;
         var route=c.kiosk?kioskRoute(c.kioskIndex):queueRoute(false),join=laneJoinIndex(route);
         // Step down the desk's door side and join the lane in the corridor in front of it, clear of the doorman.
-        c.routeKind=c.kiosk?'kiosk':'order';c.laneDistance=routeLength(route.slice(0,join+1));c.waypoints=[{x:-10.05,z:8.5},route[join]];
+        c.routeKind=c.kiosk?'kiosk':'order';c.laneDistance=routeLength(route.slice(0,join+1));c.waypoints=[{x:ID_CHECK.x,z:8.5},route[join]];
       }
     }
   }
@@ -3505,7 +3508,7 @@ if(!SHOP_SPRITES){
   }
   function addIdCheckStation(jobs,now){
     // The desk sits wholly on the timber floor (front edge z 9.925 < 10), just inside the door.
-    var x=-9.1,z=9.3,steel=['#414843','#171e1a','#2b342e'],wood=['#bc9d73','#6f5943','#998063'];
+    var x=ID_DESK.x,z=ID_DESK.z,steel=['#414843','#171e1a','#2b342e'],wood=['#bc9d73','#6f5943','#998063'];
     jobs.push({depth:depthOf({x:-12.4,z:7.1})-.01,draw:function(){
       groundPatch(-12.4,7.1,.65,.7,'#c7d6a754');
       worldLine([[-12.7,.04,7.45],[-12.1,.04,7.45]],'#e5d7ae',.05);
@@ -4264,7 +4267,7 @@ if(!SHOP_SPRITES){
           person(p.x+spot.dx,p.y||0,p.z+spot.dz,'#2f6b52',function(){drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait)})})(i,p);
       }
     }
-    stations.push({index:6,x:-9.1,y:0,z:9.3,w:.8,d:1.3,h:1.1,tier:state.doorBuilt?spriteTier(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
+    stations.push({index:6,x:ID_DESK.x,y:0,z:ID_DESK.z,w:.8,d:1.3,h:1.1,tier:state.doorBuilt?spriteTier(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
     if(state.doorBuilt)person(-8.25,0,8.75,'#2f6b52',function(){drawPerson(-8.25,8.75,now,6,false,true,false)});
     // The lounge host works the rooftop: behind the bar once there is one, otherwise by the elevator's bridge.
     if(state.lounge>0){var host=state.lounge>=2?{x:3.7,z:-8.75,f:.3}:{x:-5.2,z:-4,f:.3};person(host.x,ROOFTOP.y,host.z,'#2f6b52',function(){drawPerson(host.x,host.z,now,8,false,true,false,{amount:0,phase:0,facing:host.f})})}
@@ -4605,7 +4608,7 @@ if(!SHOP_SPRITES){
   function updateMarkers(){
     var key=[centerX,centerY,unit,width,height,state.idStaff,state.lines.join(),securitySelected,selected,state.lounge,loungeSelected].join("|");
     if(updateMarkers.key===key)return;updateMarkers.key=key;
-    var securityPos=project(-9.1,.62,9.91),loungePos=map3d&&map3d.ok?project(-2.7,ROOFTOP.y+1.2,-6.1):project(LOUNGE_DOOR.x,1.5,DISPLAY_Z+.5),labelSize=Math.max(8,Math.min(10,unit*.24))*(width>=780?.85:1)+'px';
+    var securityPos=project(ID_DESK.x,.62,9.91),loungePos=map3d&&map3d.ok?project(-2.7,ROOFTOP.y+1.2,-6.1):project(LOUNGE_DOOR.x,1.5,DISPLAY_Z+.5),labelSize=Math.max(8,Math.min(10,unit*.24))*(width>=780?.85:1)+'px';
     securityMarker.style.fontSize=labelSize;loungeMarker.style.fontSize=labelSize;
     var labels=[{el:securityMarker,x:securityPos.x,y:securityPos.y},{el:loungeMarker,x:loungePos.x,y:loungePos.y}];
     markerEls.forEach(function(el,i){var station=machinePos[i],pos=project(station.x,.63+station.y,station.z+1.23);el.style.fontSize=labelSize;labels.push({el:el,x:pos.x,y:pos.y})});
@@ -5158,7 +5161,7 @@ if(!SHOP_SPRITES){
   function selectMachine(i){securitySelected=false;loungeSelected=false;selected=i;showTray('factory');renderUI();if(machineTabs[i]&&machineTabs[i].scrollIntoView)machineTabs[i].scrollIntoView({block:'nearest',inline:'nearest'});if(navigator.vibrate)navigator.vibrate(8)}
   // Construction: the door and each station are raised for free, in line order, with the intro explaining what each one does.
   // Building never charges cash because a shop with no pickup counter cannot earn any.
-  var DOOR_POS={x:-9.1,z:9.3};
+  var DOOR_POS=ID_DESK;
   function isBuilt(key){return key==='door'?state.doorBuilt:state.lines[key]>0}
   function buildStation(key){
     if(isBuilt(key))return false;
