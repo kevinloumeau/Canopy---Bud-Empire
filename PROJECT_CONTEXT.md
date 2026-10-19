@@ -611,3 +611,7 @@ Phase 1 adds `src/three/`: `camera.js` is an orthographic camera matched pixel f
 ## 3D map, phase 8: 3D is the default (October 19, 2026)
 
 After Kevin's iPhone check ("good on phone"), the sprite shop's map and the five branch maps draw in 3D without any URL flag. `?render=2d` keeps the Canvas 2D map, and the 2D map still draws while the 3D module loads, when WebGL cannot start and after a lost WebGL context. `?render=3d` is no longer needed but does no harm. The drawn looks (`?look=classic`, `?sprites=drawn`) stay 2D. No save or rule changes.
+
+## 2D map removed (October 19, 2026)
+
+Kevin decided the game is iOS-first (the web build is for testing), so the 3D map is the only map. `?render=2d`, `?look=classic` and `?sprites=drawn` are gone (`SUNNY` and `SHOP_SPRITES` in `src/sunny-world.js` are now always true), as are the Canvas 2D frame, the Desert Oasis WebGL2 compositor (`src/gl-post.js`) and about 2,100 lines of drawing only the 2D frame used. The 2D drawing the 3D map still records stays: people, street props and fixtures through `capturePerson`, and branch maps through `recordBranch`. While the 3D module loads, the loading card stays over the map until the first 3D frame. A lost WebGL context brings the card back ("Reloading the map…") and rebuilds the map on a fresh canvas; after five failed starts the card offers Retry. No save or rule changes.
