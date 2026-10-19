@@ -153,7 +153,7 @@ box("Sign", (.98, .05, .24), (SX, AY, H - .27), GREEN, .02)
 box("SignTrim", (1.0, .045, .015), (SX, AY, H - .285), BRASS, .005)
 for dx in (-.32, .32):
     tube(f"SignHanger{dx}", [(SX + dx, AY, H - .03), (SX + dx, AY, H + .02)], .01, BRASS)
-txt = bpy.data.curves.new("SignText", "FONT"); txt.body = "PICKUP"
+txt = bpy.data.curves.new("SignText", "FONT"); txt.body = "PICKUP"; txt.resolution_u = 3
 txt.size = .15; txt.extrude = .006; txt.align_x = "CENTER"; txt.align_y = "CENTER"; txt.space_character = 1.08
 to = obj_add(bpy.data.objects.new("SignText", txt), CREAM)
 to.location = (SX, AY - .03, H - .15); to.rotation_euler = (math.pi / 2, 0, 0)

@@ -9,8 +9,10 @@ Needs canopy_kit.py and seedgrow45_parts.py in the same folder.  Run headless wi
 import os, sys, math
 try: sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 except NameError: pass
+import bpy
 import canopy_kit as K
 import seedgrow45_parts as T
+from mathutils import Vector
 
 OUT = K.begin("GrowBenchTier5")
 rnd = K.rnd
@@ -54,20 +56,56 @@ for i, y in enumerate((-.18, .18)):
         K.tube(f"Hanger{i}{sx}", [(sx * (L / 2 - .3), y, FH), (sx * (L / 2 - .3), y, FH - .07)], .006, K.BRASS)
 for sx in (-1, 1):
     fx = sx * (L / 2 - .05); fz = TOP + .95
-    K.cyl(f"FanRing{sx}", .11, .11, .04, (fx - sx * .04, Y1 - .07, fz), M["LACQUER_D"], 24).rotation_euler = (math.pi / 2, 0, 0)
+    K.cyl(f"FanRing{sx}", .11, .11, .04, (fx - sx * .04, Y1 - .07, fz), M["LACQUER_D"], 12).rotation_euler = (math.pi / 2, 0, 0)
     K.cyl(f"FanHub{sx}", .03, .03, .05, (fx - sx * .04, Y1 - .07, fz), K.BRASS, 12).rotation_euler = (math.pi / 2, 0, 0)
     for b in range(3):
         o = K.box(f"FanBlade{sx}{b}", (.16, .006, .045), (fx - sx * .04, Y1 - .075, fz - .0225), K.CREAM, .003)
         o.rotation_euler.y = b * 2.094 + .3
 
+def slim_plant(tag, x, y, z0, H, sc=1., spread=1.):
+    """K.plant with the same part names (P<n>Stem/Leaf/Pet/Branch/BranchLeaf/Cola/SideCola/Sugar/TopSugar) but fewer,
+    larger leaves and fewer side colas, so six lush plants stay light on phones."""
+    lean = Vector((rnd.uniform(-.03, .03), rnd.uniform(-.03, .03), 0))
+    pts = [Vector((x, y, z0)) + lean * (t * t) + Vector((0, 0, H * t)) for t in (i / 4 for i in range(5))]
+    K.tube(f"{tag}Stem", [tuple(p) for p in pts], .011, K.STEM, .006)
+    top = pts[-1]
+    K.inst(f"{tag}Cola", K.BUD_MESH, tuple(top - Vector((0, 0, .03))), (0, 0, rnd.uniform(0, 6)), 1.2 * sc)
+    nodes = 4
+    for k in range(nodes):
+        t = .1 + .75 * k / (nodes - 1)
+        p = pts[0].lerp(pts[-1], t)
+        yaw0 = k * 2.4 + rnd.uniform(-.3, .3)
+        s = (1.45 - .6 * k / (nodes - 1)) * sc * (1 + .4 * (spread - 1))
+        for side in (0, math.pi):
+            yaw = yaw0 + side
+            pet = (.06 + .05 * (1 - k / nodes)) * sc
+            tip = p + Vector((math.cos(yaw), math.sin(yaw), .25)) * pet
+            K.tube(f"{tag}Pet{k}{int(side)}", [tuple(p), tuple(tip)], .004, K.STEM)
+            K.leaf_at(f"{tag}Leaf{k}{int(side)}", tuple(tip), yaw, rnd.uniform(-.35, .05) + .3 * k / nodes, s,
+                      K.LEAF_MESHES[(k + int(side > 0)) % 2])
+        if 1 <= k <= 2:
+            yaw = yaw0 + math.pi / 4
+            d = Vector((math.cos(yaw), math.sin(yaw), 1.1 / spread)).normalized()
+            end = p + d * (.12 + .04 * (3 - k)) * sc * spread
+            K.leaf_at(f"{tag}BranchLeaf{k}", tuple(p.lerp(end, .5)), yaw + 1.2, -.1, .95 * sc, K.LEAF_MESHES[k % 2])
+            K.tube(f"{tag}Branch{k}", [tuple(p), tuple(end)], .007, K.STEM, .004)
+            if k == 1: K.inst(f"{tag}SideCola{k}", K.BUD_MESH, tuple(end - Vector((0, 0, .02))), (0, 0, rnd.uniform(0, 6)), .7 * sc / spread ** .5)
+            K.leaf_at(f"{tag}Sugar{k}0", tuple(end), yaw, .9, .42 * sc, K.LEAF_MESHES[2])
+    for j in range(2):
+        K.leaf_at(f"{tag}TopSugar{j}", tuple(top - Vector((0, 0, .02))), j * 3.14 + .4, .95, .5 * sc, K.LEAF_MESHES[2])
+
 # ---------- six lush plants in flower ----------
 SPOTS = [(-.66, .1), (-.02, .12), (.6, .1), (-.4, -.25), (.26, -.24), (.8, -.27)]
 for i, (x, y) in enumerate(SPOTS):
     planter(f"P{i}", x, y, TOP)
-    K.plant(f"P{i}", x, y, TOP + .22, rnd.uniform(.6, .68), sc=1.2, spread=1.4)
+    slim_plant(f"P{i}", x, y, TOP + .22, rnd.uniform(.6, .68), sc=1.2, spread=1.4)
 HZ = TOP + .05
 K.tube("DripHeader", [(-L / 2 + .05, D / 2 - .12, HZ), (L / 2 - .05, D / 2 - .12, HZ)], .014, K.BRASS)
 for i, (x, y) in enumerate(SPOTS):
     K.tube(f"Drip{i}", [(x, D / 2 - .12, HZ), (x, (y + D / 2 - .12) / 2, HZ + .2), (x + .09, y + .09, TOP + .24)], .005, M["DRIP"])
+
+# thin stems, petioles, branches and drip lines as four-sided tubes: they are a few pixels wide at map distance
+for o in bpy.data.objects:
+    if o.type == "CURVE" and any(k in o.name for k in ("Stem", "Pet", "Branch", "Drip")): o.data.bevel_resolution = 0
 
 K.finish(OUT, "grow_bench_tier5", ortho=3.2, centre=(0, 0, 1.1))
