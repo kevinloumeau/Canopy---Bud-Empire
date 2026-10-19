@@ -355,9 +355,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var QUEUE_MAX=30;
   // The drone deck's centre: Kevin asked for it a touch up and right, into the clear sidewalk behind the lounge.
   var DECK_X=-10.7,DECK_Z=.3;
-  // Where a courier loads and lifts off: the striped launch pad above and behind the deck's counter. The 3D deck model's
-  // pad sits a little lower on screen than the sprite's.
-  function launchPad(){return {x:DECK_X-2,z:DECK_Z-2,y:map3d&&map3d.ok&&!state.empire.activeStore?7.5:8.45}}
+  // Where a courier loads and lifts off: the top of the striped launch pad on online_deck.glb (its PadTop spans x -1.83
+  // to -.63, z -.49 to .04 at height 2.82 in the model), placed as layout.fixtures places the deck.
+  function launchPad(){return {x:-11.47,z:-.58,y:8.83}}
   // Everyone still to order holds a place in the line — except guests who have gone through the curtain.
   function inOrderFlow(c){return !c.ordered&&c.phase!=='leaving'&&c.phase!=='toLounge'&&c.phase!=='lounge'}
   // The smoking lounge behind the back-wall shelving. Guests bound for it are let in at the curtain while a seat and a
@@ -694,7 +694,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   // Each order is a parcel set on its own spot on the launch pad; couriers come in one after another to fetch them. With
   // every spot taken, further orders ride along with a waiting parcel (shown as ×N), so the pad never fills up.
-  var DRONE_SPOTS=[[-.36,-.34],[.36,-.34],[-.36,.34],[.36,.34]],DRONE_PICKUP=2.2,DRONE_LIFE=10.8;
+  var DRONE_SPOTS=[[-.75,0],[-.25,0],[.25,0],[.75,0]],DRONE_PICKUP=2.2,DRONE_LIFE=10.8;
   function queueDeliveryWave(count){
     var queued=0;
     for(var n=0;n<count;n++){
@@ -704,7 +704,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       var next=pending.reduce(function(m,d){return Math.max(m,d.delay-d.age)},-1.1);
       deliveryDrones.push({age:0,boxAt:queued*.2,delay:Math.max(queued*.2,next+1.1),spot:spot,slot:spot,orders:1});queued++;
     }
-    if(queued){playSound('whoosh',state.sound);if(SHOP_SPRITES){fixtureSprite('drone.courier.empty');fixtureSprite('drone.courier.loaded')}}
+    if(queued){playSound('whoosh',state.sound);if(SHOP_SPRITES){fixtureSprite('drone.courier.empty');fixtureSprite('drone.courier.loaded');fixtureSprite('prop.carton')}}
   }
   // Dispatch desk: the three numbers that matter, and the backlog as a row of parcels (lit ones can ship now).
   var dispatchKey='';
@@ -2480,13 +2480,14 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // The 2D map fades figures behind the building and lays haze over distant renders as see-through copies; in 3D
     // depth and the scene's haze do both, so only the solid draws are kept.
     figures=figures.filter(function(f){return f.alpha>.99});backdrops=backdrops.filter(function(f){return f.alpha>.99});
+    var dronePoses=deliveryDronePoses(frameDelta);deliveryCards(dronePoses,figures);
     var look=viewCentre();
     map3d.render({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2},menus:kioskMenus(),cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     // A model that had not loaded when the tabs were painted: try again every half second until all are in.
     if(picturesPending&&!(now-(renderFrame3d.picturesTried||0)<500)){renderFrame3d.picturesTried=now;picturesPending=false;paintThumbnails()}
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
     customers.forEach(function(c){if(c.phase!=='lounge'&&customerBadged(c))drawCustomerBadge(Object.assign({},c,{x:c.renderX,z:c.renderZ}))});
-    drawDeliveryDrones(frameDelta,now);drawParticles(frameDelta);drawTickets(frameDelta);drawConfetti(wallDelta);
+    drawDeliveryExtras(dronePoses,now);drawParticles(frameDelta);drawTickets(frameDelta);drawConfetti(wallDelta);
     positionShopPlay();
     updateMarkers();updateSpenderTag(false);requestAnimationFrame(render);
   }
@@ -2561,43 +2562,60 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(!mapDrawn&&(SNAP||mapSettled(wallNow))){mapDrawn=true;mapRebuilds=0;mapSettleStart=0;mapReveal()}
     if(state.empire.activeStore)renderBranch3d(now,frameDelta);else renderFrame3d(now,frameDelta,wallDelta);
   }
-  // A courier's round trip, in seconds from its own start: it drops in empty over its parcel, takes it on board at
-  // DRONE_PICKUP, climbs, flies off over the street, then comes back empty and sets down on the pad.
-  function drawDeliveryDrones(dt,now){
-    var pad=launchPad(),still=motionPreference.matches;
+  // A courier's round trip, in seconds from its own start. Couriers are based behind the rooftop elevator tower: one
+  // slips out from behind it empty, settles over its parcel, takes it on board at DRONE_PICKUP, climbs and heads back
+  // behind the tower, then comes out again empty and sets down on the pad. The drone and parcel renders stand in the
+  // 3D scene as cards, so the tower hides a courier behind it; rotors and lights go on the overlay near the pad only.
+  function deliveryDronePoses(dt){
+    var pad=launchPad(),still=motionPreference.matches,poses=[];
     var smooth=function(v){v=Math.max(0,Math.min(1,v));return v*v*(3-2*v)};
+    // A point straight behind the elevator tower on screen, s units further back.
+    var towerX=ROOFTOP.lift.x,towerZ=(ROOFTOP.lift.z+ROOFTOP.lift2.z)/2,behind=function(s,y){return {x:towerX-s,y:y,z:towerZ-s}};
+    var glide=function(from,to,u,arc){var e=smooth(u);return {x:from.x+(to.x-from.x)*e,y:from.y+(to.y-from.y)*e+arc*Math.sin(Math.PI*e),z:from.z+(to.z-from.z)*e}};
     for(var i=deliveryDrones.length-1;i>=0;i--){
       var drone=deliveryDrones[i];drone.age+=dt;var t=drone.age-drone.delay;
       if(t>(still?3.5:DRONE_LIFE)){deliveryDrones.splice(i,1);continue}
       var spot=DRONE_SPOTS[drone.spot||0],slot=drone.slot||0,bx=pad.x+spot[0],bz=pad.z+spot[1],hover=pad.y+.95;
       // The packed parcel drops on to its spot and waits there until its courier takes it.
       if(drone.age>=drone.boxAt&&t<DRONE_PICKUP){
-        var drop=still?1:Math.min(1,(drone.age-drone.boxAt)/.35);carton(bx,bz,pad.y+.5*(1-drop)*(1-drop),.5);
+        var drop=still?1:Math.min(1,(drone.age-drone.boxAt)/.35);poses.push({parcel:true,x:bx,y:pad.y+.5*(1-drop)*(1-drop),z:bz});
       }
       if(t<0)continue;
-      var x=bx,y=hover,z=bz,alpha=1,loaded=t>=DRONE_PICKUP;
-      // Out over the street along the slot's own heading, as a fraction u of the full trip.
-      var away=function(u){var e=u*u;return {x:bx-e*(20+slot*1.6),z:bz+e*(5-(slot%2?1.2:0)),y:hover+2.4+e*7}};
+      var at={x:bx,y:hover,z:bz},alpha=1,loaded=t>=DRONE_PICKUP,top={x:bx,y:hover+2.4,z:bz};
       if(still){alpha=Math.min(1,t/.25,(3.5-t)/.5)}
-      // It comes in from behind the deck, the opposite side to where loaded couriers leave, so the two never cross.
-      else if(t<2){var a=smooth(t/2);x=bx+2.6*(1-a);z=bz-2.6*(1-a);y=hover+3.6*(1-a);alpha=Math.min(1,t/.45)}
-      else if(t<2.6){y=hover-.1*Math.sin(Math.PI*(t-2)/.6)}
-      else if(t<3.8){y=hover+2.4*smooth((t-2.6)/1.2)}
-      else if(t<7){var o=away((t-3.8)/3.2);x=o.x;y=o.y;z=o.z;alpha=Math.min(1,(7-t)/.6)}
+      else if(t<2){at=glide(behind(3,9.6+slot*.3),{x:bx,y:hover,z:bz},t/2,.6);alpha=Math.min(1,t/.6)}
+      else if(t<2.6){at.y=hover-.1*Math.sin(Math.PI*(t-2)/.6)}
+      else if(t<3.8){at.y=hover+2.4*smooth((t-2.6)/1.2)}
+      else if(t<7){at=glide(top,behind(3.6,11+slot*.3),(t-3.8)/3.2,.8);alpha=Math.min(1,(7-t)/.9)}
       else if(t<7.4)continue;
       else{
-        // Home again, empty: back down the same heading, a short descent and a settle on the pad before it powers down.
-        loaded=false;var r=Math.min(1,(t-7.4)/2.6),back=away(.7*(1-r)*(1-r));x=back.x;z=back.z;y=back.y;
-        if(t>10)y=hover+2.4*(1-smooth((t-10)/.5))-.35*smooth((t-10.2)/.4);
-        alpha=Math.min(1,(t-7.4)/.5,(DRONE_LIFE-t)/.25);
+        // Home again, empty: out from behind the tower, over its spot, and a short descent to settle on the pad.
+        loaded=false;at=t<10?glide(behind(3,10.4+slot*.3),top,(t-7.4)/2.6,.5):{x:bx,y:hover+2.4*(1-smooth((t-10)/.5))-.35*smooth((t-10.2)/.4),z:bz};
+        alpha=Math.min(1,(t-7.4)/.7,(DRONE_LIFE-t)/.25);
       }
-      if(!still&&(t<2.6||t>=3.8))y+=Math.sin(t*2.1+slot*1.9)*.05;
-      ctx.save();ctx.globalAlpha=Math.max(0,alpha);drawCourierDrone(x,y,z,now,slot,loaded?drone.orders:1,!loaded);ctx.restore();
+      if(!still&&(t<2.6||t>=3.8))at.y+=Math.sin(t*2.1+slot*1.9)*.05;
+      poses.push({x:at.x,y:at.y,z:at.z,alpha:Math.max(0,alpha),loaded:loaded,orders:loaded?drone.orders:1,slot:slot,near:Math.hypot(at.x-bx,at.z-bz)<2.2});
     }
+    return poses;
   }
-  function drawCourierDrone(x,y,z,now,slot,orders,empty){
+  function deliveryCards(poses,cards){
+    poses.forEach(function(p){
+      // Each card stands a touch nearer the camera than its point (which moves nothing on screen) so a courier
+      // hovering over its parcel draws in front of it.
+      capturePerson(cards,p.x+(p.parcel?0:.15),0,p.z+(p.parcel?0:.15),function(){
+        if(p.parcel){if(fixtureSprite('prop.carton'))spriteAt('prop.carton',project(p.x,p.y,p.z),.52,.5,.88);return}
+        ctx.globalAlpha=p.alpha;drawCourierDrone(p.x,p.y,p.z,0,p.slot,p.orders,!p.loaded,'body');
+      });
+    });
+  }
+  function drawDeliveryExtras(poses,now){
+    poses.forEach(function(p){if(p.parcel||!p.near||p.alpha<=0)return;ctx.save();ctx.globalAlpha=p.alpha;drawCourierDrone(p.x,p.y,p.z,now,p.slot,p.orders,!p.loaded,'extras');ctx.restore()});
+  }
+  // part 'body' draws only the render, 'extras' only what is drawn over it (rotor blur, lights, the ×N tag); neither draws both.
+  function drawCourierDrone(x,y,z,now,slot,orders,empty,part){
       var art=empty?'drone.courier.empty':'drone.courier.loaded',droneArt=SHOP_SPRITES&&fixtureSprite(art);
-      if(droneArt)spriteAt(art,project(x,y+.2,z),1.75,.5,.46);else if(!empty)carton(x,z,y-.9,.62);
+      if(part!=='extras'){if(droneArt)spriteAt(art,project(x,y+.2,z),1.75,.5,.46);else if(!empty)carton(x,z,y-.9,.62)}
+      if(part==='body')return;
       if(orders>1){
         var cargoLabel=project(x,y-.55,z+.36);
         ctx.fillStyle='#f5efd7';ctx.font='600 '+Math.max(9,unit*.23)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText('×'+orders,cargoLabel.x,cargoLabel.y);
