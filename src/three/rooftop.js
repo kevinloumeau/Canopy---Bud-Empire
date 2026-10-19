@@ -58,7 +58,12 @@ export function buildRooftop(world, layout, { box, span, material }) {
     glassy(piece(a0, a1, y + .08, y + railH - .05, .01, '#cfe6df'));
   }
   balustrade(false, x0, x1, z1, open); balustrade(false, x0, x1, z0, open); balustrade(true, z0, z1, x1, open);
-  balustrade(true, z0, gap[0], x0, open); balustrade(true, gap[1], z1, x0, open);
+  balustrade(true, gap[1], z1, x0, open);
+  // With room for a second bridge: the rail stops either side of its landing, and a short piece fills the gap until
+  // the second shaft is bought.
+  const gap2 = r.lift2 ? [r.lift2.z - .6, r.lift2.z + .6] : null, gapFill = new THREE.Group(); open.add(gapFill);
+  if (gap2) { balustrade(true, z0, gap2[0], x0, open); balustrade(true, gap2[1], gap[0], x0, open); balustrade(true, gap2[0], gap2[1], x0, gapFill); }
+  else balustrade(true, z0, gap[0], x0, open);
   // Before opening: tape round the slab's edge on short posts, a pallet of boards and a covered stack.
   const tape = (ax, az, bx, bz) => {
     const len = Math.hypot(bx - ax, bz - az), m = new THREE.Mesh(new THREE.BoxGeometry(len, .06, .02), material('#e8b13a', { emissive: '#3a2a00' }));
@@ -70,109 +75,56 @@ export function buildRooftop(world, layout, { box, span, material }) {
   box(site, 1.8, y, -5.4, 1.2, .9, 1.2, '#8e9a86');
   box(site, 3.6, y, -2.8, .9, .14, 1.4, '#9a7a52');
 
-  // The elevator: an art deco tower from the ground to a flat cornice above the roof, glazed on every side, its
-  // brass cab riding inside with its passenger. Forest-green piers with brass fluting, a brass band at every floor
-  // and thin ones between, then a flat cornice with a CANOPY theatre blade sign, and a scalloped green canopy over the bridge's doorway. A short bridge crosses to the deck.
-  const hw = lift.w / 2, hd = lift.d / 2, crown = y + 2.9, pier = .2;
-  [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sz]) => {
-    const px = lift.x + sx * (hw - pier / 2), pz = lift.z + sz * (hd - pier / 2);
-    box(roof, px, 0, pz, pier, crown, pier, STEEL);
-    // Brass fluting on the pier's two outward faces.
-    box(roof, px + sx * (pier / 2 + .005), 0, pz, .012, crown, .05, BRASS, { cast: false });
-    box(roof, px, 0, pz + sz * (pier / 2 + .005), .05, crown, .012, BRASS, { cast: false });
-  });
-  // Bands are rings round the outside, so the shaft stays clear for the cab and its rider.
-  const band = (h, t, c) => {
-    const x0 = lift.x - hw - .03, x1 = lift.x + hw + .03, z0 = lift.z - hd - .03, z1 = lift.z + hd + .03, w = .05;
-    span(roof, x0, x1, h, h + t, z0, z0 + w, c, { cast: false }); span(roof, x0, x1, h, h + t, z1 - w, z1, c, { cast: false });
-    span(roof, x0, x0 + w, h, h + t, z0, z1, c, { cast: false }); span(roof, x1 - w, x1, h, h + t, z0, z1, c, { cast: false });
-  };
-  [0, layout.floors[1].y, layout.floors[2].y, y].forEach(h => band(h + 2.6, .14, STEEL));
-  [0, layout.floors[1].y, layout.floors[2].y, y].forEach(h => band(h + 2.74, .04, BRASS));
-  for (let h = 1.3; h < crown; h += 1.3) band(h, .025, BRASS);
-  // The top: a flat brass-capped cornice, and a theatre blade sign standing out from the street face with CANOPY
-  // stacked down it in a ring of marquee bulbs, lit a little brighter after dark.
-  const step = (w, d, y0, y1, c) => span(roof, lift.x - w, lift.x + w, y0, y1, lift.z - d, lift.z + d, c);
-  step(hw + .1, hd + .1, crown - .06, crown + .3, '#1f4a35');
-  step(hw + .14, hd + .14, crown + .3, crown + .36, BRASS);
-  step(hw - .1, hd - .1, crown + .36, crown + .5, '#1f4a35');
-  step(hw - .06, hd - .06, crown + .5, crown + .54, BRASS);
-  const finial = new THREE.Mesh(new THREE.SphereGeometry(.07, 16, 10), new THREE.MeshStandardMaterial({ color: BRASS, roughness: .3, metalness: .8 }));
-  const crownCanvas = document.createElement('canvas'); crownCanvas.width = 160; crownCanvas.height = 768;
-  const crownTexture = new THREE.CanvasTexture(crownCanvas); crownTexture.colorSpace = THREE.SRGBColorSpace; crownTexture.anisotropy = 4;
-  const crownMat = new THREE.MeshBasicMaterial({ map: crownTexture });
-  function paintCrown() {
-    const c = crownCanvas.getContext('2d'), W = 160, H = 768;
-    c.fillStyle = '#1f4a35'; c.fillRect(0, 0, W, H);
-    c.strokeStyle = '#c99b46'; c.lineWidth = 10; c.strokeRect(5, 5, W - 10, H - 10);
-    c.fillStyle = '#ffe9b0';
-    for (let yy = 22; yy < H - 10; yy += 28) { c.beginPath(); c.arc(20, yy, 5, 0, Math.PI * 2); c.arc(W - 20, yy, 5, 0, Math.PI * 2); c.fill(); }
-    c.font = '600 104px "Fredoka", "Bricolage Grotesque", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.fillStyle = '#f1e7cc';
-    'CANOPY'.split('').forEach((ch, k) => c.fillText(ch, W / 2, 80 + k * 122));
-    crownTexture.needsUpdate = true;
+  // The elevator: a sleek glass shaft from the ground to just above the roof, its brass cab riding inside with its
+  // passenger. Slim dark corner posts, a thin ring at each landing, a flat cap with a fine brass edge, and a thin
+  // flat canopy over the doorway on to the bridge. A short bridge crosses to the deck. The lounge can buy a second
+  // shaft beside the first (r.lift2), shown once frame.loungeLift says so.
+  const hw = lift.w / 2, hd = lift.d / 2, crown = y + 2.9, pier = .09;
+  function shaft(lz, frame, inside) {
+    const lx = lift.x, g = [lz - .6, lz + .6];
+    [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sz]) => box(frame, lx + sx * (hw - pier / 2), 0, lz + sz * (hd - pier / 2), pier, crown, pier, STEEL));
+    // Rings round the outside, so the shaft stays clear for the cab and its rider.
+    const band = (h, t, c, out = .01) => {
+      const a0 = lx - hw - out, a1 = lx + hw + out, b0 = lz - hd - out, b1 = lz + hd + out, w = .04;
+      span(frame, a0, a1, h, h + t, b0, b0 + w, c, { cast: false }); span(frame, a0, a1, h, h + t, b1 - w, b1, c, { cast: false });
+      span(frame, a0, a0 + w, h, h + t, b0, b1, c, { cast: false }); span(frame, a1 - w, a1, h, h + t, b0, b1, c, { cast: false });
+    };
+    [0, layout.floors[1].y, layout.floors[2].y, y].forEach(h => band(h + 2.62, .06, STEEL));
+    span(frame, lx - hw - .03, lx + hw + .03, crown, crown + .16, lz - hd - .03, lz + hd + .03, STEEL);
+    band(crown + .16, .025, BRASS, .03);
+    span(frame, lx + hw, lx + hw + .6, y + 2.5, y + 2.55, lz - hd + .05, lz + hd - .05, STEEL);
+    [[false, lz + hd], [false, lz - hd], [true, lx - hw], [true, lx + hw]].forEach(([alongZ, at]) => {
+      glassy(alongZ ? span(inside, at - .01, at + .01, .05, crown, lz - hd + .06, lz + hd - .06, '#cfe6df') : span(inside, lx - hw + .06, lx + hw - .06, .05, crown, at - .01, at + .01, '#cfe6df'));
+    });
+    const cab = new THREE.Group(); inside.add(cab);
+    const cw = lift.w - .3, cd = lift.d - .3, ch = 2.35;
+    span(cab, -cw / 2, cw / 2, 0, .12, -cd / 2, cd / 2, '#2b302d');
+    span(cab, -cw / 2, cw / 2, ch - .14, ch, -cd / 2, cd / 2, BRASS);
+    [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sz]) => box(cab, sx * (cw / 2 - .04), .12, sz * (cd / 2 - .04), .08, ch - .26, .08, BRASS));
+    span(cab, -cw / 2 + .05, -cw / 2 + .1, .12, ch - .14, -cd / 2 + .1, cd / 2 - .1, OAK_DARK, { cast: false });
+    span(cab, -cw / 2, cw / 2, 1, 1.05, -cd / 2, cd / 2, BRASS, { cast: false });
+    const cabLamp = new THREE.Mesh(new THREE.BoxGeometry(cw - .3, .04, cd - .3), glow('#fff2c8', '#ffd58a'));
+    cabLamp.position.y = ch - .16; cab.add(cabLamp); lights.push([cabLamp.material, .4, 1.2]);
+    cab.position.set(lx, 0, lz);
+    // The bridge from the landing to the deck: boards, glass sides with brass rails, and the red runner on to the deck.
+    const bx0 = lx + hw, bx1 = x0;
+    span(inside, bx0, bx1 + .05, y - .26, y, g[0], g[1], '#e4ddcc');
+    g.forEach(z => {
+      span(inside, bx0, bx1, y + railH - .03, y + railH + .03, z - .05, z + .05, BRASS, { cast: false });
+      glassy(span(inside, bx0, bx1, y + .05, y + railH - .05, z - .01, z + .01, '#cfe6df'));
+    });
+    span(inside, bx0 + .05, x0 + 1.2, y + .006, y + .016, lz - .38, lz + .38, VELVET, { cast: false });
+    span(inside, bx0 + .05, x0 + 1.2, y + .004, y + .012, lz - .45, lz + .45, BRASS, { cast: false });
+    return cab;
   }
-  paintCrown();
-  if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', paintCrown);
-  // The blade: a green box out from the front face, its sign on the side the street sees, brass caps top and bottom.
-  const bladeOut = 1, bladeH = 3.6, bladeTop = crown + .25, bladeZ = lift.z + hd + .04, bladeT = .12;
-  span(roof, lift.x - bladeT / 2, lift.x + bladeT / 2, bladeTop - bladeH, bladeTop, bladeZ, bladeZ + bladeOut, '#1f4a35');
-  span(roof, lift.x - bladeT / 2 - .02, lift.x + bladeT / 2 + .02, bladeTop, bladeTop + .06, bladeZ, bladeZ + bladeOut + .04, BRASS);
-  span(roof, lift.x - bladeT / 2 - .02, lift.x + bladeT / 2 + .02, bladeTop - bladeH - .06, bladeTop - bladeH, bladeZ, bladeZ + bladeOut + .04, BRASS);
-  finial.position.set(lift.x, bladeTop + .12, bladeZ + bladeOut - .04); finial.castShadow = true; roof.add(finial);
-  // The leaf mark on the very top, a brass-edged cut-out turned to the street.
-  const leafCanvas = document.createElement('canvas'); leafCanvas.width = leafCanvas.height = 256;
-  {
-    const c = leafCanvas.getContext('2d'), bx = 128, by = 214;
-    const blades = [[0, 150, 24], [-.42, 128, 21], [.42, 128, 21], [-.88, 96, 17], [.88, 96, 17], [-1.3, 58, 12], [1.3, 58, 12]];
-    const draw = () => blades.forEach(([a, len, w]) => { c.save(); c.translate(bx, by); c.rotate(a); c.beginPath(); c.ellipse(0, -len / 2, w, len / 2, 0, 0, Math.PI * 2); c.restore(); c.fill(); c.stroke(); });
-    c.lineJoin = 'round'; c.strokeStyle = '#e2c27a'; c.lineWidth = 9; c.fillStyle = '#e2c27a'; draw();
-    c.strokeStyle = '#2f7a4a'; c.lineWidth = 1; c.fillStyle = '#3f9a5c'; draw();
-    c.strokeStyle = '#e2c27a'; c.lineWidth = 7; c.beginPath(); c.moveTo(bx, by - 6); c.lineTo(bx, 250); c.stroke();
-  }
-  const leafTexture = new THREE.CanvasTexture(leafCanvas); leafTexture.colorSpace = THREE.SRGBColorSpace;
-  const leafMark = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.6), new THREE.MeshBasicMaterial({ map: leafTexture, transparent: true, alphaTest: .4, side: THREE.DoubleSide }));
-  leafMark.rotation.y = Math.PI / 4; leafMark.position.set(lift.x, crown + .54 + .76, lift.z); roof.add(leafMark);
-  [1, -1].forEach(side => {
-    const face = new THREE.Mesh(new THREE.PlaneGeometry(bladeOut - .06, bladeH - .06), crownMat);
-    face.rotation.y = side * Math.PI / 2; face.position.set(lift.x + side * (bladeT / 2 + .006), bladeTop - bladeH / 2, bladeZ + bladeOut / 2);
-    roof.add(face);
-  });
-  // A green canopy over the doorway on to the bridge, tipped down toward the deck, with a brass edge and two brass rods.
-  const awning = new THREE.Group(); awning.position.set(lift.x + hw, y + 2.45, lift.z); awning.rotation.z = -.32; roof.add(awning);
-  span(awning, 0, .75, -.04, .04, -hd - .15, hd + .15, '#2c6b4d');
-  span(awning, .72, .8, -.12, .04, -hd - .15, hd + .15, BRASS, { cast: false });
-  [-hd, hd].forEach(z => { const rod = new THREE.Mesh(new THREE.CylinderGeometry(.015, .015, .85, 6), finial.material); rod.position.set(.38, .3, z); rod.rotation.z = -.9; awning.add(rod); });
-  lights.push([{ set emissiveIntensity(v) { crownMat.color.setScalar(v); leafMark.material.color.setScalar(v); } }, .82, .18]);
-  [[false, lift.z + hd], [false, lift.z - hd], [true, lift.x - hw], [true, lift.x + hw]].forEach(([alongZ, at]) => {
-    const pane = alongZ ? span(open, at - .01, at + .01, .05, crown, lift.z - hd + .06, lift.z + hd - .06, '#cfe6df') : span(open, lift.x - hw + .06, lift.x + hw - .06, .05, crown, at - .01, at + .01, '#cfe6df');
-    glassy(pane);
-  });
-  const cab = new THREE.Group(); open.add(cab);
-  const cw = lift.w - .3, cd = lift.d - .3, ch = 2.35;
-  span(cab, -cw / 2, cw / 2, 0, .12, -cd / 2, cd / 2, '#2b302d');
-  span(cab, -cw / 2, cw / 2, ch - .14, ch, -cd / 2, cd / 2, BRASS);
-  [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sz]) => box(cab, sx * (cw / 2 - .04), .12, sz * (cd / 2 - .04), .08, ch - .26, .08, BRASS));
-  span(cab, -cw / 2 + .05, -cw / 2 + .1, .12, ch - .14, -cd / 2 + .1, cd / 2 - .1, OAK_DARK, { cast: false });
-  span(cab, -cw / 2, cw / 2, 1, 1.05, -cd / 2, cd / 2, BRASS, { cast: false });
-  const cabLamp = new THREE.Mesh(new THREE.BoxGeometry(cw - .3, .04, cd - .3), glow('#fff2c8', '#ffd58a'));
-  cabLamp.position.y = ch - .16; cab.add(cabLamp); lights.push([cabLamp.material, .4, 1.2]);
-  cab.position.set(lift.x, 0, lift.z);
-  // The bridge from the landing to the deck: boards, glass sides with brass rails.
-  const bx0 = lift.x + hw, bx1 = x0;
-  span(open, bx0, bx1 + .05, y - .26, y, gap[0], gap[1], '#e4ddcc');
-  [gap[0], gap[1]].forEach(z => {
-    span(open, bx0, bx1, y + railH - .03, y + railH + .03, z - .05, z + .05, BRASS, { cast: false });
-    glassy(span(open, bx0, bx1, y + .05, y + railH - .05, z - .01, z + .01, '#cfe6df'));
-  });
-  // The red runner from the elevator, across the bridge and on to the deck, where it meets the seating.
-  span(open, bx0 + .05, x0 + 1.2, y + .006, y + .016, lift.z - .38, lift.z + .38, VELVET, { cast: false });
-  span(open, bx0 + .05, x0 + 1.2, y + .004, y + .012, lift.z - .45, lift.z + .45, BRASS, { cast: false });
+  const cab = shaft(lift.z, roof, open);
+  const second = new THREE.Group(); open.add(second);
+  const cab2 = r.lift2 ? shaft(r.lift2.z, second, second) : null;
 
   // Planters along the left balustrade and in the corners, with soft shrubs; two olive trees in tall pots.
   const clump = new THREE.IcosahedronGeometry(1, 1);
   const bush = (g, bx, by, bz, rr, c) => { const b = new THREE.Mesh(clump, material(c)); b.position.set(bx, by, bz); b.scale.set(rr, rr * .8, rr); b.castShadow = b.receiveShadow = true; g.add(b); };
-  [[x0 + .2, x0 + .9, z0 + .2, lift.z - .9], [x0 + .2, x0 + .9, lift.z + .9, z1 - .2]].forEach(([a, b, c, d]) => {
+  [[x0 + .2, x0 + .9, z0 + .2, (r.lift2 ? r.lift2.z : lift.z) - .9], [x0 + .2, x0 + .9, lift.z + .9, z1 - .2]].forEach(([a, b, c, d]) => {
     span(open, a, b, y, y + .55, c, d, '#1f5e40');
     span(open, a - .03, b + .03, y + .55, y + .6, c - .03, d + .03, '#e1dbc0', { cast: false });
     for (let z = c + .35; z < d - .2; z += .55) bush(open, (a + b) / 2, y + .8, z, .32, (Math.round(z * 3) % 2) ? '#6b9250' : '#5f8648');
@@ -352,15 +304,14 @@ export function buildRooftop(world, layout, { box, span, material }) {
   paintDoorSigns();
   if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', paintDoorSigns);
   let doorAngle = 0;
-  let cabY = 0;
   return {
     update(frame) {
       const tier = frame.loungeOpen ? Math.max(1, frame.loungeTier || 1) : 0, night = frame.night || 0;
       site.visible = !tier; open.visible = !!tier;
       t1.visible = tier >= 1; t2.visible = tier >= 2; t3.visible = tier >= 3; t4.visible = tier >= 4;
       // The cab carries whoever is riding (main.js moves it with them) and waits where it last stopped.
-      cabY = frame.liftY || 0;
-      cab.position.y = cabY;
+      cab.position.y = frame.liftY || 0;
+      if (cab2) { cab2.position.y = frame.liftY2 || 0; second.visible = !!frame.loungeLift; gapFill.visible = !frame.loungeLift; }
       // The door stands open while the lounge is open and shuts (STAFF ONLY, sign taped) while it is a lot.
       doorAngle += ((tier ? 1.75 : 0) - doorAngle) * .15;
       hinge.rotation.y = doorAngle; plaque.visible = !tier; signTape.visible = !tier;
