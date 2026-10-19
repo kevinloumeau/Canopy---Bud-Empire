@@ -71,6 +71,8 @@
 .strain-pips{display:grid;grid-template-columns:repeat(10,4px);gap:2px;justify-content:center;font-style:normal}
 .strain-pips i{display:block;width:4px;height:4px;border-radius:50%;background:#ffffff1c}
 .strain-pips i.is-filled{background:var(--strain)}
+/* Ten pips per lap: levels 11-20 ring the pips they refill, so a level-20 strain reads as two full laps. */
+.strain-pips i.is-second{box-shadow:0 0 0 1px #fffc}
 .strain-hero .strain-pips{grid-template-columns:repeat(10,6px);gap:3px}
 .strain-hero .strain-pips i{width:6px;height:6px}
 
