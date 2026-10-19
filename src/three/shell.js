@@ -185,7 +185,8 @@ export function buildShell(world, layout, { box, span, material }) {
   }
   const unitBoxGeometry = new THREE.BoxGeometry(1, 1, 1).translate(0, .5, 0);
   const frontDrapes = drapes(false), exitDrapes = drapes(true);
-  const closedDoor = span(shell, dx - .7, dx + .7, 0, s.loungeHeader, face, face + .08, '#2d6146');
+  // With the rooftop lounge a real door (rooftop.js) fills the doorway instead of this panel.
+  const closedDoor = layout.rooftop ? null : span(shell, dx - .7, dx + .7, 0, s.loungeHeader, face, face + .08, '#2d6146');
   const boardedExit = span(shell, rx + .16, rx + .21, 0, eh - .24, ez - ew + .15, ez + ew - .15, '#3a2a1e');
 
   // The neon LOUNGE sign beside the doorway, lit while the lounge is open.
@@ -365,7 +366,8 @@ export function buildShell(world, layout, { box, span, material }) {
       rotor.rotation.z = -(frame.time || 0) * Math.PI * 2 / 26000;
       frontDrapes.set(frame.loungeCurtain || 0, open);
       exitDrapes.set(frame.loungeExitCurtain || 0, open);
-      closedDoor.visible = !open; boardedExit.visible = !open;
+      if (closedDoor) closedDoor.visible = !open;
+      boardedExit.visible = !open;
       paintSign(open);
       signMat.color.setScalar(open ? 1 : .8);
       if (frame.menuLines) paintBoard(frame.menuLines, 0);
