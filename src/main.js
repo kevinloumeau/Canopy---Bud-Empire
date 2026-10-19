@@ -2360,6 +2360,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     figures=figures.filter(function(f){return f.alpha>.99});backdrops=backdrops.filter(function(f){return f.alpha>.99});
     var look=viewCentre();
     map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,liftY:liftY,liftY2:liftY2,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    // A model that had not loaded when the tabs were painted: try again every half second until all are in.
+    if(picturesPending&&!(now-(renderFrame3d.picturesTried||0)<500)){renderFrame3d.picturesTried=now;picturesPending=false;paintThumbnails()}
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
     customers.forEach(function(c){if(c.phase!=='lounge'&&customerBadged(c))drawCustomerBadge(Object.assign({},c,{x:c.renderX,z:c.renderZ}))});
     drawDeliveryDrones(frameDelta,now);drawParticles(frameDelta);drawTickets(frameDelta);drawConfetti(wallDelta);
@@ -2950,6 +2952,13 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       '<div class="guide-unlock">'+crown+'<div><strong id="guideVipUnlock">VIPs at 60 loyalty</strong><span>35% base tips on regular matches</span></div></div>'+
       '<p class="guide-branch">'+icon('<path d="M5 14h22v14H5ZM3 14l3-9h20l3 9M12 28V18h8v10M3 14c0 4 6 4 6 0 0 4 7 4 7 0 0 4 7 4 7 0 0 4 6 4 6 0"/>')+'<span>Branch loyalty <b>up to +20% income</b></span></p>';
   }
+  // The menus show each station as its 3D model once the 3D map has rendered it (map3d.stationPicture, framed like the
+  // map), the sprite until then and in the 2D map. picturesPending asks the frame loop to repaint the station tabs.
+  var picturesPending=false;
+  function stationPicture(i,level){
+    if(!map3d||!map3d.ok||!map3d.stationPicture||!(level>0))return null;
+    var picture=map3d.stationPicture(i+'.'+spriteTier(level));if(!picture)picturesPending=true;return picture;
+  }
   function paintUpgradePreview(index){
     var preview=$('upgradePreview');if(!preview)return;
     var key=[index,index===-2?state.lounge:index<0?state.idStaff:stationTier(index),state.menuStrains.join(','),state.productMenu.active].join('|');
@@ -2961,8 +2970,11 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       ctx=art.getContext('2d',{willReadFrequently:true});unit=90;centerX=240;centerY=480;angle=.57;
       // The sprite shop shows the station's own sprite, so the panel matches the room.
       var spriteName=SHOP_SPRITES&&index!==-2?stationSprite(index<0?6:index,index<0?state.idStaff:Math.max(1,state.lines[index])):null,spriteArt=spriteName&&spriteImage(spriteName);
+      var picture=index===-2?null:index<0?stationPicture(6,state.doorBuilt?state.idStaff:0):stationPicture(index,Math.max(1,state.lines[index]));
       if(SHOP_SPRITES&&index!==-2&&!spriteArt)key=''; // repaint once the sprite has loaded
-      if(spriteArt){var fit=Math.min(440/spriteArt.naturalWidth,560/spriteArt.naturalHeight);ctx.drawImage(spriteArt,240-spriteArt.naturalWidth*fit/2,580-spriteArt.naturalHeight*fit,spriteArt.naturalWidth*fit,spriteArt.naturalHeight*fit)}
+      if(picturesPending&&!picture)key=''; // and once the 3D model's picture is ready
+      if(picture)ctx.drawImage(picture,0,0,480,600);
+      else if(spriteArt){var fit=Math.min(440/spriteArt.naturalWidth,560/spriteArt.naturalHeight);ctx.drawImage(spriteArt,240-spriteArt.naturalWidth*fit/2,580-spriteArt.naturalHeight*fit,spriteArt.naturalWidth*fit,spriteArt.naturalHeight*fit)}
       else if(index===-2)drawLoungeThumb(state.lounge);
       else if(index<0){drawBox(0,0,-.24,2.6,2.6,.24,['#cbb085','#7f6a4b','#ac9168']);drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5']);drawPerson(-.55,-.45,0,7,false,true,false)}
       else drawStage({x:0,z:0},index,0,true);
@@ -2973,7 +2985,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       preview.dataset.art=key;
     }finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
   }
-  function paintSecurityThumbnail(){var card=document.querySelector('[data-security] canvas');if(!card)return;var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;ctx=card.getContext('2d');if(ctx){ctx.clearRect(0,0,80,100);unit=25;centerX=40;centerY=97;angle=.57;if(!state.doorBuilt)drawConstructionSite(0,0,2.6,2.6,function(){drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5'])});else{drawBox(0,0,-.24,2.6,2.6,.24,['#cbb085','#7f6a4b','#ac9168']);drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5']);drawPerson(-.55,-.45,0,7,false,true,false)}}ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
+  function paintSecurityThumbnail(){var card=document.querySelector('[data-security] canvas');if(!card)return;var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;ctx=card.getContext('2d');var picture=state.doorBuilt?stationPicture(6,state.idStaff):null;if(ctx&&picture){ctx.clearRect(0,0,80,100);ctx.drawImage(picture,0,0,80,100)}else if(ctx){ctx.clearRect(0,0,80,100);unit=25;centerX=40;centerY=97;angle=.57;if(!state.doorBuilt)drawConstructionSite(0,0,2.6,2.6,function(){drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5'])});else{drawBox(0,0,-.24,2.6,2.6,.24,['#cbb085','#7f6a4b','#ac9168']);drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5']);drawPerson(-.55,-.45,0,7,false,true,false)}}ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
   // The lounge doorway in miniature, dressed for its tier. Every level keeps the lacquer jambs, the slab and the LOUNGE
   // blade so the card still reads as the lounge; what changes is the colour of the neon, the drapes, the room glimpsed
   // between them and the dressing out front — planters for the terrace, a rope for the booths, a doorman and a runner
@@ -3050,7 +3062,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     else{drawBox(0,.14,0,1.36,.08,1.72,['#c9a874','#7d6240','#a9895c']);constructionTape([-.75,.8,face+.06],[.75,.7,face+.06]);wallText(0,2.2,face+.01,'LOUNGE',unit*1.2,.32,'#4b3f45',false,'800')}
   }
   function paintLoungeThumbnail(){var card=document.querySelector('[data-lounge] canvas');if(!card)return;var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;ctx=card.getContext('2d');if(ctx){ctx.clearRect(0,0,80,100);unit=22;centerX=40;centerY=94;angle=.57;drawLoungeThumb()}ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
-  function paintThumbnails(){paintSecurityThumbnail();paintLoungeThumbnail();var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;machineTabs.forEach(function(tab,i){ctx=tab.querySelector('canvas').getContext('2d');if(!ctx)return;ctx.clearRect(0,0,80,100);unit=25;centerX=40;centerY=97;angle=.57;drawStage({x:0,z:0},i,0)});ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
+  function paintThumbnails(){paintSecurityThumbnail();paintLoungeThumbnail();var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;machineTabs.forEach(function(tab,i){ctx=tab.querySelector('canvas').getContext('2d');if(!ctx)return;ctx.clearRect(0,0,80,100);var picture=state.lines[i]?stationPicture(i,state.lines[i]):null;if(picture){ctx.drawImage(picture,0,0,80,100);return}unit=25;centerX=40;centerY=97;angle=.57;drawStage({x:0,z:0},i,0)});ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
   function selectLounge(){securitySelected=false;loungeSelected=true;showTray('factory');renderUI();var card=document.querySelector('[data-lounge]');if(card&&card.scrollIntoView)card.scrollIntoView({block:'nearest',inline:'nearest'});if(navigator.vibrate)navigator.vibrate(8)}
   // Each lounge tier is bought outright; the first one raises the doorway out of its hoarding.
   function upgradeLounge(){
