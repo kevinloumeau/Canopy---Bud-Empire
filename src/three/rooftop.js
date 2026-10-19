@@ -77,9 +77,11 @@ export function buildRooftop(world, layout, { box, span, material }) {
   };
   const corners = [[x0 + .2, z0 + .2], [x1 - .2, z0 + .2], [x1 - .2, z1 - .2], [x0 + .2, z1 - .2]];
   corners.forEach(([cx, cz], k) => { box(site, cx, y, cz, .07, .8, .07, '#d8cfbd'); const [nx, nz] = corners[(k + 1) % 4]; tape(cx, cz, nx, nz); });
-  box(site, -2.2, y, -4.6, 1.6, .18, 1.1, '#9a7a52'); box(site, -2.2, y + .18, -4.6, 1.5, .5, 1, '#c9a978');
-  box(site, 1.8, y, -5.4, 1.2, .9, 1.2, '#8e9a86');
-  box(site, 3.6, y, -2.8, .9, .14, 1.4, '#9a7a52');
+  // Stand-ins for the diorama's rooftop_site.glb (strapped lumber on a pallet, crates under a tied tarp, cement sacks).
+  const kSite = new THREE.Group(); site.add(kSite);
+  box(kSite, -2.2, y, -4.6, 1.6, .18, 1.1, '#9a7a52'); box(kSite, -2.2, y + .18, -4.6, 1.5, .5, 1, '#c9a978');
+  box(kSite, 1.8, y, -5.4, 1.2, .9, 1.2, '#8e9a86');
+  box(kSite, 3.6, y, -4.5, .9, .14, 1.4, '#9a7a52');
 
   // The elevator: a sleek glass shaft from the ground to just above the roof, its brass cab riding inside with its
   // passenger. Slim dark corner posts, a thin ring at each landing, a flat cap with a fine brass edge, and a thin
@@ -424,6 +426,7 @@ export function buildRooftop(world, layout, { box, span, material }) {
   lights.push([flameGlow, .3, 1.6]);
   function loadModels(loader, base) {
     const sets = [
+      { file: 'rooftop_site.glb', parent: site, hide: kSite, at: [[0, 0]] },
       { file: 'rooftop_speakeasy.glb', parent: t1, hide: k1, at: [[x0 + 3.8, z0 + 1.825]] },
       { file: 'rooftop_pergola_vines.glb', parent: t1, hide: kVines, at: [[x0 + 3.8, z0 + 1.825]] },
       { file: 'rooftop_bar.glb', parent: t2, hide: k2, at: [[(b.x0 + b.x1) / 2, b.z - .225]] },

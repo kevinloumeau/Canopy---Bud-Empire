@@ -241,6 +241,7 @@ export function createMap3D(canvas, layout) {
     });
   }
   if (rooftop) rooftop.loadModels(loader, layout.modelBase);
+  if (transport) transport.loadModels(loader, layout.modelBase);
   // Fixtures (the online orders deck) are placed by their own origin at a fixed Blender-to-map scale rather than
   // fitted to a sprite, since their footprint is irregular; `key` names the frame flag that shows them.
   const fixtures = {}, fixtureGlows = [], fixtureScreens = [], menuScreens = {};
@@ -1173,6 +1174,33 @@ function buildTransport(scene, world, transport, { box, material }) {
     mesh.setMatrixAt(mesh.count++, m.compose(at.set(x, base * K, z), turn, one));
   }
   return {
+    // The diorama's cargo_items.glb: one empty per kind (Cargo0..Cargo5, base centre at its origin, true metres) whose
+    // meshes merge into that kind's vertex-coloured geometry, in place of the code-built stand-in.
+    loadModels(loader, base) {
+      loader.load(base + 'cargo_items.glb', gltf => {
+        gltf.scene.updateMatrixWorld(true);
+        cargoKinds.forEach((kind, k) => {
+          const root = gltf.scene.getObjectByName('Cargo' + k);
+          if (!root) return;
+          const toRoot = root.matrixWorld.clone().invert().premultiply(new THREE.Matrix4().makeScale(1.69, 1.69, 1.69)), parts = [];
+          root.traverse(o => {
+            if (!o.isMesh) return;
+            const g = o.geometry.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(toRoot, o.matrixWorld));
+            const c = o.material.color, n = g.attributes.position.count, rgb = new Float32Array(n * 3);
+            for (let i = 0; i < n; i++) { rgb[i * 3] = c.r; rgb[i * 3 + 1] = c.g; rgb[i * 3 + 2] = c.b; }
+            g.setAttribute('color', new THREE.BufferAttribute(rgb, 3));
+            Object.keys(g.attributes).forEach(a => { if (!['position', 'normal', 'color'].includes(a)) g.deleteAttribute(a); });
+            parts.push(g.index ? g.toNonIndexed() : g);
+          });
+          if (!parts.length) return;
+          const geometry = mergeGeometries(parts);
+          geometry.computeBoundingBox();
+          cargoMeshes[k].geometry.dispose();
+          cargoMeshes[k].geometry = geometry;
+          kind.geometry = geometry; kind.height = geometry.boundingBox.max.y;
+        });
+      }, undefined, e => console.warn('3D map: could not load cargo_items.glb', e));
+    },
     // A run that belongs to a fixture (the online deck's feed) shows only while that fixture is built.
     update({ odo, running }, fixtures = {}) {
       cargoMeshes.forEach(mesh => { mesh.count = 0; });

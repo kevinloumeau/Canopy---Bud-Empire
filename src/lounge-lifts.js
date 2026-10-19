@@ -8,12 +8,14 @@
 // Guest lift states: 'waitUp' / 'waitDown' (asked for a cab), 'boarding', 'up' / 'down' (riding), 'roof' (walking
 // to and holding a spot; roofWalk is driven by main.js), 'back' (walking back to the landing), 'exit' (stepping out
 // below).
-export const LIFT_TRIP=3,LIFT_SEATS=3,LIFT_STEP=.8,LIFT_STAGGER=.4,LIFT_CLEAR=.3,LIFT_HOLD=.6;
+export const LIFT_TRIP=3,LIFT_SEATS=5,LIFT_STEP=.6,LIFT_STAGGER=.3,LIFT_CLEAR=.3,LIFT_HOLD=.4;
+// Where each rider stands in the cab, as x, z offsets from its centre line: one in the middle, then the four corners.
+export const CAB_SLOTS=[[0,0],[.3,-.24],[-.3,-.24],[.3,.24],[-.3,.24]];
 export function makeLifts(){return[{y:0,trip:null,boarding:null,unloading:null,hold:0},{y:0,trip:null,boarding:null,unloading:null,hold:0}]}
 const smooth=t=>t*t*t*(t*(t*6-15)+10);
 // A guest waiting to go down only takes the cab they came up in.
 export function liftWaiting(q,i){return q.phase==='lounge'&&q.liftShaft===null&&(q.lift==='waitUp'||(q.lift==='waitDown'&&(q.shaft||0)===i))}
-// The cab takes its guest and up to two more waiting on the same floor; they step in one by one.
+// The cab takes its guest and up to four more waiting on the same floor; they step in one by one.
 export function board(s,i,c,customers){
   const wait=c.lift,up=wait==='waitUp',riders=[c];
   customers.filter(q=>q!==c&&q.lift===wait&&liftWaiting(q,i)).sort((a,b)=>a.liftAsk-b.liftAsk).slice(0,LIFT_SEATS-1).forEach(q=>riders.push(q));
