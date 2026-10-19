@@ -1,17 +1,21 @@
 /* Stock strip on forest glass: open figures (line icon + mono count), no boxes.
-   After each count a small mark says what the stage is doing: a sage triangle while it builds up, a coral one while it drains,
+   Under each count a small mark says what the stage is doing: a sage triangle while it builds up, a coral one while it drains,
    "max" when storage is full and the station feeding it has stopped. The stage made by the bottleneck station turns brass,
    the same accent as the bottleneck card, and tapping it opens that station to upgrade. */
-.sheet #stockStatus{gap:0;padding:8px 4px 6px;border-top:1px solid var(--ui-edge);color:var(--ui-soft)}
+.sheet #stockStatus{gap:0;padding:6px 4px 12px;border-top:1px solid var(--ui-edge);color:var(--ui-soft)}
 .sheet #stockStatus .stock-item{position:relative;flex:1 1 auto;gap:5px;padding:4px 6px;border-radius:10px;background:none;box-shadow:none;color:var(--ui-soft);transition:background-color .2s ease,color .2s ease}
 .sheet #stockStatus .stock-item svg{width:16px;height:18px;opacity:.85}
 .sheet #stockStatus .stock-item b{font:500 13px 'DM Mono',monospace;color:var(--ui-ink);letter-spacing:-.03em}
 .sheet #stockStatus .stock-item b small{color:var(--ui-soft);font-weight:500}
 .sheet #stockStatus .stock-item b.stock-full{color:var(--ui-ink);text-decoration:none}
-.sheet #stockStatus .stock-item:not(.stock-online)::after{content:'';flex:0 0 auto;width:7px;height:6px;margin-left:-2px}
-.sheet #stockStatus .stock-item[data-trend=up]::after{background:#9cc386;clip-path:polygon(50% 0,100% 100%,0 100%)}
-.sheet #stockStatus .stock-item[data-trend=down]::after{background:var(--ui-coral);clip-path:polygon(0 0,100% 0,50% 100%)}
-.sheet #stockStatus .stock-item[data-trend=full]::after{content:'max';width:auto;height:auto;font:500 9px 'DM Mono',monospace;letter-spacing:.02em;color:var(--ui-soft)}
+/* Each stage gets an equal slot with its icon pinned to the left, so a count changing length never nudges the icon or its neighbours.
+   The mark hangs centred under the count, outside the layout, so it appearing or changing never moves anything either. */
+.sheet #stockStatus .stock-item:not(.stock-online){flex:1 1 0;justify-content:flex-start;gap:4px;padding-inline:4px}
+.sheet #stockStatus .stock-item:not(.stock-online)>span{position:relative}
+.sheet #stockStatus .stock-item:not(.stock-online)>span::after{content:'';position:absolute;left:50%;top:calc(100% + 2px);width:7px;height:5px;transform:translateX(-50%)}
+.sheet #stockStatus .stock-item[data-trend=up]>span::after{background:#9cc386;clip-path:polygon(50% 0,100% 100%,0 100%)}
+.sheet #stockStatus .stock-item[data-trend=down]>span::after{background:var(--ui-coral);clip-path:polygon(0 0,100% 0,50% 100%)}
+.sheet #stockStatus .stock-item[data-trend=full]>span::after{content:'max';top:100%;width:auto;height:auto;font:500 8.5px/1 'DM Mono',monospace;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-soft)}
 .sheet #stockStatus .stock-item.is-bottleneck{color:var(--ui-brass)}
 .sheet #stockStatus .stock-item.is-bottleneck svg{opacity:1}
 .sheet #stockStatus .stock-item.is-bottleneck b{color:var(--ui-brass)}
@@ -29,3 +33,4 @@
 .sheet #stockStatus .stock-online[data-heat="3"] b{color:var(--ui-brass);font-size:13px}
 
 @media(max-width:360px){.sheet #stockStatus .stock-item{gap:4px;padding-inline:3px}}
+.sheet #stockStatus .stock-online>span{min-width:2.4ch}
