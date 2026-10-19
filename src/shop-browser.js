@@ -1,15 +1,17 @@
 import {BOOST_MAX} from './depth.js';
+import {FORKS,sideStatus,levelsToGate,forkOf} from './research.js';
 // Reuse the original purchase nodes so prices, handlers and saves remain authoritative.
 export function mountShopBrowser({getState,components,kiosks,queueLimit,recommend,recommendInfo,openDeliveries,deliveryDesk}) {
   const pane=document.querySelector('[data-pane="boosts"]');
   pane.classList.add('shop-browser');
-  const categories=['Production','Service','Customers','Products','Online'];
-  // Keep related upgrades on the same shelf; the Service shelf includes counter expansion.
-  const definitions=[['upgradeStorage',0],['boost',0],['componentBuy10',0],['componentBuy11',0],['componentBuy12',0],['componentBuy13',0],['componentBuy25',0],
-    ['buyKiosk',1],['componentBuy5',1],['buyOrderCounter',1],['componentBuy1',1],['componentBuy2',1],['componentBuy8',1],['componentBuy14',1],
-    ['upgradeQueue',2],['componentBuy0',2],['componentBuy7',2],['componentBuy15',2],['componentBuy16',2],['componentBuy17',2],
-    ['componentBuy3',3],['componentBuy4',3],['componentBuy18',3],['componentBuy19',3],['componentBuy20',3],['componentBuy21',3],
-    ['buyAutoDrone',4],['componentBuy9',4],['componentBuy6',4],['componentBuy22',4],['componentBuy23',4],['componentBuy24',4]];
+  // Research runs down three branches. A fork's two sides sit next to each other in the order below; a run takes one.
+  const categories=['Grow','Retail','Delivery'];
+  const byKey=key=>'componentBuy'+components.findIndex(c=>c.key===key);
+  const definitions=[['upgradeStorage',0],['boost',0],[byKey('seedBatchLevel'),0],[byKey('curingLevel'),0],[byKey('trendLevel'),0],[byKey('harvestBatchLevel'),0],[byKey('packSpeedLevel'),0],[byKey('breedingLevel'),0],[byKey('growBatchLevel'),0],[byKey('terpeneLevel'),0],[byKey('offlineLevel'),0],
+    ['upgradeQueue',1],['buyKiosk',1],['buyOrderCounter',1],[byKey('basketLevel'),1],[byKey('trafficLevel'),1],[byKey('signLevel'),1],[byKey('comfortLevel'),1],[byKey('scannerLevel'),1],[byKey('pickupLevel'),1],[byKey('readyLevel'),1],[byKey('serviceLevel'),1],[byKey('kioskSpeedLevel'),1],[byKey('displayLevel'),1],[byKey('loyaltyLevel'),1],[byKey('durationLevel'),1],
+    ['buyAutoDrone',2],[byKey('webLevel'),2],[byKey('onlineBonusLevel'),2],[byKey('fleetLevel'),2],[byKey('cargoLevel'),2],[byKey('repeatLevel'),2]];
+  // One label over each undecided fork and an "or" between its sides.
+  const forkMarks=FORKS.map(f=>{const head=document.createElement('p');head.className='shop-fork-head';head.innerHTML='<b>Choose one</b><span>'+f.name+'</span>';const or=document.createElement('p');or.className='shop-fork-or';or.setAttribute('aria-hidden','true');or.innerHTML='<span>or</span>';return {fork:f,head,or,ids:f.sides.map(byKey)}});
   const rows=definitions.map(([id,category])=>{
     const button=document.getElementById(id),node=button.parentElement;
     node.classList.add('shop-item');
@@ -19,7 +21,7 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
     return {id,category,node,button,badge};
   });
   const header=document.createElement('div');header.className='shop-browser-header';
-  const icons={Production:'<path d="M4 8h16v11H4zM4 8l3-4h10l3 4M12 4v4"/>',Service:'<path d="M4 17h16M6 17a6 6 0 0 1 12 0M12 8v3M10 8h4"/>',Customers:'<circle cx="9" cy="8" r="3"/><circle cx="16" cy="9" r="2.4"/><path d="M3 20a6 6 0 0 1 12 0M13 20a4.5 4.5 0 0 1 8 0"/>',Products:'<path d="M12 21c-4.5-2.5-7-6-7-10a7 7 0 0 1 14 0c0 4-2.5 7.5-7 10ZM12 21V9"/>',Online:'<path d="M9 10h6v4H9zM4 6h3M17 6h3M5.5 6v4h3.5M18.5 6v4H15M9 14l-3 5M15 14l3 5M12 14v6"/>'};
+  const icons={Grow:'<path d="M12 21c-4.5-2.5-7-6-7-10a7 7 0 0 1 14 0c0 4-2.5 7.5-7 10ZM12 21V9"/>',Retail:'<path d="M4 17h16M6 17a6 6 0 0 1 12 0M12 8v3M10 8h4"/>',Delivery:'<path d="M9 10h6v4H9zM4 6h3M17 6h3M5.5 6v4h3.5M18.5 6v4H15M9 14l-3 5M15 14l3 5M12 14v6"/>'};
   header.innerHTML='<nav class="shop-categories" aria-label="Upgrade categories">'+categories.map((name,i)=>'<button type="button" data-shop-category="'+i+'" aria-pressed="'+(i===0)+'"><svg class="shop-category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(icons[name]||'')+'</svg><em>'+name+'</em></button>').join('')+'</nav>';
   const recommendation=document.createElement('button');recommendation.type='button';recommendation.className='shop-recommendation';
   // Same shape as the bottleneck card: brass icon, label and name, then the price on a brass chip.
@@ -51,14 +53,19 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
       else if(row.id==='upgradeQueue'){level=queueLimit();max=30}
       else {level=state.globalLevel;max=BOOST_MAX}
       // Keep kiosk hardware and software together; other completed upgrades sink to the end.
-      const isDone=level>=max,kioskPair=row.id==='buyKiosk'||row.id==='componentBuy5';row.node.classList.toggle('is-maxed',isDone);order.push({row,isDone:isDone&&!kioskPair});
-      row.badge.textContent=row.id==='buyAutoDrone'?(isDone?'Bulk installed · controls in Delivery desk':level===1?'Single installed · bulk available':'One-time upgrade'):row.id==='buyOrderCounter'?level+'/3 staffed':row.id==='upgradeQueue'?level+'/30 places':row.id==='buyKiosk'?level+'/3 installed':'Lv '+level+(Number.isFinite(max)?'/'+max:'');
+      const closed=row.id.startsWith('componentBuy')&&sideStatus(state,components[Number(row.id.replace('componentBuy',''))].key)==='closed';
+      const isDone=level>=max||closed,kioskPair=row.id==='buyKiosk'||row.id==='componentBuy5';row.node.classList.toggle('is-maxed',isDone);order.push({row,isDone:isDone&&!kioskPair});
+      const side=row.id.startsWith('componentBuy')?sideStatus(state,components[Number(row.id.replace('componentBuy',''))].key):'open',key=side!=='open'?components[Number(row.id.replace('componentBuy',''))].key:null;
+      row.badge.textContent=side==='closed'?'Closed this run'+(level?' · Lv '+level+' kept':''):side==='gated'?'Opens at '+forkOf(key).gate+' '+categories[row.category]+' levels · '+levelsToGate(state,key)+' to go':row.id==='buyAutoDrone'?(isDone?'Bulk installed · controls in Delivery desk':level===1?'Single installed · bulk available':'One-time upgrade'):row.id==='buyOrderCounter'?level+'/3 staffed':row.id==='upgradeQueue'?level+'/30 places':row.id==='buyKiosk'?level+'/3 installed':'Lv '+level+(Number.isFinite(max)?'/'+max:'');
       row.node.hidden=row.category!==category||(!isDone&&affordable&&row.button.disabled);
       if(row.category===category){if(isDone)done++;else if(!row.node.hidden)count++}
     });
     const sequence=order.filter(o=>!o.isDone).concat(order.filter(o=>o.isDone)).map(o=>o.row);
-    const key=sequence.map(r=>r.id).join(',');if(key!==render.key){render.key=key;sequence.forEach(r=>list.appendChild(r.node))}
-    desk.hidden=category!==4||!deliveryDesk;
+    // Undecided forks get their label above the first side and the "or" between the two.
+    const open=forkMarks.filter(m=>m.ids.every(id=>{const r=rows.find(x=>x.id===id);return r&&r.category===category&&sideStatus(state,components[Number(id.replace('componentBuy',''))].key)==='pick'}));
+    const key=sequence.map(r=>r.id).join(',')+'|'+category+'|'+open.map(m=>m.fork.id).join(',');
+    if(key!==render.key){render.key=key;forkMarks.forEach(m=>{m.head.remove();m.or.remove()});sequence.forEach(r=>{const mark=open.find(m=>m.ids[0]===r.id),after=open.find(m=>m.ids[1]===r.id);if(mark)list.appendChild(mark.head);if(after)list.appendChild(after.or);list.appendChild(r.node)})}
+    desk.hidden=category!==2||!deliveryDesk;
     if(!desk.hidden){const d=deliveryDesk(),note=desk.querySelector('small'),title=desk.querySelector('b'),count=desk.querySelector('.shop-desk-count'),price=desk.querySelector('.shop-desk-price'),meter=desk.querySelector('.shop-desk-meter');
       // Unbuilt, the desk is the shelf's next step: a brass card above the list with its price and savings so far.
       const unbuilt=!d.built;desk.classList.toggle('is-unbuilt',unbuilt);desk.classList.toggle('is-short',unbuilt&&!d.ready);
@@ -76,10 +83,12 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
       recommendation.querySelector('.shop-rec-go b').textContent=info.price;
       recommendation.classList.toggle('is-short',!info.affordable);
       recommendation.setAttribute('aria-label','Recommended: '+info.name+', '+info.where+', '+info.price);
-      rows.forEach(row=>row.node.classList.toggle('is-pick',row.id===info.id));
+      // A fork the advice points at lights both sides: the choice stays the player's.
+      const forkIds=info.fork?(forkMarks.find(m=>m.fork.id===info.fork)||{ids:[]}).ids:[];
+      rows.forEach(row=>row.node.classList.toggle('is-pick',info.fork?forkIds.indexOf(row.id)>=0:row.id===info.id));
     }else recommendation.querySelector('strong').textContent=recommend(false);
   }
   function show(index){category=index;header.querySelectorAll('[data-shop-category]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.shopCategory)===index)));render();}
   function categoryOf(id){const row=rows.find(r=>r.id===id);return row?row.category:0;}
-  return {render,show,categoryOf};
+  return {render,show,categoryOf,categories};
 }

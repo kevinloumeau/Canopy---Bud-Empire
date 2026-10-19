@@ -9,6 +9,7 @@ import {AUTO_DRONE_COST,BULK_DRONE_COST,buyAutoDrone,buyBulkDrone,autoDroneLimit
 import {FORMATS,wantedFormat,formatPremium,BOOST_MAX,boostCost,migrateMenu,unlockFormat,menuFormatFactor,milestone,prestigeOffer,elapsedSteps,OFFLINE_STEP} from './depth.js';
 import {PERKS,migratePerks,perkLevel,perkCost,buyPerk,perkStart,spenderGap,rushLength} from './perks.js';
 import {makeSound} from './sfx.js';
+import {FORKS,RESEARCH_BRANCHES,freshForks,migrateForks,sideStatus,takeSide,partnerOf,levelsToGate,forkOf} from './research.js';
 import {installQuietDom} from './quiet-dom.js';
 import {createTelemetry} from './telemetry.js';
 import {createReminders,planReminders} from './reminders.js';
@@ -42,7 +43,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Contract progression is defined in depth.js, including post-city milestones.
   var $=function(id){return document.getElementById(id)};
   // A new shop starts as seven construction sites: the door and six stations are raised for free during the intro, then the sign flips.
-  function fresh(){return{shopPlay:migrateShopPlay(),money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),productMenu:migrateMenu(),sound:true,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,offlineLevel:0,spenderClock:180,rushTime:0,crosses:{done:[],active:null},reminders:false,perks:{points:0,levels:{}},scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeStaff:0,loungeLift:false,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
+  function fresh(){return{forks:freshForks(),shopPlay:migrateShopPlay(),money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),productMenu:migrateMenu(),sound:true,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,offlineLevel:0,spenderClock:180,rushTime:0,crosses:{done:[],active:null},reminders:false,perks:{points:0,levels:{}},scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeStaff:0,loungeLift:false,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
   function readSave(){
     for(var key of ['shift-save','shift-save-backup']){
       try{var raw=localStorage.getItem(key);if(!raw)continue;var value=JSON.parse(raw);if(value&&typeof value==='object'&&!Array.isArray(value))return value}catch(e){}
@@ -54,7 +55,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // Saves from before the construction intro have no `shopOpen`; they are open shops with every station standing.
     next.shopOpen=old.shopOpen!==false;next.doorBuilt=next.shopOpen||old.doorBuilt===true;
     ['trafficLevel','pickupLevel','readyLevel','curingLevel','durationLevel','kioskSpeedLevel','onlineBonusLevel','comfortLevel','scannerLevel','webLevel','seedBatchLevel','growBatchLevel','harvestBatchLevel','packSpeedLevel','serviceLevel','signLevel','loyaltyLevel','basketLevel','terpeneLevel','breedingLevel','displayLevel','trendLevel','fleetLevel','cargoLevel','repeatLevel'].forEach(function(key){next[key]=Math.floor(finite(old[key],0,0,key==='pickupLevel'?12:20))});
-    next.offlineLevel=Math.floor(finite(old.offlineLevel,0,0,5));next.spenderClock=finite(old.spenderClock,180,0,600);next.rushTime=finite(old.rushTime,0,0,120);next.crosses=migrateCrosses(old.crosses,old.library,old.breed);next.reminders=old.reminders===true;next.perks=migratePerks(old.perks,next.empire.shares);
+    next.offlineLevel=Math.floor(finite(old.offlineLevel,0,0,5));next.forks=migrateForks(old.forks,next);next.spenderClock=finite(old.spenderClock,180,0,600);next.rushTime=finite(old.rushTime,0,0,120);next.crosses=migrateCrosses(old.crosses,old.library,old.breed);next.reminders=old.reminders===true;next.perks=migratePerks(old.perks,next.empire.shares);
     next.idStaff=Math.floor(finite(old.idStaff,0,0,economy.SECURITY_MAX_LEVEL));
     next.strains=STRAINS.map(function(_,i){return Math.floor(finite(old.strains&&old.strains[i],i===0?1:0,i===0?1:0,10))});
     next.activeStrain=Math.floor(finite(old.activeStrain,0,0,STRAINS.length-1));if(!next.strains[next.activeStrain])next.activeStrain=0;
@@ -654,17 +655,28 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function pickupLineFull(){return customers.filter(function(c){return c.ordered&&!c.bag}).length>=pickupLimit()}
   function readyCapacity(){return economy.readyCapacity(state.readyLevel,state.lines)}
   function componentCost(i){var L=state[COMPONENTS[i].key];return Math.round(COMPONENTS[i].base*Math.pow(1.8,Math.min(L,8))*Math.pow(2.15,Math.max(0,L-8)))}
-  function componentUnlocked(i){return COMPONENTS[i].key!=='kioskSpeedLevel'||state.kiosk}
-  function upgradeComponent(i){var c=COMPONENTS[i],price=componentCost(i);if(!componentUnlocked(i)||state[c.key]>=c.max||state.money<price)return;state.money-=price;state[c.key]++;save();renderUI();notify(c.name.toUpperCase()+' · LEVEL '+state[c.key],'upgrade')}
+  function componentInstalled(i){return COMPONENTS[i].key!=='kioskSpeedLevel'||state.kiosk}
+  // Buyable now: installed, and either off the forks or on a side that is taken or still free to take.
+  function componentUnlocked(i){var s=sideStatus(state,COMPONENTS[i].key);return componentInstalled(i)&&(s==='open'||s==='pick')}
+  // Worth advising: buyable and not a fork still waiting on the player, so the button never makes a fork's choice for them.
+  function componentAdvisable(i){return componentUnlocked(i)&&sideStatus(state,COMPONENTS[i].key)==='open'}
+  function componentIndex(key){return COMPONENTS.findIndex(function(c){return c.key===key})}
+  // Taking a fork closes its partner for the rest of the run, so the first tap only arms it and a second tap confirms.
+  var armedFork=null,armedTimer=null;
+  function upgradeComponent(i){var c=COMPONENTS[i],price=componentCost(i);if(!componentUnlocked(i)||state[c.key]>=c.max||state.money<price)return;
+    if(sideStatus(state,c.key)==='pick'&&armedFork!==i){armedFork=i;clearTimeout(armedTimer);armedTimer=setTimeout(function(){armedFork=null;renderUI()},6000);renderUI();return}
+    armedFork=null;var took=takeSide(state,c.key);state.money-=price;state[c.key]++;save();renderUI();notify(took?c.name.toUpperCase()+' · CHOSEN OVER '+COMPONENTS[componentIndex(partnerOf(c.key))].name.toUpperCase():c.name.toUpperCase()+' · LEVEL '+state[c.key],'upgrade')}
   function renderComponents(){
     var describe=[function(l){return '+'+Math.round((economy.walkSpeed(l)/2.8-1)*100)+'% walking speed'},function(l){return (4+l*2)+' picking up'},function(l){return economy.readyCapacity(l,state.lines)+' ready bags'},function(l){return '+'+(l*3)+'% sale value'},function(l){return '+'+(l*3)+'% happy tips'},function(l){return '+'+(l*15)+'% kiosk speed'},function(l){return '+'+(l*5)+'% online value'},function(l){return Math.round(economy.patience('hurried',l))+'s patience'},function(l){return '+'+(l*12)+'% check speed'},function(l){return (requestRate(state.onlineCompleted,1,l)*60).toFixed(1)+' requests / min · '+requestCap(state.onlineCompleted,l)+' waiting'},
       function(l){return '+'+(l*6)+'% seed batch'},function(l){return '+'+(l*6)+'% grow batch'},function(l){return '+'+(l*6)+'% harvest batch'},function(l){return '+'+(l*6)+'% pack speed'},
       function(l){return '+'+(l*4)+'% counter speed'},function(l){return '+'+(l*4)+'% foot traffic'},function(l){return '+'+(l*3)+'% happy tips'},function(l){return '+'+(l*4)+'% basket size'},
       function(l){return '+'+(l*.25).toFixed(2).replace(/\.?0+$/,'')+'% THC'},function(l){return '-'+(l*3)+'% grow penalty'},function(l){return '+'+(l*2)+'% boutique value'},function(l){return '+'+(35+l*2)+'% trend bonus'},
       function(l){return (10*(1-l*.03)).toFixed(1)+'s drone interval'},function(l){return (10+l)+' orders per bulk run'},function(l){return (l*4)+'% repeat buyers'},function(l){return (4+l*4)+'h offline'}];
-    COMPONENTS.forEach(function(c,i){var level=state[c.key],max=level>=c.max,locked=!componentUnlocked(i),button=$('componentBuy'+i);
-      $('componentBenefit'+i).textContent=locked?'Install a kiosk first':max?describe[i](level):describe[i](level).replace(/ (walking speed|picking up|ready bags|sale value|happy tips|kiosk speed|online value|patience|check speed|waiting|seed batch|grow batch|harvest batch|pack speed|counter speed|foot traffic|basket size|THC|grow penalty|boutique value|trend bonus|drone interval|orders per bulk run|repeat buyers)$/,'')+' → '+describe[i](level+1);
-      $('componentLevel'+i).textContent='Level '+level+' / '+c.max+(max?' · Maximum':state.money<componentCost(i)?' · '+fmt(componentCost(i)-state.money)+' to go':'');$('componentPrice'+i).textContent=max?'MAX':fmt(componentCost(i));button.disabled=locked||max||state.money<componentCost(i);button.querySelector('span').textContent=locked?'Locked':'Upgrade';button.setAttribute('aria-describedby','componentBenefit'+i)});
+    COMPONENTS.forEach(function(c,i){var level=state[c.key],max=level>=c.max,side=sideStatus(state,c.key),closed=side==='closed',gated=side==='gated',locked=!componentInstalled(i)||closed||gated,button=$('componentBuy'+i),f=forkOf(c.key);
+      button.parentElement.classList.toggle('is-fork-closed',closed);button.parentElement.classList.toggle('is-fork-open',side==='pick');
+      if(closed||gated){$('componentBenefit'+i).textContent=describe[i](level);$('componentLevel'+i).textContent=closed?'Closed this run · took '+COMPONENTS[componentIndex(partnerOf(c.key))].name+(level?' · Lv '+level+' kept':''):'Opens at '+f.gate+' '+RESEARCH_BRANCHES.find(function(b){return b.id===f.branch}).name+' levels · '+levelsToGate(state,c.key)+' to go';$('componentPrice'+i).textContent=closed?'':fmt(componentCost(i));button.disabled=true;button.querySelector('span').textContent=closed?'Closed':'Locked';return}
+      $('componentBenefit'+i).textContent=!componentInstalled(i)?'Install a kiosk first':max?describe[i](level):describe[i](level).replace(/ (walking speed|picking up|ready bags|sale value|happy tips|kiosk speed|online value|patience|check speed|waiting|seed batch|grow batch|harvest batch|pack speed|counter speed|foot traffic|basket size|THC|grow penalty|boutique value|trend bonus|drone interval|orders per bulk run|repeat buyers)$/,'')+' → '+describe[i](level+1);
+      $('componentLevel'+i).textContent='Level '+level+' / '+c.max+(max?' · Maximum':state.money<componentCost(i)?' · '+fmt(componentCost(i)-state.money)+' to go':'');$('componentPrice'+i).textContent=max?'MAX':fmt(componentCost(i));button.disabled=locked||max||state.money<componentCost(i);button.querySelector('span').textContent=locked?'Locked':side==='pick'?(armedFork===i?'Confirm':'Choose'):'Upgrade';button.setAttribute('aria-describedby','componentBenefit'+i)});
     if(shopBrowser)shopBrowser.render()}
   function queueCost(){return Math.round(150*Math.pow(1.8,state.queueLevel))}
   function upgradeQueue(){if(queueLimit()>=QUEUE_MAX||state.money<queueCost())return;state.money-=queueCost();state.queueLevel++;save();renderUI();notify('LINE EXPANDED · '+queueLimit()+' customers','upgrade')}
@@ -2925,7 +2937,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // The pane folds away first; the sheet only takes its collapsed shape once nothing is left to hide.
     glidePane(document.querySelector('[data-pane]:not([hidden])'),false,function(){if(!panelOpen){sheet.classList.add('collapsed');fitControls()}});fitControls()}
   // Deliveries lives under Shop › Online, as on iOS; its header carries a way back.
-  $('panelBack').onclick=function(){showTray('boosts');if(shopBrowser)shopBrowser.show(4)};
+  $('panelBack').onclick=function(){showTray('boosts');if(shopBrowser)shopBrowser.show(2)};
   trayTabs.forEach(function(tab){tab.onclick=function(){var name=tab.getAttribute('data-tray');if(name===activeTray&&panelOpen)collapsePanel();else showTray(name)}});
   $('panelToggle').onclick=function(){if(panelOpen)collapsePanel();else showTray(activeTray)};
   // Phones: the sheet has three heights. Its header is a grabber: pulled up past the half-open height the sheet fills
@@ -3399,7 +3411,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     COMPONENTS.forEach(function(c,i){if(document.getElementById('componentBuy'+i))return;var card=document.createElement('div');card.className='shop-upgrade shop-feature';card.innerHTML='<div class="shop-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+icons[c.key]+'</svg></div><div class="shop-copy"><h2>'+c.name+'</h2><strong id="componentBenefit'+i+'"></strong><small>'+blurbs[c.key]+'</small><small id="componentLevel'+i+'"></small></div><button id="componentBuy'+i+'"><span>Upgrade</span><b id="componentPrice'+i+'"></b></button>';pane.insertBefore(card,anchor)});
   })();
   $('expandOrderCounter').onclick=expandOrderCounters;$('buyOrderCounter').onclick=expandOrderCounters;
-  var shopBrowser=mountShopBrowser({getState:function(){return state},components:COMPONENTS,kiosks:kioskCount,queueLimit:queueLimit,openDeliveries:function(){showTray('orders')},deliveryDesk:function(){return{built:deliveryBuilt(),waiting:onlineRequestsReady(),price:fmt(AUTO_DRONE_COST),ready:state.money>=AUTO_DRONE_COST,progress:Math.min(1,state.money/AUTO_DRONE_COST),toGo:fmt(Math.max(0,AUTO_DRONE_COST-state.money))}},recommendInfo:function(){var r=recommendation(),shelf=['Production','Service','Customers','Products','Online'];return{name:r.name,where:r.kind==='component'?shelf[shopBrowser&&shopBrowser.categoryOf?shopBrowser.categoryOf('componentBuy'+r.index):2]:'Stations',price:fmt(r.price),id:r.kind==='component'?'componentBuy'+r.index:null,affordable:state.money>=r.price}},recommend:function(open){var r=recommendation();if(open){actOnRecommendation();return ''}return r.name+' · '+(r.kind==='component'?'in '+['Production','Service','Customers','Products','Online'][shopBrowser&&shopBrowser.categoryOf?shopBrowser.categoryOf('componentBuy'+r.index):2]+' · ':'upgrade ')+fmt(r.price)}});
+  var shopBrowser=mountShopBrowser({getState:function(){return state},components:COMPONENTS,kiosks:kioskCount,queueLimit:queueLimit,openDeliveries:function(){showTray('orders')},deliveryDesk:function(){return{built:deliveryBuilt(),waiting:onlineRequestsReady(),price:fmt(AUTO_DRONE_COST),ready:state.money>=AUTO_DRONE_COST,progress:Math.min(1,state.money/AUTO_DRONE_COST),toGo:fmt(Math.max(0,AUTO_DRONE_COST-state.money))}},recommendInfo:function(){var r=recommendation(),shelf=r.kind==='component'||r.kind==='fork';return{name:r.name,where:shelf?shopBrowser.categories[shopBrowser.categoryOf('componentBuy'+r.index)]:'Stations',price:fmt(r.price),id:shelf?'componentBuy'+r.index:null,fork:r.kind==='fork'?r.fork:null,affordable:state.money>=r.price}},recommend:function(open){var r=recommendation();if(open){actOnRecommendation();return ''}return r.name+' · '+(r.kind==='component'||r.kind==='fork'?'in '+shopBrowser.categories[shopBrowser.categoryOf('componentBuy'+r.index)]+' · ':'upgrade ')+fmt(r.price)}});
   var operationsUI=mountOperations({getState:function(){return state},format:fmt,changed:function(message){save();renderUI();if(message)notify(message,'upgrade')},visit:function(i,manage){visitStore(i+1,!manage);if(manage)manageViewedStore()}});
   function renderManagement(){
     var p=state.empire,report=p.returnReport,investment=recommendation();
@@ -3642,7 +3654,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // when a $23M one does the same job.
   function trafficFix(){
     var options=[{index:0,gain:.15},{index:COMPONENTS.findIndex(function(c){return c.key==='signLevel'}),gain:.04}]
-      .filter(function(o){return state[COMPONENTS[o.index].key]<COMPONENTS[o.index].max})
+      .filter(function(o){return componentAdvisable(o.index)&&state[COMPONENTS[o.index].key]<COMPONENTS[o.index].max})
       .map(function(o){var price=componentCost(o.index);return{kind:'component',index:o.index,name:COMPONENTS[o.index].name,price:price,value:o.gain/price,reach:price<=state.money+incomeRate()*90?1:0}});
     options.sort(function(a,b){return (b.reach-a.reach)||(b.value-a.value)});
     return options[0]||null;
@@ -3662,11 +3674,15 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     function tryLevels(get,set,limit){var start=get();var found=economy.stepsToGain(function(k){set(start+k);var gain=incomeRate()-base;set(start);return gain},limit,base*1e-4);return found}
     LINES.forEach(function(_,i){if(!state.lines[i]||!isOpen(i))return;var found=tryLevels(function(){return state.lines[i]},function(v){state.lines[i]=v},LOOKAHEAD);if(!found)return;var spend=0;for(var k=0;k<found.steps;k++)spend+=economy.stationCost(LINES[i].base,state.lines[i]+k);consider({kind:'station',index:i,name:['Seeds','Grow','Harvest','Pack','Orders','Pickup'][i],price:cost(i),spend:spend,gain:found.gain})});
     COMPONENTS.forEach(function(c,i){if(!componentUnlocked(i)||state[c.key]>=c.max)return;var start=state[c.key],found=tryLevels(function(){return state[c.key]},function(v){state[c.key]=v},Math.min(LOOKAHEAD,c.max-start));if(!found)return;var spend=0;for(var k=0;k<found.steps;k++){state[c.key]=start+k;spend+=componentCost(i)}state[c.key]=start;consider({kind:'component',index:i,name:c.name,price:componentCost(i),spend:spend,gain:found.gain})});
-    return bestReach||best||legacyRecommendation();
+    var pick=bestReach||best||legacyRecommendation();
+    // A fork still waiting on the player is named as the choice, not bought: the tap opens both sides in the Shop.
+    if(pick.kind==='component'&&!componentAdvisable(pick.index)){var f=forkOf(COMPONENTS[pick.index].key);return{kind:'fork',fork:f.id,index:pick.index,name:f.name,price:pick.price}}
+    return pick;
   }
+  function openFork(index){showTray('boosts');if(shopBrowser&&shopBrowser.show)shopBrowser.show(shopBrowser.categoryOf('componentBuy'+index));renderUI();var card=$('componentBuy'+index).parentElement;if(card.scrollIntoView)card.scrollIntoView({block:'nearest'})}
   // One tap buys exactly what the button names, wherever it lives, and the card moves on to the next fix. Short of cash it
   // only says how much is missing, so a tap never opens a panel some times and buys other times.
-  function actOnRecommendation(){var r=recommendation();if(!r)return;if(state.money<r.price)return notify('Need '+fmt(r.price-state.money)+' more');if(r.kind==='component')upgradeComponent(r.index);else buyStationLevel(r.index)}
+  function actOnRecommendation(){var r=recommendation();if(!r)return;if(r.kind==='fork')return openFork(r.index);if(state.money<r.price)return notify('Need '+fmt(r.price-state.money)+' more');if(r.kind==='component')upgradeComponent(r.index);else buyStationLevel(r.index)}
   $('flowAction').onclick=function(){if(state.gameSpeed===0)return setGameSpeed(1);if(!state.shopOpen){if(!state.doorBuilt)return buildStation('door');var next=state.lines.indexOf(0);return next<0?openShop():buildStation(next)}actOnRecommendation()};
   LINES.forEach(function(_,i){$('staffMax'+i).onclick=function(){trainStaffMax(i)}});
   $('trainIdChecker').onclick=function(){if(!state.doorBuilt)return buildStation('door');trainIdChecker(1)};
