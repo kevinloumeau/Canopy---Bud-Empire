@@ -9,6 +9,7 @@ try: sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 except NameError: pass
 import canopy_kit as K
 import tree_parts as T
+T.LITE = True          # phone budget: lighter canopy lumps, fewer scallops, unbevelled grate
 
 OUT = K.begin("StreetTree")
 rnd = random.Random(7)

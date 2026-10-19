@@ -109,7 +109,7 @@ K.box("Sign", (1.04, .07, .26), (SX, AY, H - .29), K.GREEN_D, .02)
 for dx in (-.36, .36):
     K.tube(f"SignHanger{dx}", [(SX + dx, AY, H - .01), (SX + dx, AY, H + .03)], .01, K.BRASS)
 X.leaf_logo("SignLeaf", (SX - .38, AY - .037, H - .16), .36, M["LEAFGLOW"])
-txt = bpy.data.curves.new("SignText", "FONT"); txt.body = "PICKUP"
+txt = bpy.data.curves.new("SignText", "FONT"); txt.body = "PICKUP"; txt.resolution_u = 3
 txt.size = .15; txt.extrude = .006; txt.align_x = "CENTER"; txt.align_y = "CENTER"; txt.space_character = 1.08
 fb = os.environ.get("CANOPY_FONT") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts", "Fredoka-SemiBold.ttf")
 if os.path.exists(fb): txt.font = bpy.data.fonts.load(fb)

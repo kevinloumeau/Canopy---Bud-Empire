@@ -70,7 +70,7 @@ def pill(tag, w, h, d, z, m, n=16):
     return o
 pill("SignBorder", SW + .07, SH + .07, .065, SZ - .035, M["POLISH"])
 pill("Sign", SW, SH, .08, SZ, K.GREEN_D)
-txt = bpy.data.curves.new("SignText", "FONT"); txt.body = "ORDER"
+txt = bpy.data.curves.new("SignText", "FONT"); txt.body = "ORDER"; txt.resolution_u = 3
 txt.size = .23; txt.extrude = .008; txt.align_x = "CENTER"; txt.align_y = "CENTER"; txt.space_character = 1.05
 fb = os.environ.get("CANOPY_FONT") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts", "Fredoka-SemiBold.ttf")
 if os.path.exists(fb): txt.font = bpy.data.fonts.load(fb)
@@ -104,6 +104,24 @@ PX, PY = .38, .17
 K.cyl("PlantPot", .085, .07, .17, (PX, PY, TOP), POTCREAM, 24)
 K.cyl("PlantPotRim", .092, .092, .025, (PX, PY, TOP + .155), K.BRASS, 24)
 K.cyl("PlantSoil", .08, .08, .01, (PX, PY, TOP + .172), K.SOIL, 20)
-K.plant("Plant", PX, PY, TOP + .175, .26, .5, colas=False, spread=1.2)
+def small_plant(tag, x, y, z0, H, sc):
+    """A light leafy pot plant with K.plant's part names (Stem, Pet, Leaf, Crown): three leaf pairs and a crown."""
+    from mathutils import Vector
+    rnd = K.rnd
+    pts = [Vector((x, y, z0 + H * t)) for t in (0, .5, 1)]
+    K.tube(f"{tag}Stem", [tuple(p) for p in pts], .011, K.STEM, .006)
+    for k in range(3):
+        p = pts[0].lerp(pts[-1], .15 + .35 * k); yaw0 = k * 2.4
+        for side in (0, math.pi):
+            yaw = yaw0 + side; tip = p + Vector((math.cos(yaw), math.sin(yaw), .25)) * .05 * sc
+            K.tube(f"{tag}Pet{k}{int(side)}", [tuple(p), tuple(tip)], .004, K.STEM)
+            K.leaf_at(f"{tag}Leaf{k}{int(side)}", tuple(tip), yaw, rnd.uniform(-.3, 0) + .1 * k, (1.5 - .3 * k) * sc, K.LEAF_MESHES[(k + int(side > 0)) % 2])
+    for j in range(3):
+        K.leaf_at(f"{tag}Crown{j}", tuple(pts[-1]), j * 2.09 + .3, .75, .75 * sc, K.LEAF_MESHES[j % 2])
+small_plant("Plant", PX, PY, TOP + .175, .26, .5)
+
+# thin stems, petioles, branches and drip lines as four-sided tubes: they are a few pixels wide at map distance
+for o in bpy.data.objects:
+    if o.type == "CURVE" and any(k in o.name for k in ("Stem", "Pet", "Branch", "Drip")): o.data.bevel_resolution = 0
 
 K.finish(OUT, "order_desk_tier5", ortho=2.6, centre=(0, 0, 1.1))

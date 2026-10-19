@@ -141,7 +141,7 @@ for x in (ax0, ax1):
 SW, SH, SZ = ax1 - ax0 - .34, .3, AH - .27
 K.box("SignBorder", (SW + .04, .07, SH + .04), ((ax0 + ax1) / 2, AY, SZ - .02), K.BRASS, .02)
 K.box("Sign", (SW, .09, SH), ((ax0 + ax1) / 2, AY, SZ), K.GREEN_D, .02)
-txt = bpy.data.curves.new("SignText", "FONT"); txt.body = "PICKUP"
+txt = bpy.data.curves.new("SignText", "FONT"); txt.body = "PICKUP"; txt.resolution_u = 3
 txt.size = .19; txt.extrude = .008; txt.align_x = "CENTER"; txt.align_y = "CENTER"; txt.space_character = 1.05
 fb = os.environ.get("CANOPY_FONT") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts", "Fredoka-SemiBold.ttf")
 if os.path.exists(fb): txt.font = bpy.data.fonts.load(fb)
