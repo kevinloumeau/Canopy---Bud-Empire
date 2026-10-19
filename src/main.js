@@ -2924,7 +2924,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(status==='locked'){info='Unlocks at crew Lv '+ABILITY_UNLOCK;label='Lv '+ABILITY_UNLOCK}
     else if(status==='active'){info='Running · +'+Math.round(ABILITY_SALES*100)+'% sales';label=clockLabel(state.abilities.active[i])}
     else if(status==='recharging'){info='Recharging';label=clockLabel(state.abilities.recharge[i])}
-    else{info=ABILITY_FACTOR+'× speed, +'+Math.round(ABILITY_SALES*100)+'% sales for '+Math.round(ABILITY_SECONDS/60)+' min';label='Use'}
+    else{info=ABILITY_FACTOR+'× speed, +'+Math.round(ABILITY_SALES*100)+'% sales for '+(ABILITY_SECONDS%60?ABILITY_SECONDS+' s':ABILITY_SECONDS/60+' min');label='Use'}
     if($('abilityName').textContent!==ABILITIES[i].name)$('abilityName').textContent=ABILITIES[i].name;
     if($('abilityInfo').textContent!==info)$('abilityInfo').textContent=info;
     if(button.firstChild.textContent!==label)button.firstChild.textContent=label;
