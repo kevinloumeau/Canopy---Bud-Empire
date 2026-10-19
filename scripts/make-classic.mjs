@@ -10,7 +10,7 @@ if (compatible === html) {
   throw new Error('Expected Vite asset tags were not found.');
 }
 
-// The 3D map's entry is loaded on demand by main.js (?render=3d), which finds its hashed name in this meta tag.
+// The 3D map's entry is loaded on demand by main.js, which finds its hashed name in this meta tag.
 const { readdir } = await import('node:fs/promises');
 const map3d = (await readdir(new URL('../dist/assets/', import.meta.url))).find(name => /^map3d-[\w-]+\.js$/.test(name));
 if (!map3d) throw new Error('The 3D map entry was not built.');

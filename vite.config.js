@@ -11,7 +11,7 @@ export default defineConfig({
     modulePreload: false,
     rollupOptions: {
       // Two pages: the game at the root and the launch page beside it at /welcome/.
-      // The 3D map (?render=3d) is its own entry, not a dynamic-import chunk: Vite's import() helper needs import.meta,
+      // The 3D map is its own entry, not a dynamic-import chunk: Vite's import() helper needs import.meta,
       // which the classic deferred script make-classic.mjs turns the game into cannot contain. make-classic.mjs writes its
       // hashed file name into index.html and main.js loads it from there.
       input: {

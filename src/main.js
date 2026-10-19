@@ -708,9 +708,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   function notify(message,kind){var cue=kind==='upgrade'?(/BUILT|OPEN|EXPANDED/.test(message)?'build':'upgrade'):/REWARD|MILESTONE|GOAL COMPLETE|EVENT COMPLETE|CHAPTER COMPLETE|WHILE AWAY|Prestige/.test(message)?'sparkle':/^Need |previous stage first/.test(message)?'denied':null;if(cue)playSound(cue,state.sound);if(kind!=='dispatch')dispatchSummary=null;$('toast').classList.toggle('is-upgrade',kind==='upgrade');$('toast').textContent=message;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){$('toast').classList.remove('show')},1600)}
 
-  // ?render=3d draws the main shop's map with Three.js (src/three/map3d.js) under a transparent 2D canvas that keeps the
-  // screen-space effects (queue badges, tickets, sparkles, confetti). The 2D map stays the default and the fallback.
-  var RENDER_3D=SHOP_SPRITES&&/[?&]render=3d\b/.test(location.search);
+  // The sprite shop's map draws with Three.js (src/three/map3d.js) under a transparent 2D canvas that keeps the
+  // screen-space effects (queue badges, tickets, sparkles, confetti). ?render=2d keeps the Canvas 2D map, which also
+  // draws while the 3D module loads and whenever WebGL cannot start or its context is lost.
+  var RENDER_3D=SHOP_SPRITES&&!/[?&]render=2d\b/.test(location.search);
   var world=$('world'),canvas=document.createElement('canvas'),ctx=canvas.getContext('2d',{alpha:RENDER_3D});
   if(!ctx){$('loadStatus').textContent='CANVAS COULD NOT START';$('loadRetry').hidden=false;return}
   world.insertBefore(canvas,world.firstChild);canvas.setAttribute('aria-hidden','true');
@@ -4111,7 +4112,7 @@ if(!SHOP_SPRITES){
   function drawParticles(frameDelta){
     for(var i=particles.length-1;i>=0;i--){var p=particles[i];p.life-=frameDelta*1.5;if(!motionPreference.matches){p.x+=p.vx*frameDelta;p.z+=p.vz*frameDelta;p.y+=p.vy*frameDelta;}p.vy-=frameDelta*5;var screen=project(p.x,p.y,p.z),size=Math.max(2,unit*.1);ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.fillRect(screen.x-size/2,screen.y-size/2,size,size);ctx.globalAlpha=1;if(p.life<=0)particles.splice(i,1)}
   }
-  // The 3D map's frame (?render=3d): the scene goes to the WebGL canvas, and the 2D canvas, cleared to transparent, keeps
+  // The 3D map's frame: the scene goes to the WebGL canvas, and the 2D canvas, cleared to transparent, keeps
   // what is drawn over the map in screen space. Taps, tags and badges use project(), which the 3D camera matches.
   var STATION_BOXES=[{w:2.6,d:1.5,h:1.5},{w:3.2,d:1.6,h:1.7},{w:2.8,d:1.5,h:1.5},{w:2.6,d:1.5,h:1.5},{w:2.2,d:1.1,h:1.25},{w:2.4,d:1.2,h:1.25},{w:.8,d:1.3,h:1.1}];
   var PERSON_COLOURS=['#d97b5f','#5f8fc9','#e0b75a','#8a6fb5','#6aa36a','#c95f86','#4fa3a0','#d48c3a'];
