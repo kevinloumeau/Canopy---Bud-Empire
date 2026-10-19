@@ -782,10 +782,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       layout.floors=[{y:0,x:.75,z:2.475,w:24.5,d:18.95},{y:4.7,z:-2.95,w:18,d:7.4},{y:9.4,z:-3.6,w:13,d:6.6}];layout.marquee={x:MARQUEE.x,zFront:MARQUEE.zFront,zRear:MARQUEE.zRear,y0:MARQUEE.y0,y1:MARQUEE.y1,top:MARQUEE.top,bottom:MARQUEE.bottom};
       // Blender models (art/blender/, exported to public/models/) by station index, sized from the tier 3 sprite they replace.
       layout.modelBase=new URL('models/',document.baseURI).href;
-      // Keyed "station.tier"; a tier without its own model shows the tier 3 one. Each is sized to its tier's sprite.
+      // Keyed "station.look" (economy.stationLook: Lv 1, 10, 30, 50, 75); a look without its own model shows the tier 3 one. Each is sized to its tier's sprite.
       layout.stationModels={'0.1':'seeds_bench_tier1.glb','0.2':'seeds_bench_tier2.glb','0.3':'seeds_bench.glb','1.1':'grow_bench_tier1.glb','1.2':'grow_bench_tier2.glb','1.3':'grow_bench.glb','2.1':'harvest_bench_tier1.glb','2.2':'harvest_bench_tier2.glb','2.3':'harvest_bench.glb',
         '3.1':'pack_bench_tier1.glb','3.2':'pack_bench_tier2.glb','3.3':'pack_bench.glb','4.1':'order_desk_tier1.glb','4.2':'order_desk_tier2.glb','4.3':'order_desk.glb','5.1':'pickup_desk_tier1.glb','5.2':'pickup_desk_tier2.glb','5.3':'pickup_desk.glb','6.1':'id_desk_tier1.glb','6.2':'id_desk_tier2.glb','6.3':'id_desk.glb'};
-      layout.stationModelSize={};for(var key in layout.stationModels)layout.stationModelSize[key]=stationSpriteSize(+key.split('.')[0],+key.split('.')[1]);layout.stationModelSize['4.3']={w:2.2,ox:0};
+      stationModelFiles=layout.stationModels;layout.stationModelSize={};for(var key in layout.stationModels)layout.stationModelSize[key]=stationSpriteSize(+key.split('.')[0],+key.split('.')[1]);layout.stationModelSize['4.3']={w:2.2,ox:0};
       // The lower order desks keep their sprites' size against tier 3's.
       [1,2].forEach(function(t){layout.stationModelSize['4.'+t]={w:2.2*stationSpriteSize(4,t).w/stationSpriteSize(4,3).w,ox:0}});
       // The production line from the 2D map's own routes, so both maps carry the same tubes, belts and cargo rhythm.
@@ -2340,7 +2340,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var speed=state.lines.some(function(n){return n>0})?Math.min(.07,.02+production()*.00002):0;
     crateTime=(crateTime+frameDelta*speed*1.4)%1;cargoOdo=(cargoOdo+frameDelta*speed*14)%1e5;
     var stations=[],people=[];
-    function station(i,x,y,z,level,built,size){var tier=built?spriteTier(level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(tier-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,selected:selected===i&&!securitySelected&&!loungeSelected})}
+    function station(i,x,y,z,level,built,size){var tier=built?economy.stationLook(level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(tier-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,selected:selected===i&&!securitySelected&&!loungeSelected})}
     // People are the 2D map's own sprites, recorded as each would be drawn and stood up in the scene as flat figures
     // (capturePerson); a capsule under each casts its shadow.
     var figures=[];
@@ -2677,7 +2677,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       }else renderUpgradeComparison('Seconds per handoff',handoffNow/Math.max(1,state.gameSpeed),handoffNext/Math.max(1,state.gameSpeed),true,!level,false);
     }
     paintUpgradePreview(selected);
-    $('nextAppearance').textContent=(tier?'Tier bonus ×'+economy.tierBoost(level)+' · ':'')+(tier<6?'Output ×2 and new look at level '+TIER_LEVELS[tier+1]+' · '+STATION_TIERS[tier+1]+(selected>=4?' · both counters at a tier double baskets':''):'Flagship equipment · upgrades keep increasing output');
+    var lookAt=economy.nextLookLevel(level);
+    $('nextAppearance').textContent=(lookAt?'New look at level '+lookAt+' · ':'')+(tier?'Tier bonus ×'+economy.tierBoost(level)+' · ':'')+(tier<6?'Output ×2 at level '+TIER_LEVELS[tier+1]+' · '+STATION_TIERS[tier+1]+(selected>=4?' · both counters at a tier double baskets':''):'Flagship equipment · upgrades keep increasing output');
     $('machineCost').textContent=level?fmt(price):'FREE';$('buyMachine').disabled=!affordable;$('buyMachine').querySelector('span').textContent=!open?'LOCKED':level?'UPGRADE':'BUILD';
     var maxUpgrade=level?maxStationUpgrade(selected):{levels:0,cost:0};
     $('buyMachineMax').disabled=!maxUpgrade.levels;
@@ -3035,10 +3036,12 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   // The menus show each station as its 3D model once the 3D map has rendered it (map3d.stationPicture, framed like the
   // map), the sprite until then and in the 2D map. picturesPending asks the frame loop to repaint the station tabs.
-  var picturesPending=false;
+  var picturesPending=false,stationModelFiles={};
+  // A look without its own model yet shows the highest one that has one, as the map does.
+  function stationModelKey(i,level){var t=economy.stationLook(level);while(t>1&&!stationModelFiles[i+'.'+t])t--;return i+'.'+t}
   function stationPicture(i,level){
     if(!map3d||!map3d.ok||!map3d.stationPicture||!(level>0))return null;
-    var picture=map3d.stationPicture(i+'.'+spriteTier(level));if(!picture)picturesPending=true;return picture;
+    var picture=map3d.stationPicture(i===6?i+'.'+spriteTier(level):stationModelKey(i,level));if(!picture)picturesPending=true;return picture;
   }
   function paintUpgradePreview(index){
     var preview=$('upgradePreview');if(!preview)return;
