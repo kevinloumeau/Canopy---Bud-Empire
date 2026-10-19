@@ -325,9 +325,9 @@ export function buildRooftop(world, layout, { box, span, material }) {
       const source = gltf.scene;
       source.traverse(o => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
       const signFace = source.getObjectByName('SignFace'), fire = source.getObjectByName('Flame'), floor = source.getObjectByName('DanceFloor');
-      // The model's sign face runs its UVs the other way round, so it gets the canvas mirrored back.
+      // glTF UVs run top-down, so the model's sign face gets the canvas unflipped.
       if (signFace) {
-        const flipped = signTexture.clone(); flipped.wrapS = THREE.RepeatWrapping; flipped.repeat.x = -1; flipped.offset.x = 1; flipped.needsUpdate = true;
+        const flipped = signTexture.clone(); flipped.flipY = false; flipped.needsUpdate = true;
         signFlipped = flipped; const faceMat = signMat.clone(); faceMat.map = flipped; signFaceMat = faceMat;
         signFace.traverse(o => { if (o.isMesh) { o.material = faceMat; o.castShadow = false; } });
       }
