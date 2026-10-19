@@ -27,6 +27,10 @@ export function createMap3D(canvas, layout) {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
   } catch (e) { return null; }
   if (!renderer.getContext()) return null;
+  // Files still loading (models and textures), so scripts/snap3d.mjs knows when a capture shows the finished scene.
+  let loading = 0;
+  const loads = THREE.DefaultLoadingManager, track = (url, done, total) => { loading = total - done; };
+  loads.onStart = loads.onProgress = track;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -545,7 +549,7 @@ export function createMap3D(canvas, layout) {
     const night = view(frame, branchBackground.set(frame.background));
     branch.update(frame.branch, night);
     placeFigures(frame.figures || [], night);
-    renderer.render(scene, camera);
+    if (!frame.dry) renderer.render(scene, camera);
     return true;
   }
 
@@ -639,7 +643,8 @@ export function createMap3D(canvas, layout) {
     if (rooftop) rooftop.update(frame);
     Object.entries(fixtures).forEach(([key, holder]) => { holder.visible = !!(frame.fixtures && frame.fixtures[key]); });
 
-    renderer.render(scene, camera);
+    // A dry frame (snap3d.mjs, while models load) sets the scene up and asks for its models without drawing it.
+    if (!frame.dry) renderer.render(scene, camera);
     return true;
   }
 
@@ -651,6 +656,7 @@ export function createMap3D(canvas, layout) {
     hasFixture: key => !!fixtures[key],
     stationPicture,
     get ok() { return !lost; },
+    get loading() { return loading; },
     dispose() { renderer.dispose(); materials.forEach(m => m.dispose()); }
   };
 }
