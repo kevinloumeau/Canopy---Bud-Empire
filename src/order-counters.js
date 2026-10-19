@@ -38,6 +38,13 @@ export function atOrderCounter(c,count){
   const position=orderCounterPositions(count)[c.orderCounter];
   return !!position&&!c.kiosk&&!c.ordered&&c.phase==='ordering'&&!c.walking&&Math.hypot(c.x-position.x,c.z-ORDER_SPOT_Z)<.01;
 }
+// Places in the pickup line: one per queue gap along its route, the head at the counter. The waiting-area upgrade
+// can never promise more places than the roped route holds, so once it is full the order desks and kiosks hold the
+// next order until someone collects and a spot opens (Kevin, 2026-10-19).
+export function pickupLineSpots(routeLength,gap){
+  return gap>0&&Number.isFinite(routeLength)&&routeLength>=0?Math.floor(routeLength/gap+1e-6)+1:1;
+}
+export function pickupPlaces(upgradeLimit,routeLength,gap){return Math.max(1,Math.min(upgradeLimit,pickupLineSpots(routeLength,gap)));}
 // All staffed counters and kiosks share this reservation budget. Counting bags
 // (rather than customers) prevents simultaneous baskets promising the same stock.
 export function orderAvailability(customers,readyStock,pickupLimit){

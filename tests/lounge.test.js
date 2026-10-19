@@ -44,13 +44,13 @@ test('admission needs an open lounge, a free seat and a spare jar',()=>{
 });
 test('a session takes the cover plus one jar at the tier premium',()=>{
   assert.deepEqual(loungeTake(0,80),{cover:0,spend:0,total:0});
-  const t=loungeTake(1,80);assert.equal(t.cover,LOUNGE_TIERS[0].cover);assert.equal(t.spend,240);assert.equal(t.total,t.cover+240);
+  const t=loungeTake(1,80);assert.equal(t.cover,LOUNGE_TIERS[0].cover*3);assert.equal(t.spend,720);assert.equal(t.total,t.cover+720);
   assert.ok(loungeTake(4,80).total>loungeTake(1,80).total);
   assert.equal(loungeTake(1,-5).spend,0);
   assert.ok(loungeRate(4,80)>loungeRate(1,80)&&loungeRate(0,80)===0);
 });
 test('the rate right now counts one take per session for every seat taken, never more than the tier seats',()=>{
-  const take=loungeTake(1,80).total,session=LOUNGE_TIERS[0].session;
+  const take=loungeTake(1,80).total,session=LOUNGE_TIERS[0].session*3;
   assert.equal(loungeCurrentRate(1,0,80),0);
   assert.equal(loungeCurrentRate(1,2,80),take*2/session);
   assert.equal(loungeCurrentRate(1,4,80),loungeRate(1,80),'every seat busy matches the card\'s full-house rate');
@@ -59,22 +59,29 @@ test('the rate right now counts one take per session for every seat taken, never
   assert.equal(loungeCurrentRate(1,-2,80),0);assert.equal(loungeCurrentRate(1,NaN,80),0);
 });
 
-test('lounge host shortens sessions and raises the rate',()=>{
+test('lounge host raises the take and the rate, never the pace',()=>{
   assert.equal(migrateLoungeHost(undefined),0);assert.equal(migrateLoungeHost(-3),0);assert.equal(migrateLoungeHost(2.7),2);assert.equal(migrateLoungeHost(1e9),10000);
   assert.equal(loungeHostSpeed(0),1);assert.equal(loungeHostSpeed(2),1.6);
-  assert.equal(loungeSessionSeconds(1,0),LOUNGE_TIERS[0].session);
-  assert.equal(loungeSessionSeconds(1,2),LOUNGE_TIERS[0].session/1.6);
+  assert.equal(loungeSessionSeconds(1),LOUNGE_TIERS[0].session*3);
+  assert.equal(loungeTake(1,80,2).cover,Math.round(LOUNGE_TIERS[0].cover*3*1.6));
   assert.ok(Math.abs(loungeRate(1,80,2)-loungeRate(1,80)*1.6)<1e-9);
   assert.equal(loungeCurrentRate(1,4,80,2),loungeRate(1,80,2));
   assert.equal(loungeHostCost(0),20);assert.equal(loungeHostCost(3),Math.floor(20*Math.pow(1.6,3)));
 });
-test('the second elevator shaft is bought once, only with the lounge open, and turns tables a quarter faster',async()=>{
+test('the second elevator shaft is bought once, only with the lounge open, and lifts the take a quarter',async()=>{
   const {buyLoungeLift,LOUNGE_LIFT_COST,LOUNGE_LIFT_SPEED}=await import('../src/lounge.js');
   assert.equal(buyLoungeLift({lounge:0,money:1e9}),false);
   const state={lounge:1,money:LOUNGE_LIFT_COST-1};
   assert.equal(buyLoungeLift(state),false);
   state.money=LOUNGE_LIFT_COST;assert.equal(buyLoungeLift(state),true);assert.equal(state.money,0);assert.equal(state.loungeLift,true);
   state.money=1e9;assert.equal(buyLoungeLift(state),false);assert.equal(state.money,1e9);
-  assert.ok(Math.abs(loungeSessionSeconds(1,0,true)*LOUNGE_LIFT_SPEED-loungeSessionSeconds(1,0))<1e-9);
+  assert.equal(loungeTake(1,100,0,true).cover,Math.round(LOUNGE_TIERS[0].cover*3*LOUNGE_LIFT_SPEED));
   assert.ok(loungeCurrentRate(1,2,100,0,true)>loungeCurrentRate(1,2,100,0));
+});
+test('guests stay three times the base session and the lounge earns the same per second',()=>{
+  for(let level=1;level<=LOUNGE_MAX;level++){
+    assert.equal(loungeSessionSeconds(level),LOUNGE_TIERS[level-1].session*3);
+    const base=LOUNGE_TIERS[level-1],old=(base.cover+80*base.spend)*base.seats/base.session;
+    assert.ok(Math.abs(loungeRate(level,80)-old)/old<.01,base.name);
+  }
 });

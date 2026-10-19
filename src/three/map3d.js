@@ -218,6 +218,45 @@ export function createMap3D(canvas, layout) {
     }, undefined, e => console.warn('3D map: could not load ' + file, e));
   }
 
+  // Station pictures for the menus (the station tabs and the upgrade panel): the station's Blender model seen from the
+  // map's own camera angle in a small sunlit scene, rendered off screen once per model and kept as a 2D canvas, so the
+  // menus show what the map shows. Returns null (and starts the load) until the model is in.
+  const pictures = {}, pictureCamera = createMapCamera(), pictureScene = new THREE.Scene();
+  pictureScene.add(new THREE.HemisphereLight(SKY, BOUNCE, 1.7));
+  const pictureSun = new THREE.DirectionalLight(SUN_COLOUR, 2.1); pictureSun.position.copy(toSun).multiplyScalar(50); pictureScene.add(pictureSun);
+  function stationPicture(key) {
+    if (pictures[key]) return pictures[key];
+    if (!models[key]) { requestModel(key); return null; }
+    const W = 480, H = 600, stretch = new THREE.Group(), copy = models[key].clone();
+    stretch.scale.y = HEIGHT_SCALE; stretch.add(copy); pictureScene.add(stretch);
+    stretch.updateMatrixWorld(true);
+    // Frame the model's projected outline with a small margin, keeping the canvas's aspect.
+    const box = new THREE.Box3().setFromObject(stretch), corners = [];
+    for (let k = 0; k < 8; k++) corners.push(new THREE.Vector3(k & 1 ? box.max.x : box.min.x, k & 2 ? box.max.y : box.min.y, k & 4 ? box.max.z : box.min.z));
+    pictureCamera.updateMatrixWorld(true);
+    const inv = pictureCamera.matrixWorldInverse, xs = [], ys = [];
+    corners.forEach(c => { c.applyMatrix4(inv); xs.push(c.x); ys.push(c.y); });
+    const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+    const half = Math.max((Math.max(...xs) - Math.min(...xs)) / 2 / W * H, (Math.max(...ys) - Math.min(...ys)) / 2) * 1.04;
+    pictureCamera.left = cx - half * W / H; pictureCamera.right = cx + half * W / H; pictureCamera.top = cy + half; pictureCamera.bottom = cy - half;
+    pictureCamera.updateProjectionMatrix();
+    const target = new THREE.WebGLRenderTarget(W, H, { samples: 4 });
+    target.texture.colorSpace = THREE.SRGBColorSpace;
+    const clear = renderer.getClearColor(new THREE.Color()), alpha = renderer.getClearAlpha(), shadows = renderer.shadowMap.enabled;
+    renderer.shadowMap.enabled = false;
+    renderer.setRenderTarget(target); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(pictureScene, pictureCamera);
+    const pixels = new Uint8Array(W * H * 4);
+    renderer.readRenderTargetPixels(target, 0, 0, W, H, pixels);
+    renderer.setRenderTarget(null); renderer.setClearColor(clear, alpha); renderer.shadowMap.enabled = shadows;
+    target.dispose(); pictureScene.remove(stretch);
+    // GL rows run bottom-up.
+    const picture = document.createElement('canvas'); picture.width = W; picture.height = H;
+    const pc = picture.getContext('2d'), image = pc.createImageData(W, H);
+    for (let y = 0; y < H; y++) image.data.set(pixels.subarray((H - 1 - y) * W * 4, (H - y) * W * 4), y * W * 4);
+    pc.putImageData(image, 0, 0);
+    return (pictures[key] = picture);
+  }
+
   // People and cars move every frame, so they are instanced: one draw call for all of them.
   const personGeometry = new THREE.CapsuleGeometry(.24, 1.55, 4, 10).translate(0, 1.03, 0);
   const people = new THREE.InstancedMesh(personGeometry, material('#ffffff', { name: 'people' }), MAX_PEOPLE);
@@ -381,8 +420,16 @@ export function createMap3D(canvas, layout) {
   function propReady(file) {
     if (!propRequested[file]) {
       propRequested[file] = true;
-      loader.load(layout.modelBase + file, gltf => {
+      // `file#low` is the model without its tree (Crown*, Trunk* parts): the shop planters along the floor's front
+      // edges keep only their shrubs so they never hide the queue behind them.
+      const [url, variant] = file.split('#');
+      loader.load(layout.modelBase + url, gltf => {
         prepare(gltf.scene);
+        if (variant === 'low') {
+          const drop = [];
+          gltf.scene.traverse(o => { if (/^(Crown|Trunk)/.test(o.name)) drop.push(o); });
+          drop.forEach(o => o.parent && o.parent.remove(o));
+        }
         gltf.scene.traverse(o => {
           if (!o.isMesh) return;
           if (o.material.name === 'LampGlow') glowMaterials.add(o.material);
@@ -605,6 +652,7 @@ export function createMap3D(canvas, layout) {
     carsModelled,
     propReady,
     hasFixture: key => !!fixtures[key],
+    stationPicture,
     get ok() { return !lost; },
     get loading() { return loading; },
     dispose() { renderer.dispose(); materials.forEach(m => m.dispose()); }
