@@ -29,7 +29,14 @@ export function migrateLounge(value){
 export function loungeTier(level){return LOUNGE_TIERS[migrateLounge(level)-1]||null;}
 export function loungeUpgradeCost(level){return LOUNGE_TIERS[migrateLounge(level)]?.cost??null;}
 export function loungeSeats(level){return loungeTier(level)?.seats||0;}
-export function loungeSessionSeconds(level,host=0){return (loungeTier(level)?.session||0)/loungeHostSpeed(host);}
+export function loungeSessionSeconds(level,host=0,lift=false){return (loungeTier(level)?.session||0)/loungeHostSpeed(host)/(lift?LOUNGE_LIFT_SPEED:1);}
+// The second elevator shaft: bought once the lounge is open, it halves the wait for the lift so tables turn over a
+// quarter faster.
+export const LOUNGE_LIFT_COST=500000,LOUNGE_LIFT_SPEED=1.25;
+export function buyLoungeLift(state){
+  if(!migrateLounge(state.lounge)||state.loungeLift===true||!Number.isFinite(state.money)||state.money<LOUNGE_LIFT_COST)return false;
+  state.money-=LOUNGE_LIFT_COST;state.loungeLift=true;return true;
+}
 // The lounge host turns tables over faster: each training level shortens a session by the same 30% step staff get.
 export function migrateLoungeHost(value){
   return typeof value==='number'&&Number.isFinite(value)?Math.max(0,Math.min(10000,Math.floor(value))):0;
@@ -67,14 +74,14 @@ export function loungeTake(level,jarValue){
 }
 // Earnings rate right now: each seated guest paid the take at the curtain and holds the seat for one session, so
 // every occupied seat is worth the take once per session. Capped at the seats the tier has.
-export function loungeCurrentRate(level,seated,jarValue,host=0){
+export function loungeCurrentRate(level,seated,jarValue,host=0,lift=false){
   const tier=loungeTier(level);
   if(!tier)return 0;
   const occupied=Math.max(0,Math.min(tier.seats,Math.floor(Number(seated)||0)));
-  return loungeTake(level,jarValue).total*occupied/loungeSessionSeconds(level,host);
+  return loungeTake(level,jarValue).total*occupied/loungeSessionSeconds(level,host,lift);
 }
 // Rough earnings rate with every seat busy, for the station card.
-export function loungeRate(level,jarValue,host=0){
+export function loungeRate(level,jarValue,host=0,lift=false){
   const tier=loungeTier(level);
-  return tier?loungeTake(level,jarValue).total*tier.seats/loungeSessionSeconds(level,host):0;
+  return tier?loungeTake(level,jarValue).total*tier.seats/loungeSessionSeconds(level,host,lift):0;
 }
