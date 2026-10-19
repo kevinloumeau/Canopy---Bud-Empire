@@ -61,3 +61,21 @@
 .sheet .empire-screen .store-card .store-status{grid-area:status;align-self:center}
 .sheet .empire-screen .store-card .store-meter{grid-area:meter}
 .sheet .empire-screen .store-card::after{grid-area:chev}
+/* Contract card on Home: the offer (or the running contract) on the left, its one action on the right; a banked boost
+   gets its own row under a hairline with the brass button, since firing it is the next thing worth a tap. */
+.sheet .empire-screen .contract-card{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;row-gap:2px;align-items:center;margin:0 0 12px;padding:10px 10px 10px 12px;border:1px solid var(--ui-edge);border-radius:14px;background:var(--ui-well-soft)}
+.sheet .empire-screen .contract-card>*{grid-column:1;margin:0}
+.sheet .empire-screen .contract-card .season-kicker{font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ui-soft)}
+.sheet .empire-screen .contract-card h2{font-size:14px;font-weight:600;color:var(--ui-ink)}
+.sheet .empire-screen .contract-card .contract-goal{font-size:12.5px;color:var(--ui-ink)}
+.sheet .empire-screen .contract-card .contract-twist{font-size:12px;color:var(--ui-soft)}
+.sheet .empire-screen .contract-card .contract-twist b{font-weight:600;color:var(--ui-ink)}
+.sheet .empire-screen .contract-card .event-time{font:500 11.5px 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-soft)}
+.sheet .empire-screen .contract-card .contract-actions{grid-column:2;grid-row:1 / span 5;display:grid;justify-items:end;gap:4px}
+.sheet .empire-screen .contract-card .contract-actions[hidden],.sheet .empire-screen .contract-card [hidden]{display:none}
+.sheet .empire-screen .contract-card #contractStart{width:auto;min-height:38px;margin:0;padding:0 14px;border:0;border-radius:10px;background:var(--ui-leaf);color:var(--ui-on-leaf);font:500 13px 'DM Mono',monospace;letter-spacing:-.02em;box-shadow:none}
+.sheet .empire-screen .contract-card #contractStart:disabled{background:var(--ui-well);color:var(--ui-soft)}
+.sheet .empire-screen .contract-card .contract-skip{min-height:28px;padding:0 2px;border:0;background:none;box-shadow:none;font-size:11.5px;color:var(--ui-soft);text-decoration:underline;text-underline-offset:3px}
+.sheet .empire-screen .contract-card .contract-boost{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid var(--ui-edge);font:500 12px 'DM Mono',monospace;color:var(--ui-ink)}
+.sheet .empire-screen .contract-card #contractBoost{min-height:36px;padding:0 12px;border:0;border-radius:10px;background:var(--ui-brass);color:var(--ui-brass-ink);font-size:12.5px;font-weight:600;box-shadow:none}
+.sheet .empire-screen .contract-card #contractBoost{flex:none}

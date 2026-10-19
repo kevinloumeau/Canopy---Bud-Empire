@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {customerHandoff,HANDOFF_FLOOR,counterLanes,stationTier,tierBoost,retailBoost,batchSize,capacity,stationCost,staffCost,basketSize,storageCapacity,readyCapacity,onlineSize,counterServiceDuration,patience,walkSpeed,preferredStrain,rewardScale,stepsToGain} from '../src/economy.js';
-import {migrateProgression,satisfyCustomer,dailyStatus,claimDaily,eventStatus,claimEvent,goalStatus,claimGoal,recordGoal,storeRate,buyStore,STORES} from '../src/progression.js';
+import {migrateProgression,satisfyCustomer,dailyStatus,claimDaily,goalStatus,claimGoal,recordGoal,storeRate,buyStore,STORES} from '../src/progression.js';
 
 test('tiers double output at 10/20/30/50/75/100 and per-level gains stay linear between them',()=>{
   assert.deepEqual([1,9,10,19,20,30,50,75,100,140].map(stationTier),[0,0,1,1,2,3,4,5,6,6]);
@@ -55,7 +55,6 @@ test('fixed rewards scale with income but never shrink, and the scale is applied
   const s={money:0,lifetime:0,empire:migrateProgression({daily:{day:0,streak:0}},now)};
   assert.equal(dailyStatus(s.empire,now).reward,150);assert.equal(dailyStatus(s.empire,now,10).reward,1500);
   assert.equal(claimDaily(s,now,10),1500);assert.equal(s.money,1500);assert.equal(claimDaily(s,now,10),0);
-  const e=eventStatus(s.empire,now,3);assert.equal(e.reward,eventStatus(s.empire,now).reward*3);
   const scaledGoal=goalStatus(s.empire,0,4);assert.equal(scaledGoal.reward,600);
   recordGoal(s.empire,'pickup',10);assert.equal(claimGoal(s,0,4),0,'the scaled target is not met by ten pickups');
   recordGoal(s.empire,'pickup',scaledGoal.target-10);assert.equal(claimGoal(s,0,4),600);

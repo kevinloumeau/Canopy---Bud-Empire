@@ -77,3 +77,7 @@ body[data-store-view=branch] .rush-pill{display:none}
 .weekly-special{margin:0 0 10px;padding:9px 12px;border-radius:10px;background:#c4e8a714;border:1px solid #c4e8a73d;font-size:13px}
 .weekly-special b{color:var(--p-lime-78)}
 .season-card.is-between .season-tiers,.season-card.is-between #seasonClaim{display:none}
+/* The running contract, under the rush pill: name, count and clock in one quiet line. */
+.contract-pill{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 142px);transform:translateX(-50%);z-index:30;padding:5px 12px;border-radius:999px;background:var(--ui-glass-strong);border:1px solid var(--ui-edge);color:var(--ui-ink);font:500 .74rem 'DM Mono',ui-monospace,monospace;box-shadow:0 4px 14px #0005;pointer-events:none;white-space:nowrap}
+.contract-pill[hidden],body[data-store-view=branch] .contract-pill{display:none}
+.rush-pill[hidden]+.contract-pill{top:calc(env(safe-area-inset-top,0px) + 108px)}
