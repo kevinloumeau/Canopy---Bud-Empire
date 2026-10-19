@@ -198,25 +198,34 @@ export function buildShell(world, layout, { box, span, material, model }) {
   const closedDoor = layout.rooftop ? null : span(shell, dx - .7, dx + .7, 0, s.loungeHeader, face, face + .08, '#2d6146');
   const boardedExit = span(shell, rx + .16, rx + .21, 0, eh - .24, ez - ew + .15, ez + ew - .15, '#3a2a1e');
 
-  // The neon LOUNGE sign beside the doorway, lit while the lounge is open.
-  const signCanvas = document.createElement('canvas'); signCanvas.width = 512; signCanvas.height = 128;
+  // The neon sign beside the doorway, "Rooftop" in amber script over LOUNGE in pink, lit while the lounge is open.
+  const signCanvas = document.createElement('canvas'); signCanvas.width = 512; signCanvas.height = 184;
   const signTexture = new THREE.CanvasTexture(signCanvas); signTexture.colorSpace = THREE.SRGBColorSpace;
   const signMat = new THREE.MeshBasicMaterial({ map: signTexture, transparent: true });
-  const sign = new THREE.Mesh(new THREE.PlaneGeometry(2, .5), signMat);
-  sign.position.set(dx + 2.1, 1.95, face + .03); shell.add(sign);
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(2, .72), signMat);
+  sign.position.set(dx + 2.1, 2.02, face + .03); shell.add(sign);
   let signLit = null;
   if (typeof FontFace === 'function' && document.fonts) {
     new FontFace('Fredoka', `url(${new URL('../fonts/Fredoka-SemiBold.ttf', layout.modelBase).href})`, { weight: '600' }).load()
       .then(font => { document.fonts.add(font); signLit = null; boardText = null; })
       .catch(() => {});
+    new FontFace('Yellowtail', `url(${new URL('../fonts/Yellowtail-Regular.woff2', layout.modelBase).href})`).load()
+      .then(font => { document.fonts.add(font); signLit = null; })
+      .catch(() => {});
   }
   function paintSign(lit) {
     if (signLit === lit) return; signLit = lit;
-    const c = signCanvas.getContext('2d'); c.clearRect(0, 0, 512, 128);
-    c.fillStyle = '#1a1216'; c.beginPath(); c.roundRect(6, 14, 500, 100, 18); c.fill();
-    c.font = `600 76px ${SIGN_FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle';
-    if (lit) { c.shadowColor = '#ff6fa8'; c.shadowBlur = 22; c.fillStyle = '#ff8fbf'; c.fillText('LOUNGE', 256, 66); c.shadowBlur = 0; c.fillStyle = '#fff4f8'; c.fillText('LOUNGE', 256, 66); }
-    else { c.fillStyle = '#5a4750'; c.fillText('LOUNGE', 256, 66); }
+    const c = signCanvas.getContext('2d'); c.clearRect(0, 0, 512, 184);
+    c.fillStyle = '#1a1216'; c.beginPath(); c.roundRect(6, 8, 500, 168, 22); c.fill();
+    const neon = (text, x, y, glow, tube, dim) => {
+      if (lit) { c.shadowColor = glow; c.shadowBlur = 22; c.fillStyle = glow; c.fillText(text, x, y); c.shadowBlur = 0; c.fillStyle = tube; c.fillText(text, x, y); }
+      else { c.fillStyle = dim; c.fillText(text, x, y); }
+    };
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.save(); c.translate(256, 56); c.rotate(-.06); c.font = '400 88px "Yellowtail", cursive';
+    neon('Rooftop', 0, 0, '#ffbf5a', '#fff1d6', '#5d5040'); c.restore();
+    c.font = `600 72px ${SIGN_FONT}`;
+    neon('LOUNGE', 256, 128, '#ff8fbf', '#fff4f8', '#5a4750');
     signTexture.needsUpdate = true;
   }
 
