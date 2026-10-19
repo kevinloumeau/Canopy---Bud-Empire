@@ -11,6 +11,7 @@ import { buildShell } from './shell.js';
 import { buildRooftop } from './rooftop.js';
 import { buildEntrance } from './entrance.js';
 import { createBranchLayer } from './branch3d.js';
+import { rigStation, bindStation, moveStation } from './station-motion.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
@@ -149,6 +150,7 @@ export function createMap3D(canvas, layout) {
   buildEntrance(world, layout, { box, span, material });
 
   // Stations: one solid per station slot, resized and recoloured from the frame (tier, built, rising in).
+  let lastStep = 0;
   const stationMeshes = [], selectionRing = new THREE.Mesh(new THREE.RingGeometry(.86, 1, 48).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#e2c68a', transparent: true, opacity: .85, depthWrite: false }));
   selectionRing.renderOrder = 2;
   world.add(selectionRing);
@@ -209,6 +211,7 @@ export function createMap3D(canvas, layout) {
       const spec = layout.stationModelSize[index] || { w: size.x + size.z, ox: 0 }, s = spec.w / ((size.x + size.z) * Math.SQRT1_2);
       source.position.set(-centre.x, -bounds.min.y, -centre.z);
       prepare(source);
+      rigStation(source, +index.split('.')[0]);
       const holder = new THREE.Group();
       holder.add(source);
       holder.scale.set(s, s / HEIGHT_SCALE, s);
@@ -558,6 +561,8 @@ export function createMap3D(canvas, layout) {
     branchMode(false);
     const night = view(frame, daySky);
 
+    const clockNow = performance.now(), stepSeconds = Math.min(.1, (clockNow - (lastStep || clockNow)) / 1000);
+    lastStep = clockNow;
     let ringShown = false;
     frame.stations.forEach((s, i) => {
       const group = stationMesh(i), { body, top } = group.userData;
@@ -569,7 +574,9 @@ export function createMap3D(canvas, layout) {
       const modelKey = models[key] ? key : s.index + '.3';
       const model = s.built && s.index !== undefined && models[modelKey];
       const clones = group.userData.clones || (group.userData.clones = {});
-      if (model && !clones[modelKey]) group.add(clones[modelKey] = model.clone());
+      const rigs = group.userData.rigs || (group.userData.rigs = {});
+      if (model && !clones[modelKey]) { group.add(clones[modelKey] = model.clone()); rigs[modelKey] = bindStation(clones[modelKey], s.index); }
+      if (model && rigs[modelKey]) moveStation(rigs[modelKey], s, stepSeconds);
       Object.entries(clones).forEach(([k, c]) => { c.visible = !!model && k === modelKey; });
       body.visible = !model;
       const h = s.built ? s.h : .12, lift = s.rise ? -s.rise * s.rise * 1.1 : 0;
