@@ -213,15 +213,15 @@ def _flower_mesh(m):
         return me
     return _shared(("flower", m.name), build)
 
-def scale_shrub(tag, centre, r, mats, core_m, flower_mats, rnd, n=60, flowers=6):
+def scale_shrub(tag, centre, r, mats, core_m, flower_mats, rnd, n=60, flowers=6, core_sub=2, leaf_size=(.34, .42), sq=.82, low=1.3):
     """A dense round bush like the sprite-era shrubs: a soft core shingled all over with small rounded leaves that
     lie almost flat on it, tips pointing down the slope, plus a few small orange and pink flower knots
     (~80 + n x 6 + flowers x 60 tris)."""
-    cx, cy, cz = centre; sq = .82
-    core = bpy.data.meshes.get("ScaleCoreMesh")
+    cx, cy, cz = centre
+    core = bpy.data.meshes.get(f"ScaleCoreMesh{core_sub}_{core_m.name}")
     if core is None:
-        core = bpy.data.meshes.new("ScaleCoreMesh"); bm = bmesh.new()
-        bmesh.ops.create_icosphere(bm, subdivisions=2, radius=1.); bm.to_mesh(core); bm.free(); core.materials.append(core_m)
+        core = bpy.data.meshes.new(f"ScaleCoreMesh{core_sub}_{core_m.name}"); bm = bmesh.new()
+        bmesh.ops.create_icosphere(bm, subdivisions=core_sub, radius=1.); bm.to_mesh(core); bm.free(); core.materials.append(core_m)
         for p in core.polygons: p.use_smooth = True
     o = _obj(f"{tag}Core", core); o.location = (cx, cy, cz); o.scale = (r * .93, r * .93, r * .93 * sq)
     golden = math.pi * (3 - math.sqrt(5))
@@ -230,7 +230,7 @@ def scale_shrub(tag, centre, r, mats, core_m, flower_mats, rnd, n=60, flowers=6)
         nx, ny, nz = math.cos(a) * ring, math.sin(a) * ring, h
         return Vector((cx + nx * r, cy + ny * r, cz + nz * r * sq)), Vector((nx, ny, nz / sq)).normalized()
     for j in range(n):
-        h = 1 - (j + .5) / n * 1.3                          # down to just below the equator
+        h = 1 - (j + .5) / n * low                          # down to just below the equator
         pos, nrm = surface(h, j * golden + rnd.uniform(-.1, .1))
         down = Vector((0, 0, -1)); tang = (down - nrm * down.dot(nrm))
         tang = tang.normalized() if tang.length > 1e-3 else Vector((math.cos(j), math.sin(j), 0))
@@ -242,7 +242,7 @@ def scale_shrub(tag, centre, r, mats, core_m, flower_mats, rnd, n=60, flowers=6)
         rotm = Matrix((x_ax, y_ax, z_ax)).transposed()
         lf = _obj(f"{tag}Leaf{j}", _soft_leaf_mesh(mats[rnd.randrange(len(mats))]))
         lf.location = pos - tang * r * .12; lf.rotation_mode = "QUATERNION"; lf.rotation_quaternion = rotm.to_quaternion()
-        lf.scale = (r * rnd.uniform(.34, .42),) * 3
+        lf.scale = (r * rnd.uniform(*leaf_size),) * 3
     for f in range(flowers):
         h = rnd.uniform(-.1, .85); pos, nrm = surface(h, rnd.uniform(0, 6.3))
         fo = _obj(f"{tag}Flower{f}", _flower_mesh(flower_mats[f % len(flower_mats)]))
