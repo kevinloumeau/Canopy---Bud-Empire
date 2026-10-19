@@ -342,7 +342,7 @@ const BUILDINGS = [
   [36.97, -23.5, 'building.apartment.brick'],
   [-27.5, 35.5, 'building.townhouse.sage'],
   [-34.61, 35.5, 'building.low.tan'],
-  [35.13, 35.5, 'building.low.stone'],
+  [37, 35.5, 'building.low.stone'],
   // Second ring: the row beyond the rear back street...
   [-10.04, -41.5, 'building.townhouse.sage'],
   [-3.06, -41.5, 'building.low.tan'],
@@ -364,6 +364,9 @@ const BUILDINGS = [
   [56.5, 9.81, 'building.low.tan'],
   [56.5, 2.69, 'building.rowhouse.terracotta'],
   [56.5, -3.59, 'building.townhouse.sage'],
+  // ...the outer columns' front corners, so no block by the haze stands empty...
+  [-53.5, 35.5, 'building.corner'],
+  [56.5, 35.5, 'building.corner'],
   // ...and the far row's run beyond the right back street, fading out.
   [55.28, -23.5, 'building.shop.narrow'],
   [62.51, -23.5, 'building.low.stone'],
@@ -376,11 +379,12 @@ const BUILDINGS = [
 // inside `reach`, measured along the camera's rotated axes (screen-right and screen-down across the ground), so the
 // view never runs past the haze at any zoom; main.js applies it.
 const HAZE = [220, 217, 203];
-const HAZE_RAMP = { west: [-55, -66], east: [57, 69], north: [-51, -62], south: [44, 55] };
+// Kevin (2026-10-19) had the haze pulled in to start just past the first ring's back streets.
+const HAZE_RAMP = { west: [-46, -55], east: [45, 55], north: [-40, -50], south: [35, 44] };
 const ramp = (v, [from, to]) => Math.max(0, Math.min(1, (v - from) / (to - from)));
 function hazeAt(x, z) { return Math.max(ramp(x, HAZE_RAMP.west), ramp(x, HAZE_RAMP.east), ramp(z, HAZE_RAMP.north), ramp(z, HAZE_RAMP.south)); }
 const hazeRGBA = a => 'rgba(' + HAZE[0] + ',' + HAZE[1] + ',' + HAZE[2] + ',' + a + ')';
-export const SUNNY_VIEW = { centre: { x: [-32, 42], z: [-30, 34] }, reach: { rx: [-55, 69], rz: [-58, 63] } };
+export const SUNNY_VIEW = { centre: { x: [-32, 42], z: [-30, 34] }, reach: { rx: [-42.3, 52.7], rz: [-43.9, 48.2] } };
 // Kept toward the kerb, clear of the facades behind them.
 const FAR_TREES = [[-12, -22.4], [-1, -22.4], [10, -22.4], [14.5, -22.4], [-26.4, -13], [-26.4, -2], [-26.4, 9], [-26.4, 20]];
 const NEAR_TREES = [[-15, -13.5], [-5, -13.5], [5, -13.5], [16.5, -13.5], [-17, 4]]; // behind / left of the shop only; nothing under the delivery deck's legs
@@ -432,7 +436,7 @@ function streetJobs(api) {
   // The 3D map's Blender model for the job just added: its file, where its feet stand (the render's anchor) and its
   // turn; a render drawn mirrored to run the other way is the model turned a quarter.
   const model = (name, x, z, flip) => { jobs[jobs.length - 1].model = { file: name + '.glb', x, z, rot: flip ? -Math.PI / 2 : 0 }; };
-  BUILDINGS.forEach(b => { const f = BUILDING_SPRITES[b[2]], x = b[0] - f.w / 2, z = b[1] - f.d / 2; at(x, z, () => building(api, b), f.w / 2, f.d / 2); jobs[jobs.length - 1].model = { file: buildingModel(b[2]), x, z, rot: 0 }; });
+  BUILDINGS.forEach(b => { const f = BUILDING_SPRITES[b[2]], x = b[0] - f.w / 2, z = b[1] - f.d / 2; at(x, z, () => building(api, b), f.w / 2, f.d / 2); jobs[jobs.length - 1].model = { file: buildingModel(b[2]), x, z, rot: 0, fit: { w: f.w, d: f.d } }; });
   kind = 'tree';
   FAR_TREES.concat(NEAR_TREES).forEach(([x, z]) => at(x, z, () => streetTree(api, x, z), 1.3, 1.3, () => treeShadow(api, x, z, 2.4, 4.8)));
   kind = 'prop';
