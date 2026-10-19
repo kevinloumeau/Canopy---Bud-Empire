@@ -792,7 +792,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       [1,2].forEach(function(t){layout.stationModelSize['4.'+t]={w:2.2*stationSpriteSize(4,t).w/stationSpriteSize(4,3).w,ox:0}});
       // The security booths are built facing -Y; turned a quarter, their scanner, sign and customer side face the front door
       // (west, -x), the desk runs along the footprint's long z side, and the doorman's side faces the room.
-      [1,2,3,4,5].forEach(function(t){layout.stationModelSize['6.'+t]={w:2.6,ox:0,turn:-Math.PI/2}});
+      [1,2,3,4,5].forEach(function(t){layout.stationModelSize['6.'+t]={w:1.7,ox:0,turn:-Math.PI/2}});
       // The production line from the 2D map's own routes, so both maps carry the same tubes, belts and cargo rhythm.
       var grow=tubeRunGeometry(TUBE_RUNS[1]),pack=tubeRunGeometry(TUBE_RUNS[3]);
       layout.transport={bore:TUBE_DIA,gap:CARGO_GAP,
