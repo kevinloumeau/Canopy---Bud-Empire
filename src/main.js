@@ -24,7 +24,7 @@ import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
 import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, PERSON_HEAD_Y, drawSprite, stationSprite, drawPersonSprite, drawWalker, streetItems, floorTextureFiles, fixtureSprite, shellSprite, spriteImage, drawBoxSprite, softShadow, sunShadow, SUN, SUN_REACH, townLayout, carPlacements, walkerPlacements, stationSpriteSize, stationTier as spriteTier } from './sunny-world.js';
 import * as economy from './economy.js';
 import * as strains from './strains.js';
-import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent, seasonStatus, claimSeason, SEASONS, RETIRED_WEEKLY, nextSeason, weeklySpecial, specialFactor } from './progression.js';
+import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, settleGoals, shiftStatus, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, eventStatus, joinEvent, recordEvent, claimEvent, seasonStatus, claimSeason, SEASONS, RETIRED_WEEKLY, nextSeason, weeklySpecial, specialFactor } from './progression.js';
 import {mountUiKit} from './ui-kit.js';
 // ?ui=kit shows the shared reskin components over the game (see ui-kit.js).
 if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
@@ -597,7 +597,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   function trainIdChecker(limit){
     var quote=idTrainingQuote(limit);if(!quote.levels)return;
-    var tierBefore=economy.stationLook(state.idStaff);state.money-=quote.cost;state.idStaff+=quote.levels;
+    var tierBefore=economy.stationLook(state.idStaff);state.money-=quote.cost;state.idStaff+=quote.levels;recordGoal(state.empire,'upgrade',quote.levels);
     var tier=economy.stationLook(state.idStaff);if(tier>tierBefore){buildRise[6]=.6;burst(DOOR_POS,'#f0d89a');paintThumbnails()}
     notify(tier>tierBefore?'SECURITY · '+economy.SECURITY_TIERS[tier-1].toUpperCase():'SECURITY · LEVEL '+state.idStaff,'upgrade');renderUI();save();
   }
@@ -612,10 +612,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   function trainStaffMax(i){
     var batch=maxStaffTraining(i);if(!batch.levels)return;
-    state.money-=batch.cost;state.staff[i]+=batch.levels;
+    state.money-=batch.cost;state.staff[i]+=batch.levels;recordGoal(state.empire,'upgrade',batch.levels);
     burst(machinePos[i],'#b6e58c');notify(LINES[i].name+' EMPLOYEE · +'+batch.levels+' LEVEL'+(batch.levels===1?'':'S'),'upgrade');renderUI();save();
   }
-  function upgradeStaff(i){if(!state.lines[i])return;var price=staffCost(i);if(state.money<price)return;state.money-=price;state.staff[i]++;burst(machinePos[i],'#b6e58c');notify('EMPLOYEE LEVEL '+state.staff[i]+' · +30% BASE SPEED','upgrade');renderUI();save()}
+  function upgradeStaff(i){if(!state.lines[i])return;var price=staffCost(i);if(state.money<price)return;state.money-=price;state.staff[i]++;recordGoal(state.empire,'upgrade',1);burst(machinePos[i],'#b6e58c');notify('EMPLOYEE LEVEL '+state.staff[i]+' · +30% BASE SPEED','upgrade');renderUI();save()}
   function expandOrderCounters(){
     if(!buyOrderCounter(state))return;
     selectMachine(4);tierFlashes[4]=1;burst(machinePos[4],'#e6d3a0');
@@ -704,19 +704,19 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     queueDeliveryWave(batch.count);
     recordEvent(state.empire,'online',batch.count);add(batch.reward);if(!automatic)notifyDispatch(batch);burst({x:DECK_X,z:DECK_Z,y:7.05},'#dbc38b');slideReceipts(batch.count);renderUI();save();
   }
-  // Rapid dispatches share a short loading window, never a growing launch queue.
+  // Each order is a parcel set on its own spot on the launch pad; couriers come in one after another to fetch them. With
+  // every spot taken, further orders ride along with a waiting parcel (shown as ×N), so the pad never fills up.
+  var DRONE_SPOTS=[[-.36,-.34],[.36,-.34],[-.36,.34],[.36,.34]],DRONE_PICKUP=2.2,DRONE_LIFE=10.8;
   function queueDeliveryWave(count){
-    var wave=deliveryDrones.filter(function(drone){return drone.age<.45});
-    var age=wave.length?wave[0].age:0;
+    var queued=0;
     for(var n=0;n<count;n++){
-      if(wave.length<5){
-        // Couriers in a wave lift off one after another, not as a block.
-        var drone={age:age,delay:wave.length*.42,slot:wave.length,orders:1};
-        wave.push(drone);deliveryDrones.push(drone);playSound('whoosh',state.sound);
-      }else{
-        var carrier=wave.reduce(function(a,b){return a.orders<=b.orders?a:b});carrier.orders++;
-      }
+      var pending=deliveryDrones.filter(function(d){return d.age<d.delay+DRONE_PICKUP}),used=pending.map(function(d){return d.spot}),spot=-1;
+      for(var k=0;k<DRONE_SPOTS.length;k++)if(used.indexOf(k)<0){spot=k;break}
+      if(spot<0){pending.reduce(function(a,b){return a.orders<=b.orders?a:b}).orders++;continue}
+      var next=pending.reduce(function(m,d){return Math.max(m,d.delay-d.age)},-1.1);
+      deliveryDrones.push({age:0,boxAt:queued*.2,delay:Math.max(queued*.2,next+1.1),spot:spot,slot:spot,orders:1});queued++;
     }
+    if(queued){playSound('whoosh',state.sound);if(SHOP_SPRITES){fixtureSprite('drone.courier.empty');fixtureSprite('drone.courier.loaded')}}
   }
   // Dispatch desk: the three numbers that matter, and the backlog as a row of parcels (lit ones can ship now).
   var dispatchKey='';
@@ -750,7 +750,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function buySelectedMax(){if(loungeSelected)return upgradeLounge();if(securitySelected&&!state.doorBuilt)return buildStation('door');if(!securitySelected&&!state.lines[selected])return buildStation(selected);
     if(securitySelected)return trainIdChecker(10000);
     var batch=maxStationUpgrade(selected);if(!batch.levels)return;
-    var oldTier=stationTier(selected);state.money-=batch.cost;state.lines[selected]+=batch.levels;telemetry.once('first_upgrade',{station:LINES[selected].name});trackStationLevel(selected);if(stationTier(selected)>oldTier){tierFlashes[selected]=1;burst(machinePos[selected],'#f0d89a')}
+    var oldTier=stationTier(selected);state.money-=batch.cost;state.lines[selected]+=batch.levels;recordGoal(state.empire,'upgrade',batch.levels);telemetry.once('first_upgrade',{station:LINES[selected].name});trackStationLevel(selected);if(stationTier(selected)>oldTier){tierFlashes[selected]=1;burst(machinePos[selected],'#f0d89a')}
     paintThumbnails();burst(machinePos[selected]);
     notify(LINES[selected].name+' · +'+batch.levels+' LEVEL'+(batch.levels===1?'':'S')+' · LEVEL '+state.lines[selected],'upgrade');
     renderUI();save();if(navigator.vibrate)navigator.vibrate(18);
@@ -2349,7 +2349,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     map3d.renderBranch({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:viewCentre(),background:BRANCH_THEMES[state.empire.activeStore-1].background,branch:scene,figures:figures.filter(function(f){return f.alpha>.99})});
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
     // Main-store effects expire while visiting a branch rather than replaying on return.
-    particles.forEach(function(p){p.life-=frameDelta*1.5});particles=particles.filter(function(p){return p.life>0});deliveryDrones.forEach(function(d){d.age+=frameDelta});deliveryDrones=deliveryDrones.filter(function(d){return d.age<d.delay+7.5});
+    particles.forEach(function(p){p.life-=frameDelta*1.5});particles=particles.filter(function(p){return p.life>0});deliveryDrones.forEach(function(d){d.age+=frameDelta});deliveryDrones=deliveryDrones.filter(function(d){return d.age<d.delay+DRONE_LIFE});
     if(shopPlayUI)shopPlayUI.position(null,false);
     updateBranchMarker();updateSpenderTag(true);requestAnimationFrame(render);
   }
@@ -2359,7 +2359,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var speed=state.lines.some(function(n){return n>0})?Math.min(.07,.02+production()*.00002):0;
     crateTime=(crateTime+frameDelta*speed*1.4)%1;cargoOdo=(cargoOdo+frameDelta*speed*14)%1e5;
     var stations=[],people=[];
-    function station(i,x,y,z,level,built,size){var tier=built?economy.stationLook(level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(tier-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,selected:selected===i&&!securitySelected&&!loungeSelected})}
+    function station(i,x,y,z,level,built,size){var tier=built?economy.stationLook(level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(tier-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,selected:selected===i&&!securitySelected&&!loungeSelected,clock:motionPreference.matches?6.3:taskClocks[i]/1000,act:taskActivity[i],full:i<4&&state.stock[i]>=storageCapacity()})}
     // People are the 2D map's own sprites, recorded as each would be drawn and stood up in the scene as flat figures
     // (capturePerson); a capsule under each casts its shadow.
     var figures=[];
@@ -2367,8 +2367,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     for(var i=0;i<6;i++){
       var p=machinePos[i];
       if(i===4)orderCounterPositions(state.orderCounters).forEach(function(q,index){
-        station(4,q.x,0,q.z,state.lines[4],state.lines[4]>0,4);
         var active=customers.some(function(c){return c.orderCounter===index&&atOrderCounter(c,state.orderCounters)&&c.serviceElapsed>0});
+        station(4,q.x,0,q.z,state.lines[4],state.lines[4]>0,4);stations[stations.length-1].act=active?1:0;
         if(state.lines[4]>0)person(q.x-.35,0,q.z-1.5,'#2f6b52',function(){drawPerson(q.x-.35,q.z-1.5,now,4,false,true,false,{amount:0,phase:0,facing:.3,identity:4+index*23,taskOffset:index*1.7,workActivity:active?1:0})});
       });
       else{
@@ -2513,36 +2513,43 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(!mapDrawn){mapDrawn=true;mapRebuilds=0;mapStatus(null)}
     if(state.empire.activeStore)renderBranch3d(now,frameDelta);else renderFrame3d(now,frameDelta,wallDelta);
   }
+  // A courier's round trip, in seconds from its own start: it drops in empty over its parcel, takes it on board at
+  // DRONE_PICKUP, climbs, flies off over the street, then comes back empty and sets down on the pad.
   function drawDeliveryDrones(dt,now){
+    var pad=launchPad(),still=motionPreference.matches;
+    var smooth=function(v){v=Math.max(0,Math.min(1,v));return v*v*(3-2*v)};
     for(var i=deliveryDrones.length-1;i>=0;i--){
-      var drone=deliveryDrones[i];drone.age+=dt;var t=drone.age-drone.delay;if(t<0)continue;
-      if(t>7.5){deliveryDrones.splice(i,1);continue}
-      var lift=Math.min(1,Math.max(0,(t-2.45)/1.5));lift=lift*lift*(3-2*lift);
-      var fly=Math.max(0,(t-3.95)/3.55),travel=fly*fly;
-      var slot=drone.slot||0,side=slot%2?1:-1,lane=Math.ceil(slot/2);
-      var spread=1;
-      if(motionPreference.matches){lift=0;travel=0;}
-      // Each slot fans out on its own heading and bobs on its own phase so a bulk launch reads as separate aircraft.
-      var bob=motionPreference.matches?0:Math.sin(t*2.1+slot*1.9)*.07*Math.min(1,lift+travel);
-      var pad=launchPad(),x=pad.x-travel*(20+slot*1.6)+(slot%3-1)*.72,z=pad.z+travel*(5-(slot%2?1.2:0)+Math.floor(slot/3)*.9)+Math.floor(slot/3)*.62,y=pad.y+.9+lift*(2.4+slot*.18)+travel*7+bob;
-      ctx.save();ctx.globalAlpha=motionPreference.matches?Math.min(1,t/.25,(7.5-t)/.7):Math.min(1,(7.5-t)/.7);
-      // A taped parcel hangs beneath a compact four-rotor courier.
-      if(t<2&&!motionPreference.matches){
-        var load=Math.min(1,t/1.9),ease=load*load*(3-2*load);
-        // Every courier loads its own crate, with no parcel count/position jump.
-        drawBox(x,z,pad.y,.62,.465,.08,['#e5bc80','#a57c4f','#c99c65']);
-        ctx.save();ctx.globalAlpha*=1-Math.max(0,(load-.7)/.3);
-        pickupBag(x,z+.3*(1-ease),pad.y+.08+.2*(1-ease));ctx.restore();
-        if(load>.65){ctx.save();ctx.globalAlpha*=(load-.65)/.35;carton(x,z,pad.y,.62);ctx.restore()}
-        ctx.restore();continue;
+      var drone=deliveryDrones[i];drone.age+=dt;var t=drone.age-drone.delay;
+      if(t>(still?3.5:DRONE_LIFE)){deliveryDrones.splice(i,1);continue}
+      var spot=DRONE_SPOTS[drone.spot||0],slot=drone.slot||0,bx=pad.x+spot[0],bz=pad.z+spot[1],hover=pad.y+.95;
+      // The packed parcel drops on to its spot and waits there until its courier takes it.
+      if(drone.age>=drone.boxAt&&t<DRONE_PICKUP){
+        var drop=still?1:Math.min(1,(drone.age-drone.boxAt)/.35);carton(bx,bz,pad.y+.5*(1-drop)*(1-drop),.5);
       }
-      drawCourierDrone(x,y,z,now,slot,drone.orders);
-      ctx.restore();
+      if(t<0)continue;
+      var x=bx,y=hover,z=bz,alpha=1,loaded=t>=DRONE_PICKUP;
+      // Out over the street along the slot's own heading, as a fraction u of the full trip.
+      var away=function(u){var e=u*u;return {x:bx-e*(20+slot*1.6),z:bz+e*(5-(slot%2?1.2:0)),y:hover+2.4+e*7}};
+      if(still){alpha=Math.min(1,t/.25,(3.5-t)/.5)}
+      // It comes in from behind the deck, the opposite side to where loaded couriers leave, so the two never cross.
+      else if(t<2){var a=smooth(t/2);x=bx+2.6*(1-a);z=bz-2.6*(1-a);y=hover+3.6*(1-a);alpha=Math.min(1,t/.45)}
+      else if(t<2.6){y=hover-.1*Math.sin(Math.PI*(t-2)/.6)}
+      else if(t<3.8){y=hover+2.4*smooth((t-2.6)/1.2)}
+      else if(t<7){var o=away((t-3.8)/3.2);x=o.x;y=o.y;z=o.z;alpha=Math.min(1,(7-t)/.6)}
+      else if(t<7.4)continue;
+      else{
+        // Home again, empty: back down the same heading, a short descent and a settle on the pad before it powers down.
+        loaded=false;var r=Math.min(1,(t-7.4)/2.6),back=away(.7*(1-r)*(1-r));x=back.x;z=back.z;y=back.y;
+        if(t>10)y=hover+2.4*(1-smooth((t-10)/.5))-.35*smooth((t-10.2)/.4);
+        alpha=Math.min(1,(t-7.4)/.5,(DRONE_LIFE-t)/.25);
+      }
+      if(!still&&(t<2.6||t>=3.8))y+=Math.sin(t*2.1+slot*1.9)*.05;
+      ctx.save();ctx.globalAlpha=Math.max(0,alpha);drawCourierDrone(x,y,z,now,slot,loaded?drone.orders:1,!loaded);ctx.restore();
     }
   }
-  function drawCourierDrone(x,y,z,now,slot,orders){
-      var droneArt=SHOP_SPRITES&&fixtureSprite('drone.courier.loaded');
-      if(droneArt)spriteAt('drone.courier.loaded',project(x,y+.2,z),1.75,.5,.46);else carton(x,z,y-.9,.62);
+  function drawCourierDrone(x,y,z,now,slot,orders,empty){
+      var art=empty?'drone.courier.empty':'drone.courier.loaded',droneArt=SHOP_SPRITES&&fixtureSprite(art);
+      if(droneArt)spriteAt(art,project(x,y+.2,z),1.75,.5,.46);else if(!empty)carton(x,z,y-.9,.62);
       if(orders>1){
         var cargoLabel=project(x,y-.55,z+.36);
         ctx.fillStyle='#f5efd7';ctx.font='600 '+Math.max(9,unit*.23)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.fillText('×'+orders,cargoLabel.x,cargoLabel.y);
@@ -2589,7 +2596,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var spenderTag=document.createElement('button');spenderTag.type='button';spenderTag.className='marker spender-tag';spenderTag.id='spenderTag';spenderTag.hidden=true;spenderTag.innerHTML='<span aria-hidden="true">★</span> Big spender';spenderTag.setAttribute('aria-label','Big spender in the shop: tap for a tip or a rush');$('markers').appendChild(spenderTag);
   var rushPill=document.createElement('div');rushPill.id='rushPill';rushPill.className='rush-pill';rushPill.hidden=true;rushPill.setAttribute('role','status');document.body.appendChild(rushPill);
   function spenderInShop(){for(var i=0;i<customers.length;i++){var c=customers[i];if(c.bigSpender&&!c.tapped&&c.phase!=='leaving'&&c.phase!=='lounge')return c}return null}
-  spenderTag.onclick=function(){var c=spenderInShop();if(!c)return;c.tapped=true;spenderTag.hidden=true;
+  spenderTag.onclick=function(){var c=spenderInShop();if(!c)return;c.tapped=true;spenderTag.hidden=true;recordGoal(state.empire,'spender',1);
     if(c.id%2){state.rushTime=rushLength(state.perks);notify('RUSH · 2× SALES FOR '+state.rushTime+'S','upgrade')}else{var tip=Math.max(50,Math.round(incomeRate()*90));add(tip);notify('BIG SPENDER TIP +'+fmt(tip),'upgrade')}
     telemetry.send('big_spender',{kind:c.id%2?'rush':'tip'});save();renderUI()};
   function updateSpenderTag(branch){var c=branch?null:spenderInShop();spenderTag.hidden=!c;if(c){var pos=project(c.x,2.75,c.z);spenderTag.style.transform='translate3d('+pos.x+'px,'+pos.y+'px,0) translate(-50%,-100%)'}
@@ -3176,7 +3183,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Each lounge tier is bought outright; the first one raises the doorway out of its hoarding.
   function upgradeLounge(){
     var price=loungeUpgradeCost(state.lounge);if(price===null)return;if(state.money<price)return notify('Need '+fmt(price-state.money)+' more');
-    var wasLot=!state.lounge;buyLoungeTier(state);var tier=loungeTier(state.lounge);
+    var wasLot=!state.lounge;buyLoungeTier(state);recordGoal(state.empire,'upgrade',1);var tier=loungeTier(state.lounge);
     if(wasLot)buildRise[7]=1;burst({x:LOUNGE_DOOR.x,z:LOUNGE_DOOR.z},'#f0a7c8');playSound(wasLot?'build':'sparkle',state.sound);telemetry.send('lounge_tier',{tier:state.lounge});
     notify(wasLot?'LOUNGE OPEN · '+tier.name:'LOUNGE · '+tier.name.toUpperCase(),'upgrade');paintThumbnails();updateMarkers.key=null;render.invalidated=true;renderUI();save();if(navigator.vibrate)navigator.vibrate(18);
   }
@@ -3201,7 +3208,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Skipping or escaping the intro still leaves a working shop behind.
   function finishConstruction(){if(!state.shopOpen)openShop()}
   function buySelected(){if(loungeSelected)return upgradeLounge();if(securitySelected)return state.doorBuilt?trainIdChecker(1):buildStation('door');buyStationLevel(selected)}
-  function buyStationLevel(i){var line=LINES[i];if(!isOpen(i))return notify('Build the previous stage first');if(!state.lines[i])return buildStation(i);var c=cost(i);if(state.money<c)return notify('Need '+fmt(c-state.money)+' more');var oldTier=stationTier(i);state.money-=c;state.lines[i]++;telemetry.once('first_upgrade',{station:line.name});trackStationLevel(i);if(stationTier(i)>oldTier){tierFlashes[i]=1;burst(machinePos[i],'#f0d89a')}paintThumbnails();burst(machinePos[i]);notify(line.name+' · LEVEL '+state.lines[i],'upgrade');renderUI();save();if(navigator.vibrate)navigator.vibrate(18)}
+  function buyStationLevel(i){var line=LINES[i];if(!isOpen(i))return notify('Build the previous stage first');if(!state.lines[i])return buildStation(i);var c=cost(i);if(state.money<c)return notify('Need '+fmt(c-state.money)+' more');var oldTier=stationTier(i);state.money-=c;state.lines[i]++;recordGoal(state.empire,'upgrade',1);telemetry.once('first_upgrade',{station:line.name});trackStationLevel(i);if(stationTier(i)>oldTier){tierFlashes[i]=1;burst(machinePos[i],'#f0d89a')}paintThumbnails();burst(machinePos[i]);notify(line.name+' · LEVEL '+state.lines[i],'upgrade');renderUI();save();if(navigator.vibrate)navigator.vibrate(18)}
   function boostAll(){if(state.globalLevel>=BOOST_MAX)return;var c=boostCost(state.globalLevel);if(state.money<c)return notify('Need '+fmt(c-state.money)+' more');state.money-=c;state.globalLevel++;state.multiplier=Math.pow(1.25,state.globalLevel);burst({x:0,z:0},colors.orange);notify('ALL STAGES +25%','upgrade');renderUI();save()}
   function claimOrder(){var o=milestone(state.contract);if(!o||state.lifetime<o.goal)return;state.money+=o.reward;state.contract++;notify(fmt(o.reward)+' ORDER BONUS');renderUI();save()}
 
@@ -3216,7 +3223,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var today=document.querySelector('[data-empire-section="today"]');
   today.innerHTML='<section id="returnSummary" hidden><h2>Welcome back</h2><p id="returnTime"></p><ul id="returnEarnings"></ul><p id="returnGoals"></p><button id="dismissReturn">Dismiss summary</button></section><h2>Next steps</h2><p id="nextInvestment"></p><div id="shortGoals"></div><section class="reputation"><h2 class="empire-section-heading">Reputation</h2><div class="reputation-summary"><strong id="reputationStatus"></strong><span id="reputationNext"></span></div><progress id="reputationProgress" max="60" value="0" aria-label="Customer reputation"></progress><section class="reputation-guide" aria-labelledby="customerGuideTitle">'+customerGuideMarkup()+'</section></section>';
   paintCustomerGuide();
-  [0,1,2].forEach(function(i){var row=document.createElement('div');row.className='short-goal';row.innerHTML='<h3 id="goalTitle'+i+'"></h3><progress id="goalProgress'+i+'" max="100" aria-label="Objective progress"></progress><p id="goalCount'+i+'"></p><button id="goalClaim'+i+'"></button>'; $('shortGoals').appendChild(row);$('goalClaim'+i).onclick=function(){var g=goalStatus(state.empire,i,rewardScale());if(g.kind==='online'&&!deliveryBuilt()&&g.progress<g.target){closeGoals();showTray('orders');return;}var reward=claimGoal(state,i,rewardScale());if(reward){save();renderUI();notify('GOAL COMPLETE · +'+fmt(reward),'upgrade')}}});
+  [0,1,2].forEach(function(i){var row=document.createElement('div');row.className='short-goal';row.innerHTML='<h3 id="goalTitle'+i+'"></h3><progress id="goalProgress'+i+'" max="100" aria-label="Objective progress"></progress><p id="goalCount'+i+'"></p><button id="goalClaim'+i+'"></button>'; $('shortGoals').appendChild(row);$('goalClaim'+i).onclick=function(){var closing=shiftStatus(state.empire).done===2,reward=claimGoal(state,i,rewardScale());if(reward){save();renderUI();notify((closing?'SHIFT COMPLETE · +':'GOAL COMPLETE · +')+fmt(reward),'upgrade')}}});
   $('dismissReturn').onclick=function(){state.empire.returnReport=null;save();renderUI()};
   STORES.forEach(function(store,i){
     var controls=document.createElement('div');controls.className='branch-management';
@@ -3306,8 +3313,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     $('returnSummary').hidden=!report;
     if(report){$('returnTime').textContent=duration(report.seconds*1000)+' away · estimated earnings ('+Math.round(offlineCap()/3600)+'-hour cap, 1× rate)';$('returnEarnings').innerHTML=report.earnings.map(function(n,i){return '<li><span>'+(['Home store'].concat(STORES.map(function(s){return s.name})))[i]+'</span><strong>'+fmt(n)+'</strong></li>'}).join('');$('returnGoals').textContent=report.goals+' goals ready to collect on return. Customer service and deliveries resume while playing.';}
     $('nextInvestment').textContent='Next improvement: '+investment.name+' · '+fmt(investment.price)+(state.money<investment.price?' ('+fmt(investment.price-state.money)+' to go)':' · ready');
-    var goalsReady=[0,1,2].filter(function(i){var g=goalStatus(p,i,rewardScale());return g.progress>=g.target}).length;if($('goalsBadge')){$('goalsBadge').textContent=goalsReady;$('goalsBadge').hidden=!goalsReady;$('goalsOpen').classList.toggle('has-ready',goalsReady>0);if($('shiftGoalsReady'))$('shiftGoalsReady').textContent=goalsReady?goalsReady+' ready':''}
-    [0,1,2].forEach(function(i){var g=goalStatus(p,i,rewardScale());$('goalTitle'+i).textContent=g.title;$('goalProgress'+i).value=g.progress/g.target*100;$('goalCount'+i).textContent=(g.kind==='revenue'?fmt(g.progress)+' / '+fmt(g.target):abbr(g.progress)+' / '+abbr(g.target))+' · '+abbr(p.goalsCompleted)+' goals completed';$('goalClaim'+i).textContent='Collect '+fmt(g.reward);$('goalClaim'+i).disabled=g.progress<g.target;var gated=g.kind==='online'&&!deliveryBuilt()&&g.progress<g.target;if(gated){$('goalCount'+i).textContent='First build the delivery pad · '+fmt(AUTO_DRONE_COST);$('goalClaim'+i).textContent='View delivery pad';$('goalClaim'+i).disabled=false;}});
+    settleGoals(state);var goalsReady=[0,1,2].filter(function(i){var g=goalStatus(p,i,rewardScale());return g.progress>=g.target}).length;if($('goalsBadge')){$('goalsBadge').textContent=goalsReady;$('goalsBadge').hidden=!goalsReady;$('goalsOpen').classList.toggle('has-ready',goalsReady>0);if($('shiftGoalsReady'))$('shiftGoalsReady').textContent=goalsReady?goalsReady+' ready':'';if($('shiftProgress')){var shiftNow=shiftStatus(p,rewardScale()),left=3-shiftNow.done,shiftHtml='<span>Shift '+abbr(shiftNow.number)+'</span><span class="shift-pips" aria-hidden="true">'+[0,1,2].map(function(k){return '<i'+(k<shiftNow.done?' class="done"':'')+'></i>'}).join('')+'</span><span>'+(left===1?'1 more goal':left+' more goals')+' for a '+fmt(shiftNow.bonus)+' bonus</span>';if($('shiftProgress').dataset.html!==shiftHtml){$('shiftProgress').innerHTML=shiftHtml;$('shiftProgress').dataset.html=shiftHtml}}}
+    [0,1,2].forEach(function(i){var g=goalStatus(p,i,rewardScale());$('goalTitle'+i).textContent=g.title;$('goalProgress'+i).value=g.progress/g.target*100;$('goalCount'+i).textContent=(g.kind==='revenue'?fmt(g.progress)+' / '+fmt(g.target):abbr(g.progress)+' / '+abbr(g.target))+(g.hint&&g.progress<g.target?' · '+g.hint:'');$('goalClaim'+i).textContent='Collect '+fmt(g.reward);$('goalClaim'+i).disabled=g.progress<g.target;$('goalClaim'+i).classList.toggle('ready',g.progress>=g.target);});
     var reputationTarget=p.reputation<20?20:60;
     $('reputationStatus').textContent=p.reputation+' loyalty';
     $('reputationNext').textContent=p.reputation>=60?'VIPs unlocked':'VIPs at 60';
@@ -3390,16 +3397,18 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // The whole bottleneck line is the target; the button inside becomes its chevron.
   var flowGuide=document.querySelector('.flow-guide');if(flowGuide){flowGuide.setAttribute('role','button');flowGuide.setAttribute('tabindex','0');flowGuide.addEventListener('click',function(e){if(e.target!==$('flowAction'))$('flowAction').click()});flowGuide.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();$('flowAction').click()}});$('flowAction').setAttribute('tabindex','-1');$('flowAction').setAttribute('aria-hidden','true');}
   // Goals live in their own popover, opened from a flag beside the customer count, rather than inside the Empire tab.
-  var goalsButton=document.createElement('button');goalsButton.type='button';goalsButton.id='goalsOpen';goalsButton.setAttribute('aria-label','Shop story and goals');goalsButton.setAttribute('aria-haspopup','dialog');goalsButton.title='Goals';
+  var goalsButton=document.createElement('button');goalsButton.type='button';goalsButton.id='goalsOpen';goalsButton.setAttribute('aria-label','Shift goals and shop story');goalsButton.setAttribute('aria-haspopup','dialog');goalsButton.title='Goals';
   goalsButton.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg><span id="goalsBadge" hidden></span>';
   $('customerStatus').appendChild(goalsButton);
   // The list is a dropdown anchored under the flag, not a full-screen dialog.
   var goalsWrap=document.createElement('div');goalsWrap.className='goals-dropdown';goalsWrap.id='goalsModal';goalsWrap.hidden=true;goalsWrap.setAttribute('role','dialog');goalsWrap.setAttribute('aria-labelledby','goalsTitle');
-  goalsWrap.innerHTML='<div class="settings-head"><h2 id="goalsTitle">Your shop story</h2><button type="button" id="goalsClose" aria-label="Close shop story">×</button></div><div class="goals-body"></div>';
+  goalsWrap.innerHTML='<div class="settings-head"><h2 id="goalsTitle">Shift goals</h2><span id="shiftGoalsReady"></span><button type="button" id="goalsClose" aria-label="Close shift goals">×</button></div><div class="goals-body"></div>';
   document.body.append(goalsWrap);
   var goalsBody=goalsWrap.querySelector('.goals-body'),nextStepsHeading=today.querySelector('h2:not(.empire-section-heading)');if(nextStepsHeading)nextStepsHeading.remove();
-  var investmentLink=document.createElement('button');investmentLink.type='button';investmentLink.id='nextInvestmentLink';investmentLink.append($('nextInvestment'));investmentLink.onclick=function(){closeGoals();var r=recommendation();if(r.kind==='station')selectMachine(r.index);else{showTray('boosts');shopBrowser.show(shopBrowser.categoryOf('componentBuy'+r.index));renderUI();}};
-  var dailyGoals=document.createElement('details');dailyGoals.className='story-goals';dailyGoals.innerHTML='<summary>Shift goals <span id=shiftGoalsReady></span></summary>';dailyGoals.append($('shortGoals'));goalsBody.append(investmentLink,dailyGoals);$('goalsClose').onclick=closeGoals;
+  // The next improvement already leads the bottleneck card in the sheet, so the goals panel leaves it out.
+  $('nextInvestment').hidden=true;
+  // Shift goals lead the panel; the story card follows underneath.
+  var shiftLine=document.createElement('p');shiftLine.id='shiftProgress';goalsBody.append($('shortGoals'),shiftLine);$('goalsClose').onclick=closeGoals;
   function placeGoals(){var r=goalsButton.getBoundingClientRect(),wide=window.innerWidth>=480;goalsWrap.style.top=Math.round(r.bottom+8)+'px';goalsWrap.style.right=wide?Math.max(8,Math.round(window.innerWidth-r.right-4))+'px':'8px';goalsWrap.style.left=wide?'auto':'8px';goalsWrap.style.setProperty('--caret',Math.round(r.left+r.width/2-(wide?goalsWrap.getBoundingClientRect().left:8))+'px')}
   function openGoals(){goalsWrap.hidden=false;renderUI();placeGoals();$('goalsClose').focus({preventScroll:true});goalsButton.setAttribute('aria-expanded','true')}
   function closeGoals(){if(goalsWrap.hidden)return;var restore=goalsWrap.contains(document.activeElement);goalsWrap.hidden=true;goalsButton.setAttribute('aria-expanded','false');if(restore)goalsButton.focus({preventScroll:true})}
