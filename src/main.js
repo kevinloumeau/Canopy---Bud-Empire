@@ -393,10 +393,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // A guest steps through the gap in the drapes and fades as they go (`loungeFade` 1 → 0 over the last half unit),
   // and fades back in at the back door on the way out.
   function enterLounge(c){
-    var take=loungeTake(state.lounge,flowerValue(strainFor(c))*specialFactor('lounge'));
-    state.stock[3]-=1;add(take.total);state.loungeSessions++;state.loungeEarned+=take.total;state.shopPlay.shift.earned+=take.total;c.loungeLeft=loungeSessionSeconds(state.lounge,state.loungeStaff,state.loungeLift);c.phase='lounge';c.walking=false;c.loungeTake=take.total;
+    var take=loungeTake(state.lounge,flowerValue(strainFor(c))*specialFactor('lounge'),state.loungeStaff,state.loungeLift);
+    state.stock[3]-=1;add(take.total);state.loungeSessions++;state.loungeEarned+=take.total;state.shopPlay.shift.earned+=take.total;c.loungeLeft=loungeSessionSeconds(state.lounge);c.phase='lounge';c.walking=false;c.loungeTake=take.total;
     c.loungeFade=1;c.fadeFromZ=c.z;c.facing=-.3;c.roofWalk=0;
-    // Short sessions (a trained host turns tables fast) squeeze the ride and the walk so the guest still gets a sit down.
+    // A short session would squeeze the ride and the walk so the guest still gets a sit down.
     c.rideK=Math.min(1,c.loungeLeft*.75/(.8+LIFT_UP+LIFT_DOWN+2*ROOF_WALK));c.loungeRide=LIFT_UP*c.rideK;
     recordEvent(state.empire,'pickup',1);playSound('coin',state.sound);
     if(!motionPreference.matches)tickets.push({x:LOUNGE_DOOR.x,y:2.1,z:LOUNGE_DOOR.z,life:1,text:fmt(take.cover)});
@@ -4747,7 +4747,7 @@ if(!SHOP_SPRITES){
     $('trainIdChecker').querySelector('span').textContent=idMaxed?'Maxed':'+'+Math.round(.3/(1+state.idStaff*.3)*100)+'%';$('trainIdChecker').querySelector('b').textContent=idMaxed?'—':fmt(idPrice);
     $('trainIdCheckerMax').disabled=!idMax.levels;$('trainIdCheckerMax').querySelector('span').textContent=idMax.levels?'+'+idMax.levels+' lv':'Maxed';$('trainIdCheckerMax').querySelector('b').textContent=idMax.levels?fmt(idMax.cost):'—';
     var hostPrice=loungeHostCost(state.loungeStaff),hostMax=loungeHostQuote(10000),hostOpen=state.lounge>0;
-    $('loungeEmployeeInfo').innerHTML='<span>Lv '+state.loungeStaff+'</span><span>'+loungeHostSpeed(state.loungeStaff).toFixed(1)+'× turns</span>';
+    $('loungeEmployeeInfo').innerHTML='<span>Lv '+state.loungeStaff+'</span><span>'+loungeHostSpeed(state.loungeStaff).toFixed(1)+'× take</span>';
     $('trainLoungeStaff').disabled=!hostOpen||state.money<hostPrice;$('trainLoungeStaff').querySelector('span').textContent='+'+Math.round(.3/loungeHostSpeed(state.loungeStaff)*100)+'%';$('trainLoungeStaff').querySelector('b').textContent=fmt(hostPrice);
     $('trainLoungeStaff').title=!hostOpen?'Open the lounge first':state.money<hostPrice?fmt(hostPrice-state.money)+' more needed':'Train lounge host';
     $('trainLoungeStaffMax').disabled=!hostMax.levels;$('trainLoungeStaffMax').querySelector('span').textContent=hostMax.levels?'+'+hostMax.levels+' lv':'Max';$('trainLoungeStaffMax').querySelector('b').textContent=hostMax.levels?fmt(hostMax.cost):'—';
@@ -4823,7 +4823,7 @@ if(!SHOP_SPRITES){
   // The lounge's second elevator shaft: a one-off build under the host row, gone once it is up.
   function renderStationLift(){
     var row=$('stationLift'),show=loungeSelected&&state.lounge>0&&!state.loungeLift;row.hidden=!show;if(!show)return;
-    var info=Math.round((LOUNGE_LIFT_SPEED-1)*100)+'% faster tables',price=fmt(LOUNGE_LIFT_COST),button=$('buyLift');
+    var info='+'+Math.round((LOUNGE_LIFT_SPEED-1)*100)+'% take per guest',price=fmt(LOUNGE_LIFT_COST),button=$('buyLift');
     if($('liftInfo').textContent!==info)$('liftInfo').textContent=info;
     if(button.querySelector('b').textContent!==price)button.querySelector('b').textContent=price;
     button.disabled=state.money<LOUNGE_LIFT_COST;button.setAttribute('aria-label','Build a second lift for '+price);
@@ -4934,20 +4934,20 @@ if(!SHOP_SPRITES){
   }
   function renderLoungeSelection(){
     var level=state.lounge,tier=loungeTier(level),next=LOUNGE_TIERS[level]||null,price=loungeUpgradeCost(level),maxed=!next,affordable=!maxed&&state.money>=price;
-    var seated=loungeSeated(),seats=loungeSeats(level),jar=flowerValue()*specialFactor('lounge'),take=loungeTake(level,jar),waiting=loungeWaiting().length,nowRate=loungeCurrentRate(level,seated,jar,state.loungeStaff,state.loungeLift)*state.gameSpeed;
+    var seated=loungeSeated(),seats=loungeSeats(level),jar=flowerValue()*specialFactor('lounge'),take=loungeTake(level,jar,state.loungeStaff,state.loungeLift),waiting=loungeWaiting().length,nowRate=loungeCurrentRate(level,seated,jar,state.loungeStaff,state.loungeLift)*state.gameSpeed;
     $('machineNumber').textContent='BACK ROOM · '+(!tier?'UNDER CONSTRUCTION':seated>=seats?'FULL'+(waiting?' · '+waiting+' ON THE ROPE':''):seated?seated+' OF '+seats+' SEATED':'SEATS FREE');
     $('machineName').textContent='SMOKING LOUNGE';$('machineLevel').textContent=level;$('machineRate').textContent=tier?fmt(nowRate)+'/s · '+fmt(take.total)+' / session':'Under construction';
     var ICON_SEAT='<svg viewBox="0 0 24 24"><path d="M6 11V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v5M4 11h16v4H4zM6 15v5M18 15v5"/></svg>',ICON_GUESTS='<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M15 20c0-2.6 1.5-4.4 3.7-4.9 1.4.3 2.3 1.6 2.3 3.4"/></svg>',ICON_TICKET='<svg viewBox="0 0 24 24"><path d="M4 8a2 2 0 0 0 2-2h12a2 2 0 0 0 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 0-2 2H6a2 2 0 0 0-2-2v-3a2 2 0 0 0 0-4zM9 6v12"/></svg>',ICON_JAR='<svg viewBox="0 0 24 24"><path d="M8 4h8v3H8zM7 7h10v11a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2zM7 11h10"/></svg>',ICON_SESSIONS='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg>',ICON_RATE='<svg viewBox="0 0 24 24"><path d="M4 17l5-6 4 3 7-8M15 6h5v5"/></svg>',ICON_LIFT='<svg viewBox="0 0 24 24"><path d="M6 3h12v18H6zM12 3v18M9 9.5l-1.5 2h3zM15 14.5l-1.5-2h3z"/></svg>',ICON_BANKED='<svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v4c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 10v4c0 1.7 3.1 3 7 3s7-1.3 7-3v-4M5 14v4c0 1.7 3.1 3 7 3s7-1.3 7-3v-4"/></svg>';
     var chipTone=!tier?'wait':seated>=seats?'stop':seated?'go':'wait',chipWord=!tier?'Site':seated>=seats?'Full':seated?seated+' of '+seats:'Open',chipReason=!tier?'not built':seated>=seats?(waiting?waiting+' at the rope':'every seat'):seated?'seated':'seats free';
     var loungeHtml='<span class="status-chip" data-tone="'+chipTone+'"><i></i><b>'+chipWord+'</b><small>'+chipReason+'</small></span>'+
-      (tier?'<span class="stat" title="What the lounge is making right now: '+seated+' of '+seats+' seats taken, each worth the '+fmt(take.total)+' take once per '+loungeSessionSeconds(level,state.loungeStaff,state.loungeLift).toFixed(1)+'-second session">'+ICON_RATE+'<b>'+fmt(nowRate)+'/s</b><small>now</small></span>'+
+      (tier?'<span class="stat" title="What the lounge is making right now: '+seated+' of '+seats+' seats taken, each worth the '+fmt(take.total)+' take once per '+loungeSessionSeconds(level).toFixed(0)+'-second session">'+ICON_RATE+'<b>'+fmt(nowRate)+'/s</b><small>now</small></span>'+
       '<span class="stat" title="Banked by the lounge since it opened: every cover and every jar sold at the lounge premium">'+ICON_BANKED+'<b>'+fmt(state.loungeEarned)+'</b><small>total</small></span>'+
       '<span class="stat tier" title="One guest in '+tier.share+' through the door heads for the curtain; VIPs twice as often">'+ICON_GUESTS+'<b>1 in '+tier.share+'</b><small>guests</small></span>'+
       '<span class="stat" title="Seats in the back room">'+ICON_SEAT+'<b>'+seats+'</b><small>seats</small></span>'+
-      '<span class="stat" title="Cover paid at the curtain">'+ICON_TICKET+'<b>'+fmt(tier.cover)+'</b><small>cover</small></span>'+
+      '<span class="stat" title="Cover paid at the curtain">'+ICON_TICKET+'<b>'+fmt(take.cover)+'</b><small>cover</small></span>'+
       '<span class="stat" title="One packed jar per session at '+tier.spend+'× the counter price">'+ICON_JAR+'<b>'+fmt(take.spend)+'</b><small>jar ×'+tier.spend+'</small></span>'+
       '<span class="stat" title="Sessions so far">'+ICON_SESSIONS+'<b>'+compactCount(state.loungeSessions)+'</b><small>sessions</small></span>'+
-      (state.loungeLift?'<span class="stat" title="Two elevator shafts: tables turn over '+Math.round((LOUNGE_LIFT_SPEED-1)*100)+'% faster">'+ICON_LIFT+'<b>2</b><small>lifts</small></span>':''):
+      (state.loungeLift?'<span class="stat" title="Two elevator shafts: '+Math.round((LOUNGE_LIFT_SPEED-1)*100)+'% more take per guest">'+ICON_LIFT+'<b>2</b><small>lifts</small></span>':''):
       '<span class="stat tier" title="Bought outright; every level adds seats and raises the take">'+ICON_TICKET+'<b>'+fmt(price)+'</b><small>to open</small></span>'+
       '<span class="stat" title="Guests who go in skip the counters: cover at the curtain, one jar at a premium, out the back door">'+ICON_GUESTS+'<b>1 in '+LOUNGE_TIERS[0].share+'</b><small>guests</small></span>'+
       '<span class="stat" title="Seats once open">'+ICON_SEAT+'<b>'+LOUNGE_TIERS[0].seats+'</b><small>seats</small></span>');
@@ -5572,7 +5572,7 @@ if(!SHOP_SPRITES){
   LINES.forEach(function(_,i){$('staffMax'+i).onclick=function(){trainStaffMax(i)}});
   $('trainIdChecker').onclick=function(){if(!state.doorBuilt)return buildStation('door');trainIdChecker(1)};
   $('trainIdCheckerMax').onclick=function(){trainIdChecker(10000)};
-  $('buyLift').onclick=function(){if(!buyLoungeLift(state))return;notify('SECOND LIFT · tables turn faster','upgrade');renderUI();save()};
+  $('buyLift').onclick=function(){if(!buyLoungeLift(state))return;notify('SECOND LIFT · bigger take per guest','upgrade');renderUI();save()};
   $('trainLoungeStaff').onclick=function(){trainLoungeHost(1)};
   $('trainLoungeStaffMax').onclick=function(){trainLoungeHost(10000)};
   $('fulfillOnlineMax').onclick=function(){sendOnlineOrders(state.lines[3]>=10?Infinity:10)};
