@@ -391,9 +391,12 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function loungeSpareJars(){return state.stock[3]-reservedJars()}
   // A guest steps through the gap in the drapes and fades as they go (`loungeFade` 1 → 0 over the last half unit),
   // and fades back in at the back door on the way out.
+  // Every guest keeps their own pace: from 0.6 to 1.4 times the session, spread evenly by id so the average (and the
+  // lounge's income) holds while arrivals and departures stagger.
+  function loungeStayJitter(id){var f=((Number(id)||0)*0.6180339887)%1;return .6+f*.8}
   function enterLounge(c){
     var take=loungeTake(state.lounge,flowerValue(strainFor(c))*specialFactor('lounge'),state.loungeStaff,state.loungeLift);
-    state.stock[3]-=1;add(take.total);state.loungeSessions++;state.loungeEarned+=take.total;state.shopPlay.shift.earned+=take.total;c.loungeLeft=loungeSessionSeconds(state.lounge);c.phase='lounge';c.walking=false;c.loungeTake=take.total;
+    state.stock[3]-=1;add(take.total);state.loungeSessions++;state.loungeEarned+=take.total;state.shopPlay.shift.earned+=take.total;c.loungeLeft=loungeSessionSeconds(state.lounge)*loungeStayJitter(c.id);c.phase='lounge';c.walking=false;c.loungeTake=take.total;
     c.loungeFade=1;c.fadeFromZ=c.z;c.facing=-.3;c.roofWalk=0;
     // A short session would squeeze the ride and the walk so the guest still gets a sit down.
     c.rideK=Math.min(1,c.loungeLeft*.75/(.8+LIFT_UP+LIFT_DOWN+2*ROOF_WALK));c.loungeRide=LIFT_UP*c.rideK;
