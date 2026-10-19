@@ -3661,6 +3661,13 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     function consider(r){r.value=r.gain/r.spend;if(!best||r.value>best.value)best=r;if(r.price<=reach&&(!bestReach||r.value>bestReach.value))bestReach=r}
     function tryLevels(get,set,limit){var start=get();var found=economy.stepsToGain(function(k){set(start+k);var gain=incomeRate()-base;set(start);return gain},limit,base*1e-4);return found}
     LINES.forEach(function(_,i){if(!state.lines[i]||!isOpen(i))return;var found=tryLevels(function(){return state.lines[i]},function(v){state.lines[i]=v},LOOKAHEAD);if(!found)return;var spend=0;for(var k=0;k<found.steps;k++)spend+=economy.stationCost(LINES[i].base,state.lines[i]+k);consider({kind:'station',index:i,name:['Seeds','Grow','Harvest','Pack','Orders','Pickup'][i],price:cost(i),spend:spend,gain:found.gain})});
+    // Stations tied for slowest only pay together: raising one alone leaves the others holding the line, so on its own
+    // it never shows a gain and the button kept buying shop upgrades instead. Price the tied group as one step and point
+    // the button at its cheapest member; each tap lifts one, and the rest stay tied until they are all raised.
+    var rates=LINES.map(function(_,i){return state.lines[i]&&isOpen(i)?stationThroughput(i):Infinity}),floor=Math.min.apply(null,rates);
+    var tied=LINES.map(function(_,i){return i}).filter(function(i){return isFinite(rates[i])&&rates[i]<=floor*(1+1e-6)});
+    if(tied.length>1){var levels=state.lines.slice(),group=economy.stepsToGain(function(k){tied.forEach(function(i){state.lines[i]=levels[i]+k});var gain=incomeRate()-base;tied.forEach(function(i){state.lines[i]=levels[i]});return gain},LOOKAHEAD,base*1e-4);
+      if(group){var spend=0;tied.forEach(function(i){for(var k=0;k<group.steps;k++)spend+=economy.stationCost(LINES[i].base,levels[i]+k)});var first=tied.reduce(function(a,b){return cost(b)<cost(a)?b:a});consider({kind:'station',index:first,name:['Seeds','Grow','Harvest','Pack','Orders','Pickup'][first],price:cost(first),spend:spend,gain:group.gain})}}
     COMPONENTS.forEach(function(c,i){if(!componentUnlocked(i)||state[c.key]>=c.max)return;var start=state[c.key],found=tryLevels(function(){return state[c.key]},function(v){state[c.key]=v},Math.min(LOOKAHEAD,c.max-start));if(!found)return;var spend=0;for(var k=0;k<found.steps;k++){state[c.key]=start+k;spend+=componentCost(i)}state[c.key]=start;consider({kind:'component',index:i,name:c.name,price:componentCost(i),spend:spend,gain:found.gain})});
     return bestReach||best||legacyRecommendation();
   }
