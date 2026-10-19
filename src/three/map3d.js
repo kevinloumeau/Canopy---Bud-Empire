@@ -339,7 +339,7 @@ export function createMap3D(canvas, layout) {
       if (!byMaterial.has(o.material)) byMaterial.set(o.material, []);
       byMaterial.get(o.material).push(g);
     });
-    return [...byMaterial].map(([mat, list]) => {
+    const parts = [...byMaterial].map(([mat, list]) => {
       // Parts merge only with the attributes they all share.
       if (list.some(g => !g.attributes.uv)) list.forEach(g => g.deleteAttribute('uv'));
       const mesh = new THREE.InstancedMesh(mergeGeometries(list), withHaze(mat), MAX_PROPS);
@@ -347,6 +347,9 @@ export function createMap3D(canvas, layout) {
       world.add(mesh);
       return mesh;
     });
+    // The model's own footprint, for props fitted to a slot (p.fit).
+    parts.box = new THREE.Box3().setFromObject(root);
+    return parts;
   }
   function propReady(file) {
     if (!propRequested[file]) {
@@ -366,13 +369,21 @@ export function createMap3D(canvas, layout) {
     return !!propSources[file];
   }
   const propScale = new THREE.Vector3(CAR_SCALE, CAR_SCALE / HEIGHT_SCALE, CAR_SCALE), propTurn = new THREE.Quaternion(), yAxis = new THREE.Vector3(0, 1, 0);
+  const fitScale = new THREE.Vector3();
   function placeProps(props, night) {
     Object.values(propSources).forEach(parts => parts.forEach(m => { m.count = 0; }));
     (props || []).forEach(p => {
       const parts = propSources[p.file];
       if (!parts || parts[0].count >= MAX_PROPS) return;
       propTurn.setFromAxisAngle(yAxis, p.rot || 0);
-      matrix.compose(position.set(p.x, p.y === undefined ? layout.plazaY : p.y, p.z), propTurn, propScale);
+      position.set(p.x, p.y === undefined ? layout.plazaY : p.y, p.z);
+      if (p.fit) {
+        // A terrace fills its render's footprint exactly (cornices, stoops and awnings included), so neighbours butt
+        // the way the 2D renders do instead of running into each other; it keeps its front's proportions.
+        const b = parts.box, sx = p.fit.w / (b.max.x - b.min.x), sz = p.fit.d / (b.max.z - b.min.z);
+        position.x -= (b.min.x + b.max.x) / 2 * sx; position.z -= (b.min.z + b.max.z) / 2 * sz;
+        matrix.compose(position, propTurn, fitScale.set(sx, sx / HEIGHT_SCALE, sz));
+      } else matrix.compose(position, propTurn, propScale);
       parts.forEach(m => m.setMatrixAt(m.count++, matrix));
     });
     Object.values(propSources).forEach(parts => parts.forEach(m => { m.instanceMatrix.needsUpdate = true; }));
