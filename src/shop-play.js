@@ -1,6 +1,6 @@
 import {BRANCH_NAMES,LINES,REGULARS,storyStatus,deliveryReason} from './operations.js';
 import {TYPES,STRAIN_TYPE} from './strains.js';
-import {FORMATS,strainFormat} from './depth.js';
+import {FORMATS,stockedFormats} from './depth.js';
 
 // Shop activity, as on iOS: a pill on the map that leads with whatever needs the player now. Walk-ins sometimes ask the
 // budtender for a pick (a good match tips 20% at pickup), every five minutes of play closes a shift with a recap and one
@@ -16,21 +16,32 @@ export function migrateShopPlay(raw){
   return {version:1,cooldown:cap(raw?.cooldown??35,90),sequence:Math.floor(cap(raw?.sequence)),matches:Math.floor(cap(raw?.matches)),tips:cap(raw?.tips),
     shift:migrateShift(raw?.shift),recap:raw?.recap?migrateShift(raw.recap):null,recapUnread:raw?.recapUnread===true};
 }
-// Every unlocked strain on the menu, sold in its format, is a pick the budtender can offer.
+// Every unlocked strain on the menu, in every type the shop stocks, is a pick the budtender can offer.
 export function picks(state,menuStrains){
-  return menuStrains.filter(i=>state.strains[i]>0).map(strain=>{const format=strainFormat(state.productMenu,strain),type=STRAIN_TYPE[strain]??0;return {strain,format,type,trait:TYPES[type],formatName:FORMATS[format].name};});
+  const formats=stockedFormats(state.productMenu);
+  return menuStrains.filter(i=>state.strains[i]>0).flatMap(strain=>{const type=STRAIN_TYPE[strain]??0;return formats.map(format=>({strain,format,type,trait:TYPES[type],formatName:FORMATS[format].name}));});
 }
 const NAMES=['Avery','Eden','Noa','Remy','Sage','Robin'];
-// One customer, one request: a strain type most of the time, and every third request a format when the shop sells one
-// beyond flower. The right answer is always among the three choices, rotated so it is not always first. With fewer than
-// two strains on the menu there is nothing to choose between, so nobody asks.
+// One customer, one request: a strain type most of the time, and every third request a type of product when the shop
+// stocks one beyond flower. A request is only made when the menu has both a right and a wrong answer for it (a menu that is all
+// edibles never hears "Something without flower."), so the three choices always hold at least one of each, rotated so
+// the right one is not always first. With fewer than two strains on the menu there is nothing to choose between.
 export function createMoment(play,customer,options){
-  if(options.length<2)return null;
+  if(new Set(options.map(o=>o.strain)).size<2)return null;
   const sequence=play.sequence++,want=options[sequence%options.length];
-  const formatRequest=sequence%3===2&&want.format>0;
+  const byFormat={ok:want.format>0&&options.some(o=>o.format!==want.format),matches:o=>o.format===want.format};
+  const byType={ok:options.some(o=>o.type!==want.type),matches:o=>o.type===want.type};
+  const preferred=sequence%3===2?[byFormat,byType]:[byType,byFormat],ask=preferred.find(r=>r.ok);
+  if(!ask)return null;
+  const formatRequest=ask===byFormat;
   const request=formatRequest?['','Something rolled and ready.','Something without flower.'][want.format]:['A balanced house pick, please.','A bright daytime pick, please.','An evening-style pick, please.'][want.type];
-  const matches=o=>formatRequest?o.format===want.format:o.type===want.type,others=options.filter(o=>!matches(o));
-  const choices=[want,...others.slice(sequence%Math.max(1,others.length)),...options.filter(o=>o!==want)].filter((o,i,all)=>all.findIndex(x=>x.strain===o.strain&&x.format===o.format)===i).slice(0,3);
+  const others=options.filter(o=>!ask.matches(o));
+  const rotated=[...others.slice(sequence%others.length),...others],wrong=rotated.find(o=>o.strain!==want.strain)||rotated[0];
+  const pool=[...rotated,...options.filter(o=>o!==want)];
+  // Three different strains where the menu has them, and always one wrong answer.
+  const choices=[want,wrong];
+  for(const o of pool)if(choices.length<3&&!choices.includes(o)&&!choices.some(c=>c.strain===o.strain))choices.push(o);
+  for(const o of pool)if(choices.length<3&&!choices.includes(o))choices.push(o);
   for(let i=0;i<sequence%choices.length;i++)choices.push(choices.shift());
   return {customerId:customer.id,name:NAMES[sequence%NAMES.length],request,choices,remaining:MOMENT_SECONDS,opened:false,formatRequest,target:formatRequest?want.format:want.type};
 }
