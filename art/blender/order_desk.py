@@ -3,7 +3,7 @@
 Needs canopy_kit.py in the same folder.  Run headless with
     blender -b -P order_desk.py -- OUT_DIR
 or open it in Blender's Scripting tab and press Run.
-Set CANOPY_FONT to a .ttf/.otf to change the sign's lettering.
+Signs use fonts/Fredoka-SemiBold.ttf next to this file; set CANOPY_FONT to a .ttf/.otf to change it.
 """
 import os, sys, math
 try: sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # find canopy_kit.py next to this file
@@ -95,7 +95,7 @@ for dx in (-SW / 2 + .09, SW / 2 - .09):
         K.cyl(f"Rivet{dx:.2f}{d}", .02, .02, .01, (dx, AY + d * .042, SZ + SH / 2), K.BRASS, 16).rotation_euler.x = math.pi / 2
 txt = bpy.data.curves.new("SignText", "FONT"); txt.body = "ORDER"
 txt.size = .23; txt.offset_y = 0; txt.extrude = .008; txt.align_x = "CENTER"; txt.align_y = "CENTER"; txt.space_character = 1.05
-fb = os.environ.get("CANOPY_FONT") or "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"
+fb = os.environ.get("CANOPY_FONT") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts", "Fredoka-SemiBold.ttf")
 if os.path.exists(fb): txt.font = bpy.data.fonts.load(fb)
 for side, (yy, rz) in enumerate(((AY - .042, 0), (AY + .042, math.pi))):   # lettering on both faces
     o = bpy.data.objects.new(f"SignText{side}", txt)

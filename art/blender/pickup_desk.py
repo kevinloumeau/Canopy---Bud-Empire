@@ -157,7 +157,7 @@ txt = bpy.data.curves.new("SignText", "FONT"); txt.body = "PICKUP"
 txt.size = .15; txt.extrude = .006; txt.align_x = "CENTER"; txt.align_y = "CENTER"; txt.space_character = 1.08
 to = obj_add(bpy.data.objects.new("SignText", txt), CREAM)
 to.location = (SX, AY - .03, H - .15); to.rotation_euler = (math.pi / 2, 0, 0)
-fb = os.environ.get("CANOPY_FONT")
+fb = os.environ.get("CANOPY_FONT") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts", "Fredoka-SemiBold.ttf")
 if fb and os.path.exists(fb): txt.font = bpy.data.fonts.load(fb)
 
 # ---------- smooth shading for bevelled boxes ----------

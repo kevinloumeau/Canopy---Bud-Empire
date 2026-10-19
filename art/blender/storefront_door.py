@@ -22,7 +22,7 @@ LAMPGLOW = K.mat("LampGlow", "#fff0c8", .3, 0, 2.)
 
 W, H, D = 3.25 / 1.69, 4.2 / 1.69, .2
 Y0, Y1 = -W / 2, W / 2
-FONT = os.environ.get("CANOPY_FONT") or "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+FONT = os.environ.get("CANOPY_FONT") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts", "Bricolage-ExtraBold.ttf")
 
 def slab(name, x0, x1, y0, y1, z0, z1, m, bevel=.008):
     return K.box(name, (x1 - x0, y1 - y0, z1 - z0), ((x0 + x1) / 2, (y0 + y1) / 2, z0), m, bevel)
