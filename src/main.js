@@ -818,15 +818,12 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var machinePos=[{x:-3,z:-3,y:9.4},{x:3,z:-3,y:9.4},{x:SHOP_SPRITES?4.8:3,z:-.3,y:4.7},{x:-3,z:-.3,y:4.7},{x:-4+COUNTER_SHIFT,z:2.5,y:0},{x:4+COUNTER_SHIFT,z:2.5,y:0}];
   // The front-of-house display case along the front-right of the shop floor, planters built into both ends.
   var DISPLAY_CASE={x:8.4,z:11.2,width:5.2};
-  // The front edges of the floor, round the pickup pen (Kevin, 2026-10-19: one lone case left the corner looking empty):
-  // a run of glass display cases along the front baseboard and up the right-hand edge, facing into the floor, with the
-  // aisle planter's twin at the front-left end. The Display cases upgrade adds a case at levels 5 and 10. Each case
-  // model is 2.1 long and 0.69 deep with its display face toward -x; `rot` turns it to face the floor from the front.
-  var FRONT_FIXTURES=[{file:'shop_planter.glb',x:2.3,z:11.33,rot:Math.PI/2,level:0},
-    {file:'display_case.glb',x:7.9,z:11.3,rot:-Math.PI/2,level:0},{file:'display_case.glb',x:10.3,z:11.3,rot:-Math.PI/2,level:0},
-    {file:'display_case.glb',x:12.4,z:10,rot:0,level:0},{file:'display_case.glb',x:5.5,z:11.3,rot:-Math.PI/2,level:5},
-    {file:'display_case.glb',x:12.4,z:7.6,rot:0,level:10}];
-  function frontFixtures(){return FRONT_FIXTURES.filter(function(f){return (state.displayLevel||0)>=f.level})}
+  // The front edges of the floor, round the pickup pen (Kevin, 2026-10-19: one lone case left the corner looking empty,
+  // and a run of cases didn't look good either): the aisle planter's twins along the front baseboard and up the
+  // right-hand edge. Each is 3.6 long and 0.95 deep, long along z; `rot` lays it along the front.
+  var FRONT_FIXTURES=[{file:'shop_planter.glb',x:2.4,z:11.33,rot:Math.PI/2},{file:'shop_planter.glb',x:6.4,z:11.33,rot:Math.PI/2},
+    {file:'shop_planter.glb',x:10.3,z:11.33,rot:Math.PI/2},{file:'shop_planter.glb',x:12.43,z:9.1,rot:0}];
+  function frontFixtures(){return FRONT_FIXTURES}
   // The back-wall shelving stands just behind the counters; the smoking lounge is the room behind it (z −7 → −1.76).
   var DISPLAY_Z=-1.6,LOUNGE_FRONT=DISPLAY_Z+.65;
   var sceneElevation=0;
@@ -1836,17 +1833,24 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // The ground floor runs out to x 13 on the right (Kevin, 2026-10-19: the exit route past the stairs was too narrow), so
   // leaving guests walk a lane at x 12.2, clear of the spiral stair (x 9.05-11.35), before turning in to the exit door.
   var STORE_RIGHT=13,EXIT_LANE_X=12.2;
-  // The pickup pen's turning points: rows between the counter's light and the display cases along the front edge.
-  var PICKUP_PEN={left:3.6,right:10.2,rows:[5.95,7.05,8.15,9.25]};
-  function orderPen(){return {right:ORDER_PEN_RIGHT,left:ORDER_PEN_RIGHT-Math.min(4.5,1.5+queueLimit()*.15)}}
+  // The pickup pen's turning points, between the counter's light and the planters along the front edge. It starts as
+  // two short rows and grows with the pickup line's places (Kevin, 2026-10-19: start smaller and get to that size):
+  // wider as Pickup line levels up, and four rows from twelve places, full size (6.6 wide) at twenty.
+  function pickupPen(){
+    var places=pickupLimit(),grow=Math.max(0,Math.min(1,(places-4)/16));
+    return {left:3.6,right:6+4.2*grow,rows:[5.95,7.05,8.15,9.25].slice(0,places>=12?4:2)};
+  }
+  // The order pen grows the same way: one row at first, widening with the line, and three rows from twelve places.
+  function orderPen(){var limit=queueLimit();return {right:ORDER_PEN_RIGHT,left:ORDER_PEN_RIGHT-Math.min(4.5,1.5+limit*.15),rows:ORDER_ROWS.slice(0,limit>=12?3:1)}}
   function queueRoute(ordered){
     var ORDER_PEN=orderPen();
-    if(!ordered)return [ORDER_QUEUE_GATE,{x:ORDER_PEN.right,z:ORDER_ROWS[0]},{x:ORDER_PEN.left,z:ORDER_ROWS[0]},{x:ORDER_PEN.left,z:ORDER_ROWS[1]},{x:ORDER_PEN.right,z:ORDER_ROWS[1]},{x:ORDER_PEN.right,z:ORDER_ROWS[2]},{x:ORDER_PEN.left,z:ORDER_ROWS[2]},{x:-7.4,z:ORDER_ROWS[2]},{x:-8.2,z:8.6}].concat(ENTRY_TAIL);
-    // The pickup line steps back from the counter into a wide pen over the open front-right floor (Kevin, 2026-10-19:
-    // the old pocket by the counter left the corner wasted): four full-width rows, right, left, right, left, the tail
-    // coming in at the bottom-left from the walkway down the middle of the floor.
-    var P=PICKUP_PEN,r=P.rows;
-    return [{x:PICKUP_X,z:4.9},{x:PICKUP_X,z:r[0]},{x:P.right,z:r[0]},{x:P.right,z:r[1]},{x:P.left,z:r[1]},{x:P.left,z:r[2]},{x:P.right,z:r[2]},{x:P.right,z:r[3]},{x:P.left,z:r[3]}];
+    // Both lines snake through their pen's rows, turning at alternate ends.
+    var snake=function(pen,first){var pts=[];pen.rows.forEach(function(z,i){var a=i%2?pen[first==='right'?'left':'right']:pen[first],b=i%2?pen[first]:pen[first==='right'?'left':'right'];pts.push({x:a,z:z},{x:b,z:z})});return pts};
+    if(!ordered){var lastRow=ORDER_PEN.rows[ORDER_PEN.rows.length-1];return [ORDER_QUEUE_GATE].concat(snake(ORDER_PEN,'right'),[{x:-7.4,z:lastRow},{x:-8.2,z:8.6}],ENTRY_TAIL)}
+    // The pickup line steps back from the counter into a pen over the open front-right floor (Kevin, 2026-10-19:
+    // the old pocket by the counter left the corner wasted): rows right, left, right, left, the tail coming in at the
+    // bottom-left from the walkway down the middle of the floor. The head's row starts at the counter.
+    var route=[{x:PICKUP_X,z:4.9}].concat(snake(pickupPen(),'left'));route[1]={x:PICKUP_X,z:route[1].z};return route;
   }
   function routeLength(route){var n=0;for(var i=1;i<route.length;i++)n+=Math.hypot(route[i].x-route[i-1].x,route[i].z-route[i-1].z);return n}
   function routePoint(route,distance){
@@ -1940,7 +1944,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       // the counters (ORDER_SPOT_Z) and the head of the order line (z 6.1); counter customers step back into the same aisle
       // rather than walking along the counter front through the other customers. Everyone then goes down the middle
       // walkway to the line's tail.
-      var toPickup=[{x:-.25+COUNTER_SHIFT,z:PICKUP_AISLE_Z},{x:-.25+COUNTER_SHIFT,z:PICKUP_PEN.rows[3]},{x:PICKUP_PEN.left,z:PICKUP_PEN.rows[3]}];
+      var tail=route[route.length-1],toPickup=[{x:-.25+COUNTER_SHIFT,z:PICKUP_AISLE_Z},{x:-.25+COUNTER_SHIFT,z:tail.z},tail];
       c.waypoints=(kind==='order'||kind==='kiosk')?[route[route.length-1]]:kind==='pickup'?(c.kiosk?[{x:-8,z:6.8-(c.kioskIndex||0)*1.8},{x:-7.4,z:PICKUP_AISLE_Z}].concat(toPickup):[{x:c.x,z:PICKUP_AISLE_Z}].concat(toPickup)):[{x:PICKUP_X,z:4},{x:8.1,z:4.6},{x:EXIT_LANE_X,z:4.6},{x:EXIT_LANE_X,z:-4.6},{x:10.25,z:-6},{x:10.25,z:-8.1},{x:7,z:-8.1},{x:-10.5,z:-8.1}];
     }
     while(c.waypoints.length&&budget>0){var point=c.waypoints[0],dx=point.x-c.x,dz=point.z-c.z,distance=Math.hypot(dx,dz),step=Math.min(distance,budget);if(distance>.0001){c.x+=dx/distance*step;c.z+=dz/distance*step}budget-=step;if(distance<=step+.0001)c.waypoints.shift();else break}
@@ -3799,22 +3803,23 @@ if(!SHOP_SPRITES){
   }
   // The queue pens' rope runs, [x1, z1, x2, z2] each, shared by the 2D map and the 3D one.
   function queuePens(){
-    // Pickup pen: an outer rope round the four rows of queueRoute(true), open at the top where the head steps up to
-    // the counter and at the bottom-left where the tail comes in, and three dividers leaving turning pockets at
-    // alternate ends. Long runs get a post every couple of units so the rope never sags across the whole floor.
-    var P=PICKUP_PEN,r=P.rows,pl=P.left-.6,pr=P.right+.6,mid=function(a,b){return (a+b)/2};
-    var pickup=[[PICKUP_X-.6,r[0]-.6,PICKUP_X-.6,mid(r[0],r[1])],[PICKUP_X+.6,r[0]-.6,pr,r[0]-.6],[pr,r[0]-.6,pr,r[3]+.6],[pr,r[3]+.6,pl,r[3]+.6],[pl,mid(r[0],r[1]),pl,mid(r[2],r[3])],
-      [pl,mid(r[0],r[1]),PICKUP_X-.6,mid(r[0],r[1])],[PICKUP_X-.6,mid(r[0],r[1]),P.right-.6,mid(r[0],r[1])],[pr,mid(r[1],r[2]),P.left+.6,mid(r[1],r[2])],[pl,mid(r[2],r[3]),P.right-.6,mid(r[2],r[3])]];
-    var split=[];pickup.forEach(function(q){var n=Math.max(1,Math.round(Math.hypot(q[2]-q[0],q[3]-q[1])/2.4));for(var i=0;i<n;i++)split.push([q[0]+(q[2]-q[0])*i/n,q[1]+(q[3]-q[1])*i/n,q[0]+(q[2]-q[0])*(i+1)/n,q[1]+(q[3]-q[1])*(i+1)/n])});
-    // Order pen: three full-width rows, open at the top so the gate's customers walk straight on to any counter, and
-    // open at the bottom-left where the tail comes in from the door. Dividers sit between the rows of
-    // queueRoute(false), each leaving a pocket at the end the line turns through (right, left, right).
-    var ORDER_PEN=orderPen(),right=ORDER_PEN.right+.65,left=ORDER_PEN.left-.65,rows=ORDER_ROWS;
-    return[split,
-      [[left,(ORDER_QUEUE_GATE.z+rows[0])/2,ORDER_PEN.right-.6,(ORDER_QUEUE_GATE.z+rows[0])/2],
-       [right,(rows[0]+rows[1])/2,ORDER_PEN.left+.6,(rows[0]+rows[1])/2],
-       [left,(rows[1]+rows[2])/2,ORDER_PEN.right-.6,(rows[1]+rows[2])/2],
-       [right,6.4,right,rows[2]],[left,(ORDER_QUEUE_GATE.z+rows[0])/2,left,(rows[1]+rows[2])/2]]];
+    var mid=function(a,b){return (a+b)/2},solid=function(q){return Math.hypot(q[2]-q[0],q[3]-q[1])>.05};
+    // Pickup pen: an outer rope round the rows of queueRoute(true), open at the top where the head steps up to the
+    // counter and at the bottom-left where the tail comes in, and dividers leaving turning pockets at alternate ends.
+    // Long runs get a post every couple of units so the rope never sags across the whole floor.
+    var P=pickupPen(),r=P.rows,n=r.length,pl=P.left-.6,pr=P.right+.6,head=PICKUP_X-.6;
+    var pickup=[[head,r[0]-.6,head,mid(r[0],r[1])],[PICKUP_X+.6,r[0]-.6,pr,r[0]-.6],[pr,r[0]-.6,pr,r[n-1]+.6],[pr,r[n-1]+.6,pl,r[n-1]+.6],[pl,mid(r[0],r[1]),pl,mid(r[n-2],r[n-1])],
+      [pl,mid(r[0],r[1]),head,mid(r[0],r[1])],[head,mid(r[0],r[1]),P.right-.6,mid(r[0],r[1])]];
+    for(var i=1;i<n-1;i++)pickup.push(i%2?[pr,mid(r[i],r[i+1]),P.left+.6,mid(r[i],r[i+1])]:[pl,mid(r[i],r[i+1]),P.right-.6,mid(r[i],r[i+1])]);
+    var split=[];pickup.filter(solid).forEach(function(q){var k=Math.max(1,Math.round(Math.hypot(q[2]-q[0],q[3]-q[1])/2.4));for(var j=0;j<k;j++)split.push([q[0]+(q[2]-q[0])*j/k,q[1]+(q[3]-q[1])*j/k,q[0]+(q[2]-q[0])*(j+1)/k,q[1]+(q[3]-q[1])*(j+1)/k])});
+    // Order pen: its rows open at the top so the gate's customers walk straight on to any counter, and open at the
+    // bottom-left where the tail comes in from the door. Dividers sit between the rows of queueRoute(false), each
+    // leaving a pocket at the end the line turns through (right, left, right).
+    var O=orderPen(),right=O.right+.65,left=O.left-.65,rows=O.rows,m=rows.length,top=(ORDER_QUEUE_GATE.z+rows[0])/2;
+    var order=[[left,top,O.right-.6,top],[right,6.4,right,rows[m-1]]];
+    for(var o=0;o<m-1;o++)order.push(o%2?[left,mid(rows[o],rows[o+1]),O.right-.6,mid(rows[o],rows[o+1])]:[right,mid(rows[o],rows[o+1]),O.left+.6,mid(rows[o],rows[o+1])]);
+    if(m>1)order.push([left,top,left,mid(rows[m-2],rows[m-1])]);
+    return[split,order];
   }
   // The smoking lounge's face. The shelving wall continues left into a speakeasy doorway — dark lacquer with brass
   // mouldings, velvet curtains tied back to a narrow gap that shows a lamp-lit corner of the room, a neon LOUNGE sign on
@@ -4450,8 +4455,8 @@ if(!SHOP_SPRITES){
     function drawDisplayCase(x,z,width){
       // Sprite shop: the case runs along the right wall in front of the exit, turned to face into the floor (the
       // render mirrored, so its long glass side is the one the camera sees), per Kevin on 2026-10-13.
-      // The 2D map can't turn the render, so it shows only the cases up the right-hand edge.
-      if(SHOP_SPRITES&&fixtureSprite('shop.displaycase')){frontFixtures().forEach(function(f){if(f.rot||f.file!=='display_case.glb')return;var cx=f.x,cz=f.z;jobs.push({depth:depthOf({x:cx,z:cz}),draw:function(){sunShadow(sunnyApi(now),cx,0,cz,.7,2.1,1.4,1,.9);drawSprite(sunnyApi(now),'shop.displaycase',cx,cz,true)}})});return}
+      // The 2D map keeps one case up the right-hand edge, clear of the pickup pen.
+      if(SHOP_SPRITES&&fixtureSprite('shop.displaycase')){[{x:12.4,z:10}].forEach(function(f){var cx=f.x,cz=f.z;jobs.push({depth:depthOf({x:cx,z:cz}),draw:function(){sunShadow(sunnyApi(now),cx,0,cz,.7,2.1,1.4,1,.9);drawSprite(sunnyApi(now),'shop.displaycase',cx,cz,true)}})});return}
       jobs.push({depth:depthOf({x:x,z:z}),draw:function(){
         if(SHOP_SPRITES&&drawSprite(sunnyApi(now),fixtureSprite('shop.displaycase'),x+.9,z,false))return;
         var oak=['#cfb184','#836949','#b09266'],stone=['#e2dfd0','#969c8e','#c3c8b8'],brass=['#d7c28b','#8c774c','#b7a16c'],half=width/2,bed=.95,inner=half-bed;
