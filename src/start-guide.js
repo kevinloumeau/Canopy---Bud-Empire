@@ -19,7 +19,7 @@ const STEPS=[
 ];
 const BUILT_PAUSE=900;
 export function mountStartGuide({showTray,collapse,fit,paintHero,sound,report,isBuilt,build,shopOpen,openShop,finish,sheet,reserve,select}){
- // `sheet` drops the tray and `reserve` keeps the map framed above the docked card, so every site stays on screen.
+ // `sheet` folds the tray away on every step (a menu the player opens mid-guide folds again on the next one) and `reserve` keeps the map framed above the docked card, so every site stays on screen.
  const root=document.createElement('div');root.className='start-guide';root.hidden=true;
  root.innerHTML='<div class="guide-dim"></div><div class="guide-ring" hidden></div>'+
   '<section class="guide-card" role="dialog" aria-modal="true" aria-labelledby="guideTitle">'+
@@ -46,7 +46,7 @@ export function mountStartGuide({showTray,collapse,fit,paintHero,sound,report,is
   clearTimeout(advanceTimer);advanceTimer=0;
   step=i;const s=STEPS[i];if(report)report('guide_step',{step:i+1});
   if(s.tray&&showTray)showTray(s.tray);
-  if(sheet&&(site(s)||s.open))sheet();
+  if(sheet)sheet();
   if(select&&site(s))select(s.build!==undefined?s.build:s.select);
   $('#guideTitle').textContent=s.title;$('#guideText').textContent=s.text;
   root.classList.toggle('is-hero',!!s.hero);$('.guide-hero').hidden=!s.hero;$('.guide-eyebrow').hidden=!s.eyebrow;$('.guide-eyebrow').textContent=s.eyebrow||'';

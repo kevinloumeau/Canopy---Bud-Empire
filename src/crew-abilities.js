@@ -10,7 +10,7 @@ export const ABILITIES=[
 export const ABILITY_FACTOR=3;
 export const ABILITY_SALES=.15;
 export const ABILITY_UNLOCK=3;
-export const ABILITY_SECONDS=120;
+export const ABILITY_SECONDS=90;
 export const ABILITY_RECHARGE=900;
 const clock=(v,max)=>Number.isFinite(Number(v))?Math.max(0,Math.min(max,Number(v))):0;
 export function migrateAbilities(old){
