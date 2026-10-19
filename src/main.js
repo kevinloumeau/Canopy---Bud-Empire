@@ -355,6 +355,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var QUEUE_MAX=30;
   // The drone deck's centre: Kevin asked for it a touch up and right, into the clear sidewalk behind the lounge.
   var DECK_X=-10.7,DECK_Z=.3;
+  // Where a courier loads and lifts off: the striped launch pad above and behind the deck's counter. The 3D deck model's
+  // pad sits a little lower on screen than the sprite's.
+  function launchPad(){return {x:DECK_X-2,z:DECK_Z-2,y:map3d&&map3d.ok&&!state.empire.activeStore?7.5:8.45}}
   // Everyone still to order holds a place in the line — except guests who have gone through the curtain.
   function inOrderFlow(c){return !c.ordered&&c.phase!=='leaving'&&c.phase!=='toLounge'&&c.phase!=='lounge'}
   // The smoking lounge behind the back-wall shelving. Guests bound for it are let in at the curtain while a seat and a
@@ -745,6 +748,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     canvas3d=document.createElement('canvas');canvas3d.setAttribute('aria-hidden','true');
     canvas3d.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none';
     world.insertBefore(canvas3d,canvas);
+    // The 2D canvas carries the 3D map's overlay (delivery drones, badges, particles, tickets), so it must stack above
+    // the absolutely positioned 3D canvas rather than paint underneath it.
+    canvas.style.position='relative';
     // Built, the module's hashed name comes from index.html (scripts/make-classic.mjs); the dev server serves the source.
     var map3dMeta=document.querySelector('meta[name="canopy-map3d"]'),map3dUrl=new URL(map3dMeta?map3dMeta.content:'./src/three/map3d.js',document.baseURI).href;
     import(/* @vite-ignore */ map3dUrl).then(function(m){
@@ -4510,16 +4516,16 @@ if(!SHOP_SPRITES){
       if(motionPreference.matches){lift=0;travel=0;}
       // Each slot fans out on its own heading and bobs on its own phase so a bulk launch reads as separate aircraft.
       var bob=motionPreference.matches?0:Math.sin(t*2.1+slot*1.9)*.07*Math.min(1,lift+travel);
-      var x=DECK_X-travel*(20+slot*1.6)+(slot%3-1)*.72,z=DECK_Z-2.25+travel*(5-(slot%2?1.2:0)+Math.floor(slot/3)*.9)+Math.floor(slot/3)*.62,y=11.10+lift*(2.4+slot*.18)+travel*7+bob;
+      var pad=launchPad(),x=pad.x-travel*(20+slot*1.6)+(slot%3-1)*.72,z=pad.z+travel*(5-(slot%2?1.2:0)+Math.floor(slot/3)*.9)+Math.floor(slot/3)*.62,y=pad.y+.9+lift*(2.4+slot*.18)+travel*7+bob;
       ctx.save();ctx.globalAlpha=motionPreference.matches?Math.min(1,t/.25,(7.5-t)/.7):Math.min(1,(7.5-t)/.7);
       // A taped parcel hangs beneath a compact four-rotor courier.
       if(t<2&&!motionPreference.matches){
         var load=Math.min(1,t/1.9),ease=load*load*(3-2*load);
         // Every courier loads its own crate, with no parcel count/position jump.
-        drawBox(x,z,10.2,.62,.465,.08,['#e5bc80','#a57c4f','#c99c65']);
+        drawBox(x,z,pad.y,.62,.465,.08,['#e5bc80','#a57c4f','#c99c65']);
         ctx.save();ctx.globalAlpha*=1-Math.max(0,(load-.7)/.3);
-        pickupBag(x,z+.3*(1-ease),10.28+.2*(1-ease));ctx.restore();
-        if(load>.65){ctx.save();ctx.globalAlpha*=(load-.65)/.35;carton(x,z,10.2,.62);ctx.restore()}
+        pickupBag(x,z+.3*(1-ease),pad.y+.08+.2*(1-ease));ctx.restore();
+        if(load>.65){ctx.save();ctx.globalAlpha*=(load-.65)/.35;carton(x,z,pad.y,.62);ctx.restore()}
         ctx.restore();continue;
       }
       drawCourierDrone(x,y,z,now,slot,drone.orders);
