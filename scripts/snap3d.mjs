@@ -9,7 +9,8 @@
 //   node scripts/snap3d.mjs out.png --phone --light night --advance 20 --save my-save.json --no-ui
 //
 // Options: --url (default http://127.0.0.1:4173/), --size WxH, --dpr, --phone (390×844), --save fresh|showcase|file,
-// --light day|night, --advance seconds of play before the shot, --no-ui (map only), --live (no ?snap, for timing).
+// --light day|night, --advance seconds of play before the shot, --no-ui (map only), --live (no ?snap, for timing),
+// --eval 'js' run in the page before the capture, printing what it returns (--wait ms after it, default 400).
 // Chrome comes from CHROME, Playwright's Chromium (/opt/pw-browsers) or the default macOS path.
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
@@ -111,6 +112,8 @@ try {
     await evaluate('document.fonts.ready');
     await evaluate('window.__canopySnap()');
   }
+  // --eval runs a script in the page just before the capture, e.g. to open a panel or show a toast.
+  if (flags.eval) { const r = await evaluate(flags.eval); if (r !== undefined) console.log(JSON.stringify(r)); await sleep(Number(flags.wait || 400)); }
   const drawn = Date.now();
   const { data } = await send('Page.captureScreenshot', { format: 'png', fromSurface: true });
   await writeFile(out, Buffer.from(data, 'base64'));
