@@ -1,4 +1,4 @@
-import {migrateOrderCounters,orderCounterPositions,COUNTER_SHIFT,PICKUP_X,orderCounterCost,buyOrderCounter,ORDER_QUEUE_GATE,assignOrderCounter,atOrderCounter,orderAvailability,pickupPlaces} from './order-counters.js';
+import {migrateOrderCounters,orderCounterPositions,COUNTER_SHIFT,PICKUP_X,orderCounterCost,buyOrderCounter,ORDER_QUEUE_GATE,assignOrderCounter,assignKiosk,atOrderCounter,orderAvailability,pickupPlaces} from './order-counters.js';
 import {LOUNGE_TIERS,LOUNGE_MAX,migrateLounge,loungeTier,loungeUpgradeCost,loungeSeats,loungeSessionSeconds,buyLoungeTier,wantsLounge,loungeAdmission,loungeTake,loungeRate,loungeCurrentRate,migrateLoungeHost,buyLoungeLift,LOUNGE_LIFT_COST,LOUNGE_LIFT_SPEED,loungeHostSpeed,loungeHostCost} from './lounge.js';
 import {migrateShopPlay,picks as momentPicks,createMoment,judgeChoice,tipFor,recordServed,tickShift,operationsAlerts,mountShopPlay} from './shop-play.js';
 import {migrateJourney,advanceJourney,CHAPTERS} from './journey.js';
@@ -512,7 +512,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       var arrivingKind=eventGuest?'vip':customerType(state.empire.reputation,customerId),lounge=wantsLounge(state.lounge,customerId,arrivingKind);
       // Every two to ten minutes a big spender walks in; tapping their tag pays a tip or starts a rush. Missing one costs nothing.
       var bigSpender=state.spenderClock<=0&&!lounge&&!eventGuest&&arrivingKind!=='vip';if(bigSpender)state.spenderClock=spenderGap(state.perks,120+(customerId*97)%480);
-      arrival=0;customers.push({bigSpender:bigSpender,eventGuest:eventGuest,kind:arrivingKind,id:customerId++,phase:'entering',idChecked:false,idCheckTime:0,lounge:lounge,kiosk:!lounge&&state.kiosk&&customerId%2===0&&customers.filter(function(c){return c.kiosk&&!c.ordered}).length<kioskCount()+4,kioskIndex:chooseKiosk(),t:0,bag:false,ordered:false,x:-12.4,z:-10});
+      arrival=0;customers.push({bigSpender:bigSpender,eventGuest:eventGuest,kind:arrivingKind,id:customerId++,phase:'entering',idChecked:false,idCheckTime:0,lounge:lounge,kiosk:!lounge&&state.kiosk&&customerId%2===0&&customers.filter(function(c){return c.kiosk&&!c.ordered}).length<kioskCount()+KIOSK_WAIT_PLACES,kioskIndex:null,t:0,bag:false,ordered:false,x:-12.4,z:-10});
     }
     tickLounge(dt);
     customers.forEach(function(c){moveQueuedCustomer(c,dt);if(!c.walking&&c.phase!=='leaving'&&c.phase!=='lounge')c.waitSeconds=(c.waitSeconds||0)+dt;if(c.bag)c.effectAge=(c.effectAge||0)+dt});
@@ -545,9 +545,13 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
         }
       });
     }
+    // The head of the kiosk line takes the first free kiosk; their place along the shared walkway is the same spot on
+    // that kiosk's longer route.
+    var nextKiosk=state.kiosk?assignKiosk(customers,kioskCount()):null;
+    if(nextKiosk)nextKiosk.laneDistance+=routeLength(kioskRoute(nextKiosk.kioskIndex))-routeLength(kioskRoute(0));
     if(state.kiosk)for(var kioskIndex=0;kioskIndex<kioskCount();kioskIndex++){
       var kioskX=-8.95,kioskZ=6.8-kioskIndex*1.8;
-      var kioskCustomer=customers.find(function(c){return c.kiosk&&(c.kioskIndex||0)===kioskIndex&&!c.ordered&&c.phase==='kiosk'&&Math.hypot(c.x-kioskX,c.z-kioskZ)<.15});
+      var kioskCustomer=customers.find(function(c){return c.kiosk&&c.kioskIndex===kioskIndex&&!c.ordered&&c.phase==='kiosk'&&Math.hypot(c.x-kioskX,c.z-kioskZ)<.15});
       var kioskAvailable=orderAvailability(customers,state.stock[4],pickupLimit());
       if(kioskCustomer&&kioskAvailable.places>0&&kioskAvailable.bags>0){
         kioskCustomer.orderTime=(kioskCustomer.orderTime||0)+dt;
@@ -641,11 +645,6 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   function buyKiosk(){if(state.kiosk||state.money<25000)return;state.money-=25000;state.kiosk=true;save();renderUI();notify('SELF-ORDER KIOSK OPEN · customers can use kiosk or counter','upgrade')}
   function kioskCount(){return state.kiosk?(state.thirdKiosk?3:state.secondKiosk?2:1):0}
-  function chooseKiosk(){
-    var counts=Array(kioskCount()||1).fill(0);
-    customers.forEach(function(c){if(c.kiosk&&!c.ordered&&c.phase!=='leaving')counts[c.kioskIndex||0]++});
-    return counts.indexOf(Math.min.apply(null,counts));
-  }
   function buyThirdKiosk(){if(!state.secondKiosk||state.thirdKiosk||state.money<100000)return;state.money-=100000;state.thirdKiosk=true;save();renderUI();notify('THIRD KIOSK OPEN','upgrade')}
   function buySecondKiosk(){if(!state.kiosk||state.secondKiosk||state.money<50000)return;state.money-=50000;state.secondKiosk=true;save();renderUI();notify('SECOND KIOSK OPEN','upgrade')}
   // Every line's tail leaves the shop the same way: past the doorman, across the threshold and out along the storefront.
@@ -1644,16 +1643,20 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function customerQueueDistance(c){
     var queue=customerQueue(c);
     if(c.kiosk&&!c.ordered){
-      var heads=Array.from({length:kioskCount()},function(_,index){return queue.find(function(q){return (q.kioskIndex||0)===index})});
-      if(heads.indexOf(c)>=0)return 0;
-      var waiting=queue.filter(function(q){return heads.indexOf(q)<0});
-      // Both kiosk branches merge into the same rear walkway. Reserve each slot once.
-      return .5+(7.6-(6.8-(c.kioskIndex||0)*1.8))+Math.max(0,waiting.indexOf(c))*queueGap(true);
+      // A customer with a kiosk walks to it; everyone else waits on the walkway behind the first kiosk, in line order,
+      // measured along the first kiosk's route (a waiting customer has no kiosk yet).
+      if(c.kioskIndex!=null)return 0;
+      var waiting=queue.filter(function(q){return q.kioskIndex==null});
+      return KIOSK_WAIT_START+Math.max(0,waiting.indexOf(c))*queueGap(true);
     }
     return Math.max(0,queue.indexOf(c))*queueGap(false);
   }
   // Space between people in a line: close enough to read as a queue (Kevin's call), a little tighter past twenty
   // places so more of the line fits in the pen before the tail runs outside.
+  // The kiosk line's first waiting place, on the walkway a step past the first kiosk (-8.45, 7.6), and how many wait:
+  // three places fit on the walkway before it reaches the entry corridor (KIOSK_WAIT_START + 2 gaps < its 2.73 join),
+  // so nobody waits in the doorway or stands on another waiting customer.
+  var KIOSK_WAIT_START=1.3,KIOSK_WAIT_PLACES=3;
   function queueGap(kiosk){return kiosk?.65:queueLimit()>20?.7:.8}
   function customerTarget(c){
     if(c.phase==='leaving')return{x:-10.5,z:-8.1};
