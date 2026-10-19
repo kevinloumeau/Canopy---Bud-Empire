@@ -4241,8 +4241,9 @@ if(!SHOP_SPRITES){
     walkerPlacements(now).forEach(function(w){person(w.x,-.012,w.z,PERSON_COLOURS[(w.g*3+1)%PERSON_COLOURS.length],function(){drawWalker(streetApi,w)})});
     // The street's trees, lamps and props are its own renders too, stood up at their footprints' centres, and so are
     // the cars until their Blender models load; the terraces stay solid. The 3D trees and lamps underneath only cast shadows.
-    var backdrops=[],carModels=map3d.carsModelled();
-    streetItems(streetApi).forEach(function(j){if(j.kind!=='walker'&&!(j.kind==='car'&&carModels))capturePerson(j.kind==='building'?backdrops:figures,(j.x0+j.x1)/2,0,(j.z0+j.z1)/2,j.draw)});
+    // A prop with a loaded Blender model is drawn as that instead of its card.
+    var backdrops=[],props=[],carModels=map3d.carsModelled();
+    streetItems(streetApi).forEach(function(j){if(j.model){props.push(j.model);if(map3d.propReady(j.model.file))return}if(j.kind!=='walker'&&!(j.kind==='car'&&carModels))capturePerson(j.kind==='building'?backdrops:figures,(j.x0+j.x1)/2,0,(j.z0+j.z1)/2,j.draw)});
     // The queue pens and the lounge's line: each post is the 2D map's stanchion, and the ropes sag between them as 3D
     // cords; the display case is its render until its Blender model loads.
     var ropes=[];
@@ -4254,14 +4255,15 @@ if(!SHOP_SPRITES){
       };
       queuePens().forEach(function(pen){pen.forEach(function(r){rail(r[0],r[1],r[2],r[3],'#2f6b45')})});
       if(state.lounge>0){var ropeX=LOUNGE_DOOR.x+.72,rf=LOUNGE_FRONT;rail(ropeX,rf+.3,ropeX,rf+1.4,'#6b1f35');rail(ropeX,rf+1.4,ropeX,rf+2.5,'#6b1f35')}
-      Object.keys(posts).forEach(function(key){var q=posts[key];capturePerson(figures,q[0],0,q[1],function(){drawStanchion(q[0],q[1])})});
+      var postModel=map3d.propReady('street_queue_post.glb');
+      Object.keys(posts).forEach(function(key){var q=posts[key];if(postModel)props.push({file:'street_queue_post.glb',x:q[0],y:0,z:q[1]});else capturePerson(figures,q[0],0,q[1],function(){drawStanchion(q[0],q[1])})});
       if(fixtureSprite('shop.displaycase')&&!map3d.hasFixture('displayCase'))capturePerson(figures,10.05,0,8.7,function(){drawSprite(streetApi,'shop.displaycase',10.05,8.7,true)});
     }
     // The 2D map fades figures behind the building and lays haze over distant renders as see-through copies; in 3D
     // depth and the scene's haze do both, so only the solid draws are kept.
     figures=figures.filter(function(f){return f.alpha>.99});backdrops=backdrops.filter(function(f){return f.alpha>.99});
     var look=viewCentre();
-    map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,ropes:ropes,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
     customers.forEach(function(c){if(c.phase!=='lounge'&&customerBadged(c))drawCustomerBadge(Object.assign({},c,{x:c.renderX,z:c.renderZ}))});
     drawDeliveryDrones(frameDelta,now);drawParticles(frameDelta);drawTickets(frameDelta);drawConfetti(wallDelta);

@@ -10,6 +10,7 @@ import * as THREE from 'three';
 import { buildShell } from './shell.js';
 import { createBranchLayer } from './branch3d.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { createMapCamera, frameMapCamera, HEIGHT_SCALE } from './camera.js';
 
@@ -116,7 +117,8 @@ export function createMap3D(canvas, layout) {
   }
   function span(parent, x0, x1, y0, y1, z0, z1, colour, opts) { return box(parent, (x0 + x1) / 2, y0, (z0 + z1) / 2, Math.max(.001, x1 - x0), Math.max(.001, y1 - y0), Math.max(.001, z1 - z0), colour, opts); }
 
-  const terraces = buildTown(world, layout, { box, span, material, textured });
+  const lampStandIns = [];
+  const terraces = buildTown(world, layout, { box, span, material, textured, lampStandIns });
   buildShop(world, layout, { box, span, material, textured });
   const transport = buildTransport(scene, world, layout.transport, { box, material });
   const shell = buildShell(world, layout, { box, span, material });
@@ -312,6 +314,61 @@ export function createMap3D(canvas, layout) {
     const wheel = gltf.scene.getObjectByName('WheelFL');
     carSources[kind] = { scene: gltf.scene, radius: wheel ? new THREE.Box3().setFromObject(wheel).getSize(new THREE.Vector3()).y / 2 : .25 };
   }, undefined, e => console.warn('3D map: could not load ' + file, e)));
+  // Street props (main.js passes frame.props: file, feet and turn, from the street's jobs and the queue posts). Each
+  // file loads on first need and is baked into one geometry per material, drawn instanced over all its placements, so
+  // forty props cost a few dozen draws rather than a thousand. Lamps glow through their LampGlow material after dark.
+  const MAX_PROPS = 64, propSources = {}, propRequested = {}, glowMaterials = new Set();
+  function bake(root) {
+    root.updateMatrixWorld(true);
+    const byMaterial = new Map();
+    root.traverse(o => {
+      if (!o.isMesh) return;
+      let g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+      g.applyMatrix4(o.matrixWorld);
+      Object.keys(g.attributes).forEach(k => { if (k !== 'position' && k !== 'normal' && k !== 'uv') g.deleteAttribute(k); });
+      if (!g.attributes.normal) g.computeVertexNormals();
+      if (!byMaterial.has(o.material)) byMaterial.set(o.material, []);
+      byMaterial.get(o.material).push(g);
+    });
+    return [...byMaterial].map(([mat, list]) => {
+      // Parts merge only with the attributes they all share.
+      if (list.some(g => !g.attributes.uv)) list.forEach(g => g.deleteAttribute('uv'));
+      const mesh = new THREE.InstancedMesh(mergeGeometries(list), mat, MAX_PROPS);
+      mesh.count = 0; mesh.castShadow = mesh.receiveShadow = true; mesh.frustumCulled = false;
+      world.add(mesh);
+      return mesh;
+    });
+  }
+  function propReady(file) {
+    if (!propRequested[file]) {
+      propRequested[file] = true;
+      loader.load(layout.modelBase + file, gltf => {
+        prepare(gltf.scene);
+        gltf.scene.traverse(o => {
+          if (!o.isMesh) return;
+          if (o.material.name === 'LampGlow') glowMaterials.add(o.material);
+          // With no environment to reflect, full metal renders near black; the posts' brass and the lamps' iron keep
+          // their colour under the sun at a lower metalness.
+          if (o.material.metalness > .5) { o.material.metalness = .35; o.material.roughness = Math.max(.35, o.material.roughness); }
+        });
+        propSources[file] = bake(gltf.scene);
+      }, undefined, e => console.warn('3D map: could not load ' + file, e));
+    }
+    return !!propSources[file];
+  }
+  const propScale = new THREE.Vector3(CAR_SCALE, CAR_SCALE / HEIGHT_SCALE, CAR_SCALE), propTurn = new THREE.Quaternion(), yAxis = new THREE.Vector3(0, 1, 0);
+  function placeProps(props, night) {
+    Object.values(propSources).forEach(parts => parts.forEach(m => { m.count = 0; }));
+    (props || []).forEach(p => {
+      const parts = propSources[p.file];
+      if (!parts || parts[0].count >= MAX_PROPS) return;
+      propTurn.setFromAxisAngle(yAxis, p.rot || 0);
+      matrix.compose(position.set(p.x, p.y === undefined ? layout.plazaY : p.y, p.z), propTurn, propScale);
+      parts.forEach(m => m.setMatrixAt(m.count++, matrix));
+    });
+    Object.values(propSources).forEach(parts => parts.forEach(m => { m.instanceMatrix.needsUpdate = true; }));
+    glowMaterials.forEach(m => { m.emissive.set('#ffd9a0'); m.emissiveIntensity = night * 2.5; });
+  }
   const carsModelled = () => !!layout.carModels && Object.keys(layout.carModels).every(k => carSources[k]);
   function carCopy(i, c) {
     const kind = c.van ? 'van' : 'car', source = carSources[kind];
@@ -459,6 +516,8 @@ export function createMap3D(canvas, layout) {
     people.instanceMatrix.needsUpdate = true;
     if (people.instanceColor) people.instanceColor.needsUpdate = true;
 
+    placeProps(frame.props, night);
+    lampStandIns.forEach(m => { m.visible = !propSources['street_lamp.glb']; });
     const modelled = carsModelled();
     frame.cars.forEach((c, i) => {
       if (!modelled) return;
@@ -494,6 +553,7 @@ export function createMap3D(canvas, layout) {
     render,
     renderBranch,
     carsModelled,
+    propReady,
     hasFixture: key => !!fixtures[key],
     get ok() { return !lost; },
     dispose() { renderer.dispose(); materials.forEach(m => m.dispose()); }
@@ -502,7 +562,7 @@ export function createMap3D(canvas, layout) {
 
 // The town round the shop: one asphalt floor at street level, every block between the streets a paved slab up to the
 // plaza level (so kerbs are the slabs' edges), the terraces as blocks of their wall colour, trees and lamps.
-function buildTown(world, layout, { box, span, material, textured }) {
+function buildTown(world, layout, { box, span, material, textured, lampStandIns }) {
   const { roads, roadWidth: rw, plazaY: P, streetY: G, extent: L } = layout;
   textured(span(world, -L, L, G - .4, G, -L, L, layout.colours.asphalt, { cast: false }), 'asphalt');
   const edges = along => {
@@ -541,9 +601,10 @@ function buildTown(world, layout, { box, span, material, textured }) {
     crown.castShadow = crown.receiveShadow = true;
     world.add(crown);
   });
+  // The lamps' shadow stand-ins, until the Blender lamp loads.
   layout.lamps.forEach(([x, z]) => {
-    box(world, x, P, z, .18, 4.4, .18, '#3b4a43', { opts: { name: 'street' } });
-    box(world, x, P + 4.3, z, .5, .3, .5, '#f1e3b6', { opts: { name: 'street' } });
+    lampStandIns.push(box(world, x, P, z, .18, 4.4, .18, '#3b4a43', { opts: { name: 'street' } }));
+    lampStandIns.push(box(world, x, P + 4.3, z, .5, .3, .5, '#f1e3b6', { opts: { name: 'street' } }));
   });
   return terraces;
 }

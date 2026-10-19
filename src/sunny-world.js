@@ -429,29 +429,35 @@ function streetJobs(api) {
   let kind = 'building';
   const at = (x, z, f, hx = .5, hz = hx, shade) => jobs.push({ kind, x0: x - hx, x1: x + hx, z0: z - hz, z1: z + hz, depth: api.depth({ x, z }), draw: f,
     shadow: typeof shade === 'function' ? shade : shade && (() => sunShadow(api, x, P, z, shade[3] === undefined ? hx : shade[3], shade[4] === undefined ? hz : shade[4], shade[0], shade[1], shade[2])) });
+  // The 3D map's Blender model for the job just added: its file, where its feet stand (the render's anchor) and its
+  // turn; a render drawn mirrored to run the other way is the model turned a quarter.
+  const model = (name, x, z, flip) => { jobs[jobs.length - 1].model = { file: name + '.glb', x, z, rot: flip ? -Math.PI / 2 : 0 }; };
   BUILDINGS.forEach(b => { const f = BUILDING_SPRITES[b[2]]; at(b[0] - f.w / 2, b[1] - f.d / 2, () => building(api, b), f.w / 2, f.d / 2); });
   kind = 'tree';
   FAR_TREES.concat(NEAR_TREES).forEach(([x, z]) => at(x, z, () => streetTree(api, x, z), 1.3, 1.3, () => treeShadow(api, x, z, 2.4, 4.8)));
   kind = 'prop';
-  LAMPS.forEach(([x, z]) => at(x, z, () => lamp(api, x, z), .4, .4, [4.6, .9, .75, .2, .2]));
+  LAMPS.forEach(([x, z]) => { at(x, z, () => lamp(api, x, z), .4, .4, [4.6, .9, .75, .2, .2]); model('street_lamp', x, z); });
   // Left-side street life: a coffee cart and café seating by the entrance, bins and a hydrant.
-  at(-18, 7.5, () => cart(api, -18, 7.5), 1.3, 1, () => sunShadow(api, -18.35, P, 7.27, 1.05, .6, 2.3, 1, 1));
+  at(-18, 7.5, () => cart(api, -18, 7.5), 1.3, 1, () => sunShadow(api, -18.35, P, 7.27, 1.05, .6, 2.3, 1, 1)); model('street_coffeecart', -18, 7.5);
   // Kevin's café set (2026-10-15) stands in for the two drawn umbrellas; the news boxes face the shop.
-  at(-17, 14, () => { if (!prop(api, 'street.awning.cafe', -17, 14)) { umbrella(api, -17, 12.5); umbrella(api, -17, 15.5); } }, 2.3, 1.6, () => sunShadow(api, -17.6, P, 13.4, 1.6, 1.3, 2.6, .8, .9));
-  at(-18.5, -8, () => bin(api, -18.5, -8), .4, .4, [1.1, 1, 1, .3, .3]); at(-18.5, 10.5, () => hydrant(api, -18.5, 10.5), .3, .3, [.95, 1, 1, .2, .2]);
-  at(-17.6, -3, () => prop(api, 'street.newsboxes', -17.6, -3, true), 1.3, 1, () => sunShadow(api, -18.1, P, -3.5, .4, 1.5, 2.8, .9, 1)); // the row's feet stand back from the render's centre; the boxes stand about 2.8 tall
+  at(-17, 14, () => { if (!prop(api, 'street.awning.cafe', -17, 14)) { umbrella(api, -17, 12.5); umbrella(api, -17, 15.5); } }, 2.3, 1.6, () => sunShadow(api, -17.6, P, 13.4, 1.6, 1.3, 2.6, .8, .9)); model('street_cafe_awning', -17, 14);
+  at(-18.5, -8, () => bin(api, -18.5, -8), .4, .4, [1.1, 1, 1, .3, .3]); model('street_bin', -18.5, -8); at(-18.5, 10.5, () => hydrant(api, -18.5, 10.5), .3, .3, [.95, 1, 1, .2, .2]); model('street_hydrant', -18.5, 10.5);
+  at(-17.6, -3, () => prop(api, 'street.newsboxes', -17.6, -3, true), 1.3, 1, () => sunShadow(api, -18.1, P, -3.5, .4, 1.5, 2.8, .9, 1)); model('street_newsboxes', -17.6, -3, true); // the row's feet stand back from the render's centre; the boxes stand about 2.8 tall
   // Shadow footprints below are measured against each render's feet (Kevin, 2026-10-17: a shadow beside a prop reads as a
   // floating blob); several renders are centred off their footprint or run along z.
-  [[18, -6], [18, 6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => at(x, z, () => planter(api, x, z), 1.6, 1.2, () => sunShadow(api, x - .7, P, z - .65, .55, 1.8, 1.2, 1, .8)));
-  at(0, 16.5, () => bench(api, 0, 16.5, true), 1.2, .5, () => sunShadow(api, -.36, P, 16.38, 1.1, .32, .9, .9, 1)); // mirrored to run along the front street
-  at(18, 0, () => bench(api, 18, 0), .5, 1.2, () => sunShadow(api, 17.73, P, -.33, .32, 1.1, .9, .9, 1)); at(14, 16, () => bikeRack(api, 14, 16), 1.3, .6, () => sunShadow(api, 14.24, P, 15.47, .45, 1.25, 1.2, .7, .7));
-  at(18.5, -11, () => busStop(api, 18.5, -11), .9, 1.8, [2.6, .8, .9, .7, 1.6]); at(18.5, 12, () => bin(api, 18.5, 12), .4, .4, [1.1, 1, 1, .3, .3]); at(12, 15.4, () => hydrant(api, 12, 15.4), .3, .3, [.95, 1, 1, .2, .2]);
+  [[18, -6], [18, 6], [-8, 16.5], [8, 16.5]].forEach(([x, z]) => { at(x, z, () => planter(api, x, z), 1.6, 1.2, () => sunShadow(api, x - .7, P, z - .65, .55, 1.8, 1.2, 1, .8)); model('street_planter', x, z); });
+  at(0, 16.5, () => bench(api, 0, 16.5, true), 1.2, .5, () => sunShadow(api, -.36, P, 16.38, 1.1, .32, .9, .9, 1)); model('street_bench', 0, 16.5, true); // mirrored to run along the front street
+  at(18, 0, () => bench(api, 18, 0), .5, 1.2, () => sunShadow(api, 17.73, P, -.33, .32, 1.1, .9, .9, 1)); model('street_bench', 18, 0);
+  at(14, 16, () => bikeRack(api, 14, 16), 1.3, .6, () => sunShadow(api, 14.24, P, 15.47, .45, 1.25, 1.2, .7, .7)); model('street_bikerack', 14.8, 16);
+  at(18.5, -11, () => busStop(api, 18.5, -11), .9, 1.8, [2.6, .8, .9, .7, 1.6]); model('street_busstop', 18.5, -11);
+  at(18.5, 12, () => bin(api, 18.5, 12), .4, .4, [1.1, 1, 1, .3, .3]); model('street_bin', 18.5, 12); at(12, 15.4, () => hydrant(api, 12, 15.4), .3, .3, [.95, 1, 1, .2, .2]); model('street_hydrant', 12, 15.4);
   // 2026-10-15 street dressing: a delivery pallet by the bus stop, a fingerpost and two meters on the right kerb,
   // olive pots either side of the front bench, and a pedestrian light at the front crossing.
-  at(17.2, -7.5, () => prop(api, 'street.deliveryboxes', 17.2, -7.5), 1.15, .9, () => sunShadow(api, 16.81, P, -7.89, .8, .65, 1.3, 1.1, 1));
-  at(19.4, 3.6, () => prop(api, 'street.signpost', 19.4, 3.6), .3, .3, [3.8, .6, .7, .12, .12]); [8.4, 10.2].forEach(z => at(19.3, z, () => prop(api, 'street.meter', 19.3, z), .25, .25, [1.9, .6, .8, .12, .12]));
-  [-3.2, 3.2].forEach(x => at(x, 16.5, () => prop(api, 'street.planter.round', x, 16.5), .6, .6, () => { sunShadow(api, x, P, 16.5, .45, .45, .8, 1, .8); softShadow(api, x + SUN.x * .9, P, 16.5 + SUN.z * .9, .75, .7, .22 * daylight(api)); }));
-  at(-10.8, 17.4, () => prop(api, 'street.trafficlight', -10.8, 17.4), .3, .3, () => sunShadow(api, -10.63, P, 16.98, .12, .12, 4.3, .6, .7)); // the post stands right of the render's centre
+  at(17.2, -7.5, () => prop(api, 'street.deliveryboxes', 17.2, -7.5), 1.15, .9, () => sunShadow(api, 16.81, P, -7.89, .8, .65, 1.3, 1.1, 1)); model('street_deliveryboxes', 17.2, -7.5);
+  at(19.4, 3.6, () => prop(api, 'street.signpost', 19.4, 3.6), .3, .3, [3.8, .6, .7, .12, .12]); model('street_signpost', 19.4, 3.6);
+  [8.4, 10.2].forEach(z => { at(19.3, z, () => prop(api, 'street.meter', 19.3, z), .25, .25, [1.9, .6, .8, .12, .12]); model('street_meter', 19.3, z); });
+  [-3.2, 3.2].forEach(x => { at(x, 16.5, () => prop(api, 'street.planter.round', x, 16.5), .6, .6, () => { sunShadow(api, x, P, 16.5, .45, .45, .8, 1, .8); softShadow(api, x + SUN.x * .9, P, 16.5 + SUN.z * .9, .75, .7, .22 * daylight(api)); }); model('street_planter_round', x, 16.5); });
+  at(-10.8, 17.4, () => prop(api, 'street.trafficlight', -10.8, 17.4), .3, .3, () => sunShadow(api, -10.63, P, 16.98, .12, .12, 4.3, .6, .7)); model('street_trafficlight', -10.8, 17.4); // the post stands right of the render's centre
   kind = 'car'; drawCars(api, at);
   kind = 'walker'; drawWalkers(api, at);
   return jobs;
