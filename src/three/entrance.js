@@ -65,7 +65,10 @@ export function buildEntrance(world, layout, { span, model }) {
   // with the neon painted on both of its faces.
   if (model) model('blade_sign.glb', wall, 0, s.z, scene => {
     let faces = 0;
-    scene.traverse(o => { if (o.isMesh && /^SignFace/.test(o.name)) { o.material = neonMat; o.castShadow = false; faces++; } });
+    // glTF UVs run top-down, so the model's faces take the canvas unflipped.
+    const modelTexture = neonTexture.clone(); modelTexture.flipY = false; modelTexture.needsUpdate = true;
+    const modelMat = neonMat.clone(); modelMat.map = modelTexture;
+    scene.traverse(o => { if (o.isMesh && /^SignFace/.test(o.name)) { o.material = modelMat; o.castShadow = false; faces++; } });
     if (faces) bracket.visible = false; else scene.parent.visible = false;
   }, group);
   return group;
