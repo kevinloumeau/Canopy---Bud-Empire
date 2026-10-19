@@ -61,7 +61,6 @@ h1,h2,.guide-card h2,.empire-screen h2,.machine-info h1,.canopy-brand b{font-var
 
 /* Toasts hang off the measured HUD, and the full-queue figure warns in the same gold as full storage. */
 .toast{top:calc(var(--hud-height,60px) + 10px + env(safe-area-inset-top,0px))}
-.hud .customer-info b.queue-full{color:#e9cd91;text-decoration:underline dotted;text-underline-offset:3px}
 .sheet #stockStatus .stock-online b.stock-full{text-decoration:underline dotted;text-underline-offset:3px}
 
 /* Loading: the leaf mark on the game's own green, so the first frame already belongs to Canopy. */
