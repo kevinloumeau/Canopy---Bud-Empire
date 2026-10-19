@@ -86,12 +86,12 @@ X.leaf_logo("RoundelLeaf", (0, AY - .015, RZ), .52, M["LEAFGLOW"])
 K.cyl("TabletFoot", .06, .07, .02, (0, .08, TOP), M["POLISH"], 20)
 K.box("TabletNeck", (.03, .03, .16), (0, .09, TOP + .02), M["POLISH"], .008)
 o = K.box("Tablet", (.34, .018, .23), (0, .08, TOP + .14), PLASTIC, .01); o.rotation_euler.x = .35
-o = K.box("TabletGlass", (.31, .004, .2), (0, .07, TOP + .155), K.DARK, .002); o.rotation_euler.x = .35
+o = K.box("TillGlass", (.31, .004, .2), (0, .07, TOP + .155), K.DARK, .002); o.rotation_euler.x = .35
 CX, CY = .3, -.14
 K.box("Cradle", (.13, .11, .03), (CX, CY + .02, TOP), M["POLISH"], .008)
 rd = K.box("Reader", (.14, .22, .045), (CX, CY, TOP + .02), PLASTIC, .016); rd.rotation_euler.x = .5
 for i, (x, y, w, d, m) in enumerate(((0, .05, .1, .07, SCREEN), (0, -.04, .09, .08, KEYS))):
-    k = K.box(f"ReaderFace{i}", (w, d, .006), (0, 0, 0), m, .002); k.parent = rd; k.location = (x, y, .045)
+    k = K.box(("ReaderScreen", "Key11")[i], (w, d, .006), (0, 0, 0), m, .002); k.parent = rd; k.location = (x, y, .045)
 
 # ---------- little glass display of jars and a potted plant ----------
 GX, GY = -.36, .02

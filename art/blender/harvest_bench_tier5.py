@@ -57,7 +57,7 @@ K.cyl("Hopper", .06, .14, .14, (TX - .1, TY + .05, TZ + .14), K.BRASS, 20)
 K.box("Motor", (.14, .16, .14), (TX + .35, TY + .05, TZ - .1), K.GREEN_D, .02)
 K.cyl("MotorCap", .05, .05, .02, (TX + .42, TY + .05, TZ - .02), K.BRASS, 16).rotation_euler.y = math.pi / 2
 K.box("MotorLamp", (.03, .01, .03), (TX + .35, TY - .035, TZ - .02), SHELFGLOW, .004)
-P.tray("CatchTray", TX, TY - .25, TOP, .42, .18, 8, K.GREEN_D)
+P.tray("Tray1", TX, TY - .25, TOP, .42, .18, 8, K.GREEN_D)
 
 # ---------- dry lines across the back right with hanging branches ----------
 LY, LZ = D / 2 - .08, 1.66

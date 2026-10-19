@@ -48,9 +48,9 @@ for a in (.2, -.2):
 K.cyl("TrimBowl", .1, .13, .07, (-.05, -.22, TOP), K.BRASS, 24)
 K.cyl("TrimBowlIn", .115, .115, .004, (-.05, -.22, TOP + .066), K.DARK, 24)
 for i in range(4):
-    P.nug(f"BowlNug{i}", -.05 + rnd.uniform(-.05, .05), -.22 + rnd.uniform(-.05, .05), TOP + .045, .9)
-P.tray("TrayA", .3, -.22, TOP)
-P.tray("TrayB", .64, -.14, TOP)
+    P.nug(f"Tray3Nug{i}", -.05 + rnd.uniform(-.05, .05), -.22 + rnd.uniform(-.05, .05), TOP + .045, .9)
+P.tray("Tray1", .3, -.22, TOP)
+P.tray("Tray2", .64, -.14, TOP)
 P.tin("Tin", .82, -.33, TOP)
 
 K.finish(OUT, "harvest_bench_tier4", ortho=2.7, centre=(0, 0, .95))

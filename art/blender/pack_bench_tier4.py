@@ -33,7 +33,7 @@ for i in range(12):
 for i in range(9):
     x = -L / 2 + .2 + i * (L - .4) / 8
     if i % 2: P.tin(f"TopTin{i}", x, SY + .06, TOP + .47, .05, .07, K.CREAM)
-    else: P.pouch(f"TopPouch{i}", x, SY + .06, TOP + .47, K.GREEN_D, .13, .05, .18, K.BRASS)
+    else: P.pouch(f"TopCratePouch{i}", x, SY + .06, TOP + .47, K.GREEN_D, .13, .05, .18, K.BRASS)
 
 # ---------- bigger brass scale with a dial ----------
 SX, SYc = -.42, -.16
