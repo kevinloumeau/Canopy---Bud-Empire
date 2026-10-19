@@ -3,11 +3,11 @@ import {atmosphere} from './operations.js';
 // `frame` is each scene's projected bounding box in world units at unit scale (width, height, centre), measured by
 // drawing it through a recording projection; the camera fits it to the viewport.
 export const BRANCH_THEMES = [
-  {name:'Riverside', description:'A cedar riverwalk shop with a timber loft and rooftop glasshouse, a footbridge to the far-bank promenade and boathouse, and waterside seating.', background:'#2f4c49', focus:{x:0,y:1.3,z:1.4}, frame:{w:44.3,h:24.9,cx:-1.9,cy:-2.2},land:{colour:'#8aa07a',y:-.15,plot:[-20.5,16,-12.5,12.5],water:[{x0:-15.5,x1:-7.75,y:-.4,colour:'#41a4a3'}],trees:true}},
-  {name:'Old Town', description:'A three-storey brick boutique on a cobbled market square, beside a bakery and a clock tower, with a fountain, stalls and an upstairs botanical atelier.', background:'#3f3831', focus:{x:0,y:.3,z:1}, frame:{w:43.3,h:30.7,cx:-.85,cy:-4.7},land:{colour:'#cdbb9b',y:0,plot:[-17,17,-12,13],water:[]}},
-  {name:'City Center', description:'A glass flagship beneath its own tower on a downtown plaza, with roof gardens, a reflecting pool, a metro entrance and a busy street.', background:'#2c3a44', focus:{x:0,y:1.3,z:-1}, frame:{w:44.9,h:32.7,cx:-.05,cy:-5.45},land:{colour:'#bdc7c2',y:0,plot:[-16,18,-13,13],water:[]}},
-  {name:'Desert Oasis', description:'An adobe courtyard shop in the desert, with a rooftop lounge and glass grow room, saguaros and agaves in a gravel garden, and a sun-baked parking court.', background:'#2e4f48', focus:{x:0,y:1.3,z:1.4}, frame:{w:43.3,h:23.6,cx:-.85,cy:-1.15},land:{colour:'#dcc79c',y:0,plot:[-17,17,-12,13],water:[]}},
-  {name:'Alpine', description:'A stone-and-timber mountain lodge among the pines, with a glass conservatory wing under a rooftop terrace, a fireside pergola patio, and a waterfall garden with a creek-side deck.', background:'#233b31', focus:{x:0,y:1.3,z:1.4}, frame:{w:43.3,h:23.7,cx:-.85,cy:-1.2},land:{colour:'#7f9a74',y:0,plot:[-17,17,-12,13],water:[{x0:12.6,x1:16.6,y:-.3,colour:'#579aa0',z0:12.5}],trees:true}}
+  {name:'Riverside', description:'A cedar riverwalk shop with a timber loft and rooftop glasshouse, a footbridge to the far-bank promenade and boathouse, and waterside seating.', background:'#2f4c49', focus:{x:0,y:1.3,z:1.4}, frame:{w:44.3,h:24.9,cx:-1.9,cy:-2.2},land:{colour:'#8aa07a',y:-.15,plot:[-20.5,16,-12.5,12.5],strips:[{x0:-15.5,x1:-7.75,y:-.4,colour:'#41a4a3'}],trees:true}},
+  {name:'Old Town', description:'A three-storey brick boutique on a cobbled market square, beside a bakery and a clock tower, with a fountain, stalls and an upstairs botanical atelier.', background:'#3f3831', focus:{x:0,y:.3,z:1}, frame:{w:43.3,h:30.7,cx:-.85,cy:-4.7},land:{colour:'#cdbb9b',y:0,plot:[-17,17,-12,13],town:true}},
+  {name:'City Center', description:'A glass flagship beneath its own tower on a downtown plaza, with roof gardens, a reflecting pool, a metro entrance and a busy street.', background:'#2c3a44', focus:{x:0,y:1.3,z:-1}, frame:{w:44.9,h:32.7,cx:-.05,cy:-5.45},land:{colour:'#bdc7c2',y:0,plot:[-16,18,-13,13],strips:[{z0:7.6,z1:13,y:.015,colour:'#53666a'}],town:true}},
+  {name:'Desert Oasis', description:'An adobe courtyard shop in the desert, with a rooftop lounge and glass grow room, saguaros and agaves in a gravel garden, and a sun-baked parking court.', background:'#2e4f48', focus:{x:0,y:1.3,z:1.4}, frame:{w:43.3,h:23.6,cx:-.85,cy:-1.15},land:{colour:'#dcc79c',y:0,plot:[-17,17,-12,13]}},
+  {name:'Alpine', description:'A stone-and-timber mountain lodge among the pines, with a glass conservatory wing under a rooftop terrace, a fireside pergola patio, and a waterfall garden with a creek-side deck.', background:'#233b31', focus:{x:0,y:1.3,z:1.4}, frame:{w:43.3,h:23.7,cx:-.85,cy:-1.2},land:{colour:'#7f9a74',y:0,plot:[-17,17,-12,12.5],strips:[{x0:12.6,x1:16.6,y:-.3,colour:'#579aa0',z0:12.5}],trees:true}}
 ];
 
 export function drawBranchMap(api, index, level, now, projects=[], experience={}) {
@@ -42,7 +42,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
   }
   function bench(x,z,w=2.8,y=0){
     if(style.layout===1&&y===0){display(x,z,0,wood);return;}
-    if(model('street_bench.glb',x,z,y,0,w/2.8))return;
+    if(model('street_bench.glb',x,z,y,-Math.PI/2,w/2.8))return;
     [-w*.36,w*.36].forEach(dx=>b(x+dx,z,y,.12,.65,.55,dark));
     for(let i=0;i<4;i++)b(x,z-.3+i*.2,y+.54,w,.15,.1,wood);
     b(x,z-.43,y+.64,w,.1,.7,wood);
@@ -151,6 +151,8 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
   // An arched timber footbridge between two banks: the deck follows a parabola, with piers, rails and lanterns.
   function footbridge(x0,x1,z,y0,y1,rise,width=1.8){
     const n=14,at=t=>({x:x0+(x1-x0)*t,y:y0+(y1-y0)*t+rise*4*t*(1-t)});
+    // The Blender footbridge is Riverside's (8.15 long, 1.8 wide, rising 1.5), stretched to fit this one.
+    if(model('footbridge.glb',(x0+x1)/2,z,(y0+y1)/2,0,[Math.abs(x1-x0)/8.15,rise/1.5,width/1.8])){const q=at(.5);[-1,1].forEach(s=>glow(q.x,q.y+1.2,z+s*width/2,.7));return;}
     [.28,.72].forEach(t=>{const q=at(t);b(q.x,z,-.6,.42,width-.3,q.y+.42,['#c2c3b1','#7f8478','#a5a897']);});
     for(let i=0;i<n;i++){const a=at(i/n),c=at((i+1)/n);
       poly([p(a.x,a.y-.16,z+width/2),p(c.x,c.y-.16,z+width/2),p(c.x,c.y,z+width/2),p(a.x,a.y,z+width/2)],wood[1]);
@@ -204,7 +206,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
   }
   // A glass bus shelter with a bench, a route flag and a lit roof panel.
   function busShelter(x,z,w=3){
-    if(model('street_busstop.glb',x,z,0)){glow(x,2.4,z,1.1);return;}
+    if(model('street_busstop.glb',x,z,0,-Math.PI/2)){glow(x,2.4,z,1.1);return;}
     [-1,1].forEach(s=>{l([[x+s*(w/2-.1),0,z-.7],[x+s*(w/2-.1),2.5,z-.7]],'#4d5b56',.07);l([[x+s*(w/2-.1),0,z+.7],[x+s*(w/2-.1),2.5,z+.7]],'#4d5b56',.07);});
     poly([p(x-w/2,.1,z-.7),p(x+w/2,.1,z-.7),p(x+w/2,2.4,z-.7),p(x-w/2,2.4,z-.7)],'#b9d8ce26');l([[x-w/2,.1,z-.7],[x-w/2,2.4,z-.7],[x+w/2,2.4,z-.7],[x+w/2,.1,z-.7]],'#5a6c66',.05);
     glassX(x-w/2,z,1.4,2.3,.1);
@@ -337,13 +339,18 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     [[-19.5,-10.4,1.15],[-19.7,5.6,1.05],[-19.1,11.3,.9]].forEach(([x,z,s])=>tree(x,z,s));
     // Benches go down before the boathouse, which stands nearer and must occlude the one behind it.
     bench(-17.9,7.4,2.4,-.15);bench(-18,-8.2,2.4,-.15);
-    b(-18.7,-3.3,-.15,3.6,3.8,2.5,wood);gableRoof(-18.7,-3.3,2.35,3.6,3.8,1.4,['#6d7f6c','#3f5044','#56685a']);
-    poly([p(-18,-.15,-1.39),p(-17,-.15,-1.39),p(-17,1.75,-1.39),p(-18,1.75,-1.39)],'#2f3d36');
-    l([[-18,-.15,-1.38],[-18,1.75,-1.38],[-17,1.75,-1.38],[-17,-.15,-1.38]],'#dcc294',.04);
-    poly([p(-20,.9,-1.39),p(-19.2,.9,-1.39),p(-19.2,1.6,-1.39),p(-20,1.6,-1.39)],'#b9d8ce30');
-    leaf(-19.4,1.4,-1.38,.9,'#d9c68a');const lb=p(-16.89,1.3,-3.3);ctx.strokeStyle='#deae79';ctx.lineWidth=Math.max(1,unit*.08);ctx.beginPath();ctx.ellipse(lb.x,lb.y,unit*.2,unit*.24,0,0,Math.PI*2);ctx.stroke();
-    [-19.75,-17.65].forEach(x=>b(x,.9,-.15,.16,.6,1.25,dark));[.3,.85].forEach(y=>l([[-19.85,y,.9],[-17.55,y,.9]],'#5b6a58',.04));
-    [[.34,'#cf8a5a'],[.9,'#7fa5a0']].forEach(([y,c])=>{poly([p(-20.1,y,.9),p(-19.4,y,.55),p(-18,y,.55),p(-17.2,y,.9),p(-18,y,1.25),p(-19.4,y,1.25)].map(q=>q),c);poly([p(-19.2,y+.02,.72),p(-18.2,y+.02,.72),p(-18.2,y+.02,1.08),p(-19.2,y+.02,1.08)],'#2c3a34');});
+    // The boathouse and its kayak rack are Blender models in the 3D map (art/blender/branches); the drawing stands in until they load.
+    if(!model('boathouse.glb',-18.7,-3.3,-.15)){
+      b(-18.7,-3.3,-.15,3.6,3.8,2.5,wood);gableRoof(-18.7,-3.3,2.35,3.6,3.8,1.4,['#6d7f6c','#3f5044','#56685a']);
+      poly([p(-18,-.15,-1.39),p(-17,-.15,-1.39),p(-17,1.75,-1.39),p(-18,1.75,-1.39)],'#2f3d36');
+      l([[-18,-.15,-1.38],[-18,1.75,-1.38],[-17,1.75,-1.38],[-17,-.15,-1.38]],'#dcc294',.04);
+      poly([p(-20,.9,-1.39),p(-19.2,.9,-1.39),p(-19.2,1.6,-1.39),p(-20,1.6,-1.39)],'#b9d8ce30');
+      leaf(-19.4,1.4,-1.38,.9,'#d9c68a');const lb=p(-16.89,1.3,-3.3);ctx.strokeStyle='#deae79';ctx.lineWidth=Math.max(1,unit*.08);ctx.beginPath();ctx.ellipse(lb.x,lb.y,unit*.2,unit*.24,0,0,Math.PI*2);ctx.stroke();
+    }
+    if(!model('kayak_rack.glb',-18.7,.9,-.15)){
+      [-19.75,-17.65].forEach(x=>b(x,.9,-.15,.16,.6,1.25,dark));[.3,.85].forEach(y=>l([[-19.85,y,.9],[-17.55,y,.9]],'#5b6a58',.04));
+      [[.34,'#cf8a5a'],[.9,'#7fa5a0']].forEach(([y,c])=>{poly([p(-20.1,y,.9),p(-19.4,y,.55),p(-18,y,.55),p(-17.2,y,.9),p(-18,y,1.25),p(-19.4,y,1.25)].map(q=>q),c);poly([p(-19.2,y+.02,.72),p(-18.2,y+.02,.72),p(-18.2,y+.02,1.08),p(-19.2,y+.02,1.08)],'#2c3a34');});
+    }
     [-9.2,6.2,10.4].forEach(z=>lamp(-16.8,z,-.15));
     // The walk up to the bridge: a branded directional post, planters and patio heaters.
     signpost(-16.6,4.6,['RIVERSIDE','FLOWERS','EDIBLES','WELLNESS']);[-.4,5.6].forEach(z=>heater(-16.95,z,-.15));[[-17,-1.6],[-18.4,4.6]].forEach(([x,z])=>planter(x,z,1,1,-.15));

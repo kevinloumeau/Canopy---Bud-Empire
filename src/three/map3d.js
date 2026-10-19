@@ -461,7 +461,9 @@ export function createMap3D(canvas, layout) {
       if (!parts || parts[0].count >= MAX_PROPS) return;
       propTurn.setFromAxisAngle(yAxis, p.rot || 0);
       position.set(p.x, p.y === undefined ? layout.plazaY : p.y, p.z);
-      if (p.scale) matrix.compose(position, propTurn, fitScale.copy(propScale).multiplyScalar(p.scale));
+      // p.scale: one factor, or [x, y, z] factors in the model's own axes (a footbridge stretched to its span).
+      if (Array.isArray(p.scale)) matrix.compose(position, propTurn, fitScale.set(propScale.x * p.scale[0], propScale.y * p.scale[1], propScale.z * p.scale[2]));
+      else if (p.scale) matrix.compose(position, propTurn, fitScale.copy(propScale).multiplyScalar(p.scale));
       else if (p.fit) {
         // A terrace fills its render's footprint exactly (cornices, stoops and awnings included), so neighbours butt
         // the way the 2D renders do instead of running into each other; it keeps its front's proportions.
@@ -575,10 +577,11 @@ export function createMap3D(canvas, layout) {
     const group = new THREE.Group(), [px0, px1, pz0, pz1] = spec.plot, cx = (px0 + px1) / 2, cz = (pz0 + pz1) / 2, R = LAND_REACH;
     group.userData.land = true;
     let ground = subtract([[cx - R, cx + R, cz - R, cz + R]], spec.plot);
-    const rivers = (spec.water || []).map(w => [w.x0, w.x1, w.z0 === undefined ? cz - R : w.z0, w.z1 === undefined ? cz + R : w.z1]);
+    // Strips (a river, a creek, a street) run on out of the plot to the haze; an end left open runs all the way.
+    const strips = spec.strips || [], rivers = strips.map(w => [w.x0 === undefined ? cx - R : w.x0, w.x1 === undefined ? cx + R : w.x1, w.z0 === undefined ? cz - R : w.z0, w.z1 === undefined ? cz + R : w.z1]);
     rivers.forEach(r => { ground = subtract(ground, r); });
     ground.forEach(([x0, x1, z0, z1]) => span(group, x0, x1, spec.y - 1.2, spec.y, z0, z1, spec.colour, { cast: false }));
-    (spec.water || []).forEach((w, i) => subtract([rivers[i]], spec.plot).forEach(([x0, x1, z0, z1]) => span(group, x0, x1, spec.y - 1.2, w.y, z0, z1, w.colour, { cast: false })));
+    strips.forEach((w, i) => subtract([rivers[i]], spec.plot).forEach(([x0, x1, z0, z1]) => span(group, x0, x1, spec.y - 1.2, w.y, z0, z1, w.colour, { cast: false })));
     // A loose belt of trees round the plot, thinning into the haze, so the land reads as countryside. The camera looks
     // in from the +x, +z corner, so the near sides keep their trees far out where they cannot hide the plot.
     const props = [];
@@ -594,6 +597,15 @@ export function createMap3D(canvas, layout) {
         if (rivers.some(([x0, x1, z0, z1]) => x > x0 - 1.6 && x < x1 + 1.6 && z > z0 - 1.6 && z < z1 + 1.6)) continue;
         props.push({ file: i % 3 ? 'tree.glb#lawn' : 'street_tree.glb#lawn', x, y: spec.y, z, rot: rand() * 6.28, scale: (near ? .6 : .75) + rand() * .35 });
       }
+    }
+    // A town plot gets neighbours: the main block's Blender terraces in a row behind it and a column to its left,
+    // facing it, fading into the haze (the camera looks in from the other two sides, so they never hide the plot).
+    if (spec.town) {
+      const kinds = ['building_rowhouse_terracotta', 'building_townhouse_sage', 'building_low_stone', 'building_mid_stone', 'building_apartment_brick', 'building_shop_narrow', 'building_low_tan', 'building_corner'];
+      let k = 0;
+      for (let x = px0 + 4; x < px1 + 4; x += 10.5) props.push({ file: kinds[k++ % kinds.length] + '.glb', x, y: spec.y, z: pz0 - 6.5, rot: 0 });
+      for (let z = pz0 + 2; z < pz1 + 2; z += 10.5) props.push({ file: kinds[k++ % kinds.length] + '.glb', x: px0 - 6.5, y: spec.y, z, rot: Math.PI / 2 });
+      props.push({ file: 'building_corner.glb', x: px0 - 6.5, y: spec.y, z: pz0 - 6.5, rot: Math.PI / 4 });
     }
     group.userData.props = props;
     group.userData.haze = [new THREE.Vector4(px0 - HAZE_FROM, px0 - HAZE_TO, px1 + HAZE_FROM, px1 + HAZE_TO), new THREE.Vector4(pz0 - HAZE_FROM, pz0 - HAZE_TO, pz1 + HAZE_FROM, pz1 + HAZE_TO)];
