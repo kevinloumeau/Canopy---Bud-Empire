@@ -625,7 +625,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function securityDuration(){return Math.max(economy.ID_CHECK_FLOOR,rawSecurityDuration(state.idStaff))}
   function arrivalInterval(){return (atmosphere(state.empire.network).night?1.2:.9)/(1+state.trafficLevel*.15)/formatFactor('demand')/strains.trafficFactor(menuStrains(),state.strainTrend.index)/strains.buzzFactor(state.vipBuzz)/(1+state.signLevel*.04)/specialFactor('traffic')}
   // The waiting-area upgrade's places, capped at the spots the pickup line's route actually holds.
-  function pickupLimit(){return pickupPlaces(4+state.pickupLevel*2,routeLength(queueRoute(true)),queueGap(false))}
+  function pickupPromised(){return 4+state.pickupLevel*2}
+  function pickupLimit(){return pickupPlaces(pickupPromised(),routeLength(queueRoute(true)),queueGap(false))}
   function pickupLineFull(){return customers.filter(function(c){return c.ordered&&!c.bag}).length>=pickupLimit()}
   function readyCapacity(){return economy.readyCapacity(state.readyLevel,state.lines)}
   function componentCost(i){var L=state[COMPONENTS[i].key];return Math.round(COMPONENTS[i].base*Math.pow(1.8,Math.min(L,8))*Math.pow(2.15,Math.max(0,L-8)))}
@@ -1559,10 +1560,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // leaving guests walk a lane at x 12.2, clear of the spiral stair (x 9.05-11.35), before turning in to the exit door.
   var EXIT_LANE_X=12.2;
   // The pickup pen's turning points, between the counter's light and the planters along the front edge. It starts as
-  // two short rows and grows with the pickup line's places (Kevin, 2026-10-19: start smaller and get to that size):
+  // two short rows and grows with the waiting area's promised places (Kevin, 2026-10-19: start smaller and get to that size):
   // wider as Pickup line levels up, and four rows from twelve places, full size (6.6 wide) at twenty.
   function pickupPen(){
-    var places=pickupLimit(),grow=Math.max(0,Math.min(1,(places-4)/16));
+    var places=pickupPromised(),grow=Math.max(0,Math.min(1,(places-4)/16));
     return {left:3.6,right:6+4.2*grow,rows:[5.95,7.05,8.15,9.25].slice(0,places>=12?4:2)};
   }
   // The order pen grows the same way: one row at first, widening with the line, and three rows from twelve places.
