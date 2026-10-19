@@ -38,3 +38,14 @@ face the camera the way its sprite does (Blender's camera looking along (-1, 1, 
 `street_subway.py` builds `public/models/street_subway.glb`, the subway entrance on the right-hand pavement: a stair
 well sunk below the pavement (the map cuts a hole through the slab for it, `SUBWAY` in `src/sunny-world.js`), green
 railings on cream coping, brass globe lamps (`LampGlow`, lit at night) and a sign over the far rail.
+
+## City round the shop (`city/`)
+
+`city/city_buildings.py` builds the `city_*` terraces: 2 to 5 storeys on the lots of the ten terrace renders, shops on
+the ground floor (sign boards, display windows with goods and posters, recessed doors, plain or striped awnings),
+parapet trims and fire escapes. `city/city_props.py` builds the rooftop clutter (`roof_*`) and the extra street dressing
+(`street_lp_*` low-poly kerbside pieces and parked car, scooters, recycling bins, shrub planters, tree grates). Both use
+`city/city_kit.py`, which imports `canopy_kit` and `building_parts` from this folder and flattens every model to one
+vertex-coloured material (plus a white `CarPaint` the game tints per parked car), so each kind is one instanced draw.
+Run them with bpy (`python city_buildings.py -- OUT_DIR`); they write `city_meta.json`, whose bounds and roof heights
+are copied into `MODEL_BOUNDS` in `src/sunny-world.js`.
