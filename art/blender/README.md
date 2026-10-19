@@ -34,3 +34,7 @@ They share tier 3's footprint, origin and facing.
 The models stay in Blender units: the 3D map scales each one so it spans the same width on screen as the station's
 tier 3 sprite (`stationSpriteSize` in `src/sunny-world.js`) and centres it on the station's footprint. A model must
 face the camera the way its sprite does (Blender's camera looking along (-1, 1, -1), as `canopy_kit.finish` sets up).
+
+`street_subway.py` builds `public/models/street_subway.glb`, the subway entrance on the right-hand pavement: a stair
+well sunk below the pavement (the map cuts a hole through the slab for it, `SUBWAY` in `src/sunny-world.js`), green
+railings on cream coping, brass globe lamps (`LampGlow`, lit at night) and a sign over the far rail.

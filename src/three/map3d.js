@@ -675,7 +675,21 @@ export function createMap3D(canvas, layout) {
 // plaza level (so kerbs are the slabs' edges), the terraces as blocks of their wall colour, trees and lamps.
 function buildTown(world, layout, { box, span, material, textured, lampStandIns }) {
   const { roads, roadWidth: rw, plazaY: P, streetY: G, extent: L } = layout;
-  textured(span(world, -L, L, G - .4, G, -L, L, layout.colours.asphalt, { cast: false }), 'asphalt');
+  // Sunken models (the subway well) need openings through both floors: each slab is laid as the strips round them.
+  const holes = layout.holes || [];
+  const slab = (x0, x1, y0, y1, z0, z1, colour, name) => {
+    let rects = [[x0, x1, z0, z1]];
+    holes.forEach(h => {
+      rects = rects.flatMap(([a0, a1, b0, b1]) => {
+        if (h.x0 >= a1 || h.x1 <= a0 || h.z0 >= b1 || h.z1 <= b0) return [[a0, a1, b0, b1]];
+        const hx0 = Math.max(a0, h.x0), hx1 = Math.min(a1, h.x1);
+        return [[a0, hx0, b0, b1], [hx1, a1, b0, b1], [hx0, hx1, b0, Math.max(b0, h.z0)], [hx0, hx1, Math.min(b1, h.z1), b1]]
+          .filter(([c0, c1, d0, d1]) => c1 - c0 > 1e-6 && d1 - d0 > 1e-6);
+      });
+    });
+    rects.forEach(([a0, a1, b0, b1]) => textured(span(world, a0, a1, y0, y1, b0, b1, colour, { cast: false }), name));
+  };
+  slab(-L, L, G - .4, G, -L, L, layout.colours.asphalt, 'asphalt');
   const edges = along => {
     const at = roads.filter(r => r.along === along).map(r => r.at).sort((a, b) => a - b), out = [];
     let from = -L;
@@ -685,7 +699,7 @@ function buildTown(world, layout, { box, span, material, textured, lampStandIns 
   };
   // Roads along x run at fixed z, so they cut the blocks' z range; roads along z cut the x range.
   const zBands = edges('x'), xBands = edges('z');
-  xBands.forEach(([x0, x1]) => zBands.forEach(([z0, z1]) => textured(span(world, x0, x1, G, P, z0, z1, layout.colours.paver, { cast: false }), 'sidewalk')));
+  xBands.forEach(([x0, x1]) => zBands.forEach(([z0, z1]) => slab(x0, x1, G, P, z0, z1, layout.colours.paver, 'sidewalk')));
   // Road paint and tactile paving from the 2D ground pass, one instanced mesh per colour.
   const byColour = {};
   (layout.marks || []).forEach(m => (byColour[m.colour] = byColour[m.colour] || []).push(m));

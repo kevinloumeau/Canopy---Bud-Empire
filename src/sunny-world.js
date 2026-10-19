@@ -456,12 +456,14 @@ function streetJobs(api) {
   at(18, 0, () => bench(api, 18, 0), .5, 1.2, () => sunShadow(api, 17.73, P, -.33, .32, 1.1, .9, .9, 1)); model('street_bench', 18, 0);
   at(14, 16, () => bikeRack(api, 14, 16), 1.3, .6, () => sunShadow(api, 14.24, P, 15.47, .45, 1.25, 1.2, .7, .7)); model('street_bikerack', 14.8, 16);
   at(18.5, -11, () => busStop(api, 18.5, -11), .9, 1.8, [2.6, .8, .9, .7, 1.6]); model('street_busstop', 18.5, -11);
-  at(18.5, 12, () => bin(api, 18.5, 12), .4, .4, [1.1, 1, 1, .3, .3]); model('street_bin', 18.5, 12); at(12, 15.4, () => hydrant(api, 12, 15.4), .3, .3, [.95, 1, 1, .2, .2]); model('street_hydrant', 12, 15.4);
+  at(19, 14.4, () => bin(api, 19, 14.4), .4, .4, [1.1, 1, 1, .3, .3]); model('street_bin', 19, 14.4); at(12, 15.4, () => hydrant(api, 12, 15.4), .3, .3, [.95, 1, 1, .2, .2]); model('street_hydrant', 12, 15.4);
   // 2026-10-15 street dressing: a delivery pallet by the bus stop, a fingerpost and two meters on the right kerb,
   // olive pots either side of the front bench, and a pedestrian light at the front crossing.
   at(17.2, -7.5, () => prop(api, 'street.deliveryboxes', 17.2, -7.5), 1.15, .9, () => sunShadow(api, 16.81, P, -7.89, .8, .65, 1.3, 1.1, 1)); model('street_deliveryboxes', 17.2, -7.5);
   at(19.4, 3.6, () => prop(api, 'street.signpost', 19.4, 3.6), .3, .3, [3.8, .6, .7, .12, .12]); model('street_signpost', 19.4, 3.6);
-  [8.4, 10.2].forEach(z => { at(19.3, z, () => prop(api, 'street.meter', 19.3, z), .25, .25, [1.9, .6, .8, .12, .12]); model('street_meter', 19.3, z); });
+  // Kevin (2026-10-19) put a subway entrance where the two meters stood; the bin steps past its mouth. The well is
+  // sunk through the pavement slab (townLayout's holes) and riders walk up out of it and back down (SUBWAY_RIDES).
+  at(SUBWAY.x, SUBWAY.z, () => {}, SUBWAY.hx, SUBWAY.hz); model('street_subway', SUBWAY.x, SUBWAY.z);
   [-3.2, 3.2].forEach(x => { at(x, 16.5, () => prop(api, 'street.planter.round', x, 16.5), .6, .6, () => { sunShadow(api, x, P, 16.5, .45, .45, .8, 1, .8); softShadow(api, x + SUN.x * .9, P, 16.5 + SUN.z * .9, .75, .7, .22 * daylight(api)); }); model('street_planter_round', x, 16.5); });
   at(-10.8, 17.4, () => prop(api, 'street.trafficlight', -10.8, 17.4), .3, .3, () => sunShadow(api, -10.63, P, 16.98, .12, .12, 4.3, .6, .7)); model('street_trafficlight', -10.8, 17.4); // the post stands right of the render's centre
   kind = 'car'; drawCars(api, at);
@@ -950,6 +952,31 @@ function drawCars(api, at) {
 // longer, used to be walked at a run), starts at their own point of the loop, faces the way they are going on screen,
 // and takes their steps from the ground covered so the feet never slide (see WALK_STEP_RATE).
 const WALK_BASE = WALKS.reduce((acc, w) => (acc.push(acc[acc.length - 1] + w[4]), acc), [0]);
+// The subway entrance on the right-hand pavement: the well's centre and the half-extents of the hole it needs in the
+// slab (street_subway.glb's walls, 1.4 m by 2.9 m outside, at 1.69 map units a metre, plus a sliver). Its mouth faces
+// +z and the stairs run down toward -z: eight 0.29 m treads of 0.2 m, then a landing 1.6 m down.
+export const SUBWAY = { x: 18, z: 9.85, hx: 1.2, hz: 2.47 };
+const SUB_M = 1.69, SUB_Y = SUB_M / (1 / Math.cos(Math.atan(Math.SQRT1_2))); // metres to map units, across and up
+const SUB_MOUTH = SUBWAY.z + 1.35 * SUB_M, SUB_FOOT = SUB_MOUTH - 8 * .29 * SUB_M, SUB_DEEP = P - 1.6 * SUB_Y;
+// Riders: a path from out of sight below the landing (through the passage in the far wall), up the stairs and out
+// onto the pavement, walked back and forth like the walks above, so each one comes up, goes about and heads back
+// down. Points are [x, y, z]; one runs to the bus stop, the other round the corner to the front crossing.
+const SUBWAY_RIDES = [
+  [[SUBWAY.x - .3, SUB_DEEP, SUBWAY.z - 8], [SUBWAY.x - .3, SUB_DEEP, SUB_FOOT], [SUBWAY.x - .3, P, SUB_MOUTH], [SUBWAY.x - .5, P, SUB_MOUTH + 1.4],
+    [15.3, P, SUB_MOUTH + 1.4], [15.3, P, -8.6], [16.9, P, -10.2]],
+  [[SUBWAY.x + .3, SUB_DEEP, SUBWAY.z - 8], [SUBWAY.x + .3, SUB_DEEP, SUB_FOOT], [SUBWAY.x + .3, P, SUB_MOUTH], [16.8, P, SUB_MOUTH + 2],
+    [16.7, P, 18.3], [-9.5, P, 18.3]]
+];
+// Where each rider is at `now`: the walks' pacing over the path's length, y included for the stairs.
+function riderPlacement(path, g, now) {
+  const legs = path.slice(1).map((b, i) => Math.hypot(b[0] - path[i][0], b[2] - path[i][2])), len = legs.reduce((a, b) => a + b, 0), loop = len * 2;
+  const pace = 1.5 + (g * 7 % 5) * .12, s = (now * .001 * pace + ((g * .53) % 1) * loop) % loop, outbound = s < len;
+  let d = outbound ? s : loop - s, i = 0;
+  while (i < legs.length - 1 && d > legs[i]) d -= legs[i++];
+  const a = path[i], b = path[i + 1], f = legs[i] ? d / legs[i] : 0, dir = outbound ? 1 : -1;
+  const hx = (b[0] - a[0]) / (legs[i] || 1) * dir, hz = (b[2] - a[2]) / (legs[i] || 1) * dir;
+  return { g, s, x: a[0] + (b[0] - a[0]) * f, y: a[1] + (b[1] - a[1]) * f, z: a[2] + (b[2] - a[2]) * f, facing: Math.sign(hx - hz) || .3, heading: { x: hx, z: hz } };
+}
 // Where each pavement walker is at `now`, shared with the 3D map like carPlacements.
 export function walkerPlacements(now) {
   const out = [];
@@ -962,6 +989,7 @@ export function walkerPlacements(now) {
         heading: { x: (x1 - x0) / len * (outbound ? 1 : -1), z: (z1 - z0) / len * (outbound ? 1 : -1) } });
     }
   });
+  SUBWAY_RIDES.forEach((path, k) => out.push(riderPlacement(path, WALK_BASE[WALKS.length] + k, now)));
   return out;
 }
 function drawWalkers(api, at) {
@@ -981,6 +1009,8 @@ export function townLayout() {
     buildings: BUILDINGS.map(([x1, z1, name]) => { const f = BUILDING_SPRITES[name]; return { x0: x1 - f.w, x1, z0: z1 - f.d, z1, h: f.h, wall: f.wall[0], roof: f.wall[1], model: buildingModel(name) }; }),
     trees: FAR_TREES.concat(NEAR_TREES).map(t => t.slice()), lamps: LAMPS.map(l => l.slice()),
     haze: { colour: HAZE.slice(), ramp: { west: HAZE_RAMP.west.slice(), east: HAZE_RAMP.east.slice(), north: HAZE_RAMP.north.slice(), south: HAZE_RAMP.south.slice() } },
-    sun: { x: SUN.x, z: SUN.z, reach: SUN_REACH }
+    sun: { x: SUN.x, z: SUN.z, reach: SUN_REACH },
+    // Openings through the pavement and the street floor under it, for sunken models (the subway well).
+    holes: [{ x0: SUBWAY.x - SUBWAY.hx, x1: SUBWAY.x + SUBWAY.hx, z0: SUBWAY.z - SUBWAY.hz, z1: SUBWAY.z + SUBWAY.hz }]
   };
 }
