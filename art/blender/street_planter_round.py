@@ -16,8 +16,9 @@ OLEAF = K.mat("OliveLeaf", "#5e7a44", .55, two_sided=True)
 OLIVE = K.mat("Olive", "#a7b04a", .4)
 
 leaf_me = bpy.data.meshes.new("OliveLeafMesh")
-bm = bmesh.new(); res = bmesh.ops.create_icosphere(bm, subdivisions=2, radius=1)
-for v in res["verts"]: v.co = Vector((v.co.x * .022, (v.co.y + 1) * .055, v.co.z * .006))
+# A narrow olive leaf card, 4 triangles with a raised midrib (it was an 80-triangle squashed sphere).
+bm = bmesh.new(); vs = [bm.verts.new(p) for p in ((0, 0, 0), (-.022, .05, 0), (0, .11, 0), (.022, .05, 0), (0, .05, .004))]
+for f in ((0, 4, 1), (1, 4, 2), (2, 4, 3), (3, 4, 0)): bm.faces.new([vs[i] for i in f])
 bm.to_mesh(leaf_me); bm.free(); leaf_me.materials.append(OLEAF)
 for p in leaf_me.polygons: p.use_smooth = True
 
