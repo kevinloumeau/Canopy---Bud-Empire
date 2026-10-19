@@ -1,4 +1,4 @@
-// The 3D map (the default for the sprite shop; ?render=2d keeps Canvas 2D). It draws the main shop's city block as a
+// The 3D map (the only map since the 2D one was removed on 2026-10-19). It draws the main shop's city block as a
 // Three.js scene through an orthographic camera matched pixel for pixel to the 2D map's project() (see camera.js), so
 // the game's pan, zoom, taps and DOM tags keep working unchanged. This phase is a grey-box: the plaza, sunken streets,
 // terraces, trees and lamps, the shop's three floors and walls, the stations, people and cars as simple solids, lit
