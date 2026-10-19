@@ -794,10 +794,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
         // its bottom centre) have loaded.
         layout.wallFaces=[{url:'sprites/shell/flat.storefront.png',x0:-10.65,z0:8.94,x1:-10.65,z1:LOUNGE_FRONT,y0:-.04,h:4.19,model:'storefront'},
           {url:'sprites/shell/flat.storefront.door.png',x0:-10.65,z0:12.05,x1:-10.65,z1:8.8,y0:-.04,h:4.2,model:'storefrontDoor'}];
-        layout.fixtures.push({key:'displayCase',file:'display_case.glb',x:10.05,y:0,z:8.7,scale:1.69},{key:'storefront',file:'storefront.glb',x:-10.65,y:0,z:(8.94+LOUNGE_FRONT)/2,scale:1.69},{key:'storefrontDoor',file:'storefront_door.glb',x:-10.65,y:0,z:(12.05+8.8)/2,scale:1.69,hide:['Canopy','CanopyEdge','CanopyEdgeSide','LampStem','LampShade','LampBulb']});
+        layout.fixtures.push({key:'displayCase',file:'display_case.glb',x:10.05,y:0,z:8.7,scale:1.69},{key:'storefront',file:'storefront.glb',x:-10.65,y:0,z:(8.94+LOUNGE_FRONT)/2,scale:1.69,glow:'SignCream'},{key:'storefrontDoor',file:'storefront_door.glb',x:-10.65,y:0,z:(12.05+8.8)/2,scale:1.69,hide:['Canopy','CanopyEdge','CanopyEdgeSide','LampStem','LampShade','LampBulb']});
         // The street door's striped awning and the neon leaf blade sign off its post (src/three/entrance.js): the door
         // opens between the storefront's last mullion (8.8) and the post (10.94..11.43), under the header (3.5..4.06).
-        layout.entrance={x:-10.65,z0:8.82,z1:10.92,header:3.5,top:3.88,front:3.3,reach:1.5,drop:.3,sign:{x0:-11.9,x1:-10.95,y0:2.05,y1:3.1,z:11.19}};
+        layout.entrance={x:-10.65,sign:{x0:-11.9,x1:-10.95,y0:2.05,y1:3.1,z:11.19}};
         var matX=10.7,matZ=-4.35,runW=(LOUNGE_CARPET_END-LOUNGE_FRONT)/LOUNGE_RUNNER_PIN.ratio,pin=LOUNGE_RUNNER_PIN;
         layout.decals=[{url:'sprites/shell/shell.mat.exit.png',image:[[0,0],[1,0],[0,1]],world:[[matX+.6,matZ+1.1],[matX+.6,matZ-1.1],[matX-.6,matZ+1.1]]},
           {url:'sprites/interior/lounge.carpet.runner.png',pixels:true,image:[pin.left,pin.bottom,pin.top],world:[[LOUNGE_DOOR.x-runW/2,LOUNGE_CARPET_END],[LOUNGE_DOOR.x+runW/2,LOUNGE_CARPET_END],[LOUNGE_DOOR.x-runW/2,LOUNGE_FRONT+.02]],show:'loungeOpen'}];

@@ -1,38 +1,19 @@
-// The sprite shop's entrance (Kevin, 2026-10-19): a striped fabric awning over the street door, and a green neon leaf
-// on a blade sign that sticks out from the door frame's post. The Blender doorway's flat corner canopy and its lamp are
-// hidden in its place (layout.fixtures `hide`). Positions come from layout.entrance (main.js): the facade's outer face
-// x, the door opening's z span, the post's z and the header's height.
+// The sprite shop's entrance (Kevin, 2026-10-19): a neon leaf OPEN blade sign that sticks out from the street door
+// frame's post. The Blender doorway's flat corner canopy and its lamp are hidden (layout.fixtures `hide`); Kevin tried
+// a striped awning there and dropped it. Positions come from layout.entrance (main.js): the facade's outer face x and
+// the sign's box.
 import * as THREE from 'three';
 
-const GREEN = '#1f6b47', CREAM = '#f1e7cc', BRASS = '#d0a54e';
+const GREEN = '#1f6b47', BRASS = '#d0a54e';
 
 export function buildEntrance(world, layout, { span }) {
   const e = layout.entrance;
   if (!e) return null;
   const group = new THREE.Group();
   world.add(group);
-  const wall = e.x, out = e.x - e.reach;
+  const wall = e.x;
 
-  // The awning's fabric: stripes running down the slope, a pair every ~0.45 units across the door.
-  const stripes = document.createElement('canvas'); stripes.width = 64; stripes.height = 8;
-  const sc = stripes.getContext('2d');
-  sc.fillStyle = GREEN; sc.fillRect(0, 0, 64, 8); sc.fillStyle = CREAM; sc.fillRect(32, 0, 32, 8);
-  const stripeTexture = new THREE.CanvasTexture(stripes); stripeTexture.colorSpace = THREE.SRGBColorSpace;
-  stripeTexture.wrapS = THREE.RepeatWrapping; stripeTexture.magFilter = THREE.NearestFilter;
-  const pairs = Math.max(2, Math.round((e.z1 - e.z0) / .45));
-  const fabric = new THREE.MeshLambertMaterial({ map: stripeTexture, side: THREE.DoubleSide });
-  // The valance: the same stripes with a scalloped hem cut out of its lower edge, one scallop per stripe.
-  const hem = document.createElement('canvas'); hem.width = 64; hem.height = 32;
-  const hc = hem.getContext('2d');
-  hc.fillStyle = GREEN; hc.fillRect(0, 0, 32, 32); hc.fillStyle = CREAM; hc.fillRect(32, 0, 32, 32);
-  hc.globalCompositeOperation = 'destination-out';
-  [16, 48].forEach(cx => { hc.beginPath(); hc.ellipse(cx, 34, 15, 12, 0, Math.PI, 0); hc.lineTo(cx + 16, 32); hc.lineTo(cx - 16, 32); hc.fill(); });
-  hc.fillRect(0, 31, 64, 1);
-  const hemTexture = new THREE.CanvasTexture(hem); hemTexture.colorSpace = THREE.SRGBColorSpace;
-  hemTexture.wrapS = THREE.RepeatWrapping; hemTexture.magFilter = THREE.NearestFilter;
-  const valance = new THREE.MeshLambertMaterial({ map: hemTexture, side: THREE.DoubleSide, alphaTest: .5 });
-
-  // A mesh from explicit corners in map units (the world group stretches heights), u across the door.
+  // A mesh from explicit corners in map units (the world group stretches heights).
   function quad(corners, uvs, mat) {
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(corners.flat(), 3));
@@ -43,26 +24,6 @@ export function buildEntrance(world, layout, { span }) {
     group.add(m);
     return m;
   }
-  const { z0, z1, top, front, drop } = e;
-  quad([[wall, top, z0], [wall, top, z1], [out, front, z1], [out, front, z0]], [[0, 1], [pairs, 1], [pairs, 0], [0, 0]], fabric);
-  quad([[out, front, z0], [out, front, z1], [out, front - drop, z1], [out, front - drop, z0]], [[0, 1], [pairs, 1], [pairs, 0], [0, 0]], valance);
-  // Plain cheeks at both ends, in the green.
-  const cheek = new THREE.MeshLambertMaterial({ color: GREEN, side: THREE.DoubleSide });
-  [z0, z1].forEach(z => quad([[wall, top, z], [out, front, z], [out, front - drop, z]], [[0, 0], [0, 0], [0, 0]], cheek));
-  // It hangs from a green fascia board standing on the door frame's header, so its back edge meets something solid
-  // (Kevin, 2026-10-19: the first try floated above the frame).
-  span(group, wall - .1, wall + .02, e.header, top + .08, z0 - .04, z1 + .04, GREEN);
-  span(group, wall - .12, wall + .03, top + .08, top + .12, z0 - .05, z1 + .05, BRASS, { cast: false });
-  // Its frame: a brass bar along the front, and two brass struts from the header's face up to it.
-  span(group, out - .03, out + .02, front - .05, front, z0, z1, BRASS, { cast: false });
-  const strut = new THREE.MeshLambertMaterial({ color: BRASS });
-  [z0 + .08, z1 - .08].forEach(z => {
-    const from = new THREE.Vector3(wall - .1, e.header - .32, z), to = new THREE.Vector3(out + .02, front - .05, z), dir = to.clone().sub(from);
-    const rod = new THREE.Mesh(new THREE.CylinderGeometry(.022, .022, dir.length(), 6), strut);
-    rod.position.copy(from).add(to).multiplyScalar(.5); rod.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
-    rod.castShadow = true; group.add(rod);
-  });
-
   // The neon leaf: a blade sign hung from a green bracket off the door post, its faces toward the street either way.
   const s = e.sign;
   span(group, s.x0, wall, s.y1 + .08, s.y1 + .16, s.z - .05, s.z + .05, GREEN);

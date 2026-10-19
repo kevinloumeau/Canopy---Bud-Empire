@@ -160,12 +160,14 @@ export function createMap3D(canvas, layout) {
   }
   // Fixtures (the online orders deck) are placed by their own origin at a fixed Blender-to-map scale rather than
   // fitted to a sprite, since their footprint is irregular; `key` names the frame flag that shows them.
-  const fixtures = {};
+  const fixtures = {}, fixtureGlows = [];
   (layout.fixtures || []).forEach(f => {
     loader.load(layout.modelBase + f.file, gltf => {
       prepare(gltf.scene);
       // Parts a fixture's model has that the map draws differently (f.hide, by object name).
       (f.hide || []).forEach(name => { const o = gltf.scene.getObjectByName(name); if (o) o.visible = false; });
+      // Backlit panels (f.glow names the material): a soft warm light from behind, faint by day and fuller at night.
+      if (f.glow) gltf.scene.traverse(o => { const m = o.isMesh && o.material; if (m && m.name === f.glow && !fixtureGlows.includes(m)) { m.emissive.set('#ffe3b0'); fixtureGlows.push(m); } });
       const holder = new THREE.Group();
       holder.add(gltf.scene);
       holder.scale.set(f.scale, f.scale / HEIGHT_SCALE, f.scale);
@@ -541,6 +543,7 @@ export function createMap3D(canvas, layout) {
     if (people.instanceColor) people.instanceColor.needsUpdate = true;
 
     placeProps(frame.props, night);
+    fixtureGlows.forEach(m => { m.emissiveIntensity = .16 + night * .7; });
     lampStandIns.forEach(m => { m.visible = !propSources['street_lamp.glb']; });
     const modelled = carsModelled();
     frame.cars.forEach((c, i) => {
