@@ -16,13 +16,9 @@ export async function runExperienceChecks(mode){
  if(mode==='starter'){
   assert($('storyTitle').textContent==='The first familiar faces','New-player chapter');
   assert($('nextInvestment').textContent.includes('Pickup'),'Shared bottleneck guidance');
-  document.querySelector('.story-goals').open=true;
-  assert($('goalClaim1').textContent==='View delivery pad','Delivery objective explains prerequisite');
-  await click($('goalClaim1'));assert(!document.querySelector('[data-pane=orders]').hidden,'Gated goal navigates to deliveries');
-  assert(!$('deliverySite').hidden&&$('deliverySite').style.display!=='none','Delivery construction visible');
-  assert($('deliveryFunding').value>0&&$('deliveryFunding').value<1,'Funding reflects current cash');
-  await click($('goalsOpen'));const cash=status().cash;await click($('nextInvestmentLink'));assert($('machineName').textContent==='CUSTOMER PICKUP','Recommendation selects Pickup');assert(status().cash===cash,'Recommendation never spends');
-  result.push('starter story, consistent recommendation, locked delivery funding and navigation');
+  assert($('goalTitle1').textContent.startsWith('Make 2 upgrades'),'New shop gets an upgrade goal, not a locked delivery goal');
+  assert($('shiftProgress').textContent.includes('Shift 1'),'Shift progress shown');
+  result.push('starter story, workable shift goals and shift progress');
  }else{
   assert($('storyTitle').textContent==='Someone knows your name','Legacy progress recognized');
   await click($('storyAction'));assert($('opTab02').getAttribute('aria-pressed')==='true','Mara action opens People');

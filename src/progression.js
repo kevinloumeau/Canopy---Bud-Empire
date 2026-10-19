@@ -61,7 +61,7 @@ export function migrateProgression(raw, now=Date.now()) {
     day:num(r.daily?.day,0), streak:num(r.daily?.streak,0,7)
   }, stores:STORES.map((_,i)=>({level:num(r.stores?.[i]?.level,0,10),projects:[0,1,2].map(j=>r.stores?.[i]?.projects?.[j]===true), manager:MANAGERS.some(m=>m.id===r.stores?.[i]?.manager)&&!(Array.isArray(r.stores)?r.stores:[]).slice(0,i).some(s=>s?.manager===r.stores?.[i]?.manager)?r.stores[i].manager:'none', featured:PRODUCTS.includes(r.stores?.[i]?.featured)?r.stores[i].featured:'everyday', loyalty:num(r.stores?.[i]?.loyalty,0,1000), served:num(r.stores?.[i]?.served), serviceClock:num(r.stores?.[i]?.serviceClock,0,11)})),
   event:{slot:num(event.slot,0), joined:event.joined===true, progress:num(event.progress), claimed:event.claimed===true}, season:migrateSeason(r.season), badges:(Array.isArray(r.badges)?r.badges:[]).filter(b=>typeof b==='string'&&BADGE_ID.test(b)).filter((b,i,a)=>a.indexOf(b)===i).slice(0,200),
-  trophies:num(r.trophies), rewards:[0,1,2].map(i=>r.rewards?.[i]===true), reputation:num(r.reputation,0,1000), counters:Object.fromEntries(['pickup','online','invest','revenue'].map(k=>[k,num(r.counters?.[k])])), goals:[0,1,2].map(i=>({round:num(r.goals?.[i]?.round),start:num(r.goals?.[i]?.start)})), goalsCompleted:num(r.goalsCompleted), returnReport:r.returnReport&&Array.isArray(r.returnReport.earnings)?{seconds:num(r.returnReport.seconds),earnings:[...Array(STORES.length+1)].map((_,i)=>num(r.returnReport.earnings[i])),goals:num(r.returnReport.goals,0,3)}:null};
+  trophies:num(r.trophies), rewards:[0,1,2].map(i=>r.rewards?.[i]===true), reputation:num(r.reputation,0,1000), counters:Object.fromEntries(GOAL_KINDS.map(k=>[k,num(r.counters?.[k])])), goals:[0,1,2].map(i=>({round:num(r.goals?.[i]?.round),start:num(r.goals?.[i]?.start),kind:GOAL_KINDS.includes(r.goals?.[i]?.kind)?r.goals[i].kind:legacyGoalKind(i,num(r.goals?.[i]?.round))})), goalsCompleted:num(r.goalsCompleted), returnReport:r.returnReport&&Array.isArray(r.returnReport.earnings)?{seconds:num(r.returnReport.seconds),earnings:[...Array(STORES.length+1)].map((_,i)=>num(r.returnReport.earnings[i])),goals:num(r.returnReport.goals,0,3)}:null};
 }
 export function selectedStore(p) {const i=p.activeStore;return Number.isInteger(i)&&i>0&&i<=STORES.length&&p.stores[i-1].level>0?i:0;}
 export function selectStore(p,i) {if(!Number.isInteger(i)||i<0||i>STORES.length||(i>0&&!p.stores[i-1].level))return false;p.activeStore=i;return true;}
@@ -178,22 +178,52 @@ export function dispatchBulk(state,now=Date.now()){
   recordEvent(state.empire,'online',1,now);recordGoal(state.empire,'revenue',reward);return reward;
 }
 export function recordGoal(p,kind,count){if(Object.prototype.hasOwnProperty.call(p.counters,kind)&&Number.isFinite(count)&&count>0)p.counters[kind]=Math.min(Number.MAX_SAFE_INTEGER,p.counters[kind]+count);}
+// Shift goals: three slots, one per kind of work. The floor (customers and big spenders), the shop's growth (upgrades,
+// then deliveries and branches once they exist) and the till. A goal's kind is fixed when its round starts, chosen from
+// what the shop can do right now, so a new shop never waits on a delivery pad it has not built. Every three goals
+// collected close a shift and pay a shift bonus on top.
+export const GOAL_KINDS=['pickup','spender','upgrade','online','invest','revenue'];
+const GOAL_REWARDS={pickup:150,spender:200,upgrade:200,online:250,invest:300,revenue:200};
+export const SHIFT_LENGTH=3;
+// Older saves stored no kind; their slots ran pickup, deliveries, then revenue alternating with branch work.
+function legacyGoalKind(i,round){return i===0?'pickup':i===1?'online':round%2===0?'revenue':'invest';}
+function goalOptions(state,i){
+  const p=state.empire;
+  if(i===0)return ['pickup','pickup','spender'];
+  if(i===2)return ['revenue'];
+  const options=['upgrade'];
+  if(state.autoDrone?.owned||p.stores[2].level>=2)options.push('online');
+  if(p.stores.some(s=>s.level)&&!p.stores.every(s=>s.level===10&&s.projects.every(Boolean)))options.push('invest');
+  return options;
+}
+function startGoal(state,i){const p=state.empire,g=p.goals[i],options=goalOptions(state,i);g.kind=options[g.round%options.length];g.start=p.counters[g.kind];}
+// A goal the shop cannot work on (an old save's delivery goal before the pad is built) is swapped while it has no progress.
+export function settleGoals(state){
+  let changed=false;
+  [0,1,2].forEach(i=>{const p=state.empire,g=p.goals[i];if(!goalOptions(state,i).includes(g.kind)&&p.counters[g.kind]<=g.start){startGoal(state,i);changed=true;}});
+  return changed;
+}
 export function goalStatus(p,i,scale=1){
-  const g=p.goals[i],kind=i===0?'pickup':i===1?'online':g.round%2===0?'revenue':'invest';
+  const g=p.goals[i],kind=g.kind||legacyGoalKind(i,g.round);
   // Targets cycle for variety but grow with income (scale) so goals keep demanding more as the empire grows, not just
   // cycling forever at starter size. Counts grow with the log of income; the revenue target grows with income itself
   // (scale is income per second over four, so the target is 2–4 minutes of takings) and pays back a fraction of it,
-  // otherwise a late-game shop earns the target in seconds and collects more than it earned.
+  // otherwise a late-game shop earns the target in seconds and collects more than it earned. Upgrades get dearer on
+  // their own and big spenders arrive at their own pace, so those counts stay small.
   const linear=Math.max(1,Number.isFinite(scale)?scale:1),growth=1+Math.log2(linear);
-  const base=kind==='pickup'?10+(g.round%3)*5:kind==='online'?2:kind==='invest'?1:500+(g.round%3)*250;
-  const target=Math.max(1,Math.round(base*(kind==='revenue'?linear:growth)));
-  const reward=scaledReward(kind==='pickup'?150:kind==='online'?250:kind==='revenue'?200:300,scale);
-  return {kind,target,reward,progress:Math.min(target,Math.max(0,p.counters[kind]-g.start)),title:kind==='pickup'?'Serve '+abbr(target)+' customers':kind==='online'?'Complete '+abbr(target)+' deliveries':kind==='invest'?(target>1?'Improve '+target+' branches or projects':'Improve a branch or build a project'):'Earn $'+abbr(target)};
+  const base={pickup:10+(g.round%3)*5,spender:1+g.round%2,upgrade:2+g.round%3,online:2,invest:1,revenue:500+(g.round%3)*250}[kind];
+  const target=Math.max(1,Math.round(kind==='revenue'?base*linear:kind==='spender'||kind==='upgrade'?base:base*growth));
+  const title={pickup:'Serve '+abbr(target)+' customers',spender:target>1?'Welcome '+target+' big spenders':'Welcome a big spender',upgrade:'Make '+target+' upgrades',
+    online:'Complete '+abbr(target)+' deliveries',invest:target>1?'Improve '+target+' branches or projects':'Improve a branch or build a project',revenue:'Earn $'+abbr(target)}[kind];
+  return {kind,target,reward:scaledReward(GOAL_REWARDS[kind],scale),progress:Math.min(target,Math.max(0,p.counters[kind]-g.start)),title,hint:kind==='spender'?'Tap the gold tag when one walks in':''};
 }
+export function shiftStatus(p,scale=1){return {number:Math.floor(p.goalsCompleted/SHIFT_LENGTH)+1,done:p.goalsCompleted%SHIFT_LENGTH,bonus:scaledReward(450,scale)};}
+// Pays the goal and, when it is the shift's last, the shift bonus; returns everything paid.
 export function claimGoal(state,i,scale=1){
   if(!Number.isInteger(i)||i<0||i>2)return 0;
   const p=state.empire,g=goalStatus(p,i,scale);if(g.progress<g.target)return 0;
-  state.money+=g.reward;p.goalsCompleted++;p.goals[i].round++;if(i===2&&p.goals[i].round%2===1&&(!p.stores.some(s=>s.level)||p.stores.every(s=>s.level===10&&s.projects.every(Boolean))))p.goals[i].round++;p.goals[i].start=p.counters[goalStatus(p,i).kind];return g.reward;
+  const bonus=p.goalsCompleted%SHIFT_LENGTH===SHIFT_LENGTH-1?shiftStatus(p,scale).bonus:0;
+  state.money+=g.reward+bonus;p.goalsCompleted++;p.goals[i].round++;startGoal(state,i);return g.reward+bonus;
 }
 export function affordableImprovement(state,additional=[]){
   const p=state.empire,options=additional.filter(o=>Number.isFinite(o.cost)&&o.cost>=0);
