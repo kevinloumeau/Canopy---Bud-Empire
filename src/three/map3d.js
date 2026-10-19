@@ -177,7 +177,7 @@ export function createMap3D(canvas, layout) {
   if (rooftop) rooftop.loadModels(loader, layout.modelBase);
   // Fixtures (the online orders deck) are placed by their own origin at a fixed Blender-to-map scale rather than
   // fitted to a sprite, since their footprint is irregular; `key` names the frame flag that shows them.
-  const fixtures = {}, fixtureGlows = [];
+  const fixtures = {}, fixtureGlows = [], fixtureScreens = [];
   (layout.fixtures || []).forEach(f => {
     loader.load(layout.modelBase + f.file, gltf => {
       prepare(gltf.scene);
@@ -185,6 +185,8 @@ export function createMap3D(canvas, layout) {
       (f.hide || []).forEach(name => { const o = gltf.scene.getObjectByName(name); if (o) o.visible = false; });
       // Backlit panels (f.glow names the material): a soft warm light from behind, faint by day and fuller at night.
       if (f.glow) gltf.scene.traverse(o => { const m = o.isMesh && o.material; if (m && m.name === f.glow && !fixtureGlows.includes(m)) { m.emissive.set('#ffe3b0'); fixtureGlows.push(m); } });
+      // Screens (f.screen names the material): the picture itself glows, brighter after dark.
+      if (f.screen) gltf.scene.traverse(o => { const m = o.isMesh && o.material; if (m && m.name === f.screen && !fixtureScreens.includes(m)) { m.emissive.set('#ffffff'); m.emissiveMap = m.map; m.needsUpdate = true; fixtureScreens.push(m); } });
       const holder = new THREE.Group();
       holder.add(gltf.scene);
       holder.scale.set(f.scale, f.scale / HEIGHT_SCALE, f.scale);
@@ -608,6 +610,7 @@ export function createMap3D(canvas, layout) {
 
     placeProps(frame.props, night);
     fixtureGlows.forEach(m => { m.emissiveIntensity = .16 + night * .7; });
+    fixtureScreens.forEach(m => { m.emissiveIntensity = .35 + night * .55; });
     lampStandIns.forEach(m => { m.visible = !propSources['street_lamp.glb']; });
     const modelled = carsModelled();
     frame.cars.forEach((c, i) => {
