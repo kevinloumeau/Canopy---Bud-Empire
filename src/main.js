@@ -1,4 +1,4 @@
-import {migrateOrderCounters,orderCounterPositions,COUNTER_SHIFT,PICKUP_X,orderCounterCost,buyOrderCounter,ORDER_QUEUE_GATE,assignOrderCounter,atOrderCounter,orderAvailability} from './order-counters.js';
+import {migrateOrderCounters,orderCounterPositions,COUNTER_SHIFT,PICKUP_X,orderCounterCost,buyOrderCounter,ORDER_QUEUE_GATE,assignOrderCounter,atOrderCounter,orderAvailability,pickupPlaces} from './order-counters.js';
 import {LOUNGE_TIERS,LOUNGE_MAX,migrateLounge,loungeTier,loungeUpgradeCost,loungeSeats,loungeSessionSeconds,buyLoungeTier,wantsLounge,loungeAdmission,loungeTake,loungeRate,loungeCurrentRate,migrateLoungeHost,buyLoungeLift,LOUNGE_LIFT_COST,LOUNGE_LIFT_SPEED,loungeHostSpeed,loungeHostCost} from './lounge.js';
 import {migrateShopPlay,picks as momentPicks,createMoment,judgeChoice,tipFor,recordServed,tickShift,operationsAlerts,mountShopPlay} from './shop-play.js';
 import {migrateJourney,advanceJourney,CHAPTERS} from './journey.js';
@@ -374,13 +374,15 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var LOUNGE_CARPET_END=2.6;
   // The 3D map's rooftop lounge (src/three/rooftop.js): a deck stepped back from the top floor like the floors below
   // it (its front 3.1 behind the top floor's, its rear over the back pavement on steel columns), one storey up, reached by a glass elevator
-  // standing in the old lounge room behind the curtain, its bridge landing at the deck's left edge. Guests ride up
-  // (`loungeRide` seconds after the curtain), spend their session at a spot on the roof, and ride down for the last
-  // LIFT_DOWN seconds before stepping out of the back door. The spots fill in tier order: Speakeasy round the fire
+  // standing in the old lounge room behind the curtain, its bridge landing at the deck's left edge. Each cab carries
+  // one guest at a time (tickLifts): a guest behind the curtain waits for a cab, rides up, walks to a spot for their
+  // session, walks back to the landing, waits for a cab down and steps out of the back door. The spots fill in tier order: Speakeasy round the fire
   // table, Dab bar at the stools, Vinyl nights on the dance floor, Terrace at the parasol tables.
   // The 2D map keeps its hidden lounge.
-  var liftY=0,liftY2=0;
-  var ROOFTOP={x0:-6.5,x1:6.5,z0:-9.6,z1:-3.4,y:14.1,lift:{x:-9.9,z:-5,w:1.4,d:1.4},lift2:{z:-6.6}},LIFT_UP=3.6,LIFT_DOWN=3.2,ROOF_WALK=3;
+  var liftY=0,liftY2=0,liftAsks=0;
+  // The cabs: where each one is (0 ground, 1 roof) and the trip it is on, empty to fetch a guest or carrying them.
+  var lifts=[{y:0,trip:null},{y:0,trip:null}];
+  var ROOFTOP={x0:-6.5,x1:6.5,z0:-9.6,z1:-3.4,y:14.1,lift:{x:-9.9,z:-5,w:1.4,d:1.4},lift2:{z:-6.6}},LIFT_TRIP=3,LIFT_SEATS=3,ROOF_WALK=3;
   var ROOFTOP_SPOTS=[[-3.9,-6.7,.3],[-1.3,-6.7,-.3],[-2.6,-6.25,.3],[-1,-7.85,-.3],[2.7,-7.45,-.3],[4.7,-7.45,-.3],[2.5,-6,.3],[3.5,-5.25,-.3],[2.2,-4.85,.3],[-4.5,-5,.3],[-2.9,-5,-.3],[-1.7,-5,.3],[-.1,-5,-.3],[-2.3,-3.95,.3]];
   // The runner render's top face in sprite px: its near-left, near-right and far-left corners, and its length over width.
   var LOUNGE_RUNNER_PIN={left:[0,274],bottom:[146,360],top:[474,0],ratio:3.25};
@@ -391,14 +393,45 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function loungeSpareJars(){return state.stock[3]-reservedJars()}
   // A guest steps through the gap in the drapes and fades as they go (`loungeFade` 1 → 0 over the last half unit),
   // and fades back in at the back door on the way out.
+  // Every guest keeps their own pace: from 0.6 to 1.4 times the session, spread evenly by id so the average (and the
+  // lounge's income) holds while arrivals and departures stagger.
+  function loungeStayJitter(id){var f=((Number(id)||0)*0.6180339887)%1;return .6+f*.8}
   function enterLounge(c){
-    var take=loungeTake(state.lounge,flowerValue(strainFor(c))*specialFactor('lounge'));
-    state.stock[3]-=1;add(take.total);state.loungeSessions++;state.loungeEarned+=take.total;state.shopPlay.shift.earned+=take.total;c.loungeLeft=loungeSessionSeconds(state.lounge,state.loungeStaff,state.loungeLift);c.phase='lounge';c.walking=false;c.loungeTake=take.total;
-    c.loungeFade=1;c.fadeFromZ=c.z;c.facing=-.3;c.roofWalk=0;
-    // Short sessions (a trained host turns tables fast) squeeze the ride and the walk so the guest still gets a sit down.
-    c.rideK=Math.min(1,c.loungeLeft*.75/(.8+LIFT_UP+LIFT_DOWN+2*ROOF_WALK));c.loungeRide=LIFT_UP*c.rideK;
+    var take=loungeTake(state.lounge,flowerValue(strainFor(c))*specialFactor('lounge'),state.loungeStaff,state.loungeLift);
+    state.stock[3]-=1;add(take.total);state.loungeSessions++;state.loungeEarned+=take.total;state.shopPlay.shift.earned+=take.total;c.loungeLeft=loungeSessionSeconds(state.lounge)*loungeStayJitter(c.id);c.phase='lounge';c.walking=false;c.loungeTake=take.total;
+    c.loungeFade=1;c.fadeFromZ=c.z;c.facing=-.3;c.roofWalk=0;c.walkBack=0;c.lift=null;c.liftShaft=null;c.shaft=0;
     recordEvent(state.empire,'pickup',1);playSound('coin',state.sound);
     if(!motionPreference.matches)tickets.push({x:LOUNGE_DOOR.x,y:2.1,z:LOUNGE_DOOR.z,life:1,text:fmt(take.cover)});
+  }
+  function askLift(c,wait){c.lift=wait;c.liftAsk=++liftAsks;c.liftShaft=null}
+  // Each idle cab takes the guest who has waited longest, travelling empty to their floor first if it has to.
+  function tickLifts(dt){
+    var smooth=function(t){return t*t*t*(t*(t*6-15)+10)};
+    lifts.forEach(function(s,i){
+      if(i>0&&!state.loungeLift)return;
+      if(s.trip){
+        var trip=s.trip;trip.t=Math.min(1,trip.t+dt/LIFT_TRIP);s.y=trip.from+(trip.to-trip.from)*smooth(trip.t);
+        if(trip.t<1)return;
+        s.y=trip.to;s.trip=null;
+        if(trip.empty){board(s,i,trip.c);return}
+        trip.riders.forEach(function(c){if(c.phase!=='lounge')return;if(c.lift==='up'){c.lift='roof';c.roofWalk=0}else{c.lift=null;leaveLounge(c)}});
+        return;
+      }
+      var next=null;
+      customers.forEach(function(q){if(liftWaiting(q,i)&&(!next||q.liftAsk<next.liftAsk))next=q});
+      if(!next)return;
+      next.liftShaft=i;var floor=next.lift==='waitUp'?0:1;
+      if(Math.abs(s.y-floor)<.001)board(s,i,next);else s.trip={from:s.y,to:floor,t:0,c:next,empty:true};
+    });
+  }
+  // A guest waiting to go down only takes the cab they came up in.
+  function liftWaiting(q,i){return q.phase==='lounge'&&q.liftShaft===null&&(q.lift==='waitUp'||(q.lift==='waitDown'&&(q.shaft||0)===i))}
+  // The cab takes its guest and up to two more waiting on the same floor, then sets off.
+  function board(s,i,c){
+    var wait=c.lift,up=wait==='waitUp',riders=[c];
+    customers.filter(function(q){return q!==c&&q.lift===wait&&liftWaiting(q,i)}).sort(function(a,b){return a.liftAsk-b.liftAsk}).slice(0,LIFT_SEATS-1).forEach(function(q){riders.push(q)});
+    riders.forEach(function(q,k){q.liftShaft=i;q.lift=up?'up':'down';q.cabSlot=k;if(up)q.shaft=i});
+    s.trip={from:up?0:1,to:up?1:0,t:0,riders:riders,empty:false};
   }
   function leaveLounge(c){
     c.phase='leaving';c.t=0;c.routeKind='exit';c.x=LOUNGE_EXIT.x;c.z=LOUNGE_EXIT.z;c.renderX=c.x;c.renderZ=c.z;c.facing=.6;c.loungeFadeIn=0;
@@ -410,11 +443,12 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     customers.forEach(function(c){
       if(c.phase==='lounge'){
         if(c.loungeFade>0){c.loungeFade=Math.max(0,c.loungeFade-dt/.8);c.z=c.fadeFromZ+(LOUNGE_FRONT-.2-c.fadeFromZ)*(1-c.loungeFade);c.x=LOUNGE_DOOR.x;c.walking=c.loungeFade>0}
-        else if(c.loungeRide>0)c.loungeRide=Math.max(0,c.loungeRide-dt);
-        else c.roofWalk=Math.min(1,(c.roofWalk||0)+dt/(ROOF_WALK*(c.rideK||1)));
-        c.loungeLeft-=dt;if(c.loungeLeft<=0)leaveLounge(c);
+        else if(!c.lift)askLift(c,'waitUp');
+        else if(c.lift==='roof'){c.roofWalk=Math.min(1,c.roofWalk+dt/ROOF_WALK);c.loungeLeft-=dt;if(c.loungeLeft<=0){c.lift='back';c.walkBack=0}}
+        else if(c.lift==='back'){c.walkBack=Math.min(1,c.walkBack+dt/ROOF_WALK);if(c.walkBack>=1)askLift(c,'waitDown')}
       }else if(c.loungeFadeIn!==undefined&&c.loungeFadeIn<1)c.loungeFadeIn=Math.min(1,c.loungeFadeIn+dt/.3);
     });
+    tickLifts(dt);
     // The rope: the first guest waiting at the curtain goes in as soon as a seat and a jar are free.
     var waiting=loungeWaiting();
     if(waiting.length&&loungeAdmission(state.lounge,loungeSeated(),loungeSpareJars()).admit)enterLounge(waiting[0]);
@@ -624,7 +658,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function rawSecurityDuration(level){return .9/((1+level*.3)*(1+state.scannerLevel*.12))}
   function securityDuration(){return Math.max(economy.ID_CHECK_FLOOR,rawSecurityDuration(state.idStaff))}
   function arrivalInterval(){return (atmosphere(state.empire.network).night?1.2:.9)/(1+state.trafficLevel*.15)/formatFactor('demand')/strains.trafficFactor(menuStrains(),state.strainTrend.index)/strains.buzzFactor(state.vipBuzz)/(1+state.signLevel*.04)/specialFactor('traffic')}
-  function pickupLimit(){return 4+state.pickupLevel*2}
+  // The waiting-area upgrade's places, capped at the spots the pickup line's route actually holds.
+  function pickupPromised(){return 4+state.pickupLevel*2}
+  function pickupLimit(){return pickupPlaces(pickupPromised(),routeLength(queueRoute(true)),queueGap(false))}
+  function pickupLineFull(){return customers.filter(function(c){return c.ordered&&!c.bag}).length>=pickupLimit()}
   function readyCapacity(){return economy.readyCapacity(state.readyLevel,state.lines)}
   function componentCost(i){var L=state[COMPONENTS[i].key];return Math.round(COMPONENTS[i].base*Math.pow(1.8,Math.min(L,8))*Math.pow(2.15,Math.max(0,L-8)))}
   function componentUnlocked(i){return COMPONENTS[i].key!=='kioskSpeedLevel'||state.kiosk}
@@ -745,10 +782,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       layout.floors=[{y:0,x:.75,z:2.475,w:24.5,d:18.95},{y:4.7,z:-2.95,w:18,d:7.4},{y:9.4,z:-3.6,w:13,d:6.6}];layout.marquee={x:MARQUEE.x,zFront:MARQUEE.zFront,zRear:MARQUEE.zRear,y0:MARQUEE.y0,y1:MARQUEE.y1,top:MARQUEE.top,bottom:MARQUEE.bottom};
       // Blender models (art/blender/, exported to public/models/) by station index, sized from the tier 3 sprite they replace.
       layout.modelBase=new URL('models/',document.baseURI).href;
-      // Keyed "station.tier"; a tier without its own model shows the tier 3 one. Each is sized to its tier's sprite.
+      // Keyed "station.look" (economy.stationLook: Lv 1, 10, 30, 50, 75); a look without its own model shows the tier 3 one. Each is sized to its tier's sprite.
       layout.stationModels={'0.1':'seeds_bench_tier1.glb','0.2':'seeds_bench_tier2.glb','0.3':'seeds_bench.glb','1.1':'grow_bench_tier1.glb','1.2':'grow_bench_tier2.glb','1.3':'grow_bench.glb','2.1':'harvest_bench_tier1.glb','2.2':'harvest_bench_tier2.glb','2.3':'harvest_bench.glb',
         '3.1':'pack_bench_tier1.glb','3.2':'pack_bench_tier2.glb','3.3':'pack_bench.glb','4.1':'order_desk_tier1.glb','4.2':'order_desk_tier2.glb','4.3':'order_desk.glb','5.1':'pickup_desk_tier1.glb','5.2':'pickup_desk_tier2.glb','5.3':'pickup_desk.glb','6.1':'id_desk_tier1.glb','6.2':'id_desk_tier2.glb','6.3':'id_desk.glb'};
-      layout.stationModelSize={};for(var key in layout.stationModels)layout.stationModelSize[key]=stationSpriteSize(+key.split('.')[0],+key.split('.')[1]);layout.stationModelSize['4.3']={w:2.2,ox:0};
+      stationModelFiles=layout.stationModels;layout.stationModelSize={};for(var key in layout.stationModels)layout.stationModelSize[key]=stationSpriteSize(+key.split('.')[0],+key.split('.')[1]);layout.stationModelSize['4.3']={w:2.2,ox:0};
       // The lower order desks keep their sprites' size against tier 3's.
       [1,2].forEach(function(t){layout.stationModelSize['4.'+t]={w:2.2*stationSpriteSize(4,t).w/stationSpriteSize(4,3).w,ox:0}});
       // The production line from the 2D map's own routes, so both maps carry the same tubes, belts and cargo rhythm.
@@ -780,7 +817,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
         // its bottom centre) have loaded.
         layout.wallFaces=[{url:'sprites/shell/flat.storefront.png',x0:-10.65,z0:8.94,x1:-10.65,z1:LOUNGE_FRONT,y0:-.04,h:4.19,model:'storefront'},
           {url:'sprites/shell/flat.storefront.door.png',x0:-10.65,z0:12.05,x1:-10.65,z1:8.8,y0:-.04,h:4.2,model:'storefrontDoor'}];
-        layout.fixtures.push({key:'displayCase',file:'display_case.glb',x:10.05,y:0,z:8.7,scale:1.69},{key:'storefront',file:'storefront.glb',x:-10.65,y:0,z:(8.94+LOUNGE_FRONT)/2,scale:1.69,glow:'SignCream'},{key:'storefrontDoor',file:'storefront_door.glb',x:-10.65,y:0,z:(12.05+8.8)/2,scale:1.69,hide:['Canopy','CanopyEdge','CanopyEdgeSide','LampStem','LampShade','LampBulb']});
+        layout.fixtures.push({key:'storefront',file:'storefront.glb',x:-10.65,y:0,z:(8.94+LOUNGE_FRONT)/2,scale:1.69,glow:'SignCream'},{key:'storefrontDoor',file:'storefront_door.glb',x:-10.65,y:0,z:(12.05+8.8)/2,scale:1.69,hide:['Canopy','CanopyEdge','CanopyEdgeSide','LampStem','LampShade','LampBulb']});
         // The street door's striped awning and the neon leaf blade sign off its post (src/three/entrance.js): the door
         // opens between the storefront's last mullion (8.8) and the post (10.94..11.43), under the header (3.5..4.06).
         layout.entrance={x:-10.65,sign:{x0:-11.9,x1:-10.95,y0:2.05,y1:3.1,z:11.19}};
@@ -823,6 +860,13 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // clear of the pots, watering along the row.
   var STAFF_SPOTS={0:{dx:-.2,dz:-1.4,front:false,facing:1},1:{dx:-2.85,dz:-.25,front:false,facing:1},2:{dx:-.9,dz:-1.4,front:false,facing:-1},3:{dx:-.3,dz:-1.4,front:false,facing:-1},5:{dx:1.05,dz:-1.55,front:false,facing:.35}};
   var machinePos=[{x:-3,z:-3,y:9.4},{x:3,z:-3,y:9.4},{x:SHOP_SPRITES?4.8:3,z:-.3,y:4.7},{x:-3,z:-.3,y:4.7},{x:-4+COUNTER_SHIFT,z:2.5,y:0},{x:4+COUNTER_SHIFT,z:2.5,y:0}];
+  // The front edges of the floor, round the pickup pen (Kevin, 2026-10-19: one lone case left the corner looking empty,
+  // and a run of cases didn't look good either): the aisle planter's twins along the front baseboard and up the
+  // right-hand edge, without the aisle planter's tree. Each is 3.6 long and 0.95 deep, long along z; `rot` lays it
+  // along the front.
+  var FRONT_FIXTURES=[{file:'shop_planter.glb#low',x:2.4,z:11.33,rot:Math.PI/2},{file:'shop_planter.glb#low',x:6.4,z:11.33,rot:Math.PI/2},
+    {file:'shop_planter.glb#low',x:10.3,z:11.33,rot:Math.PI/2},{file:'shop_planter.glb#low',x:12.43,z:9.1,rot:0}];
+  function frontFixtures(){return FRONT_FIXTURES}
   // The back-wall shelving stands just behind the counters; the smoking lounge is the room behind it (z −7 → −1.76).
   var DISPLAY_Z=-1.6,LOUNGE_FRONT=DISPLAY_Z+.65;
   var sceneElevation=0;
@@ -1550,12 +1594,24 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // The ground floor runs out to x 13 on the right (Kevin, 2026-10-19: the exit route past the stairs was too narrow), so
   // leaving guests walk a lane at x 12.2, clear of the spiral stair (x 9.05-11.35), before turning in to the exit door.
   var EXIT_LANE_X=12.2;
-  function orderPen(){return {right:ORDER_PEN_RIGHT,left:ORDER_PEN_RIGHT-Math.min(4.5,1.5+queueLimit()*.15)}}
+  // The pickup pen's turning points, between the counter's light and the planters along the front edge. It starts as
+  // two short rows and grows with the waiting area's promised places (Kevin, 2026-10-19: start smaller and get to that size):
+  // wider as Pickup line levels up, and four rows from twelve places, full size (6.6 wide) at twenty.
+  function pickupPen(){
+    var places=pickupPromised(),grow=Math.max(0,Math.min(1,(places-4)/16));
+    return {left:3.6,right:6+4.2*grow,rows:[5.95,7.05,8.15,9.25].slice(0,places>=12?4:2)};
+  }
+  // The order pen grows the same way: one row at first, widening with the line, and three rows from twelve places.
+  function orderPen(){var limit=queueLimit();return {right:ORDER_PEN_RIGHT,left:ORDER_PEN_RIGHT-Math.min(4.5,1.5+limit*.15),rows:ORDER_ROWS.slice(0,limit>=12?3:1)}}
   function queueRoute(ordered){
     var ORDER_PEN=orderPen();
-    if(!ordered)return [ORDER_QUEUE_GATE,{x:ORDER_PEN.right,z:ORDER_ROWS[0]},{x:ORDER_PEN.left,z:ORDER_ROWS[0]},{x:ORDER_PEN.left,z:ORDER_ROWS[1]},{x:ORDER_PEN.right,z:ORDER_ROWS[1]},{x:ORDER_PEN.right,z:ORDER_ROWS[2]},{x:ORDER_PEN.left,z:ORDER_ROWS[2]},{x:-7.4,z:ORDER_ROWS[2]},{x:-8.2,z:8.6}].concat(ENTRY_TAIL);
-    var x=PICKUP_X,d=-1;
-    return [{x:x,z:4.9},{x:x+d*2.1,z:4.9},{x:x+d*2.1,z:6.1},{x:x,z:6.1},{x:x,z:7.3},{x:x+d*2.1,z:7.3},{x:x+d*2.1,z:8.1}];
+    // Both lines snake through their pen's rows, turning at alternate ends.
+    var snake=function(pen,first){var pts=[];pen.rows.forEach(function(z,i){var a=i%2?pen[first==='right'?'left':'right']:pen[first],b=i%2?pen[first]:pen[first==='right'?'left':'right'];pts.push({x:a,z:z},{x:b,z:z})});return pts};
+    if(!ordered){var lastRow=ORDER_PEN.rows[ORDER_PEN.rows.length-1];return [ORDER_QUEUE_GATE].concat(snake(ORDER_PEN,'right'),[{x:-7.4,z:lastRow},{x:-8.2,z:8.6}],ENTRY_TAIL)}
+    // The pickup line steps back from the counter into a pen over the open front-right floor (Kevin, 2026-10-19:
+    // the old pocket by the counter left the corner wasted): rows right, left, right, left, the tail coming in at the
+    // bottom-left from the walkway down the middle of the floor. The head's row starts at the counter.
+    var route=[{x:PICKUP_X,z:4.9}].concat(snake(pickupPen(),'left'));route[1]={x:PICKUP_X,z:route[1].z};return route;
   }
   function routeLength(route){var n=0;for(var i=1;i<route.length;i++)n+=Math.hypot(route[i].x-route[i-1].x,route[i].z-route[i-1].z);return n}
   function routePoint(route,distance){
@@ -1649,8 +1705,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       // the counters (ORDER_SPOT_Z) and the head of the order line (z 6.1); counter customers step back into the same aisle
       // rather than walking along the counter front through the other customers. Everyone then goes down the middle
       // walkway to the line's tail.
-      var toPickup=[{x:-.25+COUNTER_SHIFT,z:PICKUP_AISLE_Z},{x:-.25+COUNTER_SHIFT,z:8.15},{x:1.9+COUNTER_SHIFT,z:8.15},{x:1.9+COUNTER_SHIFT,z:8.1}];
-      c.waypoints=(kind==='order'||kind==='kiosk')?[route[route.length-1]]:kind==='pickup'?(c.kiosk?[{x:-8,z:6.8-(c.kioskIndex||0)*1.8},{x:-7.4,z:PICKUP_AISLE_Z}].concat(toPickup):[{x:c.x,z:PICKUP_AISLE_Z}].concat(toPickup)):[{x:PICKUP_X,z:4},{x:8.1,z:5},{x:EXIT_LANE_X,z:5},{x:EXIT_LANE_X,z:-4.6},{x:10.25,z:-6},{x:10.25,z:-8.1},{x:7,z:-8.1},{x:-10.5,z:-8.1}];
+      var tail=route[route.length-1],toPickup=[{x:-.25+COUNTER_SHIFT,z:PICKUP_AISLE_Z},{x:-.25+COUNTER_SHIFT,z:tail.z},tail];
+      c.waypoints=(kind==='order'||kind==='kiosk')?[route[route.length-1]]:kind==='pickup'?(c.kiosk?[{x:-8,z:6.8-(c.kioskIndex||0)*1.8},{x:-7.4,z:PICKUP_AISLE_Z}].concat(toPickup):[{x:c.x,z:PICKUP_AISLE_Z}].concat(toPickup)):[{x:PICKUP_X,z:4},{x:8.1,z:4.6},{x:EXIT_LANE_X,z:4.6},{x:EXIT_LANE_X,z:-4.6},{x:10.25,z:-6},{x:10.25,z:-8.1},{x:7,z:-8.1},{x:-10.5,z:-8.1}];
     }
     while(c.waypoints.length&&budget>0){var point=c.waypoints[0],dx=point.x-c.x,dz=point.z-c.z,distance=Math.hypot(dx,dz),step=Math.min(distance,budget);if(distance>.0001){c.x+=dx/distance*step;c.z+=dz/distance*step}budget-=step;if(distance<=step+.0001)c.waypoints.shift();else break}
     if(!c.waypoints.length){
@@ -2121,17 +2177,23 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   // The queue pens' rope runs, [x1, z1, x2, z2] each, shared by the 2D map and the 3D one.
   function queuePens(){
-    // Pickup pen: two alternating dividers leave turning pockets matching queueRoute(true).
-    var near=4.65,far=1.25;
-    // Order pen: three full-width rows, open at the top so the gate's customers walk straight on to any counter, and
-    // open at the bottom-left where the tail comes in from the door. Dividers sit between the rows of
-    // queueRoute(false), each leaving a pocket at the end the line turns through (right, left, right).
-    var ORDER_PEN=orderPen(),right=ORDER_PEN.right+.65,left=ORDER_PEN.left-.65,rows=ORDER_ROWS;
-    return[[[near,5.5,2.5,5.5],[far,6.7,3.4,6.7],[near,4.5,near,7.9],[far,4.5,far,7.9],[near,7.9,2.5,7.9]],
-      [[left,(ORDER_QUEUE_GATE.z+rows[0])/2,ORDER_PEN.right-.6,(ORDER_QUEUE_GATE.z+rows[0])/2],
-       [right,(rows[0]+rows[1])/2,ORDER_PEN.left+.6,(rows[0]+rows[1])/2],
-       [left,(rows[1]+rows[2])/2,ORDER_PEN.right-.6,(rows[1]+rows[2])/2],
-       [right,6.4,right,rows[2]],[left,(ORDER_QUEUE_GATE.z+rows[0])/2,left,(rows[1]+rows[2])/2]]];
+    var mid=function(a,b){return (a+b)/2},solid=function(q){return Math.hypot(q[2]-q[0],q[3]-q[1])>.05};
+    // Pickup pen: an outer rope round the rows of queueRoute(true), open at the top where the head steps up to the
+    // counter and at the bottom-left where the tail comes in, and dividers leaving turning pockets at alternate ends.
+    // Long runs get a post every couple of units so the rope never sags across the whole floor.
+    var P=pickupPen(),r=P.rows,n=r.length,pl=P.left-.6,pr=P.right+.6,head=PICKUP_X-.6;
+    var pickup=[[head,r[0]-.6,head,mid(r[0],r[1])],[PICKUP_X+.6,r[0]-.6,pr,r[0]-.6],[pr,r[0]-.6,pr,r[n-1]+.6],[pr,r[n-1]+.6,pl,r[n-1]+.6],[pl,mid(r[0],r[1]),pl,mid(r[n-2],r[n-1])],
+      [pl,mid(r[0],r[1]),head,mid(r[0],r[1])],[head,mid(r[0],r[1]),P.right-.6,mid(r[0],r[1])]];
+    for(var i=1;i<n-1;i++)pickup.push(i%2?[pr,mid(r[i],r[i+1]),P.left+.6,mid(r[i],r[i+1])]:[pl,mid(r[i],r[i+1]),P.right-.6,mid(r[i],r[i+1])]);
+    var split=[];pickup.filter(solid).forEach(function(q){var k=Math.max(1,Math.round(Math.hypot(q[2]-q[0],q[3]-q[1])/2.4));for(var j=0;j<k;j++)split.push([q[0]+(q[2]-q[0])*j/k,q[1]+(q[3]-q[1])*j/k,q[0]+(q[2]-q[0])*(j+1)/k,q[1]+(q[3]-q[1])*(j+1)/k])});
+    // Order pen: its rows open at the top so the gate's customers walk straight on to any counter, and open at the
+    // bottom-left where the tail comes in from the door. Dividers sit between the rows of queueRoute(false), each
+    // leaving a pocket at the end the line turns through (right, left, right).
+    var O=orderPen(),right=O.right+.65,left=O.left-.65,rows=O.rows,m=rows.length,top=(ORDER_QUEUE_GATE.z+rows[0])/2;
+    var order=[[left,top,O.right-.6,top],[right,6.4,right,rows[m-1]]];
+    for(var o=0;o<m-1;o++)order.push(o%2?[left,mid(rows[o],rows[o+1]),O.right-.6,mid(rows[o],rows[o+1])]:[right,mid(rows[o],rows[o+1]),O.left+.6,mid(rows[o],rows[o+1])]);
+    if(m>1)order.push([left,top,left,mid(rows[m-2],rows[m-1])]);
+    return[split,order];
   }
   // The smoking lounge's face. The shelving wall continues left into a speakeasy doorway — dark lacquer with brass
   // mouldings, velvet curtains tied back to a narrow gap that shows a lamp-lit corner of the room, a neon LOUNGE sign on
@@ -2279,7 +2341,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var speed=state.lines.some(function(n){return n>0})?Math.min(.07,.02+production()*.00002):0;
     crateTime=(crateTime+frameDelta*speed*1.4)%1;cargoOdo=(cargoOdo+frameDelta*speed*14)%1e5;
     var stations=[],people=[];
-    function station(i,x,y,z,level,built,size){var tier=built?spriteTier(level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(tier-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,selected:selected===i&&!securitySelected&&!loungeSelected})}
+    function station(i,x,y,z,level,built,size){var tier=built?economy.stationLook(level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(tier-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,selected:selected===i&&!securitySelected&&!loungeSelected})}
     // People are the 2D map's own sprites, recorded as each would be drawn and stood up in the scene as flat figures
     // (capturePerson); a capsule under each casts its shadow.
     var figures=[];
@@ -2308,25 +2370,27 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     customers.forEach(function(c){if(c.phase==='lounge'&&c.roofSpot!==undefined&&c.roofSpot<spots.length&&!taken[c.roofSpot])taken[c.roofSpot]=c.id;else if(c.phase!=='lounge')c.roofSpot=undefined});
     customers.forEach(function(c){
       if(c.phase!=='lounge'||c.loungeFade>0)return;
-      var k=c.rideK||1,down=LIFT_DOWN*k,walk=ROOF_WALK*k;
-      var ride=c.loungeLeft<down?smooth(c.loungeLeft/down):c.loungeRide>0?smooth(1-c.loungeRide/(LIFT_UP*k)):null,colour=PERSON_COLOURS[(c.id||0)%PERSON_COLOURS.length];
-      // With the second shaft bought, every other guest takes it.
-      var second=state.loungeLift&&c.id%2===1,shaftZ=(second?ROOFTOP.lift2.z:lift.z)+.1;
-      if(ride!==null){if(second)liftY2=ride*ROOFTOP.y;else liftY=ride*ROOFTOP.y;var rx=lift.x,rz=shaftZ;person(rx,liftY+.12,rz,colour,function(){drawPerson(rx,rz,now,c.id,false,false,false,{amount:0,phase:0,facing:.3})});return}
+      var colour=PERSON_COLOURS[(c.id||0)%PERSON_COLOURS.length];
+      // Riding: in their cab. Waiting below: out of sight in the back hallway.
+      var sh=c.lift==='down'?(c.liftShaft||0):(c.shaft||0),shaftZ=(sh?ROOFTOP.lift2.z:lift.z)+.1;
+      if(!c.lift||c.lift==='waitUp')return;
+      if(c.lift==='up'||c.lift==='down'){var ry=lifts[sh].y*ROOFTOP.y+.12,rx=lift.x+((c.cabSlot||0)%2?.28:0)-((c.cabSlot||0)>1?.28:0),rz=shaftZ+((c.cabSlot||0)?-.2:0);person(rx,ry,rz,colour,function(){drawPerson(rx,rz,now,c.id,false,false,false,{amount:0,phase:0,facing:.3})});return}
       if(c.roofSpot===undefined||taken[c.roofSpot]!==c.id){for(var k=0;k<spots.length;k++)if(taken[k]===undefined){c.roofSpot=k;taken[k]=c.id;break}}
       var spot=spots[c.roofSpot];if(!spot||taken[c.roofSpot]!==c.id)return;
-      // Out of the cab, across the bridge and on to their spot; the same way back before the ride down.
-      var back=c.loungeLeft<down+walk,s=back?smooth((c.loungeLeft-down)/walk):smooth(c.roofWalk||0);
+      // Out of the cab, across the bridge and on to their spot; back to the landing a step from the cab door to wait.
+      var back=c.lift!=='roof',s=c.lift==='roof'?smooth(c.roofWalk):c.lift==='back'?1-smooth(c.walkBack):0;
       if(s>=1){person(spot[0],ROOFTOP.y,spot[1],colour,function(){drawPerson(spot[0],spot[1],now,c.id,false,false,false,{amount:0,phase:0,facing:spot[2]})});return}
-      if(second)liftY2=ROOFTOP.y;else liftY=ROOFTOP.y;
       var path=[{x:lift.x,z:shaftZ},{x:ROOFTOP.x0+.5,z:shaftZ},{x:spot[0],z:spot[1]}],lens=[],total=0;
       for(var p=1;p<path.length;p++){lens.push(Math.hypot(path[p].x-path[p-1].x,path[p].z-path[p-1].z));total+=lens[p-1]}
-      var along=s*total,seg=0;while(seg<lens.length-1&&along>lens[seg]){along-=lens[seg];seg++}
+      // Guests waiting for the cab down queue back along the bridge, first come nearest the door.
+      var landing=back?1:0;if(c.lift==='waitDown')customers.forEach(function(q){if(q!==c&&q.phase==='lounge'&&q.lift==='waitDown'&&(q.shaft||0)===(c.shaft||0)&&q.liftAsk<c.liftAsk)landing+=.45});
+      var along=Math.min(total,landing+s*(total-landing)),seg=0;while(seg<lens.length-1&&along>lens[seg]){along-=lens[seg];seg++}
       var a0=path[seg],a1=path[seg+1],f=lens[seg]?Math.min(1,along/lens[seg]):1,wx=a0.x+(a1.x-a0.x)*f,wz=a0.z+(a1.z-a0.z)*f;
       var hx=(a1.x-a0.x)/(lens[seg]||1),hz=(a1.z-a0.z)/(lens[seg]||1);if(back){hx=-hx;hz=-hz}
-      var moving=s>0&&s<1;
-      person(wx,ROOFTOP.y,wz,colour,function(){drawPerson(wx,wz,now,c.id,moving,false,false,{amount:moving?1:0,phase:s*total*5,heading:{x:hx,z:hz},facing:hx-hz>0?.3:-.3})});
+      var moving=c.lift==='roof'?s>0&&s<1:c.lift==='back';
+      person(wx,ROOFTOP.y,wz,colour,function(){drawPerson(wx,wz,now,c.id,moving,false,false,{amount:moving?1:0,phase:along*5,heading:{x:hx,z:hz},facing:hx-hz>0?.3:-.3})});
     });
+    liftY=lifts[0].y*ROOFTOP.y;liftY2=lifts[1].y*ROOFTOP.y;
     customers.forEach(function(c){
       stepCustomerVisual(c,frameDelta);
       if(c.phase==='lounge')return;
@@ -2352,7 +2416,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       if(state.lounge>0){var ropeX=LOUNGE_DOOR.x+.72,rf=LOUNGE_FRONT;rail(ropeX,rf+.3,ropeX,rf+1.4,'#6b1f35');rail(ropeX,rf+1.4,ropeX,rf+2.5,'#6b1f35')}
       var postModel=map3d.propReady('street_queue_post.glb');
       Object.keys(posts).forEach(function(key){var q=posts[key];if(postModel)props.push({file:'street_queue_post.glb',x:q[0],y:0,z:q[1]});else capturePerson(figures,q[0],0,q[1],function(){drawStanchion(q[0],q[1])})});
-      if(fixtureSprite('shop.displaycase')&&!map3d.hasFixture('displayCase'))capturePerson(figures,10.05,0,8.7,function(){drawSprite(streetApi,'shop.displaycase',10.05,8.7,true)});
+      frontFixtures().forEach(function(f){if(map3d.propReady(f.file))props.push({file:f.file,x:f.x,y:0,z:f.z,rot:f.rot})});
       // The self-order kiosks along the storefront glass are their render, stood up at each kiosk's footprint.
       if(state.kiosk&&fixtureSprite('shop.kiosk'))for(var k=0;k<kioskCount();k++)(function(kz){capturePerson(figures,-9.75,0,kz,function(){drawBoxSprite(streetApi,fixtureSprite('shop.kiosk'),-10.04,-9.46,kz-.4,kz+.4,0,1.8,true)})})(6.8-k*1.8);
     }
@@ -2361,6 +2425,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     figures=figures.filter(function(f){return f.alpha>.99});backdrops=backdrops.filter(function(f){return f.alpha>.99});
     var look=viewCentre();
     map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,liftY:liftY,liftY2:liftY2,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    // A model that had not loaded when the tabs were painted: try again every half second until all are in.
+    if(picturesPending&&!(now-(renderFrame3d.picturesTried||0)<500)){renderFrame3d.picturesTried=now;picturesPending=false;paintThumbnails()}
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
     customers.forEach(function(c){if(c.phase!=='lounge'&&customerBadged(c))drawCustomerBadge(Object.assign({},c,{x:c.renderX,z:c.renderZ}))});
     drawDeliveryDrones(frameDelta,now);drawParticles(frameDelta);drawTickets(frameDelta);drawConfetti(wallDelta);
@@ -2522,6 +2588,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       if(i>0&&state.stock[i-1]<1)return 'Waiting for '+['seeds','plants','harvest'][i-1];
       return 'Producing in batches';
     }
+    if(i===4&&state.lines[5]&&pickupLineFull())return 'Holding orders · pickup line full';
     if(i===4)return state.stock[4]>=readyCapacity()?'Ready storage full':state.stock[3]<1?'Waiting for packed '+unitWord(2):'Preparing pickup bags';
     var held=customers.filter(function(c){return c.ordered&&!c.bag}).length,heldNote=held>1?' · '+held+' orders held':held===1?' · 1 order held':'';
     if(state.stock[4]<1)return 'Waiting for ready bags'+heldNote;
@@ -2595,7 +2662,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       }else renderUpgradeComparison('Seconds per handoff',handoffNow/Math.max(1,state.gameSpeed),handoffNext/Math.max(1,state.gameSpeed),true,!level,false);
     }
     paintUpgradePreview(selected);
-    $('nextAppearance').textContent=(tier?'Tier bonus ×'+economy.tierBoost(level)+' · ':'')+(tier<6?'Output ×2 and new look at level '+TIER_LEVELS[tier+1]+' · '+STATION_TIERS[tier+1]+(selected>=4?' · both counters at a tier double baskets':''):'Flagship equipment · upgrades keep increasing output');
+    var lookAt=economy.nextLookLevel(level);
+    $('nextAppearance').textContent=(lookAt?'New look at level '+lookAt+' · ':'')+(tier?'Tier bonus ×'+economy.tierBoost(level)+' · ':'')+(tier<6?'Output ×2 at level '+TIER_LEVELS[tier+1]+' · '+STATION_TIERS[tier+1]+(selected>=4?' · both counters at a tier double baskets':''):'Flagship equipment · upgrades keep increasing output');
     $('machineCost').textContent=level?fmt(price):'FREE';$('buyMachine').disabled=!affordable;$('buyMachine').querySelector('span').textContent=!open?'LOCKED':level?'UPGRADE':'BUILD';
     var maxUpgrade=level?maxStationUpgrade(selected):{levels:0,cost:0};
     $('buyMachineMax').disabled=!maxUpgrade.levels;
@@ -2621,7 +2689,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     $('trainIdChecker').querySelector('span').textContent=idMaxed?'Maxed':'+'+Math.round(.3/(1+state.idStaff*.3)*100)+'%';$('trainIdChecker').querySelector('b').textContent=idMaxed?'—':fmt(idPrice);
     $('trainIdCheckerMax').disabled=!idMax.levels;$('trainIdCheckerMax').querySelector('span').textContent=idMax.levels?'+'+idMax.levels+' lv':'Maxed';$('trainIdCheckerMax').querySelector('b').textContent=idMax.levels?fmt(idMax.cost):'—';
     var hostPrice=loungeHostCost(state.loungeStaff),hostMax=loungeHostQuote(10000),hostOpen=state.lounge>0;
-    $('loungeEmployeeInfo').innerHTML='<span>Lv '+state.loungeStaff+'</span><span>'+loungeHostSpeed(state.loungeStaff).toFixed(1)+'× turns</span>';
+    $('loungeEmployeeInfo').innerHTML='<span>Lv '+state.loungeStaff+'</span><span>'+loungeHostSpeed(state.loungeStaff).toFixed(1)+'× take</span>';
     $('trainLoungeStaff').disabled=!hostOpen||state.money<hostPrice;$('trainLoungeStaff').querySelector('span').textContent='+'+Math.round(.3/loungeHostSpeed(state.loungeStaff)*100)+'%';$('trainLoungeStaff').querySelector('b').textContent=fmt(hostPrice);
     $('trainLoungeStaff').title=!hostOpen?'Open the lounge first':state.money<hostPrice?fmt(hostPrice-state.money)+' more needed':'Train lounge host';
     $('trainLoungeStaffMax').disabled=!hostMax.levels;$('trainLoungeStaffMax').querySelector('span').textContent=hostMax.levels?'+'+hostMax.levels+' lv':'Max';$('trainLoungeStaffMax').querySelector('b').textContent=hostMax.levels?fmt(hostMax.cost):'—';
@@ -2697,7 +2765,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // The lounge's second elevator shaft: a one-off build under the host row, gone once it is up.
   function renderStationLift(){
     var row=$('stationLift'),show=loungeSelected&&state.lounge>0&&!state.loungeLift;row.hidden=!show;if(!show)return;
-    var info=Math.round((LOUNGE_LIFT_SPEED-1)*100)+'% faster tables',price=fmt(LOUNGE_LIFT_COST),button=$('buyLift');
+    var info='+'+Math.round((LOUNGE_LIFT_SPEED-1)*100)+'% take per guest',price=fmt(LOUNGE_LIFT_COST),button=$('buyLift');
     if($('liftInfo').textContent!==info)$('liftInfo').textContent=info;
     if(button.querySelector('b').textContent!==price)button.querySelector('b').textContent=price;
     button.disabled=state.money<LOUNGE_LIFT_COST;button.setAttribute('aria-label','Build a second lift for '+price);
@@ -2808,20 +2876,20 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   function renderLoungeSelection(){
     var level=state.lounge,tier=loungeTier(level),next=LOUNGE_TIERS[level]||null,price=loungeUpgradeCost(level),maxed=!next,affordable=!maxed&&state.money>=price;
-    var seated=loungeSeated(),seats=loungeSeats(level),jar=flowerValue()*specialFactor('lounge'),take=loungeTake(level,jar),waiting=loungeWaiting().length,nowRate=loungeCurrentRate(level,seated,jar,state.loungeStaff,state.loungeLift)*state.gameSpeed;
+    var seated=loungeSeated(),seats=loungeSeats(level),jar=flowerValue()*specialFactor('lounge'),take=loungeTake(level,jar,state.loungeStaff,state.loungeLift),waiting=loungeWaiting().length,nowRate=loungeCurrentRate(level,seated,jar,state.loungeStaff,state.loungeLift)*state.gameSpeed;
     $('machineNumber').textContent='BACK ROOM · '+(!tier?'UNDER CONSTRUCTION':seated>=seats?'FULL'+(waiting?' · '+waiting+' ON THE ROPE':''):seated?seated+' OF '+seats+' SEATED':'SEATS FREE');
     $('machineName').textContent='SMOKING LOUNGE';$('machineLevel').textContent=level;$('machineRate').textContent=tier?fmt(nowRate)+'/s · '+fmt(take.total)+' / session':'Under construction';
     var ICON_SEAT='<svg viewBox="0 0 24 24"><path d="M6 11V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v5M4 11h16v4H4zM6 15v5M18 15v5"/></svg>',ICON_GUESTS='<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M15 20c0-2.6 1.5-4.4 3.7-4.9 1.4.3 2.3 1.6 2.3 3.4"/></svg>',ICON_TICKET='<svg viewBox="0 0 24 24"><path d="M4 8a2 2 0 0 0 2-2h12a2 2 0 0 0 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 0-2 2H6a2 2 0 0 0-2-2v-3a2 2 0 0 0 0-4zM9 6v12"/></svg>',ICON_JAR='<svg viewBox="0 0 24 24"><path d="M8 4h8v3H8zM7 7h10v11a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2zM7 11h10"/></svg>',ICON_SESSIONS='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg>',ICON_RATE='<svg viewBox="0 0 24 24"><path d="M4 17l5-6 4 3 7-8M15 6h5v5"/></svg>',ICON_LIFT='<svg viewBox="0 0 24 24"><path d="M6 3h12v18H6zM12 3v18M9 9.5l-1.5 2h3zM15 14.5l-1.5-2h3z"/></svg>',ICON_BANKED='<svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v4c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 10v4c0 1.7 3.1 3 7 3s7-1.3 7-3v-4M5 14v4c0 1.7 3.1 3 7 3s7-1.3 7-3v-4"/></svg>';
     var chipTone=!tier?'wait':seated>=seats?'stop':seated?'go':'wait',chipWord=!tier?'Site':seated>=seats?'Full':seated?seated+' of '+seats:'Open',chipReason=!tier?'not built':seated>=seats?(waiting?waiting+' at the rope':'every seat'):seated?'seated':'seats free';
     var loungeHtml='<span class="status-chip" data-tone="'+chipTone+'"><i></i><b>'+chipWord+'</b><small>'+chipReason+'</small></span>'+
-      (tier?'<span class="stat" title="What the lounge is making right now: '+seated+' of '+seats+' seats taken, each worth the '+fmt(take.total)+' take once per '+loungeSessionSeconds(level,state.loungeStaff,state.loungeLift).toFixed(1)+'-second session">'+ICON_RATE+'<b>'+fmt(nowRate)+'/s</b><small>now</small></span>'+
+      (tier?'<span class="stat" title="What the lounge is making right now: '+seated+' of '+seats+' seats taken, each worth the '+fmt(take.total)+' take once per '+loungeSessionSeconds(level).toFixed(0)+'-second session">'+ICON_RATE+'<b>'+fmt(nowRate)+'/s</b><small>now</small></span>'+
       '<span class="stat" title="Banked by the lounge since it opened: every cover and every jar sold at the lounge premium">'+ICON_BANKED+'<b>'+fmt(state.loungeEarned)+'</b><small>total</small></span>'+
       '<span class="stat tier" title="One guest in '+tier.share+' through the door heads for the curtain; VIPs twice as often">'+ICON_GUESTS+'<b>1 in '+tier.share+'</b><small>guests</small></span>'+
       '<span class="stat" title="Seats in the back room">'+ICON_SEAT+'<b>'+seats+'</b><small>seats</small></span>'+
-      '<span class="stat" title="Cover paid at the curtain">'+ICON_TICKET+'<b>'+fmt(tier.cover)+'</b><small>cover</small></span>'+
+      '<span class="stat" title="Cover paid at the curtain">'+ICON_TICKET+'<b>'+fmt(take.cover)+'</b><small>cover</small></span>'+
       '<span class="stat" title="One packed jar per session at '+tier.spend+'× the counter price">'+ICON_JAR+'<b>'+fmt(take.spend)+'</b><small>jar ×'+tier.spend+'</small></span>'+
       '<span class="stat" title="Sessions so far">'+ICON_SESSIONS+'<b>'+compactCount(state.loungeSessions)+'</b><small>sessions</small></span>'+
-      (state.loungeLift?'<span class="stat" title="Two elevator shafts: tables turn over '+Math.round((LOUNGE_LIFT_SPEED-1)*100)+'% faster">'+ICON_LIFT+'<b>2</b><small>lifts</small></span>':''):
+      (state.loungeLift?'<span class="stat" title="Two elevator shafts: '+Math.round((LOUNGE_LIFT_SPEED-1)*100)+'% more take per guest">'+ICON_LIFT+'<b>2</b><small>lifts</small></span>':''):
       '<span class="stat tier" title="Bought outright; every level adds seats and raises the take">'+ICON_TICKET+'<b>'+fmt(price)+'</b><small>to open</small></span>'+
       '<span class="stat" title="Guests who go in skip the counters: cover at the curtain, one jar at a premium, out the back door">'+ICON_GUESTS+'<b>1 in '+LOUNGE_TIERS[0].share+'</b><small>guests</small></span>'+
       '<span class="stat" title="Seats once open">'+ICON_SEAT+'<b>'+LOUNGE_TIERS[0].seats+'</b><small>seats</small></span>');
@@ -2951,6 +3019,15 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       '<div class="guide-unlock">'+crown+'<div><strong id="guideVipUnlock">VIPs at 60 loyalty</strong><span>35% base tips on regular matches</span></div></div>'+
       '<p class="guide-branch">'+icon('<path d="M5 14h22v14H5ZM3 14l3-9h20l3 9M12 28V18h8v10M3 14c0 4 6 4 6 0 0 4 7 4 7 0 0 4 7 4 7 0 0 4 6 4 6 0"/>')+'<span>Branch loyalty <b>up to +20% income</b></span></p>';
   }
+  // The menus show each station as its 3D model once the 3D map has rendered it (map3d.stationPicture, framed like the
+  // map), the sprite until then and in the 2D map. picturesPending asks the frame loop to repaint the station tabs.
+  var picturesPending=false,stationModelFiles={};
+  // A look without its own model yet shows the highest one that has one, as the map does.
+  function stationModelKey(i,level){var t=economy.stationLook(level);while(t>1&&!stationModelFiles[i+'.'+t])t--;return i+'.'+t}
+  function stationPicture(i,level){
+    if(!map3d||!map3d.ok||!map3d.stationPicture||!(level>0))return null;
+    var picture=map3d.stationPicture(i===6?i+'.'+spriteTier(level):stationModelKey(i,level));if(!picture)picturesPending=true;return picture;
+  }
   function paintUpgradePreview(index){
     var preview=$('upgradePreview');if(!preview)return;
     var key=[index,index===-2?state.lounge:index<0?state.idStaff:stationTier(index),state.menuStrains.join(','),state.productMenu.active].join('|');
@@ -2962,8 +3039,11 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       ctx=art.getContext('2d',{willReadFrequently:true});unit=90;centerX=240;centerY=480;angle=.57;
       // The sprite shop shows the station's own sprite, so the panel matches the room.
       var spriteName=SHOP_SPRITES&&index!==-2?stationSprite(index<0?6:index,index<0?state.idStaff:Math.max(1,state.lines[index])):null,spriteArt=spriteName&&spriteImage(spriteName);
+      var picture=index===-2?null:index<0?stationPicture(6,state.doorBuilt?state.idStaff:0):stationPicture(index,Math.max(1,state.lines[index]));
       if(SHOP_SPRITES&&index!==-2&&!spriteArt)key=''; // repaint once the sprite has loaded
-      if(spriteArt){var fit=Math.min(440/spriteArt.naturalWidth,560/spriteArt.naturalHeight);ctx.drawImage(spriteArt,240-spriteArt.naturalWidth*fit/2,580-spriteArt.naturalHeight*fit,spriteArt.naturalWidth*fit,spriteArt.naturalHeight*fit)}
+      if(picturesPending&&!picture)key=''; // and once the 3D model's picture is ready
+      if(picture)ctx.drawImage(picture,0,0,480,600);
+      else if(spriteArt){var fit=Math.min(440/spriteArt.naturalWidth,560/spriteArt.naturalHeight);ctx.drawImage(spriteArt,240-spriteArt.naturalWidth*fit/2,580-spriteArt.naturalHeight*fit,spriteArt.naturalWidth*fit,spriteArt.naturalHeight*fit)}
       else if(index===-2)drawLoungeThumb(state.lounge);
       else if(index<0){drawBox(0,0,-.24,2.6,2.6,.24,['#cbb085','#7f6a4b','#ac9168']);drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5']);drawPerson(-.55,-.45,0,7,false,true,false)}
       else drawStage({x:0,z:0},index,0,true);
@@ -2974,7 +3054,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       preview.dataset.art=key;
     }finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
   }
-  function paintSecurityThumbnail(){var card=document.querySelector('[data-security] canvas');if(!card)return;var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;ctx=card.getContext('2d');if(ctx){ctx.clearRect(0,0,80,100);unit=25;centerX=40;centerY=97;angle=.57;if(!state.doorBuilt)drawConstructionSite(0,0,2.6,2.6,function(){drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5'])});else{drawBox(0,0,-.24,2.6,2.6,.24,['#cbb085','#7f6a4b','#ac9168']);drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5']);drawPerson(-.55,-.45,0,7,false,true,false)}}ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
+  function paintSecurityThumbnail(){var card=document.querySelector('[data-security] canvas');if(!card)return;var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;ctx=card.getContext('2d');var picture=state.doorBuilt?stationPicture(6,state.idStaff):null;if(ctx&&picture){ctx.clearRect(0,0,80,100);ctx.drawImage(picture,0,0,80,100)}else if(ctx){ctx.clearRect(0,0,80,100);unit=25;centerX=40;centerY=97;angle=.57;if(!state.doorBuilt)drawConstructionSite(0,0,2.6,2.6,function(){drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5'])});else{drawBox(0,0,-.24,2.6,2.6,.24,['#cbb085','#7f6a4b','#ac9168']);drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5']);drawPerson(-.55,-.45,0,7,false,true,false)}}ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
   // The lounge doorway in miniature, dressed for its tier. Every level keeps the lacquer jambs, the slab and the LOUNGE
   // blade so the card still reads as the lounge; what changes is the colour of the neon, the drapes, the room glimpsed
   // between them and the dressing out front — planters for the terrace, a rope for the booths, a doorman and a runner
@@ -3051,7 +3131,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     else{drawBox(0,.14,0,1.36,.08,1.72,['#c9a874','#7d6240','#a9895c']);constructionTape([-.75,.8,face+.06],[.75,.7,face+.06]);wallText(0,2.2,face+.01,'LOUNGE',unit*1.2,.32,'#4b3f45',false,'800')}
   }
   function paintLoungeThumbnail(){var card=document.querySelector('[data-lounge] canvas');if(!card)return;var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;ctx=card.getContext('2d');if(ctx){ctx.clearRect(0,0,80,100);unit=22;centerX=40;centerY=94;angle=.57;drawLoungeThumb()}ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
-  function paintThumbnails(){paintSecurityThumbnail();paintLoungeThumbnail();var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;machineTabs.forEach(function(tab,i){ctx=tab.querySelector('canvas').getContext('2d');if(!ctx)return;ctx.clearRect(0,0,80,100);unit=25;centerX=40;centerY=97;angle=.57;drawStage({x:0,z:0},i,0)});ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
+  function paintThumbnails(){paintSecurityThumbnail();paintLoungeThumbnail();var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;machineTabs.forEach(function(tab,i){ctx=tab.querySelector('canvas').getContext('2d');if(!ctx)return;ctx.clearRect(0,0,80,100);var picture=state.lines[i]?stationPicture(i,state.lines[i]):null;if(picture){ctx.drawImage(picture,0,0,80,100);return}unit=25;centerX=40;centerY=97;angle=.57;drawStage({x:0,z:0},i,0)});ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
   function selectLounge(){securitySelected=false;loungeSelected=true;showTray('factory');renderUI();var card=document.querySelector('[data-lounge]');if(card&&card.scrollIntoView)card.scrollIntoView({block:'nearest',inline:'nearest'});if(navigator.vibrate)navigator.vibrate(8)}
   // Each lounge tier is bought outright; the first one raises the doorway out of its hoarding.
   function upgradeLounge(){
@@ -3446,7 +3526,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   LINES.forEach(function(_,i){$('staffMax'+i).onclick=function(){trainStaffMax(i)}});
   $('trainIdChecker').onclick=function(){if(!state.doorBuilt)return buildStation('door');trainIdChecker(1)};
   $('trainIdCheckerMax').onclick=function(){trainIdChecker(10000)};
-  $('buyLift').onclick=function(){if(!buyLoungeLift(state))return;notify('SECOND LIFT · tables turn faster','upgrade');renderUI();save()};
+  $('buyLift').onclick=function(){if(!buyLoungeLift(state))return;notify('SECOND LIFT · bigger take per guest','upgrade');renderUI();save()};
   $('trainLoungeStaff').onclick=function(){trainLoungeHost(1)};
   $('trainLoungeStaffMax').onclick=function(){trainLoungeHost(10000)};
   $('fulfillOnlineMax').onclick=function(){sendOnlineOrders(state.lines[3]>=10?Infinity:10)};
