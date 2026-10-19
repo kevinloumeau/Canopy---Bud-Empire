@@ -348,7 +348,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function growFactorNow(){var g=strains.growFactor(menuStrains(),state.strains);return 1-(1-g)*(1-state.breedingLevel*.03)}
   var batchRemainder=[0,0,0,0];
   var readyWork=0;
-  var work=[0,0,0,0,0,0],customers=[],arrival=0,customerId=0,pickupQueueSequence=0;
+  var work=[0,0,0,0,0,0],lastKiosk=-1,customers=[],arrival=0,customerId=0,pickupQueueSequence=0;
   // The pickup line is first come, first served: a ticket is issued when a customer reaches the line's tail, not when
   // they order, so a counter customer already in line is not held at the tail for a kiosk customer still walking over.
   function pickupOrder(c){return c.pickupTicket||Infinity}
@@ -547,7 +547,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     }
     // The head of the kiosk line takes the first free kiosk; their place along the shared walkway is the same spot on
     // that kiosk's longer route.
-    var nextKiosk=state.kiosk?assignKiosk(customers,kioskCount()):null;
+    var nextKiosk=state.kiosk?assignKiosk(customers,kioskCount(),lastKiosk):null;
+    if(nextKiosk)lastKiosk=nextKiosk.kioskIndex;
     if(nextKiosk)nextKiosk.laneDistance+=routeLength(kioskRoute(nextKiosk.kioskIndex))-routeLength(kioskRoute(0));
     if(state.kiosk)for(var kioskIndex=0;kioskIndex<kioskCount();kioskIndex++){
       var kioskX=-8.95,kioskZ=6.8-kioskIndex*1.8;
