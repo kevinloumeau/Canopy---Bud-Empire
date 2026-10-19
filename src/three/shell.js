@@ -74,9 +74,11 @@ export function buildShell(world, layout, { box, span, material, model }) {
   // Under the rooftop lounge the glazing runs right up to the underside of the roof slab's lip (rooftop.js).
   const tRear = top.z - top.d / 2, tLeft = -top.w / 2, glassH = layout.rooftop ? layout.rooftop.y - .34 - top.y : 3.9;
   // The fan housing's height at model scale, and the glazing's top.
-  const fanBase = top.y + glassH, fanBandH = 1.44;
+  const fanBase = top.y + glassH, fanBandH = 1.44, fullGlassH = glassH;
+  // Under the lounge the rear wall's top is a solid header band the exhaust row is set into; its glass stops below it.
+  const headerH = layout.rooftop ? .8 : 0;
   const glass = new THREE.MeshStandardMaterial({ color: '#cfe6df', roughness: .1, metalness: 0, transparent: true, opacity: .26, depthWrite: false });
-  function glazing(alongZ, a0, a1, at, fan) {
+  function glazing(alongZ, a0, a1, at, fan, glassH = fullGlassH) {
     const n = Math.max(2, Math.round((a1 - a0) / s.glazingBay)), step = (a1 - a0) / n, y = top.y;
     let solid = null;
     if (fan !== undefined) { const j = Math.max(0, Math.min(n - 2, Math.round((fan - a0) / step) - 1)); solid = [a0 + j * step, a0 + (j + 2) * step]; }
@@ -89,7 +91,7 @@ export function buildShell(world, layout, { box, span, material, model }) {
     if (solid) span(shell, solid[0] + .035, solid[1] - .035, y + .3, y + glassH - .08, at - .06, at - .02, '#2f5d4a');
     return solid;
   }
-  const fanBay = glazing(false, tLeft, s.topLanding.outer, tRear, s.fanX);
+  const fanBay = glazing(false, tLeft, s.topLanding.outer, tRear, s.fanX, glassH - headerH);
   glazing(true, tRear, tRear + 3.5, tLeft);
 
   // The exhaust fan in its solid bay: a green housing with a dark round throat and a four-blade rotor.
@@ -111,15 +113,16 @@ export function buildShell(world, layout, { box, span, material, model }) {
 
   // The fan row is one model load drawn instanced (one draw per part for the whole row); the rotors' instances turn
   // with the big fan's rotor every frame. FAN_W is the housing's width in map units (.86 m); its origin is its centre.
-  // Kevin (2026-10-19): large fans, touching, on a solid green band, their top frames resting just under the glazing's
-  // top rail (and so wholly under the roof slab). They stand just inside the glass so the pane and transom bar pass
-  // behind the casing rather than through it. Kevin 12:06Z: lowered further and shifted 20 cm right of the slab corner.
-  const FAN_W = 1.46, fanScale = 1.36, fanH = fanBandH * fanScale, fanTop = fanBase - .7, fanY = fanTop - fanH / 2;
-  const fanStep = FAN_W * fanScale, rowA1 = s.topLanding.outer + .5, rowCount = 2, rowA0 = rowA1 - rowCount * fanStep;
-  span(shell, rowA0, rowA1, fanTop - fanH, fanTop, tRear - .14, tRear - .02, '#2f5d4a');
-  const rowSpots = Array.from({ length: rowCount }, (_, k) => new THREE.Matrix4().makeTranslation(rowA0 + fanStep * (k + .5), fanY, tRear + .035).scale(new THREE.Vector3(fanScale, fanScale, fanScale)));
+  // Kevin (2026-10-19 12:11Z): an industrial exhaust row in the header band above the rear glass, under the roof slab:
+  // three small fans evenly spaced along the band's open run past the slab's corner (under the slab they'd be hidden),
+  // inset from the slab corner and the wall corner, their housings flush with the band's face and the rims slightly proud.
+  const FAN_W = 1.46, rowCount = headerH ? 3 : 0, bandFace = tRear + .06;
+  const rowA0 = (layout.rooftop ? layout.rooftop.x1 : tLeft) + .15, rowA1 = s.topLanding.outer - .15;
+  const fanScale = (headerH - .12) / fanBandH, fanY = fanBase - headerH / 2, housingD = .083 * 1.69 * fanScale;
+  if (headerH) span(shell, tLeft, s.topLanding.outer, fanBase - headerH, fanBase, tRear - .14, bandFace, '#2c5a44');
+  const rowSpots = Array.from({ length: rowCount }, (_, k) => new THREE.Matrix4().makeTranslation(rowA0 + (rowA1 - rowA0) * (k + .5) / rowCount, fanY, bandFace - housingD).scale(new THREE.Vector3(fanScale, fanScale, fanScale)));
   let fanRow = null;
-  if (model && rowA1 > rowA0) model('exhaust_fan.glb', 0, 0, 0, (scene, holder) => {
+  if (model && rowCount) model('exhaust_fan.glb', 0, 0, 0, (scene, holder) => {
     const parentInverse = new THREE.Matrix4().copy(holder.parent.matrixWorld).invert(), rel = new THREE.Matrix4();
     const rowRotor = scene.getObjectByName('Rotor'), spinning = [];
     holder.updateMatrixWorld(true);
