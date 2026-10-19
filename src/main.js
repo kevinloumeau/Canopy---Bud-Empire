@@ -770,7 +770,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       layout.transport={bore:TUBE_DIA,gap:CARGO_GAP,
         tubes:[{points:grow.path,stage:1,cargoStage:1,floorRings:[grow.port]},
           {points:pack.path,stage:3,cargoStage:4,floorRings:[pack.port],window:{total:PACK_FLOW,offset:0},noCap0:true},
-          {points:PACK_STUB,stage:3,cargoStage:4,window:{total:PACK_FLOW,offset:PACK_STUB_AT}}],
+          {points:PACK_STUB,stage:3,cargoStage:4,window:{total:PACK_FLOW,offset:PACK_STUB_AT}},
+          // The online deck's feed, drawn at the deck's elevation (7.05) in 2D, shown while the deck is built.
+          {points:DECK_FEED.map(function(p){return [p[0],p[1]+7.05,p[2]]}),stage:3,cargoStage:5,noCap0:true,fixture:'deck'}],
         belts:[{x1:-4.6,x2:4.6,z:-5.8,floor:9.4,height:1.05,width:BELT_W,stage:0},{x1:4.2,x2:-3.2,z:-3.7,floor:4.7,height:1.05,width:BELT_W,stage:2}]};
       // The online orders deck, placed by its origin (the stair foot, on the mezzanine) at the scale every Blender model
       // shares (about 1.69 map units a metre), so its slab's right and front edges land where the sprite's do
@@ -2070,6 +2072,11 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       drawBox(x,z,y,.3,.27,.4,['#c4dec4','#719883','#a1bea8']);
       drawBox(x,z,y+.4,.34,.31,.07,['#dacba0','#9a8c62','#c0b182']);
       drawBox(x,z+.143,y+.1,.22,.014,.16,['#f3efda','#f3efda','#f3efda']);
+    }else if(stage===5){
+      // A taped kraft shipping box with a green address label, on its way up to the online orders deck.
+      drawBox(x,z,y,.38,.3,.26,['#d6ae72','#8f6f42','#b88d55']);
+      drawBox(x,z,y+.26,.08,.31,.012,['#eadcb4','#eadcb4','#eadcb4']);
+      drawBox(x+.1,z+.151,y+.08,.12,.01,.09,['#496f50','#496f50','#496f50']);
     }else{
       // Sprite shop: the v2 kraft pickup bag with its green label.
       if(SHOP_SPRITES&&drawBoxSprite(sunnyApi(sceneTime),fixtureSprite('prop.pickup.bag'),x-.2,x+.2,z-.13,z+.13,y,y+.62,true))return;
@@ -2549,21 +2556,21 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   // Measured on the deck render: the underside of the slab's steel rim, taken at -.24 below the deck level, has its front
   // edge at z 1.26 and its right edge at x -10.7; the rear support leaves it near that corner and falls at -.43 (y over x)
-  // to the mezzanine's end. The jar feed climbs the same slope along the front of the support and runs on into the slab.
+  // to the mezzanine's end. The parcel feed climbs the same slope along the front of the support and runs on into the slab.
   var DECK_FRONT=1.26,DECK_RIGHT=-10.7,DECK_FEED=[[-4.3,-.9,.85],[-7.99,-.9,.85],[-10.68,.25,.85]];
   function onlinePackingCounter(now,previewOnly){
     var x=DECK_X,z=DECK_Z,oak=['#cbb085','#7f6a4b','#ac9168'],green=['#86a795','#3e6250','#648a70'];
     if(!deliveryBuilt()&&!previewOnly){onlineCounterSite(now,x,z,oak);return}
-    // Sprite shop: the finished deck render, with the live dispatch readout and the jar feed still drawn over it.
+    // Sprite shop: the finished deck render, with the live dispatch readout and the parcel feed still drawn over it.
     if(SHOP_SPRITES&&!previewOnly&&shellSprite('deck.delivery.built')&&spriteImage('deck.delivery.built')){
-      // The jar feed runs along the mezzanine rail, climbs beside the deck's rear support and rises into the deck's
+      // The parcel feed runs along the mezzanine rail, climbs beside the deck's rear support and rises into the deck's
       // underside: it is cut along the slab's front and right edges, so its last stretch disappears inside the deck.
       drawDeckSprite(now,'deck.delivery.built');
       var l=project(DECK_RIGHT-8,-.24,DECK_FRONT),c=project(DECK_RIGHT,-.24,DECK_FRONT),r=project(DECK_RIGHT,-.24,DECK_FRONT-8),far=width+height;
       ctx.save();ctx.beginPath();ctx.moveTo(l.x-far,l.y);ctx.lineTo(l.x,l.y);ctx.lineTo(c.x,c.y);ctx.lineTo(r.x,r.y);ctx.lineTo(r.x+far,r.y);ctx.lineTo(r.x+far,c.y+far);ctx.lineTo(l.x-far,c.y+far);ctx.closePath();ctx.clip();
       // The feed leaves the pack bench's end without a collar, and the turn onto the support is a shallow one the right-angle elbow render cannot make, so the two straights meet
       // collar to collar there, like a coupling.
-      drawTubeSprites(DECK_FEED.slice(0,2),TUBE_DIA,{noCap0:true});drawTubeSprites(DECK_FEED.slice(1));transferTube(DECK_FEED,3,[],undefined,true);ctx.restore();
+      drawTubeSprites(DECK_FEED.slice(0,2),TUBE_DIA,{noCap0:true});drawTubeSprites(DECK_FEED.slice(1));transferTube(DECK_FEED,3,[],5,true);ctx.restore();
       return;
     }
     // Cantilevered launch deck, attached to the rear sign supports.
