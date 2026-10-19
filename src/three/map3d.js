@@ -13,7 +13,7 @@ import { buildEntrance } from './entrance.js';
 import { createBranchLayer } from './branch3d.js';
 import { rigStation, bindStation, moveStation } from './station-motion.js';
 import { compactModel } from './compact.js';
-import { screenState, paintScreen, W as SCREEN_W, H as SCREEN_H } from './kiosk-screen.js';
+import { screenState, paintScreen, W as SCREEN_W, H as SCREEN_H, SCALE as SCREEN_SCALE, PAID as PAID_AT, PAID_HOLD } from './kiosk-screen.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
@@ -268,22 +268,28 @@ export function createMap3D(canvas, layout) {
   });
   function menuScreen(material) {
     const canvas = document.createElement('canvas');
-    canvas.width = SCREEN_W; canvas.height = SCREEN_H;
+    canvas.width = SCREEN_W * SCREEN_SCALE; canvas.height = SCREEN_H * SCREEN_SCALE;
     const texture = new THREE.CanvasTexture(canvas);
-    // Matches the baked menu: glTF UVs (no flip), crisp pixels.
-    texture.flipY = false; texture.colorSpace = THREE.SRGBColorSpace; texture.magFilter = THREE.NearestFilter;
-    return { material, base: material.map, texture, ctx: canvas.getContext('2d'), key: '' };
+    // Matches the baked menu's glTF UVs (no flip).
+    texture.flipY = false; texture.colorSpace = THREE.SRGBColorSpace;
+    return { material, base: material.map, texture, ctx: canvas.getContext('2d'), key: '', paidAt: null };
   }
-  // p: how far the customer at this kiosk has got with their order (0..1), or null when nobody is ordering.
+  // p: how far the customer at this kiosk has got with their order (0..1), or null when nobody is ordering. The
+  // thank-you screen starts as the order nears its end and stays up a moment after the customer walks off.
   function showMenu(screen, p, clock) {
     const m = screen.material, ordering = p != null && p >= 0;
-    if (ordering) {
-      const state = screenState(p, clock);
+    if (ordering && p >= PAID_AT && screen.paidAt == null) screen.paidAt = clock;
+    if (ordering && p < PAID_AT) screen.paidAt = null;
+    const since = screen.paidAt == null ? null : clock - screen.paidAt;
+    if (!ordering && since != null && (since > PAID_HOLD || since < 0)) screen.paidAt = null;
+    const shown = ordering || screen.paidAt != null;
+    if (shown) {
+      const state = screenState(ordering ? p : 1, clock, screen.paidAt == null ? null : since);
       if (state.key !== screen.key) { paintScreen(screen.ctx, state); screen.texture.needsUpdate = true; screen.key = state.key; }
     }
-    const map = ordering ? screen.texture : screen.base;
+    const map = shown ? screen.texture : screen.base;
     if (m.map !== map) { m.map = m.emissiveMap = map; }
-    if (ordering) m.emissiveIntensity += .15;
+    if (shown) m.emissiveIntensity += .2;
   }
   // Loaded on first need, so a shop only fetches the tiers it shows.
   const requested = {};
@@ -821,7 +827,7 @@ export function createMap3D(canvas, layout) {
     placeProps(frame.props, night);
     fixtureGlows.forEach(m => { m.emissiveIntensity = .16 + night * .7; });
     fixtureScreens.forEach(m => { m.emissiveIntensity = .35 + night * .55; });
-    Object.entries(menuScreens).forEach(([key, screen]) => showMenu(screen, frame.menus ? frame.menus[key] : null, frame.time || 0));
+    Object.entries(menuScreens).forEach(([key, screen]) => showMenu(screen, frame.menus ? frame.menus[key] : null, frame.menuClock || 0));
     lampStandIns.forEach(m => { m.visible = !propSources['street_lamp.glb']; });
     const modelled = carsModelled();
     frame.cars.forEach((c, i) => {
