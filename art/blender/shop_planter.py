@@ -3,7 +3,7 @@ rounded shrubs and a small tree near one end.  Laid out from shell.js's numbers 
 z 2..5.6, tree at x -11.45, z 2.35), converted to metres; map z runs toward Blender -Y.
 Origin at the planter's footprint centre on the floor (map x -11.225, z 3.8).
 
-Needs canopy_kit.py and tree_parts.py in the same folder.  Run headless with
+Needs canopy_kit.py, tree_parts.py and vine_parts.py in the same folder.  Run headless with
     blender -b -P shop_planter.py -- OUT_DIR
 """
 import os, sys, math, random
@@ -11,6 +11,8 @@ try: sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 except NameError: pass
 import canopy_kit as K
 import tree_parts as T
+import vine_parts as VP
+T.LITE = True          # phone budget: lighter crown lumps, as tree.py and street_tree.py
 
 OUT = K.begin("ShopPlanter")
 rnd = random.Random(5)
@@ -19,7 +21,10 @@ BOX = K.mat("PlanterGreen", "#1f5e40", .55); BOX_D = K.mat("PlanterGreenDeep", "
 RIM = K.mat("PlanterRim", "#2b302d", .5); EARTH = K.mat("PlanterSoil", "#514633", 1.)
 INLAY = K.mat("PlanterInlay", "#e1dbc0", .5)
 BARK = K.mat("Bark", "#7a5a3c", .8)
-SHRUB_A = K.mat("ShrubA", "#5f8648", .78); SHRUB_B = K.mat("ShrubB", "#6b9250", .76)
+SHRUBS = [K.mat("ShrubA", "#5c8f35", .8, two_sided=True), K.mat("ShrubB", "#6c9e3d", .8, two_sided=True), K.mat("ShrubC", "#78a744", .8, two_sided=True), K.mat("ShrubD", "#4e7f2f", .8, two_sided=True)]
+SHRUBS.append(SHRUBS[0])          # weight the mid green
+SHRUB_CORE = K.mat("ShrubCore", "#467328", .9)
+FLOWERS = [K.mat("FlowerOrange", "#ef8a3a", .6), K.mat("FlowerPink", "#e58bb0", .6)]
 CROWN = [K.mat("CrownMid", "#447a36", .78), K.mat("CrownDeep", "#33622c", .8), K.mat("CrownLight", "#5f9142", .75)]
 
 W, D, H = .95 * M, 3.6 * M, .56 * V
@@ -38,14 +43,11 @@ K.box("Rim", ((.95 + .08) * M, (3.6 + .08) * M, (.63 - .56) * V), (0, 0, H), RIM
 K.box("Soil", ((.95 - .2) * M, (3.6 - .2) * M, .02), (0, 0, .63 * V - .002), EARTH, .006)
 TOP = .63 * V
 
-# Five rounded shrubs down the box (shell.js: x +-.08, z centre + [-1.2 .. 1.6], .9 high, radius .3).
+# Five round bushes down the box (shell.js: x +-.08, z centre + [-1.2 .. 1.6], .9 high, radius .3), shingled with
+# small leaves and dotted with flowers like the edge and deck planters (vine_parts.scale_shrub).
 for n, dz in enumerate((-1.2, -.5, .2, .9, 1.6)):
     x, y = (.08 if n % 2 else -.08) * M, -dz * M
-    m = SHRUB_B if n % 2 else SHRUB_A
-    for j in range(3):
-        a = rnd.uniform(0, 6.3)
-        T.lump(f"Shrub{n}{j}", (x + .06 * math.cos(a), y + .06 * math.sin(a), .9 * V - .04 + .03 * j), .3 * M * rnd.uniform(.72, .85), m, .78,
-               k=n + j, yaw=a, bumps=3, rnd=rnd)
+    VP.scale_shrub(f"Shrub{n}", (x, y, .9 * V - .01), .3 * M * 1.3 * rnd.uniform(1.0, 1.1), SHRUBS, SHRUB_CORE, FLOWERS, rnd, n=100, flowers=5)
 
 # The tree near the planter's end at map z 2.35: a short forked trunk and a full scalloped crown, lower and fuller
 # than shell.js's (trunk to 3.03 world, three clumps .55-.75 at 2.9-3.2 world) so it reads like the sprite.
