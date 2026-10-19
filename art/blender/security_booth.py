@@ -1,4 +1,4 @@
-"""Canopy security booth at the door, five looks that grow with the Security level (Lv 1, 10, 20, 30 and 50).
+"""Canopy security booth at the door, five looks that grow with the Security level (Lv 1, 10, 30, 50 and 75, the station look levels).
 
     1  door podium: a slim oak podium with a hand scanner and a brass lamp
     2  ID desk: a green desk with oak pilasters, a lit scanner pad on an arm and a guest-list tablet

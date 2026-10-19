@@ -14,7 +14,7 @@ the shared palette, brass, plants and buds, so keep it next to the station scrip
 All four are the tier 3 look; the 3D map shows them at every tier until tier 1 and 2 variants exist. Seeds, the
 order desks and the online orders deck are still grey boxes.
 
-`security_booth.py` builds all five security booth looks (Lv 1, 10, 20, 30, 50) from one script:
+`security_booth.py` builds all five security booth looks (Lv 1, 10, 30, 50, 75) from one script:
 `blender -b -P security_booth.py -- OUT_DIR TIER` writes `security_booth_tierTIER.glb`. Every tier stands on the same
 brass-edged mat, so the map scales all five alike.
 

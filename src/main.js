@@ -596,8 +596,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   function trainIdChecker(limit){
     var quote=idTrainingQuote(limit);if(!quote.levels)return;
-    var tierBefore=economy.securityTier(state.idStaff);state.money-=quote.cost;state.idStaff+=quote.levels;
-    var tier=economy.securityTier(state.idStaff);if(tier>tierBefore){buildRise[6]=.6;burst(DOOR_POS,'#f0d89a');paintThumbnails()}
+    var tierBefore=economy.stationLook(state.idStaff);state.money-=quote.cost;state.idStaff+=quote.levels;
+    var tier=economy.stationLook(state.idStaff);if(tier>tierBefore){buildRise[6]=.6;burst(DOOR_POS,'#f0d89a');paintThumbnails()}
     notify(tier>tierBefore?'SECURITY · '+economy.SECURITY_TIERS[tier-1].toUpperCase():'SECURITY · LEVEL '+state.idStaff,'upgrade');renderUI();save();
   }
   function maxStaffTraining(i){
@@ -783,10 +783,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       layout.floors=[{y:0,x:.75,z:2.475,w:24.5,d:18.95},{y:4.7,z:-2.95,w:18,d:7.4},{y:9.4,z:-3.6,w:13,d:6.6}];layout.marquee={x:MARQUEE.x,zFront:MARQUEE.zFront,zRear:MARQUEE.zRear,y0:MARQUEE.y0,y1:MARQUEE.y1,top:MARQUEE.top,bottom:MARQUEE.bottom};
       // Blender models (art/blender/, exported to public/models/) by station index, sized from the tier 3 sprite they replace.
       layout.modelBase=new URL('models/',document.baseURI).href;
-      // Keyed "station.tier"; a tier without its own model shows the tier 3 one. Each is sized to its tier's sprite.
+      // Keyed "station.look" (economy.stationLook: Lv 1, 10, 30, 50, 75); a look without its own model shows the tier 3 one. Each is sized to its tier's sprite.
       layout.stationModels={'0.1':'seeds_bench_tier1.glb','0.2':'seeds_bench_tier2.glb','0.3':'seeds_bench.glb','1.1':'grow_bench_tier1.glb','1.2':'grow_bench_tier2.glb','1.3':'grow_bench.glb','2.1':'harvest_bench_tier1.glb','2.2':'harvest_bench_tier2.glb','2.3':'harvest_bench.glb',
         '3.1':'pack_bench_tier1.glb','3.2':'pack_bench_tier2.glb','3.3':'pack_bench.glb','4.1':'order_desk_tier1.glb','4.2':'order_desk_tier2.glb','4.3':'order_desk.glb','5.1':'pickup_desk_tier1.glb','5.2':'pickup_desk_tier2.glb','5.3':'pickup_desk.glb','6.1':'security_booth_tier1.glb','6.2':'security_booth_tier2.glb','6.3':'security_booth_tier3.glb','6.4':'security_booth_tier4.glb','6.5':'security_booth_tier5.glb'};
-      layout.stationModelSize={};for(var key in layout.stationModels)layout.stationModelSize[key]=stationSpriteSize(+key.split('.')[0],+key.split('.')[1]);layout.stationModelSize['4.3']={w:2.2,ox:0};
+      stationModelFiles=layout.stationModels;layout.stationModelSize={};for(var key in layout.stationModels)layout.stationModelSize[key]=stationSpriteSize(+key.split('.')[0],+key.split('.')[1]);layout.stationModelSize['4.3']={w:2.2,ox:0};
       // The lower order desks keep their sprites' size against tier 3's.
       [1,2].forEach(function(t){layout.stationModelSize['4.'+t]={w:2.2*stationSpriteSize(4,t).w/stationSpriteSize(4,3).w,ox:0}});
       // The security booths are built facing -Y; turned a quarter, their scanner, sign and customer side face the front door
@@ -2347,7 +2347,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var speed=state.lines.some(function(n){return n>0})?Math.min(.07,.02+production()*.00002):0;
     crateTime=(crateTime+frameDelta*speed*1.4)%1;cargoOdo=(cargoOdo+frameDelta*speed*14)%1e5;
     var stations=[],people=[];
-    function station(i,x,y,z,level,built,size){var tier=built?spriteTier(level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(tier-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,selected:selected===i&&!securitySelected&&!loungeSelected})}
+    function station(i,x,y,z,level,built,size){var tier=built?economy.stationLook(level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(tier-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,selected:selected===i&&!securitySelected&&!loungeSelected})}
     // People are the 2D map's own sprites, recorded as each would be drawn and stood up in the scene as flat figures
     // (capturePerson); a capsule under each casts its shadow.
     var figures=[];
@@ -2365,7 +2365,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
           person(p.x+spot.dx,p.y||0,p.z+spot.dz,'#2f6b52',function(){drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait)})})(i,p);
       }
     }
-    stations.push({index:6,x:ID_DESK.x,y:0,z:ID_DESK.z,w:.8,d:1.3,h:1.1,tier:state.doorBuilt?economy.securityTier(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
+    stations.push({index:6,x:ID_DESK.x,y:0,z:ID_DESK.z,w:.8,d:1.3,h:1.1,tier:state.doorBuilt?economy.stationLook(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
     // The doorman stands behind the booth, on the room side, facing the front door across the desk.
     if(state.doorBuilt)person(DOORMAN.x,0,DOORMAN.z,'#2f6b52',function(){drawPerson(DOORMAN.x,DOORMAN.z,now,6,false,true,false,{amount:0,phase:0,facing:-1})});
     // The lounge host works the rooftop: behind the bar once there is one, otherwise by the elevator's bridge.
@@ -2669,7 +2669,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       }else renderUpgradeComparison('Seconds per handoff',handoffNow/Math.max(1,state.gameSpeed),handoffNext/Math.max(1,state.gameSpeed),true,!level,false);
     }
     paintUpgradePreview(selected);
-    $('nextAppearance').textContent=(tier?'Tier bonus ×'+economy.tierBoost(level)+' · ':'')+(tier<6?'Output ×2 and new look at level '+TIER_LEVELS[tier+1]+' · '+STATION_TIERS[tier+1]+(selected>=4?' · both counters at a tier double baskets':''):'Flagship equipment · upgrades keep increasing output');
+    var lookAt=economy.nextLookLevel(level);
+    $('nextAppearance').textContent=(lookAt?'New look at level '+lookAt+' · ':'')+(tier?'Tier bonus ×'+economy.tierBoost(level)+' · ':'')+(tier<6?'Output ×2 at level '+TIER_LEVELS[tier+1]+' · '+STATION_TIERS[tier+1]+(selected>=4?' · both counters at a tier double baskets':''):'Flagship equipment · upgrades keep increasing output');
     $('machineCost').textContent=level?fmt(price):'FREE';$('buyMachine').disabled=!affordable;$('buyMachine').querySelector('span').textContent=!open?'LOCKED':level?'UPGRADE':'BUILD';
     var maxUpgrade=level?maxStationUpgrade(selected):{levels:0,cost:0};
     $('buyMachineMax').disabled=!maxUpgrade.levels;
@@ -2683,7 +2684,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     }
     renderOrderCounters();
     var doorSite=!state.doorBuilt,doorKey=doorSite?'site':String(state.idStaff);
-    securityMarker.classList.add('station-sign');securityMarker.classList.toggle('selected',securitySelected);securityMarker.classList.toggle('is-site',doorSite);securityMarker.classList.toggle('can-upgrade',!doorSite&&idTrainingQuote(1).levels>0);if(securityMarker.dataset.level!==doorKey){securityMarker.innerHTML='<span class=station-sign-name>Security</span><span class=station-sign-level>'+(doorSite?'Build':'Lv '+state.idStaff)+'</span>';securityMarker.dataset.level=doorKey;updateMarkers.key=null;}securityMarker.style.setProperty('--station-tier',TIER_COLORS[economy.securityTier(state.idStaff)]);securityMarker.setAttribute('aria-label',doorSite?'Security, under construction. Build the door':'Security, level '+state.idStaff+'. Open security station');securityMarker.setAttribute('aria-pressed',String(securitySelected));
+    securityMarker.classList.add('station-sign');securityMarker.classList.toggle('selected',securitySelected);securityMarker.classList.toggle('is-site',doorSite);securityMarker.classList.toggle('can-upgrade',!doorSite&&idTrainingQuote(1).levels>0);if(securityMarker.dataset.level!==doorKey){securityMarker.innerHTML='<span class=station-sign-name>Security</span><span class=station-sign-level>'+(doorSite?'Build':'Lv '+state.idStaff)+'</span>';securityMarker.dataset.level=doorKey;updateMarkers.key=null;}securityMarker.style.setProperty('--station-tier',TIER_COLORS[economy.stationLook(state.idStaff)]);securityMarker.setAttribute('aria-label',doorSite?'Security, under construction. Build the door':'Security, level '+state.idStaff+'. Open security station');securityMarker.setAttribute('aria-pressed',String(securitySelected));
     var loungeLot=!state.lounge,loungePrice=loungeUpgradeCost(state.lounge),loungeKey=String(state.lounge)+'|'+(loungePrice!==null&&state.money>=loungePrice);
     loungeMarker.classList.add('station-sign');loungeMarker.classList.toggle('selected',loungeSelected);loungeMarker.classList.toggle('is-lot',loungeLot);loungeMarker.classList.toggle('can-upgrade',loungePrice!==null&&state.money>=loungePrice);
     if(loungeMarker.dataset.level!==loungeKey){loungeMarker.innerHTML='<span class=station-sign-name>Lounge</span><span class=station-sign-level>'+(loungeLot?fmt(loungePrice):'Lv '+state.lounge)+'</span>';loungeMarker.dataset.level=loungeKey;updateMarkers.key=null;}
@@ -2728,7 +2729,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var slowNow=slowestStation();
     markerEls.forEach(function(el,i){var locked=!isOpen(i),site=!state.lines[i];el.classList.toggle('selected',!securitySelected&&!loungeSelected&&i===selected);el.classList.toggle('locked',locked);el.classList.toggle('is-site',site);el.classList.toggle('is-bottleneck',i===slowNow&&!locked&&!site);el.classList.add('station-sign');el.classList.toggle('can-upgrade',!locked&&!site&&state.money>=cost(i));if(el.dataset.level!==String(state.lines[i])){el.innerHTML='<span class=station-sign-name>'+shortNames[i]+'</span><span class=station-sign-level>'+(site?'Build':'Lv '+state.lines[i])+'</span>';el.dataset.level=String(state.lines[i]);updateMarkers.key=null;}el.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);el.setAttribute('aria-label',LINES[i].name+(locked?', locked':site?', under construction. Build it':', level '+state.lines[i]));el.setAttribute('aria-pressed',String(!securitySelected&&!loungeSelected&&i===selected))});
     var loungeCard=document.querySelector('[data-lounge]');if(loungeCard){loungeCard.setAttribute('aria-pressed',String(loungeSelected));loungeCard.classList.toggle('is-lot',loungeLot);loungeCard.classList.toggle('can-upgrade',loungePrice!==null&&state.money>=loungePrice);loungeCard.querySelector('em').textContent=loungeLot?'Open':'Lv '+state.lounge;loungeCard.setAttribute('aria-label',loungeLot?'Smoking lounge, under construction':'Smoking lounge, level '+state.lounge);loungeCard.style.setProperty('--station-tier',TIER_COLORS[Math.min(3,state.lounge)])}
-    var securityCard=document.querySelector('[data-security]');if(securityCard){securityCard.setAttribute('aria-pressed',String(securitySelected));securityCard.classList.toggle('is-site',doorSite);securityCard.classList.toggle('can-upgrade',!doorSite&&idTrainingQuote(1).levels>0);securityCard.querySelector('em').textContent=doorSite?'Build':'Lv '+state.idStaff;securityCard.setAttribute('aria-label',doorSite?'Security, under construction':'Security, level '+state.idStaff);securityCard.style.setProperty('--station-tier',TIER_COLORS[economy.securityTier(state.idStaff)])}
+    var securityCard=document.querySelector('[data-security]');if(securityCard){securityCard.setAttribute('aria-pressed',String(securitySelected));securityCard.classList.toggle('is-site',doorSite);securityCard.classList.toggle('can-upgrade',!doorSite&&idTrainingQuote(1).levels>0);securityCard.querySelector('em').textContent=doorSite?'Build':'Lv '+state.idStaff;securityCard.setAttribute('aria-label',doorSite?'Security, under construction':'Security, level '+state.idStaff);securityCard.style.setProperty('--station-tier',TIER_COLORS[economy.stationLook(state.idStaff)])}
     updateStationOrbit(slow);
     machineTabs.forEach(function(tab,i){var locked=!isOpen(i),site=!state.lines[i],available=!locked&&!site&&state.money>=cost(i);tab.title=site?'Under construction':i===slow?'Slowest station · improve this to raise capacity':'';tab.setAttribute('aria-pressed',String(!securitySelected&&!loungeSelected&&i===selected));tab.classList.toggle('is-locked',locked);tab.classList.toggle('is-site',site);tab.classList.toggle('can-upgrade',available);tab.querySelector('em').innerHTML=locked?'Locked':site?'Build':'Lv '+state.lines[i]+(i===slow?'<span class="slow-tag"> · Slow</span>':'');tab.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);var progress=Math.min(100,state.lines[i]/100*100),progressText=site?'Under construction':state.lines[i]>=100?'Flagship equipment reached':'Level '+state.lines[i]+' of 100 toward flagship equipment';tab.querySelector('progress').value=progress;tab.querySelector('progress').setAttribute('aria-label',LINES[i].name+' equipment progress');tab.querySelector('progress').setAttribute('aria-valuetext',progressText);tab.querySelector('progress').title=progressText;tab.querySelector('.level-funding').textContent=progressText;tab.setAttribute('aria-label',LINES[i].name+(i===slow?', slowest station':'')+', level '+state.lines[i]+', '+STATION_TIERS[stationTier(i)]+(available?', upgrade ready':''))});
     updateCommerceControls();
@@ -2933,11 +2934,11 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     }
     $('upgradeLevel').textContent=maxed?'Lv '+lvl:'Lv '+lvl+' → '+(lvl+1);
     renderUpgradeComparison('Seconds per ID check',securityDuration(),securityDuration(lvl+1),true,false,maxed);
-    var booth=economy.securityTier(lvl),nextLook=economy.SECURITY_TIER_LEVELS[booth];$('stationTier').textContent=lvl?economy.SECURITY_TIERS[booth-1]:'Unstaffed door';$('stationTier').style.color=TIER_COLORS[booth];
+    var booth=economy.stationLook(lvl),nextLook=economy.nextLookLevel(lvl);$('stationTier').textContent=lvl?economy.SECURITY_TIERS[booth-1]:'Unstaffed door';$('stationTier').style.color=TIER_COLORS[booth];
     $('upgradeFunding').textContent=maxed?'Top of the security track':affordable?'Ready to train':fmt(Math.max(0,price-state.money))+' to go';
     $('upgradeProgress').value=maxed?100:Math.min(100,state.money/price*100);$('upgradeProgress').setAttribute('aria-valuetext',affordable?'Training ready':fmt(Math.max(0,price-state.money))+' needed for level '+(lvl+1));
     paintUpgradePreview(-1);
-    $('nextAppearance').textContent=nextLook?'New look at level '+nextLook+' · '+economy.SECURITY_TIERS[booth]:'The flagship booth · scanner upgrades in the Shop still speed up every check.';
+    $('nextAppearance').textContent=nextLook?'New look at level '+nextLook+' · '+economy.SECURITY_TIERS[economy.stationLook(nextLook)-1]:'The flagship booth · scanner upgrades in the Shop still speed up every check.';
     $('machineCost').textContent=maxed?'—':fmt(price);$('buyMachine').disabled=!affordable;$('buyMachine').querySelector('span').textContent=lvl?'TRAIN':'HIRE';
     $('buyMachineMax').disabled=!quote.levels;$('machineMaxLabel').textContent='MAX'+(quote.levels?' +'+quote.levels+' LV':'');$('machineMaxCost').textContent=quote.levels?fmt(quote.cost):'—';$('buyMachineMax').setAttribute('aria-label','Train security by '+quote.levels+' levels for '+fmt(quote.cost));
     $('buyMachine').style.setProperty('--funded',(maxed?0:Math.min(100,state.money/price*100))+'%');
@@ -3027,10 +3028,12 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   // The menus show each station as its 3D model once the 3D map has rendered it (map3d.stationPicture, framed like the
   // map), the sprite until then and in the 2D map. picturesPending asks the frame loop to repaint the station tabs.
-  var picturesPending=false;
+  var picturesPending=false,stationModelFiles={};
+  // A look without its own model yet shows the highest one that has one, as the map does.
+  function stationModelKey(i,level){var t=economy.stationLook(level);while(t>1&&!stationModelFiles[i+'.'+t])t--;return i+'.'+t}
   function stationPicture(i,level){
     if(!map3d||!map3d.ok||!map3d.stationPicture||!(level>0))return null;
-    var picture=map3d.stationPicture(i+'.'+(i===6?economy.securityTier(level):spriteTier(level)));if(!picture)picturesPending=true;return picture;
+    var picture=map3d.stationPicture(stationModelKey(i,level));if(!picture)picturesPending=true;return picture;
   }
   function paintUpgradePreview(index){
     var preview=$('upgradePreview');if(!preview)return;
