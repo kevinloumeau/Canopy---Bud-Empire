@@ -177,24 +177,55 @@ export function buildRooftop(world, layout, { box, span, material }) {
   stringLights(t1, p.x0, p.z1, y + p.h, x0 + .25, z1 - .2, y + railH + .9, 9);
   stringLights(t1, p.x1, p.z1, y + p.h, x1 - .3, z1 - .2, y + railH + .9, 12);
   box(t1, x0 + .25, y, z1 - .2, .06, railH + .95, .06, STEEL); box(t1, x1 - .3, y, z1 - .2, .06, railH + .95, .06, STEEL);
-  // The neon LOUNGE sign on the pergola's front beam, toward the street.
-  const signCanvas = document.createElement('canvas'); signCanvas.width = 512; signCanvas.height = 128;
-  const signTexture = new THREE.CanvasTexture(signCanvas); signTexture.colorSpace = THREE.SRGBColorSpace;
-  // In Fredoka like the doorway's sign (shell.js loads it); repainted once it arrives.
-  function paintSign() {
-    const c = signCanvas.getContext('2d'); c.clearRect(0, 0, 512, 128);
-    c.font = '600 80px "Fredoka", "Bricolage Grotesque", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.shadowColor = '#ff6fa8'; c.shadowBlur = 20; c.fillStyle = '#ff8fbf'; c.fillText('LOUNGE', 256, 66); c.shadowBlur = 0; c.fillStyle = '#fff4f8'; c.fillText('LOUNGE', 256, 66);
-    signTexture.needsUpdate = true;
-    if (signFlipped) signFlipped.needsUpdate = true;
+  // Greenery over the pergola (Kevin, 2026-10-19, in place of its LOUNGE sign): leafy clumps along the slats and
+  // beams, thicker toward the posts, with vines trailing down the front posts. One instanced mesh, two greens.
+  const leafGeo = new THREE.IcosahedronGeometry(.17, 0);
+  const leafMat = new THREE.MeshLambertMaterial({ color: '#ffffff' });
+  const leafSpots = [];
+  let seed = 7;
+  const rand = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  const top = y + p.h + .26, slats = 13;
+  for (let i = 0; i < slats; i++) {
+    const sx = p.x0 + .1 + i * (p.x1 - p.x0 - .2) / (slats - 1);
+    // Each slat carries a run of clumps that thins out toward the middle of the span.
+    for (let z = p.z0 - .25; z <= p.z1 + .25; z += .3) {
+      const edge = Math.min(Math.abs(z - p.z0), Math.abs(z - p.z1));
+      if (rand() < .35 + edge * .25) continue;
+      leafSpots.push([sx + (rand() - .5) * .22, top + rand() * .08, z + (rand() - .5) * .16, .7 + rand() * .7]);
+    }
   }
-  let signFlipped = null, signFaceMat = null;
-  paintSign();
-  if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', paintSign);
-  const signMat = new THREE.MeshBasicMaterial({ map: signTexture, transparent: true });
-  const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, .55), signMat);
-  sign.position.set((p.x0 + p.x1) / 2, y + p.h + .5, p.z1 + .09); k1.add(sign);
-  span(k1, (p.x0 + p.x1) / 2 - 1.1, (p.x0 + p.x1) / 2 + 1.1, y + p.h + .16, y + p.h + .22, p.z1 - .02, p.z1 + .06, '#1a1216', { cast: false });
+  [p.z0, p.z1].forEach(bz => { for (let x = p.x0 - .05; x <= p.x1 + .05; x += .22) leafSpots.push([x, top - .04 + rand() * .06, bz + (rand() - .5) * .2, .8 + rand() * .5]); });
+  // Vines down the two street-side posts and part way down the rear ones, wrapping as they fall.
+  [[p.x0, p.z1, 2.3], [p.x1, p.z1, 2.1], [p.x0, p.z0, 1.2], [p.x1, p.z0, 1.4]].forEach(([vx, vz, drop]) => {
+    for (let d = 0; d < drop; d += .16) { const a = d * 4.2 + vx; leafSpots.push([vx + Math.cos(a) * .12, y + p.h + .1 - d, vz + Math.sin(a) * .12, .55 + rand() * .35 - d * .1]); }
+  });
+  const leaves = new THREE.InstancedMesh(leafGeo, leafMat, leafSpots.length);
+  const leafM = new THREE.Matrix4(), leafQ = new THREE.Quaternion(), leafE = new THREE.Euler(), leafS = new THREE.Vector3(), leafP = new THREE.Vector3(), leafC = new THREE.Color();
+  const greens = ['#4f8a3a', '#3f7a33', '#6a9e45', '#2f6a30'];
+  leafSpots.forEach(([lx, ly, lz, sc], i) => {
+    leafE.set(rand() * 3, rand() * 3, rand() * 3); leafQ.setFromEuler(leafE);
+    leafS.set(sc * 1.2, sc * .7 / HEIGHT_SCALE, sc); leafP.set(lx, ly, lz);
+    leaves.setMatrixAt(i, leafM.compose(leafP, leafQ, leafS)); leaves.setColorAt(i, leafC.set(greens[i % greens.length]));
+  });
+  leaves.castShadow = true; leaves.receiveShadow = true; t1.add(leaves);
+
+  // Smoke: each seated guest breathes out a soft puff now and then that drifts up and fades. A small pool of sprites
+  // shared by every guest, two puffs each, so it stays cheap on phones.
+  const smokeCanvas = document.createElement('canvas'); smokeCanvas.width = smokeCanvas.height = 64;
+  const sc = smokeCanvas.getContext('2d'), grad = sc.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grad.addColorStop(0, 'rgba(255,255,255,.9)'); grad.addColorStop(.45, 'rgba(255,255,255,.4)'); grad.addColorStop(1, 'rgba(255,255,255,0)');
+  sc.fillStyle = grad; sc.fillRect(0, 0, 64, 64);
+  const smokeTexture = new THREE.CanvasTexture(smokeCanvas);
+  const SMOKE_PUFFS = 2, SMOKE_PERIOD = 5200, SMOKE_LIFE = 3400;
+  const puffs = [];
+  const smoke = new THREE.Group(); open.add(smoke);
+  function puff(i) {
+    while (puffs.length <= i) {
+      const m = new THREE.SpriteMaterial({ map: smokeTexture, color: '#e9e4dc', transparent: true, depthWrite: false, opacity: 0 });
+      const sprite = new THREE.Sprite(m); sprite.renderOrder = 5; smoke.add(sprite); puffs.push(sprite);
+    }
+    return puffs[i];
+  }
 
   // Dab bar: a green-tiled bar along the rear right with a cream top, a brass foot rail, three stools, a back bar.
   const b = { x0: x1 - 4.4, x1: x1 - 1.2, z: z0 + 1.5 };
@@ -323,13 +354,9 @@ export function buildRooftop(world, layout, { box, span, material }) {
     sets.forEach(set => loader.load(base + set.file, gltf => {
       const source = gltf.scene;
       source.traverse(o => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
-      const signFace = source.getObjectByName('SignFace'), fire = source.getObjectByName('Flame'), floor = source.getObjectByName('DanceFloor');
-      // glTF UVs run top-down, so the model's sign face gets the canvas unflipped.
-      if (signFace) {
-        const flipped = signTexture.clone(); flipped.flipY = false; flipped.needsUpdate = true;
-        signFlipped = flipped; const faceMat = signMat.clone(); faceMat.map = flipped; signFaceMat = faceMat;
-        signFace.traverse(o => { if (o.isMesh) { o.material = faceMat; o.castShadow = false; } });
-      }
+      const fire = source.getObjectByName('Flame'), floor = source.getObjectByName('DanceFloor');
+      // The pergola's LOUNGE sign is gone (Kevin, 2026-10-19); the greenery tops the beam instead.
+      source.traverse(o => { if (/^Sign/.test(o.name)) o.visible = false; });
       if (fire) fire.traverse(o => { if (o.isMesh) { o.material = flame.material; o.castShadow = false; } });
       if (floor) floor.traverse(o => { if (o.isMesh) o.material = dance.material; });
       barLamps.forEach((shade, i) => { const lamp = source.getObjectByName('BarLamp' + i); if (lamp) lamp.traverse(o => { if (o.isMesh) { o.material = shade.material; o.castShadow = false; } }); });
@@ -360,8 +387,23 @@ export function buildRooftop(world, layout, { box, span, material }) {
       lights.forEach(([m, day, nightGlow]) => { m.emissiveIntensity = day + night * nightGlow; });
       flame.scale.y = .8 + Math.sin((frame.time || 0) / 130) * .2 + Math.sin((frame.time || 0) / 53) * .1;
       flame.visible = tier >= 1;
-      signMat.color.setScalar(.75 + night * .25);
-      if (signFaceMat) signFaceMat.color.setScalar(.75 + night * .25);
+      leafMat.color.setScalar(1 - night * .45);
+      // Each smoker's puffs run on their own clock (offset by id) so the roof never exhales in unison.
+      const smokers = tier ? frame.loungeSmokers || [] : [], now = frame.time || 0;
+      let used = 0;
+      smokers.forEach(g => {
+        for (let k = 0; k < SMOKE_PUFFS; k++) {
+          const t = ((now + (g.id * 1777) % SMOKE_PERIOD + k * SMOKE_PERIOD / SMOKE_PUFFS) % SMOKE_PERIOD) / SMOKE_LIFE;
+          if (t >= 1) continue;
+          const sprite = puff(used++), size = .28 + t * .75, drift = Math.sin(t * 3 + g.id) * .12;
+          sprite.visible = true;
+          sprite.position.set(g.x + (g.facing || 0) * .4 + drift + t * .25, y + 1.7 + t * 1.15, g.z + .1 - t * .1);
+          sprite.scale.set(size, size / HEIGHT_SCALE, 1);
+          sprite.material.opacity = Math.min(1, t * 5) * Math.pow(1 - t, 1.2) * .6;
+          sprite.material.color.setScalar(.86 - night * .35);
+        }
+      });
+      for (let i = used; i < puffs.length; i++) puffs[i].visible = false;
       roofLight.intensity = tier ? night * 6 : 0;
     }
   };
