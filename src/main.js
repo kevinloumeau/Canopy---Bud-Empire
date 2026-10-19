@@ -370,6 +370,16 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var LOUNGE_DOOR={x:-9.5,z:-.45},LOUNGE_EXIT={x:8.57,z:-3.3},LOUNGE_RIGHT=8.25,LOUNGE_ROPE=7;
   // The red carpet runs from the curtain to just past where lounge guests turn on to it (z 2.2), clear of the third kiosk.
   var LOUNGE_CARPET_END=2.6;
+  // The 3D map's rooftop lounge (src/three/rooftop.js): a deck stepped back from the top floor like the floors below
+  // it (its front 3.1 behind the top floor's, its rear over the back pavement on steel columns), one storey up, reached by a glass elevator
+  // standing in the old lounge room behind the curtain, its bridge landing at the deck's left edge. Guests ride up
+  // (`loungeRide` seconds after the curtain), spend their session at a spot on the roof, and ride down for the last
+  // LIFT_DOWN seconds before stepping out of the back door. The spots fill in tier order: Speakeasy round the fire
+  // table, Dab bar at the stools, Vinyl nights on the dance floor, Terrace at the parasol tables.
+  // The 2D map keeps its hidden lounge.
+  var liftY=0;
+  var ROOFTOP={x0:-6.5,x1:6.5,z0:-9.6,z1:-3.4,y:14.1,lift:{x:-9.9,z:-5,w:1.4,d:1.4}},LIFT_UP=3.2,LIFT_DOWN=2.6;
+  var ROOFTOP_SPOTS=[[-3.9,-6.7,.3],[-1.3,-6.7,-.3],[-2.6,-6.25,.3],[-1,-7.85,-.3],[2.7,-7.45,-.3],[4.7,-7.45,-.3],[2.5,-6,.3],[3.5,-5.25,-.3],[2.2,-4.85,.3],[-4.5,-5,.3],[-2.9,-5,-.3],[-1.7,-5,.3],[-.1,-5,-.3],[-2.3,-3.95,.3]];
   // The runner render's top face in sprite px: its near-left, near-right and far-left corners, and its length over width.
   var LOUNGE_RUNNER_PIN={left:[0,274],bottom:[146,360],top:[474,0],ratio:3.25};
   function loungeWaitSpot(place){return place<=0?LOUNGE_DOOR:{x:LOUNGE_DOOR.x+1.3+(place-1)*.65,z:LOUNGE_DOOR.z+.1}}
@@ -381,7 +391,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function enterLounge(c){
     var take=loungeTake(state.lounge,flowerValue(strainFor(c))*specialFactor('lounge'));
     state.stock[3]-=1;add(take.total);state.loungeSessions++;state.loungeEarned+=take.total;state.shopPlay.shift.earned+=take.total;c.loungeLeft=loungeSessionSeconds(state.lounge,state.loungeStaff);c.phase='lounge';c.walking=false;c.loungeTake=take.total;
-    c.loungeFade=1;c.fadeFromZ=c.z;c.facing=-.3;
+    c.loungeFade=1;c.fadeFromZ=c.z;c.facing=-.3;c.loungeRide=LIFT_UP;
     recordEvent(state.empire,'pickup',1);playSound('coin',state.sound);
     if(!motionPreference.matches)tickets.push({x:LOUNGE_DOOR.x,y:2.1,z:LOUNGE_DOOR.z,life:1,text:fmt(take.cover)});
   }
@@ -395,6 +405,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     customers.forEach(function(c){
       if(c.phase==='lounge'){
         if(c.loungeFade>0){c.loungeFade=Math.max(0,c.loungeFade-dt/.8);c.z=c.fadeFromZ+(LOUNGE_FRONT-.2-c.fadeFromZ)*(1-c.loungeFade);c.x=LOUNGE_DOOR.x;c.walking=c.loungeFade>0}
+        else if(c.loungeRide>0)c.loungeRide=Math.max(0,c.loungeRide-dt);
         c.loungeLeft-=dt;if(c.loungeLeft<=0)leaveLounge(c);
       }else if(c.loungeFadeIn!==undefined&&c.loungeFadeIn<1)c.loungeFadeIn=Math.min(1,c.loungeFadeIn+dt/.3);
     });
@@ -763,6 +774,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       // The street's cars and van: one model each, painted per car in code (CarPaint, VanPaint).
       layout.carModels={car:'car.glb',van:'van.glb'};
       // The shell and fittings from the same numbers drawTower, drawLoungeFront and drawShellProductWall use.
+      layout.rooftop=ROOFTOP;
       layout.shell={plaster:SHOP_GREEN_PLASTER[2],tile:SHOP_GREEN_TILE[2],tileH:LOUNGE_TILE,tilePitch:TILE_PITCH,glazingBay:GLAZING_BAY,fanX:FAN_X,topLanding:TOP_LANDING,
         loungeFront:LOUNGE_FRONT,loungeDoor:LOUNGE_DOOR,loungeExit:LOUNGE_EXIT,loungeRight:LOUNGE_RIGHT,loungeHeader:2.05,wallLeft:-6.7,wallRight:8.4,shelfLeft:-1.3+COUNTER_SHIFT,
         exitDoor:{x0:9.44,x1:11.25,h:3.3},column:{x:9.8,z:-1.8},merchCabinet:{back:8.41,face:9.27,z0:-6.84,z1:-4.8},
@@ -4232,7 +4244,21 @@ if(!SHOP_SPRITES){
     }
     stations.push({index:6,x:-9.1,y:0,z:9.3,w:.8,d:1.3,h:1.1,tier:state.doorBuilt?spriteTier(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,selected:securitySelected});
     if(state.doorBuilt)person(-8.25,0,8.75,'#2f6b52',function(){drawPerson(-8.25,8.75,now,6,false,true,false)});
-    if(state.lounge>0){var hx=LOUNGE_DOOR.x-1.05,hz=LOUNGE_FRONT+.75;person(hx,0,hz,'#2f6b52',function(){drawPerson(hx,hz,now,8,false,true,false,{amount:0,phase:0,facing:-.3})})}
+    // The lounge host works the rooftop: behind the bar once there is one, otherwise by the elevator's bridge.
+    if(state.lounge>0){var host=state.lounge>=2?{x:3.7,z:-8.75,f:.3}:{x:-5.2,z:-4,f:.3};person(host.x,ROOFTOP.y,host.z,'#2f6b52',function(){drawPerson(host.x,host.z,now,8,false,true,false,{amount:0,phase:0,facing:host.f})})}
+    // Guests on the roof hold a spot for their session. A guest riding up or down stands in the elevator's cab, which
+    // carries them between the old lounge room and the roof and waits wherever it last stopped.
+    var taken={},spots=ROOFTOP_SPOTS.slice(0,loungeSeats(state.lounge)||4),lift=ROOFTOP.lift;
+    var smooth=function(t){t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)};
+    customers.forEach(function(c){if(c.phase==='lounge'&&c.roofSpot!==undefined&&c.roofSpot<spots.length&&!taken[c.roofSpot])taken[c.roofSpot]=c.id;else if(c.phase!=='lounge')c.roofSpot=undefined});
+    customers.forEach(function(c){
+      if(c.phase!=='lounge'||c.loungeFade>0)return;
+      var ride=c.loungeLeft<LIFT_DOWN?1-smooth(1-c.loungeLeft/LIFT_DOWN):c.loungeRide>0?smooth(1-c.loungeRide/LIFT_UP):null;
+      if(ride!==null){liftY=ride*ROOFTOP.y;var rx=lift.x,rz=lift.z+.1;person(rx,liftY+.12,rz,PERSON_COLOURS[(c.id||0)%PERSON_COLOURS.length],function(){drawPerson(rx,rz,now,c.id,false,false,false,{amount:0,phase:0,facing:.3})});return}
+      if(c.roofSpot===undefined||taken[c.roofSpot]!==c.id){for(var k=0;k<spots.length;k++)if(taken[k]===undefined){c.roofSpot=k;taken[k]=c.id;break}}
+      var spot=spots[c.roofSpot];if(!spot||taken[c.roofSpot]!==c.id)return;
+      person(spot[0],ROOFTOP.y,spot[1],PERSON_COLOURS[(c.id||0)%PERSON_COLOURS.length],function(){drawPerson(spot[0],spot[1],now,c.id,false,false,false,{amount:0,phase:0,facing:spot[2]})});
+    });
     customers.forEach(function(c){
       stepCustomerVisual(c,frameDelta);
       if(c.phase==='lounge')return;
@@ -4264,7 +4290,7 @@ if(!SHOP_SPRITES){
     // depth and the scene's haze do both, so only the solid draws are kept.
     figures=figures.filter(function(f){return f.alpha>.99});backdrops=backdrops.filter(function(f){return f.alpha>.99});
     var look=viewCentre();
-    map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    map3d.render({width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,liftY:liftY,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtures:{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true},cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
     customers.forEach(function(c){if(c.phase!=='lounge'&&customerBadged(c))drawCustomerBadge(Object.assign({},c,{x:c.renderX,z:c.renderZ}))});
     drawDeliveryDrones(frameDelta,now);drawParticles(frameDelta);drawTickets(frameDelta);drawConfetti(wallDelta);
@@ -4557,7 +4583,7 @@ if(!SHOP_SPRITES){
   function updateMarkers(){
     var key=[centerX,centerY,unit,width,height,state.idStaff,state.lines.join(),securitySelected,selected,state.lounge,loungeSelected].join("|");
     if(updateMarkers.key===key)return;updateMarkers.key=key;
-    var securityPos=project(-9.1,.62,9.91),loungePos=project(LOUNGE_DOOR.x,1.5,DISPLAY_Z+.5),labelSize=Math.max(8,Math.min(10,unit*.24))*(width>=780?.85:1)+'px';
+    var securityPos=project(-9.1,.62,9.91),loungePos=map3d&&map3d.ok?project(-2.7,ROOFTOP.y+1.2,-6.1):project(LOUNGE_DOOR.x,1.5,DISPLAY_Z+.5),labelSize=Math.max(8,Math.min(10,unit*.24))*(width>=780?.85:1)+'px';
     securityMarker.style.fontSize=labelSize;loungeMarker.style.fontSize=labelSize;
     var labels=[{el:securityMarker,x:securityPos.x,y:securityPos.y},{el:loungeMarker,x:loungePos.x,y:loungePos.y}];
     markerEls.forEach(function(el,i){var station=machinePos[i],pos=project(station.x,.63+station.y,station.z+1.23);el.style.fontSize=labelSize;labels.push({el:el,x:pos.x,y:pos.y})});
@@ -4666,7 +4692,7 @@ if(!SHOP_SPRITES){
     securityMarker.classList.add('station-sign');securityMarker.classList.toggle('selected',securitySelected);securityMarker.classList.toggle('is-site',doorSite);securityMarker.classList.toggle('can-upgrade',!doorSite&&state.idStaff<10000&&state.money>=Math.floor(20*Math.pow(1.6,state.idStaff)));if(securityMarker.dataset.level!==doorKey){securityMarker.innerHTML='<span class=station-sign-name>Security</span><span class=station-sign-level>'+(doorSite?'Build':'Lv '+state.idStaff)+'</span>';securityMarker.dataset.level=doorKey;updateMarkers.key=null;}securityMarker.style.setProperty('--station-tier',TIER_COLORS[state.idStaff>=25?3:state.idStaff>=10?2:1]);securityMarker.setAttribute('aria-label',doorSite?'Security, under construction. Build the door':'Security, level '+state.idStaff+'. Open security station');securityMarker.setAttribute('aria-pressed',String(securitySelected));
     var loungeLot=!state.lounge,loungePrice=loungeUpgradeCost(state.lounge),loungeKey=String(state.lounge)+'|'+(loungePrice!==null&&state.money>=loungePrice);
     loungeMarker.classList.add('station-sign');loungeMarker.classList.toggle('selected',loungeSelected);loungeMarker.classList.toggle('is-lot',loungeLot);loungeMarker.classList.toggle('can-upgrade',loungePrice!==null&&state.money>=loungePrice);
-    if(loungeMarker.dataset.level!==loungeKey){loungeMarker.innerHTML='<span class=station-sign-name>Lounge</span><span class=station-sign-level>'+(loungeLot?'Open · '+fmt(loungePrice):'Lv '+state.lounge)+'</span>';loungeMarker.dataset.level=loungeKey;updateMarkers.key=null;}
+    if(loungeMarker.dataset.level!==loungeKey){loungeMarker.innerHTML='<span class=station-sign-name>Lounge</span><span class=station-sign-level>'+(loungeLot?fmt(loungePrice):'Lv '+state.lounge)+'</span>';loungeMarker.dataset.level=loungeKey;updateMarkers.key=null;}
     loungeMarker.style.setProperty('--station-tier',TIER_COLORS[Math.min(3,state.lounge)]);loungeMarker.setAttribute('aria-label',loungeLot?'Smoking lounge, under construction. Opens for '+fmt(loungePrice):'Smoking lounge, level '+state.lounge+'. Open lounge station');loungeMarker.setAttribute('aria-pressed',String(loungeSelected));
     var idPrice=Math.floor(20*Math.pow(1.6,state.idStaff)),idMax=idTrainingQuote(10000);
     $('idEmployeeInfo').innerHTML='<span>Lv '+state.idStaff+'</span><span>'+(securityDuration()).toFixed(2)+'s / check</span>';

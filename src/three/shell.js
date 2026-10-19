@@ -139,23 +139,26 @@ export function buildShell(world, layout, { box, span, material }) {
   span(shell, rx - .16, rx + .16, 0, wallTop, ez + ew, face, plaster);
   dado(true, gRear, ez - ew - .04, rx + .16); dado(true, ez + ew + .04, face, rx + .16);
   span(shell, rx - .1, rx + .1, 0, eh, ez - ew, ez + ew, '#0d1310', { cast: false });
-  span(shell, -11.18, rx - .16, .002, .012, gRear, zc0, '#2a1b22', { cast: false });
-  span(shell, -10.95, -9.25, .012, .022, -5.3, -2.9, '#5a2638', { cast: false });
-  span(shell, -10.75, -9.45, .022, .03, -5.1, -3.1, '#7a3a4c', { cast: false });
-  [[-6.15, -5.55, 1], [-2.65, -2.05, -1]].forEach(([z0, z1, dir]) => {
-    span(shell, -10.9, -9.3, 0, .48, z0, z1, VELVET);
-    const back = dir > 0 ? [z0, z0 + .16] : [z1 - .16, z1];
-    span(shell, -10.9, -9.3, .48, .95, back[0], back[1], '#5c1e30');
-    span(shell, -10.9, -10.72, .48, .7, z0, z1, '#5c1e30'); span(shell, -9.48, -9.3, .48, .7, z0, z1, '#5c1e30');
-  });
-  span(shell, -10.55, -9.65, 0, .4, -4.35, -3.85, '#3a2a1e');
+  // With the rooftop lounge (rooftop.js) this room is the elevator lobby, so its sofas, rug and lamps go upstairs.
   const lampShades = [];
-  [[-10.7, -6.6], [-10.7, -1.55], [-9.6, -4.1]].forEach(([x, z]) => {
-    box(shell, x, 0, z, .4, .62, .4, '#3a2a1e');
-    box(shell, x, .62, z, .04, .4, .04, '#d8c18b', { cast: false });
-    const shade = new THREE.Mesh(new THREE.CylinderGeometry(.13, .2, .26, 16).translate(0, .13, 0), new THREE.MeshLambertMaterial({ color: '#f3d9a6', emissive: '#ffb36a', emissiveIntensity: 0 }));
-    shade.position.set(x, 1, z); shell.add(shade); lampShades.push(shade);
-  });
+  if (!layout.rooftop) {
+    span(shell, -11.18, rx - .16, .002, .012, gRear, zc0, '#2a1b22', { cast: false });
+    span(shell, -10.95, -9.25, .012, .022, -5.3, -2.9, '#5a2638', { cast: false });
+    span(shell, -10.75, -9.45, .022, .03, -5.1, -3.1, '#7a3a4c', { cast: false });
+    [[-6.15, -5.55, 1], [-2.65, -2.05, -1]].forEach(([z0, z1, dir]) => {
+      span(shell, -10.9, -9.3, 0, .48, z0, z1, VELVET);
+      const back = dir > 0 ? [z0, z0 + .16] : [z1 - .16, z1];
+      span(shell, -10.9, -9.3, .48, .95, back[0], back[1], '#5c1e30');
+      span(shell, -10.9, -10.72, .48, .7, z0, z1, '#5c1e30'); span(shell, -9.48, -9.3, .48, .7, z0, z1, '#5c1e30');
+    });
+    span(shell, -10.55, -9.65, 0, .4, -4.35, -3.85, '#3a2a1e');
+    [[-10.7, -6.6], [-10.7, -1.55], [-9.6, -4.1]].forEach(([x, z]) => {
+      box(shell, x, 0, z, .4, .62, .4, '#3a2a1e');
+      box(shell, x, .62, z, .04, .4, .04, '#d8c18b', { cast: false });
+      const shade = new THREE.Mesh(new THREE.CylinderGeometry(.13, .2, .26, 16).translate(0, .13, 0), new THREE.MeshLambertMaterial({ color: '#f3d9a6', emissive: '#ffb36a', emissiveIntensity: 0 }));
+      shade.position.set(x, 1, z); shell.add(shade); lampShades.push(shade);
+    });
+  }
 
   // Velvet drapes on the entrance and the back door; their inner edges slide with the 2D map's curtain amounts.
   const drapeMat = material(VELVET);
