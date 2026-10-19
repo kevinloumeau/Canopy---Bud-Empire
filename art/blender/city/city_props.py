@@ -75,12 +75,26 @@ def scooter(colour):
     return make
 
 def shrub_planter():
-    wood, soil, leaf, leaf2 = m("Planter", "#7a5a40", .8), m("Soil", "#4a3426", 1.), m("Shrub", "#5d8c45", .8), m("Shrub2", "#72a352", .8)
-    box("Box", (2.4, .7, .5), (0, 0, 0), wood); box("Rim", (2.5, .8, .06), (0, 0, .5), wood); box("Soil", (2.3, .6, .02), (0, 0, .5), soil)
-    for i, x in enumerate((-.85, -.3, .25, .8)):
-        bm = bmesh.new(); bmesh.ops.create_icosphere(bm, subdivisions=1, radius=.32 + .04 * (i % 2))
-        me = bpy.data.meshes.new(f"Bush{i}"); bm.to_mesh(me); bm.free()
-        o = K.link(bpy.data.objects.new(f"Bush{i}", me), leaf if i % 2 else leaf2); o.location = (x, 0, .72); o.scale = (1, .9, .8)
+    """A slatted timber trough of four round box bushes shingled with small leaves and dotted with orange and pink
+    flowers, the look Kevin chose for the shop's planters (vine_parts.scale_shrub), kept light for the many copies."""
+    import random, vine_parts as VP
+    wood, wood_d, soil = m("Planter", "#8a6545", .8), m("PlanterTrim", "#6b4a32", .8), m("Soil", "#4a3426", 1.)
+    leaves = [K.mat("ShrubA", "#5c8f35", .8), K.mat("ShrubB", "#6c9e3d", .8), K.mat("ShrubC", "#78a744", .8), K.mat("ShrubD", "#4e7f2f", .8)]
+    leaves.append(leaves[0])
+    core = K.mat("ShrubCore", "#467328", .9); flowers = [K.mat("FlowerOrange", "#ef8a3a", .6), K.mat("FlowerPink", "#e58bb0", .6)]
+    box("Box", (2.4, .7, .46), (0, 0, .04), wood)
+    for i in range(7):                      # vertical boards down the long faces, a shadow line between each
+        x = -1.2 + (i + 1) * 2.4 / 8
+        for y in (-.351, .351): box(f"Seam{i}{y}", (.012, .004, .4), (x, y, .07), wood_d)
+    for x in (-1.16, 1.16):
+        for y in (-.31, .31): box(f"Foot{x}{y}", (.1, .1, .04), (x, y, 0), wood_d)
+    box("Rim", (2.5, .8, .06), (0, 0, .5), wood_d); box("Soil", (2.3, .6, .02), (0, 0, .52), soil)
+    rnd = random.Random(4)
+    for i, x in enumerate((-.85, -.28, .29, .86)):
+        VP.scale_shrub(f"Bush{i}", (x, rnd.uniform(-.03, .03), .74), .33 + .03 * (i % 2), leaves, core, flowers, rnd,
+                       n=30, flowers=1, core_sub=1, leaf_size=(.44, .52))
+    for o in bpy.data.objects:              # shared leaf meshes get their own copies so flatten can paint each
+        if o.type == "MESH" and o.data.users > 1: o.data = o.data.copy()
 
 def recycling():
     blue, green, lid, grey = m("BinBlue", "#3e6f9c", .6), m("BinGreen", "#4c8a55", .6), m("BinLid", "#2f3436", .6), m("BinLabel", "#eeeae0", .5)

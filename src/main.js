@@ -1,5 +1,5 @@
 import {migrateOrderCounters,orderCounterPositions,COUNTER_SHIFT,PICKUP_X,orderCounterCost,buyOrderCounter,ORDER_QUEUE_GATE,assignOrderCounter,assignKiosk,takesKiosk,atOrderCounter,orderAvailability,pickupPlaces} from './order-counters.js';
-import {makeLifts,tickLifts} from './lounge-lifts.js';
+import {makeLifts,tickLifts,CAB_SLOTS} from './lounge-lifts.js';
 import {LOUNGE_TIERS,LOUNGE_MAX,migrateLounge,loungeTier,loungeUpgradeCost,loungeSeats,loungeSessionSeconds,buyLoungeTier,wantsLounge,loungeAdmission,loungeTake,loungeRate,loungeCurrentRate,migrateLoungeHost,buyLoungeLift,LOUNGE_LIFT_COST,LOUNGE_LIFT_SPEED,loungeHostSpeed,loungeHostCost} from './lounge.js';
 import {migrateShopPlay,picks as momentPicks,createMoment,judgeChoice,tipFor,recordServed,tickShift,operationsAlerts,mountShopPlay} from './shop-play.js';
 import {migrateJourney,advanceJourney,CHAPTERS} from './journey.js';
@@ -2417,11 +2417,11 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       // Riding: in their cab. Waiting below: out of sight in the back hallway.
       var inCab=c.lift==='down'||c.lift==='boarding'||c.lift==='exit',sh=inCab?(c.liftShaft||0):(c.shaft||0),shaftZ=(sh?ROOFTOP.lift2.z:lift.z)+.1;
       if(!c.lift||c.lift==='waitUp')return;
-      if(c.lift==='up'||c.lift==='down'){var ry=lifts[sh].y*ROOFTOP.y+.12,rx=lift.x+((c.cabSlot||0)%2?.28:0)-((c.cabSlot||0)>1?.28:0),rz=shaftZ+((c.cabSlot||0)?-.2:0);person(rx,ry,rz,colour,function(){drawPerson(rx,rz,now,c.id,false,false,false,{amount:0,phase:0,facing:.3})});return}
+      if(c.lift==='up'||c.lift==='down'){var ry=lifts[sh].y*ROOFTOP.y+.12,rx=lift.x+CAB_SLOTS[c.cabSlot||0][0],rz=shaftZ+CAB_SLOTS[c.cabSlot||0][1];person(rx,ry,rz,colour,function(){drawPerson(rx,rz,now,c.id,false,false,false,{amount:0,phase:0,facing:.3})});return}
       // Stepping into the cab (from their place in the bridge queue, or from the hallway below) or out of it below:
       // the cab holds its floor until the last of them is through the door (lounge-lifts.js).
       if(c.lift==='boarding'||c.lift==='exit'){
-        var bs=c.cabSlot||0,bx=lift.x+(bs%2?.28:0)-(bs>1?.28:0),bz=shaftZ+(bs?-.2:0),door={x:lift.x+lift.w/2+.35,z:shaftZ},by=lifts[sh].y*ROOFTOP.y;
+        var bs=c.cabSlot||0,bx=lift.x+CAB_SLOTS[bs][0],bz=shaftZ+CAB_SLOTS[bs][1],door={x:lift.x+lift.w/2+.35,z:shaftZ},by=lifts[sh].y*ROOFTOP.y;
         var bt=smooth(c.lift==='boarding'?c.boardT:c.exitT),b0=c.lift==='boarding'?(c.boardFrom||door):{x:bx,z:bz},b1=c.lift==='boarding'?{x:bx,z:bz}:door;
         var bwx=b0.x+(b1.x-b0.x)*bt,bwz=b0.z+(b1.z-b0.z)*bt,bd=Math.hypot(b1.x-b0.x,b1.z-b0.z)||1,bstep=bt>0&&bt<1;
         var bh={x:(b1.x-b0.x)/bd,z:(b1.z-b0.z)/bd},bfy=by+(c.lift==='boarding'?bt:1-bt)*.12;
@@ -2432,7 +2432,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       var back=c.lift!=='roof',s=c.lift==='roof'?smooth(c.roofWalk):c.lift==='back'?1-smooth(c.walkBack):0;
       if(s>=1){smokers.push({x:spot[0],z:spot[1],id:c.id,facing:spot[2]});person(spot[0],ROOFTOP.y,spot[1],colour,function(){drawPerson(spot[0],spot[1],now,c.id,false,false,false,{amount:0,phase:0,facing:spot[2]})});return}
       // Riders step out one after another from where they stood in the cab (each a beat behind the one before).
-      var slot=c.cabSlot||0,cx0=lift.x+(slot%2?.28:0)-(slot>1?.28:0),cz0=shaftZ+(slot?-.2:0);
+      var slot=c.cabSlot||0,cx0=lift.x+CAB_SLOTS[slot][0],cz0=shaftZ+CAB_SLOTS[slot][1];
       var path=[{x:cx0,z:cz0},{x:ROOFTOP.x0+.5,z:shaftZ},{x:spot[0],z:spot[1]}],lens=[],total=0;
       for(var p=1;p<path.length;p++){lens.push(Math.hypot(path[p].x-path[p-1].x,path[p].z-path[p-1].z));total+=lens[p-1]}
       // Guests waiting for the cab down queue back along the bridge, first come nearest the door.
