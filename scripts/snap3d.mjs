@@ -10,6 +10,7 @@
 //
 // Options: --url (default http://127.0.0.1:4173/), --size WxH, --dpr, --phone (390×844), --save fresh|showcase|file,
 // --light day|night, --advance seconds of play before the shot, --no-ui (map only), --live (no ?snap, for timing),
+// --away seconds since the last visit (shows the welcome back report from 900), --eval 'js' run in the page before the capture, printing what it returns (--wait ms after it, default 400),
 // --stats (print the frame's draw calls, triangles and estimated GPU memory).
 // Chrome comes from CHROME, Playwright's Chromium (/opt/pw-browsers) or the default macOS path.
 import { spawn } from 'node:child_process';
@@ -47,7 +48,7 @@ const showcase = {
 };
 const saveName = flags.save || 'showcase';
 const save = saveName === 'fresh' ? null : saveName === 'showcase' ? showcase : JSON.parse(await readFile(saveName, 'utf8'));
-const seed = `try{${save ? `localStorage.setItem('shift-save',${JSON.stringify(JSON.stringify({ ...save, lastSeen: Date.now() }))});` : ''}localStorage.setItem('canopy-age-ok','1');localStorage.setItem('shift-guide-seen','1');localStorage.setItem('canopy-telemetry','off');}catch(e){}`;
+const seed = `try{${save ? `localStorage.setItem('shift-save',${JSON.stringify(JSON.stringify({ ...save, lastSeen: Date.now() - Number(flags.away || 0) * 1000 }))});` : ''}localStorage.setItem('canopy-age-ok','1');localStorage.setItem('shift-guide-seen','1');localStorage.setItem('canopy-telemetry','off');}catch(e){}`;
 
 const chrome = process.env.CHROME || ['/opt/pw-browsers/chromium', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'].find(existsSync);
 const profile = await mkdtemp(join(tmpdir(), 'snap3d-'));
@@ -112,6 +113,8 @@ try {
     await evaluate('document.fonts.ready');
     await evaluate('window.__canopySnap()');
   }
+  // --eval runs a script in the page just before the capture, e.g. to open a panel or show a toast.
+  if (flags.eval) { const r = await evaluate(flags.eval); if (r !== undefined) console.log(JSON.stringify(r)); await sleep(Number(flags.wait || 400)); }
   const drawn = Date.now();
   // --stats: the captured frame's draw calls, triangles and estimated GPU memory (map3d.stats, as ?stats shows them).
   if (flags.stats) console.log(JSON.stringify(await evaluate('window.__canopyStats&&window.__canopyStats()')));
