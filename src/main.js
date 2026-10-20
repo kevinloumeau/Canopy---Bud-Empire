@@ -2991,7 +2991,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   onlineRow.querySelector('button').onclick=function(){showTray('orders');renderUI()};
   orderExtras[orderExtras.length-1].row.after(onlineRow);
   function renderOrderExtras(){var show=!securitySelected&&!loungeSelected&&selected===4&&state.lines[4]>0;
-    onlineRow.hidden=!show;if(show){var waiting=deliveryBuilt()?onlineRequestsReady():0,note=deliveryBuilt()?(waiting?waiting+' web orders waiting':'No web orders waiting'):'Build the delivery pad';if(onlineRow.querySelector('small').textContent!==note)onlineRow.querySelector('small').textContent=note;onlineRow.querySelector('button').classList.toggle('is-waiting',waiting>0)}
+    onlineRow.hidden=!show;if(show){var waiting=onlineOpen()?onlineRequestsReady():0,note=onlineOpen()?(waiting?waiting+' web orders waiting':'No web orders waiting'):'Build the pickup window';if(onlineRow.querySelector('small').textContent!==note)onlineRow.querySelector('small').textContent=note;onlineRow.querySelector('button').classList.toggle('is-waiting',waiting>0)}
     orderExtras.forEach(function(x){x.row.hidden=!show;if(!show)return;var info=x.info.textContent;if(x.row.querySelector('small').textContent!==info)x.row.querySelector('small').textContent=info;
       ['span','b'].forEach(function(tag){var text=x.source.querySelector(tag).textContent;if(x.button.querySelector(tag).textContent!==text)x.button.querySelector(tag).textContent=text});
       x.button.disabled=x.source.disabled;x.button.setAttribute('aria-label',x.source.getAttribute('aria-label')||x.row.querySelector('b').textContent)})}
