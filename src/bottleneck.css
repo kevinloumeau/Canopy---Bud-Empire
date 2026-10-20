@@ -28,3 +28,15 @@
 .world .marker .sign-ability svg{width:14px;height:14px}
 /* The one station the best buy belongs to: its sign is ringed in brass while the upgrade is affordable. */
 .world .marker.station-sign.can-upgrade:not(.selected){box-shadow:0 0 0 1.5px var(--ui-brass),0 2px 8px #0005}
+/* A boost running (crew burst on a sign or its Use button, rush or contract boost in the HUD pill): the border is a brass
+   ring that drains clockwise as the boost runs out, and glows. Map signs are already absolutely placed; never make them
+   relative, or they stack into each other's flow. */
+@property --burst{syntax:'<number>';inherits:true;initial-value:1}
+.burst-ring{animation:burst-glow 1.6s ease-in-out infinite}
+#useAbility.burst-ring{position:relative}
+.burst-ring{border-color:transparent!important}
+.burst-ring::before{content:'';position:absolute;inset:-2px;border-radius:inherit;padding:2px;pointer-events:none;
+  background:conic-gradient(var(--ui-brass) calc(var(--burst) * 360deg),#e2c68a26 0);transition:--burst .3s linear;
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+@keyframes burst-glow{0%,100%{box-shadow:0 0 12px 2px #e2c68a99,0 2px 8px #0005}50%{box-shadow:0 0 22px 6px #e2c68acc,0 2px 8px #0005}}
+@media(prefers-reduced-motion:reduce){.burst-ring{animation:none;box-shadow:0 0 12px 2px #e2c68a99}}
