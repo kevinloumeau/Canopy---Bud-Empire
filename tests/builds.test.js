@@ -4,8 +4,8 @@ import {BUILD_SECONDS,migrateBuilds,startBuild,isBuilding,buildLeft,buildShareLe
 import {AUTO_DRONE_COST,migrateAutoDrone,payAutoDrone,grantAutoDrone} from '../src/auto-drone.js';
 
 test('old saves have no builds running',()=>{
-  const b=migrateBuilds(undefined,1000);assert.deepEqual(b,{lounge:0,deck:0});assert.equal(isBuilding(b,'lounge'),false);
-  assert.deepEqual(migrateBuilds({lounge:'x',deck:-5},1000),{lounge:0,deck:0});
+  const b=migrateBuilds(undefined,1000);assert.deepEqual(b,{lounge:0,deck:0,window:0});assert.equal(isBuilding(b,'lounge'),false);
+  assert.deepEqual(migrateBuilds({lounge:'x',deck:-5},1000),{lounge:0,deck:0,window:0});
 });
 test('a build runs on the wall clock and finishes once',()=>{
   const b=migrateBuilds({},0);startBuild(b,'lounge',0);

@@ -55,3 +55,13 @@ parapet trims and fire escapes. `city/city_props.py` builds the rooftop clutter 
 vertex-coloured material (plus a white `CarPaint` the game tints per parked car), so each kind is one instanced draw.
 Run them with bpy (`python city_buildings.py -- OUT_DIR`); they write `city_meta.json`, whose bounds and roof heights
 are copied into `MODEL_BOUNDS` in `src/sunny-world.js`.
+
+## Online pickup window
+
+`pickup_window.py` builds `public/models/pickup_window.glb`, the walk-up window on the floor's front edge that serves
+online orders once the delivery deck is built (`src/pickup-window.js`): one bay of the storefront (same green frame,
+brass beads, cream "ONLINE PICKUP" sign band in Bricolage and cornice), only 0.2 m deep, with a service hatch: an oak
+ledge out over the pavement with a bell and a bag, a sliding pane pushed aside, and an oak shelf inside under the left half.
+A glass feed tube (main.js `layout.transport`) rises out of the floor behind it and comes down onto that shelf. The clerk is the game's own staff figure. `aframe_sign.py` builds `public/models/aframe_sign.glb`, the chalkboard
+A-frame on the pavement. Both are street props: copied as plain exports (no meshopt), since the map bakes props into
+float geometry and quantized positions would be clamped to a metre.
