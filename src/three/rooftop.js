@@ -83,6 +83,64 @@ export function buildRooftop(world, layout, { box, span, material }) {
   box(kSite, -2.2, y, -4.6, 1.6, .18, 1.1, '#9a7a52'); box(kSite, -2.2, y + .18, -4.6, 1.5, .5, 1, '#c9a978');
   box(kSite, 1.8, y, -5.4, 1.2, .9, 1.2, '#8e9a86');
   box(kSite, 3.6, y, -4.5, .9, .14, 1.4, '#9a7a52');
+  // While the lounge is being built (frame.loungeBuild, the share done): a tower crane swings over the roof with a
+  // pallet on its hook, a scaffold stands round the lift's landing, and the deck boards go down strip by strip.
+  const works = new THREE.Group(); works.visible = false; roof.add(works);
+  const AMBER = '#e8b13a', mastX = x1 - 1.3, mastZ = z0 + 1.1, mastH = 6.2;
+  box(works, mastX, y, mastZ, .9, .25, .9, '#8d918a');
+  box(works, mastX, y + .25, mastZ, .32, mastH, .32, AMBER);
+  for (let h = 1; h < mastH; h += 1.1) box(works, mastX, y + .25 + h, mastZ, .38, .07, .38, '#6b5320');
+  const jib = new THREE.Group(); jib.position.set(mastX, y + .25 + mastH, mastZ); works.add(jib);
+  box(jib, 0, 0, 0, .55, .45, .5, '#efe4cf');
+  box(jib, -3.6, .45, 0, 7.2, .18, .22, AMBER); box(jib, 1.2, .45, 0, 2.4, .18, .22, AMBER);
+  box(jib, 2.1, .1, 0, .7, .5, .5, '#8d918a');
+  box(jib, 0, .45, 0, .14, 1, .14, AMBER);
+  const hookX = -4.6, cableTop = .45, cableLen = 3.4;
+  box(jib, hookX, cableTop - cableLen, 0, .03, cableLen, .03, '#2e3330');
+  box(jib, hookX, cableTop - cableLen - .45, 0, 1, .12, .7, '#9a7a52'); box(jib, hookX, cableTop - cableLen - .33, 0, .9, .3, .6, '#c9a978');
+  const beacon = new THREE.Mesh(new THREE.SphereGeometry(.13, 10, 8), new THREE.MeshBasicMaterial({ color: '#ffb52e' }));
+  beacon.position.set(0, 1.55, 0); jib.add(beacon);
+  // Scaffold round the lift's landing at the deck's left edge.
+  const sx = x0 + .5, sz = lift.z;
+  [[-.7, -.9], [.7, -.9], [-.7, .9], [.7, .9]].forEach(([dx, dz]) => box(works, sx + dx, y, sz + dz, .06, 2.6, .06, '#9aa39b'));
+  [.9, 1.8].forEach(h => { box(works, sx, y + h, sz - .9, 1.46, .05, .06, '#9aa39b'); box(works, sx, y + h, sz + .9, 1.46, .05, .06, '#9aa39b'); box(works, sx, y + h - .04, sz, 1.4, .05, 1.7, '#c9a978'); });
+  // The boards, laid from the back of the deck to the front as the build runs.
+  const strips = Array.from({ length: 10 }, (_, k) => {
+    const zA = z0 + .1 + (z1 - z0 - .2) * k / 10;
+    return box(works, (x0 + x1) / 2, y + .01, zA + (z1 - z0 - .2) / 20, x1 - x0 - .2, .03, (z1 - z0 - .2) / 10 - .04, OAK, { cast: false });
+  });
+
+  // Before the lounge opens (Kevin, 2026-10-20) the bare steel frame wears a tall banner on its sides, a
+  // vertical billboard for the store in forest green and brass. The glass shaft takes over once the lounge opens.
+  const bannerCanvas = document.createElement('canvas'); bannerCanvas.width = 160; bannerCanvas.height = 1600;
+  // Kept clean (Kevin, 2026-10-20): flat forest green, a thin outlined leaf and the name set sideways in the UI's
+  // Bricolage, all in the top half so it reads above the roofline. Repainted once the font has loaded.
+  function paintBanner() {
+    const c = bannerCanvas.getContext('2d'), W = bannerCanvas.width, H = bannerCanvas.height;
+    const fill = c.createLinearGradient(0, 0, 0, H); fill.addColorStop(0, '#24543d'); fill.addColorStop(1, '#173a2a');
+    c.fillStyle = fill; c.fillRect(0, 0, W, H);
+    c.strokeStyle = BRASS; c.lineWidth = 3; c.lineCap = 'round'; c.lineJoin = 'round';
+    c.save(); c.translate(W / 2, 150);
+    [[0, 54], [-.62, 40], [.62, 40]].forEach(([a, len]) => { c.save(); c.rotate(a); c.beginPath(); c.ellipse(0, -len / 2, 9, len / 2, 0, 0, Math.PI * 2); c.stroke(); c.restore(); });
+    c.beginPath(); c.moveTo(0, 0); c.lineTo(0, 22); c.stroke(); c.restore();
+    c.fillStyle = BRASS; c.fillRect(W / 2 - 18, 210, 36, 2);
+    c.save(); c.translate(W / 2 + 4, 520); c.rotate(-Math.PI / 2);
+    c.fillStyle = CREAM; c.font = '600 72px "Bricolage Grotesque", "Helvetica Neue", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    if ('letterSpacing' in c) c.letterSpacing = '14px';
+    c.fillText('CANOPY', 0, 0); c.restore();
+    if (bannerTexture) bannerTexture.needsUpdate = true;
+  }
+  let bannerTexture = null; paintBanner();
+  bannerTexture = new THREE.CanvasTexture(bannerCanvas); bannerTexture.colorSpace = THREE.SRGBColorSpace; bannerTexture.anisotropy = 4;
+  if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', paintBanner);
+  const banner = new THREE.Group(); roof.add(banner);
+  {
+    const bannerMat = new THREE.MeshLambertMaterial({ map: bannerTexture }), b0 = 2.9, b1 = y + 2.75;
+    const face = (w) => new THREE.Mesh(new THREE.PlaneGeometry(w, b1 - b0), bannerMat);
+    const front = face(lift.w + .06); front.position.set(lift.x, (b0 + b1) / 2, lift.z + lift.d / 2 + .03); banner.add(front);
+    [-1, 1].forEach(dir => { const side = face(lift.d + .06); side.rotation.y = dir * Math.PI / 2; side.position.set(lift.x + dir * (lift.w / 2 + .03), (b0 + b1) / 2, lift.z); banner.add(side); });
+    banner.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  }
 
   // The elevator: a sleek glass shaft from the ground to just above the roof, its brass cab riding inside with its
   // passenger. Slim dark corner posts, a thin ring at each landing, a flat cap with a fine brass edge, and a thin
@@ -559,6 +617,13 @@ export function buildRooftop(world, layout, { box, span, material }) {
     update(frame) {
       const tier = frame.loungeOpen ? Math.max(1, frame.loungeTier || 1) : 0, night = frame.night || 0;
       site.visible = !tier; open.visible = !!tier;
+      const building = !tier && frame.loungeBuild != null;
+      works.visible = building; banner.visible = !tier;
+      if (building) {
+        strips.forEach((m, k) => { m.visible = k < Math.floor(frame.loungeBuild * strips.length); });
+        jib.rotation.y = Math.sin((frame.time || 0) / 5000) * .7;
+        beacon.visible = Math.floor((frame.time || 0) / 500) % 2 === 0;
+      }
       levels.forEach((g, k) => { g.visible = tier > k; });
       // The cab carries whoever is riding (main.js moves it with them) and waits where it last stopped.
       cab.position.y = frame.liftY || 0;

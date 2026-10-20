@@ -337,10 +337,59 @@ export function createMap3D(canvas, layout) {
     const copy = rooftop && rooftop.pictureCopy(tier, lifts);
     return copy ? (pictures[key] = renderPicture(copy, 600, 480)) : null;
   }
-  // A fixture (the online deck) by itself, as the map shows it once built. Null until its model is in.
+  // A fixture being built (frame.fixtureBuild[key], the share done from 0 to 1): the whole model rises out of a
+  // scaffold cage fitted to its outline, cut off at the height reached so far. It works on the model as one piece,
+  // so a new model for the fixture gets the same building site.
+  const fixtureSites = {}, siteSteel = new THREE.MeshLambertMaterial({ color: '#9aa39b' }), siteBoard = new THREE.MeshLambertMaterial({ color: '#c9a978' });
+  const siteBeacon = new THREE.MeshBasicMaterial({ color: '#ffb52e' });
+  function fixtureSite(key, holder) {
+    if (fixtureSites[key]) return fixtureSites[key];
+    const materials = [];
+    holder.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); materials.push(o.material); } });
+    const was = holder.visible; holder.visible = true; holder.updateMatrixWorld(true);
+    const bounds = new THREE.Box3().setFromObject(holder); holder.visible = was;
+    const lo = bounds.min.y / HEIGHT_SCALE, hi = bounds.max.y / HEIGHT_SCALE + .35, pad = .3;
+    const x0 = bounds.min.x - pad, x1 = bounds.max.x + pad, z0 = bounds.min.z - pad, z1 = bounds.max.z + pad;
+    const tubes = [], boards = [], t = .05;
+    const tube = (cx, cy, cz, w, h, d, list = tubes) => list.push(new THREE.BoxGeometry(w, h, d).translate(cx, cy, cz));
+    const across = (a0, a1) => { const n = Math.max(1, Math.round((a1 - a0) / 1.6)); return Array.from({ length: n + 1 }, (_, k) => a0 + (a1 - a0) * k / n); };
+    // Standards round the outline, ledgers every metre or so, and a board deck along the front at each lift.
+    across(x0, x1).forEach(x => [z0, z1].forEach(z => tube(x, (lo + hi) / 2, z, t, hi - lo, t)));
+    across(z0, z1).forEach(z => [x0, x1].forEach(x => tube(x, (lo + hi) / 2, z, t, hi - lo, t)));
+    for (let y = lo + .9; y <= hi + .01; y += .9) {
+      [z0, z1].forEach(z => tube((x0 + x1) / 2, y, z, x1 - x0, t, t));
+      [x0, x1].forEach(x => tube(x, y, (z0 + z1) / 2, t, t, z1 - z0));
+      tube((x0 + x1) / 2, y - .03, z1 - .18, x1 - x0, .05, .34, boards);
+    }
+    const site = new THREE.Group();
+    site.add(new THREE.Mesh(mergeGeometries(tubes), siteSteel), new THREE.Mesh(mergeGeometries(boards), siteBoard));
+    const beacon = new THREE.Mesh(new THREE.SphereGeometry(.12, 10, 8), siteBeacon); beacon.position.set(x1, hi + .12, z1); site.add(beacon);
+    site.traverse(o => { if (o.isMesh) o.castShadow = true; });
+    world.add(site);
+    return (fixtureSites[key] = { site, beacon, materials, plane: new THREE.Plane(new THREE.Vector3(0, -1, 0), 0), lo: bounds.min.y, hi: bounds.max.y });
+  }
+  function updateFixtureSites(frame) {
+    const building = frame.fixtureBuild || {};
+    Object.entries(fixtures).forEach(([key, holder]) => {
+      const done = building[key];
+      if (done === undefined) {
+        const s = fixtureSites[key];
+        if (s && s.site.visible) { s.site.visible = false; s.materials.forEach(m => { m.clippingPlanes = null; m.needsUpdate = true; }); }
+        return;
+      }
+      const s = fixtureSite(key, holder);
+      if (!s.site.visible || !s.materials[0].clippingPlanes) { s.site.visible = true; s.materials.forEach(m => { m.clippingPlanes = [s.plane]; m.needsUpdate = true; }); }
+      // Keeps what lies below the height reached; the first tenth is foundations, so a fresh site is mostly cage.
+      s.plane.constant = s.lo + (s.hi - s.lo) * Math.max(0, Math.min(1, (done - .1) / .9));
+      holder.visible = true;
+      s.beacon.visible = Math.floor((frame.time || 0) / 500) % 2 === 0;
+    });
+  }
+  // A fixture (the online deck) by itself, as the map shows it once built. Null until its model is in, and while it is
+  // still being built (its materials are cut to the height reached).
   function fixturePicture(key) {
     if (pictures['fixture.' + key]) return pictures['fixture.' + key];
-    if (!fixtures[key]) return null;
+    if (!fixtures[key] || (fixtureSites[key] && fixtureSites[key].site.visible)) return null;
     const copy = fixtures[key].clone(); copy.visible = true;
     return (pictures['fixture.' + key] = renderPicture(copy, 600, 480));
   }
@@ -856,6 +905,7 @@ export function createMap3D(canvas, layout) {
     if (shell) shell.update(frame);
     if (rooftop) rooftop.update(frame);
     Object.entries(fixtures).forEach(([key, holder]) => { holder.visible = !!(frame.fixtures && frame.fixtures[key]); });
+    updateFixtureSites(frame);
 
     // A dry frame (snap3d.mjs, while models load) sets the scene up and asks for its models without drawing it.
     if (!frame.dry) renderer.render(scene, camera);
