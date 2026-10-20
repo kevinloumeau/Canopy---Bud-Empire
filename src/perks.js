@@ -14,8 +14,11 @@ export const PERKS=[
   {id:'seedbank',name:'Seed bank',blurb:level=>'Reopen with '+(1+Math.max(1,level))+' strains unlocked',costs:[2,4,6]},
   {id:'drone',name:'Drone pad',blurb:level=>level>1?'Reopen with the bulk drone':'Reopen with the auto drone',costs:[3,6]},
   {id:'lounge',name:'Rooftop lease',blurb:level=>'Reopen with the lounge at tier '+Math.max(1,level),costs:[5,10]},
-  {id:'branch',name:'Kept branch',blurb:level=>'Your best branch stays open, up to level '+[3,3,6,10][level],costs:[4,8,12]}
+  {id:'branch',name:'Kept branch',blurb:level=>'Your best branch stays open, up to level '+[3,3,6,10][level],costs:[4,8,12]},
+  // The seventh station look: flagship models rebuilt in ebony, emerald and gold (art/blender/founder_finish.py).
+  {id:'finish',name:"Founder's finish",blurb:()=>'Lv 100 stations and a Lv 75 door booth take the founder look',costs:[6]}
 ];
+export const FOUNDER_LOOK=6,FOUNDER_LEVEL=100;
 const num=(v,max)=>Number.isFinite(v)?Math.max(0,Math.min(max,Math.floor(v))):0;
 // Saves from before the shop start with one point per share they already hold, so veterans have something to spend.
 export function migratePerks(raw,shares=0){
