@@ -923,7 +923,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // right-hand edge, without the aisle planter's tree. Each is 3.6 long and 0.95 deep, long along z; `rot` lays it
   // along the front.
   var FRONT_FIXTURES=[{file:'edge_planter.glb',x:2.4,z:11.33,rot:Math.PI/2},{file:'edge_planter.glb',x:6.4,z:11.33,rot:Math.PI/2},
-    {file:'edge_planter.glb',x:10.3,z:11.33,rot:Math.PI/2,window:true},{file:'edge_planter.glb',x:12.43,z:9.1,rot:0}];
+    {file:'edge_planter.glb',x:10.3,z:11.33,rot:Math.PI/2,window:true},{file:'edge_planter.glb',x:12.43,z:10.05,rot:0}];
   // With online orders running, the pickup window takes the right-hand planter's place, its A-frame out on the pavement.
   var WINDOW_FIXTURES=[{file:'pickup_window.glb',x:PICKUP_WINDOW.x,z:PICKUP_WINDOW.z,rot:0},{file:'aframe_sign.glb',x:PICKUP_SIGN.x,z:PICKUP_SIGN.z,rot:PICKUP_SIGN.rot}];
   function frontFixtures(){return deliveryBuilt()?FRONT_FIXTURES.filter(function(f){return !f.window}).concat(WINDOW_FIXTURES):FRONT_FIXTURES}
