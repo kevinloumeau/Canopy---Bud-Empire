@@ -1,22 +1,45 @@
-import {abbr,STORES,starStatus,starCount,STAR_BONUS} from './progression.js';
+import {abbr,STORES,starStatus,starCount} from './progression.js';
 import {ACHIEVEMENTS,achievementRows} from './achievements.js';
-// Goals tab: one brass Collect for every reward that is ready, then one-row goals with open figures, grouped under
-// short headings. main.js keeps rendering the original controls by id (shift goals, contract, career, milestone,
-// daily, season, story); they live hidden here, and the rows read their text and click their buttons, so every
-// reward, price and handler stays in one place.
-const TICK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
-const CHEVRON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>';
+// Goals tab: one brass Collect for every reward that is ready, then goals as tiles: an icon inside a ring that fills with
+// progress, and a short name (the exact figures are in each tile's tooltip). main.js keeps rendering the original controls by id (shift goals, contract, career,
+// milestone, daily, season, story); they live hidden here, and the tiles read their text and click their buttons, so
+// every reward, price and handler stays in one place.
+const SVG=d=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>';
+const ICONS={
+ tick:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+ person:'<circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.8 3.6-6 7-6s6.2 2.2 7 6"/>',
+ up:'<path d="M12 19V5M6 11l6-6 6 6"/>',
+ coin:'<circle cx="12" cy="12" r="8"/><path d="M14.5 9.2c-.6-.8-1.5-1.2-2.5-1.2-1.4 0-2.5.8-2.5 2s1.1 1.6 2.5 2 2.5.8 2.5 2-1.1 2-2.5 2c-1 0-2-.4-2.6-1.2M12 6.5V8m0 8v1.5"/>',
+ box:'<path d="m4 8 8-4 8 4v8l-8 4-8-4Zm0 0 8 4 8-4M12 12v8"/>',
+ bag:'<path d="M6 8h12l-1 12H7Z"/><path d="M9 8a3 3 0 0 1 6 0"/>',
+ leaf:'<path d="M12 21c-4.5-2.5-7-6-7-10a7 7 0 0 1 14 0c0 4-2.5 7.5-7 10ZM12 21V9"/>',
+ screen:'<rect x="5" y="3" width="14" height="13" rx="2"/><path d="M9 21h6M12 16v5"/>',
+ star:'<path d="m12 4 2.4 5 5.4.6-4 3.7 1.1 5.4L12 16l-4.9 2.7 1.1-5.4-4-3.7 5.4-.6Z"/>',
+ trophy:'<path d="M8 4h8v5a4 4 0 0 1-8 0ZM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4v3h-4z"/>',
+ gift:'<rect x="4" y="9" width="16" height="11" rx="1"/><path d="M4 13h16M12 9v11M12 9c-1.5-3-5-3.5-5-1.5S10 9 12 9Zm0 0c1.5-3 5-3.5 5-1.5S14 9 12 9Z"/>',
+ calendar:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/>',
+ contract:'<path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4M10 12h5M10 16h5"/>',
+ book:'<path d="M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1Z"/><path d="M12 6v14"/>',
+ target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/>',
+ bolt:'<path d="M13 3 5 14h6l-1 7 8-11h-6Z"/>',
+ chevron:'<path d="m9 5 7 7-7 7"/>'
+};
+// Pick an icon from a goal's own words, so a new goal type still gets a sensible picture.
+const iconFor=t=>{t=(t||'').toLowerCase();
+ return /deliver|online|drone|web/.test(t)?'box':/kiosk/.test(t)?'screen':/strain|grow|seed|plant/.test(t)?'leaf':/upgrade|level|lv\b|station/.test(t)?'up':
+  /earn|revenue|cash|\$/.test(t)?'coin':/sell|bag|pack/.test(t)?'bag':/serve|customer|walk-in|spender|guest|welcome/.test(t)?'person':/star/.test(t)?'star':'target';};
 const SOURCES=['dailyClaim','careerClaim','claim','seasonClaim','goalClaim0','goalClaim1','goalClaim2'];
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 // "$1.50K" -> 1500, so the Collect card can show one total.
 const dollars=text=>{const m=/\$([\d.,]+)([KMBT]?)/.exec(text||'');if(!m)return 0;return parseFloat(m[1].replace(/,/g,''))*({'':1,K:1e3,M:1e6,B:1e9,T:1e12}[m[2]]);};
 const short=n=>abbr(Math.floor(n)).replace(/\.0+([KMBT])$/,'$1').replace(/(\.\d)0([KMBT])$/,'$1$2');
+const clamp=v=>Math.max(0,Math.min(1,Number(v)||0));
 
 export function mountGoalsPane({pane,sources,getState,format}){
  const $=id=>document.getElementById(id);
  const screen=document.createElement('div');screen.className='empire-screen empire-content goals-screen';
  const collect=document.createElement('button');collect.type='button';collect.className='goals-collect';
- collect.innerHTML='<span class="goals-collect-copy"><small>Ready to collect</small><b></b></span><span class="goals-collect-go">Collect</span>';
+ collect.innerHTML='<span class="goals-collect-icon">'+SVG(ICONS.gift)+'</span><b></b><span class="goals-collect-go">Collect</span>';
  const quiet=document.createElement('p');quiet.className='goals-quiet';
  const list=document.createElement('div');list.className='goals-list';
  const hidden=document.createElement('div');hidden.className='goals-sources';hidden.hidden=true;hidden.append(...sources.filter(Boolean));
@@ -26,50 +49,47 @@ export function mountGoalsPane({pane,sources,getState,format}){
  collect.onclick=()=>{ready().forEach(b=>b.click());render(true);};
 
  const text=id=>{const n=$(id);return n?n.textContent.trim():'';};
- const row=(o)=>{const tag=o.act?'button':'div';
-  return '<'+tag+' class="goal-row'+(o.done?' is-done':'')+(o.act?' is-link':'')+'"'+(o.act?' type="button" data-act="'+o.act+'"':'')+'>'+
-   '<span class="goal-copy"><b>'+esc(o.title)+'</b>'+(o.sub?'<small>'+esc(o.sub)+'</small>':'')+'</span>'+
-   (o.button?'<span class="goal-action'+(o.brass?' is-brass':'')+'" data-act="'+o.button.act+'" role="button" tabindex="0">'+esc(o.button.label)+'</span>':
-    '<span class="goal-figure">'+(o.done?TICK:esc(o.figure||''))+'</span>')+
-   (o.act&&!o.button?'<span class="goal-chevron">'+CHEVRON+'</span>':'')+
-   '</'+tag+'>';};
- const section=(title,figure,rows)=>rows.length?'<section class="goal-group"><h3 class="goal-head"><span>'+esc(title)+'</span>'+(figure?'<b>'+esc(figure)+'</b>':'')+'</h3>'+rows.join('')+'</section>':'';
+ const bar=id=>{const n=$(id);return n&&n.value!=null&&n.max?n.value/n.max:null;};
+ // A ring is a circle whose stroke covers the share done; finished tiles show a tick instead of the icon.
+ const ring=(icon,share,done)=>'<span class="goal-ring'+(done?' is-done':'')+'" style="--share:'+(done?1:clamp(share)).toFixed(3)+'">'+
+  '<svg class="goal-ring-track" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19"/><circle class="goal-ring-fill" cx="22" cy="22" r="19" pathLength="100"/></svg>'+
+  SVG(ICONS[done?'tick':icon]||ICONS.target)+'</span>';
+ const tile=o=>{const tag=o.act?'button':'div';
+  return '<'+tag+' class="goal-tile'+(o.done?' is-done':'')+'"'+(o.act?' type="button" data-act="'+o.act+'"':'')+' title="'+esc(o.title+(o.figure?' · '+o.figure:''))+'">'+
+   ring(o.icon||iconFor(o.title),o.share,o.done)+'<b>'+esc(o.label||o.title)+'</b>'+(o.note?'<small>'+esc(o.note)+'</small>':'')+'</'+tag+'>';};
+ const group=(title,figure,body)=>body?'<section class="goal-group"><h3 class="goal-head"><span>'+esc(title)+'</span>'+(figure?'<b>'+figure+'</b>':'')+'</h3>'+body+'</section>':'';
+ const tiles=items=>items.length?'<div class="goal-tiles">'+items.map(tile).join('')+'</div>':'';
 
- function contractRows(){
-  const running=text('contractKicker')==='Contract running',rows=[];
-  if(!text('contractName')||text('contractName')==='No contract yet')return rows;
-  const twist=text('contractTwist').replace(/^Twist\s*·\s*/,'');
-  rows.push(row({title:text('contractName')+' · '+text('contractGoal'),sub:'Twist: '+twist,
-   figure:running?text('contractTime'):'',button:running?null:{act:'contract-start',label:'Start'}}));
-  const boost=$('contractBoost');
-  if($('contractBoostRow')&&!$('contractBoostRow').hidden)rows.push(row({title:'2× sales boost',sub:text('contractBank'),
-   figure:boost&&boost.hidden?'Running':'',button:boost&&!boost.hidden?{act:'contract-boost',label:boost.textContent.trim()==='Add 10 min'?'+10 min':'Use'}:null,brass:true}));
-  return rows;
+ // Contract: one card with its icon, name and the one rule that changes; Start or the time left on the right.
+ function contract(){
+  const name=text('contractName');if(!name||name==='No contract yet')return '';
+  const running=text('contractKicker')==='Contract running',boost=$('contractBoost'),boostRow=$('contractBoostRow');
+  const canBoost=boostRow&&!boostRow.hidden&&boost&&!boost.hidden;
+  const action=running?'<span class="goal-card-figure">'+esc(text('contractTime'))+'</span>':'<span class="goal-card-go" data-act="contract-start" role="button" tabindex="0">Start</span>';
+  const boostChip=canBoost?'<span class="goal-card-go is-brass" data-act="contract-boost" role="button" tabindex="0">'+SVG(ICONS.bolt)+'2×</span>':'';
+  return '<div class="goal-card"><span class="goal-card-icon">'+SVG(ICONS.contract)+'</span><span class="goal-card-copy"><b>'+esc(name)+'</b><small>'+esc(text('contractGoal'))+'</small></span>'+boostChip+action+'</div>';
  }
- function shiftRows(){return [0,1,2].map(i=>{const b=$('goalClaim'+i),done=b&&b.classList.contains('ready'),p=$('goalProgress'+i);
-  const [figure,hint]=text('goalCount'+i).split(' · ');
-  return row({title:text('goalTitle'+i),sub:done?'Reward ready above':hint,figure,done,share:p?p.value/100:null});});}
+ function shift(){return [0,1,2].map(i=>{const b=$('goalClaim'+i),title=text('goalTitle'+i);if(!title)return null;
+  return {title,figure:text('goalCount'+i).split(' · ')[0],share:bar('goalProgress'+i),done:!!(b&&b.classList.contains('ready'))};}).filter(Boolean);}
  // #shiftProgress is "<span>Shift 4</span><pips/><span>2 more goals for a $476K bonus</span>".
  function shiftHead(){const spans=$('shiftProgress')?$('shiftProgress').querySelectorAll(':scope>span:not(.shift-pips)'):[];
   const bonus=spans.length>1?/(\$[\d.,]+[KMBT]?) bonus/.exec(spans[spans.length-1].textContent):null;
-  return [spans.length?spans[0].textContent.trim():'Shift goals',bonus?bonus[1]+' bonus at 3 / 3':''];}
- function storyRows(){const title=text('storyTitle');if(!title)return [];
-  return [row({title,sub:text('storyTask'),figure:text('storyCount'),act:'story',share:$('storyProgress')&&!$('storyProgress').hidden?$('storyProgress').value/100:null})];}
- function starRows(p){let i=-1;STORES.forEach((_,k)=>{if(p.stores[k].level>0&&starCount(p,k)<3)i=k;});if(i<0)return null;
-  const goals=starStatus(p,i),next=STORES[i+1];
-  return {title:STORES[i].name+' stars',figure:goals.filter(g=>g.earned).length+' / 3',
-   rows:goals.map(g=>row({title:g.title,done:g.earned,figure:g.kind==='level'?'Lv '+g.progress+' / '+g.target:abbr(g.progress)+' / '+abbr(g.target),share:g.progress/g.target}))
-    .concat('<p class="goal-note">All three: +'+Math.round(STAR_BONUS*100)+'% sales everywhere'+(next?', and '+esc(next.name)+' opens':'')+'</p>')};}
- function awardRows(s){const all=achievementRows(s),todo=all.filter(r=>!r.done).slice(0,3),done=all.length-all.filter(r=>!r.done).length;
+  return [spans.length?spans[0].textContent.trim():'This shift',bonus?SVG(ICONS.gift)+esc(bonus[1]):''];}
+ function story(){const title=text('storyTitle');if(!title)return '';
+  return '<button type="button" class="goal-card is-link" data-act="story"><span class="goal-card-icon">'+SVG(ICONS.book)+'</span><span class="goal-card-copy"><b>'+esc(title)+'</b><small>'+esc(text('storyTask'))+'</small></span><span class="goal-card-figure">'+esc(text('storyCount'))+'</span><span class="goal-card-chevron">'+SVG(ICONS.chevron)+'</span></button>';}
+ function stars(p){let i=-1;STORES.forEach((_,k)=>{if(p.stores[k].level>0&&starCount(p,k)<3)i=k;});if(i<0)return '';
+  const goals=starStatus(p,i),earned=goals.filter(g=>g.earned).length;
+  const figure='<span class="goal-stars" aria-label="'+earned+' of 3 stars">'+[0,1,2].map(k=>'<i class="'+(k<earned?'is-on':'')+'">'+SVG(ICONS.star)+'</i>').join('')+'</span>';
+  return group(STORES[i].name,figure,tiles(goals.map(g=>({title:g.title,icon:'star',done:g.earned,share:g.progress/g.target,
+   figure:g.kind==='level'?'Lv '+g.progress+' / '+g.target:abbr(g.progress)+' / '+abbr(g.target)}))));}
+ function awards(s){const all=achievementRows(s),todo=all.filter(r=>!r.done).slice(0,3),done=all.length-all.filter(r=>!r.done).length;
   const fig=(n,r)=>(r.id.startsWith('rev-')?'$':'')+short(n);
-  return {figure:done+' / '+ACHIEVEMENTS.length+' · +'+done+'% sales',rows:todo.map(r=>row({title:r.name,sub:r.goal,figure:fig(r.value,r)+' / '+fig(r.target,r),share:r.share}))};}
- function ladderRows(){const rows=[];
-  const career=text('careerName');if(career&&text('careerDetail')){const m=/^(.*?) lifetime/.exec(text('careerDetail'));
-   rows.push(row({title:career,sub:'Career milestone · +5% sales',figure:m?m[1]:text('careerDetail'),share:$('careerProgress')?$('careerProgress').value/100:null}));}
-  if(text('orderName')&&text('orderName')!=='ALL ORDERS FILLED')rows.push(row({title:'Milestone bonus',sub:text('claimReward')+' cash',figure:text('orderProgress')}));
-  if(text('seasonName'))rows.push(row({title:text('seasonName'),sub:text('seasonKicker'),figure:text('seasonTime').replace(/^Ends in /,'')+' left'}));
-  const d=/in (\d+h \d+m)/.exec(text('dailyTime'));rows.push(row({title:'Daily reward',sub:text('dailyTitle'),figure:$('dailyClaim')&&!$('dailyClaim').disabled?'Ready':d?'in '+d[1]:''}));
-  return rows;}
+  return group('Achievements',SVG(ICONS.trophy)+done+' / '+ACHIEVEMENTS.length,tiles(todo.map(r=>({title:r.goal,icon:iconFor(r.goal),share:r.share,figure:fig(r.value,r)+' / '+fig(r.target,r)}))));}
+ function ladders(){const items=[];
+  if(text('careerName')&&text('careerDetail'))items.push({title:text('careerName'),icon:'trophy',share:bar('careerProgress'),figure:'+5% sales'});
+  if(text('orderName')&&text('orderName')!=='ALL ORDERS FILLED'){const fill=$('orderFill');items.push({title:'Milestone bonus',label:'Bonus '+text('claimReward'),icon:'gift',share:fill?parseFloat(fill.style.width)/100:0,figure:text('claimReward')});}
+  if(text('seasonName'))items.push({title:text('seasonName'),icon:'calendar',share:0,note:text('seasonTime').replace(/^Ends in /,'').replace(/^Starts in /,'in ')});
+  return group('Milestones','',tiles(items));}
 
  let signature='';
  function render(force){
@@ -77,22 +97,21 @@ export function mountGoalsPane({pane,sources,getState,format}){
   const s=getState(),buttons=ready(),total=buttons.reduce((n,b)=>n+dollars(b.textContent),0);
   const badge=$('goalsTabBadge');if(badge)badge.hidden=!buttons.length;
   if(pane.hidden&&!force)return;
-  const star=starRows(s.empire),award=awardRows(s),[shiftTitle,shiftFigure]=shiftHead();
-  const html=section('Contract','',contractRows())+section(shiftTitle,shiftFigure,shiftRows())+section('Shop story','',storyRows())+
-   (star?section(star.title,star.figure,star.rows):'')+section('Achievements',award.figure,award.rows)+section('Milestones','',ladderRows());
+  const [shiftTitle,shiftFigure]=shiftHead();
+  const html=contract()+group(shiftTitle,shiftFigure,tiles(shift()))+story()+stars(s.empire)+awards(s)+ladders();
   const daily=/in (\d+h \d+m)/.exec(text('dailyTime'));
   const sig=html+'#'+buttons.length+total;if(sig===signature)return;signature=sig;
   collect.hidden=!buttons.length;
-  collect.querySelector('b').textContent=(format?format(total):'$'+short(total))+(buttons.length>1?' · '+buttons.length+' rewards':'');
+  collect.querySelector('b').textContent=(format?format(total):'$'+short(total));
   collect.setAttribute('aria-label','Collect '+buttons.length+' reward'+(buttons.length===1?'':'s')+', '+(format?format(total):total));
-  quiet.hidden=!!buttons.length;quiet.textContent='Nothing to collect'+(daily?' · daily reward in '+daily[1]:'');
+  quiet.hidden=!!buttons.length;quiet.innerHTML=SVG(ICONS.gift)+'<span>'+(daily?'Next reward in '+daily[1]:'Nothing to collect')+'</span>';
   list.innerHTML=html;
  }
  const act=name=>{const click=id=>{const b=$(id);if(b&&!b.disabled)b.click();};
   if(name==='contract-start')click('contractStart');else if(name==='contract-boost')click('contractBoost');else if(name==='story')click('storyAction');
   requestAnimationFrame(()=>render(true));};
  list.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(t)act(t.dataset.act);});
- list.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('.goal-action')){e.preventDefault();act(e.target.dataset.act);}});
+ list.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[role=button][data-act]')){e.preventDefault();act(e.target.dataset.act);}});
  setInterval(()=>render(false),400);
  if(window.MutationObserver)new MutationObserver(()=>{if(!pane.hidden){render(true);requestAnimationFrame(()=>render(true));}}).observe(pane,{attributes:true,attributeFilter:['hidden']});
  render(true);
