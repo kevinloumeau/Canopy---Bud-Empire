@@ -80,6 +80,21 @@ def cyl(name, r1, r2, h, loc, m, verts=32):
     o = link(bpy.data.objects.new(name, mesh), m); o.location = loc
     return o
 
+def ring(name, r_out, r_in, h, loc, m, verts=32):
+    """A hollow ring (pot lip): outer and inner walls with a flat top, open in the middle."""
+    mesh = bpy.data.meshes.new(name); bm = bmesh.new()
+    rows = []
+    for (r, z) in ((r_out, 0), (r_out, h), (r_in, h), (r_in, 0)):
+        rows.append([bm.verts.new((r * math.cos(2 * math.pi * i / verts), r * math.sin(2 * math.pi * i / verts), z)) for i in range(verts)])
+    for a, b in zip(rows, rows[1:] + rows[:1]):
+        for i in range(verts):
+            j = (i + 1) % verts
+            bm.faces.new((a[i], a[j], b[j], b[i]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces); bm.to_mesh(mesh); bm.free()
+    for p in mesh.polygons: p.use_smooth = True
+    o = link(bpy.data.objects.new(name, mesh), m); o.location = loc
+    return o
+
 def tube(name, pts, r, m, r_end=None):
     cu = bpy.data.curves.new(name, "CURVE"); cu.dimensions = "3D"
     cu.bevel_depth = r; cu.bevel_resolution = 3; cu.use_fill_caps = True
@@ -239,8 +254,8 @@ def plant(tag, x, y, z0, H, sc=1., colas=True, spread=1.):
 
 def pot(tag, x, y, z):
     cyl(f"{tag}Pot", .12, .16, .2, (x, y, z), TERRA, 40)
-    cyl(f"{tag}Rim", .172, .172, .04, (x, y, z + .19), TERRA_D, 40)
-    cyl(f"{tag}Soil", .15, .15, .02, (x, y, z + .2), SOIL, 32)
+    ring(f"{tag}Rim", .172, .148, .04, (x, y, z + .19), TERRA_D, 40)   # open lip so the soil shows
+    cyl(f"{tag}Soil", .15, .15, .02, (x, y, z + .2), SOIL, 32)          # top sits 1 cm under the lip
 
 
 def finish(out, name, ortho=2.9, centre=(0, 0, 1.0), lights=()):
