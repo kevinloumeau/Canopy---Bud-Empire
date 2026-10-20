@@ -27,7 +27,7 @@ CHALK_Y = K.mat("ChalkGold", "#f0d89a", .9)
 BW, BH = .62, .95              # board width, slant length
 FOOT = .25                     # each foot's distance from the centre line
 TILT = math.asin(FOOT / BH)
-fb = os.environ.get("CANOPY_FONT") or next((p for p in (os.path.join(d, "fonts", "Fredoka-SemiBold.ttf") for d in sys.path[:2]) if os.path.exists(p)), None)
+fb = os.environ.get("CANOPY_FONT") or next((p for p in (os.path.join(d, "fonts", "Fredoka-SemiBold.ttf") for d in (os.path.dirname(os.path.abspath(__file__)), os.path.dirname(os.path.dirname(os.path.abspath(__file__))))) if os.path.exists(p)), None)
 font = bpy.data.fonts.load(fb) if fb else None
 
 def board(tag, side):

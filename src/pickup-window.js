@@ -1,15 +1,15 @@
-// The walk-up pickup window for online orders (Kevin, 2026-10-20): an open counter set into the floor's front edge with
-// a clerk behind it, a line of customers along the front pavement and an A-frame sign on the kerb. One online order
+// The walk-up pickup window for online orders (Kevin, 2026-10-20): a storefront bay with a hatch on the floor's front edge,
+// a clerk inside it, a line of customers along the front pavement and an A-frame sign on the kerb. One online order
 // in three is collected there instead of flying out by drone; it is paid for when it is sent, like every online
 // order, so the window only changes who carries it. The walk-ups are passing scenery: nothing here is saved.
 //
 // Walk-ups come up out of the subway (main.js passes the stairs' path), walk the pavement to the back of the line,
-// shuffle up to the counter, take their bag and go back down. Positions are world units, like the rest of the map.
+// shuffle up to the window, take their bag and go back down. Positions are world units, like the rest of the map.
 
-export const PICKUP_WINDOW = { x: 10.3, z: 11.44 }; // the counter's origin: its footprint centre, its front on the floor's edge
+export const PICKUP_WINDOW = { x: 10.3, z: 11.78 }; // the window bay's origin: its wall's footprint centre on the floor's edge
 export const PICKUP_SIGN = { x: 12.45, z: 12.75, rot: Math.PI / 4 }; // the A-frame, turned to the corner and the subway
-export const WINDOW_CLERK = { x: 9.95, z: 10.3 }; // behind the counter
-const SPOT = { x: 10.4, z: 12.7 }; // the customer at the counter
+export const WINDOW_CLERK = { x: 10.75, z: 11.42 }; // at the open half of the hatch, the inside shelf hiding their legs
+const SPOT = { x: 10.4, z: 12.7 }; // the customer at the window
 const PAVE = -.012, LINE_Z = 12.9, SPACING = 1.15, LANE_Z = 14, SPEED = 1.7, SERVE = 4.5, STAGGER = 2.2;
 export const WINDOW_LINE_MAX = 6;
 
@@ -20,7 +20,7 @@ export function walkupCount(first, count) {
   for (let k = first; k < first + count; k++) if (walkupShare(k)) n++;
   return n;
 }
-// Place i in the line: 0 at the counter, the rest back along the pavement toward the shop's front left.
+// Place i in the line: 0 at the window, the rest back along the pavement toward the shop's front left.
 export function windowSlot(i) { return i === 0 ? { x: SPOT.x, z: SPOT.z } : { x: SPOT.x - i * SPACING, z: LINE_Z }; }
 
 export function createWindowLine() { return { people: [], nextId: 0 }; }
@@ -55,8 +55,8 @@ function follow(p, budget) {
   return budget;
 }
 
-// One step of the line: arrivals climb out and walk to their place, the line closes up, the one at the counter is
-// served and heads back down the stairs (`stairs` again, walked in reverse). Returns true while someone is at the counter.
+// One step of the line: arrivals climb out and walk to their place, the line closes up, the one at the window is
+// served and heads back down the stairs (`stairs` again, walked in reverse). Returns true while someone is at the window.
 export function stepWindowLine(line, dt, stairs) {
   dt = Math.min(dt, .5);
   let serving = false;
@@ -94,7 +94,7 @@ export function stepWindowLine(line, dt, stairs) {
 }
 
 // Who to draw: everyone above the stairs' hidden end (hiddenZ, the passage under the pavement), with the way they face.
-// Standing in line they face the counter, which is to their right on screen (+x, or -z at the counter itself).
+// Standing in line they face the window, which is to their right on screen (+x, or -z at the window itself).
 export function windowFigures(line, hiddenZ) {
   return line.people.filter(p => p.wait <= 0 && p.z > hiddenZ).map(p => ({
     id: p.id, x: p.x, y: p.y, z: p.z, bag: p.bag, moving: p.moving, walked: p.walked, heading: p.heading,
