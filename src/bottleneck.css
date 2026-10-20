@@ -19,3 +19,12 @@
 .sheet .flow-guide .flow-meter{grid-column:1/-1;display:block;height:4px;border-radius:4px;background:var(--ui-well);overflow:hidden}
 .sheet .flow-guide .flow-meter i{display:block;height:100%;width:0;border-radius:inherit;background:var(--ui-brass);transition:width .4s ease}
 @media(hover:hover){.sheet .flow-guide:hover{border-color:#e2c68a55}}
+/* After opening day the card steps aside: suggestions come from the map's brass arrow and bolt chips and the Shop. */
+.sheet .flow-guide[hidden]{display:none}
+/* A crew burst that is ready: a brass bolt on the station's map sign, tapped to fire it. */
+.world .marker.station-sign{position:relative}
+.world .marker .sign-ability{position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--ui-brass);color:#1f2a20;box-shadow:0 0 0 2px #1f2a20aa,0 2px 6px #0006;cursor:pointer;pointer-events:auto}
+.world .marker .sign-ability[hidden]{display:none}
+.world .marker .sign-ability svg{width:14px;height:14px}
+/* The one station the best buy belongs to: its sign is ringed in brass while the upgrade is affordable. */
+.world .marker.station-sign.can-upgrade:not(.selected){box-shadow:0 0 0 1.5px var(--ui-brass),0 2px 8px #0005}

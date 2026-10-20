@@ -2785,6 +2785,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     flowButton(state.gameSpeed===0?'Resume':fix&&fix.kind==='fork'?'Choose':fixElsewhere&&!(atFloor&&fix.kind==='station')?fix.name:'Upgrade',state.gameSpeed===0?'':fmt(fixPrice));$('flowAction').dataset.mode=state.gameSpeed===0||!canFix?'view':'fix';
     // The meter shows how much of the next station's pace the bottleneck manages (or of the counters' pace, for foot traffic).
     flowMeter(trafficBound?footTraffic/slowRate:nextRate?slowRate/nextRate:1);
+    // The brass card only guides the build. Once the shop opens, suggestions come from the map and the Shop instead.
+    $('flowAction').parentNode.hidden=state.shopOpen;
     // While the shop is still a building site the guide row counts sites instead of naming a bottleneck.
     if(!state.shopOpen){var raised=(state.doorBuilt?1:0)+state.lines.filter(function(n){return n>0}).length,nextSite=!state.doorBuilt?'Security':raised<7?shortNames[slow]:null;$('flowLabel').textContent='Under construction';$('flowText').textContent=raised+' of 7 sites raised'+(nextSite?' · next: '+nextSite:' · ready to open');$('flowText').title='Tap a site on the map to raise it. Customers arrive once the shop opens.';flowButton(nextSite?'Build '+nextSite:'Open the shop','');flowMeter(raised/7);$('flowAction').dataset.mode='fix'}
     var line=LINES[selected],open=isOpen(selected),level=state.lines[selected],price=cost(selected),affordable=open&&(!level||state.money>=price);
@@ -2889,7 +2891,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     $('boostPreview').textContent=state.multiplier.toFixed(2)+'× → '+(state.multiplier*1.25).toFixed(2)+'× all stations';
     var boostPrice=boostCost(state.globalLevel);$('boostCost').textContent=state.globalLevel>=BOOST_MAX?'MAX':fmt(boostPrice);$('boost').disabled=state.globalLevel>=BOOST_MAX||state.money<boostPrice;
     var slowNow=slowestStation();
-    markerEls.forEach(function(el,i){var locked=!isOpen(i),site=!state.lines[i];el.classList.toggle('selected',mapPicked&&!securitySelected&&!loungeSelected&&i===selected);el.classList.toggle('locked',locked);el.classList.toggle('is-site',site);el.classList.toggle('is-bottleneck',i===slowNow&&!locked&&!site);el.classList.add('station-sign');el.classList.toggle('can-upgrade',!locked&&!site&&state.money>=cost(i));if(el.dataset.level!==String(state.lines[i])){el.innerHTML='<span class=station-sign-name>'+shortNames[i]+'</span><span class=station-sign-level>'+(site?'Build':'Lv '+state.lines[i])+'</span>';el.dataset.level=String(state.lines[i]);updateMarkers.key=null;}el.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);el.setAttribute('aria-label',LINES[i].name+(locked?', locked':site?', under construction. Build it':', level '+state.lines[i]));el.setAttribute('aria-pressed',String(mapPicked&&!securitySelected&&!loungeSelected&&i===selected))});
+    // Suggestions live on the map: only the station the best buy belongs to wears the brass arrow, and a crew whose burst is
+    // ready shows a bolt chip on its sign that fires it. Shop upgrades are suggested at the top of the Shop.
+    var suggested=state.shopOpen&&fix&&fix.kind==='station'?fix.index:-1;
+    markerEls.forEach(function(el,i){var locked=!isOpen(i),site=!state.lines[i];el.classList.toggle('selected',mapPicked&&!securitySelected&&!loungeSelected&&i===selected);el.classList.toggle('locked',locked);el.classList.toggle('is-site',site);el.classList.toggle('is-bottleneck',i===slowNow&&!locked&&!site);el.classList.add('station-sign');el.classList.toggle('can-upgrade',!locked&&!site&&i===suggested&&state.money>=cost(i));if(el.dataset.level!==String(state.lines[i])){el.innerHTML='<span class=station-sign-name>'+shortNames[i]+'</span><span class=station-sign-level>'+(site?'Build':'Lv '+state.lines[i])+'</span>';el.dataset.level=String(state.lines[i]);updateMarkers.key=null;}el.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);el.setAttribute('aria-label',LINES[i].name+(locked?', locked':site?', under construction. Build it':', level '+state.lines[i]));el.setAttribute('aria-pressed',String(mapPicked&&!securitySelected&&!loungeSelected&&i===selected));abilityChip(el,i,!locked&&!site&&abilityStatus(state.abilities,i,state.staff[i])==='ready')});
     var loungeCard=document.querySelector('[data-lounge]');if(loungeCard){loungeCard.setAttribute('aria-pressed',String(loungeSelected));loungeCard.classList.toggle('is-lot',loungeLot);loungeCard.classList.toggle('can-upgrade',loungePrice!==null&&state.money>=loungePrice);loungeCard.querySelector('em').textContent=loungeLot?'Open':'Lv '+state.lounge;loungeCard.setAttribute('aria-label',loungeLot?'Smoking lounge, under construction':'Smoking lounge, level '+state.lounge);loungeCard.style.setProperty('--station-tier',TIER_COLORS[Math.min(3,state.lounge)])}
     var securityCard=document.querySelector('[data-security]');if(securityCard){securityCard.setAttribute('aria-pressed',String(securitySelected));securityCard.classList.toggle('is-site',doorSite);securityCard.classList.toggle('can-upgrade',!doorSite&&idTrainingQuote(1).levels>0);securityCard.querySelector('em').textContent=doorSite?'Build':'Lv '+state.idStaff;securityCard.setAttribute('aria-label',doorSite?'Security, under construction':'Security, level '+state.idStaff);securityCard.style.setProperty('--station-tier',TIER_COLORS[economy.stationLook(state.idStaff)])}
     updateStationOrbit(slow);
@@ -2967,6 +2972,12 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(button.firstChild.textContent!==label)button.firstChild.textContent=label;
     button.disabled=status!=='ready';row.dataset.status=status;
     button.setAttribute('aria-label',status==='ready'?'Use '+ABILITIES[i].name:ABILITIES[i].name+': '+info+(status==='locked'?'':' '+label));
+  }
+  // The bolt chip rides on a station sign while that crew's burst is ready; tapping it fires the burst without opening the station.
+  function abilityChip(sign,i,ready){
+    var chip=sign.querySelector('.sign-ability');
+    if(!chip){chip=document.createElement('span');chip.className='sign-ability';chip.setAttribute('role','button');chip.setAttribute('aria-label','Use '+ABILITIES[i].name);chip.title=ABILITIES[i].name+' is ready';chip.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3 5 13h6l-1 8 8-10h-6z"/></svg>';chip.addEventListener('click',function(e){e.stopPropagation();triggerAbility(i)});sign.appendChild(chip)}
+    chip.hidden=!ready;
   }
   function triggerAbility(i){if(!useAbility(state.abilities,i,state.staff[i]))return;burst(machinePos[i],'#d0a54e');notify(ABILITIES[i].name.toUpperCase()+' · '+ABILITY_FACTOR+'× SPEED, +'+Math.round(ABILITY_SALES*100)+'% SALES','upgrade');renderUI();save()}
   function renderStationTeam(){renderStationLift();renderStationAbility();var row=$('stationTeam'),staff=stationStaff();if(!staff.train||!staff.max){row.hidden=true;return}row.hidden=false;
@@ -3792,10 +3803,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     return pick;
   }
   function openFork(index){showTray('boosts');if(shopBrowser&&shopBrowser.show)shopBrowser.show(shopBrowser.categoryOf('componentBuy'+index));renderUI();var card=$('componentBuy'+index).parentElement;if(card.scrollIntoView)card.scrollIntoView({block:'nearest'})}
-  // One tap buys exactly what the button names, wherever it lives, and the card moves on to the next fix. Short of cash it
-  // only says how much is missing, so a tap never opens a panel some times and buys other times.
-  function actOnRecommendation(){var r=recommendation();if(!r)return;if(r.kind==='fork')return openFork(r.index);if(state.money<r.price)return notify('Need '+fmt(r.price-state.money)+' more');buyRecommendation(r)}
-  function buyRecommendation(r){if(r.kind==='component')upgradeComponent(r.index);else if(r.kind==='counter')expandOrderCounters();else if(r.kind==='kiosk')$('buyKiosk').onclick();else buyStationLevel(r.index)}
+  // A suggestion only points: a tap opens where the pick lives (its station, or its card in the Shop) and the player buys it there.
+  function actOnRecommendation(){var r=recommendation();if(!r)return;if(r.kind==='station')return selectMachine(r.index);if(r.kind==='counter'||r.kind==='kiosk')return selectMachine(4);openFork(r.index)}
   $('flowAction').onclick=function(){if(state.gameSpeed===0)return setGameSpeed(1);if(!state.shopOpen){if(!state.doorBuilt)return buildStation('door');var next=state.lines.indexOf(0);return next<0?openShop():buildStation(next)}actOnRecommendation()};
   LINES.forEach(function(_,i){$('staffMax'+i).onclick=function(){trainStaffMax(i)}});
   $('trainIdChecker').onclick=function(){if(!state.doorBuilt)return buildStation('door');trainIdChecker(1)};
