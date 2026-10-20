@@ -1,6 +1,7 @@
 import {BOOST_MAX} from './depth.js';
 import {FORKS,sideStatus,levelsToGate,forkOf} from './research.js';
-// Reuse the original purchase nodes so prices, handlers and saves remain authoritative.
+// Reuse the original purchase nodes so prices, handlers and saves remain authoritative. Order counters, kiosks and the
+// customer line live on the Orders station instead (see order-extras.js); Start over lives in Settings.
 export function mountShopBrowser({getState,components,kiosks,queueLimit,recommend,recommendInfo,openDeliveries,deliveryDesk}) {
   const pane=document.querySelector('[data-pane="boosts"]');
   pane.classList.add('shop-browser');
@@ -8,7 +9,7 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
   const categories=['Grow','Retail','Delivery'];
   const byKey=key=>'componentBuy'+components.findIndex(c=>c.key===key);
   const definitions=[['upgradeStorage',0],['boost',0],[byKey('seedBatchLevel'),0],[byKey('curingLevel'),0],[byKey('trendLevel'),0],[byKey('harvestBatchLevel'),0],[byKey('packSpeedLevel'),0],[byKey('breedingLevel'),0],[byKey('growBatchLevel'),0],[byKey('terpeneLevel'),0],[byKey('offlineLevel'),0],
-    ['upgradeQueue',1],['buyKiosk',1],['buyOrderCounter',1],[byKey('basketLevel'),1],[byKey('trafficLevel'),1],[byKey('signLevel'),1],[byKey('comfortLevel'),1],[byKey('scannerLevel'),1],[byKey('pickupLevel'),1],[byKey('readyLevel'),1],[byKey('serviceLevel'),1],[byKey('kioskSpeedLevel'),1],[byKey('displayLevel'),1],[byKey('loyaltyLevel'),1],[byKey('durationLevel'),1],
+    [byKey('basketLevel'),1],[byKey('trafficLevel'),1],[byKey('signLevel'),1],[byKey('comfortLevel'),1],[byKey('scannerLevel'),1],[byKey('pickupLevel'),1],[byKey('readyLevel'),1],[byKey('serviceLevel'),1],[byKey('kioskSpeedLevel'),1],[byKey('displayLevel'),1],[byKey('loyaltyLevel'),1],[byKey('durationLevel'),1],
     ['buyAutoDrone',2],[byKey('webLevel'),2],[byKey('onlineBonusLevel'),2],[byKey('fleetLevel'),2],[byKey('cargoLevel'),2],[byKey('repeatLevel'),2]];
   // One label over each undecided fork and an "or" between its sides.
   const forkMarks=FORKS.map(f=>{const head=document.createElement('p');head.className='shop-fork-head';head.innerHTML='<b>Choose one</b><span>'+f.name+'</span>';const or=document.createElement('p');or.className='shop-fork-or';or.setAttribute('aria-hidden','true');or.innerHTML='<span>or</span>';return {fork:f,head,or,ids:f.sides.map(byKey)}});
@@ -36,7 +37,7 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
   desk.onclick=()=>{if(openDeliveries)openDeliveries()};
   list.prepend(desk);
   pane.prepend(header,recommendation,list,empty);
-  pane.append(milestone,reset);
+  pane.append(milestone,reset);reset.hidden=true;
   let category=0;
   header.querySelectorAll('[data-shop-category]').forEach(button=>button.onclick=()=>{category=Number(button.dataset.shopCategory);render()});
   function render(){

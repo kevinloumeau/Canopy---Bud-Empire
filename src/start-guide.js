@@ -6,7 +6,7 @@
 import {manageDialog} from './dialog-focus.js';
 const SEEN_KEY='shift-guide-seen';
 const STEPS=[
- {hero:true,eyebrow:'Canopy · Day one',title:'Your shop opens today.',text:'Grow it, stock it, sell it. The lot is yours: raise the seven stations, then flip the sign and let the neighborhood in.',cta:'Start building',beats:[['flowers','Grow'],['boosts','Sell'],['empire','Expand']]},
+ {hero:true,eyebrow:'Canopy · Day one',title:'Your shop opens today.',text:'Grow it, stock it, sell it. The lot is yours: raise the seven stations, then flip the sign and let the neighborhood in.',cta:'Start building',beats:[['factory','Build'],['flowers','Sell'],['empire','Expand']]},
  {build:'door',eyebrow:'Site 1 of 7 · Security',title:'Start at the door',text:'Every dispensary begins with an ID check. A quicker doorman means a shorter line.',target:'[data-marker=security]'},
  {build:0,eyebrow:'Site 2 of 7 · Seeds',title:'Seed station',text:'Where every harvest starts. Equipment grows each batch; employees speed the cycle.',target:'[data-marker="0"]'},
  {build:1,eyebrow:'Site 3 of 7 · Grow',title:'Grow room',text:'Seedlings take their time under the lamps — usually your first bottleneck.',target:'[data-marker="1"]'},

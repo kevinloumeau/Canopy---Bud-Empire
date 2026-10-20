@@ -207,9 +207,24 @@ def plant(tag, x, y, z0, H):
     for j in range(4):   # sugar leaves around the main cola
         leaf_at(f"{tag}TopSugar{j}", tuple(top - Vector((0, 0, .02))), j * 1.57 + .4, .95, .45, LEAF_MESHES[2])
 
+def ring(name, r_out, r_in, h, loc, m, verts=32):
+    """A hollow ring (pot lip): outer and inner walls with a flat top, open in the middle."""
+    mesh = bpy.data.meshes.new(name); bm = bmesh.new()
+    rows = []
+    for (r, z) in ((r_out, 0), (r_out, h), (r_in, h), (r_in, 0)):
+        rows.append([bm.verts.new((r * math.cos(2 * math.pi * i / verts), r * math.sin(2 * math.pi * i / verts), z)) for i in range(verts)])
+    for a, b in zip(rows, rows[1:] + rows[:1]):
+        for i in range(verts):
+            j = (i + 1) % verts
+            bm.faces.new((a[i], a[j], b[j], b[i]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces); bm.to_mesh(mesh); bm.free()
+    for p in mesh.polygons: p.use_smooth = True
+    o = link(bpy.data.objects.new(name, mesh), m); o.location = loc
+    return o
+
 def pot(tag, x, y, z):
     cyl(f"{tag}Pot", .12, .16, .2, (x, y, z), TERRA, 40)
-    cyl(f"{tag}Rim", .172, .172, .04, (x, y, z + .19), TERRA_D, 40)
+    ring(f"{tag}Rim", .172, .148, .04, (x, y, z + .19), TERRA_D, 40)   # open lip so the soil shows
     cyl(f"{tag}Soil", .15, .15, .02, (x, y, z + .2), SOIL, 32)
 
 # ---------- the bench ----------

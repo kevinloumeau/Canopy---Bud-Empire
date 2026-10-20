@@ -1,20 +1,17 @@
 /* Story and assistance share the established forest-green interface. */
-.goals-dropdown{max-height:min(82vh,660px);max-height:min(82dvh,660px);scrollbar-color:#91ab7b #20372b;scrollbar-width:thin}
-.goals-dropdown #goalsClose{width:44px;height:44px;flex:0 0 auto;border:0;border-radius:10px;background:transparent;color:#eff5e5;font-family:inherit;font-size:24px;cursor:pointer}
-/* Shift goals lead the panel: three rows, each with its reward button beside the bar. A goal that is ready to collect
+/* Shift goals in the Goals tab: three rows, each with its reward button beside the bar. A goal that is ready to collect
    carries the brass button, the one thing to tap; the rest stay quiet glass. */
-.goals-dropdown .settings-head{gap:10px}.goals-dropdown .settings-head h2{flex:1}
 #shiftGoalsReady{color:var(--ui-brass);font-size:12px;font-weight:600;white-space:nowrap}
-.goals-dropdown #shortGoals{margin-top:2px}
-.goals-dropdown .short-goal{column-gap:14px;padding:12px 0;border-top:1px solid var(--ui-edge)}
-.goals-dropdown .short-goal:first-child{border-top:0;padding-top:6px}
-.goals-dropdown .short-goal h3{margin:0 0 7px;color:var(--ui-ink);font-size:15px;font-weight:600;letter-spacing:-.01em}
-.goals-dropdown .short-goal progress{height:5px;margin:0}
-.goals-dropdown .short-goal p{margin:7px 0 0;color:var(--ui-soft);font-size:12px;line-height:1.4;font-variant-numeric:tabular-nums}
-.goals-dropdown .short-goal button{min-width:104px;min-height:44px;margin:0;padding:0 14px;border:1px solid var(--ui-edge);border-radius:12px;background:var(--ui-well-soft);color:var(--ui-ink);box-shadow:none;font-size:13px;font-weight:600}
-.goals-dropdown .short-goal button.ready{border-color:transparent;background:var(--ui-brass);color:var(--ui-brass-ink);font-weight:700}
-.goals-dropdown .short-goal button:disabled{border-color:var(--ui-edge);background:transparent;color:var(--ui-soft);opacity:.75}
-@media(hover:hover){.goals-dropdown .short-goal button:not(:disabled):hover{background:var(--ui-sheen)}.goals-dropdown .short-goal button.ready:hover{background:var(--ui-brass);filter:brightness(1.06)}}
+.goals-body #shortGoals{margin-top:2px}
+.goals-body .short-goal{column-gap:14px;padding:12px 0;border-top:1px solid var(--ui-edge)}
+.goals-body .short-goal:first-child{border-top:0;padding-top:6px}
+.goals-body .short-goal h3{margin:0 0 7px;color:var(--ui-ink);font-size:15px;font-weight:600;letter-spacing:-.01em}
+.goals-body .short-goal progress{height:5px;margin:0}
+.goals-body .short-goal p{margin:7px 0 0;color:var(--ui-soft);font-size:12px;line-height:1.4;font-variant-numeric:tabular-nums}
+.goals-body .short-goal button{min-width:104px;min-height:44px;margin:0;padding:0 14px;border:1px solid var(--ui-edge);border-radius:12px;background:var(--ui-well-soft);color:var(--ui-ink);box-shadow:none;font-size:13px;font-weight:600}
+.goals-body .short-goal button.ready{border-color:transparent;background:var(--ui-brass);color:var(--ui-brass-ink);font-weight:700}
+.goals-body .short-goal button:disabled{border-color:var(--ui-edge);background:transparent;color:var(--ui-soft);opacity:.75}
+@media(hover:hover){.goals-body .short-goal button:not(:disabled):hover{background:var(--ui-sheen)}.goals-body .short-goal button.ready:hover{background:var(--ui-brass);filter:brightness(1.06)}}
 /* Every three goals collected close a shift: three pips fill as goals are collected, and the line names the bonus. */
 #shiftProgress{display:flex;align-items:center;gap:10px;margin:0 0 10px;padding:9px 0 0;border-top:1px solid var(--ui-edge);color:var(--ui-soft);font-size:11.5px;line-height:1.35}
 #shiftProgress>span:first-child{color:var(--ui-ink);font-weight:600;white-space:nowrap}
