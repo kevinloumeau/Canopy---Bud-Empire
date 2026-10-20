@@ -14,7 +14,7 @@ for(const [name,viewport] of [['desktop',{width:1440,height:1000}],['mobile',{wi
   const id=key=>p.evaluate(k=>{const names={curingLevel:'Curing equipment',trendLevel:'Trend scout',fleetLevel:'Drone fleet',cargoLevel:'Cargo bays'};return [...document.querySelectorAll('.shop-item h2')].find(h=>h.textContent===names[k]).closest('.shop-item').querySelector('button').id},key);
   const trend=await id('trendLevel');
   assert.equal(await p.locator('#'+trend+' span').textContent(),'Closed');assert.ok(await p.locator('#'+trend).isDisabled());
-  assert.match(await p.locator('#'+trend).locator('xpath=..').locator('.shop-level').textContent(),/Closed this run · Lv 4 kept/);
+  assert.match(await p.locator('#'+trend).locator('xpath=..').locator('.shop-level').textContent(),/Closed · Lv 4 kept/);
   await p.screenshot({path:'artifacts/research/'+name+'-grow.png'});
   // Delivery: the drone fork is still open.
   await p.locator('[data-shop-category="2"]').click({noWaitAfter:true});await p.waitForTimeout(200);

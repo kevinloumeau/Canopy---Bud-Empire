@@ -1,13 +1,33 @@
 /* Five tabs, one job each: Stations, Menu, Research, Goals, Empire. Loaded last so the bar's five columns win. */
 .sheet .tray-tabs{grid-template-columns:repeat(5,minmax(0,1fr))!important}
 
-/* Goals: the reward strip, contract and lists share the Empire screen styles; the pane scrolls as one list. */
-.goals-screen{display:grid;gap:4px}
-.goals-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
-.sheet .goals-head h2{margin:0;font-size:15px}
-.goals-body .shop-story{margin-top:2px}
-.goal-stars-reward{margin:6px 0 2px!important;color:var(--ui-soft)!important;font-size:12px}
-
+/* Goals: one brass Collect, then one-row goals with open figures under short headings. Every column can shrink. */
+.goals-screen{min-width:0}
+.goals-sources[hidden],.goals-collect[hidden],.goals-quiet[hidden]{display:none!important}
+.sheet .empire-screen .goals-collect{display:flex;align-items:center;gap:12px;width:100%;min-width:0;min-height:52px;margin:0 0 6px;padding:8px 8px 8px 14px;border:1px solid var(--ui-brass);border-radius:14px;background:var(--ui-brass-wash);color:var(--ui-ink);text-align:left;box-shadow:none}
+.goals-collect-copy{display:grid;flex:1;min-width:0}
+.goals-collect-copy small{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ui-brass)}
+.goals-collect-copy b{font:500 16px 'DM Mono',monospace;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.goals-collect-go{flex:none;padding:9px 16px;border-radius:10px;background:var(--ui-brass);color:var(--ui-brass-ink);font-size:13px;font-weight:700}
+.goals-quiet{margin:0 0 4px;padding:4px 2px;color:var(--ui-soft);font-size:12px}
+.goal-group{min-width:0;margin-top:12px}
+.sheet .goal-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 2px 2px;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ui-soft)}
+.goal-head b{font:500 12px 'DM Mono',monospace;letter-spacing:-.02em;text-transform:none;color:var(--ui-ink);white-space:nowrap}
+.goal-head span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.goal-row,.sheet .empire-screen button.goal-row{position:relative;display:flex;align-items:center;gap:10px;width:100%;min-width:0;min-height:48px;margin:0;padding:7px 2px 9px;border:0;border-bottom:1px solid var(--ui-edge);border-radius:0;background:none;color:var(--ui-ink);font:inherit;text-align:left;box-shadow:none}
+.goal-group .goal-row:last-of-type{border-bottom:0}
+.goal-copy{display:grid;flex:1;min-width:0}
+.goal-copy b{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.goal-copy small{font-size:11.5px;color:var(--ui-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.goal-figure{flex:none;max-width:45%;font:500 13px 'DM Mono',monospace;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ui-ink)}
+.goal-figure svg,.goal-chevron svg{display:block;width:18px;height:18px}
+.goal-row.is-done .goal-figure{color:var(--ui-leaf-glow)}
+.goal-row.is-done .goal-copy b{color:var(--ui-soft)}
+.goal-chevron{flex:none;color:var(--ui-soft)}
+.goal-action{flex:none;min-width:64px;padding:8px 14px;border:1px solid var(--ui-edge);border-radius:10px;background:var(--ui-well-soft);font-size:12px;font-weight:600;text-align:center;cursor:pointer}
+.goal-action.is-brass{border-color:var(--ui-brass);background:var(--ui-brass);color:var(--ui-brass-ink)}
+.goal-action:focus-visible{outline:2px solid var(--ui-brass);outline-offset:2px}
+.goal-note{margin:4px 2px 0;color:var(--ui-soft);font-size:12px}
 /* Reopen card on Empire home: keep its brass card look inside the Empire screen's button styles. */
 .sheet .empire-screen .reopen-card{min-height:48px;margin:0 0 8px;padding:8px 8px 8px 12px;border:1px solid var(--ui-brass);border-radius:14px;background:var(--ui-brass-wash);color:var(--ui-ink);font-size:inherit;font-weight:inherit;box-shadow:none}
 .sheet .empire-screen .reopen-card[hidden]{display:none}
@@ -18,3 +38,19 @@
 .station-team.station-extra button{background:var(--p-forest-35);border:1px solid #91ab73;color:var(--p-cream-95);font:inherit}
 .station-team.station-extra button b{font:600 12px 'DM Mono',monospace;letter-spacing:-.02em}
 .station-team.station-extra button:disabled{opacity:.5;cursor:default}
+
+/* Research: the price is the button; only an undecided fork keeps its word (Choose, Confirm). */
+.shop-browser .shop-item:not(.shows-verb) button span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.shop-browser .shop-item button{min-width:68px}
+.shop-browser .shop-item .shop-level{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.shop-browser .shop-categories button{position:relative}
+.shop-browser .shop-categories button.has-pick::after{content:'';position:absolute;top:7px;right:calc(50% - 18px);width:7px;height:7px;border-radius:50%;background:var(--ui-brass)}
+.shop-browser .shop-later[hidden],.shop-browser .shop-done-toggle[hidden]{display:none}
+.shop-browser .shop-later{display:grid;gap:6px;margin:10px 4px 0;font-size:12px;color:var(--ui-soft)}
+.shop-browser .shop-later span{display:grid;min-width:0}
+.shop-browser .shop-later b{font-weight:600;color:var(--ui-ink)}
+.shop-browser .shop-later small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheet .shop-browser .shop-done-toggle{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;margin:6px 0 0;padding:6px 4px;border:0;border-radius:0;background:none;box-shadow:none;color:var(--ui-soft);font:inherit;font-size:12px;text-align:left;cursor:pointer}
+.shop-browser .shop-done-toggle span{flex:1}
+.shop-browser .shop-done-toggle b{font:500 12px 'DM Mono',monospace;color:var(--ui-ink)}
+.shop-browser .shop-done-toggle svg{width:16px;height:16px}
