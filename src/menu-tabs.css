@@ -165,3 +165,6 @@
 @keyframes station-boost-icon{0%,100%{transform:scale(1);filter:drop-shadow(0 0 0 transparent)}50%{transform:scale(1.12);filter:drop-shadow(0 0 6px #d8f2a8)}}
 @keyframes station-boost-sweep{0%,35%{background-position:-160px 0,0 0}100%{background-position:160px 0,0 0}}
 @media (prefers-reduced-motion:reduce){.sheet .machine-nav button.is-boosted,.sheet .machine-nav button.is-boosted .station-icon,.sheet .machine-nav button.is-boosted::after{animation:none}.sheet .machine-nav button.is-boosted{filter:drop-shadow(0 0 8px #b8e690)}}
+/* The pickup window and its upgrades live on the Pickup station now; Deliveries keeps the drone port. */
+.sheet [data-pane=orders] .window-control,.sheet [data-pane=orders] #deliverySite{display:none!important}
+.sheet .station-extra button.is-owned{opacity:.6}
