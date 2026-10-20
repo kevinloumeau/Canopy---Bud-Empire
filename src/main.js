@@ -7,7 +7,7 @@ import {mountJourney} from './journey-ui.js';
 import {manageDialog} from './dialog-focus.js';
 import {AUTO_DRONE_COST,BULK_DRONE_COST,buyAutoDrone,buyBulkDrone,autoDroneLimit,migrateAutoDrone,autoDroneReady} from './auto-drone.js';
 import {FORMATS,wantedFormat,formatPremium,BOOST_MAX,boostCost,migrateMenu,unlockFormat,menuFormatFactor,milestone,prestigeOffer,elapsedSteps,OFFLINE_STEP} from './depth.js';
-import {PERKS,migratePerks,perkLevel,perkCost,buyPerk,perkStart,spenderGap,rushLength,trainerGap,keptBranch} from './perks.js';
+import {PERKS,migratePerks,perkLevel,perkCost,buyPerk,perkStart,spenderGap,rushLength,trainerGap,keptBranch,FOUNDER_LOOK,FOUNDER_LEVEL} from './perks.js';
 import {migrateRun,freshRun,tickRun,reopenMoment} from './reopen.js';
 import {makeSound} from './sfx.js';
 import {FORKS,RESEARCH_BRANCHES,freshForks,migrateForks,sideStatus,takeSide,partnerOf,levelsToGate,forkOf} from './research.js';
@@ -588,8 +588,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   function trainIdChecker(limit){
     var quote=idTrainingQuote(limit);if(!quote.levels)return;
-    var tierBefore=economy.stationLook(state.idStaff);state.money-=quote.cost;state.idStaff+=quote.levels;recordGoal(state.empire,'upgrade',quote.levels);
-    var tier=economy.stationLook(state.idStaff);if(tier>tierBefore){buildRise[6]=.6;burst(DOOR_POS,'#f0d89a');paintThumbnails()}
+    var tierBefore=stationLookFor(6,state.idStaff);state.money-=quote.cost;state.idStaff+=quote.levels;recordGoal(state.empire,'upgrade',quote.levels);
+    var tier=stationLookFor(6,state.idStaff);if(tier>tierBefore){buildRise[6]=.6;burst(DOOR_POS,'#f0d89a');paintThumbnails()}
     notify(tier>tierBefore?'SECURITY · '+economy.SECURITY_TIERS[tier-1].toUpperCase():'SECURITY · LEVEL '+state.idStaff,'upgrade');renderUI();save();
   }
   function maxStaffTraining(i){
@@ -800,16 +800,17 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       layout.modelBase=new URL('models/',document.baseURI).href;
       // Keyed "station.look" (economy.stationLook: Lv 1, 10, 30, 50, 75); a look without its own model shows the tier 3 one. Each is sized to its tier's sprite.
       layout.stationModels={'0.1':'seeds_bench_tier1.glb','0.2':'seeds_bench_tier2.glb','0.3':'seeds_bench.glb','0.4':'seeds_bench_tier4.glb','0.5':'seeds_bench_tier5.glb','1.1':'grow_bench_tier1.glb','1.2':'grow_bench_tier2.glb','1.3':'grow_bench.glb','1.4':'grow_bench_tier4.glb','1.5':'grow_bench_tier5.glb','2.1':'harvest_bench_tier1.glb','2.2':'harvest_bench_tier2.glb','2.3':'harvest_bench.glb','2.4':'harvest_bench_tier4.glb','2.5':'harvest_bench_tier5.glb',
-        '3.1':'pack_bench_tier1.glb','3.2':'pack_bench_tier2.glb','3.3':'pack_bench.glb','3.4':'pack_bench_tier4.glb','3.5':'pack_bench_tier5.glb','4.1':'order_desk_tier1.glb','4.2':'order_desk_tier2.glb','4.3':'order_desk.glb','4.4':'order_desk_tier4.glb','4.5':'order_desk_tier5.glb','5.1':'pickup_desk_tier1.glb','5.2':'pickup_desk_tier2.glb','5.3':'pickup_desk.glb','5.4':'pickup_desk_tier4.glb','5.5':'pickup_desk_tier5.glb','6.1':'security_booth_tier1.glb','6.2':'security_booth_tier2.glb','6.3':'security_booth_tier3.glb','6.4':'security_booth_tier4.glb','6.5':'security_booth_tier5.glb'};
+        '3.1':'pack_bench_tier1.glb','3.2':'pack_bench_tier2.glb','3.3':'pack_bench.glb','3.4':'pack_bench_tier4.glb','3.5':'pack_bench_tier5.glb','4.1':'order_desk_tier1.glb','4.2':'order_desk_tier2.glb','4.3':'order_desk.glb','4.4':'order_desk_tier4.glb','4.5':'order_desk_tier5.glb','5.1':'pickup_desk_tier1.glb','5.2':'pickup_desk_tier2.glb','5.3':'pickup_desk.glb','5.4':'pickup_desk_tier4.glb','5.5':'pickup_desk_tier5.glb','6.1':'security_booth_tier1.glb','6.2':'security_booth_tier2.glb','6.3':'security_booth_tier3.glb','6.4':'security_booth_tier4.glb','6.5':'security_booth_tier5.glb',
+        '0.6':'seeds_bench_founder.glb','1.6':'grow_bench_founder.glb','2.6':'harvest_bench_founder.glb','3.6':'pack_bench_founder.glb','4.6':'order_desk_founder.glb','5.6':'pickup_desk_founder.glb','6.6':'security_booth_founder.glb'};
       stationModelFiles=layout.stationModels;layout.stationModelSize={};for(var key in layout.stationModels)layout.stationModelSize[key]=stationSpriteSize(+key.split('.')[0],+key.split('.')[1]);layout.stationModelSize['4.3']={w:2.2,ox:0};
-      // Looks 4 and 5 (Lv 50 and 75) share tier 3's footprint, origin and facing.
-      [0,1,2,3,4,5].forEach(function(i){[4,5].forEach(function(t){if(layout.stationModels[i+'.'+t])layout.stationModelSize[i+'.'+t]=layout.stationModelSize[i+'.3']})});
+      // Looks 4, 5 and the founder look share tier 3's footprint, origin and facing.
+      [0,1,2,3,4,5].forEach(function(i){[4,5,6].forEach(function(t){if(layout.stationModels[i+'.'+t])layout.stationModelSize[i+'.'+t]=layout.stationModelSize[i+'.3']})});
       // The lower order desks keep their sprites' size against tier 3's.
       [1,2].forEach(function(t){layout.stationModelSize['4.'+t]={w:2.2*stationSpriteSize(4,t).w/stationSpriteSize(4,3).w,ox:0}});
       // The security booths are built facing -Y; turned a quarter, their scanner, sign and customer side face the front door
       // (west, -x), the desk runs along the footprint's long z side, and the doorman's side faces the room.
       // w 2.69 puts the shared 1.45 x 0.8 mat at 1.69 map units a metre, the scale of the people and the other stations.
-      [1,2,3,4,5].forEach(function(t){layout.stationModelSize['6.'+t]={w:2.69,ox:0,turn:-Math.PI/2}});
+      [1,2,3,4,5,6].forEach(function(t){layout.stationModelSize['6.'+t]={w:2.69,ox:0,turn:-Math.PI/2}});
       // The production line from the 2D map's own routes, so both maps carry the same tubes, belts and cargo rhythm.
       var grow=tubeRunGeometry(TUBE_RUNS[1]),pack=tubeRunGeometry(TUBE_RUNS[3]);
       layout.transport={bore:TUBE_DIA,gap:CARGO_GAP,
@@ -2409,7 +2410,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var speed=state.lines.some(function(n){return n>0})?Math.min(.07,.02+production()*.00002):0;
     crateTime=(crateTime+frameDelta*speed*1.4)%1;cargoOdo=(cargoOdo+frameDelta*speed*14)%1e5;
     var stations=[],people=[];
-    function station(i,x,y,z,level,built,size){var tier=built?economy.stationLook(level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(tier-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,pop:stationPop(i),selected:mapPicked&&selected===i&&!securitySelected&&!loungeSelected,clock:motionPreference.matches?6.3:motionClocks[i],act:taskActivity[i]})}
+    function station(i,x,y,z,level,built,size){var tier=built?stationLookFor(i,level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(Math.min(5,tier)-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,pop:stationPop(i),selected:mapPicked&&selected===i&&!securitySelected&&!loungeSelected,clock:motionPreference.matches?6.3:motionClocks[i],act:taskActivity[i]})}
     // People are the 2D map's own sprites, recorded as each would be drawn and stood up in the scene as flat figures
     // (capturePerson); a capsule under each casts its shadow.
     var figures=[];
@@ -2427,7 +2428,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
           person(p.x+spot.dx,p.y||0,p.z+spot.dz,'#2f6b52',function(){drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait)})})(i,p);
       }
     }
-    stations.push({index:6,x:ID_DESK.x,y:0,z:ID_DESK.z,w:1.3,d:2.4,h:1.6,tier:state.doorBuilt?economy.stationLook(state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,pop:stationPop(6),selected:mapPicked&&securitySelected});
+    stations.push({index:6,x:ID_DESK.x,y:0,z:ID_DESK.z,w:1.3,d:2.4,h:1.6,tier:state.doorBuilt?stationLookFor(6,state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,pop:stationPop(6),selected:mapPicked&&securitySelected});
     // The doorman stands behind the booth, on the room side, facing the front door across the desk.
     if(state.doorBuilt)person(DOORMAN.x,0,DOORMAN.z,'#2f6b52',function(){drawPerson(DOORMAN.x,DOORMAN.z,now,6,false,true,false,{amount:0,phase:0,facing:1})});
     // The lounge host works the rooftop: behind the bar once there is one, otherwise by the elevator's bridge.
@@ -3215,9 +3216,11 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var next=economy.nextUnlock(Math.max(1,level)),road=$('nextAppearance');road.classList.add('unlock-road');road.hidden=!level;
     if(!next){road.innerHTML='<b>Flagship</b><span>every level still adds output</span>';return}
     var other=i===4?5:i===5?4:-1,gives=other<0?'×2 output':'×2 baskets'+(state.lines[other]<next.level?' with '+(other===4?'Orders':'Pickup'):'');
-    road.innerHTML='<b>Lv '+next.level+'</b><span>'+gives+(next.look?' · new look':'')+'</span>';
+    road.innerHTML='<b>Lv '+next.level+'</b><span>'+gives+(next.look?' · new look':next.level===FOUNDER_LEVEL&&perkLevel(state.perks,'finish')?' · founder look':'')+'</span>';
   }
-  function stationModelKey(i,level){var t=economy.stationLook(level);while(t>1&&!stationModelFiles[i+'.'+t])t--;return i+'.'+t}
+  // Founder's finish (founder perk): a flagship station at Lv 100, or the door booth at its Lv 75 cap, takes the founder look.
+  function stationLookFor(i,level){var t=economy.stationLook(level);return t===5&&perkLevel(state.perks,'finish')&&level>=(i===6?economy.SECURITY_MAX_LEVEL:FOUNDER_LEVEL)?FOUNDER_LOOK:t}
+  function stationModelKey(i,level){var t=stationLookFor(i,level);while(t>1&&!stationModelFiles[i+'.'+t])t--;return i+'.'+t}
   function stationPicture(i,level){
     if(!map3d||!map3d.ok||!map3d.stationPicture||!(level>0))return null;
     var picture=map3d.stationPicture(stationModelKey(i,level));if(!picture)picturesPending=true;return picture;
@@ -3418,7 +3421,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   perkPanel.innerHTML='<div class="library-head"><h3 id="perksTitle">Founder perks</h3><small id="perkPoints"></small></div><p class="library-note">Each reopening pays one point per share gained. Perks are permanent and shape every new shop.</p><ul class="library-grid" id="perkGrid"></ul>';
   prestigePanel.querySelector('.prestige-body').insertBefore(perkPanel,$('prestigeCarryover'));
   PERKS.forEach(function(p){var li=document.createElement('li');li.className='library-card';li.dataset.perk=p.id;li.innerHTML='<b></b><small></small><em></em><button type="button"></button>';
-    li.querySelector('button').onclick=function(){if(buyPerk(state.perks,p.id)){if(p.id==='vault')state.offlineLevel=Math.max(state.offlineLevel,perkLevel(state.perks,'vault'));save();renderUI();notify(p.name.toUpperCase()+' · LEVEL '+perkLevel(state.perks,p.id),'upgrade')}};$('perkGrid').append(li)});
+    li.querySelector('button').onclick=function(){if(buyPerk(state.perks,p.id)){if(p.id==='vault')state.offlineLevel=Math.max(state.offlineLevel,perkLevel(state.perks,'vault'));if(p.id==='finish')paintThumbnails();save();renderUI();notify(p.name.toUpperCase()+' · LEVEL '+perkLevel(state.perks,p.id),'upgrade')}};$('perkGrid').append(li)});
   function renderPerks(){var pts=state.perks.points;$('perkPoints').textContent=pts+' point'+(pts===1?'':'s');
     PERKS.forEach(function(p){var li=$('perkGrid').querySelector('[data-perk="'+p.id+'"]'),l=perkLevel(state.perks,p.id),c=perkCost(state.perks,p.id),b=li.querySelector('button');
       li.dataset.state=c===null?'known':'open';li.querySelector('b').textContent=p.name;li.querySelector('small').textContent=p.blurb(c===null?l:l+1);li.querySelector('em').textContent='Level '+l+' of '+p.costs.length;

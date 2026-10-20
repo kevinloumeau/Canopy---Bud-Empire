@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {PERKS,migratePerks,perkLevel,perkCost,buyPerk,perkStart,spenderGap,rushLength,crossSeconds,trainerGap,keptBranch} from '../src/perks.js';
+import {FOUNDER_LOOK,FOUNDER_LEVEL,PERKS,migratePerks,perkLevel,perkCost,buyPerk,perkStart,spenderGap,rushLength,crossSeconds,trainerGap,keptBranch} from '../src/perks.js';
 test('old saves get one point per share; bad levels are clamped',()=>{
   assert.deepEqual(migratePerks(undefined,8),{points:8,levels:{}});
   assert.deepEqual(migratePerks({points:3.7,levels:{seed:9,rush:-1,nope:2}},50),{points:3,levels:{seed:3}});
@@ -30,4 +30,8 @@ test('kept branch picks the best earner and caps its level',()=>{
   assert.deepEqual(keptBranch([10,7,4,0,0],[100,300,200,0,0],6),{index:1,level:6});
   assert.deepEqual(keptBranch([2,0,0,0,0],[50,0,0,0,0],10),{index:0,level:2});
   assert.equal(keptBranch([0,0,0,0,0],[0,0,0,0,0],10),null);assert.equal(keptBranch([5,0,0,0,0],[9,0,0,0,0],0),null);
+});
+test("founder's finish is a one-level perk for the seventh look",()=>{
+  assert.equal(perkCost({levels:{}},'finish'),6);const p={points:6,levels:{}};assert.ok(buyPerk(p,'finish'));assert.equal(perkCost(p,'finish'),null);
+  assert.equal(FOUNDER_LOOK,6);assert.equal(FOUNDER_LEVEL,100);
 });

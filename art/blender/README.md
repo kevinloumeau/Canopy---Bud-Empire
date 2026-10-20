@@ -24,6 +24,12 @@ Every station also has Lv 50 and Lv 75 looks (map keys `index.4` and `index.5`):
 and `order_desk_tier4.py`, `order_desk_tier5.py`, `pickup_desk_tier4.py`, `pickup_desk_tier5.py` (need `luxe_parts.py`).
 They share tier 3's footprint, origin and facing.
 
+The founder look (map keys `index.6`, unlocked by the Founder's finish perk at Lv 100, and Lv 75 for the door booth)
+is the Lv 75 model rebuilt in ebony, emerald lacquer and gold by `founder_finish.py`, which recolours materials by name
+and keeps every part name: `blender -b -P founder_finish.py -- OUT_DIR order_desk_tier5.py` writes
+`order_desk_founder.glb` (`-- OUT_DIR security_booth.py 5` for the booth, then `gltf-transform meshopt` like the
+other booth files).
+
 ## Rebuilding a model
 
 1. Run the script in Blender 5.2 (`blender -b -P grow_bench.py -- OUT_DIR`, or paste it into the Scripting tab).
