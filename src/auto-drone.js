@@ -2,7 +2,10 @@ export const AUTO_DRONE_COST=7500;
 export const AUTO_DRONE_INTERVAL=10;
 export const BULK_DRONE_COST=25000;
 export function migrateAutoDrone(raw){const owned=raw?.owned===true;return {bulk:owned&&raw?.bulk===true,mode:owned&&raw?.bulk===true&&raw?.mode==='bulk'?'bulk':'single',owned,enabled:owned&&raw.enabled===true,remaining:owned&&Number.isFinite(raw.remaining)?Math.max(0,Math.min(AUTO_DRONE_INTERVAL,raw.remaining)):0};}
-export function buyAutoDrone(state){if(state.autoDrone.owned||state.money<AUTO_DRONE_COST)return false;state.money-=AUTO_DRONE_COST;state.autoDrone={owned:true,enabled:true,remaining:0,bulk:false,mode:'single'};return true;}
+// The game pays for the deck first and opens it when its build finishes (builds.js); buyAutoDrone does both at once.
+export function payAutoDrone(state){if(state.autoDrone.owned||state.money<AUTO_DRONE_COST)return false;state.money-=AUTO_DRONE_COST;return true;}
+export function grantAutoDrone(state){if(!state.autoDrone.owned)state.autoDrone={owned:true,enabled:true,remaining:0,bulk:false,mode:'single'};}
+export function buyAutoDrone(state){if(!payAutoDrone(state))return false;grantAutoDrone(state);return true;}
 // Uses simulated seconds: pause and hidden-tab suspension stop departures.
 export function autoDroneReady(drone,seconds,ready){if(!drone.owned||!drone.enabled)return false;drone.remaining=Math.max(0,drone.remaining-Math.max(0,seconds));if(drone.remaining>1e-8||!ready)return false;drone.remaining=AUTO_DRONE_INTERVAL;return true;}
 
