@@ -110,29 +110,35 @@ export function buildRooftop(world, layout, { box, span, material }) {
     return box(works, (x0 + x1) / 2, y + .01, zA + (z1 - z0 - .2) / 20, x1 - x0 - .2, .03, (z1 - z0 - .2) / 10 - .04, OAK, { cast: false });
   });
 
-  // Before the lounge opens (Kevin, 2026-10-20) the bare steel frame wears a tall banner on its two street faces, a
+  // Before the lounge opens (Kevin, 2026-10-20) the bare steel frame wears a tall banner on its sides, a
   // vertical billboard for the store in forest green and brass. The glass shaft takes over once the lounge opens.
   const bannerCanvas = document.createElement('canvas'); bannerCanvas.width = 160; bannerCanvas.height = 1600;
-  {
+  // Kept clean (Kevin, 2026-10-20): flat forest green, a thin outlined leaf and the name set sideways in the UI's
+  // Bricolage, all in the top half so it reads above the roofline. Repainted once the font has loaded.
+  function paintBanner() {
     const c = bannerCanvas.getContext('2d'), W = bannerCanvas.width, H = bannerCanvas.height;
-    c.fillStyle = STEEL; c.fillRect(0, 0, W, H);
-    c.strokeStyle = BRASS; c.lineWidth = 6; c.strokeRect(10, 10, W - 20, H - 20); c.lineWidth = 2; c.strokeRect(20, 20, W - 40, H - 40);
-    // The leaf mark: five slim leaflets fanned from one stem.
-    c.save(); c.translate(W / 2, 250); c.fillStyle = BRASS;
-    [-1.1, -.55, 0, .55, 1.1].forEach((a, k) => { const len = k === 2 ? 120 : k % 4 ? 100 : 72; c.save(); c.rotate(a); c.beginPath(); c.ellipse(0, -len / 2, 13, len / 2, 0, 0, Math.PI * 2); c.fill(); c.restore(); });
-    c.fillRect(-3, 0, 6, 46); c.restore();
-    c.fillStyle = CREAM; c.font = '800 104px Georgia, serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
-    'CANOPY'.split('').forEach((ch, k) => c.fillText(ch, W / 2, 420 + k * 145));
-    c.fillStyle = BRASS; c.fillRect(W / 2 - 40, 1300, 80, 4);
-    c.font = '700 26px Georgia, serif'; ['CANNABIS', 'CO.'].forEach((t, k) => c.fillText(t, W / 2, 1360 + k * 44));
+    const fill = c.createLinearGradient(0, 0, 0, H); fill.addColorStop(0, '#24543d'); fill.addColorStop(1, '#173a2a');
+    c.fillStyle = fill; c.fillRect(0, 0, W, H);
+    c.strokeStyle = BRASS; c.lineWidth = 3; c.lineCap = 'round'; c.lineJoin = 'round';
+    c.save(); c.translate(W / 2, 150);
+    [[0, 54], [-.62, 40], [.62, 40]].forEach(([a, len]) => { c.save(); c.rotate(a); c.beginPath(); c.ellipse(0, -len / 2, 9, len / 2, 0, 0, Math.PI * 2); c.stroke(); c.restore(); });
+    c.beginPath(); c.moveTo(0, 0); c.lineTo(0, 22); c.stroke(); c.restore();
+    c.fillStyle = BRASS; c.fillRect(W / 2 - 18, 210, 36, 2);
+    c.save(); c.translate(W / 2 + 4, 520); c.rotate(-Math.PI / 2);
+    c.fillStyle = CREAM; c.font = '600 72px "Bricolage Grotesque", "Helvetica Neue", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    if ('letterSpacing' in c) c.letterSpacing = '14px';
+    c.fillText('CANOPY', 0, 0); c.restore();
+    if (bannerTexture) bannerTexture.needsUpdate = true;
   }
-  const bannerTexture = new THREE.CanvasTexture(bannerCanvas); bannerTexture.colorSpace = THREE.SRGBColorSpace; bannerTexture.anisotropy = 4;
+  let bannerTexture = null; paintBanner();
+  bannerTexture = new THREE.CanvasTexture(bannerCanvas); bannerTexture.colorSpace = THREE.SRGBColorSpace; bannerTexture.anisotropy = 4;
+  if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', paintBanner);
   const banner = new THREE.Group(); roof.add(banner);
   {
     const bannerMat = new THREE.MeshLambertMaterial({ map: bannerTexture }), b0 = 2.9, b1 = y + 2.75;
     const face = (w) => new THREE.Mesh(new THREE.PlaneGeometry(w, b1 - b0), bannerMat);
     const front = face(lift.w + .06); front.position.set(lift.x, (b0 + b1) / 2, lift.z + lift.d / 2 + .03); banner.add(front);
-    const side = face(lift.d + .06); side.rotation.y = -Math.PI / 2; side.position.set(lift.x - lift.w / 2 - .03, (b0 + b1) / 2, lift.z); banner.add(side);
+    [-1, 1].forEach(dir => { const side = face(lift.d + .06); side.rotation.y = dir * Math.PI / 2; side.position.set(lift.x + dir * (lift.w / 2 + .03), (b0 + b1) / 2, lift.z); banner.add(side); });
     banner.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
   }
 
