@@ -119,3 +119,21 @@
 .sheet>[data-pane=factory] #buyMachine:not(:disabled){background:var(--ui-brass)!important;color:var(--ui-brass-ink)!important;border-color:var(--ui-brass)!important;box-shadow:0 4px 14px #e2c68a2e!important}
 .sheet>[data-pane=factory] #buyMachine:not(:disabled) *{color:var(--ui-brass-ink)!important}
 .sheet>[data-pane=factory] #buyMachineMax{background:none!important;border:1px solid var(--ui-edge)!important;box-shadow:none!important}
+/* Selected station card, compact like the mock: title-case name, level, the next look as a small chip, the figures,
+   then Upgrade (arrow, word and price on one line) beside Max. */
+.sheet>[data-pane=factory] .selected-line{gap:6px 14px!important;padding:12px 12px 10px!important;min-height:0!important;align-content:start!important}
+.sheet .selected-line h1{text-transform:lowercase;font:600 18px/1.2 'Bricolage Grotesque',system-ui,sans-serif!important;letter-spacing:-.01em;color:var(--ui-ink);margin:0 0 2px!important}
+.sheet .selected-line h1::first-letter{text-transform:uppercase}
+.sheet .selected-line #upgradeLevel{font:500 13px/1.35 'Bricolage Grotesque',system-ui,sans-serif!important;color:var(--ui-soft)!important}
+.sheet .selected-line #nextAppearance:not([hidden]){display:inline-block;max-width:100%;margin:5px 0 0;padding:2px 9px;border:1px solid var(--ui-edge);border-radius:999px;font:600 10px/1.5 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--ui-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet .selected-line #nextAppearance b,.sheet .selected-line #nextAppearance strong{font:inherit;color:var(--ui-ink);margin-right:.4em}
+.sheet .selected-line #upgradeBenefit{margin-top:6px!important}
+.sheet .selected-line .station-buy-actions{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)!important;gap:8px!important;margin-top:4px}
+.sheet .selected-line .station-buy-actions #buyMachine{flex-direction:row!important;flex-wrap:nowrap!important;justify-content:center!important;align-items:center;gap:6px!important;min-height:46px!important;border-radius:14px!important}
+.sheet .selected-line .station-buy-actions #buyMachine::before{content:'';flex:none;width:16px;height:16px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 18V6M6 12l6-6 6 6M5 21h14'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 18V6M6 12l6-6 6 6M5 21h14'/%3E%3C/svg%3E") center/contain no-repeat}
+.sheet .selected-line .station-buy-actions #buyMachine span{display:inline-block;text-transform:lowercase;font:700 15px/1.2 'Bricolage Grotesque',system-ui,sans-serif!important;letter-spacing:0!important}
+.sheet .selected-line .station-buy-actions #buyMachine span::first-letter{text-transform:uppercase}
+.sheet .selected-line .station-buy-actions #buyMachine b{font:600 15px/1.2 'DM Mono',monospace!important}
+.sheet .selected-line .station-buy-actions #buyMachine b::before{content:'· ';font-family:'Bricolage Grotesque',system-ui,sans-serif}
+.sheet .selected-line .station-buy-actions #buyMachineMax{min-height:46px!important;border-radius:14px!important}
+.sheet .selected-line .station-buy-actions #buyMachineMax span{text-transform:none;font-size:11px}
