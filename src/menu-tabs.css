@@ -168,3 +168,4 @@
 /* The pickup window and its upgrades live on the Pickup station now; Deliveries keeps the drone port. */
 .sheet [data-pane=orders] .window-control,.sheet [data-pane=orders] #deliverySite{display:none!important}
 .sheet .station-extra button.is-owned{opacity:.6}
+.sheet .station-extra button[hidden]{display:none!important}
