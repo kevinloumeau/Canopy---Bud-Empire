@@ -2770,14 +2770,18 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var rates=LINES.map(function(_,i){return state.lines[i]?stationThroughput(i):Infinity}),slowRate=rates[slow],others=rates.filter(function(r,i){return i!==slow&&isFinite(r)}),nextRate=others.length?Math.min.apply(null,others):null,nextName=nextRate!==null?shortNames[rates.indexOf(nextRate)]:'';
     var behind=nextRate?Math.round((1-slowRate/nextRate)*100):0,footTraffic=basketSize()/arrivalInterval();
     var atFloor=slow>=4&&!trafficBound&&economy.customerHandoff(slow,state.lines[slow],counterServiceDuration(slow))<=economy.HANDOFF_FLOOR[slow]&&economy.customerHandoff(slow,state.lines[slow]+1,counterServiceDuration(slow,nextCapacity(slow)))<=economy.HANDOFF_FLOOR[slow];
-    // A counter at its handoff floor can't close the gap with more levels, so say it is at top speed instead of a % that never moves.
-    $('flowText').textContent=trafficBound?'Foot traffic · '+Math.round((1-footTraffic/slowRate)*100)+'% below capacity':atFloor?shortNames[slow]+' at top speed · bigger baskets help':behind>0?shortNames[slow]+' trails '+nextName+' by '+behind+'%':shortNames[slow]+' · slowest station';
-    $('flowText').title=(trafficBound?'Customers arrive at '+footTraffic.toFixed(1)+'/s but the counters can serve '+slowRate.toFixed(1)+'/s. ':shortNames[slow]+' moves '+slowRate.toFixed(1)+'/s; '+nextName+' can do '+(nextRate||0).toFixed(1)+'/s, so everything queues here. ')+'Estimates include batches, handoff time and kiosks.';
+    // Plain words: which station holds the shop back, then what the upgrade does for it. The % gap lives in the tooltip and meter.
+    var speedsUp=['plants seeds faster','grows plants faster','harvests faster','packs faster','takes orders faster','hands out bags faster'];
+    $('flowText').textContent=trafficBound?'Not enough customers · the counters could serve '+Math.round((slowRate/footTraffic-1)*100)+'% more':atFloor?shortNames[slow]+' can\'t go faster · bigger baskets help':shortNames[slow]+' is holding the shop back · upgrading it '+speedsUp[slow];
+    $('flowText').title=(trafficBound?'Customers arrive at '+footTraffic.toFixed(1)+'/s but the counters can serve '+slowRate.toFixed(1)+'/s. ':shortNames[slow]+' moves '+slowRate.toFixed(1)+'/s; '+nextName+' can do '+(nextRate||0).toFixed(1)+'/s'+(behind>0?' ('+shortNames[slow]+' runs '+behind+'% slower)':'')+', so everything queues here. ')+'Estimates include batches, handoff time and kiosks.';
     // The fix button follows the best-value purchase, which can differ from the slowest station when that station is capped.
     var fix=recommendation(),fixPrice=fix?fix.price:0,canFix=fixPrice>0&&state.money>=fixPrice,fixElsewhere=fix&&!(fix.kind==='station'&&fix.index===slow);
     // At the floor the line above names what the button upgrades, so the button itself stays Upgrade.
-    if(atFloor&&fix&&fix.kind==='station')$('flowText').textContent=shortNames[slow]+' at top speed · upgrade '+fix.name;
-    flowButton(state.gameSpeed===0?'Resume':fixElsewhere&&!(atFloor&&fix.kind==='station')?fix.name:'Upgrade',state.gameSpeed===0?'':fmt(fixPrice));$('flowAction').dataset.mode=state.gameSpeed===0||!canFix?'view':'fix';
+    if(atFloor&&fix&&fix.kind==='station')$('flowText').textContent=shortNames[slow]+' can\'t go faster · upgrading '+fix.name+' brings bigger baskets';
+    // An undecided research fork only opens its choice in the Shop, so the line says so and the button says Choose, not Upgrade.
+    else if(fix&&fix.kind==='fork')$('flowText').textContent=(trafficBound?'Not enough customers':atFloor?shortNames[slow]+' can\'t go faster':shortNames[slow]+' is slow')+' · pick '+fix.name.charAt(0).toLowerCase()+fix.name.slice(1);
+    else if(!trafficBound&&!atFloor&&fixElsewhere)$('flowText').textContent=shortNames[slow]+' is holding the shop back · this is the best buy for now';
+    flowButton(state.gameSpeed===0?'Resume':fix&&fix.kind==='fork'?'Choose':fixElsewhere&&!(atFloor&&fix.kind==='station')?fix.name:'Upgrade',state.gameSpeed===0?'':fmt(fixPrice));$('flowAction').dataset.mode=state.gameSpeed===0||!canFix?'view':'fix';
     // The meter shows how much of the next station's pace the bottleneck manages (or of the counters' pace, for foot traffic).
     flowMeter(trafficBound?footTraffic/slowRate:nextRate?slowRate/nextRate:1);
     // While the shop is still a building site the guide row counts sites instead of naming a bottleneck.
