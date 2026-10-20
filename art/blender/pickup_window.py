@@ -1,104 +1,80 @@
-"""Canopy online-orders pickup window: a little walk-up kiosk booth on the shop floor's front edge.
+"""Canopy online-orders pickup window: an open walk-up counter set into the shop floor's front edge.
 
-A green-tiled booth (cream cornice, brass trim) with a serving hatch in its street face: an oak ledge outside with a
-brass bell and a bag waiting, a sliding glass pane pushed to one side, two brass globe sconces (material "LampGlow",
-lit at night by the map) and an "ONLINE PICKUP" sign plate on the fascia.  Inside, an oak shelf of kraft bags; the
-clerk is the game's own staff figure, stood just behind the hatch.
+Kevin (2026-10-20) found the first booth a heavy, enclosed green box; this one is open and part of the building: the
+front baseboard (green tile, brass rail, cream cap) rises into a counter base, an oak top reaches out over the
+pavement, and two slim brass posts carry a cream sign bar ("ONLINE PICKUP") with globe sconces (material "LampGlow",
+lit at night by the map). On the top, a bell, a till and a bag waiting; the bags come up a glass tube into the
+counter's back (drawn by the map, not here).  The clerk is the game's own staff figure, standing in the open behind it.
 
 The street face looks along Blender -Y (map +z, the front pavement).  Origin at the footprint centre on the floor.
-Footprint 1.6 m wide by 1.0 m deep (2.7 by 1.69 map units at 1.69 a metre), 2.3 m tall; the ledge reaches .26 m past
-the front.
+1.7 m wide, 0.6 m deep (the top reaches .14 m further out), counter 1.0 m, sign bar to 2.57 m.
 
 Needs canopy_kit.py one folder up (or next to this file).  Run headless with
-    python pickup_window.py -- OUT_DIR        (bpy as a module)   or   blender -b -P pickup_window.py -- OUT_DIR
+    python pickup_window.py -- OUT_DIR
 """
 import os, sys, math
 try:
     here = os.path.dirname(os.path.abspath(__file__))
     sys.path.insert(0, here); sys.path.insert(0, os.path.dirname(here))
 except NameError: pass
-import bpy
+import bpy, bmesh
 import canopy_kit as K
 
 OUT = K.begin("PickupWindow")
 TILE = K.mat("BoothTile", "#1f5e40", .45)
 TILE_D = K.mat("BoothTileDeep", "#174a33", .5)
 CAP = K.mat("BoothCap", "#e1dbc0", .55)
-INSIDE = K.mat("BoothInside", "#efe3c8", .7)
 SIGNTXT = K.mat("SignLetters", "#1e4a37", .5)
 LAMP = K.mat("LampGlow", "#fff1cf", .35, 0, 1.2)
 KRAFT_D = K.mat("KraftFold", "#a97a4c", .85)
 
-W, D, H = 1.6, 1.0, 2.18
-FY = -D / 2                      # the street face
-SILL, HEAD = 1.0, 1.82           # the hatch opening, bottom and top
-HW = 1.08                        # hatch width
-T = .07                          # wall thickness
+W, D, TOP = 1.7, .6, 1.0
+FY = -D / 2
 
 def b(name, size, loc, m, bevel=.006, seg=1):
     return K.box(name, size, loc, m, bevel, seg)
 
-# ---------- plinth, walls ----------
-b("Plinth", (W + .04, D + .04, .08), (0, 0, 0), TILE_D, .01)
-b("FrontLow", (W, T, SILL - .08), (0, FY + T / 2, .08), TILE)
+# ---------- counter base: the baseboard's green tile, brass rail and cream cap, risen to counter height ----------
+b("Base", (W, D - .1, TOP - .05), (0, .05, 0), TILE)
+b("BaseFront", (W, .06, TOP - .05), (0, FY + .03, 0), TILE, .004)
 for s in (-1, 1):
-    b(f"Side{'L' if s < 0 else 'R'}", (T, D - T, H - .08), (s * (W / 2 - T / 2), T / 2, .08), TILE)
-    b(f"Post{'L' if s < 0 else 'R'}", ((W - HW) / 2, T, HEAD - SILL), (s * (HW / 2 + (W - HW) / 4), FY + T / 2, SILL), TILE)
-b("Back", (W - 2 * T, T, H - .08), (0, D / 2 - T / 2, .08), INSIDE)
-b("Fascia", (W, T, H - HEAD), (0, FY + T / 2, HEAD), TILE)
-# recessed panels and a brass kick rail on the lower front
+    b(f"Panel{s}", (W / 2 - .18, .012, .52), (s * W / 4, FY - .004, .2), TILE_D, .004)
+b("KickRail", (W - .06, .02, .025), (0, FY - .012, .12), K.BRASS, .005)
+b("CapRail", (W + .02, .02, .025), (0, FY - .012, TOP - .09), K.BRASS, .005)
+# oak top, reaching out over the pavement, with a brass edge
+b("Top", (W + .1, D + .2, .05), (0, -.04, TOP - .05), K.OAK, .01)
+b("TopEdge", (W + .1, .02, .02), (0, FY - .15, TOP - .04), K.BRASS, .004)
+
+# ---------- two slim brass posts carrying the sign bar ----------
+SB = 2.3    # sign bar bottom, high enough to see the clerk under it
 for s in (-1, 1):
-    b(f"Panel{s}", (W / 2 - .2, .012, .5), (s * W / 4, FY - .004, .28), TILE_D, .004)
-b("KickRail", (W - .08, .02, .025), (0, FY - .012, .2), K.BRASS, .006)
-# inside floor, so the hatch never shows the pavement through the booth
-b("Floor", (W - 2 * T, D - 2 * T, .02), (0, 0, .08), INSIDE, 0)
-
-# ---------- roof: cream cornice and a green cap ----------
-b("Cornice", (W + .14, D + .14, .07), (0, 0, H), CAP, .012)
-b("Roof", (W + .06, D + .06, .05), (0, 0, H + .07), TILE_D, .01)
-
-# ---------- the hatch: oak ledge out over the pavement, brass frame, sliding glass pushed aside ----------
-b("Ledge", (HW + .18, .36, .045), (0, FY - .08, SILL - .045), K.OAK, .01)
-b("LedgeEdge", (HW + .18, .02, .02), (0, FY - .265, SILL - .035), K.BRASS, .005)
-b("InnerSill", (W - 2 * T, .5, .04), (0, FY + T + .25, SILL - .04), K.OAK, .006)
-for s in (-1, 1):   # brackets under the ledge
-    o = b(f"Bracket{s}", (.03, .2, .03), (s * (HW / 2 - .05), FY - .09, SILL - .2), K.BRASS, .006); o.rotation_euler.x = -.75
-for s in (-1, 1):
-    b(f"FrameSide{s}", (.03, .03, HEAD - SILL), (s * HW / 2, FY - .005, SILL), K.BRASS, .006)
-b("FrameTop", (HW + .03, .03, .03), (0, FY - .005, HEAD - .03), K.BRASS, .006)
-b("Track", (HW, .05, .02), (0, FY + .03, HEAD - .05), K.BRASS, .004)
-PW = HW / 2 - .02
-gx = -HW / 2 + PW / 2 + .02
-b("Pane", (PW, .012, HEAD - SILL - .1), (gx, FY + .04, SILL + .03), K.GLASS, 0)
-for dz in (SILL + .02, HEAD - .07):
-    b(f"PaneRail{dz:.2f}", (PW, .018, .025), (gx, FY + .04, dz), K.BRASS, .004)
-b("PaneStile", (.025, .018, HEAD - SILL - .08), (gx + PW / 2, FY + .04, SILL + .02), K.BRASS, .004)
-
-# ---------- sign plate on the fascia ----------
-SZ = HEAD + (H - HEAD) / 2
-b("SignPlate", (W - .16, .02, .24), (0, FY - .01, SZ - .12), CAP, .008)
-b("SignRim", (W - .12, .012, .27), (0, FY - .004, SZ - .135), K.BRASS, .006)
+    x = s * (W / 2 - .06)
+    K.cyl(f"Post{s}", .022, .022, SB - TOP, (x, -.05, TOP), K.BRASS, 10)
+    K.cyl(f"PostFoot{s}", .04, .03, .03, (x, -.05, TOP), K.BRASS, 10)
+b("SignBar", (W + .04, .08, .24), (0, -.05, SB), CAP, .01)
+b("SignTrim", (W + .06, .09, .02), (0, -.05, SB - .01), K.BRASS, .004)
+b("SignCap", (W + .06, .1, .03), (0, -.05, SB + .24), TILE, .006)
 txt = bpy.data.curves.new("SignText", "FONT"); txt.body = "ONLINE PICKUP"; txt.resolution_u = 2
 txt.size = .135; txt.extrude = 0; txt.align_x = "CENTER"; txt.align_y = "CENTER"; txt.space_character = 1.04
 fb = os.environ.get("CANOPY_FONT") or next((p for p in (os.path.join(d, "fonts", "Fredoka-SemiBold.ttf") for d in sys.path[:2]) if os.path.exists(p)), None)
 if fb: txt.font = bpy.data.fonts.load(fb)
 o = bpy.data.objects.new("SignText", txt); K.link(o, SIGNTXT)
-o.location = (0, FY - .022, SZ - .005); o.rotation_euler = (math.pi / 2, 0, 0)
+o.location = (0, -.05 - .041, SB + .12); o.rotation_euler = (math.pi / 2, 0, 0)
 
-# ---------- brass globe sconces either side of the hatch ----------
+# globe sconces hanging under the sign bar's ends
 for s in (-1, 1):
-    x = s * (W / 2 - .13)
-    b(f"SconcePlate{s}", (.07, .015, .1), (x, FY - .007, HEAD - .02), K.BRASS, .004)
-    b(f"SconceArm{s}", (.02, .1, .02), (x, FY - .06, HEAD + .02), K.BRASS, .004)
+    x = s * (W / 2 - .25)
+    K.cyl(f"LampStem{s}", .006, .006, .08, (x, -.05, SB - .08), K.BRASS, 6)
     g = bpy.data.meshes.new(f"Globe{s}")
-    import bmesh
-    bm = bmesh.new(); bmesh.ops.create_uvsphere(bm, u_segments=10, v_segments=6, radius=.055); bm.to_mesh(g); bm.free()
+    bm = bmesh.new(); bmesh.ops.create_uvsphere(bm, u_segments=10, v_segments=6, radius=.05); bm.to_mesh(g); bm.free()
     for p in g.polygons: p.use_smooth = True
-    go = K.link(bpy.data.objects.new(f"LampGlobe{s}", g), LAMP); go.location = (x, FY - .11, HEAD - .03)
+    go = K.link(bpy.data.objects.new(f"LampGlobe{s}", g), LAMP); go.location = (x, -.05, SB - .12)
 
-# ---------- on the ledge: a brass bell and a bag waiting to be picked up ----------
-K.cyl("BellBase", .045, .045, .012, (.38, FY - .12, SILL), K.WOOD, 12)
-K.cyl("Bell", .035, .008, .04, (.38, FY - .12, SILL + .012), K.BRASS, 12)
+# ---------- on the top: a bell, a till facing the clerk, a bag waiting ----------
+K.cyl("BellBase", .045, .045, .012, (.45, FY - .02, TOP), K.WOOD, 12)
+K.cyl("Bell", .035, .008, .04, (.45, FY - .02, TOP + .012), K.BRASS, 12)
+b("Till", (.24, .16, .03), (.1, .12, TOP), K.DARK, .006)
+o = b("TillScreen", (.22, .02, .15), (.1, .16, TOP + .03), K.DARK, .006); o.rotation_euler.x = .35
 
 def bag(name, x, y, z, s=1.):
     w, d, h = .17 * s, .1 * s, .26 * s
@@ -107,12 +83,5 @@ def bag(name, x, y, z, s=1.):
     b(name + "Label", (.08 * s, .006, .08 * s), (x, y - d / 2 - .002, z + .09 * s), K.GREEN, .003)
     b(name + "Handle", (w * .5, .01, .06 * s), (x, y, z + h), KRAFT_D, 0)
 
-bag("LedgeBag", -.3, FY - .1, SILL)
-# ---------- inside: oak shelf of bags against the back wall, and a till on the inner sill ----------
-b("Shelf", (W - 2 * T, .26, .035), (0, D / 2 - T - .13, 1.18), K.OAK, .006)
-for i, x in enumerate((-.5, -.25, 0, .25, .5)):
-    bag(f"ShelfBag{i}", x, D / 2 - T - .13, 1.215, .9)
-b("Till", (.22, .16, .03), (.28, FY + T + .2, SILL), K.DARK, .006)
-o = b("TillScreen", (.2, .02, .14), (.28, FY + T + .27, SILL + .03), K.DARK, .006); o.rotation_euler.x = -.35
-
-K.finish(OUT, "pickup_window", ortho=3.0, centre=(0, 0, 1.1))
+bag("LedgeBag", -.35, FY + .02, TOP)
+K.finish(OUT, "pickup_window", ortho=3.0, centre=(0, 0, 1.0))

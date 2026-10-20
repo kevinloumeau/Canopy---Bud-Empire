@@ -824,7 +824,11 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
           // The online deck's feed, shown while the deck is built: along the mezzanine rail at the 2D map's height, up the
           // same slope, level under the deck, then bending straight up into the slab (underside 7.04, boards 7.2), where its
           // open end and the parcels disappear; it tucks back from the slab's front edge (z .84) so none of it shows above.
-          {points:[[-4.3,6.15,.85],[-7.99,6.15,.85],[-9.3,6.6,.85],[-10.75,6.6,.42],[-10.75,7.12,.42]],stage:3,cargoStage:5,noCap0:true,noCap1:true,fixture:'deck'}],
+          {points:[[-4.3,6.15,.85],[-7.99,6.15,.85],[-9.3,6.6,.85],[-10.75,6.6,.42],[-10.75,7.12,.42]],stage:3,cargoStage:5,noCap0:true,noCap1:true,fixture:'deck'},
+          // The pickup window's feed (Kevin, 2026-10-20): up out of the floor behind the counter, over and down into its top
+          // at the right-hand end like a bank's tube, where the parcels arrive. It shows with the window, which comes with
+          // the deck.
+          {points:[[PICKUP_WINDOW.x+1,-.7,PICKUP_WINDOW.z-1.5],[PICKUP_WINDOW.x+1,2.4,PICKUP_WINDOW.z-1.5],[PICKUP_WINDOW.x+1,2.4,PICKUP_WINDOW.z-.05],[PICKUP_WINDOW.x+1,1.45,PICKUP_WINDOW.z-.05]],stage:3,cargoStage:5,noCap0:true,floorRings:[[PICKUP_WINDOW.x+1,0,PICKUP_WINDOW.z-1.5]],fixture:'deck'}],
         belts:[{x1:-4.6,x2:4.6,z:-5.8,floor:9.4,height:1.05,width:BELT_W,stage:0},{x1:4.2,x2:-3.2,z:-3.7,floor:4.7,height:1.05,width:BELT_W,stage:2}]};
       // The online orders deck, placed by its origin (the stair foot, on the mezzanine) at the scale every Blender model
       // shares (about 1.69 map units a metre), so its slab's right and front edges land where the sprite's do
@@ -2488,7 +2492,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     });
     var streetApi=sunnyApi(now);
     walkerPlacements(now).forEach(function(w){person(w.x,w.y===undefined?-.012:w.y,w.z,PERSON_COLOURS[(w.g*3+1)%PERSON_COLOURS.length],function(){drawWalker(streetApi,w)})});
-    // The pickup window's clerk behind the hatch, and its walk-ups (cast after the shop's own customers).
+    // The pickup window's clerk behind the counter, and its walk-ups (cast after the shop's own customers).
     if(deliveryBuilt()){
       person(WINDOW_CLERK.x,0,WINDOW_CLERK.z,'#2f6b52',function(){drawPerson(WINDOW_CLERK.x,WINDOW_CLERK.z,now,5,false,true,false,{amount:0,phase:0,facing:-1,workActivity:windowServing?1:0})});
       windowFigures(windowLine,SUBWAY_HIDDEN_Z).forEach(function(w){var who=500+w.id;person(w.x,w.y,w.z,PERSON_COLOURS[who%PERSON_COLOURS.length],function(){drawPerson(w.x,w.z,now,who,w.moving,false,w.bag,{identity:who,phase:w.walked*5,heading:w.heading,amount:w.moving?1:0,facing:w.facing})})});

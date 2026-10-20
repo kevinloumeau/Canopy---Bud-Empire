@@ -58,9 +58,10 @@ are copied into `MODEL_BOUNDS` in `src/sunny-world.js`.
 
 ## Online pickup window
 
-`pickup_window.py` builds `public/models/pickup_window.glb`, the walk-up booth on the floor's front edge that serves
-online orders once the delivery deck is built (`src/pickup-window.js`): green tile, cream cornice, an "ONLINE PICKUP"
-sign, an oak ledge with a bell and a bag, a sliding pane pushed aside, and two globe sconces (`LampGlow`, lit at night).
-The clerk is the game's own staff figure. `aframe_sign.py` builds `public/models/aframe_sign.glb`, the chalkboard
+`pickup_window.py` builds `public/models/pickup_window.glb`, the open walk-up counter set into the floor's front edge
+that serves online orders once the delivery deck is built (`src/pickup-window.js`): a green-tile base like the
+baseboard, an oak top reaching over the pavement with a bell, a till and a bag, two brass posts carrying an "ONLINE
+PICKUP" sign bar with globe sconces (`LampGlow`, lit at night); a glass feed
+tube (main.js `layout.transport`) rises out of the floor behind it and comes down into its top. The clerk is the game's own staff figure. `aframe_sign.py` builds `public/models/aframe_sign.glb`, the chalkboard
 A-frame on the pavement. Both are street props: copied as plain exports (no meshopt), since the map bakes props into
 float geometry and quantized positions would be clamped to a metre.
