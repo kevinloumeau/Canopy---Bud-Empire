@@ -1,3 +1,4 @@
+import {PICKUP_WINDOW,PICKUP_SIGN,WINDOW_CLERK,walkupCount,createWindowLine,addWalkups,stepWindowLine,windowFigures} from './pickup-window.js';
 import {migrateOrderCounters,orderCounterPositions,COUNTER_SHIFT,PICKUP_X,orderCounterCost,buyOrderCounter,ORDER_QUEUE_GATE,assignOrderCounter,assignKiosk,takesKiosk,atOrderCounter,orderAvailability,pickupPlaces} from './order-counters.js';
 import {makeLifts,tickLifts,CAB_SLOTS} from './lounge-lifts.js';
 import {LOUNGE_TIERS,LOUNGE_MAX,migrateLounge,loungeTier,loungeUpgradeCost,loungeSeats,loungeSessionSeconds,buyLoungeTier,wantsLounge,loungeAdmission,loungeTake,loungeRate,loungeCurrentRate,migrateLoungeHost,buyLoungeLift,LOUNGE_LIFT_COST,LOUNGE_LIFT_SPEED,loungeHostSpeed,loungeHostCost} from './lounge.js';
@@ -25,7 +26,7 @@ import {mountStartGuide} from './start-guide.js';
 import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
-import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, PERSON_HEAD_Y, drawSprite, stationSprite, drawPersonSprite, drawWalker, streetItems, floorTextureFiles, fixtureSprite, shellSprite, spriteImage, spritesLoading, drawBoxSprite, softShadow, sunShadow, SUN, SUN_REACH, townLayout, carPlacements, walkerPlacements, stationSpriteSize, stationTier as spriteTier } from './sunny-world.js';
+import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, PERSON_HEAD_Y, subwayStairs, SUBWAY_HIDDEN_Z, drawSprite, stationSprite, drawPersonSprite, drawWalker, streetItems, floorTextureFiles, fixtureSprite, shellSprite, spriteImage, spritesLoading, drawBoxSprite, softShadow, sunShadow, SUN, SUN_REACH, townLayout, carPlacements, walkerPlacements, stationSpriteSize, stationTier as spriteTier } from './sunny-world.js';
 import * as economy from './economy.js';
 import {ABILITIES,ABILITY_UNLOCK,ABILITY_FACTOR,ABILITY_SALES,ABILITY_SECONDS,migrateAbilities,abilityStatus,useAbility,tickAbilities,abilityFactor,abilitySales,clockLabel} from './crew-abilities.js';
 import * as strains from './strains.js';
@@ -497,7 +498,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       var bigSpender=state.spenderClock<=0&&!lounge&&!eventGuest&&arrivingKind!=='vip';if(bigSpender)state.spenderClock=contractTwist(state.empire)==='spender'?60:spenderGap(state.perks,120+(customerId*97)%480);
       arrival=0;customers.push({bigSpender:bigSpender,eventGuest:eventGuest,kind:arrivingKind,id:customerId++,phase:'entering',idChecked:false,idCheckTime:0,lounge:lounge,kiosk:wantsKiosk(lounge),kioskIndex:null,t:0,bag:false,ordered:false,x:-12.4,z:-10});
     }
-    tickLounge(dt);
+    tickLounge(dt);windowServing=deliveryBuilt()&&stepWindowLine(windowLine,dt,windowStairs);
     customers.forEach(function(c){moveQueuedCustomer(c,dt);if(!c.walking&&c.phase!=='leaving'&&c.phase!=='lounge')c.waitSeconds=(c.waitSeconds||0)+dt;if(c.bag)c.effectAge=(c.effectAge||0)+dt});
     tickThoughts(dt);
     customers=customers.filter(function(c){return c.phase!=='leaving'||c.t<1});
@@ -712,11 +713,14 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     state.stock[3]-=batch.jars;state.onlineCompleted+=batch.count;state.shopPlay.shift.deliveries+=batch.count;consumeRequests(state,batch.count);
     // Repeat buyers: a share of fulfilled orders come straight back as new requests.
     if(state.repeatLevel)state.onlineRequests=Math.min(onlineRequestCap(),state.onlineRequests+batch.count*state.repeatLevel*.04);
-    queueDeliveryWave(batch.count);
+    // One order in three is collected at the pickup window instead, while its line has room (pickup-window.js).
+    queueDeliveryWave(batch.count-addWalkups(windowLine,walkupCount(state.onlineCompleted-batch.count,batch.count),windowStairs));
     recordEvent(state.empire,'online',batch.count);add(batch.reward);if(!automatic)notifyDispatch(batch);burst({x:DECK_X,z:DECK_Z,y:7.05},'#dbc38b');slideReceipts(batch.count);renderUI();save();
   }
   // Each order is a parcel set on its own spot on the launch pad; couriers come in one after another to fetch them. With
   // every spot taken, further orders ride along with a waiting parcel (shown as ×N), so the pad never fills up.
+  var windowLine=createWindowLine(),windowServing=false;
+  function windowStairs(id){return subwayStairs(id%2?.3:-.3)}
   var DRONE_SPOTS=[[-.75,0],[-.25,0],[.25,0],[.75,0]],DRONE_PICKUP=2.2,DRONE_LIFE=10.8;
   function queueDeliveryWave(count){
     var queued=0;
@@ -914,8 +918,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // right-hand edge, without the aisle planter's tree. Each is 3.6 long and 0.95 deep, long along z; `rot` lays it
   // along the front.
   var FRONT_FIXTURES=[{file:'edge_planter.glb',x:2.4,z:11.33,rot:Math.PI/2},{file:'edge_planter.glb',x:6.4,z:11.33,rot:Math.PI/2},
-    {file:'edge_planter.glb',x:10.3,z:11.33,rot:Math.PI/2},{file:'edge_planter.glb',x:12.43,z:9.1,rot:0}];
-  function frontFixtures(){return FRONT_FIXTURES}
+    {file:'edge_planter.glb',x:10.3,z:11.33,rot:Math.PI/2,window:true},{file:'edge_planter.glb',x:12.43,z:9.1,rot:0}];
+  // With online orders running, the pickup window takes the right-hand planter's place, its A-frame out on the pavement.
+  var WINDOW_FIXTURES=[{file:'pickup_window.glb',x:PICKUP_WINDOW.x,z:PICKUP_WINDOW.z,rot:0},{file:'aframe_sign.glb',x:PICKUP_SIGN.x,z:PICKUP_SIGN.z,rot:PICKUP_SIGN.rot}];
+  function frontFixtures(){return deliveryBuilt()?FRONT_FIXTURES.filter(function(f){return !f.window}).concat(WINDOW_FIXTURES):FRONT_FIXTURES}
   // The back-wall shelving stands just behind the counters; the smoking lounge is the room behind it (z −7 → −1.76).
   var DISPLAY_Z=-1.6,LOUNGE_FRONT=DISPLAY_Z+.65;
   var sceneElevation=0;
@@ -2482,6 +2488,11 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     });
     var streetApi=sunnyApi(now);
     walkerPlacements(now).forEach(function(w){person(w.x,w.y===undefined?-.012:w.y,w.z,PERSON_COLOURS[(w.g*3+1)%PERSON_COLOURS.length],function(){drawWalker(streetApi,w)})});
+    // The pickup window's clerk behind the hatch, and its walk-ups (cast after the shop's own customers).
+    if(deliveryBuilt()){
+      person(WINDOW_CLERK.x,0,WINDOW_CLERK.z,'#2f6b52',function(){drawPerson(WINDOW_CLERK.x,WINDOW_CLERK.z,now,5,false,true,false,{amount:0,phase:0,facing:-1,workActivity:windowServing?1:0})});
+      windowFigures(windowLine,SUBWAY_HIDDEN_Z).forEach(function(w){var who=500+w.id;person(w.x,w.y,w.z,PERSON_COLOURS[who%PERSON_COLOURS.length],function(){drawPerson(w.x,w.z,now,who,w.moving,false,w.bag,{identity:who,phase:w.walked*5,heading:w.heading,amount:w.moving?1:0,facing:w.facing})})});
+    }
     // The street's trees, lamps and props are its own renders too, stood up at their footprints' centres, and so are
     // the cars until their Blender models load; the terraces stay solid. The 3D trees and lamps underneath only cast shadows.
     // A prop with a loaded Blender model is drawn as that instead of its card.
@@ -3825,7 +3836,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       if(carry.branch)state.empire.stores[carry.branch.index].level=carry.branch.level}
     // A prestige reopens a standing shop; Start over goes back to the building site and replays the intro.
     if(rank>0){state.lines=LINES.map(function(){return state.startLine||1});delete state.startLine;state.doorBuilt=true;state.shopOpen=true}
-    readyWork=0;work=[0,0,0,0,0,0];batchRemainder=[0,0,0,0];customers=[];arrival=0;customerId=0;deliveryDrones=[];particles=[];tickets=[];taskClocks.fill(0);taskActivity.fill(0);cropGrowth=[.15,.4,.7,.95];tierFlashes.fill(0);buildRise.fill(0);confetti=[];recentPickupRatings=[];animationTime=0;sceneTime=0;crateTime=0;cargoOdo=0;render.last=undefined;securitySelected=false;loungeSelected=false;selected=0;updateMarkers.key=null;save();$('resetModal').hidden=true;notify(rank>0?'FACTORY RESET':'STARTING OVER');syncMapView();paintThumbnails();renderUI();if(!state.shopOpen)setTimeout(function(){startGuide.open()},400)};
+    readyWork=0;work=[0,0,0,0,0,0];batchRemainder=[0,0,0,0];customers=[];arrival=0;customerId=0;deliveryDrones=[];windowLine=createWindowLine();particles=[];tickets=[];taskClocks.fill(0);taskActivity.fill(0);cropGrowth=[.15,.4,.7,.95];tierFlashes.fill(0);buildRise.fill(0);confetti=[];recentPickupRatings=[];animationTime=0;sceneTime=0;crateTime=0;cargoOdo=0;render.last=undefined;securitySelected=false;loungeSelected=false;selected=0;updateMarkers.key=null;save();$('resetModal').hidden=true;notify(rank>0?'FACTORY RESET':'STARTING OVER');syncMapView();paintThumbnails();renderUI();if(!state.shopOpen)setTimeout(function(){startGuide.open()},400)};
 
   // The intro waits behind the 21+ gate; a visitor who answers No never sees it.
   // `resume` picks the intro up at the first unbuilt site when a half-built shop is reloaded.
