@@ -122,3 +122,11 @@
   [data-pane="orders"] .online-card>.dispatch-actions,[data-pane="orders"] .online-card>.dispatch-actions:has(#onlineMaxOption){width:min(100%,300px);justify-self:center}
   .sheet [data-pane="orders"] .dispatch-option button{min-height:56px}
 }
+/* The pickup window's row, laid out like the drone's beneath it: icon, line status, then its two one-time upgrades. */
+.dispatch-desk .window-control{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:10px 8px;margin:0;padding:10px 12px;border:1px solid #d8ead21f;border-radius:14px;background:#ffffff05}
+.dispatch-desk .window-control>div{display:grid;gap:2px;min-width:0}
+.dispatch-desk .window-control strong{font-size:12.5px}
+.dispatch-desk .window-control small{font-size:10.5px;color:var(--p-sage-65);font-family:inherit;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dispatch-desk .window-control button{display:grid;gap:1px;justify-items:center;min-height:34px;min-width:0;padding:5px 9px;border-radius:10px;font-size:11px;line-height:1.15}
+.dispatch-desk .window-control button b{font-size:10.5px}
+.dispatch-desk .window-control button.is-owned{opacity:.6}
