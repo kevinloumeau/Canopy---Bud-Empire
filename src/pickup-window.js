@@ -1,17 +1,33 @@
 // The walk-up pickup window for online orders (Kevin, 2026-10-20): a storefront bay with a hatch on the floor's front edge,
-// a clerk inside it, a line of customers along the front pavement and an A-frame sign on the kerb. One online order
-// in three is collected there instead of flying out by drone; it is paid for when it is sent, like every online
-// order, so the window only changes who carries it. The walk-ups are passing scenery: nothing here is saved.
+// a clerk inside it, a line of customers along the front pavement and an A-frame sign on the kerb.
+//
+// It is the first online buy (Kevin picked "window first"): building it opens web orders, and until the drone port is
+// built every order is collected there, as fast as the line moves. Once drones fly, one order in three still walks
+// up. Orders are paid for when they are sent, like every online order; the tip jar adds a quarter on walk-ups. The
+// save keeps only what was bought (migrateWindow); the walk-ups themselves are passing scenery.
 //
 // Walk-ups come up out of the subway (main.js passes the stairs' path), walk the pavement to the back of the line,
 // shuffle up to the window, take their bag and go back down. Positions are world units, like the rest of the map.
 
 export const PICKUP_WINDOW = { x: 10.3, z: 11.78 }; // the window bay's origin: its wall's footprint centre on the floor's edge
-export const PICKUP_SIGN = { x: 15.2, z: 12.5, rot: Math.PI / 4 }; // the A-frame, turned to the corner and the subway
+export const PICKUP_SIGN = { x: 13.6, z: 10.75, rot: Math.PI / 4 }; // the A-frame, turned to the corner and the subway
 export const WINDOW_CLERK = { x: 10.75, z: 11.42 }; // at the open half of the hatch, clear of the inside shelf
 const SPOT = { x: 10.4, z: 12.7 }; // the customer at the window
-const PAVE = -.012, LINE_Z = 12.9, SPACING = 1.15, LANE_Z = 14, SPEED = 1.7, SERVE = 4.5, STAGGER = 2.2;
+const PAVE = -.012, LINE_Z = 12.9, SPACING = 1.15, LANE_Z = 14, SPEED = 1.7, STAGGER = 2.2;
 export const WINDOW_LINE_MAX = 6;
+
+// What the window costs and what its two upgrades do. The second hatch lengthens the line and speeds the hand-off;
+// the tip jar pays a quarter more on every walk-up order.
+export const WINDOW_COST = 3000, HATCH_COST = 12000, TIPS_COST = 20000, TIP_SHARE = .25;
+export function migrateWindow(raw, droneOwned) {
+  // Saves from before the window was its own buy got it free with the drone port, so they keep it.
+  const owned = raw?.owned === true || droneOwned === true;
+  return { owned, hatch: owned && raw?.hatch === true, tips: owned && raw?.tips === true };
+}
+export function windowLineMax(w) { return w && w.hatch ? 10 : WINDOW_LINE_MAX; }
+export function windowServeSeconds(w) { return w && w.hatch ? 3 : 4.5; }
+// Places free in the line.
+export function windowRoom(line, w) { return Math.max(0, windowLineMax(w) - inLine(line).length); }
 
 // Every third online order (by its number) is a walk-up.
 export function walkupShare(sequence) { return sequence % 3 === 2; }
@@ -26,10 +42,10 @@ export function windowSlot(i) { return i === 0 ? { x: SPOT.x, z: SPOT.z } : { x:
 export function createWindowLine() { return { people: [], nextId: 0 }; }
 function inLine(line) { return line.people.filter(p => p.phase !== 'leave'); }
 
-// Adds up to n walk-ups, as many as the line has room for; returns how many came. `stairs(id)` is the path up out of
+// Adds up to n walk-ups, as many as the line (max long) has room for; returns how many came. `stairs(id)` is the path up out of
 // the subway, [[x, y, z], ...], starting out of sight.
-export function addWalkups(line, n, stairs) {
-  const room = Math.max(0, WINDOW_LINE_MAX - inLine(line).length), count = Math.min(n, room);
+export function addWalkups(line, n, stairs, max = WINDOW_LINE_MAX) {
+  const room = Math.max(0, max - inLine(line).length), count = Math.min(n, room);
   const waiting = line.people.filter(p => p.wait > 0).reduce((m, p) => Math.max(m, p.wait), -STAGGER);
   for (let k = 0; k < count; k++) {
     const id = line.nextId++, route = stairs(id).map(p => p.slice());
@@ -56,8 +72,9 @@ function follow(p, budget) {
 }
 
 // One step of the line: arrivals climb out and walk to their place, the line closes up, the one at the window is
-// served and heads back down the stairs (`stairs` again, walked in reverse). Returns true while someone is at the window.
-export function stepWindowLine(line, dt, stairs) {
+// served (serveSeconds) and heads back down the stairs (`stairs` again, walked in reverse). Returns true while someone
+// is at the window.
+export function stepWindowLine(line, dt, stairs, serveSeconds = 4.5) {
   dt = Math.min(dt, .5);
   let serving = false;
   inLine(line).forEach((p, i) => {
@@ -77,7 +94,7 @@ export function stepWindowLine(line, dt, stairs) {
     p.moving = Math.hypot(p.x - startX, p.z - startZ) > 1e-4;
     if (p.phase === 'queue' && i === 0 && !p.moving && p.x === slot.x && p.z === slot.z) {
       serving = true; p.serve += dt;
-      if (p.serve >= SERVE) {
+      if (p.serve >= serveSeconds) {
         p.bag = true; p.phase = 'leave';
         p.route = [[p.x + .7, PAVE, LANE_Z]].concat(stairs(p.id).reverse().map(q => q.slice()));
       }
