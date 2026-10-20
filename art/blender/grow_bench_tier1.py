@@ -33,7 +33,7 @@ def young_plant(tag, x, y, z0, H, sc=1.):
 
 def small_pot(tag, x, y, z, k=.85):
     K.cyl(f"{tag}Pot", .12 * k, .16 * k, .2 * k, (x, y, z), K.TERRA, 40)
-    K.cyl(f"{tag}Rim", .172 * k, .172 * k, .04 * k, (x, y, z + .19 * k), K.TERRA_D, 40)
+    K.ring(f"{tag}Rim", .172 * k, .148 * k, .04 * k, (x, y, z + .19 * k), K.TERRA_D, 40)   # open lip so the soil shows
     K.cyl(f"{tag}Soil", .15 * k, .15 * k, .02 * k, (x, y, z + .2 * k), K.SOIL, 32)
 
 # ---------- oak cabinet with three green drawers ----------
