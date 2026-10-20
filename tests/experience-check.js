@@ -12,7 +12,7 @@ export async function runExperienceChecks(mode){
  for(const tab of tabs){if(tab.getAttribute('aria-pressed')!=='true'||$('sheet').classList.contains('collapsed'))await click(tab);assert(!$('sheet').classList.contains('collapsed'),'Tab opens');assert(document.querySelector('[data-pane='+tab.dataset.tray+']').hidden===false,'Matching pane visible');}
  result.push('all six tabs and panes');
  await click(document.querySelector('[data-tray=empire]'));assert($('sheet').classList.contains('collapsed'),'Active tab collapses');await click(document.querySelector('[data-tray=empire]'));
- await click($('goalsOpen'));assert(!$('goalsModal').hidden,'Story opens');
+ await click($('goalsOpen'));assert(!document.querySelector('[data-pane=goals]').hidden,'Goals tab opens');
  if(mode==='starter'){
   assert($('storyTitle').textContent==='The first familiar faces','New-player chapter');
   assert($('nextInvestment').textContent.includes('Pickup'),'Shared bottleneck guidance');

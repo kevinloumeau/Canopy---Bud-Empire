@@ -2872,6 +2872,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     $('buyKiosk').querySelector('span').textContent=installedKiosks===3?'Maximum':installedKiosks===0?'Install kiosk':'Add kiosk '+(installedKiosks+1);
 
     $('queueCapacity').textContent=queueLimit()>=QUEUE_MAX?QUEUE_MAX+' customers · maximum':queueLimit()+' → '+Math.min(QUEUE_MAX,queueLimit()+2)+' customers';$('queueUpgradeInfo').textContent=queueLimit()>=QUEUE_MAX?'All waiting places unlocked.':state.money<queueCost()?fmt(queueCost()-state.money)+' more to expand':'Two extra waiting places';$('queuePrice').textContent=queueLimit()>=QUEUE_MAX?'MAX':fmt(queueCost());$('upgradeQueue').disabled=queueLimit()>=QUEUE_MAX||state.money<queueCost();
+    renderOrderExtras();
     $('storageCapacity').textContent=qtyLabel(storageCapacity())+' → '+qtyLabel(storageCapacity()+100)+' per stage';$('storageUsage').textContent=qtyLabel(state.stock[3])+' / '+qtyLabel(storageCapacity())+(state.storageLevel<20&&state.money<storageCost()?' · '+fmt(storageCost()-state.money)+' to expand':' stored');$('storageFill').max=storageCapacity();$('storageFill').value=state.stock[3];$('storagePrice').textContent=state.storageLevel>=20?'MAX':fmt(storageCost());$('upgradeStorage').disabled=state.storageLevel>=20||state.money<storageCost();if(state.storageLevel>=20)$('storageCapacity').textContent=storageCapacity()+' per stage · maximum';
     // One send: everything shippable, or up to ten at a time until the packing bar reaches level 10.
     var maxUnlocked=state.lines[3]>=10,maxBatch=onlineBatch(maxUnlocked?Infinity:10);
@@ -2885,7 +2886,6 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var waiting=customers.filter(inOrderFlow).length;firstTimeHints(waiting);state.stock.forEach(function(n,i){var packed=i===3,oz=state.productMenu.active===0,v=packed&&oz?n/8:n;$('stockCount'+i).innerHTML=compactCount(v)+(packed?'<small>'+(oz?'oz':state.productMenu.active===1?'jt':'ed')+'</small>':'');$('stockCount'+i).title=i===4?n+' / '+readyCapacity()+' packed orders ready for walk-in pickup':i===3?qtyLabel(n)+' packed of '+qtyLabel(storageCapacity())+(n>=storageCapacity()?' · Storage full':''):n+' / '+storageCapacity()+(n>=storageCapacity()?' · Storage full':'');var cap=i===4?readyCapacity():storageCapacity(),item=$('stockCount'+i).parentNode.parentNode;$('stockCount'+i).classList.toggle('stock-full',n>=cap);item.dataset.trend=stockTrend(i,n,cap);item.classList.toggle('is-bottleneck',!trafficBound&&STOCK_STATIONS[i].indexOf(slow)>=0)});var order=milestone(state.contract);
     if(order){$('orderName').textContent=state.lifetime>=order.goal?'ORDER READY TO CLAIM':order.name;$('orderProgress').textContent=fmt(Math.min(state.lifetime,order.goal))+' / '+fmt(order.goal);$('orderFill').style.width=Math.min(100,state.lifetime/order.goal*100)+'%';$('claimReward').textContent='+'+fmt(order.reward);$('claim').disabled=state.lifetime<order.goal}
     else{$('orderName').textContent='ALL ORDERS FILLED';$('orderProgress').textContent='COMPLETE';$('orderFill').style.width='100%';$('claimReward').textContent='✓';$('claim').disabled=true}
-    $('orderBadge').hidden=!order||state.lifetime<order.goal;
     $('boostPreview').textContent=state.multiplier.toFixed(2)+'× → '+(state.multiplier*1.25).toFixed(2)+'× all stations';
     var boostPrice=boostCost(state.globalLevel);$('boostCost').textContent=state.globalLevel>=BOOST_MAX?'MAX':fmt(boostPrice);$('boost').disabled=state.globalLevel>=BOOST_MAX||state.money<boostPrice;
     var slowNow=slowestStation();
@@ -2940,6 +2940,20 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     button.disabled=state.money<LOUNGE_LIFT_COST;button.setAttribute('aria-label','Build a second lift for '+price);
     button.title=button.disabled?fmt(LOUNGE_LIFT_COST-state.money)+' more needed':'Build a second elevator shaft';
   }
+  // Kiosks and the customer line belong to the order floor, so they sit under the counters on the Orders station. Each
+  // row mirrors its original button (kept hidden in the Research list), so prices, limits and handlers stay in one place.
+  var orderExtras=[['buyKiosk','kioskCountLabel','Self-order kiosks','<path d="M7 3h10v13H7zM10 7h4M10 10h4M12 16v5M8 21h8"/>'],
+    ['upgradeQueue','queueCapacity','Customer line','<circle cx="8" cy="7" r="2.5"/><circle cx="16" cy="7" r="2.5"/><path d="M3.5 20v-4a4.5 4.5 0 0 1 9 0v4m-1 0v-4a4.5 4.5 0 0 1 9 0v4"/>']].map(function(d){
+    var row=document.createElement('div');row.className='station-team station-extra';row.hidden=true;
+    row.innerHTML='<span class="team-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+d[3]+'</svg></span><span class="team-copy"><b>'+d[2]+'</b><small></small></span><button type="button"><span></span><b></b></button>';
+    var source=$(d[0]),button=row.querySelector('button');source.parentElement.hidden=true;button.onclick=function(){if(!source.disabled)source.click()};
+    return {row:row,source:source,button:button,info:$(d[1])}});
+  $('buyOrderCounter').parentElement.hidden=true;
+  orderExtras.slice().reverse().forEach(function(x){$('orderCounterExpansion').after(x.row)});
+  function renderOrderExtras(){var show=!securitySelected&&!loungeSelected&&selected===4&&state.lines[4]>0;
+    orderExtras.forEach(function(x){x.row.hidden=!show;if(!show)return;var info=x.info.textContent;if(x.row.querySelector('small').textContent!==info)x.row.querySelector('small').textContent=info;
+      ['span','b'].forEach(function(tag){var text=x.source.querySelector(tag).textContent;if(x.button.querySelector(tag).textContent!==text)x.button.querySelector(tag).textContent=text});
+      x.button.disabled=x.source.disabled;x.button.setAttribute('aria-label',x.source.getAttribute('aria-label')||x.row.querySelector('b').textContent)})}
   // The selected station's crew ability: what it does while ready, a countdown while it runs or recharges.
   function renderStationAbility(){
     var row=$('stationAbility'),i=selected,show=!securitySelected&&!loungeSelected&&!!ABILITIES[i]&&state.lines[i]>0;row.hidden=!show;if(!show)return;
@@ -2974,7 +2988,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     run.onfinish=function(){pane.style.overflow='';if(paneGlide===run)paneGlide=null;if(done)done();fitControls()};
     run.oncancel=function(){pane.style.overflow='';if(paneGlide===run)paneGlide=null};
   }
-  function showTray(name){if(name==='employees')name='factory';if(name==='factory')mapPicked=true;if(document.body.dataset.activeTray!==name)playSound('tap',state.sound);document.body.dataset.activeTray=name;if(state.empire.activeStore&&name!=='empire')visitStore(0,false);activeTray=name;var wasCollapsed=$('sheet').classList.contains('collapsed');panelOpen=true;$('sheet').classList.remove('collapsed');$('panelToggle').setAttribute('aria-expanded','true');$('panelToggle').textContent='⌄';var titles={factory:'Stations',employees:'Staff',orders:'Deliveries',boosts:'Shop',flowers:'Menu',empire:'Empire'};$('panelTitle').textContent=titles[name];var tabName=name==='orders'?'boosts':name;trayTabs.forEach(function(t){t.setAttribute('aria-pressed',String(t.getAttribute('data-tray')===tabName))});$('panelBack').hidden=name!=='orders';Array.prototype.forEach.call(document.querySelectorAll('[data-pane]'),function(p){p.hidden=p.getAttribute('data-pane')!==name});if(wasCollapsed)glidePane(document.querySelector('[data-pane="'+name+'"]'),true);else if(paneGlide){paneGlide.cancel();paneGlide=null}fitControls()}
+  function showTray(name){if(name==='employees')name='factory';if(name==='factory')mapPicked=true;if(document.body.dataset.activeTray!==name)playSound('tap',state.sound);document.body.dataset.activeTray=name;if(state.empire.activeStore&&name!=='empire')visitStore(0,false);activeTray=name;var wasCollapsed=$('sheet').classList.contains('collapsed');panelOpen=true;$('sheet').classList.remove('collapsed');$('panelToggle').setAttribute('aria-expanded','true');$('panelToggle').textContent='⌄';var titles={factory:'Stations',employees:'Staff',orders:'Deliveries',boosts:'Research',flowers:'Menu',goals:'Goals',empire:'Empire'};$('panelTitle').textContent=titles[name];var tabName=name==='orders'?'boosts':name;trayTabs.forEach(function(t){t.setAttribute('aria-pressed',String(t.getAttribute('data-tray')===tabName))});$('panelBack').hidden=name!=='orders';Array.prototype.forEach.call(document.querySelectorAll('[data-pane]'),function(p){p.hidden=p.getAttribute('data-pane')!==name});if(wasCollapsed)glidePane(document.querySelector('[data-pane="'+name+'"]'),true);else if(paneGlide){paneGlide.cancel();paneGlide=null}fitControls()}
   function collapsePanel(){if(mapPicked){mapPicked=false;if(window.__shiftReady)renderUI()}var sheet=$('sheet'),wasOpen=!sheet.classList.contains('collapsed');if(wasOpen&&sheet.classList.contains('tall')){settleSheet('collapsed');return}panelOpen=false;$('panelToggle').setAttribute('aria-expanded','false');$('panelToggle').textContent='⌃';if(!wasOpen){fitControls();return}
     // The pane folds away first; the sheet only takes its collapsed shape once nothing is left to hide.
     glidePane(document.querySelector('[data-pane]:not([hidden])'),false,function(){if(!panelOpen){sheet.classList.add('collapsed');fitControls()}});fitControls()}
@@ -3055,7 +3069,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function firstTimeHints(waiting){
     var h=state.hints;if(!h||!state.shopOpen||document.body.classList.contains('guide-open')||(firstRun&&startGuide&&!startGuide.seen())||$('toast').classList.contains('show'))return;
     if(!h.web&&onlineRequestsReady()>=1){h.web=true;notify('FIRST WEB ORDER · send it from Deliveries','upgrade');save();return}
-    if(!h.storage&&state.stock.some(function(n,i){return i<4&&n>=storageCapacity()})){h.storage=true;notify('STORAGE FULL · expand it in the Shop');save();return}
+    if(!h.storage&&state.stock.some(function(n,i){return i<4&&n>=storageCapacity()})){h.storage=true;notify('STORAGE FULL · expand it in Research');save();return}
     if(!h.queue&&waiting>=queueLimit()&&state.lines[4]>0){h.queue=true;notify('LINE IS FULL · upgrade the order desk for more places');save()}
   }
   function renderLoungeSelection(){
@@ -3099,7 +3113,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var securityHtml='<span class="status-chip" data-tone="'+chipTone+'"><i></i><b>'+chipWord+'</b><small>'+chipReason+'</small></span>'+
       '<span class="stat" title="Seconds the doorman takes per ID check; training and the scanner both cut it">'+ICON_CLOCK+'<b>'+securityDuration().toFixed(2)+'s</b><small>per check</small></span>'+
       '<span class="stat" title="Customers on the way to or waiting at the desk">'+ICON_DOOR+'<b>'+atDoor+'</b><small>at the door</small></span>'+
-      '<span class="stat" title="ID scanner from the Shop: each level checks 12% faster">'+ICON_SCAN+'<b>'+(state.scannerLevel?'+'+Math.round(state.scannerLevel*12)+'%':'—')+'</b><small>scanner</small></span>';
+      '<span class="stat" title="ID scanner from Research: each level checks 12% faster">'+ICON_SCAN+'<b>'+(state.scannerLevel?'+'+Math.round(state.scannerLevel*12)+'%':'—')+'</b><small>scanner</small></span>';
     if($('stationStatus').dataset.html!==securityHtml){$('stationStatus').innerHTML=securityHtml;$('stationStatus').dataset.html=securityHtml}
     if(site){
       $('upgradeLevel').textContent='Not built';renderUpgradeComparison('Seconds per ID check',securityDuration(),securityDuration(),true,true,false);
@@ -3411,7 +3425,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Each strain's card carries its own Sell-as pills (see renderFlowers); a format's unlock is paid once, for every strain.
   function stockFormat(index){if(state.productMenu.unlocked[index])return;if(unlockFormat(state,index)){save();renderUI();notify('EVERY STRAIN NOW SELLS AS '+FORMATS[index].name.toUpperCase(),'upgrade')}}
   var prestigePanel=document.createElement('details');prestigePanel.className='depth-panel prestige-panel';prestigePanel.innerHTML=
-    '<summary><svg class="prestige-sprout" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V11M12 14C3 14 3 7 3 7s9-1 9 7ZM12 11c0-8 9-9 9-9s0 9-9 9Z"/></svg><span>New beginnings</span><small id="prestigeStatus"></small><svg class="prestige-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></summary>'+
+    '<summary><svg class="prestige-sprout" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V11M12 14C3 14 3 7 3 7s9-1 9 7ZM12 11c0-8 9-9 9-9s0 9-9 9Z"/></svg><span>Reopening &amp; founder perks</span><small id="prestigeStatus"></small><svg class="prestige-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></summary>'+
     '<div class="prestige-body"><div class="prestige-rank-track" id="prestigeComparison" role="group"><div class="prestige-rank"><span id="prestigeCurrentRank"></span><strong id="prestigeCurrentRate"></strong><small>base sales</small></div><svg id="prestigeArrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h17m-6-6 6 6-6 6"/></svg><div class="prestige-rank is-next" id="prestigeNext"><span id="prestigeNextRank"></span><strong id="prestigeNextRate"></strong><small>base sales</small></div></div>'+
     '<p class="prestige-gain" id="prestigeGain"></p><div class="prestige-funding" id="prestigeFunding"><div><span>All-time revenue</span><b id="prestigeRevenue"></b></div><progress id="prestigeProgress" max="100" value="0" aria-label="All-time revenue toward the next share"></progress><small id="prestigeFundingStatus"></small></div>'+
     '<dl class="prestige-carryover" id="prestigeCarryover"><div><dt>Keep</dt><dd>Shares (permanent sales bonus), founder perks, branch stars, event badges, discovered cultivars &amp; sound setting</dd></div><div><dt>Restart</dt><dd>Cash, stores &amp; all shop progress</dd></div></dl><button id="prestigeStart" type="button" aria-describedby="prestigeFundingStatus prestigeCarryover"></button></div>';
@@ -3439,7 +3453,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var prestigeOpener=null;
   $('prestigeCancel').onclick=function(){prestigeDialog.hidden=true;(prestigeOpener&&!prestigeOpener.hidden?prestigeOpener:$('prestigeStart')).focus();prestigeOpener=null};
   // The brass reopen card: shown once a fresh shop would earn back today's income within about 20 minutes of play.
-  function renderReopenCard(){var card=$('reopenCard');if(!card)return;var m=state.empire.activeStore?null:reopenMoment(prestigeOffer(state),state.run,incomeRate());card.hidden=!m;if(!m)return;
+  function renderReopenCard(){var card=$('reopenCard');if(!card)return;var m=state.empire.activeStore?null:reopenMoment(prestigeOffer(state),state.run,incomeRate());card.hidden=!m;$('empireBadge').hidden=!m;if(!m)return;
     var text=(m.minutes?'Back on pace in ~'+m.minutes+' min':'Fresh shop, '+m.ratio.toFixed(2).replace(/0$/,'')+'\u00d7 sales'),gain='+'+m.gain+' share'+(m.gain===1?'':'s');
     if($('reopenText').textContent!==text)$('reopenText').textContent=text;if($('reopenGain').textContent!==gain)$('reopenGain').textContent=gain;
     card.setAttribute('aria-label','Reopen for '+gain+'. '+(m.minutes?'A fresh shop is back to today\u2019s income in about '+m.minutes+' minutes':text))}
@@ -3501,7 +3515,6 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function renderEmpire(){
     renderStoreView();renderManagement();operationsUI.render();if(shopPlayUI)shopPlayUI.render();
     var p=state.empire,d=dailyStatus(p,Date.now(),rewardScale()),m=CAREER[p.career];
-    $('empireBadge').hidden=!(d.available||(m&&state.lifetime>=m.goal));
     $('careerName').textContent=m?m.name:'Bud empire complete';
     $('careerDetail').textContent=m?fmt(state.lifetime)+' / '+fmt(m.goal)+' lifetime revenue':'All six career milestones collected.';
     $('careerProgress').value=m?Math.min(100,state.lifetime/m.goal*100):100;
@@ -3579,26 +3592,21 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function flowMeter(ratio){var fill=$('flowMeter');if(fill)fill.style.width=Math.round(Math.max(.04,Math.min(1,ratio||0))*100)+'%'}
   // The whole bottleneck line is the target; the button inside becomes its chevron.
   var flowGuide=document.querySelector('.flow-guide');if(flowGuide){flowGuide.setAttribute('role','button');flowGuide.setAttribute('tabindex','0');flowGuide.addEventListener('click',function(e){if(e.target!==$('flowAction'))$('flowAction').click()});flowGuide.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();$('flowAction').click()}});$('flowAction').setAttribute('tabindex','-1');$('flowAction').setAttribute('aria-hidden','true');}
-  // Goals live in their own popover, opened from a flag beside the customer count, rather than inside the Empire tab.
-  var goalsButton=document.createElement('button');goalsButton.type='button';goalsButton.id='goalsOpen';goalsButton.setAttribute('aria-label','Shift goals and shop story');goalsButton.setAttribute('aria-haspopup','dialog');goalsButton.title='Goals';
+  // A flag beside the customer count opens the Goals tab.
+  var goalsButton=document.createElement('button');goalsButton.type='button';goalsButton.id='goalsOpen';goalsButton.setAttribute('aria-label','Open goals');goalsButton.title='Goals';
   goalsButton.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg><span id="goalsBadge" hidden></span>';
   $('customerStatus').appendChild(goalsButton);
-  // The list is a dropdown anchored under the flag, not a full-screen dialog.
-  var goalsWrap=document.createElement('div');goalsWrap.className='goals-dropdown';goalsWrap.id='goalsModal';goalsWrap.hidden=true;goalsWrap.setAttribute('role','dialog');goalsWrap.setAttribute('aria-labelledby','goalsTitle');
-  goalsWrap.innerHTML='<div class="settings-head"><h2 id="goalsTitle">Shift goals</h2><span id="shiftGoalsReady"></span><button type="button" id="goalsClose" aria-label="Close shift goals">×</button></div><div class="goals-body"></div>';
-  document.body.append(goalsWrap);
-  var goalsBody=goalsWrap.querySelector('.goals-body'),nextStepsHeading=today.querySelector('h2:not(.empire-section-heading)');if(nextStepsHeading)nextStepsHeading.remove();
-  // The next improvement already leads the bottleneck card in the sheet, so the goals panel leaves it out.
+  // Shift goals open the Goals tab (the Empire shell places this block there); the flag is a shortcut to it.
+  var goalsBody=document.createElement('section');goalsBody.className='goals-body empire-group';goalsBody.setAttribute('aria-labelledby','goalsTitle');
+  goalsBody.innerHTML='<div class="goals-head"><h2 class="empire-group-title" id="goalsTitle">Shift goals</h2><span id="shiftGoalsReady"></span></div>';
+  var nextStepsHeading=today.querySelector('h2:not(.empire-section-heading)');if(nextStepsHeading)nextStepsHeading.remove();
+  // The next improvement already leads the bottleneck card in the sheet, so the goals list leaves it out.
   $('nextInvestment').hidden=true;
-  // Shift goals lead the panel; the story card follows underneath.
-  var shiftLine=document.createElement('p');shiftLine.id='shiftProgress';goalsBody.append($('shortGoals'),shiftLine);$('goalsClose').onclick=closeGoals;
-  function placeGoals(){var r=goalsButton.getBoundingClientRect(),wide=window.innerWidth>=480;goalsWrap.style.top=Math.round(r.bottom+8)+'px';goalsWrap.style.right=wide?Math.max(8,Math.round(window.innerWidth-r.right-4))+'px':'8px';goalsWrap.style.left=wide?'auto':'8px';goalsWrap.style.setProperty('--caret',Math.round(r.left+r.width/2-(wide?goalsWrap.getBoundingClientRect().left:8))+'px')}
-  function openGoals(){goalsWrap.hidden=false;renderUI();placeGoals();$('goalsClose').focus({preventScroll:true});goalsButton.setAttribute('aria-expanded','true')}
-  function closeGoals(){if(goalsWrap.hidden)return;var restore=goalsWrap.contains(document.activeElement);goalsWrap.hidden=true;goalsButton.setAttribute('aria-expanded','false');if(restore)goalsButton.focus({preventScroll:true})}
-  goalsButton.setAttribute('aria-expanded','false');goalsButton.onclick=function(){if(goalsWrap.hidden)openGoals();else closeGoals()};
-  document.addEventListener('pointerdown',function(e){if(!goalsWrap.hidden&&!goalsWrap.contains(e.target)&&!goalsButton.contains(e.target))closeGoals()});
-  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!goalsWrap.hidden){e.stopPropagation();closeGoals();goalsButton.focus()}},true);
-  window.addEventListener('resize',function(){if(!goalsWrap.hidden)placeGoals()});
+  // Shift goals lead the block; the story card follows underneath.
+  var shiftLine=document.createElement('p');shiftLine.id='shiftProgress';goalsBody.append($('shortGoals'),shiftLine);document.body.append(goalsBody);
+  function openGoals(){showTray('goals');renderUI()}
+  function closeGoals(){}
+  goalsButton.onclick=function(){if(activeTray==='goals'&&panelOpen)collapsePanel();else openGoals()};
   var empireShell=mountEmpireShell({fit:fitControls,getState:function(){return state},format:fmt});
   var shopPlayCollapsed=false;
   shopPlayUI=mountShopPlay({getState:function(){return state},getMoment:function(){return moment},getAlerts:function(){return operationsAlerts(state.empire)},names:STRAINS.map(function(s){return s.name}),format:fmt,changed:save,
@@ -3837,7 +3845,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(document.querySelector('.start-guide:not([hidden])')||document.querySelector('.modal-wrap:not([hidden])'))return;
     if(e.key===' '&&t&&t.closest('button,a,summary,[role=button]'))return;
     // Arrow keys still scroll a panel that has focus; WASD pans from anywhere outside a field.
-    if(PAN_KEYS[e.code]&&!(e.code.indexOf('Arrow')===0&&t&&t.closest('.sheet,.goals-dropdown'))){e.preventDefault();if(!heldPanKeys[e.code]){heldPanKeys[e.code]=true;mapHintActivity()}return}
+    if(PAN_KEYS[e.code]&&!(e.code.indexOf('Arrow')===0&&t&&t.closest('.sheet'))){e.preventDefault();if(!heldPanKeys[e.code]){heldPanKeys[e.code]=true;mapHintActivity()}return}
     if(e.key===' '){e.preventDefault();setGameSpeed(state.gameSpeed===0?1:0)}
     else if(e.key==='1'||e.key==='2'||e.key==='4')setGameSpeed(Number(e.key));
     else if(e.key==='Escape'&&panelOpen)collapsePanel();
