@@ -56,8 +56,8 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
       const key=row.id.startsWith('componentBuy')?components[Number(row.id.replace('componentBuy',''))].key:null,side=key?sideStatus(state,key):'open';
       const isDone=level>=max||side==='closed',gated=side==='gated'&&!isDone;row.node.classList.toggle('is-maxed',isDone);order.push({row,isDone});
       // Rows keep one short figure; the long states fold into the lines under the list.
-      row.badge.textContent=side==='closed'?'Closed':row.id==='buyAutoDrone'?(isDone?'Bulk':level===1?'Single':'0/2'):isDone?'Max':level+(Number.isFinite(max)?'/'+max:'');
-      row.badge.setAttribute('aria-label',side==='closed'?'Closed this run'+(level?', level '+level+' kept':''):'Level '+level+(Number.isFinite(max)?' of '+max:''));
+      row.badge.textContent=side==='closed'?'Closed':isDone?'Max':'Lv '+level;
+      row.badge.setAttribute('aria-label',side==='closed'?'Closed this run'+(level?', level '+level+' kept':''):'Level '+level);
       row.node.classList.toggle('shows-verb',side==='pick');
       // The ring around the icon fills with the level; the effect line is the tile's tooltip.
       if(row.symbol)row.symbol.style.setProperty('--lv',Math.min(1,Number.isFinite(max)&&max?level/max:0).toFixed(3));

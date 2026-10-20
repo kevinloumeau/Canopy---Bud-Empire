@@ -2904,7 +2904,6 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var machineTabs=Array.prototype.slice.call(document.querySelectorAll('[data-machine]'));var securityTab=document.querySelector('[data-security]');if(securityTab)securityTab.onclick=selectSecurity;
   var loungeTab=document.querySelector('[data-lounge]');if(loungeTab)loungeTab.onclick=selectLounge;
   // Online orders sit with the stations: the last card opens the deliveries panel (build the pad, send orders).
-  var onlineTab=document.querySelector('[data-online]');if(onlineTab){onlineTab.onclick=function(){showTray('orders');renderUI()};setInterval(function(){var note=deliveryBuilt()?(onlineRequestsReady()?onlineRequestsReady()+' waiting':'Open'):'Build';if($('onlineTabNote').textContent!==note)$('onlineTabNote').textContent=note;onlineTab.setAttribute('aria-pressed',String(activeTray==='orders'))},500)}
   var stationOrbitIndex=-1,stationOrbitOffset=0;
   function updateStationOrbit(index){
     if(index===stationOrbitIndex)return;
@@ -2957,7 +2956,13 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     return {row:row,source:source,button:button,info:$(d[1])}});
   $('buyOrderCounter').parentElement.hidden=true;
   orderExtras.slice().reverse().forEach(function(x){$('orderCounterExpansion').after(x.row)});
+  // Online orders open from the Orders station too: one row that opens the deliveries panel (build the pad, send orders).
+  var onlineRow=document.createElement('div');onlineRow.className='station-team station-extra';onlineRow.hidden=true;
+  onlineRow.innerHTML='<span class="team-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 10h6v4H9zM4 6h3M17 6h3M5.5 6v4h3.5M18.5 6v4H15M9 14l-3 5M15 14l3 5M12 14v6"/></svg></span><span class="team-copy"><b>Online orders</b><small></small></span><button type="button"><span>Open</span><b></b></button>';
+  onlineRow.querySelector('button').onclick=function(){showTray('orders');renderUI()};
+  orderExtras[orderExtras.length-1].row.after(onlineRow);
   function renderOrderExtras(){var show=!securitySelected&&!loungeSelected&&selected===4&&state.lines[4]>0;
+    onlineRow.hidden=!show;if(show){var waiting=deliveryBuilt()?onlineRequestsReady():0,note=deliveryBuilt()?(waiting?waiting+' web orders waiting':'No web orders waiting'):'Build the delivery pad';if(onlineRow.querySelector('small').textContent!==note)onlineRow.querySelector('small').textContent=note;onlineRow.querySelector('button').classList.toggle('is-waiting',waiting>0)}
     orderExtras.forEach(function(x){x.row.hidden=!show;if(!show)return;var info=x.info.textContent;if(x.row.querySelector('small').textContent!==info)x.row.querySelector('small').textContent=info;
       ['span','b'].forEach(function(tag){var text=x.source.querySelector(tag).textContent;if(x.button.querySelector(tag).textContent!==text)x.button.querySelector(tag).textContent=text});
       x.button.disabled=x.source.disabled;x.button.setAttribute('aria-label',x.source.getAttribute('aria-label')||x.row.querySelector('b').textContent)})}
