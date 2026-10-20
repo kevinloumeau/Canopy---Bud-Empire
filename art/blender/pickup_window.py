@@ -4,7 +4,7 @@ Kevin (2026-10-20) found the first booth a heavy, enclosed green box, then asked
 building's exterior and for an actual window in a wall.  So this is a single bay of the storefront (storefront.py):
 the same green frame, brass beads, cream sign band lettered in Bricolage and capped cornice, 2.48 m tall, but only
 0.2 m deep, with a service hatch where the glazing would be: a tiled kick wall to counter height, an oak ledge out
-over the pavement (a bell and a bag waiting), a sliding pane pushed to one side, and an oak shelf inside with a till,
+over the pavement (a bell and a bag waiting), a sliding pane pushed to one side, and an oak shelf inside under the left half,
 where the glass feed tube (drawn by the map) brings the bags down.
 
 The street face looks along Blender -Y (map +z, the front pavement).  Origin at the wall's footprint centre on the
@@ -90,11 +90,10 @@ def bag(name, x, y, zz, s=1.):
     slab(name + "Handle", x - w / 4, x + w / 4, y - .005, y + .005, zz + h, zz + h + .06 * s, KRAFT_D, 0)
 bag("LedgeBag", -.25, Y0 - .1, SILL)
 
-# ---------- inside: an oak shelf on two legs with the till, where the feed tube comes down ----------
-slab("InnerShelf", a, b, Y1, Y1 + .5, SILL - .045, SILL, K.OAK, .008)
-for s in (-1, 1):
-    slab(f"ShelfLeg{s}", s * (W / 2 - PIL - .08) - .03, s * (W / 2 - PIL - .08) + .03, Y1 + .38, Y1 + .44, 0, SILL - .045, K.OAK, .006)
-slab("Till", .05, .29, Y1 + .1, Y1 + .26, SILL, SILL + .03, K.DARK, .006)
-o = slab("TillScreen", .06, .28, Y1 + .22, Y1 + .24, SILL + .03, SILL + .18, K.DARK, .004); o.rotation_euler.x = .35
+# ---------- inside: an oak shelf under the left half only, where the feed tube comes down; the clerk stands at the
+# open right half with nothing in front of them but the ledge ----------
+slab("InnerShelf", a, -.12, Y1, Y1 + .5, SILL - .045, SILL, K.OAK, .008)
+for x in (a + .08, -.2):
+    slab(f"ShelfLeg{x:.2f}", x - .03, x + .03, Y1 + .38, Y1 + .44, 0, SILL - .045, K.OAK, .006)
 
 K.finish(OUT, "pickup_window", ortho=3.0, centre=(0, 0, 1.2))

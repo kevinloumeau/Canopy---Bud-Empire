@@ -7,8 +7,8 @@
 // shuffle up to the window, take their bag and go back down. Positions are world units, like the rest of the map.
 
 export const PICKUP_WINDOW = { x: 10.3, z: 11.78 }; // the window bay's origin: its wall's footprint centre on the floor's edge
-export const PICKUP_SIGN = { x: 12.45, z: 12.75, rot: Math.PI / 4 }; // the A-frame, turned to the corner and the subway
-export const WINDOW_CLERK = { x: 10.75, z: 11.42 }; // at the open half of the hatch, the inside shelf hiding their legs
+export const PICKUP_SIGN = { x: 15.2, z: 12.5, rot: Math.PI / 4 }; // the A-frame, turned to the corner and the subway
+export const WINDOW_CLERK = { x: 10.75, z: 11.42 }; // at the open half of the hatch, clear of the inside shelf
 const SPOT = { x: 10.4, z: 12.7 }; // the customer at the window
 const PAVE = -.012, LINE_Z = 12.9, SPACING = 1.15, LANE_Z = 14, SPEED = 1.7, SERVE = 4.5, STAGGER = 2.2;
 export const WINDOW_LINE_MAX = 6;

@@ -1,7 +1,7 @@
 """Canopy A-frame sidewalk sign for the online pickup window: an oak-framed chalkboard sandwich board.
 
 Two boards hinged at the top (brass hinges, a little chain between them), splayed apart at the foot.  The front
-board carries chalk lettering, "ONLINE" over "PICKUP", an arrow and a doodled bag with a leaf; the back board a
+board carries chalk lettering, a small "CANOPY" at the top, "ONLINE" over "PICKUP", an arrow and a doodled bag with a leaf; the back board a
 smaller "ORDER AHEAD".  Chalk is flat (no extrusion) to keep the count down.
 
 The front board faces Blender -Y (map +z).  Origin at the footprint centre on the pavement.  About 0.62 m wide,
@@ -59,8 +59,11 @@ def stroke(name, pts, parent, side, m=CHALK, r=.006, mirror=False):
 
 front, fp = board("Front", -1)
 back, bp = board("Back", 1)
-# front board: ONLINE / PICKUP, an arrow pointing left (to the window, as the map stands it), a bag doodle with a leaf
-chalk_text("ChalkOnline", "ONLINE", .095, -.2, front, -1, CHALK_G)
+# front board: a small CANOPY between dashes at the top, ONLINE / PICKUP, an arrow pointing left (to the window, as the map stands it), a bag doodle with a leaf
+chalk_text("ChalkCanopy", "CANOPY", .05, -.1, front, -1, CHALK_Y).data.space_character = 1.3
+for s in (-1, 1):
+    stroke(f"ChalkDash{s}", [(s * .14, -.1), (s * .2, -.1)], front, -1, CHALK_Y, .004)
+chalk_text("ChalkOnline", "ONLINE", .095, -.21, front, -1, CHALK_G)
 chalk_text("ChalkPickup", "PICKUP", .12, -.33, front, -1, CHALK)
 stroke("ChalkUnderline", [(-.2, -.41), (.2, -.405)], front, -1, CHALK_Y, .005)
 # kraft bag doodle: body, fold line, handle, and a leaf on it
