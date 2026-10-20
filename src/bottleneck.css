@@ -28,3 +28,19 @@
 .world .marker .sign-ability svg{width:14px;height:14px}
 /* The one station the best buy belongs to: its sign is ringed in brass while the upgrade is affordable. */
 .world .marker.station-sign.can-upgrade:not(.selected){box-shadow:0 0 0 1.5px var(--ui-brass),0 2px 8px #0005}
+/* One countdown look for the map and HUD: the element's border becomes a ring that drains clockwise as the time runs out
+   (--burst, 1 to 0) and pulses a soft glow. A running boost (crew burst on its sign or Use button, rush or contract boost
+   on the HUD pill) is brass; the lounge's build is pink. Painted as a border-box gradient behind a padding-box fill, so
+   the ring hugs the pill itself and nothing becomes a positioned box. */
+@property --burst{syntax:'<number>';inherits:true;initial-value:1}
+.burst-ring{--ring:#e2c68a;--ring-dim:#0b150fcc;--ring-glow:#e2c68a88;--ring-glow-peak:#e2c68acc;--ring-fill:#18291f}
+.rush-pill.burst-ring{--ring-fill:#2a2410}
+#useAbility.burst-ring{--ring-fill:#1c2f26}
+.world .marker.station-sign.selected.burst-ring{--ring:#1f2a20;--ring-dim:#1f2a2033;--ring-fill:var(--ui-brass)}
+.world .marker.station-sign.is-lot.is-building{--burst:var(--build-left,1);--ring:#f0a7c8;--ring-dim:#1d0f15cc;--ring-glow:#f0a7c877;--ring-glow-peak:#f0a7c8bb;--ring-fill:#2a1a22}
+.world .marker.station-sign.is-lot.is-building.selected{--ring:#4a2634;--ring-dim:#4a263433;--ring-fill:#f0a7c8}
+.rush-pill.burst-ring,#useAbility.burst-ring,.world .marker.station-sign.burst-ring,.world .marker.station-sign.burst-ring:not(.selected),.world .marker.station-sign.is-lot.is-building,.world .marker.station-sign.is-lot.is-building:not(.selected){border:2px solid transparent;
+  background:linear-gradient(var(--ring-fill),var(--ring-fill)) padding-box,conic-gradient(var(--ring) calc(var(--burst) * 360deg),var(--ring-dim) 0) border-box;
+  transition:--burst .3s linear;animation:burst-glow 1.6s ease-in-out infinite}
+@keyframes burst-glow{0%,100%{box-shadow:0 0 10px 1px var(--ring-glow),0 2px 8px #0005}50%{box-shadow:0 0 18px 4px var(--ring-glow-peak),0 2px 8px #0005}}
+@media(prefers-reduced-motion:reduce){.burst-ring,.world .marker.station-sign.is-lot.is-building{animation:none;box-shadow:0 0 12px 2px var(--ring-glow)}}

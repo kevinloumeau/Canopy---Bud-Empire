@@ -460,8 +460,14 @@ const ramp = (v, [from, to]) => Math.max(0, Math.min(1, (v - from) / (to - from)
 function hazeAt(x, z) { return Math.max(ramp(x, HAZE_RAMP.west), ramp(x, HAZE_RAMP.east), ramp(z, HAZE_RAMP.north), ramp(z, HAZE_RAMP.south)); }
 const hazeRGBA = a => 'rgba(' + HAZE[0] + ',' + HAZE[1] + ',' + HAZE[2] + ',' + a + ')';
 export const SUNNY_VIEW = { centre: { x: [-32, 42], z: [-30, 34] }, reach: { rx: [-42.3, 52.7], rz: [-43.9, 48.2] } };
-// Kept toward the kerb, clear of the facades behind them.
-const FAR_TREES = [[-12, -22.4], [-1, -22.4], [10, -22.4], [14.5, -22.4], [-26.4, -13], [-26.4, -2], [-26.4, 9], [-26.4, 20]];
+// Down the middle of the two-unit pavement between the kerb and the facades behind it.
+const FAR_TREES = [[-12, -22.5], [-1, -22.5], [10, -22.5], [14.5, -22.5], [-26.5, -13], [-26.5, -2], [-26.5, 9], [-26.5, 20]];
+// A street tree's pit on the 3D map, apart from the tree: the model's own pit (`#low` keeps only its Pit parts) or the
+// square iron grate, unturned so its sides run with the kerb, and shrunk where it is wider than the pavement allows
+// (the narrowest pavements are two units kerb to facade, so a pit is at most 1.6 across). The tree itself stands in
+// it without its pit (`#lawn`), at its own turn and size. Half-widths in map units at the model's own size.
+const PIT_HALF = { street_tree: .75 * 1.69, tree: .46 * 1.69, grate: .75 * 1.69 };
+const treePit = (kind, x, z) => ({ file: kind === 'grate' ? 'street_tree_grate.glb' : kind + '.glb#low', x, z, rot: 0, scale: Math.min(1, .8 / PIT_HALF[kind]) });
 const NEAR_TREES = [[-15, -13.5], [-5, -13.5], [5, -13.5], [16.5, -13.5], [-17, 4]]; // behind / left of the shop only; nothing under the delivery deck's legs
 export const LAMPS = [[-18.5, -14.5], [18.5, -14.5], [-18.5, 17.5], [18.5, 17.5], [0, -14.5], [-18.5, 1]];
 // Walkers: [x0, z0, x1, z1, count]; each walks the segment back and forth on its own phase.
@@ -510,14 +516,18 @@ function streetJobs(api) {
     shadow: typeof shade === 'function' ? shade : shade && (() => sunShadow(api, x, P, z, shade[3] === undefined ? hx : shade[3], shade[4] === undefined ? hz : shade[4], shade[0], shade[1], shade[2])) });
   // The 3D map's Blender model for the job just added: its file, where its feet stand (the render's anchor) and its
   // turn; a render drawn mirrored to run the other way is the model turned a quarter.
-  const model = (name, x, z, flip) => { jobs[jobs.length - 1].model = { file: name + '.glb', x, z, rot: flip ? -Math.PI / 2 : 0 }; };
+  const model = (name, x, z, flip) => { jobs[jobs.length - 1].model = { file: name.includes('.glb') ? name : name + '.glb', x, z, rot: flip ? -Math.PI / 2 : 0 }; };
   BUILDINGS.forEach(b => { const f = BUILDING_SPRITES[b[2]], x = b[0] - f.w / 2, z = b[1] - f.d / 2; at(x, z, () => building(api, b), f.w / 2, f.d / 2); jobs[jobs.length - 1].model = { file: modelOf(b) + '.glb', x, z, rot: 0, fit: { w: f.w, d: f.d } }; });
   kind = 'prop';
   ROOF_PROPS.concat(CITY_PROPS).forEach(p => { at(p.x, p.z, () => {}, .5, .5); jobs[jobs.length - 1].model = p; });
   kind = 'tree';
   // The 3D map's Blender trees follow streetTree's own pick: the tall street tree where its `& 3` rule puts one, the
   // round tree everywhere else (both drawn instanced, one set of draws for all of them).
-  FAR_TREES.concat(NEAR_TREES).forEach(([x, z]) => { at(x, z, () => streetTree(api, x, z), 1.3, 1.3, () => treeShadow(api, x, z, 2.4, 4.8)); model(streetTreeKind(x, z), x, z); });
+  FAR_TREES.concat(NEAR_TREES).forEach(([x, z]) => {
+    const kind = streetTreeKind(x, z);
+    at(x, z, () => streetTree(api, x, z), 1.3, 1.3, () => treeShadow(api, x, z, 2.4, 4.8)); model(kind + '.glb#lawn', x, z);
+    at(x, z, () => {}, .8, .8); jobs[jobs.length - 1].model = treePit(kind, x, z);
+  });
   kind = 'prop';
   LAMPS.forEach(([x, z]) => { at(x, z, () => lamp(api, x, z), .4, .4, [4.6, .9, .75, .2, .2]); model('street_lamp', x, z); });
   // Left-side street life: a coffee cart and café seating by the entrance, bins and a hydrant.
@@ -1029,16 +1039,15 @@ const CITY_PROPS = (() => {
         let k = Math.floor(rand() * DRESSING.length);
         for (let u = s0 + 1.6; u < s1 - 1.6; u += 3 + rand() * 1.8) {
           if (zebras.some(z => Math.abs(z - u) < 2.4)) continue;
-          const kind = DRESSING[k++ % DRESSING.length], depth = kind === 'tree' || kind === 'shrub' ? .95 : .55;
+          // Trees stand down the middle of the pavement so their pits stay on it; shrubs a little in from the kerb.
+          const kind = DRESSING[k++ % DRESSING.length], depth = kind === 'tree' ? 1 : kind === 'shrub' ? .95 : .55;
           const off = kerb + side * depth, x = along === 'x' ? u : off, z = along === 'x' ? off : u, r = kind === 'tree' ? 1.3 : .7;
           if (!free(x, z, r)) continue;
           if (kind === 'tree') {
             // Three kinds of street tree, each a little bigger or smaller: the tall one in its own pit, the round one in
             // its own pit, or the round one in a square iron grate.
-            const pick = rand(), scale = .8 + rand() * .45;
-            if (pick < .35) put('street_tree', x, z, rand() * 6.28, r, { scale });
-            else if (pick < .65) put('tree', x, z, rand() * 6.28, r, { scale });
-            else { out.push({ file: 'tree.glb#lawn', x, z, rot: rand() * 6.28, scale }, { file: 'street_tree_grate.glb', x, z, rot: 0 }); taken.push({ x, z, r }); }
+            const pick = rand(), scale = .8 + rand() * .45, tree = pick < .35 ? 'street_tree' : 'tree';
+            out.push({ file: tree + '.glb#lawn', x, z, rot: rand() * 6.28, scale }, treePit(pick < .65 ? tree : 'grate', x, z)); taken.push({ x, z, r });
           } else if (kind === 'meter') { put('street_lp_meter', x, z, rot, r); }
           else if (kind === 'hydrant') put('street_lp_hydrant', x, z, rot, r);
           else if (kind === 'bin') put('street_lp_bin', x, z, rot, r);

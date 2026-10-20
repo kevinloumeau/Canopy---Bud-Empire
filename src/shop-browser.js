@@ -79,9 +79,9 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
       // Unbuilt, the desk is the shelf's next step: a brass card above the list with its price and savings so far.
       const unbuilt=!d.built;desk.classList.toggle('is-unbuilt',unbuilt);desk.classList.toggle('is-short',unbuilt&&!d.ready);
       if(unbuilt&&desk.parentElement===list)list.before(desk);else if(!unbuilt&&desk.parentElement!==list)list.prepend(desk);
-      title.textContent=unbuilt?'Build the delivery pad':'Delivery desk';
-      note.textContent=unbuilt?(d.ready?'Opens web orders':'Opens web orders · '+d.toGo+' to go'):d.waiting?d.waiting+' waiting to send':'No orders waiting';
-      price.hidden=meter.hidden=!unbuilt;price.firstChild.textContent=d.price||'';meter.firstChild.style.width=Math.round((d.progress||0)*100)+'%';
+      title.textContent=unbuilt?(d.building?'Building the delivery pad':'Build the delivery pad'):'Delivery desk';
+      note.textContent=unbuilt?(d.building?'Opens in '+d.clock:d.ready?'Opens web orders':'Opens web orders · '+d.toGo+' to go'):d.waiting?d.waiting+' waiting to send':'No orders waiting';
+      price.hidden=meter.hidden=!unbuilt;price.firstChild.textContent=(d.building?d.clock:d.price)||'';meter.firstChild.style.width=Math.round((d.progress||0)*100)+'%';
       count.hidden=!d.built||!d.waiting;count.textContent=d.waiting;desk.setAttribute('aria-label',unbuilt?'Build the delivery pad, '+d.price+', '+note.textContent:'Delivery desk, '+note.textContent)}
     const gateLines=Object.keys(gates);later.hidden=!gateLines.length;
     later.innerHTML=gateLines.map(g=>'<span><b>Opens at '+g.replace(' · ','</b> · ')+'<small>'+gates[g].join(' or ')+'</small></span>').join('');
