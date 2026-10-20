@@ -1202,6 +1202,11 @@ const SUBWAY_RIDES = [
   [[SUBWAY.x + .3, SUB_DEEP, SUBWAY.z - 8], [SUBWAY.x + .3, SUB_DEEP, SUB_FOOT], [SUBWAY.x + .3, P, SUB_MOUTH], [16.8, P, SUB_MOUTH + 2],
     [16.7, P, 18.3], [-9.5, P, 18.3]]
 ];
+// The way up out of the subway on lane dx (either side of the well's centre), for the online pickup window's walk-ups
+// (pickup-window.js): from out of sight in the passage, along the landing, up the stairs and a step onto the pavement.
+// Points are [x, y, z]; a figure is only drawn once past SUBWAY_HIDDEN_Z, as with the riders.
+export function subwayStairs(dx) { return [[SUBWAY.x + dx, SUB_DEEP, SUB_PASSAGE - .8], [SUBWAY.x + dx, SUB_DEEP, SUB_FOOT], [SUBWAY.x + dx, P, SUB_MOUTH], [SUBWAY.x + dx - .2, P, SUB_MOUTH + 1]]; }
+export const SUBWAY_HIDDEN_Z = SUB_PASSAGE;
 // Where each rider is at `now`: the walks' pacing over the path's length, y included for the stairs.
 function riderPlacement(path, g, now) {
   const legs = path.slice(1).map((b, i) => Math.hypot(b[0] - path[i][0], b[2] - path[i][2])), len = legs.reduce((a, b) => a + b, 0), loop = len * 2;
