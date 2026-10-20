@@ -1,0 +1,20 @@
+/* Five tabs, one job each: Stations, Menu, Research, Goals, Empire. Loaded last so the bar's five columns win. */
+.sheet .tray-tabs{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+
+/* Goals: the reward strip, contract and lists share the Empire screen styles; the pane scrolls as one list. */
+.goals-screen{display:grid;gap:4px}
+.goals-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.sheet .goals-head h2{margin:0;font-size:15px}
+.goals-body .shop-story{margin-top:2px}
+.goal-stars-reward{margin:6px 0 2px!important;color:var(--ui-soft)!important;font-size:12px}
+
+/* Reopen card on Empire home: keep its brass card look inside the Empire screen's button styles. */
+.sheet .empire-screen .reopen-card{min-height:48px;margin:0 0 8px;padding:8px 8px 8px 12px;border:1px solid var(--ui-brass);border-radius:14px;background:var(--ui-brass-wash);color:var(--ui-ink);font-size:inherit;font-weight:inherit;box-shadow:none}
+.sheet .empire-screen .reopen-card[hidden]{display:none}
+
+/* Kiosks and the customer line on the Orders station, laid out like the crew row above them. */
+.sheet .station-extra[hidden]{display:none}
+.station-team.station-extra{margin-top:6px;grid-template-columns:24px minmax(0,1fr) 104px}
+.station-team.station-extra button{background:var(--p-forest-35);border:1px solid #91ab73;color:var(--p-cream-95);font:inherit}
+.station-team.station-extra button b{font:600 12px 'DM Mono',monospace;letter-spacing:-.02em}
+.station-team.station-extra button:disabled{opacity:.5;cursor:default}
