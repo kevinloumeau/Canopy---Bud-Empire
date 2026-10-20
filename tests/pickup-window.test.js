@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {walkupShare,walkupCount,windowSlot,createWindowLine,addWalkups,stepWindowLine,windowFigures,WINDOW_LINE_MAX} from '../src/pickup-window.js';
+import {walkupShare,walkupCount,windowSlot,createWindowLine,addWalkups,stepWindowLine,windowFigures,WINDOW_LINE_MAX, migrateWindow, windowLineMax, windowServeSeconds, windowRoom, WINDOW_COST, HATCH_COST, TIPS_COST} from '../src/pickup-window.js';
 
 const stairs=()=>[[18,-2.2,7],[18,-2.2,8.2],[18,0,12.1],[17.8,0,13.1]];
 const HIDDEN=7.9;
@@ -33,4 +33,26 @@ test('places run back along the pavement from the hatch',()=>{
 test('figures face the hatch while standing and never show below the stairs',()=>{
   const line=createWindowLine();addWalkups(line,2,stairs);
   for(let t=0;t<30;t+=.1){stepWindowLine(line,.1,stairs);windowFigures(line,HIDDEN).forEach(f=>{assert.ok(f.z>HIDDEN);if(!f.moving)assert.equal(f.facing,1)})}
+});
+
+test('the window is its own buy; saves from before keep it when they have the drone port', () => {
+  assert.deepEqual(migrateWindow(undefined, false), { owned: false, hatch: false, tips: false });
+  assert.deepEqual(migrateWindow(undefined, true), { owned: true, hatch: false, tips: false });
+  assert.deepEqual(migrateWindow({ owned: true, hatch: true, tips: 'yes' }, false), { owned: true, hatch: true, tips: false });
+  assert.deepEqual(migrateWindow({ owned: false, hatch: true, tips: true }, false), { owned: false, hatch: false, tips: false });
+  assert.ok(WINDOW_COST < HATCH_COST && HATCH_COST < TIPS_COST);
+});
+
+test('the second hatch lengthens the line and quickens the hand-off', () => {
+  const plain = { owned: true, hatch: false }, hatch = { owned: true, hatch: true };
+  assert.equal(windowLineMax(plain), 6); assert.equal(windowLineMax(hatch), 10);
+  assert.ok(windowServeSeconds(hatch) < windowServeSeconds(plain));
+  const line = createWindowLine(), stairs = () => [[18, 0, 10], [18, 0, 13]];
+  assert.equal(addWalkups(line, 12, stairs, windowLineMax(hatch)), 10);
+  assert.equal(windowRoom(line, hatch), 0); assert.equal(windowRoom(line, plain), 0);
+  // Served faster with the hatch: run both lines the same time and compare who has gone.
+  const slow = createWindowLine(), fast = createWindowLine();
+  addWalkups(slow, 4, stairs); addWalkups(fast, 4, stairs);
+  for (let t = 0; t < 20; t += .1) { stepWindowLine(slow, .1, stairs, windowServeSeconds(plain)); stepWindowLine(fast, .1, stairs, windowServeSeconds(hatch)); }
+  assert.ok(windowRoom(fast, plain) > windowRoom(slow, plain));
 });

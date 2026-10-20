@@ -1,8 +1,9 @@
 // Big purchases take real time to raise (Kevin, 2026-10-20): paying for the rooftop lounge or the online orders deck
 // starts a construction site, and the place opens when the timer runs out. Timers are wall-clock end times, so they
 // keep running while the game is closed, paused or hidden, and game speed does not hurry them.
-// Lounge 3 min, deck 90 s: long enough to feel like a build, short enough to wait out in one sitting.
-export const BUILD_SECONDS={lounge:180,deck:90};
+// Lounge 3 min, deck 90 s: long enough to feel like a build, short enough to wait out in one sitting. The pickup
+// window, the first and cheapest online buy, takes 45 s.
+export const BUILD_SECONDS={lounge:180,deck:90,window:45};
 
 // A save's timers: each key is an end time in ms, or 0 for no build. A clock set back cannot leave a build longer
 // than its full time.

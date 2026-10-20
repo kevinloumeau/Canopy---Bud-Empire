@@ -156,7 +156,7 @@ function migrateContracts(r){
 }
 // What the shop can work on: deliveries need the drone or Old Town's bulk desk, the type contracts need that type stocked.
 function contractReady(def,state){
-  if(def.needs==='online')return !!(state.autoDrone?.owned||state.empire.stores[2].level>=2);
+  if(def.needs==='online')return !!(state.pickupWindow?.owned||state.autoDrone?.owned||state.empire.stores[2].level>=2);
   if(def.needs==='edibles')return state.productMenu?.unlocked?.[2]===true;
   if(def.needs==='prerolls')return state.productMenu?.unlocked?.[1]===true;
   return true;
@@ -276,7 +276,7 @@ function goalOptions(state,i){
   if(i===0)return ['pickup','pickup','spender'];
   if(i===2)return ['revenue'];
   const options=['upgrade'];
-  if(state.autoDrone?.owned||p.stores[2].level>=2)options.push('online');
+  if(state.pickupWindow?.owned||state.autoDrone?.owned||p.stores[2].level>=2)options.push('online');
   if(p.stores.some(s=>s.level)&&!p.stores.every(s=>s.level===10&&s.projects.every(Boolean)))options.push('invest');
   return options;
 }
