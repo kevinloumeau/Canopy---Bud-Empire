@@ -827,7 +827,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       // shares (about 1.69 map units a metre), so its slab's right and front edges land where the sprite's do
       // (DECK_RIGHT, DECK_FRONT) with the deck at 7.05.
       layout.floorTextures=floorTextureFiles();
-      layout.fixtures=[{key:'deck',file:'online_deck.glb',x:-9.39,y:4.7,z:-.2,scale:1.69}];
+      layout.fixtures=[{key:'deck',file:'online_deck.glb',x:-9.39,y:4.7,z:-.2,scale:1.69,glow:'SignLit'}];
       // The self-order kiosks, one Blender model per bought kiosk where the customer code queues them (6.8 - k * 1.8),
       // the screen facing +x toward the customer and lit like a screen (`screen` names its material).
       [0,1,2].forEach(function(k){layout.fixtures.push({key:'kiosk'+k,file:'kiosk.glb',x:-9.75,y:0,z:6.8-k*1.8,scale:1.69,screen:'Screen',menu:true})});

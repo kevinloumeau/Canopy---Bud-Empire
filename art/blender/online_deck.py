@@ -1,7 +1,8 @@
-"""Canopy online orders deck (built), modelled from the current sprite.
+"""Canopy drone port (the online orders deck, built): it runs itself, so there is no counter and no staff.
 
-A raised oak deck on green steel braces with the ONLINE ORDERS counter and sign, a drone landing pad on posts
-above it, and a flight of stairs down to a foot landing.  The origin is the centre of the whole footprint on the
+A raised oak deck on green steel braces with a DRONE DELIVERY sign, a charging dock with a spare courier, a
+parcel lift that carries packed orders up to a drone landing pad on posts (four marked parcel bays, beacons and a
+windsock), and a flight of stairs down to a foot landing.  The origin is the centre of the whole footprint on the
 floor at the stair foot; the empty "DeckCentre" marks the middle of the deck's walking surface.
 
 Needs canopy_kit.py in the same folder.  Run headless with
@@ -21,7 +22,6 @@ DECKWOOD = K.mat("DeckOak", "#d9a768", .55)
 STRIPE = K.mat("PadStripe", "#e3b320", .45)
 CONE = K.mat("Cone", "#ec6a1c", .5)
 TOPSTONE = K.mat("CreamTop", "#f0d9a8", .4)
-SIGNBOARD = K.mat("SignBoard", "#f3e6c4", .5)
 
 def beam(name, p0, p1, w, m=STEEL, h=None):
     """A square steel member from p0 to p1."""
@@ -83,53 +83,115 @@ for y0, y in ((-DD / 2 + .12, SY0 - .03), (DD / 2 - .12, SY1 + .03)):
     bolt(f"BraceBolt{y:.2f}", (NX, y - .07, .14))
 beam("FloorTie", (NX, SY0 - .03, .07), (NX, SY1 + .03, .07), .1)
 
-# ---------- ONLINE ORDERS counter ----------
-CX, CY = X0 - .22, -DD / 2 + .3
-K.box("CounterBody", (1.1, .36, .42), (CX, CY, PH), K.GREEN, .012)
-K.box("CounterBrass", (1.12, .38, .025), (CX, CY, PH + .02), K.BRASS, .006)
-K.box("CounterPanel", (1.0, .01, .26), (CX, CY - .182, PH + .08), K.GREEN_D, .004)
-for dz in (.08, .34):
-    K.box(f"CounterTrim{dz}", (1.0, .014, .012), (CX, CY - .19, PH + dz - .006), K.BRASS, .003)
-K.box("CounterTop", (1.18, .44, .07), (CX, CY, PH + .42), TOPSTONE, .03, 4)
-K.box("SideBody", (.34, .32, .3), (CX + .74, CY - .04, PH), K.GREEN, .012)
-K.box("SideBrass", (.36, .34, .02), (CX + .74, CY - .04, PH + .02), K.BRASS, .006)
-K.box("SideTop", (.4, .36, .06), (CX + .74, CY - .04, PH + .3), TOPSTONE, .025, 4)
+# ---------- deck guard rails: nobody serves here, so the open front and left edges get brass rails ----------
+RY, RX = -DD / 2 + .03, X0 - DL / 2 + .03
+rail("FrontRail", [(RX, RY, PH + .42), (X0 + DL / 2 - .03, RY, PH + .42)],
+     [(RX, RY, PH), (X0 - .3, RY, PH), (X0 + .3, RY, PH), (X0 + DL / 2 - .03, RY, PH)])
+rail("LeftRail", [(RX, RY, PH + .42), (RX, DD / 2 - .03, PH + .42)], [(RX, DD / 2 - .03, PH)])
 
-# ---------- sign on an oak portal behind the counter ----------
-GY = -.03; G0, G1 = X0 - .5, X0 + .42
+# ---------- DRONE DELIVERY sign: a steel gantry with a backlit board, a quadcopter mark above the words ----------
+SIGNLIT = K.mat("SignLit", "#f6ecd2", .45)       # the map makes this the backlit face (layout.fixtures glow)
+INK = K.GREEN_D
+GY = -.03; G0, G1 = X0 - .84, X0 + .14; GC = (G0 + G1) / 2; GZ = PH + .56
 for x in (G0, G1):
-    K.box(f"SignPost{x:.2f}", (.07, .07, 1.0), (x, GY, PH), DECKWOOD, .012)
-K.box("SignBeam", (G1 - G0 + .1, .08, .07), ((G0 + G1) / 2, GY, PH + 1.0), DECKWOOD, .012)
-K.box("SignBoard", (G1 - G0 - .1, .05, .3), ((G0 + G1) / 2, GY, PH + .66), DECKWOOD, .01)
-K.box("SignFace", (G1 - G0 - .18, .01, .22), ((G0 + G1) / 2, GY - .03, PH + .7), SIGNBOARD, .004)
-txt = bpy.data.curves.new("SignText", "FONT"); txt.body = "ONLINE ORDERS"
-txt.size = .12; txt.extrude = .004; txt.align_x = "CENTER"; txt.align_y = "CENTER"
+    K.box(f"SignPost{x:.2f}", (.055, .055, GZ - PH + .4), (x, GY, PH), STEEL, .01)
+    K.cyl(f"SignCap{x:.2f}", .034, .034, .03, (x, GY, GZ + .4), K.BRASS, 12)
+K.box("SignBoard", (G1 - G0 + .02, .05, .4), (GC, GY, GZ), STEEL, .012)
+K.box("SignFace", (G1 - G0 - .06, .01, .34), (GC, GY - .028, GZ + .03), SIGNLIT, .004)
+K.box("SignTrim", (G1 - G0 - .04, .012, .012), (GC, GY - .033, GZ + .02), K.BRASS, .003)
+# the mark: a quadcopter seen from the front, four rotors on a cross with a parcel hanging under it
+MX, MZ, F = GC - .31, GZ + .2, GY - .036
+K.box("SignMarkBody", (.08, .012, .03), (MX, F, MZ), INK, .004)
+for dx in (-1, 1):
+    K.box(f"SignMarkArm{dx}", (.06, .01, .012), (MX + dx * .06, F, MZ + .018), INK, .002)
+    K.box(f"SignMarkRotor{dx}", (.07, .01, .01), (MX + dx * .1, F, MZ + .036), INK, .002)
+    K.box(f"SignMarkHub{dx}", (.012, .01, .02), (MX + dx * .1, F, MZ + .02), INK, .002)
+K.box("SignMarkLine", (.006, .01, .035), (MX, F, MZ - .035), INK, 0)
+K.box("SignMarkParcel", (.05, .01, .045), (MX, F, MZ - .08), INK, .004)
 fb = os.environ.get("CANOPY_FONT") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts", "Fredoka-SemiBold.ttf")
-if os.path.exists(fb): txt.font = bpy.data.fonts.load(fb)
-to = K.link(bpy.data.objects.new("SignText", txt), K.GREEN_D)
-to.location = ((G0 + G1) / 2, GY - .037, PH + .81); to.rotation_euler = (math.pi / 2, 0, 0)
+for name, body, size, x, z in (("SignText", "DRONE", .13, GC + .09, GZ + .25), ("SignText2", "DELIVERY", .09, GC + .09, GZ + .11)):
+    txt = bpy.data.curves.new(name, "FONT"); txt.body = body; txt.resolution_u = 3
+    txt.size = size; txt.extrude = .004; txt.align_x = "CENTER"; txt.align_y = "CENTER"
+    if os.path.exists(fb): txt.font = bpy.data.fonts.load(fb)
+    to = K.link(bpy.data.objects.new(name, txt), INK)
+    to.location = (x, GY - .037, z); to.rotation_euler = (math.pi / 2, 0, 0)
 
-# ---------- drone landing pad on steel posts ----------
-PX0, PX1, PY0, PY1, PZ = X0 - .4, X0 + .82, .02, DD / 2 + .02, PH + 1.1
+# ---------- charging dock with a spare courier parked on it (a touch larger than life so it reads on the map) ----------
+BEACON = K.mat("PadBeacon", "#8fe39a", .4, 0, 2.0)
+DX, DYc, Q = X0 - .4, -.24, 1.5
+K.cyl("DockBase", .23, .23, .03, (DX, DYc, PH), K.DARK, 24)
+K.ring("DockRing", .21, .19, .034, (DX, DYc, PH), BEACON, 24)
+K.box("DockPost", (.06, .06, .24), (DX - .24, DYc + .14, PH), STEEL, .01)
+K.box("DockScreen", (.05, .012, .06), (DX - .24, DYc + .11, PH + .19), BEACON, .004)
+DZ = PH + .09
+K.box("DroneBody", (.16 * Q, .16 * Q, .07 * Q), (DX, DYc, DZ), K.CREAM, .025)
+K.box("DroneLid", (.11 * Q, .11 * Q, .035 * Q), (DX, DYc, DZ + .07 * Q), K.GREEN, .015)
+K.box("DroneEye", (.05 * Q, .01, .02 * Q), (DX, DYc - .08 * Q - .004, DZ + .03 * Q), BEACON, .003)
+for i, (sx, sy) in enumerate(((1, 1), (1, -1), (-1, 1), (-1, -1))):
+    ax, ay = DX + sx * .13 * Q, DYc + sy * .13 * Q
+    beam(f"DroneArm{i}", (DX + sx * .05 * Q, DYc + sy * .05 * Q, DZ + .035 * Q), (ax, ay, DZ + .045 * Q), .025, K.GREEN)
+    K.ring(f"DroneGuard{i}", .07 * Q, .06 * Q, .022, (ax, ay, DZ + .04 * Q), K.CREAM, 16)
+    K.box(f"DroneRotor{i}", (.11 * Q, .016, .004), (ax, ay, DZ + .06 * Q), K.DARK, 0).rotation_euler.z = sx * sy * .6
+    K.cyl(f"DroneLeg{i}", .009, .009, DZ - PH, (DX + sx * .055 * Q, DYc + sy * .055 * Q, PH + .02), K.DARK, 6)
+
+# ---------- parcel lift: packed jars come up through the deck, ride a conveyor and are lifted to the pad ----------
+LX, LY = X0 + .6, -.12
+PZ = PH + 1.1                          # the landing pad's top
+# a short belt brings the jars' boxes from the feed under the deck to the tower's foot
+K.box("FeedHopper", (.24, .2, .1), (LX, -.4, PH), STEEL, .01)
+K.box("Conveyor", (.2, .24, .07), (LX, -.36, PH + .1), K.GREEN, .01)
+for k in range(4):
+    K.cyl(f"Roller{k}", .013, .013, .18, (LX - .09, -.46 + k * .065, PH + .18), K.BRASS, 8).rotation_euler.y = math.pi / 2
+K.box("ParcelOnBelt", (.11, .1, .08), (LX, -.38, PH + .195), K.KRAFT, .008)
+K.box("ParcelTape", (.022, .102, .082), (LX, -.38, PH + .195), K.CREAM, 0)
+# the lift tower: a green shaft up to the pad's front edge, a lit window showing a parcel on its way up
+TW, TD = .26, .2
+K.box("LiftTower", (TW, TD, PZ - PH - .02), (LX, LY, PH), K.GREEN, .015)
+FY = LY - TD / 2                        # the tower's front face
+K.box("LiftWindowBack", (TW - .08, .012, .44), (LX, FY - .006, PH + .35), K.DARK, .004)
+K.box("ParcelInLift", (.12, .05, .09), (LX, FY - .03, PH + .5), K.KRAFT, .008)
+K.box("ParcelInLiftTape", (.024, .052, .092), (LX, FY - .03, PH + .5), K.CREAM, 0)
+K.box("LiftShelf", (TW - .1, .06, .012), (LX, FY - .03, PH + .488), K.BRASS, .003)
+K.box("LiftWindow", (TW - .06, .008, .46), (LX, FY - .062, PH + .34), K.GLASS, .003)
+K.box("LiftDoor", (TW - .08, .01, .12), (LX, FY - .004, PH + .12), K.GREEN_D, .004)
+for k, z in enumerate((PH + .32, PH + .8, PZ - .05)):
+    K.box(f"LiftBand{k}", (TW + .02, TD + .02, .03), (LX, LY, z), K.BRASS, .006)
+K.box("LiftStatus", (.14, .012, .03), (LX, FY - .006, PH + .86), BEACON, .004)
+K.cyl("LiftBeacon", .03, .024, .05, (LX, LY, PZ - .02), BEACON, 12)
+K.tube("Antenna", [(LX + .09, LY - .06, PZ - .02), (LX + .09, LY - .06, PZ + .3)], .007, STEEL)
+K.cyl("AntennaTip", .016, .016, .022, (LX + .09, LY - .06, PZ + .3), BEACON, 8)
+
+# ---------- drone landing pad on steel posts: four marked parcel bays, beacons on the corners ----------
+PX0, PX1, PY0, PY1 = X0 - .4, X0 + .82, .02, DD / 2 + .02
+PADC = ((PX0 + PX1) / 2, (PY0 + PY1) / 2)
 for x in (PX0 + .05, PX1 - .05):
     for y in (PY0 + .05, PY1 - .05):
         K.box(f"PadPost{x:.2f}{y:.2f}", (.09, .09, PZ - PH - .1), (x, y, PH), STEEL, .012)
         K.box(f"PadPostFoot{x:.2f}{y:.2f}", (.14, .14, .03), (x, y, PH), STEEL, .006)
     beam(f"PadKnee{x:.2f}", (x, PY0 + .05, PZ - .45), (x, PY0 + .3, PZ - .12), .05)
-K.box("PadFrame", (PX1 - PX0, PY1 - PY0, .1), ((PX0 + PX1) / 2, (PY0 + PY1) / 2, PZ - .1), STEEL, .015)
-K.box("PadTop", (PX1 - PX0 - .02, PY1 - PY0 - .02, .02), ((PX0 + PX1) / 2, (PY0 + PY1) / 2, PZ), K.GREEN, .006)
-for k in range(3):
-    x = PX0 + (PX1 - PX0) * (k + .5) / 3
-    K.box(f"PadStripe{k}", ((PX1 - PX0) / 6, PY1 - PY0 - .04, .006), (x, (PY0 + PY1) / 2, PZ + .018), STRIPE, .002)
-for x in (PX0 + .15, (PX0 + PX1) / 2, PX1 - .15):
+K.box("PadFrame", (PX1 - PX0, PY1 - PY0, .1), (PADC[0], PADC[1], PZ - .1), STEEL, .015)
+K.box("PadTop", (PX1 - PX0 - .02, PY1 - PY0 - .02, .02), (PADC[0], PADC[1], PZ), K.GREEN, .006)
+for name, size, off in (("Front", (PX1 - PX0, .03), (0, -(PY1 - PY0) / 2 + .015)), ("Back", (PX1 - PX0, .03), (0, (PY1 - PY0) / 2 - .015)),
+                        ("Left", (.03, PY1 - PY0), (-(PX1 - PX0) / 2 + .015, 0)), ("Right", (.03, PY1 - PY0), ((PX1 - PX0) / 2 - .015, 0))):
+    K.box(f"PadLip{name}", size + (.035,), (PADC[0] + off[0], PADC[1] + off[1], PZ - .01), K.DARK, .006)
+# the bays sit where the game drops the parcels: 0.5 map units apart (1.69 units a metre), centred on the pad
+BAY = .5 / 1.69; BW = .22; LW = .014
+for k in range(4):
+    bx = PADC[0] + (k - 1.5) * BAY
+    for name, size, off in (("N", (BW, LW), (0, BW / 2)), ("S", (BW, LW), (0, -BW / 2)),
+                            ("W", (LW, BW), (-BW / 2, 0)), ("E", (LW, BW), (BW / 2, 0))):
+        K.box(f"PadBay{k}{name}", (size[0], size[1], .004), (bx + off[0], PADC[1] + off[1], PZ + .02), STRIPE, 0)
+    K.box(f"PadBayDot{k}", (.03, .03, .004), (bx, PADC[1], PZ + .02), K.CREAM, 0)
+for x in (PX0 + .03, PX1 - .03):
+    for y in (PY0 + .03, PY1 - .03):
+        K.cyl(f"PadBeacon{x:.2f}{y:.2f}", .025, .02, .035, (x, y, PZ + .02), BEACON, 12)
+for x in (PX0 + .15, PADC[0], PX1 - .15):
     bolt(f"PadBolt{x:.2f}", (x, PY0 - .002, PZ - .05))
-for name, pts in (("Back", [(PX0, PY1, PZ + .42), (PX1, PY1, PZ + .42)]), ("Front", [(PX0, PY0, PZ + .42), (PX1, PY0, PZ + .42)]),
-                  ("Left", [(PX0, PY0, PZ + .42), (PX0, PY1, PZ + .42)]),
-                  ("Right", [(PX1, PY0, PZ + .42), (PX1, PY1, PZ + .42)])):
-    rail(f"Pad{name}", pts, [pts[0][:2] + (PZ + .02,), pts[1][:2] + (PZ + .02,)])
-K.cyl("ConeBase", .07, .07, .015, ((PX0 + PX1) / 2 + .05, PY1 - .2, PZ + .02), K.DARK, 4).rotation_euler.z = math.pi / 4
-K.cyl("Cone", .055, .012, .2, ((PX0 + PX1) / 2 + .05, PY1 - .2, PZ + .035), CONE, 24)
-K.cyl("ConeBand", .037, .03, .04, ((PX0 + PX1) / 2 + .05, PY1 - .2, PZ + .12), K.CREAM, 24)
+# a windsock on the back corner, so the pad reads as an airfield
+WX, WY = PX0 + .03, PY1 - .03
+K.tube("WindsockMast", [(WX, WY, PZ + .05), (WX, WY, PZ + .5)], .01, STEEL)
+sock = K.cyl("Windsock", .04, .02, .2, (WX, WY, PZ + .46), CONE, 12); sock.rotation_euler.y = math.pi / 2 + .25
+K.cyl("WindsockBand", .034, .03, .03, (WX + .1, WY, PZ + .44), K.CREAM, 12).rotation_euler.y = math.pi / 2 + .25
 
 # ---------- recentre: origin at the middle of the whole footprint, on the floor ----------
 dg = bpy.context.evaluated_depsgraph_get()
