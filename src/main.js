@@ -2411,7 +2411,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var speed=state.lines.some(function(n){return n>0})?Math.min(.07,.02+production()*.00002):0;
     crateTime=(crateTime+frameDelta*speed*1.4)%1;cargoOdo=(cargoOdo+frameDelta*speed*14)%1e5;
     var stations=[],people=[];
-    function station(i,x,y,z,level,built,size){var tier=built?stationLookFor(i,level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(Math.min(5,tier)-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,pop:stationPop(i),selected:mapPicked&&selected===i&&!securitySelected&&!loungeSelected,clock:motionPreference.matches?6.3:motionClocks[i],act:taskActivity[i]})}
+    function station(i,x,y,z,level,built,size){var tier=built?stationLookFor(i,level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(Math.min(5,tier)-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,pop:stationPop(i),selected:mapPicked&&selected===i&&!securitySelected&&!loungeSelected,clock:motionPreference.matches?6.3:motionClocks[i],act:taskActivity[i],boost:i<ABILITIES.length&&state.abilities.active[i]>0?state.abilities.active[i]/ABILITY_SECONDS:0})}
     // People are the 2D map's own sprites, recorded as each would be drawn and stood up in the scene as flat figures
     // (capturePerson); a capsule under each casts its shadow.
     var figures=[];
