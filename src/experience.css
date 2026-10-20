@@ -182,6 +182,12 @@
 .world .marker.station-sign.is-lot.selected::after{background:#4a2634}
 /* The unbuilt lounge's tag stays one row, the size of the station tags: its name, then the opening price. */
 .world .marker.station-sign.is-lot{white-space:nowrap}
+/* Lounge being built: the countdown replaces the price and the dashed border becomes a pink ring that drains clockwise
+   as the time runs out (--build-left, 1 to 0). Painted as a border-box gradient so the sign stays an unpositioned box. */
+.world .marker.station-sign.is-lot.is-building,.world .marker.station-sign.is-lot.is-building:not(.selected){border:1.5px solid transparent;
+ background:linear-gradient(#2a1a22ee,#2a1a22ee) padding-box,conic-gradient(#f0a7c8 calc(var(--build-left,1)*360deg),#f0a7c833 0) border-box}
+.world .marker.station-sign.is-lot.is-building.selected{background:linear-gradient(#f0a7c8,#f0a7c8) padding-box,conic-gradient(#4a2634 calc(var(--build-left,1)*360deg),#4a263433 0) border-box}
+.world .marker.station-sign.is-lot.is-building .station-sign-level{font-variant-numeric:tabular-nums}
 .world .marker.station-sign.is-lot .station-sign-level,.world .marker.station-sign.is-lot:not(.selected) .station-sign-level{display:inline;margin-left:.4em}
 .sheet .machine-nav button.is-lot{border-style:dashed;border-color:#f0a7c866}
 .sheet .machine-nav button.is-lot em,.sheet .machine-nav button.is-lot.can-upgrade em{color:#f7c6da}
