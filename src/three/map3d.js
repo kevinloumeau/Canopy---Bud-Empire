@@ -684,14 +684,16 @@ export function createMap3D(canvas, layout) {
     holder.add(body);
     holder.scale.set(BLENDER_SCALE, BLENDER_SCALE / HEIGHT_SCALE, BLENDER_SCALE);
     world.add(holder);
-    const mixer = new THREE.AnimationMixer(body), clip = name => source.clips.find(c => c.name === name);
-    const idle = mixer.clipAction(clip('Idle_11')), walk = mixer.clipAction(clip('Walking'));
+    // Each model names its idle by the Meshy preset it used (Idle_9, Idle_11, Idle_12).
+    const mixer = new THREE.AnimationMixer(body), clip = test => source.clips.find(c => test.test(c.name));
+    const idle = mixer.clipAction(clip(/^Idle/)), walk = mixer.clipAction(clip(/^Walking$/));
     walk.timeScale = 0;
     idle.play(); walk.play();
     return (characterCopies[i] = { file, holder, mixer, idle, walk });
   }
-  // Screen right is (cos 45°, 0, -sin 45°) and the camera looks back along (1, 0, 1): a figure standing still turns
-  // three-quarters to the camera, to the side its sprite would face (facing > 0 is screen right).
+  // A figure faces the way it walks; standing, what it is doing (c.look), else the way it last walked. With neither,
+  // it turns three-quarters to the camera (which looks back along (1, 0, 1); screen right is (cos 45°, 0, -sin 45°)),
+  // to the side its sprite would face (facing > 0 is screen right).
   function placeCharacters(list, stepSeconds, night) {
     Object.values(characterSources).forEach(s => s.materials.forEach(m => { m.emissiveIntensity = CHARACTER_LIFT * (1 - night * .85); }));
     const seen = new Set();
@@ -701,7 +703,8 @@ export function createMap3D(canvas, layout) {
       copy.holder.visible = true;
       copy.holder.position.set(c.x, c.y || 0, c.z);
       let fx, fz;
-      if (amount > .3 && c.heading) { fx = c.heading.x; fz = c.heading.z; }
+      const aim = amount > .3 ? c.heading : c.look || c.heading;
+      if (aim) { fx = aim.x; fz = aim.z; }
       else { const side = (c.facing === undefined ? .3 : c.facing) >= 0 ? .75 : -.75; fx = 1 + side; fz = 1 - side; }
       const target = Math.atan2(fx, fz), last = characterYaw.has(c.id) ? characterYaw.get(c.id) : target;
       let turn = target - last; turn -= Math.round(turn / (2 * Math.PI)) * 2 * Math.PI;

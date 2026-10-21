@@ -2336,8 +2336,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // what is drawn over the map in screen space. Taps, tags and badges use project(), which the 3D camera matches.
   var STATION_BOXES=[{w:2.6,d:1.5,h:1.5},{w:3.2,d:1.6,h:1.7},{w:2.8,d:1.5,h:1.5},{w:2.6,d:1.5,h:1.5},{w:2.2,d:1.1,h:1.25},{w:2.4,d:1.2,h:1.25},{w:.8,d:1.3,h:1.1}];
   var PERSON_COLOURS=['#d97b5f','#5f8fc9','#e0b75a','#8a6fb5','#6aa36a','#c95f86','#4fa3a0','#d48c3a'];
-  // The rigged beanie customer (Kevin's Meshy model, 2026-10-21): customers 1, 21, 41... in the 3D map.
-  var BEANIE_MODEL='people/beanie-character.glb',BEANIE_EVERY=20,BEANIE_AT=1;
+  // The shop's customers in the 3D map are Kevin's rigged Meshy characters (2026-10-21), taken in turn by id.
+  var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-shirt','utility-vest','office-woman','bearded-blue-shirt','tie-dye-hoodie','cream-outfit','trench-coat'].map(function(n){return 'people/'+n+'.glb'});
   // Records the images one 2D figure draws (with every transform it applies) and turns each into four world points: a
   // flat card standing upright at the figure's feet, spanning screen-right and up, so the 3D camera shows it exactly
   // where the 2D map would while counters in front of it still hide it. Nothing else the figure draws is kept.
@@ -2438,12 +2438,13 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // (capturePerson); a capsule under each casts its shadow.
     var figures=[];
     function person(x,y,z,colour,draw){people.push({x:x,y:y,z:z,colour:colour});capturePerson(figures,x,y,z,draw)}
-    // Kevin's Meshy beanie customer is a rigged 3D model rather than a sprite: one customer in every twenty, the same
-    // customer upstairs and down, once the model has loaded (until then that customer's sprite stands in). It casts
-    // its own shadow, so it needs no capsule.
+    // Customers are rigged 3D models rather than sprites, the same model upstairs and down, once theirs has loaded
+    // (until then their sprite stands in). A model casts its own shadow, so it needs no capsule. Standing still, it
+    // looks at what the customer is doing (gait.look), else along the way it last walked.
     var characters=[];
     function customer(id,x,y,z,colour,gait,draw){
-      if(id%BEANIE_EVERY===BEANIE_AT&&map3d.characterReady(BEANIE_MODEL)){var still=motionPreference.matches;characters.push({file:BEANIE_MODEL,id:id,x:x,y:y,z:z,ground:(gait.phase||0)/5,amount:still?0:gait.amount,heading:gait.heading,facing:gait.facing,still:still});return}
+      var file=CUSTOMER_MODELS[id%CUSTOMER_MODELS.length];
+      if(map3d.characterReady(file)){var still=motionPreference.matches;characters.push({file:file,id:id,x:x,y:y,z:z,ground:(gait.phase||0)/5,amount:still?0:gait.amount,heading:gait.heading,look:gait.look,facing:gait.facing,still:still});return}
       person(x,y,z,colour,draw);
     }
     for(var i=0;i<6;i++){
@@ -2510,7 +2511,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     customers.forEach(function(c){
       stepCustomerVisual(c,frameDelta);
       if(c.phase==='lounge'&&!(c.loungeFade>0))return;
-      var gait={phase:c.walkPhase||0,heading:c.walkHeading,amount:c.walkAmount||0,facing:c.facing===undefined?.3:c.facing,lean:c.turnLean||0,pickupAge:c.effectAge};
+      var gait={phase:c.walkPhase||0,heading:c.walkHeading,look:customerLook(c),amount:c.walkAmount||0,facing:c.facing===undefined?.3:c.facing,lean:c.turnLean||0,pickupAge:c.effectAge};
       customer(c.id||0,c.renderX,0,c.renderZ,PERSON_COLOURS[(c.id||0)%PERSON_COLOURS.length],gait,function(){drawPerson(c.renderX,c.renderZ,now,c.id,c.walking,false,c.bag,gait)});
     });
     var streetApi=sunnyApi(now);
@@ -2557,6 +2558,20 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     updateMarkers();updateSpenderTag(false);requestAnimationFrame(render);
   }
   // Eases a customer's drawn position toward the simulation's and updates their stride, facing and service progress.
+  // What a customer standing at a service spot looks at, for the 3D figures: the order desk or pickup counter in front
+  // of them (both face +z), the kiosk screen on their left by the shop window, the ID desk; in a line, its front.
+  function customerLook(c){
+    if(c.walking)return null;
+    if(atOrderCounter(c,state.orderCounters)||c.phase==='pickup'&&Math.hypot(c.x-PICKUP_X,c.z-4.9)<.15)return{x:0,z:-1};
+    if(c.phase==='kiosk'&&c.kioskIndex!=null&&!c.ordered&&Math.hypot(c.x+8.95,c.z-(6.8-c.kioskIndex*1.8))<.15)return{x:-1,z:0};
+    if(c.phase==='idCheck'&&Math.hypot(c.x-ID_CHECK.x,c.z-ID_CHECK.z)<.15)return{x:ID_DESK.x-c.x,z:ID_DESK.z-c.z};
+    // Waiting in a line: towards the front of it (the line's route a step ahead of their place).
+    if(c.phase==='leaving'||c.phase==='toLounge'||c.phase==='lounge'||c.phase==='idCheck')return null;
+    var at=customerTarget(c);if(Math.hypot(c.x-at.x,c.z-at.z)>.15)return null;
+    var d=customerQueueDistance(c);if(d<=0)return null;
+    var ahead=routePoint(c.kiosk&&!c.ordered?kioskRoute(c.kioskIndex):queueRoute(c.ordered),Math.max(0,d-.4)),dx=ahead.x-c.x,dz=ahead.z-c.z,l=Math.hypot(dx,dz);
+    return l>.05?{x:dx/l,z:dz/l}:null;
+  }
   function stepCustomerVisual(c,frameDelta){
     var blend=1-Math.exp(-frameDelta*20),oldX=c.renderX===undefined?c.x:c.renderX,oldZ=c.renderZ===undefined?c.z:c.renderZ;
     c.renderX=oldX+(c.x-oldX)*blend;c.renderZ=oldZ+(c.z-oldZ)*blend;
