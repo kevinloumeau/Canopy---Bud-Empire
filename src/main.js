@@ -2336,6 +2336,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // what is drawn over the map in screen space. Taps, tags and badges use project(), which the 3D camera matches.
   var STATION_BOXES=[{w:2.6,d:1.5,h:1.5},{w:3.2,d:1.6,h:1.7},{w:2.8,d:1.5,h:1.5},{w:2.6,d:1.5,h:1.5},{w:2.2,d:1.1,h:1.25},{w:2.4,d:1.2,h:1.25},{w:.8,d:1.3,h:1.1}];
   var PERSON_COLOURS=['#d97b5f','#5f8fc9','#e0b75a','#8a6fb5','#6aa36a','#c95f86','#4fa3a0','#d48c3a'];
+  // The rigged beanie customer (Kevin's Meshy model, 2026-10-21): customers 1, 21, 41... in the 3D map.
+  var BEANIE_MODEL='people/beanie-character.glb',BEANIE_EVERY=20,BEANIE_AT=1;
   // Records the images one 2D figure draws (with every transform it applies) and turns each into four world points: a
   // flat card standing upright at the figure's feet, spanning screen-right and up, so the 3D camera shows it exactly
   // where the 2D map would while counters in front of it still hide it. Nothing else the figure draws is kept.
@@ -2436,6 +2438,14 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // (capturePerson); a capsule under each casts its shadow.
     var figures=[];
     function person(x,y,z,colour,draw){people.push({x:x,y:y,z:z,colour:colour});capturePerson(figures,x,y,z,draw)}
+    // Kevin's Meshy beanie customer is a rigged 3D model rather than a sprite: one customer in every twenty, the same
+    // customer upstairs and down, once the model has loaded (until then that customer's sprite stands in). It casts
+    // its own shadow, so it needs no capsule.
+    var characters=[];
+    function customer(id,x,y,z,colour,gait,draw){
+      if(id%BEANIE_EVERY===BEANIE_AT&&map3d.characterReady(BEANIE_MODEL)){var still=motionPreference.matches;characters.push({file:BEANIE_MODEL,id:id,x:x,y:y,z:z,ground:(gait.phase||0)/5,amount:still?0:gait.amount,heading:gait.heading,facing:gait.facing,still:still});return}
+      person(x,y,z,colour,draw);
+    }
     for(var i=0;i<6;i++){
       var p=machinePos[i];
       if(i===4)orderCounterPositions(state.orderCounters).forEach(function(q,index){
@@ -2465,7 +2475,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       // Riding: in their cab. Waiting below: out of sight in the back hallway.
       var inCab=c.lift==='down'||c.lift==='boarding'||c.lift==='exit',sh=inCab?(c.liftShaft||0):(c.shaft||0),shaftZ=(sh?ROOFTOP.lift2.z:lift.z)+.1;
       if(!c.lift||c.lift==='waitUp')return;
-      if(c.lift==='up'||c.lift==='down'){var ry=lifts[sh].y*ROOFTOP.y+.12,rx=lift.x+CAB_SLOTS[c.cabSlot||0][0],rz=shaftZ+CAB_SLOTS[c.cabSlot||0][1];person(rx,ry,rz,colour,function(){drawPerson(rx,rz,now,c.id,false,false,false,{amount:0,phase:0,facing:.3})});return}
+      if(c.lift==='up'||c.lift==='down'){var ry=lifts[sh].y*ROOFTOP.y+.12,rx=lift.x+CAB_SLOTS[c.cabSlot||0][0],rz=shaftZ+CAB_SLOTS[c.cabSlot||0][1];customer(c.id,rx,ry,rz,colour,{amount:0,phase:0,facing:.3},function(){drawPerson(rx,rz,now,c.id,false,false,false,{amount:0,phase:0,facing:.3})});return}
       // Stepping into the cab (from their place in the bridge queue, or from the hallway below) or out of it below:
       // the cab holds its floor until the last of them is through the door (lounge-lifts.js).
       if(c.lift==='boarding'||c.lift==='exit'){
@@ -2473,12 +2483,12 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
         var bt=smooth(c.lift==='boarding'?c.boardT:c.exitT),b0=c.lift==='boarding'?(c.boardFrom||door):{x:bx,z:bz},b1=c.lift==='boarding'?{x:bx,z:bz}:door;
         var bwx=b0.x+(b1.x-b0.x)*bt,bwz=b0.z+(b1.z-b0.z)*bt,bd=Math.hypot(b1.x-b0.x,b1.z-b0.z)||1,bstep=bt>0&&bt<1;
         var bh={x:(b1.x-b0.x)/bd,z:(b1.z-b0.z)/bd},bfy=by+(c.lift==='boarding'?bt:1-bt)*.12;
-        person(bwx,bfy,bwz,colour,function(){drawPerson(bwx,bwz,now,c.id,bstep,false,false,{amount:bstep?1:0,phase:bt*bd*5,heading:bh,facing:bh.x-bh.z>0?.3:-.3})});return}
+        var bg={amount:bstep?1:0,phase:bt*bd*5,heading:bh,facing:bh.x-bh.z>0?.3:-.3};customer(c.id,bwx,bfy,bwz,colour,bg,function(){drawPerson(bwx,bwz,now,c.id,bstep,false,false,bg)});return}
       if(c.roofSpot===undefined||taken[c.roofSpot]!==c.id){for(var k=0;k<spots.length;k++)if(taken[k]===undefined){c.roofSpot=k;taken[k]=c.id;break}}
       var spot=spots[c.roofSpot];if(!spot||taken[c.roofSpot]!==c.id)return;
       // Out of the cab, across the bridge and on to their spot; back to the landing a step from the cab door to wait.
       var back=c.lift!=='roof',s=c.lift==='roof'?smooth(c.roofWalk):c.lift==='back'?1-smooth(c.walkBack):0;
-      if(s>=1){smokers.push({x:spot[0],z:spot[1],id:c.id,facing:spot[2]});person(spot[0],ROOFTOP.y,spot[1],colour,function(){drawPerson(spot[0],spot[1],now,c.id,false,false,false,{amount:0,phase:0,facing:spot[2]})});return}
+      if(s>=1){smokers.push({x:spot[0],z:spot[1],id:c.id,facing:spot[2]});customer(c.id,spot[0],ROOFTOP.y,spot[1],colour,{amount:0,phase:0,facing:spot[2]},function(){drawPerson(spot[0],spot[1],now,c.id,false,false,false,{amount:0,phase:0,facing:spot[2]})});return}
       // Riders step out one after another from where they stood in the cab (each a beat behind the one before).
       var slot=c.cabSlot||0,cx0=lift.x+CAB_SLOTS[slot][0],cz0=shaftZ+CAB_SLOTS[slot][1];
       var path=[{x:cx0,z:cz0},{x:ROOFTOP.x0+.5,z:shaftZ},{x:spot[0],z:spot[1]}],lens=[],total=0;
@@ -2493,13 +2503,15 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       var hx=(a1.x-a0.x)/(lens[seg]||1),hz=(a1.z-a0.z)/(lens[seg]||1);if(back){hx=-hx;hz=-hz}
       var moving=c.lift==='roof'?s>0&&s<1:c.lift==='back'||shuffling;
       if(back){c.queueX=wx;c.queueZ=wz}
-      person(wx,ROOFTOP.y,wz,colour,function(){drawPerson(wx,wz,now,c.id,moving,false,false,{amount:moving?1:0,phase:along*5,heading:{x:hx,z:hz},facing:hx-hz>0?.3:-.3})});
+      var rg={amount:moving?1:0,phase:along*5,heading:{x:hx,z:hz},facing:hx-hz>0?.3:-.3};
+      customer(c.id,wx,ROOFTOP.y,wz,colour,rg,function(){drawPerson(wx,wz,now,c.id,moving,false,false,rg)});
     });
     liftY=lifts[0].y*ROOFTOP.y;liftY2=lifts[1].y*ROOFTOP.y;loungeSmokers=smokers;
     customers.forEach(function(c){
       stepCustomerVisual(c,frameDelta);
       if(c.phase==='lounge'&&!(c.loungeFade>0))return;
-      person(c.renderX,0,c.renderZ,PERSON_COLOURS[(c.id||0)%PERSON_COLOURS.length],function(){drawPerson(c.renderX,c.renderZ,now,c.id,c.walking,false,c.bag,{phase:c.walkPhase||0,heading:c.walkHeading,amount:c.walkAmount||0,facing:c.facing===undefined?.3:c.facing,lean:c.turnLean||0,pickupAge:c.effectAge})});
+      var gait={phase:c.walkPhase||0,heading:c.walkHeading,amount:c.walkAmount||0,facing:c.facing===undefined?.3:c.facing,lean:c.turnLean||0,pickupAge:c.effectAge};
+      customer(c.id||0,c.renderX,0,c.renderZ,PERSON_COLOURS[(c.id||0)%PERSON_COLOURS.length],gait,function(){drawPerson(c.renderX,c.renderZ,now,c.id,c.walking,false,c.bag,gait)});
     });
     var streetApi=sunnyApi(now);
     walkerPlacements(now).forEach(function(w){person(w.x,w.y===undefined?-.012:w.y,w.z,PERSON_COLOURS[(w.g*3+1)%PERSON_COLOURS.length],function(){drawWalker(streetApi,w)})});
@@ -2535,7 +2547,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     figures=figures.filter(function(f){return f.alpha>.99});backdrops=backdrops.filter(function(f){return f.alpha>.99});
     var dronePoses=deliveryDronePoses(frameDelta);deliveryCards(dronePoses,figures);
     var look=viewCentre();
-    map3d.render({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,loungeBuild:isBuilding(state.builds,'lounge')?1-buildShareLeft(state.builds,'lounge'):null,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtureBuild:isBuilding(state.builds,'deck')||isBuilding(state.builds,'window')?Object.assign(isBuilding(state.builds,'deck')?{deck:1-buildShareLeft(state.builds,'deck')}:{},isBuilding(state.builds,'window')?{pickupWindow:1-buildShareLeft(state.builds,'window')}:{}):null,fixtures:{deck:deliveryBuilt(),pickupWindow:windowOpen(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2},menus:kioskMenus(),menuClock:animationTime/1000,cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    map3d.render({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,characters:characters,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,loungeBuild:isBuilding(state.builds,'lounge')?1-buildShareLeft(state.builds,'lounge'):null,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtureBuild:isBuilding(state.builds,'deck')||isBuilding(state.builds,'window')?Object.assign(isBuilding(state.builds,'deck')?{deck:1-buildShareLeft(state.builds,'deck')}:{},isBuilding(state.builds,'window')?{pickupWindow:1-buildShareLeft(state.builds,'window')}:{}):null,fixtures:{deck:deliveryBuilt(),pickupWindow:windowOpen(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2},menus:kioskMenus(),menuClock:animationTime/1000,cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     // A model that had not loaded when the tabs were painted: try again every half second until all are in.
     if(picturesPending&&!(now-(renderFrame3d.picturesTried||0)<500)){renderFrame3d.picturesTried=now;picturesPending=false;paintThumbnails()}
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);

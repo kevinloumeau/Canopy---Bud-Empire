@@ -17,6 +17,7 @@ import { screenState, paintScreen, W as SCREEN_W, H as SCREEN_H, SCALE as SCREEN
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
+import { clone as cloneRigged } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { createMapCamera, frameMapCamera, HEIGHT_SCALE } from './camera.js';
 
 // Blender models are built in metres; the map draws 1.69 units a metre (layout.fixtures use the same scale).
@@ -648,6 +649,61 @@ export function createMap3D(canvas, layout) {
     Object.values(propSources).forEach(parts => parts.forEach(m => { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; m.visible = m.count > 0; }));
     glowMaterials.forEach(m => { m.emissive.set('#ffd9a0'); m.emissiveIntensity = night * 2.5; });
   }
+  // Rigged characters (Kevin's Meshy beanie customer): one skinned copy per person on screen, each with its own mixer.
+  // The walk is played by ground covered, never by the clock, so feet keep pace with the figure whatever its speed:
+  // one Walking loop covers 1.1 m of ground (measured from the foot's travel). Standing, the idle plays on the clock.
+  const WALK_LOOP = 1.1 * BLENDER_SCALE;
+  const characterSources = {}, characterRequested = {}, characterCopies = [], characterYaw = new Map();
+  function characterReady(file) {
+    if (!characterRequested[file]) {
+      characterRequested[file] = true;
+      loader.load(layout.modelBase + file, gltf => {
+        prepare(gltf.scene);
+        gltf.scene.traverse(o => { if (o.isMesh) o.frustumCulled = false; });
+        characterSources[file] = { scene: gltf.scene, clips: gltf.animations };
+      }, undefined, e => console.warn('3D map: could not load ' + file, e));
+    }
+    return !!characterSources[file];
+  }
+  function characterCopy(i, file) {
+    let copy = characterCopies[i];
+    if (copy && copy.file === file) return copy;
+    if (copy) world.remove(copy.holder);
+    const source = characterSources[file], holder = new THREE.Group(), body = cloneRigged(source.scene);
+    holder.add(body);
+    holder.scale.set(BLENDER_SCALE, BLENDER_SCALE / HEIGHT_SCALE, BLENDER_SCALE);
+    world.add(holder);
+    const mixer = new THREE.AnimationMixer(body), clip = name => source.clips.find(c => c.name === name);
+    const idle = mixer.clipAction(clip('Idle_11')), walk = mixer.clipAction(clip('Walking'));
+    walk.timeScale = 0;
+    idle.play(); walk.play();
+    return (characterCopies[i] = { file, holder, mixer, idle, walk });
+  }
+  // Screen right is (cos 45°, 0, -sin 45°) and the camera looks back along (1, 0, 1): a figure standing still turns
+  // three-quarters to the camera, to the side its sprite would face (facing > 0 is screen right).
+  function placeCharacters(list, stepSeconds) {
+    const seen = new Set();
+    (list || []).forEach((c, i) => {
+      if (!characterSources[c.file]) return;
+      const copy = characterCopy(i, c.file), amount = c.still ? 0 : Math.max(0, Math.min(1, c.amount || 0));
+      copy.holder.visible = true;
+      copy.holder.position.set(c.x, c.y || 0, c.z);
+      let fx, fz;
+      if (amount > .3 && c.heading) { fx = c.heading.x; fz = c.heading.z; }
+      else { const side = (c.facing === undefined ? .3 : c.facing) >= 0 ? .75 : -.75; fx = 1 + side; fz = 1 - side; }
+      const target = Math.atan2(fx, fz), last = characterYaw.has(c.id) ? characterYaw.get(c.id) : target;
+      let turn = target - last; turn -= Math.round(turn / (2 * Math.PI)) * 2 * Math.PI;
+      const yaw = last + turn * Math.min(1, stepSeconds * 10);
+      characterYaw.set(c.id, yaw); seen.add(c.id);
+      copy.holder.rotation.y = yaw;
+      const loop = copy.walk.getClip().duration;
+      copy.walk.time = (((c.ground || 0) / WALK_LOOP) % 1 + 1) % 1 * loop;
+      copy.walk.setEffectiveWeight(amount); copy.idle.setEffectiveWeight(1 - amount);
+      copy.mixer.update(c.still ? 0 : stepSeconds);
+    });
+    for (let i = (list || []).length; i < characterCopies.length; i++) if (characterCopies[i]) characterCopies[i].holder.visible = false;
+    characterYaw.forEach((v, id) => { if (!seen.has(id)) characterYaw.delete(id); });
+  }
   const carsModelled = () => !!layout.carModels && Object.keys(layout.carModels).every(k => carSources[k]);
   function carCopy(i, c) {
     const kind = c.van ? 'van' : 'car', source = carSources[kind];
@@ -874,6 +930,7 @@ export function createMap3D(canvas, layout) {
     if (people.instanceColor) people.instanceColor.needsUpdate = true;
 
     placeProps(frame.props, night);
+    placeCharacters(frame.characters, stepSeconds);
     fixtureGlows.forEach(m => { m.emissiveIntensity = .16 + night * .7; });
     fixtureScreens.forEach(m => { m.emissiveIntensity = .35 + night * .55; });
     Object.entries(menuScreens).forEach(([key, screen]) => showMenu(screen, frame.menus ? frame.menus[key] : null, frame.menuClock || 0));
@@ -959,6 +1016,7 @@ export function createMap3D(canvas, layout) {
     renderBranch,
     carsModelled,
     propReady,
+    characterReady,
     hasFixture: key => !!fixtures[key],
     stationPicture,
     loungePicture,
