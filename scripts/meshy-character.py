@@ -63,6 +63,24 @@ def bend(side):
     return (M @ (h.tail - h.head)).angle(M @ (f.tail - f.head))
 def rot(ax, az): return Quaternion((1, 0, 0), math.radians(ax)) @ Quaternion((0, 0, 1), math.radians(az))
 fixes = {}
+# Meshy's rigs also carry the shoulders high, close to a shrug: drop each collarbone so the shoulder joint sits
+# SHOULDER_DROP lower (in the figure's metres) without moving it in or out, before placing the arms.
+SHOULDER_DROP = .045
+def joint(side):
+    bpy.context.scene.frame_set(9); bpy.context.scene.frame_set(10); bpy.context.view_layer.update()
+    return (arm.matrix_world @ arm.pose.bones['mixamorig:%sArm' % side].head) / height * 1.36
+for side in ('Left', 'Right'):
+    if not quat_keys(idle, side + 'Shoulder'): continue
+    sb = [[k.co[1] for k in c.keyframe_points] for c in quat_keys(idle, side + 'Shoulder')]
+    j0 = joint(side); best = (SHOULDER_DROP, 0, 0)
+    for ax in range(-24, 25, 2):
+        for az in range(-24, 25, 2):
+            turn_keys(idle, side + 'Shoulder', rot(ax, az), sb); d = joint(side) - j0
+            score = abs(d.z + SHOULDER_DROP) + abs(d.x) + abs(d.y)
+            if score < best[0] - 1e-4: best = (score, ax, az)
+    fixes[side + 'Shoulder'] = rot(best[1], best[2])
+    turn_keys(idle, side + 'Shoulder', fixes[side + 'Shoulder'], sb)
+    print('SHOULDER %s turn %d,%d -> off by %.3f' % (side, best[1], best[2], best[0]))
 for side in ('Left', 'Right'):
     base = [[k.co[1] for k in c.keyframe_points] for c in quat_keys(idle, side + 'Arm')]
     w = wrist(side); best = (abs(abs(w.x) - .20) + abs(w.y), 0, 0)
@@ -86,6 +104,7 @@ for side in ('Left', 'Right'):
 for action in bpy.data.actions:
     for bone, q in fixes.items():
         if bone.endswith('Hand') and not action.name.startswith('Idle'): continue
+        if bone.endswith('Shoulder') and action == idle: continue
         turn_keys(action, bone, q)
 arm.animation_data.action = None
 arm.data.pose_position = 'REST'
