@@ -652,15 +652,26 @@ export function createMap3D(canvas, layout) {
   // Rigged characters (Kevin's Meshy beanie customer): one skinned copy per person on screen, each with its own mixer.
   // The walk is played by ground covered, never by the clock, so feet keep pace with the figure whatever its speed:
   // one Walking loop covers 1.1 m of ground (measured from the foot's travel). Standing, the idle plays on the clock.
-  const WALK_LOOP = 1.1 * BLENDER_SCALE;
+  const WALK_LOOP = 1.1 * BLENDER_SCALE, CHARACTER_LIFT = .3;
   const characterSources = {}, characterRequested = {}, characterCopies = [], characterYaw = new Map();
   function characterReady(file) {
     if (!characterRequested[file]) {
       characterRequested[file] = true;
       loader.load(layout.modelBase + file, gltf => {
         prepare(gltf.scene);
-        gltf.scene.traverse(o => { if (o.isMesh) o.frustumCulled = false; });
-        characterSources[file] = { scene: gltf.scene, clips: gltf.animations };
+        // Meshy exports the colour texture as the emissive map too (at full strength), with metalness 1 and doubled
+        // specular: the figure glows flat and milky whatever the light. A matte material lets the sun model him, and a
+        // little of the texture as glow (CHARACTER_LIFT, dimmed at night) keeps his shade side as bright as the
+        // sprites' painted light instead of going muddy.
+        const materials = [];
+        gltf.scene.traverse(o => {
+          if (!o.isMesh) return;
+          o.frustumCulled = false;
+          const map = o.material.map || o.material.emissiveMap;
+          o.material = new THREE.MeshStandardMaterial({ map, emissiveMap: map, emissive: '#ffffff', emissiveIntensity: CHARACTER_LIFT, roughness: .72, metalness: 0, name: o.material.name });
+          materials.push(o.material);
+        });
+        characterSources[file] = { scene: gltf.scene, clips: gltf.animations, materials };
       }, undefined, e => console.warn('3D map: could not load ' + file, e));
     }
     return !!characterSources[file];
@@ -681,7 +692,8 @@ export function createMap3D(canvas, layout) {
   }
   // Screen right is (cos 45°, 0, -sin 45°) and the camera looks back along (1, 0, 1): a figure standing still turns
   // three-quarters to the camera, to the side its sprite would face (facing > 0 is screen right).
-  function placeCharacters(list, stepSeconds) {
+  function placeCharacters(list, stepSeconds, night) {
+    Object.values(characterSources).forEach(s => s.materials.forEach(m => { m.emissiveIntensity = CHARACTER_LIFT * (1 - night * .85); }));
     const seen = new Set();
     (list || []).forEach((c, i) => {
       if (!characterSources[c.file]) return;
@@ -930,7 +942,7 @@ export function createMap3D(canvas, layout) {
     if (people.instanceColor) people.instanceColor.needsUpdate = true;
 
     placeProps(frame.props, night);
-    placeCharacters(frame.characters, stepSeconds);
+    placeCharacters(frame.characters, stepSeconds, night);
     fixtureGlows.forEach(m => { m.emissiveIntensity = .16 + night * .7; });
     fixtureScreens.forEach(m => { m.emissiveIntensity = .35 + night * .55; });
     Object.entries(menuScreens).forEach(([key, screen]) => showMenu(screen, frame.menus ? frame.menus[key] : null, frame.menuClock || 0));
