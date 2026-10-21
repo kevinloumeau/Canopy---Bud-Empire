@@ -23,8 +23,10 @@ for path in srcs[1:]:
     for o in set(bpy.data.objects) - before: bpy.data.objects.remove(o)
 for a in bpy.data.actions: a.use_fake_user = True
 print('ACTIONS', [a.name for a in bpy.data.actions])
-# Meshy's idles (Idle_12 above all) hold the arms well out from the body. Measure the hand spread in the idle and
-# turn both upper arms in by the angle that brings it to a relaxed ~0.21 of the figure's metres, on every clip's keys.
+# Meshy's idles (Idle_12 above all) hold the arms out from the body and hang them behind it, so the hands trail
+# backwards. For each side, search the upper-arm turn (about the bone's X and Z) that brings the idle's wrist to a
+# relaxed ~0.20 of the figure's metres out from the hips and level with them front to back, and apply it to that
+# upper arm's keys on every clip. A second, smaller search straightens a wrist bent out or back.
 import math
 from mathutils import Quaternion
 def fcurves(action):
@@ -35,30 +37,56 @@ def fcurves(action):
         for strip in layer.strips:
             for bag in strip.channelbags: out.extend(bag.fcurves)
     return out
+def quat_keys(action, bone):
+    path = 'pose.bones["mixamorig:%s"].rotation_quaternion' % bone
+    fc = sorted((c for c in fcurves(action) if c.data_path == path), key=lambda c: c.array_index)
+    return fc if len(fc) == 4 else None
+def turn_keys(action, bone, q, base=None):
+    fc = quat_keys(action, bone)
+    if not fc: return
+    base = base or [[k.co[1] for k in c.keyframe_points] for c in fc]
+    for k in range(len(fc[0].keyframe_points)):
+        key = Quaternion([base[i][k] for i in range(4)]) @ q
+        for i in range(4): fc[i].keyframe_points[k].co[1] = key[i]; fc[i].keyframe_points[k].handle_left[1] = fc[i].keyframe_points[k].handle_right[1] = key[i]
+    for c in fc: c.update()
 idle = next((a for a in bpy.data.actions if a.name.startswith('Idle')), None)
 arm.animation_data_create(); arm.animation_data.action = idle
 try: arm.animation_data.action_slot = idle.slots[0]
 except Exception: pass
-bpy.context.scene.frame_set(10); bpy.context.view_layer.update()
-hw = lambda side: arm.matrix_world @ arm.pose.bones['mixamorig:%sHand' % side].head
-hip = arm.matrix_world @ arm.pose.bones['mixamorig:Hips'].head
 height = hi.dimensions.z
-spread = (abs(hw('Left').x - hip.x) + abs(hw('Right').x - hip.x)) / 2 / height * 1.36
-angle = max(0, min(25, (spread - .21) / .0048))
-print('ARMS spread %.3f -> turn in %.1f deg' % (spread, angle))
-if angle > .5:
-    r = math.radians(angle) / math.sqrt(2)
-    turn = {'Left': Quaternion((1, 0, 0), r) @ Quaternion((0, 0, 1), r), 'Right': Quaternion((1, 0, 0), r) @ Quaternion((0, 0, 1), -r)}
-    for action in bpy.data.actions:
-        curves = fcurves(action)
-        for side, q in turn.items():
-            path = 'pose.bones["mixamorig:%sArm"].rotation_quaternion' % side
-            fc = sorted((c for c in curves if c.data_path == path), key=lambda c: c.array_index)
-            if len(fc) != 4: continue
-            for k in range(len(fc[0].keyframe_points)):
-                key = Quaternion([fc[i].keyframe_points[k].co[1] for i in range(4)]) @ q
-                for i in range(4): fc[i].keyframe_points[k].co[1] = key[i]; fc[i].keyframe_points[k].handle_left[1] = fc[i].keyframe_points[k].handle_right[1] = key[i]
-            for c in fc: c.update()
+def wrist(side):
+    bpy.context.scene.frame_set(9); bpy.context.scene.frame_set(10); bpy.context.view_layer.update()
+    hip = arm.matrix_world @ arm.pose.bones['mixamorig:Hips'].head
+    return (arm.matrix_world @ arm.pose.bones['mixamorig:%sHand' % side].head - hip) / height * 1.36
+def bend(side):
+    M = arm.matrix_world.to_3x3(); h = arm.pose.bones['mixamorig:%sHand' % side]; f = arm.pose.bones['mixamorig:%sForeArm' % side]
+    return (M @ (h.tail - h.head)).angle(M @ (f.tail - f.head))
+def rot(ax, az): return Quaternion((1, 0, 0), math.radians(ax)) @ Quaternion((0, 0, 1), math.radians(az))
+fixes = {}
+for side in ('Left', 'Right'):
+    base = [[k.co[1] for k in c.keyframe_points] for c in quat_keys(idle, side + 'Arm')]
+    w = wrist(side); best = (abs(abs(w.x) - .20) + abs(w.y), 0, 0)
+    for ax in range(-30, 31, 3):
+        for az in range(-36, 37, 3):
+            turn_keys(idle, side + 'Arm', rot(ax, az), base); w = wrist(side)
+            score = abs(abs(w.x) - .20) + abs(w.y)
+            if score < best[0] - 1e-4: best = (score, ax, az)
+    turn_keys(idle, side + 'Arm', Quaternion(), base)
+    fixes[side + 'Arm'] = rot(best[1], best[2])
+    hb = [[k.co[1] for k in c.keyframe_points] for c in quat_keys(idle, side + 'Hand')]
+    turn_keys(idle, side + 'Arm', fixes[side + 'Arm'], base)
+    wrist(side); hbest = (bend(side), 0, 0)
+    for ax in range(-40, 41, 5):
+        for az in range(-40, 41, 5):
+            turn_keys(idle, side + 'Hand', rot(ax, az), hb); wrist(side); b = bend(side)
+            if b < hbest[0] - 1e-3: hbest = (b, ax, az)
+    turn_keys(idle, side + 'Hand', Quaternion(), hb); turn_keys(idle, side + 'Arm', Quaternion(), base)
+    fixes[side + 'Hand'] = rot(hbest[1], hbest[2])
+    print('ARMS %s arm turn %d,%d wrist %d,%d -> bend %.0f deg' % (side, best[1], best[2], hbest[1], hbest[2], math.degrees(hbest[0])))
+for action in bpy.data.actions:
+    for bone, q in fixes.items():
+        if bone.endswith('Hand') and not action.name.startswith('Idle'): continue
+        turn_keys(action, bone, q)
 arm.animation_data.action = None
 arm.data.pose_position = 'REST'
 srcimg = next(n.image for n in hi.data.materials[0].node_tree.nodes if n.type == 'TEX_IMAGE')
@@ -79,6 +107,17 @@ bpy.ops.object.mode_set(mode='OBJECT')
 me.uv_layers[0].name = 'UVMap'
 bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_all(action='SELECT')
 bpy.ops.uv.smart_project(angle_limit=1.15, island_margin=0.01, area_weight=0.0, correct_aspect=True, scale_to_bounds=False)
+# The face is what reads at game size: give head islands twice the texels (packing keeps islands' relative sizes).
+from bpy_extras import bmesh_utils
+bm = bmesh.from_edit_mesh(me); uvl = bm.loops.layers.uv.active; dl = bm.verts.layers.deform.active
+head = {lo.vertex_groups[n].index for n in ('mixamorig:Head', 'mixamorig:Neck', 'headfront') if n in lo.vertex_groups}
+for island in bmesh_utils.bmesh_linked_uv_islands(bm, uvl):
+    inhead = sum(1 for f in island if all(sum(v[dl].get(g, 0) for g in head) > .5 for v in f.verts))
+    if inhead * 2 < len(island): continue
+    loops = [l for f in island for l in f.loops]; c = sum((l[uvl].uv for l in loops), Vector((0, 0))) / len(loops)
+    for l in loops: l[uvl].uv = c + (l[uvl].uv - c) * 2
+bmesh.update_edit_mesh(me)
+bpy.ops.uv.select_all(action='SELECT')
 bpy.ops.uv.pack_islands(margin=0.01, rotate=True)
 bpy.ops.object.mode_set(mode='OBJECT')
 bm = bmesh.new(); bm.from_mesh(lo.data); print('LOW tris', len(lo.data.polygons), 'boundary', sum(1 for e in bm.edges if e.is_boundary)); bm.free()
@@ -95,6 +134,8 @@ def sample(u, v):
     return (a * (1 - fx) + b * fx) * (1 - fy) + (c * (1 - fx) + d * fx) * fy
 luv = np.empty(len(me.loops) * 2, np.float32); me.uv_layers['UVMap'].data.foreach_get('uv', luv); luv = luv.reshape(-1, 2)
 lco = np.array([v.co[:] for v in me.vertices], np.float32)
+# Baked at twice the size and averaged down, so every final texel is four samples of the original (less shimmer).
+final, size = size, size * 2
 canvas = np.zeros((size, size, 3), np.float32); filled = np.zeros((size, size), bool)
 for poly in me.polygons:
     li = list(poly.loop_indices); vi = list(poly.vertices)
@@ -118,13 +159,17 @@ for poly in me.polygons:
         uvs[k] = bc[0] * huv[tl[0]] + bc[1] * huv[tl[1]] + bc[2] * huv[tl[2]]
     px = (xs[m] - .5).astype(int); py = (ys[m] - .5).astype(int)
     canvas[py, px] = sample(uvs[:, 0], uvs[:, 1]); filled[py, px] = True
-for _ in range(24):
+for _ in range(40):
     grow = ~filled
     if not grow.any(): break
     acc = np.zeros_like(canvas); cnt = np.zeros(filled.shape, np.float32)
     for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
         sf = np.roll(filled, (dy, dx), (0, 1)); acc += np.roll(canvas, (dy, dx), (0, 1)) * sf[..., None]; cnt += sf
     take = grow & (cnt > 0); canvas[take] = acc[take] / cnt[take][:, None]; filled |= take
+canvas = canvas.reshape(final, 2, final, 2, 3).mean((1, 3)); size = final
+# A light unsharp mask brings back the edge the averaging softened.
+blur = (canvas + np.roll(canvas, 1, 0) + np.roll(canvas, -1, 0) + np.roll(canvas, 1, 1) + np.roll(canvas, -1, 1)) / 5
+canvas = np.clip(canvas + (canvas - blur) * .6, 0, 1)
 img = bpy.data.images.new('texture', size, size)
 img.pixels.foreach_set(np.concatenate([canvas, np.ones((size, size, 1), np.float32)], 2).ravel()); img.update(); img.pack()
 bpy.data.objects.remove(hi)

@@ -652,7 +652,8 @@ export function createMap3D(canvas, layout) {
   // Rigged characters (Kevin's Meshy beanie customer): one skinned copy per person on screen, each with its own mixer.
   // The walk is played by ground covered, never by the clock, so feet keep pace with the figure whatever its speed:
   // one Walking loop covers 1.1 m of ground (measured from the foot's travel). Standing, the idle plays on the clock.
-  const WALK_LOOP = 1.1 * BLENDER_SCALE, CHARACTER_LIFT = .3;
+  const WALK_LOOP = 1.1 * BLENDER_SCALE, CHARACTER_LIFT = .16, CHARACTER_RIM = .9;
+  const characterRim = { value: CHARACTER_RIM };
   const characterSources = {}, characterRequested = {}, characterCopies = [], characterYaw = new Map();
   function characterReady(file) {
     if (!characterRequested[file]) {
@@ -661,14 +662,22 @@ export function createMap3D(canvas, layout) {
         prepare(gltf.scene);
         // Meshy exports the colour texture as the emissive map too (at full strength), with metalness 1 and doubled
         // specular: the figure glows flat and milky whatever the light. A matte material lets the sun model him, and a
-        // little of the texture as glow (CHARACTER_LIFT, dimmed at night) keeps his shade side as bright as the
-        // sprites' painted light instead of going muddy.
+        // little of the texture as glow (CHARACTER_LIFT, dimmed at night) keeps his shade side from going muddy, and a
+        // warm rim on the edges turned from the camera (characterRim) lifts him off the floor the way a painted
+        // figure's outline light would.
         const materials = [];
         gltf.scene.traverse(o => {
           if (!o.isMesh) return;
           o.frustumCulled = false;
           const map = o.material.map || o.material.emissiveMap;
-          o.material = new THREE.MeshStandardMaterial({ map, emissiveMap: map, emissive: '#ffffff', emissiveIntensity: CHARACTER_LIFT, roughness: .72, metalness: 0, name: o.material.name });
+          o.material = new THREE.MeshStandardMaterial({ map, emissiveMap: map, emissive: '#ffffff', emissiveIntensity: CHARACTER_LIFT, roughness: .62, metalness: 0, name: o.material.name });
+          o.material.onBeforeCompile = shader => {
+            shader.uniforms.characterRim = characterRim;
+            shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nuniform float characterRim;')
+              .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+              float rimFacing = 1.0 - abs(dot(normal, isOrthographic ? vec3(0.0, 0.0, 1.0) : normalize(vViewPosition)));
+              totalEmissiveRadiance += diffuseColor.rgb * vec3(1.0, .93, .8) * pow(rimFacing, 3.0) * characterRim;`);
+          };
           materials.push(o.material);
         });
         characterSources[file] = { scene: gltf.scene, clips: gltf.animations, materials };
@@ -696,6 +705,7 @@ export function createMap3D(canvas, layout) {
   // to the side its sprite would face (facing > 0 is screen right).
   function placeCharacters(list, stepSeconds, night) {
     Object.values(characterSources).forEach(s => s.materials.forEach(m => { m.emissiveIntensity = CHARACTER_LIFT * (1 - night * .85); }));
+    characterRim.value = CHARACTER_RIM * (1 - night * .7);
     const seen = new Set();
     (list || []).forEach((c, i) => {
       if (!characterSources[c.file]) return;
