@@ -169,3 +169,34 @@
 .sheet [data-pane=orders] .window-control,.sheet [data-pane=orders] #deliverySite{display:none!important}
 .sheet .station-extra button.is-owned{opacity:.6}
 .sheet .station-extra button[hidden]{display:none!important}
+/* Station extras as icon tiles: a ringed icon, a name, one short effect line and the price button. Team spans two. */
+.sheet .station-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0 0}
+.sheet .station-tiles .station-team{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto 1fr;justify-items:center;align-content:start;gap:6px;margin:0!important;padding:12px 8px 8px!important;border:1px solid var(--pop-edge,#ffffff33)!important;border-radius:16px!important;background:var(--pop-fill,#ffffff10)!important;text-align:center;min-width:0}
+.sheet .station-tiles .station-team[hidden]{display:none!important}
+.sheet .station-tiles .team-icon{display:grid;place-items:center;position:relative;width:40px;height:40px;border-radius:50%;background:#a8d78424;box-shadow:inset 0 0 0 1.5px #a8d78466}
+.sheet .station-tiles .team-icon svg{width:21px!important;height:21px!important;color:var(--pop-green,#a8d784)!important}
+.sheet .station-tiles .team-copy{display:grid;justify-items:center;gap:2px;min-width:0;width:100%}
+.sheet .station-tiles .team-copy b{font:600 13px/1.2 'Bricolage Grotesque',system-ui,sans-serif!important;color:var(--pop-ink,#fbf8ee);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet .station-tiles .team-copy small{font:500 11px/1.25 'DM Mono',monospace!important;color:var(--pop-green,#a8d784)!important;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet .station-tiles .station-team button{align-self:end;width:100%;min-width:0;min-height:40px!important;padding:4px 6px!important;border-radius:11px!important;display:grid!important;place-items:center;gap:0!important}
+.sheet .station-tiles .station-team button span{font:600 11px/1.15 'Bricolage Grotesque',system-ui,sans-serif!important}
+.sheet .station-tiles .station-team button b{font:600 12px/1.15 'DM Mono',monospace!important}
+.sheet .station-tiles .station-team button b:empty{display:none}
+/* Team: two buttons side by side under one icon. */
+.sheet .station-tiles #stationTeam{grid-column:span 2;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;grid-template-rows:auto auto 1fr}
+.sheet .station-tiles #stationTeam .team-icon,.sheet .station-tiles #stationTeam .team-copy{grid-column:1/-1}
+/* Crew ability: brass ring around the bolt while it's ready or running. */
+.sheet .station-tiles .station-ability[data-status=ready] .team-icon,.sheet .station-tiles .station-ability[data-status=active] .team-icon{background:#f0d69a24;box-shadow:inset 0 0 0 1.5px #f0d69a99}
+.sheet .station-tiles .station-ability[data-status=ready] .team-icon svg,.sheet .station-tiles .station-ability[data-status=active] .team-icon svg{color:var(--pop-brass,#f0d69a)!important}
+.sheet .station-tiles .station-ability .team-copy small{white-space:nowrap!important}
+/* Bought once: a check on the icon in place of a dead "Built" button. */
+.sheet .station-tiles .station-team:has(button.is-owned) button{display:none!important}
+.sheet .station-tiles .station-team:has(button.is-owned) .team-icon::after{content:'';position:absolute;right:-3px;bottom:-3px;width:16px;height:16px;border-radius:50%;background:var(--pop-green,#a8d784) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='%2318301f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat;box-shadow:0 0 0 2px #1d3326}
+/* Pickup window line as dots: filled ones are people waiting. */
+.sheet .station-tiles .line-pips{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;max-width:100%;margin-top:3px}
+.sheet .station-tiles .line-pips i{width:6px;height:6px;border-radius:50%;box-shadow:inset 0 0 0 1px #fbf8ee55}
+.sheet .station-tiles .line-pips i.on{background:var(--pop-brass,#f0d69a);box-shadow:none}
+.sheet .station-tiles .station-team:has(.line-pips:not(:empty)) small{display:none}
+@media (max-width:420px){.sheet .station-tiles{gap:6px}.sheet .station-tiles .station-team{padding:10px 6px 6px!important}}
+.sheet .station-tiles .team-copy small,.sheet .station-tiles .station-ability .team-copy small{white-space:normal!important;display:-webkit-box!important;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.sheet .station-tiles .station-team:has(.line-pips:not(:empty)) .team-copy small{display:none!important}

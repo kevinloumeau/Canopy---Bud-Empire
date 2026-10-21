@@ -2977,7 +2977,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   // Kiosks and the customer line belong to the order floor, so they sit under the counters on the Orders station. Each
   // row mirrors its original button (kept hidden in the Research list), so prices, limits and handlers stay in one place.
-  var orderExtras=[['buyKiosk','kioskCountLabel','Self-order kiosks','<path d="M7 3h10v13H7zM10 7h4M10 10h4M12 16v5M8 21h8"/>'],
+  var orderExtras=[['buyKiosk','kioskCountLabel','Kiosks','<path d="M7 3h10v13H7zM10 7h4M10 10h4M12 16v5M8 21h8"/>'],
     ['upgradeQueue','queueCapacity','Customer line','<circle cx="8" cy="7" r="2.5"/><circle cx="16" cy="7" r="2.5"/><path d="M3.5 20v-4a4.5 4.5 0 0 1 9 0v4m-1 0v-4a4.5 4.5 0 0 1 9 0v4"/>']].map(function(d){
     var row=document.createElement('div');row.className='station-team station-extra';row.hidden=true;
     row.innerHTML='<span class="team-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+d[3]+'</svg></span><span class="team-copy"><b>'+d[2]+'</b><small></small></span><button type="button"><span></span><b></b></button>';
@@ -2993,33 +2993,36 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // The pickup window belongs with the pickup counter: building it and its two upgrades live on the Pickup station.
   var windowRows=[['window','Pickup window','<path d="M4 20V8h16v12M3 8h18M7 8v6h10V8M6 14h12M9 4h6"/>'],['hatch','Second hatch','<path d="M3 20V8h18v12M3 8l2-4h14l2 4M6 8v6h5V8M13 8v6h5V8"/>'],['tips','Tip jar','<path d="M7 9h10l-1 11H8ZM6 6h12v3H6ZM12 12v5M10.5 13.5a1.5 1.2 0 0 1 3 0c0 1.5-3 1-3 2.5a1.5 1.2 0 0 0 3 0"/>']].map(function(d){
     var row=document.createElement('div');row.className='station-team station-extra';row.hidden=true;row.dataset.window=d[0];
-    row.innerHTML='<span class="team-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+d[2]+'</svg></span><span class="team-copy"><b>'+d[1]+'</b><small></small></span><button type="button"><span></span><b></b></button>';
+    row.innerHTML='<span class="team-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+d[2]+'</svg></span><span class="team-copy"><b>'+d[1]+'</b><small></small>'+(d[0]==='window'?'<span class="line-pips" aria-hidden="true"></span>':'')+'</span><button type="button"><span></span><b></b></button>';
     row.querySelector('button').onclick=function(){if(d[0]==='window')purchaseWindow();else $(d[0]==='hatch'?'buyHatch':'buyTips').click()};
     return {key:d[0],row:row,button:row.querySelector('button')}});
   windowRows.slice().reverse().forEach(function(x){$('orderCounterExpansion').after(x.row)});
+  // The station's extras sit as a grid of icon tiles (team, crew ability, kiosks, the pickup window...) under its stats.
+  var stationTiles=document.createElement('div');stationTiles.className='station-tiles';$('orderCounterExpansion').after(stationTiles);
+  [$('stationTeam'),$('stationAbility'),$('stationLift')].concat(orderExtras.map(function(x){return x.row}),[onlineRow],windowRows.map(function(x){return x.row})).forEach(function(row){stationTiles.append(row)});
   function renderWindowRows(){var show=!securitySelected&&!loungeSelected&&selected===5&&state.lines[5]>0,w=state.pickupWindow,building=isBuilding(state.builds,'window');
     windowRows.forEach(function(x){var on=show&&(x.key==='window'||w.owned);x.row.hidden=!on;if(!on)return;var note,label,price,disabled,owned=false;
-      if(x.key==='window'){if(w.owned){note=(windowLineMax(w)-windowRoom(windowLine,w))+' / '+windowLineMax(w)+' in line for web orders';label='';price='';disabled=true;owned=true}
-        else if(building){note='Builders at work';label='Opens in';price=buildClock(buildLeft(state.builds,'window'));disabled=true}
-        else{note='Walk-up pickup for web orders';label='Build';price=fmt(WINDOW_COST);disabled=state.money<WINDOW_COST}}
-      else{var cost=x.key==='hatch'?HATCH_COST:TIPS_COST;owned=!!w[x.key];note=x.key==='hatch'?'Line of 10, quicker hand-off':'Walk-up orders pay 25% more';label=owned?'Built':x.key==='hatch'?'Add':'Set out';price=owned?'':fmt(cost);disabled=owned||state.money<cost}
+      if(x.key==='window'){if(w.owned){var inLine=windowLineMax(w)-windowRoom(windowLine,w);note=inLine+' / '+windowLineMax(w)+' in line';label='';price='';disabled=true;owned=true;var pips='';for(var k=0;k<windowLineMax(w);k++)pips+='<i'+(k<inLine?' class="on"':'')+'></i>';if(x.row.dataset.pips!==pips){x.row.dataset.pips=pips;x.row.querySelector('.line-pips').innerHTML=pips}}
+        else if(building){note='Building';label='Opens in';price=buildClock(buildLeft(state.builds,'window'));disabled=true}
+        else{note='Walk-up web orders';label='Build';price=fmt(WINDOW_COST);disabled=state.money<WINDOW_COST}}
+      else{var cost=x.key==='hatch'?HATCH_COST:TIPS_COST;owned=!!w[x.key];note=x.key==='hatch'?'Line of 10':'+25% tips';label=owned?'Built':x.key==='hatch'?'Add':'Set out';price=owned?'':fmt(cost);disabled=owned||state.money<cost}
       if(x.row.querySelector('small').textContent!==note)x.row.querySelector('small').textContent=note;
       if(x.button.querySelector('span').textContent!==label)x.button.querySelector('span').textContent=label;
       if(x.button.querySelector('b').textContent!==price)x.button.querySelector('b').textContent=price;
       x.button.disabled=disabled;x.button.hidden=x.key==='window'&&owned;x.button.classList.toggle('is-owned',owned);x.button.classList.toggle('is-building',x.key==='window'&&building&&!w.owned)})}
   function renderOrderExtras(){var show=!securitySelected&&!loungeSelected&&selected===4&&state.lines[4]>0;
-    onlineRow.hidden=!show;if(show){var waiting=onlineOpen()?onlineRequestsReady():0,note=onlineOpen()?(waiting?waiting+' web orders waiting':'No web orders waiting'):'Build the pickup window';if(onlineRow.querySelector('small').textContent!==note)onlineRow.querySelector('small').textContent=note;var go=onlineOpen()?'Open':'Pickup';if(onlineRow.querySelector('button span').textContent!==go)onlineRow.querySelector('button span').textContent=go;onlineRow.querySelector('button').classList.toggle('is-waiting',waiting>0)}
-    orderExtras.forEach(function(x){x.row.hidden=!show;if(!show)return;var info=x.info.textContent;if(x.row.querySelector('small').textContent!==info)x.row.querySelector('small').textContent=info;
+    onlineRow.hidden=!show;if(show){var waiting=onlineOpen()?onlineRequestsReady():0,note=onlineOpen()?(waiting?waiting+' waiting':'None waiting'):'Needs pickup window';if(onlineRow.querySelector('small').textContent!==note)onlineRow.querySelector('small').textContent=note;var go=onlineOpen()?'Open':'Pickup';if(onlineRow.querySelector('button span').textContent!==go)onlineRow.querySelector('button span').textContent=go;onlineRow.querySelector('button').classList.toggle('is-waiting',waiting>0)}
+    orderExtras.forEach(function(x){x.row.hidden=!show;if(!show)return;var info=x.info.textContent.replace(/ (customers|installed)/,'');if(x.row.querySelector('small').textContent!==info)x.row.querySelector('small').textContent=info;
       ['span','b'].forEach(function(tag){var text=x.source.querySelector(tag).textContent;if(x.button.querySelector(tag).textContent!==text)x.button.querySelector(tag).textContent=text});
       x.button.disabled=x.source.disabled;x.button.setAttribute('aria-label',x.source.getAttribute('aria-label')||x.row.querySelector('b').textContent)})}
   // The selected station's crew ability: what it does while ready, a countdown while it runs or recharges.
   function renderStationAbility(){
     var row=$('stationAbility'),i=selected,show=!securitySelected&&!loungeSelected&&!!ABILITIES[i]&&state.lines[i]>0;row.hidden=!show;if(!show)return;
     var status=abilityStatus(state.abilities,i,state.staff[i]),button=$('useAbility'),info,label;
-    if(status==='locked'){info='Unlocks at crew Lv '+ABILITY_UNLOCK;label='Lv '+ABILITY_UNLOCK}
-    else if(status==='active'){info='Running · +'+Math.round(ABILITY_SALES*100)+'% sales';label=clockLabel(state.abilities.active[i])}
+    if(status==='locked'){info='Crew Lv '+ABILITY_UNLOCK;label='Lv '+ABILITY_UNLOCK}
+    else if(status==='active'){info='+'+Math.round(ABILITY_SALES*100)+'% sales';label=clockLabel(state.abilities.active[i])}
     else if(status==='recharging'){info='Recharging';label=clockLabel(state.abilities.recharge[i])}
-    else{info=ABILITY_FACTOR+'× speed, +'+Math.round(ABILITY_SALES*100)+'% sales for '+(ABILITY_SECONDS%60?ABILITY_SECONDS+' s':ABILITY_SECONDS/60+' min');label='Use'}
+    else{info=ABILITY_FACTOR+'× speed · '+(ABILITY_SECONDS%60?ABILITY_SECONDS+'\u00a0s':ABILITY_SECONDS/60+'\u00a0min');label='Use'}
     if($('abilityName').textContent!==ABILITIES[i].name)$('abilityName').textContent=ABILITIES[i].name;
     if($('abilityInfo').textContent!==info)$('abilityInfo').textContent=info;
     if(button.firstChild.textContent!==label)button.firstChild.textContent=label;
