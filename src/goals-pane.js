@@ -1,4 +1,5 @@
-import {abbr,STORES,starStatus,starCount} from './progression.js';
+import {abbr,STORES,starStatus,starCount,SHIFT_LENGTH} from './progression.js';
+import {milestone} from './depth.js';
 import {ACHIEVEMENTS,achievementRows} from './achievements.js';
 // Goals tab: one brass Collect for every reward that is ready, then goals as tiles: an icon inside a ring that fills with
 // progress, and a short name (the exact figures are in each tile's tooltip). main.js keeps rendering the original controls by id (shift goals, contract, career,
@@ -30,25 +31,43 @@ const iconFor=t=>{t=(t||'').toLowerCase();
   /earn|revenue|cash|\$/.test(t)?'coin':/sell|bag|pack/.test(t)?'bag':/serve|customer|walk-in|spender|guest|welcome/.test(t)?'person':/star/.test(t)?'star':'target';};
 const SOURCES=['dailyClaim','careerClaim','claim','seasonClaim','goalClaim0','goalClaim1','goalClaim2'];
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const title=t=>String(t||'').toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());
+const span=sec=>sec<90?Math.max(1,Math.round(sec))+' s':sec<5400?Math.round(sec/60)+' min':(Math.round(sec/360)/10)+' h';
 // "$1.50K" -> 1500, so the Collect card can show one total.
 const dollars=text=>{const m=/\$([\d.,]+)([KMBT]?)/.exec(text||'');if(!m)return 0;return parseFloat(m[1].replace(/,/g,''))*({'':1,K:1e3,M:1e6,B:1e9,T:1e12}[m[2]]);};
 const short=n=>abbr(Math.floor(n)).replace(/\.0+([KMBT])$/,'$1').replace(/(\.\d)0([KMBT])$/,'$1$2');
 const clamp=v=>Math.max(0,Math.min(1,Number(v)||0));
 
-export function mountGoalsPane({pane,sources,getState,format}){
+export function mountGoalsPane({pane,sources,getState,format,rate}){
  const $=id=>document.getElementById(id);
  const screen=document.createElement('div');screen.className='empire-screen empire-content goals-screen';
+ // The brass reward box: the total and Collect on top, then one line per reward saying what it is for.
+ const reward=document.createElement('div');reward.className='goals-reward';
  const collect=document.createElement('button');collect.type='button';collect.className='goals-collect';
  collect.innerHTML='<span class="goals-collect-icon">'+SVG(ICONS.gift)+'</span><b></b><span class="goals-collect-go">Collect</span>';
+ const why=document.createElement('ul');why.className='goals-why';
+ const note=document.createElement('p');note.className='goals-why-note';
+ reward.append(collect,why,note);
  const quiet=document.createElement('p');quiet.className='goals-quiet';
  const list=document.createElement('div');list.className='goals-list';
  const hidden=document.createElement('div');hidden.className='goals-sources';hidden.hidden=true;hidden.append(...sources.filter(Boolean));
- screen.append(collect,quiet,list,hidden);pane.append(screen);
+ screen.append(reward,quiet,list,hidden);pane.append(screen);
 
  const ready=()=>SOURCES.map($).filter(b=>b&&!b.disabled&&!b.hidden&&/^Collect\b/.test(b.textContent.trim()));
  collect.onclick=()=>{ready().forEach(b=>b.click());render(true);};
 
  const text=id=>{const n=$(id);return n?n.textContent.trim():'';};
+ // Each ready reward as {icon,label,why,amount}; the shift bonus pays with the goal that closes the shift.
+ function reasons(s,buttons){const rows=[],p=s.empire,fmt=n=>format?format(n):'$'+short(n);let shiftGoals=0;
+  buttons.forEach(b=>{const id=b.id,amount=dollars(b.textContent);
+   if(id.startsWith('goalClaim')){shiftGoals++;rows.push({icon:iconFor(text('goalTitle'+id.slice(-1))),label:text('goalTitle'+id.slice(-1)),why:'Shift goal done',amount});}
+   else if(id==='dailyClaim')rows.push({icon:'calendar',label:text('dailyTitle').replace(/ is ready$/,'')+' of 7',why:'Daily visit · grows each day',amount});
+   else if(id==='careerClaim')rows.push({icon:'trophy',label:text('careerName'),why:'Career milestone · +5% sales',amount});
+   else if(id==='claim'){const m=milestone(s.contract);rows.push({icon:'coin',label:m?title(m.name):'Milestone',why:m?'Earned '+fmt(m.goal)+' total':'Milestone',amount:m?m.reward:amount});}
+   else if(id==='seasonClaim')rows.push({icon:'calendar',label:text('seasonName'),why:'Event step '+Math.min(3,((p.season&&p.season.claimed)||0)+1)+' of 3',amount});});
+  if(shiftGoals&&p&&SHIFT_LENGTH-p.goalsCompleted%SHIFT_LENGTH<=shiftGoals){const bonus=dollars(shiftHead()[1]);
+   if(bonus)rows.push({icon:'star',label:shiftHead()[0]+' bonus',why:'All '+SHIFT_LENGTH+' goals done',amount:bonus});}
+  return rows;}
  const bar=id=>{const n=$(id);return n&&n.value!=null&&n.max?n.value/n.max:null;};
  // A ring is a circle whose stroke covers the share done; finished tiles show a tick instead of the icon.
  const ring=(icon,share,done)=>'<span class="goal-ring'+(done?' is-done':'')+'" style="--share:'+(done?1:clamp(share)).toFixed(3)+'">'+
@@ -94,14 +113,17 @@ export function mountGoalsPane({pane,sources,getState,format}){
  let signature='';
  function render(force){
   if(document.hidden||!getState)return;
-  const s=getState(),buttons=ready(),total=buttons.reduce((n,b)=>n+dollars(b.textContent),0);
+  const s=getState(),buttons=ready(),rows=reasons(s,buttons),total=rows.reduce((n,r)=>n+r.amount,0);
   const badge=$('goalsTabBadge');if(badge)badge.hidden=!buttons.length;
   if(pane.hidden&&!force)return;
   const [shiftTitle,shiftFigure]=shiftHead();
   const html=contract()+group(shiftTitle,shiftFigure,tiles(shift()))+story()+stars(s.empire)+awards(s)+ladders();
   const daily=/in (\d+h \d+m)/.exec(text('dailyTime'));
-  const sig=html+'#'+buttons.length+total;if(sig===signature)return;signature=sig;
-  collect.hidden=!buttons.length;
+  const perSec=rate?rate():0,worth=perSec>0&&total>0?'About '+span(total/perSec)+' of your sales · rewards grow as you earn':'';
+  const sig=html+'#'+buttons.length+total+worth+rows.map(r=>r.label).join();if(sig===signature)return;signature=sig;
+  reward.hidden=!buttons.length;
+  why.innerHTML=rows.map(r=>'<li><span class="goals-why-icon">'+SVG(ICONS[r.icon]||ICONS.target)+'</span><span class="goals-why-copy"><b>'+esc(r.label)+'</b><small>'+esc(r.why)+'</small></span><em>'+esc(format?format(r.amount):'$'+short(r.amount))+'</em></li>').join('');
+  note.hidden=!worth;note.textContent=worth;
   collect.querySelector('b').textContent=(format?format(total):'$'+short(total));
   collect.setAttribute('aria-label','Collect '+buttons.length+' reward'+(buttons.length===1?'':'s')+', '+(format?format(total):total));
   quiet.hidden=!!buttons.length;quiet.innerHTML=SVG(ICONS.gift)+'<span>'+(daily?'Next reward in '+daily[1]:'Nothing to collect')+'</span>';

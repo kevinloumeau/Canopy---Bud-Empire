@@ -3,7 +3,20 @@
 
 /* Goals: one brass Collect, a contract card, then tiles: an icon in a ring that fills with progress and a short name. */
 .goals-screen{min-width:0}
-.goals-sources[hidden],.goals-collect[hidden],.goals-quiet[hidden]{display:none!important}
+.goals-sources[hidden],.goals-reward[hidden],.goals-why-note[hidden],.goals-quiet[hidden]{display:none!important}
+/* The brass box holds the total + Collect, then one quiet line per reward: what it is for and what it pays. */
+.goals-reward{min-width:0;margin:0 0 10px;border:1px solid var(--ui-brass);border-radius:16px;background:var(--ui-brass-wash)}
+.sheet .empire-screen .goals-reward .goals-collect{margin:0;border:0;background:none}
+.goals-why{display:grid;gap:8px;margin:0;padding:2px 12px 10px;list-style:none}
+.goals-why li{display:flex;align-items:center;gap:10px;min-width:0}
+.goals-why-icon{flex:none;display:grid;place-items:center;width:24px;height:24px;margin:0 6px;color:var(--ui-brass)}
+.goals-why-icon svg{width:18px;height:18px}
+.goals-why-copy{flex:1;display:grid;min-width:0}
+.goals-why-copy b,.goals-why-copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.goals-why-copy b{font-size:12.5px;font-weight:600;color:var(--ui-ink)}
+.goals-why-copy small{font-size:11px;color:var(--ui-soft)}
+.goals-why em{flex:none;font:500 13px 'DM Mono',monospace;font-style:normal;letter-spacing:-.02em;color:var(--ui-ink)}
+.goals-why-note{margin:0;padding:8px 12px 10px;border-top:1px solid var(--ui-edge);color:var(--ui-soft);font-size:11px}
 .sheet .empire-screen .goals-collect{display:flex;align-items:center;gap:12px;width:100%;min-width:0;min-height:56px;margin:0 0 10px;padding:8px 8px 8px 12px;border:1px solid var(--ui-brass);border-radius:16px;background:var(--ui-brass-wash);color:var(--ui-ink);text-align:left;box-shadow:none}
 .goals-collect-icon{flex:none;display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--ui-brass);color:var(--ui-brass-ink)}
 .goals-collect-icon svg{width:20px;height:20px}

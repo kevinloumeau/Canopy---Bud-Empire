@@ -17,6 +17,8 @@ import { screenState, paintScreen, W as SCREEN_W, H as SCREEN_H, SCALE as SCREEN
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
+import { clone as cloneRigged } from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { bindStaff, poseStaff } from './staff-motion.js';
 import { createMapCamera, frameMapCamera, HEIGHT_SCALE } from './camera.js';
 
 // Blender models are built in metres; the map draws 1.69 units a metre (layout.fixtures use the same scale).
@@ -648,6 +650,97 @@ export function createMap3D(canvas, layout) {
     Object.values(propSources).forEach(parts => parts.forEach(m => { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; m.visible = m.count > 0; }));
     glowMaterials.forEach(m => { m.emissive.set('#ffd9a0'); m.emissiveIntensity = night * 2.5; });
   }
+  // Rigged characters (Kevin's Meshy cast): every person on the map and in the branches, one skinned copy each with
+  // its own mixer.
+  // The walk is played by ground covered, never by the clock, so feet keep pace with the figure whatever its speed:
+  // one Walking loop covers 1.1 m of ground (measured from the foot's travel). Standing, the idle plays on the clock.
+  const WALK_LOOP = 1.1 * BLENDER_SCALE, CHARACTER_LIFT = .16, CHARACTER_RIM = .9;
+  const characterRim = { value: CHARACTER_RIM };
+  const ease01 = v => v * v * (3 - 2 * v);
+  const characterSources = {}, characterRequested = {}, characterCopies = [], characterYaw = new Map();
+  function characterReady(file) {
+    if (!characterRequested[file]) {
+      characterRequested[file] = true;
+      loader.load(layout.modelBase + file, gltf => {
+        prepare(gltf.scene);
+        // Meshy exports the colour texture as the emissive map too (at full strength), with metalness 1 and doubled
+        // specular: the figure glows flat and milky whatever the light. A matte material lets the sun model him, and a
+        // little of the texture as glow (CHARACTER_LIFT, dimmed at night) keeps his shade side from going muddy, and a
+        // warm rim on the edges turned from the camera (characterRim) lifts him off the floor the way a painted
+        // figure's outline light would.
+        const materials = [];
+        gltf.scene.traverse(o => {
+          if (!o.isMesh) return;
+          o.frustumCulled = false;
+          const map = o.material.map || o.material.emissiveMap;
+          o.material = new THREE.MeshStandardMaterial({ map, emissiveMap: map, emissive: '#ffffff', emissiveIntensity: CHARACTER_LIFT, roughness: .62, metalness: 0, name: o.material.name });
+          o.material.onBeforeCompile = shader => {
+            shader.uniforms.characterRim = characterRim;
+            shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nuniform float characterRim;')
+              .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+              float rimFacing = 1.0 - abs(dot(normal, isOrthographic ? vec3(0.0, 0.0, 1.0) : normalize(vViewPosition)));
+              totalEmissiveRadiance += diffuseColor.rgb * vec3(1.0, .93, .8) * pow(rimFacing, 3.0) * characterRim;`);
+          };
+          materials.push(o.material);
+        });
+        characterSources[file] = { scene: gltf.scene, clips: gltf.animations, materials };
+      }, undefined, e => console.warn('3D map: could not load ' + file, e));
+    }
+    return !!characterSources[file];
+  }
+  function characterCopy(i, file) {
+    let copy = characterCopies[i];
+    if (copy && copy.file === file) return copy;
+    if (copy) world.remove(copy.holder);
+    const source = characterSources[file], holder = new THREE.Group(), body = cloneRigged(source.scene);
+    holder.add(body);
+    holder.scale.set(BLENDER_SCALE, BLENDER_SCALE / HEIGHT_SCALE, BLENDER_SCALE);
+    world.add(holder);
+    // Each model names its idle by the Meshy preset it used (Idle_9, Idle_11, Idle_12).
+    const mixer = new THREE.AnimationMixer(body), clip = test => source.clips.find(c => test.test(c.name));
+    const idle = mixer.clipAction(clip(/^Idle/)), walk = mixer.clipAction(clip(/^Walking$/));
+    walk.timeScale = 0;
+    idle.play(); walk.play();
+    return (characterCopies[i] = { file, holder, mixer, idle, walk, rig: bindStaff(body) });
+  }
+  // A figure faces the way it walks; standing, what it is doing (c.look), else the way it last walked. With neither,
+  // it turns three-quarters to the camera (which looks back along (1, 0, 1); screen right is (cos 45°, 0, -sin 45°)),
+  // to the side its sprite would face (facing > 0 is screen right).
+  function placeCharacters(list, stepSeconds, night) {
+    Object.values(characterSources).forEach(s => s.materials.forEach(m => { m.emissiveIntensity = CHARACTER_LIFT * (1 - night * .85); }));
+    characterRim.value = CHARACTER_RIM * (1 - night * .7);
+    const seen = new Set();
+    (list || []).forEach((c, i) => {
+      if (!characterSources[c.file]) return;
+      const copy = characterCopy(i, c.file), amount = c.still ? 0 : Math.max(0, Math.min(1, c.amount || 0));
+      copy.holder.visible = true;
+      copy.holder.position.set(c.x, c.y || 0, c.z);
+      let fx, fz;
+      const aim = amount > .3 ? c.heading : c.look || c.heading;
+      if (aim) { fx = aim.x; fz = aim.z; }
+      else { const side = (c.facing === undefined ? .3 : c.facing) >= 0 ? .75 : -.75; fx = 1 + side; fz = 1 - side; }
+      const target = Math.atan2(fx, fz), last = characterYaw.has(c.id) ? characterYaw.get(c.id) : target;
+      let turn = target - last; turn -= Math.round(turn / (2 * Math.PI)) * 2 * Math.PI;
+      const yaw = last + turn * Math.min(1, stepSeconds * 10);
+      characterYaw.set(c.id, yaw); seen.add(c.id);
+      copy.holder.rotation.y = yaw;
+      const loop = copy.walk.getClip().duration;
+      copy.walk.time = (((c.ground || 0) / WALK_LOOP) % 1 + 1) % 1 * loop;
+      copy.walk.setEffectiveWeight(amount); copy.idle.setEffectiveWeight(1 - amount);
+      copy.mixer.update(c.still ? 0 : stepSeconds);
+      // Staff work their post over the idle (staff-motion.js), easing in when a copy takes up a new job.
+      if (copy.rig) {
+        const role = c.work && c.work.role;
+        if (copy.rig.role !== role) { copy.rig.role = role; copy.rig.weight = 0; }
+        if (role) {
+          copy.rig.weight = c.still ? 1 : Math.min(1, copy.rig.weight + stepSeconds * 2);
+          poseStaff(copy.rig, role, c.work.clock, c.work.act, ease01(copy.rig.weight));
+        }
+      }
+    });
+    for (let i = (list || []).length; i < characterCopies.length; i++) if (characterCopies[i]) characterCopies[i].holder.visible = false;
+    characterYaw.forEach((v, id) => { if (!seen.has(id)) characterYaw.delete(id); });
+  }
   const carsModelled = () => !!layout.carModels && Object.keys(layout.carModels).every(k => carSources[k]);
   function carCopy(i, c) {
     const kind = c.van ? 'van' : 'car', source = carSources[kind];
@@ -802,6 +895,9 @@ export function createMap3D(canvas, layout) {
     props.forEach(p => propReady(p.file));
     placeProps(props, night);
     placeFigures(frame.figures || [], night);
+    const clockNow = performance.now(), stepSeconds = Math.min(.1, (clockNow - (lastStep || clockNow)) / 1000);
+    lastStep = clockNow;
+    placeCharacters(frame.characters, stepSeconds, night);
     if (!frame.dry) renderer.render(scene, camera);
     return true;
   }
@@ -874,6 +970,7 @@ export function createMap3D(canvas, layout) {
     if (people.instanceColor) people.instanceColor.needsUpdate = true;
 
     placeProps(frame.props, night);
+    placeCharacters(frame.characters, stepSeconds, night);
     fixtureGlows.forEach(m => { m.emissiveIntensity = .16 + night * .7; });
     fixtureScreens.forEach(m => { m.emissiveIntensity = .35 + night * .55; });
     Object.entries(menuScreens).forEach(([key, screen]) => showMenu(screen, frame.menus ? frame.menus[key] : null, frame.menuClock || 0));
@@ -959,6 +1056,7 @@ export function createMap3D(canvas, layout) {
     renderBranch,
     carsModelled,
     propReady,
+    characterReady,
     hasFixture: key => !!fixtures[key],
     stationPicture,
     loungePicture,
