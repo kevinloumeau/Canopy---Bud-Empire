@@ -2769,12 +2769,12 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // its spot, then the drone port on its deck once the window is open, and a smaller tag over a ghost of the next kiosk.
   // A tap opens the panel with the buy button: Deliveries for the window and the drone port, the Orders station for kiosks.
   function lotMarker(name,open){var b=document.createElement('button');b.className='marker station-sign is-lot';b.dataset.marker=name;b.onclick=open;b.style.display='none';$('markers').appendChild(b);return b}
-  var windowMarker=lotMarker('window',function(){showTray('orders');renderUI()}),droneMarker=lotMarker('drone',function(){showTray('orders');renderUI()}),kioskMarker=lotMarker('kiosk',function(){selectMachine(4)});kioskMarker.classList.add('is-mini');
+  var windowMarker=lotMarker('window',function(){showTray('orders');renderUI()}),droneMarker=lotMarker('drone',function(){showTray('orders');renderUI()}),kioskMarker=lotMarker('kiosk',function(){selectMachine(4)});[windowMarker,droneMarker,kioskMarker].forEach(function(el){el.classList.add('is-mini')});
   var KIOSK_PRICES=[25000,50000,100000],KIOSK_Z=[6.8,5,3.2];
   // What each tag shows now: null when there is nothing to buy there.
   function lotTags(){var tags=[],count=kioskCount(),orders=state.lines[4]>0;
-    if(orders&&!windowOpen())tags.push({el:windowMarker,name:'Pickup window',build:'window',price:WINDOW_COST,x:PICKUP_WINDOW.x,y:2.4,z:PICKUP_WINDOW.z});
-    if(windowOpen()&&!deliveryBuilt())tags.push({el:droneMarker,name:'Drone port',build:'deck',price:AUTO_DRONE_COST,x:-9.39,y:7.2,z:-.2});
+    if(orders&&!windowOpen())tags.push({el:windowMarker,name:'Window',build:'window',price:WINDOW_COST,x:PICKUP_WINDOW.x,y:2.4,z:PICKUP_WINDOW.z});
+    if(windowOpen()&&!deliveryBuilt())tags.push({el:droneMarker,name:'Drones',build:'deck',price:AUTO_DRONE_COST,x:-9.39,y:7.2,z:-.2});
     if(orders&&count<3)tags.push({el:kioskMarker,name:'Kiosk',price:KIOSK_PRICES[count],x:-9.75,y:2.1,z:KIOSK_Z[count]});
     return tags}
   function renderLotTags(){var shown=lotTags();[windowMarker,droneMarker,kioskMarker].forEach(function(el){var t=shown.filter(function(x){return x.el===el})[0];el.hidden=!t;if(!t)return;
