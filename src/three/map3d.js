@@ -18,6 +18,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { clone as cloneRigged } from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { bindStaff, poseStaff } from './staff-motion.js';
 import { createMapCamera, frameMapCamera, HEIGHT_SCALE } from './camera.js';
 
 // Blender models are built in metres; the map draws 1.69 units a metre (layout.fixtures use the same scale).
@@ -654,6 +655,7 @@ export function createMap3D(canvas, layout) {
   // one Walking loop covers 1.1 m of ground (measured from the foot's travel). Standing, the idle plays on the clock.
   const WALK_LOOP = 1.1 * BLENDER_SCALE, CHARACTER_LIFT = .16, CHARACTER_RIM = .9;
   const characterRim = { value: CHARACTER_RIM };
+  const ease01 = v => v * v * (3 - 2 * v);
   const characterSources = {}, characterRequested = {}, characterCopies = [], characterYaw = new Map();
   function characterReady(file) {
     if (!characterRequested[file]) {
@@ -698,7 +700,7 @@ export function createMap3D(canvas, layout) {
     const idle = mixer.clipAction(clip(/^Idle/)), walk = mixer.clipAction(clip(/^Walking$/));
     walk.timeScale = 0;
     idle.play(); walk.play();
-    return (characterCopies[i] = { file, holder, mixer, idle, walk });
+    return (characterCopies[i] = { file, holder, mixer, idle, walk, rig: bindStaff(body) });
   }
   // A figure faces the way it walks; standing, what it is doing (c.look), else the way it last walked. With neither,
   // it turns three-quarters to the camera (which looks back along (1, 0, 1); screen right is (cos 45°, 0, -sin 45°)),
@@ -725,6 +727,15 @@ export function createMap3D(canvas, layout) {
       copy.walk.time = (((c.ground || 0) / WALK_LOOP) % 1 + 1) % 1 * loop;
       copy.walk.setEffectiveWeight(amount); copy.idle.setEffectiveWeight(1 - amount);
       copy.mixer.update(c.still ? 0 : stepSeconds);
+      // Staff work their post over the idle (staff-motion.js), easing in when a copy takes up a new job.
+      if (copy.rig) {
+        const role = c.work && c.work.role;
+        if (copy.rig.role !== role) { copy.rig.role = role; copy.rig.weight = 0; }
+        if (role) {
+          copy.rig.weight = c.still ? 1 : Math.min(1, copy.rig.weight + stepSeconds * 2);
+          poseStaff(copy.rig, role, c.work.clock, c.work.act, ease01(copy.rig.weight));
+        }
+      }
     });
     for (let i = (list || []).length; i < characterCopies.length; i++) if (characterCopies[i]) characterCopies[i].holder.visible = false;
     characterYaw.forEach((v, id) => { if (!seen.has(id)) characterYaw.delete(id); });

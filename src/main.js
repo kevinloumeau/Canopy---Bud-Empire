@@ -924,8 +924,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var colors={bg:'#202226',floorTop:'#303238',floorLeft:'#1c1f23',floorRight:'#272a30',grid:'#41444a',beltEdge:'#111419',belt:'#313943',slat:'#5b6470',oliveTop:'#f4f5ec',oliveLeft:'#a9b6be',oliveRight:'#d5dce0',darkTop:'#56616a',darkLeft:'#252e36',darkRight:'#3b4650',metalTop:'#eef2f3',metalLeft:'#8b9ba8',metalRight:'#becbd4',acid:'#f5c344',orange:'#ff7628',boxTop:'#d3a36c',boxLeft:'#8e6741',boxRight:'#b17f50'};
   // Sprite shop: the harvest bench stands at x 4.8, directly in front of the grow line's drop, so the tube feeds its
   // back in a straight run (the drawn shop keeps the symmetric pair at x 3). The grower works the grow bench's left end,
-  // clear of the pots, watering along the row.
-  var STAFF_SPOTS={0:{dx:-.2,dz:-1.4,front:false,facing:1},1:{dx:-2.85,dz:-.25,front:false,facing:1},2:{dx:-.9,dz:-1.4,front:false,facing:-1},3:{dx:-.3,dz:-1.4,front:false,facing:-1},5:{dx:1.05,dz:-1.55,front:false,facing:.35}};
+  // close enough to reach the pots it tends (staff-motion.js).
+  var STAFF_SPOTS={0:{dx:-.2,dz:-1.4,front:false,facing:1},1:{dx:-2.25,dz:-.25,front:false,facing:1},2:{dx:-.9,dz:-1.4,front:false,facing:-1},3:{dx:-.3,dz:-1.4,front:false,facing:-1},5:{dx:1.05,dz:-1.55,front:false,facing:.35}};
   var machinePos=[{x:-3,z:-3,y:9.4},{x:3,z:-3,y:9.4},{x:SHOP_SPRITES?4.8:3,z:-.3,y:4.7},{x:-3,z:-.3,y:4.7},{x:-4+COUNTER_SHIFT,z:2.5,y:0},{x:4+COUNTER_SHIFT,z:2.5,y:0}];
   // The front edges of the floor, round the pickup pen (Kevin, 2026-10-19: one lone case left the corner looking empty,
   // and a run of cases didn't look good either): the aisle planter's twins along the front baseboard and up the
@@ -2338,6 +2338,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var PERSON_COLOURS=['#d97b5f','#5f8fc9','#e0b75a','#8a6fb5','#6aa36a','#c95f86','#4fa3a0','#d48c3a'];
   // The shop's customers in the 3D map are Kevin's rigged Meshy characters (2026-10-21), taken in turn by id.
   var STAFF_MODELS=(function(f){return{stations:[f('green-uniform-woman'),f('green-uniform-man'),f('chef'),f('staff-young'),null,f('staff-gray')],desks:[f('staff-dark-hair'),f('staff-young'),f('staff-gray')],door:f('security-guard'),host:f('staff-dark-hair'),window:f('staff-young')}})(function(n){return 'people/'+n+'.glb'});
+var STAFF_ROLES=['seeds','grow','harvest','pack','desk','pickup'];
 var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-shirt','utility-vest','office-woman','bearded-blue-shirt','tie-dye-hoodie','cream-outfit','trench-coat'].map(function(n){return 'people/'+n+'.glb'});
   // Records the images one 2D figure draws (with every transform it applies) and turns each into four world points: a
   // flat card standing upright at the figure's feet, spanning screen-right and up, so the 3D camera shows it exactly
@@ -2442,15 +2443,16 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // Customers are rigged 3D models rather than sprites, the same model upstairs and down, once theirs has loaded
     // (until then their sprite stands in). A model casts its own shadow, so it needs no capsule. Standing still, it
     // looks at what the customer is doing (gait.look), else along the way it last walked.
-    var characters=[];
+    var characters=[],workClock=function(i){return motionPreference.matches?6.3:motionClocks[i]};
     function customer(id,x,y,z,colour,gait,draw){
       var file=CUSTOMER_MODELS[id%CUSTOMER_MODELS.length];
       if(map3d.characterReady(file)){var still=motionPreference.matches;characters.push({file:file,id:id,x:x,y:y,z:z,ground:(gait.phase||0)/5,amount:still?0:gait.amount,heading:gait.heading,look:gait.look,facing:gait.facing,still:still});return}
       person(x,y,z,colour,draw);
     }
     // Staff are rigged models too, one per role (STAFF_MODELS), standing at work and facing it (look).
-    function staffer(id,file,x,y,z,look,facing,draw){
-      if(map3d.characterReady(file)){characters.push({file:file,id:id,x:x,y:y,z:z,amount:0,look:look,facing:facing,still:motionPreference.matches});return}
+    // work: the job they act out at their post (staff-motion.js), on the post's own clock so hands follow its parts.
+    function staffer(id,file,x,y,z,look,facing,draw,work){
+      if(map3d.characterReady(file)){characters.push({file:file,id:id,x:x,y:y,z:z,amount:0,look:look,facing:facing,still:motionPreference.matches,work:work});return}
       person(x,y,z,'#2f6b52',draw);
     }
     for(var i=0;i<6;i++){
@@ -2458,19 +2460,19 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       if(i===4)orderCounterPositions(state.orderCounters).forEach(function(q,index){
         var active=customers.some(function(c){return c.orderCounter===index&&atOrderCounter(c,state.orderCounters)&&c.serviceElapsed>0});
         station(4,q.x,0,q.z,state.lines[4],state.lines[4]>0,4);stations[stations.length-1].act=active?1:0;
-        if(state.lines[4]>0)staffer('desk'+index,STAFF_MODELS.desks[index%STAFF_MODELS.desks.length],q.x-.35,0,q.z-1.5,{x:0,z:1},.3,function(){drawPerson(q.x-.35,q.z-1.5,now,4,false,true,false,{amount:0,phase:0,facing:.3,identity:4+index*23,taskOffset:index*1.7,workActivity:active?1:0})});
+        if(state.lines[4]>0)staffer('desk'+index,STAFF_MODELS.desks[index%STAFF_MODELS.desks.length],q.x-.35,0,q.z-1.5,{x:0,z:1},.3,function(){drawPerson(q.x-.35,q.z-1.5,now,4,false,true,false,{amount:0,phase:0,facing:.3,identity:4+index*23,taskOffset:index*1.7,workActivity:active?1:0})},{role:'desk',clock:workClock(4)+index*1.7,act:active?1:0});
       });
       else{
         station(i,p.x,p.y||0,p.z,state.lines[i],state.lines[i]>0,i);
         if(state.lines[i]>0)(function(i,p){var spot=STAFF_SPOTS[i]||{dx:-.95,dz:-1.65},gait=spot.facing?{amount:0,phase:0,facing:spot.facing}:undefined;
-          staffer('station'+i,STAFF_MODELS.stations[i],p.x+spot.dx,p.y||0,p.z+spot.dz,{x:-spot.dx,z:-spot.dz},spot.facing,function(){drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait)})})(i,p);
+          staffer('station'+i,STAFF_MODELS.stations[i],p.x+spot.dx,p.y||0,p.z+spot.dz,{x:-spot.dx,z:-spot.dz},spot.facing,function(){drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait)},{role:STAFF_ROLES[i],clock:workClock(i),act:1})})(i,p);
       }
     }
     stations.push({index:6,x:ID_DESK.x,y:0,z:ID_DESK.z,w:1.3,d:2.4,h:1.6,tier:state.doorBuilt?stationLookFor(6,state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,pop:stationPop(6),selected:mapPicked&&securitySelected});
     // The doorman stands behind the booth, on the room side, facing the front door across the desk.
-    if(state.doorBuilt)staffer('door',STAFF_MODELS.door,DOORMAN.x,0,DOORMAN.z,{x:ID_CHECK.x-DOORMAN.x,z:ID_CHECK.z-DOORMAN.z},1,function(){drawPerson(DOORMAN.x,DOORMAN.z,now,6,false,true,false,{amount:0,phase:0,facing:1})});
+    if(state.doorBuilt)staffer('door',STAFF_MODELS.door,DOORMAN.x,0,DOORMAN.z,{x:ID_CHECK.x-DOORMAN.x,z:ID_CHECK.z-DOORMAN.z},1,function(){drawPerson(DOORMAN.x,DOORMAN.z,now,6,false,true,false,{amount:0,phase:0,facing:1})},{role:'guard',clock:sceneTime/1000});
     // The lounge host works the rooftop: behind the bar once there is one, otherwise by the elevator's bridge.
-    if(state.lounge>0){var host=state.lounge>=2?{x:3.7,z:-8.75,f:.3}:{x:-5.2,z:-4,f:.3};staffer('host',STAFF_MODELS.host,host.x,ROOFTOP.y,host.z,null,host.f,function(){drawPerson(host.x,host.z,now,8,false,true,false,{amount:0,phase:0,facing:host.f})})}
+    if(state.lounge>0){var host=state.lounge>=2?{x:3.7,z:-8.75,f:.3}:{x:-5.2,z:-4,f:.3};staffer('host',STAFF_MODELS.host,host.x,ROOFTOP.y,host.z,null,host.f,function(){drawPerson(host.x,host.z,now,8,false,true,false,{amount:0,phase:0,facing:host.f})},{role:'host',clock:sceneTime/1000})}
     // Guests on the roof hold a spot for their session. A guest riding up or down stands in the elevator's cab, which
     // carries them between the old lounge room and the roof and waits wherever it last stopped.
     var taken={},smokers=[],spots=ROOFTOP_SPOTS.slice(0,loungeSeats(state.lounge)||4),lift=ROOFTOP.lift;
@@ -2524,7 +2526,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     walkerPlacements(now).forEach(function(w){person(w.x,w.y===undefined?-.012:w.y,w.z,PERSON_COLOURS[(w.g*3+1)%PERSON_COLOURS.length],function(){drawWalker(streetApi,w)})});
     // The pickup window's clerk inside it, and its walk-ups (cast after the shop's own customers).
     if(windowOpen()){
-      staffer('window',STAFF_MODELS.window,WINDOW_CLERK.x,0,WINDOW_CLERK.z,null,-1,function(){drawPerson(WINDOW_CLERK.x,WINDOW_CLERK.z,now,5,false,true,false,{amount:0,phase:0,facing:-1,workActivity:windowServing?1:0})});
+      staffer('window',STAFF_MODELS.window,WINDOW_CLERK.x,0,WINDOW_CLERK.z,null,-1,function(){drawPerson(WINDOW_CLERK.x,WINDOW_CLERK.z,now,5,false,true,false,{amount:0,phase:0,facing:-1,workActivity:windowServing?1:0})},{role:'window',clock:sceneTime/1000,act:windowServing?1:0});
       windowFigures(windowLine,SUBWAY_HIDDEN_Z).forEach(function(w){var who=500+w.id;person(w.x,w.y,w.z,PERSON_COLOURS[who%PERSON_COLOURS.length],function(){drawPerson(w.x,w.z,now,who,w.moving,false,w.bag,{identity:who,phase:w.walked*5,heading:w.heading,amount:w.moving?1:0,facing:w.facing})})});
     }
     // The street's trees, lamps and props are its own renders too, stood up at their footprints' centres, and so are
