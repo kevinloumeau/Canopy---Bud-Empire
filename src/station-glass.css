@@ -36,3 +36,8 @@
 .sheet .machine-info .next-appearance.unlock-road[hidden]{display:none}
 .unlock-road b{font:600 12px 'DM Mono',monospace;color:var(--p-lime-85);font-variant-numeric:tabular-nums;white-space:nowrap}
 .unlock-road span{min-width:0}
+/* The lounge is bought one level at a time, and while it is being built the card shows one Finish now button and the clock once. */
+.sheet .selected-line .station-buy-actions.single{grid-template-columns:minmax(0,1fr)!important}
+.sheet .selected-line .station-buy-actions.single #buyMachineMax{display:none!important}
+.sheet .selected-line.is-building .station-buy-actions #buyMachine::before{display:none}
+.sheet .selected-line.is-building #upgradeMetricLabel,.sheet .selected-line.is-building .upgrade-comparison{display:none}
