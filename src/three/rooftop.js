@@ -461,7 +461,7 @@ export function buildRooftop(world, layout, { box, span, material }) {
   const tapeCanvas = document.createElement('canvas'); tapeCanvas.width = 512; tapeCanvas.height = 64;
   const tapeTexture = new THREE.CanvasTexture(tapeCanvas); tapeTexture.colorSpace = THREE.SRGBColorSpace; tapeTexture.anisotropy = 4;
   const tapeMat = new THREE.MeshBasicMaterial({ map: tapeTexture, transparent: true });
-  const signTape = new THREE.Group(); signTape.position.set(sh.loungeSign.x + .02, sh.loungeSign.y, face + sh.loungeSign.out); signTape.rotation.y = Math.PI / 2; signTape.scale.setScalar(sh.loungeSign.scale); lobby.add(signTape);
+  const signTape = new THREE.Group(); signTape.position.set(sh.loungeSign.x, sh.loungeSign.y, face + .05); signTape.scale.setScalar(sh.loungeSign.scale); lobby.add(signTape);
   [.12, -.1].forEach((tilt, k) => { const strip = new THREE.Mesh(new THREE.PlaneGeometry(2.3, .26), tapeMat); strip.rotation.z = tilt; strip.position.z = k * .006; signTape.add(strip); });
   function paintDoorSigns() {
     const font = '"Fredoka", "Bricolage Grotesque", sans-serif';

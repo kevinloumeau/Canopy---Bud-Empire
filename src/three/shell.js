@@ -283,12 +283,9 @@ export function buildShell(world, layout, { box, span, material, model }) {
   const signTexture = new THREE.CanvasTexture(signCanvas); signTexture.colorSpace = THREE.SRGBColorSpace;
   const signMat = new THREE.MeshBasicMaterial({ map: signTexture, transparent: true });
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(2, .72), signMat);
-  // Flat on the wall above the door the mezzanine edge and the storefront's corner post would hide it, so it is a blade
-  // standing out from the wall on the door's right-hand jamb, above the door, read side-on down the shop, hung from a
-  // brass arm.
-  const ls = s.loungeSign;
-  sign.position.set(ls.x, ls.y, face + ls.out); sign.rotation.y = Math.PI / 2; sign.scale.setScalar(ls.scale); shell.add(sign);
-  span(shell, ls.x - .02, ls.x + .02, ls.y + .37 * ls.scale, ls.y + .37 * ls.scale + .04, face, face + ls.out + 1.05 * ls.scale, BRASS);
+  // Centred over the door, small enough to sit between its header and the mezzanine edge's sight line (Kevin turned
+  // down a blade sign standing out from the wall: it ran through the mezzanine post).
+  sign.position.set(s.loungeSign.x, s.loungeSign.y, face + .03); sign.scale.setScalar(s.loungeSign.scale); shell.add(sign);
   let signLit = null;
   if (typeof FontFace === 'function' && document.fonts) {
     new FontFace('Fredoka', `url(${new URL('../fonts/Fredoka-SemiBold.ttf', layout.modelBase).href})`, { weight: '600' }).load()
