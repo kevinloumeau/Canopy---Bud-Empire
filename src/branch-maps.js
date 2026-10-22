@@ -307,7 +307,10 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
       const walking=k!==2&&k!==4,sdx=p(c[0],0,c[1]).x-p(a[0],0,a[1]).x;
       const facing=walking&&Math.abs(sdx)>.5?Math.max(-1,Math.min(1,sdx/(unit*.9))):.15;
       const id=20+index*19+i+lap*61;
-      job(x,z,()=>person(x,z,now,id,walking,false,k>=5,{amount:walking?1:0,phase:now*.008+i*3.1,facing,identity:id}));
+      // The 3D map walks them by the ground covered along the path (ground) the way they head (heading).
+      const len=Math.hypot(c[0]-a[0],c[1]-a[1]),ground=path.slice(1,k+1).reduce((d,q,j)=>d+Math.hypot(q[0]-path[j][0],q[1]-path[j][1]),0)+t*len;
+      const heading=len?{x:(c[0]-a[0])/len,z:(c[1]-a[1])/len}:null;
+      job(x,z,()=>person(x,z,now,id,walking,false,k>=5,{amount:walking?1:0,phase:now*.008+i*3.1,facing,identity:id,ground,heading}));
     }
   }
   if(api.backdrop)api.backdrop(theme.background);else{api.ctx.fillStyle=theme.background;api.ctx.fillRect(0,0,width,height);}

@@ -650,7 +650,8 @@ export function createMap3D(canvas, layout) {
     Object.values(propSources).forEach(parts => parts.forEach(m => { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; m.visible = m.count > 0; }));
     glowMaterials.forEach(m => { m.emissive.set('#ffd9a0'); m.emissiveIntensity = night * 2.5; });
   }
-  // Rigged characters (Kevin's Meshy beanie customer): one skinned copy per person on screen, each with its own mixer.
+  // Rigged characters (Kevin's Meshy cast): every person on the map and in the branches, one skinned copy each with
+  // its own mixer.
   // The walk is played by ground covered, never by the clock, so feet keep pace with the figure whatever its speed:
   // one Walking loop covers 1.1 m of ground (measured from the foot's travel). Standing, the idle plays on the clock.
   const WALK_LOOP = 1.1 * BLENDER_SCALE, CHARACTER_LIFT = .16, CHARACTER_RIM = .9;
@@ -894,6 +895,9 @@ export function createMap3D(canvas, layout) {
     props.forEach(p => propReady(p.file));
     placeProps(props, night);
     placeFigures(frame.figures || [], night);
+    const clockNow = performance.now(), stepSeconds = Math.min(.1, (clockNow - (lastStep || clockNow)) / 1000);
+    lastStep = clockNow;
+    placeCharacters(frame.characters, stepSeconds, night);
     if (!frame.dry) renderer.render(scene, camera);
     return true;
   }
