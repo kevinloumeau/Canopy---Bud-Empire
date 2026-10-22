@@ -90,8 +90,10 @@ fixes = {}
 # Meshy's rigs also carry the shoulders high, close to a shrug: drop each collarbone so the shoulder joint sits
 # SHOULDER_DROP lower (in the figure's metres) without moving it in or out, before placing the arms.
 SHOULDER_DROP = .045
-# How far out from the hips' centre the idle wrists hang (figure metres): .20 read as an A-pose, .17 hangs at the sides.
-ARM_OUT = .17
+# How far out from the hips' centre the idle wrists hang (figure metres): .20 read as an A-pose, .17 hangs at the sides
+# (Kevin, 2026-10-22). Broad figures need more room or their hands sink into the body: MESHY_ARM_OUT=.21 for those.
+import os
+ARM_OUT = float(os.environ.get('MESHY_ARM_OUT', .17))
 def joint(side):
     bpy.context.scene.frame_set(9); bpy.context.scene.frame_set(10); bpy.context.view_layer.update()
     return (arm.matrix_world @ arm.pose.bones['mixamorig:%sArm' % side].head) / height * 1.36
