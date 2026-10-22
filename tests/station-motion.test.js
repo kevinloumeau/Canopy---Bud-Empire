@@ -44,3 +44,18 @@ for (const [index, files] of Object.entries(MODELS)) for (const file of files) t
   assert.ok(new THREE.Box3().setFromObject(source).max.distanceTo(box.max) < 1e-6);
   assert.equal(meshes.length > 0, true);
 });
+
+for (const file of ['grow_bench', 'grow_bench_tier1', 'grow_bench_tier2', 'grow_bench_tier4', 'grow_bench_tier5', 'grow_bench_founder']) test(file + ' lamps glow and throw light while Grow lights runs', async () => {
+  const rig = bindStation(rigStation(await load(file + '.glb'), 1).clone(), 1), k = kinds(rig);
+  assert.ok(k.lamp > 0 && k.fall > 0, JSON.stringify(k));
+  const lamps = rig.parts.filter(o => o.userData.motion.m === 'lamp'), falls = rig.parts.filter(o => o.userData.motion.m === 'fall');
+  const run = boost => { for (let i = 0; i < 120; i++) moveStation(rig, { clock: 1, act: 1, boost }, 1 / 20); };
+  run(0);
+  const rest = lamps.map(o => o.material.emissiveIntensity);
+  assert.ok(falls.every(o => !o.visible), 'no light falls without the burst');
+  run(.5);
+  assert.ok(lamps.every((o, i) => o.material.emissiveIntensity > rest[i] * 2), 'lamps brighten');
+  assert.ok(falls.every(o => o.visible && o.material.opacity > .3), 'light falls onto the plants');
+  run(0);
+  assert.ok(falls.every(o => !o.visible), 'and goes out when it ends');
+});
