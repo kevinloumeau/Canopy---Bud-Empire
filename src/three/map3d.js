@@ -989,8 +989,8 @@ export function createMap3D(canvas, layout) {
       if (!(s.boost > 0) || s.visible === false || (s.pop !== undefined && s.pop < 1)) return;
       const { pool, ring } = boostGlow(glowing++), r = Math.max(s.w, s.d) * .75, breathe = .5 + .5 * Math.sin(beat * 3.2), rise = (beat * .7) % 1;
       pool.visible = ring.visible = true;
-      pool.position.set(s.x, s.y + .025, s.z); pool.scale.set(r * 4.4, 1, r * 4.4); pool.material.opacity = .55 + .35 * breathe;
-      ring.position.set(s.x, s.y + .05 + rise * 1.4, s.z); ring.scale.set(r * (.9 + rise * .35), 1, r * (.9 + rise * .35)); ring.material.opacity = .95 * (1 - rise);
+      pool.position.set(s.x, s.y + .025, s.z); pool.scale.set(r * 3.8, 1, r * 3.8); pool.material.opacity = .38 + .25 * breathe;
+      ring.position.set(s.x, s.y + .05 + rise * 1.4, s.z); ring.scale.set(r * (.9 + rise * .35), 1, r * (.9 + rise * .35)); ring.material.opacity = .7 * (1 - rise);
     });
     for (let n = glowing; n < boostGlows.length; n++) boostGlows[n].pool.visible = boostGlows[n].ring.visible = false;
 
