@@ -51,3 +51,4 @@
  .dispatch-desk .delivery-site{grid-template-rows:auto minmax(96px,1fr) auto}
  .delivery-benefits li{row-gap:0}
 }
+.delivery-site .build-skip[hidden]{display:none}

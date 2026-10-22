@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {BUILD_SECONDS,migrateBuilds,startBuild,isBuilding,buildLeft,buildShareLeft,finishBuilds,buildClock} from '../src/builds.js';
+import {BUILD_SECONDS,migrateBuilds,startBuild,isBuilding,buildLeft,buildShareLeft,finishBuilds,buildClock,skipCost,skipBuild} from '../src/builds.js';
 import {AUTO_DRONE_COST,migrateAutoDrone,payAutoDrone,grantAutoDrone} from '../src/auto-drone.js';
 
 test('old saves have no builds running',()=>{
@@ -22,4 +22,11 @@ test('the countdown reads minutes and seconds',()=>{assert.equal(buildClock(180)
 test('the deck is paid for at purchase and opens on grant',()=>{
   const s={money:AUTO_DRONE_COST,autoDrone:migrateAutoDrone()};assert.equal(payAutoDrone(s),true);assert.equal(s.money,0);assert.equal(s.autoDrone.owned,false);
   grantAutoDrone(s);assert.equal(s.autoDrone.owned,true);assert.equal(s.autoDrone.enabled,true);s.money=AUTO_DRONE_COST;assert.equal(payAutoDrone(s),false);
+});
+test('a build can be skipped for half its price times the time left',()=>{
+  const b=migrateBuilds(undefined,0);assert.equal(skipCost(b,'window',3000,0),0);
+  startBuild(b,'window',0);assert.equal(skipCost(b,'window',3000,0),1500);
+  assert.equal(skipCost(b,'window',3000,BUILD_SECONDS.window*500),750);
+  assert.equal(skipCost(b,'window',100,BUILD_SECONDS.window*999),100);
+  assert.equal(skipBuild(b,'window',1000),true);assert.deepEqual(finishBuilds(b,1000),['window']);assert.equal(skipBuild(b,'window',1000),false);
 });
