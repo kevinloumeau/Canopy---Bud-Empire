@@ -44,3 +44,21 @@
   transition:--burst .3s linear;animation:burst-glow 1.6s ease-in-out infinite}
 @keyframes burst-glow{0%,100%{box-shadow:0 0 10px 1px var(--ring-glow),0 2px 8px #0005}50%{box-shadow:0 0 18px 4px var(--ring-glow-peak),0 2px 8px #0005}}
 @media(prefers-reduced-motion:reduce){.burst-ring,.world .marker.station-sign.is-lot.is-building{animation:none;box-shadow:0 0 12px 2px var(--ring-glow)}}
+/* The buy box over a picked sign (Kevin, 2026-10-22): its upgrades a tap away, in a small glass box above the sign (below
+   it near the top of the screen). Brass marks the one best buy; a price the cash doesn't cover yet is dimmed. */
+.world .marker.has-buy{z-index:6}
+.world .marker .sign-buy{position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);display:flex;gap:5px;padding:5px;border-radius:14px;background:#15231bdd;box-shadow:0 0 0 1px #f3ead62e,0 8px 20px #0007;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);white-space:nowrap;font-size:11px;line-height:1.15;pointer-events:auto;cursor:default}
+.world .marker .sign-buy[hidden]{display:none}
+.world .marker.buy-below .sign-buy{bottom:auto;top:calc(100% + 7px)}
+.world .marker .sign-buy [data-buy]{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:58px;min-height:36px;padding:4px 10px;border-radius:10px;background:#f3ead614;box-shadow:inset 0 0 0 1px #f3ead633;color:#f3ead6;cursor:pointer}
+.world .marker .sign-buy [data-buy] span{display:flex;align-items:center;gap:3px;font-size:.9em;color:#f3ead6bb}
+.world .marker .sign-buy [data-buy] svg{width:10px;height:10px}
+.world .marker .sign-buy [data-buy] b{font-size:1.1em;font-weight:700}
+.world .marker .sign-buy [data-buy]:hover{background:#f3ead626}
+.world .marker .sign-buy [data-buy].is-best{background:var(--ui-brass);box-shadow:0 0 12px #e2c68a66;color:#1f2a20}
+.world .marker .sign-buy [data-buy].is-best span{color:#1f2a20cc}
+.world .marker .sign-buy [data-buy].is-short{opacity:.5;cursor:default}
+.world .marker .sign-buy [data-buy].is-best.is-short{background:transparent;box-shadow:inset 0 0 0 1.5px var(--ui-brass);color:#f3ead6;opacity:.75}
+.world .marker .sign-buy [data-buy].is-best.is-short span{color:#f3ead6bb}
+/* With the box up, a ready bolt chip moves to the sign's left side. */
+.world .marker.has-buy .sign-ability{bottom:50%;left:auto;right:calc(100% + 5px);transform:translateY(50%)}
