@@ -298,7 +298,7 @@
 .sheet [data-pane="flowers"] .strain-nav .strain-card-art img.icon-3d{position:relative;width:36px;height:36px;object-fit:contain}
 .sheet [data-pane="flowers"] .strain-nav button.is-locked .strain-card-art img.icon-3d{filter:saturate(.75) brightness(.78)}
 .sheet [data-pane="flowers"] .strain-hero-art img.icon-3d{width:100%;height:100%;object-fit:contain;object-position:center bottom}
-.sheet [data-pane="flowers"] .strain-format-pill img.icon-3d{width:46px;height:34px;object-fit:contain;filter:drop-shadow(0 3px 4px #0a140e80)}
+.sheet [data-pane="flowers"] .strain-format-pill img.icon-3d{width:54px;height:42px;object-fit:contain;filter:drop-shadow(0 3px 4px #0a140e80)}
 .sheet [data-pane="flowers"] .strain-format-pill:disabled img.icon-3d{filter:grayscale(.85) brightness(.75)}
 .sheet .empire-screen .store-list .store-card .store-icon{background:none!important;box-shadow:none!important;width:48px!important;height:44px!important;border-radius:0!important}
 .sheet .empire-screen .store-list .store-card .store-icon img.icon-3d{width:48px;height:44px;filter:drop-shadow(0 3px 4px #0a140e80)}
