@@ -162,8 +162,8 @@ export function mountEmpireStores({getState,format}){
   const sig=[chip,tone,dot,d.locked&&Math.round(d.unlockPct),starred].join('|');
   if(sig===c.sig)return;c.sig=sig;
   c.stars.innerHTML=d.lvl?starRow(starred):'';c.stars.title=d.lvl?starred+' of 3 stars':'';
-  set(c.status,chip);c.status.className='store-status'+(tone?' '+tone.split(' ').map(t=>'is-'+t).join(' '):'');
-  c.dot.hidden=!dot;c.meter.hidden=!d.locked;if(d.locked)c.meter.firstChild.style.width=(d.gated?d.prevStars/3*100:d.unlockPct)+'%';
+  if(d.gated){c.status.innerHTML=starRow(d.prevStars);c.status.title='Earn 3 stars at '+STORES[i-1].name;c.status.setAttribute('aria-label',chip);}else{set(c.status,chip);c.status.removeAttribute('title');c.status.removeAttribute('aria-label');}c.status.className='store-status'+(tone?' '+tone.split(' ').map(t=>'is-'+t).join(' '):'');
+  c.dot.hidden=!dot;c.meter.hidden=!d.locked||d.gated;if(d.locked)c.meter.firstChild.style.width=(d.gated?d.prevStars/3*100:d.unlockPct)+'%';
   c.toggle.classList.toggle('is-locked',d.locked);c.toggle.classList.toggle('has-ready',!!tone&&tone!=='max'&&tone!=='locked');
  }
 

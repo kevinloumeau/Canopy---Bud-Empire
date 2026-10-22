@@ -213,3 +213,38 @@
 @media (max-width:420px){.sheet .station-tiles{gap:6px}.sheet .station-tiles .station-team{padding:10px 6px 6px!important}}
 .sheet .station-tiles .team-copy small,.sheet .station-tiles .station-ability .team-copy small{white-space:normal!important;display:-webkit-box!important;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .sheet .station-tiles .station-team:has(.line-pips:not(:empty)) .team-copy small{display:none!important}
+/* Empire stores as tiles: ringed icon (lock badge until it can open), name, one status chip and the income. */
+.sheet .empire-screen .store-list{display:grid!important;overflow:visible!important;margin:8px 0 0!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;border:0!important;background:none!important;box-shadow:none!important;padding:0!important}
+.sheet .empire-screen .store-list button.branch-toggle.store-card{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"icon" "copy" "meta" "meter"!important;justify-items:center;align-content:start;row-gap:6px!important;min-width:0;width:auto!important;margin:0!important;padding:12px 6px 10px!important;border:1px solid var(--pop-edge,#ffffff33)!important;border-radius:16px!important;background:rgba(255,255,255,.065)!important;box-shadow:none!important;text-align:center;opacity:1}
+.sheet .empire-screen .store-list button.store-card.has-ready{border-color:#f0d69a99!important;box-shadow:0 0 14px #f0d69a1f!important}
+.sheet .empire-screen .store-list .store-card::after{display:none!important}
+.sheet .empire-screen .store-list .store-card .store-icon{grid-area:icon;grid-row:auto!important;align-self:center;width:42px;height:42px;border-radius:50%;background:#a8d78424;box-shadow:inset 0 0 0 1.5px #a8d78466;color:#a8d784}
+.sheet .empire-screen .store-list .store-card.has-ready .store-icon{background:#f0d69a24;box-shadow:inset 0 0 0 1.5px #f0d69a99;color:#f0d69a}
+.sheet .empire-screen .store-list .store-card.is-locked .store-icon{background:#ffffff0d;box-shadow:inset 0 0 0 1.5px #ffffff2e;color:#fbf8ee8c}
+.sheet .empire-screen .store-list .store-card.is-locked .store-icon::after{content:'';position:absolute;right:-3px;bottom:-3px;width:16px;height:16px;border-radius:50%;background:#2a4234 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e9e4d4' stroke-width='2.2' stroke-linecap='round'%3E%3Crect x='6' y='11' width='12' height='9' rx='2'/%3E%3Cpath d='M9 11V8a3 3 0 0 1 6 0v3'/%3E%3C/svg%3E") center/11px no-repeat;box-shadow:0 0 0 1.5px #ffffff40}
+.sheet .empire-screen .store-list .store-card .store-copy{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"name" "status"!important;justify-items:center;gap:5px!important;width:100%}
+.sheet .empire-screen .store-list .store-card .branch-name{font:600 13px/1.2 'Bricolage Grotesque',system-ui,sans-serif!important;color:#fbf8ee;max-width:100%;display:flex;flex-direction:column;align-items:center;gap:3px}
+.sheet .empire-screen .store-list .store-card .store-detail{display:none!important}
+.sheet .empire-screen .store-list .store-card .store-status{max-width:100%;font-size:10.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet .empire-screen .store-list .store-card .store-meta{justify-content:center;width:100%}
+.sheet .empire-screen .store-list .store-card .store-meta strong{flex-direction:column;gap:3px!important;justify-self:center!important;align-items:center!important}
+.sheet .empire-screen .store-list .store-card .store-locked{display:none!important}
+.sheet .empire-screen .store-list .store-card .store-income{font:500 11px/1.2 'DM Mono',monospace;color:#a8d784}
+.sheet .empire-screen .store-list .store-card .store-income svg{display:none}
+.sheet .empire-screen .store-list .store-card .store-meter{width:70%;justify-self:center}
+.sheet .empire-screen .store-list .store-card .store-status .store-stars{display:inline-flex;gap:2px}
+.sheet .empire-screen .store-list .store-card .store-status .store-stars i{display:block;width:14px;height:14px;color:#fbf8ee59}
+.sheet .empire-screen .store-list .store-card .store-status .store-stars i svg{width:14px;height:14px;display:block}
+.sheet .empire-screen .store-list .store-card .store-status .store-stars i.on{color:#f0d69a}
+.sheet .empire-screen .store-list .store-card .store-status .store-stars i.on svg{fill:currentColor}
+.sheet .empire-screen .store-list .store-card .store-status:has(.store-stars){background:none!important;border:0!important;padding:0!important;overflow:visible}
+/* Strain detail: the buyer sentence goes; the signature perk becomes one chip with its effect. */
+.sheet [data-pane="flowers"] .strain-hero-info p{display:none}
+.sheet [data-pane="flowers"] .strain-perk{display:inline-grid;grid-template-columns:auto auto;grid-template-areas:"star name" "star effect";align-items:center;column-gap:8px;row-gap:1px;margin:8px 0 0;padding:6px 12px 6px 8px;border:1px solid #f0d69a4d;border-radius:12px;background:#f0d69a14}
+.sheet [data-pane="flowers"] .strain-perk .perk-star{grid-area:star;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#f0d69a26;color:#f0d69a;font-size:14px}
+.sheet [data-pane="flowers"] .strain-perk b{grid-area:name;font:600 12px/1.2 'Bricolage Grotesque',system-ui,sans-serif;color:#f0d69a}
+.sheet [data-pane="flowers"] .strain-perk small{grid-area:effect;font:500 11px/1.25 'DM Mono',monospace;color:#a8d784}
+.sheet [data-pane="flowers"] .strain-perk:not(.is-unlocked){border-color:#ffffff2e;background:#ffffff0a}
+.sheet [data-pane="flowers"] .strain-perk:not(.is-unlocked) .perk-star{background:#ffffff12;color:#fbf8ee99}
+.sheet [data-pane="flowers"] .strain-perk:not(.is-unlocked) b{color:#fbf8eecc}
+.sheet [data-pane="flowers"] .strain-perk:not(.is-unlocked) small{color:#fbf8ee8c}
