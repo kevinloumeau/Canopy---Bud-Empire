@@ -1,9 +1,9 @@
 // Big purchases take real time to raise (Kevin, 2026-10-20): paying for the rooftop lounge or the online orders deck
 // starts a construction site, and the place opens when the timer runs out. Timers are wall-clock end times, so they
 // keep running while the game is closed, paused or hidden, and game speed does not hurry them.
-// Lounge 3 min, deck 90 s: long enough to feel like a build, short enough to wait out in one sitting. The pickup
-// window, the first and cheapest online buy, takes 45 s.
-export const BUILD_SECONDS={lounge:180,deck:90,window:45};
+// Lounge 3 min, drone port 4 min, pickup window 2 min (Kevin, 2026-10-22: the window's 45 s was too quick). Each can
+// be finished early for cash (skipCost).
+export const BUILD_SECONDS={lounge:180,deck:240,window:120};
 
 // A save's timers: each key is an end time in ms, or 0 for no build. A clock set back cannot leave a build longer
 // than its full time.
@@ -26,3 +26,11 @@ export function finishBuilds(builds,now=Date.now()){
   return Object.keys(BUILD_SECONDS).filter(key=>isBuilding(builds,key)&&builds[key]<=now).map(key=>{builds[key]=0;return key;});
 }
 export function buildClock(seconds){const s=Math.max(0,Math.ceil(seconds));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+// Paying to skip (Kevin, 2026-10-22): finishing a build now costs half its price for the share of time still to go,
+// in in-game cash, rounded up to $10 and never under $100. 0 when nothing is building.
+export function skipCost(builds,key,price,now=Date.now()){
+  if(!isBuilding(builds,key))return 0;
+  return Math.max(100,Math.ceil(price*.5*buildShareLeft(builds,key,now)/10)*10);
+}
+// Ends the build's time now; finishBuilds then opens it like any other.
+export function skipBuild(builds,key,now=Date.now()){if(!isBuilding(builds,key))return false;builds[key]=Math.min(builds[key],now);return true;}
