@@ -212,7 +212,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if($('flowerBuyers').dataset.html!==legend){$('flowerBuyers').innerHTML=legend;$('flowerBuyers').dataset.html=legend}
     STRAINS.forEach(function(strain,i){
       var level=state.strains[i],active=state.menuStrains.indexOf(i)>=0,tab=$('strainTab'+i),art=tab.querySelector('.strain-card-art');
-      var artKey=(level?'u':'l');if(art.dataset.key!==artKey){art.innerHTML=icon3d('jar-'+i);art.dataset.key=artKey}
+      var artKey=(level?'u':'l');if(art.dataset.key!==artKey){art.innerHTML=icon3d('strain-'+i);art.dataset.key=artKey}
       tab.classList.toggle('is-on-menu',active);tab.classList.toggle('is-locked',!level);tab.classList.toggle('is-trending',i===trend);tab.setAttribute('aria-selected',String(flowerFocus===i));tab.tabIndex=flowerFocus===i?0:-1;
       tab.style.setProperty('--lv',String(level/strains.STRAIN_MAX));var tag=tab.querySelector('small');tag.textContent=!level?fmt(strain.unlock):'Lv '+level;tab.title=!level?'Locked':active?'On the menu':'Off the menu';tag.classList.toggle('price-tag',!level);
       Array.prototype.forEach.call(tab.querySelectorAll('.strain-pips i'),function(pip,k){pip.classList.toggle('is-filled',k<level);pip.classList.toggle('is-second',k<level-10)});
@@ -233,7 +233,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     '</ul>';
     var perkLine='<p class="strain-perk'+(tier?' is-unlocked':'')+'" title="'+(tier<2?'Level '+(tier?10:5)+': '+perk.effect[tier]:perk.effect[1])+'"><span class="perk-star" aria-hidden="true">'+(tier?'★':'☆')+'</span><b>'+perk.name+'</b><small>'+(tier?perk.effect[tier-1]:'Lv 5 · '+perk.effect[0])+'</small></p>';
     var heroHtml='<div class="strain-hero'+(level?'':' is-locked')+(active?' is-on-menu':'')+(i===trend?' is-trending':'')+'" style="--strain:'+strain.color+'">'+
-      '<div class="strain-hero-art">'+icon3d('jar-'+i)+(level?'<button type="button" id="flowerSelect" class="menu-toggle" aria-pressed="'+active+'">'+(active?'On menu':'Add')+'</button>':'')+'</div>'+
+      '<div class="strain-hero-art">'+icon3d('strain-'+i)+(level?'<button type="button" id="flowerSelect" class="menu-toggle" aria-pressed="'+active+'">'+(active?'On menu':'Add')+'</button>':'')+'</div>'+
       '<div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">'+look.kind+' · </span>'+strains.TYPES[type]+(level?' · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>'+level+' / '+strains.STRAIN_MAX:' · Locked')+'</small><h2>'+strain.name+'</h2><p>'+(level?look.buyers:'Unlock to put it on the menu. '+look.buyers)+'</p></div>'+
       '<div class="strain-stats">'+stats+'</div>'+
       '<div class="strain-hero-details">'+traits+perkLine+'</div>'+
