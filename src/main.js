@@ -456,6 +456,14 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var c=eligible[Math.floor(Math.random()*eligible.length)],pool=thoughtPool(c);
     c.thought={text:pool[Math.floor(Math.random()*pool.length)],age:0,duration:reduced?5:4.4};c.thoughtCooldown=20+Math.random()*15;
   }
+  // Customers in the shop walk at WALK_PACE of the economy's walking speed (Kevin, 2026-10-22: slow them down). In a busy
+  // shop the walk is part of serving: a customer who has ordered holds a pickup place from the counter until the bag is
+  // in hand, so a slower walk would leave counters waiting for places. The counters may promise 1/WALK_PACE as many
+  // places (never more than the line's route holds), and the pickup clerk starts the handoff as the head of the line
+  // comes up its last half unit, the way the doorman does; together they keep sales where they were at full pace.
+  var WALK_PACE=.7,PICKUP_REACH=.5;
+  function walkSpeed(){return economy.walkSpeed(state.trafficLevel)*WALK_PACE}
+  function pickupReserve(){return pickupPlaces(Math.round(pickupPromised()/WALK_PACE),routeLength(queueRoute(true)),queueGap(false))}
   function queueLimit(){return Math.min(QUEUE_MAX,Math.min(12,6+Math.floor(Math.max(0,state.lines[4]-1)/2)+Math.floor(state.staff[4]/2))+state.queueLevel*2)}
   function counterServiceDuration(i,serviceCapacity){
     // Both equipment and training shorten the handoff, with gentler gains at high levels.
@@ -506,7 +514,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     tickThoughts(dt);
     customers=customers.filter(function(c){return c.phase!=='leaving'||c.t<1});
     if(state.lines[5]){
-      var pickups=customers.filter(function(c){return c.ordered&&!c.bag}).sort(function(a,b){return pickupOrder(a)-pickupOrder(b)}).slice(0,1).filter(function(c){return c.phase==='pickup'&&!c.walking&&Math.hypot(c.x-PICKUP_X,c.z-4.9)<.01});
+      var pickups=customers.filter(function(c){return c.ordered&&!c.bag}).sort(function(a,b){return pickupOrder(a)-pickupOrder(b)}).slice(0,1).filter(function(c){return c.phase==='pickup'&&Math.hypot(c.x-PICKUP_X,c.z-4.9)<PICKUP_REACH});
       if(pickups.length&&state.stock[4]>0){var served=advanceCounterService(pickups[0],5,dt)?1:0;if(served>0){work[5]=0;var bags=Math.max(1,Math.min(pickups[0].bags||1,state.stock[4]));pickups[0].bags=bags;state.stock[4]-=bags;state.sold+=bags;playSound('sale',state.sound);recordEvent(state.empire,'pickup',served);pickups.slice(0,served).forEach(recordContractSale);add(pickups.slice(0,served).reduce(function(total,c){var sale=(c.salePrice||flowerValue())*(c.bags||1)*customerSaleBonus(c);if(c.momentMatched){var tip=tipFor((c.salePrice||flowerValue())*(c.bags||1));sale+=tip;state.shopPlay.tips+=tip;state.empire.reputation=Math.min(1000,state.empire.reputation+2);if(shopPlayUI)shopPlayUI.feedback(c.momentName+' loved your pick · +'+fmt(tip)+' tip · +2 reputation')}recordServed(state.shopPlay,c,sale);return total+sale},0));pickups.slice(0,served).forEach(function(c){c.phase='leaving';c.t=0;c.bag=true;c.effectAge=0;recentPickupRatings.push(customerRatings(c).highness);if(recentPickupRatings.length>20)recentPickupRatings.shift()});burst(machinePos[5],colors.acid)}}else work[5]=0;
     }
     // Prepare pickup bags independently of the number of customers collecting, but never from jars a waiting web order needs.
@@ -520,7 +528,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     work[4]=0;
     if(state.lines[4]){
       customers.filter(function(c){return atOrderCounter(c,state.orderCounters)}).forEach(function(c){
-        var available=orderAvailability(customers,state.stock[4],pickupLimit());
+        var available=orderAvailability(customers,state.stock[4],pickupReserve());
         if(available.places<1||available.bags<1)return;
         // A customer the player is advising waits at the desk; after a pick the team takes a moment to talk it through.
         if(moment&&moment.customerId===c.id&&moment.opened){c.adviceWait=(c.adviceWait||0)+dt;return}
@@ -540,7 +548,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(state.kiosk)for(var kioskIndex=0;kioskIndex<kioskCount();kioskIndex++){
       var kioskX=-8.95,kioskZ=6.8-kioskIndex*1.8;
       var kioskCustomer=customers.find(function(c){return c.kiosk&&c.kioskIndex===kioskIndex&&!c.ordered&&c.phase==='kiosk'&&Math.hypot(c.x-kioskX,c.z-kioskZ)<.15});
-      var kioskAvailable=orderAvailability(customers,state.stock[4],pickupLimit());
+      var kioskAvailable=orderAvailability(customers,state.stock[4],pickupReserve());
       if(kioskCustomer&&kioskAvailable.places>0&&kioskAvailable.bags>0){
         kioskCustomer.orderTime=(kioskCustomer.orderTime||0)+dt*abilityFactor(state.abilities,4);
         if(kioskCustomer.orderTime>=kioskServiceDuration()){kioskCustomer.strain=strainFor(kioskCustomer);kioskCustomer.bags=Math.min(basketSize()*(kioskCustomer.kind==='vip'?strains.VIP_BASKET:1),kioskAvailable.bags);kioskCustomer.salePrice=salePriceFor(kioskCustomer,kioskCustomer.strain);kioskCustomer.ordered=true;kioskCustomer.phase='toPickup'}
@@ -1735,7 +1743,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var ID_ROUTE=[ID_CHECK,{x:-10.6,z:9.6},{x:-11.7,z:9.3},{x:-12.4,z:7.8},{x:-12.4,z:-10}];
   function moveToIdCheck(c,dt){
     var queue=customers.filter(function(q){return q.idChecked===false}),index=queue.indexOf(c);
-    var startX=c.x,startZ=c.z,budget=dt*economy.walkSpeed(state.trafficLevel);
+    var startX=c.x,startZ=c.z,budget=dt*walkSpeed();
     c.phase='idCheck';
     if(c.idDistance===undefined)c.idDistance=routeLength(ID_ROUTE);
     c.idDistance=Math.max(index*.7,c.idDistance-budget);
@@ -1764,7 +1772,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(c.idChecked===false){moveToIdCheck(c,dt);return}
     if(c.phase==='lounge'){if(!(c.loungeFade>0))c.walking=false;return}
     if(c.phase==='toLounge'){
-      var loungeStartX=c.x,loungeStartZ=c.z,loungeBudget=dt*economy.walkSpeed(state.trafficLevel);
+      var loungeStartX=c.x,loungeStartZ=c.z,loungeBudget=dt*walkSpeed();
       if(!c.waypoints.length){
         // Waiting on the rope: shuffle back along the approach, one place per guest ahead.
         var place=loungeWaiting().indexOf(c),spot=loungeWaitSpot(place);
@@ -1773,15 +1781,15 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       c.walking=Math.hypot(c.x-loungeStartX,c.z-loungeStartZ)>.001;return;
     }
     if(!c.ordered&&c.orderCounter!=null){
-      var startX=c.x,startZ=c.z,budget=dt*economy.walkSpeed(state.trafficLevel);
+      var startX=c.x,startZ=c.z,budget=dt*walkSpeed();
       while(c.waypoints.length&&budget>0){var point=c.waypoints[0],dx=point.x-c.x,dz=point.z-c.z,distance=Math.hypot(dx,dz),step=Math.min(distance,budget);if(distance>.0001){c.x+=dx/distance*step;c.z+=dz/distance*step}budget-=step;if(distance<=step+.0001)c.waypoints.shift();else break}
       c.phase='ordering';c.walking=Math.hypot(c.x-startX,c.z-startZ)>.001;return;
     }
     if(c.phase==='leaving'&&c.loungeFadeIn!==undefined&&c.loungeFadeIn<1){c.walking=false;return}
-    var kind=c.phase==='leaving'?'exit':c.ordered?'pickup':c.kiosk?'kiosk':'order',route=kind==='kiosk'?kioskRoute(c.kioskIndex):queueRoute(c.ordered),budget=dt*economy.walkSpeed(state.trafficLevel),startX=c.x,startZ=c.z;
+    var kind=c.phase==='leaving'?'exit':c.ordered?'pickup':c.kiosk?'kiosk':'order',route=kind==='kiosk'?kioskRoute(c.kioskIndex):queueRoute(c.ordered),budget=dt*walkSpeed(),startX=c.x,startZ=c.z;
     // A guest out of the lounge is in no hurry: they amble to the door at a fixed slow pace, whatever Floor flow does
     // for everyone else (a third of the base walking speed).
-    if(c.lounge&&kind==='exit'&&c.z>-7.4)budget=dt*economy.walkSpeed(0)/3;
+    if(c.lounge&&kind==='exit'&&c.z>-7.4)budget=dt*economy.walkSpeed(0)*WALK_PACE/3;
     if(c.routeKind!==kind){
       c.routeKind=kind;c.laneDistance=null;
       // To the pickup line: kiosk customers cross the floor along z 5.5, the aisle between the customers ordering at
