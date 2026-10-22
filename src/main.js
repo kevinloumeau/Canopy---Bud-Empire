@@ -27,7 +27,7 @@ import {mountStartGuide} from './start-guide.js';
 import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
-import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, PERSON_HEAD_Y, subwayStairs, SUBWAY_HIDDEN_Z, drawSprite, stationSprite, drawPersonSprite, drawWalker, streetItems, floorTextureFiles, fixtureSprite, shellSprite, spriteImage, spritesLoading, drawBoxSprite, softShadow, sunShadow, SUN, SUN_REACH, townLayout, carPlacements, walkerPlacements, stationSpriteSize, stationTier as spriteTier } from './sunny-world.js';
+import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, PERSON_HEAD_Y, subwayStairs, SUBWAY_HIDDEN_Z, drawSprite, stationSprite, drawPersonSprite, streetItems, floorTextureFiles, fixtureSprite, shellSprite, spriteImage, spritesLoading, drawBoxSprite, softShadow, sunShadow, SUN, SUN_REACH, townLayout, carPlacements, walkerPlacements, stationSpriteSize, stationTier as spriteTier } from './sunny-world.js';
 import * as economy from './economy.js';
 import {ABILITIES,ABILITY_UNLOCK,ABILITY_FACTOR,ABILITY_SALES,ABILITY_SECONDS,migrateAbilities,abilityStatus,useAbility,tickAbilities,abilityFactor,abilitySales,clockLabel} from './crew-abilities.js';
 import * as strains from './strains.js';
@@ -2335,7 +2335,6 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // The 3D map's frame: the scene goes to the WebGL canvas, and the 2D canvas, cleared to transparent, keeps
   // what is drawn over the map in screen space. Taps, tags and badges use project(), which the 3D camera matches.
   var STATION_BOXES=[{w:2.6,d:1.5,h:1.5},{w:3.2,d:1.6,h:1.7},{w:2.8,d:1.5,h:1.5},{w:2.6,d:1.5,h:1.5},{w:2.2,d:1.1,h:1.25},{w:2.4,d:1.2,h:1.25},{w:.8,d:1.3,h:1.1}];
-  var PERSON_COLOURS=['#d97b5f','#5f8fc9','#e0b75a','#8a6fb5','#6aa36a','#c95f86','#4fa3a0','#d48c3a'];
   // The shop's customers in the 3D map are Kevin's rigged Meshy characters (2026-10-21), taken in turn by id.
   var STAFF_MODELS=(function(f){return{stations:[f('green-uniform-woman'),f('green-uniform-man'),f('chef'),f('staff-young'),null,f('staff-gray')],desks:[f('staff-dark-hair'),f('staff-young'),f('staff-gray')],door:f('security-guard'),host:f('staff-dark-hair'),window:f('staff-young')}})(function(n){return 'people/'+n+'.glb'});
 var STAFF_ROLES=['seeds','grow','harvest','pack','desk','pickup'];
@@ -2379,7 +2378,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function viewCentre(){var u=unit,c=Math.cos(angle),s=Math.sin(angle),rx=(width/2-centerX)/u,rz=(height/2-centerY)/(u*FLOOR_SQUASH);return{x:rx*c+rz*s,z:rz*c-rx*s}}
   // A branch in 3D: its own 2D drawing runs at a fixed scale with the primitives recording world shapes (branchRec)
   // and a context that paints nothing; screen-space ellipses and polygons are traced back to the world points they
-  // were projected from, and people are recorded as figures like the main map's.
+  // were projected from, and people stand in as the main map's rigged models (branchPerson).
   // Its gradients keep their stops, so a gradient-filled shape (Riverside's water) records in its middle colour.
   var silentCtx=(function(){var noop=function(){},canvasStub={width:1,height:1},gradient=function(){return{stops:[],addColorStop:function(o,c){this.stops.push(c)}}};
     return new Proxy({},{get:function(t,k){if(k==='createLinearGradient'||k==='createRadialGradient'||k==='createConicGradient')return gradient;if(k==='measureText')return function(){return{width:0}};if(k==='canvas')return canvasStub;if(k==='getTransform')return function(){return{a:1,b:0,c:0,d:1,e:0,f:0}};return noop},set:function(){return true}})})();
@@ -2391,7 +2390,16 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     function hex(v){return Math.round(v/n).toString(16).padStart(2,'0')}
     return '#'+hex(r)+hex(g)+hex(b)+hex(a);
   }
-  function recordBranch(figures){
+  // A branch's person (its api.person(x,z,now,id,moving,employee,bag,gait) call) as a 3D model: visitors from the
+  // shoppers' cast, staff from the staff's (the counter clerks face their counters), walking by the ground they cover.
+  var BRANCH_STAFF={10:STAFF_MODELS.desks[0],11:STAFF_MODELS.window,12:STAFF_MODELS.stations[5],16:STAFF_MODELS.desks[2]};
+  function branchPerson(characters,x,z,id,moving,employee,gait){
+    var still=motionPreference.matches,file=employee?(BRANCH_STAFF[id]||STAFF_MODELS.host):CUSTOMER_MODELS[id%CUSTOMER_MODELS.length];
+    if(!map3d.characterReady(file))return;
+    var walking=!still&&!!(gait&&gait.heading)&&(gait.amount===undefined?moving:gait.amount>0);
+    characters.push({file:file,id:'branch'+id,x:x,y:sceneElevation,z:z,ground:gait&&gait.ground||0,amount:walking?1:0,heading:gait&&gait.heading,look:employee&&(id===10||id===11)?{x:0,z:1}:null,facing:gait?gait.facing:.3,still:still});
+  }
+  function recordBranch(characters){
     var U=32,saved=[unit,centerX,centerY,ctx,sceneElevation],seen=new Map(),out={unit:U,boxes:[],lines:[],polys:[],ellipses:[],faces:[],fixtures:[],props:[]};
     function key(x,y){return Math.round(x*8)+','+Math.round(y*8)}
     branchRec={
@@ -2411,7 +2419,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     unit=U;centerX=0;centerY=0;ctx=silentCtx;sceneElevation=0;
     try{
       drawActiveBranch({realDepth:true,ctx:silentCtx,width:width,height:height,unit:U,project:project,box:drawBox,line:worldLine,poly:poly,ellipse:ellipse,blob:blobEllipse,leaf:leafShape,noise:seedNoise,lit:lit,plant:plant3d,jar:jar,carton:carton,depth:depthOf,
-        person:function(x,z){var args=arguments,rec=branchRec;branchRec=null;capturePerson(figures,x,0,z,function(){drawPerson.apply(null,args)});branchRec=rec},
+        person:function(x,z,now,id,moving,employee,bag,gait){branchPerson(characters,x,z,id,moving,employee,gait)},
         face:function(x,y,z,alongZ,draw){out.faces.push({x:x,y:y,z:z,alongZ:alongZ,draw:draw})},
         night:function(fixtures){out.fixtures=fixtures},
         // A Blender prop in place of the 2D drawing, once its model has loaded (until then the drawing stands in).
@@ -2421,8 +2429,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   }
   function renderBranch3d(now,frameDelta){
     var nightT=nightAmount();render.nightT=nightT;
-    var figures=[],scene=recordBranch(figures);
-    map3d.renderBranch({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:viewCentre(),background:BRANCH_THEMES[state.empire.activeStore-1].background,land:BRANCH_THEMES[state.empire.activeStore-1].land,landKey:state.empire.activeStore,branch:scene,figures:figures.filter(function(f){return f.alpha>.99})});
+    var characters=[],scene=recordBranch(characters);
+    map3d.renderBranch({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:viewCentre(),background:BRANCH_THEMES[state.empire.activeStore-1].background,land:BRANCH_THEMES[state.empire.activeStore-1].land,landKey:state.empire.activeStore,branch:scene,characters:characters});
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
     // Main-store effects expire while visiting a branch rather than replaying on return.
     particles.forEach(function(p){p.life-=frameDelta*1.5});particles=particles.filter(function(p){return p.life>0});deliveryDrones.forEach(function(d){d.age+=frameDelta});deliveryDrones=deliveryDrones.filter(function(d){return d.age<d.delay+DRONE_LIFE});
@@ -2436,43 +2444,39 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     crateTime=(crateTime+frameDelta*speed*1.4)%1;cargoOdo=(cargoOdo+frameDelta*speed*14)%1e5;
     var stations=[],people=[];
     function station(i,x,y,z,level,built,size){var tier=built?stationLookFor(i,level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(Math.min(5,tier)-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,pop:stationPop(i),selected:mapPicked&&selected===i&&!securitySelected&&!loungeSelected,clock:motionPreference.matches?6.3:motionClocks[i],act:taskActivity[i]})}
-    // People are the 2D map's own sprites, recorded as each would be drawn and stood up in the scene as flat figures
-    // (capturePerson); a capsule under each casts its shadow.
+    // Every person on the map is a rigged 3D model (Kevin's Meshy cast), the same model upstairs and down; nobody is
+    // a flat sprite (Kevin, 2026-10-22), so a person whose model has not loaded yet is simply not shown. Standing still,
+    // a customer looks at what they are doing (gait.look), else along the way they last walked. cast picks the model
+    // (default the id), so street walkers and walk-ups can share the shoppers' cast without sharing their ids.
     var figures=[];
-    function person(x,y,z,colour,draw){people.push({x:x,y:y,z:z,colour:colour});capturePerson(figures,x,y,z,draw)}
-    // Customers are rigged 3D models rather than sprites, the same model upstairs and down, once theirs has loaded
-    // (until then their sprite stands in). A model casts its own shadow, so it needs no capsule. Standing still, it
-    // looks at what the customer is doing (gait.look), else along the way it last walked.
     var characters=[],workClock=function(i){return motionPreference.matches?6.3:motionClocks[i]};
-    function customer(id,x,y,z,colour,gait,draw){
-      var file=CUSTOMER_MODELS[id%CUSTOMER_MODELS.length];
-      if(map3d.characterReady(file)){var still=motionPreference.matches;characters.push({file:file,id:id,x:x,y:y,z:z,ground:(gait.phase||0)/5,amount:still?0:gait.amount,heading:gait.heading,look:gait.look,facing:gait.facing,still:still});return}
-      person(x,y,z,colour,draw);
+    function customer(id,x,y,z,gait,cast){
+      var file=CUSTOMER_MODELS[(cast===undefined?id:cast)%CUSTOMER_MODELS.length];
+      if(map3d.characterReady(file)){var still=motionPreference.matches;characters.push({file:file,id:id,x:x,y:y,z:z,ground:(gait.phase||0)/5,amount:still?0:gait.amount,heading:gait.heading,look:gait.look,facing:gait.facing,still:still})}
     }
     // Staff are rigged models too, one per role (STAFF_MODELS), standing at work and facing it (look).
     // work: the job they act out at their post (staff-motion.js), on the post's own clock so hands follow its parts.
-    function staffer(id,file,x,y,z,look,facing,draw,work){
-      if(map3d.characterReady(file)){characters.push({file:file,id:id,x:x,y:y,z:z,amount:0,look:look,facing:facing,still:motionPreference.matches,work:work});return}
-      person(x,y,z,'#2f6b52',draw);
+    function staffer(id,file,x,y,z,look,facing,work){
+      if(map3d.characterReady(file))characters.push({file:file,id:id,x:x,y:y,z:z,amount:0,look:look,facing:facing,still:motionPreference.matches,work:work});
     }
     for(var i=0;i<6;i++){
       var p=machinePos[i];
       if(i===4)orderCounterPositions(state.orderCounters).forEach(function(q,index){
         var active=customers.some(function(c){return c.orderCounter===index&&atOrderCounter(c,state.orderCounters)&&c.serviceElapsed>0});
         station(4,q.x,0,q.z,state.lines[4],state.lines[4]>0,4);stations[stations.length-1].act=active?1:0;
-        if(state.lines[4]>0)staffer('desk'+index,STAFF_MODELS.desks[index%STAFF_MODELS.desks.length],q.x-.35,0,q.z-1.5,{x:0,z:1},.3,function(){drawPerson(q.x-.35,q.z-1.5,now,4,false,true,false,{amount:0,phase:0,facing:.3,identity:4+index*23,taskOffset:index*1.7,workActivity:active?1:0})},{role:'desk',clock:workClock(4)+index*1.7,act:active?1:0});
+        if(state.lines[4]>0)staffer('desk'+index,STAFF_MODELS.desks[index%STAFF_MODELS.desks.length],q.x-.35,0,q.z-1.5,{x:0,z:1},.3,{role:'desk',clock:workClock(4)+index*1.7,act:active?1:0});
       });
       else{
         station(i,p.x,p.y||0,p.z,state.lines[i],state.lines[i]>0,i);
-        if(state.lines[i]>0)(function(i,p){var spot=STAFF_SPOTS[i]||{dx:-.95,dz:-1.65},gait=spot.facing?{amount:0,phase:0,facing:spot.facing}:undefined;
-          staffer('station'+i,STAFF_MODELS.stations[i],p.x+spot.dx,p.y||0,p.z+spot.dz,{x:-spot.dx,z:-spot.dz},spot.facing,function(){drawPerson(p.x+spot.dx,p.z+spot.dz,now,i,false,true,false,gait)},{role:STAFF_ROLES[i],clock:workClock(i),act:1})})(i,p);
+        if(state.lines[i]>0)(function(i,p){var spot=STAFF_SPOTS[i]||{dx:-.95,dz:-1.65};
+          staffer('station'+i,STAFF_MODELS.stations[i],p.x+spot.dx,p.y||0,p.z+spot.dz,{x:-spot.dx,z:-spot.dz},spot.facing,{role:STAFF_ROLES[i],clock:workClock(i),act:1})})(i,p);
       }
     }
     stations.push({index:6,x:ID_DESK.x,y:0,z:ID_DESK.z,w:1.3,d:2.4,h:1.6,tier:state.doorBuilt?stationLookFor(6,state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,pop:stationPop(6),selected:mapPicked&&securitySelected});
     // The doorman stands behind the booth, on the room side, facing the front door across the desk.
-    if(state.doorBuilt)staffer('door',STAFF_MODELS.door,DOORMAN.x,0,DOORMAN.z,{x:ID_CHECK.x-DOORMAN.x,z:ID_CHECK.z-DOORMAN.z},1,function(){drawPerson(DOORMAN.x,DOORMAN.z,now,6,false,true,false,{amount:0,phase:0,facing:1})},{role:'guard',clock:sceneTime/1000});
+    if(state.doorBuilt)staffer('door',STAFF_MODELS.door,DOORMAN.x,0,DOORMAN.z,{x:ID_CHECK.x-DOORMAN.x,z:ID_CHECK.z-DOORMAN.z},1,{role:'guard',clock:sceneTime/1000});
     // The lounge host works the rooftop: behind the bar once there is one, otherwise by the elevator's bridge.
-    if(state.lounge>0){var host=state.lounge>=2?{x:3.7,z:-8.75,f:.3}:{x:-5.2,z:-4,f:.3};staffer('host',STAFF_MODELS.host,host.x,ROOFTOP.y,host.z,null,host.f,function(){drawPerson(host.x,host.z,now,8,false,true,false,{amount:0,phase:0,facing:host.f})},{role:'host',clock:sceneTime/1000})}
+    if(state.lounge>0){var host=state.lounge>=2?{x:3.7,z:-8.75,f:.3}:{x:-5.2,z:-4,f:.3};staffer('host',STAFF_MODELS.host,host.x,ROOFTOP.y,host.z,null,host.f,{role:'host',clock:sceneTime/1000})}
     // Guests on the roof hold a spot for their session. A guest riding up or down stands in the elevator's cab, which
     // carries them between the old lounge room and the roof and waits wherever it last stopped.
     var taken={},smokers=[],spots=ROOFTOP_SPOTS.slice(0,loungeSeats(state.lounge)||4),lift=ROOFTOP.lift;
@@ -2480,11 +2484,10 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     customers.forEach(function(c){if(c.phase==='lounge'&&c.roofSpot!==undefined&&c.roofSpot<spots.length&&!taken[c.roofSpot])taken[c.roofSpot]=c.id;else if(c.phase!=='lounge')c.roofSpot=undefined});
     customers.forEach(function(c){
       if(c.phase!=='lounge'||c.loungeFade>0)return;
-      var colour=PERSON_COLOURS[(c.id||0)%PERSON_COLOURS.length];
       // Riding: in their cab. Waiting below: out of sight in the back hallway.
       var inCab=c.lift==='down'||c.lift==='boarding'||c.lift==='exit',sh=inCab?(c.liftShaft||0):(c.shaft||0),shaftZ=(sh?ROOFTOP.lift2.z:lift.z)+.1;
       if(!c.lift||c.lift==='waitUp')return;
-      if(c.lift==='up'||c.lift==='down'){var ry=lifts[sh].y*ROOFTOP.y+.12,rx=lift.x+CAB_SLOTS[c.cabSlot||0][0],rz=shaftZ+CAB_SLOTS[c.cabSlot||0][1];customer(c.id,rx,ry,rz,colour,{amount:0,phase:0,facing:.3},function(){drawPerson(rx,rz,now,c.id,false,false,false,{amount:0,phase:0,facing:.3})});return}
+      if(c.lift==='up'||c.lift==='down'){var ry=lifts[sh].y*ROOFTOP.y+.12,rx=lift.x+CAB_SLOTS[c.cabSlot||0][0],rz=shaftZ+CAB_SLOTS[c.cabSlot||0][1];customer(c.id,rx,ry,rz,{amount:0,phase:0,facing:.3});return}
       // Stepping into the cab (from their place in the bridge queue, or from the hallway below) or out of it below:
       // the cab holds its floor until the last of them is through the door (lounge-lifts.js).
       if(c.lift==='boarding'||c.lift==='exit'){
@@ -2492,12 +2495,12 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
         var bt=smooth(c.lift==='boarding'?c.boardT:c.exitT),b0=c.lift==='boarding'?(c.boardFrom||door):{x:bx,z:bz},b1=c.lift==='boarding'?{x:bx,z:bz}:door;
         var bwx=b0.x+(b1.x-b0.x)*bt,bwz=b0.z+(b1.z-b0.z)*bt,bd=Math.hypot(b1.x-b0.x,b1.z-b0.z)||1,bstep=bt>0&&bt<1;
         var bh={x:(b1.x-b0.x)/bd,z:(b1.z-b0.z)/bd},bfy=by+(c.lift==='boarding'?bt:1-bt)*.12;
-        var bg={amount:bstep?1:0,phase:bt*bd*5,heading:bh,facing:bh.x-bh.z>0?.3:-.3};customer(c.id,bwx,bfy,bwz,colour,bg,function(){drawPerson(bwx,bwz,now,c.id,bstep,false,false,bg)});return}
+        var bg={amount:bstep?1:0,phase:bt*bd*5,heading:bh,facing:bh.x-bh.z>0?.3:-.3};customer(c.id,bwx,bfy,bwz,bg);return}
       if(c.roofSpot===undefined||taken[c.roofSpot]!==c.id){for(var k=0;k<spots.length;k++)if(taken[k]===undefined){c.roofSpot=k;taken[k]=c.id;break}}
       var spot=spots[c.roofSpot];if(!spot||taken[c.roofSpot]!==c.id)return;
       // Out of the cab, across the bridge and on to their spot; back to the landing a step from the cab door to wait.
       var back=c.lift!=='roof',s=c.lift==='roof'?smooth(c.roofWalk):c.lift==='back'?1-smooth(c.walkBack):0;
-      if(s>=1){smokers.push({x:spot[0],z:spot[1],id:c.id,facing:spot[2]});customer(c.id,spot[0],ROOFTOP.y,spot[1],colour,{amount:0,phase:0,facing:spot[2]},function(){drawPerson(spot[0],spot[1],now,c.id,false,false,false,{amount:0,phase:0,facing:spot[2]})});return}
+      if(s>=1){smokers.push({x:spot[0],z:spot[1],id:c.id,facing:spot[2]});customer(c.id,spot[0],ROOFTOP.y,spot[1],{amount:0,phase:0,facing:spot[2]});return}
       // Riders step out one after another from where they stood in the cab (each a beat behind the one before).
       var slot=c.cabSlot||0,cx0=lift.x+CAB_SLOTS[slot][0],cz0=shaftZ+CAB_SLOTS[slot][1];
       var path=[{x:cx0,z:cz0},{x:ROOFTOP.x0+.5,z:shaftZ},{x:spot[0],z:spot[1]}],lens=[],total=0;
@@ -2513,21 +2516,22 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       var moving=c.lift==='roof'?s>0&&s<1:c.lift==='back'||shuffling;
       if(back){c.queueX=wx;c.queueZ=wz}
       var rg={amount:moving?1:0,phase:along*5,heading:{x:hx,z:hz},facing:hx-hz>0?.3:-.3};
-      customer(c.id,wx,ROOFTOP.y,wz,colour,rg,function(){drawPerson(wx,wz,now,c.id,moving,false,false,rg)});
+      customer(c.id,wx,ROOFTOP.y,wz,rg);
     });
     liftY=lifts[0].y*ROOFTOP.y;liftY2=lifts[1].y*ROOFTOP.y;loungeSmokers=smokers;
     customers.forEach(function(c){
       stepCustomerVisual(c,frameDelta);
       if(c.phase==='lounge'&&!(c.loungeFade>0))return;
       var gait={phase:c.walkPhase||0,heading:c.walkHeading,look:customerLook(c),amount:c.walkAmount||0,facing:c.facing===undefined?.3:c.facing,lean:c.turnLean||0,pickupAge:c.effectAge};
-      customer(c.id||0,c.renderX,0,c.renderZ,PERSON_COLOURS[(c.id||0)%PERSON_COLOURS.length],gait,function(){drawPerson(c.renderX,c.renderZ,now,c.id,c.walking,false,c.bag,gait)});
+      customer(c.id||0,c.renderX,0,c.renderZ,gait);
     });
     var streetApi=sunnyApi(now);
-    walkerPlacements(now).forEach(function(w){person(w.x,w.y===undefined?-.012:w.y,w.z,PERSON_COLOURS[(w.g*3+1)%PERSON_COLOURS.length],function(){drawWalker(streetApi,w)})});
+    // Pavement walkers and subway riders wear the shoppers' cast too, walking by the ground they cover.
+    walkerPlacements(now).forEach(function(w){customer('walker'+w.g,w.x,w.y===undefined?-.012:w.y,w.z,{amount:1,phase:w.s*5,heading:w.heading,facing:w.facing},w.g*3+1)});
     // The pickup window's clerk inside it, and its walk-ups (cast after the shop's own customers).
     if(windowOpen()){
-      staffer('window',STAFF_MODELS.window,WINDOW_CLERK.x,0,WINDOW_CLERK.z,null,-1,function(){drawPerson(WINDOW_CLERK.x,WINDOW_CLERK.z,now,5,false,true,false,{amount:0,phase:0,facing:-1,workActivity:windowServing?1:0})},{role:'window',clock:sceneTime/1000,act:windowServing?1:0});
-      windowFigures(windowLine,SUBWAY_HIDDEN_Z).forEach(function(w){var who=500+w.id;person(w.x,w.y,w.z,PERSON_COLOURS[who%PERSON_COLOURS.length],function(){drawPerson(w.x,w.z,now,who,w.moving,false,w.bag,{identity:who,phase:w.walked*5,heading:w.heading,amount:w.moving?1:0,facing:w.facing})})});
+      staffer('window',STAFF_MODELS.window,WINDOW_CLERK.x,0,WINDOW_CLERK.z,null,-1,{role:'window',clock:sceneTime/1000,act:windowServing?1:0});
+      windowFigures(windowLine,SUBWAY_HIDDEN_Z).forEach(function(w){customer('window'+w.id,w.x,w.y,w.z,{phase:w.walked*5,heading:w.heading,amount:w.moving?1:0,facing:w.facing},500+w.id)});
     }
     // The street's trees, lamps and props are its own renders too, stood up at their footprints' centres, and so are
     // the cars until their Blender models load; the terraces stay solid. The 3D trees and lamps underneath only cast shadows.
