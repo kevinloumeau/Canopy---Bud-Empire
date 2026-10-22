@@ -688,8 +688,8 @@ export function createMap3D(canvas, layout) {
   // The walk is played by ground covered, never by the clock, so feet keep pace with the figure whatever its speed:
   // one Walking loop covers 1.1 m of ground (measured from the foot's travel). Standing, the idle plays on the clock.
   // People stand at CHARACTER_SCALE of the built 1.36 m figure (Kevin, 2026-10-22: the Meshy cast read a little large).
-  const CHARACTER_SCALE = .9, WALK_LOOP = 1.1 * BLENDER_SCALE * CHARACTER_SCALE, CHARACTER_LIFT = .16, CHARACTER_RIM = .9, CHARACTER_SAT = 1.2, CHARACTER_FILL = 1, CHARACTER_BRIGHT = 1.12;
-  const characterRim = { value: CHARACTER_RIM };
+  const CHARACTER_SCALE = .9, WALK_LOOP = 1.1 * BLENDER_SCALE * CHARACTER_SCALE, CHARACTER_LIFT = .16, CHARACTER_RIM = .9, CHARACTER_SAT = 1.15, CHARACTER_FILL = 1, CHARACTER_BRIGHT = 1.12, CHARACTER_SHEEN = .15, CHARACTER_DIRECT = 1;
+  const characterRim = { value: CHARACTER_RIM }, characterSheen = { value: CHARACTER_SHEEN };
   const ease01 = v => v * v * (3 - 2 * v);
   const characterSources = {}, characterRequested = {}, characterCopies = [], characterYaw = new Map();
   function characterReady(file) {
@@ -708,18 +708,18 @@ export function createMap3D(canvas, layout) {
           if (!o.isMesh) return;
           o.frustumCulled = false;
           const map = o.material.map || o.material.emissiveMap;
-          o.material = new THREE.MeshStandardMaterial({ map, emissiveMap: map, emissive: '#ffffff', emissiveIntensity: CHARACTER_LIFT, roughness: .4, metalness: 0, name: o.material.name });
+          o.material = new THREE.MeshStandardMaterial({ map, emissiveMap: map, emissive: '#ffffff', emissiveIntensity: CHARACTER_LIFT, roughness: .42, metalness: .05, name: o.material.name });
           o.material.onBeforeCompile = shader => {
-            shader.uniforms.characterRim = characterRim;
-            shader.uniforms.characterSat = { value: CHARACTER_SAT }; shader.uniforms.characterBright = { value: CHARACTER_BRIGHT }; shader.uniforms.characterFill = { value: CHARACTER_FILL };
-            shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nuniform float characterRim, characterSat, characterFill, characterBright;')
+            shader.uniforms.characterRim = characterRim; shader.uniforms.characterSheen = characterSheen;
+            shader.uniforms.characterSat = { value: CHARACTER_SAT }; shader.uniforms.characterBright = { value: CHARACTER_BRIGHT }; shader.uniforms.characterFill = { value: CHARACTER_FILL }; shader.uniforms.characterDirect = { value: CHARACTER_DIRECT };
+            shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nuniform float characterRim, characterSat, characterFill, characterBright, characterSheen, characterDirect;')
               .replace('#include <map_fragment>', `#include <map_fragment>
               diffuseColor.rgb = max(mix(vec3(dot(diffuseColor.rgb, vec3(.2126, .7152, .0722))), diffuseColor.rgb, characterSat), 0.0) * characterBright;`)
               .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
-              reflectedLight.indirectDiffuse *= characterFill;`)
+              reflectedLight.indirectDiffuse *= characterFill; reflectedLight.directDiffuse *= characterDirect;`)
               .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
               float rimFacing = 1.0 - abs(dot(normal, isOrthographic ? vec3(0.0, 0.0, 1.0) : normalize(vViewPosition)));
-              totalEmissiveRadiance += diffuseColor.rgb * vec3(1.0, .93, .8) * pow(rimFacing, 3.0) * characterRim;`);
+              totalEmissiveRadiance += diffuseColor.rgb * vec3(1.0, .93, .8) * pow(rimFacing, 3.0) * characterRim + vec3(pow(rimFacing, 3.0) * characterSheen);`);
           };
           materials.push(o.material);
         });
@@ -748,7 +748,7 @@ export function createMap3D(canvas, layout) {
   // to the side its sprite would face (facing > 0 is screen right).
   function placeCharacters(list, stepSeconds, night) {
     Object.values(characterSources).forEach(s => s.materials.forEach(m => { m.emissiveIntensity = CHARACTER_LIFT * (1 - night * .85); }));
-    characterRim.value = CHARACTER_RIM * (1 - night * .7);
+    characterRim.value = CHARACTER_RIM * (1 - night * .7); characterSheen.value = CHARACTER_SHEEN * (1 - night * .7);
     const seen = new Set();
     (list || []).forEach((c, i) => {
       if (!characterSources[c.file]) return;
