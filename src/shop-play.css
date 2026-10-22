@@ -84,3 +84,10 @@
 .shop-activity-panel .shop-play-feedback{position:static;transform:none;width:auto;max-width:none;margin:2px 0 10px;border-color:#e2c68a44;background:var(--ui-brass-wash);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
 
 @media(min-width:780px){.shop-activity{left:76px}.shop-activity-panel{left:76px;max-height:calc(100dvh - var(--hud-height,60px) - 90px)}}
+/* Last recap: a small label over three open figures, then a one-line brass fix button when a station needs it. */
+.activity-last{margin-top:14px;padding-top:12px;border-top:1px solid var(--ui-edge)}
+.activity-last h4{margin:0 2px;font:600 11px/1.2 'DM Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ui-soft)}
+.activity-figures.is-last{margin-top:6px}
+.activity-figures.is-last dd{font-size:17px}
+.activity-advice{grid-template-columns:auto minmax(0,1fr) auto!important;margin-top:10px!important;padding:9px 10px!important;border-color:#e2c68a66!important;background:#e2c68a1f!important}
+.activity-advice strong{font-size:13px;font-weight:600;line-height:1.25;color:var(--ui-ink);text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
