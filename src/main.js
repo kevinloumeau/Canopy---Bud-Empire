@@ -2948,8 +2948,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
         var basketNow=basketAt(level),basketNext=basketAt(level+1),nextGain=level+1;
         while(nextGain<level+60&&basketAt(nextGain)<=basketNow)nextGain++;
         // Pickup only moves the basket through the retail tier, which both counters have to reach.
-        var retail=economy.retailTier(state.lines),laterGain=basketAt(nextGain)>basketNow?'+1 at Lv '+nextGain:retail<TIER_LEVELS.length-1?'×2 when both counters reach Lv '+TIER_LEVELS[retail+1]:'';
-        renderUpgradeComparison('Units per basket',basketNow,basketNext,false,false,false,{gain:function(before,after){return after>before?'+'+(after-before)+' per basket':'Same basket'+(laterGain?' · '+laterGain:'')}});
+        var retail=economy.retailTier(state.lines),laterGain=basketAt(nextGain)>basketNow?'+1 at Lv '+nextGain:retail<TIER_LEVELS.length-1?(function(at,other){return '×2 when '+(state.lines[other]<at?(other===4?'Orders':'Pickup')+' hits':'both hit')+' Lv '+at})(TIER_LEVELS[retail+1],selected===4?5:4):'';
+        renderUpgradeComparison('Units per basket',basketNow,basketNext,false,false,false,{gain:function(before,after){return after>before?'+'+(after-before)+' per basket':laterGain||'Same basket'}});
       }else renderUpgradeComparison('Seconds per handoff',handoffNow/Math.max(1,state.gameSpeed),handoffNext/Math.max(1,state.gameSpeed),true,!level,false);
     }
     paintUpgradePreview(selected);
@@ -3395,7 +3395,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function renderUnlockRoad(level,i){
     var next=economy.nextUnlock(Math.max(1,level)),road=$('nextAppearance');road.classList.add('unlock-road');road.hidden=!level;
     if(!next){road.innerHTML='<b>Flagship</b><span>every level still adds output</span>';return}
-    var other=i===4?5:i===5?4:-1,gives=other<0?'×2 output':'×2 baskets'+(state.lines[other]<next.level?' with '+(other===4?'Orders':'Pickup'):'');
+    var other=i===4?5:i===5?4:-1,gives=other<0?'×2 output':'×2 baskets';road.title=other<0?'':'Baskets double when Orders and Pickup both reach Lv '+next.level;
     road.innerHTML='<b>Lv '+next.level+'</b><span>'+gives+(next.look?' · new look':next.level===FOUNDER_LEVEL&&perkLevel(state.perks,'finish')?' · founder look':'')+'</span>';
   }
   // Founder's finish (founder perk): a flagship station at Lv 100, or the door booth at its Lv 75 cap, takes the founder look.
