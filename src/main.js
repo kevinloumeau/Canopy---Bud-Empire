@@ -1238,9 +1238,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var taskClocks=[0,0,0,0,0,0],taskActivity=[0,0,0,0,0,0],cropGrowth=[.15,.4,.7,.95];
   // Each station's work clock: it runs while the station is working, easing in and out, and drives its staff loop.
   // Its 3D model's motion (station-motion.js) runs on its own clock whenever the station is built, so a station whose
-  // store is full or whose input ran dry still looks alive; only pausing the game stops it.
+  // store is full or whose input ran dry still looks alive; only pausing the game stops it. A crew burst runs it at the
+  // burst's speed, so the station visibly works faster.
   var motionClocks=[0,0,0,0,0,0];
-  function tickTaskClocks(dt){for(var task=0;task<6;task++){var target=stationWorking(task)?1:0;taskActivity[task]+=(target-taskActivity[task])*(1-Math.exp(-dt*5));taskClocks[task]+=dt*1000*taskActivity[task];if(state.lines[task]>0)motionClocks[task]+=dt}}
+  function tickTaskClocks(dt){for(var task=0;task<6;task++){var target=stationWorking(task)?1:0;taskActivity[task]+=(target-taskActivity[task])*(1-Math.exp(-dt*5));taskClocks[task]+=dt*1000*taskActivity[task];if(state.lines[task]>0)motionClocks[task]+=dt*(state.abilities.active[task]>0?ABILITY_FACTOR:1)}}
   function crop(x,z,y,slot,mature){
     var strain=visibleStrain(slot),phase=motionPreference.matches?.8:(taskClocks[1]/9000+slot*.23)%1;
     // A readable representative crop cycle, independent of high-speed batch counts.
