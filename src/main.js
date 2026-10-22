@@ -2338,7 +2338,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // The shop's customers in the 3D map are Kevin's rigged Meshy characters (2026-10-21), taken in turn by id.
   var STAFF_MODELS=(function(f){return{stations:[f('green-uniform-woman'),f('green-uniform-man'),f('chef'),f('staff-young'),null,f('staff-gray')],desks:[f('staff-dark-hair'),f('staff-young'),f('staff-gray')],door:f('security-guard'),host:f('staff-dark-hair'),window:f('staff-young')}})(function(n){return 'people/'+n+'.glb'});
 var STAFF_ROLES=['seeds','grow','harvest','pack','desk','pickup'];
-var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-shirt','utility-vest','office-woman','bearded-blue-shirt','tie-dye-hoodie','cream-outfit','trench-coat','linen-tunic','blazer-woman','beanie-hoodie','puffer-vest-woman','fleece-man','yellow-jacket-woman','athletic-man','hijab-woman'].map(function(n){return 'people/'+n+'.glb'});
+var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-shirt','utility-vest','office-woman','bearded-blue-shirt','tie-dye-hoodie','cream-outfit','trench-coat','linen-tunic','blazer-woman','beanie-hoodie','puffer-vest-woman','fleece-man','yellow-jacket-woman','athletic-man','hijab-woman','pattern-shirt-man'].map(function(n){return 'people/'+n+'.glb'});
   // Records the images one 2D figure draws (with every transform it applies) and turns each into four world points: a
   // flat card standing upright at the figure's feet, spanning screen-right and up, so the 3D camera shows it exactly
   // where the 2D map would while counters in front of it still hide it. Nothing else the figure draws is kept.
