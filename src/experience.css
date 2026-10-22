@@ -210,8 +210,10 @@
 /* A station card whose crew ability is ready carries a small brass dot, so a returning player can see what to tap. */
 .sheet .machine-nav button.ability-ready{position:relative}
 .sheet .machine-nav button.ability-ready::before{content:"";position:absolute;top:6px;left:6px;width:7px;height:7px;border-radius:50%;background:#e2bd6a;box-shadow:0 0 0 2px #d0a54e33;pointer-events:none}
-/* Purchase tags for the smaller buys (pickup window, drone port, next kiosk): the lounge's tag at about half its size. */
-.world .marker.station-sign.is-lot.is-mini{padding:2px 7px!important;border-radius:8px;opacity:.94}
+/* Purchase tags for the smaller buys (pickup window, drone port, next kiosk): the lounge's tag at about half its size and
+   quieter (Kevin, 2026-10-22): see-through glass, a faint dashed edge, no brass ring. */
+.world .marker.station-sign.is-lot.is-mini,.world .marker.station-sign.is-lot.is-mini:not(.selected){padding:2px 7px!important;border-radius:8px;border:1px dashed #f3ead64d;background:#1c2a2299;color:#f3ead6cc;box-shadow:none;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.world .marker.station-sign.is-lot.is-mini .station-sign-level{color:#f3ead699}
 .world .marker.station-sign.is-lot.is-mini .station-sign-name{font-size:9px}
 .world .marker.station-sign.is-lot.is-mini .station-sign-level{font-size:8.5px}
 .world .marker.station-sign.is-lot.is-mini::after{display:none}
