@@ -12,7 +12,8 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
     [byKey('basketLevel'),1],[byKey('trafficLevel'),1],[byKey('signLevel'),1],[byKey('comfortLevel'),1],[byKey('scannerLevel'),1],[byKey('pickupLevel'),1],[byKey('readyLevel'),1],[byKey('serviceLevel'),1],[byKey('kioskSpeedLevel'),1],[byKey('displayLevel'),1],[byKey('loyaltyLevel'),1],[byKey('durationLevel'),1],
     [byKey('webLevel'),2],[byKey('onlineBonusLevel'),2],[byKey('fleetLevel'),2],[byKey('cargoLevel'),2],[byKey('repeatLevel'),2]];
   // One label over each undecided fork and an "or" between its sides.
-  const forkMarks=FORKS.map(f=>{const head=document.createElement('p');head.className='shop-fork-head';head.innerHTML='<b>Choose one</b><span>'+f.name+'</span>';const or=document.createElement('p');or.className='shop-fork-or';or.setAttribute('aria-hidden','true');or.innerHTML='<span>or</span>';const end=document.createElement('i');end.className='shop-fork-end';end.setAttribute('aria-hidden','true');return {fork:f,head,or,end,ids:f.sides.map(byKey)}});
+  // An undecided fork sits at the end of its branch as one card: both sides side by side with an "or" between them.
+  const forkMarks=FORKS.map(f=>{const box=document.createElement('div');box.className='shop-fork';box.setAttribute('role','group');box.setAttribute('aria-label','Pick one: '+f.name);const head=document.createElement('p');head.className='shop-fork-head';head.innerHTML='<b>Pick one</b><span>The other closes until you reopen</span>';const or=document.createElement('p');or.className='shop-fork-or';or.setAttribute('aria-hidden','true');or.innerHTML='<span>or</span>';const end=document.createElement('i');end.className='shop-fork-end';end.setAttribute('aria-hidden','true');return {fork:f,box,head,or,end,ids:f.sides.map(byKey)}});
   const rows=definitions.map(([id,category])=>{
     const button=document.getElementById(id),node=button.parentElement;
     node.classList.add('shop-item');
@@ -73,7 +74,10 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
     // Undecided forks get their label above the first side and the "or" between the two.
     const open=forkMarks.filter(m=>m.ids.every(id=>{const r=rows.find(x=>x.id===id);return r&&r.category===category&&sideStatus(state,components[Number(id.replace('componentBuy',''))].key)==='pick'}));
     const key=sequence.map(r=>r.id).join(',')+'|'+category+'|'+open.map(m=>m.fork.id).join(',');
-    if(key!==render.key){render.key=key;forkMarks.forEach(m=>{m.head.remove();m.or.remove();m.end.remove()});sequence.forEach(r=>{const mark=open.find(m=>m.ids[0]===r.id),after=open.find(m=>m.ids[1]===r.id);if(mark)list.appendChild(mark.head);if(after)list.appendChild(after.or);list.appendChild(r.node);if(after)list.appendChild(after.end)})}
+    if(key!==render.key){render.key=key;forkMarks.forEach(m=>m.box.remove());
+      const forked=id=>open.some(m=>m.ids.indexOf(id)>=0);
+      sequence.forEach(r=>{if(!forked(r.id))list.appendChild(r.node)});
+      open.forEach(m=>{const [a,b]=m.ids.map(id=>rows.find(x=>x.id===id).node);m.box.replaceChildren(m.head,a,m.or,b);list.appendChild(m.box)})}
     desk.hidden=true;
     if(!desk.hidden){const d=deliveryDesk(),note=desk.querySelector('small'),title=desk.querySelector('b'),count=desk.querySelector('.shop-desk-count'),price=desk.querySelector('.shop-desk-price'),meter=desk.querySelector('.shop-desk-meter');
       // Unbuilt, the desk is the shelf's next step: a brass card above the list with its price and savings so far.

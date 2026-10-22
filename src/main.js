@@ -2564,7 +2564,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var look=viewCentre();
     map3d.render({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,characters:characters,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,loungeBuild:isBuilding(state.builds,'lounge')?1-buildShareLeft(state.builds,'lounge'):null,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtureBuild:isBuilding(state.builds,'deck')||isBuilding(state.builds,'window')?Object.assign(isBuilding(state.builds,'deck')?{deck:1-buildShareLeft(state.builds,'deck')}:{},isBuilding(state.builds,'window')?{pickupWindow:1-buildShareLeft(state.builds,'window')}:{}):null,fixtures:{deck:deliveryBuilt(),pickupWindow:windowOpen(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2},menus:kioskMenus(),menuClock:animationTime/1000,cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     // A model that had not loaded when the tabs were painted: try again every half second until all are in.
-    if(picturesPending&&!(now-(renderFrame3d.picturesTried||0)<500)){renderFrame3d.picturesTried=now;picturesPending=false;paintThumbnails()}
+    var wall=performance.now();if(picturesPending&&!(wall-(renderFrame3d.picturesTried||0)<500)){renderFrame3d.picturesTried=wall;picturesPending=false;paintThumbnails()}
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
     customers.forEach(function(c){if(c.phase!=='lounge'&&customerBadged(c))drawCustomerBadge(Object.assign({},c,{x:c.renderX,z:c.renderZ}))});
     drawDeliveryExtras(dronePoses,now);drawParticles(frameDelta);drawTickets(frameDelta);drawConfetti(wallDelta);
@@ -3349,12 +3349,13 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function stationLookFor(i,level){var t=economy.stationLook(level);return t===5&&perkLevel(state.perks,'finish')&&level>=(i===6?economy.SECURITY_MAX_LEVEL:FOUNDER_LEVEL)?FOUNDER_LOOK:t}
   function stationModelKey(i,level){var t=stationLookFor(i,level);while(t>1&&!stationModelFiles[i+'.'+t])t--;return i+'.'+t}
   function stationPicture(i,level){
-    if(!map3d||!map3d.ok||!map3d.stationPicture||!(level>0))return null;
+    // Before the 3D map is up, ask the frame loop to try again rather than keep the sprite.
+    if(!(level>0))return null;if(!map3d||!map3d.ok||!map3d.stationPicture){picturesPending=true;return null}
     var picture=map3d.stationPicture(stationModelKey(i,level));if(!picture)picturesPending=true;return picture;
   }
   // The rooftop lounge as the map shows it at its tier (map3d.loungePicture); unbought, the Speakeasy it opens as.
   function loungePicture(){
-    if(!map3d||!map3d.ok||!map3d.loungePicture)return null;
+    if(!map3d||!map3d.ok||!map3d.loungePicture){picturesPending=true;return null}
     var picture=map3d.loungePicture(Math.max(1,state.lounge),state.loungeLift);if(!picture)picturesPending=true;return picture;
   }
   // Draws a picture into a w×h canvas, as large as fits, centred and standing on the bottom edge.
@@ -3393,7 +3394,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       preview.dataset.art=key;
     }finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
   }
-  function paintSecurityThumbnail(){var card=document.querySelector('[data-security] canvas');if(!card)return;paintThumb(card,state.doorBuilt?stationPicture(6,state.idStaff):null,function(){unit=25;centerX=40;centerY=97;angle=.57;if(!state.doorBuilt)drawConstructionSite(0,0,2.6,2.6,function(){drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5'])});else{drawBox(0,0,-.24,2.6,2.6,.24,['#cbb085','#7f6a4b','#ac9168']);drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5']);drawPerson(-.55,-.45,0,7,false,true,false)}})}
+  function paintSecurityThumbnail(){var card=document.querySelector('[data-security] canvas');if(!card)return;paintThumb(card,stationPicture(6,state.doorBuilt?Math.max(1,state.idStaff):1),function(){unit=25;centerX=40;centerY=97;angle=.57;if(!state.doorBuilt)drawConstructionSite(0,0,2.6,2.6,function(){drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5'])});else{drawBox(0,0,-.24,2.6,2.6,.24,['#cbb085','#7f6a4b','#ac9168']);drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5']);drawPerson(-.55,-.45,0,7,false,true,false)}})}
   // The lounge doorway in miniature, dressed for its tier. Every level keeps the lacquer jambs, the slab and the LOUNGE
   // blade so the card still reads as the lounge; what changes is the colour of the neon, the drapes, the room glimpsed
   // between them and the dressing out front — planters for the terrace, a rope for the booths, a doorman and a runner

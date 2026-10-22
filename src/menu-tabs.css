@@ -295,7 +295,7 @@
 .sheet .machine-nav button.is-locked .machine-thumb{opacity:.5}
 /* 3D icons rendered in Blender (public/icons/3d) */
 .sheet img.icon-3d{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;pointer-events:none;user-select:none;-webkit-user-drag:none}
-.sheet [data-pane="flowers"] .strain-nav .strain-card-art img.icon-3d{position:relative;width:30px;height:34px;object-fit:contain}
+.sheet [data-pane="flowers"] .strain-nav .strain-card-art img.icon-3d{position:relative;width:36px;height:36px;object-fit:contain}
 .sheet [data-pane="flowers"] .strain-nav button.is-locked .strain-card-art img.icon-3d{filter:grayscale(.85) brightness(.75)}
 .sheet [data-pane="flowers"] .strain-hero-art img.icon-3d{width:100%;height:100%;object-fit:contain;object-position:center bottom}
 .sheet [data-pane="flowers"] .strain-format-pill img.icon-3d{width:46px;height:34px;object-fit:contain;filter:drop-shadow(0 3px 4px #0a140e80)}
@@ -307,3 +307,11 @@
 .sheet .empire-screen .store-hero .store-icon{background:none!important;box-shadow:none!important;width:56px!important;height:50px!important}
 .sheet .empire-screen .store-hero .store-icon img.icon-3d{width:56px;height:50px}
 .sheet .empire-screen .store-hero.is-locked .store-icon img.icon-3d{filter:grayscale(.9) brightness(.7)}
+/* A research fork is one card at the end of its branch: "Pick one", then both sides with an "or" between them. */
+.shop-browser .shop-items>.shop-fork{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) 22px minmax(0,1fr);align-items:stretch;gap:0;margin-top:4px!important;padding:8px;border:1px solid #f0d69a59;border-radius:16px;background:linear-gradient(180deg,#f0d69a14,#f0d69a05)}
+.shop-browser .shop-fork>.shop-fork-head{grid-column:1/-1;display:flex;align-items:baseline;gap:8px;margin:0 4px 8px!important;font-size:11.5px;color:#fbf8eeb3}
+.shop-browser .shop-fork>.shop-fork-head b{font:600 12px/1.2 'Bricolage Grotesque',system-ui,sans-serif;color:#f0d69a;letter-spacing:.02em}
+.shop-browser .shop-fork>.shop-fork-or{display:grid!important;place-items:center;margin:0!important;position:relative}
+.shop-browser .shop-fork>.shop-fork-or::before,.shop-browser .shop-fork>.shop-fork-or::after{display:none}
+.shop-browser .shop-fork>.shop-fork-or span{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#2a4234;box-shadow:0 0 0 1.5px #f0d69a80;font:600 10px/1 'DM Mono',monospace;color:#f0d69a;text-transform:lowercase;letter-spacing:0}
+.shop-browser .shop-fork>.shop-item{margin:0!important}
