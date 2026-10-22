@@ -10,16 +10,18 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
   const byKey=key=>'componentBuy'+components.findIndex(c=>c.key===key);
   const definitions=[['upgradeStorage',0],['boost',0],[byKey('seedBatchLevel'),0],[byKey('curingLevel'),0],[byKey('trendLevel'),0],[byKey('harvestBatchLevel'),0],[byKey('packSpeedLevel'),0],[byKey('breedingLevel'),0],[byKey('growBatchLevel'),0],[byKey('terpeneLevel'),0],[byKey('offlineLevel'),0],
     [byKey('basketLevel'),1],[byKey('trafficLevel'),1],[byKey('signLevel'),1],[byKey('comfortLevel'),1],[byKey('scannerLevel'),1],[byKey('pickupLevel'),1],[byKey('readyLevel'),1],[byKey('serviceLevel'),1],[byKey('kioskSpeedLevel'),1],[byKey('displayLevel'),1],[byKey('loyaltyLevel'),1],[byKey('durationLevel'),1],
-    ['buyAutoDrone',2],[byKey('webLevel'),2],[byKey('onlineBonusLevel'),2],[byKey('fleetLevel'),2],[byKey('cargoLevel'),2],[byKey('repeatLevel'),2]];
+    [byKey('webLevel'),2],[byKey('onlineBonusLevel'),2],[byKey('fleetLevel'),2],[byKey('cargoLevel'),2],[byKey('repeatLevel'),2]];
   // One label over each undecided fork and an "or" between its sides.
-  const forkMarks=FORKS.map(f=>{const head=document.createElement('p');head.className='shop-fork-head';head.innerHTML='<b>Choose one</b><span>'+f.name+'</span>';const or=document.createElement('p');or.className='shop-fork-or';or.setAttribute('aria-hidden','true');or.innerHTML='<span>or</span>';const end=document.createElement('i');end.className='shop-fork-end';end.setAttribute('aria-hidden','true');return {fork:f,head,or,end,ids:f.sides.map(byKey)}});
+  // An undecided fork sits at the end of its branch as one card: both sides side by side with an "or" between them.
+  const forkMarks=FORKS.map(f=>{const box=document.createElement('div');box.className='shop-fork';box.setAttribute('role','group');box.setAttribute('aria-label','Pick one: '+f.name);const head=document.createElement('p');head.className='shop-fork-head';head.innerHTML='<b>Pick one</b><span>The other closes until you reopen</span>';const or=document.createElement('p');or.className='shop-fork-or';or.setAttribute('aria-hidden','true');or.innerHTML='<span>or</span>';const end=document.createElement('i');end.className='shop-fork-end';end.setAttribute('aria-hidden','true');return {fork:f,box,head,or,end,ids:f.sides.map(byKey)}});
   const rows=definitions.map(([id,category])=>{
     const button=document.getElementById(id),node=button.parentElement;
     node.classList.add('shop-item');
     const copy=node.querySelector('.shop-copy,.storage-copy'),badge=document.createElement('span');
     badge.className='shop-level';copy.append(badge);
     button.setAttribute('aria-label',copy.querySelector('h2,b').textContent+' upgrade');
-    return {id,category,node,button,badge,symbol:node.querySelector('.shop-symbol')};
+    const effect=document.createElement('small');effect.className='shop-effect';node.append(effect);
+    return {id,category,node,button,badge,effect,symbol:node.querySelector('.shop-symbol')};
   });
   const header=document.createElement('div');header.className='shop-browser-header';
   const icons={Grow:'<path d="M12 21c-4.5-2.5-7-6-7-10a7 7 0 0 1 14 0c0 4-2.5 7.5-7 10ZM12 21V9"/>',Retail:'<path d="M4 17h16M6 17a6 6 0 0 1 12 0M12 8v3M10 8h4"/>',Delivery:'<path d="M9 10h6v4H9zM4 6h3M17 6h3M5.5 6v4h3.5M18.5 6v4H15M9 14l-3 5M15 14l3 5M12 14v6"/>'};
@@ -38,6 +40,8 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
   let showDone=false;doneToggle.onclick=()=>{showDone=!showDone;render();};
   pane.prepend(header,list,later,doneToggle,empty);
   pane.append(milestone,reset);reset.hidden=true;
+  // Building the delivery pad and its drones live on the Online card in Stations (the deliveries panel).
+  const droneNode=document.getElementById('buyAutoDrone');if(droneNode&&droneNode.parentElement&&pane.contains(droneNode))droneNode.parentElement.hidden=true;
   let category=0;
   header.querySelectorAll('[data-shop-category]').forEach(button=>button.onclick=()=>{category=Number(button.dataset.shopCategory);showDone=false;render()});
   function render(){
@@ -53,12 +57,14 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
       const key=row.id.startsWith('componentBuy')?components[Number(row.id.replace('componentBuy',''))].key:null,side=key?sideStatus(state,key):'open';
       const isDone=level>=max||side==='closed',gated=side==='gated'&&!isDone;row.node.classList.toggle('is-maxed',isDone);order.push({row,isDone});
       // Rows keep one short figure; the long states fold into the lines under the list.
-      row.badge.textContent=side==='closed'?'Closed':row.id==='buyAutoDrone'?(isDone?'Bulk':level===1?'Single':'0/2'):isDone?'Max':level+(Number.isFinite(max)?'/'+max:'');
-      row.badge.setAttribute('aria-label',side==='closed'?'Closed this run'+(level?', level '+level+' kept':''):'Level '+level+(Number.isFinite(max)?' of '+max:''));
+      row.badge.textContent=side==='closed'?'Closed':isDone?'Max':'Lv '+level;
+      row.badge.setAttribute('aria-label',side==='closed'?'Closed this run'+(level?', level '+level+' kept':''):'Level '+level);
       row.node.classList.toggle('shows-verb',side==='pick');
       // The ring around the icon fills with the level; the effect line is the tile's tooltip.
       if(row.symbol)row.symbol.style.setProperty('--lv',Math.min(1,Number.isFinite(max)&&max?level/max:0).toFixed(3));
-      const effect=row.node.querySelector('strong');row.node.title=effect?row.node.querySelector('h2,b').textContent+' · '+effect.textContent:'';
+      // Under the name: what the next level gives ("+0% → +6% seed batch" shows "+6% seed batch"), the full line as tooltip.
+      const effect=row.node.querySelector('strong'),full=effect?effect.textContent.trim():'',next=full.split('→').pop().split(' · ')[0].trim();
+      if(row.effect.textContent!==next)row.effect.textContent=next;row.node.title=full?row.node.querySelector('h2,b').textContent+' · '+full:'';
       const here=row.category===category;
       if(here&&gated){const gate=forkOf(key).gate+' '+categories[row.category]+' levels · '+levelsToGate(state,key)+' to go';(gates[gate]=gates[gate]||[]).push(row.node.querySelector('h2,b').textContent);}
       row.node.hidden=!here||gated||(isDone&&!showDone);
@@ -68,8 +74,11 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
     // Undecided forks get their label above the first side and the "or" between the two.
     const open=forkMarks.filter(m=>m.ids.every(id=>{const r=rows.find(x=>x.id===id);return r&&r.category===category&&sideStatus(state,components[Number(id.replace('componentBuy',''))].key)==='pick'}));
     const key=sequence.map(r=>r.id).join(',')+'|'+category+'|'+open.map(m=>m.fork.id).join(',');
-    if(key!==render.key){render.key=key;forkMarks.forEach(m=>{m.head.remove();m.or.remove();m.end.remove()});sequence.forEach(r=>{const mark=open.find(m=>m.ids[0]===r.id),after=open.find(m=>m.ids[1]===r.id);if(mark)list.appendChild(mark.head);if(after)list.appendChild(after.or);list.appendChild(r.node);if(after)list.appendChild(after.end)})}
-    desk.hidden=category!==2||!deliveryDesk;
+    if(key!==render.key){render.key=key;forkMarks.forEach(m=>m.box.remove());
+      const forked=id=>open.some(m=>m.ids.indexOf(id)>=0);
+      sequence.forEach(r=>{if(!forked(r.id))list.appendChild(r.node)});
+      open.forEach(m=>{const [a,b]=m.ids.map(id=>rows.find(x=>x.id===id).node);m.box.replaceChildren(m.head,a,m.or,b);list.appendChild(m.box)})}
+    desk.hidden=true;
     if(!desk.hidden){const d=deliveryDesk(),note=desk.querySelector('small'),title=desk.querySelector('b'),count=desk.querySelector('.shop-desk-count'),price=desk.querySelector('.shop-desk-price'),meter=desk.querySelector('.shop-desk-meter');
       // Unbuilt, the desk is the shelf's next step: a brass card above the list with its price and savings so far.
       const unbuilt=!d.built;desk.classList.toggle('is-unbuilt',unbuilt);desk.classList.toggle('is-short',unbuilt&&!d.ready);

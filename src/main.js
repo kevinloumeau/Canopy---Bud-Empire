@@ -6,7 +6,7 @@ import {migrateShopPlay,picks as momentPicks,createMoment,judgeChoice,tipFor,rec
 import {migrateJourney,advanceJourney,CHAPTERS} from './journey.js';
 import {mountJourney} from './journey-ui.js';
 import {manageDialog} from './dialog-focus.js';
-import {migrateBuilds,startBuild,isBuilding,buildLeft,buildShareLeft,finishBuilds,buildClock} from './builds.js';
+import {migrateBuilds,startBuild,isBuilding,buildLeft,buildShareLeft,finishBuilds,buildClock,skipCost,skipBuild} from './builds.js';
 import {AUTO_DRONE_COST,BULK_DRONE_COST,payAutoDrone,grantAutoDrone,buyBulkDrone,autoDroneLimit,migrateAutoDrone,autoDroneReady} from './auto-drone.js';
 import {FORMATS,wantedFormat,formatPremium,BOOST_MAX,boostCost,migrateMenu,unlockFormat,menuFormatFactor,milestone,prestigeOffer,elapsedSteps,OFFLINE_STEP} from './depth.js';
 import {PERKS,migratePerks,perkLevel,perkCost,buyPerk,perkStart,spenderGap,rushLength,trainerGap,keptBranch,FOUNDER_LOOK,FOUNDER_LEVEL} from './perks.js';
@@ -147,6 +147,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     {kind:'Boutique',buyers:'VIPs order the most potent boutique strain on the menu.',pistil:'#9fe0c9',frost:true,shape:'dense'}
   ];
   // A glass jar with the strain's bud inside. Calyx blobs stack in three tones of the strain colour; pistils and frost differ per strain.
+  // 3D icons rendered in Blender at the map's angle (public/icons/3d, source in the shared menu-icons folder).
+  function icon3d(name){return '<img class="icon-3d" src="icons/3d/'+name+'.png" alt="" draggable="false" decoding="async">'}
   function strainArt(i,locked){
     var c=STRAINS[i].color,look=STRAIN_LOOKS[i],dark=shadeColor(c,.66),mid=shadeColor(c,.86),light=shadeColor(c,1.18),g='';
     var layouts={
@@ -190,7 +192,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function displayBoost(i){return i>0?1+state.displayLevel*.02:1}
   function thcLabel(i){var v=strainPotency(i);return (Math.round(v*10)/10).toFixed(v%1?1:0)+'%'}
   function buildStrainMenu(){
-    $('strainNav').innerHTML=STRAINS.map(function(strain,i){return '<button type="button" role="tab" id="strainTab'+i+'" style="--strain:'+strain.color+'"><span class="strain-card-art"></span><b>'+typeGlyph(strains.STRAIN_TYPE[i])+strain.name.replace(' ',' <br>')+'</b><small></small><em class="strain-pips" aria-hidden="true">'+Array.from({length:10},function(){return '<i></i>'}).join('')+'</em></button>'}).join('');
+    $('strainNav').innerHTML=STRAINS.map(function(strain,i){return '<button type="button" role="tab" id="strainTab'+i+'" style="--strain:'+strain.color+'"><span class="strain-card-art"></span><b>'+typeGlyph(strains.STRAIN_TYPE[i])+strain.name.replace(' ',' <br>')+'</b><small></small><i class="menu-check" aria-hidden="true"></i><em class="strain-pips" aria-hidden="true">'+Array.from({length:10},function(){return '<i></i>'}).join('')+'</em></button>'}).join('');
     STRAINS.forEach(function(_,i){$('strainTab'+i).onclick=function(){flowerFocus=i;renderFlowers();var hero=document.querySelector('.strain-hero');if(hero&&hero.scrollIntoView)hero.scrollIntoView({block:'nearest',behavior:motionPreference.matches?'auto':'smooth'})}});
     flowerFocus=menuStrains()[0]||0;
   }
@@ -210,9 +212,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if($('flowerBuyers').dataset.html!==legend){$('flowerBuyers').innerHTML=legend;$('flowerBuyers').dataset.html=legend}
     STRAINS.forEach(function(strain,i){
       var level=state.strains[i],active=state.menuStrains.indexOf(i)>=0,tab=$('strainTab'+i),art=tab.querySelector('.strain-card-art');
-      var artKey=(level?'u':'l');if(art.dataset.key!==artKey){art.innerHTML=strainArt(i,!level);art.dataset.key=artKey}
+      var artKey=(level?'u':'l');if(art.dataset.key!==artKey){art.innerHTML=icon3d('strain-'+i);art.dataset.key=artKey}
       tab.classList.toggle('is-on-menu',active);tab.classList.toggle('is-locked',!level);tab.classList.toggle('is-trending',i===trend);tab.setAttribute('aria-selected',String(flowerFocus===i));tab.tabIndex=flowerFocus===i?0:-1;
-      var tag=tab.querySelector('small');tag.textContent=!level?fmt(strain.unlock):active?'On menu':'Off menu';tag.classList.toggle('price-tag',!level);
+      tab.style.setProperty('--lv',String(level/strains.STRAIN_MAX));var tag=tab.querySelector('small');tag.textContent=!level?fmt(strain.unlock):'Lv '+level;tab.title=!level?'Locked':active?'On the menu':'Off the menu';tag.classList.toggle('price-tag',!level);
       Array.prototype.forEach.call(tab.querySelectorAll('.strain-pips i'),function(pip,k){pip.classList.toggle('is-filled',k<level);pip.classList.toggle('is-second',k<level-10)});
     });
     var i=flowerFocus,strain=STRAINS[i],look=STRAIN_LOOKS[i],level=state.strains[i],active=state.menuStrains.indexOf(i)>=0,price=strainCost(i),maxed=level>=strains.STRAIN_MAX,detail=$('strainDetail');
@@ -229,14 +231,14 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       (i===trend?'<li class="is-trend">Trending · +'+Math.round((trendBoost(i)-1)*100)+'% price · <span class="trend-clock"></span></li>':'')+
       (i===reserve?'<li class="is-vip">★ VIP reserve · double baskets</li>':'')+
     '</ul>';
-    var perkLine='<p class="strain-perk'+(tier?' is-unlocked':'')+'"><b>'+(tier?'★ '+perk.name:'☆ '+perk.name)+'</b> · '+(tier?perk.effect[tier-1]+(tier<2?' · level 10 doubles it':''):perk.locked)+'</p>';
+    var perkLine='<p class="strain-perk'+(tier?' is-unlocked':'')+'" title="'+(tier<2?'Level '+(tier?10:5)+': '+perk.effect[tier]:perk.effect[1])+'"><span class="perk-star" aria-hidden="true">'+(tier?'★':'☆')+'</span><b>'+perk.name+'</b><small>'+(tier?perk.effect[tier-1]:'Lv 5 · '+perk.effect[0])+'</small></p>';
     var heroHtml='<div class="strain-hero'+(level?'':' is-locked')+(active?' is-on-menu':'')+(i===trend?' is-trending':'')+'" style="--strain:'+strain.color+'">'+
-      '<div class="strain-hero-art">'+strainArt(i,!level)+'</div>'+
+      '<div class="strain-hero-art">'+icon3d('strain-'+i)+(level?'<button type="button" id="flowerSelect" class="menu-toggle" aria-pressed="'+active+'">'+(active?'On menu':'Add')+'</button>':'')+'</div>'+
       '<div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">'+look.kind+' · </span>'+strains.TYPES[type]+(level?' · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>'+level+' / '+strains.STRAIN_MAX:' · Locked')+'</small><h2>'+strain.name+'</h2><p>'+(level?look.buyers:'Unlock to put it on the menu. '+look.buyers)+'</p></div>'+
       '<div class="strain-stats">'+stats+'</div>'+
       '<div class="strain-hero-details">'+traits+perkLine+'</div>'+
-      (level?'<div class="product-line strain-format"><h2>Sells as</h2><div class="format-options">'+FORMATS.map(function(f,k){var stocked=state.productMenu.unlocked[k];return '<button type="button" class="strain-format-pill" data-format="'+k+'" aria-pressed="'+stocked+'"'+(!stocked&&state.money<f.cost?' disabled':'')+' title="'+f.detail+'"><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+productIcons[k]+'</svg><strong>'+f.name+'</strong><small>'+(stocked?'Selling':fmt(f.cost))+'</small></button>'}).join('')+'</div><p class="format-benefit">'+(function(){var next=FORMATS.findIndex(function(f,k){return !state.productMenu.unlocked[k]});return next<0?'Every strain sells in all three types, to whoever wants each.':'Stock '+FORMATS[next].name.toLowerCase()+' for every strain · '+['','+45% value for the 3 in 10 who want them · slower packing','+120% value for the 1 in 5 who want them · slow packing'][next]})()+'</p></div>':'')+
-      '<div class="strain-hero-actions">'+(level?'<button type="button" id="flowerSelect" aria-pressed="'+active+'">'+(active?'On menu ✓':'Add to menu')+'</button>':'')+'<button type="button" id="flowerBuy" class="is-primary">'+(maxed?'Fully upgraded':(level?'Upgrade':'Unlock')+' · '+fmt(price))+'</button></div>'+
+      (level?'<div class="product-line strain-format"><h2>Sells as</h2><div class="format-options">'+FORMATS.map(function(f,k){var stocked=state.productMenu.unlocked[k];return '<button type="button" class="strain-format-pill" data-format="'+k+'" aria-pressed="'+stocked+'"'+(!stocked&&state.money<f.cost?' disabled':'')+' title="'+f.detail+'">'+icon3d('product-'+k)+'<strong>'+f.name+'</strong><em>'+(f.value>1?'+'+Math.round((f.value-1)*100)+'% value':'Base price')+'</em><small>'+(stocked?'Selling':fmt(f.cost))+'</small></button>'}).join('')+'</div><p class="format-benefit">'+(function(){var next=FORMATS.findIndex(function(f,k){return !state.productMenu.unlocked[k]});return next<0?'Every strain sells in all three types, to whoever wants each.':'Stock '+FORMATS[next].name.toLowerCase()+' for every strain · '+['','+45% value for the 3 in 10 who want them · slower packing','+120% value for the 1 in 5 who want them · slow packing'][next]})()+'</p></div>':'')+
+      '<div class="strain-hero-actions"><button type="button" id="flowerBuy" class="is-primary">'+(maxed?'Fully upgraded':(level?'Upgrade':'Unlock')+' · '+fmt(price))+'</button></div>'+
     '</div>';
     var heroKey=heroHtml+'|'+(maxed||state.money<price)+'|'+(active&&menu.length===1)+'|'+state.productMenu.unlocked.join(',');
     Array.prototype.forEach.call(document.querySelectorAll('.menu-board .trend-clock'),function(el){el.textContent=trendClock});
@@ -861,7 +863,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       // The shell and fittings, placed by the same numbers the station and customer code uses.
       layout.rooftop=ROOFTOP;
       layout.shell={plaster:SHOP_GREEN_PLASTER[2],tile:SHOP_GREEN_TILE[2],tileH:LOUNGE_TILE,tilePitch:TILE_PITCH,glazingBay:GLAZING_BAY,fanX:FAN_X,topLanding:TOP_LANDING,
-        loungeFront:LOUNGE_FRONT,loungeDoor:LOUNGE_DOOR,loungeExit:LOUNGE_EXIT,loungeRight:LOUNGE_RIGHT,loungeHeader:2.05,wallLeft:-6.7,wallRight:8.4,shelfLeft:-1.3+COUNTER_SHIFT,
+        loungeFront:LOUNGE_FRONT,loungeDoor:LOUNGE_DOOR,loungeExit:LOUNGE_EXIT,loungeRight:LOUNGE_RIGHT,loungeHeader:2.05,loungeSign:{x:LOUNGE_DOOR.x,y:2.46,scale:.65},wallLeft:-6.7,wallRight:8.4,shelfLeft:-1.3+COUNTER_SHIFT,
         exitDoor:{x0:9.44,x1:11.25,h:3.3},column:{x:9.8,z:-1.8},merchCabinet:{back:8.41,face:9.27,z0:-6.84,z1:-4.8},
         planter:{x0:-11.7,x1:-10.75,z0:2,z1:5.6,tree:{x:-11.45,z:2.35}},baseboard:{x0:-10.65,x1:13,front:11.95,rear:-7,h:.32},hanging:{x0:-2.3,x1:2.3,y:9.05,z:-1.35},
         lamps:[[-4,3.7,3.5,1.3],[4,3.7,3.5,1.3],[-4,3.7,8.5,1.1],[5,3.7,8.5,1.1],[-10,3,-4,.8],[-4,8.4,-3,1.2],[4,8.4,-3,1.2],[0,12.8,-4.5,1]]};
@@ -1246,9 +1248,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var taskClocks=[0,0,0,0,0,0],taskActivity=[0,0,0,0,0,0],cropGrowth=[.15,.4,.7,.95];
   // Each station's work clock: it runs while the station is working, easing in and out, and drives its staff loop.
   // Its 3D model's motion (station-motion.js) runs on its own clock whenever the station is built, so a station whose
-  // store is full or whose input ran dry still looks alive; only pausing the game stops it.
+  // store is full or whose input ran dry still looks alive; only pausing the game stops it. A crew burst runs it at the
+  // burst's speed, so the station visibly works faster.
   var motionClocks=[0,0,0,0,0,0];
-  function tickTaskClocks(dt){for(var task=0;task<6;task++){var target=stationWorking(task)?1:0;taskActivity[task]+=(target-taskActivity[task])*(1-Math.exp(-dt*5));taskClocks[task]+=dt*1000*taskActivity[task];if(state.lines[task]>0)motionClocks[task]+=dt}}
+  function tickTaskClocks(dt){for(var task=0;task<6;task++){var target=stationWorking(task)?1:0;taskActivity[task]+=(target-taskActivity[task])*(1-Math.exp(-dt*5));taskClocks[task]+=dt*1000*taskActivity[task];if(state.lines[task]>0)motionClocks[task]+=dt*(state.abilities.active[task]>0?ABILITY_FACTOR:1)}}
   function crop(x,z,y,slot,mature){
     var strain=visibleStrain(slot),phase=motionPreference.matches?.8:(taskClocks[1]/9000+slot*.23)%1;
     // A readable representative crop cycle, independent of high-speed batch counts.
@@ -2052,7 +2055,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // changes flips over, cycling through the alphabet for a moment and rippling left to right, the way a Solari board
   // rolls; on load the whole board flips in from blank. Letters are only drawn once a flap is wide enough to read.
   // The board stops at y 2.62: from the default view the mezzanine fascia hides the back wall above about 2.65.
-  var FLAP_COLS=21,FLAP_ROWS=4;
+  var FLAP_COLS=24,FLAP_ROWS=4;
   function flapLines(){
     var lines=[];
     menuStrains().slice(0,FLAP_ROWS).forEach(function(i){
@@ -2451,7 +2454,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var speed=state.lines.some(function(n){return n>0})?Math.min(.07,.02+production()*.00002):0;
     crateTime=(crateTime+frameDelta*speed*1.4)%1;cargoOdo=(cargoOdo+frameDelta*speed*14)%1e5;
     var stations=[],people=[];
-    function station(i,x,y,z,level,built,size){var tier=built?stationLookFor(i,level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(Math.min(5,tier)-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,pop:stationPop(i),selected:mapPicked&&selected===i&&!securitySelected&&!loungeSelected,clock:motionPreference.matches?6.3:motionClocks[i],act:taskActivity[i]})}
+    function station(i,x,y,z,level,built,size){var tier=built?stationLookFor(i,level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(Math.min(5,tier)-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,pop:stationPop(i),selected:mapPicked&&selected===i&&!securitySelected&&!loungeSelected,clock:motionPreference.matches?6.3:motionClocks[i],act:taskActivity[i],boost:i<ABILITIES.length&&state.abilities.active[i]>0?state.abilities.active[i]/ABILITY_SECONDS:0})}
     // Every person on the map is a rigged 3D model (Kevin's Meshy cast), the same model upstairs and down; nobody is
     // a flat sprite (Kevin, 2026-10-22), so a person whose model has not loaded yet is simply not shown. Standing still,
     // a customer looks at what they are doing (gait.look), else along the way they last walked. cast picks the model
@@ -2568,9 +2571,9 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     figures=figures.filter(function(f){return f.alpha>.99});backdrops=backdrops.filter(function(f){return f.alpha>.99});
     var dronePoses=deliveryDronePoses(frameDelta);deliveryCards(dronePoses,figures);
     var look=viewCentre();
-    map3d.render({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,characters:characters,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,loungeBuild:isBuilding(state.builds,'lounge')?1-buildShareLeft(state.builds,'lounge'):null,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtureBuild:isBuilding(state.builds,'deck')||isBuilding(state.builds,'window')?Object.assign(isBuilding(state.builds,'deck')?{deck:1-buildShareLeft(state.builds,'deck')}:{},isBuilding(state.builds,'window')?{pickupWindow:1-buildShareLeft(state.builds,'window')}:{}):null,fixtures:{deck:deliveryBuilt(),pickupWindow:windowOpen(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2},menus:kioskMenus(),menuClock:animationTime/1000,cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    map3d.render({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,characters:characters,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,loungeBuild:isBuilding(state.builds,'lounge')?1-buildShareLeft(state.builds,'lounge'):null,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtureBuild:isBuilding(state.builds,'deck')||isBuilding(state.builds,'window')?Object.assign(isBuilding(state.builds,'deck')?{deck:1-buildShareLeft(state.builds,'deck')}:{},isBuilding(state.builds,'window')?{pickupWindow:1-buildShareLeft(state.builds,'window')}:{}):null,fixtures:{deck:deliveryBuilt(),pickupWindow:windowOpen(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2},fixtureGhost:state.lines[4]>0&&kioskCount()<3?{['kiosk'+kioskCount()]:true}:null,menus:kioskMenus(),menuClock:animationTime/1000,cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     // A model that had not loaded when the tabs were painted: try again every half second until all are in.
-    if(picturesPending&&!(now-(renderFrame3d.picturesTried||0)<500)){renderFrame3d.picturesTried=now;picturesPending=false;paintThumbnails()}
+    var wall=performance.now();if(picturesPending&&!(wall-(renderFrame3d.picturesTried||0)<500)){renderFrame3d.picturesTried=wall;picturesPending=false;paintThumbnails()}
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
     customers.forEach(function(c){if(c.phase!=='lounge'&&customerBadged(c))drawCustomerBadge(Object.assign({},c,{x:c.renderX,z:c.renderZ}))});
     drawDeliveryExtras(dronePoses,now);drawParticles(frameDelta);drawTickets(frameDelta);drawConfetti(wallDelta);
@@ -2773,21 +2776,41 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var rush=state.rushTime>0,boost=state.empire.contracts.boost>0,parts=[];if(rush)parts.push('Rush · 2× sales · '+Math.ceil(state.rushTime)+'s');if(boost)parts.push('Boost · 2× sales · '+clock(state.empire.contracts.boost*1000/Math.max(1,state.gameSpeed||1)));rushPill.hidden=!parts.length;rushPeak.rush=rush?Math.max(rushPeak.rush,state.rushTime):0;rushPeak.boost=boost?Math.max(rushPeak.boost,state.empire.contracts.boost):0;burstRing(rushPill,Math.min(rush?state.rushTime/rushPeak.rush:1,boost?state.empire.contracts.boost/rushPeak.boost:1)*(parts.length?1:0));var text=parts.join('  ·  ');if(rushPill.textContent!==text)rushPill.textContent=text;
     var c=branch?null:activeContract(state.empire);contractPill.hidden=!c;if(c){var line=c.name+' · '+abbr(c.progress)+' / '+abbr(c.target)+' · '+clock(c.remaining);if(contractPill.textContent!==line)contractPill.textContent=line}}
   var loungeMarker=document.createElement('button');loungeMarker.className='marker';loungeMarker.dataset.marker='lounge';loungeMarker.onclick=selectLounge;$('markers').appendChild(loungeMarker);
+  // Purchase tags for what can be bought next on the map (Kevin, 2026-10-22, like the lounge's): the pickup window on
+  // its spot, then the drone port on its deck once the window is open, and a smaller tag over a ghost of the next kiosk.
+  // A tap opens the panel with the buy button: Deliveries for the window and the drone port, the Orders station for kiosks.
+  function lotMarker(name,open){var b=document.createElement('button');b.className='marker station-sign is-lot';b.dataset.marker=name;b.onclick=open;b.style.display='none';$('markers').appendChild(b);return b}
+  var windowMarker=lotMarker('window',function(){showTray('orders');renderUI()}),droneMarker=lotMarker('drone',function(){showTray('orders');renderUI()}),kioskMarker=lotMarker('kiosk',function(){selectMachine(4)});[windowMarker,droneMarker,kioskMarker].forEach(function(el){el.classList.add('is-mini')});
+  var KIOSK_PRICES=[25000,50000,100000],KIOSK_Z=[6.8,5,3.2];
+  // What each tag shows now: null when there is nothing to buy there.
+  function lotTags(){var tags=[],count=kioskCount(),orders=state.lines[4]>0;
+    if(orders&&!windowOpen())tags.push({el:windowMarker,name:'Window',build:'window',price:WINDOW_COST,x:PICKUP_WINDOW.x,y:2.4,z:PICKUP_WINDOW.z});
+    if(windowOpen()&&!deliveryBuilt())tags.push({el:droneMarker,name:'Drones',build:'deck',price:AUTO_DRONE_COST,x:-9.39,y:7.2,z:-.2});
+    if(orders&&count<3)tags.push({el:kioskMarker,name:'Kiosk',price:KIOSK_PRICES[count],x:-9.75,y:2.1,z:KIOSK_Z[count]});
+    return tags}
+  function renderLotTags(){var shown=lotTags();[windowMarker,droneMarker,kioskMarker].forEach(function(el){var t=shown.filter(function(x){return x.el===el})[0];el.hidden=!t;if(!t)return;
+    var building=!!t.build&&isBuilding(state.builds,t.build),clock=building?buildClock(buildLeft(state.builds,t.build)):'',key=t.name+'|'+(building?clock:fmt(t.price))+'|'+(state.money>=t.price);
+    el.classList.toggle('is-building',building);
+    if(building)el.style.setProperty('--build-left',buildShareLeft(state.builds,t.build).toFixed(3));else el.style.removeProperty('--build-left');
+    if(el.dataset.level!==key){el.innerHTML='<span class=station-sign-name>'+t.name+'</span><span class=station-sign-level>'+(building?clock:fmt(t.price))+'</span>';el.dataset.level=key;updateMarkers.key=null}
+    el.setAttribute('aria-label',building?t.name+', being built. Opens in '+clock:t.name+', '+fmt(t.price)+'. Open where to buy it')})}
   function updateCommerceControls(){
     if($('buyAutoDrone')){var drone=state.autoDrone,dronePrice=drone.owned?BULK_DRONE_COST:AUTO_DRONE_COST,deckBuilding=isBuilding(state.builds,'deck'),deckClock=buildClock(buildLeft(state.builds,'deck'));
       $('buyAutoDrone').disabled=drone.bulk||deckBuilding||state.money<dronePrice||!windowOpen();$('autoDronePrice').textContent=drone.bulk?'Installed':deckBuilding?deckClock:fmt(dronePrice);$('buyAutoDrone').querySelector('span').textContent=drone.owned?'Bulk upgrade':deckBuilding?'Building':'Install';$('autoDroneBenefit').textContent=drone.owned?'Up to 10 ready orders every 10s':'Send a ready order every 10s';
-      $('autoDroneToggle').disabled=!drone.owned&&(deckBuilding||state.money<AUTO_DRONE_COST||!windowOpen());$('autoDroneToggle').textContent=!drone.owned?(deckBuilding?'Building · '+deckClock:'Install '+fmt(AUTO_DRONE_COST)):drone.enabled?'On':'Off';if(drone.owned)$('autoDroneToggle').setAttribute('aria-pressed',String(drone.enabled));else $('autoDroneToggle').removeAttribute('aria-pressed');$('autoDroneToggle').setAttribute('aria-label',drone.owned?'Automatic drone dispatch':('Install auto drone for '+fmt(AUTO_DRONE_COST)));
+      var deckSkip=buildSkipCost('deck');$('autoDroneToggle').disabled=!drone.owned&&(deckBuilding?state.money<deckSkip:state.money<AUTO_DRONE_COST||!windowOpen());$('autoDroneToggle').textContent=!drone.owned?(deckBuilding?'Finish now '+fmt(deckSkip):'Install '+fmt(AUTO_DRONE_COST)):drone.enabled?'On':'Off';if(drone.owned)$('autoDroneToggle').setAttribute('aria-pressed',String(drone.enabled));else $('autoDroneToggle').removeAttribute('aria-pressed');$('autoDroneToggle').setAttribute('aria-label',drone.owned?'Automatic drone dispatch':('Install auto drone for '+fmt(AUTO_DRONE_COST)));
       $('autoDroneBulk').hidden=!drone.owned;$('autoDroneBulk').disabled=!drone.bulk&&state.money<BULK_DRONE_COST;$('autoDroneBulk').textContent=drone.bulk?(drone.mode==='bulk'?'Bulk · up to 10':'Single · 1 order'):'Upgrade to bulk · '+fmt(BULK_DRONE_COST);if(drone.bulk)$('autoDroneBulk').setAttribute('aria-pressed',String(drone.mode==='bulk'));else $('autoDroneBulk').removeAttribute('aria-pressed');$('autoDroneBulk').setAttribute('aria-label',drone.bulk?'Bulk automatic dispatch':('Upgrade auto drone to bulk for '+fmt(BULK_DRONE_COST)));
       $('autoDroneStatus').textContent=!drone.owned?(deckBuilding?'Opens in '+deckClock:'Ships what the window can\'t'):!drone.enabled?'Manual dispatch':state.gameSpeed===0?'Paused':drone.remaining>.05?'Next check in '+Math.ceil(drone.remaining)+'s':state.stock[3]<onlineSize()?'Waiting for '+(onlineSize()-state.stock[3])+' jars':'Ready to launch';}
 
     if(shopBrowser)shopBrowser.render();
   }
   function updateMarkers(){
-    var key=[centerX,centerY,unit,width,height,state.idStaff,state.lines.join(),securitySelected,selected,state.lounge,loungeSelected,mapPicked].join("|");
+    var key=[centerX,centerY,unit,width,height,state.idStaff,state.lines.join(),securitySelected,selected,state.lounge,loungeSelected,mapPicked,windowOpen(),deliveryBuilt(),kioskCount()].join("|");
     if(updateMarkers.key===key)return;updateMarkers.key=key;
     var securityPos=project(ID_DESK.x,.62,ID_DESK.z+.1),loungePos=map3d&&map3d.ok?project(-2.7,ROOFTOP.y+1.2,-6.1):project(LOUNGE_DOOR.x,1.5,DISPLAY_Z+.5),labelSize=Math.max(8,Math.min(10,unit*.24))*(width>=780?.85:1)+'px';
     securityMarker.style.fontSize=labelSize;loungeMarker.style.fontSize=labelSize;
-    var labels=[{el:securityMarker,x:securityPos.x,y:securityPos.y},{el:loungeMarker,x:loungePos.x,y:loungePos.y}];
+    var labels=[{el:securityMarker,x:securityPos.x,y:securityPos.y},{el:loungeMarker,x:loungePos.x,y:loungePos.y}],tags=lotTags();
+    [windowMarker,droneMarker,kioskMarker].forEach(function(el){if(!tags.some(function(t){return t.el===el}))el.style.display='none'});
+    tags.forEach(function(t){var p=project(t.x,t.y,t.z);t.el.style.fontSize=labelSize;labels.push({el:t.el,x:p.x,y:p.y})});
     markerEls.forEach(function(el,i){var station=machinePos[i],pos=project(station.x,.63+station.y,station.z+1.23);el.style.fontSize=labelSize;labels.push({el:el,x:pos.x,y:pos.y})});
     labels.forEach(function(l){l.el.style.display=l.x<-40||l.x>width+40||l.y<-30||l.y>height+30?'none':'block'});
     labels.forEach(function(l){l.w=l.el.offsetWidth;l.h=l.el.offsetHeight});
@@ -2927,6 +2950,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var loungeLot=!state.lounge,loungePrice=loungeBuilding?null:loungeUpgradeCost(state.lounge),loungeKey=String(state.lounge)+'|'+(loungePrice!==null&&state.money>=loungePrice)+'|'+(loungeBuilding?loungeClock:'');
     loungeMarker.classList.add('station-sign');loungeMarker.classList.toggle('selected',mapPicked&&loungeSelected);loungeMarker.classList.toggle('is-lot',loungeLot);loungeMarker.classList.toggle('is-building',loungeBuilding);loungeMarker.classList.toggle('can-upgrade',loungePrice!==null&&state.money>=loungePrice);
     if(loungeBuilding)loungeMarker.style.setProperty('--build-left',buildShareLeft(state.builds,'lounge').toFixed(3));else loungeMarker.style.removeProperty('--build-left');
+    renderLotTags();
     if(loungeMarker.dataset.level!==loungeKey){loungeMarker.innerHTML='<span class=station-sign-name>Lounge</span><span class=station-sign-level>'+(loungeBuilding?loungeClock:loungeLot?fmt(loungePrice):'Lv '+state.lounge)+'</span>';loungeMarker.dataset.level=loungeKey;updateMarkers.key=null;}
     loungeMarker.style.setProperty('--station-tier',TIER_COLORS[Math.min(3,state.lounge)]);loungeMarker.setAttribute('aria-label',loungeBuilding?'Smoking lounge, being built. Opens in '+loungeClock:loungeLot?'Smoking lounge, under construction. Opens for '+fmt(loungePrice):'Smoking lounge, level '+state.lounge+'. Open lounge station');loungeMarker.setAttribute('aria-pressed',String(mapPicked&&loungeSelected));
     // Once a check is as quick as it gets, training buys nothing, so the single-level button says Maxed too.
@@ -2950,13 +2974,13 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     $('buyKiosk').querySelector('span').textContent=installedKiosks===3?'Maximum':installedKiosks===0?'Install kiosk':'Add kiosk '+(installedKiosks+1);
 
     $('queueCapacity').textContent=queueLimit()>=QUEUE_MAX?QUEUE_MAX+' customers · maximum':queueLimit()+' → '+Math.min(QUEUE_MAX,queueLimit()+2)+' customers';$('queueUpgradeInfo').textContent=queueLimit()>=QUEUE_MAX?'All waiting places unlocked.':state.money<queueCost()?fmt(queueCost()-state.money)+' more to expand':'Two extra waiting places';$('queuePrice').textContent=queueLimit()>=QUEUE_MAX?'MAX':fmt(queueCost());$('upgradeQueue').disabled=queueLimit()>=QUEUE_MAX||state.money<queueCost();
-    renderOrderExtras();
+    renderOrderExtras();renderWindowRows();
     $('storageCapacity').textContent=qtyLabel(storageCapacity())+' → '+qtyLabel(storageCapacity()+100)+' per stage';$('storageUsage').textContent=qtyLabel(state.stock[3])+' / '+qtyLabel(storageCapacity())+(state.storageLevel<20&&state.money<storageCost()?' · '+fmt(storageCost()-state.money)+' to expand':' stored');$('storageFill').max=storageCapacity();$('storageFill').value=state.stock[3];$('storagePrice').textContent=state.storageLevel>=20?'MAX':fmt(storageCost());$('upgradeStorage').disabled=state.storageLevel>=20||state.money<storageCost();if(state.storageLevel>=20)$('storageCapacity').textContent=storageCapacity()+' per stage · maximum';
     // One send: everything shippable, or up to ten at a time until the packing bar reaches level 10.
     var maxUnlocked=state.lines[3]>=10,maxBatch=onlineBatch(onlineLimit(maxUnlocked?Infinity:10));
     $('fulfillOnlineMax').disabled=!maxBatch.count;$('onlineMaxLabel').textContent=maxBatch.count?'Send '+maxBatch.count+(maxBatch.count===1?' order':' orders'):'Nothing to send';$('onlineMaxReward').textContent=maxBatch.count?fmt(maxBatch.reward):'';$('onlineMaxInfo').textContent=maxBatch.count?qtyLabel(maxBatch.jars)+(maxUnlocked?'':' · up to 10 per launch until Pack Lv 10'):(onlineRequestsReady()?(onlineLimit(1)?'Needs '+qtyLabel(onlineSize())+' packed':'The window line is full'):'No requests waiting');
 
-    var built=onlineOpen();if(!built&&activeTray==='orders')paintDeliveryPreview();$('deliverySite').style.display=built?'none':'';var padBuilding=isBuilding(state.builds,'window'),padClock=buildClock(buildLeft(state.builds,'window'));$('buildDelivery').disabled=padBuilding||state.money<WINDOW_COST;$('buildDelivery').classList.toggle('is-building',padBuilding);$('buildDelivery').querySelector('span').textContent=padBuilding?'Building pickup window':'Build pickup window';$('buildDelivery').querySelector('b').textContent=padBuilding?padClock:fmt(WINDOW_COST);$('deliveryFunding').value=padBuilding?(1-buildShareLeft(state.builds,'window'))*100:Math.min(100,state.money/WINDOW_COST*100);$('deliveryFunding').setAttribute('aria-label',padBuilding?'Pickup window build progress':'Cash toward the pickup window');$('deliveryFundingText').textContent=padBuilding?'Builders at work · opens in '+padClock:state.money>=WINDOW_COST?'Ready to build':fmt(state.money)+' saved · '+fmt(WINDOW_COST-state.money)+' to go';['.online-card','#dispatchHint','.auto-drone-control','.window-control','.dispatch-stats'].forEach(function(sel){document.querySelector('[data-pane="orders"] '+sel).style.display=built?'':'none'});renderWindowControl();
+    var built=onlineOpen();if(!built&&activeTray==='orders')paintDeliveryPreview();$('deliverySite').style.display=built?'none':'';var padBuilding=isBuilding(state.builds,'window'),padClock=buildClock(buildLeft(state.builds,'window'));$('buildDelivery').disabled=padBuilding||state.money<WINDOW_COST;$('buildDelivery').classList.toggle('is-building',padBuilding);$('buildDelivery').querySelector('span').textContent=padBuilding?'Building':'Build pickup window';$('buildDelivery').parentElement.classList.toggle('is-building',padBuilding);$('buildDelivery').querySelector('b').textContent=padBuilding?padClock:fmt(WINDOW_COST);var windowSkip=buildSkipCost('window');$('skipBuildDelivery').hidden=!padBuilding;if(padBuilding){$('skipBuildDelivery').querySelector('b').textContent=fmt(windowSkip);$('skipBuildDelivery').disabled=state.money<windowSkip}$('deliveryFunding').value=padBuilding?(1-buildShareLeft(state.builds,'window'))*100:Math.min(100,state.money/WINDOW_COST*100);$('deliveryFunding').setAttribute('aria-label',padBuilding?'Pickup window build progress':'Cash toward the pickup window');$('deliveryFundingText').textContent=padBuilding?'Builders at work · opens in '+padClock:state.money>=WINDOW_COST?'Ready to build':fmt(state.money)+' saved · '+fmt(WINDOW_COST-state.money)+' to go';['.online-card','#dispatchHint','.auto-drone-control','.window-control','.dispatch-stats'].forEach(function(sel){document.querySelector('[data-pane="orders"] '+sel).style.display=built?'':'none'});renderWindowControl();
     $('onlineTitle').textContent='#'+String(state.onlineCompleted+1).padStart(3,'0');$('onlineNeed').textContent=qtyLabel(onlineSize())+(state.productMenu.active===0?' ':' · ')+STRAINS[menuChoice(state.onlineCompleted)].name;$('receiptUnit').textContent=fmt(onlineValue())+' / '+unitShort();$('receiptFormat').textContent=format().name;$('receiptCarrier').textContent=deliveryBuilt()?'Drone · no fee':'Window pickup';$('receiptTotal').textContent=fmt(onlineSize()*onlineValue());var heldBags=customers.filter(function(c){return c.ordered&&!c.bag}).length;$('onlineStock').textContent=heldBags?heldBags+' walk-in bag'+(heldBags===1?'':'s')+' reserved first':'';renderDispatchDesk(maxBatch.count);$('dispatchHint').textContent=onlineRequestsReady()<1?'Waiting for the next web request. Requests arrive faster as you complete orders, and with Web marketing in the Shop.':state.stock[3]<onlineSize()?'Waiting for '+qtyLabel(onlineSize()-state.stock[3])+' more to be packed. Walk-in pickups stay reserved.':'';
     // The caption under the send button doubles as the hint line, so the card never changes height.
     if($('dispatchHint').textContent){$('onlineMaxInfo').textContent=$('dispatchHint').textContent;$('onlineMaxInfo').classList.add('is-hint')}else $('onlineMaxInfo').classList.remove('is-hint');var webItem=$('stockCountOnline').closest('.stock-item'),webCount=onlineRequestsReady();$('stockCountOnline').textContent=webCount;webItem.dataset.heat=String(requestHeat(webCount));$('stockCountOnline').classList.toggle('stock-full',webCount>=onlineRequestCap());webItem.title=webCount+' deliver'+(webCount===1?'y':'ies')+' requested · '+onlineRequestCap()+' max';$('onlineBadge').hidden=$('fulfillOnlineMax').disabled;
@@ -2974,11 +2998,12 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var loungeCard=document.querySelector('[data-lounge]');if(loungeCard){loungeCard.setAttribute('aria-pressed',String(loungeSelected));loungeCard.classList.toggle('is-lot',loungeLot);loungeCard.classList.toggle('can-upgrade',loungePrice!==null&&state.money>=loungePrice);loungeCard.querySelector('em').textContent=loungeBuilding?loungeClock:loungeLot?'Open':'Lv '+state.lounge;loungeCard.setAttribute('aria-label',loungeLot?'Smoking lounge, under construction':'Smoking lounge, level '+state.lounge);loungeCard.style.setProperty('--station-tier',TIER_COLORS[Math.min(3,state.lounge)])}
     var securityCard=document.querySelector('[data-security]');if(securityCard){securityCard.setAttribute('aria-pressed',String(securitySelected));securityCard.classList.toggle('is-site',doorSite);securityCard.classList.toggle('can-upgrade',!doorSite&&idTrainingQuote(1).levels>0);securityCard.querySelector('em').textContent=doorSite?'Build':'Lv '+state.idStaff;securityCard.setAttribute('aria-label',doorSite?'Security, under construction':'Security, level '+state.idStaff);securityCard.style.setProperty('--station-tier',TIER_COLORS[economy.stationLook(state.idStaff)])}
     updateStationOrbit(slow);
-    machineTabs.forEach(function(tab,i){var locked=!isOpen(i),site=!state.lines[i],available=!locked&&!site&&state.money>=cost(i);tab.title=site?'Under construction':i===slow?'Slowest station · improve this to raise capacity':'';tab.setAttribute('aria-pressed',String(!securitySelected&&!loungeSelected&&i===selected));tab.classList.toggle('is-locked',locked);tab.classList.toggle('is-site',site);tab.classList.toggle('can-upgrade',available);tab.classList.toggle('ability-ready',!site&&abilityStatus(state.abilities,i,state.staff[i])==='ready');tab.querySelector('em').innerHTML=locked?'Locked':site?'Build':'Lv '+state.lines[i]+(i===slow?'<span class="slow-tag"> · Slow</span>':'');tab.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);var progress=Math.min(100,state.lines[i]/100*100),progressText=site?'Under construction':state.lines[i]>=100?'Flagship equipment reached':'Level '+state.lines[i]+' of 100 toward flagship equipment';tab.querySelector('progress').value=progress;tab.querySelector('progress').setAttribute('aria-label',LINES[i].name+' equipment progress');tab.querySelector('progress').setAttribute('aria-valuetext',progressText);tab.querySelector('progress').title=progressText;tab.querySelector('.level-funding').textContent=progressText;tab.setAttribute('aria-label',LINES[i].name+(i===slow?', slowest station':'')+', level '+state.lines[i]+', '+STATION_TIERS[stationTier(i)]+(available?', upgrade ready':''))});
+    machineTabs.forEach(function(tab,i){var locked=!isOpen(i),site=!state.lines[i],available=!locked&&!site&&state.money>=cost(i);tab.title=site?'Under construction':i===slow?'Slowest station · improve this to raise capacity':'';tab.setAttribute('aria-pressed',String(!securitySelected&&!loungeSelected&&i===selected));tab.classList.toggle('is-locked',locked);tab.classList.toggle('is-site',site);tab.classList.toggle('can-upgrade',available);var crewState=site?'':abilityStatus(state.abilities,i,state.staff[i]);tab.classList.toggle('ability-ready',crewState==='ready');tab.classList.toggle('is-boosted',crewState==='active');tab.querySelector('em').innerHTML=locked?'Locked':site?'Build':'Lv '+state.lines[i]+(i===slow?'<span class="slow-tag"> · Slow</span>':'');tab.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);var progress=Math.min(100,state.lines[i]/100*100),progressText=site?'Under construction':state.lines[i]>=100?'Flagship equipment reached':'Level '+state.lines[i]+' of 100 toward flagship equipment';tab.querySelector('progress').value=progress;tab.querySelector('progress').setAttribute('aria-label',LINES[i].name+' equipment progress');tab.querySelector('progress').setAttribute('aria-valuetext',progressText);tab.querySelector('progress').title=progressText;tab.querySelector('.level-funding').textContent=progressText;tab.setAttribute('aria-label',LINES[i].name+(i===slow?', slowest station':'')+', level '+state.lines[i]+', '+STATION_TIERS[stationTier(i)]+(available?', upgrade ready':''))});
     updateCommerceControls();
   }
   var machineTabs=Array.prototype.slice.call(document.querySelectorAll('[data-machine]'));var securityTab=document.querySelector('[data-security]');if(securityTab)securityTab.onclick=selectSecurity;
   var loungeTab=document.querySelector('[data-lounge]');if(loungeTab)loungeTab.onclick=selectLounge;
+  // Online orders sit with the stations: the last card opens the deliveries panel (build the pad, send orders).
   var stationOrbitIndex=-1,stationOrbitOffset=0;
   function updateStationOrbit(index){
     if(index===stationOrbitIndex)return;
@@ -3023,7 +3048,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   }
   // Kiosks and the customer line belong to the order floor, so they sit under the counters on the Orders station. Each
   // row mirrors its original button (kept hidden in the Research list), so prices, limits and handlers stay in one place.
-  var orderExtras=[['buyKiosk','kioskCountLabel','Self-order kiosks','<path d="M7 3h10v13H7zM10 7h4M10 10h4M12 16v5M8 21h8"/>'],
+  var orderExtras=[['buyKiosk','kioskCountLabel','Kiosks','<path d="M7 3h10v13H7zM10 7h4M10 10h4M12 16v5M8 21h8"/>'],
     ['upgradeQueue','queueCapacity','Customer line','<circle cx="8" cy="7" r="2.5"/><circle cx="16" cy="7" r="2.5"/><path d="M3.5 20v-4a4.5 4.5 0 0 1 9 0v4m-1 0v-4a4.5 4.5 0 0 1 9 0v4"/>']].map(function(d){
     var row=document.createElement('div');row.className='station-team station-extra';row.hidden=true;
     row.innerHTML='<span class="team-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+d[3]+'</svg></span><span class="team-copy"><b>'+d[2]+'</b><small></small></span><button type="button"><span></span><b></b></button>';
@@ -3031,18 +3056,44 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     return {row:row,source:source,button:button,info:$(d[1])}});
   $('buyOrderCounter').parentElement.hidden=true;
   orderExtras.slice().reverse().forEach(function(x){$('orderCounterExpansion').after(x.row)});
+  // Online orders open from the Orders station too: one row that opens the deliveries panel (build the pad, send orders).
+  var onlineRow=document.createElement('div');onlineRow.className='station-team station-extra';onlineRow.hidden=true;
+  onlineRow.innerHTML='<span class="team-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 10h6v4H9zM4 6h3M17 6h3M5.5 6v4h3.5M18.5 6v4H15M9 14l-3 5M15 14l3 5M12 14v6"/></svg></span><span class="team-copy"><b>Online orders</b><small></small></span><button type="button"><span>Open</span><b></b></button>';
+  onlineRow.querySelector('button').onclick=function(){if(onlineOpen()){showTray('orders');renderUI()}else selectMachine(5)};
+  orderExtras[orderExtras.length-1].row.after(onlineRow);
+  // The pickup window belongs with the pickup counter: building it and its two upgrades live on the Pickup station.
+  var windowRows=[['window','Pickup window','<path d="M4 20V8h16v12M3 8h18M7 8v6h10V8M6 14h12M9 4h6"/>'],['hatch','Second hatch','<path d="M3 20V8h18v12M3 8l2-4h14l2 4M6 8v6h5V8M13 8v6h5V8"/>'],['tips','Tip jar','<path d="M7 9h10l-1 11H8ZM6 6h12v3H6ZM12 12v5M10.5 13.5a1.5 1.2 0 0 1 3 0c0 1.5-3 1-3 2.5a1.5 1.2 0 0 0 3 0"/>']].map(function(d){
+    var row=document.createElement('div');row.className='station-team station-extra';row.hidden=true;row.dataset.window=d[0];
+    row.innerHTML='<span class="team-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+d[2]+'</svg></span><span class="team-copy"><b>'+d[1]+'</b><small></small>'+(d[0]==='window'?'<span class="line-pips" aria-hidden="true"></span>':'')+'</span><button type="button"><span></span><b></b></button>';
+    row.querySelector('button').onclick=function(){if(d[0]==='window')purchaseWindow();else $(d[0]==='hatch'?'buyHatch':'buyTips').click()};
+    return {key:d[0],row:row,button:row.querySelector('button')}});
+  windowRows.slice().reverse().forEach(function(x){$('orderCounterExpansion').after(x.row)});
+  // The station's extras sit as a grid of icon tiles (team, crew ability, kiosks, the pickup window...) under its stats.
+  var stationTiles=document.createElement('div');stationTiles.className='station-tiles';$('orderCounterExpansion').after(stationTiles);
+  [$('stationTeam'),$('stationAbility'),$('stationLift')].concat(orderExtras.map(function(x){return x.row}),[onlineRow],windowRows.map(function(x){return x.row})).forEach(function(row){stationTiles.append(row)});
+  function renderWindowRows(){var show=!securitySelected&&!loungeSelected&&selected===5&&state.lines[5]>0,w=state.pickupWindow,building=isBuilding(state.builds,'window');
+    windowRows.forEach(function(x){var on=show&&(x.key==='window'||w.owned);x.row.hidden=!on;if(!on)return;var note,label,price,disabled,owned=false;
+      if(x.key==='window'){if(w.owned){var inLine=windowLineMax(w)-windowRoom(windowLine,w);note=inLine+' / '+windowLineMax(w)+' in line';label='';price='';disabled=true;owned=true;var pips='';for(var k=0;k<windowLineMax(w);k++)pips+='<i'+(k<inLine?' class="on"':'')+'></i>';if(x.row.dataset.pips!==pips){x.row.dataset.pips=pips;x.row.querySelector('.line-pips').innerHTML=pips}}
+        else if(building){note='Building';label='Opens in';price=buildClock(buildLeft(state.builds,'window'));disabled=true}
+        else{note='Walk-up web orders';label='Build';price=fmt(WINDOW_COST);disabled=state.money<WINDOW_COST}}
+      else{var cost=x.key==='hatch'?HATCH_COST:TIPS_COST;owned=!!w[x.key];note=x.key==='hatch'?'Line of 10':'+25% tips';label=owned?'Built':x.key==='hatch'?'Add':'Set out';price=owned?'':fmt(cost);disabled=owned||state.money<cost}
+      if(x.row.querySelector('small').textContent!==note)x.row.querySelector('small').textContent=note;
+      if(x.button.querySelector('span').textContent!==label)x.button.querySelector('span').textContent=label;
+      if(x.button.querySelector('b').textContent!==price)x.button.querySelector('b').textContent=price;
+      x.button.disabled=disabled;x.button.hidden=x.key==='window'&&owned;x.button.classList.toggle('is-owned',owned);x.button.classList.toggle('is-building',x.key==='window'&&building&&!w.owned)})}
   function renderOrderExtras(){var show=!securitySelected&&!loungeSelected&&selected===4&&state.lines[4]>0;
-    orderExtras.forEach(function(x){x.row.hidden=!show;if(!show)return;var info=x.info.textContent;if(x.row.querySelector('small').textContent!==info)x.row.querySelector('small').textContent=info;
+    onlineRow.hidden=!show;if(show){var waiting=onlineOpen()?onlineRequestsReady():0,note=onlineOpen()?(waiting?waiting+' waiting':'None waiting'):'Needs pickup window';if(onlineRow.querySelector('small').textContent!==note)onlineRow.querySelector('small').textContent=note;var go=onlineOpen()?'Open':'Pickup';if(onlineRow.querySelector('button span').textContent!==go)onlineRow.querySelector('button span').textContent=go;onlineRow.querySelector('button').classList.toggle('is-waiting',waiting>0)}
+    orderExtras.forEach(function(x){x.row.hidden=!show;if(!show)return;var info=x.info.textContent.replace(/ (customers|installed)/,'');if(x.row.querySelector('small').textContent!==info)x.row.querySelector('small').textContent=info;
       ['span','b'].forEach(function(tag){var text=x.source.querySelector(tag).textContent;if(x.button.querySelector(tag).textContent!==text)x.button.querySelector(tag).textContent=text});
       x.button.disabled=x.source.disabled;x.button.setAttribute('aria-label',x.source.getAttribute('aria-label')||x.row.querySelector('b').textContent)})}
   // The selected station's crew ability: what it does while ready, a countdown while it runs or recharges.
   function renderStationAbility(){
     var row=$('stationAbility'),i=selected,show=!securitySelected&&!loungeSelected&&!!ABILITIES[i]&&state.lines[i]>0;row.hidden=!show;if(!show)return;
     var status=abilityStatus(state.abilities,i,state.staff[i]),button=$('useAbility'),info,label;
-    if(status==='locked'){info='Unlocks at crew Lv '+ABILITY_UNLOCK;label='Lv '+ABILITY_UNLOCK}
-    else if(status==='active'){info='Running · +'+Math.round(ABILITY_SALES*100)+'% sales';label=clockLabel(state.abilities.active[i])}
+    if(status==='locked'){info='Crew Lv '+ABILITY_UNLOCK;label='Lv '+ABILITY_UNLOCK}
+    else if(status==='active'){info='+'+Math.round(ABILITY_SALES*100)+'% sales';label=clockLabel(state.abilities.active[i])}
     else if(status==='recharging'){info='Recharging';label=clockLabel(state.abilities.recharge[i])}
-    else{info=ABILITY_FACTOR+'× speed, +'+Math.round(ABILITY_SALES*100)+'% sales for '+(ABILITY_SECONDS%60?ABILITY_SECONDS+' s':ABILITY_SECONDS/60+' min');label='Use'}
+    else{info=ABILITY_FACTOR+'× speed · '+(ABILITY_SECONDS%60?ABILITY_SECONDS+'\u00a0s':ABILITY_SECONDS/60+'\u00a0min');label='Use'}
     if($('abilityName').textContent!==ABILITIES[i].name)$('abilityName').textContent=ABILITIES[i].name;
     if($('abilityInfo').textContent!==info)$('abilityInfo').textContent=info;
     if(button.firstChild.textContent!==label)button.firstChild.textContent=label;
@@ -3080,12 +3131,12 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     run.onfinish=function(){pane.style.overflow='';if(paneGlide===run)paneGlide=null;if(done)done();fitControls()};
     run.oncancel=function(){pane.style.overflow='';if(paneGlide===run)paneGlide=null};
   }
-  function showTray(name){if(name==='employees')name='factory';if(name==='factory')mapPicked=true;if(document.body.dataset.activeTray!==name)playSound('tap',state.sound);document.body.dataset.activeTray=name;if(state.empire.activeStore&&name!=='empire')visitStore(0,false);activeTray=name;var wasCollapsed=$('sheet').classList.contains('collapsed');panelOpen=true;$('sheet').classList.remove('collapsed');$('panelToggle').setAttribute('aria-expanded','true');$('panelToggle').textContent='⌄';var titles={factory:'Stations',employees:'Staff',orders:'Deliveries',boosts:'Research',flowers:'Menu',goals:'Goals',empire:'Empire'};$('panelTitle').textContent=titles[name];var tabName=name==='orders'?'boosts':name;trayTabs.forEach(function(t){t.setAttribute('aria-pressed',String(t.getAttribute('data-tray')===tabName))});$('panelBack').hidden=name!=='orders';Array.prototype.forEach.call(document.querySelectorAll('[data-pane]'),function(p){p.hidden=p.getAttribute('data-pane')!==name});if(wasCollapsed)glidePane(document.querySelector('[data-pane="'+name+'"]'),true);else if(paneGlide){paneGlide.cancel();paneGlide=null}fitControls()}
+  function showTray(name){if(name==='employees')name='factory';if(name==='orders'&&!onlineOpen()){securitySelected=false;loungeSelected=false;selected=5;name='factory'}if(name==='factory')mapPicked=true;if(document.body.dataset.activeTray!==name)playSound('tap',state.sound);document.body.dataset.activeTray=name;if(state.empire.activeStore&&name!=='empire')visitStore(0,false);activeTray=name;var wasCollapsed=$('sheet').classList.contains('collapsed');panelOpen=true;$('sheet').classList.remove('collapsed');$('panelToggle').setAttribute('aria-expanded','true');$('panelToggle').textContent='⌄';var titles={factory:'Stations',employees:'Staff',orders:'Deliveries',boosts:'Research',flowers:'Menu',goals:'Goals',empire:'Empire'};$('panelTitle').textContent=titles[name];var tabName=name==='orders'?'factory':name;trayTabs.forEach(function(t){t.setAttribute('aria-pressed',String(t.getAttribute('data-tray')===tabName))});$('panelBack').hidden=name!=='orders';Array.prototype.forEach.call(document.querySelectorAll('[data-pane]'),function(p){p.hidden=p.getAttribute('data-pane')!==name});if(wasCollapsed)glidePane(document.querySelector('[data-pane="'+name+'"]'),true);else if(paneGlide){paneGlide.cancel();paneGlide=null}fitControls()}
   function collapsePanel(){if(mapPicked){mapPicked=false;if(window.__shiftReady)renderUI()}var sheet=$('sheet'),wasOpen=!sheet.classList.contains('collapsed');if(wasOpen&&sheet.classList.contains('tall')){settleSheet('collapsed');return}panelOpen=false;$('panelToggle').setAttribute('aria-expanded','false');$('panelToggle').textContent='⌃';if(!wasOpen){fitControls();return}
     // The pane folds away first; the sheet only takes its collapsed shape once nothing is left to hide.
     glidePane(document.querySelector('[data-pane]:not([hidden])'),false,function(){if(!panelOpen){sheet.classList.add('collapsed');fitControls()}});fitControls()}
   // Deliveries lives under Shop › Online, as on iOS; its header carries a way back.
-  $('panelBack').onclick=function(){showTray('boosts');if(shopBrowser)shopBrowser.show(2)};
+  $('panelBack').onclick=function(){showTray('factory')};
   trayTabs.forEach(function(tab){tab.onclick=function(){var name=tab.getAttribute('data-tray');if(name===activeTray&&panelOpen)collapsePanel();else showTray(name)}});
   $('panelToggle').onclick=function(){if(panelOpen)collapsePanel();else showTray(activeTray)};
   // Phones: the sheet has three heights. Its header is a grabber: pulled up past the half-open height the sheet fills
@@ -3191,7 +3242,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     $('upgradeProgress').value=building?(1-buildShareLeft(state.builds,'lounge'))*100:maxed?100:Math.min(100,state.money/price*100);$('upgradeProgress').setAttribute('aria-valuetext',building?'Opens in '+clock:maxed?'Fully fitted':affordable?'Ready':fmt(Math.max(0,price-state.money))+' needed for '+next.name);
     paintUpgradePreview(-2);
     $('nextAppearance').classList.remove('unlock-road');$('nextAppearance').hidden=false;$('nextAppearance').textContent=next?next.name+' · '+next.seats+' seats · 1 in '+next.share+' guests · jar ×'+next.spend:'Nothing left to fit in the back room.';
-    $('machineCost').textContent=building?clock:maxed?'—':fmt(price);$('buyMachine').disabled=!affordable;$('buyMachine').querySelector('span').textContent=building?'BUILDING':tier?'UPGRADE':'OPEN';$('buyMachine').style.setProperty('--funded',(building?(1-buildShareLeft(state.builds,'lounge'))*100:maxed?0:Math.min(100,state.money/price*100))+'%');
+    var loungeSkip=building?buildSkipCost('lounge'):0;$('machineCost').textContent=building?fmt(loungeSkip):maxed?'—':fmt(price);$('buyMachine').disabled=building?state.money<loungeSkip:!affordable;$('buyMachine').querySelector('span').textContent=building?'FINISH NOW · '+clock:tier?'UPGRADE':'OPEN';$('buyMachine').style.setProperty('--funded',(building?(1-buildShareLeft(state.builds,'lounge'))*100:maxed?0:Math.min(100,state.money/price*100))+'%');
     $('buyMachineMax').disabled=true;$('machineMaxLabel').textContent='MAX';$('machineMaxCost').textContent='—';$('buyMachineMax').setAttribute('aria-label','The lounge is fitted one level at a time');
     $('upgradeHint').textContent=building?'Builders are on the roof · guests go up once it opens':maxed?'Every seat in the back room is spoken for.':!affordable?fmt(price-state.money)+' to go':tier?'+'+(next.seats-seats)+' seats · bigger take per session':'Open the curtain · every 4th guest slips in';$('upgradeHint').classList.toggle('ready',affordable);
   }
@@ -3328,15 +3379,24 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function stationLookFor(i,level){var t=economy.stationLook(level);return t===5&&perkLevel(state.perks,'finish')&&level>=(i===6?economy.SECURITY_MAX_LEVEL:FOUNDER_LEVEL)?FOUNDER_LOOK:t}
   function stationModelKey(i,level){var t=stationLookFor(i,level);while(t>1&&!stationModelFiles[i+'.'+t])t--;return i+'.'+t}
   function stationPicture(i,level){
-    if(!map3d||!map3d.ok||!map3d.stationPicture||!(level>0))return null;
+    // Before the 3D map is up, ask the frame loop to try again rather than keep the sprite.
+    if(!(level>0))return null;if(!map3d||!map3d.ok||!map3d.stationPicture){picturesPending=true;return null}
     var picture=map3d.stationPicture(stationModelKey(i,level));if(!picture)picturesPending=true;return picture;
   }
   // The rooftop lounge as the map shows it at its tier (map3d.loungePicture); unbought, the Speakeasy it opens as.
   function loungePicture(){
-    if(!map3d||!map3d.ok||!map3d.loungePicture)return null;
+    if(!map3d||!map3d.ok||!map3d.loungePicture){picturesPending=true;return null}
     var picture=map3d.loungePicture(Math.max(1,state.lounge),state.loungeLift);if(!picture)picturesPending=true;return picture;
   }
   // Draws a picture into a w×h canvas, as large as fits, centred and standing on the bottom edge.
+  // The same, cropped to the picture's solid pixels first (the bounds are measured once per picture), so a small card
+  // shows the equipment rather than the empty sky around it.
+  function drawPictureCrop(c,picture,w,h){var crop=picture.cropped;
+    if(!crop){var tmp=document.createElement('canvas');tmp.width=480;tmp.height=600;var tc=tmp.getContext('2d',{willReadFrequently:true});drawPictureFit(tc,picture,480,600);
+      var d=tc.getImageData(0,0,480,600).data,l=480,r=0,t=600,bt=0;for(var y=0;y<600;y+=2)for(var x=0;x<480;x+=2)if(d[(y*480+x)*4+3]>24){if(x<l)l=x;if(x>r)r=x;if(y<t)t=y;if(y>bt)bt=y}
+      if(r<=l)return drawPictureFit(c,picture,w,h);l=Math.max(0,l-4);t=Math.max(0,t-4);r=Math.min(479,r+4);bt=Math.min(599,bt+4);
+      crop=picture.cropped=document.createElement('canvas');crop.width=r-l;crop.height=bt-t;crop.getContext('2d').drawImage(tmp,l,t,r-l,bt-t,0,0,r-l,bt-t)}
+    var fit=Math.min(w/crop.width,h/crop.height),pw=crop.width*fit,ph=crop.height*fit;c.drawImage(crop,(w-pw)/2,h-ph,pw,ph)}
   function drawPictureFit(c,picture,w,h){var fit=Math.min(w/picture.width,h/picture.height),pw=picture.width*fit,ph=picture.height*fit;c.drawImage(picture,(w-pw)/2,h-ph,pw,ph)}
   function paintUpgradePreview(index){
     var preview=$('upgradePreview');if(!preview)return;
@@ -3364,7 +3424,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       preview.dataset.art=key;
     }finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
   }
-  function paintSecurityThumbnail(){var card=document.querySelector('[data-security] canvas');if(!card)return;var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;ctx=card.getContext('2d');var picture=state.doorBuilt?stationPicture(6,state.idStaff):null;if(ctx&&picture){ctx.clearRect(0,0,80,100);ctx.drawImage(picture,0,0,80,100)}else if(ctx){ctx.clearRect(0,0,80,100);unit=25;centerX=40;centerY=97;angle=.57;if(!state.doorBuilt)drawConstructionSite(0,0,2.6,2.6,function(){drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5'])});else{drawBox(0,0,-.24,2.6,2.6,.24,['#cbb085','#7f6a4b','#ac9168']);drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5']);drawPerson(-.55,-.45,0,7,false,true,false)}}ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
+  function paintSecurityThumbnail(){var card=document.querySelector('[data-security] canvas');if(!card)return;paintThumb(card,stationPicture(6,state.doorBuilt?Math.max(1,state.idStaff):1),function(){unit=25;centerX=40;centerY=97;angle=.57;if(!state.doorBuilt)drawConstructionSite(0,0,2.6,2.6,function(){drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5'])});else{drawBox(0,0,-.24,2.6,2.6,.24,['#cbb085','#7f6a4b','#ac9168']);drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5']);drawPerson(-.55,-.45,0,7,false,true,false)}})}
   // The lounge doorway in miniature, dressed for its tier. Every level keeps the lacquer jambs, the slab and the LOUNGE
   // blade so the card still reads as the lounge; what changes is the colour of the neon, the drapes, the room glimpsed
   // between them and the dressing out front — planters for the terrace, a rope for the booths, a doorman and a runner
@@ -3440,12 +3500,18 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     }
     else{drawBox(0,.14,0,1.36,.08,1.72,['#c9a874','#7d6240','#a9895c']);constructionTape([-.75,.8,face+.06],[.75,.7,face+.06]);wallText(0,2.2,face+.01,'LOUNGE',unit*1.2,.32,'#4b3f45',false,'800')}
   }
-  function paintLoungeThumbnail(){var card=document.querySelector('[data-lounge] canvas');if(!card)return;var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;ctx=card.getContext('2d');var picture=loungePicture();if(ctx&&picture){ctx.clearRect(0,0,80,100);drawPictureFit(ctx,picture,80,100)}else if(ctx){ctx.clearRect(0,0,80,100);unit=22;centerX=40;centerY=94;angle=.57;drawLoungeThumb()}ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
-  function paintThumbnails(){paintSecurityThumbnail();paintLoungeThumbnail();var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;machineTabs.forEach(function(tab,i){ctx=tab.querySelector('canvas').getContext('2d');if(!ctx)return;ctx.clearRect(0,0,80,100);var picture=state.lines[i]?stationPicture(i,state.lines[i]):null;if(picture){ctx.drawImage(picture,0,0,80,100);return}unit=25;centerX=40;centerY=97;angle=.57;drawStage({x:0,z:0},i,0)});ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
+  function paintLoungeThumbnail(){var card=document.querySelector('[data-lounge] canvas');if(!card)return;paintThumb(card,loungePicture(),function(){unit=22;centerX=40;centerY=94;angle=.57;drawLoungeThumb()})}
+  // A station card's thumbnail: the 3D picture, or until it's in the 2D drawing (laid out for an 80×100 box), either
+  // way cropped to its solid pixels and fitted to the card's wide canvas, standing on its bottom edge.
+  function paintThumb(card,picture,drawFallback){var c=card&&card.getContext('2d');if(!c)return;
+    if(!picture){var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;picture=document.createElement('canvas');picture.width=160;picture.height=200;ctx=picture.getContext('2d');ctx.setTransform(2,0,0,2,0,0);try{drawFallback()}finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}}
+    c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,card.width,card.height);drawPictureCrop(c,picture,card.width,card.height)}
+  function paintThumbnails(){paintSecurityThumbnail();paintLoungeThumbnail();machineTabs.forEach(function(tab,i){paintThumb(tab.querySelector('canvas'),state.lines[i]?stationPicture(i,state.lines[i]):null,function(){unit=25;centerX=40;centerY=97;angle=.57;drawStage({x:0,z:0},i,0)})})}
   function selectLounge(){securitySelected=false;loungeSelected=true;showTray('factory');renderUI();var card=document.querySelector('[data-lounge]');if(card&&card.scrollIntoView)card.scrollIntoView({block:'nearest',inline:'nearest'});if(navigator.vibrate)navigator.vibrate(8)}
   // Each lounge tier is bought outright; the first one raises the doorway out of its hoarding.
   function upgradeLounge(){
-    var price=loungeUpgradeCost(state.lounge);if(price===null||isBuilding(state.builds,'lounge'))return;if(state.money<price)return notify('Need '+fmt(price-state.money)+' more');
+    if(isBuilding(state.builds,'lounge')){skipBuildNow('lounge');return}
+    var price=loungeUpgradeCost(state.lounge);if(price===null)return;if(state.money<price)return notify('Need '+fmt(price-state.money)+' more');
     // The first level pays for the build; the roof opens when the builders finish (completeBuilds).
     if(!state.lounge){state.money-=price;startBuild(state.builds,'lounge');recordGoal(state.empire,'upgrade',1);playSound('build',state.sound);telemetry.send('lounge_build',{});notify('LOUNGE UNDER CONSTRUCTION · opens in '+buildClock(buildLeft(state.builds,'lounge')),'upgrade');paintThumbnails();updateMarkers.key=null;render.invalidated=true;renderUI();save();if(navigator.vibrate)navigator.vibrate(18);return}
     var wasLot=!state.lounge;buyLoungeTier(state);recordGoal(state.empire,'upgrade',1);var tier=loungeTier(state.lounge);
@@ -3511,11 +3577,6 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     toggle.onclick=function(){var open=toggle.getAttribute('aria-expanded')!=='true';expandBranch(open?i:-1);if(open)requestAnimationFrame(function(){toggle.scrollIntoView({block:'start'})})};
   });
   $('bulkDispatch').onclick=function(){var reward=dispatchBulk(state);if(reward){queueDeliveryWave(1);notify('BULK DELIVERY · +'+fmt(reward),'upgrade');save();renderUI()}};
-  var productIcons=[
-    '<path d="M16 28V12m0 8C5 20 5 8 5 8s11 0 11 12Zm0-4C16 5 27 5 27 5s0 11-11 11Z"/>',
-    '<path d="m5 23 17-17 5 5-17 17Z M8 20l5 5m7-17 5 5M7 7c-3-3 3-3 0-6"/>',
-    '<rect x="5" y="5" width="22" height="22" rx="4"/><path d="M5 16h22M16 5v22M9 10h3m8 0h3M9 21h3m8 0h3"/>'
-  ];
   // Each strain's card carries its own Sell-as pills (see renderFlowers); a format's unlock is paid once, for every strain.
   function stockFormat(index){if(state.productMenu.unlocked[index])return;if(unlockFormat(state,index)){save();renderUI();notify('EVERY STRAIN NOW SELLS AS '+FORMATS[index].name.toUpperCase(),'upgrade')}}
   var prestigePanel=document.createElement('details');prestigePanel.className='depth-panel prestige-panel';prestigePanel.innerHTML=
@@ -3561,11 +3622,16 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   var windowControl=document.createElement('div');windowControl.className='window-control';windowControl.innerHTML='<span class="drone-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V8h16v12M3 8h18M7 8v6h10V8M6 14h12M9 4h6"/></svg></span><div><strong>Pickup window</strong><small id="windowStatus"></small></div><button id="buyHatch" type="button"><span>Line of 10</span><b></b></button><button id="buyTips" type="button"><span>+25% tips</span><b></b></button>';droneControl.before(windowControl);
   $('buyHatch').onclick=function(){purchaseWindowUpgrade('hatch',HATCH_COST,'SECOND HATCH OPEN · line of 10, quicker hand-off')};
   $('buyTips').onclick=function(){purchaseWindowUpgrade('tips',TIPS_COST,'TIP JAR OUT · walk-ups pay 25% more')};
-  var deliverySite=document.createElement('div');deliverySite.className='delivery-site';deliverySite.id='deliverySite';deliverySite.innerHTML='<h2>Open a pickup window</h2><div class="delivery-preview"><canvas id="deliveryPreview" width="600" height="720" role="img" aria-label="Preview of the finished pickup window with its hatch, ledge and glass parcel tube"></canvas></div><ul class="delivery-benefits"><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 21V12h10v9M5 12h14M9 8a3 3 0 1 0 6 0 3 3 0 1 0-6 0"/></svg><strong>Walk-up</strong><span>pickup</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 8a8 8 0 0 0-14-3L3 8m0-5v5h5m-4 8a8 8 0 0 0 14 3l3-3m0 5v-5h-5"/></svg><strong>Auto</strong><span>clerk serves</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 17 6-6 4 4 8-10m-6 0h6v6"/></svg><strong>+33%</strong><span>per unit</span></li></ul><div class="delivery-build"><div class="delivery-funding"><small id="deliveryFundingText"></small><progress id="deliveryFunding" max="100" value="0" aria-label="Cash toward delivery pad"></progress></div><button id="buildDelivery" type="button"><span>Build delivery pad</span><b>'+fmt(AUTO_DRONE_COST)+'</b></button></div>';document.querySelector('.dispatch-desk').prepend(deliverySite);$('buildDelivery').onclick=purchaseWindow;
+  var deliverySite=document.createElement('div');deliverySite.className='delivery-site';deliverySite.id='deliverySite';deliverySite.innerHTML='<h2>Open a pickup window</h2><div class="delivery-preview"><canvas id="deliveryPreview" width="600" height="720" role="img" aria-label="Preview of the finished pickup window with its hatch, ledge and glass parcel tube"></canvas></div><ul class="delivery-benefits"><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 21V12h10v9M5 12h14M9 8a3 3 0 1 0 6 0 3 3 0 1 0-6 0"/></svg><strong>Walk-up</strong><span>pickup</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 8a8 8 0 0 0-14-3L3 8m0-5v5h5m-4 8a8 8 0 0 0 14 3l3-3m0 5v-5h-5"/></svg><strong>Auto</strong><span>clerk serves</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 17 6-6 4 4 8-10m-6 0h6v6"/></svg><strong>+33%</strong><span>per unit</span></li></ul><div class="delivery-build"><div class="delivery-funding"><small id="deliveryFundingText"></small><progress id="deliveryFunding" max="100" value="0" aria-label="Cash toward delivery pad"></progress></div><button id="buildDelivery" type="button"><span>Build delivery pad</span><b>'+fmt(AUTO_DRONE_COST)+'</b></button><button id="skipBuildDelivery" type="button" class="build-skip" hidden><span>Finish now</span><b></b></button></div>';document.querySelector('.dispatch-desk').prepend(deliverySite);$('buildDelivery').onclick=purchaseWindow;$('skipBuildDelivery').onclick=function(){skipBuildNow('window')};
   // Paying starts the deck's build (builds.js); completeBuilds opens it when the time is up.
   function renderWindowControl(){var w=state.pickupWindow;if(!w.owned)return;
     var queued=windowLineMax(w)-windowRoom(windowLine,w),status=queued+' / '+windowLineMax(w)+' in line';if($('windowStatus').textContent!==status)$('windowStatus').textContent=status;
     [['buyHatch','hatch',HATCH_COST,'Second hatch: line of 10, quicker hand-off'],['buyTips','tips',TIPS_COST,'Tip jar: walk-up orders pay 25% more']].forEach(function(u){var b=$(u[0]),own=w[u[1]];b.disabled=own||state.money<u[2];b.classList.toggle('is-owned',own);var price=own?'Built':fmt(u[2]);if(b.querySelector('b').textContent!==price)b.querySelector('b').textContent=price;b.setAttribute('aria-label',u[3]+(own?', built':', '+fmt(u[2])))})}
+  // What each build cost, for its skip price (builds.js skipCost), and paying to finish it now.
+  function buildPrice(key){return key==='window'?WINDOW_COST:key==='deck'?AUTO_DRONE_COST:LOUNGE_TIERS[0].cost}
+  function buildSkipCost(key){return skipCost(state.builds,key,buildPrice(key))}
+  function skipBuildNow(key){var price=buildSkipCost(key);if(!price)return;if(state.money<price){notify('Need '+fmt(price-state.money)+' more to finish now');return}
+    state.money-=price;skipBuild(state.builds,key);telemetry.once('build_skipped_'+key);playSound('build',state.sound);completeBuilds();renderUI();save()}
   function purchaseWindow(){if(windowOpen()||isBuilding(state.builds,'window')||state.money<WINDOW_COST)return;state.money-=WINDOW_COST;startBuild(state.builds,'window');telemetry.once('pickup_window_paid');save();renderUI();notify('PICKUP WINDOW UNDER CONSTRUCTION · opens in '+buildClock(buildLeft(state.builds,'window')),'upgrade')}
   // The window's two upgrades, each bought once: a second hatch (longer line, quicker hand-off) and a tip jar.
   function purchaseWindowUpgrade(key,price,message){var w=state.pickupWindow;if(!w.owned||w[key]||state.money<price)return;state.money-=price;w[key]=true;telemetry.once('pickup_window_'+key);save();renderUI();notify(message,'upgrade')}
@@ -3582,7 +3648,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   $('autoDroneBulk').onclick=function(){if(!state.autoDrone.bulk){purchaseBulkDrone();return}state.autoDrone.mode=state.autoDrone.mode==='bulk'?'single':'bulk';save();renderUI()};
   // The switch flips on any press-and-release anywhere on it: pointer capture means the release always lands on the
   // button even though the knob slides under the pointer, and the click event is ignored so nothing double-fires.
-  function flipAutoDrone(){if(!state.autoDrone.owned){purchaseAutoDrone();return}state.autoDrone.enabled=!state.autoDrone.enabled;save();renderUI()}
+  function flipAutoDrone(){if(!state.autoDrone.owned){if(isBuilding(state.builds,'deck'))skipBuildNow('deck');else purchaseAutoDrone();return}state.autoDrone.enabled=!state.autoDrone.enabled;save();renderUI()}
   (function(toggle){var pressed=false;
     toggle.addEventListener('pointerdown',function(e){if(e.button&&e.button!==0)return;pressed=true;try{toggle.setPointerCapture(e.pointerId)}catch(err){}});
     toggle.addEventListener('pointerup',function(e){if(!pressed)return;pressed=false;try{toggle.releasePointerCapture(e.pointerId)}catch(err){}flipAutoDrone()});
