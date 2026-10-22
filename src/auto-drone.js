@@ -1,6 +1,6 @@
-export const AUTO_DRONE_COST=7500;
+export const AUTO_DRONE_COST=25000;
 export const AUTO_DRONE_INTERVAL=10;
-export const BULK_DRONE_COST=25000;
+export const BULK_DRONE_COST=75000;
 export function migrateAutoDrone(raw){const owned=raw?.owned===true;return {bulk:owned&&raw?.bulk===true,mode:owned&&raw?.bulk===true&&raw?.mode==='bulk'?'bulk':'single',owned,enabled:owned&&raw.enabled===true,remaining:owned&&Number.isFinite(raw.remaining)?Math.max(0,Math.min(AUTO_DRONE_INTERVAL,raw.remaining)):0};}
 // The game pays for the deck first and opens it when its build finishes (builds.js); buyAutoDrone does both at once.
 export function payAutoDrone(state){if(state.autoDrone.owned||state.money<AUTO_DRONE_COST)return false;state.money-=AUTO_DRONE_COST;return true;}

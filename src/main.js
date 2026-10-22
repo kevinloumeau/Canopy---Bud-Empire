@@ -855,7 +855,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       // The shell and fittings, placed by the same numbers the station and customer code uses.
       layout.rooftop=ROOFTOP;
       layout.shell={plaster:SHOP_GREEN_PLASTER[2],tile:SHOP_GREEN_TILE[2],tileH:LOUNGE_TILE,tilePitch:TILE_PITCH,glazingBay:GLAZING_BAY,fanX:FAN_X,topLanding:TOP_LANDING,
-        loungeFront:LOUNGE_FRONT,loungeDoor:LOUNGE_DOOR,loungeExit:LOUNGE_EXIT,loungeRight:LOUNGE_RIGHT,loungeHeader:2.05,wallLeft:-6.7,wallRight:8.4,shelfLeft:-1.3+COUNTER_SHIFT,
+        loungeFront:LOUNGE_FRONT,loungeDoor:LOUNGE_DOOR,loungeExit:LOUNGE_EXIT,loungeRight:LOUNGE_RIGHT,loungeHeader:2.05,loungeSign:{x:LOUNGE_DOOR.x,y:2.46,scale:.65},wallLeft:-6.7,wallRight:8.4,shelfLeft:-1.3+COUNTER_SHIFT,
         exitDoor:{x0:9.44,x1:11.25,h:3.3},column:{x:9.8,z:-1.8},merchCabinet:{back:8.41,face:9.27,z0:-6.84,z1:-4.8},
         planter:{x0:-11.7,x1:-10.75,z0:2,z1:5.6,tree:{x:-11.45,z:2.35}},baseboard:{x0:-10.65,x1:13,front:11.95,rear:-7,h:.32},hanging:{x0:-2.3,x1:2.3,y:9.05,z:-1.35},
         lamps:[[-4,3.7,3.5,1.3],[4,3.7,3.5,1.3],[-4,3.7,8.5,1.1],[5,3.7,8.5,1.1],[-10,3,-4,.8],[-4,8.4,-3,1.2],[4,8.4,-3,1.2],[0,12.8,-4.5,1]]};
@@ -1240,9 +1240,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var taskClocks=[0,0,0,0,0,0],taskActivity=[0,0,0,0,0,0],cropGrowth=[.15,.4,.7,.95];
   // Each station's work clock: it runs while the station is working, easing in and out, and drives its staff loop.
   // Its 3D model's motion (station-motion.js) runs on its own clock whenever the station is built, so a station whose
-  // store is full or whose input ran dry still looks alive; only pausing the game stops it.
+  // store is full or whose input ran dry still looks alive; only pausing the game stops it. A crew burst runs it at the
+  // burst's speed, so the station visibly works faster.
   var motionClocks=[0,0,0,0,0,0];
-  function tickTaskClocks(dt){for(var task=0;task<6;task++){var target=stationWorking(task)?1:0;taskActivity[task]+=(target-taskActivity[task])*(1-Math.exp(-dt*5));taskClocks[task]+=dt*1000*taskActivity[task];if(state.lines[task]>0)motionClocks[task]+=dt}}
+  function tickTaskClocks(dt){for(var task=0;task<6;task++){var target=stationWorking(task)?1:0;taskActivity[task]+=(target-taskActivity[task])*(1-Math.exp(-dt*5));taskClocks[task]+=dt*1000*taskActivity[task];if(state.lines[task]>0)motionClocks[task]+=dt*(state.abilities.active[task]>0?ABILITY_FACTOR:1)}}
   function crop(x,z,y,slot,mature){
     var strain=visibleStrain(slot),phase=motionPreference.matches?.8:(taskClocks[1]/9000+slot*.23)%1;
     // A readable representative crop cycle, independent of high-speed batch counts.
@@ -2046,7 +2047,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // changes flips over, cycling through the alphabet for a moment and rippling left to right, the way a Solari board
   // rolls; on load the whole board flips in from blank. Letters are only drawn once a flap is wide enough to read.
   // The board stops at y 2.62: from the default view the mezzanine fascia hides the back wall above about 2.65.
-  var FLAP_COLS=21,FLAP_ROWS=4;
+  var FLAP_COLS=24,FLAP_ROWS=4;
   function flapLines(){
     var lines=[];
     menuStrains().slice(0,FLAP_ROWS).forEach(function(i){
@@ -2340,7 +2341,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // The shop's customers in the 3D map are Kevin's rigged Meshy characters (2026-10-21), taken in turn by id.
   var STAFF_MODELS=(function(f){return{stations:[f('green-uniform-woman'),f('green-uniform-man'),f('chef'),f('staff-young'),null,f('staff-gray')],desks:[f('staff-dark-hair'),f('staff-young'),f('staff-gray')],door:f('security-guard'),host:f('staff-dark-hair'),window:f('staff-young')}})(function(n){return 'people/'+n+'.glb'});
 var STAFF_ROLES=['seeds','grow','harvest','pack','desk','pickup'];
-var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-shirt','utility-vest','office-woman','bearded-blue-shirt','tie-dye-hoodie','cream-outfit','trench-coat'].map(function(n){return 'people/'+n+'.glb'});
+var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-shirt','utility-vest','office-woman','bearded-blue-shirt','tie-dye-hoodie','cream-outfit','trench-coat','linen-tunic','blazer-woman','beanie-hoodie','puffer-vest-woman','fleece-man','yellow-jacket-woman','athletic-man','hijab-woman','pattern-shirt-man','tweed-senior','green-sweater-man','chef-woman','overalls-woman','punk-jacket-woman','bomber-jacket-man'].map(function(n){return 'people/'+n+'.glb'});
   // Records the images one 2D figure draws (with every transform it applies) and turns each into four world points: a
   // flat card standing upright at the figure's feet, spanning screen-right and up, so the 3D camera shows it exactly
   // where the 2D map would while counters in front of it still hide it. Nothing else the figure draws is kept.
@@ -2445,7 +2446,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var speed=state.lines.some(function(n){return n>0})?Math.min(.07,.02+production()*.00002):0;
     crateTime=(crateTime+frameDelta*speed*1.4)%1;cargoOdo=(cargoOdo+frameDelta*speed*14)%1e5;
     var stations=[],people=[];
-    function station(i,x,y,z,level,built,size){var tier=built?stationLookFor(i,level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(Math.min(5,tier)-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,pop:stationPop(i),selected:mapPicked&&selected===i&&!securitySelected&&!loungeSelected,clock:motionPreference.matches?6.3:motionClocks[i],act:taskActivity[i]})}
+    function station(i,x,y,z,level,built,size){var tier=built?stationLookFor(i,level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(Math.min(5,tier)-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,pop:stationPop(i),selected:mapPicked&&selected===i&&!securitySelected&&!loungeSelected,clock:motionPreference.matches?6.3:motionClocks[i],act:taskActivity[i],boost:i<ABILITIES.length&&state.abilities.active[i]>0?state.abilities.active[i]/ABILITY_SECONDS:0})}
     // Every person on the map is a rigged 3D model (Kevin's Meshy cast), the same model upstairs and down; nobody is
     // a flat sprite (Kevin, 2026-10-22), so a person whose model has not loaded yet is simply not shown. Standing still,
     // a customer looks at what they are doing (gait.look), else along the way they last walked. cast picks the model
@@ -2562,7 +2563,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     figures=figures.filter(function(f){return f.alpha>.99});backdrops=backdrops.filter(function(f){return f.alpha>.99});
     var dronePoses=deliveryDronePoses(frameDelta);deliveryCards(dronePoses,figures);
     var look=viewCentre();
-    map3d.render({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,characters:characters,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,loungeBuild:isBuilding(state.builds,'lounge')?1-buildShareLeft(state.builds,'lounge'):null,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtureBuild:isBuilding(state.builds,'deck')||isBuilding(state.builds,'window')?Object.assign(isBuilding(state.builds,'deck')?{deck:1-buildShareLeft(state.builds,'deck')}:{},isBuilding(state.builds,'window')?{pickupWindow:1-buildShareLeft(state.builds,'window')}:{}):null,fixtures:{deck:deliveryBuilt(),pickupWindow:windowOpen(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2},menus:kioskMenus(),menuClock:animationTime/1000,cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    map3d.render({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,characters:characters,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,loungeBuild:isBuilding(state.builds,'lounge')?1-buildShareLeft(state.builds,'lounge'):null,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtureBuild:isBuilding(state.builds,'deck')||isBuilding(state.builds,'window')?Object.assign(isBuilding(state.builds,'deck')?{deck:1-buildShareLeft(state.builds,'deck')}:{},isBuilding(state.builds,'window')?{pickupWindow:1-buildShareLeft(state.builds,'window')}:{}):null,fixtures:{deck:deliveryBuilt(),pickupWindow:windowOpen(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2},fixtureGhost:state.lines[4]>0&&kioskCount()<3?{['kiosk'+kioskCount()]:true}:null,menus:kioskMenus(),menuClock:animationTime/1000,cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     // A model that had not loaded when the tabs were painted: try again every half second until all are in.
     var wall=performance.now();if(picturesPending&&!(wall-(renderFrame3d.picturesTried||0)<500)){renderFrame3d.picturesTried=wall;picturesPending=false;paintThumbnails()}
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -2767,6 +2768,24 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var rush=state.rushTime>0,boost=state.empire.contracts.boost>0,parts=[];if(rush)parts.push('Rush · 2× sales · '+Math.ceil(state.rushTime)+'s');if(boost)parts.push('Boost · 2× sales · '+clock(state.empire.contracts.boost*1000/Math.max(1,state.gameSpeed||1)));rushPill.hidden=!parts.length;rushPeak.rush=rush?Math.max(rushPeak.rush,state.rushTime):0;rushPeak.boost=boost?Math.max(rushPeak.boost,state.empire.contracts.boost):0;burstRing(rushPill,Math.min(rush?state.rushTime/rushPeak.rush:1,boost?state.empire.contracts.boost/rushPeak.boost:1)*(parts.length?1:0));var text=parts.join('  ·  ');if(rushPill.textContent!==text)rushPill.textContent=text;
     var c=branch?null:activeContract(state.empire);contractPill.hidden=!c;if(c){var line=c.name+' · '+abbr(c.progress)+' / '+abbr(c.target)+' · '+clock(c.remaining);if(contractPill.textContent!==line)contractPill.textContent=line}}
   var loungeMarker=document.createElement('button');loungeMarker.className='marker';loungeMarker.dataset.marker='lounge';loungeMarker.onclick=selectLounge;$('markers').appendChild(loungeMarker);
+  // Purchase tags for what can be bought next on the map (Kevin, 2026-10-22, like the lounge's): the pickup window on
+  // its spot, then the drone port on its deck once the window is open, and a smaller tag over a ghost of the next kiosk.
+  // A tap opens the panel with the buy button: Deliveries for the window and the drone port, the Orders station for kiosks.
+  function lotMarker(name,open){var b=document.createElement('button');b.className='marker station-sign is-lot';b.dataset.marker=name;b.onclick=open;b.style.display='none';$('markers').appendChild(b);return b}
+  var windowMarker=lotMarker('window',function(){showTray('orders');renderUI()}),droneMarker=lotMarker('drone',function(){showTray('orders');renderUI()}),kioskMarker=lotMarker('kiosk',function(){selectMachine(4)});[windowMarker,droneMarker,kioskMarker].forEach(function(el){el.classList.add('is-mini')});
+  var KIOSK_PRICES=[25000,50000,100000],KIOSK_Z=[6.8,5,3.2];
+  // What each tag shows now: null when there is nothing to buy there.
+  function lotTags(){var tags=[],count=kioskCount(),orders=state.lines[4]>0;
+    if(orders&&!windowOpen())tags.push({el:windowMarker,name:'Window',build:'window',price:WINDOW_COST,x:PICKUP_WINDOW.x,y:2.4,z:PICKUP_WINDOW.z});
+    if(windowOpen()&&!deliveryBuilt())tags.push({el:droneMarker,name:'Drones',build:'deck',price:AUTO_DRONE_COST,x:-9.39,y:7.2,z:-.2});
+    if(orders&&count<3)tags.push({el:kioskMarker,name:'Kiosk',price:KIOSK_PRICES[count],x:-9.75,y:2.1,z:KIOSK_Z[count]});
+    return tags}
+  function renderLotTags(){var shown=lotTags();[windowMarker,droneMarker,kioskMarker].forEach(function(el){var t=shown.filter(function(x){return x.el===el})[0];el.hidden=!t;if(!t)return;
+    var building=!!t.build&&isBuilding(state.builds,t.build),clock=building?buildClock(buildLeft(state.builds,t.build)):'',key=t.name+'|'+(building?clock:fmt(t.price))+'|'+(state.money>=t.price);
+    el.classList.toggle('is-building',building);
+    if(building)el.style.setProperty('--build-left',buildShareLeft(state.builds,t.build).toFixed(3));else el.style.removeProperty('--build-left');
+    if(el.dataset.level!==key){el.innerHTML='<span class=station-sign-name>'+t.name+'</span><span class=station-sign-level>'+(building?clock:fmt(t.price))+'</span>';el.dataset.level=key;updateMarkers.key=null}
+    el.setAttribute('aria-label',building?t.name+', being built. Opens in '+clock:t.name+', '+fmt(t.price)+'. Open where to buy it')})}
   function updateCommerceControls(){
     if($('buyAutoDrone')){var drone=state.autoDrone,dronePrice=drone.owned?BULK_DRONE_COST:AUTO_DRONE_COST,deckBuilding=isBuilding(state.builds,'deck'),deckClock=buildClock(buildLeft(state.builds,'deck'));
       $('buyAutoDrone').disabled=drone.bulk||deckBuilding||state.money<dronePrice||!windowOpen();$('autoDronePrice').textContent=drone.bulk?'Installed':deckBuilding?deckClock:fmt(dronePrice);$('buyAutoDrone').querySelector('span').textContent=drone.owned?'Bulk upgrade':deckBuilding?'Building':'Install';$('autoDroneBenefit').textContent=drone.owned?'Up to 10 ready orders every 10s':'Send a ready order every 10s';
@@ -2777,11 +2796,13 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     if(shopBrowser)shopBrowser.render();
   }
   function updateMarkers(){
-    var key=[centerX,centerY,unit,width,height,state.idStaff,state.lines.join(),securitySelected,selected,state.lounge,loungeSelected,mapPicked].join("|");
+    var key=[centerX,centerY,unit,width,height,state.idStaff,state.lines.join(),securitySelected,selected,state.lounge,loungeSelected,mapPicked,windowOpen(),deliveryBuilt(),kioskCount()].join("|");
     if(updateMarkers.key===key)return;updateMarkers.key=key;
     var securityPos=project(ID_DESK.x,.62,ID_DESK.z+.1),loungePos=map3d&&map3d.ok?project(-2.7,ROOFTOP.y+1.2,-6.1):project(LOUNGE_DOOR.x,1.5,DISPLAY_Z+.5),labelSize=Math.max(8,Math.min(10,unit*.24))*(width>=780?.85:1)+'px';
     securityMarker.style.fontSize=labelSize;loungeMarker.style.fontSize=labelSize;
-    var labels=[{el:securityMarker,x:securityPos.x,y:securityPos.y},{el:loungeMarker,x:loungePos.x,y:loungePos.y}];
+    var labels=[{el:securityMarker,x:securityPos.x,y:securityPos.y},{el:loungeMarker,x:loungePos.x,y:loungePos.y}],tags=lotTags();
+    [windowMarker,droneMarker,kioskMarker].forEach(function(el){if(!tags.some(function(t){return t.el===el}))el.style.display='none'});
+    tags.forEach(function(t){var p=project(t.x,t.y,t.z);t.el.style.fontSize=labelSize;labels.push({el:t.el,x:p.x,y:p.y})});
     markerEls.forEach(function(el,i){var station=machinePos[i],pos=project(station.x,.63+station.y,station.z+1.23);el.style.fontSize=labelSize;labels.push({el:el,x:pos.x,y:pos.y})});
     labels.forEach(function(l){l.el.style.display=l.x<-40||l.x>width+40||l.y<-30||l.y>height+30?'none':'block'});
     labels.forEach(function(l){l.w=l.el.offsetWidth;l.h=l.el.offsetHeight});
@@ -2921,6 +2942,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var loungeLot=!state.lounge,loungePrice=loungeBuilding?null:loungeUpgradeCost(state.lounge),loungeKey=String(state.lounge)+'|'+(loungePrice!==null&&state.money>=loungePrice)+'|'+(loungeBuilding?loungeClock:'');
     loungeMarker.classList.add('station-sign');loungeMarker.classList.toggle('selected',mapPicked&&loungeSelected);loungeMarker.classList.toggle('is-lot',loungeLot);loungeMarker.classList.toggle('is-building',loungeBuilding);loungeMarker.classList.toggle('can-upgrade',loungePrice!==null&&state.money>=loungePrice);
     if(loungeBuilding)loungeMarker.style.setProperty('--build-left',buildShareLeft(state.builds,'lounge').toFixed(3));else loungeMarker.style.removeProperty('--build-left');
+    renderLotTags();
     if(loungeMarker.dataset.level!==loungeKey){loungeMarker.innerHTML='<span class=station-sign-name>Lounge</span><span class=station-sign-level>'+(loungeBuilding?loungeClock:loungeLot?fmt(loungePrice):'Lv '+state.lounge)+'</span>';loungeMarker.dataset.level=loungeKey;updateMarkers.key=null;}
     loungeMarker.style.setProperty('--station-tier',TIER_COLORS[Math.min(3,state.lounge)]);loungeMarker.setAttribute('aria-label',loungeBuilding?'Smoking lounge, being built. Opens in '+loungeClock:loungeLot?'Smoking lounge, under construction. Opens for '+fmt(loungePrice):'Smoking lounge, level '+state.lounge+'. Open lounge station');loungeMarker.setAttribute('aria-pressed',String(mapPicked&&loungeSelected));
     // Once a check is as quick as it gets, training buys nothing, so the single-level button says Maxed too.

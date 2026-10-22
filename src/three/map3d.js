@@ -188,6 +188,23 @@ export function createMap3D(canvas, layout) {
   selectionRing.renderOrder = 2;
   world.add(selectionRing);
   const TIER_COLOURS = ['#d8cfbd', '#b8cdb2', '#9cc4b8', '#e2c68a'];
+  // A boosted station (its crew burst running): warm brass light pools on the floor under it, breathing, and a thin ring
+  // rises off the floor and fades on a loop. A saturated gold, so it reads against the pale wood and concrete floors by day. Pooled, one per boosted station.
+  const glowTexture = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const g = c.getContext('2d'), grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(.6, 'rgba(255,255,255,.8)'); grad.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = grad; g.fillRect(0, 0, 64, 64);
+    return new THREE.CanvasTexture(c);
+  })();
+  const boostGlows = [];
+  function boostGlow(n) {
+    if (!boostGlows[n]) {
+      const glow = (geometry, extra) => { const m = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial(Object.assign({ color: '#f0a010', transparent: true, depthWrite: false }, extra))); m.renderOrder = 2; world.add(m); return m; };
+      boostGlows[n] = { pool: glow(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), { map: glowTexture }), ring: glow(new THREE.RingGeometry(.86, 1, 48).rotateX(-Math.PI / 2), { color: '#e8920a' }) };
+    }
+    return boostGlows[n];
+  }
   function stationMesh(i) {
     if (!stationMeshes[i]) {
       const group = new THREE.Group(), body = box(group, 0, 0, 0, 1, 1, 1, TIER_COLOURS[1]), top = box(group, 0, 1, 0, 1, .08, 1, '#efe7d4');
@@ -385,6 +402,22 @@ export function createMap3D(canvas, layout) {
       s.plane.constant = s.lo + (s.hi - s.lo) * Math.max(0, Math.min(1, (done - .1) / .9));
       holder.visible = true;
       s.beacon.visible = Math.floor((frame.time || 0) / 500) % 2 === 0;
+    });
+  }
+  // The next thing to buy shown where it will stand (frame.fixtureGhost[key], Kevin 2026-10-22: the next kiosk): a pale,
+  // see-through copy of the fixture's model, with no shadow, so it reads as a promise rather than a placed object.
+  const fixtureGhosts = {}, ghostMaterial = new THREE.MeshBasicMaterial({ color: '#f1e6c6', transparent: true, opacity: .3, depthWrite: false });
+  function updateFixtureGhosts(frame) {
+    const wanted = frame.fixtureGhost || {};
+    Object.entries(fixtures).forEach(([key, holder]) => {
+      const show = !!wanted[key] && !holder.visible;
+      if (!show) { if (fixtureGhosts[key]) fixtureGhosts[key].visible = false; return; }
+      if (!fixtureGhosts[key]) {
+        const ghost = holder.clone();
+        ghost.traverse(o => { if (o.isMesh) { o.material = ghostMaterial; o.castShadow = false; o.receiveShadow = false; } });
+        world.add(ghost); fixtureGhosts[key] = ghost;
+      }
+      fixtureGhosts[key].visible = true;
     });
   }
   // A fixture (the online deck) by itself, as the map shows it once built. Null until its model is in, and while it is
@@ -654,7 +687,7 @@ export function createMap3D(canvas, layout) {
   // its own mixer.
   // The walk is played by ground covered, never by the clock, so feet keep pace with the figure whatever its speed:
   // one Walking loop covers 1.1 m of ground (measured from the foot's travel). Standing, the idle plays on the clock.
-  const WALK_LOOP = 1.1 * BLENDER_SCALE, CHARACTER_LIFT = .16, CHARACTER_RIM = .9;
+  const WALK_LOOP = 1.1 * BLENDER_SCALE, CHARACTER_LIFT = .16, CHARACTER_RIM = .9, CHARACTER_SAT = 1.2, CHARACTER_FILL = 1, CHARACTER_BRIGHT = 1.12;
   const characterRim = { value: CHARACTER_RIM };
   const ease01 = v => v * v * (3 - 2 * v);
   const characterSources = {}, characterRequested = {}, characterCopies = [], characterYaw = new Map();
@@ -667,16 +700,22 @@ export function createMap3D(canvas, layout) {
         // specular: the figure glows flat and milky whatever the light. A matte material lets the sun model him, and a
         // little of the texture as glow (CHARACTER_LIFT, dimmed at night) keeps his shade side from going muddy, and a
         // warm rim on the edges turned from the camera (characterRim) lifts him off the floor the way a painted
-        // figure's outline light would.
+        // figure's outline light would. Closer to Meshy's own preview (Kevin, 2026-10-22): colours a little richer
+        // (CHARACTER_SAT) and a touch brighter (CHARACTER_BRIGHT) on a cleaner bake.
         const materials = [];
         gltf.scene.traverse(o => {
           if (!o.isMesh) return;
           o.frustumCulled = false;
           const map = o.material.map || o.material.emissiveMap;
-          o.material = new THREE.MeshStandardMaterial({ map, emissiveMap: map, emissive: '#ffffff', emissiveIntensity: CHARACTER_LIFT, roughness: .62, metalness: 0, name: o.material.name });
+          o.material = new THREE.MeshStandardMaterial({ map, emissiveMap: map, emissive: '#ffffff', emissiveIntensity: CHARACTER_LIFT, roughness: .4, metalness: 0, name: o.material.name });
           o.material.onBeforeCompile = shader => {
             shader.uniforms.characterRim = characterRim;
-            shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nuniform float characterRim;')
+            shader.uniforms.characterSat = { value: CHARACTER_SAT }; shader.uniforms.characterBright = { value: CHARACTER_BRIGHT }; shader.uniforms.characterFill = { value: CHARACTER_FILL };
+            shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nuniform float characterRim, characterSat, characterFill, characterBright;')
+              .replace('#include <map_fragment>', `#include <map_fragment>
+              diffuseColor.rgb = max(mix(vec3(dot(diffuseColor.rgb, vec3(.2126, .7152, .0722))), diffuseColor.rgb, characterSat), 0.0) * characterBright;`)
+              .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
+              reflectedLight.indirectDiffuse *= characterFill;`)
               .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
               float rimFacing = 1.0 - abs(dot(normal, isOrthographic ? vec3(0.0, 0.0, 1.0) : normalize(vViewPosition)));
               totalEmissiveRadiance += diffuseColor.rgb * vec3(1.0, .93, .8) * pow(rimFacing, 3.0) * characterRim;`);
@@ -942,6 +981,16 @@ export function createMap3D(canvas, layout) {
       }
     });
     selectionRing.visible = ringShown;
+    let glowing = 0;
+    const beat = (frame.time || 0) / 1000;
+    frame.stations.forEach(s => {
+      if (!(s.boost > 0) || s.visible === false || (s.pop !== undefined && s.pop < 1)) return;
+      const { pool, ring } = boostGlow(glowing++), r = Math.max(s.w, s.d) * .75, breathe = .5 + .5 * Math.sin(beat * 3.2), rise = (beat * .7) % 1;
+      pool.visible = ring.visible = true;
+      pool.position.set(s.x, s.y + .025, s.z); pool.scale.set(r * 4.4, 1, r * 4.4); pool.material.opacity = .55 + .35 * breathe;
+      ring.position.set(s.x, s.y + .05 + rise * 1.4, s.z); ring.scale.set(r * (.9 + rise * .35), 1, r * (.9 + rise * .35)); ring.material.opacity = .95 * (1 - rise);
+    });
+    for (let n = glowing; n < boostGlows.length; n++) boostGlows[n].pool.visible = boostGlows[n].ring.visible = false;
 
     const figures = frame.figures || [], shade = 1 - night * .55;
     placeFigures(figures, night);
@@ -1003,6 +1052,7 @@ export function createMap3D(canvas, layout) {
     if (rooftop) rooftop.update(frame);
     Object.entries(fixtures).forEach(([key, holder]) => { holder.visible = !!(frame.fixtures && frame.fixtures[key]); });
     updateFixtureSites(frame);
+    updateFixtureGhosts(frame);
 
     // A dry frame (snap3d.mjs, while models load) sets the scene up and asks for its models without drawing it.
     if (!frame.dry) renderer.render(scene, camera);

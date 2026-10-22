@@ -39,7 +39,7 @@
 .world .marker.station-sign.selected.burst-ring{--ring:#1f2a20;--ring-dim:#1f2a2033;--ring-fill:var(--ui-brass)}
 .world .marker.station-sign.is-lot.is-building{--burst:var(--build-left,1);--ring:#f0a7c8;--ring-dim:#1d0f15cc;--ring-glow:#f0a7c877;--ring-glow-peak:#f0a7c8bb;--ring-fill:#2a1a22}
 .world .marker.station-sign.is-lot.is-building.selected{--ring:#4a2634;--ring-dim:#4a263433;--ring-fill:#f0a7c8}
-.rush-pill.burst-ring,#useAbility.burst-ring,.world .marker.station-sign.burst-ring,.world .marker.station-sign.burst-ring:not(.selected),.world .marker.station-sign.is-lot.is-building,.world .marker.station-sign.is-lot.is-building:not(.selected){border:2px solid transparent;
+.rush-pill.burst-ring,#useAbility.burst-ring,.world .marker.station-sign.burst-ring,.world .marker.station-sign.burst-ring:not(.selected),.world .marker.station-sign.burst-ring.selected,.world .marker.station-sign.is-lot.is-building.selected,.world .marker.station-sign.is-lot.is-building,.world .marker.station-sign.is-lot.is-building:not(.selected){border:2px solid transparent;
   background:linear-gradient(var(--ring-fill),var(--ring-fill)) padding-box,conic-gradient(var(--ring) calc(var(--burst) * 360deg),var(--ring-dim) 0) border-box;
   transition:--burst .3s linear;animation:burst-glow 1.6s ease-in-out infinite}
 @keyframes burst-glow{0%,100%{box-shadow:0 0 10px 1px var(--ring-glow),0 2px 8px #0005}50%{box-shadow:0 0 18px 4px var(--ring-glow-peak),0 2px 8px #0005}}
