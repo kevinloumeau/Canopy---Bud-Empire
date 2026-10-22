@@ -2796,7 +2796,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // The buy box over a picked sign (Kevin, 2026-10-22): what can be bought there, each a tap away. items: [{label, price,
   // go, best, icon}] or null to hide it. A box near the top of the screen opens below its sign instead, so it is never
   // clipped. Its buttons are spans, not buttons, since the sign itself is a button.
-  var FAST_FORWARD='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6v12l8-6zm9 0v12l8-6z" fill="currentColor"/></svg>';
+  var FAST_FORWARD='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 11h12l-6-8zm0 9h12l-6-8z" fill="currentColor"/></svg>';
   function signBuy(sign,items){var box=sign.querySelector('.sign-buy');sign.classList.toggle('has-buy',!!items);
     if(!items){if(box)box.hidden=true;return}
     if(!box){box=document.createElement('span');box.className='sign-buy';box.addEventListener('click',function(e){e.stopPropagation();var b=e.target.closest('[data-buy]');if(b&&b.getAttribute('aria-disabled')!=='true'&&box.items[+b.dataset.buy])box.items[+b.dataset.buy].go()});sign.appendChild(box)}
