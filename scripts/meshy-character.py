@@ -186,9 +186,22 @@ for _ in range(40):
         sf = np.roll(filled, (dy, dx), (0, 1)); acc += np.roll(canvas, (dy, dx), (0, 1)) * sf[..., None]; cnt += sf
     take = grow & (cnt > 0); canvas[take] = acc[take] / cnt[take][:, None]; filled |= take
 canvas = canvas.reshape(final, 2, final, 2, 3).mean((1, 3)); size = final
-# A light unsharp mask brings back the edge the averaging softened.
-blur = (canvas + np.roll(canvas, 1, 0) + np.roll(canvas, -1, 0) + np.roll(canvas, 1, 1) + np.roll(canvas, -1, 1)) / 5
-canvas = np.clip(canvas + (canvas - blur) * .6, 0, 1)
+# Meshy's painted texture is grainy (brush strokes, speckle) where its preview reads as clean, rounded clay: an
+# edge-preserving smooth (a bilateral filter: neighbours are averaged only where their colour is close) flattens the
+# grain inside each colour area while seams, eyes and stripes keep their edges.
+import os
+if os.environ.get('MESHY_SHARPEN'):
+    blur = (canvas + np.roll(canvas, 1, 0) + np.roll(canvas, -1, 0) + np.roll(canvas, 1, 1) + np.roll(canvas, -1, 1)) / 5
+    canvas = np.clip(canvas + (canvas - blur) * .6, 0, 1)
+else:
+    for _ in range(2):
+        acc = np.zeros_like(canvas); wsum = np.zeros(canvas.shape[:2], np.float32)
+        for dy in range(-3, 4):
+            for dx in range(-3, 4):
+                nb = np.roll(canvas, (dy, dx), (0, 1))
+                w = np.exp(-(dy * dy + dx * dx) / 8.0 - ((nb - canvas) ** 2).sum(2) / (2 * .06 ** 2))
+                acc += nb * w[..., None]; wsum += w
+        canvas = acc / wsum[..., None]
 img = bpy.data.images.new('texture', size, size)
 img.pixels.foreach_set(np.concatenate([canvas, np.ones((size, size, 1), np.float32)], 2).ravel()); img.update(); img.pack()
 bpy.data.objects.remove(hi)

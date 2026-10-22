@@ -654,7 +654,7 @@ export function createMap3D(canvas, layout) {
   // its own mixer.
   // The walk is played by ground covered, never by the clock, so feet keep pace with the figure whatever its speed:
   // one Walking loop covers 1.1 m of ground (measured from the foot's travel). Standing, the idle plays on the clock.
-  const WALK_LOOP = 1.1 * BLENDER_SCALE, CHARACTER_LIFT = .16, CHARACTER_RIM = .9;
+  const WALK_LOOP = 1.1 * BLENDER_SCALE, CHARACTER_LIFT = .1, CHARACTER_RIM = .6, CHARACTER_SAT = 1.2, CHARACTER_FILL = .9;
   const characterRim = { value: CHARACTER_RIM };
   const ease01 = v => v * v * (3 - 2 * v);
   const characterSources = {}, characterRequested = {}, characterCopies = [], characterYaw = new Map();
@@ -667,16 +667,22 @@ export function createMap3D(canvas, layout) {
         // specular: the figure glows flat and milky whatever the light. A matte material lets the sun model him, and a
         // little of the texture as glow (CHARACTER_LIFT, dimmed at night) keeps his shade side from going muddy, and a
         // warm rim on the edges turned from the camera (characterRim) lifts him off the floor the way a painted
-        // figure's outline light would.
+        // figure's outline light would. Closer to Meshy's own preview (Kevin, 2026-10-22): colours a little richer
+        // (CHARACTER_SAT) and a little less sky fill (CHARACTER_FILL), so the sun rounds the body.
         const materials = [];
         gltf.scene.traverse(o => {
           if (!o.isMesh) return;
           o.frustumCulled = false;
           const map = o.material.map || o.material.emissiveMap;
-          o.material = new THREE.MeshStandardMaterial({ map, emissiveMap: map, emissive: '#ffffff', emissiveIntensity: CHARACTER_LIFT, roughness: .62, metalness: 0, name: o.material.name });
+          o.material = new THREE.MeshStandardMaterial({ map, emissiveMap: map, emissive: '#ffffff', emissiveIntensity: CHARACTER_LIFT, roughness: .4, metalness: 0, name: o.material.name });
           o.material.onBeforeCompile = shader => {
             shader.uniforms.characterRim = characterRim;
-            shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nuniform float characterRim;')
+            shader.uniforms.characterSat = { value: CHARACTER_SAT }; shader.uniforms.characterFill = { value: CHARACTER_FILL };
+            shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nuniform float characterRim, characterSat, characterFill;')
+              .replace('#include <map_fragment>', `#include <map_fragment>
+              diffuseColor.rgb = max(mix(vec3(dot(diffuseColor.rgb, vec3(.2126, .7152, .0722))), diffuseColor.rgb, characterSat), 0.0);`)
+              .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
+              reflectedLight.indirectDiffuse *= characterFill;`)
               .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
               float rimFacing = 1.0 - abs(dot(normal, isOrthographic ? vec3(0.0, 0.0, 1.0) : normalize(vViewPosition)));
               totalEmissiveRadiance += diffuseColor.rgb * vec3(1.0, .93, .8) * pow(rimFacing, 3.0) * characterRim;`);
