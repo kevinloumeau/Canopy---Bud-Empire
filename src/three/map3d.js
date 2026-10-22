@@ -687,8 +687,9 @@ export function createMap3D(canvas, layout) {
   // its own mixer.
   // The walk is played by ground covered, never by the clock, so feet keep pace with the figure whatever its speed:
   // one Walking loop covers 1.1 m of ground (measured from the foot's travel). Standing, the idle plays on the clock.
-  // People stand at CHARACTER_SCALE of the built 1.36 m figure (Kevin, 2026-10-22: the Meshy cast read a little large).
-  const CHARACTER_SCALE = .9, WALK_LOOP = 1.1 * BLENDER_SCALE * CHARACTER_SCALE, CHARACTER_LIFT = .16, CHARACTER_RIM = .9, CHARACTER_SAT = 1.2, CHARACTER_FILL = 1, CHARACTER_BRIGHT = 1.12;
+  // People stand at CHARACTER_SCALE of the built 1.36 m figure. Every model is that height now (the 15 Meshy people converted
+  // from FBX had stood a quarter taller, which is what read as "a little large", 2026-10-22), so the cast is back at 1.
+  const CHARACTER_SCALE = 1, WALK_LOOP = 1.1 * BLENDER_SCALE * CHARACTER_SCALE, CHARACTER_LIFT = .16, CHARACTER_RIM = .9, CHARACTER_SAT = 1.2, CHARACTER_FILL = 1, CHARACTER_BRIGHT = 1.12;
   const characterRim = { value: CHARACTER_RIM };
   const ease01 = v => v * v * (3 - 2 * v);
   const characterSources = {}, characterRequested = {}, characterCopies = [], characterYaw = new Map();
@@ -988,8 +989,8 @@ export function createMap3D(canvas, layout) {
       if (!(s.boost > 0) || s.visible === false || (s.pop !== undefined && s.pop < 1)) return;
       const { pool, ring } = boostGlow(glowing++), r = Math.max(s.w, s.d) * .75, breathe = .5 + .5 * Math.sin(beat * 3.2), rise = (beat * .7) % 1;
       pool.visible = ring.visible = true;
-      pool.position.set(s.x, s.y + .025, s.z); pool.scale.set(r * 4.4, 1, r * 4.4); pool.material.opacity = .55 + .35 * breathe;
-      ring.position.set(s.x, s.y + .05 + rise * 1.4, s.z); ring.scale.set(r * (.9 + rise * .35), 1, r * (.9 + rise * .35)); ring.material.opacity = .95 * (1 - rise);
+      pool.position.set(s.x, s.y + .025, s.z); pool.scale.set(r * 3.8, 1, r * 3.8); pool.material.opacity = .38 + .25 * breathe;
+      ring.position.set(s.x, s.y + .05 + rise * 1.4, s.z); ring.scale.set(r * (.9 + rise * .35), 1, r * (.9 + rise * .35)); ring.material.opacity = .7 * (1 - rise);
     });
     for (let n = glowing; n < boostGlows.length; n++) boostGlows[n].pool.visible = boostGlows[n].ring.visible = false;
 
