@@ -1238,9 +1238,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var taskClocks=[0,0,0,0,0,0],taskActivity=[0,0,0,0,0,0],cropGrowth=[.15,.4,.7,.95];
   // Each station's work clock: it runs while the station is working, easing in and out, and drives its staff loop.
   // Its 3D model's motion (station-motion.js) runs on its own clock whenever the station is built, so a station whose
-  // store is full or whose input ran dry still looks alive; only pausing the game stops it.
+  // store is full or whose input ran dry still looks alive; only pausing the game stops it. A crew burst runs it at the
+  // burst's speed, so the station visibly works faster.
   var motionClocks=[0,0,0,0,0,0];
-  function tickTaskClocks(dt){for(var task=0;task<6;task++){var target=stationWorking(task)?1:0;taskActivity[task]+=(target-taskActivity[task])*(1-Math.exp(-dt*5));taskClocks[task]+=dt*1000*taskActivity[task];if(state.lines[task]>0)motionClocks[task]+=dt}}
+  function tickTaskClocks(dt){for(var task=0;task<6;task++){var target=stationWorking(task)?1:0;taskActivity[task]+=(target-taskActivity[task])*(1-Math.exp(-dt*5));taskClocks[task]+=dt*1000*taskActivity[task];if(state.lines[task]>0)motionClocks[task]+=dt*(state.abilities.active[task]>0?ABILITY_FACTOR:1)}}
   function crop(x,z,y,slot,mature){
     var strain=visibleStrain(slot),phase=motionPreference.matches?.8:(taskClocks[1]/9000+slot*.23)%1;
     // A readable representative crop cycle, independent of high-speed batch counts.
@@ -2443,7 +2444,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var speed=state.lines.some(function(n){return n>0})?Math.min(.07,.02+production()*.00002):0;
     crateTime=(crateTime+frameDelta*speed*1.4)%1;cargoOdo=(cargoOdo+frameDelta*speed*14)%1e5;
     var stations=[],people=[];
-    function station(i,x,y,z,level,built,size){var tier=built?stationLookFor(i,level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(Math.min(5,tier)-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,pop:stationPop(i),selected:mapPicked&&selected===i&&!securitySelected&&!loungeSelected,clock:motionPreference.matches?6.3:motionClocks[i],act:taskActivity[i]})}
+    function station(i,x,y,z,level,built,size){var tier=built?stationLookFor(i,level):0,b=STATION_BOXES[size];stations.push({index:i,x:x,y:y,z:z,w:b.w,d:b.d,h:b.h*(1+(Math.min(5,tier)-1)*.12),tier:tier,built:built,rise:buildRise[i]||0,pop:stationPop(i),selected:mapPicked&&selected===i&&!securitySelected&&!loungeSelected,clock:motionPreference.matches?6.3:motionClocks[i],act:taskActivity[i],boost:i<ABILITIES.length&&state.abilities.active[i]>0?state.abilities.active[i]/ABILITY_SECONDS:0})}
     // Every person on the map is a rigged 3D model (Kevin's Meshy cast), the same model upstairs and down; nobody is
     // a flat sprite (Kevin, 2026-10-22), so a person whose model has not loaded yet is simply not shown. Standing still,
     // a customer looks at what they are doing (gait.look), else along the way they last walked. cast picks the model
