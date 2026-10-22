@@ -96,15 +96,222 @@
 .shop-browser .shop-items>.shop-fork-or{display:none}
 .shop-browser .shop-items>.shop-fork-end{grid-column:1/-1;height:0}
 .shop-browser .shop-items>.shop-desk{border:1px solid var(--ui-edge);border-radius:14px;background:var(--ui-well-soft)}
-[data-pane="boosts"].shop-browser .shop-item{position:relative;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;grid-template-areas:"icon" "title" "button";justify-items:center;align-content:start;gap:6px;min-height:0;padding:12px 6px 6px;border:1px solid var(--ui-edge);border-radius:14px;background:var(--ui-well-soft)}
+[data-pane="boosts"].shop-browser .shop-item{position:relative;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto auto;grid-template-areas:"icon" "title" "effect" "button";justify-items:center;align-content:start;gap:6px;min-height:0;padding:12px 6px 6px;border:1px solid var(--ui-edge);border-radius:14px;background:var(--ui-well-soft)}
 [data-pane="boosts"].shop-browser .shop-item[hidden]{display:none}
 .shop-browser .shop-item .shop-symbol{position:relative;display:grid;place-items:center;width:40px;height:40px;color:var(--ui-ink)}
 .shop-browser .shop-item .shop-symbol::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--ui-leaf-glow) calc(var(--lv,0)*1turn),var(--ui-edge) 0);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px))}
 .shop-browser .shop-item .shop-symbol svg{width:19px;height:19px}
-.shop-browser .shop-item h2,.shop-browser .shop-item .storage-copy>b{align-self:start;max-width:100%;min-height:2.5em;text-align:center;font-size:12px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.shop-browser .shop-item h2,.shop-browser .shop-item .storage-copy>b{align-self:start;max-width:100%;min-height:0;text-align:center;font-size:12px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .shop-browser .shop-item strong{display:none}
 .shop-browser .shop-item .shop-level{position:absolute;top:6px;right:8px;font-size:10px}
 .shop-browser .shop-item button{justify-self:stretch;justify-items:center;width:auto;min-width:0;max-width:none;min-height:34px;padding:4px 6px;text-align:center}
 .shop-browser .shop-item.shows-verb button span{opacity:1}
 .shop-browser .shop-item.is-pick{border-color:var(--ui-brass);background:var(--ui-brass-wash)}
 .shop-browser .shop-item.is-pick .shop-symbol::before{background:conic-gradient(var(--ui-brass) calc(var(--lv,0)*1turn),var(--ui-edge) 0)}
+
+.shop-browser .shop-item .shop-effect{grid-area:effect;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:100%;min-height:2.6em;margin-top:-4px;font:500 11px/1.3 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-leaf-glow);text-align:center}
+.shop-browser .shop-later span{display:block}
+.shop-browser .shop-later small{display:block}
+
+/* Stations panel, after Kevin's mock: the stations as a 4×2 grid of framed cards (icon, name, level; the selected one
+   in brass), then the selected station in one framed card with a brass Upgrade and an outlined Max. */
+.sheet .machine-nav{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;grid-auto-flow:row!important;gap:6px!important;padding:0!important;margin:0 0 10px!important;background:none!important;box-shadow:none!important;border:0!important;overflow:visible!important}
+.sheet .machine-nav button{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:20px auto auto!important;grid-template-areas:"icon" "name" "status"!important;justify-items:center;align-content:center;row-gap:1px!important;min-height:0!important;height:auto!important;padding:6px 4px 5px!important;border:1px solid var(--ui-edge)!important;border-radius:14px!important;background:var(--ui-well-soft)!important;box-shadow:none!important}
+.sheet .machine-nav .station-icon{width:20px!important;height:20px!important;color:var(--ui-ink)!important;opacity:.9!important}
+.sheet .machine-nav .station-card-name{position:static!important;width:auto!important;height:auto!important;clip:auto!important;overflow:hidden!important;max-width:100%;text-overflow:ellipsis;white-space:nowrap;grid-area:name;font:600 13px/1.2 'Bricolage Grotesque',system-ui,sans-serif!important;letter-spacing:-.01em!important;color:var(--ui-ink)!important}
+.sheet .machine-nav button>em{grid-area:status;font:500 12px/1.2 'Bricolage Grotesque',system-ui,sans-serif!important;color:var(--ui-soft)!important}
+.sheet .machine-nav button.can-upgrade>em{color:var(--ui-leaf-glow)!important}
+.sheet .machine-nav button.can-upgrade::after{display:none!important}
+.sheet .machine-nav button.is-bottleneck .station-card-name{color:var(--ui-brass)!important}
+.sheet .machine-nav button[aria-pressed=true]{border-color:var(--ui-brass)!important;background:linear-gradient(160deg,#e2c68a2e,#e2c68a0d)!important;box-shadow:0 0 0 1px #e2c68a33,0 4px 14px #0003!important}
+.sheet .machine-nav button[aria-pressed=true] .station-icon,.sheet .machine-nav button[aria-pressed=true] .station-card-name{color:var(--ui-brass)!important;opacity:1!important}
+.sheet .machine-nav button.ability-ready::before{top:5px;left:6px}
+.sheet>[data-pane=factory] .selected-line{border:1px solid var(--ui-edge);border-radius:18px;background:var(--ui-well-soft);padding:14px 14px 12px!important;margin-bottom:8px}
+.sheet>[data-pane=factory] #upgradeGain{display:inline-flex;align-items:center;width:max-content;margin-top:6px;padding:3px 10px;border:1px solid #7fa76566;border-radius:999px;background:#4f7a3e40;color:var(--ui-leaf-glow)}
+.sheet>[data-pane=factory] #upgradeGain:empty{display:none}
+.sheet>[data-pane=factory] #buyMachine:not(:disabled){background:var(--ui-brass)!important;color:var(--ui-brass-ink)!important;border-color:var(--ui-brass)!important;box-shadow:0 4px 14px #e2c68a2e!important}
+.sheet>[data-pane=factory] #buyMachine:not(:disabled) *{color:var(--ui-brass-ink)!important}
+.sheet>[data-pane=factory] #buyMachineMax{background:none!important;border:1px solid var(--ui-edge)!important;box-shadow:none!important}
+/* Selected station card, compact like the mock: title-case name, level, the next look as a small chip, the figures,
+   then Upgrade (arrow, word and price on one line) beside Max. */
+.sheet>[data-pane=factory] .selected-line{gap:6px 14px!important;padding:12px 12px 10px!important;min-height:0!important;align-content:start!important}
+.sheet .selected-line h1{text-transform:lowercase;font:600 18px/1.2 'Bricolage Grotesque',system-ui,sans-serif!important;letter-spacing:-.01em;color:var(--ui-ink);margin:0 0 2px!important}
+.sheet .selected-line h1::first-letter{text-transform:uppercase}
+.sheet .selected-line #upgradeLevel{font:500 13px/1.35 'Bricolage Grotesque',system-ui,sans-serif!important;color:var(--ui-soft)!important}
+.sheet .selected-line #nextAppearance:not([hidden]){display:inline-block;max-width:100%;margin:5px 0 0;padding:2px 9px;border:1px solid var(--ui-edge);border-radius:999px;font:600 10px/1.5 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--ui-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet .selected-line #nextAppearance b,.sheet .selected-line #nextAppearance strong{font:inherit;color:var(--ui-ink);margin-right:.4em}
+.sheet .selected-line #upgradeBenefit{margin-top:6px!important}
+.sheet .selected-line .station-buy-actions{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)!important;gap:8px!important;margin-top:4px}
+.sheet .selected-line .station-buy-actions #buyMachine{flex-direction:row!important;flex-wrap:nowrap!important;justify-content:center!important;align-items:center;gap:6px!important;min-height:46px!important;border-radius:14px!important}
+.sheet .selected-line .station-buy-actions #buyMachine::before{content:'';flex:none;width:16px;height:16px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 18V6M6 12l6-6 6 6M5 21h14'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 18V6M6 12l6-6 6 6M5 21h14'/%3E%3C/svg%3E") center/contain no-repeat}
+.sheet .selected-line .station-buy-actions #buyMachine span{display:inline-block;text-transform:lowercase;font:700 15px/1.2 'Bricolage Grotesque',system-ui,sans-serif!important;letter-spacing:0!important}
+.sheet .selected-line .station-buy-actions #buyMachine span::first-letter{text-transform:uppercase}
+.sheet .selected-line .station-buy-actions #buyMachine b{font:600 15px/1.2 'DM Mono',monospace!important}
+.sheet .selected-line .station-buy-actions #buyMachine b::before{content:'· ';font-family:'Bricolage Grotesque',system-ui,sans-serif}
+.sheet .selected-line .station-buy-actions #buyMachineMax{min-height:46px!important;border-radius:14px!important}
+.sheet .selected-line .station-buy-actions #buyMachineMax span{text-transform:none;font-size:11px}
+/* Mock colours: brighter ink, clear card edges, a livelier green for levels and gains, and a richer brass. */
+.sheet [data-pane=factory]{--pop-ink:#fbf8ee;--pop-edge:rgba(255,255,255,.2);--pop-fill:rgba(255,255,255,.065);--pop-green:#a8d784;--pop-brass:#f0d69a}
+.sheet .machine-nav button{border-color:var(--pop-edge)!important;background:var(--pop-fill)!important}
+.sheet .machine-nav .station-icon,.sheet .machine-nav .station-card-name{color:var(--pop-ink)!important;opacity:1!important}
+.sheet .machine-nav button>em{color:var(--pop-green)!important;opacity:.95}
+.sheet .machine-nav button[aria-pressed=true]{border-color:var(--pop-brass)!important;background:linear-gradient(160deg,#f0d69a47,#e2c68a1a)!important;box-shadow:0 0 0 1px #f0d69a40,0 0 18px #f0d69a26!important}
+.sheet .machine-nav button[aria-pressed=true] .station-icon,.sheet .machine-nav button[aria-pressed=true] .station-card-name,.sheet .machine-nav button[aria-pressed=true]>em{color:var(--pop-brass)!important}
+.sheet>[data-pane=factory] .selected-line{border-color:var(--pop-edge)!important;background:var(--pop-fill)!important}
+.sheet .selected-line h1,.sheet .selected-line #upgradeAfter,.sheet .selected-line #upgradeBefore{color:var(--pop-ink)!important}
+.sheet>[data-pane=factory] #upgradeGain{border-color:#8fc76c99!important;background:#3f7a3566!important;color:var(--pop-green)!important}
+.sheet>[data-pane=factory] #buyMachine:not(:disabled){background:linear-gradient(180deg,#f5e1ab,#e2c68a)!important;border-color:#f5e1ab!important;box-shadow:0 6px 18px #f0d69a33,inset 0 1px 0 #fff6!important}
+.sheet>[data-pane=factory] #buyMachineMax{border-color:var(--pop-edge)!important;color:var(--pop-ink)!important}
+.sheet>[data-pane=factory] .station-team{border-color:var(--pop-edge)!important}
+/* Max: fast-forward icon on the left, label over price, and a bright edge so it reads as a button. */
+.sheet .selected-line .station-buy-actions #buyMachineMax{display:grid!important;grid-template-columns:auto auto;grid-template-rows:auto auto;justify-content:center;align-items:center;column-gap:8px;row-gap:1px;border:1.5px solid rgba(251,248,238,.6)!important;background:rgba(255,255,255,.08)!important;color:var(--pop-ink)!important}
+.sheet .selected-line .station-buy-actions #buyMachineMax::before{content:'';grid-row:1/3;width:18px;height:18px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 6l9 6-9 6zM12 6l9 6-9 6z' fill='black' stroke='black' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 6l9 6-9 6zM12 6l9 6-9 6z' fill='black' stroke='black' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
+.sheet .selected-line .station-buy-actions #buyMachineMax span,.sheet .selected-line .station-buy-actions #buyMachineMax b{grid-column:2;text-align:left;color:inherit}
+.sheet .selected-line .station-buy-actions #buyMachineMax:not(:disabled):hover{border-color:var(--pop-brass)!important;background:rgba(240,214,154,.12)!important}
+.sheet .selected-line .station-buy-actions #buyMachineMax:disabled{border-color:var(--pop-edge)!important;background:none!important;opacity:.55}
+/* Boosted station card: a breathing green-gold glow with a light sweep while the crew ability runs. */
+.sheet .machine-nav button.is-boosted,.sheet .machine-nav button.is-boosted[aria-pressed=true]{position:relative;overflow:hidden;border-color:#c9e89a!important;animation:station-boost-glow 1.6s ease-in-out infinite}
+.sheet .machine-nav button.is-boosted .station-icon,.sheet .machine-nav button.is-boosted[aria-pressed=true] .station-icon{color:#d8f2a8!important;animation:station-boost-icon 1.6s ease-in-out infinite}
+.sheet .machine-nav button.is-boosted .station-card-name,.sheet .machine-nav button.is-boosted>em{color:#e2f6c2!important}
+.sheet .machine-nav button.is-boosted::after{content:''!important;display:block!important;position:absolute;inset:0;width:auto!important;height:auto!important;border:0!important;background:linear-gradient(105deg,transparent 30%,rgba(255,250,220,.32) 50%,transparent 70%),radial-gradient(circle at 50% 30%,rgba(168,215,132,.35),transparent 70%)!important;background-size:100% 100%!important;background-repeat:no-repeat!important;animation:station-boost-sweep 2.4s ease-in-out infinite;pointer-events:none;-webkit-mask:none!important;mask:none!important}
+@keyframes station-boost-glow{0%,100%{filter:drop-shadow(0 0 4px #a8d78488)}50%{filter:drop-shadow(0 0 9px #c4ee96) drop-shadow(0 0 20px #a8d784cc)}}
+@keyframes station-boost-icon{0%,100%{transform:scale(1);filter:drop-shadow(0 0 0 transparent)}50%{transform:scale(1.12);filter:drop-shadow(0 0 6px #d8f2a8)}}
+@keyframes station-boost-sweep{0%,35%{background-position:-160px 0,0 0}100%{background-position:160px 0,0 0}}
+@media (prefers-reduced-motion:reduce){.sheet .machine-nav button.is-boosted,.sheet .machine-nav button.is-boosted .station-icon,.sheet .machine-nav button.is-boosted::after{animation:none}.sheet .machine-nav button.is-boosted{filter:drop-shadow(0 0 8px #b8e690)}}
+/* The pickup window and its upgrades live on the Pickup station now; Deliveries keeps the drone port. */
+.sheet [data-pane=orders] .window-control,.sheet [data-pane=orders] #deliverySite{display:none!important}
+.sheet .station-extra button.is-owned{opacity:.6}
+.sheet .station-extra button[hidden]{display:none!important}
+/* Station extras as icon tiles: a ringed icon, a name, one short effect line and the price button. Team spans two. */
+.sheet .station-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0 0}
+.sheet .station-tiles .station-team{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto 1fr;justify-items:center;align-content:start;gap:6px;margin:0!important;padding:12px 8px 8px!important;border:1px solid var(--pop-edge,#ffffff33)!important;border-radius:16px!important;background:var(--pop-fill,#ffffff10)!important;text-align:center;min-width:0}
+.sheet .station-tiles .station-team[hidden]{display:none!important}
+.sheet .station-tiles .team-icon{display:grid;place-items:center;position:relative;width:40px;height:40px;border-radius:50%;background:#a8d78424;box-shadow:inset 0 0 0 1.5px #a8d78466}
+.sheet .station-tiles .team-icon svg{width:21px!important;height:21px!important;color:var(--pop-green,#a8d784)!important}
+.sheet .station-tiles .team-copy{display:grid;justify-items:center;gap:2px;min-width:0;width:100%}
+.sheet .station-tiles .team-copy b{font:600 13px/1.2 'Bricolage Grotesque',system-ui,sans-serif!important;color:var(--pop-ink,#fbf8ee);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet .station-tiles .team-copy small{font:500 11px/1.25 'DM Mono',monospace!important;color:var(--pop-green,#a8d784)!important;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet .station-tiles .station-team button{align-self:end;width:100%;min-width:0;min-height:40px!important;padding:4px 6px!important;border-radius:11px!important;display:grid!important;place-items:center;gap:0!important}
+.sheet .station-tiles .station-team button span{font:600 11px/1.15 'Bricolage Grotesque',system-ui,sans-serif!important}
+.sheet .station-tiles .station-team button b{font:600 12px/1.15 'DM Mono',monospace!important}
+.sheet .station-tiles .station-team button b:empty{display:none}
+/* Team: two buttons side by side under one icon. */
+.sheet .station-tiles #stationTeam{grid-column:span 2;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;grid-template-rows:auto auto 1fr}
+.sheet .station-tiles #stationTeam .team-icon,.sheet .station-tiles #stationTeam .team-copy{grid-column:1/-1}
+/* Crew ability: brass ring around the bolt while it's ready or running. */
+.sheet .station-tiles .station-ability[data-status=ready] .team-icon,.sheet .station-tiles .station-ability[data-status=active] .team-icon{background:#f0d69a24;box-shadow:inset 0 0 0 1.5px #f0d69a99}
+.sheet .station-tiles .station-ability[data-status=ready] .team-icon svg,.sheet .station-tiles .station-ability[data-status=active] .team-icon svg{color:var(--pop-brass,#f0d69a)!important}
+.sheet .station-tiles .station-ability .team-copy small{white-space:nowrap!important}
+/* Bought once: a check on the icon in place of a dead "Built" button. */
+.sheet .station-tiles .station-team:has(button.is-owned) button{display:none!important}
+.sheet .station-tiles .station-team:has(button.is-owned) .team-icon::after{content:'';position:absolute;right:-3px;bottom:-3px;width:16px;height:16px;border-radius:50%;background:var(--pop-green,#a8d784) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='%2318301f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat;box-shadow:0 0 0 2px #1d3326}
+/* Pickup window line as dots: filled ones are people waiting. */
+.sheet .station-tiles .line-pips{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;max-width:100%;margin-top:3px}
+.sheet .station-tiles .line-pips i{width:6px;height:6px;border-radius:50%;box-shadow:inset 0 0 0 1px #fbf8ee55}
+.sheet .station-tiles .line-pips i.on{background:var(--pop-brass,#f0d69a);box-shadow:none}
+.sheet .station-tiles .station-team:has(.line-pips:not(:empty)) small{display:none}
+@media (max-width:420px){.sheet .station-tiles{gap:6px}.sheet .station-tiles .station-team{padding:10px 6px 6px!important}}
+.sheet .station-tiles .team-copy small,.sheet .station-tiles .station-ability .team-copy small{white-space:normal!important;display:-webkit-box!important;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.sheet .station-tiles .station-team:has(.line-pips:not(:empty)) .team-copy small{display:none!important}
+/* Empire stores as tiles: ringed icon (lock badge until it can open), name, one status chip and the income. */
+.sheet .empire-screen .store-list{display:grid!important;overflow:visible!important;margin:8px 0 0!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;border:0!important;background:none!important;box-shadow:none!important;padding:0!important}
+.sheet .empire-screen .store-list button.branch-toggle.store-card{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"icon" "copy" "meta" "meter"!important;justify-items:center;align-content:start;row-gap:6px!important;min-width:0;width:auto!important;margin:0!important;padding:12px 6px 10px!important;border:1px solid var(--pop-edge,#ffffff33)!important;border-radius:16px!important;background:rgba(255,255,255,.065)!important;box-shadow:none!important;text-align:center;opacity:1}
+.sheet .empire-screen .store-list button.store-card.has-ready{border-color:#f0d69a99!important;box-shadow:0 0 14px #f0d69a1f!important}
+.sheet .empire-screen .store-list .store-card::after{display:none!important}
+.sheet .empire-screen .store-list .store-card .store-icon{grid-area:icon;grid-row:auto!important;align-self:center;width:42px;height:42px;border-radius:50%;background:#a8d78424;box-shadow:inset 0 0 0 1.5px #a8d78466;color:#a8d784}
+.sheet .empire-screen .store-list .store-card.has-ready .store-icon{background:#f0d69a24;box-shadow:inset 0 0 0 1.5px #f0d69a99;color:#f0d69a}
+.sheet .empire-screen .store-list .store-card.is-locked .store-icon{background:#ffffff0d;box-shadow:inset 0 0 0 1.5px #ffffff2e;color:#fbf8ee8c}
+.sheet .empire-screen .store-list .store-card.is-locked .store-icon::after{content:'';position:absolute;right:-3px;bottom:-3px;width:16px;height:16px;border-radius:50%;background:#2a4234 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e9e4d4' stroke-width='2.2' stroke-linecap='round'%3E%3Crect x='6' y='11' width='12' height='9' rx='2'/%3E%3Cpath d='M9 11V8a3 3 0 0 1 6 0v3'/%3E%3C/svg%3E") center/11px no-repeat;box-shadow:0 0 0 1.5px #ffffff40}
+.sheet .empire-screen .store-list .store-card .store-copy{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"name" "status"!important;justify-items:center;gap:5px!important;width:100%}
+.sheet .empire-screen .store-list .store-card .branch-name{font:600 13px/1.2 'Bricolage Grotesque',system-ui,sans-serif!important;color:#fbf8ee;max-width:100%;display:flex;flex-direction:column;align-items:center;gap:3px}
+.sheet .empire-screen .store-list .store-card .store-detail{display:none!important}
+.sheet .empire-screen .store-list .store-card .store-status{max-width:100%;font-size:10.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet .empire-screen .store-list .store-card .store-meta{justify-content:center;width:100%}
+.sheet .empire-screen .store-list .store-card .store-meta strong{flex-direction:column;gap:3px!important;justify-self:center!important;align-items:center!important}
+.sheet .empire-screen .store-list .store-card .store-locked{display:none!important}
+.sheet .empire-screen .store-list .store-card .store-income{font:500 11px/1.2 'DM Mono',monospace;color:#a8d784}
+.sheet .empire-screen .store-list .store-card .store-income svg{display:none}
+.sheet .empire-screen .store-list .store-card .store-meter{width:70%;justify-self:center}
+.sheet .empire-screen .store-list .store-card .store-status .store-stars{display:inline-flex;gap:2px}
+.sheet .empire-screen .store-list .store-card .store-status .store-stars i{display:block;width:14px;height:14px;color:#fbf8ee59}
+.sheet .empire-screen .store-list .store-card .store-status .store-stars i svg{width:14px;height:14px;display:block}
+.sheet .empire-screen .store-list .store-card .store-status .store-stars i.on{color:#f0d69a}
+.sheet .empire-screen .store-list .store-card .store-status .store-stars i.on svg{fill:currentColor}
+.sheet .empire-screen .store-list .store-card .store-status:has(.store-stars){background:none!important;border:0!important;padding:0!important;overflow:visible}
+/* Strain detail: the buyer sentence goes; the signature perk becomes one chip with its effect. */
+.sheet [data-pane="flowers"] .strain-hero-info p{display:none}
+.sheet [data-pane="flowers"] .strain-perk{display:inline-grid;grid-template-columns:auto auto;grid-template-areas:"star name" "star effect";align-items:center;column-gap:8px;row-gap:1px;margin:8px 0 0;padding:6px 12px 6px 8px;border:1px solid #f0d69a4d;border-radius:12px;background:#f0d69a14}
+.sheet [data-pane="flowers"] .strain-perk .perk-star{grid-area:star;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#f0d69a26;color:#f0d69a;font-size:14px}
+.sheet [data-pane="flowers"] .strain-perk b{grid-area:name;font:600 12px/1.2 'Bricolage Grotesque',system-ui,sans-serif;color:#f0d69a}
+.sheet [data-pane="flowers"] .strain-perk small{grid-area:effect;font:500 11px/1.25 'DM Mono',monospace;color:#a8d784}
+.sheet [data-pane="flowers"] .strain-perk:not(.is-unlocked){border-color:#ffffff2e;background:#ffffff0a}
+.sheet [data-pane="flowers"] .strain-perk:not(.is-unlocked) .perk-star{background:#ffffff12;color:#fbf8ee99}
+.sheet [data-pane="flowers"] .strain-perk:not(.is-unlocked) b{color:#fbf8eecc}
+.sheet [data-pane="flowers"] .strain-perk:not(.is-unlocked) small{color:#fbf8ee8c}
+/* Menu tab, tile pass: each strain jar sits in a level ring with a check when it's on the menu; the menu toggle lives
+   on the big jar; the three product types are tiles with their effect; Upgrade is the one brass button. */
+.sheet [data-pane="flowers"] .strain-nav button{position:relative}
+.sheet [data-pane="flowers"] .strain-nav .strain-card-art{display:grid;place-items:center;width:48px!important;height:48px!important;margin:0 auto}
+.sheet [data-pane="flowers"] .strain-nav .strain-card-art svg{width:26px;height:33px;position:relative}
+.sheet [data-pane="flowers"] .strain-nav .strain-card-art::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--strain) calc(var(--lv,0)*1turn),#ffffff24 0);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px))}
+.sheet [data-pane="flowers"] .strain-nav button.is-locked .strain-card-art::before{background:#ffffff1a}
+.sheet [data-pane="flowers"] .strain-nav .strain-pips{display:none!important}
+.sheet [data-pane="flowers"] .strain-nav button small{font:500 11px/1.2 'DM Mono',monospace!important;color:#a8d784}
+.sheet [data-pane="flowers"] .strain-nav button.is-locked small{color:#fbf8eebf}
+.sheet [data-pane="flowers"] .strain-nav .menu-check{display:none;position:absolute;top:2px;left:calc(50% + 12px);width:16px;height:16px;border-radius:50%;background:#a8d784 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='%2318301f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat;box-shadow:0 0 0 2px #1d3326;z-index:1}
+.sheet [data-pane="flowers"] .strain-nav button.is-on-menu .menu-check{display:block}
+/* The big jar's menu toggle: a chip under the jar. */
+.sheet [data-pane="flowers"] .strain-hero-art .menu-toggle{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:4px;min-height:26px;padding:3px 10px 3px 8px;border:1px solid #ffffff4d;border-radius:999px;background:#1d3326;color:#fbf8ee;font:600 11px/1 'Bricolage Grotesque',system-ui,sans-serif;white-space:nowrap;cursor:pointer;filter:none;z-index:2;box-shadow:0 2px 8px #0a140e99}
+.sheet [data-pane="flowers"] .strain-hero-art .menu-toggle::before{content:'+';font-size:13px;line-height:1}
+.sheet [data-pane="flowers"] .strain-hero-art .menu-toggle[aria-pressed=true]{border-color:#a8d784;background:#2c4a2c;color:#d8f2a8}
+.sheet [data-pane="flowers"] .strain-hero-art .menu-toggle[aria-pressed=true]::before{content:'✓';font-size:11px}
+.sheet [data-pane="flowers"] .strain-hero-art .menu-toggle:disabled{cursor:default;opacity:1}
+/* Upgrade: the single brass action. */
+.sheet [data-pane="flowers"] .strain-hero-actions{grid-template-columns:1fr!important}
+.sheet [data-pane="flowers"] .strain-hero-actions #flowerBuy:not(:disabled){background:linear-gradient(180deg,#f5e1ab,#e2c68a)!important;box-shadow:0 6px 18px #f0d69a33,inset 0 1px 0 #fff6!important;color:#2a2414!important;border:0}
+/* Sells as: three product tiles with the effect on each. */
+.sheet [data-pane="flowers"] .format-benefit{display:none}
+.sheet [data-pane="flowers"] .format-options{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;padding:0!important;border:0!important;background:none!important}
+.sheet [data-pane="flowers"] .strain-format-pill{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto auto auto;justify-items:center;gap:3px!important;min-width:0;padding:10px 6px 8px!important;border:1px solid #ffffff33!important;border-radius:16px!important;background:#ffffff10!important;box-shadow:none!important;text-align:center}
+.sheet [data-pane="flowers"] .strain-format-pill svg{width:34px!important;height:34px!important;padding:7px;border-radius:50%;background:#a8d78424;box-shadow:inset 0 0 0 1.5px #a8d78466;color:#a8d784;box-sizing:border-box}
+.sheet [data-pane="flowers"] .strain-format-pill strong{font:600 12.5px/1.2 'Bricolage Grotesque',system-ui,sans-serif!important;color:#fbf8ee}
+.sheet [data-pane="flowers"] .strain-format-pill em{font:500 10.5px/1.2 'DM Mono',monospace;font-style:normal;color:#a8d784;white-space:nowrap}
+.sheet [data-pane="flowers"] .strain-format-pill small{font:600 11.5px/1.2 'DM Mono',monospace!important;color:#f0d69a!important}
+.sheet [data-pane="flowers"] .strain-format-pill[aria-pressed=true]{border-color:#a8d78480!important}
+.sheet [data-pane="flowers"] .strain-format-pill[aria-pressed=true] small{color:#d8f2a8!important}
+.sheet [data-pane="flowers"] .strain-format-pill[aria-pressed=true] small::before{content:'✓ '}
+.sheet [data-pane="flowers"] .strain-format-pill:not([aria-pressed=true]) svg{background:#ffffff0d;box-shadow:inset 0 0 0 1.5px #ffffff2e;color:#fbf8eebf}
+.sheet [data-pane="flowers"] .strain-nav button.is-on-menu small,.sheet [data-pane="flowers"] .strain-nav button small{display:block!important}
+.sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill>*{grid-column:1!important;grid-row:auto!important;align-self:center!important;margin:0}
+.sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill[aria-pressed=true] small{display:block!important}
+.sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill:disabled{opacity:.7}
+.sheet [data-pane="flowers"] .strain-hero-art{margin-bottom:8px}
+.sheet [data-pane="flowers"] .strain-hero-art .menu-toggle{background:#1d3326!important;color:#fbf8ee!important}
+.sheet [data-pane="flowers"] .strain-hero-art .menu-toggle[aria-pressed=true]{background:#2c4a2c!important;color:#d8f2a8!important}
+/* 3D station pictures (the same renders as the upgrade card) on the station cards, in place of the line icons. */
+.sheet .machine-nav button{grid-template-rows:44px auto auto!important}
+.sheet .machine-nav button .machine-thumb{display:block!important;grid-column:auto!important;grid-row:auto!important;width:59px!important;height:44px!important;margin:0 auto!important;object-fit:contain;object-position:center bottom;opacity:1;filter:drop-shadow(0 3px 4px #0a140e80)}
+.sheet .machine-nav button .station-icon{display:none!important}
+.sheet .machine-nav button.is-locked .machine-thumb{opacity:.5}
+/* 3D icons rendered in Blender (public/icons/3d) */
+.sheet img.icon-3d{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;pointer-events:none;user-select:none;-webkit-user-drag:none}
+.sheet [data-pane="flowers"] .strain-nav .strain-card-art img.icon-3d{position:relative;width:36px;height:36px;object-fit:contain}
+.sheet [data-pane="flowers"] .strain-nav button.is-locked .strain-card-art img.icon-3d{filter:saturate(.75) brightness(.78)}
+.sheet [data-pane="flowers"] .strain-hero-art img.icon-3d{width:100%;height:100%;object-fit:contain;object-position:center bottom}
+.sheet [data-pane="flowers"] .strain-format-pill img.icon-3d{width:46px;height:34px;object-fit:contain;filter:drop-shadow(0 3px 4px #0a140e80)}
+.sheet [data-pane="flowers"] .strain-format-pill:disabled img.icon-3d{filter:grayscale(.85) brightness(.75)}
+.sheet .empire-screen .store-list .store-card .store-icon{background:none!important;box-shadow:none!important;width:48px!important;height:44px!important;border-radius:0!important}
+.sheet .empire-screen .store-list .store-card .store-icon img.icon-3d{width:48px;height:44px;filter:drop-shadow(0 3px 4px #0a140e80)}
+.sheet .empire-screen .store-list .store-card.is-locked .store-icon img.icon-3d{filter:grayscale(.9) brightness(.7)}
+.sheet .empire-screen .store-list .store-card.is-locked .store-icon::after{right:0;bottom:0}
+.sheet .empire-screen .store-hero .store-icon{background:none!important;box-shadow:none!important;width:56px!important;height:50px!important}
+.sheet .empire-screen .store-hero .store-icon img.icon-3d{width:56px;height:50px}
+.sheet .empire-screen .store-hero.is-locked .store-icon img.icon-3d{filter:grayscale(.9) brightness(.7)}
+/* A research fork is one card at the end of its branch: "Pick one", then both sides with an "or" between them. */
+.shop-browser .shop-items>.shop-fork{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) 22px minmax(0,1fr);align-items:stretch;gap:0;margin-top:4px!important;padding:8px;border:1px solid #f0d69a59;border-radius:16px;background:linear-gradient(180deg,#f0d69a14,#f0d69a05)}
+.shop-browser .shop-fork>.shop-fork-head{grid-column:1/-1;display:flex;align-items:baseline;gap:8px;margin:0 4px 8px!important;font-size:11.5px;color:#fbf8eeb3}
+.shop-browser .shop-fork>.shop-fork-head b{font:600 12px/1.2 'Bricolage Grotesque',system-ui,sans-serif;color:#f0d69a;letter-spacing:.02em}
+.shop-browser .shop-fork>.shop-fork-or{display:grid!important;place-items:center;margin:0!important;position:relative}
+.shop-browser .shop-fork>.shop-fork-or::before,.shop-browser .shop-fork>.shop-fork-or::after{display:none}
+.shop-browser .shop-fork>.shop-fork-or span{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#2a4234;box-shadow:0 0 0 1.5px #f0d69a80;font:600 10px/1 'DM Mono',monospace;color:#f0d69a;text-transform:lowercase;letter-spacing:0}
+.shop-browser .shop-fork>.shop-item{margin:0!important}
