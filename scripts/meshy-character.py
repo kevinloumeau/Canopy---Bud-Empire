@@ -260,6 +260,12 @@ arm.data.pose_position = 'POSE'
 bpy.context.view_layer.update()
 zs = [(lo.matrix_world @ v.co).z for v in me.vertices]; h = max(zs) - min(zs)
 arm.scale = arm.scale * (HEIGHT / h)
+# Clips converted from FBX key the armature object's own scale (0.01), which would override the scale above in the
+# game (the figure came out a quarter too tall, 2026-10-22). Drop those keys so the object scale holds.
+for a in bpy.data.actions:
+    bags = [a] if hasattr(a, 'fcurves') else [b for l in a.layers for st in l.strips for b in st.channelbags]
+    for bag in bags:
+        for fc in [fc for fc in bag.fcurves if fc.data_path == 'scale']: bag.fcurves.remove(fc)
 print('HEIGHT was', h)
 bpy.ops.export_scene.gltf(filepath=out, export_format='GLB', export_image_format='JPEG', export_jpeg_quality=88,
     export_animations=True, export_animation_mode='ACTIONS', export_skins=True, export_yup=True, export_apply=False)
