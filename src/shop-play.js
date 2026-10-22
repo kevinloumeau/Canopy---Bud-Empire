@@ -65,9 +65,9 @@ export function tickShift(play,dt,{queue=0,stockout=false}={}){
 export const MAX_ORDER_COUNTERS=3;
 export const MAX_COMFORT=20;
 export function shiftAdvice(recap,{counters=1,comfortLevel=0}={}){
-  if(recap.stockoutSeconds>30)return {text:'Keep pickup stocked: check your Pack and Orders stations.',station:3};
-  if(recap.served&&recap.waitTotal/recap.served>25)return {text:comfortLevel>=MAX_COMFORT?'Customers waited a while. Train the Orders team to serve faster.':'Customers waited a while. Train the Orders team or improve queue comfort.',station:4};
-  if(recap.queuePeak>8)return {text:counters>=MAX_ORDER_COUNTERS?'A busy shift. Upgrade the Orders desk and team so every counter serves faster.':'A busy shift. Add an order counter to spread the queue.',station:4};
+  if(recap.stockoutSeconds>30)return {text:'Keep pickup stocked: check your Pack and Orders stations.',short:'Pickup ran dry · check Pack',station:3};
+  if(recap.served&&recap.waitTotal/recap.served>25)return {text:comfortLevel>=MAX_COMFORT?'Customers waited a while. Train the Orders team to serve faster.':'Customers waited a while. Train the Orders team or improve queue comfort.',short:'Long waits · speed up Orders',station:4};
+  if(recap.queuePeak>8)return {text:counters>=MAX_ORDER_COUNTERS?'A busy shift. Upgrade the Orders desk and team so every counter serves faster.':'A busy shift. Add an order counter to spread the queue.',short:counters>=MAX_ORDER_COUNTERS?'Long line · upgrade Orders':'Long line · add a counter',station:4};
   return {text:'Try another customer recommendation next shift. Great matches earn extra tips.',moment:true};
 }
 export function operationsAlerts(empire){
@@ -121,7 +121,7 @@ export function mountShopPlay({getState,getMoment,getAlerts,names,format,choose,
   root.addEventListener('keydown',e=>{if(e.key==='Escape'){close();e.stopPropagation()}});
   $('budtenderMoment').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.choice!==undefined)choose(Number(b.dataset.choice));else if(b.dataset.skip!==undefined)skip();render();});
   $('operationsAlerts').addEventListener('click',e=>{const b=e.target.closest('[data-alert]');if(!b)return;const alert=getAlerts().find(a=>a.id===b.dataset.alert);if(alert){close();navigate(alert)}});
-  $('shiftRecap').addEventListener('click',e=>{if(!e.target.closest('button'))return;const recap=getState().shopPlay.recap;if(recap){close();navigate(advice(recap))}});
+  $('shiftRecap').addEventListener('click',e=>{if(!e.target.closest('.activity-advice'))return;const recap=getState().shopPlay.recap,tip=recap&&advice(recap);if(tip&&tip.station!==undefined){close();navigate(tip)}});
   const advice=recap=>{const state=getState();return shiftAdvice(recap,{counters:state.orderCounters,comfortLevel:state.comfortLevel});};
   const el=(tag,props,...kids)=>{const node=Object.assign(document.createElement(tag),props);node.append(...kids);return node;};
   const figure=(label,value)=>el('div',{},el('dt',{textContent:label}),el('dd',{textContent:value}));
@@ -147,9 +147,10 @@ export function mountShopPlay({getState,getMoment,getAlerts,names,format,choose,
     recapBox.replaceChildren(el('div',{className:'activity-head'},el('h3',{textContent:'On the floor'}),el('span',{textContent:shiftTimeLeft(shift.seconds)})),progress,
       el('dl',{className:'activity-figures'},figure('Served',String(shift.served)),figure('Great picks',String(shift.matches)),figure('Earned',format(shift.earned))));
     if(play.recap){
-      const r=play.recap,wait=r.served?' · '+Math.round(r.waitTotal/r.served)+'s wait':'';
-      const card=el('button',{type:'button',className:'activity-advice'},svg(SPARK),el('span',{className:'activity-advice-copy'},el('small',{textContent:'Last 5 min · '+format(r.earned)+' · '+r.served+' served'+wait}),el('strong',{textContent:advice(r).text})),svg(CHEVRON));
-      recapBox.appendChild(card);
+      // Last recap as three open figures; a brass button only when there is a station to fix, and it opens that station.
+      const r=play.recap,tip=advice(r);
+      recapBox.append(el('div',{className:'activity-last'},el('h4',{textContent:'Last 5 min'}),el('dl',{className:'activity-figures is-last'},figure('Earned',format(r.earned)),figure('Served',String(r.served)),figure('Avg wait',r.served?Math.round(r.waitTotal/r.served)+'s':'–'))));
+      if(tip.station!==undefined){const card=el('button',{type:'button',className:'activity-advice',title:tip.text},svg(SPARK),el('strong',{textContent:tip.short||tip.text}),svg(CHEVRON));recapBox.appendChild(card)}
     }
     const list=$('operationsAlerts');list.replaceChildren();$('operationsCount').textContent=alerts.length?String(alerts.length):'';
     if(!alerts.length)list.appendChild(el('p',{className:'activity-clear'},svg(CHECK),'All caught up'));
