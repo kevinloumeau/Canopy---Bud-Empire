@@ -56,7 +56,7 @@
 .dispatch-option>small.is-hint{color:#c7b98a}
 
 /* Auto drone: a compact card with a real switch, bulk upgrade beside it. */
-.dispatch-desk .auto-drone-control{display:grid;grid-template-columns:auto minmax(0,1fr) 52px auto;align-items:center;gap:10px 12px;margin:0;padding:10px 12px;border:1px solid #d8ead21f;border-bottom:1px solid #d8ead21f;border-radius:14px;background:#ffffff05}
+.dispatch-desk .auto-drone-control{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:10px 12px;margin:0;padding:10px 12px;border:1px solid #d8ead21f;border-bottom:1px solid #d8ead21f;border-radius:14px;background:#ffffff05}
 .dispatch-desk .auto-drone-control>.drone-glyph{grid-column:1;order:0}
 .dispatch-desk .auto-drone-control>div{grid-column:2;order:0;gap:2px}
 .dispatch-desk .auto-drone-control>#autoDroneToggle{grid-column:3;order:0}
@@ -70,7 +70,7 @@
 .dispatch-desk .drone-switch::before{content:'';position:absolute;top:4px;left:4px;width:26px;height:26px;border-radius:50%;background:var(--p-sage-77);transition:transform .18s ease,background .18s ease}
 .dispatch-desk .drone-switch[aria-pressed=true]{background:#7c9a55!important;border-color:#b7cf8e!important}
 .dispatch-desk .drone-switch[aria-pressed=true]::before{transform:translateX(18px);background:var(--p-sage-94-2)}
-.dispatch-desk .drone-switch:not([aria-pressed]){width:auto!important;max-width:none;color:var(--p-sage-91)!important;padding:6px 10px!important}
+.dispatch-desk .drone-switch:not([aria-pressed]){width:auto!important;max-width:none;white-space:nowrap;color:var(--p-sage-91)!important;padding:6px 12px!important;border-radius:10px!important}
 .dispatch-desk .drone-switch:not([aria-pressed])::before{display:none}
 .dispatch-desk #autoDroneBulk[aria-pressed=true]{background:#496044}
 /* Before construction, the finished deck is the focal point and the build action anchors the pane. */
