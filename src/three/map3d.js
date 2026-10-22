@@ -404,6 +404,22 @@ export function createMap3D(canvas, layout) {
       s.beacon.visible = Math.floor((frame.time || 0) / 500) % 2 === 0;
     });
   }
+  // The next thing to buy shown where it will stand (frame.fixtureGhost[key], Kevin 2026-10-22: the next kiosk): a pale,
+  // see-through copy of the fixture's model, with no shadow, so it reads as a promise rather than a placed object.
+  const fixtureGhosts = {}, ghostMaterial = new THREE.MeshBasicMaterial({ color: '#f1e6c6', transparent: true, opacity: .3, depthWrite: false });
+  function updateFixtureGhosts(frame) {
+    const wanted = frame.fixtureGhost || {};
+    Object.entries(fixtures).forEach(([key, holder]) => {
+      const show = !!wanted[key] && !holder.visible;
+      if (!show) { if (fixtureGhosts[key]) fixtureGhosts[key].visible = false; return; }
+      if (!fixtureGhosts[key]) {
+        const ghost = holder.clone();
+        ghost.traverse(o => { if (o.isMesh) { o.material = ghostMaterial; o.castShadow = false; o.receiveShadow = false; } });
+        world.add(ghost); fixtureGhosts[key] = ghost;
+      }
+      fixtureGhosts[key].visible = true;
+    });
+  }
   // A fixture (the online deck) by itself, as the map shows it once built. Null until its model is in, and while it is
   // still being built (its materials are cut to the height reached).
   function fixturePicture(key) {
@@ -1036,6 +1052,7 @@ export function createMap3D(canvas, layout) {
     if (rooftop) rooftop.update(frame);
     Object.entries(fixtures).forEach(([key, holder]) => { holder.visible = !!(frame.fixtures && frame.fixtures[key]); });
     updateFixtureSites(frame);
+    updateFixtureGhosts(frame);
 
     // A dry frame (snap3d.mjs, while models load) sets the scene up and asks for its models without drawing it.
     if (!frame.dry) renderer.render(scene, camera);
