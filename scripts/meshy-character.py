@@ -68,13 +68,30 @@ def ahead():
 def bend(side):
     M = arm.matrix_world.to_3x3(); h = arm.pose.bones['mixamorig:%sHand' % side]
     hip = arm.matrix_world @ arm.pose.bones['mixamorig:Hips'].head; out = (arm.matrix_world @ h.head) - hip; out.z = 0
-    want = Vector((0, 0, -1)) + ahead() * .3 - out.normalized() * .12
+    want = Vector((0, 0, -1)) + ahead() * .12 - out.normalized() * .08
     return (M @ (h.tail - h.head)).angle(want)
+# The palm's normal: the flattest direction of the hand's own vertices (least spread), in rest armature space, then
+# carried by the hand bone's current pose into the world.
+def palm_rest(side):
+    g = hi.vertex_groups.get('mixamorig:%sHand' % side)
+    if g is None: return None
+    to_arm = arm.matrix_world.inverted() @ hi.matrix_world
+    pts = np.array([(to_arm @ v.co)[:] for v in hi.data.vertices if any(e.group == g.index and e.weight > .5 for e in v.groups)])
+    if len(pts) < 10: return None
+    vals, vecs = np.linalg.eigh(np.cov((pts - pts.mean(0)).T)); return Vector(vecs[:, 0])
+palms = {s: palm_rest(s) for s in ('Left', 'Right')}
+def palm(side):
+    n = palms[side]
+    if n is None: return Vector((1, 0, 0))
+    pb = arm.pose.bones['mixamorig:%sHand' % side]
+    return (arm.matrix_world.to_3x3() @ (pb.matrix.to_3x3() @ pb.bone.matrix_local.to_3x3().inverted() @ n)).normalized()
 def rot(ax, az): return Quaternion((1, 0, 0), math.radians(ax)) @ Quaternion((0, 0, 1), math.radians(az))
 fixes = {}
 # Meshy's rigs also carry the shoulders high, close to a shrug: drop each collarbone so the shoulder joint sits
 # SHOULDER_DROP lower (in the figure's metres) without moving it in or out, before placing the arms.
 SHOULDER_DROP = .045
+# How far out from the hips' centre the idle wrists hang (figure metres): .20 read as an A-pose, .17 hangs at the sides.
+ARM_OUT = .17
 def joint(side):
     bpy.context.scene.frame_set(9); bpy.context.scene.frame_set(10); bpy.context.view_layer.update()
     return (arm.matrix_world @ arm.pose.bones['mixamorig:%sArm' % side].head) / height * 1.36
@@ -92,11 +109,11 @@ for side in ('Left', 'Right'):
     print('SHOULDER %s turn %d,%d -> off by %.3f' % (side, best[1], best[2], best[0]))
 for side in ('Left', 'Right'):
     base = [[k.co[1] for k in c.keyframe_points] for c in quat_keys(idle, side + 'Arm')]
-    w = wrist(side); best = (abs(abs(w.x) - .20) + abs(w.y), 0, 0)
+    w = wrist(side); best = (abs(abs(w.x) - ARM_OUT) + abs(w.y), 0, 0)
     for ax in range(-30, 31, 3):
         for az in range(-36, 37, 3):
             turn_keys(idle, side + 'Arm', rot(ax, az), base); w = wrist(side)
-            score = abs(abs(w.x) - .20) + abs(w.y)
+            score = abs(abs(w.x) - ARM_OUT) + abs(w.y)
             if score < best[0] - 1e-4: best = (score, ax, az)
     turn_keys(idle, side + 'Arm', Quaternion(), base)
     fixes[side + 'Arm'] = rot(best[1], best[2])
@@ -107,8 +124,16 @@ for side in ('Left', 'Right'):
         for az in range(-60, 61, 5):
             turn_keys(idle, side + 'Hand', rot(ax, az), hb); wrist(side); b = bend(side)
             if b < hbest[0] - 1e-3: hbest = (b, ax, az)
+    # Then twist the hand about its own length so the palm faces the thigh: seen from the front it is edge-on, a slim
+    # shape at the hip rather than a flat paddle.
+    side_axis = ahead().cross(Vector((0, 0, 1))).normalized(); tbest = (2, 0)
+    for ay in range(-90, 91, 10):
+        turn_keys(idle, side + 'Hand', rot(hbest[1], hbest[2]) @ Quaternion((0, 1, 0), math.radians(ay)), hb); wrist(side)
+        t = 1 - abs(palm(side).dot(side_axis))
+        if t < tbest[0] - 1e-3: tbest = (t, ay)
     turn_keys(idle, side + 'Hand', Quaternion(), hb); turn_keys(idle, side + 'Arm', Quaternion(), base)
-    fixes[side + 'Hand'] = rot(hbest[1], hbest[2])
+    fixes[side + 'Hand'] = rot(hbest[1], hbest[2]) @ Quaternion((0, 1, 0), math.radians(tbest[1]))
+    print('PALM %s twist %d -> facing the thigh %.2f' % (side, tbest[1], 1 - tbest[0]))
     print('ARMS %s arm turn %d,%d wrist %d,%d -> hand off relaxed by %.0f deg' % (side, best[1], best[2], hbest[1], hbest[2], math.degrees(hbest[0])))
 for action in bpy.data.actions:
     for bone, q in fixes.items():
@@ -117,6 +142,16 @@ for action in bpy.data.actions:
         turn_keys(action, bone, q)
 arm.animation_data.action = None
 arm.data.pose_position = 'REST'
+# Meshy's cartoon hands are large for a figure this small on screen: shrink everything the hand bone carries to
+# HAND_SCALE about the wrist, by its weight, in the rest pose (the bake reads the shrunk surface too).
+HAND_SCALE = .82
+for side in ('Left', 'Right'):
+    g = hi.vertex_groups.get('mixamorig:%sHand' % side)
+    if g is None: continue
+    pivot = hi.matrix_world.inverted() @ arm.matrix_world @ arm.data.bones['mixamorig:%sHand' % side].head_local
+    for v in hi.data.vertices:
+        w = sum(e.weight for e in v.groups if e.group == g.index)
+        if w > 0: v.co = pivot + (v.co - pivot) * (1 - (1 - HAND_SCALE) * w)
 srcimg = next(n.image for n in hi.data.materials[0].node_tree.nodes if n.type == 'TEX_IMAGE')
 # The low mesh: a welded copy, collapsed to the triangle budget.
 lo = hi.copy(); lo.data = hi.data.copy(); lo.name = 'char1'; bpy.context.collection.objects.link(lo)

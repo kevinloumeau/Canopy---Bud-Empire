@@ -654,7 +654,8 @@ export function createMap3D(canvas, layout) {
   // its own mixer.
   // The walk is played by ground covered, never by the clock, so feet keep pace with the figure whatever its speed:
   // one Walking loop covers 1.1 m of ground (measured from the foot's travel). Standing, the idle plays on the clock.
-  const WALK_LOOP = 1.1 * BLENDER_SCALE, CHARACTER_LIFT = .16, CHARACTER_RIM = .9, CHARACTER_SAT = 1.2, CHARACTER_FILL = 1, CHARACTER_BRIGHT = 1.12;
+  // People stand at CHARACTER_SCALE of the built 1.36 m figure (Kevin, 2026-10-22: the Meshy cast read a little large).
+  const CHARACTER_SCALE = .92, WALK_LOOP = 1.1 * BLENDER_SCALE * CHARACTER_SCALE, CHARACTER_LIFT = .16, CHARACTER_RIM = .9, CHARACTER_SAT = 1.2, CHARACTER_FILL = 1, CHARACTER_BRIGHT = 1.12;
   const characterRim = { value: CHARACTER_RIM };
   const ease01 = v => v * v * (3 - 2 * v);
   const characterSources = {}, characterRequested = {}, characterCopies = [], characterYaw = new Map();
@@ -700,7 +701,7 @@ export function createMap3D(canvas, layout) {
     if (copy) world.remove(copy.holder);
     const source = characterSources[file], holder = new THREE.Group(), body = cloneRigged(source.scene);
     holder.add(body);
-    holder.scale.set(BLENDER_SCALE, BLENDER_SCALE / HEIGHT_SCALE, BLENDER_SCALE);
+    holder.scale.set(BLENDER_SCALE * CHARACTER_SCALE, BLENDER_SCALE * CHARACTER_SCALE / HEIGHT_SCALE, BLENDER_SCALE * CHARACTER_SCALE);
     world.add(holder);
     // Each model names its idle by the Meshy preset it used (Idle_9, Idle_11, Idle_12).
     const mixer = new THREE.AnimationMixer(body), clip = test => source.clips.find(c => test.test(c.name));
