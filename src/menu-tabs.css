@@ -315,3 +315,6 @@
 .shop-browser .shop-fork>.shop-fork-or::before,.shop-browser .shop-fork>.shop-fork-or::after{display:none}
 .shop-browser .shop-fork>.shop-fork-or span{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#2a4234;box-shadow:0 0 0 1.5px #f0d69a80;font:600 10px/1 'DM Mono',monospace;color:#f0d69a;text-transform:lowercase;letter-spacing:0}
 .shop-browser .shop-fork>.shop-item{margin:0!important}
+/* Upgrade card pills never run off the card: they wrap inside it at worst. */
+.sheet>[data-pane=factory] #upgradeGain{width:auto!important;max-width:100%!important;white-space:normal!important;box-sizing:border-box}
+.sheet .selected-line #nextAppearance:not([hidden]){box-sizing:border-box;white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
