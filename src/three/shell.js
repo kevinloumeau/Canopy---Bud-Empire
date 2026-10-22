@@ -277,12 +277,15 @@ export function buildShell(world, layout, { box, span, material, model }) {
   const closedDoor = layout.rooftop ? null : span(shell, dx - .7, dx + .7, 0, s.loungeHeader, face, face + .08, '#2d6146');
   const boardedExit = span(shell, rx + .16, rx + .21, 0, eh - .24, ez - ew + .15, ez + ew - .15, '#3a2a1e');
 
-  // The neon sign beside the doorway, "Rooftop" in amber script over LOUNGE in pink, lit while the lounge is open.
+  // The neon sign over the doorway (Kevin, 2026-10-22: above the door, leaving the wall beside it to the menu board),
+  // "Rooftop" in amber script over LOUNGE in pink, lit while the lounge is open.
   const signCanvas = document.createElement('canvas'); signCanvas.width = 512; signCanvas.height = 184;
   const signTexture = new THREE.CanvasTexture(signCanvas); signTexture.colorSpace = THREE.SRGBColorSpace;
   const signMat = new THREE.MeshBasicMaterial({ map: signTexture, transparent: true });
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(2, .72), signMat);
-  sign.position.set(dx + 2.1, 2.02, face + .03); shell.add(sign);
+  // Centred over the door, small enough to sit between its header and the mezzanine edge's sight line (Kevin turned
+  // down a blade sign standing out from the wall: it ran through the mezzanine post).
+  sign.position.set(s.loungeSign.x, s.loungeSign.y, face + .03); sign.scale.setScalar(s.loungeSign.scale); shell.add(sign);
   let signLit = null;
   if (typeof FontFace === 'function' && document.fonts) {
     new FontFace('Fredoka', `url(${new URL('../fonts/Fredoka-SemiBold.ttf', layout.modelBase).href})`, { weight: '600' }).load()
@@ -308,8 +311,13 @@ export function buildShell(world, layout, { box, span, material, model }) {
     signTexture.needsUpdate = true;
   }
 
-  // Product wall: the flip menu board centred between the plaster and the shelving, then the five-bay shelving.
-  const board = { x: (s.wallLeft + s.shelfLeft) / 2, y: 1.8, w: 5.1, h: 1.24 }, boardUnit = unit();
+  // Product wall: the flip menu board between the lounge doorway and the shelving, then the five-bay shelving.
+  // The mezzanine slab overhangs this wall, and down the camera's line of sight (y rises .816 per unit of z) its
+  // underside hides the wall above about y 3; Kevin (2026-10-22) found the board hidden there and wanted it larger,
+  // so it fills the wall from the door frame to the shelving (less the shelving's depth, whose end would cover the
+  // last column of prices), its top just clear of the slab edge and its foot a little into the tile dado.
+  const board = { x0: s.loungeDoor.x + 1.25, x1: s.shelfLeft - .78, y: 1, h: 1.9 }, boardUnit = unit();
+  board.x = (board.x0 + board.x1) / 2; board.w = board.x1 - board.x0;
   span(boardUnit, board.x - board.w / 2 - .14, board.x + board.w / 2 + .14, board.y - .12, board.y + board.h + .12, face, face + .1, OAK);
   span(boardUnit, board.x - board.w / 2 + .04, board.x + board.w / 2 - .04, board.y + .04, board.y + board.h - .04, face + .1, face + .12, BRASS, { cast: false });
   const boardCanvas = document.createElement('canvas'); boardCanvas.width = 1024; boardCanvas.height = 240;
@@ -317,7 +325,11 @@ export function buildShell(world, layout, { box, span, material, model }) {
   const boardFace = new THREE.Mesh(new THREE.PlaneGeometry(board.w - .14, board.h - .14), new THREE.MeshBasicMaterial({ map: boardTexture }));
   boardFace.position.set(board.x, board.y + board.h / 2, face + .125); boardUnit.add(boardFace);
   // The Blender board (origin on the floor under it, in the wall plane) shows the same live flip letters on its face.
-  swap(boardUnit, 'menu_board.glb', board.x, 0, face, scene => { const f = scene.getObjectByName('BoardFace'); if (f) f.traverse(o => {
+  swap(boardUnit, 'menu_board.glb', board.x, 0, face, (scene, holder) => {
+    // The model's frame is 3.18 wide and 1.07 tall, from 1.218 above its origin: stretch it to the board and set it there.
+    holder.scale.x = board.w / 3.18; holder.scale.y = board.h / 1.07;
+    holder.position.y = board.y - 1.218 * holder.scale.y;
+    const f = scene.getObjectByName('BoardFace'); if (f) f.traverse(o => {
     if (!o.isMesh) return;
     // glTF UVs run top-down; the canvas texture is flipped the other way, so turn the quad's v round to match.
     const uv = o.geometry.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setY(i, 1 - uv.getY(i)); uv.needsUpdate = true;
