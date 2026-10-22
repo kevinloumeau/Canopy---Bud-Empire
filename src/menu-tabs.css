@@ -288,3 +288,22 @@
 .sheet [data-pane="flowers"] .strain-hero-art{margin-bottom:8px}
 .sheet [data-pane="flowers"] .strain-hero-art .menu-toggle{background:#1d3326!important;color:#fbf8ee!important}
 .sheet [data-pane="flowers"] .strain-hero-art .menu-toggle[aria-pressed=true]{background:#2c4a2c!important;color:#d8f2a8!important}
+/* 3D station pictures (the same renders as the upgrade card) on the station cards, in place of the line icons. */
+.sheet .machine-nav button{grid-template-rows:44px auto auto!important}
+.sheet .machine-nav button .machine-thumb{display:block!important;grid-column:auto!important;grid-row:auto!important;width:59px!important;height:44px!important;margin:0 auto!important;object-fit:contain;object-position:center bottom;opacity:1;filter:drop-shadow(0 3px 4px #0a140e80)}
+.sheet .machine-nav button .station-icon{display:none!important}
+.sheet .machine-nav button.is-locked .machine-thumb{opacity:.5}
+/* 3D icons rendered in Blender (public/icons/3d) */
+.sheet img.icon-3d{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;pointer-events:none;user-select:none;-webkit-user-drag:none}
+.sheet [data-pane="flowers"] .strain-nav .strain-card-art img.icon-3d{position:relative;width:30px;height:34px;object-fit:contain}
+.sheet [data-pane="flowers"] .strain-nav button.is-locked .strain-card-art img.icon-3d{filter:grayscale(.85) brightness(.75)}
+.sheet [data-pane="flowers"] .strain-hero-art img.icon-3d{width:100%;height:100%;object-fit:contain;object-position:center bottom}
+.sheet [data-pane="flowers"] .strain-format-pill img.icon-3d{width:46px;height:34px;object-fit:contain;filter:drop-shadow(0 3px 4px #0a140e80)}
+.sheet [data-pane="flowers"] .strain-format-pill:disabled img.icon-3d{filter:grayscale(.85) brightness(.75)}
+.sheet .empire-screen .store-list .store-card .store-icon{background:none!important;box-shadow:none!important;width:48px!important;height:44px!important;border-radius:0!important}
+.sheet .empire-screen .store-list .store-card .store-icon img.icon-3d{width:48px;height:44px;filter:drop-shadow(0 3px 4px #0a140e80)}
+.sheet .empire-screen .store-list .store-card.is-locked .store-icon img.icon-3d{filter:grayscale(.9) brightness(.7)}
+.sheet .empire-screen .store-list .store-card.is-locked .store-icon::after{right:0;bottom:0}
+.sheet .empire-screen .store-hero .store-icon{background:none!important;box-shadow:none!important;width:56px!important;height:50px!important}
+.sheet .empire-screen .store-hero .store-icon img.icon-3d{width:56px;height:50px}
+.sheet .empire-screen .store-hero.is-locked .store-icon img.icon-3d{filter:grayscale(.9) brightness(.7)}

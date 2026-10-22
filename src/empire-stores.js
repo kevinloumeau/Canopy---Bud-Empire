@@ -7,13 +7,8 @@ import {openingStatus,LINES,STAFF,REGULARS,COSMETICS,shelfCapacity,shelfUsed,sta
 import {MANAGERS} from './progression.js';
 
 const svg=paths=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+paths+'</svg>';
-const ICONS=[
- svg('<path d="M3 15c2-2 4-2 6 0s4 2 6 0 4-2 6 0M3 19c2-2 4-2 6 0s4 2 6 0 4-2 6 0M12 11V3M12 11c-3.3 0-5.5-2.2-5.5-5.5C9.8 5.5 12 7.7 12 11Zm0 0c3.3 0 5.5-2.2 5.5-5.5C14.2 5.5 12 7.7 12 11Z"/>'),
- svg('<path d="M4 21V9l8-6 8 6v12M3 21h18M9 21v-6a3 3 0 0 1 6 0v6M4 12h16"/>'),
- svg('<path d="M3 21h18M5 21V9h5v12M10 21V4h6v17M16 21v-8h3v8M7 12h1M7 15h1M12 8h2M12 11h2M12 14h2"/>'),
- svg('<path d="M3 21h18M12 21V5a2 2 0 0 1 4 0v16M12 13H9a2 2 0 0 1-2-2V8M16 11h2a2 2 0 0 0 2-2V7"/>'),
- svg('<path d="M2 20h20L14.5 6l-3.5 6-2-3zM12.5 9.5l2 1.5 2-1.5"/>')
-];
+// Each store's 3D storefront, rendered in Blender at the map's angle (public/icons/3d).
+const STORE_ICON=i=>'<img class="icon-3d" src="icons/3d/store-'+i+'.png" alt="" draggable="false" decoding="async">';
 const LOCK=svg('<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>');
 const CHECK=svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>');
 const SPECIALTY=['Exclusive strains','Boutique products','Bulk deliveries'];
@@ -39,7 +34,7 @@ export function mountEmpireStores({getState,format}){
   // ---- Home card: the toggle button becomes a card with icon, description, figures and a status chip. ----
   const toggle=$('branchToggle'+i),figures=$('branchLevel'+i),name=toggle.querySelector('.branch-name');
   toggle.classList.add('store-card');
-  const icon=el('span','store-icon',ICONS[i]+'<i class="store-dot" hidden></i>');
+  const icon=el('span','store-icon',STORE_ICON(i)+'<i class="store-dot" hidden></i>');
   // Name and status share the top line; the figures row below keeps the full width so nothing clips at 375px.
   const status=el('span','store-status');
   const stars=el('span','store-name-stars');name.append(stars);const copy=el('span','store-copy');copy.append(name,status,el('small','store-detail',store.detail));
@@ -51,7 +46,7 @@ export function mountEmpireStores({getState,format}){
   // ---- Store screen: hero, grand opening, at-a-glance stats, bulk delivery, projects. ----
   const overview=$('opPane'+i+'0'),buy=$('branchBuy'+i),visit=$('branchVisit'+i),opening=overview.querySelector('.opening-task'),projects=overview.querySelector('.branch-projects');
   const hero=el('section','store-hero');hero.setAttribute('aria-label',store.name+' overview');
-  const head=el('div','hero-head','<span class="store-icon">'+ICONS[i]+'</span><span class="hero-copy"><b class="hero-tag">'+SPECIALTY[i]+'</b><span class="hero-detail">'+store.detail+'</span></span>');
+  const head=el('div','hero-head','<span class="store-icon">'+STORE_ICON(i)+'</span><span class="hero-copy"><b class="hero-tag">'+SPECIALTY[i]+'</b><span class="hero-detail">'+store.detail+'</span></span>');
   const level=el('div','hero-level');
   const income=el('div','hero-income');
   const actions=el('div','hero-actions');actions.append(buy,visit);

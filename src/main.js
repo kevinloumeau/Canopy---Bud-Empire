@@ -147,6 +147,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     {kind:'Boutique',buyers:'VIPs order the most potent boutique strain on the menu.',pistil:'#9fe0c9',frost:true,shape:'dense'}
   ];
   // A glass jar with the strain's bud inside. Calyx blobs stack in three tones of the strain colour; pistils and frost differ per strain.
+  // 3D icons rendered in Blender at the map's angle (public/icons/3d, source in the shared menu-icons folder).
+  function icon3d(name){return '<img class="icon-3d" src="icons/3d/'+name+'.png" alt="" draggable="false" decoding="async">'}
   function strainArt(i,locked){
     var c=STRAINS[i].color,look=STRAIN_LOOKS[i],dark=shadeColor(c,.66),mid=shadeColor(c,.86),light=shadeColor(c,1.18),g='';
     var layouts={
@@ -210,7 +212,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if($('flowerBuyers').dataset.html!==legend){$('flowerBuyers').innerHTML=legend;$('flowerBuyers').dataset.html=legend}
     STRAINS.forEach(function(strain,i){
       var level=state.strains[i],active=state.menuStrains.indexOf(i)>=0,tab=$('strainTab'+i),art=tab.querySelector('.strain-card-art');
-      var artKey=(level?'u':'l');if(art.dataset.key!==artKey){art.innerHTML=strainArt(i,!level);art.dataset.key=artKey}
+      var artKey=(level?'u':'l');if(art.dataset.key!==artKey){art.innerHTML=icon3d('jar-'+i);art.dataset.key=artKey}
       tab.classList.toggle('is-on-menu',active);tab.classList.toggle('is-locked',!level);tab.classList.toggle('is-trending',i===trend);tab.setAttribute('aria-selected',String(flowerFocus===i));tab.tabIndex=flowerFocus===i?0:-1;
       tab.style.setProperty('--lv',String(level/strains.STRAIN_MAX));var tag=tab.querySelector('small');tag.textContent=!level?fmt(strain.unlock):'Lv '+level;tab.title=!level?'Locked':active?'On the menu':'Off the menu';tag.classList.toggle('price-tag',!level);
       Array.prototype.forEach.call(tab.querySelectorAll('.strain-pips i'),function(pip,k){pip.classList.toggle('is-filled',k<level);pip.classList.toggle('is-second',k<level-10)});
@@ -231,11 +233,11 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     '</ul>';
     var perkLine='<p class="strain-perk'+(tier?' is-unlocked':'')+'" title="'+(tier<2?'Level '+(tier?10:5)+': '+perk.effect[tier]:perk.effect[1])+'"><span class="perk-star" aria-hidden="true">'+(tier?'★':'☆')+'</span><b>'+perk.name+'</b><small>'+(tier?perk.effect[tier-1]:'Lv 5 · '+perk.effect[0])+'</small></p>';
     var heroHtml='<div class="strain-hero'+(level?'':' is-locked')+(active?' is-on-menu':'')+(i===trend?' is-trending':'')+'" style="--strain:'+strain.color+'">'+
-      '<div class="strain-hero-art">'+strainArt(i,!level)+(level?'<button type="button" id="flowerSelect" class="menu-toggle" aria-pressed="'+active+'">'+(active?'On menu':'Add')+'</button>':'')+'</div>'+
+      '<div class="strain-hero-art">'+icon3d('jar-'+i)+(level?'<button type="button" id="flowerSelect" class="menu-toggle" aria-pressed="'+active+'">'+(active?'On menu':'Add')+'</button>':'')+'</div>'+
       '<div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">'+look.kind+' · </span>'+strains.TYPES[type]+(level?' · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>'+level+' / '+strains.STRAIN_MAX:' · Locked')+'</small><h2>'+strain.name+'</h2><p>'+(level?look.buyers:'Unlock to put it on the menu. '+look.buyers)+'</p></div>'+
       '<div class="strain-stats">'+stats+'</div>'+
       '<div class="strain-hero-details">'+traits+perkLine+'</div>'+
-      (level?'<div class="product-line strain-format"><h2>Sells as</h2><div class="format-options">'+FORMATS.map(function(f,k){var stocked=state.productMenu.unlocked[k];return '<button type="button" class="strain-format-pill" data-format="'+k+'" aria-pressed="'+stocked+'"'+(!stocked&&state.money<f.cost?' disabled':'')+' title="'+f.detail+'"><svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+productIcons[k]+'</svg><strong>'+f.name+'</strong><em>'+(f.value>1?'+'+Math.round((f.value-1)*100)+'% value':'Base price')+'</em><small>'+(stocked?'Selling':fmt(f.cost))+'</small></button>'}).join('')+'</div><p class="format-benefit">'+(function(){var next=FORMATS.findIndex(function(f,k){return !state.productMenu.unlocked[k]});return next<0?'Every strain sells in all three types, to whoever wants each.':'Stock '+FORMATS[next].name.toLowerCase()+' for every strain · '+['','+45% value for the 3 in 10 who want them · slower packing','+120% value for the 1 in 5 who want them · slow packing'][next]})()+'</p></div>':'')+
+      (level?'<div class="product-line strain-format"><h2>Sells as</h2><div class="format-options">'+FORMATS.map(function(f,k){var stocked=state.productMenu.unlocked[k];return '<button type="button" class="strain-format-pill" data-format="'+k+'" aria-pressed="'+stocked+'"'+(!stocked&&state.money<f.cost?' disabled':'')+' title="'+f.detail+'">'+icon3d('product-'+k)+'<strong>'+f.name+'</strong><em>'+(f.value>1?'+'+Math.round((f.value-1)*100)+'% value':'Base price')+'</em><small>'+(stocked?'Selling':fmt(f.cost))+'</small></button>'}).join('')+'</div><p class="format-benefit">'+(function(){var next=FORMATS.findIndex(function(f,k){return !state.productMenu.unlocked[k]});return next<0?'Every strain sells in all three types, to whoever wants each.':'Stock '+FORMATS[next].name.toLowerCase()+' for every strain · '+['','+45% value for the 3 in 10 who want them · slower packing','+120% value for the 1 in 5 who want them · slow packing'][next]})()+'</p></div>':'')+
       '<div class="strain-hero-actions"><button type="button" id="flowerBuy" class="is-primary">'+(maxed?'Fully upgraded':(level?'Upgrade':'Unlock')+' · '+fmt(price))+'</button></div>'+
     '</div>';
     var heroKey=heroHtml+'|'+(maxed||state.money<price)+'|'+(active&&menu.length===1)+'|'+state.productMenu.unlocked.join(',');
@@ -3356,6 +3358,14 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var picture=map3d.loungePicture(Math.max(1,state.lounge),state.loungeLift);if(!picture)picturesPending=true;return picture;
   }
   // Draws a picture into a w×h canvas, as large as fits, centred and standing on the bottom edge.
+  // The same, cropped to the picture's solid pixels first (the bounds are measured once per picture), so a small card
+  // shows the equipment rather than the empty sky around it.
+  function drawPictureCrop(c,picture,w,h){var crop=picture.cropped;
+    if(!crop){var tmp=document.createElement('canvas');tmp.width=480;tmp.height=600;var tc=tmp.getContext('2d',{willReadFrequently:true});drawPictureFit(tc,picture,480,600);
+      var d=tc.getImageData(0,0,480,600).data,l=480,r=0,t=600,bt=0;for(var y=0;y<600;y+=2)for(var x=0;x<480;x+=2)if(d[(y*480+x)*4+3]>24){if(x<l)l=x;if(x>r)r=x;if(y<t)t=y;if(y>bt)bt=y}
+      if(r<=l)return drawPictureFit(c,picture,w,h);l=Math.max(0,l-4);t=Math.max(0,t-4);r=Math.min(479,r+4);bt=Math.min(599,bt+4);
+      crop=picture.cropped=document.createElement('canvas');crop.width=r-l;crop.height=bt-t;crop.getContext('2d').drawImage(tmp,l,t,r-l,bt-t,0,0,r-l,bt-t)}
+    var fit=Math.min(w/crop.width,h/crop.height),pw=crop.width*fit,ph=crop.height*fit;c.drawImage(crop,(w-pw)/2,h-ph,pw,ph)}
   function drawPictureFit(c,picture,w,h){var fit=Math.min(w/picture.width,h/picture.height),pw=picture.width*fit,ph=picture.height*fit;c.drawImage(picture,(w-pw)/2,h-ph,pw,ph)}
   function paintUpgradePreview(index){
     var preview=$('upgradePreview');if(!preview)return;
@@ -3383,7 +3393,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       preview.dataset.art=key;
     }finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
   }
-  function paintSecurityThumbnail(){var card=document.querySelector('[data-security] canvas');if(!card)return;var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;ctx=card.getContext('2d');var picture=state.doorBuilt?stationPicture(6,state.idStaff):null;if(ctx&&picture){ctx.clearRect(0,0,80,100);ctx.drawImage(picture,0,0,80,100)}else if(ctx){ctx.clearRect(0,0,80,100);unit=25;centerX=40;centerY=97;angle=.57;if(!state.doorBuilt)drawConstructionSite(0,0,2.6,2.6,function(){drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5'])});else{drawBox(0,0,-.24,2.6,2.6,.24,['#cbb085','#7f6a4b','#ac9168']);drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5']);drawPerson(-.55,-.45,0,7,false,true,false)}}ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
+  function paintSecurityThumbnail(){var card=document.querySelector('[data-security] canvas');if(!card)return;paintThumb(card,state.doorBuilt?stationPicture(6,state.idStaff):null,function(){unit=25;centerX=40;centerY=97;angle=.57;if(!state.doorBuilt)drawConstructionSite(0,0,2.6,2.6,function(){drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5'])});else{drawBox(0,0,-.24,2.6,2.6,.24,['#cbb085','#7f6a4b','#ac9168']);drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5']);drawPerson(-.55,-.45,0,7,false,true,false)}})}
   // The lounge doorway in miniature, dressed for its tier. Every level keeps the lacquer jambs, the slab and the LOUNGE
   // blade so the card still reads as the lounge; what changes is the colour of the neon, the drapes, the room glimpsed
   // between them and the dressing out front — planters for the terrace, a rope for the booths, a doorman and a runner
@@ -3459,8 +3469,13 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     }
     else{drawBox(0,.14,0,1.36,.08,1.72,['#c9a874','#7d6240','#a9895c']);constructionTape([-.75,.8,face+.06],[.75,.7,face+.06]);wallText(0,2.2,face+.01,'LOUNGE',unit*1.2,.32,'#4b3f45',false,'800')}
   }
-  function paintLoungeThumbnail(){var card=document.querySelector('[data-lounge] canvas');if(!card)return;var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;ctx=card.getContext('2d');var picture=loungePicture();if(ctx&&picture){ctx.clearRect(0,0,80,100);drawPictureFit(ctx,picture,80,100)}else if(ctx){ctx.clearRect(0,0,80,100);unit=22;centerX=40;centerY=94;angle=.57;drawLoungeThumb()}ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
-  function paintThumbnails(){paintSecurityThumbnail();paintLoungeThumbnail();var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;machineTabs.forEach(function(tab,i){ctx=tab.querySelector('canvas').getContext('2d');if(!ctx)return;ctx.clearRect(0,0,80,100);var picture=state.lines[i]?stationPicture(i,state.lines[i]):null;if(picture){ctx.drawImage(picture,0,0,80,100);return}unit=25;centerX=40;centerY=97;angle=.57;drawStage({x:0,z:0},i,0)});ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
+  function paintLoungeThumbnail(){var card=document.querySelector('[data-lounge] canvas');if(!card)return;paintThumb(card,loungePicture(),function(){unit=22;centerX=40;centerY=94;angle=.57;drawLoungeThumb()})}
+  // A station card's thumbnail: the 3D picture, or until it's in the 2D drawing (laid out for an 80×100 box), either
+  // way cropped to its solid pixels and fitted to the card's wide canvas, standing on its bottom edge.
+  function paintThumb(card,picture,drawFallback){var c=card&&card.getContext('2d');if(!c)return;
+    if(!picture){var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;picture=document.createElement('canvas');picture.width=160;picture.height=200;ctx=picture.getContext('2d');ctx.setTransform(2,0,0,2,0,0);try{drawFallback()}finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}}
+    c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,card.width,card.height);drawPictureCrop(c,picture,card.width,card.height)}
+  function paintThumbnails(){paintSecurityThumbnail();paintLoungeThumbnail();machineTabs.forEach(function(tab,i){paintThumb(tab.querySelector('canvas'),state.lines[i]?stationPicture(i,state.lines[i]):null,function(){unit=25;centerX=40;centerY=97;angle=.57;drawStage({x:0,z:0},i,0)})})}
   function selectLounge(){securitySelected=false;loungeSelected=true;showTray('factory');renderUI();var card=document.querySelector('[data-lounge]');if(card&&card.scrollIntoView)card.scrollIntoView({block:'nearest',inline:'nearest'});if(navigator.vibrate)navigator.vibrate(8)}
   // Each lounge tier is bought outright; the first one raises the doorway out of its hoarding.
   function upgradeLounge(){
@@ -3530,11 +3545,6 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     toggle.onclick=function(){var open=toggle.getAttribute('aria-expanded')!=='true';expandBranch(open?i:-1);if(open)requestAnimationFrame(function(){toggle.scrollIntoView({block:'start'})})};
   });
   $('bulkDispatch').onclick=function(){var reward=dispatchBulk(state);if(reward){queueDeliveryWave(1);notify('BULK DELIVERY · +'+fmt(reward),'upgrade');save();renderUI()}};
-  var productIcons=[
-    '<path d="M16 28V12m0 8C5 20 5 8 5 8s11 0 11 12Zm0-4C16 5 27 5 27 5s0 11-11 11Z"/>',
-    '<path d="m5 23 17-17 5 5-17 17Z M8 20l5 5m7-17 5 5M7 7c-3-3 3-3 0-6"/>',
-    '<rect x="5" y="5" width="22" height="22" rx="4"/><path d="M5 16h22M16 5v22M9 10h3m8 0h3M9 21h3m8 0h3"/>'
-  ];
   // Each strain's card carries its own Sell-as pills (see renderFlowers); a format's unlock is paid once, for every strain.
   function stockFormat(index){if(state.productMenu.unlocked[index])return;if(unlockFormat(state,index)){save();renderUI();notify('EVERY STRAIN NOW SELLS AS '+FORMATS[index].name.toUpperCase(),'upgrade')}}
   var prestigePanel=document.createElement('details');prestigePanel.className='depth-panel prestige-panel';prestigePanel.innerHTML=
