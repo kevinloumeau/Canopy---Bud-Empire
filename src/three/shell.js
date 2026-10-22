@@ -308,8 +308,12 @@ export function buildShell(world, layout, { box, span, material, model }) {
     signTexture.needsUpdate = true;
   }
 
-  // Product wall: the flip menu board centred between the plaster and the shelving, then the five-bay shelving.
-  const board = { x: (s.wallLeft + s.shelfLeft) / 2, y: 1.8, w: 5.1, h: 1.24 }, boardUnit = unit();
+  // Product wall: the flip menu board between the lounge sign and the shelving, then the five-bay shelving.
+  // The mezzanine slab overhangs this wall, and down the camera's line of sight (y rises .816 per unit of z) its
+  // underside hides the wall above about y 3; Kevin (2026-10-22) found the board hidden there, so it sits low, on the
+  // dado's brass rail, its top clear of the slab edge and the Pack desk's sign above. Set that low, the shelving's
+  // end would cover its last column of prices, so it stands a little left of centre.
+  const board = { x: (s.wallLeft + s.shelfLeft) / 2 - .15, y: s.tileH + .02, w: 5.36, h: 1.56 }, boardUnit = unit();
   span(boardUnit, board.x - board.w / 2 - .14, board.x + board.w / 2 + .14, board.y - .12, board.y + board.h + .12, face, face + .1, OAK);
   span(boardUnit, board.x - board.w / 2 + .04, board.x + board.w / 2 - .04, board.y + .04, board.y + board.h - .04, face + .1, face + .12, BRASS, { cast: false });
   const boardCanvas = document.createElement('canvas'); boardCanvas.width = 1024; boardCanvas.height = 240;
@@ -317,7 +321,10 @@ export function buildShell(world, layout, { box, span, material, model }) {
   const boardFace = new THREE.Mesh(new THREE.PlaneGeometry(board.w - .14, board.h - .14), new THREE.MeshBasicMaterial({ map: boardTexture }));
   boardFace.position.set(board.x, board.y + board.h / 2, face + .125); boardUnit.add(boardFace);
   // The Blender board (origin on the floor under it, in the wall plane) shows the same live flip letters on its face.
-  swap(boardUnit, 'menu_board.glb', board.x, 0, face, scene => { const f = scene.getObjectByName('BoardFace'); if (f) f.traverse(o => {
+  swap(boardUnit, 'menu_board.glb', board.x, 0, face, (scene, holder) => {
+    // The model's frame starts 1.218 above its origin: set it down on the rail.
+    holder.position.y = board.y - 1.218 * holder.scale.y;
+    const f = scene.getObjectByName('BoardFace'); if (f) f.traverse(o => {
     if (!o.isMesh) return;
     // glTF UVs run top-down; the canvas texture is flipped the other way, so turn the quad's v round to match.
     const uv = o.geometry.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setY(i, 1 - uv.getY(i)); uv.needsUpdate = true;
