@@ -52,3 +52,7 @@
  .delivery-benefits li{row-gap:0}
 }
 .delivery-site .build-skip[hidden]{display:none}
+/* While the window builds, its countdown and Finish now share one line under the progress bar. */
+.delivery-site .delivery-build.is-building{grid-template-columns:1fr 1fr}
+.delivery-site .delivery-build.is-building>.delivery-funding{grid-column:1/-1}
+.delivery-site .delivery-build.is-building button{padding-left:12px;font-size:13px}
