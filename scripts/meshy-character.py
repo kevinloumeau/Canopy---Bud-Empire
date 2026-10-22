@@ -58,9 +58,18 @@ def wrist(side):
     bpy.context.scene.frame_set(9); bpy.context.scene.frame_set(10); bpy.context.view_layer.update()
     hip = arm.matrix_world @ arm.pose.bones['mixamorig:Hips'].head
     return (arm.matrix_world @ arm.pose.bones['mixamorig:%sHand' % side].head - hip) / height * 1.36
+# A relaxed hand doesn't carry on the forearm's outward line: it hangs straight down beside the thigh, fingers turned
+# a little forward and in (Kevin, 2026-10-22: the hands looked like they were pointing). The figure's forward is where
+# the 'headfront' bone sits in front of the head.
+def ahead():
+    hb = arm.pose.bones; M = arm.matrix_world
+    f = (M @ hb['headfront'].head) - (M @ hb['mixamorig:Head'].head) if 'headfront' in hb else Vector((0, -1, 0))
+    f.z = 0; return f.normalized()
 def bend(side):
-    M = arm.matrix_world.to_3x3(); h = arm.pose.bones['mixamorig:%sHand' % side]; f = arm.pose.bones['mixamorig:%sForeArm' % side]
-    return (M @ (h.tail - h.head)).angle(M @ (f.tail - f.head))
+    M = arm.matrix_world.to_3x3(); h = arm.pose.bones['mixamorig:%sHand' % side]
+    hip = arm.matrix_world @ arm.pose.bones['mixamorig:Hips'].head; out = (arm.matrix_world @ h.head) - hip; out.z = 0
+    want = Vector((0, 0, -1)) + ahead() * .3 - out.normalized() * .12
+    return (M @ (h.tail - h.head)).angle(want)
 def rot(ax, az): return Quaternion((1, 0, 0), math.radians(ax)) @ Quaternion((0, 0, 1), math.radians(az))
 fixes = {}
 # Meshy's rigs also carry the shoulders high, close to a shrug: drop each collarbone so the shoulder joint sits
@@ -94,13 +103,13 @@ for side in ('Left', 'Right'):
     hb = [[k.co[1] for k in c.keyframe_points] for c in quat_keys(idle, side + 'Hand')]
     turn_keys(idle, side + 'Arm', fixes[side + 'Arm'], base)
     wrist(side); hbest = (bend(side), 0, 0)
-    for ax in range(-40, 41, 5):
-        for az in range(-40, 41, 5):
+    for ax in range(-60, 61, 5):
+        for az in range(-60, 61, 5):
             turn_keys(idle, side + 'Hand', rot(ax, az), hb); wrist(side); b = bend(side)
             if b < hbest[0] - 1e-3: hbest = (b, ax, az)
     turn_keys(idle, side + 'Hand', Quaternion(), hb); turn_keys(idle, side + 'Arm', Quaternion(), base)
     fixes[side + 'Hand'] = rot(hbest[1], hbest[2])
-    print('ARMS %s arm turn %d,%d wrist %d,%d -> bend %.0f deg' % (side, best[1], best[2], hbest[1], hbest[2], math.degrees(hbest[0])))
+    print('ARMS %s arm turn %d,%d wrist %d,%d -> hand off relaxed by %.0f deg' % (side, best[1], best[2], hbest[1], hbest[2], math.degrees(hbest[0])))
 for action in bpy.data.actions:
     for bone, q in fixes.items():
         if bone.endswith('Hand') and not action.name.startswith('Idle'): continue
