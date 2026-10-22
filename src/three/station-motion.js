@@ -11,6 +11,42 @@ import * as THREE from 'three';
 // 2D crop cycle it replaces.
 export const CYCLE = [7, 9, 8, 6, 3, 4];
 const SCREENS = /^(ReaderScreen|MonitorGlass|ScaleScreen|TillGlass)$/;
+// The grow bench's lamp faces, by material, across every look (the warm panel, the purple bars, the LED strips).
+const LAMPS = /^(LightPanel|GrowLightPurple|GrowLed)$/;
+
+// A soft fall of light under each lamp, brightest at the lamp and gone by the plants. Hidden until Grow lights runs.
+let fallTexture = null;
+function lightFall() {
+  if (!fallTexture) {
+    // A 1x64 ramp built in memory (no canvas, so the tests can rig a model without a page): full at the top, a quick
+    // fall over the first third, then a long tail to nothing.
+    const data = new Uint8Array(64 * 4);
+    for (let i = 0; i < 64; i++) { const v = i / 63, a = Math.round(255 * (v > .65 ? .53 + .47 * (v - .65) / .35 : .53 * v / .65)); data.set([a, a, a, 255], i * 4); }
+    fallTexture = new THREE.DataTexture(data, 1, 64);
+    fallTexture.needsUpdate = true;
+  }
+  return fallTexture;
+}
+function addLightFall(lamp, floorY) {
+  if (!lamp.geometry.boundingBox) lamp.geometry.computeBoundingBox();
+  lamp.updateMatrix();
+  const box = part.copy(lamp.geometry.boundingBox).applyMatrix4(lamp.matrix), size = box.getSize(new THREE.Vector3());
+  const drop = box.min.y - floorY;
+  // Only lamps hung over the bench, and flat ones (a bar or panel, not an end cap).
+  if (!(drop > .05) || size.y > Math.max(size.x, size.z) * .5) return;
+  const colour = new THREE.Color().copy(lamp.material.emissive || lamp.material.color);
+  // Kept saturated: the lamp's own hue, at full strength, so the purple bars throw purple light.
+  colour.multiplyScalar(1 / Math.max(colour.r, colour.g, colour.b, 1e-3));
+  // An open box with no lid or floor, a little wider at the bottom; v runs 0 at the bottom to 1 at the lamp.
+  const geo = new THREE.CylinderGeometry(Math.SQRT1_2, Math.SQRT1_2 * 1.25, 1, 4, 1, true).rotateY(Math.PI / 4);
+  const fall = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: colour, alphaMap: lightFall(), transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }));
+  fall.name = 'LampFall';
+  fall.scale.set(Math.max(size.x, .02), drop, Math.max(size.z, .02));
+  fall.position.set((box.min.x + box.max.x) / 2, floorY + drop / 2, (box.min.z + box.max.z) / 2);
+  fall.castShadow = fall.receiveShadow = false; fall.renderOrder = 2; fall.visible = false;
+  fall.userData.motion = { m: 'fall' };
+  lamp.parent.add(fall);
+}
 
 const bounds = new THREE.Box3(), part = new THREE.Box3(), base = new THREE.Vector3();
 function baseOf(objects) {
@@ -50,6 +86,15 @@ export function rigStation(source, index) {
     pivot(parts, { m: 'plant', k });
     parts.forEach(p => { if (/(Cola|Sugar)\d*$/.test(p.name)) tag(p, { m: 'bud' }); });
   });
+  if (index === 1) {
+    // Grow lights: the lamps burn brighter and throw light down onto the plants while the crew's burst runs.
+    const top = all.find(o => o.name === 'Top' && o.isMesh);
+    const floorY = top ? (top.updateMatrix(), part.copy((top.geometry.boundingBox || (top.geometry.computeBoundingBox(), top.geometry.boundingBox))).applyMatrix4(top.matrix).max.y) : null;
+    all.filter(o => o.isMesh && o.material && LAMPS.test(o.material.name)).forEach(o => {
+      o.userData.motion = { m: 'lamp', rest: o.material.emissiveIntensity };
+      if (floorY !== null) addLightFall(o, floorY);
+    });
+  }
   if (index === 2) {
     each(named(/^(?:T\dP\d|Plant|Corner)(?:Leaf|Pet|BranchLeaf)/), (o, k, n) => tag(o, { m: 'trim', k: (k * 7) % n, n }));
     each(named(/^(?:Tray\d?Nug|BoardNug)\d+$/), (o, k, n) => tag(o, { m: 'fill', k, n, from: .1, span: .75 }));
@@ -72,6 +117,7 @@ export function bindStation(root, index) {
   root.traverse(o => {
     const t = o.userData.motion;
     if (!t) return;
+    if (t.m === 'lamp' || t.m === 'fall') o.material = o.material.clone();
     if (t.m === 'screen') {
       o.material = o.material.clone();
       if (o.material.emissive) o.material.emissive.copy(o.material.color).lerp(new THREE.Color('#bff5dc'), .5);
@@ -86,10 +132,14 @@ const ease = v => { v = clamp01(v); return v * v * (3 - 2 * v); };
 // Grow plants: up from a seedling over most of the cycle, full for a beat, then cut back for the next crop.
 export function growth(phase) { return phase < .72 ? phase / .72 : phase > .86 ? (1 - phase) / .14 : 1; }
 
-// s: the frame's station ({ clock: seconds, act: 0..1 working }); dt in wall seconds.
+// s: the frame's station ({ clock: seconds, act: 0..1 working, boost: share of a crew burst left }); dt in wall seconds.
+// A burst also runs the station's clock faster (main.js), so its work cycle visibly speeds up.
 export function moveStation(rig, s, dt) {
   const clock = s.clock || 0, period = CYCLE[rig.index] || 6, phase = (clock / period) % 1, follow = 1 - Math.exp(-dt * 4);
   rig.act += ((s.act || 0) - rig.act) * follow;
+  // Eased, so lamps warm up and fade out rather than snap.
+  rig.boost = (rig.boost || 0) + ((s.boost > 0 ? 1 : 0) - (rig.boost || 0)) * (1 - Math.exp(-dt * 3));
+  const lit = rig.boost, flicker = .9 + .1 * Math.sin(clock * 2.3);
   const parts = rig.parts;
   for (let i = 0; i < parts.length; i++) {
     const o = parts[i], t = o.userData.motion;
@@ -137,7 +187,9 @@ export function moveStation(rig, s, dt) {
         o.scale.setScalar(1 - gone);
         break;
       }
-      case 'screen': o.material.emissiveIntensity = rig.act * (.35 + .08 * Math.sin(clock * 23) + (Math.sin(clock * 3.1) > .96 ? .15 : 0)); break;
+      case 'lamp': o.material.emissiveIntensity = t.rest * (1 + lit * 1.6 * flicker); break;
+      case 'fall': o.visible = lit > .02; o.material.opacity = .7 * lit * flicker; break;
+      case 'screen': o.material.emissiveIntensity = Math.max(rig.act, lit) * (1 + lit) * (.35 + .08 * Math.sin(clock * 23) + (Math.sin(clock * 3.1) > .96 ? .15 : 0)); break;
     }
   }
 }
