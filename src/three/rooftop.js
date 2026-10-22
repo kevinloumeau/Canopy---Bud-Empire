@@ -457,11 +457,11 @@ export function buildRooftop(world, layout, { box, span, material }) {
   const plaqueTexture = new THREE.CanvasTexture(plaqueCanvas); plaqueTexture.colorSpace = THREE.SRGBColorSpace;
   const plaque = new THREE.Mesh(new THREE.PlaneGeometry(.66, .25), new THREE.MeshBasicMaterial({ map: plaqueTexture }));
   plaque.position.set(leafW * .62, 1.5, .056); hinge.add(plaque);
-  // COMING SOON tape across the LOUNGE sign beside the doorway (shell.js), two strips crossing at a slant.
+  // COMING SOON tape across the LOUNGE sign over the doorway (shell.js), two strips crossing at a slant.
   const tapeCanvas = document.createElement('canvas'); tapeCanvas.width = 512; tapeCanvas.height = 64;
   const tapeTexture = new THREE.CanvasTexture(tapeCanvas); tapeTexture.colorSpace = THREE.SRGBColorSpace; tapeTexture.anisotropy = 4;
   const tapeMat = new THREE.MeshBasicMaterial({ map: tapeTexture, transparent: true });
-  const signTape = new THREE.Group(); signTape.position.set(dx + 2.1, 2.02, face + .05); lobby.add(signTape);
+  const signTape = new THREE.Group(); signTape.position.set(sh.loungeSign.x + .02, sh.loungeSign.y, face + sh.loungeSign.out); signTape.rotation.y = Math.PI / 2; signTape.scale.setScalar(sh.loungeSign.scale); lobby.add(signTape);
   [.12, -.1].forEach((tilt, k) => { const strip = new THREE.Mesh(new THREE.PlaneGeometry(2.3, .26), tapeMat); strip.rotation.z = tilt; strip.position.z = k * .006; signTape.add(strip); });
   function paintDoorSigns() {
     const font = '"Fredoka", "Bricolage Grotesque", sans-serif';

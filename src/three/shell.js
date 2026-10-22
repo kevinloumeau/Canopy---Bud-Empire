@@ -277,12 +277,18 @@ export function buildShell(world, layout, { box, span, material, model }) {
   const closedDoor = layout.rooftop ? null : span(shell, dx - .7, dx + .7, 0, s.loungeHeader, face, face + .08, '#2d6146');
   const boardedExit = span(shell, rx + .16, rx + .21, 0, eh - .24, ez - ew + .15, ez + ew - .15, '#3a2a1e');
 
-  // The neon sign beside the doorway, "Rooftop" in amber script over LOUNGE in pink, lit while the lounge is open.
+  // The neon sign over the doorway (Kevin, 2026-10-22: above the door, leaving the wall beside it to the menu board),
+  // "Rooftop" in amber script over LOUNGE in pink, lit while the lounge is open.
   const signCanvas = document.createElement('canvas'); signCanvas.width = 512; signCanvas.height = 184;
   const signTexture = new THREE.CanvasTexture(signCanvas); signTexture.colorSpace = THREE.SRGBColorSpace;
   const signMat = new THREE.MeshBasicMaterial({ map: signTexture, transparent: true });
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(2, .72), signMat);
-  sign.position.set(dx + 2.1, 2.02, face + .03); shell.add(sign);
+  // Flat on the wall above the door the mezzanine edge and the storefront's corner post would hide it, so it is a blade
+  // standing out from the wall on the door's right-hand jamb, above the door, read side-on down the shop, hung from a
+  // brass arm.
+  const ls = s.loungeSign;
+  sign.position.set(ls.x, ls.y, face + ls.out); sign.rotation.y = Math.PI / 2; sign.scale.setScalar(ls.scale); shell.add(sign);
+  span(shell, ls.x - .02, ls.x + .02, ls.y + .37 * ls.scale, ls.y + .37 * ls.scale + .04, face, face + ls.out + 1.05 * ls.scale, BRASS);
   let signLit = null;
   if (typeof FontFace === 'function' && document.fonts) {
     new FontFace('Fredoka', `url(${new URL('../fonts/Fredoka-SemiBold.ttf', layout.modelBase).href})`, { weight: '600' }).load()
@@ -308,12 +314,13 @@ export function buildShell(world, layout, { box, span, material, model }) {
     signTexture.needsUpdate = true;
   }
 
-  // Product wall: the flip menu board between the lounge sign and the shelving, then the five-bay shelving.
+  // Product wall: the flip menu board between the lounge doorway and the shelving, then the five-bay shelving.
   // The mezzanine slab overhangs this wall, and down the camera's line of sight (y rises .816 per unit of z) its
-  // underside hides the wall above about y 3; Kevin (2026-10-22) found the board hidden there, so it sits low, on the
-  // dado's brass rail, its top clear of the slab edge and the Pack desk's sign above. Set that low, the shelving's
-  // end would cover its last column of prices, so it stands a little left of centre.
-  const board = { x: (s.wallLeft + s.shelfLeft) / 2 - .15, y: s.tileH + .02, w: 5.36, h: 1.56 }, boardUnit = unit();
+  // underside hides the wall above about y 3; Kevin (2026-10-22) found the board hidden there and wanted it larger,
+  // so it fills the wall from the door frame to the shelving (less the shelving's depth, whose end would cover the
+  // last column of prices), its top just clear of the slab edge and its foot a little into the tile dado.
+  const board = { x0: s.loungeDoor.x + 1.25, x1: s.shelfLeft - .78, y: 1, h: 1.9 }, boardUnit = unit();
+  board.x = (board.x0 + board.x1) / 2; board.w = board.x1 - board.x0;
   span(boardUnit, board.x - board.w / 2 - .14, board.x + board.w / 2 + .14, board.y - .12, board.y + board.h + .12, face, face + .1, OAK);
   span(boardUnit, board.x - board.w / 2 + .04, board.x + board.w / 2 - .04, board.y + .04, board.y + board.h - .04, face + .1, face + .12, BRASS, { cast: false });
   const boardCanvas = document.createElement('canvas'); boardCanvas.width = 1024; boardCanvas.height = 240;
@@ -322,7 +329,8 @@ export function buildShell(world, layout, { box, span, material, model }) {
   boardFace.position.set(board.x, board.y + board.h / 2, face + .125); boardUnit.add(boardFace);
   // The Blender board (origin on the floor under it, in the wall plane) shows the same live flip letters on its face.
   swap(boardUnit, 'menu_board.glb', board.x, 0, face, (scene, holder) => {
-    // The model's frame starts 1.218 above its origin: set it down on the rail.
+    // The model's frame is 3.18 wide and 1.07 tall, from 1.218 above its origin: stretch it to the board and set it there.
+    holder.scale.x = board.w / 3.18; holder.scale.y = board.h / 1.07;
     holder.position.y = board.y - 1.218 * holder.scale.y;
     const f = scene.getObjectByName('BoardFace'); if (f) f.traverse(o => {
     if (!o.isMesh) return;
