@@ -2771,6 +2771,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
         if(view.x!==undefined){var frame=cameraFrame(),p=project(view.x,view.y||0,view.z||0);panX=frame.x-p.x;panY=frame.y-p.y;applyCamera()}}
       render.snap=true;render.dry=view.draw===false;render.invalidated=true;render(performance.now());render.snap=render.dry=false;
       return window.__canopySnap.status()};
+    window.__canopySnap.map3d=function(){return map3d&&map3d.ok?map3d.debug:null};
     window.__canopySnap.status=function(){return{map3d:!!(map3d&&map3d.ok),loading:map3d?map3d.loading:-1}};
   }
   // Dev numbers (?stats): a small readout over the map with the frames drawn a second, the frame's script time, the 3D
@@ -4075,7 +4076,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function openGoals(){showTray('goals');renderUI()}
   function closeGoals(){}
   goalsButton.onclick=function(){if(activeTray==='goals'&&panelOpen)collapsePanel();else openGoals()};
-  var empireShell=mountEmpireShell({fit:fitControls,getState:function(){return state},format:fmt,rate:incomeRate});
+  var empireShell=mountEmpireShell({fit:fitControls,getState:function(){return state},format:fmt,rate:incomeRate,fly:flyToPlace});
   var shopPlayCollapsed=false;
   shopPlayUI=mountShopPlay({getState:function(){return state},getMoment:function(){return moment},getAlerts:function(){return operationsAlerts(state.empire)},names:STRAINS.map(function(s){return s.name}),format:fmt,changed:save,
     // On a phone, or where the side panel would sit under the list, the sheet steps aside while shop activity is open.
@@ -4133,9 +4134,22 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function centreOn(x,z){var frame=cameraFrame(),u=frame.unit*zoom,c=Math.cos(angle),s=Math.sin(angle);panX=-(x*c-z*s)*u;panY=-(x*s+z*c)*u*FLOOR_SQUASH;applyCamera()}
   function lookAtStore(id,animate){
     var to=storeSpot(id),z1=id?branchFit(id):1;
-    if(animate===false||motionPreference.matches){districtGlide=null;zoom=z1;centreOn(to.x,to.z);return}
+    if(animate===false||motionPreference.matches||SNAP){districtGlide=null;zoom=z1;centreOn(to.x,to.z);return}
     districtGlide={from:viewAnchor(),to:to,z0:zoom,z1:z1,t:0};render.invalidated=true;
   }
+  // The Empire tab's map tiles (empire-map.js): a tap glides the camera to that place. A shop is visited (a branch not
+  // open yet shows its lot); HQ or a city building is centred halfway up so the whole tower shows, and its buy box opens.
+  function flyToPlace(kind,id){mapHintActivity();
+    if(kind==='shop'){if(!id){if(state.empire.activeStore)visitStore(0,false);else lookAtStore(0);return}
+      if(state.empire.stores[id-1].level){visitStore(id,false);return}
+      if(state.empire.activeStore)visitStore(0,false);var c=districtCentre(id-1);glideTo(c.x,c.z,1);return}
+    // The lot's middle, moved back along the view by a bit over a third of the building's height, so the whole building and its buy box clear the bars.
+    var hq=id==='flagship',at=hq?{x:HQ_TAG.x,y:hqTagHeight(),z:HQ_TAG.z-3}:cityTagAt(id,state.lifetime<cityBuilding(id).unlock);if(!at)return;
+    if(!hq){if(!cityLotRects)cityLotRects=cityLots();var lot=cityLotRects[id];at.z=(lot.z0+lot.z1)/2}
+    if(state.empire.activeStore)visitStore(0,false);
+    var lift=at.y*.38*.6124;glideTo(at.x-lift,at.z-lift,1);
+    pickedTag=hq?'hq':id;buyBoxFor=-1;renderUI()}
+  function glideTo(x,z,z1){if(motionPreference.matches||SNAP){districtGlide=null;zoom=z1;centreOn(x,z);return}districtGlide={from:viewAnchor(),to:{x:x,z:z},z0:zoom,z1:z1,t:0};render.invalidated=true}
   function stepGlide(dt){
     var g=districtGlide;if(!g)return;
     var far=Math.abs(g.to.x-g.from.x);g.t=Math.min(1,g.t+dt/Math.min(1.4,.55+far/160));

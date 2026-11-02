@@ -4,8 +4,9 @@ import {mountGoalsPane} from './goals-pane.js';
 // Empire has three screens: Home (reopen card, store list, founder perks), Store (one branch), Records.
 // Goals (goals-pane.js) gets the contract, shift goals, story and reward controls as hidden sources.
 import {mountEmpireStores} from './empire-stores.js';
+import {mountEmpireMap} from './empire-map.js';
 import {manageDialog} from './dialog-focus.js';
-export function mountEmpireShell({fit,getState,format,rate}){
+export function mountEmpireShell({fit,getState,format,rate,fly}){
  const pane=document.querySelector('[data-pane=empire]'),$=id=>document.getElementById(id);
  const section=name=>pane.querySelector('[data-empire-section="'+name+'"]');
  const el=(tag,cls,html)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(html!=null)n.innerHTML=html;return n;};
@@ -22,9 +23,12 @@ export function mountEmpireShell({fit,getState,format,rate}){
  const toggles=[],articles=[];
  growth.querySelectorAll('.empire-branch').forEach((article,i)=>{const toggle=article.querySelector('.branch-toggle');toggles[i]=toggle;articles[i]=article;list.append(toggle);});
  const more=el('button','empire-more','<span>Records</span><span class="empire-more-hint">Lifetime figures, reputation</span>'+chevron);more.type='button';more.onclick=()=>show('details');
- // Empire home: the reopen card leads (it pays for the perks below), then the stores, then reopening and founder perks.
+ // Empire home: the reopen card leads (it pays for the perks below), then the map's places as tiles (empire-map.js),
+ // then reopening and founder perks. The old store rows stay in the page, hidden, as each branch page's toggle.
  const reopen=$('reopenCard');
- screens.home.append(reopen||'',storesHead,storesSummary,list,storesHelp,group(null,[growth.querySelector('.depth-panel')]),more);
+ const map=mountEmpireMap({getState,format,summary:storesSummary,fly:(kind,id)=>{if(fly)fly(kind,id);if(kind==='shop'&&id>0)openStore(id-1);}});
+ const rows=el('div','store-rows');rows.hidden=true;rows.append(storesHead,list);
+ screens.home.append(reopen||'',map.root,group(null,[growth.querySelector('.depth-panel')]),more,rows);
  // The welcome-back report is a moment over the map, not a row in a tab.
  const summary=$('returnSummary');if(summary){const overlay=el('div','return-overlay');overlay.hidden=true;const card=el('div','return-card');card.append(summary);overlay.append(card);document.body.append(overlay);
   const reflect=()=>{overlay.hidden=summary.hidden;if(!summary.hidden){const b=$('dismissReturn');if(b)b.focus({preventScroll:true});}};
@@ -46,7 +50,7 @@ export function mountEmpireShell({fit,getState,format,rate}){
  let boardSig='';
  function syncBoard(){if(!getState)return;const s=getState();const values={revenue:format?format(s.lifetime||0):String(Math.round(s.lifetime||0)),served:abbr(s.sold||0),deliveries:abbr(s.onlineCompleted||0),trophies:String((s.empire&&s.empire.trophies)||0),prestige:String((s.empire&&s.empire.shares)||0)};const sig=Object.values(values).join('|');if(sig===boardSig)return;boardSig=sig;stats.forEach(([,key])=>{board.querySelector('[data-score="'+key+'"]').textContent=values[key];});}
  setInterval(()=>{if(!document.hidden&&current==='details')syncBoard();},500);
- screens.details.append(group(null,[today.querySelector('.reputation')]));
+ screens.details.append(group(null,[today.querySelector('.reputation')]),storesHelp);
  const goalsPane=document.querySelector('[data-pane=goals]');
  if(goalsPane)mountGoalsPane({pane:goalsPane,getState,format,rate,sources:[$('contractCard'),document.querySelector('.goals-body'),
   group(null,[$('careerName'),$('careerDetail'),$('careerProgress'),$('careerBonus'),$('careerClaim')]),
@@ -66,7 +70,7 @@ export function mountEmpireShell({fit,getState,format,rate}){
  // main.js still opens a branch body directly (Manage on the map, bottleneck shortcuts); follow it.
  if(window.MutationObserver){const watcher=new MutationObserver(()=>{const open=articles.findIndex((_,i)=>$('branchBody'+i)&&!$('branchBody'+i).hidden);if(open>=0&&(current!=='store'||storeBar.heading.textContent!==toggles[open].querySelector('.branch-name').textContent)){openStore(open);}});articles.forEach((_,i)=>{const body=$('branchBody'+i);if(body)watcher.observe(body,{attributes:true,attributeFilter:['hidden']});});}
  const todayView=pane.querySelector('[data-empire-view=today]');if(todayView)todayView.addEventListener('click',()=>{if(current!=='home')show('home');});
- function sync(){if(!document.hidden)storesUI.sync();}
+ function sync(){if(!document.hidden){storesUI.sync();map.sync();}}
  pane.addEventListener('click',()=>requestAnimationFrame(sync));setInterval(sync,250);sync();
  return {show,openStore,sync};
 }
