@@ -2,8 +2,8 @@
 // so a share of the customers on their way to the door step out of the line to a cash machine on the pavement by the
 // entrance, take out cash and step back into their place. Every withdrawal pays the shop a fee.
 //
-// The machines stand on the wide left pavement just short of the front corner, facing the shop (and the camera), clear
-// of the security booth, the kiosks and the lines inside. The customer stands on the shop side, facing the screen.
+// The machines stand against the shop's front ledge facing the front pavement, clear of the security booth, the kiosks
+// and the lines inside. The customer walks round the front-left corner, stands on the pavement facing the screen.
 //
 // What can be bought: the first machine, then levels (a bigger fee, more customers using it, quicker withdrawals) and
 // a second and third machine (more withdrawals at once). The machine's look changes at the station look levels
@@ -16,15 +16,19 @@ export const ATM_BUILD = 8000;
 export const ATM_MACHINE_COSTS = [40000, 250000]; // the second and the third machine
 export const ATM_MAX_LEVEL = 100, ATM_MAX_MACHINES = 3;
 const LEVEL_BASE = 1200;
-// The machines, in the order they are bought: the first stands nearest the corner, the next two either side of it.
-// Each faces +x (the shop); the customer stands at STAND_X in front of it.
-export const ATM_SPOTS = [{ x: -14.2, z: 11.4 }, { x: -14.2, z: 10.25 }, { x: -14.2, z: 12.55 }];
-export const ATM_STAND_X = -13.45;
-// A customer steps out to a machine only while their place in the ID line is along this stretch of it (route
-// distance from the ID check), so they are never far from the machine and never at the head of the line.
-export const ATM_WINDOW = { from: 1.6, to: 8 };
+// The machines, in the order they are bought (Kevin, 2026-11-02: "against the wall facing the sidewalk"): backs to the
+// shop's front ledge (the floor's front edge, z 11.95) below the order line's rope pen, facing the front pavement and the
+// camera (rot turns the machine's own +x face to +z). The first stands in the middle, the next two either side of it.
+// The customer stands at `stand`, on the pavement in front of the screen.
+const ATM_Z = 12.45, STAND_Z = 13.25;
+export const ATM_SPOTS = [-4.6, -5.8, -3.4].map(x => ({ x, z: ATM_Z, rot: -Math.PI / 2, stand: { x, z: STAND_Z } }));
+// The way out to the machines and back: round the shop's front-left corner on the pavement.
+export const ATM_CORNER = { x: -11.9, z: 13.25 };
+// A customer steps out to a machine only while their place in the ID line is near the door end of it (route distance
+// from the ID check), the nearest point of the line to the corner, and never at its head.
+export const ATM_WINDOW = { from: 2.4, to: 6 };
 // Seconds walking to the machine and back, on top of the withdrawal itself, for the capacity estimate.
-const ATM_WALK_SECONDS = 1.1;
+const ATM_WALK_SECONDS = 3;
 
 export function migrateAtm(raw) {
   const level = Math.max(0, Math.min(ATM_MAX_LEVEL, Math.floor(Number(raw?.level) || 0)));

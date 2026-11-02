@@ -1,5 +1,5 @@
 import {PICKUP_WINDOW,PICKUP_SIGN,WINDOW_CLERK,WINDOW_COST,HATCH_COST,TIPS_COST,TIP_SHARE,migrateWindow,windowLineMax,windowServeSeconds,windowRoom,walkupCount,createWindowLine,addWalkups,stepWindowLine,windowFigures} from './pickup-window.js';
-import {ATM_BUILD,ATM_SPOTS,ATM_STAND_X,ATM_WINDOW,ATM_MAX_LEVEL,migrateAtm,atmLook,atmFeeShare,atmUseShare,atmUseSeconds,wantsCash,atmIncome,atmLevelCost,atmMachineCost,buyAtm,buyAtmLevel,buyAtmLevels,atmMaxQuote,buyAtmMachine,freeAtm} from './atm.js';
+import {ATM_BUILD,ATM_SPOTS,ATM_CORNER,ATM_WINDOW,ATM_MAX_LEVEL,migrateAtm,atmLook,atmFeeShare,atmUseShare,atmUseSeconds,wantsCash,atmIncome,atmLevelCost,atmMachineCost,buyAtm,buyAtmLevel,buyAtmLevels,atmMaxQuote,buyAtmMachine,freeAtm} from './atm.js';
 import {migrateOrderCounters,orderCounterPositions,COUNTER_SHIFT,PICKUP_X,orderCounterCost,buyOrderCounter,ORDER_QUEUE_GATE,assignOrderCounter,assignKiosk,takesKiosk,atOrderCounter,orderAvailability,pickupPlaces} from './order-counters.js';
 import {makeLifts,tickLifts,CAB_SLOTS} from './lounge-lifts.js';
 import {LOUNGE_TIERS,LOUNGE_MAX,migrateLounge,loungeTier,loungeUpgradeCost,loungeSeats,loungeSessionSeconds,buyLoungeTier,wantsLounge,loungeAdmission,loungeTake,loungeRate,loungeCurrentRate,migrateLoungeHost,buyLoungeLift,LOUNGE_LIFT_COST,LOUNGE_LIFT_SPEED,loungeHostSpeed,loungeHostCost} from './lounge.js';
@@ -1813,13 +1813,13 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(c.idDistance===undefined)c.idDistance=routeLength(ID_ROUTE);
     // A cash user steps out of the line to a free ATM (src/atm.js) as they come up to it, takes out cash, then joins the
     // back of the line (moved to the end of the arrivals after this step, cashRejoin), so nobody is held up or pushed back.
-    if(!c.cash&&c.wantsCash&&!c.cashDone&&state.atm.level&&c.idDistance>=ATM_WINDOW.from&&c.idDistance<=ATM_WINDOW.to){var machine=freeAtm(customers,state.atm.machines);if(machine>=0)c.cash={machine:machine,stage:'go',t:0}}
+    if(!c.cash&&c.wantsCash&&!c.cashDone&&state.atm.level&&c.idDistance>=ATM_WINDOW.from&&c.idDistance<=ATM_WINDOW.to){var machine=freeAtm(customers,state.atm.machines);if(machine>=0)c.cash={machine:machine,stage:'go',t:0,path:[ATM_CORNER,ATM_SPOTS[machine].stand]}}
     var queue=customers.filter(function(q){return q.idChecked===false&&!atAtm(q)}),index=queue.indexOf(c);
     if(!atAtm(c))c.idDistance=Math.max(index*.7,c.idDistance-budget);
     var pos=routePoint(ID_ROUTE,c.idDistance);
-    if(c.cash){var spot=ATM_SPOTS[c.cash.machine],goal=c.cash.stage==='back'?pos:{x:ATM_STAND_X,z:spot.z},gx=goal.x-c.x,gz=goal.z-c.z,gd=Math.hypot(gx,gz),walk=dt*walkSpeed();
-      if(c.cash.stage==='use'){c.cash.t+=dt;if(c.cash.t>=atmUseSeconds(state.atm.level)){var fee=atmFee();if(fee>0){add(fee);state.atmEarned=(state.atmEarned||0)+fee;if(!motionPreference.matches)tickets.push({x:spot.x,y:2.6,z:spot.z,life:1,text:fmt(fee)})}c.cash.stage='back';c.cashRejoin=true}}
-      else if(gd<=walk){c.x=goal.x;c.z=goal.z;if(c.cash.stage==='go'){c.cash.stage='use';c.cash.t=0}else{c.cash=null;c.cashDone=true}}
+    if(c.cash){var spot=ATM_SPOTS[c.cash.machine],goal=c.cash.path.length?c.cash.path[0]:c.cash.stage==='back'?pos:spot.stand,gx=goal.x-c.x,gz=goal.z-c.z,gd=Math.hypot(gx,gz),walk=dt*walkSpeed();
+      if(c.cash.stage==='use'){c.cash.t+=dt;if(c.cash.t>=atmUseSeconds(state.atm.level)){var fee=atmFee();if(fee>0){add(fee);state.atmEarned=(state.atmEarned||0)+fee;if(!motionPreference.matches)tickets.push({x:spot.x,y:2.6,z:spot.z,life:1,text:fmt(fee)})}c.cash.stage='back';c.cash.path=[ATM_CORNER];c.cashRejoin=true}}
+      else if(gd<=walk){c.x=goal.x;c.z=goal.z;if(c.cash.path.length)c.cash.path.shift();else if(c.cash.stage==='go'){c.cash.stage='use';c.cash.t=0}else{c.cash=null;c.cashDone=true}}
       else{c.x+=gx/gd*walk;c.z+=gz/gd*walk}
     }else{c.x=pos.x;c.z=pos.z}
     c.walking=Math.hypot(c.x-startX,c.z-startZ)>.001;
@@ -2730,8 +2730,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var direction=distance>.001?Math.max(-1,Math.min(1,rotate(dx,dz).x/distance)):(c.facing===undefined?.3:c.facing);
     // At the kiosk head a customer turns to the screen beside them (up-left of where they stand) for as long as they order.
     if(distance<=.001&&c.phase==='kiosk'&&!c.ordered&&c.laneDistance!==null&&c.laneDistance<.05)direction=-1;
-    // At an ATM they turn to its screen, which faces the shop from the kerb side (-x, like a kiosk's).
-    if(distance<=.001&&c.cash&&c.cash.stage==='use')direction=-1;
+    // At an ATM they turn to its screen, on the shop's front ledge behind them (-z, up the screen to the right).
+    if(distance<=.001&&c.cash&&c.cash.stage==='use')direction=1;
     c.facing=(c.facing===undefined?direction:c.facing)+(direction-(c.facing===undefined?direction:c.facing))*(1-Math.exp(-frameDelta*8));
     c.turnLean=(c.turnLean||0)+((c.facing-previousFacing)*1.5-(c.turnLean||0))*(1-Math.exp(-frameDelta*12));
     var serviceIndex=c.ordered?5:4,serviceTarget=c.serviceStation===serviceIndex?Math.min(1,(c.serviceElapsed||0)/economy.customerHandoff(serviceIndex,state.lines[serviceIndex],counterServiceDuration(serviceIndex))):0;

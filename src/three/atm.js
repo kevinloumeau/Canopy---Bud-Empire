@@ -1,5 +1,5 @@
-// The street ATM (src/atm.js) on the 3D map: up to three cash machines on the left pavement by the entrance, facing the
-// shop. Each is a free-standing street kiosk: a stone plinth, a tall body, a lit ATM header, a screen over a keypad
+// The street ATM (src/atm.js) on the 3D map: up to three cash machines against the shop's front ledge, facing the front
+// pavement. Each is a free-standing street kiosk: a stone plinth, a tall body, a lit ATM header, a screen over a keypad
 // shelf with card and cash slots, and a cap. Its look follows the machine's level like a station's: Lv 1 plain steel,
 // Lv 10 forest green and brass, Lv 30 a little canopy and lit edges, Lv 50 walnut and brass, Lv 75 black glass with a lit
 // leaf, and the founder's ebony, emerald and gold at Lv 100.
@@ -77,7 +77,7 @@ export function buildAtms(world, layout, { material }) {
     return m;
   }
   const matrix = new THREE.Matrix4(), quarter = new THREE.Quaternion(), place = new THREE.Vector3(), one = new THREE.Vector3(1, 1, 1);
-  const machineMatrix = i => matrix.compose(place.set(ATM_SPOTS[i].x, 0, ATM_SPOTS[i].z), quarter, one);
+  const machineMatrix = i => matrix.compose(place.set(ATM_SPOTS[i].x, 0, ATM_SPOTS[i].z), quarter.setFromAxisAngle(new THREE.Vector3(0, 1, 0), ATM_SPOTS[i].rot || 0), one);
   const looks = LOOKS.map(look => {
     if (!look) return null;
     const group = new THREE.Group(); group.visible = false; root.add(group);
@@ -128,7 +128,7 @@ export function buildAtms(world, layout, { material }) {
       glowMaterials.forEach(m => { m.emissiveIntensity = .12 + .75 * night; });
       const g = a.ghost;
       ghost.visible = g != null && g >= 0 && g < count;
-      if (ghost.visible) ghost.position.set(ATM_SPOTS[g].x, 0, ATM_SPOTS[g].z);
+      if (ghost.visible) { ghost.position.set(ATM_SPOTS[g].x, 0, ATM_SPOTS[g].z); ghost.rotation.y = ATM_SPOTS[g].rot || 0; }
     }
   };
 }

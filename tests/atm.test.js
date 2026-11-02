@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {ATM_FOUND_FREE,ATM_BUILD,ATM_MACHINE_COSTS,ATM_SPOTS,ATM_STAND_X,migrateAtm,atmLook,atmFeeShare,atmUseShare,atmUseSeconds,wantsCash,atmCapacity,atmIncome,atmLevelCost,atmMachineCost,buyAtm,buyAtmLevel,buyAtmLevels,atmMaxQuote,buyAtmMachine,freeAtm} from '../src/atm.js';
+import {ATM_FOUND_FREE,ATM_BUILD,ATM_MACHINE_COSTS,ATM_SPOTS,ATM_CORNER,migrateAtm,atmLook,atmFeeShare,atmUseShare,atmUseSeconds,wantsCash,atmCapacity,atmIncome,atmLevelCost,atmMachineCost,buyAtm,buyAtmLevel,buyAtmLevels,atmMaxQuote,buyAtmMachine,freeAtm} from '../src/atm.js';
 
 test('saves keep only a sane level and machine count',()=>{
   assert.deepEqual(migrateAtm(),{level:0,machines:0});
@@ -52,9 +52,9 @@ test('a machine is free until a customer holds it',()=>{
   assert.equal(freeAtm([{cash:{machine:0}},{cash:{machine:1}}],2),-1);
   assert.equal(freeAtm([{cash:null}],0),-1);
 });
-test('the machines stand on the left pavement, clear of the storefront, the walkers and each other',()=>{
-  ATM_SPOTS.forEach(s=>{assert.ok(s.x<-14&&s.x>-14.7);assert.ok(s.z>9.3,'past the corner post')});
-  for(let i=0;i<ATM_SPOTS.length;i++)for(let j=i+1;j<ATM_SPOTS.length;j++)assert.ok(Math.abs(ATM_SPOTS[i].z-ATM_SPOTS[j].z)>=1.1);
-  // The cash user stands between the machine and the customers' lane (x -12.4).
-  assert.ok(ATM_STAND_X>ATM_SPOTS[0].x&&ATM_STAND_X<-12.9);
+test('the machines stand against the front ledge, clear of the pickup window line and each other',()=>{
+  ATM_SPOTS.forEach(s=>{assert.ok(s.z>11.95&&s.z<12.8,'backs to the ledge');assert.ok(s.x<2&&s.x>-9,'below the rope pen, left of the window line');assert.ok(s.stand.z>s.z+.6&&s.stand.x===s.x)});
+  for(let i=0;i<ATM_SPOTS.length;i++)for(let j=i+1;j<ATM_SPOTS.length;j++)assert.ok(Math.abs(ATM_SPOTS[i].x-ATM_SPOTS[j].x)>=1.1);
+  // The way round the corner stays on the pavement, outside the floor.
+  assert.ok(ATM_CORNER.x<-10.65&&ATM_CORNER.z>11.95);
 });
