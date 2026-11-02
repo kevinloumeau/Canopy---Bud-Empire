@@ -424,7 +424,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   function askLift(c,wait){c.lift=wait;c.liftAsk=++liftAsks;c.liftShaft=null}
   function leaveLounge(c){
-    c.phase='leaving';c.t=0;c.routeKind='exit';c.x=LOUNGE_EXIT.x;c.z=LOUNGE_EXIT.z;c.renderX=c.x;c.renderZ=c.z;c.facing=.6;c.loungeFadeIn=0;
+    c.phase='leaving';c.t=0;c.routeKind='exit';c.x=LOUNGE_EXIT.x;c.z=LOUNGE_EXIT.z;c.renderX=c.x;c.renderZ=c.z;c.facing=.6;c.loungeFadeIn=0;c.walkHeading=null;c.walkAmount=0;
     c.waypoints=[{x:9.7,z:-4.3},{x:11.15,z:-4.6},{x:10.25,z:-5.6},{x:10.25,z:-8.1},{x:7,z:-8.1},{x:-10.5,z:-8.1}];
   }
   function tickLounge(dt){
@@ -2625,6 +2625,15 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     if(atOrderCounter(c,state.orderCounters)||c.phase==='pickup'&&Math.hypot(c.x-PICKUP_X,c.z-4.9)<.15)return{x:0,z:-1};
     if(c.phase==='kiosk'&&c.kioskIndex!=null&&!c.ordered&&Math.hypot(c.x+8.95,c.z-(6.8-c.kioskIndex*1.8))<.15)return{x:-1,z:0};
     if(c.phase==='idCheck'&&Math.hypot(c.x-ID_CHECK.x,c.z-ID_CHECK.z)<.15)return{x:ID_DESK.x-c.x,z:ID_DESK.z-c.z};
+    // On the lounge rope: up the rope towards the curtain, and the guest at its head into the curtain.
+    if(c.phase==='toLounge'&&!c.waypoints.length&&c.ropeDistance!==undefined){
+      if(c.ropeDistance<.05)return{x:0,z:-1};
+      var next=routePoint(LOUNGE_ROPE_ROUTE,Math.max(0,c.ropeDistance-.4)),rx=next.x-c.x,rz=next.z-c.z,rl=Math.hypot(rx,rz);
+      return rl>.05?{x:rx/rl,z:rz/rl}:null;
+    }
+    // Held up on the way somewhere (behind a slower guest on the way out, just out of the back door): the way they are
+    // going, not whichever way they last walked before the lounge.
+    if((c.phase==='leaving'||c.phase==='toLounge')&&c.waypoints&&c.waypoints.length){var w=c.waypoints[0],wx=w.x-c.x,wz=w.z-c.z,wl=Math.hypot(wx,wz);if(wl>.05)return{x:wx/wl,z:wz/wl}}
     // Waiting in a line: towards the front of it (the line's route a step ahead of their place).
     if(c.phase==='leaving'||c.phase==='toLounge'||c.phase==='lounge'||c.phase==='idCheck')return null;
     var at=customerTarget(c);if(Math.hypot(c.x-at.x,c.z-at.z)>.15)return null;
