@@ -1,3 +1,4 @@
+import { CROSS_STREETS, districtPlot, DISTRICT_COUNT } from './branch-districts.js';
 // The sunny look (the default since 2026-10-15): instead of a diorama floating in a dark studio, the main shop sits
 // on a sunlit city block that runs to the screen edges. The shop's slab and the sidewalk are one continuous paved plaza, a
 // kerb drops to sunken asphalt streets on all four sides, and muted low-rise neighbours sit beyond the far kerbs so
@@ -295,7 +296,13 @@ const P = -.012, G = -.33, L = 90; // plaza level (flush with the slab top), str
 // street of its own instead of standing on the heels of the row before it, and every street runs on through its
 // junctions into the haze rather than ending.
 const ROADS = [{ along: 'x', at: -18.5 }, { along: 'x', at: 21.5 }, { along: 'z', at: -22.5 }, { along: 'z', at: 22.5 },
-  { along: 'x', at: -36.5 }, { along: 'x', at: 40.5 }, { along: 'z', at: -48.5 }, { along: 'z', at: 42 }];
+  { along: 'x', at: -36.5 }, { along: 'x', at: 40.5 }, { along: 'z', at: -48.5 }, { along: 'z', at: 42 },
+  // The branch districts' cross streets (branch-districts.js): the streets along x carry on east past the first ring to
+  // a block per branch, and these split the blocks. They run on to XE, the town's east end, always deep in the haze.
+  ...CROSS_STREETS.map(at => ({ along: 'z', at }))];
+const XE = CROSS_STREETS[CROSS_STREETS.length - 1] + 40;
+// How far a street runs: those along x from the west haze to the town's east end, those along z across the town.
+const runOf = along => along === 'x' ? [-L, XE] : [-L, L];
 const RW = 6; // street width kerb to kerb
 const PAVER = '#d2c8ab', PAVER_LINE = '#b5aa8c', TACTILE = 'rgba(217,194,122,.38)', KERB = '#e2dac4', KERB_FACE = '#a69d85', ASPHALT = '#5a5e64';
 const STONE = ['#d6d0c2', '#a9a295', '#c1bbad'], TAN = ['#dac9b6', '#ad9b87', '#c6b29d'], SAGE = ['#c9cfc6', '#9ea59b', '#b4bab0'], MAUVE = ['#d6cdcf', '#a9a0a2', '#c2b8ba'];
@@ -432,7 +439,7 @@ function bandsAlong(along) {
   const at = ROADS.filter(r => r.along === along).map(r => r.at).sort((a, b) => a - b), out = [];
   let from = -BLOCK_SPAN;
   at.forEach(a => { out.push([from, a - RW / 2]); from = a + RW / 2; });
-  out.push([from, BLOCK_SPAN]);
+  out.push([from, along === 'z' ? XE : BLOCK_SPAN]);
   return out;
 }
 const MUTED = ['#c9b9a6', '#bba596', '#b7bdb1', '#c4bdb0', '#b49384', '#c7a993', '#bfb6b6', '#cfc4ad'];
@@ -645,9 +652,10 @@ function groundHaze(api) {
 
 function roadSurface(api, quad, { along, at }) {
   const a0 = at - RW / 2, a1 = at + RW / 2;
-  if (along === 'x') quad(-L, a0, L, a1, G, ASPHALT); else quad(a0, -L, a1, L, G, ASPHALT);
+  const [r0, r1] = runOf(along);
+  if (along === 'x') quad(r0, a0, r1, a1, G, ASPHALT); else quad(a0, r0, a1, r1, G, ASPHALT);
   const tarmac = floorPattern(api, 'asphalt', 8);
-  if (tarmac) { if (along === 'x') quad(-L, a0, L, a1, G, tarmac); else quad(a0, -L, a1, L, G, tarmac); }
+  if (tarmac) { if (along === 'x') quad(r0, a0, r1, a1, G, tarmac); else quad(a0, r0, a1, r1, G, tarmac); }
   // Manhole covers down one lane.
   const p = api.project, u = api.unit;
   for (let k = -36; k <= 36; k += 24) { const q = along === 'x' ? p(k, G + .002, at - 1.5) : p(at + 1.5, G + .002, k); api.ellipse(q.x, q.y, u * .45, u * .25, '#4a4e54'); api.ellipse(q.x, q.y, u * .32, u * .17, '#5f636a'); }
@@ -658,7 +666,7 @@ function roadSurface(api, quad, { along, at }) {
 function roadKerbs(api, quad, { along, at }) {
   const a0 = at - RW / 2, a1 = at + RW / 2, p = api.project;
   const cross = ROADS.filter(r => r.along !== along).map(r => r.at).sort((a, b) => a - b), segs = [];
-  let from = -L; cross.forEach(c => { segs.push([from, c - RW / 2]); from = c + RW / 2; }); segs.push([from, L]);
+  let from = runOf(along)[0]; cross.forEach(c => { segs.push([from, c - RW / 2]); from = c + RW / 2; }); segs.push([from, runOf(along)[1]]);
   segs.forEach(([s0, s1]) => {
     if (along === 'x') {
       api.poly([p(s0, P, a0), p(s1, P, a0), p(s1, G, a0), p(s0, G, a0)], KERB_FACE);
@@ -682,7 +690,7 @@ function roadMarkings(api, quad, { along, at }) {
   const cross = ROADS.filter(r => r.along !== along).map(r => r.at).sort((a, b) => a - b), y = G + .004;
   const centre = (k0, k1) => along === 'x' ? quad(k0, at - .05, k1, at + .05, y, '#f2d16b') : quad(at - .05, k0, at + .05, k1, y, '#f2d16b');
   const zebras = MID_CROSSINGS.filter(([a, r]) => a === along && r === at).map(c => c[2]);
-  const stops = [-L - STOP_AT].concat(cross, [L + STOP_AT]);
+  const stops = [runOf(along)[0] - STOP_AT].concat(cross, [runOf(along)[1] + STOP_AT]);
   for (let i = 0; i + 1 < stops.length; i++) {
     const s0 = stops[i] + STOP_AT + .15, s1 = stops[i + 1] - STOP_AT - .15;
     if (s1 - s0 < 2) continue;
@@ -728,7 +736,7 @@ function kerbsAndDrains() {
   ROADS.forEach(({ along, at }) => {
     const cross = ROADS.filter(r => r.along !== along).map(r => r.at).sort((a, b) => a - b), zebras = zebraAt(along, at);
     const segs = [];
-    let from = -L; cross.forEach(c => { segs.push([from, c - RW / 2]); from = c + RW / 2; }); segs.push([from, L]);
+    let from = runOf(along)[0]; cross.forEach(c => { segs.push([from, c - RW / 2]); from = c + RW / 2; }); segs.push([from, runOf(along)[1]]);
     [-1, 1].forEach(side => {
       const edge = at + side * RW / 2, inner = edge + side * (KERB_W - .04), outer = edge - side * .04;
       segs.forEach(([s0, s1]) => {
@@ -1073,7 +1081,7 @@ const CITY_PROPS = (() => {
   });
   // Parked cars on the back streets, between the junctions' stop bars.
   ROADS.slice(4).forEach(({ along, at }) => {
-    const cross = ROADS.filter(r => r.along !== along).map(r => r.at).sort((a, b) => a - b), stops = [-L].concat(cross, [L]);
+    const cross = ROADS.filter(r => r.along !== along).map(r => r.at).sort((a, b) => a - b), stops = [runOf(along)[0]].concat(cross, [runOf(along)[1]]);
     for (let i = 0; i + 1 < stops.length; i++) [-1, 1].forEach(side => {
       const heading = along === 'x' ? side : -side, lane = at + side * 1.9;
       const rot = along === 'x' ? (heading > 0 ? 0 : Math.PI) : (heading > 0 ? -Math.PI / 2 : Math.PI / 2);
@@ -1260,9 +1268,10 @@ export function drawWalker(api, { g, s, x, z, facing, heading }) {
 
 // The block's layout for the 3D map: streets, terraces (footprints from their renders), trees, lamps and haze, in
 // the same world units the 2D passes above use.
+const DISTRICT_PLOTS = Array.from({ length: DISTRICT_COUNT }, (_, i) => districtPlot(i));
 export function townLayout() {
   return {
-    roads: ROADS.map(r => ({ ...r })), roadWidth: RW, plazaY: P, streetY: G, extent: L,
+    roads: ROADS.map(r => ({ ...r })), roadWidth: RW, plazaY: P, streetY: G, extent: L, eastEnd: XE,
     colours: { paver: PAVER, asphalt: ASPHALT }, marks: groundMarks().concat(kerbsAndDrains()),
     flagshipLot: (([x1, z1, name]) => { const f = BUILDING_SPRITES[name]; return { x0: x1 - f.w, x1, z0: z1 - f.d, z1 }; })(BUILDINGS[FLAGSHIP_LOT]),
     buildings: BUILDINGS.map((b, i) => { if (!keepLot(b, i)) return null; const f = BUILDING_SPRITES[b[2]]; return { x0: b[0] - f.w, x1: b[0], z0: b[1] - f.d, z1: b[1], h: lotFit(b).top, wall: f.wall[0], roof: f.wall[1], model: modelOf(b) + '.glb', lot: CITY_LOT_OF.get(i) }; }).filter(Boolean),
@@ -1272,6 +1281,8 @@ export function townLayout() {
     haze: { colour: HAZE.slice(), ramp: { west: HAZE_RAMP.west.slice(), east: HAZE_RAMP.east.slice(), north: HAZE_RAMP.north.slice(), south: HAZE_RAMP.south.slice() } },
     sun: { x: SUN.x, z: SUN.z, reach: SUN_REACH },
     // Openings through the pavement and the street floor under it, for sunken models (the subway well).
-    holes: [{ x0: SUBWAY.x - SUBWAY.hx, x1: SUBWAY.x + SUBWAY.hx, z0: SUBWAY.z - SUBWAY.hz, z1: SUBWAY.z + SUBWAY.hz }]
+    // The branch districts' plots too: each district lays its own ground there (map3d placeDistricts).
+    holes: [{ x0: SUBWAY.x - SUBWAY.hx, x1: SUBWAY.x + SUBWAY.hx, z0: SUBWAY.z - SUBWAY.hz, z1: SUBWAY.z + SUBWAY.hz }].concat(DISTRICT_PLOTS),
+    districtPlots: DISTRICT_PLOTS.map(p => ({ ...p }))
   };
 }

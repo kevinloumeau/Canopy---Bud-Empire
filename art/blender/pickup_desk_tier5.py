@@ -36,7 +36,7 @@ SC = (XL + XR) / 2; SL = XR - XL
 # green tiled plinth
 K.box("Plinth", (SL, D + .1, .12), (SC, 0, 0), K.GREEN_D, .015)
 K.cyl("PlinthEnd", R + .05, R + .05, .12, (XL, 0, 0), K.GREEN_D, 40)
-X.tile_band("PlinthTile", XL, XR + .05, -(D + .1) / 2 - .002, .015, .09, 1, .09)
+X.tile_band("PlinthTile", XL, XR + .05, -(D + .1) / 2 - .002, .015, .09, 1)
 K.box("KickBrass", (SL + .02, D + .12, .02), (SC, 0, .12), K.BRASS, .005)
 K.cyl("KickBrassEnd", R + .06, R + .06, .02, (XL, 0, .12), K.BRASS, 40)
 # body: oak, fluted on the front and round the end
@@ -85,8 +85,8 @@ for i in range(4):
 # ---------- green tiled side cabinet with a potted plant ----------
 CX, CW, CD, CH = X0 + L / 2 + .3, .5, .62, .82
 K.box("Cabinet", (CW, CD, CH), (CX, .02, 0), K.GREEN, .015)
-X.tile_band("CabTile", CX - CW / 2 + .01, CX + CW / 2 - .01, .02 - CD / 2 - .004, .08, .62, 4, .1)
-X.tile_band("CabTileSide", .02 - CD / 2 + .01, .02 + CD / 2 - .01, CX + CW / 2 + .004, .08, .62, 4, .1, "+X")
+X.tile_band("CabTile", CX - CW / 2 + .01, CX + CW / 2 - .01, .02 - CD / 2 - .004, .08, .62, 2)
+X.tile_band("CabTileSide", .02 - CD / 2 + .01, .02 + CD / 2 - .01, CX + CW / 2 + .004, .08, .62, 2, facing="+X")
 K.box("CabinetKick", (CW + .02, CD + .02, .07), (CX, .02, 0), K.GREEN_D, .01)
 K.box("CabKickBrass", (CW + .03, CD + .03, .015), (CX, .02, .07), K.BRASS, .004)
 X.marble_top("CabinetTop", (CW + .05, CD + .05, .05), (CX, .02, CH), .02)
