@@ -9,6 +9,7 @@
 import * as THREE from 'three';
 import { buildShell } from './shell.js';
 import { buildRooftop } from './rooftop.js';
+import { buildFlagship } from './flagship.js';
 import { buildEntrance } from './entrance.js';
 import { createBranchLayer } from './branch3d.js';
 import { rigStation, bindStation, moveStation } from './station-motion.js';
@@ -180,6 +181,7 @@ export function createMap3D(canvas, layout) {
   const transport = buildTransport(scene, world, layout.transport, { box, material });
   const shell = buildShell(world, layout, { box, span, material, model });
   const rooftop = buildRooftop(world, layout, { box, span, material });
+  const flagship = buildFlagship(world, layout, { material });
   buildEntrance(world, layout, { box, span, material, model });
 
   // Stations: one solid per station slot, resized and recoloured from the frame (tier, built, rising in).
@@ -1052,6 +1054,7 @@ export function createMap3D(canvas, layout) {
     if (transport && frame.cargo) transport.update(frame.cargo, frame.fixtures);
     if (shell) shell.update(frame);
     if (rooftop) rooftop.update(frame);
+    if (flagship) flagship.update(frame);
     Object.entries(fixtures).forEach(([key, holder]) => { holder.visible = !!(frame.fixtures && frame.fixtures[key]); });
     updateFixtureSites(frame);
     updateFixtureGhosts(frame);

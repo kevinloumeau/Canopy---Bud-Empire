@@ -3,7 +3,7 @@
 // keep running while the game is closed, paused or hidden, and game speed does not hurry them.
 // Lounge 3 min, drone port 4 min, pickup window 2 min (Kevin, 2026-10-22: the window's 45 s was too quick). Each can
 // be finished early for cash (skipCost).
-export const BUILD_SECONDS={lounge:180,deck:240,window:120};
+export const BUILD_SECONDS={lounge:180,deck:240,window:120,flagship:480};
 
 // A save's timers: each key is an end time in ms, or 0 for no build. A clock set back cannot leave a build longer
 // than its full time.
