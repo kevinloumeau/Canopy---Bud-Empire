@@ -23,9 +23,11 @@
 .center-pills{position:fixed;left:var(--cash-x,50%);top:calc(var(--hud-height,60px) + 12px);transform:translateX(-50%);z-index:30;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;max-width:calc(100vw - 32px)}
 .center-pills.contract-first .contract-pill{order:-1}
 body[data-store-view=branch] .center-pills{display:none}
-/* Phone: the map buttons run down the right and the activity chip sits top left, so the stack drops one row under the
-   chip and centres in the space left of the buttons. */
-@media(max-width:700px){.center-pills{left:calc(50% - 28px);top:calc(var(--hud-height,60px) + 64px);max-width:calc(100vw - 88px)}.center-pills>*{max-width:100%;overflow:hidden;text-overflow:ellipsis}}
+/* Phone: the stack stays level with the activity chip and the map buttons, centred in the gap between them (main.js
+   measures it), with slimmer pills and shorter copy so both fit: the contract
+   reads as its name over its percent and clock. */
+@media(max-width:700px){.center-pills{gap:4px;max-width:var(--pill-room,calc(100vw - 200px))}.center-pills>*{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+ .center-pills .rush-pill{padding:4px 10px;font-size:.68rem}.center-pills .contract-pill{padding:5px 12px;border-radius:12px;font-size:.66rem;line-height:1.35;white-space:pre-line;text-align:center}}
 .rush-pill{padding:6px 14px;border-radius:999px;background:#2a2410e6;border:1px solid var(--p-gold-72);color:#f6dc95;font:600 .78rem 'DM Mono',ui-monospace,monospace;box-shadow:0 4px 14px #0006;pointer-events:none;white-space:nowrap}
 .rush-pill[hidden]{display:none}
 body[data-store-view=branch] .rush-pill{display:none}
