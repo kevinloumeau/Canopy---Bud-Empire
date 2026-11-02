@@ -80,7 +80,7 @@ for side, (yy, rz) in enumerate(((AY - .044, 0), (AY + .044, math.pi))):
 RZ = SZ + SH + .2
 K.box("RoundelFoot", (.12, .05, .12), (0, AY, SZ + SH + .01), M["POLISH"], .01)
 X.roundel("Roundel", (0, AY + .02, RZ), .17, K.GREEN_D, M["POLISH"])
-X.leaf_logo("RoundelLeaf", (0, AY - .015, RZ), .52, M["LEAFGLOW"])
+X.leaf_logo("RoundelLeaf", (0, AY - .015, RZ), .42, M["LEAFGLOW"])
 
 # ---------- slim tablet till (budtender side) and card reader (customer side) ----------
 K.cyl("TabletFoot", .06, .07, .02, (0, .08, TOP), M["POLISH"], 20)
