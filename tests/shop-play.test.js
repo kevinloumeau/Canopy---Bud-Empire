@@ -67,9 +67,9 @@ test('advice never suggests an order counter or queue comfort the shop has alrea
   assert.doesNotMatch(shiftAdvice(slow,{comfortLevel:20}).text,/Express lanes/);
 });
 
-test('picks offer every strain in every stocked type, three different strains where the menu has them',async()=>{
+test('picks offer every strain in each type it stocks, three different strains where the menu has them',async()=>{
   const {picks}=await import('../src/shop-play.js');
-  const state={strains:[1,1,1,0],productMenu:{unlocked:[true,false,true],active:0}};
+  const state={strains:[1,1,1,0],productMenu:{byStrain:[[true,false,true],[true,false,true],[true,false,true],[true,false,true]],active:0}};
   const options=picks(state,[0,1,2,3]);
   assert.equal(options.length,6);assert.deepEqual([...new Set(options.map(o=>o.format))],[0,2]);
   for(let n=0;n<12;n++){

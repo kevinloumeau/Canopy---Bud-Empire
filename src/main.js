@@ -8,10 +8,10 @@ import {migrateJourney,advanceJourney,CHAPTERS} from './journey.js';
 import {mountJourney} from './journey-ui.js';
 import {manageDialog} from './dialog-focus.js';
 import {CITY_BUILDINGS,cityBuilding,migrateCity,cityUnlocked,cityNext,cityCost,payCity,openCityStage,awayExtraSeconds,awayPay,outputFactor,trafficFactor as cityTraffic,terpFactor,stageGain,CITY_TOPS} from './city-buildings.js';
-import {FLAGSHIP_MAX,FLAGSHIP_STEP,flagshipNext,flagshipCost,flagshipSales as hqSales,flagshipUnlocked,migrateFlagship,payFlagship,openFlagshipStage} from './flagship.js';
+import {FLAGSHIP_UNLOCK_LIFETIME,FLAGSHIP_MAX,FLAGSHIP_STEP,flagshipNext,flagshipCost,flagshipSales as hqSales,flagshipUnlocked,migrateFlagship,payFlagship,openFlagshipStage} from './flagship.js';
 import {migrateBuilds,startBuild,isBuilding,buildLeft,buildShareLeft,finishBuilds,buildClock,skipCost,skipBuild} from './builds.js';
 import {AUTO_DRONE_COST,BULK_DRONE_COST,payAutoDrone,grantAutoDrone,buyBulkDrone,autoDroneLimit,migrateAutoDrone,autoDroneReady} from './auto-drone.js';
-import {FORMATS,wantedFormat,formatPremium,BOOST_MAX,boostCost,migrateMenu,unlockFormat,menuFormatFactor,milestone,prestigeOffer,elapsedSteps,OFFLINE_STEP} from './depth.js';
+import {FORMATS,wantedFormat,formatPremium,stocks,formatCost,BOOST_MAX,boostCost,migrateMenu,unlockFormat,menuFormatFactor,milestone,prestigeOffer,elapsedSteps,OFFLINE_STEP} from './depth.js';
 import {SHOP_EVENTS,eventKind,eventGap,eventReward,eventToast} from './shop-events.js';
 import {PERKS,migratePerks,perkLevel,perkCost,buyPerk,perkStart,spenderGap,rushLength,trainerGap,keptBranch,FOUNDER_LOOK,FOUNDER_LEVEL} from './perks.js';
 import {migrateRun,freshRun,tickRun,reopenMoment} from './reopen.js';
@@ -139,11 +139,11 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // A VIP takes the reserve strain; everyone else takes their strain in the type they came for (see `wantedFormat`),
   // since every strain sells in every stocked type, and pays that type's premium. A VIP pays the menu's mean value.
   function strainFor(c){if(c.kind==='vip'){var reserve=strains.reserveStrain(menuStrains(),state.strains);if(reserve!==null)return reserve}var preferred=economy.preferredStrain(c.kind,menuStrains(),state.strains);return preferred===null?menuChoice(c.id):preferred}
-  function salePriceFor(c,strain){if(c.kind==='vip')return flowerValue(strain);return Math.round(flowerValue(strain)/formatFactor('value')*formatPremium(state.productMenu,wantedType(c))*(contractTwist(state.empire)==='prerolls'&&wantedType(c)===1?.8:1))}
+  function salePriceFor(c,strain){if(c.kind==='vip')return flowerValue(strain);var want=wantedType(c,strain);return Math.round(flowerValue(strain)/formatFactor('value',strain)*formatPremium(state.productMenu,want,strain)*(contractTwist(state.empire)==='prerolls'&&want===1?.8:1))}
   // The running contract counts VIPs served within their 15 seconds and units of the type it asks for.
   function recordContractSale(c){if(!contractTwist(state.empire))return;if(c.kind==='vip'){if(Math.max(0,(c.waitSeconds||0)-(c.adviceWait||0))<=15*(1+state.comfortLevel*.15))recordEvent(state.empire,'vip',1);return}var f=wantedType(c);if(f===2)recordEvent(state.empire,'edible',c.bags||1);else if(f===1)recordEvent(state.empire,'preroll',c.bags||1)}
   // A type contract's twist sends every other walk-in to that type, when the shop stocks it.
-  function wantedType(c){var t=contractTwist(state.empire),m=state.productMenu;if(c.id%2&&t==='edibles'&&m.unlocked[2])return 2;if(c.id%2&&t==='prerolls'&&m.unlocked[1])return 1;return wantedFormat(m,c.id)}
+  function wantedType(c,strain){var t=contractTwist(state.empire),m=state.productMenu,s=strain!==undefined?strain:c.strain!==undefined?c.strain:menuChoice(c.id);if(c.id%2&&t==='edibles'&&stocks(m,2,s))return 2;if(c.id%2&&t==='prerolls'&&stocks(m,1,s))return 1;return wantedFormat(m,c.id,s)}
   // Satisfaction tips: patience stretches with Queue comfort, and Lasting effects sweeten every happy sale.
   function customerSaleBonus(c){var bonus=satisfyCustomer(state.empire,-1,c.kind,(c.normalStrain===undefined?c.strain:c.normalStrain)===0?'everyday':'boutique',Math.max(0,(c.waitSeconds||0)-(c.adviceWait||0)),1+state.comfortLevel*.15);if(bonus>1)bonus+=state.durationLevel*.03;
     // Strain identity: potency tips, the everyday and VIP perks, and Violet Haze's word of mouth on happy boutique sales.
@@ -233,10 +233,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     });
     var i=flowerFocus,strain=STRAINS[i],look=STRAIN_LOOKS[i],level=state.strains[i],active=state.menuStrains.indexOf(i)>=0,price=strainCost(i),maxed=level>=strains.STRAIN_MAX,detail=$('strainDetail');
     var isNight=atmosphere(state.empire.network).night,type=strains.STRAIN_TYPE[i],timeNow=strains.timeFactor(type,isNight);
-    var nextValue=Math.round(strain.price*(1+level*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value')*trendBoost(i)*displayBoost(i)*terpFactor(state.city,i,state.strainTrend.index)*timeNow);
+    var nextValue=Math.round(strain.price*(1+level*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value',i)*trendBoost(i)*displayBoost(i)*terpFactor(state.city,i,state.strainTrend.index)*timeNow);
     var stats=level?
       '<span><b>'+fmt(flowerValue(i))+'</b><small>'+'per sale'+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+(maxed?'Max':'+'+fmt(nextValue-flowerValue(i)))+'</b><small>'+(maxed?'level '+strains.STRAIN_MAX:'next lv')+'</small></span>':
-      '<span><b>'+fmt(Math.round(strain.price*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value')*timeNow))+'</b><small>'+'per sale'+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+fmt(strain.unlock)+'</b><small>unlock</small></span>';
+      '<span><b>'+fmt(Math.round(strain.price*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value',i)*timeNow))+'</b><small>'+'per sale'+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+fmt(strain.unlock)+'</b><small>unlock</small></span>';
     var growPct=Math.round((1-strains.strainGrowFactor(i,Math.max(1,level)))*100),tipVip=Math.round((strains.tipFactor('vip',strains.potency(i,level)+state.terpeneLevel*.25)-1)*100),tier=strains.perkTier(level),perk=strains.PERKS[i];
     var traits='<ul class="strain-traits">'+
       '<li'+(growPct?' class="is-cost"':'')+'>'+(growPct?'Grow room −'+growPct+'%'+(level<10?' · masters with levels':''):'Easy to grow')+'</li>'+
@@ -251,22 +251,22 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       '<div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">'+look.kind+' · </span>'+strains.TYPES[type]+(level?' · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>'+level+' / '+strains.STRAIN_MAX:' · Locked')+'</small><h2>'+strain.name+'</h2><p>'+(level?look.buyers:'Unlock to put it on the menu. '+look.buyers)+'</p></div>'+
       '<div class="strain-stats">'+stats+'</div>'+
       '<div class="strain-hero-details">'+traits+perkLine+'</div>'+
-      (level?'<div class="product-line strain-format"><h2>Sells as</h2><div class="format-options">'+FORMATS.map(function(f,k){var stocked=state.productMenu.unlocked[k];return '<button type="button" class="strain-format-pill" data-format="'+k+'" aria-pressed="'+stocked+'"'+(!stocked&&state.money<f.cost?' disabled':'')+' title="'+f.detail+'">'+icon3d('goods-'+k)+'<strong>'+f.name+'</strong><em>'+(f.value>1?'+'+Math.round((f.value-1)*100)+'% value':'Base price')+'</em><small>'+(stocked?'Selling':fmt(f.cost))+'</small></button>'}).join('')+'</div><p class="format-benefit">'+(function(){var next=FORMATS.findIndex(function(f,k){return !state.productMenu.unlocked[k]});return next<0?'Every strain sells in all three types, to whoever wants each.':'Stock '+FORMATS[next].name.toLowerCase()+' for every strain · '+['','+45% value for the 3 in 10 who want them · slower packing','+120% value for the 1 in 5 who want them · slow packing'][next]})()+'</p></div>':'')+
+      (level?'<div class="product-line strain-format"><h2>Sells as</h2><div class="format-options">'+FORMATS.map(function(f,k){var stocked=stocks(state.productMenu,k,i),cost=formatCost(k,i);return '<button type="button" class="strain-format-pill" data-format="'+k+'" aria-pressed="'+stocked+'"'+(!stocked&&state.money<cost?' disabled':'')+' title="'+f.detail+'">'+icon3d('goods-'+k)+'<strong>'+f.name+'</strong><em>'+(f.value>1?'+'+Math.round((f.value-1)*100)+'% value':'Base price')+'</em><small>'+(stocked?'Selling':fmt(cost))+'</small></button>'}).join('')+'</div><p class="format-benefit">'+(function(){var next=FORMATS.findIndex(function(f,k){return !stocks(state.productMenu,k,i)});return next<0?strain.name+' sells in all three types, to whoever wants each.':'Stock '+FORMATS[next].name.toLowerCase()+' for '+strain.name+' · '+['','+45% value for the 3 in 10 who want them · slower packing','+120% value for the 1 in 5 who want them · slow packing'][next]})()+'</p></div>':'')+
       '<div class="strain-hero-actions"><button type="button" id="flowerBuy" class="is-primary">'+(maxed?'Fully upgraded':(level?'Upgrade':'Unlock')+' · '+fmt(price))+'</button></div>'+
     '</div>';
-    var heroKey=heroHtml+'|'+(maxed||state.money<price)+'|'+(active&&menu.length===1)+'|'+state.productMenu.unlocked.join(',');
+    var heroKey=heroHtml+'|'+(maxed||state.money<price)+'|'+(active&&menu.length===1)+'|'+state.productMenu.byStrain[i].join(',');
     Array.prototype.forEach.call(document.querySelectorAll('.menu-board .trend-clock'),function(el){el.textContent=trendClock});
     if(detail.dataset.key===heroKey)return;
     detail.innerHTML=heroHtml;detail.dataset.key=heroKey;
     Array.prototype.forEach.call(detail.querySelectorAll('.trend-clock'),function(el){el.textContent=trendClock});
     if(level){var sel=$('flowerSelect');sel.disabled=active&&menu.length===1;sel.title=sel.disabled?'Keep at least one strain on the menu':active?'Remove from menu':'Add to menu';sel.onclick=function(){selectStrain(i)}}
     var buy=$('flowerBuy');buy.disabled=maxed||state.money<price;buy.onclick=function(){buyStrain(i)};
-    Array.prototype.forEach.call(detail.querySelectorAll('.strain-format-pill'),function(pill){pill.onclick=function(){stockFormat(Number(pill.dataset.format))}});
+    Array.prototype.forEach.call(detail.querySelectorAll('.strain-format-pill'),function(pill){pill.onclick=function(){stockFormat(Number(pill.dataset.format),i)}});
   }
   // Every strain sells in every stocked type. `format()` is flower (units and legacy readouts); `formatFactor(p)` is the
   // door's mean for a property such as demand or value, each customer counting the type they buy.
   function format(){return FORMATS[state.productMenu.active]}
-  function formatFactor(property){return menuFormatFactor(state.productMenu,property)}
+  function formatFactor(property,strain){return menuFormatFactor(state.productMenu,property,strain,menuStrains())}
   // Sales units follow the format: flower is sold by weight (one packed unit is an eighth), pre-rolls by the joint, edibles by the piece.
   function unitWord(n,formatIndex){var f=formatIndex===undefined?state.productMenu.active:formatIndex;return f===1?(n===1?'joint':'joints'):f===2?(n===1?'edible':'edibles'):(n===1?'eighth':'eighths')}
   function unitShort(){var f=state.productMenu.active;return f===1?'joint':f===2?'edible':'⅛'}
@@ -282,7 +282,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function trackStationLevel(i){var lv=state.lines[i];[10,25,50,100].forEach(function(m){if(lv>=m)telemetry.once('station_level_'+m,{station:LINES[i].name})})}
   // Browsers only start audio inside a gesture: the first tap or key press primes the context while sound is on.
   ['pointerdown','keydown'].forEach(function(type){window.addEventListener(type,function prime(){playSound.unlock(state.sound)},{passive:true})});
-  function flowerValue(index){if(index===undefined){var menu=menuStrains();return menu.reduce(function(total,i){return total+flowerValue(i)},0)/menu.length}var i=index;return Math.round(STRAINS[i].price*(1+Math.max(0,state.strains[i]-1)*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value')*trendBoost(i)*displayBoost(i)*strains.timeFactor(strains.STRAIN_TYPE[i],atmosphere(state.empire.network).night)*(1+crossBonus(state.crosses))*(1+achievementBonus(state))*(i>0?specialFactor('boutique'):1)*terpFactor(state.city,i,state.strainTrend.index)*hqSales(state.flagship))}
+  function flowerValue(index){if(index===undefined){var menu=menuStrains();return menu.reduce(function(total,i){return total+flowerValue(i)},0)/menu.length}var i=index;return Math.round(STRAINS[i].price*(1+Math.max(0,state.strains[i]-1)*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value',i)*trendBoost(i)*displayBoost(i)*strains.timeFactor(strains.STRAIN_TYPE[i],atmosphere(state.empire.network).night)*(1+crossBonus(state.crosses))*(1+achievementBonus(state))*(i>0?specialFactor('boutique'):1)*terpFactor(state.city,i,state.strainTrend.index)*hqSales(state.flagship))}
   function onlineValue(sequence){return Math.round(flowerValue(menuChoice(sequence===undefined?state.onlineCompleted:sequence))*4/3*(1+state.onlineBonusLevel*.05)*specialFactor('online')*contractFactor(state.empire,'online'))}
   function strainCost(i){return state.strains[i]?Math.round(Math.max(250,STRAINS[i].unlock*.35)*Math.pow(1.85,state.strains[i]-1)):STRAINS[i].unlock}
   function buyStrain(i){
@@ -925,14 +925,19 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // The card stays over the map while the first frames draw underneath and ask for their models, textures and sprites;
   // once nothing has been loading for a few frames (shaders compiled and textures uploaded by those frames too), the
   // whole finished map fades in at once. A slow connection still gets the map after MAP_SETTLE_MAX ms.
-  // The first time the map appears, the stations pop up out of the floor one after another down the line (stationPop,
-  // 0 to 1 per station), starting as the card fades. Players who ask for reduced motion see them in place.
-  var introAt=0;
+  // The first time the map appears the shop builds itself as the card fades (three/intro.js: floors and walls, then
+  // fittings, the stations, the people and the sign, about 1.3 s in all). The stations pop up out of the floor one after
+  // another down the line (stationPop, 0 to 1 per station); their map signs fade in once they stand. Players who ask
+  // for reduced motion see everything in place. ?snap&intro=0.4 freezes a snap3d capture at that moment of the build.
+  var introAt=0,INTRO_END=1.4,STATION_POP={at:.18,step:.06,take:.34};
+  var introFrozen=/[?&]snap\b/.test(location.search)&&/[?&]intro=([\d.]+)/.exec(location.search);
+  function introTime(){return introFrozen?+introFrozen[1]:introAt?(performance.now()-introAt)/1000:-1}
   function stationPop(i){
     // Until the card lifts they draw at full size underneath it, so their shaders and textures are ready for the pop.
-    if(!introAt)return 1;
-    var t=(performance.now()-introAt)/1000-.2-i*.11;
-    return t<=0?0:Math.min(1,t/.5);
+    var t=introTime();
+    if(t<0)return 1;
+    t-=STATION_POP.at+i*STATION_POP.step;
+    return t<=0?0:Math.min(1,t/STATION_POP.take);
   }
   var MAP_SETTLE_MAX=12000,mapSettleStart=0,mapQuietFrames=0,mapRevealTimer=0;
   function mapSettled(wallNow){
@@ -940,7 +945,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     mapQuietFrames=map3d.loading>0||spritesLoading()>0?0:mapQuietFrames+1;
     return mapQuietFrames>=6||wallNow-mapSettleStart>MAP_SETTLE_MAX;
   }
-  function mapReveal(){var card=$('loading');if(card.hidden)return;if(!introAt&&!SNAP&&!motionPreference.matches)introAt=performance.now();card.classList.add('reveal');clearTimeout(mapRevealTimer);mapRevealTimer=setTimeout(function(){card.hidden=true;card.classList.remove('reveal')},motionPreference.matches?0:500)}
+  function mapReveal(){var card=$('loading');if(card.hidden)return;if(!introAt&&!SNAP&&!motionPreference.matches){introAt=performance.now();$('world').classList.add('building')}card.classList.add('reveal');clearTimeout(mapRevealTimer);mapRevealTimer=setTimeout(function(){card.hidden=true;card.classList.remove('reveal')},motionPreference.matches?0:300)}
   // Builds the 3D map on a fresh WebGL canvas. A lost context (the GPU reset, or iOS reclaimed it in the background)
   // is rebuilt the same way rather than trusted to come back, with the loading card up meanwhile.
   function startMap3d(){
@@ -1800,6 +1805,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var ID_ROUTE=[ID_CHECK,{x:-10.6,z:9.6},{x:-11.7,z:9.3},{x:-12.4,z:7.8},{x:-12.4,z:-10}];
   // A cash user at the ATM (going to it or taking out cash) is out of the ID line: the line closes up behind them.
   function atAtm(c){return !!c.cash&&c.cash.stage!=='back'}
+  // How far through a full ID check the door is (0 when nobody is mid-check or the check is a quick trained one).
+  function guardCheck(){var c=customers.find(function(q){return q.idChecked===false&&q.idCheckFor!==undefined});return c&&c.idCheckFor>=1?Math.min(1,c.idCheckTime/c.idCheckFor):0}
   function moveToIdCheck(c,dt){
     var startX=c.x,startZ=c.z,budget=dt*walkSpeed();
     c.phase='idCheck';
@@ -1819,8 +1826,14 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // The doorman starts the check as the head comes up the last half-stride, so a quick door clears a customer every
     // tick or two and never caps the shop's flow.
     if(index===0&&c.idDistance<=.35&&!c.cash){
+      // Kevin (2026-11-02): "ID check should take longer". The guard takes the ID, reads it, looks up and waves the
+      // guest in, ID_CHECK_SHOW seconds, whenever the door has that long to spare: the check is fixed as it starts, never
+      // longer than the next walker needs to reach their place behind, and never shorter than the trained speed. So the
+      // next guest is never held up and the door clears exactly as many people as before; only a packed line gets the
+      // trained quick check.
+      if(c.idCheckFor===undefined){var behind=queue[1],gap=behind?(behind.idDistance-.7)/walkSpeed():Infinity;c.idCheckFor=Math.max(securityDuration(),Math.min(economy.ID_CHECK_SHOW,gap))}
       c.idCheckTime+=dt;
-      if(c.idCheckTime>=securityDuration()){
+      if(c.idCheckTime>=c.idCheckFor){
         c.idChecked=true;c.phase='entering';
         // A lounge guest heads for the curtain only while the rope there is short; otherwise they shop like anyone
         // else, so the rope never backs up through the kiosks to the door.
@@ -2583,7 +2596,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // It goes last, so every built station keeps its slot.
     var nextCounter=nextOrderCounter();if(nextCounter){station(4,nextCounter.x,0,nextCounter.z,state.lines[4],true,4);var g=stations[stations.length-1];g.ghost=true;g.selected=false;g.boost=0;g.act=0;g.rise=0;g.pop=1}
     // The doorman stands behind the booth, on the room side, facing the front door across the desk.
-    if(state.doorBuilt)staffer('door',STAFF_MODELS.door,DOORMAN.x,0,DOORMAN.z,{x:ID_CHECK.x-DOORMAN.x,z:ID_CHECK.z-DOORMAN.z},1,{role:'guard',clock:sceneTime/1000});
+    if(state.doorBuilt)staffer('door',STAFF_MODELS.door,DOORMAN.x,0,DOORMAN.z,{x:ID_CHECK.x-DOORMAN.x,z:ID_CHECK.z-DOORMAN.z},1,{role:'guard',clock:sceneTime/1000,act:guardCheck()});
     // The lounge host works the rooftop: behind the bar once there is one, otherwise by the elevator's bridge.
     if(state.lounge>0){var host=state.lounge>=2?{x:3.7,z:-8.75,f:.3}:{x:-5.2,z:-4,f:.3};staffer('host',STAFF_MODELS.host,host.x,ROOFTOP.y,host.z,null,host.f,{role:'host',clock:sceneTime/1000})}
     // Guests on the roof hold a spot for their session. A guest riding up or down stands in the elevator's cab, which
@@ -2670,7 +2683,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     figures=figures.filter(function(f){return f.alpha>.99});backdrops=backdrops.filter(function(f){return f.alpha>.99});
     var dronePoses=deliveryDronePoses(frameDelta);deliveryCards(dronePoses,figures);
     var look=viewCentre(),districts=districtScenes(characters,props);
-    map3d.render({districts:districts,hazeEast:eastHaze(storeLevels()),dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,characters:characters,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,city:state.city,cityClaimed:cityClaimed(),cityBuild:cityBuildShares(),atm:atmFrame(),flagship:state.flagship,flagshipBuild:isBuilding(state.builds,'flagship')?1-buildShareLeft(state.builds,'flagship'):null,loungeBuild:isBuilding(state.builds,'lounge')?1-buildShareLeft(state.builds,'lounge'):null,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtureBuild:isBuilding(state.builds,'deck')||isBuilding(state.builds,'window')?Object.assign(isBuilding(state.builds,'deck')?{deck:1-buildShareLeft(state.builds,'deck')}:{},isBuilding(state.builds,'window')?{pickupWindow:1-buildShareLeft(state.builds,'window')}:{}):null,fixtures:{deck:deliveryBuilt(),pickupWindow:windowOpen(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2},fixtureGhost:state.lines[4]>0&&kioskCount()<3?{['kiosk'+kioskCount()]:true}:null,menus:kioskMenus(),menuClock:animationTime/1000,cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    map3d.render({step:frameDelta,districts:districts,hazeEast:eastHaze(storeLevels()),dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,characters:characters,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,intro:introTime(),loungeOpen:state.lounge>0,loungeTier:state.lounge,city:state.city,cityClaimed:cityClaimed(),cityBuild:cityBuildShares(),atm:atmFrame(),flagship:state.flagship,flagshipBuild:isBuilding(state.builds,'flagship')?1-buildShareLeft(state.builds,'flagship'):null,loungeBuild:isBuilding(state.builds,'lounge')?1-buildShareLeft(state.builds,'lounge'):null,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtureBuild:isBuilding(state.builds,'deck')||isBuilding(state.builds,'window')?Object.assign(isBuilding(state.builds,'deck')?{deck:1-buildShareLeft(state.builds,'deck')}:{},isBuilding(state.builds,'window')?{pickupWindow:1-buildShareLeft(state.builds,'window')}:{}):null,fixtures:{deck:deliveryBuilt(),pickupWindow:windowOpen(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2},fixtureGhost:state.lines[4]>0&&kioskCount()<3?{['kiosk'+kioskCount()]:true}:null,menus:kioskMenus(),menuClock:animationTime/1000,cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     // A model that had not loaded when the tabs were painted: try again every half second until all are in.
     var wall=performance.now();if(picturesPending&&!(wall-(renderFrame3d.picturesTried||0)<500)){renderFrame3d.picturesTried=wall;picturesPending=false;paintThumbnails()}
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -2766,7 +2779,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var wallDelta=Math.min(.1,Math.max(0,(wallNow-(render.last===undefined?wallNow:render.last))/1000)),frameDelta=wallDelta*state.gameSpeed;
     render.last=wallNow;
     // A freshly built station rises out of its site on wall time, so the reveal plays at the same pace at every game speed.
-    if(introAt){if(performance.now()-introAt>2000)introAt=0;render.invalidated=true}
+    if(introAt){var introT=(performance.now()-introAt)/1000;if(introT>.85)$('world').classList.remove('building');if(introT>INTRO_END)introAt=0;render.invalidated=true}
     for(var site=0;site<buildRise.length;site++)if(buildRise[site]>0){buildRise[site]=motionPreference.matches?0:Math.max(0,buildRise[site]-wallDelta*1.7);render.invalidated=true}
     animationTime+=frameDelta*1000;tickTaskClocks(frameDelta);
     for(var slot=0;slot<4;slot++){var phase=(taskClocks[1]/9000+slot*.23)%1;var targetGrowth=state.stock[1]>=storageCapacity()?1:phase>.86?Math.max(0,(1-phase)/.14):Math.min(1,phase/.72);cropGrowth[slot]+=(targetGrowth-cropGrowth[slot])*(1-Math.exp(-frameDelta*4))}var now=animationTime;
@@ -2926,7 +2939,13 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       tags.push({el:hqMarker,name:'HQ',build:'flagship',price:hqBuilding?hqSkip:flagshipCost(state.flagship),x:HQ_TAG.x,y:hqTagHeight(),z:HQ_TAG.z,buildBuys:true,
         buys:hqBuilding?[{label:'Finish now',price:hqSkip,go:function(){skipBuildNow('flagship')}}]:[{label:hqNext.name+' · +'+Math.round(FLAGSHIP_STEP*100)+'% sales',price:flagshipCost(state.flagship),best:state.money>=flagshipCost(state.flagship),go:purchaseFlagship}]})}
     // The city buildings: each lot sells its next stage once it unlocks, like the HQ.
-    CITY_BUILDINGS.forEach(function(b){var stage=state.city[b.id];if(!cityUnlocked(b.id,state.lifetime)||stage>=b.stages.length)return;
+    // Before it unlocks, the next lot to open (HQ included) wears a small locked tag with what it takes; a tap says so.
+    var nextLocked=CITY_BUILDINGS.map(function(b){return{id:b.id,unlock:b.unlock}}).concat([{id:'flagship',unlock:FLAGSHIP_UNLOCK_LIFETIME}]).filter(function(b){return state.lifetime<b.unlock}).sort(function(a,b){return a.unlock-b.unlock})[0];
+    function lockedBox(unlock){return[{label:'Opens at '+fmt(unlock)+' earned',note:Math.floor(Math.min(1,state.lifetime/unlock)*100)+'%',price:unlock}]}
+    if(nextLocked&&nextLocked.id==='flagship')tags.push({el:hqMarker,name:'HQ',price:FLAGSHIP_UNLOCK_LIFETIME,locked:true,lockText:fmt(FLAGSHIP_UNLOCK_LIFETIME),x:HQ_TAG.x,y:hqTagHeight(),z:HQ_TAG.z,buys:lockedBox(FLAGSHIP_UNLOCK_LIFETIME)});
+    CITY_BUILDINGS.forEach(function(b){var stage=state.city[b.id];
+      if(nextLocked&&nextLocked.id===b.id){var lockAt=cityTagAt(b.id,true);if(lockAt)tags.push({el:cityMarkers[b.id],name:b.name,price:b.unlock,locked:true,lockText:fmt(b.unlock),x:lockAt.x,y:lockAt.y,z:lockAt.z,buys:lockedBox(b.unlock)});return}
+      if(!cityUnlocked(b.id,state.lifetime)||stage>=b.stages.length)return;
       var building=isBuilding(state.builds,b.id),next=cityNext(b.id,stage),skip=building?buildSkipCost(b.id):0,price=cityCost(b.id,stage),at=cityTagAt(b.id);if(!at)return;
       tags.push({el:cityMarkers[b.id],name:b.name,build:b.id,price:building?skip:price,x:at.x,y:at.y,z:at.z,buildBuys:true,
         buys:building?[{label:'Finish now',price:skip,go:function(){skipBuildNow(b.id)}}]:[{label:next.name+' · '+stageGain(b.id),price:price,best:state.money>=price,go:function(){purchaseCity(b.id)}}]})});
@@ -2963,9 +2982,9 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var building=!!t.build&&isBuilding(state.builds,t.build),clock=building?buildClock(buildLeft(state.builds,t.build)):'',key=t.name+'|'+(building?clock:fmt(t.price))+'|'+(state.money>=t.price);
     el.classList.toggle('is-building',building);
     if(building)el.style.setProperty('--build-left',buildShareLeft(state.builds,t.build).toFixed(3));else el.style.removeProperty('--build-left');
-    el.classList.toggle('is-mini',!t.sign);if(t.sign)el.style.setProperty('--station-tier',TIER_COLORS[Math.min(6,t.look-1)]);el.classList.toggle('is-lot',!t.sign);el.classList.toggle('can-upgrade',!!t.best);if(t.sign)key=t.name+'|'+t.level;if(t.locked)key+='|locked';if(el.dataset.level!==key){el.innerHTML='<span class=station-sign-name>'+t.name+'</span><span class=station-sign-level>'+(t.sign?t.level:building?clock:t.locked?LOCK_ICON:fmt(t.price))+'</span>';el.dataset.level=key;updateMarkers.key=null}
-    el.setAttribute('aria-label',t.sign?t.name+', level '+t.level.slice(3)+'. Show what to buy':building?t.name+', being built. Opens in '+clock:t.locked?t.name+', for lease. Locked, show what opens it':t.name+', '+fmt(t.price)+'. Show what to buy');
-    signBuy(el,pickedTag===el.dataset.marker&&!t.locked&&(!building||t.buildBuys)?t.buys:null)});
+    el.classList.toggle('is-mini',!t.sign);if(t.sign)el.style.setProperty('--station-tier',TIER_COLORS[Math.min(6,t.look-1)]);el.classList.toggle('is-lot',!t.sign);el.classList.toggle('can-upgrade',!!t.best);if(t.sign)key=t.name+'|'+t.level;if(t.locked)key+='|locked';if(el.dataset.level!==key){el.innerHTML='<span class=station-sign-name>'+t.name+'</span><span class=station-sign-level>'+(t.sign?t.level:building?clock:t.locked?LOCK_ICON+(t.lockText||''):fmt(t.price))+'</span>';el.dataset.level=key;updateMarkers.key=null}
+    el.setAttribute('aria-label',t.sign?t.name+', level '+t.level.slice(3)+'. Show what to buy':building?t.name+', being built. Opens in '+clock:t.locked?t.name+(t.lockText?', locked until '+t.lockText+' earned':', for lease. Locked, show what opens it'):t.name+', '+fmt(t.price)+'. Show what to buy');
+    signBuy(el,pickedTag===el.dataset.marker&&(!t.locked||t.lockText)&&(!building||t.buildBuys)?t.buys:null)});
     if(pickedTag&&!shown.some(function(t){return t.el.dataset.marker===pickedTag}))pickedTag=null}
   // The buy box over a picked sign (Kevin, 2026-10-22): what can be bought there, each a tap away. items: [{label, price,
   // go, best, icon}] or null to hide it. A box near the top of the screen opens below its sign instead, so it is never
@@ -2975,7 +2994,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     if(!items){if(box)box.hidden=true;return}
     if(!box){box=document.createElement('span');box.className='sign-buy';box.addEventListener('click',function(e){e.stopPropagation();var b=e.target.closest('[data-buy]');if(b&&b.getAttribute('aria-disabled')!=='true'&&box.items[+b.dataset.buy])box.items[+b.dataset.buy].go()});sign.appendChild(box)}
     box.hidden=false;box.items=items;
-    var html=items.map(function(it,n){var ready=state.money>=it.price;return '<span role=button tabindex=0 data-buy='+n+' class="'+(it.best?'is-best ':'')+(ready?'':'is-short')+'" aria-disabled='+!ready+' aria-label="'+it.label+', '+fmt(it.price)+'"><span>'+(it.icon||'')+it.label+'</span><b>'+fmt(it.price)+'</b></span>'}).join('');
+    var html=items.map(function(it,n){var ready=!it.note&&state.money>=it.price;if(it.note)return '<span role=button tabindex=0 data-buy='+n+' class=is-short aria-disabled=true aria-label="'+it.label+', '+it.note+' there"><span>'+LOCK_ICON+it.label+'</span><b>'+it.note+'</b></span>';return '<span role=button tabindex=0 data-buy='+n+' class="'+(it.best?'is-best ':'')+(ready?'':'is-short')+'" aria-disabled='+!ready+' aria-label="'+it.label+', '+fmt(it.price)+'"><span>'+(it.icon||'')+it.label+'</span><b>'+fmt(it.price)+'</b></span>'}).join('');
     if(box.dataset.html!==html){box.innerHTML=html;box.dataset.html=html}}
   // The station's own box: one level, and as many as the cash buys (Max). The best buy wears the brass.
   function stationBuys(i,suggested){if(!state.lines[i]||!isOpen(i))return null;var q=maxStationUpgrade(i),items=[{label:'Lv '+(state.lines[i]+1),price:cost(i),best:i===suggested,go:function(){buyStationLevel(i)}}];
@@ -3073,7 +3092,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // While the shop is still a building site the guide row counts sites instead of naming a bottleneck.
     if(!state.shopOpen){var raised=(state.doorBuilt?1:0)+state.lines.filter(function(n){return n>0}).length,nextSite=!state.doorBuilt?'Security':raised<7?shortNames[slow]:null;$('flowLabel').textContent='Under construction';$('flowText').textContent=raised+' of 7 sites raised'+(nextSite?' · next: '+nextSite:' · ready to open');$('flowText').title='Tap a site on the map to raise it. Customers arrive once the shop opens.';flowButton(nextSite?'Build '+nextSite:'Open the shop','');flowMeter(raised/7);$('flowAction').dataset.mode='fix'}
     var line=LINES[selected],open=isOpen(selected),level=state.lines[selected],price=cost(selected),affordable=open&&(!level||state.money>=price);
-    $('rate').dataset.paused=String(state.gameSpeed===0);$('money').textContent=fmt(state.money);$('rate').textContent=state.gameSpeed===0?'Paused':fmt((state.empire.activeStore?storeRate(state.empire,state.empire.activeStore-1):production()+branchIncome(state.empire))*state.gameSpeed)+'/s';document.querySelector('.stat.output small').textContent=state.empire.activeStore?'BRANCH INCOME':'CAPACITY';
+    $('rate').dataset.paused=String(state.gameSpeed===0);document.body.dataset.gamePaused=String(state.gameSpeed===0);$('money').textContent=fmt(state.money);$('rate').textContent=state.gameSpeed===0?'Paused':fmt((state.empire.activeStore?storeRate(state.empire,state.empire.activeStore-1):production()+branchIncome(state.empire))*state.gameSpeed)+'/s';document.querySelector('.stat.output small').textContent=state.empire.activeStore?'BRANCH INCOME':'CAPACITY';
     var paused=state.gameSpeed===0;speedButtons.forEach(function(button){var value=Number(button.getAttribute('data-speed'));button.setAttribute('aria-pressed',String(value===state.gameSpeed||(value===1&&paused)))});
     var glyph=paused?'pause':'play';if(speedOne.getAttribute('data-glyph')!==glyph){speedOne.setAttribute('data-glyph',glyph);speedOne.innerHTML=paused?PAUSE_GLYPH:PLAY_GLYPH}speedOne.setAttribute('aria-label',paused?'Paused. Resume normal speed':'Normal speed. Press again to pause');speedOne.title=paused?'Paused · press to resume':'Normal speed · press again to pause';speedOne.parentElement.setAttribute('data-paused',String(paused));
     // The lounge's picture is the whole rooftop, wider than a station's, and each level is bought outright, so no MAX.
@@ -3765,7 +3784,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   });
   $('bulkDispatch').onclick=function(){var reward=dispatchBulk(state);if(reward){queueDeliveryWave(1);notify('BULK DELIVERY · +'+fmt(reward),'upgrade');save();renderUI()}};
   // Each strain's card carries its own Sell-as pills (see renderFlowers); a format's unlock is paid once, for every strain.
-  function stockFormat(index){if(state.productMenu.unlocked[index])return;if(unlockFormat(state,index)){save();renderUI();notify('EVERY STRAIN NOW SELLS AS '+FORMATS[index].name.toUpperCase(),'upgrade')}}
+  function stockFormat(index,strain){if(stocks(state.productMenu,index,strain))return;if(unlockFormat(state,index,strain)){save();renderUI();notify(STRAINS[strain].name.toUpperCase()+' NOW SELLS AS '+FORMATS[index].name.toUpperCase(),'upgrade')}}
   var prestigePanel=document.createElement('details');prestigePanel.className='depth-panel prestige-panel';prestigePanel.innerHTML=
     '<summary><svg class="prestige-sprout" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V11M12 14C3 14 3 7 3 7s9-1 9 7ZM12 11c0-8 9-9 9-9s0 9-9 9Z"/></svg><span>Reopening &amp; founder perks</span><small id="prestigeStatus"></small><svg class="prestige-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></summary>'+
     '<div class="prestige-body"><div class="prestige-rank-track" id="prestigeComparison" role="group"><div class="prestige-rank"><span id="prestigeCurrentRank"></span><strong id="prestigeCurrentRate"></strong><small>base sales</small></div><svg id="prestigeArrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h17m-6-6 6 6-6 6"/></svg><div class="prestige-rank is-next" id="prestigeNext"><span id="prestigeNextRank"></span><strong id="prestigeNextRate"></strong><small>base sales</small></div></div>'+
@@ -3829,7 +3848,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function purchaseCity(id){var b=cityBuilding(id);if(!b||isBuilding(state.builds,id)||!cityUnlocked(id,state.lifetime))return;var next=cityNext(id,state.city[id]);if(!next||!payCity(state,id))return;
     startBuild(state.builds,id);pickedTag=null;telemetry.send('city_paid',{id:id,stage:state.city[id]+1});playSound('build',state.sound);notify(b.name.toUpperCase()+' · '+next.name.toUpperCase()+' UNDER WAY · done in '+buildClock(buildLeft(state.builds,id)),'upgrade');updateMarkers.key=null;render.invalidated=true;save();renderUI()}
   // Where a city building's tag sits: over the lot's front, just above what stands there now.
-  var cityLotRects=null;function cityTagAt(id){if(!cityLotRects)cityLotRects=cityLots();var lot=cityLotRects[id];if(!lot)return null;return{x:(lot.x0+lot.x1)/2,y:CITY_TOPS[id][Math.min(3,state.city[id]+(isBuilding(state.builds,id)?1:0))]+.6,z:lot.z1-1}}
+  var cityLotRects=null;function cityTagAt(id,terrace){if(!cityLotRects)cityLotRects=cityLots();var lot=cityLotRects[id];if(!lot)return null;if(terrace)return{x:(lot.x0+lot.x1)/2,y:lot.top+.6,z:lot.z1-1};return{x:(lot.x0+lot.x1)/2,y:CITY_TOPS[id][Math.min(3,state.city[id]+(isBuilding(state.builds,id)?1:0))]+.6,z:lot.z1-1}}
   // Lots shown as for sale or built: their old terraces step aside (frame.cityClaimed).
   function cityClaimed(){var out={};CITY_BUILDINGS.forEach(function(b){out[b.id]=state.city[b.id]>0||isBuilding(state.builds,b.id)||cityUnlocked(b.id,state.lifetime)});return out}
   function cityBuildShares(){var out={};CITY_BUILDINGS.forEach(function(b){if(isBuilding(state.builds,b.id))out[b.id]=1-buildShareLeft(state.builds,b.id)});return out}
@@ -4235,7 +4254,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   window.addEventListener('resize',resize);$('buyMachine').onclick=buySelected;$('buyMachineMax').onclick=buySelectedMax;$('upgradeStorage').onclick=upgradeStorage;$('boost').onclick=boostAll;$('claim').onclick=claimOrder;$('resetOpen').onclick=function(){$('resetModal').hidden=false};$('resetCancel').onclick=function(){$('resetModal').hidden=true};$('resetConfirm').onclick=function(){resetRun(0,state.sound)};function resetRun(rank,sound,carry){if(rank>0)telemetry.send('prestige',{rank:rank});state=fresh();moment=null;if(shopPlayUI)shopPlayUI.reset();state.empire.prestige=rank;state.sound=sound;if(carry){state.empire.shares=carry.shares;state.empire.lifetimeAll=carry.lifetimeAll;if(carry.contracts){state.empire.contracts.bank=carry.contracts.bank;state.empire.contracts.done=carry.contracts.done;state.empire.contracts.round=carry.contracts.round}state.empire.badges=carry.badges.slice();if(carry.stars)state.empire.stars=carry.stars.slice();state.crosses=carry.crosses;state.achievements=(carry.achievements||[]).slice();state.perks=carry.perks;var start=perkStart(state.perks);state.money+=start.money;state.offlineLevel=start.offlineLevel;state.startLine=start.line;
       // Run-shaping perks hand the new shop what it would otherwise buy in its first stretch.
       state.kiosk=start.kiosks>0;state.secondKiosk=start.kiosks>1;state.thirdKiosk=start.kiosks>2;
-      for(var f=1;f<=start.formats;f++)state.productMenu.unlocked[f]=true;
+      for(var f=1;f<=start.formats;f++)state.productMenu.byStrain.forEach(function(row){row[f]=true});
       for(var k=1;k<=start.strains&&k<state.strains.length;k++){state.strains[k]=1;state.menuStrains.push(k)}
       if(start.drone){state.pickupWindow.owned=true;state.autoDrone={owned:true,enabled:true,remaining:0,bulk:start.drone>1,mode:start.drone>1?'bulk':'single'}}
       state.lounge=Math.max(state.lounge,start.lounge);

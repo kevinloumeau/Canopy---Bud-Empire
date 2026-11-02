@@ -13,6 +13,7 @@ import { buildFlagship } from './flagship.js';
 import { buildAtms } from './atm.js';
 import { buildCityBuildings } from './city-buildings.js';
 import { buildEntrance } from './entrance.js';
+import { createIntro } from './intro.js';
 import { createBranchLayer } from './branch3d.js';
 import { rigStation, bindStation, moveStation } from './station-motion.js';
 import { compactModel } from './compact.js';
@@ -173,20 +174,26 @@ export function createMap3D(canvas, layout) {
       holder.scale.set(BLENDER_SCALE, BLENDER_SCALE / HEIGHT_SCALE, BLENDER_SCALE);
       holder.position.set(x, y, z);
       parent.add(holder);
+      if (parent === world) shopParts.add(holder);
       if (onReady) onReady(gltf.scene, holder);
       compactModel(gltf.scene);
     }, undefined, e => console.warn('3D map: could not load ' + file, e));
   }
   const lampStandIns = [];
   const terraces = buildTown(world, layout, { box, span, material, textured, lampStandIns });
+  // Everything that is the shop rather than the town round it, for the first-load build (intro.js).
+  const shopParts = new Set(), townEnd = world.children.length;
   buildShop(world, layout, { box, span, material, textured, model });
+  const sceneEnd = scene.children.length;
   const transport = buildTransport(scene, world, layout.transport, { box, material });
+  scene.children.slice(sceneEnd).forEach(o => shopParts.add(o));
   const shell = buildShell(world, layout, { box, span, material, model });
   const rooftop = buildRooftop(world, layout, { box, span, material });
   const flagship = buildFlagship(world, layout, { material });
   const atms = layout.atm ? buildAtms(world, layout, { material }) : null;
   const cityBuildings = buildCityBuildings(world, layout, { material });
   buildEntrance(world, layout, { box, span, material, model });
+  world.children.slice(townEnd).forEach(o => shopParts.add(o));
 
   // Stations: one solid per station slot, resized and recoloured from the frame (tier, built, rising in).
   let lastStep = 0;
@@ -287,7 +294,7 @@ export function createMap3D(canvas, layout) {
       holder.scale.set(f.scale, f.scale / HEIGHT_SCALE, f.scale);
       holder.position.set(f.x, f.y, f.z);
       holder.visible = false;
-      world.add(holder);
+      world.add(holder); shopParts.add(holder);
       fixtures[f.key] = holder;
     }, undefined, e => console.warn('3D map: could not load ' + f.file, e));
   });
@@ -759,6 +766,8 @@ export function createMap3D(canvas, layout) {
   carriedBags.castShadow = true; carriedBags.count = 0; carriedBags.frustumCulled = false;
   carriedBags.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   scene.add(carriedBags);
+  shopParts.add(ropes);
+  const intro = createIntro({ parts: shopParts, characters: () => characterCopies.filter(c => c && c.holder.visible).map(c => c.holder), hideWhilePeople: [carriedBags], sign: shell && shell.introSign });
   // The bag swings from the hand like a pendulum (small-angle, damped), driven by how the grip itself speeds up and
   // slows, so it lags the arm's swing as they walk and rocks to a stop when they stop. Worked in the scene's true
   // space (the world group stretches heights), so the bag tilts without shearing.
@@ -997,13 +1006,19 @@ export function createMap3D(canvas, layout) {
     props.forEach(p => propReady(p.file));
     placeProps(props, night);
     placeFigures(frame.figures || [], night);
-    const clockNow = performance.now(), stepSeconds = Math.min(.1, (clockNow - (lastStep || clockNow)) / 1000);
-    lastStep = clockNow;
+    const stepSeconds = frameStep(frame);
     placeCharacters(frame.characters, stepSeconds, night);
     if (!frame.dry) renderer.render(scene, camera);
     return true;
   }
 
+  // How far the map's motion moves this frame: the game's own clock (frame.step, game seconds), so people, staff and
+  // stations stand still while the game is paused and keep pace with 2x and 4x; wall time only for a caller without one.
+  function frameStep(frame) {
+    const clockNow = performance.now(), wall = Math.min(.1, (clockNow - (lastStep || clockNow)) / 1000);
+    lastStep = clockNow;
+    return frame.step === undefined ? wall : Math.max(0, Math.min(.4, frame.step));
+  }
   // Branches on the main map (branch-districts.js, main.js districtScenes): every district on or near the screen comes
   // in the frame with its recorded scene, drawn by a pooled branch layer moved onto its block, and its plot's own
   // ground (the theme's land and its river or creek, cut to the plot) in the hole the town leaves for it; the next
@@ -1065,8 +1080,7 @@ export function createMap3D(canvas, layout) {
     if (frame.hazeEast) { hazeUniforms.hazeX.value.z = frame.hazeEast[0]; hazeUniforms.hazeX.value.w = frame.hazeEast[1]; }
     placeDistricts(frame.districts, night);
 
-    const clockNow = performance.now(), stepSeconds = Math.min(.1, (clockNow - (lastStep || clockNow)) / 1000);
-    lastStep = clockNow;
+    const stepSeconds = frameStep(frame);
     let ringShown = false;
     frame.stations.forEach((s, i) => {
       const group = stationMesh(i), { body, top } = group.userData;
@@ -1184,7 +1198,11 @@ export function createMap3D(canvas, layout) {
     updateFixtureGhosts(frame);
 
     // A dry frame (snap3d.mjs, while models load) sets the scene up and asks for its models without drawing it.
-    if (!frame.dry) renderer.render(scene, camera);
+    if (!frame.dry) {
+      const posed = intro.apply(frame.intro);
+      renderer.render(scene, camera);
+      if (posed) intro.restore();
+    }
     return true;
   }
 
@@ -1360,7 +1378,9 @@ function buildShop(world, layout, { box, span, material, textured, model }) {
   const shop = new THREE.Group();
   world.add(shop);
   layout.floors.forEach((f, fi) => {
-    const left = (f.x || 0) - f.w / 2, right = (f.x || 0) + f.w / 2, rear = f.z - f.d / 2, front = f.z + f.d / 2;
+    // The ground floor's timber stops at the storefront's outer face (Kevin, 2026-11-02: it ran out onto the sidewalk).
+    const outer = !fi && layout.entrance ? layout.entrance.x : -Infinity;
+    const left = Math.max(outer, (f.x || 0) - f.w / 2), right = (f.x || 0) + f.w / 2, rear = f.z - f.d / 2, front = f.z + f.d / 2;
     textured(span(shop, left, right, f.y - (fi ? .32 : .02), f.y, rear, front, fi === 2 ? '#e9e4d8' : fi ? '#e4ddcc' : '#c9965f', { cast: fi > 0 }), ['herringbone', 'timber', 'concrete'][fi]);
     // The walls themselves are the shell's (shell.js).
     // A brass rail along the open front edge of the upper floors.
@@ -1434,6 +1454,23 @@ function buildShop(world, layout, { box, span, material, textured, model }) {
   [m.zRear, m.zFront].forEach(z => box(shop, m.x, 0, z, .34, m.y1, .34, '#174f36'));
 }
 
+// The floor opening under a tube's brass floor ring, drawn once on a small canvas: the far half of the shaft wall
+// catches a little light, the rest falls to black, and the rim darkens under the ring.
+function holeTexture() {
+  const size = 128, c = document.createElement('canvas'); c.width = c.height = size;
+  const g = c.getContext('2d'), mid = size / 2;
+  g.fillStyle = '#050605'; g.fillRect(0, 0, size, size);
+  const wall = g.createRadialGradient(mid, mid + size * .2, size * .2, mid, mid + size * .1, size * .55);
+  wall.addColorStop(0, 'rgba(5,6,5,0)'); wall.addColorStop(.55, 'rgba(46,30,18,.0)'); wall.addColorStop(.8, 'rgba(58,38,22,.9)'); wall.addColorStop(1, 'rgba(30,20,12,1)');
+  g.fillStyle = wall; g.fillRect(0, 0, size, size);
+  const lip = g.createRadialGradient(mid, mid, size * .38, mid, mid, size * .5);
+  lip.addColorStop(0, 'rgba(0,0,0,0)'); lip.addColorStop(1, 'rgba(0,0,0,.85)');
+  g.fillStyle = lip; g.fillRect(0, 0, size, size);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
 // The production line: the glass tubes as real pipe along the 2D map's own routes (TUBE_RUNS and PACK_STUB in main.js),
 // rounded at each corner the way transferTube rounds them, with brass collars at the ends and floor rings where a tube
 // passes through a slab; the two belts; and the cargo, a parcel every `gap` units at the one shop-wide speed, exactly
@@ -1444,6 +1481,10 @@ function buildTransport(scene, world, transport, { box, material }) {
   const glass = new THREE.MeshStandardMaterial({ color: '#cfeee2', emissive: '#2f5a4a', emissiveIntensity: .25, roughness: .08, metalness: 0, transparent: true, opacity: .46, depthWrite: false });
   const brass = new THREE.MeshStandardMaterial({ color: '#d0a54e', roughness: .3, metalness: .9 });
   const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+  // One shared disc for every floor opening: near-black in the middle, a dark wood-brown wall showing on the far side
+  // (as a shaft seen from above at the map's 30° camera would), and a soft shadow under the brass lip.
+  const holeGeometry = new THREE.CircleGeometry(R + .04, 32).rotateX(-Math.PI / 2);
+  const holeMaterial = new THREE.MeshBasicMaterial({ map: holeTexture(), toneMapped: false });
   // Corners rounded with a quadratic bend, in the map's units (heights unstretched), as transferTube does.
   function rounded(points) {
     const path = [points[0]], radius = .48;
@@ -1474,7 +1515,15 @@ function buildTransport(scene, world, transport, { box, material }) {
     const parts = [mesh];
     const ends = [[tube.points[0], tube.points[1]], [tube.points[tube.points.length - 1], tube.points[tube.points.length - 2]]];
     ends.forEach(([p, q], i) => { if (!(i === 0 ? tube.noCap0 : tube.noCap1)) parts.push(ring(p, trueSpace(p).sub(trueSpace(q)).normalize(), R + .02, .07, brass)); });
-    (tube.floorRings || []).forEach(p => parts.push(ring(p, new THREE.Vector3(0, 1, 0), R + .1, .08, brass)));
+    (tube.floorRings || []).forEach(p => {
+      parts.push(ring(p, new THREE.Vector3(0, 1, 0), R + .1, .08, brass));
+      // The opening the tube drops through: a dark disc filling the ring, just proud of the floor so it never fights it.
+      const hole = new THREE.Mesh(holeGeometry, holeMaterial);
+      hole.position.copy(trueSpace(p)).add(new THREE.Vector3(0, .012, 0));
+      hole.renderOrder = 1;
+      scene.add(hole);
+      parts.push(hole);
+    });
     const segments = [];
     let total = 0;
     for (let i = 1; i < path.length; i++) { const len = Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1], path[i][2] - path[i - 1][2]); segments.push({ a: path[i - 1], b: path[i], len }); total += len; }

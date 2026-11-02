@@ -339,13 +339,17 @@ export function buildShell(world, layout, { box, span, material, model }) {
   // and row by row, each step a flap folding down over the hinge, the way a Solari board does; on load the whole board
   // flips in from blank. The canvas is repainted (and the texture marked for upload) only while something moves.
   const FLAPS = ' ABCDEFGHIJKLMNOPQRSTUVWXYZ$0123456789.,', STEP = 55, ROLL = 9;
-  let cells = null, boardText = null, rolling = false;
+  let cells = null, boardText = null, rolling = false, boardClock = null;
   function paintBoard(lines, now) {
     const rows = lines.length, cols = lines[0] ? lines[0].length : 21;
-    if (!cells || cells.length !== rows || cells[0].length !== cols) cells = lines.map(l => [...l].map(() => ({ from: ' ', to: ' ', start: 0 })));
+    // The first fill, and a change while the game clock stands still (paused), land at once; otherwise the flaps roll.
+    const first = !cells || cells.length !== rows || cells[0].length !== cols, still = now === boardClock;
+    if (first) cells = lines.map(l => [...l].map(() => ({ from: ' ', to: ' ', start: 0 })));
+    boardClock = now;
     lines.forEach((line, r) => [...line].forEach((ch, k) => {
       const cell = cells[r][k];
-      if (cell.to !== ch) { cell.from = cell.to; cell.to = ch; cell.start = now + k * 35 + r * 90; rolling = true; }
+      if (cell.start > now + 5000) cell.start = now; // the clock went back (a new game)
+      if (cell.to !== ch) { cell.from = first || still ? ch : cell.to; cell.to = ch; cell.start = now + (first || still ? 0 : k * 35 + r * 90); rolling = true; }
     }));
     if (!rolling && boardText !== null) return;
     boardText = '';
@@ -478,6 +482,20 @@ export function buildShell(world, layout, { box, span, material, model }) {
     span(shell, x0 - .02, x1 + .02, bb.h - .07, bb.h, z0 - .03, z1 + .03, '#e1dbc0');
   });
 
+  // Door sills (Kevin, 2026-11-02): a cream stone plate under each outside door's frame, a brass nosing on its street
+  // edge, where the timber meets the pavement. The street door's plate runs from the storefront's last mullion past
+  // the post; the exit door's sits in the rear wall's doorway.
+  const sill = (x0, x1, z0, z1, nose) => {
+    span(shell, x0, x1, 0, .045, z0, z1, '#e1dbc0', { cast: false });
+    span(shell, ...nose, { cast: false });
+  };
+  if (layout.entrance) {
+    const ex = layout.entrance.x;
+    sill(ex - .16, ex + .2, 8.7, 11.5, [ex - .18, ex - .14, 0, .055, 8.7, 11.5, BRASS]);
+  }
+  const xd = s.exitDoor;
+  sill(xd.x0 - .08, xd.x1 + .08, gRear - .3, gRear + .14, [xd.x0 - .08, xd.x1 + .08, 0, .055, gRear - .32, gRear - .28, BRASS]);
+
   // Foliage: one instanced leaf mesh for the planter's shrubs and tree, the hanging plants and the baskets.
   const leafSpots = [];
   // The planter's shrubs and its tree are soft rounded clumps, like the town's trees.
@@ -539,6 +557,8 @@ export function buildShell(world, layout, { box, span, material, model }) {
   });
 
   return {
+    // The storefront sign drops in last in the first-load build (intro.js).
+    introSign: layout.wallFaces ? null : marqueeFace,
     update(frame) {
       const night = frame.night || 0, open = !!frame.loungeOpen;
       rotor.rotation.z = -(frame.time || 0) * Math.PI * 2 / 2500; // one turn every 2.5 s (Kevin 2026-10-19)
@@ -558,7 +578,8 @@ export function buildShell(world, layout, { box, span, material, model }) {
       boardedExit.visible = !open;
       paintSign(open);
       signMat.color.setScalar(open ? 1 : .8);
-      if (frame.menuLines) paintBoard(frame.menuLines, performance.now());
+      // The flaps roll on the game clock (ms), so the board holds still while the game is paused.
+      if (frame.menuLines) paintBoard(frame.menuLines, frame.menuClock === undefined ? performance.now() : frame.menuClock * 1000);
       lampShades.forEach(l => { l.material.emissiveIntensity = open ? .5 + night * 1.2 : 0; });
       sconce.material.emissiveIntensity = .3 + night * 1.4;
       exitLamp.material.emissiveIntensity = .4 + night * 1.2;

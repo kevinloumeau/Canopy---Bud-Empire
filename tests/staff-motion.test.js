@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneRigged } from 'three/examples/jsm/utils/SkeletonUtils.js';
-import { staffPose, bindStaff, poseStaff, poseCarry, handInBody, STATION_ROLES } from '../src/three/staff-motion.js';
+import { staffPose, bindStaff, poseStaff, poseCarry, handInBody, relaxHand, HAND_NARROW, STATION_ROLES } from '../src/three/staff-motion.js';
 import { CYCLE } from '../src/three/station-motion.js';
 
 const ROLES = [...STATION_ROLES, 'window', 'guard', 'host'];
@@ -92,5 +92,41 @@ for (const file of ['beanie-character.glb', 'chef-woman.glb']) test(file + ': a 
     // Out to the figure's right (-x), past where the walk swings it, and no higher, so the bag hangs clear of the leg.
     assert.ok(hand.x < -.15 && hand.x < free.x - .03, file + ' hand not out from the hip ' + hand.x.toFixed(3));
     assert.ok(hand.y < free.y + .05, file + ' hand raised ' + (hand.y - free.y).toFixed(3));
+  }
+});
+
+test('the guard reads an ID through a check: card taken across the booth, read up close, then a wave in', () => {
+  const rest = staffPose('guard', 3, 0);
+  // Before and after a check he scans the room with his hands clasped.
+  assert.deepEqual(staffPose('guard', 3, 1), rest);
+  const reach = staffPose('guard', 3, .2).right, read = staffPose('guard', 3, .45), wave = staffPose('guard', 3, .76).left;
+  assert.ok(reach[2] > rest.right[2] + .3, 'reaches across the booth for the card');
+  assert.ok(read.pitch > rest.pitch + .2 && read.right[1] > rest.right[1] + .2, 'looks down at the card held up');
+  assert.ok(wave[0] > rest.left[0] + .6, 'waves the guest in');
+  // A check playing out at its real pace never jumps.
+  let last = staffPose('guard', 0, 0);
+  for (let f = 1; f <= 2.2 * 60; f++) {
+    const p = staffPose('guard', f / 60, f / (2.2 * 60));
+    for (const arm of ['left', 'right']) assert.ok(Math.hypot(p[arm][0] - last[arm][0], p[arm][1] - last[arm][1], p[arm][2] - last[arm][2]) < .06, arm + ' jumps at frame ' + f);
+    last = p;
+  }
+});
+
+test('working hands relax: curled toward the palm, fingers drawn in, gently moving, and back to the idle at w 0', () => {
+  const hand = new THREE.Bone(), fingers = new THREE.Vector3(0, 1, 0), palm = new THREE.Vector3(0, 0, 1);
+  const tip = (side, t, w) => { hand.quaternion.identity(); hand.scale.set(1, 1, 1); relaxHand(hand, side, t, w); return fingers.clone().applyQuaternion(hand.quaternion); };
+  for (const side of [1, -1]) {
+    const seen = [];
+    for (let t = 0; t < 12; t += .25) {
+      const f = tip(side, t, 1);
+      // Fingertips tip toward the palm side (+z), never back: a soft 20 to 45 degree curl.
+      const curl = Math.atan2(f.dot(palm), f.y);
+      assert.ok(curl > .35 && curl < .8, 'curl ' + curl.toFixed(2));
+      assert.ok(Math.abs(hand.scale.x - HAND_NARROW) < 1e-9 && hand.scale.y < 1 && hand.scale.z === 1);
+      seen.push(curl);
+    }
+    assert.ok(Math.max(...seen) - Math.min(...seen) > .05, 'the hand moves a little');
+    tip(side, 3, 0);
+    assert.ok(hand.quaternion.angleTo(new THREE.Quaternion()) < 1e-9 && hand.scale.x === 1, 'w 0 leaves the idle hand');
   }
 });
