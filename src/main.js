@@ -1056,6 +1056,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // visible map (the HUD's bottom to the bottom of the map, less the sheet on a phone) stays inside the hazed reach,
   // measured along the camera's rotated axes, so no edge of the town shows at any zoom. When the visible map is wider
   // than the reach, the view sits centred on it.
+  var TALL_HEADROOM=8;
   function clampSunnyPan(frame){
     var u=frame.unit*zoom,sq=FLOOR_SQUASH,c=Math.cos(angle),s=Math.sin(angle),view=SUNNY_VIEW;
     var rx=-panX/u,rz=-panY/(u*sq),x=rx*c+rz*s,z=rz*c-rx*s;
@@ -1069,7 +1070,12 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var hud=document.querySelector('.hud'),top=hud?hud.getBoundingClientRect().bottom:0,bottom=visibleHeight();
     var fit=function(v,lo,hi){return lo>hi?(lo+hi)/2:Math.max(lo,Math.min(hi,v))};
     rx=fit(rx,view.reach.rx[0]+slide*c+frame.x/u,view.reach.rx[1]+slide*c-(width-frame.x)/u);
-    rz=fit(rz,view.reach.rz[0]+slide*s+Math.max(0,frame.y-top)/(u*sq),view.reach.rz[1]+slide*s-Math.max(0,bottom-frame.y)/(u*sq));
+    // The rooftop lounge and Canopy HQ stand storeys above the ground the reach is measured on, so a view stopped at
+    // the north limit cut their tops off under the top bar (Kevin, 2026-11-02). Closer in, where a whole building no
+    // longer fits, the north limit gives TALL_HEADROOM map units of height more room; zoomed right out it adds none,
+    // so the far edge of the town still never shows.
+    var headroom=TALL_HEADROOM*Math.max(0,Math.min(1,(zoom-.65)/.5))/sq;
+    rz=fit(rz,view.reach.rz[0]-headroom+slide*s+Math.max(0,frame.y-top)/(u*sq),view.reach.rz[1]+slide*s-Math.max(0,bottom-frame.y)/(u*sq));
     panX=-rx*u;panY=-rz*u*sq;
   }
   function zoomAt(next,x,y){next=Math.max(.65,Math.min(4,next));var ratio=next/zoom,frame=cameraFrame();panX=x-(x-centerX)*ratio-frame.x;panY=y-(y-centerY)*ratio-frame.y;zoom=next;applyCamera()}
