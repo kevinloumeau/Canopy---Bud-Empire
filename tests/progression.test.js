@@ -189,3 +189,22 @@ test('branch stars latch, credit old saves, open the next branch and add a lasti
  const restored=migrateProgression(old,start);assert.equal(starCount(restored,0),3);assert.equal(branchOpenable(restored,2),true);
  assert.deepEqual(migrateProgression({stars:[9,-1,'x']},start).stars,[0,0,0,0,0]);
 });
+import {STARS_TO_OPEN,STORES} from '../src/progression.js';
+test('two stars open the next branch, a story is optional',()=>{
+ const s=fresh(),p=s.empire;s.lifetime=1e12;s.money=1e15;
+ assert.equal(STARS_TO_OPEN,2);assert.equal(buyStore(s,0),true);
+ p.stores[0].served=STAR_GOALS[0].target[0];settleStars(p);assert.equal(branchOpenable(p,1),false);
+ while(p.stores[0].level<10)buyStore(s,0);settleStars(p);
+ assert.equal(starCount(p,0),2);assert.equal(branchOpenable(p,1),true);assert.equal(buyStore(s,1),true);
+});
+test('branches earn a share of the flagship once it has a sales rate',()=>{
+ const s=fresh(),p=s.empire;s.lifetime=1e12;s.money=1e15;buyStore(s,0);
+ const legacy=storeRate(p,0);p.flagship=1e6;
+ assert.ok(Math.abs(storeRate(p,0)-STORES[0].share*4/13*1e6)<1e-6);assert.ok(storeRate(p,0)>legacy);
+ while(p.stores[0].level<10)buyStore(s,0);assert.ok(Math.abs(storeRate(p,0)-STORES[0].share*1e6)<1e-6);
+ p.flagship=2e6;assert.ok(Math.abs(storeRate(p,0)-STORES[0].share*2e6)<1e-6);
+ assert.equal(migrateProgression(JSON.parse(JSON.stringify(p))).flagship,2e6);
+ assert.equal(migrateProgression({flagship:-5}).flagship,0);assert.equal(migrateProgression({flagship:'x'}).flagship,0);
+ // Later branches are worth more of the flagship, so each opening is a bigger jump.
+ STORES.slice(1).forEach((b,i)=>assert.ok(b.share>STORES[i].share));
+});

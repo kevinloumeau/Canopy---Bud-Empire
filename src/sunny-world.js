@@ -375,6 +375,10 @@ const MODEL_BOUNDS = {
   city_stone_4: [-2.3574, 2.3974, -2.4491, 3.2191, 10.418, 10.69], city_tan_3: [-2.3426, 2.3426, -2.3249, 3.0949, 7.968, 8.66],
   city_terra_2: [-2.7213, 3.4913, -2.0763, 2.8463, 5.518, 5.79], city_terra_4: [-2.7213, 2.7213, -2.0763, 2.8463, 10.418, 11.11]
 };
+// The flagship's lot (Kevin, 2026-11-02): the corner behind the shop across the rear street, on the right junction.
+// Its terrace gives way to the Canopy HQ tower (src/three/flagship.js), which map3d builds on layout.flagshipLot.
+const FLAGSHIP_LOT = BUILDINGS.findIndex(b => b[0] === 17.5 && b[1] === -23.5);
+const keepLot = (b, i) => i !== FLAGSHIP_LOT;
 const HEIGHT_UP = Math.sqrt(1.5); // the 3D map's height stretch (camera.js HEIGHT_SCALE): world height = map height × this
 // A terrace's 3D model: its city model if it names one, else the render's own (building.low.sage is building_low_sage).
 const modelOf = b => b[3] || b[2].replace(/\./g, '_');
@@ -393,6 +397,7 @@ const PROP_HALF = { roof_hvac: .75, roof_skylight: .65, roof_vents: .45, roof_ac
 const ROOF_PROPS = (() => {
   const out = [];
   BUILDINGS.forEach((b, i) => {
+    if (i === FLAGSHIP_LOT) return;
     const fit = lotFit(b), name = modelOf(b), tall = fit.top - P > 15, hw = fit.w / 2 - .42, hd = fit.d / 2 - .42;
     let seed = (i + 1) * 2654435761 >>> 0;
     const rand = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 4294967296);
@@ -517,7 +522,7 @@ function streetJobs(api) {
   // The 3D map's Blender model for the job just added: its file, where its feet stand (the render's anchor) and its
   // turn; a render drawn mirrored to run the other way is the model turned a quarter.
   const model = (name, x, z, flip) => { jobs[jobs.length - 1].model = { file: name.includes('.glb') ? name : name + '.glb', x, z, rot: flip ? -Math.PI / 2 : 0 }; };
-  BUILDINGS.forEach(b => { const f = BUILDING_SPRITES[b[2]], x = b[0] - f.w / 2, z = b[1] - f.d / 2; at(x, z, () => building(api, b), f.w / 2, f.d / 2); jobs[jobs.length - 1].model = { file: modelOf(b) + '.glb', x, z, rot: 0, fit: { w: f.w, d: f.d } }; });
+  BUILDINGS.filter(keepLot).forEach(b => { const f = BUILDING_SPRITES[b[2]], x = b[0] - f.w / 2, z = b[1] - f.d / 2; at(x, z, () => building(api, b), f.w / 2, f.d / 2); jobs[jobs.length - 1].model = { file: modelOf(b) + '.glb', x, z, rot: 0, fit: { w: f.w, d: f.d } }; });
   kind = 'prop';
   ROOF_PROPS.concat(CITY_PROPS).forEach(p => { at(p.x, p.z, () => {}, .5, .5); jobs[jobs.length - 1].model = p; });
   kind = 'tree';
@@ -890,7 +895,7 @@ function bakedShadows() {
     g.globalAlpha = alpha; g.beginPath(); hull(all).forEach(([x, z], i) => (i ? g.lineTo(px(x), pz(z)) : g.moveTo(px(x), pz(z)))); g.closePath(); g.fill();
   };
   g.fillStyle = '#000';
-  BUILDINGS.forEach(([x1, z1, name]) => { const f = BUILDING_SPRITES[name]; block(x1 - f.w, x1, z1 - f.d, z1, f.h, 1 - hazeAt(x1 - f.w / 2, z1 - f.d / 2)); });
+  BUILDINGS.filter(keepLot).forEach(([x1, z1, name]) => { const f = BUILDING_SPRITES[name]; block(x1 - f.w, x1, z1 - f.d, z1, f.h, 1 - hazeAt(x1 - f.w / 2, z1 - f.d / 2)); });
   // Soften: the blurred copy of the solid shapes, thrown back onto the canvas from off its edge, in the shadow colour.
   const out = document.createElement('canvas'); out.width = W; out.height = H;
   const o = out.getContext('2d');
@@ -1248,7 +1253,8 @@ export function townLayout() {
   return {
     roads: ROADS.map(r => ({ ...r })), roadWidth: RW, plazaY: P, streetY: G, extent: L,
     colours: { paver: PAVER, asphalt: ASPHALT }, marks: groundMarks().concat(kerbsAndDrains()),
-    buildings: BUILDINGS.map(b => { const f = BUILDING_SPRITES[b[2]]; return { x0: b[0] - f.w, x1: b[0], z0: b[1] - f.d, z1: b[1], h: lotFit(b).top, wall: f.wall[0], roof: f.wall[1], model: modelOf(b) + '.glb' }; }),
+    flagshipLot: (([x1, z1, name]) => { const f = BUILDING_SPRITES[name]; return { x0: x1 - f.w, x1, z0: z1 - f.d, z1 }; })(BUILDINGS[FLAGSHIP_LOT]),
+    buildings: BUILDINGS.filter(keepLot).map(b => { const f = BUILDING_SPRITES[b[2]]; return { x0: b[0] - f.w, x1: b[0], z0: b[1] - f.d, z1: b[1], h: lotFit(b).top, wall: f.wall[0], roof: f.wall[1], model: modelOf(b) + '.glb' }; }),
     silhouettes: SILHOUETTES.map(b => ({ ...b })),
     trees: FAR_TREES.concat(NEAR_TREES).map(t => t.slice()), lamps: LAMPS.map(l => l.slice()),
     haze: { colour: HAZE.slice(), ramp: { west: HAZE_RAMP.west.slice(), east: HAZE_RAMP.east.slice(), north: HAZE_RAMP.north.slice(), south: HAZE_RAMP.south.slice() } },
