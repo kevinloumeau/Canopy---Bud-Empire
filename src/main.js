@@ -916,14 +916,19 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // The card stays over the map while the first frames draw underneath and ask for their models, textures and sprites;
   // once nothing has been loading for a few frames (shaders compiled and textures uploaded by those frames too), the
   // whole finished map fades in at once. A slow connection still gets the map after MAP_SETTLE_MAX ms.
-  // The first time the map appears, the stations pop up out of the floor one after another down the line (stationPop,
-  // 0 to 1 per station), starting as the card fades. Players who ask for reduced motion see them in place.
-  var introAt=0;
+  // The first time the map appears the shop builds itself as the card fades (three/intro.js: floors and walls, then
+  // fittings, the stations, the people and the sign, about 1.3 s in all). The stations pop up out of the floor one after
+  // another down the line (stationPop, 0 to 1 per station); their map signs fade in once they stand. Players who ask
+  // for reduced motion see everything in place. ?snap&intro=0.4 freezes a snap3d capture at that moment of the build.
+  var introAt=0,INTRO_END=1.4,STATION_POP={at:.18,step:.06,take:.34};
+  var introFrozen=/[?&]snap\b/.test(location.search)&&/[?&]intro=([\d.]+)/.exec(location.search);
+  function introTime(){return introFrozen?+introFrozen[1]:introAt?(performance.now()-introAt)/1000:-1}
   function stationPop(i){
     // Until the card lifts they draw at full size underneath it, so their shaders and textures are ready for the pop.
-    if(!introAt)return 1;
-    var t=(performance.now()-introAt)/1000-.2-i*.11;
-    return t<=0?0:Math.min(1,t/.5);
+    var t=introTime();
+    if(t<0)return 1;
+    t-=STATION_POP.at+i*STATION_POP.step;
+    return t<=0?0:Math.min(1,t/STATION_POP.take);
   }
   var MAP_SETTLE_MAX=12000,mapSettleStart=0,mapQuietFrames=0,mapRevealTimer=0;
   function mapSettled(wallNow){
@@ -931,7 +936,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     mapQuietFrames=map3d.loading>0||spritesLoading()>0?0:mapQuietFrames+1;
     return mapQuietFrames>=6||wallNow-mapSettleStart>MAP_SETTLE_MAX;
   }
-  function mapReveal(){var card=$('loading');if(card.hidden)return;if(!introAt&&!SNAP&&!motionPreference.matches)introAt=performance.now();card.classList.add('reveal');clearTimeout(mapRevealTimer);mapRevealTimer=setTimeout(function(){card.hidden=true;card.classList.remove('reveal')},motionPreference.matches?0:500)}
+  function mapReveal(){var card=$('loading');if(card.hidden)return;if(!introAt&&!SNAP&&!motionPreference.matches){introAt=performance.now();$('world').classList.add('building')}card.classList.add('reveal');clearTimeout(mapRevealTimer);mapRevealTimer=setTimeout(function(){card.hidden=true;card.classList.remove('reveal')},motionPreference.matches?0:300)}
   // Builds the 3D map on a fresh WebGL canvas. A lost context (the GPU reset, or iOS reclaimed it in the background)
   // is rebuilt the same way rather than trusted to come back, with the loading card up meanwhile.
   function startMap3d(){
@@ -2659,7 +2664,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     figures=figures.filter(function(f){return f.alpha>.99});backdrops=backdrops.filter(function(f){return f.alpha>.99});
     var dronePoses=deliveryDronePoses(frameDelta);deliveryCards(dronePoses,figures);
     var look=viewCentre(),districts=districtScenes(characters,props);
-    map3d.render({step:frameDelta,districts:districts,hazeEast:eastHaze(storeLevels()),dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,characters:characters,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,city:state.city,cityClaimed:cityClaimed(),cityBuild:cityBuildShares(),flagship:state.flagship,flagshipBuild:isBuilding(state.builds,'flagship')?1-buildShareLeft(state.builds,'flagship'):null,loungeBuild:isBuilding(state.builds,'lounge')?1-buildShareLeft(state.builds,'lounge'):null,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtureBuild:isBuilding(state.builds,'deck')||isBuilding(state.builds,'window')?Object.assign(isBuilding(state.builds,'deck')?{deck:1-buildShareLeft(state.builds,'deck')}:{},isBuilding(state.builds,'window')?{pickupWindow:1-buildShareLeft(state.builds,'window')}:{}):null,fixtures:{deck:deliveryBuilt(),pickupWindow:windowOpen(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2},fixtureGhost:state.lines[4]>0&&kioskCount()<3?{['kiosk'+kioskCount()]:true}:null,menus:kioskMenus(),menuClock:animationTime/1000,cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    map3d.render({step:frameDelta,districts:districts,hazeEast:eastHaze(storeLevels()),dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,characters:characters,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,intro:introTime(),loungeOpen:state.lounge>0,loungeTier:state.lounge,city:state.city,cityClaimed:cityClaimed(),cityBuild:cityBuildShares(),flagship:state.flagship,flagshipBuild:isBuilding(state.builds,'flagship')?1-buildShareLeft(state.builds,'flagship'):null,loungeBuild:isBuilding(state.builds,'lounge')?1-buildShareLeft(state.builds,'lounge'):null,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtureBuild:isBuilding(state.builds,'deck')||isBuilding(state.builds,'window')?Object.assign(isBuilding(state.builds,'deck')?{deck:1-buildShareLeft(state.builds,'deck')}:{},isBuilding(state.builds,'window')?{pickupWindow:1-buildShareLeft(state.builds,'window')}:{}):null,fixtures:{deck:deliveryBuilt(),pickupWindow:windowOpen(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2},fixtureGhost:state.lines[4]>0&&kioskCount()<3?{['kiosk'+kioskCount()]:true}:null,menus:kioskMenus(),menuClock:animationTime/1000,cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     // A model that had not loaded when the tabs were painted: try again every half second until all are in.
     var wall=performance.now();if(picturesPending&&!(wall-(renderFrame3d.picturesTried||0)<500)){renderFrame3d.picturesTried=wall;picturesPending=false;paintThumbnails()}
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -2753,7 +2758,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var wallDelta=Math.min(.1,Math.max(0,(wallNow-(render.last===undefined?wallNow:render.last))/1000)),frameDelta=wallDelta*state.gameSpeed;
     render.last=wallNow;
     // A freshly built station rises out of its site on wall time, so the reveal plays at the same pace at every game speed.
-    if(introAt){if(performance.now()-introAt>2000)introAt=0;render.invalidated=true}
+    if(introAt){var introT=(performance.now()-introAt)/1000;if(introT>.85)$('world').classList.remove('building');if(introT>INTRO_END)introAt=0;render.invalidated=true}
     for(var site=0;site<buildRise.length;site++)if(buildRise[site]>0){buildRise[site]=motionPreference.matches?0:Math.max(0,buildRise[site]-wallDelta*1.7);render.invalidated=true}
     animationTime+=frameDelta*1000;tickTaskClocks(frameDelta);
     for(var slot=0;slot<4;slot++){var phase=(taskClocks[1]/9000+slot*.23)%1;var targetGrowth=state.stock[1]>=storageCapacity()?1:phase>.86?Math.max(0,(1-phase)/.14):Math.min(1,phase/.72);cropGrowth[slot]+=(targetGrowth-cropGrowth[slot])*(1-Math.exp(-frameDelta*4))}var now=animationTime;
