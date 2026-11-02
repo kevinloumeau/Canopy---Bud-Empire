@@ -2,12 +2,13 @@
 // rides above the customer who brought it. One system, grown from the big spender tag: the same clock, the same tag and
 // the same tap, with four kinds that take turns. Tapping pays; missing one costs nothing.
 const STAR='M12 2.8l2.75 5.82 6.35.8-4.67 4.38 1.2 6.3L12 17.02 6.37 20.1l1.2-6.3L2.9 9.42l6.35-.8z';
-const BOLT='M13.5 2 5 13.4h5.6L9.4 22l9.1-12.2h-5.7z';
+// A stopwatch, not a bolt: the bolt already marks a ready crew burst on station signs.
+const WATCH='M10 1.5h4V3h-1.2v1.55A8.5 8.5 0 1 1 11.2 4.55V3H10zM12 6.3a6.85 6.85 0 1 0 0 13.7 6.85 6.85 0 0 0 0-13.7zm-.85 2.2h1.7v4.8l3.1 2.1-.95 1.4-3.85-2.6z';
 const CHECK='M9 2.5h6a1 1 0 0 1 1 1V5h2a1.5 1.5 0 0 1 1.5 1.5v13A1.5 1.5 0 0 1 18 21H6a1.5 1.5 0 0 1-1.5-1.5v-13A1.5 1.5 0 0 1 6 5h2V3.5a1 1 0 0 1 1-1zm1 1.5v1.6h4V4zm5.9 6.2-1.3-1.3-3.9 3.9-1.8-1.8-1.3 1.3 3.1 3.1z';
 const CROWN='M3 7.5l4.6 3.6L12 4.5l4.4 6.6L21 7.5 19.3 18H4.7zM4.7 19.4h14.6V21H4.7z';
 export const SHOP_EVENTS={
   spender:{name:'Big spender',icon:STAR,label:'Big spender in the shop: tap for a tip'},
-  rush:{name:'Rush hour',icon:BOLT,label:'Rush hour: tap for double sales'},
+  rush:{name:'Rush hour',icon:WATCH,label:'Rush hour: tap for double sales'},
   inspection:{name:'Inspection',icon:CHECK,label:'Inspector in the shop: tap to pass for reputation and a bonus'},
   vip:{name:'VIP request',icon:CROWN,label:'VIP request: tap for a big tip and more walk-ins'}};
 // The order they take turns in. The first is always a big spender, so the first shift goal's hint still fits.
