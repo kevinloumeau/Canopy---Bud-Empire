@@ -7,7 +7,7 @@ import {migrateJourney,advanceJourney,CHAPTERS} from './journey.js';
 import {mountJourney} from './journey-ui.js';
 import {manageDialog} from './dialog-focus.js';
 import {CITY_BUILDINGS,cityBuilding,migrateCity,cityUnlocked,cityNext,cityCost,payCity,openCityStage,awayExtraSeconds,awayPay,outputFactor,trafficFactor as cityTraffic,terpFactor,stageGain,CITY_TOPS} from './city-buildings.js';
-import {FLAGSHIP_MAX,FLAGSHIP_STEP,flagshipNext,flagshipCost,flagshipSales as hqSales,flagshipUnlocked,migrateFlagship,payFlagship,openFlagshipStage} from './flagship.js';
+import {FLAGSHIP_UNLOCK_LIFETIME,FLAGSHIP_MAX,FLAGSHIP_STEP,flagshipNext,flagshipCost,flagshipSales as hqSales,flagshipUnlocked,migrateFlagship,payFlagship,openFlagshipStage} from './flagship.js';
 import {migrateBuilds,startBuild,isBuilding,buildLeft,buildShareLeft,finishBuilds,buildClock,skipCost,skipBuild} from './builds.js';
 import {AUTO_DRONE_COST,BULK_DRONE_COST,payAutoDrone,grantAutoDrone,buyBulkDrone,autoDroneLimit,migrateAutoDrone,autoDroneReady} from './auto-drone.js';
 import {FORMATS,wantedFormat,formatPremium,stocks,formatCost,BOOST_MAX,boostCost,migrateMenu,unlockFormat,menuFormatFactor,milestone,prestigeOffer,elapsedSteps,OFFLINE_STEP} from './depth.js';
@@ -2916,7 +2916,13 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       tags.push({el:hqMarker,name:'HQ',build:'flagship',price:hqBuilding?hqSkip:flagshipCost(state.flagship),x:HQ_TAG.x,y:hqTagHeight(),z:HQ_TAG.z,buildBuys:true,
         buys:hqBuilding?[{label:'Finish now',price:hqSkip,go:function(){skipBuildNow('flagship')}}]:[{label:hqNext.name+' · +'+Math.round(FLAGSHIP_STEP*100)+'% sales',price:flagshipCost(state.flagship),best:state.money>=flagshipCost(state.flagship),go:purchaseFlagship}]})}
     // The city buildings: each lot sells its next stage once it unlocks, like the HQ.
-    CITY_BUILDINGS.forEach(function(b){var stage=state.city[b.id];if(!cityUnlocked(b.id,state.lifetime)||stage>=b.stages.length)return;
+    // Before it unlocks, the next lot to open (HQ included) wears a small locked tag with what it takes; a tap says so.
+    var nextLocked=CITY_BUILDINGS.map(function(b){return{id:b.id,unlock:b.unlock}}).concat([{id:'flagship',unlock:FLAGSHIP_UNLOCK_LIFETIME}]).filter(function(b){return state.lifetime<b.unlock}).sort(function(a,b){return a.unlock-b.unlock})[0];
+    function lockedBox(unlock){return[{label:'Opens at '+fmt(unlock)+' earned',note:Math.floor(Math.min(1,state.lifetime/unlock)*100)+'%',price:unlock}]}
+    if(nextLocked&&nextLocked.id==='flagship')tags.push({el:hqMarker,name:'HQ',price:FLAGSHIP_UNLOCK_LIFETIME,locked:true,lockText:fmt(FLAGSHIP_UNLOCK_LIFETIME),x:HQ_TAG.x,y:hqTagHeight(),z:HQ_TAG.z,buys:lockedBox(FLAGSHIP_UNLOCK_LIFETIME)});
+    CITY_BUILDINGS.forEach(function(b){var stage=state.city[b.id];
+      if(nextLocked&&nextLocked.id===b.id){var lockAt=cityTagAt(b.id,true);if(lockAt)tags.push({el:cityMarkers[b.id],name:b.name,price:b.unlock,locked:true,lockText:fmt(b.unlock),x:lockAt.x,y:lockAt.y,z:lockAt.z,buys:lockedBox(b.unlock)});return}
+      if(!cityUnlocked(b.id,state.lifetime)||stage>=b.stages.length)return;
       var building=isBuilding(state.builds,b.id),next=cityNext(b.id,stage),skip=building?buildSkipCost(b.id):0,price=cityCost(b.id,stage),at=cityTagAt(b.id);if(!at)return;
       tags.push({el:cityMarkers[b.id],name:b.name,build:b.id,price:building?skip:price,x:at.x,y:at.y,z:at.z,buildBuys:true,
         buys:building?[{label:'Finish now',price:skip,go:function(){skipBuildNow(b.id)}}]:[{label:next.name+' · '+stageGain(b.id),price:price,best:state.money>=price,go:function(){purchaseCity(b.id)}}]})});
@@ -2936,9 +2942,9 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var building=!!t.build&&isBuilding(state.builds,t.build),clock=building?buildClock(buildLeft(state.builds,t.build)):'',key=t.name+'|'+(building?clock:fmt(t.price))+'|'+(state.money>=t.price);
     el.classList.toggle('is-building',building);
     if(building)el.style.setProperty('--build-left',buildShareLeft(state.builds,t.build).toFixed(3));else el.style.removeProperty('--build-left');
-    if(t.locked)key+='|locked';if(el.dataset.level!==key){el.innerHTML='<span class=station-sign-name>'+t.name+'</span><span class=station-sign-level>'+(building?clock:t.locked?LOCK_ICON:fmt(t.price))+'</span>';el.dataset.level=key;updateMarkers.key=null}
-    el.setAttribute('aria-label',building?t.name+', being built. Opens in '+clock:t.locked?t.name+', for lease. Locked, show what opens it':t.name+', '+fmt(t.price)+'. Show what to buy');
-    signBuy(el,pickedTag===el.dataset.marker&&!t.locked&&(!building||t.buildBuys)?t.buys:null)});
+    if(t.locked)key+='|locked';if(el.dataset.level!==key){el.innerHTML='<span class=station-sign-name>'+t.name+'</span><span class=station-sign-level>'+(building?clock:t.locked?LOCK_ICON+(t.lockText||''):fmt(t.price))+'</span>';el.dataset.level=key;updateMarkers.key=null}
+    el.setAttribute('aria-label',building?t.name+', being built. Opens in '+clock:t.locked?t.name+(t.lockText?', locked until '+t.lockText+' earned':', for lease. Locked, show what opens it'):t.name+', '+fmt(t.price)+'. Show what to buy');
+    signBuy(el,pickedTag===el.dataset.marker&&(!t.locked||t.lockText)&&(!building||t.buildBuys)?t.buys:null)});
     if(pickedTag&&!shown.some(function(t){return t.el.dataset.marker===pickedTag}))pickedTag=null}
   // The buy box over a picked sign (Kevin, 2026-10-22): what can be bought there, each a tap away. items: [{label, price,
   // go, best, icon}] or null to hide it. A box near the top of the screen opens below its sign instead, so it is never
@@ -2948,7 +2954,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     if(!items){if(box)box.hidden=true;return}
     if(!box){box=document.createElement('span');box.className='sign-buy';box.addEventListener('click',function(e){e.stopPropagation();var b=e.target.closest('[data-buy]');if(b&&b.getAttribute('aria-disabled')!=='true'&&box.items[+b.dataset.buy])box.items[+b.dataset.buy].go()});sign.appendChild(box)}
     box.hidden=false;box.items=items;
-    var html=items.map(function(it,n){var ready=state.money>=it.price;return '<span role=button tabindex=0 data-buy='+n+' class="'+(it.best?'is-best ':'')+(ready?'':'is-short')+'" aria-disabled='+!ready+' aria-label="'+it.label+', '+fmt(it.price)+'"><span>'+(it.icon||'')+it.label+'</span><b>'+fmt(it.price)+'</b></span>'}).join('');
+    var html=items.map(function(it,n){var ready=!it.note&&state.money>=it.price;if(it.note)return '<span role=button tabindex=0 data-buy='+n+' class=is-short aria-disabled=true aria-label="'+it.label+', '+it.note+' there"><span>'+LOCK_ICON+it.label+'</span><b>'+it.note+'</b></span>';return '<span role=button tabindex=0 data-buy='+n+' class="'+(it.best?'is-best ':'')+(ready?'':'is-short')+'" aria-disabled='+!ready+' aria-label="'+it.label+', '+fmt(it.price)+'"><span>'+(it.icon||'')+it.label+'</span><b>'+fmt(it.price)+'</b></span>'}).join('');
     if(box.dataset.html!==html){box.innerHTML=html;box.dataset.html=html}}
   // The station's own box: one level, and as many as the cash buys (Max). The best buy wears the brass.
   function stationBuys(i,suggested){if(!state.lines[i]||!isOpen(i))return null;var q=maxStationUpgrade(i),items=[{label:'Lv '+(state.lines[i]+1),price:cost(i),best:i===suggested,go:function(){buyStationLevel(i)}}];
@@ -3802,7 +3808,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function purchaseCity(id){var b=cityBuilding(id);if(!b||isBuilding(state.builds,id)||!cityUnlocked(id,state.lifetime))return;var next=cityNext(id,state.city[id]);if(!next||!payCity(state,id))return;
     startBuild(state.builds,id);pickedTag=null;telemetry.send('city_paid',{id:id,stage:state.city[id]+1});playSound('build',state.sound);notify(b.name.toUpperCase()+' · '+next.name.toUpperCase()+' UNDER WAY · done in '+buildClock(buildLeft(state.builds,id)),'upgrade');updateMarkers.key=null;render.invalidated=true;save();renderUI()}
   // Where a city building's tag sits: over the lot's front, just above what stands there now.
-  var cityLotRects=null;function cityTagAt(id){if(!cityLotRects)cityLotRects=cityLots();var lot=cityLotRects[id];if(!lot)return null;return{x:(lot.x0+lot.x1)/2,y:CITY_TOPS[id][Math.min(3,state.city[id]+(isBuilding(state.builds,id)?1:0))]+.6,z:lot.z1-1}}
+  var cityLotRects=null;function cityTagAt(id,terrace){if(!cityLotRects)cityLotRects=cityLots();var lot=cityLotRects[id];if(!lot)return null;if(terrace)return{x:(lot.x0+lot.x1)/2,y:lot.top+.6,z:lot.z1-1};return{x:(lot.x0+lot.x1)/2,y:CITY_TOPS[id][Math.min(3,state.city[id]+(isBuilding(state.builds,id)?1:0))]+.6,z:lot.z1-1}}
   // Lots shown as for sale or built: their old terraces step aside (frame.cityClaimed).
   function cityClaimed(){var out={};CITY_BUILDINGS.forEach(function(b){out[b.id]=state.city[b.id]>0||isBuilding(state.builds,b.id)||cityUnlocked(b.id,state.lifetime)});return out}
   function cityBuildShares(){var out={};CITY_BUILDINGS.forEach(function(b){if(isBuilding(state.builds,b.id))out[b.id]=1-buildShareLeft(state.builds,b.id)});return out}

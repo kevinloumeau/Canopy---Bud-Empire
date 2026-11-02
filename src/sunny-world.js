@@ -1258,7 +1258,7 @@ function drawWalkers(api, at) {
 // Each city building's lot as a footprint ({id: {x0, x1, z0, z1}}), for its 3D model and its map tag.
 export function cityLots() {
   const out = {};
-  CITY_LOT_OF.forEach((id, i) => { const [x1, z1, name] = BUILDINGS[i], f = BUILDING_SPRITES[name]; out[id] = { x0: x1 - f.w, x1, z0: z1 - f.d, z1 }; });
+  CITY_LOT_OF.forEach((id, i) => { const [x1, z1, name] = BUILDINGS[i], f = BUILDING_SPRITES[name]; out[id] = { x0: x1 - f.w, x1, z0: z1 - f.d, z1, top: lotFit(BUILDINGS[i]).top }; });
   return out;
 }
 // One walker from walkerPlacements, as the street draws it; the 3D map records the same call to stand the figure up.
