@@ -10,6 +10,19 @@ export const BRANCH_THEMES = [
   {name:'Alpine', description:'A stone-and-timber mountain lodge among the pines, with a glass conservatory wing under a rooftop terrace, a fireside pergola patio, and a waterfall garden with a creek-side deck.', background:'#233b31', focus:{x:0,y:1.3,z:1.4}, frame:{w:43.3,h:23.7,cx:-.85,cy:-1.2},land:{colour:'#7f9a74',y:0,plot:[-17,17,-12,12.5],strips:[{x0:12.6,x1:16.6,y:-.3,colour:'#579aa0',z0:12.5}],trees:true}}
 ];
 
+// Where each branch's station line stands in the 3D map (Kevin, 2026-11-02: every branch runs the flagship's stations):
+// Seeds, Grow, Harvest and Pack in a row along the back wall where the drawing's shelves and showcases stood, and the
+// Order desk and Pickup on the drawing's two counters. Scene units, on the shop floor.
+export const BRANCH_STATIONS = [
+  [[-4.9,-5.9],[-1.7,-5.9],[1.5,-5.9],[4.5,-5.9],[-3,1.4],[2,1.4]],
+  [[-5.6,-2.6],[-2.3,-2.6],[1.1,-2.6],[4.4,-2.6],[-3,1.4],[2.3,1.4]],
+  [[-5.4,2.6],[-2,2.6],[1.6,2.6],[5,2.6],[-4.4,-1.8],[4.4,-1.8]],
+  [[-5.4,-.6],[-2.1,-.6],[1.3,-.6],[4.6,-.6],[-3,3.2],[2,3.2]],
+  [[-1.2,-2],[2,-2],[5.3,-2],[8.5,-2],[.5,2.6],[5.5,2.6]]
+];
+// Where a branch's customers stand to order and to collect: in front of its two desks.
+export function branchQueue(index){const s=BRANCH_STATIONS[index];return [[s[4][0],s[4][1]+1.7],[s[5][0],s[5][1]+1.7]];}
+
 export function drawBranchMap(api, index, level, now, projects=[], experience={}) {
   const {width,height,unit,project:p,box:b,line:l,poly,ellipse,plant,jar,carton,person,depth}=api;
   const theme=BRANCH_THEMES[index];
@@ -22,6 +35,10 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
   const jobs=[],fixtures=[];
   // In the 3D map, api.model places a Blender prop instead of the drawing below it once the model has loaded.
   const model=api.model||(()=>false),groundY=theme.land?theme.land.y:0;
+  // In the 3D map the branch runs the flagship's real stations (api.station places one); the drawn shelves, showcases
+  // and counters they stand in for are left out, and the counters' clerks stay at their posts behind the new desks.
+  const real=!!api.station;
+  if(real)BRANCH_STATIONS[index].forEach(([x,z],j)=>api.station(j,x,z,0));
   const activeEvent=!!experience.contract?.open;
   const eventKind=(experience.contract?.index||0)%3;
   const job=(x,z,draw)=>jobs.push({depth:depth({x,z}),draw});
@@ -292,6 +309,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     const q=p(x,4.85,z+.19);ellipse(q.x,q.y,unit*.3,unit*.42,'#4f7a58');ellipse(q.x+unit*.1,q.y-unit*.1,unit*.16,unit*.24,'#7fa870');glow(x,4.8,z+.4,1.2);
   }
   function visitors(order,pickup,exit,approach=[-5,4.4],arrive=[-8,7],leave=[10,8]){
+    if(real)[order,pickup]=branchQueue(index);
     // Managed customers are visual only; branch income stays in the economy simulation. Each scene routes them
     // through clear ground: arrive → approach → order → pickup → exit → leave.
     const corner=[exit[0]+(leave[0]-exit[0])*.2,leave[1]-(leave[1]-exit[1])*.15];
@@ -425,7 +443,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     for(let i=-6.3;i<10.5;i+=.32)b(i,-8.0,.05,.06,.045,4.38,wood);
     b(-6.4,-4.8,0,.2,6.6,4.6,wood);
     [-2.2,2.1,6.4].forEach(x=>glass(x,-7.86,3.2,2.1,1.8));
-    showcase(-3.7,-6.9,3.5);showcase(2.1,-6.9,4.7);
+    if(!real){showcase(-3.7,-6.9,3.5);showcase(2.1,-6.9,4.7);}
     // Chalk menu between the showcases, a neon slogan panel by the nursery.
     b(-1.1,-7.98,1.5,1.5,.08,2.1,dark);['FLOWER','PRE-ROLLS','EDIBLES','WELLNESS'].forEach((t,i)=>text(-1.1,3.3-i*.42,-7.9,t,1.3,.13,'#e8dcc0',false,'600'));
     neonPanel(-6.3,-6.2,1.3,2,2,[],'#9fe3a5',true);
@@ -468,8 +486,8 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     [-4.6,-1.4,1.8].forEach(x=>pendant(x,-4.2,3.6));
     // Rain chain and a small collection barrel at the nursery end.
     job(10.85,-3.5,()=>{b(10.85,-3.5,0,.85,.85,1.15,wood);[.25,.9].forEach(y=>b(10.85,-3.5,y,.89,.89,.07,dark));for(let n=0;n<12;n++){const q=p(10.85,1.2+n*.26,-3.5);api.ctx.strokeStyle='#b8aa7b';api.ctx.lineWidth=Math.max(.5,unit*.02);api.ctx.beginPath();api.ctx.ellipse(q.x,q.y,unit*.06,unit*.09,0,0,Math.PI*2);api.ctx.stroke();}});
-    b(-.1,-5.8,.03,1.1,.8,.8,wood);carton(-.1,-5.8,.85,.62);
-    for(let n=0;n<3;n++)jar(-.48+n*.37,-4.6,.08,n);
+    if(!real){b(-.1,-5.8,.03,1.1,.8,.8,wood);carton(-.1,-5.8,.85,.62);
+    for(let n=0;n<3;n++)jar(-.48+n*.37,-4.6,.08,n);}
     // Irrigation and a stocked potting bench accompany the nursery.
     b(10,-5,.12,.55,3.4,.75,wood);for(let n=0;n<4;n++)carton(10,-6.15+n*.75,.88,.42);
     l([[6.7,.13,-6.7],[6.7,.13,-2.2],[9.9,.13,-2.2]],'#52766a',.065);
@@ -485,8 +503,8 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     job(-5.9,3.85,()=>aFrame(-5.9,3.85));job(-2.5,4.7,()=>stanchions([[-3.9,4.7],[-2.5,4.7],[-1.1,4.7]]));
     job(9,9.3,()=>bicycle(9,9.3,'#c9b57e'));
     job(10.7,6.3,()=>{b(10.7,6.3,0,.7,.7,1,dark);b(10.7,6.3,1,.8,.8,.12,wood);});
-    job(-3,1.4,()=>{[-1,1].forEach(s=>l([[-3+s*1.05,0,-.9],[-3+s*1.05,3.2,-.9]],'#4d5b56',.04));b(-3,-.9,2.55,2.3,.12,.62,dark);text(-3,2.86,-.83,'ORDER',2,.28,'#f0dfb0');person(-3,-.1,now,10,false,true,false);counter(-3,1.4);});
-    job(2,1.4,()=>{[-1,1].forEach(s=>l([[2+s*1.05,0,-.9],[2+s*1.05,3.2,-.9]],'#4d5b56',.04));b(2,-.9,2.55,2.3,.12,.62,dark);text(2,2.86,-.83,'PICK UP',2,.28,'#f0dfb0');person(2,-.1,now,11,false,true,false);counter(2,1.4);});
+    job(-3,1.4,()=>{if(!real){[-1,1].forEach(s=>l([[-3+s*1.05,0,-.9],[-3+s*1.05,3.2,-.9]],'#4d5b56',.04));b(-3,-.9,2.55,2.3,.12,.62,dark);text(-3,2.86,-.83,'ORDER',2,.28,'#f0dfb0');}if(!real)person(-3,-.1,now,10,false,true,false);if(!real){counter(-3,1.4);}});
+    job(2,1.4,()=>{if(!real){[-1,1].forEach(s=>l([[2+s*1.05,0,-.9],[2+s*1.05,3.2,-.9]],'#4d5b56',.04));b(2,-.9,2.55,2.3,.12,.62,dark);text(2,2.86,-.83,'PICK UP',2,.28,'#f0dfb0');}if(!real)person(2,-.1,now,11,false,true,false);if(!real){counter(2,1.4);}});
     job(6.2,.7,()=>display(6.2,.7));
     if(level>=3)job(7.5,3.5,()=>display(7.5,3.5));
     job(1.2,8.6,()=>heater(1.2,8.6));
@@ -556,7 +574,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     b(9.7,-8.8,3.6,2.5,.7,.15,stone);for(let x=8.6;x<10.9;x+=.55)b(x,-8.8,3.75,.5,.7,.1,tile);roseVine(10.6,-8.5,3.5,2.6);
     [-7.4,-2.8,2.8,7.4].forEach(x=>sconce(x,-8.43,3.75));
     [-7.9,-7.5,-7.1].forEach(x=>vine(x,-8.39,8.8,2.1));
-    shelf(-4.3,-6.9,4.5,0,['#91735d','#503e35','#725541']);shelf(3.5,-6.9,4.8,0,['#91735d','#503e35','#725541']);
+    if(!real){shelf(-4.3,-6.9,4.5,0,['#91735d','#503e35','#725541']);shelf(3.5,-6.9,4.8,0,['#91735d','#503e35','#725541']);}
     // A narrow rear atelier above the shop, leaving the front retail volume open.
     floor(0,-6.35,16.7,4.65,4.8,wood);
     b(-3.8,-6,4.8,4.7,1.4,.85,wood);b(-3.8,-6,5.65,4.9,1.55,.14,stone);
@@ -612,8 +630,8 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
       job(x,5.5,()=>b(x,5.5,3.95,1,.55,.22,stone));
       job(x,6.05,()=>b(x,6.05,3.72,1,1.5,.16,finish));
     }
-    job(-3,-2.8,()=>{person(-3,-4.35,now,10,false,true,false);counter(-3,-2.8,3.6,['#846c58','#423e35','#655344']);});
-    job(2.3,-2.8,()=>{person(2.3,-4.35,now,11,false,true,false);counter(2.3,-2.8,3.6,['#846c58','#423e35','#655344']);});
+    job(-3,-2.8,()=>{if(!real)person(-3,-4.35,now,10,false,true,false);if(!real){counter(-3,-2.8,3.6,['#846c58','#423e35','#655344']);}});
+    job(2.3,-2.8,()=>{if(!real)person(2.3,-4.35,now,11,false,true,false);if(!real){counter(2.3,-2.8,3.6,['#846c58','#423e35','#655344']);}});
     job(-5.4,4.3,()=>display(-5.4,4.3,0,brass));job(.5,4.3,()=>display(.5,4.3,0,brass));
     if(level>=3)job(5.1,4.3,()=>display(5.1,4.3,0,brass));
     [-4,3].forEach(x=>pendant(x,-.6,3.5));
@@ -621,7 +639,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     mat(-2.6,6.2,3.3,.9);
     // Sidewalk parcel storage and brass doorknobs on the built-in cabinets.
     job(10.9,-4.6,()=>{carton(10.9,-4.6,.03,.85);carton(10.9,-4.6,.58,.65);carton(11.5,-3.9,.03,.62);});
-    for(let x=-6.2;x<6.5;x+=1.4)b(x,-6.42,.32,.075,.08,.075,brass);
+    if(!real)for(let x=-6.2;x<6.5;x+=1.4)b(x,-6.42,.32,.075,.08,.075,brass);
     job(-10,-.7,()=>{b(-10,-.7,.32,2.1,1.1,.62,wood);[-.75,.75].forEach(dx=>{const q=p(-10+dx,.28,-.25);ellipse(q.x,q.y,unit*.22,unit*.25,'#374a3c');});for(let i=0;i<3;i++)plant(-10.65+i*.65,-.7,.94,.6);flowerBox(-10,-.7,1.1,1.9);});
     job(-11.6,2,()=>bicycle(-11.6,2,'#af7f63'));
     job(3.5,9.8,()=>{cafeTable(3.5,9.8);});
@@ -672,7 +690,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     b(-10.45,-6.5,0,.22,7.4,7.1,teal);
     // Ground-floor fittings must precede the upper slab that occludes them.
     // Otherwise rear shelves appear suspended in front of the balcony/posts.
-    shelf(-7.1,-8.3,4.5,0,teal);shelf(7,-8.3,4.5,0,teal);
+    if(!real){shelf(-7.1,-8.3,4.5,0,teal);shelf(7,-8.3,4.5,0,teal);}
     b(9,-4.6,0,1.75,1.65,.15,silver);
     b(9,-4.58,.15,1.25,1.05,2.25,['#cad8d0','#819a90','#a5bdb0']);
     l([[9,.18,-4.02],[9,2.36,-4.02]],'#586e66',.035);
@@ -716,10 +734,10 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     job(-8,1.8,()=>{b(-8,1.8,0,.9,.75,1.45,teal);b(-8,1.8,1.45,1,.18,1.1,dark);b(-8,1.91,1.57,.79,.025,.78,['#bcd8c4','#bcd8c4','#bcd8c4']);for(let n=0;n<3;n++)b(-8,1.94,1.75+n*.17,.51,.02,.045,teal);});
     // Sorted by its near corner so the planter never paints over the counters beside it.
     job(1.75,-2.8,()=>{b(0,-4.5,0,3.5,3.4,.3,cream);tree(0,-4.5,1.75);});
-    for(let i=0;i<3;i++)job(-6.8+i*6.6,2.2,()=>display(-6.8+i*6.6,2.2,0,silver));
+    if(!real)for(let i=0;i<3;i++)job(-6.8+i*6.6,2.2,()=>display(-6.8+i*6.6,2.2,0,silver));
     // Service counters stand inside the atrium, under the canopy, with the staff between them and the tree.
-    job(-4.4,-1.8,()=>{person(-4.4,-3.3,now,10,false,true,false);counter(-4.4,-1.8,3.9,teal);});
-    job(4.4,-1.8,()=>{person(4.4,-3.3,now,11,false,true,false);counter(4.4,-1.8,3.9,teal);});
+    job(-4.4,-1.8,()=>{if(!real)person(-4.4,-3.3,now,10,false,true,false);if(!real){counter(-4.4,-1.8,3.9,teal);}});
+    job(4.4,-1.8,()=>{if(!real)person(4.4,-3.3,now,11,false,true,false);if(!real){counter(4.4,-1.8,3.9,teal);}});
     // Low planter lights keep the retail sightlines clear of bare tall poles.
     [-8.7,8.8].forEach(x=>job(x,4.5,()=>{planter(x,4.5,1.4,1.3);b(x+.52,4.9,.65,.16,.16,.18,silver);b(x+.52,4.9,.83,.19,.19,.09,cream);glow(x+.52,.92,4.9,.55);}));
     if(level<7)job(-9,7,()=>bench(-9,7,3.8));
@@ -837,7 +855,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     bougainvillea(-8.2,-7.6,4.5,3.4);
     // Terracotta coping crowns every parapet.
     b(0,-8.42,4.6,17.4,.5,.2,tile);
-    showcase(-4,-6.9,4);shelf(3.4,-6.9,4.4,0,['#9a7a54','#5c452e','#7d5f3e']);
+    if(!real){showcase(-4,-6.9,4);shelf(3.4,-6.9,4.4,0,['#9a7a54','#5c452e','#7d5f3e']);}
     // A staff-only door and back-room crates at the right end of the wall.
     poly([p(7.1,.05,-8.13),p(8.15,.05,-8.13),p(8.15,2.25,-8.13),p(7.1,2.25,-8.13)],green[1]);
     l([[7.1,.05,-8.12],[7.1,2.25,-8.12],[8.15,2.25,-8.12],[8.15,.05,-8.12]],'#d8c396',.04);
@@ -890,9 +908,9 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     for(let i=0;i<7;i++)pendant(-5.4+i*1.22,2.6,4.05);
     [-5.5,-4.9,2,2.6].forEach(x=>bougainvillea(x,2.65,4.8,1.5));
     job(-5.9,3.85,()=>aFrame(-5.9,3.85,['HIGHER','DAYS','BRIGHTER']));
-    job(-2.5,4.7,()=>stanchions([[-3.9,4.7],[-2.5,4.7],[-1.1,4.7]]));
-    job(-3,1.4,()=>{[-1,1].forEach(s=>l([[-3+s*1.05,0,-.9],[-3+s*1.05,3.2,-.9]],'#6a5a40',.04));b(-3,-.9,2.55,2.3,.12,.62,green);text(-3,2.86,-.83,'ORDER',2,.28,'#f0dfb0');person(-3,-.1,now,10,false,true,false);counter(-3,1.4);});
-    job(2,1.4,()=>{[-1,1].forEach(s=>l([[2+s*1.05,0,-.9],[2+s*1.05,3.2,-.9]],'#6a5a40',.04));b(2,-.9,2.55,2.3,.12,.62,green);text(2,2.86,-.83,'PICK UP',2,.28,'#f0dfb0');person(2,-.1,now,11,false,true,false);counter(2,1.4);});
+    if(!real)job(-2.5,4.7,()=>stanchions([[-3.9,4.7],[-2.5,4.7],[-1.1,4.7]]));
+    job(-3,1.4,()=>{if(!real){[-1,1].forEach(s=>l([[-3+s*1.05,0,-.9],[-3+s*1.05,3.2,-.9]],'#6a5a40',.04));b(-3,-.9,2.55,2.3,.12,.62,green);text(-3,2.86,-.83,'ORDER',2,.28,'#f0dfb0');}if(!real)person(-3,-.1,now,10,false,true,false);if(!real){counter(-3,1.4);}});
+    job(2,1.4,()=>{if(!real){[-1,1].forEach(s=>l([[2+s*1.05,0,-.9],[2+s*1.05,3.2,-.9]],'#6a5a40',.04));b(2,-.9,2.55,2.3,.12,.62,green);text(2,2.86,-.83,'PICK UP',2,.28,'#f0dfb0');}if(!real)person(2,-.1,now,11,false,true,false);if(!real){counter(2,1.4);}});
     job(6.2,.7,()=>display(6.2,.7));
     if(level>=3)job(7.5,3.5,()=>display(7.5,3.5));
     // A branded pylon greets the parking court; a signpost lists the menu by the walk.
@@ -996,7 +1014,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     b(4,-8.4,2.6,14.15,.46,.22,wood);
     windowGrid('z',-8.18,-2.2,9.8,.7,1,4,1.6,1.4,0,['#f0dfb0','#eddaa8','#f3e7c4','#f0dfb0']);
     [-1,4.4].forEach(x=>sconce(x,-8.16,3.9));wallArt(7.3,-8.21,3.3);
-    showcase(1.2,-6.9,4);shelf(7.6,-6.9,4.2,0,['#7a5c40','#463424','#5f4732']);
+    if(!real){showcase(1.2,-6.9,4);shelf(7.6,-6.9,4.2,0,['#7a5c40','#463424','#5f4732']);}
     b(10.95,-4.6,0,.3,7.4,5.2,stone);
     ['CULTURE','COMMUNITY','CANNABIS'].forEach((t,i)=>text(11.11,3.85-i*.52,-4.4,t,2.4,.3,'#5c5a4a',true,'700'));
     leaf(11.11,1.6,-4.4,.8,'#4f6a52',true);
@@ -1010,11 +1028,11 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     glow(4,1.6,-2,7,'#ffcf8a');
     mat(3,3.6,2.5,1);
     // Counters sit in the hall, the queue winding in from the courtyard on the left.
-    job(.5,1.2,()=>{[-1,1].forEach(sgn=>l([[.5+sgn*1.05,0,-1.1],[.5+sgn*1.05,3.2,-1.1]],'#54402c',.04));b(.5,-1.1,2.55,2.3,.12,.62,green);text(.5,2.86,-1.03,'ORDER',2,.28,'#f0dfb0');person(.5,-.3,now,10,false,true,false);counter(.5,1.2);});
-    job(5.5,1.2,()=>{[-1,1].forEach(sgn=>l([[5.5+sgn*1.05,0,-1.1],[5.5+sgn*1.05,3.2,-1.1]],'#54402c',.04));b(5.5,-1.1,2.55,2.3,.12,.62,green);text(5.5,2.86,-1.03,'PICK UP',2,.28,'#f0dfb0');person(5.5,-.3,now,11,false,true,false);counter(5.5,1.2);});
+    job(.5,1.2,()=>{if(!real){[-1,1].forEach(sgn=>l([[.5+sgn*1.05,0,-1.1],[.5+sgn*1.05,3.2,-1.1]],'#54402c',.04));b(.5,-1.1,2.55,2.3,.12,.62,green);text(.5,2.86,-1.03,'ORDER',2,.28,'#f0dfb0');}if(!real)person(.5,-.3,now,10,false,true,false);if(!real){counter(.5,1.2);}});
+    job(5.5,1.2,()=>{if(!real){[-1,1].forEach(sgn=>l([[5.5+sgn*1.05,0,-1.1],[5.5+sgn*1.05,3.2,-1.1]],'#54402c',.04));b(5.5,-1.1,2.55,2.3,.12,.62,green);text(5.5,2.86,-1.03,'PICK UP',2,.28,'#f0dfb0');}if(!real)person(5.5,-.3,now,11,false,true,false);if(!real){counter(5.5,1.2);}});
     job(9.2,.9,()=>display(9.2,.9));
-    if(level>=3)job(-.8,-5.9,()=>display(-.8,-5.9));
-    job(-1.6,3.4,()=>stanchions([[-2.9,4.2],[-1.6,3.4],[-.3,2.8]]));
+    if(level>=3&&!real)job(-.8,-5.9,()=>display(-.8,-5.9));
+    if(!real)job(-1.6,3.4,()=>stanchions([[-2.9,4.2],[-1.6,3.4],[-.3,2.8]]));
     job(-3.9,4.9,()=>aFrame(-3.9,4.9,['HIGHER','DAYS','AHEAD']));
     // The creek: born in a rock shelf on the right, it falls twice and runs off the front of the plot. The
     // waterfall face and the channel are cut into the ground like Riverside's river, and a timber footbridge
