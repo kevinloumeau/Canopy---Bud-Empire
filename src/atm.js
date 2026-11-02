@@ -21,7 +21,7 @@ const LEVEL_BASE = 1200;
 // camera (rot turns the machine's own +x face to +z). The first stands in the middle, the next two either side of it.
 // The customer stands at `stand`, on the pavement in front of the screen.
 const ATM_Z = 12.45, STAND_Z = 13.25;
-export const ATM_SPOTS = [-4.6, -5.8, -3.4].map(x => ({ x, z: ATM_Z, rot: -Math.PI / 2, stand: { x, z: STAND_Z } }));
+export const ATM_SPOTS = [-2.4, -3.6, -1.2].map(x => ({ x, z: ATM_Z, rot: -Math.PI / 2, stand: { x, z: STAND_Z } }));
 // The way out to the machines and back: round the shop's front-left corner on the pavement.
 export const ATM_CORNER = { x: -11.9, z: 13.25 };
 // A customer steps out to a machine only while their place in the ID line is near the door end of it (route distance

@@ -2969,12 +2969,12 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     return tags}
   var ATM_NUMBERS=['2nd','3rd'];
   function atmTagInfo(){if(!state.lines[4])return null;var atm=state.atm,spot=ATM_SPOTS[0],fix=state.shopOpen?recommendation():null,best=!!fix&&fix.kind==='atm';
-    if(!atm.level)return{el:atmMarker,name:'ATM',price:ATM_BUILD,x:spot.x,y:2.5,z:spot.z,best:best,buys:[{label:'Build',price:ATM_BUILD,best:best,go:purchaseAtm}]};
+    if(!atm.level)return{el:atmMarker,name:'ATM',price:ATM_BUILD,x:spot.x,y:2.6,z:spot.z+.5,best:best,buys:[{label:'Build',price:ATM_BUILD,best:best,go:purchaseAtm}]};
     var buys=[],levelPrice=atmLevelCost(atm.level),machinePrice=atmMachineCost(atm);
     if(levelPrice!==null){buys.push({label:'Lv '+(atm.level+1),price:levelPrice,best:best&&!fix.machine,go:purchaseAtmLevel});var q=atmMaxQuote(atm,state.money);if(q.levels>1)buys.push({label:'+'+q.levels,icon:FAST_FORWARD,price:q.cost,go:purchaseAtmMax})}
     if(machinePrice!==null)buys.push({label:ATM_NUMBERS[atm.machines-1]+' ATM',price:machinePrice,best:best&&!!fix.machine,go:purchaseAtmMachine});
     var bestBuy=buys.filter(function(b){return b.best})[0];
-    return{el:atmMarker,name:'ATM',level:atm.level,price:bestBuy?bestBuy.price:buys.length?buys[0].price:0,x:spot.x,y:2.5,z:spot.z,best:!!bestBuy,buys:buys.length?buys:null}}
+    return{el:atmMarker,name:'ATM',level:atm.level,price:bestBuy?bestBuy.price:buys.length?buys[0].price:0,x:spot.x,y:2.6,z:spot.z+.5,best:!!bestBuy,buys:buys.length?buys:null}}
   function purchaseAtm(){if(!buyAtm(state))return;burst({x:ATM_SPOTS[0].x,z:ATM_SPOTS[0].z,y:1},'#dbc38b');telemetry.once('atm_built');save();renderUI();notify('ATM INSTALLED · cash users pay a fee on every withdrawal','upgrade')}
   function purchaseAtmLevel(){if(!buyAtmLevel(state))return;atmLevelled();save();renderUI()}
   function purchaseAtmMax(){var from=state.atm.level;if(!buyAtmLevels(state))return;atmLevelled(from);save();renderUI()}
