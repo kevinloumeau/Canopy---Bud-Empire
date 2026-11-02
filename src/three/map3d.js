@@ -938,20 +938,25 @@ export function createMap3D(canvas, layout) {
     props.forEach(p => propReady(p.file));
     placeProps(props, night);
     placeFigures(frame.figures || [], night);
-    const clockNow = performance.now(), stepSeconds = Math.min(.1, (clockNow - (lastStep || clockNow)) / 1000);
-    lastStep = clockNow;
+    const stepSeconds = frameStep(frame);
     placeCharacters(frame.characters, stepSeconds, night);
     if (!frame.dry) renderer.render(scene, camera);
     return true;
   }
 
+  // How far the map's motion moves this frame: the game's own clock (frame.step, game seconds), so people, staff and
+  // stations stand still while the game is paused and keep pace with 2x and 4x; wall time only for a caller without one.
+  function frameStep(frame) {
+    const clockNow = performance.now(), wall = Math.min(.1, (clockNow - (lastStep || clockNow)) / 1000);
+    lastStep = clockNow;
+    return frame.step === undefined ? wall : Math.max(0, Math.min(.4, frame.step));
+  }
   function render(frame) {
     if (lost) return false;
     branchMode(false);
     const night = view(frame, daySky);
 
-    const clockNow = performance.now(), stepSeconds = Math.min(.1, (clockNow - (lastStep || clockNow)) / 1000);
-    lastStep = clockNow;
+    const stepSeconds = frameStep(frame);
     let ringShown = false;
     frame.stations.forEach((s, i) => {
       const group = stationMesh(i), { body, top } = group.userData;
