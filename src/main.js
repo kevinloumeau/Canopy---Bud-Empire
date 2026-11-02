@@ -1861,11 +1861,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     }
     if(c.phase==='leaving'&&c.loungeFadeIn!==undefined&&c.loungeFadeIn<1){c.walking=false;return}
     var kind=c.phase==='leaving'?'exit':c.ordered?'pickup':c.kiosk?'kiosk':'order',route=kind==='kiosk'?kioskRoute(c.kioskIndex):queueRoute(c.ordered),budget=dt*walkSpeed(),startX=c.x,startZ=c.z;
-    // A guest out of the lounge is in no hurry: they amble to the door at a fixed slow pace, whatever Floor flow does
-    // for everyone else (a third of the base walking speed).
-    if(c.lounge&&kind==='exit'&&c.z>-7.4)budget=dt*economy.walkSpeed(0)*WALK_PACE/3;
-    // On the way out nobody walks into the back of the person in front: a slow lounge guest ambling to the door holds
-    // up whoever catches them, a step behind, instead of the two sliding through each other.
+    // Lounge guests leave at everyone's pace: the slow stoned amble they once had backed the whole exit lane up behind
+    // them at the EXIT ONLY door. On the way out nobody walks into the back of the person in front.
     if(kind==='exit'&&c.routeKind===kind)budget=Math.min(budget,exitRoom(c));
     if(c.routeKind!==kind){
       c.routeKind=kind;c.laneDistance=null;
