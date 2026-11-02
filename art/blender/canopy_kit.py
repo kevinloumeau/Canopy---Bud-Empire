@@ -33,6 +33,11 @@ def glass(name, hexcol="#eaf3ef"):
     b.inputs["IOR"].default_value = 1.45
     return m
 
+# The shop's one green tile (Kevin, 2026-11-02: "unify the green tiles"): the wall dado's tall stack-bond tile
+# (src/three/shell.js, SHOP_GREEN_TILE and TILE_GROUT in the sunny look) about 0.118 m wide and 0.39 m a course.
+# The column base and the luxe desks' tiled cabinets and plinths use the same green, grout and tile width.
+TILE_GREEN, TILE_GROUT, TILE_W = "#1f5e40", "#cfdcc4", .118
+
 def begin(name):
     """Reset the scene and create the shared palette.  Returns the output folder."""
     global col, WOOD, WOOD_D, OAK, BRASS, STONE, GREEN, GREEN_D, GLOW, TERRA, TERRA_D, SOIL, LEAF_A, LEAF_B, STEM, BUD, PISTIL, DRY, CREAM, GLASS, KRAFT, DARK
