@@ -165,11 +165,13 @@ function migrateContracts(r){
   return {round:num(c.round),done:num(c.done),bank:num(c.bank,0,CONTRACT_BANK_MAX),boost:Math.min(CONTRACT_BOOST_SECONDS*CONTRACT_BANK_MAX,Math.max(0,Number.isFinite(c.boost)?c.boost:0)),
     active:a?{id:a.id,start:num(a.start),end:num(a.end),target:Math.max(1,num(a.target,1)),progress:num(a.progress)}:null};
 }
+// A strain on the menu sells as this type (types are stocked per strain).
+function sellsOnMenu(state,type){const rows=state.productMenu?.byStrain;if(!Array.isArray(rows))return false;const menu=Array.isArray(state.menuStrains)&&state.menuStrains.length?state.menuStrains:rows.map((_,i)=>i);return menu.some(i=>rows[i]?.[type]===true);}
 // What the shop can work on: deliveries need the drone or Old Town's bulk desk, the type contracts need that type stocked.
 function contractReady(def,state){
   if(def.needs==='online')return !!(state.pickupWindow?.owned||state.autoDrone?.owned||state.empire.stores[2].level>=2);
-  if(def.needs==='edibles')return state.productMenu?.unlocked?.[2]===true;
-  if(def.needs==='prerolls')return state.productMenu?.unlocked?.[1]===true;
+  if(def.needs==='edibles')return sellsOnMenu(state,2);
+  if(def.needs==='prerolls')return sellsOnMenu(state,1);
   return true;
 }
 // With the shop's current pace for the contract's kind (per minute, from main.js), the target is 60% of what that pace
