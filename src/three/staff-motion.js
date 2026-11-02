@@ -187,3 +187,21 @@ export function handInBody(rig, arm) {
   inBody(rig.bones[ARM[arm][2]], p);
   return p;
 }
+
+// A shopper carrying their pickup bag out: the right arm hangs a little out from the hip, nearly straight, so the bag
+// clears the leg, and swings gently fore and aft with the stride (swing -1..1, from the walk). w (0..1) eases it in as
+// the bag is handed over. Only the right upper arm and forearm turn; the walk or idle keeps everything else.
+export const CARRY_HAND = [.2, -.96, .03];
+export function poseCarry(rig, swing = 0, w = 1) {
+  if (!rig || w <= 0) return null;
+  const { body, bones } = rig, names = ARM.right, upper = bones[names[0]], fore = bones[names[1]];
+  const restUpper = upper.quaternion.clone(), restFore = fore.quaternion.clone();
+  body.updateWorldMatrix(true, false);
+  inv.copy(body.matrixWorld).invert();
+  inBody(upper, sp); inBody(fore, ep); inBody(bones[names[2]], hp);
+  const r = ep.distanceTo(sp) + hp.distanceTo(ep), h = CARRY_HAND;
+  const target = (rig.targets.carry = rig.targets.carry || new THREE.Vector3()).set(sp.x - h[0] * r, sp.y + (h[1] + Math.abs(swing) * .02) * r, sp.z + (h[2] + swing * .09) * r);
+  reach(bones, names, -1, target);
+  if (w < 1) { upper.quaternion.slerp(restUpper, 1 - w); fore.quaternion.slerp(restFore, 1 - w); }
+  return target;
+}

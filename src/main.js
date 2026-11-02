@@ -2474,7 +2474,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var characters=[],workClock=function(i){return motionPreference.matches?6.3:motionClocks[i]};
     function customer(id,x,y,z,gait,cast){
       var file=CUSTOMER_MODELS[(cast===undefined?id:cast)%CUSTOMER_MODELS.length];
-      if(map3d.characterReady(file)){var still=motionPreference.matches;characters.push({file:file,id:id,x:x,y:y,z:z,ground:(gait.phase||0)/5,amount:still?0:gait.amount,heading:gait.heading,look:gait.look,facing:gait.facing,still:still})}
+      if(map3d.characterReady(file)){var still=motionPreference.matches;characters.push({file:file,id:id,x:x,y:y,z:z,ground:(gait.phase||0)/5,amount:still?0:gait.amount,heading:gait.heading,look:gait.look,facing:gait.facing,still:still,bag:!!gait.bag})}
     }
     // Staff are rigged models too, one per role (STAFF_MODELS), standing at work and facing it (look).
     // work: the job they act out at their post (staff-motion.js), on the post's own clock so hands follow its parts.
@@ -2547,7 +2547,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     customers.forEach(function(c){
       stepCustomerVisual(c,frameDelta);
       if(c.phase==='lounge'&&!(c.loungeFade>0))return;
-      var gait={phase:c.walkPhase||0,heading:c.walkHeading,look:customerLook(c),amount:c.walkAmount||0,facing:c.facing===undefined?.3:c.facing,lean:c.turnLean||0,pickupAge:c.effectAge};
+      var gait={phase:c.walkPhase||0,heading:c.walkHeading,look:customerLook(c),amount:c.walkAmount||0,facing:c.facing===undefined?.3:c.facing,lean:c.turnLean||0,pickupAge:c.effectAge,bag:!!c.bag};
       customer(c.id||0,c.renderX,0,c.renderZ,gait);
     });
     var streetApi=sunnyApi(now);
@@ -2556,7 +2556,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // The pickup window's clerk inside it, and its walk-ups (cast after the shop's own customers).
     if(windowOpen()){
       staffer('window',STAFF_MODELS.window,WINDOW_CLERK.x,0,WINDOW_CLERK.z,null,-1,{role:'window',clock:sceneTime/1000,act:windowServing?1:0});
-      windowFigures(windowLine,SUBWAY_HIDDEN_Z).forEach(function(w){customer('window'+w.id,w.x,w.y,w.z,{phase:w.walked*5,heading:w.heading,amount:w.moving?1:0,facing:w.facing},500+w.id)});
+      windowFigures(windowLine,SUBWAY_HIDDEN_Z).forEach(function(w){customer('window'+w.id,w.x,w.y,w.z,{phase:w.walked*5,heading:w.heading,amount:w.moving?1:0,facing:w.facing,bag:!!w.bag},500+w.id)});
     }
     // The street's trees, lamps and props are its own renders too, stood up at their footprints' centres, and so are
     // the cars until their Blender models load; the terraces stay solid. The 3D trees and lamps underneath only cast shadows.
