@@ -62,7 +62,7 @@ export function wantsCash(id, level) {
 export function atmCapacity(atm) { return atm.level ? atm.machines / (atmUseSeconds(atm.level) + ATM_WALK_SECONDS) : 0; }
 // Cash users pass the machines in a second or two, so some find them all busy and walk on: about this share get cash
 // (measured in the real shop, 4-hour sim).
-export const ATM_FOUND_FREE = .6;
+export const ATM_FOUND_FREE = .45;
 // Fees a second, for the income rate and the best-buy maths: customers a second, the share who stop (as many as the
 // machines can take), times the fee on a basket of the given value.
 export function atmIncome(atm, customersPerSecond, basketValue) {

@@ -531,7 +531,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     tickAbilities(state.abilities,dt);arrival+=dt;state.vipBuzz=Math.max(0,(state.vipBuzz||0)-dt);state.rushTime=Math.max(0,state.rushTime-dt);tickContractBoost(state.empire,dt);var settled=settleContract(state.empire);if(settled)contractSettled(settled);if(state.shopOpen)state.spenderClock=Math.max(0,state.spenderClock-dt);
     if(strains.tickTrend(state.strainTrend,dt,STRAINS.length,state.sold+customerId)){var trending=STRAINS[state.strainTrend.index];notify(trending.name.toUpperCase()+' IS TRENDING · +35% for 8 min'+(state.strains[state.strainTrend.index]?'':' · unlock it to cash in'),'upgrade');renderUI()}
     // Nobody walks in until the sign flips; stations that are already standing still stock the shelves.
-    if(state.shopOpen&&arrival>=arrivalInterval()&&customers.filter(function(c){return inOrderFlow(c)&&!atAtm(c)}).length<queueLimit()){
+    if(state.shopOpen&&arrival>=arrivalInterval()&&customers.filter(function(c){return inOrderFlow(c)&&!c.cash}).length<queueLimit()){
       var eventGuest=contractTwist(state.empire)==='vip'&&customerId%3===2;
       var arrivingKind=eventGuest?'vip':customerType(state.empire.reputation,customerId),lounge=wantsLounge(state.lounge,customerId,arrivingKind);
       // Every two to seven minutes a shop event walks in with a customer (shop-events.js): a big spender, rush hour, an
