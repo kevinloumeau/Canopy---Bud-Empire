@@ -21,7 +21,7 @@ FOUNDER = {
     "Brass": ("#e9c35f", .22), "PolishedBrass": ("#f2cd68", .14),
     "CreamStone": ("#f6f1e6", None), "Marble": ("#f8f4ec", .18), "MarbleVein": ("#d8c79a", None), "CreamTop": ("#f6efdc", None),
     "Cream": ("#f6f0e2", None), "CreamPaint": ("#f4eedf", None), "CabinetCream": ("#f4ecd8", None), "Grout": ("#c9a957", None),
-    "PotCream": ("#1b1512", .35), "Terracotta": ("#1f1915", .4), "TerracottaRim": ("#d9b45a", .25),
+    "PotCream": ("#1b1512", .35), "StorefrontGreen": ("#221a15", .35), "StorefrontGreenDeep": ("#0f4d37", .3), "SignLetters": ("#0d3a2a", None), "Terracotta": ("#1f1915", .4), "TerracottaRim": ("#d9b45a", .25),
 }
 _mat = K.mat
 def mat(name, hexcol, rough=.5, metal=0., emit=0., two_sided=False):

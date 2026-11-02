@@ -1,4 +1,4 @@
-import {PICKUP_WINDOW,PICKUP_SIGN,WINDOW_CLERK,WINDOW_COST,HATCH_COST,TIPS_COST,TIP_SHARE,migrateWindow,windowLineMax,windowServeSeconds,windowRoom,walkupCount,createWindowLine,addWalkups,stepWindowLine,windowFigures} from './pickup-window.js';
+import {PICKUP_WINDOW,PICKUP_SIGN,WINDOW_CLERK,WINDOW_COST,WINDOW_MAX_LEVEL,WINDOW_LOOKS,WINDOW_UNLOCKS,migrateWindow,windowLevel,windowLook,nextWindowLook,windowLevelCost,windowLevelsFor,windowPay,windowRequestBoost,walkupFraction,windowLineMax,windowServeSeconds,windowRoom,walkupCount,createWindowLine,addWalkups,stepWindowLine,windowFigures} from './pickup-window.js';
 import {migrateOrderCounters,orderCounterPositions,COUNTER_SHIFT,PICKUP_X,orderCounterCost,buyOrderCounter,ORDER_QUEUE_GATE,assignOrderCounter,assignKiosk,takesKiosk,atOrderCounter,orderAvailability,pickupPlaces} from './order-counters.js';
 import {makeLifts,tickLifts,CAB_SLOTS} from './lounge-lifts.js';
 import {LOUNGE_TIERS,LOUNGE_MAX,migrateLounge,loungeTier,loungeUpgradeCost,loungeSeats,loungeSessionSeconds,buyLoungeTier,wantsLounge,loungeAdmission,loungeTake,loungeRate,loungeCurrentRate,migrateLoungeHost,buyLoungeLift,LOUNGE_LIFT_COST,LOUNGE_LIFT_SPEED,loungeHostSpeed,loungeHostCost} from './lounge.js';
@@ -744,7 +744,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function onlineOpen(){return windowOpen()||deliveryBuilt()}
   // Without drones an order can only leave through the window, so a send is held to the room in its line.
   function onlineLimit(limit){return deliveryBuilt()?limit:Math.min(limit,windowOpen()?windowRoom(windowLine,state.pickupWindow):0)}
-  function accrueOnlineRequests(seconds){if(onlineOpen())accrueRequests(state,seconds)}
+  function accrueOnlineRequests(seconds){if(onlineOpen())accrueRequests(state,seconds*windowRequestBoost(state.pickupWindow))}
   function onlineRequestsReady(){return requestsReady(state)}
   function onlineBatch(limit,jarBudget){
     var jars=jarBudget===undefined?state.stock[3]:jarBudget,count=0,used=0,reward=0;limit=Math.min(limit,onlineRequestsReady());
@@ -757,14 +757,15 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // Repeat buyers: a share of fulfilled orders come straight back as new requests.
     if(state.repeatLevel)state.onlineRequests=Math.min(onlineRequestCap(),state.onlineRequests+batch.count*state.repeatLevel*.04);
     // Once drones fly, one order in three is still collected at the pickup window, while its line has room
-    // (pickup-window.js); before them every order is. The tip jar pays a quarter more on each walk-up.
-    var walks=windowOpen()?addWalkups(windowLine,deliveryBuilt()?walkupCount(state.onlineCompleted-batch.count,batch.count):batch.count,windowStairs,windowLineMax(state.pickupWindow)):0;
-    queueDeliveryWave(batch.count-walks);if(state.pickupWindow.tips&&walks)batch.reward+=batch.reward*walks/batch.count*TIP_SHARE;
+    // (pickup-window.js), more as the window levels; before them every order is.
+    var wl=windowLevel(state.pickupWindow),walks=windowOpen()?addWalkups(windowLine,deliveryBuilt()?walkupCount(state.onlineCompleted-batch.count,batch.count,wl):batch.count,windowStairs,windowLineMax(state.pickupWindow)):0;
+    // Each window level pays walk-ups more, doubling at each new look (pickup-window.js).
+    queueDeliveryWave(batch.count-walks);if(walks)batch.reward+=batch.reward*walks/batch.count*(windowPay(wl)-1);
     recordEvent(state.empire,'online',batch.count);add(batch.reward);if(!automatic)notifyDispatch(batch);burst({x:DECK_X,z:DECK_Z,y:7.05},'#dbc38b');slideReceipts(batch.count);renderUI();save();
   }
   // Each order is a parcel set on its own spot on the launch pad; couriers come in one after another to fetch them. With
   // every spot taken, further orders ride along with a waiting parcel (shown as ×N), so the pad never fills up.
-  var windowLine=createWindowLine(),windowServing=false;
+  var windowLine=createWindowLine(),windowServing=false,WINDOW_FIXTURE_KEYS=['pickupWindow','pickupWindow2','pickupWindow3','pickupWindow4','pickupWindow5','pickupWindowF'];
   function windowStairs(id){return subwayStairs(id%2?.3:-.3)}
   var DRONE_SPOTS=[[-.75,0],[-.25,0],[.25,0],[.75,0]],DRONE_PICKUP=2.2,DRONE_LIFE=10.8;
   function queueDeliveryWave(count){
@@ -873,13 +874,13 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
           // The pickup window's feed (Kevin, 2026-10-20): up out of the floor behind the window, over the bay's cap and down
           // behind its sliding pane onto the inside shelf, where the parcels arrive. It shows with the window, which comes
           // with the deck.
-          {points:[[PICKUP_WINDOW.x-1,-.7,PICKUP_WINDOW.z-1.6],[PICKUP_WINDOW.x-1,4,PICKUP_WINDOW.z-1.6],[PICKUP_WINDOW.x-1,4,PICKUP_WINDOW.z-.55],[PICKUP_WINDOW.x-1,1.45,PICKUP_WINDOW.z-.55]],stage:3,cargoStage:5,noCap0:true,floorRings:[[PICKUP_WINDOW.x-1,0,PICKUP_WINDOW.z-1.6]],fixture:'pickupWindow'}],
+          {points:[[PICKUP_WINDOW.x-1,-.7,PICKUP_WINDOW.z-1.6],[PICKUP_WINDOW.x-1,4,PICKUP_WINDOW.z-1.6],[PICKUP_WINDOW.x-1,4,PICKUP_WINDOW.z-.55],[PICKUP_WINDOW.x-1,1.45,PICKUP_WINDOW.z-.55]],stage:3,cargoStage:5,noCap0:true,floorRings:[[PICKUP_WINDOW.x-1,0,PICKUP_WINDOW.z-1.6]],fixture:'windowTube'}],
         belts:[{x1:-4.6,x2:4.6,z:-5.8,floor:9.4,height:1.05,width:BELT_W,stage:0},{x1:4.2,x2:-3.2,z:-3.7,floor:4.7,height:1.05,width:BELT_W,stage:2}]};
       // The online orders deck, placed by its origin (the stair foot, on the mezzanine) at the scale every Blender model
       // shares (about 1.69 map units a metre), so its slab's right and front edges land where the sprite's do
       // (DECK_RIGHT, DECK_FRONT) with the deck at 7.05.
       layout.floorTextures=floorTextureFiles();
-      layout.fixtures=[{key:'deck',file:'online_deck.glb',x:-9.39,y:4.7,z:-.2,scale:1.69,glow:'SignLit'},{key:'pickupWindow',file:'pickup_window.glb',x:PICKUP_WINDOW.x,y:0,z:PICKUP_WINDOW.z,scale:1.69,glow:'SignCream'}];
+      layout.fixtures=[{key:'deck',file:'online_deck.glb',x:-9.39,y:4.7,z:-.2,scale:1.69,glow:'SignLit'},{key:'pickupWindow',file:'pickup_window.glb',x:PICKUP_WINDOW.x,y:0,z:PICKUP_WINDOW.z,scale:1.69,glow:'SignCream'}].concat(WINDOW_FIXTURE_KEYS.slice(1).map(function(k,n){return{key:k,file:'pickup_window_'+(n<4?'tier'+(n+2):'founder')+'.glb',x:PICKUP_WINDOW.x,y:0,z:PICKUP_WINDOW.z,scale:1.69,glow:'SignCream'}}));
       // The self-order kiosks, one Blender model per bought kiosk where the customer code queues them (kioskZ),
       // the screen facing +x toward the customer and lit like a screen (`screen` names its material).
       [0,1,2].forEach(function(k){layout.fixtures.push({key:'kiosk'+k,file:'kiosk.glb',x:-9.75,y:0,z:kioskZ(k),scale:1.69,screen:'Screen',menu:true})});
@@ -976,6 +977,13 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Once the pickup window is bought it takes the front planter's place, its A-frame out on the pavement.
   // The window bay itself is a layout fixture (key pickupWindow), so it rises out of a building site like the deck.
   var WINDOW_FIXTURES=[{file:'aframe_sign.glb',x:PICKUP_SIGN.x,z:PICKUP_SIGN.z,rot:PICKUP_SIGN.rot}];
+  // The window's model for its level: one fixture per look (pickup_window.glb to _tier5, and the founder's finish at
+  // Lv 75 with the perk); windowTube keeps the glass bag tube down to it whichever look stands.
+  function windowLookNow(){var l=windowLevel(state.pickupWindow),look=windowLook(l);return look===5&&perkLevel(state.perks,'finish')&&l>=WINDOW_MAX_LEVEL?6:look}
+  function windowFixtures(){var open=windowOpen(),look=open?windowLookNow():0,out={windowTube:open};WINDOW_FIXTURE_KEYS.forEach(function(k,n){out[k]=open&&look===n+1});if(!open)out.pickupWindow=false;return out}
+  // Pale see-through copies of what is next to buy (Kevin, 2026-11-02): the next kiosk, and the pickup window over its
+  // lot while its tag offers it.
+  function fixtureGhosts(){var g={},orders=state.lines[4]>0;if(orders&&kioskCount()<3)g['kiosk'+kioskCount()]=true;if(orders&&!windowOpen()&&!isBuilding(state.builds,'window'))g.pickupWindow=true;return Object.keys(g).length?g:null}
   function frontFixtures(){return windowOpen()?FRONT_FIXTURES.filter(function(f){return !f.window}).concat(WINDOW_FIXTURES):isBuilding(state.builds,'window')?FRONT_FIXTURES.filter(function(f){return !f.window}):FRONT_FIXTURES}
   // The back-wall shelving stands just behind the counters; the smoking lounge is the room behind it (z −7 → −1.76).
   var DISPLAY_Z=-1.6,LOUNGE_FRONT=DISPLAY_Z+.65;
@@ -2678,7 +2686,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
         stations.push({index:j,x:q.x,y:q.y,z:q.z,w:b.w,d:b.d,h:b.h*(1+(Math.min(5,tier)-1)*.12),tier:tier,built:true,rise:0,pop:1,selected:branchBuyFor===j&&state.empire.activeStore===d.index+1,clock:workClock(j),act:1,boost:0});
         if(j===4)staffer('b'+d.index+'s4',STAFF_MODELS.desks[(d.index+1)%STAFF_MODELS.desks.length],q.x-.35,q.y,q.z-1.5,{x:0,z:1},.3,{role:'desk',clock:workClock(4)+d.index*1.7,act:1});
         else{var spot=STAFF_SPOTS[j]||{dx:-.95,dz:-1.65};staffer('b'+d.index+'s'+j,STAFF_MODELS.stations[j],q.x+spot.dx,q.y,q.z+spot.dz,{x:-spot.dx,z:-spot.dz},spot.facing,{role:STAFF_ROLES[j],clock:workClock(j),act:1})}})});
-    map3d.render({step:frameDelta,districts:districts,hazeEast:eastHaze(storeLevels()),dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,characters:characters,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,intro:introTime(),loungeOpen:state.lounge>0,loungeTier:state.lounge,city:state.city,cityClaimed:cityClaimed(),cityBuild:cityBuildShares(),flagship:state.flagship,flagshipBuild:isBuilding(state.builds,'flagship')?1-buildShareLeft(state.builds,'flagship'):null,loungeBuild:isBuilding(state.builds,'lounge')?1-buildShareLeft(state.builds,'lounge'):null,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtureBuild:isBuilding(state.builds,'deck')||isBuilding(state.builds,'window')?Object.assign(isBuilding(state.builds,'deck')?{deck:1-buildShareLeft(state.builds,'deck')}:{},isBuilding(state.builds,'window')?{pickupWindow:1-buildShareLeft(state.builds,'window')}:{}):null,fixtures:{deck:deliveryBuilt(),pickupWindow:windowOpen(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2},fixtureGhost:state.lines[4]>0&&kioskCount()<3?{['kiosk'+kioskCount()]:true}:null,menus:kioskMenus(),menuClock:animationTime/1000,cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    map3d.render({step:frameDelta,districts:districts,hazeEast:eastHaze(storeLevels()),dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,characters:characters,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,intro:introTime(),loungeOpen:state.lounge>0,loungeTier:state.lounge,city:state.city,cityClaimed:cityClaimed(),cityBuild:cityBuildShares(),flagship:state.flagship,flagshipBuild:isBuilding(state.builds,'flagship')?1-buildShareLeft(state.builds,'flagship'):null,loungeBuild:isBuilding(state.builds,'lounge')?1-buildShareLeft(state.builds,'lounge'):null,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtureBuild:isBuilding(state.builds,'deck')||isBuilding(state.builds,'window')?Object.assign(isBuilding(state.builds,'deck')?{deck:1-buildShareLeft(state.builds,'deck')}:{},isBuilding(state.builds,'window')?{pickupWindow:1-buildShareLeft(state.builds,'window')}:{}):null,fixtures:Object.assign(windowFixtures(),{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2}),fixtureGhost:fixtureGhosts(),menus:kioskMenus(),menuClock:animationTime/1000,cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     // A model that had not loaded when the tabs were painted: try again every half second until all are in.
     var wall=performance.now();if(picturesPending&&!(wall-(renderFrame3d.picturesTried||0)<500)){renderFrame3d.picturesTried=wall;picturesPending=false;paintThumbnails()}
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -2941,10 +2949,10 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   var KIOSK_PRICES=[25000,50000,100000],KIOSK_Z=[0,1,2].map(kioskZ);
   // What each tag shows now: null when there is nothing to buy there.
   function lotTags(){var tags=[],count=kioskCount(),orders=state.lines[4]>0;
-    var w=state.pickupWindow,windowBuys=windowOpen()?[['hatch','Line of 10',HATCH_COST],['tips','+25% tips',TIPS_COST]].filter(function(u){return !w[u[0]]}):[];
-    if(orders&&!windowOpen())tags.push({el:windowMarker,name:'Window',build:'window',price:WINDOW_COST,x:PICKUP_WINDOW.x,y:2.4,z:PICKUP_WINDOW.z,buys:[{label:'Build',price:WINDOW_COST,go:purchaseWindow}]});
-    // Once open, the window keeps its tag while its two upgrades are still to buy.
-    else if(windowBuys.length)tags.push({el:windowMarker,name:'Window',price:windowBuys[0][2],x:PICKUP_WINDOW.x,y:2.4,z:PICKUP_WINDOW.z,buys:windowBuys.map(function(u){return{label:u[1],price:u[2],go:function(){purchaseWindowUpgrade(u[0],u[2],u[0]==='hatch'?'SECOND HATCH OPEN · line of 10, quicker hand-off':'TIP JAR OUT · walk-ups pay 25% more')}}})});
+    if(orders&&!windowOpen())tags.push({el:windowMarker,name:'Window',build:'window',price:WINDOW_COST,best:windowSuggested(),x:PICKUP_WINDOW.x,y:2.4,z:PICKUP_WINDOW.z,buys:[{label:'Build',price:WINDOW_COST,go:purchaseWindow}]});
+    // Once open, the window keeps a small level tag: its box sells the next level and as many as the cash buys, like a
+    // station's, and wears the brass when the window is the best buy.
+    else if(windowOpen()&&!windowMaxed())tags.push({el:windowMarker,name:'Window',level:windowLevel(state.pickupWindow),price:windowNextCost(),best:windowSuggested(),x:PICKUP_WINDOW.x,y:2.4,z:PICKUP_WINDOW.z,buys:windowBuys()});
     if(windowOpen()&&!deliveryBuilt())tags.push({el:droneMarker,name:'Drones',build:'deck',price:AUTO_DRONE_COST,x:-9.39,y:7.2,z:-.2,buys:[{label:'Build',price:AUTO_DRONE_COST,go:purchaseAutoDrone}]});
     // Canopy HQ (src/flagship.js): from the late game on, the corner lot behind the shop sells its next stage; while a
     // stage builds the tag counts down and its box offers Finish now.
@@ -2975,11 +2983,11 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // Where the next order counter will stand and what it costs, while Orders is open and a counter is left to buy.
   function nextOrderCounter(){var count=state.orderCounters,price=orderCounterCost(count);if(!state.lines[4]||price===null)return null;var q=orderCounterPositions(count+1)[count];return{x:q.x,z:q.z,price:price}}
   function renderLotTags(){var shown=lotTags();LOT_MARKERS.forEach(function(el){var t=shown.filter(function(x){return x.el===el})[0];el.hidden=!t;if(!t)return;
-    var building=!!t.build&&isBuilding(state.builds,t.build),clock=building?buildClock(buildLeft(state.builds,t.build)):'',key=t.name+'|'+(building?clock:fmt(t.price))+'|'+(state.money>=t.price);
-    el.classList.toggle('is-building',building);
+    var building=!!t.build&&isBuilding(state.builds,t.build),clock=building?buildClock(buildLeft(state.builds,t.build)):'',shownLevel=building?clock:t.level?'Lv '+t.level:fmt(t.price),key=t.name+'|'+shownLevel+'|'+(state.money>=t.price);
+    el.classList.toggle('is-building',building);el.classList.toggle('can-upgrade',!building&&!!t.best&&state.money>=t.price);
     if(building)el.style.setProperty('--build-left',buildShareLeft(state.builds,t.build).toFixed(3));else el.style.removeProperty('--build-left');
-    if(t.locked)key+='|locked';if(el.dataset.level!==key){el.innerHTML='<span class=station-sign-name>'+t.name+'</span><span class=station-sign-level>'+(building?clock:t.locked?LOCK_ICON+(t.lockText||''):fmt(t.price))+'</span>';el.dataset.level=key;updateMarkers.key=null}
-    el.setAttribute('aria-label',building?t.name+', being built. Opens in '+clock:t.locked?t.name+(t.lockText?', locked until '+t.lockText+' earned':', for lease. Locked, show what opens it'):t.name+', '+fmt(t.price)+'. Show what to buy');
+    if(t.locked)key+='|locked';if(el.dataset.level!==key){el.innerHTML='<span class=station-sign-name>'+t.name+'</span><span class=station-sign-level>'+(t.locked&&!building?LOCK_ICON+(t.lockText||''):shownLevel)+'</span>';el.dataset.level=key;updateMarkers.key=null}
+    el.setAttribute('aria-label',building?t.name+', being built. Opens in '+clock:t.locked?t.name+(t.lockText?', locked until '+t.lockText+' earned':', for lease. Locked, show what opens it'):t.name+(t.level?', level '+t.level+', next '+fmt(t.price):', '+fmt(t.price))+'. Show what to buy');
     signBuy(el,pickedTag===el.dataset.marker&&(!t.locked||t.lockText)&&(!building||t.buildBuys)?t.buys:null)});
     if(pickedTag&&!shown.some(function(t){return t.el.dataset.marker===pickedTag}))pickedTag=null}
   // The buy box over a picked sign (Kevin, 2026-10-22): what can be bought there, each a tap away. items: [{label, price,
@@ -3005,7 +3013,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     if(shopBrowser)shopBrowser.render();
   }
   function updateMarkers(){
-    var key=[centerX,centerY,unit,width,height,state.idStaff,state.lines.join(),state.empire.activeStore,securitySelected,selected,state.lounge,loungeSelected,mapPicked,windowOpen(),deliveryBuilt(),kioskCount(),state.orderCounters,state.pickupWindow.hatch,state.pickupWindow.tips,state.flagship,isBuilding(state.builds,'flagship'),flagshipUnlocked(state.lifetime),cityKey(),storeLevels().join(),leaseIndex()>=0&&leaseLocked(leaseIndex())].join("|");
+    var key=[centerX,centerY,unit,width,height,state.idStaff,state.lines.join(),state.empire.activeStore,securitySelected,selected,state.lounge,loungeSelected,mapPicked,windowOpen(),deliveryBuilt(),kioskCount(),state.orderCounters,windowLevel(state.pickupWindow),state.flagship,isBuilding(state.builds,'flagship'),flagshipUnlocked(state.lifetime),cityKey(),storeLevels().join(),leaseIndex()>=0&&leaseLocked(leaseIndex())].join("|");
     if(updateMarkers.key===key)return;updateMarkers.key=key;
     var securityPos=project(ID_DESK.x,.62,ID_DESK.z+.1),loungePos=map3d&&map3d.ok?project(-2.7,ROOFTOP.y+1.2,-6.1):project(LOUNGE_DOOR.x,1.5,DISPLAY_Z+.5),labelSize=Math.max(8,Math.min(10,unit*.24))*(width>=780?.85:1)+'px';
     securityMarker.style.fontSize=labelSize;loungeMarker.style.fontSize=labelSize;
@@ -3076,7 +3084,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     $('flowText').textContent=trafficBound?'Not enough customers · the counters could serve '+Math.round((slowRate/footTraffic-1)*100)+'% more':atFloor?shortNames[slow]+' can\'t go faster · bigger baskets help':shortNames[slow]+' is holding the shop back · upgrading it '+speedsUp[slow];
     $('flowText').title=(trafficBound?'Customers arrive at '+footTraffic.toFixed(1)+'/s but the counters can serve '+slowRate.toFixed(1)+'/s. ':shortNames[slow]+' moves '+slowRate.toFixed(1)+'/s; '+nextName+' can do '+(nextRate||0).toFixed(1)+'/s'+(behind>0?' ('+shortNames[slow]+' runs '+behind+'% slower)':'')+', so everything queues here. ')+'Estimates include batches, handoff time and kiosks.';
     // The fix button follows the best-value purchase, which can differ from the slowest station when that station is capped.
-    var fix=recommendation(),fixPrice=fix?fix.price:0,canFix=fixPrice>0&&state.money>=fixPrice,fixElsewhere=fix&&!(fix.kind==='station'&&fix.index===slow);
+    var fix=lastFix=recommendation(),fixPrice=fix?fix.price:0,canFix=fixPrice>0&&state.money>=fixPrice,fixElsewhere=fix&&!(fix.kind==='station'&&fix.index===slow);
     // At the floor the line above names what the button upgrades, so the button itself stays Upgrade.
     if(atFloor&&fix&&fix.kind==='station')$('flowText').textContent=shortNames[slow]+' can\'t go faster · upgrading '+fix.name+' brings bigger baskets';
     // An undecided research fork only opens its choice in the Shop, so the line says so and the button says Choose, not Upgrade.
@@ -3266,11 +3274,11 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   onlineRow.innerHTML='<span class="team-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 10h6v4H9zM4 6h3M17 6h3M5.5 6v4h3.5M18.5 6v4H15M9 14l-3 5M15 14l3 5M12 14v6"/></svg></span><span class="team-copy"><b>Online orders</b><small></small></span><button type="button"><span>Open</span><b></b></button>';
   onlineRow.querySelector('button').onclick=function(){if(onlineOpen()){showTray('orders');renderUI()}else selectMachine(5)};
   orderExtras[orderExtras.length-1].row.after(onlineRow);
-  // The pickup window belongs with the pickup counter: building it and its two upgrades live on the Pickup station.
-  var windowRows=[['window','Pickup window','<path d="M4 20V8h16v12M3 8h18M7 8v6h10V8M6 14h12M9 4h6"/>'],['hatch','Second hatch','<path d="M3 20V8h18v12M3 8l2-4h14l2 4M6 8v6h5V8M13 8v6h5V8"/>'],['tips','Tip jar','<path d="M7 9h10l-1 11H8ZM6 6h12v3H6ZM12 12v5M10.5 13.5a1.5 1.2 0 0 1 3 0c0 1.5-3 1-3 2.5a1.5 1.2 0 0 0 3 0"/>']].map(function(d){
+  // The pickup window belongs with the pickup counter: building it and its level track live on the Pickup station.
+  var windowRows=[['window','Pickup window','<path d="M4 20V8h16v12M3 8h18M7 8v6h10V8M6 14h12M9 4h6"/>'],['level','Window','<path d="M3 20V8h18v12M3 8l2-4h14l2 4M6 8v6h5V8M13 8v6h5V8M12 2v3"/>']].map(function(d){
     var row=document.createElement('div');row.className='station-team station-extra';row.hidden=true;row.dataset.window=d[0];
     row.innerHTML='<span class="team-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+d[2]+'</svg></span><span class="team-copy"><b>'+d[1]+'</b><small></small>'+(d[0]==='window'?'<span class="line-pips" aria-hidden="true"></span>':'')+'</span><button type="button"><span></span><b></b></button>';
-    row.querySelector('button').onclick=function(){if(d[0]==='window')purchaseWindow();else $(d[0]==='hatch'?'buyHatch':'buyTips').click()};
+    row.querySelector('button').onclick=function(){if(d[0]==='window')purchaseWindow();else buyWindowLevels(1)};
     return {key:d[0],row:row,button:row.querySelector('button')}});
   windowRows.slice().reverse().forEach(function(x){$('orderCounterExpansion').after(x.row)});
   // The station's extras sit as a grid of icon tiles (team, crew ability, kiosks, the pickup window...) under its stats.
@@ -3281,7 +3289,10 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       if(x.key==='window'){if(w.owned){var inLine=windowLineMax(w)-windowRoom(windowLine,w);note=inLine+' / '+windowLineMax(w)+' in line';label='';price='';disabled=true;owned=true;var pips='';for(var k=0;k<windowLineMax(w);k++)pips+='<i'+(k<inLine?' class="on"':'')+'></i>';if(x.row.dataset.pips!==pips){x.row.dataset.pips=pips;x.row.querySelector('.line-pips').innerHTML=pips}}
         else if(building){note='Building';label='Opens in';price=buildClock(buildLeft(state.builds,'window'));disabled=true}
         else{note='Walk-up web orders';label='Build';price=fmt(WINDOW_COST);disabled=state.money<WINDOW_COST}}
-      else{var cost=x.key==='hatch'?HATCH_COST:TIPS_COST;owned=!!w[x.key];note=x.key==='hatch'?'Line of 10':'+25% tips';label=owned?'Built':x.key==='hatch'?'Add':'Set out';price=owned?'':fmt(cost);disabled=owned||state.money<cost}
+      else{var lvl=windowLevel(w),maxed=lvl>=WINDOW_MAX_LEVEL,cost=windowLevelCost(lvl),road=nextWindowLook(lvl),title='Window Lv '+lvl;owned=maxed;
+        // The next look, or what one more level pays, under the window's own level.
+        note=maxed?'×'+payText(windowPay(lvl))+' walk-ups':road?WINDOW_LOOKS[windowLook(road)-1]+' at Lv '+road:'+5% walk-ups';label=maxed?'Max':'Lv '+(lvl+1);price=maxed?'':fmt(cost);disabled=maxed||state.money<cost;
+        if(x.row.querySelector('b').textContent!==title)x.row.querySelector('b').textContent=title}
       if(x.row.querySelector('small').textContent!==note)x.row.querySelector('small').textContent=note;
       if(x.button.querySelector('span').textContent!==label)x.button.querySelector('span').textContent=label;
       if(x.button.querySelector('b').textContent!==price)x.button.querySelector('b').textContent=price;
@@ -3824,14 +3835,14 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   document.querySelector('[data-pane="boosts"]').append(droneRow);
   var droneControl=document.createElement('div');droneControl.className='auto-drone-control';droneControl.innerHTML='<span class="drone-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 10h6v4H9zM4 6h3M17 6h3M5.5 6v4h3.5M18.5 6v4H15M9 14l-3 4M15 14l3 4"/></svg></span><div><strong>Auto drone</strong><small id="autoDroneStatus"></small></div><button id="autoDroneToggle" type="button" class="drone-switch"></button><button id="autoDroneBulk" type="button" hidden></button>';document.querySelector('.dispatch-desk').append(droneControl);
   // The pickup window's row above the drone's: how its line is doing, and its two upgrades.
-  var windowControl=document.createElement('div');windowControl.className='window-control';windowControl.innerHTML='<span class="drone-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V8h16v12M3 8h18M7 8v6h10V8M6 14h12M9 4h6"/></svg></span><div><strong>Pickup window</strong><small id="windowStatus"></small></div><button id="buyHatch" type="button"><span>Line of 10</span><b></b></button><button id="buyTips" type="button"><span>+25% tips</span><b></b></button>';droneControl.before(windowControl);
-  $('buyHatch').onclick=function(){purchaseWindowUpgrade('hatch',HATCH_COST,'SECOND HATCH OPEN · line of 10, quicker hand-off')};
-  $('buyTips').onclick=function(){purchaseWindowUpgrade('tips',TIPS_COST,'TIP JAR OUT · walk-ups pay 25% more')};
+  var windowControl=document.createElement('div');windowControl.className='window-control';windowControl.innerHTML='<span class="drone-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V8h16v12M3 8h18M7 8v6h10V8M6 14h12M9 4h6"/></svg></span><div><strong>Pickup window</strong><small id="windowStatus"></small></div><button id="buyWindowLevel" type="button"><span></span><b></b></button>';droneControl.before(windowControl);
+  $('buyWindowLevel').onclick=function(){buyWindowLevels(1)};
   var deliverySite=document.createElement('div');deliverySite.className='delivery-site';deliverySite.id='deliverySite';deliverySite.innerHTML='<h2>Open a pickup window</h2><div class="delivery-preview"><canvas id="deliveryPreview" width="600" height="720" role="img" aria-label="Preview of the finished pickup window with its hatch, ledge and glass parcel tube"></canvas></div><ul class="delivery-benefits"><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 21V12h10v9M5 12h14M9 8a3 3 0 1 0 6 0 3 3 0 1 0-6 0"/></svg><strong>Walk-up</strong><span>pickup</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 8a8 8 0 0 0-14-3L3 8m0-5v5h5m-4 8a8 8 0 0 0 14 3l3-3m0 5v-5h-5"/></svg><strong>Auto</strong><span>clerk serves</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 17 6-6 4 4 8-10m-6 0h6v6"/></svg><strong>+33%</strong><span>per unit</span></li></ul><div class="delivery-build"><div class="delivery-funding"><small id="deliveryFundingText"></small><progress id="deliveryFunding" max="100" value="0" aria-label="Cash toward delivery pad"></progress></div><button id="buildDelivery" type="button"><span>Build delivery pad</span><b>'+fmt(AUTO_DRONE_COST)+'</b></button><button id="skipBuildDelivery" type="button" class="build-skip" hidden><span>Finish now</span><b></b></button></div>';document.querySelector('.dispatch-desk').prepend(deliverySite);$('buildDelivery').onclick=purchaseWindow;$('skipBuildDelivery').onclick=function(){skipBuildNow('window')};
   // Paying starts the deck's build (builds.js); completeBuilds opens it when the time is up.
   function renderWindowControl(){var w=state.pickupWindow;if(!w.owned)return;
     var queued=windowLineMax(w)-windowRoom(windowLine,w),status=queued+' / '+windowLineMax(w)+' in line';if($('windowStatus').textContent!==status)$('windowStatus').textContent=status;
-    [['buyHatch','hatch',HATCH_COST,'Second hatch: line of 10, quicker hand-off'],['buyTips','tips',TIPS_COST,'Tip jar: walk-up orders pay 25% more']].forEach(function(u){var b=$(u[0]),own=w[u[1]];b.disabled=own||state.money<u[2];b.classList.toggle('is-owned',own);var price=own?'Built':fmt(u[2]);if(b.querySelector('b').textContent!==price)b.querySelector('b').textContent=price;b.setAttribute('aria-label',u[3]+(own?', built':', '+fmt(u[2])))})}
+    var lvl=windowLevel(w),maxed=lvl>=WINDOW_MAX_LEVEL,price=windowLevelCost(lvl),b=$('buyWindowLevel'),label=maxed?'Lv '+lvl:'Lv '+(lvl+1),tag=maxed?'Max':fmt(price);
+    b.disabled=maxed||state.money<price;b.classList.toggle('is-owned',maxed);if(b.querySelector('span').textContent!==label)b.querySelector('span').textContent=label;if(b.querySelector('b').textContent!==tag)b.querySelector('b').textContent=tag;b.setAttribute('aria-label',maxed?'Pickup window at its top level':'Pickup window level '+(lvl+1)+', '+fmt(price))}
   // What each build cost, for its skip price (builds.js skipCost), and paying to finish it now.
   function buildPrice(key){if(cityBuilding(key))return cityCost(key,state.city[key])||0;return key==='flagship'?flagshipCost(state.flagship)||0:key==='window'?WINDOW_COST:key==='deck'?AUTO_DRONE_COST:LOUNGE_TIERS[0].cost}
   function buildSkipCost(key){return skipCost(state.builds,key,buildPrice(key))}
@@ -3858,7 +3869,18 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // The first time the lot comes up for sale, say where it is.
   function noticeFlagship(){if(state.flagshipSeen||!flagshipUnlocked(state.lifetime))return;state.flagshipSeen=true;updateMarkers.key=null;notify('CANOPY HQ · the corner lot behind the shop is for sale','upgrade');save()}
   // The window's two upgrades, each bought once: a second hatch (longer line, quicker hand-off) and a tip jar.
-  function purchaseWindowUpgrade(key,price,message){var w=state.pickupWindow;if(!w.owned||w[key]||state.money<price)return;state.money-=price;w[key]=true;telemetry.once('pickup_window_'+key);save();renderUI();notify(message,'upgrade')}
+  // The window's level track (pickup-window.js): one level, or as many as the cash buys. A look level gets its own toast.
+  function windowMaxed(){return windowLevel(state.pickupWindow)>=WINDOW_MAX_LEVEL}
+  function windowNextCost(){return windowLevelCost(windowLevel(state.pickupWindow))}
+  // The best buy as renderUI last worked it out (recommendation() is too heavy to run per tag).
+  var lastFix=null;function windowSuggested(){return state.shopOpen&&!!lastFix&&lastFix.kind==='window'}
+  function windowBuys(){var l=windowLevel(state.pickupWindow),q=windowLevelsFor(l,state.money,WINDOW_MAX_LEVEL),items=[{label:'Lv '+(l+1),price:windowLevelCost(l),best:windowSuggested(),go:function(){buyWindowLevels(1)}}];
+    if(q.levels>1)items.push({label:'+'+q.levels,icon:FAST_FORWARD,price:q.cost,go:function(){buyWindowLevels(q.levels)}});return items}
+  function buyWindowLevels(n){var w=state.pickupWindow;if(!w.owned)return;var from=windowLevel(w),q=windowLevelsFor(from,state.money,n);if(!q.levels)return;
+    state.money-=q.cost;w.level=from+q.levels;telemetry.once('pickup_window_level');save();renderUI();
+    var look=windowLook(w.level);if(look>windowLook(from)){burst({x:PICKUP_WINDOW.x,z:PICKUP_WINDOW.z,y:2.2},'#dbc38b');notify('PICKUP WINDOW · '+WINDOW_LOOKS[look-1].toUpperCase()+' · ×2 walk-up pay · '+WINDOW_UNLOCKS[look-1],'upgrade')}
+    else notify('PICKUP WINDOW LV '+w.level+' · walk-ups pay ×'+payText(windowPay(w.level)),'upgrade')}
+  function payText(x){return x<10?x.toFixed(1):String(Math.round(x))}
   // The drone port comes after the window.
   function purchaseAutoDrone(){if(!windowOpen()||isBuilding(state.builds,'deck'))return;if(payAutoDrone(state)){startBuild(state.builds,'deck');telemetry.once('delivery_pad_paid');save();renderUI();notify('DELIVERY PAD UNDER CONSTRUCTION · opens in '+buildClock(buildLeft(state.builds,'deck')),'upgrade')}}
   // Opens whatever finished building, live or while the game was closed.
@@ -4219,11 +4241,23 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // shop selling well under what its stations could is flow-bound, and every Floor flow level's faster walking lifts
     // the whole take by about the same share (a sim of the real shop agreed within noise).
     var flow=flowFix(base);if(flow)consider(flow);var tips=tipFix(base);if(tips)consider(tips);
+    // The pickup window: building it once the order desk runs, then its levels, each priced on the extra online take.
+    // Its next look level is priced as one bundle too, like a station's next tier.
+    if(state.lines[4]>0&&state.shopOpen){var wl=windowLevel(state.pickupWindow),wNow=windowIncome(wl);
+      if(!state.pickupWindow.owned){if(!isBuilding(state.builds,'window')){var built=windowIncome(1);if(built>0)consider({kind:'window',name:'Pickup window',price:WINDOW_COST,spend:WINDOW_COST,gain:built})}}
+      else if(wl<WINDOW_MAX_LEVEL){var wNext=windowLevelCost(wl),wGain=windowIncome(wl+1)-wNow;if(wGain>0)consider({kind:'window',name:'Pickup window',price:wNext,spend:wNext,gain:wGain});
+        var road=nextWindowLook(wl);if(road&&road-wl>1){var wSpend=0;for(var wk=wl;wk<road;wk++)wSpend+=windowLevelCost(wk);var roadGain=windowIncome(road)-wNow;if(roadGain>0)consider({kind:'window',name:'Pickup window',price:wNext,spend:wSpend,gain:roadGain})}}}
     var pick=bestReach||best||legacyRecommendation();
     // A fork still waiting on the player is named as the choice, not bought: the tap opens both sides in the Shop.
     if(pick.kind==='component'&&!componentAdvisable(pick.index)){var f=forkOf(COMPONENTS[pick.index].key);return{kind:'fork',fork:f.id,index:pick.index,name:f.name,price:pick.price}}
     return pick;
   }
+  // What web orders bring in a second with the window at `level` (0: not built): requests arrive at their rate (the
+  // blade sign adds a quarter), held to what the hatch can hand over until drones fly; walk-ups pay the window's
+  // bonus, the rest fly at the plain online price. An estimate for the best-buy, not the live take.
+  function windowIncome(level){if(!level&&!deliveryBuilt())return 0;var w={owned:level>0,level:level},rate=requestRate(state.onlineCompleted,state.lines[4],state.webLevel)*windowRequestBoost(w);
+    if(!deliveryBuilt())rate=Math.min(rate,1/windowServeSeconds(w));var share=deliveryBuilt()?(level?walkupFraction(level):0):1,order=10*economy.retailBoost(state.lines)*onlineValue();
+    return rate*order*(share*windowPay(level)+(1-share))}
   function flowFix(base){var i=componentIndex('trafficLevel'),L=state.trafficLevel,walkIn=flagshipSales();
     if(!componentUnlocked(i)||L>=COMPONENTS[i].max||!(realRate>0)||realRate>walkIn*.75)return null;
     var gain=base*(economy.walkSpeed(L+1)/economy.walkSpeed(L)-1),price=componentCost(i);
@@ -4235,7 +4269,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var price=componentCost(i);return{kind:'component',index:i,name:COMPONENTS[i].name,price:price,spend:price,gain:base*.05/(1+L*.06)}}
   function openFork(index){showTray('boosts');if(shopBrowser&&shopBrowser.show)shopBrowser.show(shopBrowser.categoryOf('componentBuy'+index));renderUI();var card=$('componentBuy'+index).parentElement;if(card.scrollIntoView)card.scrollIntoView({block:'nearest'})}
   // A suggestion only points: a tap opens where the pick lives (its station, or its card in the Shop) and the player buys it there.
-  function actOnRecommendation(){var r=recommendation();if(!r)return;if(r.kind==='station')return selectMachine(r.index);if(r.kind==='counter'||r.kind==='kiosk')return selectMachine(4);openFork(r.index)}
+  function actOnRecommendation(){var r=recommendation();if(!r)return;if(r.kind==='station')return selectMachine(r.index);if(r.kind==='counter'||r.kind==='kiosk')return selectMachine(4);if(r.kind==='window'){pickedTag='window';buyBoxFor=-1;renderUI();return}openFork(r.index)}
   $('flowAction').onclick=function(){if(state.gameSpeed===0)return setGameSpeed(1);if(!state.shopOpen){if(!state.doorBuilt)return buildStation('door');var next=state.lines.indexOf(0);return next<0?openShop():buildStation(next)}actOnRecommendation()};
   LINES.forEach(function(_,i){$('staffMax'+i).onclick=function(){trainStaffMax(i)}});
   $('trainIdChecker').onclick=function(){if(!state.doorBuilt)return buildStation('door');trainIdChecker(1)};
