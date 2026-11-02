@@ -4,7 +4,7 @@
     2  ID desk: a green desk with oak pilasters, a lit scanner pad on an arm and a guest-list tablet
     3  ID check booth: a walnut desk with brass panels, two rear posts and an ID CHECK header
     4  monitored booth: tier 3 plus a glass guard along the front, a camera on each post, twin monitors and a neon leaf
-    5  flagship booth: four brass posts under a framed glass canopy, a SECURITY sign, pendant lights and
+    5  flagship booth: four brass posts under a framed glass canopy, a SECURITY sign, a third camera watching the door, pendant lights and
        a marble-topped desk
 
 Every tier stands on the same brass-edged mat, so all five fill the same footprint and the 3D map scales them alike
@@ -243,6 +243,8 @@ else:
         # Front posts and a framed glass canopy over the whole booth, with two pendant lights.
         for sx in (-1, 1):
             post(f"FrontPost{sx}", sx * PX, -PY, PH)
+        # A third camera on the front corner by the door, watching customers walk in.
+        cctv("CamF", PX, -PY, PH + .03, -.6)
         CZ = Z0 + PH + .03
         K.box("CanopyGlass", (2 * PX + .06, 2 * PY + .06, .02), (0, 0, CZ), CANOPY, .004)
         for n, (dx, dy, w, d) in enumerate(((0, -PY, 2 * PX + .1, .05), (0, PY, 2 * PX + .1, .05), (-PX, 0, .05, 2 * PY + .1), (PX, 0, .05, 2 * PY + .1))):
