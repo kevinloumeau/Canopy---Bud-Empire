@@ -3,6 +3,10 @@
 .world .marker.spender-tag,.world .marker.spender-tag:not(.selected){left:0;top:0;display:flex;align-items:center;gap:7px;min-width:0;min-height:34px;padding:4px 13px 4px 4px;line-height:1;opacity:1;border-radius:999px;background:linear-gradient(180deg,#f3e2b6,var(--ui-brass) 70%);border:1px solid #fff3d080;color:var(--ui-brass-ink);font:700 13px/1 'Bricolage Grotesque',sans-serif;letter-spacing:.01em;white-space:nowrap;box-shadow:0 5px 14px rgba(10,20,14,.38),0 0 18px #e7b94a40;cursor:pointer;z-index:4}
 .world .marker.spender-tag .spender-badge{display:grid;place-items:center;flex:none;width:26px;height:26px;border-radius:50%;background:var(--ui-brass-ink);color:var(--ui-gold);box-shadow:inset 0 0 0 1px #e7b94a59}
 .world .marker.spender-tag .spender-badge svg{width:15px;height:15px;display:block}
+/* Shop events share the brass pill; only the icon in the ink badge changes colour, so the four read apart at a glance. */
+.world .marker.spender-tag[data-event=rush] .spender-badge{color:#ffb35c}
+.world .marker.spender-tag[data-event=inspection] .spender-badge{color:#9fe0b0}
+.world .marker.spender-tag[data-event=vip] .spender-badge{color:#f2b6e8}
 .world .marker.spender-tag::after{content:'';display:block;position:absolute;left:50%;top:100%;width:10px;height:10px;margin-top:-6px;border-radius:0 0 3px 0;background:var(--ui-brass);border:solid #fff3d080;border-width:0 1px 1px 0;transform:translateX(-50%) rotate(45deg)}
 /* The pill is smaller than a fingertip; an invisible margin brings the tap area to 44px, and carries the pulsing ring. */
 .world .marker.spender-tag::before{content:'';position:absolute;inset:-5px -4px;border-radius:999px}

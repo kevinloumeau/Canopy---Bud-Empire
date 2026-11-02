@@ -308,9 +308,9 @@ export function goalStatus(p,i,scale=1){
   const linear=Math.max(1,Number.isFinite(scale)?scale:1),growth=1+Math.log2(linear);
   const base={pickup:10+(g.round%3)*5,spender:1+g.round%2,upgrade:2+g.round%3,online:2,invest:1,revenue:500+(g.round%3)*250}[kind];
   const target=Math.max(1,Math.round(kind==='revenue'?base*linear:kind==='spender'||kind==='upgrade'?base:base*growth));
-  const title={pickup:'Serve '+abbr(target)+' customers',spender:target>1?'Welcome '+target+' big spenders':'Welcome a big spender',upgrade:'Make '+target+' upgrades',
+  const title={pickup:'Serve '+abbr(target)+' customers',spender:target>1?'Tap '+target+' shop events':'Tap a shop event',upgrade:'Make '+target+' upgrades',
     online:'Complete '+abbr(target)+' deliveries',invest:target>1?'Improve '+target+' branches or projects':'Improve a branch or build a project',revenue:'Earn $'+abbr(target)}[kind];
-  return {kind,target,reward:scaledReward(GOAL_REWARDS[kind],scale),progress:Math.min(target,Math.max(0,p.counters[kind]-g.start)),title,hint:kind==='spender'?'Tap the gold tag when one walks in':''};
+  return {kind,target,reward:scaledReward(GOAL_REWARDS[kind],scale),progress:Math.min(target,Math.max(0,p.counters[kind]-g.start)),title,hint:kind==='spender'?'Tap the gold tag when one shows up':''};
 }
 export function shiftStatus(p,scale=1){return {number:Math.floor(p.goalsCompleted/SHIFT_LENGTH)+1,done:p.goalsCompleted%SHIFT_LENGTH,bonus:scaledReward(450,scale)};}
 // Pays the goal and, when it is the shift's last, the shift bonus; returns everything paid.
