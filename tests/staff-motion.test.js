@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneRigged } from 'three/examples/jsm/utils/SkeletonUtils.js';
-import { staffPose, bindStaff, poseStaff, handInBody, STATION_ROLES } from '../src/three/staff-motion.js';
+import { staffPose, bindStaff, poseStaff, poseCarry, handInBody, STATION_ROLES } from '../src/three/staff-motion.js';
 import { CYCLE } from '../src/three/station-motion.js';
 
 const ROLES = [...STATION_ROLES, 'window', 'guard', 'host'];
@@ -77,4 +77,20 @@ for (const file of ['green-uniform-woman.glb', 'chef.glb', 'security-guard.glb',
   mixer.setTime(0); poseStaff(rig, 'harvest', 0, 1);
   const dz = at().z - upright.z;
   assert.ok(Math.abs(dz) < .015, file + ' head moves ' + dz.toFixed(3));
+});
+
+for (const file of ['beanie-character.glb', 'chef-woman.glb']) test(file + ': a shopper carrying a bag holds it out from the hip, walking or standing', async () => {
+  const gltf = await parse(file), body = cloneRigged(gltf.scene), holder = new THREE.Group();
+  holder.add(body); holder.scale.set(1.69, 1.69 / 1.3, 1.69); holder.rotation.y = -1.1;
+  const mixer = new THREE.AnimationMixer(body), rig = bindStaff(body);
+  assert.ok(rig);
+  const walk = mixer.clipAction(gltf.animations.find(c => /^Walking$/.test(c.name))); walk.play();
+  for (const t of [0, .3, .6, .9]) for (const swing of [-1, 0, 1]) {
+    mixer.setTime(t + swing * .01);
+    const free = handInBody(rig, 'right'), target = poseCarry(rig, swing, 1), hand = handInBody(rig, 'right');
+    assert.ok(hand.distanceTo(target) < .03, file + ' misses by ' + hand.distanceTo(target).toFixed(3));
+    // Out to the figure's right (-x), past where the walk swings it, and no higher, so the bag hangs clear of the leg.
+    assert.ok(hand.x < -.15 && hand.x < free.x - .03, file + ' hand not out from the hip ' + hand.x.toFixed(3));
+    assert.ok(hand.y < free.y + .05, file + ' hand raised ' + (hand.y - free.y).toFixed(3));
+  }
 });
