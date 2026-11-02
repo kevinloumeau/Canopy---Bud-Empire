@@ -10,6 +10,7 @@ import * as THREE from 'three';
 import { buildShell } from './shell.js';
 import { buildRooftop } from './rooftop.js';
 import { buildFlagship } from './flagship.js';
+import { buildCityBuildings } from './city-buildings.js';
 import { buildEntrance } from './entrance.js';
 import { createBranchLayer } from './branch3d.js';
 import { rigStation, bindStation, moveStation } from './station-motion.js';
@@ -182,6 +183,7 @@ export function createMap3D(canvas, layout) {
   const shell = buildShell(world, layout, { box, span, material, model });
   const rooftop = buildRooftop(world, layout, { box, span, material });
   const flagship = buildFlagship(world, layout, { material });
+  const cityBuildings = buildCityBuildings(world, layout, { material });
   buildEntrance(world, layout, { box, span, material, model });
 
   // Stations: one solid per station slot, resized and recoloured from the frame (tier, built, rising in).
@@ -1068,7 +1070,7 @@ export function createMap3D(canvas, layout) {
     const behind = frame.backdrops || [];
     behind.forEach((f, i) => place(f, backdrop(i)));
     for (let i = behind.length; i < backdrops.length; i++) backdrops[i].visible = false;
-    terraces.forEach(t => { t.visible = !propSources[t.userData.model]; t.renderOrder = frame.backdrops ? -2 : 0; t.material.colorWrite = !frame.backdrops; });
+    terraces.forEach(t => { t.visible = !propSources[t.userData.model] && !(t.userData.lot && frame.cityClaimed && frame.cityClaimed[t.userData.lot]); t.renderOrder = frame.backdrops ? -2 : 0; t.material.colorWrite = !frame.backdrops; });
     // With figures standing in, the capsules only cast shadows.
     people.material.colorWrite = people.material.depthWrite = !frame.figures;
     materials.forEach((m, key) => { if (key.endsWith('{"name":"street"}')) m.colorWrite = m.depthWrite = !frame.figures; });
@@ -1117,6 +1119,7 @@ export function createMap3D(canvas, layout) {
     if (shell) shell.update(frame);
     if (rooftop) rooftop.update(frame);
     if (flagship) flagship.update(frame);
+    cityBuildings.update(frame);
     Object.entries(fixtures).forEach(([key, holder]) => { holder.visible = !!(frame.fixtures && frame.fixtures[key]); });
     updateFixtureSites(frame);
     updateFixtureGhosts(frame);
@@ -1234,7 +1237,7 @@ function buildTown(world, layout, { box, span, material, textured, lampStandIns 
     // Each block steps aside for its Blender model once that loads (b.model).
     const wall = span(world, b.x0, b.x1, P, b.h, b.z0, b.z1, b.wall, { opts: { name: 'terrace' } });
     const roof = span(world, b.x0 - .15, b.x1 + .15, b.h, b.h + .35, b.z0 - .15, b.z1 + .15, b.roof, { opts: { name: 'terrace' } });
-    wall.userData.model = roof.userData.model = b.model;
+    wall.userData.model = roof.userData.model = b.model; wall.userData.lot = roof.userData.lot = b.lot;
     terraces.push(wall, roof);
   });
   world.add(silhouettes(layout.silhouettes || [], P, material));
