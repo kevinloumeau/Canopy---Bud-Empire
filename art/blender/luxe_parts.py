@@ -34,6 +34,8 @@ def leaf_logo(name, loc, size, m, facing="-Y"):
         for v in me.vertices: v.co.z = 0.          # flatten the droop into a clean logo
         ys = [v.co.y for v in me.vertices]; cy = (min(ys) + max(ys)) / 2
         for v in me.vertices: v.co.y -= cy         # centre it, so loc is the logo's middle
+        bm = bmesh.new(); bm.from_mesh(me)         # the fan leaf faces -Z; turn it so the glow faces out of its disc
+        bmesh.ops.reverse_faces(bm, faces=bm.faces); bm.to_mesh(me); bm.free()   # (three.js skips back faces)
     rot = (math.pi / 2, 0, 0) if facing == "-Y" else (math.pi / 2, 0, math.pi / 2)
     return K.inst(name, _LEAF[m.name], loc, rot, size)
 
