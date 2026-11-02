@@ -4,7 +4,7 @@ export const PERKS=[
   {id:'seed',name:'Seed money',blurb:level=>'Reopen with '+['$0','$1K','$10K','$100K'][level]+' cash',costs:[2,4,8]},
   {id:'crew',name:'Veteran crew',blurb:level=>'Stations reopen at level '+(1+level*5),costs:[3,6,12]},
   {id:'vault',name:'Kept vault',blurb:level=>'Back-room safe reopens at level '+level,costs:[2,4,6]},
-  {id:'regulars',name:'Regulars',blurb:level=>'Big spenders '+(level*25)+'% more often',costs:[3,6]},
+  {id:'regulars',name:'Regulars',blurb:level=>'Shop events '+(level*25)+'% more often',costs:[3,6]},
   {id:'rush',name:'Long rush',blurb:level=>'Rushes last '+(60+level*30)+'s',costs:[2,4]},
   {id:'breeder',name:"Breeder's eye",blurb:level=>'Crosses '+(level*20)+'% faster',costs:[3,6]},
   // Run-shaping perks: each one changes what the first minutes of a new shop look like, not just a number.
