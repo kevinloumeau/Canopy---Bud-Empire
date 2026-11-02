@@ -29,12 +29,13 @@ import {mountEmpireShell} from './empire-shell.js';
 import {mountStartGuide} from './start-guide.js';
 import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
-import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
-import { districtCentre, districtAt, districtBlock, shownDistricts, eastHaze, leaseLot, districtTerraces, DISTRICT_COUNT, MAIN_EAST_HAZE } from './branch-districts.js';
+import { BRANCH_THEMES, BRANCH_STATIONS, drawBranchMap } from './branch-maps.js';
+import { districtPlot, districtCentre, districtAt, districtBlock, shownDistricts, eastHaze, leaseLot, districtTerraces, DISTRICT_COUNT, MAIN_EAST_HAZE } from './branch-districts.js';
 import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, PERSON_HEAD_Y, subwayStairs, SUBWAY_HIDDEN_Z, drawSprite, stationSprite, drawPersonSprite, streetItems, floorTextureFiles, fixtureSprite, shellSprite, spriteImage, spritesLoading, drawBoxSprite, softShadow, sunShadow, SUN, SUN_REACH, townLayout, cityLots, carPlacements, walkerPlacements, stationSpriteSize, stationTier as spriteTier } from './sunny-world.js';
 import * as economy from './economy.js';
 import {ABILITIES,ABILITY_UNLOCK,ABILITY_FACTOR,ABILITY_SALES,ABILITY_SECONDS,migrateAbilities,abilityStatus,useAbility,tickAbilities,abilityFactor,abilitySales,clockLabel} from './crew-abilities.js';
 import * as strains from './strains.js';
+import { BRANCH_LINE, branchStationCost, buyBranchStation, branchStationMax, branchBestStation } from './progression.js';
 import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, settleGoals, shiftStatus, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, branchOpenable, STARS_TO_OPEN, settleStars, starCount, branchFinished, STAR_BONUS, recordEvent, contractOffer, activeContract, contractTwist, contractFactor, startContract, skipContract, settleContract, useContractBoost, tickContractBoost, contractBoostFactor, CONTRACT_BOOST_SECONDS, seasonStatus, claimSeason, SEASONS, RETIRED_WEEKLY, nextSeason, weeklySpecial, specialFactor } from './progression.js';
 import {mountUiKit} from './ui-kit.js';
 // The self-order kiosks stand along the storefront glass from z 6.8 toward the back, KIOSK_GAP apart (Kevin 2026-11-02:
@@ -1030,7 +1031,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var visible=visibleHeight(),bottom=0,top=Math.min(160,visible*.26),space=Math.max(120,visible-top-bottom);return{x:width*.5,y:top+space*.66,unit:Math.max(1,Math.min((width-40)/33,space/28))*1.18}}
   function applyCamera(){render.invalidated=true;var frame=cameraFrame();
     if(SUNNY)clampSunnyPan(frame);else{panX=Math.max(-width*1.6,Math.min(width*1.6,panX));panY=Math.max(-height*1.6,Math.min(height*1.6,panY));}
-    centerX=frame.x+panX;centerY=frame.y+panY;unit=frame.unit*zoom;followDistrict();if(state.empire.activeStore)updateBranchMarker()}
+    centerX=frame.x+panX;centerY=frame.y+panY;unit=frame.unit*zoom;followDistrict();if(state.empire.activeStore)updateBranchMarker();if(window.__shiftReady)renderHomeChip()}
   // The branch whose block is under the middle of the view is the one being viewed: the top bar shows its income and
   // its Manage tag shows on its counter. Anywhere else (the flagship, a lot for lease) is the flagship's view.
   var districtFollow=false;
@@ -2492,7 +2493,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     characters.push({file:file,id:'branch'+id,x:x,y:sceneElevation,z:z,ground:gait&&gait.ground||0,amount:walking?1:0,heading:gait&&gait.heading,look:employee&&(id===10||id===11)?{x:0,z:1}:null,facing:gait?gait.facing:.3,still:still});
   }
   function recordBranch(characters,id){
-    var U=32,saved=[unit,centerX,centerY,ctx,sceneElevation],seen=new Map(),out={unit:U,boxes:[],lines:[],polys:[],ellipses:[],faces:[],fixtures:[],props:[]};
+    var U=32,saved=[unit,centerX,centerY,ctx,sceneElevation],seen=new Map(),out={unit:U,boxes:[],lines:[],polys:[],ellipses:[],faces:[],fixtures:[],props:[],stations:[]};
     function key(x,y){return Math.round(x*8)+','+Math.round(y*8)}
     branchRec={
       seen:function(q,x,y,z){seen.set(key(q.x,q.y),[x,y,z])},
@@ -2515,7 +2516,9 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
         face:function(x,y,z,alongZ,draw){out.faces.push({x:x,y:y,z:z,alongZ:alongZ,draw:draw})},
         night:function(fixtures){out.fixtures=fixtures},
         // A Blender prop in place of the 2D drawing, once its model has loaded (until then the drawing stands in).
-        model:function(file,x,z,y,rot,scale){if(!map3d.propReady(file))return false;out.props.push({file:file,x:x,y:(y||0)+sceneElevation,z:z,rot:rot||0,scale:scale});return true}},sceneTime,id);
+        model:function(file,x,z,y,rot,scale){if(!map3d.propReady(file))return false;out.props.push({file:file,x:x,y:(y||0)+sceneElevation,z:z,rot:rot||0,scale:scale});return true},
+        // One of the branch's own stations (BRANCH_STATIONS), a real flagship station model in place of the drawn fitting.
+        station:function(j,x,z,y){out.stations.push({j:j,x:x,z:z,y:(y||0)+sceneElevation});return true}},sceneTime,id);
     }finally{branchRec=null;unit=saved[0];centerX=saved[1];centerY=saved[2];ctx=saved[3];sceneElevation=saved[4]}
     return out;
   }
@@ -2538,7 +2541,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       var local=[],scene=recordBranch(local,d.index+1);
       local.forEach(function(ch){ch.x+=c.x;ch.z+=c.z;ch.id='d'+d.index+ch.id;characters.push(ch)});
       scene.props.forEach(function(p){props.push(Object.assign({},p,{x:p.x+c.x,z:p.z+c.z}))});scene.props=[];
-      out.push({index:d.index,x:c.x,z:c.z,scene:scene,land:BRANCH_THEMES[d.index].land});
+      var line=scene.stations.map(function(s){return{j:s.j,x:s.x+c.x,y:s.y,z:s.z+c.z}});scene.stations=[];
+      out.push({index:d.index,x:c.x,z:c.z,scene:scene,land:BRANCH_THEMES[d.index].land,line:line});
     });
     return out;
   }
@@ -2581,6 +2585,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // A see-through copy of the next order counter where it will stand, as the kiosks show theirs (Kevin, 2026-11-02).
     // It goes last, so every built station keeps its slot.
     var nextCounter=nextOrderCounter();if(nextCounter){station(4,nextCounter.x,0,nextCounter.z,state.lines[4],true,4);var g=stations[stations.length-1];g.ghost=true;g.selected=false;g.boost=0;g.act=0;g.rise=0;g.pop=1}
+    // With no ghost its slot stays, hidden, so the branches' stations that follow keep theirs.
+    else stations.push({index:4,x:0,y:0,z:0,w:1,d:1,h:1,tier:0,built:false,visible:false});
     // The doorman stands behind the booth, on the room side, facing the front door across the desk.
     if(state.doorBuilt)staffer('door',STAFF_MODELS.door,DOORMAN.x,0,DOORMAN.z,{x:ID_CHECK.x-DOORMAN.x,z:ID_CHECK.z-DOORMAN.z},1,{role:'guard',clock:sceneTime/1000,act:guardCheck()});
     // The lounge host works the rooftop: behind the bar once there is one, otherwise by the elevator's bridge.
@@ -2669,6 +2675,14 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     figures=figures.filter(function(f){return f.alpha>.99});backdrops=backdrops.filter(function(f){return f.alpha>.99});
     var dronePoses=deliveryDronePoses(frameDelta);deliveryCards(dronePoses,figures);
     var look=viewCentre(),districts=districtScenes(characters,props);
+    // Each open branch on screen runs the flagship's station line: the same models at their levels' looks, working on
+    // the same clocks, each production station with its crew member at the same spot as the flagship's.
+    // Only a district whose shop is in view gets its line (a block's edge peeking in at the side costs nothing).
+    var lineSpan=viewSpanX();districts.forEach(function(d){if(!d.line)return;var plot=districtPlot(d.index);if(plot.x1<lineSpan[0]||plot.x0>lineSpan[1])return;var store=state.empire.stores[d.index];
+      d.line.forEach(function(q){var j=q.j,level=Math.max(1,store.lines&&store.lines[j]||1),b=STATION_BOXES[j],tier=stationLookFor(j,level);
+        stations.push({index:j,x:q.x,y:q.y,z:q.z,w:b.w,d:b.d,h:b.h*(1+(Math.min(5,tier)-1)*.12),tier:tier,built:true,rise:0,pop:1,selected:branchBuyFor===j&&state.empire.activeStore===d.index+1,clock:workClock(j),act:1,boost:0});
+        if(j===4)staffer('b'+d.index+'s4',STAFF_MODELS.desks[(d.index+1)%STAFF_MODELS.desks.length],q.x-.35,q.y,q.z-1.5,{x:0,z:1},.3,{role:'desk',clock:workClock(4)+d.index*1.7,act:1});
+        else{var spot=STAFF_SPOTS[j]||{dx:-.95,dz:-1.65};staffer('b'+d.index+'s'+j,STAFF_MODELS.stations[j],q.x+spot.dx,q.y,q.z+spot.dz,{x:-spot.dx,z:-spot.dz},spot.facing,{role:STAFF_ROLES[j],clock:workClock(j),act:1})}})});
     map3d.render({step:frameDelta,districts:districts,hazeEast:eastHaze(storeLevels()),dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,characters:characters,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,intro:introTime(),loungeOpen:state.lounge>0,loungeTier:state.lounge,city:state.city,cityClaimed:cityClaimed(),cityBuild:cityBuildShares(),flagship:state.flagship,flagshipBuild:isBuilding(state.builds,'flagship')?1-buildShareLeft(state.builds,'flagship'):null,loungeBuild:isBuilding(state.builds,'lounge')?1-buildShareLeft(state.builds,'lounge'):null,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtureBuild:isBuilding(state.builds,'deck')||isBuilding(state.builds,'window')?Object.assign(isBuilding(state.builds,'deck')?{deck:1-buildShareLeft(state.builds,'deck')}:{},isBuilding(state.builds,'window')?{pickupWindow:1-buildShareLeft(state.builds,'window')}:{}):null,fixtures:Object.assign(windowFixtures(),{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2}),fixtureGhost:fixtureGhosts(),menus:kioskMenus(),menuClock:animationTime/1000,cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     // A model that had not loaded when the tabs were painted: try again every half second until all are in.
     var wall=performance.now();if(picturesPending&&!(wall-(renderFrame3d.picturesTried||0)<500)){renderFrame3d.picturesTried=wall;picturesPending=false;paintThumbnails()}
@@ -2876,6 +2890,28 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   var markerEls=LINES.map(function(line,i){var b=document.createElement('button');b.className='marker';b.dataset.marker=String(i);b.textContent=line.name;b.onclick=function(){if(!state.lines[i]&&isOpen(i))buildStation(i);else{var open=buyBoxFor===i;selectMachine(i);buyBoxFor=open?-1:i;renderUI()}};$('markers').appendChild(b);return b});
   // The station whose buy box is up: set by a tap on its map sign, cleared by picking anything else.
   var buyBoxFor=-1;
+  // The viewed branch's station signs (Kevin, 2026-11-02: every branch has the flagship's stations and upgrades): one per
+  // station on its lot, name and level as the flagship's; a tap opens the same buy box (one level, or as many as the cash
+  // buys) and the line's best buy wears the brass arrow.
+  var BRANCH_SHORT=['Seeds','Grow','Harvest','Pack','Orders','Pickup'],branchBuyFor=-1;
+  (function(tag){tag.className='marker station-sign branch-tag';$('markers').appendChild(tag)})($('branchMapMarker'));
+  var branchSignEls=BRANCH_SHORT.map(function(name,j){var b=document.createElement('button');b.className='marker station-sign';b.dataset.marker='branch'+j;b.style.display='none';
+    b.onclick=function(){branchBuyFor=branchBuyFor===j?-1:j;pickedTag=null;buyBoxFor=-1;renderUI()};$('markers').appendChild(b);return b});
+  function branchSignAt(j){var id=state.empire.activeStore;if(!id)return null;var c=districtCentre(id-1),q=BRANCH_STATIONS[id-1][j];return project(c.x+q[0],.63,c.z+q[1]+1.23)}
+  function buyBranchLevel(i,j,levels){var bought=0;for(var k=0;k<(levels||1);k++){if(!buyBranchStation(state,i,j))break;bought++}
+    if(!bought){notify('Need '+fmt(branchStationCost(i,j,state.empire.stores[i].lines[j])-state.money)+' more');return}
+    var level=state.empire.stores[i].lines[j],c=districtCentre(i),q=BRANCH_STATIONS[i][j];burst({x:c.x+q[0],y:0,z:c.z+q[1]});
+    notify(STORES[i].name+' '+BRANCH_LINE[j]+' · LEVEL '+level,'upgrade');save();renderUI();if(navigator.vibrate)navigator.vibrate(18)}
+  function renderBranchSigns(){if(!branchSignEls)return;var id=state.empire.activeStore,store=id?state.empire.stores[id-1]:null;
+    if(!store){branchBuyFor=-1;branchSignEls.forEach(function(el){el.hidden=true;signBuy(el,null)});return}
+    var i=id-1,best=branchBestStation(state.empire,i);
+    branchSignEls.forEach(function(el,j){var level=Math.max(1,store.lines[j]||1),price=branchStationCost(i,j,level),key=id+'|'+level;el.hidden=false;
+      el.classList.toggle('selected',branchBuyFor===j);el.classList.toggle('can-upgrade',j===best&&state.money>=price);el.style.setProperty('--station-tier',TIER_COLORS[economy.stationTier(level)]);
+      if(el.dataset.level!==key){el.innerHTML='<span class=station-sign-name>'+BRANCH_SHORT[j]+'</span><span class=station-sign-level>Lv '+level+'</span>';el.dataset.level=key;updateMarkers.key=null}
+      el.setAttribute('aria-label',STORES[i].name+' '+BRANCH_LINE[j]+', level '+level+'. Show upgrades');el.setAttribute('aria-pressed',String(branchBuyFor===j));
+      var items=null;if(branchBuyFor===j){var q=branchStationMax(state,i,j);items=[{label:'Lv '+(level+1),price:price,best:j===best,go:function(){buyBranchLevel(i,j,1)}}];
+        if(q.levels>1)items.push({label:'+'+q.levels,icon:FAST_FORWARD,price:q.cost,go:function(){buyBranchLevel(i,j,q.levels)}})}
+      signBuy(el,items)})}
   var securityMarker=document.createElement('button');securityMarker.className='marker';securityMarker.dataset.marker='security';securityMarker.onclick=function(){if(!state.doorBuilt)buildStation('door');else selectSecurity()};$('markers').appendChild(securityMarker);
   // A shop event's tag follows the customer who brought it through the shop; the rush pill counts down a tapped rush.
   var spenderTag=document.createElement('button');spenderTag.type='button';spenderTag.className='marker spender-tag';spenderTag.id='spenderTag';spenderTag.hidden=true;$('markers').appendChild(spenderTag);
@@ -2974,7 +3010,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     if(shopBrowser)shopBrowser.render();
   }
   function updateMarkers(){
-    var key=[centerX,centerY,unit,width,height,state.idStaff,state.lines.join(),securitySelected,selected,state.lounge,loungeSelected,mapPicked,windowOpen(),deliveryBuilt(),kioskCount(),state.orderCounters,windowLevel(state.pickupWindow),state.flagship,isBuilding(state.builds,'flagship'),flagshipUnlocked(state.lifetime),cityKey(),storeLevels().join(),leaseIndex()>=0&&leaseLocked(leaseIndex())].join("|");
+    var key=[centerX,centerY,unit,width,height,state.idStaff,state.lines.join(),state.empire.activeStore,securitySelected,selected,state.lounge,loungeSelected,mapPicked,windowOpen(),deliveryBuilt(),kioskCount(),state.orderCounters,windowLevel(state.pickupWindow),state.flagship,isBuilding(state.builds,'flagship'),flagshipUnlocked(state.lifetime),cityKey(),storeLevels().join(),leaseIndex()>=0&&leaseLocked(leaseIndex())].join("|");
     if(updateMarkers.key===key)return;updateMarkers.key=key;
     var securityPos=project(ID_DESK.x,.62,ID_DESK.z+.1),loungePos=map3d&&map3d.ok?project(-2.7,ROOFTOP.y+1.2,-6.1):project(LOUNGE_DOOR.x,1.5,DISPLAY_Z+.5),labelSize=Math.max(8,Math.min(10,unit*.24))*(width>=780?.85:1)+'px';
     securityMarker.style.fontSize=labelSize;loungeMarker.style.fontSize=labelSize;
@@ -2982,6 +3018,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     LOT_MARKERS.forEach(function(el){if(!tags.some(function(t){return t.el===el}))el.style.display='none'});
     tags.forEach(function(t){var p=project(t.x,t.y,t.z);t.el.style.fontSize=labelSize;labels.push({el:t.el,x:p.x,y:p.y})});
     markerEls.forEach(function(el,i){var station=machinePos[i],pos=project(station.x,.63+station.y,station.z+1.23);el.style.fontSize=labelSize;labels.push({el:el,x:pos.x,y:pos.y})});
+    branchSignEls.forEach(function(el,j){var pos=branchSignAt(j);if(!pos){el.style.display='none';return}el.style.fontSize=labelSize;labels.push({el:el,x:pos.x,y:pos.y})});
+    var manage=$('branchMapMarker');if(!state.empire.activeStore)manage.style.display='none';else{var mp=branchManageAt();manage.style.fontSize=labelSize;labels.push({el:manage,x:mp.x,y:mp.y})}
     labels.forEach(function(l){l.el.style.display=l.x<-40||l.x>width+40||l.y<-30||l.y>height+30?'none':'block'});
     labels.forEach(function(l){l.w=l.el.offsetWidth;l.h=l.el.offsetHeight});
     // Keep labels from stacking: later (lower) labels slide down until they clear any earlier one they overlap.
@@ -3166,6 +3204,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // ready shows a bolt chip on its sign that fires it. Shop upgrades are suggested at the top of the Shop.
     var suggested=state.shopOpen&&fix&&fix.kind==='station'?fix.index:-1;
     markerEls.forEach(function(el,i){var locked=!isOpen(i),site=!state.lines[i];el.classList.toggle('selected',mapPicked&&!securitySelected&&!loungeSelected&&i===selected);el.classList.toggle('locked',locked);el.classList.toggle('is-site',site);el.classList.toggle('is-bottleneck',i===slowNow&&!locked&&!site);el.classList.add('station-sign');el.classList.toggle('can-upgrade',!locked&&!site&&i===suggested&&state.money>=cost(i));if(el.dataset.level!==String(state.lines[i])){el.innerHTML='<span class=station-sign-name>'+shortNames[i]+'</span><span class=station-sign-level>'+(site?'Build':'Lv '+state.lines[i])+'</span>';el.dataset.level=String(state.lines[i]);updateMarkers.key=null;}el.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);el.setAttribute('aria-label',LINES[i].name+(locked?', locked':site?', under construction. Build it':', level '+state.lines[i]));el.setAttribute('aria-pressed',String(mapPicked&&!securitySelected&&!loungeSelected&&i===selected));abilityChip(el,i,!locked&&!site);signBuy(el,mapPicked&&!securitySelected&&!loungeSelected&&!pickedTag&&i===selected&&i===buyBoxFor?stationBuys(i,suggested):null)});
+    renderBranchSigns();renderHomeChip();
     var loungeCard=document.querySelector('[data-lounge]');if(loungeCard){loungeCard.setAttribute('aria-pressed',String(loungeSelected));loungeCard.classList.toggle('is-lot',loungeLot);loungeCard.classList.toggle('can-upgrade',loungePrice!==null&&state.money>=loungePrice);loungeCard.querySelector('em').textContent=loungeBuilding?loungeClock:loungeLot?'Open':'Lv '+state.lounge;loungeCard.setAttribute('aria-label',loungeLot?'Smoking lounge, under construction':'Smoking lounge, level '+state.lounge);loungeCard.style.setProperty('--station-tier',TIER_COLORS[Math.min(3,state.lounge)])}
     var securityCard=document.querySelector('[data-security]');if(securityCard){securityCard.setAttribute('aria-pressed',String(securitySelected));securityCard.classList.toggle('is-site',doorSite);securityCard.classList.toggle('can-upgrade',!doorSite&&idTrainingQuote(1).levels>0);securityCard.querySelector('em').textContent=doorSite?'Build':'Lv '+state.idStaff;securityCard.setAttribute('aria-label',doorSite?'Security, under construction':'Security, level '+state.idStaff);securityCard.style.setProperty('--station-tier',TIER_COLORS[economy.stationLook(state.idStaff)])}
     updateStationOrbit(slow);
@@ -3306,7 +3345,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     run.oncancel=function(){pane.style.overflow='';if(paneGlide===run)paneGlide=null};
   }
   function showTray(name){if(name==='employees')name='factory';if(name==='orders'&&!onlineOpen()){securitySelected=false;loungeSelected=false;selected=5;name='factory'}if(name==='factory')mapPicked=true;if(document.body.dataset.activeTray!==name)playSound('tap',state.sound);document.body.dataset.activeTray=name;if(districtFollow&&state.empire.activeStore&&name!=='empire')visitStore(0,false);activeTray=name;var wasCollapsed=$('sheet').classList.contains('collapsed');panelOpen=true;$('sheet').classList.remove('collapsed');$('panelToggle').setAttribute('aria-expanded','true');$('panelToggle').textContent='⌄';var titles={factory:'Stations',employees:'Staff',orders:'Deliveries',boosts:'Research',flowers:'Menu',goals:'Goals',empire:'Empire'};$('panelTitle').textContent=titles[name];var tabName=name==='orders'?'factory':name;trayTabs.forEach(function(t){t.setAttribute('aria-pressed',String(t.getAttribute('data-tray')===tabName))});$('panelBack').hidden=name!=='orders';Array.prototype.forEach.call(document.querySelectorAll('[data-pane]'),function(p){p.hidden=p.getAttribute('data-pane')!==name});if(wasCollapsed)glidePane(document.querySelector('[data-pane="'+name+'"]'),true);else if(paneGlide){paneGlide.cancel();paneGlide=null}fitControls()}
-  function collapsePanel(){pickedTag=null;buyBoxFor=-1;if(mapPicked){mapPicked=false;if(window.__shiftReady)renderUI()}var sheet=$('sheet'),wasOpen=!sheet.classList.contains('collapsed');if(wasOpen&&sheet.classList.contains('tall')){settleSheet('collapsed');return}panelOpen=false;$('panelToggle').setAttribute('aria-expanded','false');$('panelToggle').textContent='⌃';if(!wasOpen){fitControls();return}
+  function collapsePanel(){pickedTag=null;buyBoxFor=-1;branchBuyFor=-1;if(mapPicked){mapPicked=false;if(window.__shiftReady)renderUI()}var sheet=$('sheet'),wasOpen=!sheet.classList.contains('collapsed');if(wasOpen&&sheet.classList.contains('tall')){settleSheet('collapsed');return}panelOpen=false;$('panelToggle').setAttribute('aria-expanded','false');$('panelToggle').textContent='⌃';if(!wasOpen){fitControls();return}
     // The pane folds away first; the sheet only takes its collapsed shape once nothing is left to hide.
     glidePane(document.querySelector('[data-pane]:not([hidden])'),false,function(){if(!panelOpen){sheet.classList.add('collapsed');fitControls()}});fitControls()}
   // Deliveries lives under Shop › Online, as on iOS; its header carries a way back.
@@ -4066,19 +4105,26 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     ['Home shop','Riverside','Old Town','City Center','Desert Oasis','Alpine'].forEach(function(name,i){var button=$('storeButton'+i),locked=i>0&&!state.empire.stores[i-1].level;button.disabled=locked;button.setAttribute('aria-pressed',String(id===i));button.setAttribute('aria-label',name+(locked?' · Unlock in Empire':id===i?' · Current store':' · Visit store'));button.title=name+(locked?' · Unlock in Empire':'');});
     $('manageViewedStore').hidden=!id;
     if(locationToggle&&locationToggle.dataset.store!==String(id)){locationToggle.innerHTML=$('storeButton'+id).querySelector('.location-icon').outerHTML+'<span>'+['Home','Riverside','Old Town','City','Desert','Alpine'][id]+'</span><span class=location-chevron aria-hidden=true>⌄</span>';locationToggle.dataset.store=String(id);locationToggle.setAttribute('aria-label','Change location · '+['Home shop','Riverside','Old Town','City Center','Desert Oasis','Alpine'][id])}
-    if(id){$('branchMapMarker').textContent='Manage · Lv '+state.empire.stores[id-1].level;$('branchMapMarker').setAttribute('aria-label','Manage '+STORES[id-1].name+' upgrades');}
+    if(id){var tag=$('branchMapMarker'),html='<span class=station-sign-name>'+STORES[id-1].name+'</span><span class=station-sign-level>Lv '+state.empire.stores[id-1].level+' · Manage</span>';if(tag.dataset.html!==html){tag.innerHTML=html;tag.dataset.html=html;updateMarkers.key=null}tag.setAttribute('aria-label','Manage '+STORES[id-1].name+', level '+state.empire.stores[id-1].level);}
   }
   function manageViewedStore(){
     var id=state.empire.activeStore;if(!id)return;
     showTray('empire');document.querySelector('[data-empire-view="growth"]').click();
     expandBranch(id-1);$('branchToggle'+(id-1)).scrollIntoView({block:'start'});$('branchToggle'+(id-1)).focus({preventScroll:true});
   }
-  function updateBranchMarker(){
-    var id=state.empire.activeStore;if(!id)return;
-    var f=BRANCH_THEMES[id-1].focus,o=districtCentre(id-1),q=project(f.x+o.x,f.y,f.z+o.z),el=$('branchMapMarker');
-    el.style.transform='translate3d('+q.x+'px,'+q.y+'px,0) translate(-50%,-50%)';el.style.fontSize=Math.max(9,Math.min(12,unit*.38))+'px';
-    el.style.visibility=q.x<0||q.x>width||q.y<0||q.y>height?'hidden':'visible';
-  }
+  // The branch's own tag stands at the front of its lot, small like the other lot tags; updateMarkers places it with them.
+  function branchManageAt(){var id=state.empire.activeStore,p=districtPlot(id-1),c=districtCentre(id-1);return project(c.x,2.2,p.z1-1)}
+  function updateBranchMarker(){if(state.empire.activeStore){updateMarkers.key=null;updateMarkers()}}
+  // Home (Kevin, 2026-11-02: "make it easier to get back to the main store after scrolling away"): whenever the flagship
+  // is off the screen a small glass chip sits at the bottom of the map, its arrow pointing the way home; a tap glides
+  // the camera back to the flagship.
+  var homeChip=document.createElement('button');homeChip.type='button';homeChip.className='home-chip';homeChip.hidden=true;
+  homeChip.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5M6.5 9.5V19h11V9.5M10 19v-5h4v5"/></svg><span>Home</span>';
+  homeChip.setAttribute('aria-label','Back to the main shop');$('world').appendChild(homeChip);
+  homeChip.onclick=function(){mapHintActivity();if(state.empire.activeStore)visitStore(0,false);else lookAtStore(0)};
+  function renderHomeChip(){if(!homeChip)return;var q=project(0,1,0),low=Math.min(height,visibleHeight()),away=state.empire.activeStore>0||q.x<-width*.08||q.x>width*1.08||q.y<-height*.1||q.y>low+height*.1;
+    if(homeChip.hidden!==!away)homeChip.hidden=!away;if(!away)return;
+    homeChip.style.top=Math.max(0,low-58)+'px';homeChip.classList.toggle('points-right',q.x>width)}
   var locationNav=document.querySelector('.store-switcher'),locationOptions=document.createElement('div');locationOptions.id='locationOptions';locationOptions.className='location-options';locationOptions.hidden=true;while(locationNav.firstChild)locationOptions.appendChild(locationNav.firstChild);locationNav.appendChild(locationOptions);
   var locationToggle=document.createElement('button');locationToggle.id='locationToggle';locationToggle.type='button';locationToggle.setAttribute('aria-expanded','false');locationToggle.setAttribute('aria-controls','locationOptions');locationToggle.innerHTML=$('storeButton0').querySelector('.location-icon').outerHTML+'<span>Main</span><span class=location-chevron aria-hidden=true>⌄</span>';locationNav.append(locationToggle,locationOptions);document.querySelector('.map-controls').appendChild(locationNav);
   function closeLocations(){locationOptions.hidden=true;locationToggle.setAttribute('aria-expanded','false')}
@@ -4238,7 +4284,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       for(var k=1;k<=start.strains&&k<state.strains.length;k++){state.strains[k]=1;state.menuStrains.push(k)}
       if(start.drone){state.pickupWindow.owned=true;state.autoDrone={owned:true,enabled:true,remaining:0,bulk:start.drone>1,mode:start.drone>1?'bulk':'single'}}
       state.lounge=Math.max(state.lounge,start.lounge);
-      if(carry.branch)state.empire.stores[carry.branch.index].level=carry.branch.level}
+      if(carry.branch){state.empire.stores[carry.branch.index].level=carry.branch.level;state.empire.stores[carry.branch.index].lines=[1,1,1,1,1,1]}}
     // A prestige reopens a standing shop; Start over goes back to the building site and replays the intro.
     if(rank>0){state.lines=LINES.map(function(){return state.startLine||1});delete state.startLine;state.doorBuilt=true;state.shopOpen=true}
     readyWork=0;work=[0,0,0,0,0,0];batchRemainder=[0,0,0,0];customers=[];arrival=0;customerId=0;deliveryDrones=[];windowLine=createWindowLine();particles=[];tickets=[];taskClocks.fill(0);taskActivity.fill(0);cropGrowth=[.15,.4,.7,.95];tierFlashes.fill(0);buildRise.fill(0);confetti=[];recentPickupRatings=[];animationTime=0;sceneTime=0;crateTime=0;cargoOdo=0;render.last=undefined;securitySelected=false;loungeSelected=false;selected=0;updateMarkers.key=null;save();$('resetModal').hidden=true;notify(rank>0?'FACTORY RESET':'STARTING OVER');syncMapView();paintThumbnails();renderUI();if(!state.shopOpen)setTimeout(function(){startGuide.open()},400)};
