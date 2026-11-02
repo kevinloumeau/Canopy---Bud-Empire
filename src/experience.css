@@ -217,3 +217,8 @@
 .world .marker.station-sign.is-lot.is-mini .station-sign-name{font-size:9px}
 .world .marker.station-sign.is-lot.is-mini .station-sign-level{font-size:8.5px}
 .world .marker.station-sign.is-lot.is-mini::after{display:none}
+/* City buildings and the HQ (Kevin, 2026-11-02: "the building tags are a little hidden"): the same small tag, but deep
+   forest with a brass edge and a brass price, so it reads over pale facades without growing. */
+.world .marker.station-sign.is-lot.is-mini.is-landmark,.world .marker.station-sign.is-lot.is-mini.is-landmark:not(.selected){border:1px solid #d0a54ecc;background:#173a2aee;color:#f3ead6;box-shadow:0 2px 6px #0b1a1266}
+.world .marker.station-sign.is-lot.is-mini.is-landmark .station-sign-level{color:#e6c477}
+.world .marker.station-sign.is-lot.is-mini.is-landmark .sign-lock{stroke:#e6c477}
