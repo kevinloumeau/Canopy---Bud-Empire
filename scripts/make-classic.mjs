@@ -10,6 +10,13 @@ if (compatible === html) {
   throw new Error('Expected Vite asset tags were not found.');
 }
 
+// A classic script cannot import or export, so a split-off shared chunk would stop the game at start-up.
+const entry = compatible.match(/<script defer src="\.?\/(assets\/shift-[^"]+\.js)">/)[1];
+const entryCode = await readFile(new URL(`../dist/${entry}`, import.meta.url), 'utf8');
+if (/^import[\s{*"']|\bexport\s*\{/m.test(entryCode)) {
+  throw new Error(`${entry} has a module import or export, so it cannot run as a classic script.`);
+}
+
 // The 3D map's entry is loaded on demand by main.js, which finds its hashed name in this meta tag.
 const { readdir } = await import('node:fs/promises');
 const map3d = (await readdir(new URL('../dist/assets/', import.meta.url))).find(name => /^map3d-[\w-]+\.js$/.test(name));
