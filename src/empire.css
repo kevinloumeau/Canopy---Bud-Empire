@@ -47,7 +47,9 @@
 .store-switcher button[hidden]{display:none}
 .store-switcher button:focus-visible,.branch-map-marker:focus-visible{outline:2px solid #e4d19d;outline-offset:2px}
 @media(hover:hover){.store-switcher button:not(:disabled):hover{background:#c3dca51a}}
-body[data-store-view=branch] #markers,body[data-store-view=branch] #upgradeHint{display:none!important}
+body[data-store-view=branch] #upgradeHint{display:none!important}
+/* The lease tag's lock, in place of a price while the next branch is still locked. */
+.station-sign .sign-lock{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;vertical-align:-.15em}
 body[data-store-view=branch] #customerStatus,body[data-store-view=branch] #stockStatus{visibility:hidden}
 body[data-store-view=branch] .customer-mood{display:none}
 .branch-actions{display:grid;gap:7px;min-width:106px}

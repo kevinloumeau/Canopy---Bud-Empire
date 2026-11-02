@@ -15,8 +15,8 @@ def mats():
             BACKLIGHT=K.mat("Backlight", "#ffe2a8", .4, 0, 2.2),
             LED=K.mat("LedStrip", "#ffd79a", .4, 0, 4.),
             FLUTE=K.mat("FlutedOak", "#c99862", .5),
-            TILE=K.mat("GreenTile", "#2f7350", .2),
-            GROUT=K.mat("Grout", "#d9d2bf", .7),
+            TILE=K.mat("GreenTile", K.TILE_GREEN, .3),
+            GROUT=K.mat("Grout", K.TILE_GROUT, .8),
             POLISH=K.mat("PolishedBrass", "#e2b75a", .16, 1.),
             JARGLASS=K.mat("JarGlass", "#e8f1ec", .08),
         )
@@ -68,19 +68,20 @@ def fluted(tag, x0, x1, y, z0, h, step=.06, r=.024, m=None, facing="-Y"):
         c = K.cyl(f"{tag}{i}", r, r, h, (0, 0, 0), m, 10)
         c.location = (p, y, z0) if facing == "-Y" else (y, p, z0)
 
-def tile_band(tag, x0, x1, y, z0, h, rows=2, w=.1, facing="-Y"):
+def tile_band(tag, x0, x1, y, z0, h, rows=2, w=K.TILE_W, facing="-Y"):
     """Green glazed tiles with cream grout on a face toward -Y (along x) or +X (along y): a backing slab and
-    thin grout bars, so it stays a handful of triangles."""
+    thin grout bars, so it stays a handful of triangles.  Tall stack-bond tiles like the shop's wall dado
+    (K.TILE_W wide); a short band is the same tiles cut down."""
     M = mats(); L = x1 - x0; c = (x0 + x1) / 2
     if facing == "-Y":
         K.box(f"{tag}", (L, .02, h), (c, y, z0), M["TILE"], .004)
         for k in range(1, rows): K.box(f"{tag}H{k}", (L, .024, .008), (c, y - .002, z0 + h * k / rows - .004), M["GROUT"], 0)
-        n = int(L / w)
+        n = max(1, round(L / w))
         for k in range(1, n): K.box(f"{tag}V{k}", (.008, .024, h), (x0 + L * k / n, y - .002, z0), M["GROUT"], 0)
     else:
         K.box(f"{tag}", (.02, L, h), (y, c, z0), M["TILE"], .004)
         for k in range(1, rows): K.box(f"{tag}H{k}", (.024, L, .008), (y + .002, c, z0 + h * k / rows - .004), M["GROUT"], 0)
-        n = int(L / w)
+        n = max(1, round(L / w))
         for k in range(1, n): K.box(f"{tag}V{k}", (.024, .008, h), (y + .002, x0 + L * k / n, z0), M["GROUT"], 0)
 
 def marble_top(tag, size, loc, bevel=.03):
