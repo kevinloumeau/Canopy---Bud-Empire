@@ -90,7 +90,21 @@ export function staffPose(role, clock, act = 1) {
     case 'guard': {
       // On the door: hands clasped in front, standing tall, scanning the room and the door in slow looks with holds.
       const scan = Math.sin(t * .45) + .35 * Math.sin(t * 1.1);
-      return { lean: -.04, yaw: .55 * Math.max(-1, Math.min(1, scan * 1.2)), pitch: .05, left: [-.42, -.72, .32], right: [-.38, -.72, .36] };
+      const idle = { lean: -.04, yaw: .55 * Math.max(-1, Math.min(1, scan * 1.2)), pitch: .05, left: [-.42, -.72, .32], right: [-.38, -.72, .36] };
+      // act is how far through an ID check the door is (0 between guests). He faces the guest: takes the card across
+      // the booth, brings it up and reads it, looks up at the face, hands it back, then waves them in.
+      const p = clamp01(act), w = ease(p / .12) * ease((1 - p) / .1);
+      if (w <= 0) return idle;
+      const take = [.02, -.4, .78], read = [-.18, -.42, .5], clasp = idle.right;
+      let right = take;
+      if (p < .2) right = mix(clasp, take, ease(p / .2));
+      else if (p < .3) right = mix(take, read, ease((p - .2) / .1));
+      else if (p < .62) right = read;
+      else if (p < .72) right = mix(read, take, ease((p - .62) / .1));
+      else right = mix(take, clasp, ease((p - .72) / .14));
+      const wave = bump(p, .58, .94), left = mix(idle.left, [.3, -.4, .55], wave);
+      const pitch = .05 + .3 * bump(p, .22, .64) - .05 * bump(p, .6, .78);
+      return blendPose(idle, { lean: 0, yaw: .25 * wave, pitch, left, right }, w);
     }
     case 'host': {
       // The lounge host: hands loosely together, looking over the roof, and now and then a welcoming open hand.

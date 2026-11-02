@@ -1763,6 +1763,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // side by the monitors, past the line's last row at z 9.3.
   var ID_DESK={x:-8.2,z:10.15},ID_CHECK={x:-9.2,z:9.6},DOORMAN={x:-7.15,z:10.35};
   var ID_ROUTE=[ID_CHECK,{x:-10.6,z:9.6},{x:-11.7,z:9.3},{x:-12.4,z:7.8},{x:-12.4,z:-10}];
+  // How far through a full ID check the door is (0 when nobody is mid-check or the check is a quick trained one).
+  function guardCheck(){var c=customers.find(function(q){return q.idChecked===false&&q.idCheckFor!==undefined});return c&&c.idCheckFor>=1?Math.min(1,c.idCheckTime/c.idCheckFor):0}
   function moveToIdCheck(c,dt){
     var queue=customers.filter(function(q){return q.idChecked===false}),index=queue.indexOf(c);
     var startX=c.x,startZ=c.z,budget=dt*walkSpeed();
@@ -1774,8 +1776,14 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // The doorman starts the check as the head comes up the last half-stride, so a quick door clears a customer every
     // tick or two and never caps the shop's flow.
     if(index===0&&c.idDistance<=.35){
+      // Kevin (2026-11-02): "ID check should take longer". The guard takes the ID, reads it, looks up and waves the
+      // guest in, ID_CHECK_SHOW seconds, whenever the door has that long to spare: the check is fixed as it starts, never
+      // longer than the next walker needs to reach their place behind, and never shorter than the trained speed. So the
+      // next guest is never held up and the door clears exactly as many people as before; only a packed line gets the
+      // trained quick check.
+      if(c.idCheckFor===undefined){var behind=queue[1],gap=behind?(behind.idDistance-.7)/walkSpeed():Infinity;c.idCheckFor=Math.max(securityDuration(),Math.min(economy.ID_CHECK_SHOW,gap))}
       c.idCheckTime+=dt;
-      if(c.idCheckTime>=securityDuration()){
+      if(c.idCheckTime>=c.idCheckFor){
         c.idChecked=true;c.phase='entering';
         // A lounge guest heads for the curtain only while the rope there is short; otherwise they shop like anyone
         // else, so the rope never backs up through the kiosks to the door.
@@ -2525,7 +2533,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // It goes last, so every built station keeps its slot.
     var nextCounter=nextOrderCounter();if(nextCounter){station(4,nextCounter.x,0,nextCounter.z,state.lines[4],true,4);var g=stations[stations.length-1];g.ghost=true;g.selected=false;g.boost=0;g.act=0;g.rise=0;g.pop=1}
     // The doorman stands behind the booth, on the room side, facing the front door across the desk.
-    if(state.doorBuilt)staffer('door',STAFF_MODELS.door,DOORMAN.x,0,DOORMAN.z,{x:ID_CHECK.x-DOORMAN.x,z:ID_CHECK.z-DOORMAN.z},1,{role:'guard',clock:sceneTime/1000});
+    if(state.doorBuilt)staffer('door',STAFF_MODELS.door,DOORMAN.x,0,DOORMAN.z,{x:ID_CHECK.x-DOORMAN.x,z:ID_CHECK.z-DOORMAN.z},1,{role:'guard',clock:sceneTime/1000,act:guardCheck()});
     // The lounge host works the rooftop: behind the bar once there is one, otherwise by the elevator's bridge.
     if(state.lounge>0){var host=state.lounge>=2?{x:3.7,z:-8.75,f:.3}:{x:-5.2,z:-4,f:.3};staffer('host',STAFF_MODELS.host,host.x,ROOFTOP.y,host.z,null,host.f,{role:'host',clock:sceneTime/1000})}
     // Guests on the roof hold a spot for their session. A guest riding up or down stands in the elevator's cab, which

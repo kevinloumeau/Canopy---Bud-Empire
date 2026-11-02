@@ -94,3 +94,20 @@ for (const file of ['beanie-character.glb', 'chef-woman.glb']) test(file + ': a 
     assert.ok(hand.y < free.y + .05, file + ' hand raised ' + (hand.y - free.y).toFixed(3));
   }
 });
+
+test('the guard reads an ID through a check: card taken across the booth, read up close, then a wave in', () => {
+  const rest = staffPose('guard', 3, 0);
+  // Before and after a check he scans the room with his hands clasped.
+  assert.deepEqual(staffPose('guard', 3, 1), rest);
+  const reach = staffPose('guard', 3, .2).right, read = staffPose('guard', 3, .45), wave = staffPose('guard', 3, .76).left;
+  assert.ok(reach[2] > rest.right[2] + .3, 'reaches across the booth for the card');
+  assert.ok(read.pitch > rest.pitch + .2 && read.right[1] > rest.right[1] + .2, 'looks down at the card held up');
+  assert.ok(wave[0] > rest.left[0] + .6, 'waves the guest in');
+  // A check playing out at its real pace never jumps.
+  let last = staffPose('guard', 0, 0);
+  for (let f = 1; f <= 2.2 * 60; f++) {
+    const p = staffPose('guard', f / 60, f / (2.2 * 60));
+    for (const arm of ['left', 'right']) assert.ok(Math.hypot(p[arm][0] - last[arm][0], p[arm][1] - last[arm][1], p[arm][2] - last[arm][2]) < .06, arm + ' jumps at frame ' + f);
+    last = p;
+  }
+});
