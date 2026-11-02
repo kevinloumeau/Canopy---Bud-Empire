@@ -52,10 +52,10 @@ test('a contract that runs out costs nothing, stops counting and moves on to the
  assert.equal(activeContract(p,start+31*60000),null);
 });
 test('offers skip contracts the shop cannot work on yet, and another offer can be asked for',()=>{
- const s=fresh();s.productMenu={unlocked:[true,false,false]};s.empire.contracts.round=1;
+ const s=fresh();s.productMenu={byStrain:[[true,false,false],[true,false,false],[true,false,false],[true,false,false]]};s.empire.contracts.round=1;
  assert.equal(contractOffer(s).id,'vip-night','deliveries and edibles need their unlocks');
  s.autoDrone={owned:true};assert.equal(contractOffer(s).id,'delivery-blitz');
- assert.equal(skipContract(s,start),true);s.productMenu.unlocked[2]=true;assert.equal(contractOffer(s).id,'edibles-weekend');
+ assert.equal(skipContract(s,start),true);s.productMenu.byStrain[0][2]=true;assert.equal(contractOffer(s).id,'edibles-weekend');
  startContract(s,start);assert.equal(skipContract(s,start),false,'no skipping a running contract');
  assert.equal(contractTarget(CONTRACTS[4],1e9),5,'big spender counts never grow');assert.ok(contractTarget(CONTRACTS[0],64)>contractTarget(CONTRACTS[0],1));
  assert.ok(contractTarget(CONTRACTS[0],1e12)<=CONTRACTS[0].base*CONTRACTS[0].cap);

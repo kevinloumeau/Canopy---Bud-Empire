@@ -16,10 +16,9 @@ export function migrateShopPlay(raw){
   return {version:1,cooldown:cap(raw?.cooldown??35,90),sequence:Math.floor(cap(raw?.sequence)),matches:Math.floor(cap(raw?.matches)),tips:cap(raw?.tips),
     shift:migrateShift(raw?.shift),recap:raw?.recap?migrateShift(raw.recap):null,recapUnread:raw?.recapUnread===true};
 }
-// Every unlocked strain on the menu, in every type the shop stocks, is a pick the budtender can offer.
+// Every unlocked strain on the menu, in every type that strain stocks, is a pick the budtender can offer.
 export function picks(state,menuStrains){
-  const formats=stockedFormats(state.productMenu);
-  return menuStrains.filter(i=>state.strains[i]>0).flatMap(strain=>{const type=STRAIN_TYPE[strain]??0;return formats.map(format=>({strain,format,type,trait:TYPES[type],formatName:FORMATS[format].name}));});
+  return menuStrains.filter(i=>state.strains[i]>0).flatMap(strain=>{const type=STRAIN_TYPE[strain]??0;return stockedFormats(state.productMenu,strain).map(format=>({strain,format,type,trait:TYPES[type],formatName:FORMATS[format].name}));});
 }
 const NAMES=['Avery','Eden','Noa','Remy','Sage','Robin'];
 // One customer, one request: a strain type most of the time, and every third request a type of product when the shop
