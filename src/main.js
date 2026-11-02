@@ -14,7 +14,7 @@ import {SHOP_EVENTS,eventKind,eventGap,eventReward,eventToast} from './shop-even
 import {PERKS,migratePerks,perkLevel,perkCost,buyPerk,perkStart,spenderGap,rushLength,trainerGap,keptBranch,FOUNDER_LOOK,FOUNDER_LEVEL} from './perks.js';
 import {migrateRun,freshRun,tickRun,reopenMoment} from './reopen.js';
 import {makeSound} from './sfx.js';
-import {FORKS,RESEARCH_BRANCHES,freshForks,migrateForks,sideStatus,takeSide,partnerOf,levelsToGate,forkOf} from './research.js';
+import {FORKS,RESEARCH_BRANCHES,ALSO,RESEARCH_VERSION,levelCost,mergeResearch,freshForks,migrateForks,sideStatus,takeSide,partnerOf,levelsToGate,forkOf} from './research.js';
 import {installQuietDom} from './quiet-dom.js';
 import {createTelemetry} from './telemetry.js';
 import {createReminders,planReminders} from './reminders.js';
@@ -50,7 +50,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Contract progression is defined in depth.js, including post-city milestones.
   var $=function(id){return document.getElementById(id)};
   // A new shop starts as seven construction sites: the door and six stations are raised for free during the intro, then the sign flips.
-  function fresh(){return{forks:freshForks(),shopPlay:migrateShopPlay(),money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),pickupWindow:migrateWindow(),builds:migrateBuilds(),flagship:0,flagshipSeen:false,productMenu:migrateMenu(),sound:true,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,offlineLevel:0,spenderClock:180,shopEvents:0,rushTime:0,crosses:{done:[],active:null},achievements:[],reminders:false,perks:{points:0,levels:{}},run:freshRun(),trainerClock:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],abilities:migrateAbilities(),sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeStaff:0,loungeLift:false,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
+  function fresh(){return{researchVersion:RESEARCH_VERSION,forks:freshForks(),shopPlay:migrateShopPlay(),money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),pickupWindow:migrateWindow(),builds:migrateBuilds(),flagship:0,flagshipSeen:false,productMenu:migrateMenu(),sound:true,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,offlineLevel:0,spenderClock:180,shopEvents:0,rushTime:0,crosses:{done:[],active:null},achievements:[],reminders:false,perks:{points:0,levels:{}},run:freshRun(),trainerClock:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],abilities:migrateAbilities(),sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeStaff:0,loungeLift:false,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
   function readSave(){
     for(var key of ['shift-save','shift-save-backup']){
       try{var raw=localStorage.getItem(key);if(!raw)continue;var value=JSON.parse(raw);if(value&&typeof value==='object'&&!Array.isArray(value))return value}catch(e){}
@@ -62,13 +62,13 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // Saves from before the construction intro have no `shopOpen`; they are open shops with every station standing.
     next.shopOpen=old.shopOpen!==false;next.doorBuilt=next.shopOpen||old.doorBuilt===true;
     ['trafficLevel','pickupLevel','readyLevel','curingLevel','durationLevel','kioskSpeedLevel','onlineBonusLevel','comfortLevel','scannerLevel','webLevel','seedBatchLevel','growBatchLevel','harvestBatchLevel','packSpeedLevel','serviceLevel','signLevel','loyaltyLevel','basketLevel','terpeneLevel','breedingLevel','displayLevel','trendLevel','fleetLevel','cargoLevel','repeatLevel'].forEach(function(key){next[key]=Math.floor(finite(old[key],0,0,key==='pickupLevel'?12:20))});
-    next.offlineLevel=Math.floor(finite(old.offlineLevel,0,0,5));next.forks=migrateForks(old.forks,next);next.spenderClock=finite(old.spenderClock,180,0,600);next.shopEvents=Math.floor(finite(old.shopEvents,0,0,1e9));next.rushTime=finite(old.rushTime,0,0,120);next.crosses=migrateCrosses(old.crosses,old.library,old.breed);next.achievements=migrateAchievements(old.achievements);next.reminders=old.reminders===true;next.perks=migratePerks(old.perks,next.empire.shares);next.run=migrateRun(old.run);next.trainerClock=finite(old.trainerClock,0,0,240);
+    next.offlineLevel=Math.floor(finite(old.offlineLevel,0,0,5));next.researchVersion=Math.floor(finite(old.researchVersion,0,0,RESEARCH_VERSION));var researchRefund=mergeResearch(next);next.forks=migrateForks(old.forks,next);next.spenderClock=finite(old.spenderClock,180,0,600);next.shopEvents=Math.floor(finite(old.shopEvents,0,0,1e9));next.rushTime=finite(old.rushTime,0,0,120);next.crosses=migrateCrosses(old.crosses,old.library,old.breed);next.achievements=migrateAchievements(old.achievements);next.reminders=old.reminders===true;next.perks=migratePerks(old.perks,next.empire.shares);next.run=migrateRun(old.run);next.trainerClock=finite(old.trainerClock,0,0,240);
     next.idStaff=Math.floor(finite(old.idStaff,0,0,economy.SECURITY_MAX_LEVEL));
     next.strains=STRAINS.map(function(_,i){return Math.floor(finite(old.strains&&old.strains[i],i===0?1:0,i===0?1:0,strains.STRAIN_MAX))});
     next.activeStrain=Math.floor(finite(old.activeStrain,0,0,STRAINS.length-1));if(!next.strains[next.activeStrain])next.activeStrain=0;
     next.menuStrains=STRAINS.map(function(_,i){return i}).filter(function(i){return next.strains[i]>0&&(!Array.isArray(old.menuStrains)||old.menuStrains.indexOf(i)>=0)});if(!next.menuStrains.length)next.menuStrains=[0];next.strainTrend=strains.migrateTrend(old.strainTrend,STRAINS.length);next.vipBuzz=finite(old.vipBuzz,0,0,strains.VIP_BUZZ_SECONDS);
     next.journey=migrateJourney(old.journey);next.orderCounters=migrateOrderCounters(old.orderCounters);
-    next.money=finite(old.money,30,0,Number.MAX_SAFE_INTEGER);
+    next.money=finite(old.money,30,0,Number.MAX_SAFE_INTEGER)+researchRefund;
     next.lifetime=finite(old.lifetime,0,0,Number.MAX_SAFE_INTEGER);
     next.sold=Math.floor(finite(old.sold,0,0,Number.MAX_SAFE_INTEGER));
     next.onlineCompleted=Math.floor(finite(old.onlineCompleted,0,0,Number.MAX_SAFE_INTEGER));next.onlineRequests=finite(old.onlineRequests,0,0,40);next.hints={web:!!(old.hints&&old.hints.web),storage:!!(old.hints&&old.hints.storage),queue:!!(old.hints&&old.hints.queue)};
@@ -491,11 +491,15 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var options=momentPicks(state,menuStrains());if(menuStrains().length<2)return;
     guest.momentOffered=true;moment=createMoment(play,guest,options);play.cooldown=60+(play.sequence%3)*15;
   }
+  // What the shop really earns a second, smoothed over about a minute of play. The advice compares it with what the
+  // stations could sell: well short means customers can't get through the door fast enough (see flowFix).
+  var realRate=0;
   // Branches earn a share of the flagship's walk-in sales. p.flagship follows that rate over about five minutes, so a
   // short rush or crew burst barely moves branch income while every lasting upgrade carries over to every branch.
   function flagshipSales(){return Math.min(production(),flowerValue()*basketSize()/arrivalInterval())}
   function trackFlagship(dt){var p=state.empire,now=flagshipSales();if(!Number.isFinite(now))return;p.flagship=p.flagship>0?p.flagship+(now-p.flagship)*Math.min(1,dt/300):now}
-  function simulate(dt){
+  function simulate(dt){var before=state.lifetime;simulateStep(dt);if(dt>0&&dt<5)realRate+=((state.lifetime-before)/dt-realRate)*Math.min(1,dt/60)}
+  function simulateStep(dt){
     state.empire.retailBoost=retailBoost();trackFlagship(dt);accrueOnlineRequests(dt);
     tickMoment(dt);var shift=state.shopPlay.shift,sentBefore=transfersSent();
     // Achievements are checked once a game second; a save that already meets some is credited quietly on load.
@@ -665,12 +669,12 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var ENTRY_TAIL=[{x:-9.7,z:8.15},{x:-10.3,z:8.75},{x:-10.9,z:9.3},{x:-11.7,z:9.3},{x:-12.4,z:7.8}];
   function laneJoinIndex(route){return route.length-ENTRY_TAIL.length}
   function kioskRoute(index){var z=6.8-(index||0)*1.8;return [{x:-8.95,z:z},{x:-8.45,z:z},{x:-8.45,z:7.7}].concat(ENTRY_TAIL)}
-  // Twenty levels per line (twelve for the waiting area). The first eight climb gently; past that each level costs 2.15× the last, so the back half of every line is a late-game project rather than an afternoon.
-  var COMPONENTS=[{key:'trafficLevel',name:'Floor flow',base:750,max:20},{key:'pickupLevel',name:'Pickup waiting area',base:1200,max:12},{key:'readyLevel',name:'Ready-bag storage',base:600,max:20},{key:'curingLevel',name:'Curing equipment',base:1800,max:20},{key:'durationLevel',name:'Lasting effects',base:2400,max:20},{key:'kioskSpeedLevel',name:'Kiosk software',base:3000,max:20},{key:'onlineBonusLevel',name:'Premium packaging',base:2200,max:20},{key:'comfortLevel',name:'Queue comfort',base:1400,max:20},{key:'scannerLevel',name:'ID scanner',base:1600,max:20},{key:'webLevel',name:'Web marketing',base:2500,max:20},
-    {key:'seedBatchLevel',name:'Seed trays',base:900,max:20},{key:'growBatchLevel',name:'Grow lights',base:1500,max:20},{key:'harvestBatchLevel',name:'Trim robots',base:2000,max:20},{key:'packSpeedLevel',name:'Auto-baggers',base:2600,max:20},
-    {key:'serviceLevel',name:'Express lanes',base:1800,max:20},{key:'signLevel',name:'Street signage',base:1000,max:20},{key:'loyaltyLevel',name:'Loyalty cards',base:2100,max:20},{key:'basketLevel',name:'Bigger baskets',base:2400,max:20},
-    {key:'terpeneLevel',name:'Terpene lab',base:2800,max:20},{key:'breedingLevel',name:'Breeding bench',base:3200,max:20},{key:'displayLevel',name:'Display cases',base:2600,max:20},{key:'trendLevel',name:'Trend scout',base:3000,max:20},
-    {key:'fleetLevel',name:'Drone fleet',base:4000,max:20},{key:'cargoLevel',name:'Cargo bays',base:3500,max:20},{key:'repeatLevel',name:'Repeat buyers',base:2200,max:20},{key:'offlineLevel',name:'Back-room safe',base:5000,max:5}];
+  // Twelve research picks, twenty levels each (five for the safe). The first eight levels climb gently; past that each costs
+  // 2.15× the last, so the back half of every line is a late-game project. A pick with lines in research.js ALSO raises
+  // them all at once, so each tap does something you can see.
+  var COMPONENTS=[{key:'growBatchLevel',name:'Grow lights',base:1500,max:20},{key:'curingLevel',name:'Curing equipment',base:1800,max:20},{key:'trendLevel',name:'Trend scout',base:3000,max:20},{key:'breedingLevel',name:'Breeding bench',base:3200,max:20},{key:'offlineLevel',name:'Back-room safe',base:5000,max:5},
+    {key:'basketLevel',name:'Bigger baskets',base:2400,max:20},{key:'trafficLevel',name:'Floor flow',base:750,max:20},{key:'displayLevel',name:'Display cases',base:2600,max:20},{key:'loyaltyLevel',name:'Loyalty cards',base:2100,max:20},{key:'serviceLevel',name:'Express lanes',base:1800,max:20},
+    {key:'webLevel',name:'Web marketing',base:2500,max:20},{key:'onlineBonusLevel',name:'Premium bags',base:2200,max:20},{key:'fleetLevel',name:'Drone fleet',base:4000,max:20},{key:'cargoLevel',name:'Cargo bays',base:3500,max:20}];
   function kioskServiceDuration(){return .8+1.2/(1+state.kioskSpeedLevel*.15)}
   // How far the customer standing at each kiosk has got with their order (0..1), for the 3D map's touchscreens.
   function kioskMenus(){
@@ -685,9 +689,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function pickupPromised(){return 4+state.pickupLevel*2}
   function pickupLimit(){return pickupPlaces(pickupPromised(),routeLength(queueRoute(true)),queueGap(false))}
   function pickupLineFull(){return customers.filter(function(c){return c.ordered&&!c.bag}).length>=pickupLimit()}
-  function readyCapacity(){return economy.readyCapacity(state.readyLevel,state.lines)}
-  function componentCost(i){var L=state[COMPONENTS[i].key];return Math.round(COMPONENTS[i].base*Math.pow(1.8,Math.min(L,8))*Math.pow(2.15,Math.max(0,L-8)))}
-  function componentInstalled(i){return COMPONENTS[i].key!=='kioskSpeedLevel'||state.kiosk}
+  function readyCapacity(){return Math.max(economy.readyCapacity(state.readyLevel,state.lines),4*basketSize())}
+  function componentCost(i){return levelCost(COMPONENTS[i].base,state[COMPONENTS[i].key])}
+  function componentInstalled(i){return true}
   // Buyable now: installed, and either off the forks or on a side that is taken or still free to take.
   function componentUnlocked(i){var s=sideStatus(state,COMPONENTS[i].key);return componentInstalled(i)&&(s==='open'||s==='pick')}
   // Worth advising: buyable and not a fork still waiting on the player, so the button never makes a fork's choice for them.
@@ -697,17 +701,17 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var armedFork=null,armedTimer=null;
   function upgradeComponent(i){var c=COMPONENTS[i],price=componentCost(i);if(!componentUnlocked(i)||state[c.key]>=c.max||state.money<price)return;
     if(sideStatus(state,c.key)==='pick'&&armedFork!==i){armedFork=i;clearTimeout(armedTimer);armedTimer=setTimeout(function(){armedFork=null;renderUI()},6000);renderUI();return}
-    armedFork=null;var took=takeSide(state,c.key);state.money-=price;state[c.key]++;save();renderUI();notify(took?c.name.toUpperCase()+' · CHOSEN OVER '+COMPONENTS[componentIndex(partnerOf(c.key))].name.toUpperCase():c.name.toUpperCase()+' · LEVEL '+state[c.key],'upgrade')}
+    armedFork=null;var took=takeSide(state,c.key);state.money-=price;state[c.key]++;(ALSO[c.key]||[]).forEach(function(k){state[k]=Math.max(state[k]||0,state[c.key])});save();renderUI();notify(took?c.name.toUpperCase()+' · CHOSEN OVER '+COMPONENTS[componentIndex(partnerOf(c.key))].name.toUpperCase():c.name.toUpperCase()+' · LEVEL '+state[c.key],'upgrade')}
   function renderComponents(){
-    var describe=[function(l){return '+'+Math.round((economy.walkSpeed(l)/2.8-1)*100)+'% walking speed'},function(l){return (4+l*2)+' picking up'},function(l){return economy.readyCapacity(l,state.lines)+' ready bags'},function(l){return '+'+(l*3)+'% sale value'},function(l){return '+'+(l*3)+'% happy tips'},function(l){return '+'+(l*15)+'% kiosk speed'},function(l){return '+'+(l*5)+'% online value'},function(l){return Math.round(economy.patience('hurried',l))+'s patience'},function(l){return '+'+(l*12)+'% check speed'},function(l){return (requestRate(state.onlineCompleted,1,l)*60).toFixed(1)+' requests / min · '+requestCap(state.onlineCompleted,l)+' waiting'},
-      function(l){return '+'+(l*6)+'% seed batch'},function(l){return '+'+(l*6)+'% grow batch'},function(l){return '+'+(l*6)+'% harvest batch'},function(l){return '+'+(l*6)+'% pack speed'},
-      function(l){return '+'+(l*4)+'% counter speed'},function(l){return '+'+(l*4)+'% foot traffic'},function(l){return '+'+(l*3)+'% happy tips'},function(l){return '+'+(l*4)+'% basket size'},
-      function(l){return '+'+(l*.25).toFixed(2).replace(/\.?0+$/,'')+'% THC'},function(l){return '-'+(l*3)+'% grow penalty'},function(l){return '+'+(l*2)+'% boutique value'},function(l){return '+'+(35+l*2)+'% trend bonus'},
-      function(l){return (10*(1-l*.03)).toFixed(1)+'s drone interval'},function(l){return (10+l)+' orders per bulk run'},function(l){return (l*4)+'% repeat buyers'},function(l){return (4+l*4)+'h offline'}];
+    // Each effect fits one line of a Research tile: a number and one or two words.
+    var effectLines={growBatchLevel:function(l){return '+'+(l*6)+'% batches'},curingLevel:function(l){return '+'+(l*3)+'% sale value'},trendLevel:function(l){return '+'+(35+l*2)+'% on trend'},breedingLevel:function(l){return '-'+(l*3)+'% grow time'},offlineLevel:function(l){return (4+l*4)+'h offline'},
+      basketLevel:function(l){return '+'+(l*4)+'% baskets'},trafficLevel:function(l){return '+'+Math.round((economy.walkSpeed(l)/2.8-1)*100)+'% walking'},displayLevel:function(l){return '+'+(l*2)+'% boutique'},loyaltyLevel:function(l){return '+'+(l*6)+'% tips'},serviceLevel:function(l){return '+'+(l*15)+'% patience'},
+      webLevel:function(l){return (requestRate(state.onlineCompleted,1,l)*60).toFixed(1)+' orders/min'},onlineBonusLevel:function(l){return '+'+(l*5)+'% online'},fleetLevel:function(l){return (10*(1-l*.03)).toFixed(1)+'s per drone'},cargoLevel:function(l){return (10+l)+' per run'}},
+      describe=COMPONENTS.map(function(c){return effectLines[c.key]});
     COMPONENTS.forEach(function(c,i){var level=state[c.key],max=level>=c.max,side=sideStatus(state,c.key),closed=side==='closed',gated=side==='gated',locked=!componentInstalled(i)||closed||gated,button=$('componentBuy'+i),f=forkOf(c.key);
       button.parentElement.classList.toggle('is-fork-closed',closed);button.parentElement.classList.toggle('is-fork-open',side==='pick');
       if(closed||gated){$('componentBenefit'+i).textContent=describe[i](level);$('componentLevel'+i).textContent=closed?'Closed this run · took '+COMPONENTS[componentIndex(partnerOf(c.key))].name+(level?' · Lv '+level+' kept':''):'Opens at '+f.gate+' '+RESEARCH_BRANCHES.find(function(b){return b.id===f.branch}).name+' levels · '+levelsToGate(state,c.key)+' to go';$('componentPrice'+i).textContent=closed?'':fmt(componentCost(i));button.disabled=true;button.querySelector('span').textContent=closed?'Closed':'Locked';return}
-      $('componentBenefit'+i).textContent=!componentInstalled(i)?'Install a kiosk first':max?describe[i](level):describe[i](level).replace(/ (walking speed|picking up|ready bags|sale value|happy tips|kiosk speed|online value|patience|check speed|waiting|seed batch|grow batch|harvest batch|pack speed|counter speed|foot traffic|basket size|THC|grow penalty|boutique value|trend bonus|drone interval|orders per bulk run|repeat buyers)$/,'')+' → '+describe[i](level+1);
+      $('componentBenefit'+i).textContent=!componentInstalled(i)?'Install a kiosk first':max?describe[i](level):describe[i](level).replace(/ (batches|sale value|on trend|grow time|offline|baskets|walking|boutique|tips|patience|orders\/min|online|per drone|per run)$/,'')+' → '+describe[i](level+1);
       $('componentLevel'+i).textContent='Level '+level+' / '+c.max+(max?' · Maximum':state.money<componentCost(i)?' · '+fmt(componentCost(i)-state.money)+' to go':'');$('componentPrice'+i).textContent=max?'MAX':fmt(componentCost(i));button.disabled=locked||max||state.money<componentCost(i);button.querySelector('span').textContent=locked?'Locked':side==='pick'?(armedFork===i?'Confirm':'Choose'):'Upgrade';button.setAttribute('aria-describedby','componentBenefit'+i)});
     if(shopBrowser)shopBrowser.render()}
   function queueCost(){return Math.round(150*Math.pow(1.8,state.queueLevel))}
@@ -3300,7 +3304,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var securityHtml='<span class="status-chip" data-tone="'+chipTone+'"><i></i><b>'+chipWord+'</b><small>'+chipReason+'</small></span>'+
       '<span class="stat" title="Seconds the doorman takes per ID check; training and the scanner both cut it">'+ICON_CLOCK+'<b>'+securityDuration().toFixed(2)+'s</b><small>per check</small></span>'+
       '<span class="stat" title="Customers on the way to or waiting at the desk">'+ICON_DOOR+'<b>'+atDoor+'</b><small>at the door</small></span>'+
-      '<span class="stat" title="ID scanner from Research: each level checks 12% faster">'+ICON_SCAN+'<b>'+(state.scannerLevel?'+'+Math.round(state.scannerLevel*12)+'%':'—')+'</b><small>scanner</small></span>';
+      '<span class="stat" title="Express lanes from Research: each level checks IDs 12% faster">'+ICON_SCAN+'<b>'+(state.scannerLevel?'+'+Math.round(state.scannerLevel*12)+'%':'—')+'</b><small>scanner</small></span>';
     if($('stationStatus').dataset.html!==securityHtml){$('stationStatus').innerHTML=securityHtml;$('stationStatus').dataset.html=securityHtml}
     if(site){
       $('upgradeLevel').textContent='Not built';renderUpgradeComparison('Seconds per ID check',securityDuration(),securityDuration(),true,true,false);
@@ -3402,7 +3406,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       '<li class="guide-customer"><div class="guide-portrait"><canvas width="180" height="260" aria-hidden="true"></canvas><span class="guide-flower" aria-hidden="true">'+strainArt(0,false)+'</span></div><h4>Regulars</h4><strong class="guide-preference">Meadow Mint</strong><span class="guide-caption">On the menu</span></li>'+
       '<li class="guide-customer"><div class="guide-portrait"><canvas width="180" height="260" aria-hidden="true"></canvas><span class="guide-cue">'+clock+'</span></div><h4>Hurried</h4><strong class="guide-time" id="guideHurriedTime">≤20s</strong><span class="guide-caption">Whole visit</span></li>'+
       '<li class="guide-customer guide-vip"><div class="guide-portrait"><canvas width="180" height="260" aria-hidden="true"></canvas><span class="guide-cue">'+crown+'</span></div><h4>VIPs</h4><strong class="guide-time" id="guideVipTime">≤15s</strong><span class="guide-caption">Whole visit<br>Reserve flower<br><b>2× pay</b></span></li></ul>'+
-      '<p class="guide-comfort">'+clock+'<span id="guideComfort">Queue comfort adds time to both visit limits.</span></p>'+
+      '<p class="guide-comfort">'+clock+'<span id="guideComfort">Express lanes add time to both visit limits.</span></p>'+
       '<div class="guide-outcomes"><div>'+icon('<circle cx="16" cy="16" r="12"/><path d="m10 16 4 4 8-8"/>')+'<div><h4>Match</h4><strong>+1 <span>loyalty</span></strong><small id="guideMatchTip">+15% base tip</small></div></div><div>'+icon('<circle cx="16" cy="16" r="12"/><path d="m12 12 8 8m0-8-8 8"/>')+'<div><h4>Miss</h4><strong>−1 <span>loyalty</span></strong><small>Preference or time</small></div></div></div>'+
       '<div class="guide-unlock">'+crown+'<div><strong id="guideVipUnlock">VIPs at 60 loyalty</strong><span>35% base tips on regular matches</span></div></div>'+
       '<p class="guide-branch">'+icon('<path d="M5 14h22v14H5ZM3 14l3-9h20l3 9M12 28V18h8v10M3 14c0 4 6 4 6 0 0 4 7 4 7 0 0 4 7 4 7 0 0 4 6 4 6 0"/>')+'<span>Branch loyalty <b>up to +20% income</b></span></p>';
@@ -3708,8 +3712,10 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     toggle.addEventListener('click',function(e){if(e.detail!==0)e.preventDefault();else flipAutoDrone()});
   })($('autoDroneToggle'));
   // Cards for the second wave of upgrades are generated from the table; the originals stay in the HTML.
-  (function(){var icons={seedBatchLevel:'<path d="M6 26h20M9 26V14h14v12M12 14V8h8v6M16 8V4"/>',growBatchLevel:'<path d="M6 6h20M8 6v4h16V6M12 10v4m8-4v4M9 28h14l-1-8H10Z"/>',harvestBatchLevel:'<path d="M8 8l16 16M8 24 24 8M8 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm0 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>',packSpeedLevel:'<path d="M4 10h18v14H4zM22 14h5l2 3v7h-7M8 24a2 2 0 1 0 4 0m10 0a2 2 0 1 0 4 0"/>',serviceLevel:'<path d="M4 24h24M6 24V12h20v12M12 12V7h8v5M4 16h24"/>',signLevel:'<path d="M16 28V10M8 10h16l3 4-3 4H8Z"/>',loyaltyLevel:'<path d="M4 9h24v14H4zM4 14h24M9 19h6"/>',basketLevel:'<path d="M5 12h22l-2 14H7ZM10 12l3-7m9 7-3-7M12 17v5m4-5v5m4-5v5"/>',terpeneLevel:'<path d="M12 4h8M14 4v8L6 26h20L18 12V4M10 20h12"/>',breedingLevel:'<path d="M16 28V14M16 14c-6 0-9-4-9-9 6 0 9 4 9 9Zm0 0c6 0 9-4 9-9-6 0-9 4-9 9ZM6 28h20"/>',displayLevel:'<path d="M5 10h22v16H5zM5 18h22M9 10V6h14v4"/>',trendLevel:'<path d="M4 24 12 15l5 5 11-11M20 9h8v8"/>',fleetLevel:'<path d="M12 12h8v6h-8zM4 8h5M23 8h5M6 8v4h6M26 8v4h-6M12 18l-3 6M20 18l3 6"/>',cargoLevel:'<path d="M4 10h24v14H4zM4 16h24M12 10v14m8-14v14"/>',repeatLevel:'<path d="M6 14a10 10 0 0 1 17-6l3 3M26 6v6h-6M26 18a10 10 0 0 1-17 6l-3-3M6 26v-6h6"/>',offlineLevel:'<path d="M5 6h22v20H5zM5 26v2m22-2v2M16 16m-5 0a5 5 0 1 0 10 0a5 5 0 1 0-10 0M16 11v2m0 6v2m5-5h-2m-6 0h-2"/>'};
-    var blurbs={seedBatchLevel:'Deeper trays start more seedlings per cycle.',growBatchLevel:'Brighter lights fatten every grow batch.',harvestBatchLevel:'Robots trim more flower per pass.',packSpeedLevel:'Machines bag flower faster than hands can.',serviceLevel:'Both counters hand off customers quicker.',signLevel:'Street signs pull more walk-ins through the door.',loyaltyLevel:'Happy customers tip more when they carry your card.',basketLevel:'Customers take a little more home each visit.',terpeneLevel:'Raises the THC of every strain on the menu.',breedingLevel:'Breeds boutique strains that grow closer to everyday speed.',displayLevel:'Boutique flower sells for more in lit cases.',trendLevel:'Spots trends early so the trending strain pays out more.',fleetLevel:'More couriers on the pad: shorter gaps between launches.',cargoLevel:'Bulk runs carry extra orders per launch.',repeatLevel:'A share of web customers order again right away.',offlineLevel:'Keeps earning longer while you are away, four more hours per level.'};
+  (function(){var icons={trafficLevel:'<path d="M4 24h24M7 21V14h4v7m4 0V9h4v12m4 0V4h4v17"/>',curingLevel:'<path d="M6 4h20v24H6ZM6 12h20M6 21h20M11 8h3m4 0h3m-10 9h3m4 0h3"/>',onlineBonusLevel:'<path d="M5 11h22v17H5ZM5 11l11-7 11 7M16 11v17"/>',webLevel:'<circle cx="16" cy="16" r="11"/><path d="M5 16h22M16 5c4 4 4 18 0 22M16 5c-4 4-4 18 0 22"/>',seedBatchLevel:'<path d="M6 26h20M9 26V14h14v12M12 14V8h8v6M16 8V4"/>',growBatchLevel:'<path d="M6 6h20M8 6v4h16V6M12 10v4m8-4v4M9 28h14l-1-8H10Z"/>',harvestBatchLevel:'<path d="M8 8l16 16M8 24 24 8M8 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm0 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>',packSpeedLevel:'<path d="M4 10h18v14H4zM22 14h5l2 3v7h-7M8 24a2 2 0 1 0 4 0m10 0a2 2 0 1 0 4 0"/>',serviceLevel:'<path d="M4 24h24M6 24V12h20v12M12 12V7h8v5M4 16h24"/>',signLevel:'<path d="M16 28V10M8 10h16l3 4-3 4H8Z"/>',loyaltyLevel:'<path d="M4 9h24v14H4zM4 14h24M9 19h6"/>',basketLevel:'<path d="M5 12h22l-2 14H7ZM10 12l3-7m9 7-3-7M12 17v5m4-5v5m4-5v5"/>',terpeneLevel:'<path d="M12 4h8M14 4v8L6 26h20L18 12V4M10 20h12"/>',breedingLevel:'<path d="M16 28V14M16 14c-6 0-9-4-9-9 6 0 9 4 9 9Zm0 0c6 0 9-4 9-9-6 0-9 4-9 9ZM6 28h20"/>',displayLevel:'<path d="M5 10h22v16H5zM5 18h22M9 10V6h14v4"/>',trendLevel:'<path d="M4 24 12 15l5 5 11-11M20 9h8v8"/>',fleetLevel:'<path d="M12 12h8v6h-8zM4 8h5M23 8h5M6 8v4h6M26 8v4h-6M12 18l-3 6M20 18l3 6"/>',cargoLevel:'<path d="M4 10h24v14H4zM4 16h24M12 10v14m8-14v14"/>',repeatLevel:'<path d="M6 14a10 10 0 0 1 17-6l3 3M26 6v6h-6M26 18a10 10 0 0 1-17 6l-3-3M6 26v-6h6"/>',offlineLevel:'<path d="M5 6h22v20H5zM5 26v2m22-2v2M16 16m-5 0a5 5 0 1 0 10 0a5 5 0 1 0-10 0M16 11v2m0 6v2m5-5h-2m-6 0h-2"/>'};
+    var blurbs={growBatchLevel:'Seeds, grow, harvest and pack all make more each cycle.',curingLevel:'Every bag sells for more.',trendLevel:'The trending strain pays out much more.',breedingLevel:'Opens strain crosses; boutique strains grow faster.',offlineLevel:'Keeps earning longer while you are away.',
+      basketLevel:'Customers take more home each visit.',trafficLevel:'More walk-ins, and everyone walks faster.',displayLevel:'Boutique flower sells for more in lit cases.',loyaltyLevel:'Happy customers tip more, and the high lasts.',serviceLevel:'Shoppers wait longer; counters, kiosks and ID checks speed up.',
+      webLevel:'More web orders, and some order again.',onlineBonusLevel:'Earn more on every online delivery.',fleetLevel:'Shorter gaps between drone launches.',cargoLevel:'Bulk runs carry extra orders.'};
     var pane=document.querySelector('[data-pane="boosts"]'),anchor=pane.querySelector('.shop-milestone')||null;
     COMPONENTS.forEach(function(c,i){if(document.getElementById('componentBuy'+i))return;var card=document.createElement('div');card.className='shop-upgrade shop-feature';card.innerHTML='<div class="shop-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+icons[c.key]+'</svg></div><div class="shop-copy"><h2>'+c.name+'</h2><strong id="componentBenefit'+i+'"></strong><small>'+blurbs[c.key]+'</small><small id="componentLevel'+i+'"></small></div><button id="componentBuy'+i+'"><span>Upgrade</span><b id="componentPrice'+i+'"></b></button>';pane.insertBefore(card,anchor)});
   })();
@@ -3730,7 +3736,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     $('reputationProgress').setAttribute('aria-valuetext',p.reputation+' loyalty. '+(p.reputation>=60?'VIPs unlocked':'VIPs at 60.'));
     $('guideHurriedTime').textContent='≤'+Number(economy.patience('hurried',state.comfortLevel).toFixed(2))+'s';
     $('guideVipTime').textContent='≤'+Number(economy.patience('vip',state.comfortLevel).toFixed(2))+'s';
-    $('guideComfort').textContent=state.comfortLevel?'Queue comfort adds '+(state.comfortLevel*15)+'% to both visit limits.':'Queue comfort adds time to both visit limits.';
+    $('guideComfort').textContent=state.comfortLevel?'Express lanes add '+(state.comfortLevel*15)+'% to both visit limits.':'Express lanes add time to both visit limits.';
     $('guideMatchTip').textContent='+'+(p.reputation>=60?'35':'15')+'% base tip';
     $('guideVipUnlock').textContent=p.reputation>=60?'VIPs unlocked · 60 loyalty':'VIPs at 60 loyalty';
     STORES.forEach(function(_,i){var store=p.stores[i];$('branchLoyalty'+i).closest('.branch-management').hidden=!store.level;
@@ -3965,12 +3971,10 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // The card's button buys the recommended fix when affordable; otherwise it shows the price outlined and says what is missing.
   // The counters are only "traffic bound" while an arrivals booster can still be bought; once both are maxed the fix is the station itself.
   function isTrafficBound(slow){return slow>=4&&trafficFix()!==null&&basketSize()/arrivalInterval()<stationThroughput(slow)}
-  // Customers arrive too slowly for the counters. Floor flow (+15% arrivals a level) and Street signage (+4%) both bring
-  // more through the door: recommend whichever buys the most arrivals per dollar, and while only one of them is within
-  // reach — the cash in hand plus a minute and a half of income — that one, so a $174M line never heads the list
-  // when a $23M one does the same job.
+  // Customers arrive too slowly for the counters. Floor flow (+15% arrivals a level, and Street signage's +4% with it)
+  // brings more through the door, so it is the fix while it can still be bought.
   function trafficFix(){
-    var options=[{index:0,gain:.15},{index:COMPONENTS.findIndex(function(c){return c.key==='signLevel'}),gain:.04}]
+    var options=[{index:componentIndex('trafficLevel'),gain:.19}]
       .filter(function(o){return componentAdvisable(o.index)&&state[COMPONENTS[o.index].key]<COMPONENTS[o.index].max})
       .map(function(o){var price=componentCost(o.index);return{kind:'component',index:o.index,name:COMPONENTS[o.index].name,price:price,value:o.gain/price,reach:price<=state.money+incomeRate()*90?1:0}});
     options.sort(function(a,b){return (b.reach-a.reach)||(b.value-a.value)});
@@ -4011,16 +4015,29 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
         group=tierGain>base*1e-4?{gain:tierGain}:null;
       }
       if(group){var spend=0;tied.forEach(function(i,n){for(var k=levels[i];k<targets[n];k++)spend+=economy.stationCost(LINES[i].base,k)});var first=tied.reduce(function(a,b){return cost(b)<cost(a)?b:a});consider({kind:'station',index:first,name:['Seeds','Grow','Harvest','Pack','Orders','Pickup'][first],price:cost(first),spend:spend,gain:group.gain})}}
-    COMPONENTS.forEach(function(c,i){if(!componentUnlocked(i)||state[c.key]>=c.max)return;var start=state[c.key],found=tryLevels(function(){return state[c.key]},function(v){state[c.key]=v},Math.min(LOOKAHEAD,c.max-start));if(!found)return;var spend=0;for(var k=0;k<found.steps;k++){state[c.key]=start+k;spend+=componentCost(i)}state[c.key]=start;consider({kind:'component',index:i,name:c.name,price:componentCost(i),spend:spend,gain:found.gain})});
+    COMPONENTS.forEach(function(c,i){if(!componentUnlocked(i)||state[c.key]>=c.max)return;var start=state[c.key],riders=(ALSO[c.key]||[]).map(function(k){return [k,state[k]]}),found=tryLevels(function(){return state[c.key]},function(v){state[c.key]=v;riders.forEach(function(r){state[r[0]]=Math.max(r[1],v)})},Math.min(LOOKAHEAD,c.max-start));if(!found)return;var spend=0;for(var k=0;k<found.steps;k++){state[c.key]=start+k;spend+=componentCost(i)}state[c.key]=start;consider({kind:'component',index:i,name:c.name,price:componentCost(i),spend:spend,gain:found.gain})});
     // A second or third order counter and the self-order kiosks take more orders at once once the desk is at its handoff
     // floor, which no level can do.
     var counterPrice=orderCounterCost(state.orderCounters);if(counterPrice!==null){state.orderCounters++;var counterGain=incomeRate()-base;state.orderCounters--;if(counterGain>base*1e-4)consider({kind:'counter',name:'Order counter',price:counterPrice,spend:counterPrice,gain:counterGain})}
     var kioskStep=!state.kiosk?['kiosk',25000]:!state.secondKiosk?['secondKiosk',50000]:!state.thirdKiosk?['thirdKiosk',100000]:null;if(kioskStep){state[kioskStep[0]]=true;var kioskGain=incomeRate()-base;state[kioskStep[0]]=false;if(kioskGain>base*1e-4)consider({kind:'kiosk',name:'Kiosk',price:kioskStep[1],spend:kioskStep[1],gain:kioskGain})}
+    // Walk-in sales are capped by how fast customers get through the line, which the station math above can't see: a
+    // shop selling well under what its stations could is flow-bound, and every Floor flow level's faster walking lifts
+    // the whole take by about the same share (a sim of the real shop agreed within noise).
+    var flow=flowFix(base);if(flow)consider(flow);var tips=tipFix(base);if(tips)consider(tips);
     var pick=bestReach||best||legacyRecommendation();
     // A fork still waiting on the player is named as the choice, not bought: the tap opens both sides in the Shop.
     if(pick.kind==='component'&&!componentAdvisable(pick.index)){var f=forkOf(COMPONENTS[pick.index].key);return{kind:'fork',fork:f.id,index:pick.index,name:f.name,price:pick.price}}
     return pick;
   }
+  function flowFix(base){var i=componentIndex('trafficLevel'),L=state.trafficLevel,walkIn=flagshipSales();
+    if(!componentUnlocked(i)||L>=COMPONENTS[i].max||!(realRate>0)||realRate>walkIn*.75)return null;
+    var gain=base*(economy.walkSpeed(L+1)/economy.walkSpeed(L)-1),price=componentCost(i);
+    return{kind:'component',index:i,name:COMPONENTS[i].name,price:price,spend:price,gain:gain}}
+  // Loyalty cards pay out as tips on happy sales, which the station math leaves out too. Each level adds 6% to a happy
+  // sale (3% tips, 3% from the high lasting longer) and most sales are happy, so it is valued at 5% of the take a level
+  // (a sim of the real shop: three levels lifted sales 16-28%).
+  function tipFix(base){var i=componentIndex('loyaltyLevel'),L=state.loyaltyLevel;if(!componentAdvisable(i)||L>=COMPONENTS[i].max)return null;
+    var price=componentCost(i);return{kind:'component',index:i,name:COMPONENTS[i].name,price:price,spend:price,gain:base*.05/(1+L*.06)}}
   function openFork(index){showTray('boosts');if(shopBrowser&&shopBrowser.show)shopBrowser.show(shopBrowser.categoryOf('componentBuy'+index));renderUI();var card=$('componentBuy'+index).parentElement;if(card.scrollIntoView)card.scrollIntoView({block:'nearest'})}
   // A suggestion only points: a tap opens where the pick lives (its station, or its card in the Shop) and the player buys it there.
   function actOnRecommendation(){var r=recommendation();if(!r)return;if(r.kind==='station')return selectMachine(r.index);if(r.kind==='counter'||r.kind==='kiosk')return selectMachine(4);openFork(r.index)}

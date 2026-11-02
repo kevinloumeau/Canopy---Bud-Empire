@@ -164,7 +164,7 @@ The unit suite covers economy, migration, progression, branches, strains, delive
 | [`scripts/capture-showcase.mjs`](scripts/capture-showcase.mjs) · [`capture-live-panes.mjs`](scripts/capture-live-panes.mjs) | Headless-Chrome gameplay captures and live sheet markup from a seeded showcase save |
 | [`tests/`](tests/) | Unit tests and browser regression helpers |
 
-The recent browser helpers are [`experience-check.js`](tests/experience-check.js), [`order-counters-check.js`](tests/order-counters-check.js) and [`kiosk-software-check.js`](tests/kiosk-software-check.js). They are browser modules served through Vite and require their documented fixtures. They are not Node CLI scripts.
+The recent browser helpers are [`experience-check.js`](tests/experience-check.js) and [`order-counters-check.js`](tests/order-counters-check.js). They are browser modules served through Vite and require their documented fixtures. They are not Node CLI scripts.
 
 [`construction-check.mjs`](tests/construction-check.mjs) is a Node script that drives installed Chrome over the DevTools protocol (no dependency) and walks the construction intro at phone and desktop sizes against a running server. [`queue-check.mjs`](tests/queue-check.mjs) uses the same harness on a seeded busy shop to check that the order line fills its rope pen and stays on the roped route, and that the pickup line is served first come, first served. [`lounge-check.mjs`](tests/lounge-check.mjs) does the same for the smoking lounge: admissions, seats, jar burn and the back-door exit.
 

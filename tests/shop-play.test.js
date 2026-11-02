@@ -63,8 +63,8 @@ test('advice never suggests an order counter or queue comfort the shop has alrea
   const maxed=shiftAdvice(busy,{counters:MAX_ORDER_COUNTERS});
   assert.doesNotMatch(maxed.text,/order counter/);assert.equal(maxed.station,4);
   const slow={served:10,waitTotal:400,queuePeak:3,stockoutSeconds:0};
-  assert.match(shiftAdvice(slow,{comfortLevel:5}).text,/queue comfort/);
-  assert.doesNotMatch(shiftAdvice(slow,{comfortLevel:20}).text,/queue comfort/);
+  assert.match(shiftAdvice(slow,{comfortLevel:5}).text,/Express lanes/);
+  assert.doesNotMatch(shiftAdvice(slow,{comfortLevel:20}).text,/Express lanes/);
 });
 
 test('picks offer every strain in every stocked type, three different strains where the menu has them',async()=>{

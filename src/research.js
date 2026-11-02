@@ -1,18 +1,43 @@
-// Shop research: the shop's upgrades sit on three branches (Grow, Retail, Delivery), and six pairs of them are forks where a
-// run takes one side or the other. The first level bought on either side picks it and closes its partner until the shop is
+// Shop research: twelve picks on three branches (Grow, Retail, Delivery), and three pairs of them are forks where a run
+// takes one side or the other. The first level bought on either side picks it and closes its partner until the shop is
 // reopened, so the choice comes back fresh every run. Pure functions over the save so they can be tested in Node.
+//
+// Research used to be 26 picks, and a sim of the real shop showed most of them did nothing you could measure. Small
+// lines that each tuned one corner of the shop now ride together on one pick (ALSO), and picks that never paid are gone
+// (CUT, refunded once by mergeResearch). Every key stays on the save, so the effects that read them keep working.
 export const RESEARCH_BRANCHES=[
-  {id:'grow',name:'Grow',keys:['seedBatchLevel','curingLevel','trendLevel','harvestBatchLevel','packSpeedLevel','breedingLevel','growBatchLevel','terpeneLevel','offlineLevel']},
-  {id:'retail',name:'Retail',keys:['basketLevel','trafficLevel','signLevel','comfortLevel','scannerLevel','pickupLevel','readyLevel','serviceLevel','kioskSpeedLevel','displayLevel','loyaltyLevel','durationLevel']},
-  {id:'delivery',name:'Delivery',keys:['webLevel','onlineBonusLevel','fleetLevel','cargoLevel','repeatLevel']}
+  {id:'grow',name:'Grow',keys:['growBatchLevel','curingLevel','trendLevel','breedingLevel','offlineLevel']},
+  {id:'retail',name:'Retail',keys:['basketLevel','trafficLevel','displayLevel','loyaltyLevel','serviceLevel']},
+  {id:'delivery',name:'Delivery',keys:['webLevel','onlineBonusLevel','fleetLevel','cargoLevel']}
 ];
-// gate: levels the branch needs before the fork opens, so the second fork of a branch is a step further down the road.
+// Lines that now level up with the pick they are listed under: one purchase raises them all.
+export const ALSO={
+  growBatchLevel:['seedBatchLevel','harvestBatchLevel','packSpeedLevel'],
+  trafficLevel:['signLevel'],
+  loyaltyLevel:['durationLevel'],
+  serviceLevel:['kioskSpeedLevel','scannerLevel','comfortLevel'],
+  webLevel:['repeatLevel']
+};
+// Picks taken out of Research, with the price their first level cost, so old saves get back what they spent.
+// Ready-bag storage now grows with the basket on its own (see readyCapacity in main.js).
+export const CUT={pickupLevel:1200,readyLevel:600,terpeneLevel:2800};
+export const RESEARCH_VERSION=2;
+// The price research charges for a level (same curve as the Research cards): gentle for eight levels, steep after.
+export function levelCost(base,level){return Math.round(base*Math.pow(1.8,Math.min(level,8))*Math.pow(2.15,Math.max(0,level-8)));}
+// Brings a save from the 26-pick list to this one, once. Merged lines all take the highest level any of them had, so
+// nobody loses a level; cut lines go to zero and their whole cost comes back as cash. Returns the refund.
+export function mergeResearch(state){
+  if(state.researchVersion>=RESEARCH_VERSION)return 0;
+  Object.keys(ALSO).forEach(key=>{const keys=[key].concat(ALSO[key]),top=Math.max.apply(null,keys.map(k=>Math.max(0,Number(state[k])||0)));keys.forEach(k=>{state[k]=top})});
+  let refund=0;
+  Object.keys(CUT).forEach(key=>{const level=Math.max(0,Number(state[key])||0);for(let l=0;l<level;l++)refund+=levelCost(CUT[key],l);state[key]=0});
+  state.researchVersion=RESEARCH_VERSION;
+  return refund;
+}
+// gate: levels the branch needs before the fork opens (all three open from the start).
 export const FORKS=[
   {id:'yield',branch:'grow',name:'Steady premium or chase the trend',sides:['curingLevel','trendLevel'],gate:0},
-  {id:'lab',branch:'grow',name:'Bigger harvests or stronger strains',sides:['growBatchLevel','terpeneLevel'],gate:12},
   {id:'shelf',branch:'retail',name:'Bigger baskets or more shoppers',sides:['basketLevel','trafficLevel'],gate:0},
-  {id:'counter',branch:'retail',name:'Counters or kiosks',sides:['serviceLevel','kioskSpeedLevel'],gate:0},
-  {id:'regulars',branch:'retail',name:'Tips or lasting effects',sides:['loyaltyLevel','durationLevel'],gate:12},
   {id:'drones',branch:'delivery',name:'Faster drones or bigger loads',sides:['fleetLevel','cargoLevel'],gate:0}
 ];
 export function forkOf(key){return FORKS.find(f=>f.sides.indexOf(key)>=0)||null;}

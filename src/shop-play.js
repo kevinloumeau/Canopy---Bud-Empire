@@ -66,7 +66,7 @@ export const MAX_ORDER_COUNTERS=3;
 export const MAX_COMFORT=20;
 export function shiftAdvice(recap,{counters=1,comfortLevel=0}={}){
   if(recap.stockoutSeconds>30)return {text:'Keep pickup stocked: check your Pack and Orders stations.',short:'Pickup ran dry · check Pack',station:3};
-  if(recap.served&&recap.waitTotal/recap.served>25)return {text:comfortLevel>=MAX_COMFORT?'Customers waited a while. Train the Orders team to serve faster.':'Customers waited a while. Train the Orders team or improve queue comfort.',short:'Long waits · speed up Orders',station:4};
+  if(recap.served&&recap.waitTotal/recap.served>25)return {text:comfortLevel>=MAX_COMFORT?'Customers waited a while. Train the Orders team to serve faster.':'Customers waited a while. Train the Orders team or buy Express lanes.',short:'Long waits · speed up Orders',station:4};
   if(recap.queuePeak>8)return {text:counters>=MAX_ORDER_COUNTERS?'A busy shift. Upgrade the Orders desk and team so every counter serves faster.':'A busy shift. Add an order counter to spread the queue.',short:counters>=MAX_ORDER_COUNTERS?'Long line · upgrade Orders':'Long line · add a counter',station:4};
   return {text:'Try another customer recommendation next shift. Great matches earn extra tips.',moment:true};
 }
