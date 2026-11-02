@@ -107,6 +107,9 @@ export function staffPose(role, clock, act = 1) {
 // GLTFLoader drops the colon from Mixamo's bone names (mixamorig:Hips loads as mixamorigHips).
 const A = 'mixamorig';
 const ARM = { left: [A + 'LeftArm', A + 'LeftForeArm', A + 'LeftHand'], right: [A + 'RightArm', A + 'RightForeArm', A + 'RightHand'] };
+// How much of a pose's lean the spine takes, and of its nod the head (the rest would read as a hunch from the
+// camera's 30 degrees above).
+export const UPRIGHT_LEAN = .25, UPRIGHT_NOD = .55;
 const POSED = [A + 'Spine', A + 'Spine2', A + 'Neck', A + 'Head', ...ARM.left.slice(0, 2), ...ARM.right.slice(0, 2)];
 
 // The bones one staff copy needs (null when its skeleton isn't the Mixamo one these poses are for).
@@ -162,20 +165,23 @@ export function poseStaff(rig, role, clock, act, w = 1) {
   POSED.forEach((n, i) => rig.idle[i].copy(bones[n].quaternion));
   body.updateWorldMatrix(true, false);
   inv.copy(body.matrixWorld).invert();
-  // Lean from the waist (split over two spine bones), then the head's turn and nod on the neck and head.
-  turnAbout(bones[A + 'Spine'], X, pose.lean * .5); turnAbout(bones[A + 'Spine2'], X, pose.lean * .5);
-  turnAbout(bones[A + 'Neck'], Y, pose.yaw * .5); turnAbout(bones[A + 'Head'], Y, pose.yaw * .5);
-  turnAbout(bones[A + 'Head'], X, pose.pitch);
-  const out = {};
-  [['left', 1], ['right', -1]].forEach(([arm, side]) => {
-    const h = pose[arm];
-    if (!h) return;
-    const names = ARM[arm];
+  // The hands go where the pose's full lean would put them (so they still meet the tray, press or bag), but the
+  // body only leans a little and the head nods less: staff work standing tall rather than hunched over the station.
+  const spine = [bones[A + 'Spine'], bones[A + 'Spine2']];
+  const lean = l => spine.forEach(bone => turnAbout(bone, X, l * .5));
+  lean(pose.lean);
+  const out = {}, arms = [['left', 1], ['right', -1]].filter(([arm]) => pose[arm]);
+  arms.forEach(([arm, side]) => {
+    const h = pose[arm], names = ARM[arm];
     inBody(bones[names[0]], sp); inBody(bones[names[1]], ep); inBody(bones[names[2]], hp);
-    const r = ep.distanceTo(sp) + hp.distanceTo(ep), target = (rig.targets[arm] = rig.targets[arm] || new THREE.Vector3()).set(sp.x + side * h[0] * r, sp.y + h[1] * r, sp.z + h[2] * r);
-    reach(bones, names, side, target);
-    out[arm] = target;
+    const r = ep.distanceTo(sp) + hp.distanceTo(ep);
+    out[arm] = (rig.targets[arm] = rig.targets[arm] || new THREE.Vector3()).set(sp.x + side * h[0] * r, sp.y + h[1] * r, sp.z + h[2] * r);
   });
+  spine.forEach((bone, i) => bone.quaternion.copy(rig.idle[i]));
+  lean(pose.lean * UPRIGHT_LEAN);
+  turnAbout(bones[A + 'Neck'], Y, pose.yaw * .5); turnAbout(bones[A + 'Head'], Y, pose.yaw * .5);
+  turnAbout(bones[A + 'Head'], X, pose.pitch * UPRIGHT_NOD);
+  arms.forEach(([arm, side]) => reach(bones, ARM[arm], side, out[arm]));
   if (w < 1) POSED.forEach((n, i) => bones[n].quaternion.slerp(rig.idle[i], 1 - w));
   return out;
 }

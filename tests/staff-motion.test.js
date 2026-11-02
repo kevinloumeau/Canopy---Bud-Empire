@@ -70,10 +70,11 @@ for (const file of ['green-uniform-woman.glb', 'chef.glb', 'security-guard.glb',
       assert.ok(miss < .03, file + ' ' + role + ' ' + arm + ' misses by ' + miss.toFixed(3));
     }
   }
-  // Leaning forward takes the head forward (+z), not back.
+  // Leaning in takes the head forward (+z), not back, but only a little: staff stand tall at work, not hunched.
   mixer.setTime(0);
   const at = () => { body.updateWorldMatrix(true, true); const m = new THREE.Matrix4().copy(body.matrixWorld).invert().multiply(head.matrixWorld); return new THREE.Vector3().setFromMatrixPosition(m); };
   const upright = at();
   mixer.setTime(0); poseStaff(rig, 'harvest', 0, 1);
-  assert.ok(at().z > upright.z + .03);
+  const dz = at().z - upright.z;
+  assert.ok(dz > .005 && dz < .03, file + ' head moves ' + dz.toFixed(3));
 });
