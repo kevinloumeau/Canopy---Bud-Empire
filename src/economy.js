@@ -45,6 +45,9 @@ export function customerHandoff(station,level,duration){return Math.max(HANDOFF_
 export function stepsToGain(gainAfter,limit,threshold=0){for(let k=1;k<=limit;k++){const gain=gainAfter(k);if(gain>threshold)return{steps:k,gain};}return null;}
 // The doorman's floor: no ID check takes less than a quarter of a second.
 export const ID_CHECK_FLOOR=.25;
+// How long a full ID check takes on the map when the door has time to spare (the guard reads the ID, then waves the
+// guest in). It never slows the door: a busy line falls back to the trained securityDuration.
+export const ID_CHECK_SHOW=2.2;
 // Security trains to level 75, its booth changing at the station look levels (1, 10, 30, 50, 75). The first nine
 // levels keep their old prices and speeds (they used to be the whole track); past them each level costs 20% more and
 // the floor itself comes down, from a quarter of a second to a tenth at level 75, so every level still shortens the

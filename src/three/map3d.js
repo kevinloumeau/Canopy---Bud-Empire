@@ -12,6 +12,7 @@ import { buildRooftop } from './rooftop.js';
 import { buildFlagship } from './flagship.js';
 import { buildCityBuildings } from './city-buildings.js';
 import { buildEntrance } from './entrance.js';
+import { createIntro } from './intro.js';
 import { createBranchLayer } from './branch3d.js';
 import { rigStation, bindStation, moveStation } from './station-motion.js';
 import { compactModel } from './compact.js';
@@ -172,19 +173,25 @@ export function createMap3D(canvas, layout) {
       holder.scale.set(BLENDER_SCALE, BLENDER_SCALE / HEIGHT_SCALE, BLENDER_SCALE);
       holder.position.set(x, y, z);
       parent.add(holder);
+      if (parent === world) shopParts.add(holder);
       if (onReady) onReady(gltf.scene, holder);
       compactModel(gltf.scene);
     }, undefined, e => console.warn('3D map: could not load ' + file, e));
   }
   const lampStandIns = [];
   const terraces = buildTown(world, layout, { box, span, material, textured, lampStandIns });
+  // Everything that is the shop rather than the town round it, for the first-load build (intro.js).
+  const shopParts = new Set(), townEnd = world.children.length;
   buildShop(world, layout, { box, span, material, textured, model });
+  const sceneEnd = scene.children.length;
   const transport = buildTransport(scene, world, layout.transport, { box, material });
+  scene.children.slice(sceneEnd).forEach(o => shopParts.add(o));
   const shell = buildShell(world, layout, { box, span, material, model });
   const rooftop = buildRooftop(world, layout, { box, span, material });
   const flagship = buildFlagship(world, layout, { material });
   const cityBuildings = buildCityBuildings(world, layout, { material });
   buildEntrance(world, layout, { box, span, material, model });
+  world.children.slice(townEnd).forEach(o => shopParts.add(o));
 
   // Stations: one solid per station slot, resized and recoloured from the frame (tier, built, rising in).
   let lastStep = 0;
@@ -285,7 +292,7 @@ export function createMap3D(canvas, layout) {
       holder.scale.set(f.scale, f.scale / HEIGHT_SCALE, f.scale);
       holder.position.set(f.x, f.y, f.z);
       holder.visible = false;
-      world.add(holder);
+      world.add(holder); shopParts.add(holder);
       fixtures[f.key] = holder;
     }, undefined, e => console.warn('3D map: could not load ' + f.file, e));
   });
@@ -757,6 +764,8 @@ export function createMap3D(canvas, layout) {
   carriedBags.castShadow = true; carriedBags.count = 0; carriedBags.frustumCulled = false;
   carriedBags.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   scene.add(carriedBags);
+  shopParts.add(ropes);
+  const intro = createIntro({ parts: shopParts, characters: () => characterCopies.filter(c => c && c.holder.visible).map(c => c.holder), hideWhilePeople: [carriedBags], sign: shell && shell.introSign });
   // The bag swings from the hand like a pendulum (small-angle, damped), driven by how the grip itself speeds up and
   // slows, so it lags the arm's swing as they walk and rocks to a stop when they stop. Worked in the scene's true
   // space (the world group stretches heights), so the bag tilts without shearing.
@@ -995,20 +1004,81 @@ export function createMap3D(canvas, layout) {
     props.forEach(p => propReady(p.file));
     placeProps(props, night);
     placeFigures(frame.figures || [], night);
-    const clockNow = performance.now(), stepSeconds = Math.min(.1, (clockNow - (lastStep || clockNow)) / 1000);
-    lastStep = clockNow;
+    const stepSeconds = frameStep(frame);
     placeCharacters(frame.characters, stepSeconds, night);
     if (!frame.dry) renderer.render(scene, camera);
     return true;
+  }
+
+  // How far the map's motion moves this frame: the game's own clock (frame.step, game seconds), so people, staff and
+  // stations stand still while the game is paused and keep pace with 2x and 4x; wall time only for a caller without one.
+  function frameStep(frame) {
+    const clockNow = performance.now(), wall = Math.min(.1, (clockNow - (lastStep || clockNow)) / 1000);
+    lastStep = clockNow;
+    return frame.step === undefined ? wall : Math.max(0, Math.min(.4, frame.step));
+  }
+  // Branches on the main map (branch-districts.js, main.js districtScenes): every district on or near the screen comes
+  // in the frame with its recorded scene, drawn by a pooled branch layer moved onto its block, and its plot's own
+  // ground (the theme's land and its river or creek, cut to the plot) in the hole the town leaves for it; the next
+  // branch's block shows its lot for lease behind a hoarding. A plot not on show is plain paving. The east haze moves
+  // out with the empire (frame.hazeEast).
+  const districtLayers = [], districtGrounds = {}, PLOT_FILL = '#d2c8ab';
+  function districtGround(d) {
+    const key = d.index + (d.lease ? ':lease' : d.scene ? ':open' : ':plain');
+    if (districtGrounds[key]) return districtGrounds[key];
+    const group = new THREE.Group(), p = layout.districtPlots[d.index];
+    group.userData.land = true;
+    if (d.scene) {
+      const spec = d.land, c = { x: p.x0 - spec.plot[0], z: p.z0 - spec.plot[2] };
+      let ground = [[p.x0, p.x1, p.z0, p.z1]];
+      const strips = (spec.strips || []).map(w => [w.x0 === undefined ? p.x0 : c.x + w.x0, w.x1 === undefined ? p.x1 : c.x + w.x1, w.z0 === undefined ? p.z0 : c.z + w.z0, w.z1 === undefined ? p.z1 : c.z + w.z1].map((v, k) => Math.max(k < 2 ? p.x0 : p.z0, Math.min(k < 2 ? p.x1 : p.z1, v))));
+      strips.forEach(r => { ground = subtract(ground, r); });
+      ground.forEach(([x0, x1, z0, z1]) => span(group, x0, x1, spec.y - 1.2, spec.y, z0, z1, spec.colour, { cast: false }));
+      strips.forEach((r, i) => { if (r[1] > r[0] && r[3] > r[2]) span(group, r[0], r[1], spec.y - 1.2, spec.strips[i].y, r[2], r[3], spec.strips[i].colour, { cast: false }); });
+    } else {
+      const P = layout.plazaY;
+      span(group, p.x0, p.x1, P - 1, d.lease ? P + .03 : P, p.z0, p.z1, d.lease ? '#a7b58f' : PLOT_FILL, { cast: false });
+      if (d.lease) {
+        // A low post-and-rail fence a unit in from the plot's edge, open at the front's middle where the tag stands.
+        const x0 = p.x0 + .8, x1 = p.x1 - .8, z0 = p.z0 + .8, z1 = p.z1 - .8, mid = (x0 + x1) / 2, gap = d.lease.gap || 3, wood = '#8a6b4c';
+        const runs = [[x0, z0, x1, z0], [x0, z0, x0, z1], [x1, z0, x1, z1], [x0, z1, mid - gap, z1], [mid + gap, z1, x1, z1]];
+        runs.forEach(([a0, b0, a1, b1]) => {
+          const along = a1 - a0 > b1 - b0, len = along ? a1 - a0 : b1 - b0, n = Math.max(1, Math.round(len / 2.4));
+          for (let k = 0; k <= n; k++) { const x = along ? a0 + len * k / n : a0, z = along ? b0 : b0 + len * k / n; span(group, x - .09, x + .09, P, P + 1.05, z - .09, z + .09, wood); }
+          [.45, .85].forEach(h => span(group, a0 - .05, (along ? a1 : a0) + .05, P + h, P + h + .07, b0 - .05, (along ? b0 : b1) + .05, '#a9855d'));
+        });
+      }
+    }
+    world.add(group);
+    return (districtGrounds[key] = group);
+  }
+  function placeDistricts(list, night) {
+    const shown = new Set();
+    let used = 0;
+    (list || []).forEach(d => {
+      if (d.scene) {
+        const layer = districtLayers[used] || (districtLayers[used] = createBranchLayer(world, { lights: 0 }));
+        used++;
+        layer.group.visible = true; layer.group.position.set(d.x, 0, d.z);
+        layer.update(d.scene, night);
+      }
+      shown.add(d.index);
+      const g = districtGround(d); g.visible = true; g.userData.shownFrame = frameClock;
+    });
+    for (let n = used; n < districtLayers.length; n++) districtLayers[n].group.visible = false;
+    Object.values(districtGrounds).forEach(g => { if (g.userData.shownFrame !== frameClock) g.visible = false; });
+    // Plots not on show: plain paving, so no hole ever shows.
+    (layout.districtPlots || []).forEach((p, i) => { if (!shown.has(i)) { const g = districtGround({ index: i }); g.visible = true; g.userData.shownFrame = frameClock; } });
   }
 
   function render(frame) {
     if (lost) return false;
     branchMode(false);
     const night = view(frame, daySky);
+    if (frame.hazeEast) { hazeUniforms.hazeX.value.z = frame.hazeEast[0]; hazeUniforms.hazeX.value.w = frame.hazeEast[1]; }
+    placeDistricts(frame.districts, night);
 
-    const clockNow = performance.now(), stepSeconds = Math.min(.1, (clockNow - (lastStep || clockNow)) / 1000);
-    lastStep = clockNow;
+    const stepSeconds = frameStep(frame);
     let ringShown = false;
     frame.stations.forEach((s, i) => {
       const group = stationMesh(i), { body, top } = group.userData;
@@ -1125,7 +1195,11 @@ export function createMap3D(canvas, layout) {
     updateFixtureGhosts(frame);
 
     // A dry frame (snap3d.mjs, while models load) sets the scene up and asks for its models without drawing it.
-    if (!frame.dry) renderer.render(scene, camera);
+    if (!frame.dry) {
+      const posed = intro.apply(frame.intro);
+      renderer.render(scene, camera);
+      if (posed) intro.restore();
+    }
     return true;
   }
 
@@ -1207,12 +1281,14 @@ function buildTown(world, layout, { box, span, material, textured, lampStandIns 
     });
     rects.forEach(([a0, a1, b0, b1]) => textured(span(world, a0, a1, y0, y1, b0, b1, colour, { cast: false }), name));
   };
-  slab(-L, L, G - .4, G, -L, L, layout.colours.asphalt, 'asphalt');
+  // The streets along x run on east to the branch districts (layout.eastEnd), so the ground does too.
+  const E = layout.eastEnd || L;
+  slab(-L, E, G - .4, G, -L, L, layout.colours.asphalt, 'asphalt');
   const edges = along => {
     const at = roads.filter(r => r.along === along).map(r => r.at).sort((a, b) => a - b), out = [];
     let from = -L;
     at.forEach(a => { out.push([from, a - rw / 2]); from = a + rw / 2; });
-    out.push([from, L]);
+    out.push([from, along === 'z' ? E : L]);
     return out;
   };
   // Roads along x run at fixed z, so they cut the blocks' z range; roads along z cut the x range.
@@ -1299,7 +1375,9 @@ function buildShop(world, layout, { box, span, material, textured, model }) {
   const shop = new THREE.Group();
   world.add(shop);
   layout.floors.forEach((f, fi) => {
-    const left = (f.x || 0) - f.w / 2, right = (f.x || 0) + f.w / 2, rear = f.z - f.d / 2, front = f.z + f.d / 2;
+    // The ground floor's timber stops at the storefront's outer face (Kevin, 2026-11-02: it ran out onto the sidewalk).
+    const outer = !fi && layout.entrance ? layout.entrance.x : -Infinity;
+    const left = Math.max(outer, (f.x || 0) - f.w / 2), right = (f.x || 0) + f.w / 2, rear = f.z - f.d / 2, front = f.z + f.d / 2;
     textured(span(shop, left, right, f.y - (fi ? .32 : .02), f.y, rear, front, fi === 2 ? '#e9e4d8' : fi ? '#e4ddcc' : '#c9965f', { cast: fi > 0 }), ['herringbone', 'timber', 'concrete'][fi]);
     // The walls themselves are the shell's (shell.js).
     // A brass rail along the open front edge of the upper floors.
@@ -1373,6 +1451,23 @@ function buildShop(world, layout, { box, span, material, textured, model }) {
   [m.zRear, m.zFront].forEach(z => box(shop, m.x, 0, z, .34, m.y1, .34, '#174f36'));
 }
 
+// The floor opening under a tube's brass floor ring, drawn once on a small canvas: the far half of the shaft wall
+// catches a little light, the rest falls to black, and the rim darkens under the ring.
+function holeTexture() {
+  const size = 128, c = document.createElement('canvas'); c.width = c.height = size;
+  const g = c.getContext('2d'), mid = size / 2;
+  g.fillStyle = '#050605'; g.fillRect(0, 0, size, size);
+  const wall = g.createRadialGradient(mid, mid + size * .2, size * .2, mid, mid + size * .1, size * .55);
+  wall.addColorStop(0, 'rgba(5,6,5,0)'); wall.addColorStop(.55, 'rgba(46,30,18,.0)'); wall.addColorStop(.8, 'rgba(58,38,22,.9)'); wall.addColorStop(1, 'rgba(30,20,12,1)');
+  g.fillStyle = wall; g.fillRect(0, 0, size, size);
+  const lip = g.createRadialGradient(mid, mid, size * .38, mid, mid, size * .5);
+  lip.addColorStop(0, 'rgba(0,0,0,0)'); lip.addColorStop(1, 'rgba(0,0,0,.85)');
+  g.fillStyle = lip; g.fillRect(0, 0, size, size);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
 // The production line: the glass tubes as real pipe along the 2D map's own routes (TUBE_RUNS and PACK_STUB in main.js),
 // rounded at each corner the way transferTube rounds them, with brass collars at the ends and floor rings where a tube
 // passes through a slab; the two belts; and the cargo, a parcel every `gap` units at the one shop-wide speed, exactly
@@ -1383,6 +1478,10 @@ function buildTransport(scene, world, transport, { box, material }) {
   const glass = new THREE.MeshStandardMaterial({ color: '#cfeee2', emissive: '#2f5a4a', emissiveIntensity: .25, roughness: .08, metalness: 0, transparent: true, opacity: .46, depthWrite: false });
   const brass = new THREE.MeshStandardMaterial({ color: '#d0a54e', roughness: .3, metalness: .9 });
   const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+  // One shared disc for every floor opening: near-black in the middle, a dark wood-brown wall showing on the far side
+  // (as a shaft seen from above at the map's 30° camera would), and a soft shadow under the brass lip.
+  const holeGeometry = new THREE.CircleGeometry(R + .04, 32).rotateX(-Math.PI / 2);
+  const holeMaterial = new THREE.MeshBasicMaterial({ map: holeTexture(), toneMapped: false });
   // Corners rounded with a quadratic bend, in the map's units (heights unstretched), as transferTube does.
   function rounded(points) {
     const path = [points[0]], radius = .48;
@@ -1413,7 +1512,15 @@ function buildTransport(scene, world, transport, { box, material }) {
     const parts = [mesh];
     const ends = [[tube.points[0], tube.points[1]], [tube.points[tube.points.length - 1], tube.points[tube.points.length - 2]]];
     ends.forEach(([p, q], i) => { if (!(i === 0 ? tube.noCap0 : tube.noCap1)) parts.push(ring(p, trueSpace(p).sub(trueSpace(q)).normalize(), R + .02, .07, brass)); });
-    (tube.floorRings || []).forEach(p => parts.push(ring(p, new THREE.Vector3(0, 1, 0), R + .1, .08, brass)));
+    (tube.floorRings || []).forEach(p => {
+      parts.push(ring(p, new THREE.Vector3(0, 1, 0), R + .1, .08, brass));
+      // The opening the tube drops through: a dark disc filling the ring, just proud of the floor so it never fights it.
+      const hole = new THREE.Mesh(holeGeometry, holeMaterial);
+      hole.position.copy(trueSpace(p)).add(new THREE.Vector3(0, .012, 0));
+      hole.renderOrder = 1;
+      scene.add(hole);
+      parts.push(hole);
+    });
     const segments = [];
     let total = 0;
     for (let i = 1; i < path.length; i++) { const len = Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1], path[i][2] - path[i - 1][2]); segments.push({ a: path[i - 1], b: path[i], len }); total += len; }

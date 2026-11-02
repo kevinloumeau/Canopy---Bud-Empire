@@ -90,7 +90,21 @@ export function staffPose(role, clock, act = 1) {
     case 'guard': {
       // On the door: hands clasped in front, standing tall, scanning the room and the door in slow looks with holds.
       const scan = Math.sin(t * .45) + .35 * Math.sin(t * 1.1);
-      return { lean: -.04, yaw: .55 * Math.max(-1, Math.min(1, scan * 1.2)), pitch: .05, left: [-.42, -.72, .32], right: [-.38, -.72, .36] };
+      const idle = { lean: -.04, yaw: .55 * Math.max(-1, Math.min(1, scan * 1.2)), pitch: .05, left: [-.42, -.72, .32], right: [-.38, -.72, .36] };
+      // act is how far through an ID check the door is (0 between guests). He faces the guest: takes the card across
+      // the booth, brings it up and reads it, looks up at the face, hands it back, then waves them in.
+      const p = clamp01(act), w = ease(p / .12) * ease((1 - p) / .1);
+      if (w <= 0) return idle;
+      const take = [.02, -.4, .78], read = [-.18, -.42, .5], clasp = idle.right;
+      let right = take;
+      if (p < .2) right = mix(clasp, take, ease(p / .2));
+      else if (p < .3) right = mix(take, read, ease((p - .2) / .1));
+      else if (p < .62) right = read;
+      else if (p < .72) right = mix(read, take, ease((p - .62) / .1));
+      else right = mix(take, clasp, ease((p - .72) / .14));
+      const wave = bump(p, .58, .94), left = mix(idle.left, [.3, -.4, .55], wave);
+      const pitch = .05 + .3 * bump(p, .22, .64) - .05 * bump(p, .6, .78);
+      return blendPose(idle, { lean: 0, yaw: .25 * wave, pitch, left, right }, w);
     }
     case 'host': {
       // The lounge host: hands loosely together, looking over the roof, and now and then a welcoming open hand.
@@ -110,6 +124,12 @@ const ARM = { left: [A + 'LeftArm', A + 'LeftForeArm', A + 'LeftHand'], right: [
 // How much of a pose's lean the spine takes (none) and of its nod the head; any more reads as a hunch from the
 // camera's 30 degrees above. CHEST_UP lifts the chest a touch (radians back on the upper spine) so they stand tall.
 export const UPRIGHT_LEAN = 0, UPRIGHT_NOD = .3, CHEST_UP = .06;
+// The Meshy hands have no finger bones, so a straight, open hand reads as a stiff paddle with the fingers fanned out.
+// A working hand instead hangs relaxed from the wrist: tipped a little toward the palm (never bent back), the palm
+// turned in toward the body (HAND_TWIST, radians about the hand's length), the fingers drawn in together (the hand
+// bone narrows across the fingers' spread and shortens a touch, which reads as a soft curl), and it breathes with a
+// slow small sway so it is never frozen. Hand bone axes: y runs to the fingertips, x across the spread, z the palm.
+export const HAND_CURL = .55, HAND_TWIST = .6, HAND_SWAY = .07, HAND_NARROW = .72, HAND_SHORT = .9;
 const POSED = [A + 'Spine', A + 'Spine2', A + 'Neck', A + 'Head', ...ARM.left.slice(0, 2), ...ARM.right.slice(0, 2)];
 
 // The bones one staff copy needs (null when its skeleton isn't the Mixamo one these poses are for).
@@ -184,7 +204,19 @@ export function poseStaff(rig, role, clock, act, w = 1) {
   turnAbout(bones[A + 'Head'], X, pose.pitch * UPRIGHT_NOD);
   arms.forEach(([arm, side]) => reach(bones, ARM[arm], side, out[arm]));
   if (w < 1) POSED.forEach((n, i) => bones[n].quaternion.slerp(rig.idle[i], 1 - w));
+  arms.forEach(([arm, side]) => relaxHand(bones[ARM[arm][2]], side, (clock || 0) + (side > 0 ? 0 : 1.9), w));
   return out;
+}
+// Relaxes a working hand (after the mixer's idle has set it): a soft curl toward the palm with a slow, small sway,
+// the palm turned in and the fingers drawn in. side is +1 for the left hand, -1 the right; w eases it in with the work
+// pose. Only the hand bone itself turns and narrows, so where the hand reaches (the wrist) is unchanged.
+const hq = new THREE.Quaternion(), he = new THREE.Euler();
+export function relaxHand(hand, side, t, w = 1) {
+  if (!hand || w <= 0) return;
+  const sway = Math.sin(t * .8) * .6 + Math.sin(t * 1.9 + 1) * .4;
+  he.set(w * (HAND_CURL + HAND_SWAY * sway), -w * side * HAND_TWIST, w * side * HAND_SWAY * .5 * Math.sin(t * .6 + 2));
+  hand.quaternion.multiply(hq.setFromEuler(he));
+  hand.scale.set(hand.scale.x * (1 - (1 - HAND_NARROW) * w), hand.scale.y * (1 - (1 - HAND_SHORT) * w), hand.scale.z);
 }
 // Where a hand is now, in the body frame (for tests).
 export function handInBody(rig, arm) {

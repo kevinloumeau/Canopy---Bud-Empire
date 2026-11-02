@@ -62,3 +62,8 @@
 .world .marker .sign-buy [data-buy].is-best.is-short span{color:#f3ead6bb}
 /* With the box up, a ready bolt chip moves to the sign's left side. */
 .world .marker.has-buy .sign-ability{bottom:50%;left:auto;right:calc(100% + 5px);transform:translateY(50%)}
+/* Paused (the 1x button pressed again): everything that loops on the map and its signs holds still with the game, as do
+   the boost rings and boosted station buttons in the HUD and menu. The id outranks the signs' own !important loops. */
+body[data-game-paused=true] #world *,body[data-game-paused=true] #world *::before,body[data-game-paused=true] #world *::after,
+body[data-game-paused=true] .burst-ring,body[data-game-paused=true] .is-boosted,body[data-game-paused=true] .is-boosted *,
+body[data-game-paused=true] .is-boosted::after,body[data-game-paused=true] .stock-online svg{animation-play-state:paused!important}
