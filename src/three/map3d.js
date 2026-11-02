@@ -10,6 +10,7 @@ import * as THREE from 'three';
 import { buildShell } from './shell.js';
 import { buildRooftop } from './rooftop.js';
 import { buildFlagship } from './flagship.js';
+import { buildAtms } from './atm.js';
 import { buildCityBuildings } from './city-buildings.js';
 import { buildEntrance } from './entrance.js';
 import { createIntro } from './intro.js';
@@ -189,6 +190,7 @@ export function createMap3D(canvas, layout) {
   const shell = buildShell(world, layout, { box, span, material, model });
   const rooftop = buildRooftop(world, layout, { box, span, material });
   const flagship = buildFlagship(world, layout, { material });
+  const atms = layout.atm ? buildAtms(world, layout, { material }) : null;
   const cityBuildings = buildCityBuildings(world, layout, { material });
   buildEntrance(world, layout, { box, span, material, model });
   world.children.slice(townEnd).forEach(o => shopParts.add(o));
@@ -1189,6 +1191,7 @@ export function createMap3D(canvas, layout) {
     if (shell) shell.update(frame);
     if (rooftop) rooftop.update(frame);
     if (flagship) flagship.update(frame);
+    if (atms) atms.update(frame);
     cityBuildings.update(frame);
     Object.entries(fixtures).forEach(([key, holder]) => { holder.visible = !!(frame.fixtures && frame.fixtures[key]); });
     updateFixtureSites(frame);
