@@ -2,9 +2,9 @@
 
     1  door podium: a slim oak podium with a hand scanner and a brass lamp
     2  ID desk: a green desk with oak pilasters, a lit scanner pad on an arm and a guest-list tablet
-    3  ID check booth: a walnut desk with brass panels, two rear posts and a backlit ID CHECK header
+    3  ID check booth: a walnut desk with brass panels, two rear posts and an ID CHECK header
     4  monitored booth: tier 3 plus a glass guard along the front, a camera on each post, twin monitors and a neon leaf
-    5  flagship booth: four brass posts under a framed glass canopy, a backlit SECURITY sign, pendant lights and
+    5  flagship booth: four brass posts under a framed glass canopy, a SECURITY sign, pendant lights and
        a marble-topped desk
 
 Every tier stands on the same brass-edged mat, so all five fill the same footprint and the 3D map scales them alike
@@ -148,9 +148,8 @@ def walnut_desk(L, D, H, top):
 
 
 def header_sign(word, posts_y, z, w, leaf=False):
-    """A backlit sign between the two rear posts: a green face in a brass frame, light spilling round its edges."""
+    """A sign between the two rear posts: a green face in a brass frame (no glowing backer: Kevin read it as a white board)."""
     h = .3
-    K.box("SignGlow", (w + .1, .014, h + .1), (0, posts_y, z - .05), SIGNLIGHT, .03, 4)
     P.pill("SignBorder", w + .05, h + .05, .05, 0, posts_y, z - .025, K.BRASS)
     P.pill("Sign", w, h, .066, 0, posts_y, z, K.GREEN_D)
     if leaf:
