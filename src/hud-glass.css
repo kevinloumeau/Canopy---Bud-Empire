@@ -27,7 +27,13 @@
 
 @media(max-width:700px){.hud{gap:8px}}
 @media(min-width:701px){.hud{top:12px;left:16px;right:16px;padding:8px 10px 8px 16px!important;border-radius:20px}}
-@media(min-width:780px){.hud{right:450px}}
+/* Desktop: the bar runs the full width and the Stations panel hangs under it, same 16px side margin and a 12px gap,
+   so the bar's right end and the panel's edge line up. Taller windows let the pane grow a little (crew cards show) but
+   stop short of stretching, so there is no empty gap. */
+@media(min-width:780px){
+ html body .sheet{top:calc(var(--hud-height,64px) + 12px);bottom:auto;max-height:calc(100dvh - var(--hud-height,64px) - 28px)}
+ html body .sheet>[data-pane]{height:min(calc(100vh - 258px),660px);height:min(calc(100dvh - 258px),660px)}
+}
 
 /* Map buttons share the material. */
 .map-controls button,.map-controls .store-switcher #locationToggle{
