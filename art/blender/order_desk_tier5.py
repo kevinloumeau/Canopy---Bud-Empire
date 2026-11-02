@@ -29,8 +29,8 @@ def arc_pts(c, r, a0, a1, n, y):
 # ---------- fluted oak counter on a green tiled plinth ----------
 L, D, H = 1.15, .62, .9
 K.box("Plinth", (L + .08, D + .08, .12), (0, 0, 0), K.GREEN_D, .02)
-X.tile_band("PlinthTile", -(L + .08) / 2 + .01, (L + .08) / 2 - .01, -(D + .08) / 2 - .002, .015, .09, 1, .09)
-X.tile_band("PlinthTileSide", -(D + .08) / 2 + .01, (D + .08) / 2 - .01, (L + .08) / 2 + .002, .015, .09, 1, .09, "+X")
+X.tile_band("PlinthTile", -(L + .08) / 2 + .01, (L + .08) / 2 - .01, -(D + .08) / 2 - .002, .015, .09, 1)
+X.tile_band("PlinthTileSide", -(D + .08) / 2 + .01, (D + .08) / 2 - .01, (L + .08) / 2 + .002, .015, .09, 1, facing="+X")
 K.box("PlinthBrass", (L + .09, D + .09, .02), (0, 0, .12), M["POLISH"], .006)
 K.box("Body", (L, D, H - .19), (0, 0, .14), K.WOOD, .01)
 X.fluted("Flute", -L / 2 + .02, L / 2 - .02, -D / 2 - .004, .16, H - .27)
