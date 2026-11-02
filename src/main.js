@@ -6,7 +6,7 @@ import {migrateShopPlay,picks as momentPicks,createMoment,judgeChoice,tipFor,rec
 import {migrateJourney,advanceJourney,CHAPTERS} from './journey.js';
 import {mountJourney} from './journey-ui.js';
 import {manageDialog} from './dialog-focus.js';
-import {FLAGSHIP_MAX,FLAGSHIP_STEP,flagshipNext,flagshipCost,flagshipSales,flagshipUnlocked,migrateFlagship,payFlagship,openFlagshipStage} from './flagship.js';
+import {FLAGSHIP_MAX,FLAGSHIP_STEP,flagshipNext,flagshipCost,flagshipSales as hqSales,flagshipUnlocked,migrateFlagship,payFlagship,openFlagshipStage} from './flagship.js';
 import {migrateBuilds,startBuild,isBuilding,buildLeft,buildShareLeft,finishBuilds,buildClock,skipCost,skipBuild} from './builds.js';
 import {AUTO_DRONE_COST,BULK_DRONE_COST,payAutoDrone,grantAutoDrone,buyBulkDrone,autoDroneLimit,migrateAutoDrone,autoDroneReady} from './auto-drone.js';
 import {FORMATS,wantedFormat,formatPremium,BOOST_MAX,boostCost,migrateMenu,unlockFormat,menuFormatFactor,milestone,prestigeOffer,elapsedSteps,OFFLINE_STEP} from './depth.js';
@@ -32,7 +32,7 @@ import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, PERSON_HEAD_Y, subwayStairs, SUBWAY_HI
 import * as economy from './economy.js';
 import {ABILITIES,ABILITY_UNLOCK,ABILITY_FACTOR,ABILITY_SALES,ABILITY_SECONDS,migrateAbilities,abilityStatus,useAbility,tickAbilities,abilityFactor,abilitySales,clockLabel} from './crew-abilities.js';
 import * as strains from './strains.js';
-import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, settleGoals, shiftStatus, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, branchOpenable, settleStars, starCount, branchFinished, STAR_BONUS, recordEvent, contractOffer, activeContract, contractTwist, contractFactor, startContract, skipContract, settleContract, useContractBoost, tickContractBoost, contractBoostFactor, CONTRACT_BOOST_SECONDS, seasonStatus, claimSeason, SEASONS, RETIRED_WEEKLY, nextSeason, weeklySpecial, specialFactor } from './progression.js';
+import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, settleGoals, shiftStatus, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, branchOpenable, STARS_TO_OPEN, settleStars, starCount, branchFinished, STAR_BONUS, recordEvent, contractOffer, activeContract, contractTwist, contractFactor, startContract, skipContract, settleContract, useContractBoost, tickContractBoost, contractBoostFactor, CONTRACT_BOOST_SECONDS, seasonStatus, claimSeason, SEASONS, RETIRED_WEEKLY, nextSeason, weeklySpecial, specialFactor } from './progression.js';
 import {mountUiKit} from './ui-kit.js';
 // ?ui=kit shows the shared reskin components over the game (see ui-kit.js).
 if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
@@ -101,8 +101,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     }catch(e){if(!saveFailed)notify('SAVE UNAVAILABLE · keep this window open to retain progress');saveFailed=true;return false}
   }
   // Demand ceiling counts whole baskets, so offline pay and reward scaling track real sales.
-  function branchIncome(p){return branchRate(p)*specialFactor('branch')*flagshipSales(state.flagship)}
-  function incomeRate(){return Math.min(production(),flowerValue()*basketSize()/arrivalInterval())+branchIncome(state.empire)}
+  function branchIncome(p){return branchRate(p)*specialFactor('branch')}
+  function incomeRate(){return flagshipSales()+branchIncome(state.empire)}
   // Offline earnings accrue whether or not the game was paused; the Back-room safe raises the cap in four-hour steps.
   function offlineCap(){return OFFLINE_STEP*(1+state.offlineLevel)}
   function offlineReward(seconds){return incomeRate()*Math.min(offlineCap(),Math.max(0,seconds))}
@@ -269,7 +269,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function trackStationLevel(i){var lv=state.lines[i];[10,25,50,100].forEach(function(m){if(lv>=m)telemetry.once('station_level_'+m,{station:LINES[i].name})})}
   // Browsers only start audio inside a gesture: the first tap or key press primes the context while sound is on.
   ['pointerdown','keydown'].forEach(function(type){window.addEventListener(type,function prime(){playSound.unlock(state.sound)},{passive:true})});
-  function flowerValue(index){if(index===undefined){var menu=menuStrains();return menu.reduce(function(total,i){return total+flowerValue(i)},0)/menu.length}var i=index;return Math.round(STRAINS[i].price*(1+Math.max(0,state.strains[i]-1)*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value')*trendBoost(i)*displayBoost(i)*strains.timeFactor(strains.STRAIN_TYPE[i],atmosphere(state.empire.network).night)*(1+crossBonus(state.crosses))*(1+achievementBonus(state))*(i>0?specialFactor('boutique'):1)*flagshipSales(state.flagship))}
+  function flowerValue(index){if(index===undefined){var menu=menuStrains();return menu.reduce(function(total,i){return total+flowerValue(i)},0)/menu.length}var i=index;return Math.round(STRAINS[i].price*(1+Math.max(0,state.strains[i]-1)*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value')*trendBoost(i)*displayBoost(i)*strains.timeFactor(strains.STRAIN_TYPE[i],atmosphere(state.empire.network).night)*(1+crossBonus(state.crosses))*(1+achievementBonus(state))*(i>0?specialFactor('boutique'):1)*hqSales(state.flagship))}
   function onlineValue(sequence){return Math.round(flowerValue(menuChoice(sequence===undefined?state.onlineCompleted:sequence))*4/3*(1+state.onlineBonusLevel*.05)*specialFactor('online')*contractFactor(state.empire,'online'))}
   function strainCost(i){return state.strains[i]?Math.round(Math.max(250,STRAINS[i].unlock*.35)*Math.pow(1.85,state.strains[i]-1)):STRAINS[i].unlock}
   function buyStrain(i){
@@ -490,8 +490,12 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var options=momentPicks(state,menuStrains());if(menuStrains().length<2)return;
     guest.momentOffered=true;moment=createMoment(play,guest,options);play.cooldown=60+(play.sequence%3)*15;
   }
+  // Branches earn a share of the flagship's walk-in sales. p.flagship follows that rate over about five minutes, so a
+  // short rush or crew burst barely moves branch income while every lasting upgrade carries over to every branch.
+  function flagshipSales(){return Math.min(production(),flowerValue()*basketSize()/arrivalInterval())}
+  function trackFlagship(dt){var p=state.empire,now=flagshipSales();if(!Number.isFinite(now))return;p.flagship=p.flagship>0?p.flagship+(now-p.flagship)*Math.min(1,dt/300):now}
   function simulate(dt){
-    state.empire.retailBoost=retailBoost();accrueOnlineRequests(dt);
+    state.empire.retailBoost=retailBoost();trackFlagship(dt);accrueOnlineRequests(dt);
     tickMoment(dt);var shift=state.shopPlay.shift,sentBefore=transfersSent();
     // Achievements are checked once a game second; a save that already meets some is credited quietly on load.
     achievementClock+=dt;if(achievementClock>=1){achievementClock=0;var earned=checkAchievements(state);if(earned.length){telemetry.send('achievement',{id:earned[earned.length-1].id,count:state.achievements.length});notify('ACHIEVEMENT · '+earned[earned.length-1].name.toUpperCase()+' · +'+earned.length+'% SALES');save()}}
@@ -800,7 +804,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   // A new branch star gets a toast; the third names the bonus and the branch it opens.
   function celebrateStars(list){var last=list[list.length-1],i=last.store,p=state.empire,name=STORES[i].name,count=starCount(p,i);
-    notify(count===3?name.toUpperCase()+' FINISHED · +'+Math.round(STAR_BONUS*100)+'% SALES EVERYWHERE'+(STORES[i+1]?' · '+STORES[i+1].name+' can open':''):name+' ★ '+count+' of 3','upgrade');renderUI()}
+    notify(count===3?name.toUpperCase()+' FINISHED · +'+Math.round(STAR_BONUS*100)+'% SALES EVERYWHERE':count===STARS_TO_OPEN&&STORES[i+1]?name+' ★ '+count+' of 3 · '+STORES[i+1].name+' can open':name+' ★ '+count+' of 3','upgrade');renderUI()}
   function notify(message,kind){var cue=kind==='upgrade'?(/BUILT|OPEN|EXPANDED/.test(message)?'build':'upgrade'):/REWARD|MILESTONE|ACHIEVEMENT|GOAL COMPLETE|EVENT COMPLETE|CHAPTER COMPLETE|WHILE AWAY|Prestige/.test(message)?'sparkle':/^Need |previous stage first/.test(message)?'denied':null;if(cue)playSound(cue,state.sound);if(kind!=='dispatch')dispatchSummary=null;$('toast').classList.toggle('is-upgrade',kind==='upgrade');$('toast').textContent=message;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){$('toast').classList.remove('show')},1600)}
 
   // The map draws with Three.js (src/three/map3d.js) under a transparent 2D canvas that keeps the screen-space effects
@@ -3683,7 +3687,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // Opens whatever finished building, live or while the game was closed.
   function completeBuilds(){finishBuilds(state.builds).forEach(function(key){
     if(key==='lounge'){var wasLot=!state.lounge;state.lounge=Math.max(1,state.lounge);if(!wasLot)return;buildRise[7]=1;burst({x:LOUNGE_DOOR.x,z:LOUNGE_DOOR.z},'#f0a7c8');telemetry.send('lounge_tier',{tier:state.lounge});notify('LOUNGE OPEN · '+loungeTier(state.lounge).name,'upgrade');paintThumbnails();updateMarkers.key=null;render.invalidated=true}
-    if(key==='flagship'){var stage=flagshipNext(state.flagship);if(!stage)return;openFlagshipStage(state);burst({x:HQ_TAG.x,z:HQ_TAG.z,y:2},'#dbc38b');telemetry.send('flagship_stage',{stage:state.flagship});notify(state.flagship>=FLAGSHIP_MAX?'CANOPY HQ IS OPEN · every shop sells '+Math.round((flagshipSales(state.flagship)-1)*100)+'% more':'CANOPY HQ · '+stage.name.toUpperCase()+' DONE · every shop sells '+Math.round((flagshipSales(state.flagship)-1)*100)+'% more','upgrade');updateMarkers.key=null;render.invalidated=true}
+    if(key==='flagship'){var stage=flagshipNext(state.flagship);if(!stage)return;openFlagshipStage(state);burst({x:HQ_TAG.x,z:HQ_TAG.z,y:2},'#dbc38b');telemetry.send('flagship_stage',{stage:state.flagship});notify(state.flagship>=FLAGSHIP_MAX?'CANOPY HQ IS OPEN · every shop sells '+Math.round((hqSales(state.flagship)-1)*100)+'% more':'CANOPY HQ · '+stage.name.toUpperCase()+' DONE · every shop sells '+Math.round((hqSales(state.flagship)-1)*100)+'% more','upgrade');updateMarkers.key=null;render.invalidated=true}
     if(key==='window'){if(state.pickupWindow.owned)return;state.pickupWindow.owned=true;burst({x:PICKUP_WINDOW.x,z:PICKUP_WINDOW.z,y:1.6},'#dbc38b');telemetry.once('pickup_window_built');notify('PICKUP WINDOW OPEN · web orders start','upgrade');render.invalidated=true}
     if(key==='deck'){if(state.autoDrone.owned)return;grantAutoDrone(state);telemetry.once('delivery_pad_built');notify('DELIVERY PAD BUILT · drones take the rest','upgrade');render.invalidated=true}
     renderUI();save()})}
@@ -3748,9 +3752,9 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       // Store row: level pips and an income figure instead of a sentence; unopened stores show a lock and the opening price.
       var pips='';for(var pip=0;pip<10;pip++)pips+='<i'+(pip<level?' class="on"':'')+'></i>';
       var rowHtml=level?'<span class="store-level" title="Level '+level+' of 10"><span class="store-pips">'+pips+'</span><b>Lv '+level+'</b></span><span class="store-income"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.5 10a2.5 2 0 0 1 5 0c0 2.5-5 1.5-5 4a2.5 2 0 0 0 5 0"/></svg>'+fmt(storeRate(p,i)*state.gameSpeed)+'/s</span>':
-        '<span class="store-locked'+(locked?' is-locked':'')+'"><svg viewBox="0 0 24 24" aria-hidden="true">'+(locked?'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>':'<path d="M4 20V9l8-5 8 5v11M9 20v-6h6v6"/>')+'</svg>'+(locked?lockText:'Open · '+fmt(storeCost(p,i)))+'</span><span class="store-income muted">'+fmt(store.rate*saleMultiplier(p)*Math.max(1,p.retailBoost||1))+'/s</span>';
+        '<span class="store-locked'+(locked?' is-locked':'')+'"><svg viewBox="0 0 24 24" aria-hidden="true">'+(locked?'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>':'<path d="M4 20V9l8-5 8 5v11M9 20v-6h6v6"/>')+'</svg>'+(locked?lockText:'Open · '+fmt(storeCost(p,i)))+'</span><span class="store-income muted">'+fmt(nextStoreRate(p,i)*state.gameSpeed)+'/s</span>';
       if($('branchLevel'+i).dataset.html!==rowHtml){$('branchLevel'+i).innerHTML=rowHtml;$('branchLevel'+i).dataset.html=rowHtml}
-      $('branchHint'+i).textContent=locked?(gated?'Earn all 3 stars at '+STORES[i-1].name:'Unlock at '+fmt(store.goal)+' revenue'):max?'':'Next: +'+fmt(nextStoreRate(p,i)-storeRate(p,i))+'/s';$('branchHint'+i).hidden=max;$('branchBuy'+i).hidden=max;$('projectSummary'+i).parentElement.hidden=!level;
+      $('branchHint'+i).textContent=locked?(gated?'Earn '+STARS_TO_OPEN+' stars at '+STORES[i-1].name:'Unlock at '+fmt(store.goal)+' revenue'):max?'':'Next: +'+fmt(nextStoreRate(p,i)-storeRate(p,i))+'/s';$('branchHint'+i).hidden=max;$('branchBuy'+i).hidden=max;$('projectSummary'+i).parentElement.hidden=!level;
       $('projectSummary'+i).textContent='Projects · '+p.stores[i].projects.filter(Boolean).length+'/3';
       STORE_PROJECTS[i].forEach(function(name,j){
         var owned=p.stores[i].projects[j],required=PROJECT_LEVELS[j],cost=projectCost(i,j),button=$('projectBuy'+i+j);
