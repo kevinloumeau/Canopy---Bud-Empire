@@ -2962,7 +2962,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // The street ATM (src/atm.js): a small price tag over its ghost until it is bought, then a station sign with its level.
   var atmMarker=lotMarker('atm',function(){pickTag('atm')});
   // One tag per city building (city-buildings.js), on its lot.
-  var cityMarkers={};CITY_BUILDINGS.forEach(function(b){cityMarkers[b.id]=lotMarker(b.id,function(){pickTag(b.id)})});
+  var cityMarkers={};CITY_BUILDINGS.forEach(function(b){cityMarkers[b.id]=lotMarker(b.id,function(){pickTag(b.id)});cityMarkers[b.id].classList.add('is-landmark')});hqMarker.classList.add('is-landmark');
   var leaseMarker=lotMarker('lease',function(){var i=leaseIndex();if(i>=0&&leaseLocked(i)){showTray('empire');document.querySelector('[data-empire-view="growth"]').click();expandBranch(i);$('branchToggle'+i).scrollIntoView({block:'start'})}else pickTag('lease')});
   var LOT_MARKERS=[windowMarker,droneMarker,kioskMarker,counterMarker,hqMarker,leaseMarker,atmMarker].concat(CITY_BUILDINGS.map(function(b){return cityMarkers[b.id]}));LOT_MARKERS.forEach(function(el){el.classList.add('is-mini')});
   var LOCK_ICON='<svg class=sign-lock viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
@@ -3896,7 +3896,9 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function purchaseCity(id){var b=cityBuilding(id);if(!b||isBuilding(state.builds,id)||!cityUnlocked(id,state.lifetime))return;var next=cityNext(id,state.city[id]);if(!next||!payCity(state,id))return;
     startBuild(state.builds,id);pickedTag=null;telemetry.send('city_paid',{id:id,stage:state.city[id]+1});playSound('build',state.sound);notify(b.name.toUpperCase()+' · '+next.name.toUpperCase()+' UNDER WAY · done in '+buildClock(buildLeft(state.builds,id)),'upgrade');updateMarkers.key=null;render.invalidated=true;save();renderUI()}
   // Where a city building's tag sits: over the lot's front, just above what stands there now.
-  var cityLotRects=null;function cityTagAt(id,terrace){if(!cityLotRects)cityLotRects=cityLots();var lot=cityLotRects[id];if(!lot)return null;if(terrace)return{x:(lot.x0+lot.x1)/2,y:lot.top+.6,z:lot.z1-1};return{x:(lot.x0+lot.x1)/2,y:CITY_TOPS[id][Math.min(3,state.city[id]+(isBuilding(state.builds,id)?1:0))]+.6,z:lot.z1-1}}
+  var cityLotRects=null;function cityTagAt(id,terrace){if(!cityLotRects)cityLotRects=cityLots();var lot=cityLotRects[id];if(!lot)return null;// Locked tags ride over the terrace (capped, the tall ones would lift them off screen); a plot for sale gets its tag
+    // high enough to clear the shorter neighbours in front of it instead of sitting on their facades.
+    if(terrace)return{x:(lot.x0+lot.x1)/2,y:Math.min(lot.top,9)+.6,z:lot.z1-1};var k=Math.min(3,state.city[id]+(isBuilding(state.builds,id)?1:0));return{x:(lot.x0+lot.x1)/2,y:(k?CITY_TOPS[id][k]:7.4)+.6,z:lot.z1-1}}
   // Lots shown as for sale or built: their old terraces step aside (frame.cityClaimed).
   function cityClaimed(){var out={};CITY_BUILDINGS.forEach(function(b){out[b.id]=state.city[b.id]>0||isBuilding(state.builds,b.id)||cityUnlocked(b.id,state.lifetime)});return out}
   function cityBuildShares(){var out={};CITY_BUILDINGS.forEach(function(b){if(isBuilding(state.builds,b.id))out[b.id]=1-buildShareLeft(state.builds,b.id)});return out}
