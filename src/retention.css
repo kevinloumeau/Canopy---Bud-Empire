@@ -3,6 +3,10 @@
 .world .marker.spender-tag,.world .marker.spender-tag:not(.selected){left:0;top:0;display:flex;align-items:center;gap:7px;min-width:0;min-height:34px;padding:4px 13px 4px 4px;line-height:1;opacity:1;border-radius:999px;background:linear-gradient(180deg,#f3e2b6,var(--ui-brass) 70%);border:1px solid #fff3d080;color:var(--ui-brass-ink);font:700 13px/1 'Bricolage Grotesque',sans-serif;letter-spacing:.01em;white-space:nowrap;box-shadow:0 5px 14px rgba(10,20,14,.38),0 0 18px #e7b94a40;cursor:pointer;z-index:4}
 .world .marker.spender-tag .spender-badge{display:grid;place-items:center;flex:none;width:26px;height:26px;border-radius:50%;background:var(--ui-brass-ink);color:var(--ui-gold);box-shadow:inset 0 0 0 1px #e7b94a59}
 .world .marker.spender-tag .spender-badge svg{width:15px;height:15px;display:block}
+/* Shop events share the brass pill; only the icon in the ink badge changes colour, so the four read apart at a glance. */
+.world .marker.spender-tag[data-event=rush] .spender-badge{color:#ffb35c}
+.world .marker.spender-tag[data-event=inspection] .spender-badge{color:#9fe0b0}
+.world .marker.spender-tag[data-event=vip] .spender-badge{color:#f2b6e8}
 .world .marker.spender-tag::after{content:'';display:block;position:absolute;left:50%;top:100%;width:10px;height:10px;margin-top:-6px;border-radius:0 0 3px 0;background:var(--ui-brass);border:solid #fff3d080;border-width:0 1px 1px 0;transform:translateX(-50%) rotate(45deg)}
 /* The pill is smaller than a fingertip; an invisible margin brings the tap area to 44px, and carries the pulsing ring. */
 .world .marker.spender-tag::before{content:'';position:absolute;inset:-5px -4px;border-radius:999px}
@@ -14,7 +18,17 @@
 }
 @keyframes spender-bob{50%{margin-top:-4px}}
 @keyframes spender-ring{0%{box-shadow:0 0 0 0 #e2c68a99}80%,100%{box-shadow:0 0 0 9px #e2c68a00}}
-.rush-pill{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 108px);transform:translateX(-50%);z-index:30;padding:6px 14px;border-radius:999px;background:#2a2410e6;border:1px solid var(--p-gold-72);color:#f6dc95;font:600 .78rem 'DM Mono',ui-monospace,monospace;box-shadow:0 4px 14px #0006;pointer-events:none;white-space:nowrap}
+/* The centre pill stack: level with the map buttons and the panel under the top bar, centred on the cash (main.js sets
+   --cash-x on desktop). Flex order puts the wider pill on top. */
+.center-pills{position:fixed;left:var(--cash-x,50%);top:calc(var(--hud-height,60px) + 12px);transform:translateX(-50%);z-index:30;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;max-width:calc(100vw - 32px)}
+.center-pills.contract-first .contract-pill{order:-1}
+body[data-store-view=branch] .center-pills{display:none}
+/* Phone: the stack stays level with the activity chip and the map buttons, centred in the gap between them (main.js
+   measures it), with slimmer pills and shorter copy so both fit: the contract
+   reads as its name over its percent and clock. */
+@media(max-width:700px){.center-pills{gap:4px;max-width:var(--pill-room,calc(100vw - 200px))}.center-pills>*{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+ .center-pills .rush-pill{padding:4px 10px;font-size:.68rem}.center-pills .contract-pill{padding:5px 12px;border-radius:12px;font-size:.66rem;line-height:1.35;white-space:pre-line;text-align:center}}
+.rush-pill{padding:6px 14px;border-radius:999px;background:#2a2410e6;border:1px solid var(--p-gold-72);color:#f6dc95;font:600 .78rem 'DM Mono',ui-monospace,monospace;box-shadow:0 4px 14px #0006;pointer-events:none;white-space:nowrap}
 .rush-pill[hidden]{display:none}
 body[data-store-view=branch] .rush-pill{display:none}
 /* Multi-day event card: kicker, name, countdown, a three-step ladder whose cells fill with progress, and the claim button. */
@@ -77,7 +91,6 @@ body[data-store-view=branch] .rush-pill{display:none}
 .weekly-special{margin:0 0 10px;padding:9px 12px;border-radius:10px;background:#c4e8a714;border:1px solid #c4e8a73d;font-size:13px}
 .weekly-special b{color:var(--p-lime-78)}
 .season-card.is-between .season-tiers,.season-card.is-between #seasonClaim{display:none}
-/* The running contract, under the rush pill: name, count and clock in one quiet line. */
-.contract-pill{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 142px);transform:translateX(-50%);z-index:30;padding:5px 12px;border-radius:999px;background:var(--ui-glass-strong);border:1px solid var(--ui-edge);color:var(--ui-ink);font:500 .74rem 'DM Mono',ui-monospace,monospace;box-shadow:0 4px 14px #0005;pointer-events:none;white-space:nowrap}
+/* The running contract: name, count and clock in one quiet line, in the centre pill stack. */
+.contract-pill{padding:5px 12px;border-radius:999px;background:var(--ui-glass-strong);border:1px solid var(--ui-edge);color:var(--ui-ink);font:500 .74rem 'DM Mono',ui-monospace,monospace;box-shadow:0 4px 14px #0005;pointer-events:none;white-space:nowrap}
 .contract-pill[hidden],body[data-store-view=branch] .contract-pill{display:none}
-.rush-pill[hidden]+.contract-pill{top:calc(env(safe-area-inset-top,0px) + 108px)}

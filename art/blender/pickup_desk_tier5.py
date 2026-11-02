@@ -125,6 +125,6 @@ to = K.link(bpy.data.objects.new("SignText", txt), K.CREAM)
 to.location = (SX, AY - .037, H - .18); to.rotation_euler = (math.pi / 2, 0, 0)
 X.roundel("Roundel", (SX, AY + .02, H + .33), .2, K.GREEN_D, M["POLISH"])
 K.box("RoundelFoot", (.14, .06, .2), (SX, AY + .03, H + .07), M["POLISH"], .01)
-X.leaf_logo("RoundelLeaf", (SX, AY - .015, H + .33), .62, M["LEAFGLOW"])
+X.leaf_logo("RoundelLeaf", (SX, AY - .015, H + .33), .5, M["LEAFGLOW"])
 
 K.finish(OUT, "pickup_desk_tier5", ortho=2.9, centre=(-.02, 0, .95))

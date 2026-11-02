@@ -11,6 +11,7 @@ import { CROSS_STREETS, districtPlot, DISTRICT_COUNT } from './branch-districts.
 // Kevin made the sunny all-sprite shop the default on 2026-10-13 (shipped to main 2026-10-15). Since the 2D map was
 // removed (2026-10-19, the game is iOS-first and the map is 3D only) both are always on: the studio diorama and the
 // drawn shop only ever drew in Canvas 2D, so "?look=classic" and "?sprites=drawn" no longer do anything.
+import { CITY_BUILDINGS } from './city-buildings.js';
 export const SUNNY = true;
 // The shop's own sprites (stations, shell, people), which the 3D map records as upright cards.
 export const SHOP_SPRITES = true;
@@ -386,6 +387,10 @@ const MODEL_BOUNDS = {
 // Its terrace gives way to the Canopy HQ tower (src/three/flagship.js), which map3d builds on layout.flagshipLot.
 const FLAGSHIP_LOT = BUILDINGS.findIndex(b => b[0] === 17.5 && b[1] === -23.5);
 const keepLot = (b, i) => i !== FLAGSHIP_LOT;
+// The city buildings' lots (src/city-buildings.js), found by their coordinates so rows added to BUILDINGS later never
+// shift them. Their terraces keep standing until the lot comes up for sale: each terrace and its roof props carry
+// `lot`, and main.js leaves them out of the frame once that lot is claimed (map3d hides the stand-in block too).
+const CITY_LOT_OF = new Map(CITY_BUILDINGS.map(c => [BUILDINGS.findIndex(b => b[0] === c.lot[0] && b[1] === c.lot[1]), c.id]).filter(([i]) => i >= 0));
 const HEIGHT_UP = Math.sqrt(1.5); // the 3D map's height stretch (camera.js HEIGHT_SCALE): world height = map height × this
 // A terrace's 3D model: its city model if it names one, else the render's own (building.low.sage is building_low_sage).
 const modelOf = b => b[3] || b[2].replace(/\./g, '_');
@@ -418,7 +423,7 @@ const ROOF_PROPS = (() => {
       if (k === 0 && tall && rand() < .7) { file = 'roof_watertower'; qx = -1; qz = -1; }
       // Each piece sits toward its quarter's outer corner, clear of the middle where the next quarter's piece reaches.
       const half = PROP_HALF[file], mx = qx * Math.max(half + .05, hw - half) + (rand() - .5) * .15, mz = qz * Math.max(half + .05, hd - half) + (rand() - .5) * .15;
-      out.push({ file: file + '.glb', x: fit.x(mx), y: fit.roof, z: fit.z(mz), rot: rand() < .5 ? 0 : Math.PI / 2, scale: fit.sx / 1.69 });
+      out.push({ file: file + '.glb', x: fit.x(mx), y: fit.roof, z: fit.z(mz), rot: rand() < .5 ? 0 : Math.PI / 2, scale: fit.sx / 1.69, lot: CITY_LOT_OF.get(i) });
     });
   });
   // One piece per quarter at most, so two never share a spot when a water tower took the back one.
@@ -529,7 +534,7 @@ function streetJobs(api) {
   // The 3D map's Blender model for the job just added: its file, where its feet stand (the render's anchor) and its
   // turn; a render drawn mirrored to run the other way is the model turned a quarter.
   const model = (name, x, z, flip) => { jobs[jobs.length - 1].model = { file: name.includes('.glb') ? name : name + '.glb', x, z, rot: flip ? -Math.PI / 2 : 0 }; };
-  BUILDINGS.filter(keepLot).forEach(b => { const f = BUILDING_SPRITES[b[2]], x = b[0] - f.w / 2, z = b[1] - f.d / 2; at(x, z, () => building(api, b), f.w / 2, f.d / 2); jobs[jobs.length - 1].model = { file: modelOf(b) + '.glb', x, z, rot: 0, fit: { w: f.w, d: f.d } }; });
+  BUILDINGS.forEach((b, i) => { if (!keepLot(b, i)) return; const f = BUILDING_SPRITES[b[2]], x = b[0] - f.w / 2, z = b[1] - f.d / 2; at(x, z, () => building(api, b), f.w / 2, f.d / 2); jobs[jobs.length - 1].model = { file: modelOf(b) + '.glb', x, z, rot: 0, fit: { w: f.w, d: f.d }, lot: CITY_LOT_OF.get(i) }; });
   kind = 'prop';
   ROOF_PROPS.concat(CITY_PROPS).forEach(p => { at(p.x, p.z, () => {}, .5, .5); jobs[jobs.length - 1].model = p; });
   kind = 'tree';
@@ -1250,6 +1255,12 @@ export function walkerPlacements(now) {
 function drawWalkers(api, at) {
   walkerPlacements(api.now).forEach(w => at(w.x, w.z, () => drawWalker(api, w), .4));
 }
+// Each city building's lot as a footprint ({id: {x0, x1, z0, z1}}), for its 3D model and its map tag.
+export function cityLots() {
+  const out = {};
+  CITY_LOT_OF.forEach((id, i) => { const [x1, z1, name] = BUILDINGS[i], f = BUILDING_SPRITES[name]; out[id] = { x0: x1 - f.w, x1, z0: z1 - f.d, z1 }; });
+  return out;
+}
 // One walker from walkerPlacements, as the street draws it; the 3D map records the same call to stand the figure up.
 export function drawWalker(api, { g, s, x, z, facing, heading }) {
   if (!drawPersonSprite(api, x, z, -(g + 1), false, facing, s + g * .44, api.now > 0 ? 1 : 0, walkerHasBag(g + 1), false, heading)) api.person(x, z, 40 + g, api.now > 0);
@@ -1263,7 +1274,8 @@ export function townLayout() {
     roads: ROADS.map(r => ({ ...r })), roadWidth: RW, plazaY: P, streetY: G, extent: L, eastEnd: XE,
     colours: { paver: PAVER, asphalt: ASPHALT }, marks: groundMarks().concat(kerbsAndDrains()),
     flagshipLot: (([x1, z1, name]) => { const f = BUILDING_SPRITES[name]; return { x0: x1 - f.w, x1, z0: z1 - f.d, z1 }; })(BUILDINGS[FLAGSHIP_LOT]),
-    buildings: BUILDINGS.filter(keepLot).map(b => { const f = BUILDING_SPRITES[b[2]]; return { x0: b[0] - f.w, x1: b[0], z0: b[1] - f.d, z1: b[1], h: lotFit(b).top, wall: f.wall[0], roof: f.wall[1], model: modelOf(b) + '.glb' }; }),
+    buildings: BUILDINGS.map((b, i) => { if (!keepLot(b, i)) return null; const f = BUILDING_SPRITES[b[2]]; return { x0: b[0] - f.w, x1: b[0], z0: b[1] - f.d, z1: b[1], h: lotFit(b).top, wall: f.wall[0], roof: f.wall[1], model: modelOf(b) + '.glb', lot: CITY_LOT_OF.get(i) }; }).filter(Boolean),
+    cityLots: cityLots(),
     silhouettes: SILHOUETTES.map(b => ({ ...b })),
     trees: FAR_TREES.concat(NEAR_TREES).map(t => t.slice()), lamps: LAMPS.map(l => l.slice()),
     haze: { colour: HAZE.slice(), ramp: { west: HAZE_RAMP.west.slice(), east: HAZE_RAMP.east.slice(), north: HAZE_RAMP.north.slice(), south: HAZE_RAMP.south.slice() } },
