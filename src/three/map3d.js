@@ -754,23 +754,43 @@ export function createMap3D(canvas, layout) {
   const carriedBags = new THREE.InstancedMesh(transport ? transport.bagGeometry() : buildCargoKinds()[4].geometry, new THREE.MeshLambertMaterial({ vertexColors: true }), MAX_CARRIED);
   carriedBags.castShadow = true; carriedBags.count = 0; carriedBags.frustumCulled = false;
   carriedBags.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-  world.add(carriedBags);
-  const toWorld = new THREE.Matrix4(), grip = new THREE.Vector3(), elbowAt = new THREE.Vector3(), bagAt = new THREE.Vector3(), bagTurn = new THREE.Quaternion(), bagSize = new THREE.Vector3(), bagMatrix = new THREE.Matrix4(), upAxis = new THREE.Vector3(0, 1, 0);
-  function hangBag(copy, yaw) {
+  scene.add(carriedBags);
+  // The bag swings from the hand like a pendulum (small-angle, damped), driven by how the grip itself speeds up and
+  // slows, so it lags the arm's swing as they walk and rocks to a stop when they stop. Worked in the scene's true
+  // space (the world group stretches heights), so the bag tilts without shearing.
+  const SWAY_RATE = 7, SWAY_DAMP = 3.2, SWAY_MAX = .32;
+  const grip = new THREE.Vector3(), elbowAt = new THREE.Vector3(), bagAt = new THREE.Vector3(), bagTurn = new THREE.Quaternion(), bagTilt = new THREE.Quaternion(), tiltAxis = new THREE.Vector3(), bagSize = new THREE.Vector3(), bagMatrix = new THREE.Matrix4(), upAxis = new THREE.Vector3(0, 1, 0);
+  function hangBag(copy, yaw, dt) {
     if (!copy.hand || !copy.fore || carriedBags.count >= MAX_CARRIED) return;
     if (transport && carriedBags.geometry !== transport.bagGeometry()) carriedBags.geometry = transport.bagGeometry();
     const geometry = carriedBags.geometry;
     if (!geometry.boundingBox) geometry.computeBoundingBox();
-    // The grip is a little past the wrist along the forearm (the palm), in the world group's own (unstretched) units.
-    toWorld.copy(world.matrixWorld).invert();
+    // The grip is a little past the wrist along the forearm (the palm).
     copy.hand.updateWorldMatrix(true, false);
-    grip.setFromMatrixPosition(copy.hand.matrixWorld).applyMatrix4(toWorld);
-    elbowAt.setFromMatrixPosition(copy.fore.matrixWorld).applyMatrix4(toWorld);
+    grip.setFromMatrixPosition(copy.hand.matrixWorld);
+    elbowAt.setFromMatrixPosition(copy.fore.matrixWorld);
     grip.addScaledVector(elbowAt.sub(grip).negate(), .32);
     const top = geometry.boundingBox.max.y * .94 * CARRY_SCALE;
-    bagAt.set(grip.x, grip.y - top / HEIGHT_SCALE, grip.z);
-    bagTurn.setFromAxisAngle(upAxis, yaw - Math.PI / 2);
-    bagSize.set(CARRY_SCALE, CARRY_SCALE / HEIGHT_SCALE, CARRY_SCALE);
+    // Sway state: the grip's last place and speed, and the bag's lean (x, z: how far its base has swung out, in
+    // radians) and how fast that lean is changing. A copy that jumped (handed to another person) starts still.
+    let w = copy.sway;
+    if (!w || Math.hypot(grip.x - w.px, grip.z - w.pz) > .6) w = copy.sway = { px: grip.x, pz: grip.z, vx: 0, vz: 0, tx: 0, tz: 0, ox: 0, oz: 0 };
+    if (dt > 0) {
+      const h = Math.min(dt, 1 / 20), vx = (grip.x - w.px) / dt, vz = (grip.z - w.pz) / dt, ax = (vx - w.vx) / dt, az = (vz - w.vz) / dt;
+      w.ox += (-SWAY_RATE * SWAY_RATE * w.tx - SWAY_DAMP * w.ox - ax / top * .5) * h;
+      w.oz += (-SWAY_RATE * SWAY_RATE * w.tz - SWAY_DAMP * w.oz - az / top * .5) * h;
+      w.tx += w.ox * h; w.tz += w.oz * h;
+      const lean = Math.hypot(w.tx, w.tz);
+      if (lean > SWAY_MAX) { w.tx *= SWAY_MAX / lean; w.tz *= SWAY_MAX / lean; w.ox *= .5; w.oz *= .5; }
+      w.vx = vx; w.vz = vz;
+    }
+    w.px = grip.x; w.pz = grip.z;
+    // Lean the bag about its handles: the axis turns straight down toward the swung-out direction.
+    const lean = Math.hypot(w.tx, w.tz);
+    if (lean > 1e-5) bagTilt.setFromAxisAngle(tiltAxis.set(-w.tz / lean, 0, w.tx / lean), lean); else bagTilt.identity();
+    bagTurn.setFromAxisAngle(upAxis, yaw - Math.PI / 2).premultiply(bagTilt);
+    bagAt.set(0, -top, 0).applyQuaternion(bagTilt).add(grip);
+    bagSize.setScalar(CARRY_SCALE);
     carriedBags.setMatrixAt(carriedBags.count++, bagMatrix.compose(bagAt, bagTurn, bagSize));
   }
   // A figure faces the way it walks; standing, what it is doing (c.look), else the way it last walked. With neither,
@@ -812,7 +832,7 @@ export function createMap3D(canvas, layout) {
       copy.carry = c.bag ? (c.still ? 1 : Math.min(1, copy.carry + stepSeconds * 3)) : 0;
       if (c.bag) {
         poseCarry(copy.rig, amount * Math.sin(copy.walk.time / loop * 2 * Math.PI), ease01(copy.carry));
-        hangBag(copy, yaw);
+        hangBag(copy, yaw, c.still ? 0 : stepSeconds);
       }
     });
     carriedBags.instanceMatrix.needsUpdate = true;
