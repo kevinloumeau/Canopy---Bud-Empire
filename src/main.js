@@ -28,6 +28,7 @@ import {mountStartGuide} from './start-guide.js';
 import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, drawBranchMap } from './branch-maps.js';
+import { districtCentre, districtAt, districtBlock, shownDistricts, eastHaze, leaseLot, districtTerraces, DISTRICT_COUNT, MAIN_EAST_HAZE } from './branch-districts.js';
 import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, PERSON_HEAD_Y, subwayStairs, SUBWAY_HIDDEN_Z, drawSprite, stationSprite, drawPersonSprite, streetItems, floorTextureFiles, fixtureSprite, shellSprite, spriteImage, spritesLoading, drawBoxSprite, softShadow, sunShadow, SUN, SUN_REACH, townLayout, carPlacements, walkerPlacements, stationSpriteSize, stationTier as spriteTier } from './sunny-world.js';
 import * as economy from './economy.js';
 import {ABILITIES,ABILITY_UNLOCK,ABILITY_FACTOR,ABILITY_SALES,ABILITY_SECONDS,migrateAbilities,abilityStatus,useAbility,tickAbilities,abilityFactor,abilitySales,clockLabel} from './crew-abilities.js';
@@ -986,17 +987,33 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var dprCap=3;
 
   function resize(){var rect=world.getBoundingClientRect(),oldWidth=width,oldHeight=height,oldDpr=dpr;dpr=Math.min(window.devicePixelRatio||1,dprCap);width=Math.max(1,Math.round(rect.width));height=Math.max(1,Math.round(rect.height));if(oldWidth!==width||oldHeight!==height||oldDpr!==dpr){canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);}canvas.style.width=width+'px';canvas.style.height=height+'px';ctx.setTransform(dpr,0,0,dpr,0,0);applyCamera()}
-  function cameraFrame(){
-    if(state.empire.activeStore){
+  // Branches stand on the flagship's own map now (branch-districts.js), so the camera has one frame for all of it.
+  // branchFit is the zoom that fits a branch's scene on screen, which a glide to it eases to.
+  function branchFit(id){
+    var main=mainFrame();
+    {
       // A branch plot fills the viewport: its measured projected extents (see BRANCH_THEMES[].frame) fit the width or the
       // height under the HUD, whichever binds. On desktop the tray floats over the bottom-right, where the plot's near
       // corner lands, so a little more room is kept under the plot there.
-      var fit=BRANCH_THEMES[state.empire.activeStore-1].frame,wide=width>=780,top=document.querySelector('.hud').getBoundingClientRect().bottom+16,low=wide?64:16,space=Math.max(130,visibleHeight()-top-low),area=Math.max(260,width-(wide?56:24)),u=Math.max(1,Math.min(area/fit.w,space/fit.h));
-      return{x:width*.5-fit.cx*u,y:top+space*.5-fit.cy*u,unit:u}}
+      var fit=BRANCH_THEMES[id-1].frame,wide=width>=780,top=document.querySelector('.hud').getBoundingClientRect().bottom+16,low=wide?64:16,space=Math.max(130,visibleHeight()-top-low),area=Math.max(260,width-(wide?56:24)),u=Math.max(1,Math.min(area/fit.w,space/fit.h));
+      return Math.max(.65,Math.min(1,u/main.unit))}
+  }
+  function cameraFrame(){return mainFrame()}
+  function mainFrame(){
     var visible=visibleHeight(),bottom=0,top=Math.min(160,visible*.26),space=Math.max(120,visible-top-bottom);return{x:width*.5,y:top+space*.66,unit:Math.max(1,Math.min((width-40)/33,space/28))*1.18}}
   function applyCamera(){render.invalidated=true;var frame=cameraFrame();
-    if(SUNNY&&!state.empire.activeStore)clampSunnyPan(frame);else{panX=Math.max(-width*1.6,Math.min(width*1.6,panX));panY=Math.max(-height*1.6,Math.min(height*1.6,panY));}
-    centerX=frame.x+panX;centerY=frame.y+panY;unit=frame.unit*zoom;if(state.empire.activeStore)updateBranchMarker()}
+    if(SUNNY)clampSunnyPan(frame);else{panX=Math.max(-width*1.6,Math.min(width*1.6,panX));panY=Math.max(-height*1.6,Math.min(height*1.6,panY));}
+    centerX=frame.x+panX;centerY=frame.y+panY;unit=frame.unit*zoom;followDistrict();if(state.empire.activeStore)updateBranchMarker()}
+  // The branch whose block is under the middle of the view is the one being viewed: the top bar shows its income and
+  // its Manage tag shows on its counter. Anywhere else (the flagship, a lot for lease) is the flagship's view.
+  var districtFollow=false;
+  function storeLevels(){return state.empire.stores.map(function(s){return s.level})}
+  function followDistrict(){
+    if(!districtFollow||districtGlide)return;
+    var c=viewCentre(),i=districtAt(c.x),id=i>=0&&state.empire.stores[i].level>0?i+1:0;
+    if(id===state.empire.activeStore||!selectStore(state.empire,id))return;
+    syncMapView();renderUI();
+  }
   // The sunny city block ends in haze, and SUNNY_VIEW says how far the camera may look: the point under the frame's
   // anchor (where the shop's origin sits at rest) stays inside the shop block and its first ring of streets, and the
   // visible map (the HUD's bottom to the bottom of the map, less the sheet on a phone) stays inside the hazed reach,
@@ -1005,12 +1022,17 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function clampSunnyPan(frame){
     var u=frame.unit*zoom,sq=FLOOR_SQUASH,c=Math.cos(angle),s=Math.sin(angle),view=SUNNY_VIEW;
     var rx=-panX/u,rz=-panY/(u*sq),x=rx*c+rz*s,z=rz*c-rx*s;
-    x=Math.max(view.centre.x[0],Math.min(view.centre.x[1],x));z=Math.max(view.centre.z[0],Math.min(view.centre.z[1],z));
+    // The town runs on east to the open branches and the next lot (branch-districts.js): the east limit moves out with
+    // the east haze, and past the flagship the allowed window slides east with the view, so the north and south
+    // limits stay where they are and the far edge stays inside the haze wherever the view is along the street.
+    var reach=Math.max(0,eastHaze(storeLevels())[0]-MAIN_EAST_HAZE[0]);
+    x=Math.max(view.centre.x[0],Math.min(view.centre.x[1]+reach,x));z=Math.max(view.centre.z[0],Math.min(view.centre.z[1],z));
+    var slide=Math.max(0,Math.min(reach,x-5));
     rx=x*c-z*s;rz=x*s+z*c;
     var hud=document.querySelector('.hud'),top=hud?hud.getBoundingClientRect().bottom:0,bottom=visibleHeight();
     var fit=function(v,lo,hi){return lo>hi?(lo+hi)/2:Math.max(lo,Math.min(hi,v))};
-    rx=fit(rx,view.reach.rx[0]+frame.x/u,view.reach.rx[1]-(width-frame.x)/u);
-    rz=fit(rz,view.reach.rz[0]+Math.max(0,frame.y-top)/(u*sq),view.reach.rz[1]-Math.max(0,bottom-frame.y)/(u*sq));
+    rx=fit(rx,view.reach.rx[0]+slide*c+frame.x/u,view.reach.rx[1]+slide*c-(width-frame.x)/u);
+    rz=fit(rz,view.reach.rz[0]+slide*s+Math.max(0,frame.y-top)/(u*sq),view.reach.rz[1]+slide*s-Math.max(0,bottom-frame.y)/(u*sq));
     panX=-rx*u;panY=-rz*u*sq;
   }
   function zoomAt(next,x,y){next=Math.max(.65,Math.min(4,next));var ratio=next/zoom,frame=cameraFrame();panX=x-(x-centerX)*ratio-frame.x;panY=y-(y-centerY)*ratio-frame.y;zoom=next;applyCamera()}
@@ -2390,8 +2412,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     ctx=figureRecorder.begin(list,{x:x,y:y,z:z});sceneElevation=y;
     try{draw()}catch(e){}finally{ctx=savedCtx;sceneElevation=savedElevation}
   }
-  function drawActiveBranch(api,now){
-    var i=state.empire.activeStore-1,store=state.empire.stores[i];
+  function drawActiveBranch(api,now,id){
+    var i=(id||state.empire.activeStore)-1,store=state.empire.stores[i];
     drawBranchMap(api,i,store.level,motionPreference.matches?0:now,store.projects,{lighting:visualLight(),store:store,contract:activeContract(state.empire),rewards:state.empire.rewards,network:state.empire.network,neighborhood:neighborhood(state.empire,i)});
   }
   // The point at the middle of the screen on the ground, which the 3D sun's shadow box follows.
@@ -2419,7 +2441,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var walking=!still&&!!(gait&&gait.heading)&&(gait.amount===undefined?moving:gait.amount>0);
     characters.push({file:file,id:'branch'+id,x:x,y:sceneElevation,z:z,ground:gait&&gait.ground||0,amount:walking?1:0,heading:gait&&gait.heading,look:employee&&(id===10||id===11)?{x:0,z:1}:null,facing:gait?gait.facing:.3,still:still});
   }
-  function recordBranch(characters){
+  function recordBranch(characters,id){
     var U=32,saved=[unit,centerX,centerY,ctx,sceneElevation],seen=new Map(),out={unit:U,boxes:[],lines:[],polys:[],ellipses:[],faces:[],fixtures:[],props:[]};
     function key(x,y){return Math.round(x*8)+','+Math.round(y*8)}
     branchRec={
@@ -2443,19 +2465,32 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
         face:function(x,y,z,alongZ,draw){out.faces.push({x:x,y:y,z:z,alongZ:alongZ,draw:draw})},
         night:function(fixtures){out.fixtures=fixtures},
         // A Blender prop in place of the 2D drawing, once its model has loaded (until then the drawing stands in).
-        model:function(file,x,z,y,rot,scale){if(!map3d.propReady(file))return false;out.props.push({file:file,x:x,y:(y||0)+sceneElevation,z:z,rot:rot||0,scale:scale});return true}},sceneTime);
+        model:function(file,x,z,y,rot,scale){if(!map3d.propReady(file))return false;out.props.push({file:file,x:x,y:(y||0)+sceneElevation,z:z,rot:rot||0,scale:scale});return true}},sceneTime,id);
     }finally{branchRec=null;unit=saved[0];centerX=saved[1];centerY=saved[2];ctx=saved[3];sceneElevation=saved[4]}
     return out;
   }
-  function renderBranch3d(now,frameDelta){
-    var nightT=nightAmount();render.nightT=nightT;
-    var characters=[],scene=recordBranch(characters);
-    map3d.renderBranch({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:viewCentre(),background:BRANCH_THEMES[state.empire.activeStore-1].background,land:BRANCH_THEMES[state.empire.activeStore-1].land,landKey:state.empire.activeStore,branch:scene,characters:characters});
-    ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
-    // Main-store effects expire while visiting a branch rather than replaying on return.
-    particles.forEach(function(p){p.life-=frameDelta*1.5});particles=particles.filter(function(p){return p.life>0});deliveryDrones.forEach(function(d){d.age+=frameDelta});deliveryDrones=deliveryDrones.filter(function(d){return d.age<d.delay+DRONE_LIFE});
-    if(shopPlayUI)shopPlayUI.position(null,false);
-    updateBranchMarker();updateSpenderTag(true);requestAnimationFrame(render);
+  // The ground x the view spans (the corners of the map left above a phone's sheet, on the ground), so only the districts in or near it are drawn.
+  function viewSpanX(){var c=Math.cos(angle),s=Math.sin(angle),lo=Infinity,hi=-Infinity;
+    var low=Math.min(height,visibleHeight());[[0,0],[width,0],[0,low],[width,low]].forEach(function(q){var rx=(q[0]-centerX)/unit,rz=(q[1]-centerY)/(unit*FLOOR_SQUASH),x=rx*c+rz*s;lo=Math.min(lo,x);hi=Math.max(hi,x)});
+    return[lo,hi]}
+  // The branch districts along the street (branch-districts.js) that are on or near the screen: an open branch's scene
+  // is recorded from its drawing as a visit used to be, moved onto its block (its people and props too); the next
+  // branch's block shows its lot for lease. Their neighbours' terraces join the street's props. Districts off screen
+  // cost nothing.
+  var terraceCache=[];
+  function districtScenes(characters,props){
+    var out=[],span=viewSpanX();
+    shownDistricts(storeLevels()).forEach(function(d){
+      var b=districtBlock(d.index),c=districtCentre(d.index);
+      if(b.x1+4<span[0]||b.x0-4>span[1])return;
+      (terraceCache[d.index]||(terraceCache[d.index]=districtTerraces(d.index))).forEach(function(t){props.push(t)});
+      if(!d.open){var lot=leaseLot(d.index);lot.props.forEach(function(p){props.push(p)});out.push({index:d.index,x:c.x,z:c.z,lease:lot});return}
+      var local=[],scene=recordBranch(local,d.index+1);
+      local.forEach(function(ch){ch.x+=c.x;ch.z+=c.z;ch.id='d'+d.index+ch.id;characters.push(ch)});
+      scene.props.forEach(function(p){props.push(Object.assign({},p,{x:p.x+c.x,z:p.z+c.z}))});scene.props=[];
+      out.push({index:d.index,x:c.x,z:c.z,scene:scene,land:BRANCH_THEMES[d.index].land});
+    });
+    return out;
   }
   function renderFrame3d(now,frameDelta,wallDelta){
     var nightT=nightAmount();render.nightT=nightT;
@@ -2582,8 +2617,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // depth and the scene's haze do both, so only the solid draws are kept.
     figures=figures.filter(function(f){return f.alpha>.99});backdrops=backdrops.filter(function(f){return f.alpha>.99});
     var dronePoses=deliveryDronePoses(frameDelta);deliveryCards(dronePoses,figures);
-    var look=viewCentre();
-    map3d.render({dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,characters:characters,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,flagship:state.flagship,flagshipBuild:isBuilding(state.builds,'flagship')?1-buildShareLeft(state.builds,'flagship'):null,loungeBuild:isBuilding(state.builds,'lounge')?1-buildShareLeft(state.builds,'lounge'):null,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtureBuild:isBuilding(state.builds,'deck')||isBuilding(state.builds,'window')?Object.assign(isBuilding(state.builds,'deck')?{deck:1-buildShareLeft(state.builds,'deck')}:{},isBuilding(state.builds,'window')?{pickupWindow:1-buildShareLeft(state.builds,'window')}:{}):null,fixtures:{deck:deliveryBuilt(),pickupWindow:windowOpen(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2},fixtureGhost:state.lines[4]>0&&kioskCount()<3?{['kiosk'+kioskCount()]:true}:null,menus:kioskMenus(),menuClock:animationTime/1000,cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    var look=viewCentre(),districts=districtScenes(characters,props);
+    map3d.render({districts:districts,hazeEast:eastHaze(storeLevels()),dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,characters:characters,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,loungeOpen:state.lounge>0,loungeTier:state.lounge,flagship:state.flagship,flagshipBuild:isBuilding(state.builds,'flagship')?1-buildShareLeft(state.builds,'flagship'):null,loungeBuild:isBuilding(state.builds,'lounge')?1-buildShareLeft(state.builds,'lounge'):null,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtureBuild:isBuilding(state.builds,'deck')||isBuilding(state.builds,'window')?Object.assign(isBuilding(state.builds,'deck')?{deck:1-buildShareLeft(state.builds,'deck')}:{},isBuilding(state.builds,'window')?{pickupWindow:1-buildShareLeft(state.builds,'window')}:{}):null,fixtures:{deck:deliveryBuilt(),pickupWindow:windowOpen(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2},fixtureGhost:state.lines[4]>0&&kioskCount()<3?{['kiosk'+kioskCount()]:true}:null,menus:kioskMenus(),menuClock:animationTime/1000,cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     // A model that had not loaded when the tabs were painted: try again every half second until all are in.
     var wall=performance.now();if(picturesPending&&!(wall-(renderFrame3d.picturesTried||0)<500)){renderFrame3d.picturesTried=wall;picturesPending=false;paintThumbnails()}
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -2658,6 +2693,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function renderFrame(wallNow){
     if(document.hidden){render.last=wallNow;requestAnimationFrame(render);return}
     keyboardPan(wallNow);
+    if(districtGlide){var glideDt=Math.min(.1,Math.max(0,(wallNow-(render.glideAt===undefined?wallNow:render.glideAt))/1000));stepGlide(glideDt)}render.glideAt=wallNow;
     var frameInterval=state.gameSpeed===0?250:1000/60;
     if(!render.invalidated&&render.drawnAt!==undefined&&wallNow-render.drawnAt<frameInterval-1){requestAnimationFrame(render);return}
     render.drawnAt=wallNow;render.invalidated=false;render.frames=(render.frames||0)+1;
@@ -2675,7 +2711,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       requestAnimationFrame(render);return;
     }
     if(!mapDrawn&&(SNAP||mapSettled(wallNow))){mapDrawn=true;mapRebuilds=0;mapSettleStart=0;mapReveal()}
-    if(state.empire.activeStore)renderBranch3d(now,frameDelta);else renderFrame3d(now,frameDelta,wallDelta);
+    renderFrame3d(now,frameDelta,wallDelta);
   }
   // A courier's round trip, in seconds from its own start. Couriers are based behind the rooftop elevator tower: one
   // slips out from behind it empty, settles over its parcel, takes it on board at DRONE_PICKUP, climbs and heads back
@@ -2796,7 +2832,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function lotMarker(name,open){var b=document.createElement('button');b.className='marker station-sign is-lot';b.dataset.marker=name;b.onclick=open;b.style.display='none';$('markers').appendChild(b);return b}
   // A tap opens a small buy box above the tag (signBuy); a second tap closes it.
   var pickedTag=null;function pickTag(name){pickedTag=pickedTag===name?null:name;buyBoxFor=-1;renderUI()}
-  var windowMarker=lotMarker('window',function(){pickTag('window')}),droneMarker=lotMarker('drone',function(){pickTag('drone')}),kioskMarker=lotMarker('kiosk',function(){pickTag('kiosk')}),counterMarker=lotMarker('counter',function(){pickTag('counter')}),hqMarker=lotMarker('hq',function(){pickTag('hq')});[windowMarker,droneMarker,kioskMarker,counterMarker,hqMarker].forEach(function(el){el.classList.add('is-mini')});
+  var windowMarker=lotMarker('window',function(){pickTag('window')}),droneMarker=lotMarker('drone',function(){pickTag('drone')}),kioskMarker=lotMarker('kiosk',function(){pickTag('kiosk')}),counterMarker=lotMarker('counter',function(){pickTag('counter')}),hqMarker=lotMarker('hq',function(){pickTag('hq')}),leaseMarker=lotMarker('lease',function(){var i=leaseIndex();if(i>=0&&leaseLocked(i)){showTray('empire');document.querySelector('[data-empire-view="growth"]').click();expandBranch(i);$('branchToggle'+i).scrollIntoView({block:'start'})}else pickTag('lease')});[windowMarker,droneMarker,kioskMarker,counterMarker,hqMarker,leaseMarker].forEach(function(el){el.classList.add('is-mini')});
+  var LOCK_ICON='<svg class=sign-lock viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
   var KIOSK_PRICES=[25000,50000,100000],KIOSK_Z=[6.8,5,3.2];
   // What each tag shows now: null when there is nothing to buy there.
   function lotTags(){var tags=[],count=kioskCount(),orders=state.lines[4]>0;
@@ -2812,17 +2849,23 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
         buys:hqBuilding?[{label:'Finish now',price:hqSkip,go:function(){skipBuildNow('flagship')}}]:[{label:hqNext.name+' · +'+Math.round(FLAGSHIP_STEP*100)+'% sales',price:flagshipCost(state.flagship),best:state.money>=flagshipCost(state.flagship),go:purchaseFlagship}]})}
     if(orders&&count<3)tags.push({el:kioskMarker,name:'Kiosk',price:KIOSK_PRICES[count],x:-9.75,y:2.1,z:KIOSK_Z[count],buys:[{label:'Buy',price:KIOSK_PRICES[count],go:[buyKiosk,buySecondKiosk,buyThirdKiosk][count]}]});
     // The next order counter, over its ghost (Kevin, 2026-11-02: like the kiosks).
+    // The next branch's lot along the street (branch-districts.js), for lease: its tag opens the branch, or while it is
+    // still locked says what opens it and takes a tap to its Empire row.
+    var lease=leaseIndex();if(lease>=0){var lot=leaseLot(lease),leaseShut=leaseLocked(lease),leasePrice=storeCost(state.empire,lease);
+      tags.push({el:leaseMarker,name:STORES[lease].name,price:leasePrice,locked:leaseShut,x:lot.tag.x,y:lot.tag.y,z:lot.tag.z,buys:[{label:'Open',price:leasePrice,best:state.money>=leasePrice,go:function(){pickedTag=null;$('branchBuy'+lease).click()}}]})}
     var counterAt=nextOrderCounter();if(counterAt)tags.push({el:counterMarker,name:'Counter',price:counterAt.price,x:counterAt.x,y:2.1,z:counterAt.z,buys:[{label:'Buy',price:counterAt.price,go:expandOrderCounter}]});
     return tags}
+  function leaseIndex(){var shown=shownDistricts(storeLevels()),last=shown[shown.length-1];return last&&!last.open?last.index:-1}
+  function leaseLocked(i){return state.lifetime<STORES[i].goal||!branchOpenable(state.empire,i)}
   // Where the next order counter will stand and what it costs, while Orders is open and a counter is left to buy.
   function nextOrderCounter(){var count=state.orderCounters,price=orderCounterCost(count);if(!state.lines[4]||price===null)return null;var q=orderCounterPositions(count+1)[count];return{x:q.x,z:q.z,price:price}}
-  function renderLotTags(){var shown=lotTags();[windowMarker,droneMarker,kioskMarker,counterMarker,hqMarker].forEach(function(el){var t=shown.filter(function(x){return x.el===el})[0];el.hidden=!t;if(!t)return;
+  function renderLotTags(){var shown=lotTags();[windowMarker,droneMarker,kioskMarker,counterMarker,hqMarker,leaseMarker].forEach(function(el){var t=shown.filter(function(x){return x.el===el})[0];el.hidden=!t;if(!t)return;
     var building=!!t.build&&isBuilding(state.builds,t.build),clock=building?buildClock(buildLeft(state.builds,t.build)):'',key=t.name+'|'+(building?clock:fmt(t.price))+'|'+(state.money>=t.price);
     el.classList.toggle('is-building',building);
     if(building)el.style.setProperty('--build-left',buildShareLeft(state.builds,t.build).toFixed(3));else el.style.removeProperty('--build-left');
-    if(el.dataset.level!==key){el.innerHTML='<span class=station-sign-name>'+t.name+'</span><span class=station-sign-level>'+(building?clock:fmt(t.price))+'</span>';el.dataset.level=key;updateMarkers.key=null}
-    el.setAttribute('aria-label',building?t.name+', being built. Opens in '+clock:t.name+', '+fmt(t.price)+'. Show what to buy');
-    signBuy(el,pickedTag===el.dataset.marker&&(!building||t.buildBuys)?t.buys:null)});
+    if(t.locked)key+='|locked';if(el.dataset.level!==key){el.innerHTML='<span class=station-sign-name>'+t.name+'</span><span class=station-sign-level>'+(building?clock:t.locked?LOCK_ICON:fmt(t.price))+'</span>';el.dataset.level=key;updateMarkers.key=null}
+    el.setAttribute('aria-label',building?t.name+', being built. Opens in '+clock:t.locked?t.name+', for lease. Locked, show what opens it':t.name+', '+fmt(t.price)+'. Show what to buy');
+    signBuy(el,pickedTag===el.dataset.marker&&!t.locked&&(!building||t.buildBuys)?t.buys:null)});
     if(pickedTag&&!shown.some(function(t){return t.el.dataset.marker===pickedTag}))pickedTag=null}
   // The buy box over a picked sign (Kevin, 2026-10-22): what can be bought there, each a tap away. items: [{label, price,
   // go, best, icon}] or null to hide it. A box near the top of the screen opens below its sign instead, so it is never
@@ -2847,12 +2890,12 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     if(shopBrowser)shopBrowser.render();
   }
   function updateMarkers(){
-    var key=[centerX,centerY,unit,width,height,state.idStaff,state.lines.join(),securitySelected,selected,state.lounge,loungeSelected,mapPicked,windowOpen(),deliveryBuilt(),kioskCount(),state.orderCounters,state.pickupWindow.hatch,state.pickupWindow.tips,state.flagship,isBuilding(state.builds,'flagship'),flagshipUnlocked(state.lifetime)].join("|");
+    var key=[centerX,centerY,unit,width,height,state.idStaff,state.lines.join(),securitySelected,selected,state.lounge,loungeSelected,mapPicked,windowOpen(),deliveryBuilt(),kioskCount(),state.orderCounters,state.pickupWindow.hatch,state.pickupWindow.tips,state.flagship,isBuilding(state.builds,'flagship'),flagshipUnlocked(state.lifetime),storeLevels().join(),leaseIndex()>=0&&leaseLocked(leaseIndex())].join("|");
     if(updateMarkers.key===key)return;updateMarkers.key=key;
     var securityPos=project(ID_DESK.x,.62,ID_DESK.z+.1),loungePos=map3d&&map3d.ok?project(-2.7,ROOFTOP.y+1.2,-6.1):project(LOUNGE_DOOR.x,1.5,DISPLAY_Z+.5),labelSize=Math.max(8,Math.min(10,unit*.24))*(width>=780?.85:1)+'px';
     securityMarker.style.fontSize=labelSize;loungeMarker.style.fontSize=labelSize;
     var labels=[{el:securityMarker,x:securityPos.x,y:securityPos.y},{el:loungeMarker,x:loungePos.x,y:loungePos.y}],tags=lotTags();
-    [windowMarker,droneMarker,kioskMarker,counterMarker,hqMarker].forEach(function(el){if(!tags.some(function(t){return t.el===el}))el.style.display='none'});
+    [windowMarker,droneMarker,kioskMarker,counterMarker,hqMarker,leaseMarker].forEach(function(el){if(!tags.some(function(t){return t.el===el}))el.style.display='none'});
     tags.forEach(function(t){var p=project(t.x,t.y,t.z);t.el.style.fontSize=labelSize;labels.push({el:t.el,x:p.x,y:p.y})});
     markerEls.forEach(function(el,i){var station=machinePos[i],pos=project(station.x,.63+station.y,station.z+1.23);el.style.fontSize=labelSize;labels.push({el:el,x:pos.x,y:pos.y})});
     labels.forEach(function(l){l.el.style.display=l.x<-40||l.x>width+40||l.y<-30||l.y>height+30?'none':'block'});
@@ -3175,7 +3218,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     run.onfinish=function(){pane.style.overflow='';if(paneGlide===run)paneGlide=null;if(done)done();fitControls()};
     run.oncancel=function(){pane.style.overflow='';if(paneGlide===run)paneGlide=null};
   }
-  function showTray(name){if(name==='employees')name='factory';if(name==='orders'&&!onlineOpen()){securitySelected=false;loungeSelected=false;selected=5;name='factory'}if(name==='factory')mapPicked=true;if(document.body.dataset.activeTray!==name)playSound('tap',state.sound);document.body.dataset.activeTray=name;if(state.empire.activeStore&&name!=='empire')visitStore(0,false);activeTray=name;var wasCollapsed=$('sheet').classList.contains('collapsed');panelOpen=true;$('sheet').classList.remove('collapsed');$('panelToggle').setAttribute('aria-expanded','true');$('panelToggle').textContent='⌄';var titles={factory:'Stations',employees:'Staff',orders:'Deliveries',boosts:'Research',flowers:'Menu',goals:'Goals',empire:'Empire'};$('panelTitle').textContent=titles[name];var tabName=name==='orders'?'factory':name;trayTabs.forEach(function(t){t.setAttribute('aria-pressed',String(t.getAttribute('data-tray')===tabName))});$('panelBack').hidden=name!=='orders';Array.prototype.forEach.call(document.querySelectorAll('[data-pane]'),function(p){p.hidden=p.getAttribute('data-pane')!==name});if(wasCollapsed)glidePane(document.querySelector('[data-pane="'+name+'"]'),true);else if(paneGlide){paneGlide.cancel();paneGlide=null}fitControls()}
+  function showTray(name){if(name==='employees')name='factory';if(name==='orders'&&!onlineOpen()){securitySelected=false;loungeSelected=false;selected=5;name='factory'}if(name==='factory')mapPicked=true;if(document.body.dataset.activeTray!==name)playSound('tap',state.sound);document.body.dataset.activeTray=name;if(districtFollow&&state.empire.activeStore&&name!=='empire')visitStore(0,false);activeTray=name;var wasCollapsed=$('sheet').classList.contains('collapsed');panelOpen=true;$('sheet').classList.remove('collapsed');$('panelToggle').setAttribute('aria-expanded','true');$('panelToggle').textContent='⌄';var titles={factory:'Stations',employees:'Staff',orders:'Deliveries',boosts:'Research',flowers:'Menu',goals:'Goals',empire:'Empire'};$('panelTitle').textContent=titles[name];var tabName=name==='orders'?'factory':name;trayTabs.forEach(function(t){t.setAttribute('aria-pressed',String(t.getAttribute('data-tray')===tabName))});$('panelBack').hidden=name!=='orders';Array.prototype.forEach.call(document.querySelectorAll('[data-pane]'),function(p){p.hidden=p.getAttribute('data-pane')!==name});if(wasCollapsed)glidePane(document.querySelector('[data-pane="'+name+'"]'),true);else if(paneGlide){paneGlide.cancel();paneGlide=null}fitControls()}
   function collapsePanel(){pickedTag=null;buyBoxFor=-1;if(mapPicked){mapPicked=false;if(window.__shiftReady)renderUI()}var sheet=$('sheet'),wasOpen=!sheet.classList.contains('collapsed');if(wasOpen&&sheet.classList.contains('tall')){settleSheet('collapsed');return}panelOpen=false;$('panelToggle').setAttribute('aria-expanded','false');$('panelToggle').textContent='⌃';if(!wasOpen){fitControls();return}
     // The pane folds away first; the sheet only takes its collapsed shape once nothing is left to hide.
     glidePane(document.querySelector('[data-pane]:not([hidden])'),false,function(){if(!panelOpen){sheet.classList.add('collapsed');fitControls()}});fitControls()}
@@ -3885,9 +3928,27 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   }
   function visitStore(id,collapse){
     if(!selectStore(state.empire,id))return;
-    zoom=1;panX=0;panY=0;syncMapView();
+    lookAtStore(id);syncMapView();
     if(collapse!==false){showTray(id?'empire':'factory');collapsePanel()}
     fitControls();save();renderUI();
+  }
+  // A visit glides the camera along the street to the branch's block (or back to the flagship), easing the zoom to fit
+  // its scene; a drag, pinch or wheel takes over at once. Reduced motion jumps.
+  var districtGlide=null;
+  function storeSpot(id){return id?districtCentre(id-1):{x:0,z:0}}
+  function viewAnchor(){var frame=cameraFrame(),u=frame.unit*zoom,c=Math.cos(angle),s=Math.sin(angle),rx=-panX/u,rz=-panY/(u*FLOOR_SQUASH);return{x:rx*c+rz*s,z:rz*c-rx*s}}
+  function centreOn(x,z){var frame=cameraFrame(),u=frame.unit*zoom,c=Math.cos(angle),s=Math.sin(angle);panX=-(x*c-z*s)*u;panY=-(x*s+z*c)*u*FLOOR_SQUASH;applyCamera()}
+  function lookAtStore(id,animate){
+    var to=storeSpot(id),z1=id?branchFit(id):1;
+    if(animate===false||motionPreference.matches){districtGlide=null;zoom=z1;centreOn(to.x,to.z);return}
+    districtGlide={from:viewAnchor(),to:to,z0:zoom,z1:z1,t:0};render.invalidated=true;
+  }
+  function stepGlide(dt){
+    var g=districtGlide;if(!g)return;
+    var far=Math.abs(g.to.x-g.from.x);g.t=Math.min(1,g.t+dt/Math.min(1.4,.55+far/160));
+    var e=g.t<.5?4*g.t*g.t*g.t:1-Math.pow(-2*g.t+2,3)/2;
+    zoom=g.z0+(g.z1-g.z0)*e;centreOn(g.from.x+(g.to.x-g.from.x)*e,g.from.z+(g.to.z-g.from.z)*e);
+    if(g.t>=1){districtGlide=null;applyCamera()}
   }
   function renderStoreView(){
     var id=state.empire.activeStore;
@@ -3903,7 +3964,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   }
   function updateBranchMarker(){
     var id=state.empire.activeStore;if(!id)return;
-    var f=BRANCH_THEMES[id-1].focus,q=project(f.x,f.y,f.z),el=$('branchMapMarker');
+    var f=BRANCH_THEMES[id-1].focus,o=districtCentre(id-1),q=project(f.x+o.x,f.y,f.z+o.z),el=$('branchMapMarker');
     el.style.transform='translate3d('+q.x+'px,'+q.y+'px,0) translate(-50%,-50%)';el.style.fontSize=Math.max(9,Math.min(12,unit*.38))+'px';
     el.style.visibility=q.x<0||q.x>width||q.y<0||q.y>height?'hidden':'visible';
   }
@@ -3926,7 +3987,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       hintHideTimer=setTimeout(function(){$('gestureHint').classList.add('is-hidden')},4000);
     },30000);
   }
-  canvas.addEventListener('pointerdown',function(e){mapHintActivity();canvas.setPointerCapture(e.pointerId);touches[e.pointerId]={x:e.clientX,y:e.clientY};if(Object.keys(touches).length===1){gestureMoved=false;gestureOrigin={x:e.clientX,y:e.clientY}}else gestureMoved=true});
+  canvas.addEventListener('pointerdown',function(e){mapHintActivity();districtGlide=null;canvas.setPointerCapture(e.pointerId);touches[e.pointerId]={x:e.clientX,y:e.clientY};if(Object.keys(touches).length===1){gestureMoved=false;gestureOrigin={x:e.clientX,y:e.clientY}}else gestureMoved=true});
   canvas.addEventListener('pointermove',function(e){
     if(!touches[e.pointerId])return;mapHintActivity();var before=Object.values(touches),previous=touches[e.pointerId];touches[e.pointerId]={x:e.clientX,y:e.clientY};var after=Object.values(touches);
     if(after.length===1){var dx=e.clientX-previous.x,dy=e.clientY-previous.y;if(Math.hypot(e.clientX-gestureOrigin.x,e.clientY-gestureOrigin.y)>5)gestureMoved=true;if(gestureMoved){panX+=dx;panY+=dy;applyCamera()}}
@@ -3943,10 +4004,10 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
     if(zoom<1.7)zoomAt(2.2,x,y);else{zoom=1;panX=0;panY=0;applyCamera()}
   });
-  canvas.addEventListener('pointerup',function(e){mapHintActivity();if(!gestureMoved&&Object.keys(touches).length===1&&state.empire.activeStore){var br=canvas.getBoundingClientRect(),f=BRANCH_THEMES[state.empire.activeStore-1].focus,q=project(f.x,f.y,f.z);if(Math.hypot(e.clientX-br.left-q.x,e.clientY-br.top-q.y)<Math.max(45,unit*3))manageViewedStore()}else if(!gestureMoved&&Object.keys(touches).length===1){var rect=canvas.getBoundingClientRect(),best=-1,distance=60;machinePos.forEach(function(pos,i){var p=project(pos.x,1.4+(pos.y||0),pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=i;distance=d}});orderCounterPositions(state.orderCounters).forEach(function(pos){var p=project(pos.x,1.4,pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=4;distance=d}});var online=project(-10.7,8.45,1.5),od=Math.hypot(e.clientX-rect.left-online.x,e.clientY-rect.top-online.y);if(od<distance){showTray('orders');renderUI()}else if(best>=0)selectMachine(best);else if(mapPicked){mapPicked=false;renderUI()}}delete touches[e.pointerId];if(Object.keys(touches).length)gestureMoved=true;else gestureOrigin=null});
+  canvas.addEventListener('pointerup',function(e){mapHintActivity();if(!gestureMoved&&Object.keys(touches).length===1&&state.empire.activeStore){var br=canvas.getBoundingClientRect(),f=BRANCH_THEMES[state.empire.activeStore-1].focus,fo=districtCentre(state.empire.activeStore-1),q=project(f.x+fo.x,f.y,f.z+fo.z);if(Math.hypot(e.clientX-br.left-q.x,e.clientY-br.top-q.y)<Math.max(45,unit*3))manageViewedStore()}else if(!gestureMoved&&Object.keys(touches).length===1){var rect=canvas.getBoundingClientRect(),best=-1,distance=60;machinePos.forEach(function(pos,i){var p=project(pos.x,1.4+(pos.y||0),pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=i;distance=d}});orderCounterPositions(state.orderCounters).forEach(function(pos){var p=project(pos.x,1.4,pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=4;distance=d}});var online=project(-10.7,8.45,1.5),od=Math.hypot(e.clientX-rect.left-online.x,e.clientY-rect.top-online.y);if(od<distance){showTray('orders');renderUI()}else if(best>=0)selectMachine(best);else if(mapPicked){mapPicked=false;renderUI()}}delete touches[e.pointerId];if(Object.keys(touches).length)gestureMoved=true;else gestureOrigin=null});
   function cancelPointer(e){mapHintActivity();delete touches[e.pointerId];gestureMoved=true}
   canvas.addEventListener('pointercancel',cancelPointer);canvas.addEventListener('lostpointercapture',cancelPointer);
-  canvas.addEventListener('wheel',function(e){mapHintActivity();e.preventDefault();var r=canvas.getBoundingClientRect();zoomAt(zoom*Math.exp(-e.deltaY*.0015),e.clientX-r.left,e.clientY-r.top)},{passive:false});
+  canvas.addEventListener('wheel',function(e){mapHintActivity();districtGlide=null;e.preventDefault();var r=canvas.getBoundingClientRect();zoomAt(zoom*Math.exp(-e.deltaY*.0015),e.clientX-r.left,e.clientY-r.top)},{passive:false});
   $('zoomIn').onclick=function(){mapHintActivity();zoomAt(zoom*1.2,width/2,height/2)};
   $('zoomOut').onclick=function(){mapHintActivity();zoomAt(zoom/1.2,width/2,height/2)};
   $('centerView').onclick=function(){mapHintActivity();zoom=1;panX=0;panY=0;applyCamera()};
@@ -4094,7 +4155,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   document.addEventListener('keyup',function(e){if(heldPanKeys[e.code])delete heldPanKeys[e.code]});
   window.addEventListener('blur',releasePanKeys);
   if(state.empire.returnReport){renderUI()}
-  syncMapView();if(!state.empire.returnReport&&state.empire.activeStore){showTray('empire');collapsePanel()}
+  // A save viewing a branch opens on its block along the street.
+  var startStore=state.empire.activeStore;syncMapView();districtFollow=true;if(startStore)lookAtStore(startStore,false);
   paintThumbnails();
   selected=slowestStation();fitControls();syncGestureHint();renderUI();telemetry.drain();telemetry.session({returning:!firstRun});telemetry.heartbeat();window.__shiftReady=true;if(!state.shopOpen)openGuideAfterGate(!firstRun);else if(firstRun&&!startGuide.seen())openGuideAfterGate(false);requestAnimationFrame(render);setInterval(tick,50);setInterval(function(){renderUI(true)},250);setInterval(function(){if(!document.hidden)save()},5000);window.addEventListener('beforeunload',function(){if(!document.hidden)save()});window.addEventListener('pagehide',function(){if(!document.hidden)save()});
   document.body.dataset.pageHidden=String(document.hidden);
