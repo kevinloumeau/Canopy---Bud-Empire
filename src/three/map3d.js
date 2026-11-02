@@ -1438,6 +1438,23 @@ function buildShop(world, layout, { box, span, material, textured, model }) {
   [m.zRear, m.zFront].forEach(z => box(shop, m.x, 0, z, .34, m.y1, .34, '#174f36'));
 }
 
+// The floor opening under a tube's brass floor ring, drawn once on a small canvas: the far half of the shaft wall
+// catches a little light, the rest falls to black, and the rim darkens under the ring.
+function holeTexture() {
+  const size = 128, c = document.createElement('canvas'); c.width = c.height = size;
+  const g = c.getContext('2d'), mid = size / 2;
+  g.fillStyle = '#050605'; g.fillRect(0, 0, size, size);
+  const wall = g.createRadialGradient(mid, mid + size * .2, size * .2, mid, mid + size * .1, size * .55);
+  wall.addColorStop(0, 'rgba(5,6,5,0)'); wall.addColorStop(.55, 'rgba(46,30,18,.0)'); wall.addColorStop(.8, 'rgba(58,38,22,.9)'); wall.addColorStop(1, 'rgba(30,20,12,1)');
+  g.fillStyle = wall; g.fillRect(0, 0, size, size);
+  const lip = g.createRadialGradient(mid, mid, size * .38, mid, mid, size * .5);
+  lip.addColorStop(0, 'rgba(0,0,0,0)'); lip.addColorStop(1, 'rgba(0,0,0,.85)');
+  g.fillStyle = lip; g.fillRect(0, 0, size, size);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
 // The production line: the glass tubes as real pipe along the 2D map's own routes (TUBE_RUNS and PACK_STUB in main.js),
 // rounded at each corner the way transferTube rounds them, with brass collars at the ends and floor rings where a tube
 // passes through a slab; the two belts; and the cargo, a parcel every `gap` units at the one shop-wide speed, exactly
@@ -1448,6 +1465,10 @@ function buildTransport(scene, world, transport, { box, material }) {
   const glass = new THREE.MeshStandardMaterial({ color: '#cfeee2', emissive: '#2f5a4a', emissiveIntensity: .25, roughness: .08, metalness: 0, transparent: true, opacity: .46, depthWrite: false });
   const brass = new THREE.MeshStandardMaterial({ color: '#d0a54e', roughness: .3, metalness: .9 });
   const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+  // One shared disc for every floor opening: near-black in the middle, a dark wood-brown wall showing on the far side
+  // (as a shaft seen from above at the map's 30° camera would), and a soft shadow under the brass lip.
+  const holeGeometry = new THREE.CircleGeometry(R + .04, 32).rotateX(-Math.PI / 2);
+  const holeMaterial = new THREE.MeshBasicMaterial({ map: holeTexture(), toneMapped: false });
   // Corners rounded with a quadratic bend, in the map's units (heights unstretched), as transferTube does.
   function rounded(points) {
     const path = [points[0]], radius = .48;
@@ -1478,7 +1499,15 @@ function buildTransport(scene, world, transport, { box, material }) {
     const parts = [mesh];
     const ends = [[tube.points[0], tube.points[1]], [tube.points[tube.points.length - 1], tube.points[tube.points.length - 2]]];
     ends.forEach(([p, q], i) => { if (!(i === 0 ? tube.noCap0 : tube.noCap1)) parts.push(ring(p, trueSpace(p).sub(trueSpace(q)).normalize(), R + .02, .07, brass)); });
-    (tube.floorRings || []).forEach(p => parts.push(ring(p, new THREE.Vector3(0, 1, 0), R + .1, .08, brass)));
+    (tube.floorRings || []).forEach(p => {
+      parts.push(ring(p, new THREE.Vector3(0, 1, 0), R + .1, .08, brass));
+      // The opening the tube drops through: a dark disc filling the ring, just proud of the floor so it never fights it.
+      const hole = new THREE.Mesh(holeGeometry, holeMaterial);
+      hole.position.copy(trueSpace(p)).add(new THREE.Vector3(0, .012, 0));
+      hole.renderOrder = 1;
+      scene.add(hole);
+      parts.push(hole);
+    });
     const segments = [];
     let total = 0;
     for (let i = 1; i < path.length; i++) { const len = Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1], path[i][2] - path[i - 1][2]); segments.push({ a: path[i - 1], b: path[i], len }); total += len; }
