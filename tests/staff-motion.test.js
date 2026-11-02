@@ -70,12 +70,13 @@ for (const file of ['green-uniform-woman.glb', 'chef.glb', 'security-guard.glb',
       assert.ok(miss < .03, file + ' ' + role + ' ' + arm + ' misses by ' + miss.toFixed(3));
     }
   }
-  // Leaning forward takes the head forward (+z), not back.
+  // Staff stand tall at work: the head stays over the body rather than pushing forward of it.
   mixer.setTime(0);
   const at = () => { body.updateWorldMatrix(true, true); const m = new THREE.Matrix4().copy(body.matrixWorld).invert().multiply(head.matrixWorld); return new THREE.Vector3().setFromMatrixPosition(m); };
   const upright = at();
   mixer.setTime(0); poseStaff(rig, 'harvest', 0, 1);
-  assert.ok(at().z > upright.z + .03);
+  const dz = at().z - upright.z;
+  assert.ok(Math.abs(dz) < .015, file + ' head moves ' + dz.toFixed(3));
 });
 
 for (const file of ['beanie-character.glb', 'chef-woman.glb']) test(file + ': a shopper carrying a bag holds it out from the hip, walking or standing', async () => {
