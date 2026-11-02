@@ -339,13 +339,17 @@ export function buildShell(world, layout, { box, span, material, model }) {
   // and row by row, each step a flap folding down over the hinge, the way a Solari board does; on load the whole board
   // flips in from blank. The canvas is repainted (and the texture marked for upload) only while something moves.
   const FLAPS = ' ABCDEFGHIJKLMNOPQRSTUVWXYZ$0123456789.,', STEP = 55, ROLL = 9;
-  let cells = null, boardText = null, rolling = false;
+  let cells = null, boardText = null, rolling = false, boardClock = null;
   function paintBoard(lines, now) {
     const rows = lines.length, cols = lines[0] ? lines[0].length : 21;
-    if (!cells || cells.length !== rows || cells[0].length !== cols) cells = lines.map(l => [...l].map(() => ({ from: ' ', to: ' ', start: 0 })));
+    // The first fill, and a change while the game clock stands still (paused), land at once; otherwise the flaps roll.
+    const first = !cells || cells.length !== rows || cells[0].length !== cols, still = now === boardClock;
+    if (first) cells = lines.map(l => [...l].map(() => ({ from: ' ', to: ' ', start: 0 })));
+    boardClock = now;
     lines.forEach((line, r) => [...line].forEach((ch, k) => {
       const cell = cells[r][k];
-      if (cell.to !== ch) { cell.from = cell.to; cell.to = ch; cell.start = now + k * 35 + r * 90; rolling = true; }
+      if (cell.start > now + 5000) cell.start = now; // the clock went back (a new game)
+      if (cell.to !== ch) { cell.from = first || still ? ch : cell.to; cell.to = ch; cell.start = now + (first || still ? 0 : k * 35 + r * 90); rolling = true; }
     }));
     if (!rolling && boardText !== null) return;
     boardText = '';
@@ -572,7 +576,8 @@ export function buildShell(world, layout, { box, span, material, model }) {
       boardedExit.visible = !open;
       paintSign(open);
       signMat.color.setScalar(open ? 1 : .8);
-      if (frame.menuLines) paintBoard(frame.menuLines, performance.now());
+      // The flaps roll on the game clock (ms), so the board holds still while the game is paused.
+      if (frame.menuLines) paintBoard(frame.menuLines, frame.menuClock === undefined ? performance.now() : frame.menuClock * 1000);
       lampShades.forEach(l => { l.material.emissiveIntensity = open ? .5 + night * 1.2 : 0; });
       sconce.material.emissiveIntensity = .3 + night * 1.4;
       exitLamp.material.emissiveIntensity = .4 + night * 1.2;
