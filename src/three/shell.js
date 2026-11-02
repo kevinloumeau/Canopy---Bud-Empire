@@ -539,6 +539,8 @@ export function buildShell(world, layout, { box, span, material, model }) {
   });
 
   return {
+    // The storefront sign drops in last in the first-load build (intro.js).
+    introSign: layout.wallFaces ? null : marqueeFace,
     update(frame) {
       const night = frame.night || 0, open = !!frame.loungeOpen;
       rotor.rotation.z = -(frame.time || 0) * Math.PI * 2 / 2500; // one turn every 2.5 s (Kevin 2026-10-19)

@@ -11,6 +11,7 @@ import { buildShell } from './shell.js';
 import { buildRooftop } from './rooftop.js';
 import { buildFlagship } from './flagship.js';
 import { buildEntrance } from './entrance.js';
+import { createIntro } from './intro.js';
 import { createBranchLayer } from './branch3d.js';
 import { rigStation, bindStation, moveStation } from './station-motion.js';
 import { compactModel } from './compact.js';
@@ -171,18 +172,24 @@ export function createMap3D(canvas, layout) {
       holder.scale.set(BLENDER_SCALE, BLENDER_SCALE / HEIGHT_SCALE, BLENDER_SCALE);
       holder.position.set(x, y, z);
       parent.add(holder);
+      if (parent === world) shopParts.add(holder);
       if (onReady) onReady(gltf.scene, holder);
       compactModel(gltf.scene);
     }, undefined, e => console.warn('3D map: could not load ' + file, e));
   }
   const lampStandIns = [];
   const terraces = buildTown(world, layout, { box, span, material, textured, lampStandIns });
+  // Everything that is the shop rather than the town round it, for the first-load build (intro.js).
+  const shopParts = new Set(), townEnd = world.children.length;
   buildShop(world, layout, { box, span, material, textured, model });
+  const sceneEnd = scene.children.length;
   const transport = buildTransport(scene, world, layout.transport, { box, material });
+  scene.children.slice(sceneEnd).forEach(o => shopParts.add(o));
   const shell = buildShell(world, layout, { box, span, material, model });
   const rooftop = buildRooftop(world, layout, { box, span, material });
   const flagship = buildFlagship(world, layout, { material });
   buildEntrance(world, layout, { box, span, material, model });
+  world.children.slice(townEnd).forEach(o => shopParts.add(o));
 
   // Stations: one solid per station slot, resized and recoloured from the frame (tier, built, rising in).
   let lastStep = 0;
@@ -283,7 +290,7 @@ export function createMap3D(canvas, layout) {
       holder.scale.set(f.scale, f.scale / HEIGHT_SCALE, f.scale);
       holder.position.set(f.x, f.y, f.z);
       holder.visible = false;
-      world.add(holder);
+      world.add(holder); shopParts.add(holder);
       fixtures[f.key] = holder;
     }, undefined, e => console.warn('3D map: could not load ' + f.file, e));
   });
@@ -755,6 +762,8 @@ export function createMap3D(canvas, layout) {
   carriedBags.castShadow = true; carriedBags.count = 0; carriedBags.frustumCulled = false;
   carriedBags.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   scene.add(carriedBags);
+  shopParts.add(ropes);
+  const intro = createIntro({ parts: shopParts, characters: () => characterCopies.filter(c => c && c.holder.visible).map(c => c.holder), hideWhilePeople: [carriedBags], sign: shell && shell.introSign });
   // The bag swings from the hand like a pendulum (small-angle, damped), driven by how the grip itself speeds up and
   // slows, so it lags the arm's swing as they walk and rocks to a stop when they stop. Worked in the scene's true
   // space (the world group stretches heights), so the bag tilts without shearing.
@@ -1122,7 +1131,11 @@ export function createMap3D(canvas, layout) {
     updateFixtureGhosts(frame);
 
     // A dry frame (snap3d.mjs, while models load) sets the scene up and asks for its models without drawing it.
-    if (!frame.dry) renderer.render(scene, camera);
+    if (!frame.dry) {
+      const posed = intro.apply(frame.intro);
+      renderer.render(scene, camera);
+      if (posed) intro.restore();
+    }
     return true;
   }
 
