@@ -15,7 +15,7 @@ import { stationCost, STATION_LOOK_LEVELS } from './economy.js';
 export const ATM_BUILD = 8000;
 export const ATM_MACHINE_COSTS = [40000, 250000]; // the second and the third machine
 export const ATM_MAX_LEVEL = 100, ATM_MAX_MACHINES = 3;
-const LEVEL_BASE = 400;
+const LEVEL_BASE = 1200;
 // The machines, in the order they are bought: the first stands nearest the corner, the next two either side of it.
 // Each faces +x (the shop); the customer stands at STAND_X in front of it.
 export const ATM_SPOTS = [{ x: -14.2, z: 11.4 }, { x: -14.2, z: 10.25 }, { x: -14.2, z: 12.55 }];
@@ -56,11 +56,14 @@ export function wantsCash(id, level) {
 }
 // Withdrawals a second the machines can take, walking there and back included.
 export function atmCapacity(atm) { return atm.level ? atm.machines / (atmUseSeconds(atm.level) + ATM_WALK_SECONDS) : 0; }
+// Cash users pass the machines in a second or two, so some find them all busy and walk on: about this share get cash
+// (measured in the real shop, 4-hour sim).
+export const ATM_FOUND_FREE = .6;
 // Fees a second, for the income rate and the best-buy maths: customers a second, the share who stop (as many as the
 // machines can take), times the fee on a basket of the given value.
 export function atmIncome(atm, customersPerSecond, basketValue) {
   if (!atm.level || !(customersPerSecond > 0) || !(basketValue > 0)) return 0;
-  const uses = Math.min(customersPerSecond * atmUseShare(atm.level), atmCapacity(atm));
+  const uses = Math.min(customersPerSecond * atmUseShare(atm.level), atmCapacity(atm)) * ATM_FOUND_FREE;
   return uses * atmFeeShare(atm.level) * basketValue;
 }
 

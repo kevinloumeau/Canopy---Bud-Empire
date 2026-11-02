@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {ATM_BUILD,ATM_MACHINE_COSTS,ATM_SPOTS,ATM_STAND_X,migrateAtm,atmLook,atmFeeShare,atmUseShare,atmUseSeconds,wantsCash,atmCapacity,atmIncome,atmLevelCost,atmMachineCost,buyAtm,buyAtmLevel,buyAtmLevels,atmMaxQuote,buyAtmMachine,freeAtm} from '../src/atm.js';
+import {ATM_FOUND_FREE,ATM_BUILD,ATM_MACHINE_COSTS,ATM_SPOTS,ATM_STAND_X,migrateAtm,atmLook,atmFeeShare,atmUseShare,atmUseSeconds,wantsCash,atmCapacity,atmIncome,atmLevelCost,atmMachineCost,buyAtm,buyAtmLevel,buyAtmLevels,atmMaxQuote,buyAtmMachine,freeAtm} from '../src/atm.js';
 
 test('saves keep only a sane level and machine count',()=>{
   assert.deepEqual(migrateAtm(),{level:0,machines:0});
@@ -31,8 +31,8 @@ test('fees follow customers until the machines are full, and a machine adds room
   const one={level:1,machines:1},two={level:1,machines:2};
   assert.equal(atmIncome({level:0,machines:0},2,100),0);
   const light=atmIncome(one,.2,100);
-  assert.ok(Math.abs(light-.2*.3*atmFeeShare(1)*100)<1e-9);
-  assert.ok(Math.abs(atmIncome(one,20,100)-atmCapacity(one)*atmFeeShare(1)*100)<1e-9);
+  assert.ok(Math.abs(light-.2*.3*atmFeeShare(1)*100*ATM_FOUND_FREE)<1e-9);
+  assert.ok(Math.abs(atmIncome(one,20,100)-atmCapacity(one)*atmFeeShare(1)*100*ATM_FOUND_FREE)<1e-9);
   assert.ok(atmIncome(two,20,100)>atmIncome(one,20,100)*1.99);
 });
 test('buying: build, levels, max and machines, never past the cash or the caps',()=>{

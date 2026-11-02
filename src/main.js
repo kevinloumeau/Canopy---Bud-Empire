@@ -531,7 +531,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     tickAbilities(state.abilities,dt);arrival+=dt;state.vipBuzz=Math.max(0,(state.vipBuzz||0)-dt);state.rushTime=Math.max(0,state.rushTime-dt);tickContractBoost(state.empire,dt);var settled=settleContract(state.empire);if(settled)contractSettled(settled);if(state.shopOpen)state.spenderClock=Math.max(0,state.spenderClock-dt);
     if(strains.tickTrend(state.strainTrend,dt,STRAINS.length,state.sold+customerId)){var trending=STRAINS[state.strainTrend.index];notify(trending.name.toUpperCase()+' IS TRENDING · +35% for 8 min'+(state.strains[state.strainTrend.index]?'':' · unlock it to cash in'),'upgrade');renderUI()}
     // Nobody walks in until the sign flips; stations that are already standing still stock the shelves.
-    if(state.shopOpen&&arrival>=arrivalInterval()&&customers.filter(inOrderFlow).length<queueLimit()){
+    if(state.shopOpen&&arrival>=arrivalInterval()&&customers.filter(function(c){return inOrderFlow(c)&&!atAtm(c)}).length<queueLimit()){
       var eventGuest=contractTwist(state.empire)==='vip'&&customerId%3===2;
       var arrivingKind=eventGuest?'vip':customerType(state.empire.reputation,customerId),lounge=wantsLounge(state.lounge,customerId,arrivingKind);
       // Every two to seven minutes a shop event walks in with a customer (shop-events.js): a big spender, rush hour, an
@@ -543,6 +543,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // Before the drone port the window is the only way out: the clerk takes ready orders as the line has room.
     if(windowOpen()&&!deliveryBuilt()&&state.lines[4]>0&&onlineRequestsReady()>0&&state.stock[3]>=onlineSize()){var room=windowRoom(windowLine,state.pickupWindow);if(room)sendOnlineOrders(room,true)}
     customers.forEach(function(c){moveQueuedCustomer(c,dt);if(!c.walking&&c.phase!=='leaving'&&c.phase!=='lounge')c.waitSeconds=(c.waitSeconds||0)+dt;if(c.bag)c.effectAge=(c.effectAge||0)+dt});
+    // Cash users who just finished at the ATM join the back of the ID line: last among the arrivals.
+    customers.filter(function(c){return c.cashRejoin}).forEach(function(c){c.cashRejoin=false;customers.splice(customers.indexOf(c),1);customers.push(c)});
+
     tickThoughts(dt);
     customers=customers.filter(function(c){return c.phase!=='leaving'||c.t<1});
     if(state.lines[5]){
@@ -1795,18 +1798,20 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // side by the monitors, past the line's last row at z 9.3.
   var ID_DESK={x:-8.2,z:10.15},ID_CHECK={x:-9.2,z:9.6},DOORMAN={x:-7.15,z:10.35};
   var ID_ROUTE=[ID_CHECK,{x:-10.6,z:9.6},{x:-11.7,z:9.3},{x:-12.4,z:7.8},{x:-12.4,z:-10}];
+  // A cash user at the ATM (going to it or taking out cash) is out of the ID line: the line closes up behind them.
+  function atAtm(c){return !!c.cash&&c.cash.stage!=='back'}
   function moveToIdCheck(c,dt){
-    var queue=customers.filter(function(q){return q.idChecked===false}),index=queue.indexOf(c);
     var startX=c.x,startZ=c.z,budget=dt*walkSpeed();
     c.phase='idCheck';
     if(c.idDistance===undefined)c.idDistance=routeLength(ID_ROUTE);
-    c.idDistance=Math.max(index*.7,c.idDistance-budget);
+    // A cash user steps out of the line to a free ATM (src/atm.js) as they come up to it, takes out cash, then joins the
+    // back of the line (moved to the end of the arrivals after this step, cashRejoin), so nobody is held up or pushed back.
+    if(!c.cash&&c.wantsCash&&!c.cashDone&&state.atm.level&&c.idDistance>=ATM_WINDOW.from&&c.idDistance<=ATM_WINDOW.to){var machine=freeAtm(customers,state.atm.machines);if(machine>=0)c.cash={machine:machine,stage:'go',t:0}}
+    var queue=customers.filter(function(q){return q.idChecked===false&&!atAtm(q)}),index=queue.indexOf(c);
+    if(!atAtm(c))c.idDistance=Math.max(index*.7,c.idDistance-budget);
     var pos=routePoint(ID_ROUTE,c.idDistance);
-    // A cash user steps out to a free ATM (src/atm.js) while their place is near it, and walks back to it once they have
-    // their cash. Their place in the line holds while they are away, so nobody behind them is held up or pushed.
-    if(!c.cash&&c.wantsCash&&!c.cashDone&&state.atm.level&&index>0&&c.idDistance>=ATM_WINDOW.from&&c.idDistance<=ATM_WINDOW.to){var machine=freeAtm(customers,state.atm.machines);if(machine>=0)c.cash={machine:machine,stage:'go',t:0}}
     if(c.cash){var spot=ATM_SPOTS[c.cash.machine],goal=c.cash.stage==='back'?pos:{x:ATM_STAND_X,z:spot.z},gx=goal.x-c.x,gz=goal.z-c.z,gd=Math.hypot(gx,gz),walk=dt*walkSpeed();
-      if(c.cash.stage==='use'){c.cash.t+=dt;if(c.cash.t>=atmUseSeconds(state.atm.level)){var fee=atmFee();if(fee>0){add(fee);state.atmEarned=(state.atmEarned||0)+fee;if(!motionPreference.matches)tickets.push({x:spot.x,y:2.6,z:spot.z,life:1,text:fmt(fee)})}c.cash.stage='back'}}
+      if(c.cash.stage==='use'){c.cash.t+=dt;if(c.cash.t>=atmUseSeconds(state.atm.level)){var fee=atmFee();if(fee>0){add(fee);state.atmEarned=(state.atmEarned||0)+fee;if(!motionPreference.matches)tickets.push({x:spot.x,y:2.6,z:spot.z,life:1,text:fmt(fee)})}c.cash.stage='back';c.cashRejoin=true}}
       else if(gd<=walk){c.x=goal.x;c.z=goal.z;if(c.cash.stage==='go'){c.cash.stage='use';c.cash.t=0}else{c.cash=null;c.cashDone=true}}
       else{c.x+=gx/gd*walk;c.z+=gz/gd*walk}
     }else{c.x=pos.x;c.z=pos.z}
