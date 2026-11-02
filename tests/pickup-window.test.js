@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {walkupShare,walkupCount,windowSlot,createWindowLine,addWalkups,stepWindowLine,windowFigures,WINDOW_LINE_MAX, migrateWindow, windowLineMax, windowServeSeconds, windowRoom, WINDOW_COST, HATCH_COST, TIPS_COST} from '../src/pickup-window.js';
+import {walkupShare,walkupCount,windowSlot,createWindowLine,addWalkups,stepWindowLine,windowFigures,WINDOW_LINE_MAX, migrateWindow, windowLineMax, windowServeSeconds, windowRoom, WINDOW_COST, WINDOW_MAX_LEVEL, windowLevelCost, windowLevelsFor, windowPay, windowLook, nextWindowLook, walkupFraction, windowRequestBoost} from '../src/pickup-window.js';
 
 const stairs=()=>[[18,-2.2,7],[18,-2.2,8.2],[18,0,12.1],[17.8,0,13.1]];
 const HIDDEN=7.9;
@@ -35,16 +35,43 @@ test('figures face the hatch while standing and never show below the stairs',()=
   for(let t=0;t<30;t+=.1){stepWindowLine(line,.1,stairs);windowFigures(line,HIDDEN).forEach(f=>{assert.ok(f.z>HIDDEN);if(!f.moving)assert.equal(f.facing,1)})}
 });
 
-test('the window is its own buy; saves from before keep it when they have the drone port', () => {
-  assert.deepEqual(migrateWindow(undefined, false), { owned: false, hatch: false, tips: false });
-  assert.deepEqual(migrateWindow(undefined, true), { owned: true, hatch: false, tips: false });
-  assert.deepEqual(migrateWindow({ owned: true, hatch: true, tips: 'yes' }, false), { owned: true, hatch: true, tips: false });
-  assert.deepEqual(migrateWindow({ owned: false, hatch: true, tips: true }, false), { owned: false, hatch: false, tips: false });
-  assert.ok(WINDOW_COST < HATCH_COST && HATCH_COST < TIPS_COST);
+test('the window is its own buy; saves from before keep it, their hatch and tip jar as levels', () => {
+  assert.deepEqual(migrateWindow(undefined, false), { owned: false, level: 0 });
+  assert.deepEqual(migrateWindow(undefined, true), { owned: true, level: 1 });
+  assert.deepEqual(migrateWindow({ owned: true, hatch: true, tips: 'yes' }, false), { owned: true, level: 10 });
+  assert.deepEqual(migrateWindow({ owned: true, hatch: true, tips: true }, false), { owned: true, level: 15 });
+  assert.deepEqual(migrateWindow({ owned: true, hatch: false, tips: true }, false), { owned: true, level: 6 });
+  assert.deepEqual(migrateWindow({ owned: false, hatch: true, tips: true }, false), { owned: false, level: 0 });
+  assert.deepEqual(migrateWindow({ owned: true, level: 40 }, false), { owned: true, level: 40 });
+  assert.deepEqual(migrateWindow({ owned: true, level: 900 }, false), { owned: true, level: WINDOW_MAX_LEVEL });
 });
 
-test('the second hatch lengthens the line and quickens the hand-off', () => {
-  const plain = { owned: true, hatch: false }, hatch = { owned: true, hatch: true };
+test('levels cost more each time, and the cash buys as many as it covers', () => {
+  for (let l = 1; l < WINDOW_MAX_LEVEL; l++) assert.ok(windowLevelCost(l + 1) > windowLevelCost(l));
+  assert.ok(windowLevelCost(1) >= WINDOW_COST * .5);
+  const q = windowLevelsFor(1, windowLevelCost(1) + windowLevelCost(2) + 1);
+  assert.deepEqual(q, { levels: 2, cost: windowLevelCost(1) + windowLevelCost(2) });
+  assert.equal(windowLevelsFor(WINDOW_MAX_LEVEL, 1e30).levels, 0);
+});
+
+test('looks change at the station look levels, and each one adds something', () => {
+  assert.deepEqual([1, 9, 10, 29, 30, 50, 75].map(windowLook), [1, 1, 2, 2, 3, 4, 5]);
+  assert.equal(nextWindowLook(1), 10); assert.equal(nextWindowLook(75), null);
+  const at = level => ({ owned: true, level });
+  assert.deepEqual([1, 10, 30].map(l => windowLineMax(at(l))), [6, 10, 12]);
+  assert.deepEqual([1, 10, 30].map(l => windowServeSeconds(at(l))), [4.5, 3, 2]);
+  assert.equal(windowRequestBoost(at(49)), 1); assert.equal(windowRequestBoost(at(50)), 1.25);
+  assert.deepEqual([1, 30, 75].map(walkupFraction), [1 / 3, 1 / 2, 2 / 3]);
+  assert.equal(windowPay(1), 1); assert.ok(Math.abs(windowPay(9) - 1.4) < 1e-9 && Math.abs(windowPay(10) - 1.45 * 1.5) < 1e-9);
+  assert.ok(Math.abs(windowPay(75) - 4.7 * 1.5 ** 4) < 1e-9, 'Lv 75 pays 4.7 x 1.5^4');
+});
+
+test('the walk-up share follows the level, counted by order number', () => {
+  for (const level of [1, 30, 75]) assert.equal(walkupCount(0, 600, level), Math.round(600 * walkupFraction(level)));
+});
+
+test('the second hatch (Lv 10) lengthens the line and quickens the hand-off', () => {
+  const plain = { owned: true, level: 1 }, hatch = { owned: true, level: 10 };
   assert.equal(windowLineMax(plain), 6); assert.equal(windowLineMax(hatch), 10);
   assert.ok(windowServeSeconds(hatch) < windowServeSeconds(plain));
   const line = createWindowLine(), stairs = () => [[18, 0, 10], [18, 0, 13]];
