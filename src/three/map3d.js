@@ -19,7 +19,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { clone as cloneRigged } from 'three/examples/jsm/utils/SkeletonUtils.js';
-import { bindStaff, poseStaff } from './staff-motion.js';
+import { bindStaff, poseStaff, poseCarry } from './staff-motion.js';
 import { createMapCamera, frameMapCamera, HEIGHT_SCALE } from './camera.js';
 
 // Blender models are built in metres; the map draws 1.69 units a metre (layout.fixtures use the same scale).
@@ -744,7 +744,54 @@ export function createMap3D(canvas, layout) {
     const idle = mixer.clipAction(clip(/^Idle/)), walk = mixer.clipAction(clip(/^Walking$/));
     walk.timeScale = 0;
     idle.play(); walk.play();
-    return (characterCopies[i] = { file, holder, mixer, idle, walk, rig: bindStaff(body) });
+    const bone = name => body.getObjectByName('mixamorig' + name);
+    return (characterCopies[i] = { file, holder, mixer, idle, walk, rig: bindStaff(body), hand: bone('RightHand'), fore: bone('RightForeArm'), carry: 0 });
+  }
+  // A shopper who has picked up their order carries it out: the shop's own kraft pickup bag (the production line's
+  // cargo bag, the same model the counters hand over: kraft body, folded top, rope handles, green Canopy label) hangs
+  // from the right hand, label out, until they leave the map. One instanced mesh for every carrier (184 triangles).
+  const MAX_CARRIED = 64, CARRY_SCALE = 1.05;
+  const carriedBags = new THREE.InstancedMesh(transport ? transport.bagGeometry() : buildCargoKinds()[4].geometry, new THREE.MeshLambertMaterial({ vertexColors: true }), MAX_CARRIED);
+  carriedBags.castShadow = true; carriedBags.count = 0; carriedBags.frustumCulled = false;
+  carriedBags.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  scene.add(carriedBags);
+  // The bag swings from the hand like a pendulum (small-angle, damped), driven by how the grip itself speeds up and
+  // slows, so it lags the arm's swing as they walk and rocks to a stop when they stop. Worked in the scene's true
+  // space (the world group stretches heights), so the bag tilts without shearing.
+  const SWAY_RATE = 7, SWAY_DAMP = 3.2, SWAY_MAX = .32;
+  const grip = new THREE.Vector3(), elbowAt = new THREE.Vector3(), bagAt = new THREE.Vector3(), bagTurn = new THREE.Quaternion(), bagTilt = new THREE.Quaternion(), tiltAxis = new THREE.Vector3(), bagSize = new THREE.Vector3(), bagMatrix = new THREE.Matrix4(), upAxis = new THREE.Vector3(0, 1, 0);
+  function hangBag(copy, yaw, dt) {
+    if (!copy.hand || !copy.fore || carriedBags.count >= MAX_CARRIED) return;
+    if (transport && carriedBags.geometry !== transport.bagGeometry()) carriedBags.geometry = transport.bagGeometry();
+    const geometry = carriedBags.geometry;
+    if (!geometry.boundingBox) geometry.computeBoundingBox();
+    // The grip is a little past the wrist along the forearm (the palm).
+    copy.hand.updateWorldMatrix(true, false);
+    grip.setFromMatrixPosition(copy.hand.matrixWorld);
+    elbowAt.setFromMatrixPosition(copy.fore.matrixWorld);
+    grip.addScaledVector(elbowAt.sub(grip).negate(), .32);
+    const top = geometry.boundingBox.max.y * .94 * CARRY_SCALE;
+    // Sway state: the grip's last place and speed, and the bag's lean (x, z: how far its base has swung out, in
+    // radians) and how fast that lean is changing. A copy that jumped (handed to another person) starts still.
+    let w = copy.sway;
+    if (!w || Math.hypot(grip.x - w.px, grip.z - w.pz) > .6) w = copy.sway = { px: grip.x, pz: grip.z, vx: 0, vz: 0, tx: 0, tz: 0, ox: 0, oz: 0 };
+    if (dt > 0) {
+      const h = Math.min(dt, 1 / 20), vx = (grip.x - w.px) / dt, vz = (grip.z - w.pz) / dt, ax = (vx - w.vx) / dt, az = (vz - w.vz) / dt;
+      w.ox += (-SWAY_RATE * SWAY_RATE * w.tx - SWAY_DAMP * w.ox - ax / top * .5) * h;
+      w.oz += (-SWAY_RATE * SWAY_RATE * w.tz - SWAY_DAMP * w.oz - az / top * .5) * h;
+      w.tx += w.ox * h; w.tz += w.oz * h;
+      const lean = Math.hypot(w.tx, w.tz);
+      if (lean > SWAY_MAX) { w.tx *= SWAY_MAX / lean; w.tz *= SWAY_MAX / lean; w.ox *= .5; w.oz *= .5; }
+      w.vx = vx; w.vz = vz;
+    }
+    w.px = grip.x; w.pz = grip.z;
+    // Lean the bag about its handles: the axis turns straight down toward the swung-out direction.
+    const lean = Math.hypot(w.tx, w.tz);
+    if (lean > 1e-5) bagTilt.setFromAxisAngle(tiltAxis.set(-w.tz / lean, 0, w.tx / lean), lean); else bagTilt.identity();
+    bagTurn.setFromAxisAngle(upAxis, yaw - Math.PI / 2).premultiply(bagTilt);
+    bagAt.set(0, -top, 0).applyQuaternion(bagTilt).add(grip);
+    bagSize.setScalar(CARRY_SCALE);
+    carriedBags.setMatrixAt(carriedBags.count++, bagMatrix.compose(bagAt, bagTurn, bagSize));
   }
   // A figure faces the way it walks; standing, what it is doing (c.look), else the way it last walked. With neither,
   // it turns three-quarters to the camera (which looks back along (1, 0, 1); screen right is (cos 45°, 0, -sin 45°)),
@@ -753,6 +800,7 @@ export function createMap3D(canvas, layout) {
     Object.values(characterSources).forEach(s => s.materials.forEach(m => { m.emissiveIntensity = CHARACTER_LIFT * (1 - night * .85); }));
     characterRim.value = CHARACTER_RIM * (1 - night * .7);
     const seen = new Set();
+    carriedBags.count = 0;
     (list || []).forEach((c, i) => {
       if (!characterSources[c.file]) return;
       const copy = characterCopy(i, c.file), amount = c.still ? 0 : Math.max(0, Math.min(1, c.amount || 0));
@@ -780,7 +828,14 @@ export function createMap3D(canvas, layout) {
           poseStaff(copy.rig, role, c.work.clock, c.work.act, ease01(copy.rig.weight));
         }
       }
+      // The bag arm settles in over a third of a second as the order is handed over, and swings with the stride.
+      copy.carry = c.bag ? (c.still ? 1 : Math.min(1, copy.carry + stepSeconds * 3)) : 0;
+      if (c.bag) {
+        poseCarry(copy.rig, amount * Math.sin(copy.walk.time / loop * 2 * Math.PI), ease01(copy.carry));
+        hangBag(copy, yaw, c.still ? 0 : stepSeconds);
+      }
     });
+    carriedBags.instanceMatrix.needsUpdate = true;
     for (let i = (list || []).length; i < characterCopies.length; i++) if (characterCopies[i]) characterCopies[i].holder.visible = false;
     characterYaw.forEach((v, id) => { if (!seen.has(id)) characterYaw.delete(id); });
   }
@@ -1392,6 +1447,8 @@ function buildTransport(scene, world, transport, { box, material }) {
     mesh.setMatrixAt(mesh.count++, m.compose(at.set(x, base * K, z), turn, one));
   }
   return {
+    // The pickup bag's current geometry (code-built until cargo_items.glb swaps in the Blender one), for carried bags.
+    bagGeometry: () => cargoKinds[4].geometry,
     // The diorama's cargo_items.glb: one empty per kind (Cargo0..Cargo5, base centre at its origin, true metres) whose
     // meshes merge into that kind's vertex-coloured geometry, in place of the code-built stand-in.
     loadModels(loader, base) {
