@@ -107,9 +107,9 @@ export function staffPose(role, clock, act = 1) {
 // GLTFLoader drops the colon from Mixamo's bone names (mixamorig:Hips loads as mixamorigHips).
 const A = 'mixamorig';
 const ARM = { left: [A + 'LeftArm', A + 'LeftForeArm', A + 'LeftHand'], right: [A + 'RightArm', A + 'RightForeArm', A + 'RightHand'] };
-// How much of a pose's lean the spine takes, and of its nod the head (the rest would read as a hunch from the
-// camera's 30 degrees above).
-export const UPRIGHT_LEAN = .25, UPRIGHT_NOD = .55;
+// How much of a pose's lean the spine takes (none) and of its nod the head; any more reads as a hunch from the
+// camera's 30 degrees above. CHEST_UP lifts the chest a touch (radians back on the upper spine) so they stand tall.
+export const UPRIGHT_LEAN = 0, UPRIGHT_NOD = .3, CHEST_UP = .06;
 const POSED = [A + 'Spine', A + 'Spine2', A + 'Neck', A + 'Head', ...ARM.left.slice(0, 2), ...ARM.right.slice(0, 2)];
 
 // The bones one staff copy needs (null when its skeleton isn't the Mixamo one these poses are for).
@@ -179,6 +179,7 @@ export function poseStaff(rig, role, clock, act, w = 1) {
   });
   spine.forEach((bone, i) => bone.quaternion.copy(rig.idle[i]));
   lean(pose.lean * UPRIGHT_LEAN);
+  turnAbout(spine[1], X, -CHEST_UP);
   turnAbout(bones[A + 'Neck'], Y, pose.yaw * .5); turnAbout(bones[A + 'Head'], Y, pose.yaw * .5);
   turnAbout(bones[A + 'Head'], X, pose.pitch * UPRIGHT_NOD);
   arms.forEach(([arm, side]) => reach(bones, ARM[arm], side, out[arm]));
