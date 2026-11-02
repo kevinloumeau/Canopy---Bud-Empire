@@ -2783,16 +2783,20 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // A shop event's tag follows the customer who brought it through the shop; the rush pill counts down a tapped rush.
   var spenderTag=document.createElement('button');spenderTag.type='button';spenderTag.className='marker spender-tag';spenderTag.id='spenderTag';spenderTag.hidden=true;$('markers').appendChild(spenderTag);
   function dressEventTag(kind){if(spenderTag.dataset.event===kind)return;var e=SHOP_EVENTS[kind]||SHOP_EVENTS.spender;spenderTag.dataset.event=kind;spenderTag.innerHTML='<span class="spender-badge" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="'+e.icon+'"/></svg></span>'+e.name;spenderTag.setAttribute('aria-label',e.label)}
-  var rushPeak={rush:0,boost:0},rushPill=document.createElement('div');rushPill.id='rushPill';rushPill.className='rush-pill';rushPill.hidden=true;rushPill.setAttribute('role','status');document.body.appendChild(rushPill);
-  var contractPill=document.createElement('div');contractPill.id='contractPill';contractPill.className='contract-pill';contractPill.hidden=true;contractPill.setAttribute('role','status');document.body.appendChild(contractPill);
+  // The rush/boost and contract pills share one stack under the top bar (Kevin, 2026-11-02): it starts level with the map
+  // buttons and the panel, sits under the cash on desktop, and the wider pill goes on top so the stack reads as a pyramid.
+  var pillStack=document.createElement('div');pillStack.className='center-pills';document.body.appendChild(pillStack);
+  var rushPeak={rush:0,boost:0},rushPill=document.createElement('div');rushPill.id='rushPill';rushPill.className='rush-pill';rushPill.hidden=true;rushPill.setAttribute('role','status');pillStack.appendChild(rushPill);
+  var contractPill=document.createElement('div');contractPill.id='contractPill';contractPill.className='contract-pill';contractPill.hidden=true;contractPill.setAttribute('role','status');pillStack.appendChild(contractPill);
+  function stackPills(){if(rushPill.hidden||contractPill.hidden)return;pillStack.classList.toggle('contract-first',contractPill.offsetWidth>=rushPill.offsetWidth)}
   function spenderInShop(){for(var i=0;i<customers.length;i++){var c=customers[i];if(c.bigSpender&&!c.tapped&&c.phase!=='leaving'&&c.phase!=='lounge')return c}return null}
   spenderTag.onclick=function(){var c=spenderInShop();if(!c)return;c.tapped=true;spenderTag.hidden=true;recordEvent(state.empire,'spender',1);
     var kind=c.shopEvent||'spender',reward=eventReward(kind,incomeRate(),rushLength(state.perks));
     if(reward.rush)state.rushTime=Math.max(state.rushTime,reward.rush);if(reward.cash)add(reward.cash);if(reward.reputation)state.empire.reputation=Math.min(1000,state.empire.reputation+reward.reputation);if(reward.buzz)state.vipBuzz=Math.max(state.vipBuzz||0,reward.buzz);
     notify(eventToast(kind,reward,fmt),'upgrade');telemetry.send('shop_event',{kind:kind});save();renderUI()};
   function updateSpenderTag(branch){var c=branch?null:spenderInShop();spenderTag.hidden=!c;if(c){dressEventTag(c.shopEvent||'spender');var pos=project(c.x,2.75,c.z);spenderTag.style.transform='translate3d('+pos.x+'px,'+pos.y+'px,0) translate(-50%,-100%)'}
-    var rush=state.rushTime>0,boost=state.empire.contracts.boost>0,parts=[];if(rush)parts.push('Rush · 2× sales · '+Math.ceil(state.rushTime)+'s');if(boost)parts.push('Boost · 2× sales · '+clock(state.empire.contracts.boost*1000/Math.max(1,state.gameSpeed||1)));rushPill.hidden=!parts.length;rushPeak.rush=rush?Math.max(rushPeak.rush,state.rushTime):0;rushPeak.boost=boost?Math.max(rushPeak.boost,state.empire.contracts.boost):0;burstRing(rushPill,Math.min(rush?state.rushTime/rushPeak.rush:1,boost?state.empire.contracts.boost/rushPeak.boost:1)*(parts.length?1:0));var text=parts.join('  ·  ');if(rushPill.textContent!==text)rushPill.textContent=text;
-    var c=branch?null:activeContract(state.empire);contractPill.hidden=!c;if(c){var line=c.name+' · '+abbr(c.progress)+' / '+abbr(c.target)+' · '+clock(c.remaining);if(contractPill.textContent!==line)contractPill.textContent=line}}
+    var rush=state.rushTime>0,boost=state.empire.contracts.boost>0,parts=[];if(rush)parts.push('Rush · 2× sales · '+Math.ceil(state.rushTime)+'s');if(boost)parts.push('Boost · 2× sales · '+clock(state.empire.contracts.boost*1000/Math.max(1,state.gameSpeed||1)));rushPill.hidden=!parts.length;rushPeak.rush=rush?Math.max(rushPeak.rush,state.rushTime):0;rushPeak.boost=boost?Math.max(rushPeak.boost,state.empire.contracts.boost):0;burstRing(rushPill,Math.min(rush?state.rushTime/rushPeak.rush:1,boost?state.empire.contracts.boost/rushPeak.boost:1)*(parts.length?1:0));var text=parts.join('  ·  '),restack=false;if(rushPill.textContent!==text){rushPill.textContent=text;restack=true}
+    var c=branch?null:activeContract(state.empire);contractPill.hidden=!c;if(c){var line=c.name+' · '+abbr(c.progress)+' / '+abbr(c.target)+' · '+clock(c.remaining);if(contractPill.textContent!==line){contractPill.textContent=line;restack=true}}if(restack)stackPills()}
   var loungeMarker=document.createElement('button');loungeMarker.className='marker';loungeMarker.dataset.marker='lounge';loungeMarker.onclick=selectLounge;$('markers').appendChild(loungeMarker);
   // Purchase tags for what can be bought next on the map (Kevin, 2026-10-22, like the lounge's): the pickup window on
   // its spot, then the drone port on its deck once the window is open, and a smaller tag over a ghost of the next kiosk.
@@ -4070,7 +4074,11 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   completeBuilds();var offline=collectOffline();if(offline>=1){setTimeout(function(){notify('WHILE AWAY +'+fmt(offline))},500)}
   // The canvas runs full height behind the sheet; the camera frames the building in the strip above it.
   var dockHeight=0;
-  function fitControls(){document.documentElement.style.setProperty('--hud-height',document.querySelector('.hud').getBoundingClientRect().bottom+'px');
+  // The pill stack's centre follows the cash readout (money plus its rate) in the top bar; on a phone the cash sits at the
+  // left, so the stack stays on the screen's centre line there.
+  function centerOnCash(){var root=document.documentElement.style,money=document.querySelector('.hud>.stat'),rate=document.querySelector('.hud>.stat.output');
+    if(!money||innerWidth<=700){root.removeProperty('--cash-x');return}var a=money.getBoundingClientRect(),b=(rate||money).getBoundingClientRect();root.setProperty('--cash-x',((a.left+b.right)/2).toFixed(1)+'px')}
+  function fitControls(){document.documentElement.style.setProperty('--hud-height',document.querySelector('.hud').getBoundingClientRect().bottom+'px');centerOnCash();stackPills();
     var sheet=$('sheet');if(!phoneSheet())sheet.classList.remove('tall');
     // A tall or gliding sheet keeps the last settled dock height, so the map is framed for the half-open sheet it sits behind.
     if(!sheet.classList.contains('tall')&&!sheet.classList.contains('fluid')){dockHeight=sheet.getBoundingClientRect().height;if(!sheet.classList.contains('collapsed')&&!paneGlide)sheetHalfHeight=dockHeight}
@@ -4078,7 +4086,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // While the intro's card is docked over the collapsed tray, the map is framed above the card rather than the tray.
   var guideReserve=0;
   function visibleHeight(){return width>=780?height:Math.max(200,height-Math.max(dockHeight,guideReserve))}
-  if(window.ResizeObserver){new ResizeObserver(fitControls).observe($('sheet'))}
+  if(window.ResizeObserver){new ResizeObserver(fitControls).observe($('sheet'));var cashWatch=new ResizeObserver(centerOnCash);Array.prototype.forEach.call(document.querySelectorAll('.hud>.stat'),function(el){cashWatch.observe(el)})}
   window.addEventListener('resize',fitControls);
   // Desktop conveniences: the hint names the pointer, and speed and tabs have keys when no field has focus.
   // Hint copy follows the active pointer, and drops the keyboard shortcuts where the map is too narrow to fit them.
