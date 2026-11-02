@@ -1,0 +1,49 @@
+/* Empire home as the map (src/empire-map.js): the shops along the street, then HQ and the city buildings, each a 3D
+   icon in a progress ring with a short name and one figure. Forest glass, leaf for progress, brass only on the one
+   best buy (and on a stage going up). */
+.sheet .empire-screen .store-rows{display:none!important}
+.sheet .empire-screen .empire-map{margin:0 0 6px}
+.sheet .empire-screen .empire-map-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:8px 2px 2px;padding:0;border:0;font:600 13.5px/1.2 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-ink)}
+.sheet .empire-screen .empire-map-head:first-child{margin-top:2px}
+.sheet .empire-screen .empire-map-head .empire-map-meta{margin:0;padding:0;font:400 11px/1.2 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-soft);white-space:nowrap}
+.sheet .empire-screen .map-tiles{display:grid;gap:0;margin:0 -6px}
+.sheet .empire-screen .map-tiles.is-shops{grid-template-columns:repeat(6,minmax(0,1fr))}
+.sheet .empire-screen .map-tiles.is-city{grid-template-columns:repeat(5,minmax(0,1fr))}
+.sheet .empire-screen .empire-map button.map-tile{display:grid;grid-template-rows:auto auto auto;justify-items:center;align-content:start;gap:3px;min-width:0;min-height:0;width:auto;margin:0;padding:7px 0 6px;border:0;border-radius:14px;background:none;box-shadow:none;color:var(--ui-ink);font:inherit;text-align:center;opacity:1;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s}
+.sheet .empire-screen .empire-map button.map-tile::after{display:none}
+@media(hover:hover){.sheet .empire-screen .empire-map button.map-tile:hover{background:var(--ui-sheen)}}
+.sheet .empire-screen .empire-map button.map-tile:active{background:var(--ui-sheen);transform:scale(.97)}
+.sheet .empire-screen .empire-map button.map-tile:focus-visible{outline:2px solid var(--ui-brass);outline-offset:-2px}
+
+/* The ring: a track and a leaf stroke for the share done, with the place's 3D icon standing in it. */
+.map-ring{position:relative;display:grid;place-items:center;width:50px;height:50px}
+.map-ring-track{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
+.map-ring-track circle{fill:rgba(255,255,255,.035);stroke:var(--ui-edge);stroke-width:3}
+.map-ring-track .map-ring-fill{fill:none;stroke:var(--ui-leaf-glow);stroke-linecap:round;stroke-dasharray:calc(var(--share,0)*100) 100;transition:stroke-dasharray .4s ease}
+.map-tile-icon{position:relative;width:40px;height:40px;object-fit:contain;object-position:50% 100%;margin-top:-6px;filter:drop-shadow(0 3px 3px #0a140e8c);pointer-events:none}
+.map-tile-icon.is-wide{width:44px;height:44px;margin-top:-2px}
+
+.map-tile-name{display:block;max-width:100%;overflow:hidden;font:600 11px/1.15 'Bricolage Grotesque',system-ui,sans-serif;white-space:nowrap;text-overflow:ellipsis;color:var(--ui-ink)}
+.map-tile-figure{display:inline-flex;align-items:center;justify-content:center;gap:2px;max-width:100%;min-height:17px;padding:0 4px;border-radius:999px;overflow:hidden;font:500 10px/1 'DM Mono',monospace;letter-spacing:-.04em;white-space:nowrap;color:#a8d784}
+.map-per{font-size:8px;letter-spacing:0;opacity:.75}
+.map-lock{flex:0 0 auto;width:10px;height:10px;margin-right:1px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+
+/* States. */
+.map-tile.is-locked .map-tile-icon{filter:grayscale(.85) brightness(.62) drop-shadow(0 2px 2px #0a140e66)}
+.map-tile.is-locked .map-ring-fill{stroke:rgba(242,240,230,.42)}
+.map-tile.is-locked .map-tile-name,.map-tile.is-locked .map-tile-figure{color:var(--ui-soft)}
+.map-tile.is-ready .map-tile-figure{background:#7fa7652e;color:#bfe39a}
+.map-tile.is-max .map-tile-figure{font:600 10px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:0;color:#a8d784}
+.map-tile.is-max .map-ring-fill{stroke:#a8d784}
+.map-tile.is-building .map-ring-fill{stroke:var(--ui-brass)}
+.map-tile.is-building .map-tile-figure{color:var(--ui-brass);font-variant-numeric:tabular-nums}
+.map-tile.is-building .map-ring::after{content:'';position:absolute;inset:-3px;border-radius:50%;box-shadow:0 0 12px #e2c68a40;animation:map-build 1.6s ease-in-out infinite}
+@keyframes map-build{50%{opacity:.25}}
+/* The one best buy. */
+.sheet .empire-screen .empire-map button.map-tile.is-best{background:radial-gradient(60% 55% at 50% 32%,#e2c68a2b,transparent 75%)}
+.map-tile.is-best .map-ring-track circle{stroke:#e2c68a55}
+.map-tile.is-best .map-ring-fill{stroke:var(--ui-brass)}
+.map-tile.is-best .map-tile-figure{background:var(--ui-brass);color:var(--ui-brass-ink);font-weight:600}
+/* The shop under the camera. */
+.map-tile.is-here .map-ring-track circle:first-child{fill:rgba(127,167,101,.16)}
+@media(prefers-reduced-motion:reduce){.map-tile.is-building .map-ring::after{animation:none}.map-ring-fill{transition:none}}

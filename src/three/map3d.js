@@ -1259,6 +1259,8 @@ export function createMap3D(canvas, layout) {
     loungePicture,
     fixturePicture,
     stats,
+    // Dev only (?snap, scripts/map-icons.mjs): the scene's parts, so a script can draw one building on its own.
+    debug: { THREE, scene, world, camera, renderer, haze: hazeUniforms },
     get ok() { return !lost; },
     // Files still loading plus loaded models still waiting for their setup.
     get loading() { return loading + setups.length; },
