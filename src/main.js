@@ -2472,11 +2472,11 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     }
     for(var i=0;i<6;i++){
       var p=machinePos[i];
-      if(i===4)orderCounterPositions(state.orderCounters).forEach(function(q,index){
+      if(i===4){orderCounterPositions(state.orderCounters).forEach(function(q,index){
         var active=customers.some(function(c){return c.orderCounter===index&&atOrderCounter(c,state.orderCounters)&&c.serviceElapsed>0});
         station(4,q.x,0,q.z,state.lines[4],state.lines[4]>0,4);stations[stations.length-1].act=active?1:0;
         if(state.lines[4]>0)staffer('desk'+index,STAFF_MODELS.desks[index%STAFF_MODELS.desks.length],q.x-.35,0,q.z-1.5,{x:0,z:1},.3,{role:'desk',clock:workClock(4)+index*1.7,act:active?1:0});
-      });
+      });}
       else{
         station(i,p.x,p.y||0,p.z,state.lines[i],state.lines[i]>0,i);
         if(state.lines[i]>0)(function(i,p){var spot=STAFF_SPOTS[i]||{dx:-.95,dz:-1.65};
@@ -2484,6 +2484,9 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       }
     }
     stations.push({index:6,x:ID_DESK.x,y:0,z:ID_DESK.z,w:1.3,d:2.4,h:1.6,tier:state.doorBuilt?stationLookFor(6,state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,pop:stationPop(6),selected:mapPicked&&securitySelected});
+    // A see-through copy of the next order counter where it will stand, as the kiosks show theirs (Kevin, 2026-11-02).
+    // It goes last, so every built station keeps its slot.
+    var nextCounter=nextOrderCounter();if(nextCounter){station(4,nextCounter.x,0,nextCounter.z,state.lines[4],true,4);var g=stations[stations.length-1];g.ghost=true;g.selected=false;g.boost=0;g.act=0;g.rise=0;g.pop=1}
     // The doorman stands behind the booth, on the room side, facing the front door across the desk.
     if(state.doorBuilt)staffer('door',STAFF_MODELS.door,DOORMAN.x,0,DOORMAN.z,{x:ID_CHECK.x-DOORMAN.x,z:ID_CHECK.z-DOORMAN.z},1,{role:'guard',clock:sceneTime/1000});
     // The lounge host works the rooftop: behind the bar once there is one, otherwise by the elevator's bridge.
@@ -2784,7 +2787,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function lotMarker(name,open){var b=document.createElement('button');b.className='marker station-sign is-lot';b.dataset.marker=name;b.onclick=open;b.style.display='none';$('markers').appendChild(b);return b}
   // A tap opens a small buy box above the tag (signBuy); a second tap closes it.
   var pickedTag=null;function pickTag(name){pickedTag=pickedTag===name?null:name;buyBoxFor=-1;renderUI()}
-  var windowMarker=lotMarker('window',function(){pickTag('window')}),droneMarker=lotMarker('drone',function(){pickTag('drone')}),kioskMarker=lotMarker('kiosk',function(){pickTag('kiosk')});[windowMarker,droneMarker,kioskMarker].forEach(function(el){el.classList.add('is-mini')});
+  var windowMarker=lotMarker('window',function(){pickTag('window')}),droneMarker=lotMarker('drone',function(){pickTag('drone')}),kioskMarker=lotMarker('kiosk',function(){pickTag('kiosk')}),counterMarker=lotMarker('counter',function(){pickTag('counter')});[windowMarker,droneMarker,kioskMarker,counterMarker].forEach(function(el){el.classList.add('is-mini')});
   var KIOSK_PRICES=[25000,50000,100000],KIOSK_Z=[6.8,5,3.2];
   // What each tag shows now: null when there is nothing to buy there.
   function lotTags(){var tags=[],count=kioskCount(),orders=state.lines[4]>0;
@@ -2794,8 +2797,12 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     else if(windowBuys.length)tags.push({el:windowMarker,name:'Window',price:windowBuys[0][2],x:PICKUP_WINDOW.x,y:2.4,z:PICKUP_WINDOW.z,buys:windowBuys.map(function(u){return{label:u[1],price:u[2],go:function(){purchaseWindowUpgrade(u[0],u[2],u[0]==='hatch'?'SECOND HATCH OPEN · line of 10, quicker hand-off':'TIP JAR OUT · walk-ups pay 25% more')}}})});
     if(windowOpen()&&!deliveryBuilt())tags.push({el:droneMarker,name:'Drones',build:'deck',price:AUTO_DRONE_COST,x:-9.39,y:7.2,z:-.2,buys:[{label:'Build',price:AUTO_DRONE_COST,go:purchaseAutoDrone}]});
     if(orders&&count<3)tags.push({el:kioskMarker,name:'Kiosk',price:KIOSK_PRICES[count],x:-9.75,y:2.1,z:KIOSK_Z[count],buys:[{label:'Buy',price:KIOSK_PRICES[count],go:[buyKiosk,buySecondKiosk,buyThirdKiosk][count]}]});
+    // The next order counter, over its ghost (Kevin, 2026-11-02: like the kiosks).
+    var counterAt=nextOrderCounter();if(counterAt)tags.push({el:counterMarker,name:'Counter',price:counterAt.price,x:counterAt.x,y:2.1,z:counterAt.z,buys:[{label:'Buy',price:counterAt.price,go:expandOrderCounter}]});
     return tags}
-  function renderLotTags(){var shown=lotTags();[windowMarker,droneMarker,kioskMarker].forEach(function(el){var t=shown.filter(function(x){return x.el===el})[0];el.hidden=!t;if(!t)return;
+  // Where the next order counter will stand and what it costs, while Orders is open and a counter is left to buy.
+  function nextOrderCounter(){var count=state.orderCounters,price=orderCounterCost(count);if(!state.lines[4]||price===null)return null;var q=orderCounterPositions(count+1)[count];return{x:q.x,z:q.z,price:price}}
+  function renderLotTags(){var shown=lotTags();[windowMarker,droneMarker,kioskMarker,counterMarker].forEach(function(el){var t=shown.filter(function(x){return x.el===el})[0];el.hidden=!t;if(!t)return;
     var building=!!t.build&&isBuilding(state.builds,t.build),clock=building?buildClock(buildLeft(state.builds,t.build)):'',key=t.name+'|'+(building?clock:fmt(t.price))+'|'+(state.money>=t.price);
     el.classList.toggle('is-building',building);
     if(building)el.style.setProperty('--build-left',buildShareLeft(state.builds,t.build).toFixed(3));else el.style.removeProperty('--build-left');
@@ -2826,12 +2833,12 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     if(shopBrowser)shopBrowser.render();
   }
   function updateMarkers(){
-    var key=[centerX,centerY,unit,width,height,state.idStaff,state.lines.join(),securitySelected,selected,state.lounge,loungeSelected,mapPicked,windowOpen(),deliveryBuilt(),kioskCount(),state.pickupWindow.hatch,state.pickupWindow.tips].join("|");
+    var key=[centerX,centerY,unit,width,height,state.idStaff,state.lines.join(),securitySelected,selected,state.lounge,loungeSelected,mapPicked,windowOpen(),deliveryBuilt(),kioskCount(),state.orderCounters,state.pickupWindow.hatch,state.pickupWindow.tips].join("|");
     if(updateMarkers.key===key)return;updateMarkers.key=key;
     var securityPos=project(ID_DESK.x,.62,ID_DESK.z+.1),loungePos=map3d&&map3d.ok?project(-2.7,ROOFTOP.y+1.2,-6.1):project(LOUNGE_DOOR.x,1.5,DISPLAY_Z+.5),labelSize=Math.max(8,Math.min(10,unit*.24))*(width>=780?.85:1)+'px';
     securityMarker.style.fontSize=labelSize;loungeMarker.style.fontSize=labelSize;
     var labels=[{el:securityMarker,x:securityPos.x,y:securityPos.y},{el:loungeMarker,x:loungePos.x,y:loungePos.y}],tags=lotTags();
-    [windowMarker,droneMarker,kioskMarker].forEach(function(el){if(!tags.some(function(t){return t.el===el}))el.style.display='none'});
+    [windowMarker,droneMarker,kioskMarker,counterMarker].forEach(function(el){if(!tags.some(function(t){return t.el===el}))el.style.display='none'});
     tags.forEach(function(t){var p=project(t.x,t.y,t.z);t.el.style.fontSize=labelSize;labels.push({el:t.el,x:p.x,y:p.y})});
     markerEls.forEach(function(el,i){var station=machinePos[i],pos=project(station.x,.63+station.y,station.z+1.23);el.style.fontSize=labelSize;labels.push({el:el,x:pos.x,y:pos.y})});
     labels.forEach(function(l){l.el.style.display=l.x<-40||l.x>width+40||l.y<-30||l.y>height+30?'none':'block'});
