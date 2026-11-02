@@ -8,9 +8,9 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
   // Research runs down three branches. A fork's two sides sit next to each other in the order below; a run takes one.
   const categories=['Grow','Retail','Delivery'];
   const byKey=key=>'componentBuy'+components.findIndex(c=>c.key===key);
-  const definitions=[['upgradeStorage',0],['boost',0],[byKey('seedBatchLevel'),0],[byKey('curingLevel'),0],[byKey('trendLevel'),0],[byKey('harvestBatchLevel'),0],[byKey('packSpeedLevel'),0],[byKey('breedingLevel'),0],[byKey('growBatchLevel'),0],[byKey('terpeneLevel'),0],[byKey('offlineLevel'),0],
-    [byKey('basketLevel'),1],[byKey('trafficLevel'),1],[byKey('signLevel'),1],[byKey('comfortLevel'),1],[byKey('scannerLevel'),1],[byKey('pickupLevel'),1],[byKey('readyLevel'),1],[byKey('serviceLevel'),1],[byKey('kioskSpeedLevel'),1],[byKey('displayLevel'),1],[byKey('loyaltyLevel'),1],[byKey('durationLevel'),1],
-    [byKey('webLevel'),2],[byKey('onlineBonusLevel'),2],[byKey('fleetLevel'),2],[byKey('cargoLevel'),2],[byKey('repeatLevel'),2]];
+  const definitions=[['upgradeStorage',0],['boost',0],[byKey('growBatchLevel'),0],[byKey('curingLevel'),0],[byKey('trendLevel'),0],[byKey('breedingLevel'),0],[byKey('offlineLevel'),0],
+    [byKey('basketLevel'),1],[byKey('trafficLevel'),1],[byKey('displayLevel'),1],[byKey('loyaltyLevel'),1],[byKey('serviceLevel'),1],
+    [byKey('webLevel'),2],[byKey('onlineBonusLevel'),2],[byKey('fleetLevel'),2],[byKey('cargoLevel'),2]];
   // One label over each undecided fork and an "or" between its sides.
   // An undecided fork sits at the end of its branch as one card: both sides side by side with an "or" between them.
   const forkMarks=FORKS.map(f=>{const box=document.createElement('div');box.className='shop-fork';box.setAttribute('role','group');box.setAttribute('aria-label','Pick one: '+f.name);const head=document.createElement('p');head.className='shop-fork-head';head.innerHTML='<b>Pick one</b><span>The other closes until you reopen</span>';const or=document.createElement('p');or.className='shop-fork-or';or.setAttribute('aria-hidden','true');or.innerHTML='<span>or</span>';const end=document.createElement('i');end.className='shop-fork-end';end.setAttribute('aria-hidden','true');return {fork:f,box,head,or,end,ids:f.sides.map(byKey)}});

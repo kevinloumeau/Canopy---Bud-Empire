@@ -2,14 +2,14 @@
 // come every 10-20 minutes. It goes up in four stages; each stage is paid in full, raised on a build timer like the
 // lounge and the window (builds.js key 'flagship'), and once open lifts sales in every shop by FLAGSHIP_STEP.
 export const FLAGSHIP_STAGES=[
-  {name:'Foundations',cost:120e6,summary:'Break ground. Every shop sells 20% more.'},
-  {name:'Frame',cost:240e6,summary:'The frame goes up. Another 20% on every sale.'},
-  {name:'Glass',cost:400e6,summary:'Glazed and lit. Another 20% on every sale.'},
-  {name:'Grand opening',cost:550e6,summary:'Signed and open. Another 20%, and it lights the skyline.'}
+  {name:'Foundations',cost:1.2e9,summary:'Break ground. Every shop sells 20% more.'},
+  {name:'Frame',cost:2.4e9,summary:'The frame goes up. Another 20% on every sale.'},
+  {name:'Glass',cost:4e9,summary:'Glazed and lit. Another 20% on every sale.'},
+  {name:'Grand opening',cost:5.5e9,summary:'Signed and open. Another 20%, and it lights the skyline.'}
 ];
 export const FLAGSHIP_MAX=FLAGSHIP_STAGES.length,FLAGSHIP_STEP=.2;
-// Unlocks at $600M earned, about 2.5 hours into a first run (twelve-hour sim), so it is there when buys thin out.
-export const FLAGSHIP_UNLOCK_LIFETIME=600e6;
+// Unlocks at $6B earned, about 2 hours into a first run (six-hour sim, after the research rework's 10x faster start), so it is there when buys thin out.
+export const FLAGSHIP_UNLOCK_LIFETIME=6e9;
 
 export function migrateFlagship(value){
   return typeof value==='number'&&Number.isFinite(value)?Math.max(0,Math.min(FLAGSHIP_MAX,Math.floor(value))):0;
