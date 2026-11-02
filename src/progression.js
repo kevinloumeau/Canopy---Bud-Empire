@@ -11,11 +11,11 @@ export const DAY = 86400000;
 export const HOUR = 3600000;
 export const DAILY = [150, 250, 400, 600, 900, 1300, 2500];
 export const STORES = [
-  {name:'Riverside', price:5000, goal:5000, rate:2, detail:'A neighborhood shop with a steady local following.'},
-  {name:'Old Town', price:30000, goal:50000, rate:9, detail:'A boutique destination for the historic district.'},
-  {name:'City Center', price:150000, goal:250000, rate:35, detail:'Your flagship in the heart of the city.'},
-  {name:'Desert Oasis', price:750000, goal:1200000, rate:120, detail:'A destination courtyard shop on the desert highway.'},
-  {name:'Alpine', price:4000000, goal:6000000, rate:400, detail:'A mountain lodge retreat among the pines.'}
+  {name:'Riverside', price:5000, goal:5000, rate:2, share:.05, detail:'A neighborhood shop with a steady local following.'},
+  {name:'Old Town', price:150000, goal:200000, rate:9, share:.08, detail:'A boutique destination for the historic district.'},
+  {name:'City Center', price:1500000, goal:2000000, rate:35, share:.13, detail:'Your flagship in the heart of the city.'},
+  {name:'Desert Oasis', price:5000000, goal:8000000, rate:120, share:.2, detail:'A destination courtyard shop on the desert highway.'},
+  {name:'Alpine', price:25000000, goal:40000000, rate:400, share:.32, detail:'A mountain lodge retreat among the pines.'}
 ];
 // Optional investments keep branch levels and special projects independent.
 export const STORE_PROJECTS = [
@@ -35,10 +35,11 @@ export function buyProject(state,i,j) {
   if(store.level<PROJECT_LEVELS[j]||store.projects[j]||state.money<cost)return false;
   const before=storeRate(state.empire,i);state.money-=cost;store.projects[j]=true;state.empire.network.stores[i].construction=6;state.empire.network.stores[i].incomeGain=storeRate(state.empire,i)-before;recordGoal(state.empire,'invest',1);return true;
 }
-// Branch stars: three goals per branch. Earned stars are kept for good (they survive reopening, like badges). All three
-// add a permanent sales bonus everywhere and open the next branch. Targets live in this table so they are easy to retune.
+// Branch stars: three goals per branch. Earned stars are kept for good (they survive reopening, like badges). Any two
+// open the next branch; all three add a permanent sales bonus everywhere. Targets live in this table so they are easy to
+// retune: a branch serves one customer every 12 s, so each serve target is a fixed wait (150 = 30 min).
 export const STAR_GOALS=[
-  {kind:'served',target:[250,350,500,650,800]},
+  {kind:'served',target:[150,175,200,225,250]},
   {kind:'level',target:[10,10,10,10,10]},
   {kind:'story',target:[3,3,3,3,3]}
 ];
@@ -52,8 +53,9 @@ export const starCount=(p,i)=>[0,1,2].filter(k=>(p.stars?.[i]||0)&1<<k).length;
 export const branchFinished=(p,i)=>starCount(p,i)===3;
 export const finishedBranches=p=>STORES.filter((_,i)=>branchFinished(p,i)).length;
 export function starMultiplier(p){return 1+finishedBranches(p)*STAR_BONUS;}
-// A branch opens once the one before it is finished. A branch already open stays open (older saves keep their stores).
-export function branchOpenable(p,i){return i===0||p.stores[i].level>0||branchFinished(p,i-1);}
+// A branch opens once the one before it has STARS_TO_OPEN stars. A branch already open stays open (older saves keep their stores).
+export const STARS_TO_OPEN=2;
+export function branchOpenable(p,i){return i===0||p.stores[i].level>0||starCount(p,i-1)>=STARS_TO_OPEN;}
 export function starStatus(p,i){
   const name=REGULAR_NAMES[i];
   return STAR_GOALS.map((g,k)=>{const target=g.target[i],earned=!!((p.stars?.[i]||0)&1<<k),value=Math.min(target,starValue(p,i,g.kind));
@@ -83,7 +85,7 @@ const num = (v, fallback=0, max=Number.MAX_SAFE_INTEGER) => Number.isFinite(v) ?
 export function migrateProgression(raw, now=Date.now()) {
   const r=raw && typeof raw==='object' ? raw : {};
   const clock=num(r.clock, now);
-  const p={network:migrateOperations(r.network),version:4, retailBoost:Math.max(1,num(r.retailBoost,1,64)), prestige:num(r.prestige,0,999), ...prestigeShares(r), clock, activeStore:num(r.activeStore,0,STORES.length), career:num(r.career,0,CAREER.length), daily:{
+  const p={network:migrateOperations(r.network),version:4, retailBoost:Math.max(1,num(r.retailBoost,1,64)), flagship:Number.isFinite(r.flagship)&&r.flagship>0?Math.min(r.flagship,1e15):0, prestige:num(r.prestige,0,999), ...prestigeShares(r), clock, activeStore:num(r.activeStore,0,STORES.length), career:num(r.career,0,CAREER.length), daily:{
     day:num(r.daily?.day,0), streak:num(r.daily?.streak,0,7)
   }, stores:STORES.map((_,i)=>({level:num(r.stores?.[i]?.level,0,10),projects:[0,1,2].map(j=>r.stores?.[i]?.projects?.[j]===true), manager:MANAGERS.some(m=>m.id===r.stores?.[i]?.manager)&&!(Array.isArray(r.stores)?r.stores:[]).slice(0,i).some(s=>s?.manager===r.stores?.[i]?.manager)?r.stores[i].manager:'none', featured:PRODUCTS.includes(r.stores?.[i]?.featured)?r.stores[i].featured:'everyday', loyalty:num(r.stores?.[i]?.loyalty,0,1000), served:num(r.stores?.[i]?.served), serviceClock:num(r.stores?.[i]?.serviceClock,0,11)})),
   contracts:migrateContracts(r.contracts), season:migrateSeason(r.season), badges:(Array.isArray(r.badges)?r.badges:[]).filter(b=>typeof b==='string'&&BADGE_ID.test(b)).filter((b,i,a)=>a.indexOf(b)===i).slice(0,200),
@@ -124,9 +126,18 @@ export function claimCareer(state) {
   const m=CAREER[state.empire.career];if(!m || state.lifetime<m.goal)return 0;
   state.empire.career++;state.money+=m.reward;return m.reward;
 }
-export function storeCost(p,i) {return Math.round(STORES[i].price*Math.pow(1.75,p.stores[i].level));}
-// p.retailBoost mirrors the main shop's retail tier (set by main.js) so branches keep pace with tiered baskets; it defaults to 1.
-export function storeRate(p,i) {const l=p.stores[i].level;return l?STORES[i].rate*l*(1+(l-1)*.15)*saleMultiplier(p)*(1+projectBonus(p,i))*managementMultiplier(p,i)*Math.max(1,p.retailBoost||1):0;}
+export const STORE_GROWTH=1.5;
+export function storeCost(p,i) {return Math.round(STORES[i].price*Math.pow(STORE_GROWTH,p.stores[i].level));}
+// A branch earns a share of the flagship's sales (p.flagship, a smoothed walk-in sales rate that main.js keeps), so every
+// branch stays a real part of income however big the main shop grows: at level 10 Riverside adds 15% of the flagship and
+// Alpine matches it. Level 1 starts at 4/13 of that. The flagship's rate already carries the sales multiplier. Before the
+// flagship has a rate (a new shop, or tests) the branch falls back to its fixed base rate, scaled by the retail tier.
+export function storeRate(p,i) {
+  const l=p.stores[i].level;if(!l)return 0;
+  const legacy=STORES[i].rate*l*(1+(l-1)*.15)*saleMultiplier(p)*Math.max(1,p.retailBoost||1);
+  const share=STORES[i].share*(l+3)/13*Math.max(0,p.flagship||0);
+  return Math.max(legacy,share)*(1+projectBonus(p,i))*managementMultiplier(p,i);
+}
 export function branchRate(p) {return STORES.reduce((sum,_,i)=>sum+storeRate(p,i),0);}
 export function buyStore(state,i) {
   if(!STORES[i])return false;

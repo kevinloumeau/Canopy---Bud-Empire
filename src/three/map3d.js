@@ -9,6 +9,7 @@
 import * as THREE from 'three';
 import { buildShell } from './shell.js';
 import { buildRooftop } from './rooftop.js';
+import { buildFlagship } from './flagship.js';
 import { buildEntrance } from './entrance.js';
 import { createBranchLayer } from './branch3d.js';
 import { rigStation, bindStation, moveStation } from './station-motion.js';
@@ -180,6 +181,7 @@ export function createMap3D(canvas, layout) {
   const transport = buildTransport(scene, world, layout.transport, { box, material });
   const shell = buildShell(world, layout, { box, span, material, model });
   const rooftop = buildRooftop(world, layout, { box, span, material });
+  const flagship = buildFlagship(world, layout, { material });
   buildEntrance(world, layout, { box, span, material, model });
 
   // Stations: one solid per station slot, resized and recoloured from the frame (tier, built, rising in).
@@ -958,11 +960,16 @@ export function createMap3D(canvas, layout) {
       // A built station with a loaded model shows the model (one copy per slot, so the order desks can share one).
       const key = s.index + '.' + Math.max(1, s.tier);
       if (s.built) { requestModel(key); requestModel(s.index + '.3'); }
-      const modelKey = models[key] ? key : s.index + '.3';
-      const model = s.built && s.index !== undefined && models[modelKey];
+      const sourceKey = models[key] ? key : s.index + '.3', modelKey = s.ghost ? sourceKey + '|ghost' : sourceKey;
+      const model = s.built && s.index !== undefined && models[sourceKey];
       const clones = group.userData.clones || (group.userData.clones = {});
       const rigs = group.userData.rigs || (group.userData.rigs = {});
-      if (model && !clones[modelKey]) { group.add(clones[modelKey] = model.clone()); rigs[modelKey] = bindStation(clones[modelKey], s.index); }
+      // A ghost (the next order counter) is the same pale see-through copy the next kiosk uses, standing still.
+      if (model && !clones[modelKey]) {
+        group.add(clones[modelKey] = model.clone());
+        if (s.ghost) clones[modelKey].traverse(o => { if (o.isMesh) { o.material = ghostMaterial; o.castShadow = false; o.receiveShadow = false; } });
+        else rigs[modelKey] = bindStation(clones[modelKey], s.index);
+      }
       if (model && rigs[modelKey]) moveStation(rigs[modelKey], s, stepSeconds);
       Object.entries(clones).forEach(([k, c]) => { c.visible = !!model && k === modelKey; });
       body.visible = !model;
@@ -982,6 +989,8 @@ export function createMap3D(canvas, layout) {
         selectionRing.scale.set(r, 1, r);
       }
     });
+    // Slots the frame no longer fills (the next counter's ghost once the last counter is bought) stay hidden.
+    for (let n = frame.stations.length; n < stationMeshes.length; n++) if (stationMeshes[n]) stationMeshes[n].visible = false;
     selectionRing.visible = ringShown;
     let glowing = 0;
     const beat = (frame.time || 0) / 1000;
@@ -1052,6 +1061,7 @@ export function createMap3D(canvas, layout) {
     if (transport && frame.cargo) transport.update(frame.cargo, frame.fixtures);
     if (shell) shell.update(frame);
     if (rooftop) rooftop.update(frame);
+    if (flagship) flagship.update(frame);
     Object.entries(fixtures).forEach(([key, holder]) => { holder.visible = !!(frame.fixtures && frame.fixtures[key]); });
     updateFixtureSites(frame);
     updateFixtureGhosts(frame);
