@@ -110,6 +110,12 @@ const ARM = { left: [A + 'LeftArm', A + 'LeftForeArm', A + 'LeftHand'], right: [
 // How much of a pose's lean the spine takes (none) and of its nod the head; any more reads as a hunch from the
 // camera's 30 degrees above. CHEST_UP lifts the chest a touch (radians back on the upper spine) so they stand tall.
 export const UPRIGHT_LEAN = 0, UPRIGHT_NOD = .3, CHEST_UP = .06;
+// The Meshy hands have no finger bones, so a straight, open hand reads as a stiff paddle with the fingers fanned out.
+// A working hand instead hangs relaxed from the wrist: tipped a little toward the palm (never bent back), the palm
+// turned in toward the body (HAND_TWIST, radians about the hand's length), the fingers drawn in together (the hand
+// bone narrows across the fingers' spread and shortens a touch, which reads as a soft curl), and it breathes with a
+// slow small sway so it is never frozen. Hand bone axes: y runs to the fingertips, x across the spread, z the palm.
+export const HAND_CURL = .55, HAND_TWIST = .6, HAND_SWAY = .07, HAND_NARROW = .72, HAND_SHORT = .9;
 const POSED = [A + 'Spine', A + 'Spine2', A + 'Neck', A + 'Head', ...ARM.left.slice(0, 2), ...ARM.right.slice(0, 2)];
 
 // The bones one staff copy needs (null when its skeleton isn't the Mixamo one these poses are for).
@@ -184,7 +190,19 @@ export function poseStaff(rig, role, clock, act, w = 1) {
   turnAbout(bones[A + 'Head'], X, pose.pitch * UPRIGHT_NOD);
   arms.forEach(([arm, side]) => reach(bones, ARM[arm], side, out[arm]));
   if (w < 1) POSED.forEach((n, i) => bones[n].quaternion.slerp(rig.idle[i], 1 - w));
+  arms.forEach(([arm, side]) => relaxHand(bones[ARM[arm][2]], side, (clock || 0) + (side > 0 ? 0 : 1.9), w));
   return out;
+}
+// Relaxes a working hand (after the mixer's idle has set it): a soft curl toward the palm with a slow, small sway,
+// the palm turned in and the fingers drawn in. side is +1 for the left hand, -1 the right; w eases it in with the work
+// pose. Only the hand bone itself turns and narrows, so where the hand reaches (the wrist) is unchanged.
+const hq = new THREE.Quaternion(), he = new THREE.Euler();
+export function relaxHand(hand, side, t, w = 1) {
+  if (!hand || w <= 0) return;
+  const sway = Math.sin(t * .8) * .6 + Math.sin(t * 1.9 + 1) * .4;
+  he.set(w * (HAND_CURL + HAND_SWAY * sway), -w * side * HAND_TWIST, w * side * HAND_SWAY * .5 * Math.sin(t * .6 + 2));
+  hand.quaternion.multiply(hq.setFromEuler(he));
+  hand.scale.set(hand.scale.x * (1 - (1 - HAND_NARROW) * w), hand.scale.y * (1 - (1 - HAND_SHORT) * w), hand.scale.z);
 }
 // Where a hand is now, in the body frame (for tests).
 export function handInBody(rig, arm) {
@@ -193,4 +211,22 @@ export function handInBody(rig, arm) {
   const p = new THREE.Vector3();
   inBody(rig.bones[ARM[arm][2]], p);
   return p;
+}
+
+// A shopper carrying their pickup bag out: the right arm hangs a little out from the hip, nearly straight, so the bag
+// clears the leg, and swings gently fore and aft with the stride (swing -1..1, from the walk). w (0..1) eases it in as
+// the bag is handed over. Only the right upper arm and forearm turn; the walk or idle keeps everything else.
+export const CARRY_HAND = [.2, -.96, .03];
+export function poseCarry(rig, swing = 0, w = 1) {
+  if (!rig || w <= 0) return null;
+  const { body, bones } = rig, names = ARM.right, upper = bones[names[0]], fore = bones[names[1]];
+  const restUpper = upper.quaternion.clone(), restFore = fore.quaternion.clone();
+  body.updateWorldMatrix(true, false);
+  inv.copy(body.matrixWorld).invert();
+  inBody(upper, sp); inBody(fore, ep); inBody(bones[names[2]], hp);
+  const r = ep.distanceTo(sp) + hp.distanceTo(ep), h = CARRY_HAND;
+  const target = (rig.targets.carry = rig.targets.carry || new THREE.Vector3()).set(sp.x - h[0] * r, sp.y + (h[1] + Math.abs(swing) * .02) * r, sp.z + (h[2] + swing * .09) * r);
+  reach(bones, names, -1, target);
+  if (w < 1) { upper.quaternion.slerp(restUpper, 1 - w); fore.quaternion.slerp(restFore, 1 - w); }
+  return target;
 }

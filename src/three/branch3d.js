@@ -30,7 +30,9 @@ function parseColour(c) {
   return hit;
 }
 
-export function createBranchLayer(parent) {
+// opts.lights: how many point lights its fixtures may light after dark (none for the districts on the main map, where
+// a light count that changed as districts came and went would recompile every material).
+export function createBranchLayer(parent, { lights: lightCount = MAX_LIGHTS } = {}) {
   const group = new THREE.Group();
   group.visible = false;
   parent.add(group);
@@ -101,7 +103,7 @@ export function createBranchLayer(parent) {
   }
 
   const lights = [];
-  for (let i = 0; i < MAX_LIGHTS; i++) {
+  for (let i = 0; i < lightCount; i++) {
     const light = new THREE.PointLight('#ffd9a0', 0, 9, 1.4);
     group.add(light);
     lights.push(light);

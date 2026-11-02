@@ -10,6 +10,7 @@ import * as THREE from 'three';
 import { buildShell } from './shell.js';
 import { buildRooftop } from './rooftop.js';
 import { buildFlagship } from './flagship.js';
+import { buildCityBuildings } from './city-buildings.js';
 import { buildEntrance } from './entrance.js';
 import { createBranchLayer } from './branch3d.js';
 import { rigStation, bindStation, moveStation } from './station-motion.js';
@@ -19,7 +20,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { clone as cloneRigged } from 'three/examples/jsm/utils/SkeletonUtils.js';
-import { bindStaff, poseStaff } from './staff-motion.js';
+import { bindStaff, poseStaff, poseCarry } from './staff-motion.js';
 import { createMapCamera, frameMapCamera, HEIGHT_SCALE } from './camera.js';
 
 // Blender models are built in metres; the map draws 1.69 units a metre (layout.fixtures use the same scale).
@@ -182,6 +183,7 @@ export function createMap3D(canvas, layout) {
   const shell = buildShell(world, layout, { box, span, material, model });
   const rooftop = buildRooftop(world, layout, { box, span, material });
   const flagship = buildFlagship(world, layout, { material });
+  const cityBuildings = buildCityBuildings(world, layout, { material });
   buildEntrance(world, layout, { box, span, material, model });
 
   // Stations: one solid per station slot, resized and recoloured from the frame (tier, built, rising in).
@@ -744,7 +746,54 @@ export function createMap3D(canvas, layout) {
     const idle = mixer.clipAction(clip(/^Idle/)), walk = mixer.clipAction(clip(/^Walking$/));
     walk.timeScale = 0;
     idle.play(); walk.play();
-    return (characterCopies[i] = { file, holder, mixer, idle, walk, rig: bindStaff(body) });
+    const bone = name => body.getObjectByName('mixamorig' + name);
+    return (characterCopies[i] = { file, holder, mixer, idle, walk, rig: bindStaff(body), hand: bone('RightHand'), fore: bone('RightForeArm'), carry: 0 });
+  }
+  // A shopper who has picked up their order carries it out: the shop's own kraft pickup bag (the production line's
+  // cargo bag, the same model the counters hand over: kraft body, folded top, rope handles, green Canopy label) hangs
+  // from the right hand, label out, until they leave the map. One instanced mesh for every carrier (184 triangles).
+  const MAX_CARRIED = 64, CARRY_SCALE = 1.05;
+  const carriedBags = new THREE.InstancedMesh(transport ? transport.bagGeometry() : buildCargoKinds()[4].geometry, new THREE.MeshLambertMaterial({ vertexColors: true }), MAX_CARRIED);
+  carriedBags.castShadow = true; carriedBags.count = 0; carriedBags.frustumCulled = false;
+  carriedBags.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  scene.add(carriedBags);
+  // The bag swings from the hand like a pendulum (small-angle, damped), driven by how the grip itself speeds up and
+  // slows, so it lags the arm's swing as they walk and rocks to a stop when they stop. Worked in the scene's true
+  // space (the world group stretches heights), so the bag tilts without shearing.
+  const SWAY_RATE = 7, SWAY_DAMP = 3.2, SWAY_MAX = .32;
+  const grip = new THREE.Vector3(), elbowAt = new THREE.Vector3(), bagAt = new THREE.Vector3(), bagTurn = new THREE.Quaternion(), bagTilt = new THREE.Quaternion(), tiltAxis = new THREE.Vector3(), bagSize = new THREE.Vector3(), bagMatrix = new THREE.Matrix4(), upAxis = new THREE.Vector3(0, 1, 0);
+  function hangBag(copy, yaw, dt) {
+    if (!copy.hand || !copy.fore || carriedBags.count >= MAX_CARRIED) return;
+    if (transport && carriedBags.geometry !== transport.bagGeometry()) carriedBags.geometry = transport.bagGeometry();
+    const geometry = carriedBags.geometry;
+    if (!geometry.boundingBox) geometry.computeBoundingBox();
+    // The grip is a little past the wrist along the forearm (the palm).
+    copy.hand.updateWorldMatrix(true, false);
+    grip.setFromMatrixPosition(copy.hand.matrixWorld);
+    elbowAt.setFromMatrixPosition(copy.fore.matrixWorld);
+    grip.addScaledVector(elbowAt.sub(grip).negate(), .32);
+    const top = geometry.boundingBox.max.y * .94 * CARRY_SCALE;
+    // Sway state: the grip's last place and speed, and the bag's lean (x, z: how far its base has swung out, in
+    // radians) and how fast that lean is changing. A copy that jumped (handed to another person) starts still.
+    let w = copy.sway;
+    if (!w || Math.hypot(grip.x - w.px, grip.z - w.pz) > .6) w = copy.sway = { px: grip.x, pz: grip.z, vx: 0, vz: 0, tx: 0, tz: 0, ox: 0, oz: 0 };
+    if (dt > 0) {
+      const h = Math.min(dt, 1 / 20), vx = (grip.x - w.px) / dt, vz = (grip.z - w.pz) / dt, ax = (vx - w.vx) / dt, az = (vz - w.vz) / dt;
+      w.ox += (-SWAY_RATE * SWAY_RATE * w.tx - SWAY_DAMP * w.ox - ax / top * .5) * h;
+      w.oz += (-SWAY_RATE * SWAY_RATE * w.tz - SWAY_DAMP * w.oz - az / top * .5) * h;
+      w.tx += w.ox * h; w.tz += w.oz * h;
+      const lean = Math.hypot(w.tx, w.tz);
+      if (lean > SWAY_MAX) { w.tx *= SWAY_MAX / lean; w.tz *= SWAY_MAX / lean; w.ox *= .5; w.oz *= .5; }
+      w.vx = vx; w.vz = vz;
+    }
+    w.px = grip.x; w.pz = grip.z;
+    // Lean the bag about its handles: the axis turns straight down toward the swung-out direction.
+    const lean = Math.hypot(w.tx, w.tz);
+    if (lean > 1e-5) bagTilt.setFromAxisAngle(tiltAxis.set(-w.tz / lean, 0, w.tx / lean), lean); else bagTilt.identity();
+    bagTurn.setFromAxisAngle(upAxis, yaw - Math.PI / 2).premultiply(bagTilt);
+    bagAt.set(0, -top, 0).applyQuaternion(bagTilt).add(grip);
+    bagSize.setScalar(CARRY_SCALE);
+    carriedBags.setMatrixAt(carriedBags.count++, bagMatrix.compose(bagAt, bagTurn, bagSize));
   }
   // A figure faces the way it walks; standing, what it is doing (c.look), else the way it last walked. With neither,
   // it turns three-quarters to the camera (which looks back along (1, 0, 1); screen right is (cos 45°, 0, -sin 45°)),
@@ -753,6 +802,7 @@ export function createMap3D(canvas, layout) {
     Object.values(characterSources).forEach(s => s.materials.forEach(m => { m.emissiveIntensity = CHARACTER_LIFT * (1 - night * .85); }));
     characterRim.value = CHARACTER_RIM * (1 - night * .7);
     const seen = new Set();
+    carriedBags.count = 0;
     (list || []).forEach((c, i) => {
       if (!characterSources[c.file]) return;
       const copy = characterCopy(i, c.file), amount = c.still ? 0 : Math.max(0, Math.min(1, c.amount || 0));
@@ -780,7 +830,14 @@ export function createMap3D(canvas, layout) {
           poseStaff(copy.rig, role, c.work.clock, c.work.act, ease01(copy.rig.weight));
         }
       }
+      // The bag arm settles in over a third of a second as the order is handed over, and swings with the stride.
+      copy.carry = c.bag ? (c.still ? 1 : Math.min(1, copy.carry + stepSeconds * 3)) : 0;
+      if (c.bag) {
+        poseCarry(copy.rig, amount * Math.sin(copy.walk.time / loop * 2 * Math.PI), ease01(copy.carry));
+        hangBag(copy, yaw, c.still ? 0 : stepSeconds);
+      }
     });
+    carriedBags.instanceMatrix.needsUpdate = true;
     for (let i = (list || []).length; i < characterCopies.length; i++) if (characterCopies[i]) characterCopies[i].holder.visible = false;
     characterYaw.forEach((v, id) => { if (!seen.has(id)) characterYaw.delete(id); });
   }
@@ -951,10 +1008,66 @@ export function createMap3D(canvas, layout) {
     lastStep = clockNow;
     return frame.step === undefined ? wall : Math.max(0, Math.min(.4, frame.step));
   }
+  // Branches on the main map (branch-districts.js, main.js districtScenes): every district on or near the screen comes
+  // in the frame with its recorded scene, drawn by a pooled branch layer moved onto its block, and its plot's own
+  // ground (the theme's land and its river or creek, cut to the plot) in the hole the town leaves for it; the next
+  // branch's block shows its lot for lease behind a hoarding. A plot not on show is plain paving. The east haze moves
+  // out with the empire (frame.hazeEast).
+  const districtLayers = [], districtGrounds = {}, PLOT_FILL = '#d2c8ab';
+  function districtGround(d) {
+    const key = d.index + (d.lease ? ':lease' : d.scene ? ':open' : ':plain');
+    if (districtGrounds[key]) return districtGrounds[key];
+    const group = new THREE.Group(), p = layout.districtPlots[d.index];
+    group.userData.land = true;
+    if (d.scene) {
+      const spec = d.land, c = { x: p.x0 - spec.plot[0], z: p.z0 - spec.plot[2] };
+      let ground = [[p.x0, p.x1, p.z0, p.z1]];
+      const strips = (spec.strips || []).map(w => [w.x0 === undefined ? p.x0 : c.x + w.x0, w.x1 === undefined ? p.x1 : c.x + w.x1, w.z0 === undefined ? p.z0 : c.z + w.z0, w.z1 === undefined ? p.z1 : c.z + w.z1].map((v, k) => Math.max(k < 2 ? p.x0 : p.z0, Math.min(k < 2 ? p.x1 : p.z1, v))));
+      strips.forEach(r => { ground = subtract(ground, r); });
+      ground.forEach(([x0, x1, z0, z1]) => span(group, x0, x1, spec.y - 1.2, spec.y, z0, z1, spec.colour, { cast: false }));
+      strips.forEach((r, i) => { if (r[1] > r[0] && r[3] > r[2]) span(group, r[0], r[1], spec.y - 1.2, spec.strips[i].y, r[2], r[3], spec.strips[i].colour, { cast: false }); });
+    } else {
+      const P = layout.plazaY;
+      span(group, p.x0, p.x1, P - 1, d.lease ? P + .03 : P, p.z0, p.z1, d.lease ? '#a7b58f' : PLOT_FILL, { cast: false });
+      if (d.lease) {
+        // A low post-and-rail fence a unit in from the plot's edge, open at the front's middle where the tag stands.
+        const x0 = p.x0 + .8, x1 = p.x1 - .8, z0 = p.z0 + .8, z1 = p.z1 - .8, mid = (x0 + x1) / 2, gap = d.lease.gap || 3, wood = '#8a6b4c';
+        const runs = [[x0, z0, x1, z0], [x0, z0, x0, z1], [x1, z0, x1, z1], [x0, z1, mid - gap, z1], [mid + gap, z1, x1, z1]];
+        runs.forEach(([a0, b0, a1, b1]) => {
+          const along = a1 - a0 > b1 - b0, len = along ? a1 - a0 : b1 - b0, n = Math.max(1, Math.round(len / 2.4));
+          for (let k = 0; k <= n; k++) { const x = along ? a0 + len * k / n : a0, z = along ? b0 : b0 + len * k / n; span(group, x - .09, x + .09, P, P + 1.05, z - .09, z + .09, wood); }
+          [.45, .85].forEach(h => span(group, a0 - .05, (along ? a1 : a0) + .05, P + h, P + h + .07, b0 - .05, (along ? b0 : b1) + .05, '#a9855d'));
+        });
+      }
+    }
+    world.add(group);
+    return (districtGrounds[key] = group);
+  }
+  function placeDistricts(list, night) {
+    const shown = new Set();
+    let used = 0;
+    (list || []).forEach(d => {
+      if (d.scene) {
+        const layer = districtLayers[used] || (districtLayers[used] = createBranchLayer(world, { lights: 0 }));
+        used++;
+        layer.group.visible = true; layer.group.position.set(d.x, 0, d.z);
+        layer.update(d.scene, night);
+      }
+      shown.add(d.index);
+      const g = districtGround(d); g.visible = true; g.userData.shownFrame = frameClock;
+    });
+    for (let n = used; n < districtLayers.length; n++) districtLayers[n].group.visible = false;
+    Object.values(districtGrounds).forEach(g => { if (g.userData.shownFrame !== frameClock) g.visible = false; });
+    // Plots not on show: plain paving, so no hole ever shows.
+    (layout.districtPlots || []).forEach((p, i) => { if (!shown.has(i)) { const g = districtGround({ index: i }); g.visible = true; g.userData.shownFrame = frameClock; } });
+  }
+
   function render(frame) {
     if (lost) return false;
     branchMode(false);
     const night = view(frame, daySky);
+    if (frame.hazeEast) { hazeUniforms.hazeX.value.z = frame.hazeEast[0]; hazeUniforms.hazeX.value.w = frame.hazeEast[1]; }
+    placeDistricts(frame.districts, night);
 
     const stepSeconds = frameStep(frame);
     let ringShown = false;
@@ -1018,7 +1131,7 @@ export function createMap3D(canvas, layout) {
     const behind = frame.backdrops || [];
     behind.forEach((f, i) => place(f, backdrop(i)));
     for (let i = behind.length; i < backdrops.length; i++) backdrops[i].visible = false;
-    terraces.forEach(t => { t.visible = !propSources[t.userData.model]; t.renderOrder = frame.backdrops ? -2 : 0; t.material.colorWrite = !frame.backdrops; });
+    terraces.forEach(t => { t.visible = !propSources[t.userData.model] && !(t.userData.lot && frame.cityClaimed && frame.cityClaimed[t.userData.lot]); t.renderOrder = frame.backdrops ? -2 : 0; t.material.colorWrite = !frame.backdrops; });
     // With figures standing in, the capsules only cast shadows.
     people.material.colorWrite = people.material.depthWrite = !frame.figures;
     materials.forEach((m, key) => { if (key.endsWith('{"name":"street"}')) m.colorWrite = m.depthWrite = !frame.figures; });
@@ -1067,6 +1180,7 @@ export function createMap3D(canvas, layout) {
     if (shell) shell.update(frame);
     if (rooftop) rooftop.update(frame);
     if (flagship) flagship.update(frame);
+    cityBuildings.update(frame);
     Object.entries(fixtures).forEach(([key, holder]) => { holder.visible = !!(frame.fixtures && frame.fixtures[key]); });
     updateFixtureSites(frame);
     updateFixtureGhosts(frame);
@@ -1154,12 +1268,14 @@ function buildTown(world, layout, { box, span, material, textured, lampStandIns 
     });
     rects.forEach(([a0, a1, b0, b1]) => textured(span(world, a0, a1, y0, y1, b0, b1, colour, { cast: false }), name));
   };
-  slab(-L, L, G - .4, G, -L, L, layout.colours.asphalt, 'asphalt');
+  // The streets along x run on east to the branch districts (layout.eastEnd), so the ground does too.
+  const E = layout.eastEnd || L;
+  slab(-L, E, G - .4, G, -L, L, layout.colours.asphalt, 'asphalt');
   const edges = along => {
     const at = roads.filter(r => r.along === along).map(r => r.at).sort((a, b) => a - b), out = [];
     let from = -L;
     at.forEach(a => { out.push([from, a - rw / 2]); from = a + rw / 2; });
-    out.push([from, L]);
+    out.push([from, along === 'z' ? E : L]);
     return out;
   };
   // Roads along x run at fixed z, so they cut the blocks' z range; roads along z cut the x range.
@@ -1184,7 +1300,7 @@ function buildTown(world, layout, { box, span, material, textured, lampStandIns 
     // Each block steps aside for its Blender model once that loads (b.model).
     const wall = span(world, b.x0, b.x1, P, b.h, b.z0, b.z1, b.wall, { opts: { name: 'terrace' } });
     const roof = span(world, b.x0 - .15, b.x1 + .15, b.h, b.h + .35, b.z0 - .15, b.z1 + .15, b.roof, { opts: { name: 'terrace' } });
-    wall.userData.model = roof.userData.model = b.model;
+    wall.userData.model = roof.userData.model = b.model; wall.userData.lot = roof.userData.lot = b.lot;
     terraces.push(wall, roof);
   });
   world.add(silhouettes(layout.silhouettes || [], P, material));
@@ -1246,7 +1362,9 @@ function buildShop(world, layout, { box, span, material, textured, model }) {
   const shop = new THREE.Group();
   world.add(shop);
   layout.floors.forEach((f, fi) => {
-    const left = (f.x || 0) - f.w / 2, right = (f.x || 0) + f.w / 2, rear = f.z - f.d / 2, front = f.z + f.d / 2;
+    // The ground floor's timber stops at the storefront's outer face (Kevin, 2026-11-02: it ran out onto the sidewalk).
+    const outer = !fi && layout.entrance ? layout.entrance.x : -Infinity;
+    const left = Math.max(outer, (f.x || 0) - f.w / 2), right = (f.x || 0) + f.w / 2, rear = f.z - f.d / 2, front = f.z + f.d / 2;
     textured(span(shop, left, right, f.y - (fi ? .32 : .02), f.y, rear, front, fi === 2 ? '#e9e4d8' : fi ? '#e4ddcc' : '#c9965f', { cast: fi > 0 }), ['herringbone', 'timber', 'concrete'][fi]);
     // The walls themselves are the shell's (shell.js).
     // A brass rail along the open front edge of the upper floors.
@@ -1397,6 +1515,8 @@ function buildTransport(scene, world, transport, { box, material }) {
     mesh.setMatrixAt(mesh.count++, m.compose(at.set(x, base * K, z), turn, one));
   }
   return {
+    // The pickup bag's current geometry (code-built until cargo_items.glb swaps in the Blender one), for carried bags.
+    bagGeometry: () => cargoKinds[4].geometry,
     // The diorama's cargo_items.glb: one empty per kind (Cargo0..Cargo5, base centre at its origin, true metres) whose
     // meshes merge into that kind's vertex-coloured geometry, in place of the code-built stand-in.
     loadModels(loader, base) {

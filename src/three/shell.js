@@ -482,6 +482,20 @@ export function buildShell(world, layout, { box, span, material, model }) {
     span(shell, x0 - .02, x1 + .02, bb.h - .07, bb.h, z0 - .03, z1 + .03, '#e1dbc0');
   });
 
+  // Door sills (Kevin, 2026-11-02): a cream stone plate under each outside door's frame, a brass nosing on its street
+  // edge, where the timber meets the pavement. The street door's plate runs from the storefront's last mullion past
+  // the post; the exit door's sits in the rear wall's doorway.
+  const sill = (x0, x1, z0, z1, nose) => {
+    span(shell, x0, x1, 0, .045, z0, z1, '#e1dbc0', { cast: false });
+    span(shell, ...nose, { cast: false });
+  };
+  if (layout.entrance) {
+    const ex = layout.entrance.x;
+    sill(ex - .16, ex + .2, 8.7, 11.5, [ex - .18, ex - .14, 0, .055, 8.7, 11.5, BRASS]);
+  }
+  const xd = s.exitDoor;
+  sill(xd.x0 - .08, xd.x1 + .08, gRear - .3, gRear + .14, [xd.x0 - .08, xd.x1 + .08, 0, .055, gRear - .32, gRear - .28, BRASS]);
+
   // Foliage: one instanced leaf mesh for the planter's shrubs and tree, the hanging plants and the baskets.
   const leafSpots = [];
   // The planter's shrubs and its tree are soft rounded clumps, like the town's trees.
