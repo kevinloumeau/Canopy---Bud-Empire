@@ -1004,13 +1004,19 @@ export function createMap3D(canvas, layout) {
     props.forEach(p => propReady(p.file));
     placeProps(props, night);
     placeFigures(frame.figures || [], night);
-    const clockNow = performance.now(), stepSeconds = Math.min(.1, (clockNow - (lastStep || clockNow)) / 1000);
-    lastStep = clockNow;
+    const stepSeconds = frameStep(frame);
     placeCharacters(frame.characters, stepSeconds, night);
     if (!frame.dry) renderer.render(scene, camera);
     return true;
   }
 
+  // How far the map's motion moves this frame: the game's own clock (frame.step, game seconds), so people, staff and
+  // stations stand still while the game is paused and keep pace with 2x and 4x; wall time only for a caller without one.
+  function frameStep(frame) {
+    const clockNow = performance.now(), wall = Math.min(.1, (clockNow - (lastStep || clockNow)) / 1000);
+    lastStep = clockNow;
+    return frame.step === undefined ? wall : Math.max(0, Math.min(.4, frame.step));
+  }
   // Branches on the main map (branch-districts.js, main.js districtScenes): every district on or near the screen comes
   // in the frame with its recorded scene, drawn by a pooled branch layer moved onto its block, and its plot's own
   // ground (the theme's land and its river or creek, cut to the plot) in the hole the town leaves for it; the next
@@ -1072,8 +1078,7 @@ export function createMap3D(canvas, layout) {
     if (frame.hazeEast) { hazeUniforms.hazeX.value.z = frame.hazeEast[0]; hazeUniforms.hazeX.value.w = frame.hazeEast[1]; }
     placeDistricts(frame.districts, night);
 
-    const clockNow = performance.now(), stepSeconds = Math.min(.1, (clockNow - (lastStep || clockNow)) / 1000);
-    lastStep = clockNow;
+    const stepSeconds = frameStep(frame);
     let ringShown = false;
     frame.stations.forEach((s, i) => {
       const group = stationMesh(i), { body, top } = group.userData;

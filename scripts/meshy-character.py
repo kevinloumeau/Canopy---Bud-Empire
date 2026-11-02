@@ -109,13 +109,16 @@ for side in ('Left', 'Right'):
     fixes[side + 'Shoulder'] = rot(best[1], best[2])
     turn_keys(idle, side + 'Shoulder', fixes[side + 'Shoulder'], sb)
     print('SHOULDER %s turn %d,%d -> off by %.3f' % (side, best[1], best[2], best[0]))
+# The wrist must land on its OWN side: matching only its distance out let the overalls, punk-jacket and trench-coat
+# builds swing an arm across the chest to the far hip (2026-11-02), which bent it through the body in the game.
 for side in ('Left', 'Right'):
     base = [[k.co[1] for k in c.keyframe_points] for c in quat_keys(idle, side + 'Arm')]
-    w = wrist(side); best = (abs(abs(w.x) - ARM_OUT) + abs(w.y), 0, 0)
+    own = math.copysign(ARM_OUT, joint(side).x - (arm.matrix_world @ arm.pose.bones['mixamorig:Hips'].head).x / height * 1.36)
+    w = wrist(side); best = (abs(w.x - own) + abs(w.y), 0, 0)
     for ax in range(-30, 31, 3):
         for az in range(-36, 37, 3):
             turn_keys(idle, side + 'Arm', rot(ax, az), base); w = wrist(side)
-            score = abs(abs(w.x) - ARM_OUT) + abs(w.y)
+            score = abs(w.x - own) + abs(w.y)
             if score < best[0] - 1e-4: best = (score, ax, az)
     turn_keys(idle, side + 'Arm', Quaternion(), base)
     fixes[side + 'Arm'] = rot(best[1], best[2])
