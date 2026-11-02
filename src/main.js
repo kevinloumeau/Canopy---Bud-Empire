@@ -401,11 +401,13 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var ROOFTOP_SPOTS=[[-3.9,-6.7,.3],[-1.3,-6.7,-.3],[-2.6,-6.25,.3],[-1,-7.85,-.3],[2.7,-7.45,-.3],[4.7,-7.45,-.3],[2.5,-6,.3],[3.5,-5.25,-.3],[2.2,-4.85,.3],[-4.5,-5,.3],[-2.9,-5,-.3],[-1.7,-5,.3],[-.1,-5,-.3],[-2.3,-3.95,.3]];
   // The runner render's top face in sprite px: its near-left, near-right and far-left corners, and its length over width.
   var LOUNGE_RUNNER_PIN={left:[0,274],bottom:[146,360],top:[474,0],ratio:3.25};
-  // The rope runs down the red carpet in front of the door, on the guests' side of the room.
-  // Every other guest stands a half step to the side so the line reads as people, not one stacked sprite.
-  function loungeWaitSpot(place){return place<=0?LOUNGE_DOOR:{x:LOUNGE_DOOR.x+(place%2?.13:-.07),z:LOUNGE_DOOR.z+.4+Math.min(place,LOUNGE_ROPE-1)*.37}}
+  // The rope runs down the red carpet from the curtain, turns along z 2.2 at its end and back up the approach the
+  // guests walk in by (Kevin, 2026-11-02: the old 0.37 spacing stacked guests into each other). Guests join it at
+  // its tail, ROPE_GAP apart like the shop's other lines, and walk up behind the guest in front (never through them).
+  // Seven places fit before the turn back up the approach, and LOUNGE_ROPE lets no more than seven head for it.
+  var LOUNGE_ROPE_ROUTE=[LOUNGE_DOOR,{x:LOUNGE_DOOR.x,z:2.2},{x:-7.95,z:2.2},{x:-7.95,z:7.6}],ROPE_GAP=.7,ropeTickets=0;
   function loungeSeated(){return customers.filter(function(c){return c.phase==='lounge'}).length}
-  function loungeWaiting(){return customers.filter(function(c){return c.phase==='toLounge'&&!c.waypoints.length}).sort(function(a,b){return a.id-b.id})}
+  function loungeWaiting(){return customers.filter(function(c){return c.phase==='toLounge'&&!c.waypoints.length}).sort(function(a,b){return (a.ropeTicket||0)-(b.ropeTicket||0)||a.id-b.id})}
   function loungeSpareJars(){return state.stock[3]-reservedJars()}
   // A guest walks through the open door and the drapes into the back hallway, where the walls hide them on their way
   // to the elevator (`loungeFade` runs 1 → 0 over LOUNGE_STEP_IN seconds), and fades back in at the back door on the
@@ -423,7 +425,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   function askLift(c,wait){c.lift=wait;c.liftAsk=++liftAsks;c.liftShaft=null}
   function leaveLounge(c){
-    c.phase='leaving';c.t=0;c.routeKind='exit';c.x=LOUNGE_EXIT.x;c.z=LOUNGE_EXIT.z;c.renderX=c.x;c.renderZ=c.z;c.facing=.6;c.loungeFadeIn=0;
+    c.phase='leaving';c.t=0;c.routeKind='exit';c.x=LOUNGE_EXIT.x;c.z=LOUNGE_EXIT.z;c.renderX=c.x;c.renderZ=c.z;c.facing=.6;c.loungeFadeIn=0;c.walkHeading=null;c.walkAmount=0;
     c.waypoints=[{x:9.7,z:-4.3},{x:11.15,z:-4.6},{x:10.25,z:-5.6},{x:10.25,z:-8.1},{x:7,z:-8.1},{x:-10.5,z:-8.1}];
   }
   function tickLounge(dt){
@@ -435,12 +437,16 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
         else if(!c.lift)askLift(c,'waitUp');
         else if(c.lift==='roof'){c.roofWalk=Math.min(1,c.roofWalk+dt/ROOF_WALK);c.loungeLeft-=dt;if(c.loungeLeft<=0){c.lift='back';c.walkBack=0}}
         else if(c.lift==='back'){c.walkBack=Math.min(1,c.walkBack+dt/ROOF_WALK);if(c.walkBack>=1)askLift(c,'waitDown')}
-      }else if(c.loungeFadeIn!==undefined&&c.loungeFadeIn<1)c.loungeFadeIn=Math.min(1,c.loungeFadeIn+dt/.3);
+      }else if(c.loungeFadeIn!==undefined&&c.loungeFadeIn<1){
+        // Out of the back door only once the guest before has stepped clear of it, so two never appear in one spot.
+        var doorTaken=customers.some(function(q){return q!==c&&exitClear(q)&&Math.hypot(q.x-LOUNGE_EXIT.x,q.z-LOUNGE_EXIT.z)<EXIT_GAP});
+        if(!doorTaken||c.loungeFadeIn>0)c.loungeFadeIn=Math.min(1,c.loungeFadeIn+dt/.3);
+      }
     });
     tickLifts(lifts,customers,dt,{second:state.loungeLift,leave:leaveLounge});
     // The rope: the first guest waiting at the curtain goes in as soon as a seat and a jar are free.
     var waiting=loungeWaiting();
-    if(waiting.length&&loungeAdmission(state.lounge,loungeSeated(),loungeSpareJars()).admit)enterLounge(waiting[0]);
+    if(waiting.length&&(waiting[0].ropeDistance||0)<.35&&loungeAdmission(state.lounge,loungeSeated(),loungeSpareJars()).admit)enterLounge(waiting[0]);
   }
   // Occasional thought bubbles: three-beat emoji stories about why someone came in, what the wait feels like, or the plan once the bag is in hand.
   var THOUGHTS={
@@ -1773,7 +1779,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
         // else, so the rope never backs up through the kiosks to the door.
         if(c.lounge&&loungeSeats(state.lounge)>0&&loungeWaiting().length+customers.filter(function(q){return q.phase==='toLounge'&&q.waypoints.length}).length<LOUNGE_ROPE){
           // Past the doorman, along the kiosk row and back to the curtain.
-          c.phase='toLounge';c.routeKind='lounge';c.waypoints=[{x:ID_CHECK.x,z:8.5},{x:-9.7,z:8.15},{x:-8.2,z:8.6},{x:-7.95,z:7.6},{x:-7.95,z:2.2},{x:LOUNGE_DOOR.x,z:2.2}];return;
+          c.phase='toLounge';c.routeKind='lounge';c.waypoints=[{x:ID_CHECK.x,z:8.5},{x:-9.7,z:8.15},{x:-8.2,z:8.6},{x:-7.95,z:7.6}];return;
         }
         c.lounge=false;
         var route=c.kiosk?kioskRoute(c.kioskIndex):queueRoute(false),join=laneJoinIndex(route);
@@ -1787,11 +1793,15 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(c.phase==='lounge'){if(!(c.loungeFade>0))c.walking=false;return}
     if(c.phase==='toLounge'){
       var loungeStartX=c.x,loungeStartZ=c.z,loungeBudget=dt*walkSpeed();
+      while(c.waypoints.length&&loungeBudget>0){var lp=c.waypoints[0],ldx=lp.x-c.x,ldz=lp.z-c.z,ld=Math.hypot(ldx,ldz),ls=Math.min(ld,loungeBudget);if(ld>.0001){c.x+=ldx/ld*ls;c.z+=ldz/ld*ls}loungeBudget-=ls;if(ld<=ls+.0001){c.waypoints.shift();if(!c.waypoints.length){c.ropeTicket=++ropeTickets;c.ropeDistance=routeLength(LOUNGE_ROPE_ROUTE)}}else break}
       if(!c.waypoints.length){
-        // Waiting on the rope: shuffle back along the approach, one place per guest ahead.
-        var place=loungeWaiting().indexOf(c),spot=loungeWaitSpot(place);
-        var wdx=spot.x-c.x,wdz=spot.z-c.z,wd=Math.hypot(wdx,wdz),ws=Math.min(wd,loungeBudget);if(wd>.001){c.x+=wdx/wd*ws;c.z+=wdz/wd*ws}
-      }else while(c.waypoints.length&&loungeBudget>0){var lp=c.waypoints[0],ldx=lp.x-c.x,ldz=lp.z-c.z,ld=Math.hypot(ldx,ldz),ls=Math.min(ld,loungeBudget);if(ld>.0001){c.x+=ldx/ld*ls;c.z+=ldz/ld*ls}loungeBudget-=ls;if(ld<=ls+.0001)c.waypoints.shift();else break}
+        // On the rope: up towards the curtain, one place per guest ahead and never closer than ROPE_GAP behind them.
+        var rope=loungeWaiting(),place=rope.indexOf(c),ahead=rope[place-1];
+        var target=Math.max(0,place)*ROPE_GAP;if(ahead)target=Math.max(target,(ahead.ropeDistance||0)+ROPE_GAP);
+        if(c.ropeDistance===undefined)c.ropeDistance=target;
+        c.ropeDistance=Math.min(c.ropeDistance,Math.max(target,c.ropeDistance-loungeBudget));
+        var spot=routePoint(LOUNGE_ROPE_ROUTE,c.ropeDistance);c.x=spot.x;c.z=spot.z;
+      }
       c.walking=Math.hypot(c.x-loungeStartX,c.z-loungeStartZ)>.001;return;
     }
     if(!c.ordered&&c.orderCounter!=null){
@@ -1804,6 +1814,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // A guest out of the lounge is in no hurry: they amble to the door at a fixed slow pace, whatever Floor flow does
     // for everyone else (a third of the base walking speed).
     if(c.lounge&&kind==='exit'&&c.z>-7.4)budget=dt*economy.walkSpeed(0)*WALK_PACE/3;
+    // On the way out nobody walks into the back of the person in front: a slow lounge guest ambling to the door holds
+    // up whoever catches them, a step behind, instead of the two sliding through each other.
+    if(kind==='exit'&&c.routeKind===kind)budget=Math.min(budget,exitRoom(c));
     if(c.routeKind!==kind){
       c.routeKind=kind;c.laneDistance=null;
       // To the pickup line: kiosk customers cross the floor along z 5.5, the aisle between the customers ordering at
@@ -1834,6 +1847,17 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       }
     }
     c.walking=Math.hypot(c.x-startX,c.z-startZ)>.001;
+  }
+  // Leaving customers keep EXIT_GAP apart. Everyone on the way out ends at the same corner, so whoever has less of the
+  // way left is in front; a customer may close only to EXIT_GAP behind anyone in front within reach. Ordering by the
+  // way left means the front walker is never held, so the line always moves.
+  var EXIT_GAP=.7;
+  function exitLeft(c){var n=0,x=c.x,z=c.z;(c.waypoints||[]).forEach(function(p){n+=Math.hypot(p.x-x,p.z-z);x=p.x;z=p.z});return n}
+  function exitClear(q){return q.phase==='leaving'&&!(q.loungeFadeIn!==undefined&&q.loungeFadeIn<1)&&q.t<1}
+  function exitRoom(c){
+    var left=exitLeft(c),room=Infinity;
+    customers.forEach(function(q){if(q===c||!exitClear(q))return;var d=Math.hypot(q.x-c.x,q.z-c.z);if(d<EXIT_GAP*2&&(exitLeft(q)<left||exitLeft(q)===left&&q.id<c.id))room=Math.min(room,Math.max(0,d-EXIT_GAP))});
+    return room;
   }
   function customerBehindBuilding(c){
     var x=c.renderX===undefined?c.x:c.renderX,z=c.renderZ===undefined?c.z:c.renderZ;
@@ -2547,6 +2571,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     customers.forEach(function(c){
       stepCustomerVisual(c,frameDelta);
       if(c.phase==='lounge'&&!(c.loungeFade>0))return;
+      if(c.phase==='leaving'&&c.loungeFadeIn===0)return;
       var gait={phase:c.walkPhase||0,heading:c.walkHeading,look:customerLook(c),amount:c.walkAmount||0,facing:c.facing===undefined?.3:c.facing,lean:c.turnLean||0,pickupAge:c.effectAge,bag:!!c.bag};
       customer(c.id||0,c.renderX,0,c.renderZ,gait);
     });
@@ -2602,6 +2627,15 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     if(atOrderCounter(c,state.orderCounters)||c.phase==='pickup'&&Math.hypot(c.x-PICKUP_X,c.z-4.9)<.15)return{x:0,z:-1};
     if(c.phase==='kiosk'&&c.kioskIndex!=null&&!c.ordered&&Math.hypot(c.x+8.95,c.z-(6.8-c.kioskIndex*1.8))<.15)return{x:-1,z:0};
     if(c.phase==='idCheck'&&Math.hypot(c.x-ID_CHECK.x,c.z-ID_CHECK.z)<.15)return{x:ID_DESK.x-c.x,z:ID_DESK.z-c.z};
+    // On the lounge rope: up the rope towards the curtain, and the guest at its head into the curtain.
+    if(c.phase==='toLounge'&&!c.waypoints.length&&c.ropeDistance!==undefined){
+      if(c.ropeDistance<.05)return{x:0,z:-1};
+      var next=routePoint(LOUNGE_ROPE_ROUTE,Math.max(0,c.ropeDistance-.4)),rx=next.x-c.x,rz=next.z-c.z,rl=Math.hypot(rx,rz);
+      return rl>.05?{x:rx/rl,z:rz/rl}:null;
+    }
+    // Held up on the way somewhere (behind a slower guest on the way out, just out of the back door): the way they are
+    // going, not whichever way they last walked before the lounge.
+    if((c.phase==='leaving'||c.phase==='toLounge')&&c.waypoints&&c.waypoints.length){var w=c.waypoints[0],wx=w.x-c.x,wz=w.z-c.z,wl=Math.hypot(wx,wz);if(wl>.05)return{x:wx/wl,z:wz/wl}}
     // Waiting in a line: towards the front of it (the line's route a step ahead of their place).
     if(c.phase==='leaving'||c.phase==='toLounge'||c.phase==='lounge'||c.phase==='idCheck')return null;
     var at=customerTarget(c);if(Math.hypot(c.x-at.x,c.z-at.z)>.15)return null;
@@ -2609,12 +2643,15 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var ahead=routePoint(c.kiosk&&!c.ordered?kioskRoute(c.kioskIndex):queueRoute(c.ordered),Math.max(0,d-.4)),dx=ahead.x-c.x,dz=ahead.z-c.z,l=Math.hypot(dx,dz);
     return l>.05?{x:dx/l,z:dz/l}:null;
   }
+  var STRIDE_FULL_SPEED=.3;
   function stepCustomerVisual(c,frameDelta){
     var blend=1-Math.exp(-frameDelta*20),oldX=c.renderX===undefined?c.x:c.renderX,oldZ=c.renderZ===undefined?c.z:c.renderZ;
     c.renderX=oldX+(c.x-oldX)*blend;c.renderZ=oldZ+(c.z-oldZ)*blend;
     var dx=c.renderX-oldX,dz=c.renderZ-oldZ,distance=Math.hypot(dx,dz);
     c.walkPhase=(c.walkPhase||0)+distance*5;if(distance>.001)c.walkHeading={x:dx/distance,z:dz/distance};
-    var strideTarget=frameDelta>0?Math.min(1,distance/frameDelta/2.2):(c.walkAmount||0);
+    // The walk plays by ground covered (map3d), so a slow walker takes slow steps with planted feet; any real movement
+    // is a full walk, not the idle sliding along (Kevin, 2026-11-02). Only the last creep of easing to a stop blends out.
+    var strideTarget=frameDelta>0?Math.min(1,distance/frameDelta/STRIDE_FULL_SPEED):(c.walkAmount||0);
     c.walkAmount=(c.walkAmount||0)+(strideTarget-(c.walkAmount||0))*(1-Math.exp(-frameDelta*10));
     var previousFacing=c.facing===undefined?.3:c.facing;
     var direction=distance>.001?Math.max(-1,Math.min(1,rotate(dx,dz).x/distance)):(c.facing===undefined?.3:c.facing);
