@@ -1,4 +1,5 @@
 import {migrateOperations,staffLevel,REGULARS} from './operations.js';
+import {batchSize,stationTier} from './economy.js';
 const REGULAR_NAMES=REGULARS.map(r=>r.name);
 // Persistent empire systems. Rewards never count as earned revenue.
 // Counts and money alike are abbreviated past a thousand — 15.1K, 2.4M — everywhere the app shows a number.
@@ -87,7 +88,7 @@ export function migrateProgression(raw, now=Date.now()) {
   const clock=num(r.clock, now);
   const p={network:migrateOperations(r.network),version:4, retailBoost:Math.max(1,num(r.retailBoost,1,64)), flagship:Number.isFinite(r.flagship)&&r.flagship>0?Math.min(r.flagship,1e15):0, prestige:num(r.prestige,0,999), ...prestigeShares(r), clock, activeStore:num(r.activeStore,0,STORES.length), career:num(r.career,0,CAREER.length), daily:{
     day:num(r.daily?.day,0), streak:num(r.daily?.streak,0,7)
-  }, stores:STORES.map((_,i)=>({level:num(r.stores?.[i]?.level,0,10),projects:[0,1,2].map(j=>r.stores?.[i]?.projects?.[j]===true), manager:MANAGERS.some(m=>m.id===r.stores?.[i]?.manager)&&!(Array.isArray(r.stores)?r.stores:[]).slice(0,i).some(s=>s?.manager===r.stores?.[i]?.manager)?r.stores[i].manager:'none', featured:PRODUCTS.includes(r.stores?.[i]?.featured)?r.stores[i].featured:'everyday', loyalty:num(r.stores?.[i]?.loyalty,0,1000), served:num(r.stores?.[i]?.served), serviceClock:num(r.stores?.[i]?.serviceClock,0,11)})),
+  }, stores:STORES.map((_,i)=>({level:num(r.stores?.[i]?.level,0,10),projects:[0,1,2].map(j=>r.stores?.[i]?.projects?.[j]===true), manager:MANAGERS.some(m=>m.id===r.stores?.[i]?.manager)&&!(Array.isArray(r.stores)?r.stores:[]).slice(0,i).some(s=>s?.manager===r.stores?.[i]?.manager)?r.stores[i].manager:'none', featured:PRODUCTS.includes(r.stores?.[i]?.featured)?r.stores[i].featured:'everyday', loyalty:num(r.stores?.[i]?.loyalty,0,1000), served:num(r.stores?.[i]?.served), serviceClock:num(r.stores?.[i]?.serviceClock,0,11), lines:migrateBranchLine(r.stores?.[i]?.lines,num(r.stores?.[i]?.level,0,10))})),
   contracts:migrateContracts(r.contracts), season:migrateSeason(r.season), badges:(Array.isArray(r.badges)?r.badges:[]).filter(b=>typeof b==='string'&&BADGE_ID.test(b)).filter((b,i,a)=>a.indexOf(b)===i).slice(0,200),
   trophies:num(r.trophies), rewards:[0,1,2].map(i=>r.rewards?.[i]===true), reputation:num(r.reputation,0,1000), counters:Object.fromEntries(GOAL_KINDS.map(k=>[k,num(r.counters?.[k])])), goals:[0,1,2].map(i=>({round:num(r.goals?.[i]?.round),start:num(r.goals?.[i]?.start),kind:GOAL_KINDS.includes(r.goals?.[i]?.kind)?r.goals[i].kind:legacyGoalKind(i,num(r.goals?.[i]?.round))})), goalsCompleted:num(r.goalsCompleted), returnReport:r.returnReport&&Array.isArray(r.returnReport.earnings)?{seconds:num(r.returnReport.seconds),earnings:[...Array(STORES.length+1)].map((_,i)=>num(r.returnReport.earnings[i])),goals:num(r.returnReport.goals,0,3)}:null,
   stars:STORES.map((_,i)=>{const v=r.stars?.[i];return Number.isInteger(v)&&v>=0&&v<=7?v:0;})};
@@ -136,14 +137,53 @@ export function storeRate(p,i) {
   const l=p.stores[i].level;if(!l)return 0;
   const legacy=STORES[i].rate*l*(1+(l-1)*.15)*saleMultiplier(p)*Math.max(1,p.retailBoost||1);
   const share=STORES[i].share*(l+3)/13*Math.max(0,p.flagship||0);
-  return Math.max(legacy,share)*(1+projectBonus(p,i))*managementMultiplier(p,i);
+  return Math.max(legacy,share)*(1+projectBonus(p,i))*managementMultiplier(p,i)*branchLineFactor(p.stores[i].lines);
+}
+// Every branch runs the flagship's own station line (Kevin, 2026-11-02: "the same stations and upgrade systems as the
+// first building"): Seeds, Grow, Harvest, Pack, the Order desk and Pickup, each levelled on its own with the same cost
+// curve, tiers (a doubling at Lv 10, 20, 30...) and looks (Lv 10/30/50/75) as the flagship's. A branch opens with all
+// six at Lv 1, which is the income it always had; raising them multiplies it. Like the flagship the line sells at the
+// pace of its slowest station, so the slowest counts most, but every level counts some, so no buy is wasted.
+export const BRANCH_LINE=['Seeds','Grow','Harvest','Pack','Order desk','Pickup'];
+export const BRANCH_LINE_MAX=100;
+const BRANCH_LINE_BASE=[1,1.3,1.6,1.9,2.2,2.5];
+export function migrateBranchLine(raw,level){
+  return BRANCH_LINE.map((_,j)=>{const v=Array.isArray(raw)?raw[j]:undefined;return level>0?Math.max(1,Math.min(BRANCH_LINE_MAX,Number.isFinite(v)?Math.floor(v):1)):0;});
+}
+// The price of a branch station's next level: 2% of the branch's opening price at Lv 1, growing 16% a level as the flagship's.
+export function branchStationCost(i,j,level){return Math.floor(STORES[i].price*.02*BRANCH_LINE_BASE[j]*Math.pow(1.16,Math.max(0,level-1)));}
+// What the line does to the branch's income: 1 with every station at Lv 1. Each station's output is the flagship's
+// batch size at its level (with tier doublings); the line runs at a blend of its slowest (60%) and average (40%), and
+// the square root keeps a whole branch from outgrowing the flagship that feeds it.
+export function branchLineFactor(lines){
+  if(!Array.isArray(lines)||!lines.length||!lines[0])return 1;
+  const out=lines.map(l=>batchSize(Math.max(1,l))),min=Math.min(...out),avg=out.reduce((a,b)=>a+b,0)/out.length;
+  return Math.sqrt(.6*min+.4*avg);
+}
+// The station that gains the branch the most per dollar: the line's best buy, which wears the brass on the map.
+export function branchBestStation(p,i){
+  const s=p.stores[i];if(!s.level)return -1;let best=-1,score=-1;
+  s.lines.forEach((l,j)=>{if(l>=BRANCH_LINE_MAX)return;const next=s.lines.slice();next[j]++;const gain=(branchLineFactor(next)-branchLineFactor(s.lines))/branchStationCost(i,j,l);if(gain>score){score=gain;best=j;}});
+  return best;
+}
+export function branchStationTier(level){return stationTier(level);}
+export function buyBranchStation(state,i,j){
+  const s=state.empire.stores[i];if(!s?.level||!BRANCH_LINE[j]||s.lines[j]>=BRANCH_LINE_MAX)return false;
+  const cost=branchStationCost(i,j,s.lines[j]);if(state.money<cost)return false;
+  const before=storeRate(state.empire,i);state.money-=cost;s.lines[j]++;state.empire.network.stores[i].incomeGain=storeRate(state.empire,i)-before;recordGoal(state.empire,'upgrade',1);return true;
+}
+// As many levels of one station as the cash buys (the flagship's Max).
+export function branchStationMax(state,i,j){
+  const s=state.empire.stores[i];if(!s?.level)return {levels:0,cost:0};let levels=0,total=0;
+  while(s.lines[j]+levels<BRANCH_LINE_MAX){const c=branchStationCost(i,j,s.lines[j]+levels);if(total+c>state.money)break;total+=c;levels++;}
+  return {levels,cost:total};
 }
 export function branchRate(p) {return STORES.reduce((sum,_,i)=>sum+storeRate(p,i),0);}
 export function buyStore(state,i) {
   if(!STORES[i])return false;
   const p=state.empire, cost=storeCost(p,i);
   if(p.stores[i].level>=10 || state.lifetime<STORES[i].goal || !branchOpenable(p,i) || state.money<cost)return false;
-  const before=storeRate(p,i);state.money-=cost;p.stores[i].level++;p.network.stores[i].construction=6;p.network.stores[i].incomeGain=storeRate(p,i)-before;recordGoal(p,'invest',1);return true;
+  const before=storeRate(p,i);state.money-=cost;p.stores[i].level++;if(!p.stores[i].lines||!p.stores[i].lines[0])p.stores[i].lines=BRANCH_LINE.map(()=>1);p.network.stores[i].construction=6;p.network.stores[i].incomeGain=storeRate(p,i)-before;recordGoal(p,'invest',1);return true;
 }
 // Contracts replace the old hourly events: a 30 to 60 minute goal with a twist rule that changes how the shop plays while
 // it runs (faster walk-ins, a door full of VIPs, half the line asking for edibles). The player starts one when they
