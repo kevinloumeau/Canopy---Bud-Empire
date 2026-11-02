@@ -37,6 +37,10 @@ import {ABILITIES,ABILITY_UNLOCK,ABILITY_FACTOR,ABILITY_SALES,ABILITY_SECONDS,mi
 import * as strains from './strains.js';
 import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, settleGoals, shiftStatus, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, branchOpenable, STARS_TO_OPEN, settleStars, starCount, branchFinished, STAR_BONUS, recordEvent, contractOffer, activeContract, contractTwist, contractFactor, startContract, skipContract, settleContract, useContractBoost, tickContractBoost, contractBoostFactor, CONTRACT_BOOST_SECONDS, seasonStatus, claimSeason, SEASONS, RETIRED_WEEKLY, nextSeason, weeklySpecial, specialFactor } from './progression.js';
 import {mountUiKit} from './ui-kit.js';
+// The self-order kiosks stand along the storefront glass from z 6.8 toward the back, KIOSK_GAP apart (Kevin 2026-11-02:
+// "a tad closer together", 1.8 -> 1.5). Customers, screens, the ghost and its purchase tag all read kioskZ.
+const KIOSK_Z0=6.8,KIOSK_GAP=1.5;
+function kioskZ(index){return KIOSK_Z0-(index||0)*KIOSK_GAP}
 // ?ui=kit shows the shared reskin components over the game (see ui-kit.js).
 if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
 
@@ -568,8 +572,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(nextKiosk)lastKiosk=nextKiosk.kioskIndex;
     if(nextKiosk)nextKiosk.laneDistance+=routeLength(kioskRoute(nextKiosk.kioskIndex))-routeLength(kioskRoute(0));
     if(state.kiosk)for(var kioskIndex=0;kioskIndex<kioskCount();kioskIndex++){
-      var kioskX=-8.95,kioskZ=6.8-kioskIndex*1.8;
-      var kioskCustomer=customers.find(function(c){return c.kiosk&&c.kioskIndex===kioskIndex&&!c.ordered&&c.phase==='kiosk'&&Math.hypot(c.x-kioskX,c.z-kioskZ)<.15});
+      var kioskX=-8.95,kioskAtZ=kioskZ(kioskIndex);
+      var kioskCustomer=customers.find(function(c){return c.kiosk&&c.kioskIndex===kioskIndex&&!c.ordered&&c.phase==='kiosk'&&Math.hypot(c.x-kioskX,c.z-kioskAtZ)<.15});
       var kioskAvailable=orderAvailability(customers,state.stock[4],pickupReserve());
       if(kioskCustomer&&kioskAvailable.places>0&&kioskAvailable.bags>0){
         kioskCustomer.orderTime=(kioskCustomer.orderTime||0)+dt*abilityFactor(state.abilities,4);
@@ -677,7 +681,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // A customer cleared at the ID desk joins their lane at the first of these points.
   var ENTRY_TAIL=[{x:-9.7,z:8.15},{x:-10.3,z:8.75},{x:-10.9,z:9.3},{x:-11.7,z:9.3},{x:-12.4,z:7.8}];
   function laneJoinIndex(route){return route.length-ENTRY_TAIL.length}
-  function kioskRoute(index){var z=6.8-(index||0)*1.8;return [{x:-8.95,z:z},{x:-8.45,z:z},{x:-8.45,z:7.7}].concat(ENTRY_TAIL)}
+  function kioskRoute(index){var z=kioskZ(index);return [{x:-8.95,z:z},{x:-8.45,z:z},{x:-8.45,z:7.7}].concat(ENTRY_TAIL)}
   // Twelve research picks, twenty levels each (five for the safe). The first eight levels climb gently; past that each costs
   // 2.15× the last, so the back half of every line is a late-game project. A pick with lines in research.js ALSO raises
   // them all at once, so each tap does something you can see.
@@ -688,7 +692,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // How far the customer standing at each kiosk has got with their order (0..1), for the 3D map's touchscreens.
   function kioskMenus(){
     var out={};
-    customers.forEach(function(c){if(c.kiosk&&c.kioskIndex!=null&&!c.ordered&&c.phase==='kiosk'&&Math.hypot(c.x+8.95,c.z-(6.8-c.kioskIndex*1.8))<.15)out['kiosk'+c.kioskIndex]=Math.min(1,(c.orderTime||0)/kioskServiceDuration())});
+    customers.forEach(function(c){if(c.kiosk&&c.kioskIndex!=null&&!c.ordered&&c.phase==='kiosk'&&Math.hypot(c.x+8.95,c.z-kioskZ(c.kioskIndex))<.15)out['kiosk'+c.kioskIndex]=Math.min(1,(c.orderTime||0)/kioskServiceDuration())});
     return out;
   }
   function securityDuration(level){return economy.securityDuration(level===undefined?state.idStaff:level,state.scannerLevel)}
@@ -875,9 +879,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       // (DECK_RIGHT, DECK_FRONT) with the deck at 7.05.
       layout.floorTextures=floorTextureFiles();
       layout.fixtures=[{key:'deck',file:'online_deck.glb',x:-9.39,y:4.7,z:-.2,scale:1.69,glow:'SignLit'},{key:'pickupWindow',file:'pickup_window.glb',x:PICKUP_WINDOW.x,y:0,z:PICKUP_WINDOW.z,scale:1.69,glow:'SignCream'}];
-      // The self-order kiosks, one Blender model per bought kiosk where the customer code queues them (6.8 - k * 1.8),
+      // The self-order kiosks, one Blender model per bought kiosk where the customer code queues them (kioskZ),
       // the screen facing +x toward the customer and lit like a screen (`screen` names its material).
-      [0,1,2].forEach(function(k){layout.fixtures.push({key:'kiosk'+k,file:'kiosk.glb',x:-9.75,y:0,z:6.8-k*1.8,scale:1.69,screen:'Screen',menu:true})});
+      [0,1,2].forEach(function(k){layout.fixtures.push({key:'kiosk'+k,file:'kiosk.glb',x:-9.75,y:0,z:kioskZ(k),scale:1.69,screen:'Screen',menu:true})});
       // The street's cars and van: one model each, painted per car in code (CarPaint, VanPaint).
       layout.carModels={car:'car.glb',van:'van.glb'};
       // The shell and fittings, placed by the same numbers the station and customer code uses.
@@ -1848,7 +1852,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       // rather than walking along the counter front through the other customers. Everyone then goes down the middle
       // walkway to the line's tail.
       var tail=route[route.length-1],toPickup=[{x:-.25+COUNTER_SHIFT,z:PICKUP_AISLE_Z},{x:-.25+COUNTER_SHIFT,z:tail.z},tail];
-      c.waypoints=(kind==='order'||kind==='kiosk')?[route[route.length-1]]:kind==='pickup'?(c.kiosk?[{x:-8,z:6.8-(c.kioskIndex||0)*1.8},{x:-7.4,z:PICKUP_AISLE_Z}].concat(toPickup):[{x:c.x,z:PICKUP_AISLE_Z}].concat(toPickup)):[{x:PICKUP_X,z:4},{x:8.1,z:4.6},{x:EXIT_LANE_X,z:4.6},{x:EXIT_LANE_X,z:-4.6},{x:10.25,z:-6},{x:10.25,z:-8.1},{x:7,z:-8.1},{x:-10.5,z:-8.1}];
+      c.waypoints=(kind==='order'||kind==='kiosk')?[route[route.length-1]]:kind==='pickup'?(c.kiosk?[{x:-8,z:kioskZ(c.kioskIndex)},{x:-7.4,z:PICKUP_AISLE_Z}].concat(toPickup):[{x:c.x,z:PICKUP_AISLE_Z}].concat(toPickup)):[{x:PICKUP_X,z:4},{x:8.1,z:4.6},{x:EXIT_LANE_X,z:4.6},{x:EXIT_LANE_X,z:-4.6},{x:10.25,z:-6},{x:10.25,z:-8.1},{x:7,z:-8.1},{x:-10.5,z:-8.1}];
     }
     while(c.waypoints.length&&budget>0){var point=c.waypoints[0],dx=point.x-c.x,dz=point.z-c.z,distance=Math.hypot(dx,dz),step=Math.min(distance,budget);if(distance>.0001){c.x+=dx/distance*step;c.z+=dz/distance*step}budget-=step;if(distance<=step+.0001)c.waypoints.shift();else break}
     if(!c.waypoints.length){
@@ -2640,7 +2644,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       Object.keys(posts).forEach(function(key){var q=posts[key];if(postModel)props.push({file:'street_queue_post.glb',x:q[0],y:0,z:q[1]});else capturePerson(figures,q[0],0,q[1],function(){drawStanchion(q[0],q[1])})});
       frontFixtures().forEach(function(f){if(map3d.propReady(f.file))props.push({file:f.file,x:f.x,y:0,z:f.z,rot:f.rot})});
       // The self-order kiosks along the storefront glass are their render, stood up at each kiosk's footprint.
-      if(state.kiosk&&fixtureSprite('shop.kiosk'))for(var k=0;k<kioskCount();k++)if(!map3d.hasFixture('kiosk'+k))(function(kz){capturePerson(figures,-9.75,0,kz,function(){drawBoxSprite(streetApi,fixtureSprite('shop.kiosk'),-10.04,-9.46,kz-.4,kz+.4,0,1.8,true)})})(6.8-k*1.8);
+      if(state.kiosk&&fixtureSprite('shop.kiosk'))for(var k=0;k<kioskCount();k++)if(!map3d.hasFixture('kiosk'+k))(function(kz){capturePerson(figures,-9.75,0,kz,function(){drawBoxSprite(streetApi,fixtureSprite('shop.kiosk'),-10.04,-9.46,kz-.4,kz+.4,0,1.8,true)})})(kioskZ(k));
     }
     // The 2D map fades figures behind the building and lays haze over distant renders as see-through copies; in 3D
     // depth and the scene's haze do both, so only the solid draws are kept.
@@ -2662,7 +2666,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function customerLook(c){
     if(c.walking)return null;
     if(atOrderCounter(c,state.orderCounters)||c.phase==='pickup'&&Math.hypot(c.x-PICKUP_X,c.z-4.9)<.15)return{x:0,z:-1};
-    if(c.phase==='kiosk'&&c.kioskIndex!=null&&!c.ordered&&Math.hypot(c.x+8.95,c.z-(6.8-c.kioskIndex*1.8))<.15)return{x:-1,z:0};
+    if(c.phase==='kiosk'&&c.kioskIndex!=null&&!c.ordered&&Math.hypot(c.x+8.95,c.z-kioskZ(c.kioskIndex))<.15)return{x:-1,z:0};
     if(c.phase==='idCheck'&&Math.hypot(c.x-ID_CHECK.x,c.z-ID_CHECK.z)<.15)return{x:ID_DESK.x-c.x,z:ID_DESK.z-c.z};
     // On the lounge rope: up the rope towards the curtain, and the guest at its head into the curtain.
     if(c.phase==='toLounge'&&!c.waypoints.length&&c.ropeDistance!==undefined){
@@ -2885,7 +2889,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   var leaseMarker=lotMarker('lease',function(){var i=leaseIndex();if(i>=0&&leaseLocked(i)){showTray('empire');document.querySelector('[data-empire-view="growth"]').click();expandBranch(i);$('branchToggle'+i).scrollIntoView({block:'start'})}else pickTag('lease')});
   var LOT_MARKERS=[windowMarker,droneMarker,kioskMarker,counterMarker,hqMarker,leaseMarker].concat(CITY_BUILDINGS.map(function(b){return cityMarkers[b.id]}));LOT_MARKERS.forEach(function(el){el.classList.add('is-mini')});
   var LOCK_ICON='<svg class=sign-lock viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
-  var KIOSK_PRICES=[25000,50000,100000],KIOSK_Z=[6.8,5,3.2];
+  var KIOSK_PRICES=[25000,50000,100000],KIOSK_Z=[0,1,2].map(kioskZ);
   // What each tag shows now: null when there is nothing to buy there.
   function lotTags(){var tags=[],count=kioskCount(),orders=state.lines[4]>0;
     var w=state.pickupWindow,windowBuys=windowOpen()?[['hatch','Line of 10',HATCH_COST],['tips','+25% tips',TIPS_COST]].filter(function(u){return !w[u[0]]}):[];
