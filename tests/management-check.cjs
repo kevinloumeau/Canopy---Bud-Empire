@@ -15,8 +15,8 @@ for(const [name,viewport] of [['desktop',{width:1440,height:1000}],['mobile',{wi
  await page.screenshot({path:'artifacts/management/'+name+'-today.png'});
  await page.locator('[data-empire-view=growth]').click();
  for(let i=0;i<3;i++){
-  if(await page.locator('#locationToggle').getAttribute('aria-expanded')!=='true')await page.locator('#locationToggle').click();await page.locator('#storeButton'+(i+1)).click();await page.waitForTimeout(150);await page.screenshot({path:'artifacts/management/'+name+'-before'+i+'.png'});
-  if(await page.locator('#locationToggle').getAttribute('aria-expanded')!=='true')await page.locator('#locationToggle').click();await page.locator('#manageViewedStore').click();
+  await page.evaluate(i=>document.getElementById('branchVisit'+(i-1)).click(),(i+1));await page.waitForTimeout(150);await page.screenshot({path:'artifacts/management/'+name+'-before'+i+'.png'});
+  await page.evaluate(()=>document.getElementById('branchMapMarker').click());
   await page.locator('#featured'+i).selectOption(['exclusive','boutique','express'][i]);await page.locator('#manager'+i).selectOption(['grower','host','dispatcher'][i]);
   if(i===2){const before=await status();await page.locator('#bulkDispatch').click();const after=await status();assert.equal(after.stock[3],before.stock[3]-30);assert.equal(after.onlineCompleted,before.onlineCompleted+1);assert.ok(after.cash>before.cash);}
   for(let l=0;l<5;l++)await page.locator('#branchBuy'+i).click();
@@ -25,7 +25,7 @@ for(const [name,viewport] of [['desktop',{width:1440,height:1000}],['mobile',{wi
  }
  await page.locator('[data-tray=empire]').click();await page.locator('[data-empire-view=events]').click();await page.locator('#eventAction').click();
  await page.locator('[data-tray=empire]').click();await page.waitForTimeout(150);await page.screenshot({path:'artifacts/management/'+name+'-event.png'});
- if(await page.locator('#locationToggle').getAttribute('aria-expanded')!=='true')await page.locator('#locationToggle').click();await page.locator('#storeButton0').click();await page.waitForTimeout(150);await page.screenshot({path:'artifacts/management/'+name+'-main-event.png'});
+ await page.evaluate(()=>document.querySelector('.home-chip').click());await page.waitForTimeout(150);await page.screenshot({path:'artifacts/management/'+name+'-main-event.png'});
  await page.reload();await page.waitForFunction(()=>window.__shiftReady);const s=await status();assert.deepEqual(s.branchLevels,[7,7,7]);assert.deepEqual(s.management.map(s=>s.manager),['grower','host','dispatcher']);assert.deepEqual(s.management.map(s=>s.featured),['exclusive','boutique','express']);assert.deepEqual(s.lineLevels,[10,11,12,13,14,15]);
  await page.locator('[data-tray=empire]').click();await page.locator('#branchToggle0').click();await page.locator('#manager0').selectOption('dispatcher');assert.equal((await status()).management[2].manager,'none');
  await page.locator('[data-speed="4"]').click();let served=false;for(let n=0;n<20;n++){await page.waitForTimeout(500);const q=await status();assert.ok(q.customers.every(c=>!c.bag||c.ordered));if(q.customersServed>0){served=true;break}}assert.ok(served);await page.locator('[data-speed="0"]').click();
