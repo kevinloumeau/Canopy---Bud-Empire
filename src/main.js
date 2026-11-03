@@ -39,6 +39,7 @@ import * as strains from './strains.js';
 import { BRANCH_LINE, branchStationCost, buyBranchStation, branchStationMax, branchBestStation } from './progression.js';
 import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, settleGoals, shiftStatus, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, branchOpenable, STARS_TO_OPEN, settleStars, starCount, branchFinished, STAR_BONUS, recordEvent, contractOffer, activeContract, contractTwist, contractFactor, startContract, skipContract, settleContract, useContractBoost, tickContractBoost, contractBoostFactor, CONTRACT_BOOST_SECONDS, seasonStatus, claimSeason, SEASONS, RETIRED_WEEKLY, nextSeason, weeklySpecial, specialFactor } from './progression.js';
 import {mountUiKit} from './ui-kit.js';
+import {rubberBand,addSample,releaseVelocity,coastAxis} from './map-gesture.js';
 // The self-order kiosks stand along the storefront glass from z 6.8 toward the back, KIOSK_GAP apart (Kevin 2026-11-02:
 // "a tad closer together", 1.8 -> 1.5). Customers, screens, the ghost and its purchase tag all read kioskZ.
 const KIOSK_Z0=6.8,KIOSK_GAP=1.5;
@@ -1030,8 +1031,16 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   var motionPreference=window.matchMedia('(prefers-reduced-motion: reduce)');
   var dprCap=3;
+  // The top bar's bottom edge bounds the camera and the map labels on every frame of a drag. Reading it with
+  // getBoundingClientRect forced a layout per frame (and per touch event), so it is measured once and measured again
+  // only when the bar or the window changes size.
+  var hudEdges=null;
+  function hudBottom(){if(!hudEdges){var hud=document.querySelector('.hud'),markers=$('markers');hudEdges={bottom:hud?hud.getBoundingClientRect().bottom:0,markersTop:markers?markers.getBoundingClientRect().top:0}}return hudEdges.bottom}
+  function forgetHudEdges(){hudEdges=null;updateMarkers.key=null}
+  if(window.ResizeObserver){var hudWatch=new ResizeObserver(forgetHudEdges);hudWatch.observe(document.querySelector('.hud'))}
+  window.addEventListener('resize',forgetHudEdges);
 
-  function resize(){var rect=world.getBoundingClientRect(),oldWidth=width,oldHeight=height,oldDpr=dpr;dpr=Math.min(window.devicePixelRatio||1,dprCap);width=Math.max(1,Math.round(rect.width));height=Math.max(1,Math.round(rect.height));if(oldWidth!==width||oldHeight!==height||oldDpr!==dpr){canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);}canvas.style.width=width+'px';canvas.style.height=height+'px';ctx.setTransform(dpr,0,0,dpr,0,0);applyCamera()}
+  function resize(){hudEdges=null;var rect=world.getBoundingClientRect(),oldWidth=width,oldHeight=height,oldDpr=dpr;dpr=Math.min(window.devicePixelRatio||1,dprCap);width=Math.max(1,Math.round(rect.width));height=Math.max(1,Math.round(rect.height));if(oldWidth!==width||oldHeight!==height||oldDpr!==dpr){canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);}canvas.style.width=width+'px';canvas.style.height=height+'px';ctx.setTransform(dpr,0,0,dpr,0,0);applyCamera()}
   // Branches stand on the flagship's own map now (branch-districts.js), so the camera has one frame for all of it.
   // branchFit is the zoom that fits a branch's scene on screen, which a glide to it eases to.
   function branchFit(id){
@@ -1040,14 +1049,15 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       // A branch plot fills the viewport: its measured projected extents (see BRANCH_THEMES[].frame) fit the width or the
       // height under the HUD, whichever binds. On desktop the tray floats over the bottom-right, where the plot's near
       // corner lands, so a little more room is kept under the plot there.
-      var fit=BRANCH_THEMES[id-1].frame,wide=width>=780,top=document.querySelector('.hud').getBoundingClientRect().bottom+16,low=wide?64:16,space=Math.max(130,visibleHeight()-top-low),area=Math.max(260,width-(wide?56:24)),u=Math.max(1,Math.min(area/fit.w,space/fit.h));
+      var fit=BRANCH_THEMES[id-1].frame,wide=width>=780,top=hudBottom()+16,low=wide?64:16,space=Math.max(130,visibleHeight()-top-low),area=Math.max(260,width-(wide?56:24)),u=Math.max(1,Math.min(area/fit.w,space/fit.h));
       return Math.max(.65,Math.min(1,u/main.unit))}
   }
   function cameraFrame(){return mainFrame()}
   function mainFrame(){
     var visible=visibleHeight(),bottom=0,top=Math.min(160,visible*.26),space=Math.max(120,visible-top-bottom);return{x:width*.5,y:top+space*.66,unit:Math.max(1,Math.min((width-40)/33,space/28))*1.18}}
-  function applyCamera(){render.invalidated=true;var frame=cameraFrame();
-    if(SUNNY)clampSunnyPan(frame);else{panX=Math.max(-width*1.6,Math.min(width*1.6,panX));panY=Math.max(-height*1.6,Math.min(height*1.6,panY));}
+  // free: a drag or glide has already placed the view (it may sit past the edge on purpose, see map-gesture.js).
+  function applyCamera(free){render.invalidated=true;var frame=cameraFrame();
+    if(!free)clampPan(frame);
     centerX=frame.x+panX;centerY=frame.y+panY;unit=frame.unit*zoom;followDistrict();if(state.empire.activeStore)updateBranchMarker();if(window.__shiftReady)renderHomeChip()}
   // The branch whose block is under the middle of the view is the one being viewed: the top bar shows its income and
   // its Manage tag shows on its counter. Anywhere else (the flagship, a lot for lease) is the flagship's view.
@@ -1065,6 +1075,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // measured along the camera's rotated axes, so no edge of the town shows at any zoom. When the visible map is wider
   // than the reach, the view sits centred on it.
   var TALL_HEADROOM=8;
+  function clampPan(frame){if(SUNNY)clampSunnyPan(frame);else{panX=Math.max(-width*1.6,Math.min(width*1.6,panX));panY=Math.max(-height*1.6,Math.min(height*1.6,panY));}}
+  // Where the camera clamp would put a view at (x, y), leaving the camera itself alone.
+  function clampedPan(x,y){var sx=panX,sy=panY;panX=x;panY=y;clampPan(cameraFrame());var r={x:panX,y:panY};panX=sx;panY=sy;return r}
   function clampSunnyPan(frame){
     var u=frame.unit*zoom,sq=FLOOR_SQUASH,c=Math.cos(angle),s=Math.sin(angle),view=SUNNY_VIEW;
     var rx=-panX/u,rz=-panY/(u*sq),x=rx*c+rz*s,z=rz*c-rx*s;
@@ -1075,7 +1088,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     x=Math.max(view.centre.x[0],Math.min(view.centre.x[1]+reach,x));z=Math.max(view.centre.z[0],Math.min(view.centre.z[1],z));
     var slide=Math.max(0,Math.min(reach,x-5));
     rx=x*c-z*s;rz=x*s+z*c;
-    var hud=document.querySelector('.hud'),top=hud?hud.getBoundingClientRect().bottom:0,bottom=visibleHeight();
+    var top=hudBottom(),bottom=visibleHeight();
     var fit=function(v,lo,hi){return lo>hi?(lo+hi)/2:Math.max(lo,Math.min(hi,v))};
     rx=fit(rx,view.reach.rx[0]+slide*c+frame.x/u,view.reach.rx[1]+slide*c-(width-frame.x)/u);
     // The rooftop lounge and Canopy HQ stand storeys above the ground the reach is measured on, so a view stopped at
@@ -1086,7 +1099,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     rz=fit(rz,view.reach.rz[0]-headroom+slide*s+Math.max(0,frame.y-top)/(u*sq),view.reach.rz[1]+slide*s-Math.max(0,bottom-frame.y)/(u*sq));
     panX=-rx*u;panY=-rz*u*sq;
   }
-  function zoomAt(next,x,y){next=Math.max(.65,Math.min(4,next));var ratio=next/zoom,frame=cameraFrame();panX=x-(x-centerX)*ratio-frame.x;panY=y-(y-centerY)*ratio-frame.y;zoom=next;applyCamera()}
+  function zoomAt(next,x,y){if(mapGesture.mode==='coast')endGesture();next=Math.max(.65,Math.min(4,next));var ratio=next/zoom,frame=cameraFrame();panX=x-(x-centerX)*ratio-frame.x;panY=y-(y-centerY)*ratio-frame.y;zoom=next;applyCamera()}
   // Desktop keyboard panning: arrows or WASD glide the camera while held. Direction is the way the view moves, so the
   // content slides the other way. Velocity eases toward the held direction, so a tap nudges and a hold coasts to speed,
   // and the render loop steps it on wall time so panning runs at any game speed, including paused.
@@ -2792,6 +2805,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // map's draw calls and triangles and its estimated GPU memory, so a phone shows its own numbers. Players never pass
   // ?stats; window.__canopyStats returns the same numbers to scripts.
   var STATS=/[?&]stats\b/.test(location.search);
+  if(STATS||SNAP)window.__canopyCamera=function(){return{panX:Math.round(panX),panY:Math.round(panY),zoom:+zoom.toFixed(3),mode:mapGesture.mode}};
   if(STATS||SNAP)window.__canopyStats=function(perModel){return map3d&&map3d.ok?map3d.stats(perModel):null};
   if(STATS){
     var statsBox=document.createElement('div');
@@ -2805,7 +2819,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function render(wallNow){if(SNAP&&!render.snap)return;var t0=performance.now();try{renderFrame(wallNow);render.frameMs=(render.frameMs||0)*.9+(performance.now()-t0)*.1;window.__canopyFrameMs=render.frameMs;if(render.frameMs>13&&dprCap>2){dprCap=2;resize()}}catch(e){if(!render.failed)console.error('Canopy frame failed; retrying',e);ctx=screenCtx;sceneElevation=0;render.failed=true;render.invalidated=true;requestAnimationFrame(render)}}
   function renderFrame(wallNow){
     if(document.hidden){render.last=wallNow;requestAnimationFrame(render);return}
-    keyboardPan(wallNow);
+    stepMapGesture(wallNow);keyboardPan(wallNow);
     if(districtGlide){var glideDt=Math.min(.1,Math.max(0,(wallNow-(render.glideAt===undefined?wallNow:render.glideAt))/1000));stepGlide(glideDt)}render.glideAt=wallNow;
     var frameInterval=state.gameSpeed===0?250:1000/60;
     if(!render.invalidated&&render.drawnAt!==undefined&&wallNow-render.drawnAt<frameInterval-1){requestAnimationFrame(render);return}
@@ -3066,8 +3080,13 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     if(shopBrowser)shopBrowser.render();
   }
   function updateMarkers(){
-    var key=[centerX,centerY,unit,width,height,state.idStaff,state.lines.join(),state.empire.activeStore,securitySelected,selected,state.lounge,loungeSelected,mapPicked,windowOpen(),deliveryBuilt(),kioskCount(),state.orderCounters,windowLevel(state.pickupWindow),state.atm.level,state.atm.machines,state.flagship,isBuilding(state.builds,'flagship'),flagshipUnlocked(state.lifetime),cityKey(),storeLevels().join(),leaseIndex()>=0&&leaseLocked(leaseIndex())].join("|");
-    if(updateMarkers.key===key)return;updateMarkers.key=key;
+    var key=[unit,width,height,state.idStaff,state.lines.join(),state.empire.activeStore,securitySelected,selected,state.lounge,loungeSelected,mapPicked,windowOpen(),deliveryBuilt(),kioskCount(),state.orderCounters,windowLevel(state.pickupWindow),state.atm.level,state.atm.machines,state.flagship,isBuilding(state.builds,'flagship'),flagshipUnlocked(state.lifetime),cityKey(),storeLevels().join(),leaseIndex()>=0&&leaseLocked(leaseIndex())].join("|");
+    if(updateMarkers.key===key&&updateMarkers.cx===centerX&&updateMarkers.cy===centerY)return;
+    // While a finger or a glide moves the map, only the camera's centre changes, and every label moves with it by the
+    // same amount, so the labels shift as laid out without measuring anything (a measure forced a layout per frame).
+    // A label coming on screen that was never measured, or the drag ending, lays them all out again.
+    if(updateMarkers.key===key&&updateMarkers.laid&&mapGesture.mode!=='idle'&&shiftMarkers(centerX-updateMarkers.layX,centerY-updateMarkers.layY)){updateMarkers.cx=centerX;updateMarkers.cy=centerY;return}
+    updateMarkers.key=key;updateMarkers.cx=updateMarkers.layX=centerX;updateMarkers.cy=updateMarkers.layY=centerY;
     var securityPos=project(ID_DESK.x,.62,ID_DESK.z+.1),loungePos=map3d&&map3d.ok?project(-2.7,ROOFTOP.y+1.2,-6.1):project(LOUNGE_DOOR.x,1.5,DISPLAY_Z+.5),labelSize=Math.max(8,Math.min(10,unit*.24))*(width>=780?.85:1)+'px';
     securityMarker.style.fontSize=labelSize;loungeMarker.style.fontSize=labelSize;
     var labels=[{el:securityMarker,x:securityPos.x,y:securityPos.y},{el:loungeMarker,x:loungePos.x,y:loungePos.y}],tags=lotTags();
@@ -3082,8 +3101,17 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var gap=4;labels.sort(function(a,b){return a.y-b.y});
     for(var pass=0;pass<2;pass++)for(var i=1;i<labels.length;i++){var a=labels[i];if(a.el.style.display==='none')continue;for(var j=0;j<i;j++){var b=labels[j];if(b.el.style.display==='none')continue;
       if(Math.abs(a.x-b.x)<(a.w+b.w)/2+gap&&Math.abs(a.y-b.y)<(a.h+b.h)/2+gap)a.y=b.y+(a.h+b.h)/2+gap}}
-    var hud=document.querySelector('.hud'),roof=(hud?hud.getBoundingClientRect().bottom-$('markers').getBoundingClientRect().top:0)+80;
-    labels.forEach(function(l){l.el.style.transform='translate3d('+l.x+'px,'+l.y+'px,0) translate(-50%,-50%)';l.el.classList.toggle('buy-below',l.y<roof)})}
+    hudBottom();var roof=hudEdges.bottom-hudEdges.markersTop+80;
+    labels.forEach(function(l){l.el.style.transform='translate3d('+l.x+'px,'+l.y+'px,0) translate(-50%,-50%)';l.el.classList.toggle('buy-below',l.y<roof)});
+    updateMarkers.laid=labels.map(function(l){return{el:l.el,x:l.x,y:l.y,w:l.w,shown:l.el.style.display!=='none'}});updateMarkers.roof=roof}
+  function shiftMarkers(dx,dy){
+    var laid=updateMarkers.laid,roof=updateMarkers.roof;
+    for(var i=0;i<laid.length;i++){var l=laid[i],x=l.x+dx,y=l.y+dy,show=!(x<-40||x>width+40||y<-30||y>height+30);if(show&&!l.w)return false}
+    for(i=0;i<laid.length;i++){l=laid[i];x=l.x+dx;y=l.y+dy;show=!(x<-40||x>width+40||y<-30||y>height+30);
+      if(show!==l.shown){l.el.style.display=show?'block':'none';l.shown=show}
+      if(!show)continue;
+      l.el.style.transform='translate3d('+x+'px,'+y+'px,0) translate(-50%,-50%)';var below=y<roof;if(l.below!==below){l.el.classList.toggle('buy-below',below);l.below=below}}
+    return true}
   // Head trainer (founder perk): the bottleneck station's crew gains a free level on a fixed game-time beat.
   function tickTrainer(dt){var gap=trainerGap(state.perks);if(!gap)return;state.trainerClock+=dt;if(state.trainerClock<gap)return;state.trainerClock-=gap;
     var i=slowestStation();if(!state.lines[i])return;state.staff[i]++;burst(machinePos[i],'#b6e58c')}
@@ -3414,7 +3442,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // rather than being squeezed into the strip a tall sheet leaves.
   var sheetGlide=null,sheetDrag=null,sheetHalfHeight=0,suppressHeaderClick=false;
   function phoneSheet(){return window.innerWidth<780}
-  function sheetTallHeight(){return Math.max(240,window.innerHeight-document.querySelector('.hud').getBoundingClientRect().bottom-14)}
+  function sheetTallHeight(){return Math.max(240,window.innerHeight-hudBottom()-14)}
   function settleSheet(target){
     var sheet=$('sheet'),from=sheet.getBoundingClientRect().height;
     if(sheetGlide){sheetGlide.cancel();sheetGlide=null}
@@ -4192,7 +4220,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   homeChip.onclick=function(){mapHintActivity();if(state.empire.activeStore)visitStore(0,false);else lookAtStore(0)};
   function renderHomeChip(){if(!homeChip)return;var q=project(0,1,0),low=Math.min(height,visibleHeight()),away=state.empire.activeStore>0||q.x<-width*.08||q.x>width*1.08||q.y<-height*.1||q.y>low+height*.1;
     if(homeChip.hidden!==!away)homeChip.hidden=!away;if(!away)return;
-    homeChip.style.top=Math.max(0,low-58)+'px';homeChip.classList.toggle('points-right',q.x>width)}
+    var chipTop=Math.max(0,low-58)+'px';if(homeChip.style.top!==chipTop)homeChip.style.top=chipTop;var right=q.x>width;if(homeChip.classList.contains('points-right')!==right)homeChip.classList.toggle('points-right',right)}
   $('branchMapMarker').onclick=manageViewedStore;
   STORES.forEach(function(_,i){$('branchVisit'+i).onclick=function(){visitStore(i+1)}});
 
@@ -4206,12 +4234,67 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       hintHideTimer=setTimeout(function(){$('gestureHint').classList.add('is-hidden')},4000);
     },30000);
   }
-  canvas.addEventListener('pointerdown',function(e){mapHintActivity();districtGlide=null;canvas.setPointerCapture(e.pointerId);touches[e.pointerId]={x:e.clientX,y:e.clientY};if(Object.keys(touches).length===1){gestureMoved=false;gestureOrigin={x:e.clientX,y:e.clientY}}else gestureMoved=true});
+  // Map drags (map-gesture.js). Touch events only record where the fingers are; once per frame stepMapGesture moves
+  // the camera by how far they went since the last frame, so a pinch's two fingers make one move rather than two
+  // (which jittered), and nothing is measured per event. Past the town's edge the map stretches and springs back,
+  // and a flick keeps gliding after the finger lifts. A touch during a glide stops it without tapping what is under it.
+  var mapGesture={mode:'idle',x:0,y:0,vx:0,vy:0,setX:0,setY:0,dx:0,dy:0,scale:1,fx:0,fy:0,trail:{x:0,y:0},samples:[],at:undefined};
+  var lastHint=0;function moveHint(){var now=performance.now();if(now-lastHint>250){lastHint=now;mapHintActivity()}}
+  function placeGesture(x,y){mapGesture.setX=panX=x;mapGesture.setY=panY=y;applyCamera(true)}
+  function gestureZoom(next,fx,fy){next=Math.max(.65,Math.min(4,next));var ratio=next/zoom,frame=cameraFrame();mapGesture.x=fx-(fx-(frame.x+mapGesture.x))*ratio-frame.x;mapGesture.y=fy-(fy-(frame.y+mapGesture.y))*ratio-frame.y;zoom=next}
+  function endGesture(){mapGesture.mode='idle';mapGesture.samples=[];mapGesture.vx=mapGesture.vy=0;updateMarkers.key=null;applyCamera()}
+  function stepMapGesture(now){
+    var g=mapGesture,ids=Object.keys(touches);
+    // Something else moved the camera (a glide, a zoom button, a resize): that wins.
+    if(g.mode==='coast'&&(panX!==g.setX||panY!==g.setY)){g.mode='idle';g.vx=g.vy=0;updateMarkers.key=null}
+    if(ids.length&&(gestureMoved||ids.length>1)){
+      if(g.mode!=='drag'){
+        // The finger picks the map up where it is shown; a view caught past the edge keeps its stretch.
+        var held=clampedPan(panX,panY);g.mode='drag';
+        g.x=held.x+unstretch(panX-held.x,width);g.y=held.y+unstretch(panY-held.y,visibleHeight());
+      }
+      g.x+=g.dx;g.y+=g.dy;g.dx=g.dy=0;
+      if(g.scale!==1){if(!g.rect)g.rect=canvas.getBoundingClientRect();gestureZoom(zoom*g.scale,g.fx-g.rect.left,g.fy-g.rect.top);g.scale=1}
+      var edge=clampedPan(g.x,g.y);placeGesture(edge.x+rubberBand(g.x-edge.x,width),edge.y+rubberBand(g.y-edge.y,visibleHeight()));
+      g.at=now;return;
+    }
+    g.rect=null;
+    if(g.mode==='drag'){
+      // Let go: the map carries on at the finger's speed from where it is shown.
+      var v=motionPreference.matches?{x:0,y:0}:releaseVelocity(g.samples,g.liftAt||performance.now());
+      g.mode='coast';g.vx=v.x;g.vy=v.y;g.samples=[];g.dx=g.dy=0;g.scale=1;g.x=panX;g.y=panY;g.at=now;
+    }
+    if(g.mode!=='coast')return;
+    var dt=Math.min(.05,Math.max(0,(now-g.at)/1000));g.at=now;if(!dt){render.invalidated=true;return}
+    var edge2=clampedPan(g.x,g.y);
+    if(motionPreference.matches){placeGesture(edge2.x,edge2.y);endGesture();return}
+    var ax=coastAxis(g.x,g.vx,Math.abs(g.x-edge2.x)>.01?g.x-edge2.x:0,dt),ay=coastAxis(g.y,g.vy,Math.abs(g.y-edge2.y)>.01?g.y-edge2.y:0,dt);
+    g.x=ax.pos;g.vx=ax.v;g.y=ay.pos;g.vy=ay.v;
+    placeGesture(g.x,g.y);
+    if(!g.vx&&!g.vy){var rest=clampedPan(g.x,g.y);if(Math.abs(rest.x-g.x)<.5&&Math.abs(rest.y-g.y)<.5)endGesture()}
+  }
+  // The finger distance that stretches the map by `shown` past the edge (rubberBand run backwards).
+  function unstretch(shown,size){if(!shown)return 0;var a=Math.min(Math.abs(shown),size*.98);return Math.sign(shown)*(1/(1-a/size)-1)*size/.55}
+  canvas.addEventListener('pointerdown',function(e){mapHintActivity();districtGlide=null;try{canvas.setPointerCapture(e.pointerId)}catch(err){}touches[e.pointerId]={x:e.clientX,y:e.clientY};
+    // Catching a gliding map stops it, as on iOS, and is not a tap on whatever is under the finger.
+    var caught=mapGesture.mode==='coast'&&Math.hypot(mapGesture.vx,mapGesture.vy)>60;if(mapGesture.mode==='coast'){mapGesture.vx=mapGesture.vy=0}
+    if(Object.keys(touches).length===1){gestureMoved=caught;gestureOrigin={x:e.clientX,y:e.clientY};mapGesture.dx=mapGesture.dy=0;mapGesture.scale=1;mapGesture.samples=[];mapGesture.trail={x:0,y:0};mapGesture.liftAt=0}else{gestureMoved=true;mapGesture.samples=[]}render.invalidated=true});
   canvas.addEventListener('pointermove',function(e){
-    if(!touches[e.pointerId])return;mapHintActivity();var before=Object.values(touches),previous=touches[e.pointerId];touches[e.pointerId]={x:e.clientX,y:e.clientY};var after=Object.values(touches);
-    if(after.length===1){var dx=e.clientX-previous.x,dy=e.clientY-previous.y;if(Math.hypot(e.clientX-gestureOrigin.x,e.clientY-gestureOrigin.y)>5)gestureMoved=true;if(gestureMoved){panX+=dx;panY+=dy;applyCamera()}}
-    else if(after.length===2){var rect=canvas.getBoundingClientRect(),oldDistance=Math.hypot(before[0].x-before[1].x,before[0].y-before[1].y),newDistance=Math.hypot(after[0].x-after[1].x,after[0].y-after[1].y),mx=(after[0].x+after[1].x)/2-rect.left,my=(after[0].y+after[1].y)/2-rect.top;panX+=(after[0].x+after[1].x-before[0].x-before[1].x)/2;panY+=(after[0].y+after[1].y-before[0].y-before[1].y)/2;applyCamera();if(oldDistance>0)zoomAt(zoom*newDistance/oldDistance,mx,my)}
+    var t=touches[e.pointerId];if(!t)return;moveHint();var g=mapGesture,ids=Object.keys(touches),before=ids.length>1?ids.slice(0,2).map(function(id){return{x:touches[id].x,y:touches[id].y}}):null;
+    var mx=e.clientX-t.x,my=e.clientY-t.y;t.x=e.clientX;t.y=e.clientY;
+    if(!gestureMoved&&gestureOrigin&&Math.hypot(e.clientX-gestureOrigin.x,e.clientY-gestureOrigin.y)>5)gestureMoved=true;
+    if(!gestureMoved)return;
+    if(before){
+      // Two fingers: the map follows their midpoint and scales with their spread, around that midpoint.
+      var after=ids.slice(0,2).map(function(id){return touches[id]}),d0=Math.hypot(before[0].x-before[1].x,before[0].y-before[1].y),d1=Math.hypot(after[0].x-after[1].x,after[0].y-after[1].y);
+      if(ids.indexOf(String(e.pointerId))<2){g.dx+=mx/2;g.dy+=my/2;if(d0>0&&d1>0)g.scale*=d1/d0;g.fx=(after[0].x+after[1].x)/2;g.fy=(after[0].y+after[1].y)/2}
+    }else{
+      g.dx+=mx;g.dy+=my;g.trail.x+=mx;g.trail.y+=my;addSample(g.samples,e.timeStamp,g.trail.x,g.trail.y);
+    }
+    render.invalidated=true;
   });
+  // A finger lifting takes its last move with it before it is forgotten.
+  function flushGesture(e){if(e&&Object.keys(touches).length===1)mapGesture.liftAt=e.timeStamp;if(gestureMoved&&(mapGesture.dx||mapGesture.dy||mapGesture.scale!==1))stepMapGesture(performance.now())}
   // Double-tap anywhere on the map (canvas or a station pill) zooms in around the tap, or back out when already close.
   var lastTap={time:0,x:0,y:0};
   canvas.parentElement.addEventListener('pointerup',function(e){
@@ -4221,10 +4304,11 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     lastTap=quick?{time:0,x:0,y:0}:{time:now,x:e.clientX,y:e.clientY};
     if(!quick)return;
     var r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
-    if(zoom<1.7)zoomAt(2.2,x,y);else{zoom=1;panX=0;panY=0;applyCamera()}
+    // The zoom eases in around the tap (or back out to the shop) instead of jumping.
+    if(zoom<1.7){var px=panX,py=panY,pz=zoom;zoomAt(2.2,x,y);var to=viewAnchor();panX=px;panY=py;zoom=pz;applyCamera();glideTo(to.x,to.z,2.2)}else glideTo(0,0,1);
   });
-  canvas.addEventListener('pointerup',function(e){mapHintActivity();if(!gestureMoved&&Object.keys(touches).length===1&&state.empire.activeStore){var br=canvas.getBoundingClientRect(),f=BRANCH_THEMES[state.empire.activeStore-1].focus,fo=districtCentre(state.empire.activeStore-1),q=project(f.x+fo.x,f.y,f.z+fo.z);if(Math.hypot(e.clientX-br.left-q.x,e.clientY-br.top-q.y)<Math.max(45,unit*3))manageViewedStore()}else if(!gestureMoved&&Object.keys(touches).length===1){var rect=canvas.getBoundingClientRect(),best=-1,distance=60;machinePos.forEach(function(pos,i){var p=project(pos.x,1.4+(pos.y||0),pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=i;distance=d}});orderCounterPositions(state.orderCounters).forEach(function(pos){var p=project(pos.x,1.4,pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=4;distance=d}});var online=project(-10.7,8.45,1.5),od=Math.hypot(e.clientX-rect.left-online.x,e.clientY-rect.top-online.y);if(od<distance){showTray('orders');renderUI()}else if(best>=0)selectMachine(best);else if(mapPicked){mapPicked=false;renderUI()}}delete touches[e.pointerId];if(Object.keys(touches).length)gestureMoved=true;else gestureOrigin=null});
-  function cancelPointer(e){mapHintActivity();delete touches[e.pointerId];gestureMoved=true}
+  canvas.addEventListener('pointerup',function(e){mapHintActivity();flushGesture(e);if(!gestureMoved&&Object.keys(touches).length===1&&state.empire.activeStore){var br=canvas.getBoundingClientRect(),f=BRANCH_THEMES[state.empire.activeStore-1].focus,fo=districtCentre(state.empire.activeStore-1),q=project(f.x+fo.x,f.y,f.z+fo.z);if(Math.hypot(e.clientX-br.left-q.x,e.clientY-br.top-q.y)<Math.max(45,unit*3))manageViewedStore()}else if(!gestureMoved&&Object.keys(touches).length===1){var rect=canvas.getBoundingClientRect(),best=-1,distance=60;machinePos.forEach(function(pos,i){var p=project(pos.x,1.4+(pos.y||0),pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=i;distance=d}});orderCounterPositions(state.orderCounters).forEach(function(pos){var p=project(pos.x,1.4,pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=4;distance=d}});var online=project(-10.7,8.45,1.5),od=Math.hypot(e.clientX-rect.left-online.x,e.clientY-rect.top-online.y);if(od<distance){showTray('orders');renderUI()}else if(best>=0)selectMachine(best);else if(mapPicked){mapPicked=false;renderUI()}}delete touches[e.pointerId];if(Object.keys(touches).length)gestureMoved=true;else gestureOrigin=null});
+  function cancelPointer(e){if(!touches[e.pointerId])return;mapHintActivity();flushGesture();delete touches[e.pointerId];gestureMoved=true}
   canvas.addEventListener('pointercancel',cancelPointer);canvas.addEventListener('lostpointercapture',cancelPointer);
   canvas.addEventListener('wheel',function(e){mapHintActivity();districtGlide=null;e.preventDefault();var r=canvas.getBoundingClientRect();zoomAt(zoom*Math.exp(-e.deltaY*.0015),e.clientX-r.left,e.clientY-r.top)},{passive:false});
   $('zoomIn').onclick=function(){mapHintActivity();zoomAt(zoom*1.2,width/2,height/2)};
@@ -4374,7 +4458,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function centerOnCash(){var root=document.documentElement.style,money=document.querySelector('.hud>.stat'),rate=document.querySelector('.hud>.stat.output');
     if(!money)return;if(innerWidth<=700){var chip=$('shopActivity'),pad=chip&&chip.offsetParent?chip.getBoundingClientRect().right+8:12,end=$('zoomIn').getBoundingClientRect().left-8;
       root.setProperty('--cash-x',((pad+end)/2).toFixed(1)+'px');root.setProperty('--pill-room',Math.max(120,end-pad).toFixed(0)+'px');return}var a=money.getBoundingClientRect(),b=(rate||money).getBoundingClientRect();root.setProperty('--cash-x',((a.left+b.right)/2).toFixed(1)+'px')}
-  function fitControls(){document.documentElement.style.setProperty('--hud-height',document.querySelector('.hud').getBoundingClientRect().bottom+'px');centerOnCash();stackPills();
+  function fitControls(){hudEdges=null;document.documentElement.style.setProperty('--hud-height',hudBottom()+'px');centerOnCash();stackPills();
     var sheet=$('sheet');if(!phoneSheet())sheet.classList.remove('tall');
     // A tall or gliding sheet keeps the last settled dock height, so the map is framed for the half-open sheet it sits behind.
     if(!sheet.classList.contains('tall')&&!sheet.classList.contains('fluid')){dockHeight=sheet.getBoundingClientRect().height;if(!sheet.classList.contains('collapsed')&&!paneGlide)sheetHalfHeight=dockHeight}
