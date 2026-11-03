@@ -54,6 +54,15 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     private var selectedKey = "factory"
     private var panelExpanded = true
     private var loadingCover: UIView?
+    /// The loading bar under the sprout: a brass-rimmed track with a glossy fill that only ever moves forward.
+    private weak var loadBar: UIView?
+    private weak var loadFill: UIImageView?
+    private var loadFillWidth: NSLayoutConstraint?
+    private var loadShown: CGFloat = 0
+    private var pageProgress: NSKeyValueObservation?
+    /// Lifts the cover if loading stalls, so the web loader's own Retry button is never hidden behind it.
+    private var stallTimer: DispatchWorkItem?
+    private static let loadTrackInner: CGFloat = 164
     private var nativeMap: CanopyMapRenderer?
     /// The lozenge that sits behind the selected tab. It is a glass element in its own right, so inside a
     /// `UIGlassContainerEffect` it fuses with the bar's own glass rather than sitting on top of it.
@@ -119,8 +128,8 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         webView.evaluateJavaScript(nativeAvailability)
     }
 
-    // The launch storyboard is static and shows this exact frame (the seed, label and centring), so the
-    // hand-off is invisible; from here the seed grows into the sprout, which then sways until the web view is ready.
+    // The launch storyboard is static and shows this exact frame (the seed, the empty bar and centring), so the
+    // hand-off is invisible; from here the seed grows into the sprout, which then sways while the bar fills.
     private func installLoadingCover() {
         let cover = UIView()
         cover.backgroundColor = UIColor(red: 32/255, green: 55/255, blue: 43/255, alpha: 1)
@@ -138,13 +147,8 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         plant.contentMode = .scaleAspectFit
         plant.translatesAutoresizingMaskIntoConstraints = false
         plant.isAccessibilityElement = false
-        let label = UILabel()
-        label.text = "Loading Canopy…"
-        label.textColor = UIColor(red: 0.86, green: 0.91, blue: 0.75, alpha: 1)
-        label.font = UIFont.preferredFont(forTextStyle: .subheadline)
-        label.adjustsFontForContentSizeCategory = true
-        label.textAlignment = .center
-        let stack = UIStackView(arrangedSubviews: [plant, label])
+        let bar = makeLoadBar()
+        let stack = UIStackView(arrangedSubviews: [plant, bar])
         stack.axis = .vertical; stack.alignment = .center; stack.spacing = 12
         stack.translatesAutoresizingMaskIntoConstraints = false
         cover.addSubview(stack)
@@ -154,8 +158,68 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
             stack.centerYAnchor.constraint(equalTo: cover.centerYAnchor)
         ])
         growSprout(plant)
-        // Never cover the web loader's existing Retry button if startup fails.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 8) { [weak self] in self?.dismissLoadingCover() }
+        // The first quarter of the bar is the page itself arriving; the game reports the rest as the map loads.
+        pageProgress = webView?.observe(\.estimatedProgress, options: [.new]) { [weak self] web, _ in
+            let fraction = CGFloat(web.estimatedProgress)
+            DispatchQueue.main.async { self?.setLoadProgress(0.25 * fraction) }
+        }
+        armStallTimer(after: 8)
+    }
+
+    /// The track is one image (the launch storyboard shows the same one, empty); the fill stretches between its round
+    /// ends, inset 2 pt inside the brass rim.
+    private func makeLoadBar() -> UIView {
+        let track = UIImageView(image: UIImage(named: "LoadTrack"))
+        track.translatesAutoresizingMaskIntoConstraints = false
+        track.isAccessibilityElement = true
+        track.accessibilityLabel = "Loading Canopy"
+        track.accessibilityTraits = [.updatesFrequently]
+        track.accessibilityValue = "0 percent"
+        let fillImage = UIImage(named: "LoadFill")?
+            .resizableImage(withCapInsets: UIEdgeInsets(top: 0, left: 5, bottom: 0, right: 5), resizingMode: .stretch)
+        let fill = UIImageView(image: fillImage)
+        fill.translatesAutoresizingMaskIntoConstraints = false
+        fill.alpha = 0
+        track.addSubview(fill)
+        let width = fill.widthAnchor.constraint(equalToConstant: 10)
+        loadFillWidth = width
+        loadBar = track
+        loadFill = fill
+        NSLayoutConstraint.activate([
+            track.widthAnchor.constraint(equalToConstant: 168), track.heightAnchor.constraint(equalToConstant: 14),
+            fill.leadingAnchor.constraint(equalTo: track.leadingAnchor, constant: 2),
+            fill.topAnchor.constraint(equalTo: track.topAnchor, constant: 2),
+            fill.heightAnchor.constraint(equalToConstant: 10),
+            width
+        ])
+        return track
+    }
+
+    /// Moves the bar forward, never back: the game's file count grows as it discovers more to load, which would
+    /// otherwise make the bar slip.
+    private func setLoadProgress(_ value: CGFloat, completion: (() -> Void)? = nil) {
+        guard loadingCover != nil, let bar = loadBar, let width = loadFillWidth else { completion?(); return }
+        let target = min(max(value, 0), 1)
+        guard target > loadShown else { completion?(); return }
+        loadShown = target
+        bar.accessibilityValue = "\(Int((target * 100).rounded())) percent"
+        let fill = loadFill
+        width.constant = max(10, Self.loadTrackInner * target)
+        let settle = {
+            fill?.alpha = 1
+            bar.layoutIfNeeded()
+        }
+        guard !UIAccessibility.isReduceMotionEnabled else { settle(); completion?(); return }
+        // The last stretch is quick so the reveal does not keep the shop's own build waiting.
+        UIView.animate(withDuration: target >= 1 ? 0.2 : 0.35, delay: 0, options: [.beginFromCurrentState, .curveEaseOut],
+                       animations: settle) { _ in completion?() }
+    }
+
+    private func armStallTimer(after seconds: Double) {
+        stallTimer?.cancel()
+        let lift = DispatchWorkItem { [weak self] in self?.dismissLoadingCover() }
+        stallTimer = lift
+        DispatchQueue.main.asyncAfter(deadline: .now() + seconds, execute: lift)
     }
 
     /// The seed grows once, easing out as the leaves open, then the grown sprout sways from its base. Every frame
@@ -201,10 +265,63 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     private func dismissLoadingCover() {
         guard let cover = loadingCover else { return }
         loadingCover = nil
-        UIView.animate(withDuration: UIAccessibility.isReduceMotionEnabled ? 0 : 0.2,
-                       animations: { cover.alpha = 0 }) { _ in cover.removeFromSuperview() }
+        stallTimer?.cancel()
+        pageProgress = nil
+        if UIAccessibility.isReduceMotionEnabled {
+            UIView.animate(withDuration: 0.3, animations: { cover.alpha = 0 }) { _ in cover.removeFromSuperview() }
+        } else {
+            // A smoky reveal: puffs billow over the whole screen, the sprout and bar drift up into them, and the forest
+            // thins away underneath, so the map (building itself at the same moment) appears out of the smoke.
+            puffSmoke(over: cover)
+            UIView.animate(withDuration: 0.35, delay: 0, options: .curveEaseIn) {
+                cover.subviews.forEach {
+                    $0.alpha = 0
+                    $0.transform = CGAffineTransform(translationX: 0, y: -12).scaledBy(x: 1.06, y: 1.06)
+                }
+            }
+            UIView.animate(withDuration: 0.8, delay: 0.15, options: .curveEaseInOut,
+                           animations: { cover.alpha = 0 }) { _ in cover.removeFromSuperview() }
+        }
         // The cover was modal; hand VoiceOver back to the game.
         UIAccessibility.post(notification: .screenChanged, argument: webView)
+    }
+
+    /// One short burst of soft cream puffs across the screen: about 60 large, faint ones that overlap into one cloud,
+    /// swell, rise and thin out over about 1.6 s. The layer then removes itself, so the map's first frames are not
+    /// held up.
+    private func puffSmoke(over cover: UIView) {
+        guard let host = cover.superview, let puff = UIImage(named: "SmokePuff")?.cgImage else { return }
+        let bounds = cover.frame
+        let smoke = CAEmitterLayer()
+        smoke.frame = bounds
+        smoke.emitterShape = .rectangle
+        smoke.emitterMode = .surface
+        smoke.emitterPosition = CGPoint(x: bounds.midX - bounds.minX, y: bounds.midY - bounds.minY)
+        smoke.emitterSize = CGSize(width: bounds.width * 1.1, height: bounds.height * 1.1)
+        smoke.beginTime = CACurrentMediaTime()
+        smoke.seed = UInt32.random(in: 0...UInt32.max)
+
+        let cell = CAEmitterCell()
+        cell.contents = puff
+        cell.birthRate = 500
+        cell.lifetime = 1.6
+        cell.lifetimeRange = 0.4
+        cell.scale = 1.8
+        cell.scaleRange = 0.6
+        cell.scaleSpeed = 0.5
+        cell.velocity = 40
+        cell.velocityRange = 30
+        cell.emissionRange = .pi * 2
+        cell.yAcceleration = -30
+        cell.spinRange = 1.2
+        cell.color = UIColor(red: 0.90, green: 0.93, blue: 0.84, alpha: 0.5).cgColor
+        cell.alphaSpeed = -0.35
+        smoke.emitterCells = [cell]
+
+        host.layer.insertSublayer(smoke, above: cover.layer)
+        // Emit for a moment only; the puffs already out live on and fade.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { smoke.birthRate = 0 }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) { smoke.removeFromSuperlayer() }
     }
 
     // MARK: - The bar
@@ -583,7 +700,15 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         }
         #endif
         guard message.name == "canopyTray" else { return }
-        if payload["ready"] as? Bool == true { dismissLoadingCover() }
+        if let load = payload["load"] as? Double {
+            // The map's files, 0 to 1, after the page's quarter. Any word from the game resets the stall timer.
+            setLoadProgress(0.25 + 0.7 * CGFloat(load))
+            armStallTimer(after: 6)
+        }
+        if payload["ready"] as? Bool == true {
+            // Fill the bar, then lift the cover as the shop starts building itself.
+            setLoadProgress(1) { [weak self] in self?.dismissLoadingCover() }
+        }
         if !powerStatePushed { pushPowerState() }
         if let expanded = payload["expanded"] as? Bool { panelExpanded = expanded }
         if let active = payload["active"] as? String, tabs.contains(where: { $0.key == active }) {

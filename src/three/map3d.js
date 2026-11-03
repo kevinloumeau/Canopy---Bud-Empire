@@ -38,8 +38,9 @@ export function createMap3D(canvas, layout) {
   } catch (e) { return null; }
   if (!renderer.getContext()) return null;
   // Files still loading (models and textures), so scripts/snap3d.mjs knows when a capture shows the finished scene.
-  let loading = 0;
-  const loads = THREE.DefaultLoadingManager, track = (url, done, total) => { loading = total - done; };
+  // loadDone and loadTotal (files so far) feed the iOS app's loading bar.
+  let loading = 0, loadDone = 0, loadTotal = 0;
+  const loads = THREE.DefaultLoadingManager, track = (url, done, total) => { loading = total - done; loadDone = done; loadTotal = total; };
   loads.onStart = loads.onProgress = track;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.shadowMap.enabled = true;
@@ -1264,6 +1265,7 @@ export function createMap3D(canvas, layout) {
     get ok() { return !lost; },
     // Files still loading plus loaded models still waiting for their setup.
     get loading() { return loading + setups.length; },
+    get loadCounts() { return { done: loadDone, total: loadTotal }; },
     dispose() { cancelAnimationFrame(setupPump); setups.length = 0; renderer.dispose(); materials.forEach(m => m.dispose()); }
   };
 }
