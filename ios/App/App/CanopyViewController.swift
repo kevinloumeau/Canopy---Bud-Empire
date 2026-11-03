@@ -54,6 +54,15 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     private var selectedKey = "factory"
     private var panelExpanded = true
     private var loadingCover: UIView?
+    /// The loading ring around the sprout: a brass-rimmed sage track, and a glossy fill revealed by two arcs that climb
+    /// from the bottom up both sides and meet at the top. It only ever moves forward.
+    private weak var loadRing: UIView?
+    private weak var loadRingFill: UIView?
+    private var loadArcs: [CAShapeLayer] = []
+    private var loadShown: CGFloat = 0
+    private var pageProgress: NSKeyValueObservation?
+    /// Lifts the cover if loading stalls, so the web loader's own Retry button is never hidden behind it.
+    private var stallTimer: DispatchWorkItem?
     private var nativeMap: CanopyMapRenderer?
     /// The lozenge that sits behind the selected tab. It is a glass element in its own right, so inside a
     /// `UIGlassContainerEffect` it fuses with the bar's own glass rather than sitting on top of it.
@@ -119,8 +128,8 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         webView.evaluateJavaScript(nativeAvailability)
     }
 
-    // The launch storyboard is static and shows this exact frame (same sprout, label and centring), so the
-    // hand-off is invisible; from here the sprout breathes until the web view is ready.
+    // The launch storyboard is static and shows this exact frame (the seed inside the empty ring, same centring), so
+    // the hand-off is invisible; from here the seed grows into the sprout, which then sways while the ring fills.
     private func installLoadingCover() {
         let cover = UIView()
         cover.backgroundColor = UIColor(red: 32/255, green: 55/255, blue: 43/255, alpha: 1)
@@ -138,40 +147,194 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         plant.contentMode = .scaleAspectFit
         plant.translatesAutoresizingMaskIntoConstraints = false
         plant.isAccessibilityElement = false
-        let label = UILabel()
-        label.text = "Loading Canopy…"
-        label.textColor = UIColor(red: 0.86, green: 0.91, blue: 0.75, alpha: 1)
-        label.font = UIFont.preferredFont(forTextStyle: .subheadline)
-        label.adjustsFontForContentSizeCategory = true
-        label.textAlignment = .center
-        let stack = UIStackView(arrangedSubviews: [plant, label])
-        stack.axis = .vertical; stack.alignment = .center; stack.spacing = 12
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        cover.addSubview(stack)
+        let ring = makeLoadRing()
+        cover.addSubview(ring)
+        cover.addSubview(plant)
         NSLayoutConstraint.activate([
+            ring.centerXAnchor.constraint(equalTo: cover.centerXAnchor),
+            ring.centerYAnchor.constraint(equalTo: cover.centerYAnchor),
+            // The sprout's own canvas sits 4 pt high in the ring, which centres the plant itself.
             plant.widthAnchor.constraint(equalToConstant: 96), plant.heightAnchor.constraint(equalToConstant: 96),
-            stack.centerXAnchor.constraint(equalTo: cover.centerXAnchor),
-            stack.centerYAnchor.constraint(equalTo: cover.centerYAnchor)
+            plant.centerXAnchor.constraint(equalTo: ring.centerXAnchor),
+            plant.centerYAnchor.constraint(equalTo: ring.centerYAnchor, constant: -4)
         ])
-        if !UIAccessibility.isReduceMotionEnabled {
-            // Starts at rest (scale 1) so the first frame matches the storyboard.
-            let grow = CABasicAnimation(keyPath: "transform.scale")
-            grow.fromValue = 1.0; grow.toValue = 1.08; grow.duration = 1.1
-            grow.autoreverses = true; grow.repeatCount = .infinity
-            grow.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-            plant.layer.add(grow, forKey: "sproutBreathing")
+        growSprout(plant)
+        // The first quarter of the ring is the page itself arriving; the game reports the rest as the map loads.
+        pageProgress = webView?.observe(\.estimatedProgress, options: [.new]) { [weak self] web, _ in
+            let fraction = CGFloat(web.estimatedProgress)
+            DispatchQueue.main.async { self?.setLoadProgress(0.25 * fraction) }
         }
-        // Never cover the web loader's existing Retry button if startup fails.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 8) { [weak self] in self?.dismissLoadingCover() }
+        armStallTimer(after: 8)
+    }
+
+    /// Both images are full rings (the launch storyboard shows the same track, empty). The fill is masked by two round-
+    /// capped arcs, one up each side from the bottom centre, each covering half the circle at 100%.
+    private func makeLoadRing() -> UIView {
+        let size: CGFloat = 164, radius: CGFloat = 70
+        let track = UIImageView(image: UIImage(named: "LoadRing"))
+        track.translatesAutoresizingMaskIntoConstraints = false
+        track.isAccessibilityElement = true
+        track.accessibilityLabel = "Loading Canopy"
+        track.accessibilityTraits = [.updatesFrequently]
+        track.accessibilityValue = "0 percent"
+        let fill = UIImageView(image: UIImage(named: "LoadRingFill"))
+        fill.frame = CGRect(x: 0, y: 0, width: size, height: size)
+        fill.alpha = 0
+        track.addSubview(fill)
+
+        let mask = CALayer()
+        mask.frame = fill.bounds
+        let centre = CGPoint(x: size / 2, y: size / 2)
+        loadArcs = [true, false].map { clockwise in
+            let arc = CAShapeLayer()
+            arc.frame = mask.bounds
+            // UIKit angles: .pi / 2 is straight down. Clockwise climbs the left side, the other the right.
+            arc.path = UIBezierPath(arcCenter: centre, radius: radius, startAngle: .pi / 2,
+                                    endAngle: clockwise ? .pi * 1.5 : -.pi / 2, clockwise: clockwise).cgPath
+            arc.fillColor = nil
+            arc.strokeColor = UIColor.black.cgColor
+            arc.lineWidth = 8
+            arc.lineCap = .round
+            arc.strokeEnd = 0
+            mask.addSublayer(arc)
+            return arc
+        }
+        fill.layer.mask = mask
+        loadRing = track
+        loadRingFill = fill
+        NSLayoutConstraint.activate([
+            track.widthAnchor.constraint(equalToConstant: size), track.heightAnchor.constraint(equalToConstant: size)
+        ])
+        return track
+    }
+
+    /// Moves the ring forward, never back: the game's file count grows as it discovers more to load, which would
+    /// otherwise make the ring slip.
+    private func setLoadProgress(_ value: CGFloat, completion: (() -> Void)? = nil) {
+        guard loadingCover != nil, let ring = loadRing else { completion?(); return }
+        let target = min(max(value, 0), 1)
+        guard target > loadShown else { completion?(); return }
+        loadShown = target
+        ring.accessibilityValue = "\(Int((target * 100).rounded())) percent"
+        loadRingFill?.alpha = 1
+        let animated = !UIAccessibility.isReduceMotionEnabled
+        CATransaction.begin()
+        CATransaction.setDisableActions(!animated)
+        // The last stretch is quick so the reveal does not keep the shop's own build waiting.
+        CATransaction.setAnimationDuration(target >= 1 ? 0.2 : 0.35)
+        CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: .easeOut))
+        CATransaction.setCompletionBlock { completion?() }
+        loadArcs.forEach { $0.strokeEnd = target }
+        CATransaction.commit()
+    }
+
+    private func armStallTimer(after seconds: Double) {
+        stallTimer?.cancel()
+        let lift = DispatchWorkItem { [weak self] in self?.dismissLoadingCover() }
+        stallTimer = lift
+        DispatchQueue.main.asyncAfter(deadline: .now() + seconds, execute: lift)
+    }
+
+    /// The seed grows once, easing out as the leaves open, then the grown sprout sways from its base. Every frame
+    /// shares one canvas with the stem's foot on the same pixel, so nothing hops between frames.
+    private func growSprout(_ plant: UIImageView) {
+        let frames = (1...21).compactMap { UIImage(named: String(format: "SproutGrow%02d", $0))?.cgImage }
+        guard frames.count == 21, let grown = UIImage(named: "SproutGrow21") else { return }
+        if UIAccessibility.isReduceMotionEnabled {
+            // A fade, not motion: the seed simply becomes the sprout, once the cover is on screen.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                UIView.transition(with: plant, duration: 0.4, options: .transitionCrossDissolve,
+                                  animations: { plant.image = grown })
+            }
+            return
+        }
+        // The grown sprout is the resting state; the frames play over it and leave it in place.
+        plant.image = grown
+        let growTime = 1.5
+        let grow = CAKeyframeAnimation(keyPath: "contents")
+        grow.values = frames
+        // Later frames hold longer, so the stem shoots up and the leaves settle slowly.
+        grow.keyTimes = (0..<frames.count).map { NSNumber(value: pow(Double($0) / Double(frames.count - 1), 1.4)) }
+        grow.calculationMode = .discrete
+        grow.duration = growTime
+        plant.layer.add(grow, forKey: "sproutGrow")
+
+        // Sway pivots on the foot of the stem: 84% down the 96 pt canvas, so 32 pt below the view's centre.
+        let foot: CGFloat = 32
+        func lean(_ degrees: CGFloat) -> NSValue {
+            let pivot = CATransform3DMakeTranslation(0, foot, 0)
+            return NSValue(caTransform3D: CATransform3DTranslate(
+                CATransform3DRotate(pivot, degrees * .pi / 180, 0, 0, 1), 0, -foot, 0))
+        }
+        let sway = CAKeyframeAnimation(keyPath: "transform")
+        sway.values = [lean(0), lean(2), lean(0), lean(-2), lean(0)]
+        sway.timingFunctions = Array(repeating: CAMediaTimingFunction(name: .easeInEaseOut), count: 4)
+        sway.duration = 2.4
+        sway.repeatCount = .infinity
+        sway.beginTime = plant.layer.convertTime(CACurrentMediaTime(), from: nil) + growTime
+        plant.layer.add(sway, forKey: "sproutSway")
     }
 
     private func dismissLoadingCover() {
         guard let cover = loadingCover else { return }
         loadingCover = nil
-        UIView.animate(withDuration: UIAccessibility.isReduceMotionEnabled ? 0 : 0.2,
-                       animations: { cover.alpha = 0 }) { _ in cover.removeFromSuperview() }
+        stallTimer?.cancel()
+        pageProgress = nil
+        if UIAccessibility.isReduceMotionEnabled {
+            UIView.animate(withDuration: 0.3, animations: { cover.alpha = 0 }) { _ in cover.removeFromSuperview() }
+        } else {
+            // A smoky reveal: puffs billow over the whole screen, the sprout and bar drift up into them, and the forest
+            // thins away underneath, so the map (building itself at the same moment) appears out of the smoke.
+            puffSmoke(over: cover)
+            UIView.animate(withDuration: 0.35, delay: 0, options: .curveEaseIn) {
+                cover.subviews.forEach {
+                    $0.alpha = 0
+                    $0.transform = CGAffineTransform(translationX: 0, y: -12).scaledBy(x: 1.06, y: 1.06)
+                }
+            }
+            UIView.animate(withDuration: 0.8, delay: 0.15, options: .curveEaseInOut,
+                           animations: { cover.alpha = 0 }) { _ in cover.removeFromSuperview() }
+        }
         // The cover was modal; hand VoiceOver back to the game.
         UIAccessibility.post(notification: .screenChanged, argument: webView)
+    }
+
+    /// One short burst of soft cream puffs across the screen: about 60 large, faint ones that overlap into one cloud,
+    /// swell, rise and thin out over about 1.6 s. The layer then removes itself, so the map's first frames are not
+    /// held up.
+    private func puffSmoke(over cover: UIView) {
+        guard let host = cover.superview, let puff = UIImage(named: "SmokePuff")?.cgImage else { return }
+        let bounds = cover.frame
+        let smoke = CAEmitterLayer()
+        smoke.frame = bounds
+        smoke.emitterShape = .rectangle
+        smoke.emitterMode = .surface
+        smoke.emitterPosition = CGPoint(x: bounds.midX - bounds.minX, y: bounds.midY - bounds.minY)
+        smoke.emitterSize = CGSize(width: bounds.width * 1.1, height: bounds.height * 1.1)
+        smoke.beginTime = CACurrentMediaTime()
+        smoke.seed = UInt32.random(in: 0...UInt32.max)
+
+        let cell = CAEmitterCell()
+        cell.contents = puff
+        cell.birthRate = 500
+        cell.lifetime = 1.6
+        cell.lifetimeRange = 0.4
+        cell.scale = 1.8
+        cell.scaleRange = 0.6
+        cell.scaleSpeed = 0.5
+        cell.velocity = 40
+        cell.velocityRange = 30
+        cell.emissionRange = .pi * 2
+        cell.yAcceleration = -30
+        cell.spinRange = 1.2
+        cell.color = UIColor(red: 0.90, green: 0.93, blue: 0.84, alpha: 0.5).cgColor
+        cell.alphaSpeed = -0.35
+        smoke.emitterCells = [cell]
+
+        host.layer.insertSublayer(smoke, above: cover.layer)
+        // Emit for a moment only; the puffs already out live on and fade.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { smoke.birthRate = 0 }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) { smoke.removeFromSuperlayer() }
     }
 
     // MARK: - The bar
@@ -550,7 +713,15 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         }
         #endif
         guard message.name == "canopyTray" else { return }
-        if payload["ready"] as? Bool == true { dismissLoadingCover() }
+        if let load = payload["load"] as? Double {
+            // The map's files, 0 to 1, after the page's quarter. Any word from the game resets the stall timer.
+            setLoadProgress(0.25 + 0.7 * CGFloat(load))
+            armStallTimer(after: 6)
+        }
+        if payload["ready"] as? Bool == true {
+            // Fill the bar, then lift the cover as the shop starts building itself.
+            setLoadProgress(1) { [weak self] in self?.dismissLoadingCover() }
+        }
         if !powerStatePushed { pushPowerState() }
         if let expanded = payload["expanded"] as? Bool { panelExpanded = expanded }
         if let active = payload["active"] as? String, tabs.contains(where: { $0.key == active }) {

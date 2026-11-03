@@ -943,12 +943,20 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     return t<=0?0:Math.min(1,t/STATION_POP.take);
   }
   var MAP_SETTLE_MAX=12000,mapSettleStart=0,mapQuietFrames=0,mapRevealTimer=0;
+  // The iOS app draws its own loading bar over the page; it hears how far the map's files are and when the card lifts.
+  // The file total grows as the map discovers what it needs, so the bar measures against last launch's total too
+  // (remembered when the card lifts); otherwise the first few files would read as nearly done.
+  var nativeLoadSent=-1,nativeLoadExpect=0;
+  try{nativeLoadExpect=+localStorage.getItem('canopyLoadFiles')||0}catch(e){}
+  function nativeLoadStep(){var c=map3d.loadCounts;return Math.floor(c.done/Math.max(c.total,nativeLoadExpect,1)*20)/20}
+  function tellNativeLoad(msg){var h=window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.canopyTray;if(h)try{h.postMessage(msg)}catch(e){}}
   function mapSettled(wallNow){
     if(!mapSettleStart){mapSettleStart=wallNow;mapQuietFrames=0}
+    var loadStep=nativeLoadStep();if(loadStep>nativeLoadSent){nativeLoadSent=loadStep;tellNativeLoad({load:loadStep})}
     mapQuietFrames=map3d.loading>0||spritesLoading()>0?0:mapQuietFrames+1;
     return mapQuietFrames>=6||wallNow-mapSettleStart>MAP_SETTLE_MAX;
   }
-  function mapReveal(){var card=$('loading');if(card.hidden)return;if(!introAt&&!SNAP&&!motionPreference.matches){introAt=performance.now();$('world').classList.add('building')}card.classList.add('reveal');clearTimeout(mapRevealTimer);mapRevealTimer=setTimeout(function(){card.hidden=true;card.classList.remove('reveal')},motionPreference.matches?0:300)}
+  function mapReveal(){tellNativeLoad({ready:true});try{if(map3d&&map3d.loadCounts.total)localStorage.setItem('canopyLoadFiles',String(map3d.loadCounts.total))}catch(e){}var card=$('loading');if(card.hidden)return;if(!introAt&&!SNAP&&!motionPreference.matches){introAt=performance.now();$('world').classList.add('building')}card.classList.add('reveal');clearTimeout(mapRevealTimer);mapRevealTimer=setTimeout(function(){card.hidden=true;card.classList.remove('reveal')},motionPreference.matches?0:300)}
   // Builds the 3D map on a fresh WebGL canvas. A lost context (the GPU reset, or iOS reclaimed it in the background)
   // is rebuilt the same way rather than trusted to come back, with the loading card up meanwhile.
   function startMap3d(){
@@ -4193,9 +4201,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   }
   function renderStoreView(){
     var id=state.empire.activeStore;
-    ['Home shop','Riverside','Old Town','City Center','Desert Oasis','Alpine'].forEach(function(name,i){var button=$('storeButton'+i),locked=i>0&&!state.empire.stores[i-1].level;button.disabled=locked;button.setAttribute('aria-pressed',String(id===i));button.setAttribute('aria-label',name+(locked?' · Unlock in Empire':id===i?' · Current store':' · Visit store'));button.title=name+(locked?' · Unlock in Empire':'');});
-    $('manageViewedStore').hidden=!id;
-    if(locationToggle&&locationToggle.dataset.store!==String(id)){locationToggle.innerHTML=$('storeButton'+id).querySelector('.location-icon').outerHTML+'<span>'+['Home','Riverside','Old Town','City','Desert','Alpine'][id]+'</span><span class=location-chevron aria-hidden=true>⌄</span>';locationToggle.dataset.store=String(id);locationToggle.setAttribute('aria-label','Change location · '+['Home shop','Riverside','Old Town','City Center','Desert Oasis','Alpine'][id])}
+    // Kevin (2026-11-03): the round store-list button under the zoom controls is gone; branches open from the Empire tab
+    // and the Home chip brings the camera back.
     if(id){var tag=$('branchMapMarker'),html='<span class=station-sign-name>'+STORES[id-1].name+'</span><span class=station-sign-level>Lv '+state.empire.stores[id-1].level+' · Manage</span>';if(tag.dataset.html!==html){tag.innerHTML=html;tag.dataset.html=html;updateMarkers.key=null}tag.setAttribute('aria-label','Manage '+STORES[id-1].name+', level '+state.empire.stores[id-1].level);}
   }
   function manageViewedStore(){
@@ -4216,13 +4223,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function renderHomeChip(){if(!homeChip)return;var q=project(0,1,0),low=Math.min(height,visibleHeight()),away=state.empire.activeStore>0||q.x<-width*.08||q.x>width*1.08||q.y<-height*.1||q.y>low+height*.1;
     if(homeChip.hidden!==!away)homeChip.hidden=!away;if(!away)return;
     var chipTop=Math.max(0,low-58)+'px';if(homeChip.style.top!==chipTop)homeChip.style.top=chipTop;var right=q.x>width;if(homeChip.classList.contains('points-right')!==right)homeChip.classList.toggle('points-right',right)}
-  var locationNav=document.querySelector('.store-switcher'),locationOptions=document.createElement('div');locationOptions.id='locationOptions';locationOptions.className='location-options';locationOptions.hidden=true;while(locationNav.firstChild)locationOptions.appendChild(locationNav.firstChild);locationNav.appendChild(locationOptions);
-  var locationToggle=document.createElement('button');locationToggle.id='locationToggle';locationToggle.type='button';locationToggle.setAttribute('aria-expanded','false');locationToggle.setAttribute('aria-controls','locationOptions');locationToggle.innerHTML=$('storeButton0').querySelector('.location-icon').outerHTML+'<span>Main</span><span class=location-chevron aria-hidden=true>⌄</span>';locationNav.append(locationToggle,locationOptions);document.querySelector('.map-controls').appendChild(locationNav);
-  function closeLocations(){locationOptions.hidden=true;locationToggle.setAttribute('aria-expanded','false')}
-  locationToggle.onclick=function(){var open=locationOptions.hidden;locationOptions.hidden=!open;locationToggle.setAttribute('aria-expanded',String(open))};
-  document.addEventListener('pointerdown',function(e){if(!locationNav.contains(e.target))closeLocations()});
-  locationNav.addEventListener('keydown',function(e){if(e.key==='Escape'){closeLocations();locationToggle.focus()}});
-  Array.prototype.forEach.call(document.querySelectorAll('[data-store]'),function(button){button.onclick=function(){var id=Number(this.getAttribute('data-store'));closeLocations();if(id!==state.empire.activeStore)visitStore(id);locationToggle.focus({preventScroll:true})}});$('manageViewedStore').onclick=function(){closeLocations();manageViewedStore()};$('branchMapMarker').onclick=manageViewedStore;
+  $('branchMapMarker').onclick=manageViewedStore;
   STORES.forEach(function(_,i){$('branchVisit'+i).onclick=function(){visitStore(i+1)}});
 
   var touches={},gestureMoved=false,gestureOrigin=null;
@@ -4300,7 +4301,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   var lastTap={time:0,x:0,y:0};
   canvas.parentElement.addEventListener('pointerup',function(e){
     if(e.pointerType==='mouse'&&e.button!==0)return;if(Object.keys(touches).length>1||gestureMoved&&e.target===canvas)return;
-    if(e.target.closest&&e.target.closest('.map-controls,.location-nav,#locationNav,button:not(.marker)'))return;
+    if(e.target.closest&&e.target.closest('.map-controls,button:not(.marker)'))return;
     var now=performance.now(),quick=now-lastTap.time<350&&Math.hypot(e.clientX-lastTap.x,e.clientY-lastTap.y)<30;
     lastTap=quick?{time:0,x:0,y:0}:{time:now,x:e.clientX,y:e.clientY};
     if(!quick)return;
