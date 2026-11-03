@@ -30,6 +30,5 @@
 
 @media(max-width:779px){
   .station-team{grid-template-columns:24px minmax(0,1fr) 84px 84px}
-  .sheet #stockStatus{display:none!important}
   .sheet [data-pane=factory] #stationStatus,.sheet [data-pane=factory] .station-upgrade{display:none!important}
 }
