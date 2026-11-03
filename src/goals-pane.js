@@ -100,7 +100,7 @@ export function mountGoalsPane({pane,sources,getState,format,rate}){
   const goals=starStatus(p,i),earned=goals.filter(g=>g.earned).length;
   const figure='<span class="goal-stars" aria-label="'+earned+' of 3 stars">'+[0,1,2].map(k=>'<i class="'+(k<earned?'is-on':'')+'">'+SVG(ICONS.star)+'</i>').join('')+'</span>';
   return group(STORES[i].name,figure,tiles(goals.map(g=>({title:g.title,icon:'star',done:g.earned,share:g.progress/g.target,
-   figure:g.kind==='level'?'Lv '+g.progress+' / '+g.target:abbr(g.progress)+' / '+abbr(g.target)}))));}
+   figure:g.kind!=='served'?'Lv '+g.progress+' / '+g.target:abbr(g.progress)+' / '+abbr(g.target)}))));}
  function awards(s){const all=achievementRows(s),todo=all.filter(r=>!r.done).slice(0,3),done=all.length-all.filter(r=>!r.done).length;
   const fig=(n,r)=>(r.id.startsWith('rev-')?'$':'')+short(n);
   return group('Achievements',SVG(ICONS.trophy)+done+' / '+ACHIEVEMENTS.length,tiles(todo.map(r=>({title:r.goal,icon:iconFor(r.goal),share:r.share,figure:fig(r.value,r)+' / '+fig(r.target,r)}))));}

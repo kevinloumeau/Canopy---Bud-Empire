@@ -1,0 +1,79 @@
+/* A store's page (src/empire-stores.js, src/operations-ui.js): one bar with back, name and two tabs, then Stations
+   (six station rings) or Store (level, three upgrades, stars). Tiles reuse the Empire map's ring look
+   (empire-map.css): leaf for progress, a pill for a price, brass only on the one best buy. */
+
+/* ---- The bar: back, the store's name, and the Stations · Store switch on the right. ---- */
+.sheet .empire-screen .empire-back.is-store{gap:4px;padding-right:0}
+.sheet .empire-screen .empire-back.is-store .empire-back-button{padding-right:4px}
+.sheet .empire-screen .empire-back.is-store .empire-back-button>span:last-child{display:none}
+.sheet .empire-screen .empire-back.is-store .empire-back-title{flex:1 1 auto}
+.sheet .empire-screen .empire-back .operation-tabs{display:flex;flex:none;gap:2px;margin:0;padding:3px;border-radius:999px;background:var(--ui-well);box-shadow:inset 0 0 0 1px var(--ui-edge)}
+.sheet .empire-screen .empire-back .operation-tabs[hidden],.sheet .empire-screen .empire-back .operation-tabs.is-single{display:none!important}
+.sheet .empire-screen .empire-back .operation-tabs button{display:inline-flex;grid-template-rows:none;align-items:center;gap:5px;min-height:32px;min-width:0;padding:0 11px 0 9px;border:0;border-radius:999px;background:none;box-shadow:none;color:var(--ui-soft)}
+.sheet .empire-screen .empire-back .operation-tabs button[hidden]{display:none}
+.sheet .empire-screen .empire-back .operation-tabs button svg{width:16px;height:16px;opacity:.8}
+.sheet .empire-screen .empire-back .operation-tabs button em{font:600 11.5px/1 'Bricolage Grotesque',system-ui,sans-serif;font-style:normal;color:inherit}
+.sheet .empire-screen .empire-back .operation-tabs button[aria-pressed=true]{background:var(--ui-sheen);box-shadow:inset 0 0 0 1px var(--ui-edge);color:var(--ui-ink)}
+.sheet .empire-screen .empire-back .operation-tabs button[aria-pressed=true] svg{opacity:1}
+.sheet .empire-screen .empire-back .operation-tabs button:focus-visible{outline:2px solid var(--ui-brass);outline-offset:1px}
+/* The old sticky header only held the (hidden) store row; the page itself starts at the top. */
+[data-empire-screen=store] .branch-sticky-header{display:none}
+.sheet .empire-screen .op-pane{padding-top:2px}
+.sheet .empire-screen .op-pane[hidden]{display:none}
+
+/* ---- Heads and tile grids. ---- */
+.sheet .empire-screen .page-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:2px 2px 2px;font:600 13.5px/1.2 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-ink)}
+.sheet .empire-screen .page-meta{font:400 11px/1.2 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-soft);white-space:nowrap}
+.sheet .empire-screen .page-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin:0 -4px}
+.sheet .empire-screen .page-group{margin-top:8px}
+.sheet .empire-screen .page-group[hidden]{display:none}
+
+.sheet .empire-screen .page-tile{display:grid;grid-template-rows:auto auto auto;justify-items:center;align-content:start;gap:3px;min-width:0;min-height:0;width:auto;margin:0;padding:5px 2px 5px;border:0;border-radius:14px;background:none;box-shadow:none;color:var(--ui-ink);font:inherit;text-align:center;opacity:1;-webkit-tap-highlight-color:transparent;transition:background .15s}
+.sheet .empire-screen button.page-tile{cursor:pointer}
+.sheet .empire-screen button.page-tile::after{display:none}
+@media(hover:hover){.sheet .empire-screen button.page-tile:hover{background:var(--ui-sheen)}}
+.sheet .empire-screen button.page-tile:active{background:var(--ui-sheen);transform:scale(.97)}
+.sheet .empire-screen button.page-tile:focus-visible{outline:2px solid var(--ui-brass);outline-offset:-2px}
+.sheet .empire-screen .page-tile.is-best{background:radial-gradient(60% 55% at 50% 32%,#e2c68a2b,transparent 75%)}
+.sheet .empire-screen .page-tile .map-tile-name.is-wrap{white-space:normal;text-wrap:balance;line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;min-height:2.3em;align-content:center}
+
+/* The glyph in the ring: a station's own line icon, an upgrade's icon, or a star. */
+.page-glyph{position:relative;display:grid;place-items:center;width:24px;height:24px;color:#cfe3bf}
+.page-glyph svg{width:24px;height:24px}
+.page-tile.is-best .page-glyph{color:var(--ui-brass)}
+.page-tile.is-max .page-glyph{color:#a8d784}
+.page-tile.is-locked .page-glyph{color:var(--ui-soft)}
+.page-glyph.is-star svg{width:22px;height:22px}
+.page-tile.is-max .page-glyph.is-star svg{fill:currentColor}
+/* A station's level as a chip on the ring's foot. */
+.page-level{position:absolute;left:50%;bottom:-5px;transform:translateX(-50%);min-width:20px;padding:2px 5px;border-radius:999px;background:#1d3428;box-shadow:inset 0 0 0 1px var(--ui-edge);font:600 9.5px/1 'DM Mono',monospace;letter-spacing:-.03em;color:var(--ui-ink);font-variant-numeric:tabular-nums}
+.page-tile.is-best .page-level{box-shadow:inset 0 0 0 1px #e2c68a77;color:var(--ui-brass)}
+.is-stations .map-tile-name{margin-top:3px}
+
+/* ---- Store: the hero row. ---- */
+.sheet .empire-screen .page-hero{display:grid;grid-template-columns:50px minmax(0,1fr) auto;align-items:center;gap:12px;margin:0 0 2px;padding:6px 10px 6px 8px;border-radius:16px;background:var(--ui-well-soft);box-shadow:inset 0 0 0 1px var(--ui-edge)}
+.page-hero .map-ring .map-tile-icon{width:40px;height:40px}
+.page-hero.is-locked .map-tile-icon{filter:grayscale(.85) brightness(.62) drop-shadow(0 2px 2px #0a140e66)}
+.page-hero.is-locked .map-ring-fill{stroke:rgba(242,240,230,.42)}
+.page-hero-copy{display:grid;gap:3px;min-width:0}
+.page-hero-copy b{font:650 14px/1.2 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.page-hero-copy small{font:500 11px/1.2 'DM Mono',monospace;letter-spacing:-.03em;color:#a8d784;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.page-hero.is-locked .page-hero-copy small{color:var(--ui-soft)}
+.sheet .empire-screen .page-hero .page-buy{min-height:38px;min-width:0;margin:0;padding:0 13px;border:0;border-radius:999px;background:#7fa7652e;box-shadow:inset 0 0 0 1px #a8d78433;color:#d8efc4;font:600 12px/1 'DM Mono',monospace;letter-spacing:-.03em;white-space:nowrap}
+.sheet .empire-screen .page-hero .page-buy.is-best{background:var(--ui-brass);box-shadow:inset 0 1px 0 #fff6,0 6px 16px -8px #e2c68a99;color:var(--ui-brass-ink)}
+.sheet .empire-screen .page-hero .page-buy:disabled{background:none;box-shadow:inset 0 0 0 1px var(--ui-edge);color:var(--ui-soft);opacity:1}
+.sheet .empire-screen .page-hero .page-buy[hidden]{display:none}
+
+/* Stars: three small rows, ring and figure side by side, so the whole page fits the half sheet. */
+.sheet .empire-screen .page-tile.is-goal{grid-template-columns:30px minmax(0,1fr);grid-template-rows:auto auto;justify-items:start;align-items:center;column-gap:7px;row-gap:1px;padding:5px 4px;text-align:left}
+.page-tile.is-goal .map-ring{grid-row:1/3;width:30px;height:30px}
+.page-tile.is-goal .map-ring-track circle{stroke-width:4}
+.page-tile.is-goal .page-glyph,.page-tile.is-goal .page-glyph.is-star svg{width:15px;height:15px}
+.page-tile.is-goal .map-tile-name{font-size:10.5px;color:var(--ui-soft)}
+.page-tile.is-goal .map-tile-figure{justify-content:flex-start;padding:0;min-height:0;color:var(--ui-ink)}
+.page-tile.is-goal.is-max .map-tile-figure{color:#a8d784;font:500 10px/1 'DM Mono',monospace}
+
+.sheet .empire-screen .page-group.is-stars{margin-top:4px;padding-top:4px;border-top:1px solid var(--ui-sheen)}
+/* main.js still renders the old project rows (their buttons are what the upgrade tiles press); they no longer show. */
+.sheet .empire-screen .op-pane>.branch-projects{display:none!important}
+.sheet .empire-screen .page-hero .page-buy.is-off{display:none}

@@ -6,9 +6,9 @@ test('legacy and malformed journals migrate to safe, known chapter IDs',()=>{
  for(const raw of [null,undefined,3,{}, {completed:'first-bags'}])assert.deepEqual(migrateJourney(raw),{completed:[]});
  assert.deepEqual(migrateJourney({completed:['river','river','unknown']}),{completed:['river']});
 });
-test('chapters use actual sales, upgrades, unlocks and relationships without changing the economy',()=>{
+test('chapters use actual sales, upgrades, unlocks, branch stations and stars without changing the economy',()=>{
  const s=state();assert.equal(currentChapter(s).id,'first-bags');
- s.sold=10;s.lines.fill(3);s.strains[1]=1;s.empire.stores.forEach(b=>b.level=1);s.empire.network.stores.forEach(b=>b.relationship=1);
+ s.sold=10;s.lines.fill(3);s.strains[1]=1;s.empire.stores.forEach(b=>{b.level=1;b.lines=[3,3,3,3,3,3]});s.empire.stars=[7,0,0];
  const before=structuredClone(s);assert.equal(advanceJourney(s).length,CHAPTERS.length);assert.equal(currentChapter(s),null);
  const {journey,...economy}=s;const {journey:old,...original}=before;assert.deepEqual(economy,original);
  assert.deepEqual(advanceJourney(s),[]);

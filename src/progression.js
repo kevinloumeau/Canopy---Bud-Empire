@@ -1,6 +1,5 @@
-import {migrateOperations,staffLevel,REGULARS} from './operations.js';
+import {migrateOperations,staffLevel} from './operations.js';
 import {batchSize,stationTier} from './economy.js';
-const REGULAR_NAMES=REGULARS.map(r=>r.name);
 // Persistent empire systems. Rewards never count as earned revenue.
 // Counts and money alike are abbreviated past a thousand — 15.1K, 2.4M — everywhere the app shows a number.
 export function abbr(n){
@@ -42,13 +41,15 @@ export function buyProject(state,i,j) {
 export const STAR_GOALS=[
   {kind:'served',target:[150,175,200,225,250]},
   {kind:'level',target:[10,10,10,10,10]},
-  {kind:'story',target:[3,3,3,3,3]}
+  // The third star was a regular's story; with the store page down to stations and upgrades (Kevin, 2026-11-03) it asks
+  // for the whole line instead: every one of the branch's six stations at its first tier, Lv 10.
+  {kind:'line',target:[10,10,10,10,10]}
 ];
 export const STAR_BONUS=.1;
 function starValue(p,i,kind){
   if(kind==='served')return p.stores[i].served;
   if(kind==='level')return p.stores[i].level;
-  return p.network?.stores?.[i]?.relationship||0;
+  const lines=p.stores[i].lines;return p.stores[i].level&&Array.isArray(lines)&&lines.length?Math.min(...lines):0;
 }
 export const starCount=(p,i)=>[0,1,2].filter(k=>(p.stars?.[i]||0)&1<<k).length;
 export const branchFinished=(p,i)=>starCount(p,i)===3;
@@ -58,9 +59,8 @@ export function starMultiplier(p){return 1+finishedBranches(p)*STAR_BONUS;}
 export const STARS_TO_OPEN=2;
 export function branchOpenable(p,i){return i===0||p.stores[i].level>0||starCount(p,i-1)>=STARS_TO_OPEN;}
 export function starStatus(p,i){
-  const name=REGULAR_NAMES[i];
   return STAR_GOALS.map((g,k)=>{const target=g.target[i],earned=!!((p.stars?.[i]||0)&1<<k),value=Math.min(target,starValue(p,i,g.kind));
-    const title=g.kind==='served'?'Serve '+abbr(target)+' customers':g.kind==='level'?'Reach level '+target:'Finish '+name+'’s story';
+    const title=g.kind==='served'?'Serve '+abbr(target)+' customers':g.kind==='level'?'Reach level '+target:'Every station Lv '+target;
     return {kind:g.kind,target,progress:earned?target:value,earned,title};});
 }
 // Latches every goal met right now; returns [{store,goal}] for stars earned by this call so the UI can celebrate them.

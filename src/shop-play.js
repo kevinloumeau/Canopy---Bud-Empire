@@ -1,11 +1,9 @@
-import {BRANCH_NAMES,LINES,REGULARS,storyStatus,deliveryReason} from './operations.js';
 import {TYPES,STRAIN_TYPE} from './strains.js';
 import {FORMATS,stockedFormats} from './depth.js';
 
 // Shop activity, as on iOS: a pill on the map that leads with whatever needs the player now. Walk-ins sometimes ask the
 // budtender for a pick (a good match tips 20% at pickup), every five minutes of play closes a shift with a recap and one
-// piece of advice, and branch stores raise operations alerts (a regular's order ready, shelves empty or full, a branch
-// short of harvest, a driver free).
+// piece of advice.
 export const SHIFT_SECONDS=300;
 export const MOMENT_SECONDS=18;
 export const TIP_SHARE=.2;
@@ -69,28 +67,15 @@ export function shiftAdvice(recap,{counters=1,comfortLevel=0}={}){
   if(recap.queuePeak>8)return {text:counters>=MAX_ORDER_COUNTERS?'A busy shift. Upgrade the Orders desk and team so every counter serves faster.':'A busy shift. Add an order counter to spread the queue.',short:counters>=MAX_ORDER_COUNTERS?'Long line · upgrade Orders':'Long line · add a counter',station:4};
   return {text:'Try another customer recommendation next shift. Great matches earn extra tips.',moment:true};
 }
-export function operationsAlerts(empire){
-  const network=empire.network,alerts=[];
-  network.stores.forEach((store,i)=>{
-    if(!empire.stores[i]?.level)return;
-    const story=storyStatus(empire,i),name=BRANCH_NAMES[i];
-    if(story.ready)alerts.push({id:'regular-'+i,title:REGULARS[i].name+'’s request is ready',detail:name+' · '+story.need+' '+LINES[story.line].name,store:i,tab:2,control:'storyServe'+i});
-    const recipe=LINES[store.recipe];
-    if(store.shelves[store.recipe]===0)alerts.push({id:'shelf-'+i,title:name+' needs shelf space',detail:'Allocate space for '+recipe.name,store:i,tab:1,control:'shelfMore'+i+store.recipe});
-    else if(store.stock[store.recipe]>=store.shelves[store.recipe])alerts.push({id:'full-'+i,title:name+' shelves are full',detail:'Check deliveries or your shelf plan',store:i,tab:1,control:'deliverySend'+i,details:true});
-    else if(i>0&&store.raw<recipe.raw&&!network.jobs.some(job=>job.kind==='transfer'&&job.to===i))alerts.push({id:'harvest-'+i,title:name+' needs harvest',detail:'Send a transfer from Riverside',store:0,tab:1,control:'transferSend0',details:true,transferTo:i});
-    const line=store.stock.findIndex((_,j)=>!deliveryReason(empire,i,j));
-    if(line>=0)alerts.push({id:'driver-'+i,title:'Driver ready for '+name,detail:store.demand+' requests · dispatch '+LINES[line].name,store:i,tab:1,control:'deliverySend'+i,details:true,line});
-  });
-  return alerts;
-}
+// Branch alerts pointed at the old Stock and People tabs (shelves, transfers, drivers, regulars). The store pages are
+// down to stations and upgrades now (2026-11-03), so there is nothing there to chase; the map's brass shows the buys.
+export function operationsAlerts(){return [];}
 
 const icon=path=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+path+'</svg>';
 const LEAF=icon('<path d="M12 21v-8"/><path d="M12 13c-4.5 0-7-2.5-7-7 4.5 0 7 2.5 7 7Z"/><path d="M12 15c0-4 2.3-6.5 7-6.5 0 4.2-2.5 6.5-7 6.5Z"/>');
 const LIST=icon('<path d="M5 7h14M5 12h14M5 17h9"/>');
 const CLOSE=icon('<path d="M6 6l12 12M18 6 6 18"/>');
 const CHEVRON=icon('<path d="m9 6 6 6-6 6"/>');
-const CHECK=icon('<path d="m5 12.5 4.5 4.5L19 7.5"/>');
 const SPARK=icon('<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.5 2.5M15.2 15.2l2.5 2.5M6.3 17.7l2.5-2.5M15.2 8.8l2.5-2.5"/>');
 const svg=html=>{const t=document.createElement('template');t.innerHTML=html;return t.content.firstChild;};
 // Minutes to the next recap, rounded up, so the label only changes once a minute.
@@ -102,7 +87,7 @@ export function mountShopPlay({getState,getMoment,getAlerts,names,format,choose,
   const root=document.createElement('div');root.className='shop-play';
   root.innerHTML='<button type="button" id="shopActivity" class="shop-activity" aria-expanded="false" aria-controls="shopActivityPanel">'+LIST+'<span></span></button>'+
     '<section id="shopActivityPanel" class="shop-activity-panel" aria-label="Shop activity" hidden><div class="shop-activity-heading"><h2>Shop activity</h2><button type="button" id="shopActivityClose" aria-label="Close shop activity">'+CLOSE+'</button></div>'+
-    '<div id="budtenderMoment"></div><section class="shift-recap" id="shiftRecap"></section><section class="operations-alerts"><div class="activity-head"><h3>Operations</h3><span id="operationsCount"></span></div><div id="operationsAlerts"></div></section></section>'+
+    '<div id="budtenderMoment"></div><section class="shift-recap" id="shiftRecap"></section></section>'+
     '<button type="button" id="momentBubble" class="moment-bubble" aria-label="Help this customer choose" hidden>'+LEAF+'</button><p class="shop-play-feedback" role="status" hidden></p>';
   document.getElementById('world').appendChild(root);
   const $=id=>root.querySelector('#'+id),panel=$('shopActivityPanel'),pill=$('shopActivity'),bubble=$('momentBubble'),feedback=root.querySelector('.shop-play-feedback');
@@ -119,7 +104,6 @@ export function mountShopPlay({getState,getMoment,getAlerts,names,format,choose,
   pill.onclick=()=>panel.hidden?open():close();bubble.onclick=open;$('shopActivityClose').onclick=close;
   root.addEventListener('keydown',e=>{if(e.key==='Escape'){close();e.stopPropagation()}});
   $('budtenderMoment').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.choice!==undefined)choose(Number(b.dataset.choice));else if(b.dataset.skip!==undefined)skip();render();});
-  $('operationsAlerts').addEventListener('click',e=>{const b=e.target.closest('[data-alert]');if(!b)return;const alert=getAlerts().find(a=>a.id===b.dataset.alert);if(alert){close();navigate(alert)}});
   $('shiftRecap').addEventListener('click',e=>{if(!e.target.closest('.activity-advice'))return;const recap=getState().shopPlay.recap,tip=recap&&advice(recap);if(tip&&tip.station!==undefined){close();navigate(tip)}});
   const advice=recap=>{const state=getState();return shiftAdvice(recap,{counters:state.orderCounters,comfortLevel:state.comfortLevel});};
   const el=(tag,props,...kids)=>{const node=Object.assign(document.createElement(tag),props);node.append(...kids);return node;};
@@ -134,7 +118,7 @@ export function mountShopPlay({getState,getMoment,getAlerts,names,format,choose,
     const next=JSON.stringify([moment&&[moment.customerId,moment.choices,moment.opened],play.recap,alerts,shift.served,shift.matches,Math.floor(shift.earned),Math.floor(shift.seconds/10),getState().orderCounters,getState().comfortLevel]);
     if(next===key)return;key=next;
     const focused=document.activeElement,scroll=panel.scrollTop,box=$('budtenderMoment');
-    const memory=root.contains(focused)?{choice:focused.dataset.choice,alert:focused.dataset.alert,customer:box.dataset.customerId,skip:focused.dataset.skip!==undefined,recap:!!focused.closest('#shiftRecap')}:null;
+    const memory=root.contains(focused)?{choice:focused.dataset.choice,customer:box.dataset.customerId,skip:focused.dataset.skip!==undefined,recap:!!focused.closest('#shiftRecap')}:null;
     box.dataset.customerId=moment?String(moment.customerId):'';box.replaceChildren();
     if(moment){
       const options=el('div',{className:'moment-options'});
@@ -151,14 +135,10 @@ export function mountShopPlay({getState,getMoment,getAlerts,names,format,choose,
       recapBox.append(el('div',{className:'activity-last'},el('h4',{textContent:'Last 5 min'}),el('dl',{className:'activity-figures is-last'},figure('Earned',format(r.earned)),figure('Served',String(r.served)),figure('Avg wait',r.served?Math.round(r.waitTotal/r.served)+'s':'–'))));
       if(tip.station!==undefined){const card=el('button',{type:'button',className:'activity-advice',title:tip.text},svg(SPARK),el('strong',{textContent:tip.short||tip.text}),svg(CHEVRON));recapBox.appendChild(card)}
     }
-    const list=$('operationsAlerts');list.replaceChildren();$('operationsCount').textContent=alerts.length?String(alerts.length):'';
-    if(!alerts.length)list.appendChild(el('p',{className:'activity-clear'},svg(CHECK),'All caught up'));
-    alerts.forEach(a=>{const b=el('button',{type:'button'},el('span',{className:'activity-row-copy'},el('strong',{textContent:a.title}),el('small',{textContent:a.detail})),svg(CHEVRON));b.dataset.alert=a.id;list.appendChild(b)});
     if(memory&&!focused.isConnected){
       let target;
       if(memory.choice!==undefined&&moment&&memory.customer===String(moment.customerId))target=box.querySelector('[data-choice="'+memory.choice+'"]');
       else if(memory.skip&&moment&&memory.customer===String(moment.customerId))target=box.querySelector('[data-skip]');
-      else if(memory.alert)target=Array.from(list.querySelectorAll('button')).find(b=>b.dataset.alert===memory.alert)||list.querySelector('button');
       else if(memory.recap)target=recapBox.querySelector('button');
       (target||pill).focus({preventScroll:true});panel.scrollTop=scroll;
     }
