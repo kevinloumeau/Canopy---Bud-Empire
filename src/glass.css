@@ -50,8 +50,17 @@
 @media(hover:hover){.sheet button:not(:disabled):hover{filter:brightness(1.1)}}
 .sheet button:not(:disabled):active{transform:scale(.975)}
 @media(max-width:779px){
- .sheet{left:7px;right:7px;bottom:7px;border-radius:24px;padding-inline:9px;padding-bottom:env(safe-area-inset-bottom,0px)}
- .sheet .tray-tabs{margin-bottom:7px}
+ /* The floating sheet hugs the bottom of the screen. On an iPhone with a home indicator (--safe-bottom > 0) its bottom
+    corners follow the display's own curve (about 55pt, less the 7px inset), the tab pill and its selected tab become
+    capsules nested inside that curve, and only the home indicator's strip (16px, with the 4px tab margin from tray-bar.css) is left below the tabs, not the full inset. */
+ .sheet{
+  --corner-fit:min(var(--safe-bottom,0px),1px);
+  left:7px;right:7px;bottom:7px;padding-inline:9px;
+  border-radius:24px 24px calc(24px + var(--corner-fit)*24) calc(24px + var(--corner-fit)*24);
+  padding-bottom:max(5px,calc(var(--safe-bottom,0px) - 23px));
+ }
+ .sheet .tray-tabs{border-radius:calc(24px + var(--corner-fit)*999)}
+ .sheet .tray-tabs button{border-radius:calc(20px + var(--corner-fit)*999)}
  .sheet .machine-nav button{grid-template-columns:39px minmax(0,1fr);column-gap:4px;padding-inline:4px}
  .sheet .machine-nav button .machine-thumb{width:39px}
  .sheet .employee-card{grid-template-columns:24px minmax(0,1fr) 162px;gap:6px}

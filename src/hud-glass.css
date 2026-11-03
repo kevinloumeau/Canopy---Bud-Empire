@@ -36,7 +36,7 @@
 }
 
 /* Map buttons share the material. */
-.map-controls button,.map-controls .store-switcher #locationToggle{
+.map-controls button{
  border:1px solid var(--ui-edge);border-radius:14px;
  background:linear-gradient(180deg,var(--ui-sheen),transparent 40%),var(--ui-glass);
  -webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);color:var(--ui-ink);box-shadow:var(--ui-shadow);

