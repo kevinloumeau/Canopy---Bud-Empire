@@ -20,13 +20,13 @@ export async function runExperienceChecks(mode){
   assert($('shiftProgress').textContent.includes('Shift 1'),'Shift progress shown');
   result.push('starter story, workable shift goals and shift progress');
  }else{
-  assert($('storyTitle').textContent==='Someone knows your name','Legacy progress recognized');
-  await click($('storyAction'));assert($('opTab02').getAttribute('aria-pressed')==='true','Mara action opens People');
+  assert($('storyTitle').textContent==='A line by the river','Legacy progress recognized');
+  await click($('storyAction'));assert($('opTab00').getAttribute('aria-pressed')==='true','Riverside action opens its stations');
   await click(document.querySelector('[data-tray=factory]'));const levels=status().lineLevels.slice();await click($('buyMachine'));const after=status();assert(after.lineLevels.some((n,i)=>n===levels[i]+1),'Station upgraded');
   await click(document.querySelector('[data-tray=employees]'));const training=status().employeeLevels[0];await click(document.querySelector('[data-staff="0"]'));assert(status().employeeLevels[0]===training+1,'Employee trained');
   await click(document.querySelector('[data-tray=orders]'));const online=status().onlineCompleted,ready=status().stock[4];await click($('fulfillOnlineMax'));assert(status().onlineCompleted>online,'Delivery completed');assert(status().stock[4]===ready,'Ready walk-in bags preserved');
-  await click($('locationToggle'));await click($('storeButton1'));assert(status().viewedStore===1,'Visit Riverside');
-  await click($('manageViewedStore'));assert(!document.querySelector('[data-pane=empire]').hidden,'Manage opens Empire');
+  await click($('branchVisit0'));assert(status().viewedStore===1,'Visit Riverside');
+  await click($('branchMapMarker'));assert(!document.querySelector('[data-pane=empire]').hidden,'Manage opens Empire');
   const position=$('branchMapMarker').style.transform;await click($('zoomIn'));assert($('branchMapMarker').style.transform!==position,'Zoom updates anchored marker');await click($('centerView'));assert($('branchMapMarker').style.transform===position,'Recenter restores camera');
   const saved=JSON.parse(localStorage.getItem('shift-save'));assert(saved.journey.completed.includes('river'),'Journal persisted');assert(saved.lines.some((n,i)=>n>initial.lineLevels[i]),'Upgrades persisted');
   result.push('legacy journal, character navigation, station/staff upgrades, dispatch stock safety, branches, camera, saved progress');
