@@ -119,8 +119,8 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         webView.evaluateJavaScript(nativeAvailability)
     }
 
-    // The launch storyboard is static and shows this exact frame (same sprout, label and centring), so the
-    // hand-off is invisible; from here the sprout breathes until the web view is ready.
+    // The launch storyboard is static and shows this exact frame (the seed, label and centring), so the
+    // hand-off is invisible; from here the seed grows into the sprout, which then sways until the web view is ready.
     private func installLoadingCover() {
         let cover = UIView()
         cover.backgroundColor = UIColor(red: 32/255, green: 55/255, blue: 43/255, alpha: 1)
@@ -153,16 +153,49 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
             stack.centerXAnchor.constraint(equalTo: cover.centerXAnchor),
             stack.centerYAnchor.constraint(equalTo: cover.centerYAnchor)
         ])
-        if !UIAccessibility.isReduceMotionEnabled {
-            // Starts at rest (scale 1) so the first frame matches the storyboard.
-            let grow = CABasicAnimation(keyPath: "transform.scale")
-            grow.fromValue = 1.0; grow.toValue = 1.08; grow.duration = 1.1
-            grow.autoreverses = true; grow.repeatCount = .infinity
-            grow.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-            plant.layer.add(grow, forKey: "sproutBreathing")
-        }
+        growSprout(plant)
         // Never cover the web loader's existing Retry button if startup fails.
         DispatchQueue.main.asyncAfter(deadline: .now() + 8) { [weak self] in self?.dismissLoadingCover() }
+    }
+
+    /// The seed grows once, easing out as the leaves open, then the grown sprout sways from its base. Every frame
+    /// shares one canvas with the stem's foot on the same pixel, so nothing hops between frames.
+    private func growSprout(_ plant: UIImageView) {
+        let frames = (1...21).compactMap { UIImage(named: String(format: "SproutGrow%02d", $0))?.cgImage }
+        guard frames.count == 21, let grown = UIImage(named: "SproutGrow21") else { return }
+        if UIAccessibility.isReduceMotionEnabled {
+            // A fade, not motion: the seed simply becomes the sprout, once the cover is on screen.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                UIView.transition(with: plant, duration: 0.4, options: .transitionCrossDissolve,
+                                  animations: { plant.image = grown })
+            }
+            return
+        }
+        // The grown sprout is the resting state; the frames play over it and leave it in place.
+        plant.image = grown
+        let growTime = 1.5
+        let grow = CAKeyframeAnimation(keyPath: "contents")
+        grow.values = frames
+        // Later frames hold longer, so the stem shoots up and the leaves settle slowly.
+        grow.keyTimes = (0..<frames.count).map { NSNumber(value: pow(Double($0) / Double(frames.count - 1), 1.4)) }
+        grow.calculationMode = .discrete
+        grow.duration = growTime
+        plant.layer.add(grow, forKey: "sproutGrow")
+
+        // Sway pivots on the foot of the stem: 84% down the 96 pt canvas, so 32 pt below the view's centre.
+        let foot: CGFloat = 32
+        func lean(_ degrees: CGFloat) -> NSValue {
+            let pivot = CATransform3DMakeTranslation(0, foot, 0)
+            return NSValue(caTransform3D: CATransform3DTranslate(
+                CATransform3DRotate(pivot, degrees * .pi / 180, 0, 0, 1), 0, -foot, 0))
+        }
+        let sway = CAKeyframeAnimation(keyPath: "transform")
+        sway.values = [lean(0), lean(2), lean(0), lean(-2), lean(0)]
+        sway.timingFunctions = Array(repeating: CAMediaTimingFunction(name: .easeInEaseOut), count: 4)
+        sway.duration = 2.4
+        sway.repeatCount = .infinity
+        sway.beginTime = plant.layer.convertTime(CACurrentMediaTime(), from: nil) + growTime
+        plant.layer.add(sway, forKey: "sproutSway")
     }
 
     private func dismissLoadingCover() {

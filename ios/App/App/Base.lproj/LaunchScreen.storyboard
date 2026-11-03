@@ -16,8 +16,8 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <!-- The opening frame of the in-app loading cover (CanopyViewController.installLoadingCover):
-                             same sprout, label, spacing and centring, so the hand-off is seamless and the app
-                             then animates it. The shop's own forest green (#20372b), not systemBackgroundColor:
+                             same seed, label, spacing and centring, so the hand-off is seamless and the app
+                             then grows it into the sprout. The shop's own forest green (#20372b), not systemBackgroundColor:
                              that is white in light mode, which flashed before the web view painted. -->
                         <subviews>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="center" spacing="12" translatesAutoresizingMaskIntoConstraints="NO" id="stk-Ld-001">
