@@ -942,12 +942,20 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     return t<=0?0:Math.min(1,t/STATION_POP.take);
   }
   var MAP_SETTLE_MAX=12000,mapSettleStart=0,mapQuietFrames=0,mapRevealTimer=0;
+  // The iOS app draws its own loading bar over the page; it hears how far the map's files are and when the card lifts.
+  // The file total grows as the map discovers what it needs, so the bar measures against last launch's total too
+  // (remembered when the card lifts); otherwise the first few files would read as nearly done.
+  var nativeLoadSent=-1,nativeLoadExpect=0;
+  try{nativeLoadExpect=+localStorage.getItem('canopyLoadFiles')||0}catch(e){}
+  function nativeLoadStep(){var c=map3d.loadCounts;return Math.floor(c.done/Math.max(c.total,nativeLoadExpect,1)*20)/20}
+  function tellNativeLoad(msg){var h=window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.canopyTray;if(h)try{h.postMessage(msg)}catch(e){}}
   function mapSettled(wallNow){
     if(!mapSettleStart){mapSettleStart=wallNow;mapQuietFrames=0}
+    var loadStep=nativeLoadStep();if(loadStep>nativeLoadSent){nativeLoadSent=loadStep;tellNativeLoad({load:loadStep})}
     mapQuietFrames=map3d.loading>0||spritesLoading()>0?0:mapQuietFrames+1;
     return mapQuietFrames>=6||wallNow-mapSettleStart>MAP_SETTLE_MAX;
   }
-  function mapReveal(){var card=$('loading');if(card.hidden)return;if(!introAt&&!SNAP&&!motionPreference.matches){introAt=performance.now();$('world').classList.add('building')}card.classList.add('reveal');clearTimeout(mapRevealTimer);mapRevealTimer=setTimeout(function(){card.hidden=true;card.classList.remove('reveal')},motionPreference.matches?0:300)}
+  function mapReveal(){tellNativeLoad({ready:true});try{if(map3d&&map3d.loadCounts.total)localStorage.setItem('canopyLoadFiles',String(map3d.loadCounts.total))}catch(e){}var card=$('loading');if(card.hidden)return;if(!introAt&&!SNAP&&!motionPreference.matches){introAt=performance.now();$('world').classList.add('building')}card.classList.add('reveal');clearTimeout(mapRevealTimer);mapRevealTimer=setTimeout(function(){card.hidden=true;card.classList.remove('reveal')},motionPreference.matches?0:300)}
   // Builds the 3D map on a fresh WebGL canvas. A lost context (the GPU reset, or iOS reclaimed it in the background)
   // is rebuilt the same way rather than trusted to come back, with the loading card up meanwhile.
   function startMap3d(){
