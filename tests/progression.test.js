@@ -180,7 +180,7 @@ test('branch stars latch, credit old saves, open the next branch and add a lasti
  assert.equal(branchOpenable(p,1),false);assert.equal(buyStore(s,0),true);assert.equal(buyStore(s,1),false);
  p.stores[0].served=STAR_GOALS[0].target[0];assert.deepEqual(settleStars(p),[{store:0,goal:0}]);assert.deepEqual(settleStars(p),[]);
  p.stores[0].served=0;assert.equal(starCount(p,0),1);assert.equal(starStatus(p,0)[0].earned,true);
- while(p.stores[0].level<10)buyStore(s,0);p.network.stores[0].relationship=3;
+ while(p.stores[0].level<10)buyStore(s,0);p.stores[0].lines.fill(STAR_GOALS[2].target[0]);
  const before=storeRate(p,0);assert.equal(settleStars(p).length,2);assert.equal(starCount(p,0),3);
  assert.equal(starMultiplier(p),1+STAR_BONUS);assert.ok(Math.abs(storeRate(p,0)/before-(1+STAR_BONUS))<1e-9);
  assert.equal(buyStore(s,1),true);assert.equal(branchOpenable(p,2),false);
@@ -190,7 +190,7 @@ test('branch stars latch, credit old saves, open the next branch and add a lasti
  assert.deepEqual(migrateProgression({stars:[9,-1,'x']},start).stars,[0,0,0,0,0]);
 });
 import {STARS_TO_OPEN,STORES} from '../src/progression.js';
-test('two stars open the next branch, a story is optional',()=>{
+test('two stars open the next branch, the full line is optional',()=>{
  const s=fresh(),p=s.empire;s.lifetime=1e12;s.money=1e15;
  assert.equal(STARS_TO_OPEN,2);assert.equal(buyStore(s,0),true);
  p.stores[0].served=STAR_GOALS[0].target[0];settleStars(p);assert.equal(branchOpenable(p,1),false);
@@ -207,4 +207,10 @@ test('branches earn a share of the flagship once it has a sales rate',()=>{
  assert.equal(migrateProgression({flagship:-5}).flagship,0);assert.equal(migrateProgression({flagship:'x'}).flagship,0);
  // Later branches are worth more of the flagship, so each opening is a bigger jump.
  STORES.slice(1).forEach((b,i)=>assert.ok(b.share>STORES[i].share));
+});
+test('the third star asks for every branch station at Lv 10',()=>{
+ const s=fresh(),p=s.empire;s.lifetime=1e12;s.money=1e15;buyStore(s,0);
+ assert.equal(STAR_GOALS[2].kind,'line');assert.equal(starStatus(p,0)[2].title,'Every station Lv 10');
+ p.stores[0].lines=[10,10,10,10,10,9];settleStars(p);assert.equal(starStatus(p,0)[2].earned,false);assert.equal(starStatus(p,0)[2].progress,9);
+ p.stores[0].lines[5]=10;assert.deepEqual(settleStars(p),[{store:0,goal:2}]);assert.equal(starStatus(p,1)[2].progress,0);
 });

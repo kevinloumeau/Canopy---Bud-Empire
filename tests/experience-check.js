@@ -20,8 +20,8 @@ export async function runExperienceChecks(mode){
   assert($('shiftProgress').textContent.includes('Shift 1'),'Shift progress shown');
   result.push('starter story, workable shift goals and shift progress');
  }else{
-  assert($('storyTitle').textContent==='Someone knows your name','Legacy progress recognized');
-  await click($('storyAction'));assert($('opTab02').getAttribute('aria-pressed')==='true','Mara action opens People');
+  assert($('storyTitle').textContent==='A line by the river','Legacy progress recognized');
+  await click($('storyAction'));assert($('opTab00').getAttribute('aria-pressed')==='true','Riverside action opens its stations');
   await click(document.querySelector('[data-tray=factory]'));const levels=status().lineLevels.slice();await click($('buyMachine'));const after=status();assert(after.lineLevels.some((n,i)=>n===levels[i]+1),'Station upgraded');
   await click(document.querySelector('[data-tray=employees]'));const training=status().employeeLevels[0];await click(document.querySelector('[data-staff="0"]'));assert(status().employeeLevels[0]===training+1,'Employee trained');
   await click(document.querySelector('[data-tray=orders]'));const online=status().onlineCompleted,ready=status().stock[4];await click($('fulfillOnlineMax'));assert(status().onlineCompleted>online,'Delivery completed');assert(status().stock[4]===ready,'Ready walk-in bags preserved');

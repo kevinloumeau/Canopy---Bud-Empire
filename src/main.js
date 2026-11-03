@@ -4090,7 +4090,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function openGoals(){showTray('goals');renderUI()}
   function closeGoals(){}
   goalsButton.onclick=function(){if(activeTray==='goals'&&panelOpen)collapsePanel();else openGoals()};
-  var empireShell=mountEmpireShell({fit:fitControls,getState:function(){return state},format:fmt,rate:incomeRate,fly:flyToPlace});
+  var empireShell=mountEmpireShell({fit:fitControls,getState:function(){return state},format:fmt,rate:incomeRate,fly:flyToPlace,buyStation:function(i,j){buyBranchLevel(i,j,1)}});
   var shopPlayCollapsed=false;
   shopPlayUI=mountShopPlay({getState:function(){return state},getMoment:function(){return moment},getAlerts:function(){return operationsAlerts(state.empire)},names:STRAINS.map(function(s){return s.name}),format:fmt,changed:save,
     // On a phone, or where the side panel would sit under the list, the sheet steps aside while shop activity is open.
@@ -4108,15 +4108,13 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       if(target.station!==undefined)return selectMachine(target.station);
       if(target.moment)return shopPlayUI.open();
       visitStore(target.store+1,false);showTray('empire');empireShell.openStore(target.store);operationsUI.showTab(target.store,target.tab);
-      if(target.transferTo!==undefined){var to=document.querySelector('#transferTo'+target.store+' [data-value="'+target.transferTo+'"]');if(to)to.click()}
-      if(target.line!==undefined){var line=document.querySelector('#deliveryLine'+target.store+' [data-value="'+target.line+'"]');if(line)line.click()}
       var control=$(target.control);if(control){if(target.details&&control.closest('details'))control.closest('details').open=true;control.scrollIntoView({block:'center'});control.focus({preventScroll:true})}
       fitControls();
     }});
   var journeyUI=mountJourney({getState:function(){return state},openGoals:openGoals,navigate:function(destination){
     closeGoals();if(destination==='pickup')return selectMachine(5);if(destination==='stations'){var r=recommendation();if(state.lines[r.index]<3)return selectMachine(r.index);return selectMachine(state.lines.findIndex(function(n){return n<3}));}
     if(destination==='flowers')return showTray('flowers');showTray('empire');if(destination==='empire'){empireShell.show('home');return;}
-    var i=destination==='regulars'?state.empire.network.stores.findIndex(function(b){return !b.relationship}):0;empireShell.openStore(Math.max(0,i));if(destination==='mara'||destination==='regulars'){var people=$('opTab'+Math.max(0,i)+'2');if(people)people.click();}
+    empireShell.openStore(0);operationsUI.showTab(0,0);
   }});
   var startGuide=mountStartGuide({showTray:showTray,collapse:function(){showTray('factory')},fit:fitControls,paintHero:paintIntroArt,sound:function(kind){playSound(kind,state.sound)},report:function(name,props){telemetry.send(name,props)},
     // Construction steps: the guide asks whether a site is built, builds it on a tap, opens the shop at the end and, if

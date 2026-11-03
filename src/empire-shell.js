@@ -1,12 +1,12 @@
 import {abbr} from './progression.js';
 import {mountGoalsPane} from './goals-pane.js';
 // Empire and Goals shells. Reparents the existing controls (main.js and operations-ui.js keep rendering them by id).
-// Empire has three screens: Home (reopen card, store list, founder perks), Store (one branch), Records.
+// Empire has three screens: Home (reopen card, the map's places, founder perks), Store (one branch: Stations and Store tabs), Records.
 // Goals (goals-pane.js) gets the contract, shift goals, story and reward controls as hidden sources.
 import {mountEmpireStores} from './empire-stores.js';
 import {mountEmpireMap} from './empire-map.js';
 import {manageDialog} from './dialog-focus.js';
-export function mountEmpireShell({fit,getState,format,rate,fly}){
+export function mountEmpireShell({fit,getState,format,rate,fly,buyStation}){
  const pane=document.querySelector('[data-pane=empire]'),$=id=>document.getElementById(id);
  const section=name=>pane.querySelector('[data-empire-section="'+name+'"]');
  const el=(tag,cls,html)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(html!=null)n.innerHTML=html;return n;};
@@ -36,8 +36,9 @@ export function mountEmpireShell({fit,getState,format,rate,fly}){
   card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-label','Welcome back');
   manageDialog(overlay,()=>{const b=$('dismissReturn');if(b)b.click();});}
 
- // Store: back bar, then the branch's own sticky tabs and body.
- const storeBar=backBar('Stores');screens.store.append(storeBar.bar);
+ // Store: one bar with the back button, the store's name and its two tabs (Stations, Store), then its body.
+ const storeBar=backBar('Stores');storeBar.bar.classList.add('is-store');screens.store.append(storeBar.bar);
+ const navs=articles.map(article=>{const nav=article.querySelector('.operation-tabs');if(nav)storeBar.bar.append(nav);return nav;});
  articles.forEach(article=>screens.store.append(article));
 
  // Details: records and long-cycle rewards, each under its own heading.
@@ -59,13 +60,13 @@ export function mountEmpireShell({fit,getState,format,rate,fly}){
  const scrollers={};
  ['store','details'].forEach(name=>{const screen=screens[name],body=el('div','empire-screen-body');while(screen.children.length>1)body.append(screen.children[1]);screen.append(body);scrollers[name]=body;});
  pane.append(screens.home,screens.store,screens.details);
- const storesUI=mountEmpireStores({getState,format});
+ const storesUI=mountEmpireStores({getState,format,buyStation});
 
  // Navigation.
  let current='home';
  function show(name){current=name;if(name==='details')syncBoard();Object.keys(screens).forEach(k=>screens[k].hidden=k!==name);pane.dataset.empireScreen=name;pane.scrollTop=0;if(scrollers[name])scrollers[name].scrollTop=0;if(name!=='store')closeBranches();if(fit)fit();}
- function closeBranches(){articles.forEach((article,i)=>{const body=$('branchBody'+i),nav=article.querySelector('.operation-tabs');if(body)body.hidden=true;if(nav)nav.hidden=true;toggles[i].setAttribute('aria-expanded','false');});}
- function openStore(i){articles.forEach((article,j)=>{const body=$('branchBody'+j),nav=article.querySelector('.operation-tabs');if(body)body.hidden=j!==i;if(nav)nav.hidden=j!==i;toggles[j].setAttribute('aria-expanded',String(j===i));});storeBar.heading.textContent=toggles[i].querySelector('.branch-name').textContent;show('store');}
+ function closeBranches(){articles.forEach((article,i)=>{const body=$('branchBody'+i),nav=navs[i];if(body)body.hidden=true;if(nav)nav.hidden=true;toggles[i].setAttribute('aria-expanded','false');});}
+ function openStore(i){articles.forEach((article,j)=>{const body=$('branchBody'+j),nav=navs[j];if(body)body.hidden=j!==i;if(nav)nav.hidden=j!==i;toggles[j].setAttribute('aria-expanded',String(j===i));});storeBar.heading.textContent=toggles[i].querySelector('.branch-name').textContent;show('store');}
  toggles.forEach((toggle,i)=>{toggle.onclick=()=>openStore(i);toggle.removeAttribute('aria-expanded');toggle.setAttribute('aria-haspopup','false');});
  // main.js still opens a branch body directly (Manage on the map, bottleneck shortcuts); follow it.
  if(window.MutationObserver){const watcher=new MutationObserver(()=>{const open=articles.findIndex((_,i)=>$('branchBody'+i)&&!$('branchBody'+i).hidden);if(open>=0&&(current!=='store'||storeBar.heading.textContent!==toggles[open].querySelector('.branch-name').textContent)){openStore(open);}});articles.forEach((_,i)=>{const body=$('branchBody'+i);if(body)watcher.observe(body,{attributes:true,attributeFilter:['hidden']});});}
