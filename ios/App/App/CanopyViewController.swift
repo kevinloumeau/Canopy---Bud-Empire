@@ -54,6 +54,9 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     private var selectedKey = "factory"
     private var panelExpanded = true
     private var loadingCover: UIView?
+    /// The current web game no longer posts `canopyTray`, so its "ready" never arrives. Lifting the cover when the
+    /// page finishes loading hands over to the game's own loading animation instead of waiting out the 8 s fallback.
+    private var loadObservation: NSKeyValueObservation?
     private var nativeMap: CanopyMapRenderer?
     /// The lozenge that sits behind the selected tab. It is a glass element in its own right, so inside a
     /// `UIGlassContainerEffect` it fuses with the bar's own glass rather than sitting on top of it.
@@ -85,6 +88,13 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
             scroll.pinchGestureRecognizer?.isEnabled = false
         }
         installNativeMap()
+        loadObservation = webView?.observe(\.isLoading, options: [.new]) { [weak self] webView, _ in
+            guard !webView.isLoading else { return }
+            DispatchQueue.main.async {
+                self?.dismissLoadingCover()
+                if self?.powerStatePushed == false { self?.pushPowerState() }
+            }
+        }
     }
 
     private func installNativeMap() {
