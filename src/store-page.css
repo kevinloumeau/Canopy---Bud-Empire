@@ -25,7 +25,7 @@
 .sheet .empire-screen .page-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:2px 2px 2px;font:600 13.5px/1.2 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-ink)}
 .sheet .empire-screen .page-meta{font:400 11px/1.2 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-soft);white-space:nowrap}
 .sheet .empire-screen .page-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin:0 -4px}
-.sheet .empire-screen .page-group{margin-top:8px}
+.sheet .empire-screen .page-group{margin-top:3px}
 .sheet .empire-screen .page-group[hidden]{display:none}
 
 .sheet .empire-screen .page-tile{display:grid;grid-template-rows:auto auto auto;justify-items:center;align-content:start;gap:3px;min-width:0;min-height:0;width:auto;margin:0;padding:5px 2px 5px;border:0;border-radius:14px;background:none;box-shadow:none;color:var(--ui-ink);font:inherit;text-align:center;opacity:1;-webkit-tap-highlight-color:transparent;transition:background .15s}
@@ -51,7 +51,7 @@
 .is-stations .map-tile-name{margin-top:3px}
 
 /* ---- Store: the hero row. ---- */
-.sheet .empire-screen .page-hero{display:grid;grid-template-columns:50px minmax(0,1fr) auto;align-items:center;gap:12px;margin:0 0 2px;padding:6px 10px 6px 8px;border-radius:16px;background:var(--ui-well-soft);box-shadow:inset 0 0 0 1px var(--ui-edge)}
+.sheet .empire-screen .page-hero{display:grid;grid-template-columns:50px minmax(0,1fr) auto;align-items:center;gap:12px;margin:0 0 2px;padding:5px 10px 5px 8px;border-radius:16px;background:var(--ui-well-soft);box-shadow:inset 0 0 0 1px var(--ui-edge)}
 .page-hero .map-ring .map-tile-icon{width:40px;height:40px}
 .page-hero.is-locked .map-tile-icon{filter:grayscale(.85) brightness(.62) drop-shadow(0 2px 2px #0a140e66)}
 .page-hero.is-locked .map-ring-fill{stroke:rgba(242,240,230,.42)}
@@ -65,7 +65,7 @@
 .sheet .empire-screen .page-hero .page-buy[hidden]{display:none}
 
 /* Stars: three small rows, ring and figure side by side, so the whole page fits the half sheet. */
-.sheet .empire-screen .page-tile.is-goal{grid-template-columns:30px minmax(0,1fr);grid-template-rows:auto auto;justify-items:start;align-items:center;column-gap:7px;row-gap:1px;padding:5px 4px;text-align:left}
+.sheet .empire-screen .page-tile.is-goal{grid-template-columns:30px minmax(0,1fr);grid-template-rows:auto auto;justify-items:start;align-items:center;column-gap:7px;row-gap:1px;padding:3px 4px;text-align:left}
 .page-tile.is-goal .map-ring{grid-row:1/3;width:30px;height:30px}
 .page-tile.is-goal .map-ring-track circle{stroke-width:4}
 .page-tile.is-goal .page-glyph,.page-tile.is-goal .page-glyph.is-star svg{width:15px;height:15px}
