@@ -11,7 +11,7 @@ export function mountSettings(){
   '<button type="button" class="settings-row" data-proxy="soundToggle"><span>Sound</span><b data-mirror="soundToggle"></b></button>'+
   '<button type="button" class="settings-row" data-proxy="remindersToggle" hidden><span>Reminders</span><b data-mirror="remindersToggle"></b></button>'+
   '<button type="button" class="settings-row" data-proxy="guide"><span>Start guide</span><b>Replay</b></button>'+
-  '</div><div class="settings-foot"><button type="button" class="settings-row settings-danger" data-proxy="resetOpen"><span>Start over</span><b>Reset everything</b></button><p class="settings-note">Canopy: Bud Empire · saves in this browser</p></div></div>';
+  '</div><div class="settings-foot"><button type="button" class="settings-row settings-danger" data-proxy="resetOpen"><span>Start over</span><b>Reset everything</b></button><div class="settings-logo" role="img" aria-label="Canopy: Bud Empire"></div><p class="settings-note">Your shop saves on this device.</p></div></div>';
  document.body.append(wrap);
  const modal=wrap.querySelector('.modal'),closeButton=wrap.querySelector('.settings-close');
  let opener=null;

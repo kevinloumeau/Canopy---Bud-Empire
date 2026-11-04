@@ -952,11 +952,11 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function tellNativeLoad(msg){var h=window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.canopyTray;if(h)try{h.postMessage(msg)}catch(e){}}
   function mapSettled(wallNow){
     if(!mapSettleStart){mapSettleStart=wallNow;mapQuietFrames=0}
-    var loadStep=nativeLoadStep();if(loadStep>nativeLoadSent){nativeLoadSent=loadStep;tellNativeLoad({load:loadStep})}
+    var loadStep=nativeLoadStep();if(loadStep>nativeLoadSent){nativeLoadSent=loadStep;tellNativeLoad({load:loadStep});$('loading').style.setProperty('--load',String(Math.max(.06,loadStep*.94)))}
     mapQuietFrames=map3d.loading>0||spritesLoading()>0?0:mapQuietFrames+1;
     return mapQuietFrames>=6||wallNow-mapSettleStart>MAP_SETTLE_MAX;
   }
-  function mapReveal(){tellNativeLoad({ready:true});try{if(map3d&&map3d.loadCounts.total)localStorage.setItem('canopyLoadFiles',String(map3d.loadCounts.total))}catch(e){}var card=$('loading');if(card.hidden)return;if(!introAt&&!SNAP&&!motionPreference.matches){introAt=performance.now();$('world').classList.add('building')}card.classList.add('reveal');clearTimeout(mapRevealTimer);mapRevealTimer=setTimeout(function(){card.hidden=true;card.classList.remove('reveal')},motionPreference.matches?0:300)}
+  function mapReveal(){tellNativeLoad({ready:true});$('loading').style.setProperty('--load','1');try{if(map3d&&map3d.loadCounts.total)localStorage.setItem('canopyLoadFiles',String(map3d.loadCounts.total))}catch(e){}var card=$('loading');if(card.hidden)return;if(!introAt&&!SNAP&&!motionPreference.matches){introAt=performance.now();$('world').classList.add('building')}card.classList.add('reveal');clearTimeout(mapRevealTimer);mapRevealTimer=setTimeout(function(){card.hidden=true;card.classList.remove('reveal')},motionPreference.matches?0:300)}
   // Builds the 3D map on a fresh WebGL canvas. A lost context (the GPU reset, or iOS reclaimed it in the background)
   // is rebuilt the same way rather than trusted to come back, with the loading card up meanwhile.
   function startMap3d(){
