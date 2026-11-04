@@ -1,13 +1,13 @@
 /* Browser adaptation of Liquid Glass for the menu's control layer. */
 :root{
- --menu-glass:rgba(26,48,38,.82);
+ --menu-glass:rgba(17,56,30,.88);
  --menu-edge:rgba(228,249,225,.25);
  --menu-control:rgba(215,239,207,.09);
  --menu-text:var(--p-sage-94);
- --menu-muted:#d0ddc9;
+ --menu-muted:#d3dfc6;
 }
 .sheet{
- background:linear-gradient(145deg,rgba(209,232,204,.13),rgba(30,53,42,.08) 42%),var(--menu-glass);
+ background:linear-gradient(145deg,rgba(214,240,196,.11),rgba(21,62,34,.08) 42%),var(--menu-glass);
  -webkit-backdrop-filter:blur(24px) saturate(135%);
  backdrop-filter:blur(24px) saturate(135%);
  border:1px solid var(--menu-edge);border-radius:26px;
@@ -19,20 +19,20 @@
 .sheet .panel-header button{border-radius:50%;width:32px;height:32px;background:#ecffe60d;box-shadow:inset 0 1px 0 #edffe51c;color:var(--menu-text)}
 .sheet>[data-pane]{scrollbar-width:thin;scrollbar-color:#c1d7b74d transparent;padding-inline:2px}
 .sheet .tray-tabs{
- margin:8px 0 10px;padding:4px;gap:2px;background:#0c231c65;
- border:0;border-radius:24px;box-shadow:inset 0 1px 2px #05180f40;
+ margin:8px 0 10px;padding:4px;gap:2px;background:#09261265;
+ border:0;border-radius:24px;box-shadow:inset 0 1px 2px #06170b40;
 }
 .sheet .tray-tabs button{border:0!important;border-radius:20px;min-height:42px;padding:6px 3px;background:transparent;color:var(--menu-muted);font-size:11px;font-weight:600}
-.sheet .tray-tabs button[aria-pressed=true]{background:linear-gradient(155deg,#e3f5db38,#c4e5b41a);box-shadow:inset 0 1px 0 #f1ffe752,inset 0 0 0 1px #e4fbd31c,0 3px 8px #08180f24;color:var(--p-sage-95)}
+.sheet .tray-tabs button[aria-pressed=true]{background:linear-gradient(155deg,#e3f5db38,#c4e5b41a);box-shadow:inset 0 1px 0 #f1ffe752,inset 0 0 0 1px #e4fbd31c,0 3px 8px #061a0c24;color:var(--p-sage-95)}
 .sheet .machine-nav button{background:#dcefd40a;border:1px solid #d6efd21f;border-radius:13px;box-shadow:none;color:var(--menu-text)}
 .sheet .machine-nav button[aria-pressed=true]{background:linear-gradient(140deg,#badb9d33,#d3eacb12);border-color:#d2ebb964;box-shadow:inset 0 1px 0 #f3ffe635}
 .sheet .machine-nav button>em{color:var(--menu-muted)}
 .sheet button{transition:background-color .16s ease,box-shadow .16s ease,transform .16s ease}
 .sheet .buy,.sheet .employee-card button,.sheet .shop-upgrade button,.sheet .station-training,.sheet .flower-actions button,.sheet .flow-guide button,
 .sheet [data-pane="orders"] .dispatch-option button{
- background:linear-gradient(145deg,#c9e4b82b,#c6dfb60a),#608149;
+ background:linear-gradient(145deg,#c9e4b82b,#c6dfb60a),#457f22;
  color:var(--p-sage-96);border:1px solid #d9f1c445;border-radius:14px;
- box-shadow:inset 0 1px 0 #efffdf40,0 3px 9px #0b1c1626;
+ box-shadow:inset 0 1px 0 #efffdf40,0 3px 9px #07200f26;
 }
 .sheet #buyMachineMax,.sheet .employee-train-actions button:last-child,.sheet #stationTrainingMax{
  background:linear-gradient(150deg,#ecffe51a,#d7edc907);border-color:#def2d330;
@@ -46,7 +46,7 @@
 .sheet progress::-webkit-progress-bar{background:#d1e6c51a}
 .sheet progress::-webkit-progress-value{background:#b9d797;border-radius:8px}
 .sheet :focus-visible{outline:2px solid var(--p-lime-84);outline-offset:3px}
-.sheet ::selection{background:#c5e4a9;color:#1d3326}
+.sheet ::selection{background:#c5e4a9;color:#153b21}
 @media(hover:hover){.sheet button:not(:disabled):hover{filter:brightness(1.1)}}
 .sheet button:not(:disabled):active{transform:scale(.975)}
 @media(max-width:779px){
@@ -65,18 +65,18 @@
  .sheet .machine-nav button .machine-thumb{width:39px}
  .sheet .employee-card{grid-template-columns:24px minmax(0,1fr) 162px;gap:6px}
 }
-@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.sheet{background:#243a2e}}
-@media(prefers-reduced-transparency:reduce){.sheet{background:#243a2e;-webkit-backdrop-filter:none;backdrop-filter:none}}
-@media(prefers-contrast:more){.sheet{background:#182e23;border-color:#e1efd6}.sheet button{border-color:#afc89e}.sheet button:disabled{color:var(--p-sage-94)!important}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.sheet{background:#1c4228}}
+@media(prefers-reduced-transparency:reduce){.sheet{background:#1c4228;-webkit-backdrop-filter:none;backdrop-filter:none}}
+@media(prefers-contrast:more){.sheet{background:#10361c;border-color:#e1efd6}.sheet button{border-color:#afc89e}.sheet button:disabled{color:var(--p-sage-94)!important}}
 @media(prefers-reduced-motion:reduce){.sheet button{transition:none}.sheet button:not(:disabled):active{transform:none}}
 
 /* The HUD shares the menu material, with a quieter surface for live metrics. */
 .hud{
- background:linear-gradient(140deg,#d7edd214,#d7edd200 65%),rgba(23,44,34,.88);
+ background:linear-gradient(140deg,#d7edd214,#d7edd200 65%),rgba(15,52,27,.88);
  -webkit-backdrop-filter:blur(20px) saturate(125%);
  backdrop-filter:blur(20px) saturate(125%);
  border-bottom:1px solid #e3f6d922;
- box-shadow:inset 0 1px 0 #edffe51c,0 5px 18px #091d1720;
+ box-shadow:inset 0 1px 0 #edffe51c,0 5px 18px #071f0f20;
 }
 .hud .factory-info{border-top-color:#d8ecd322}
 .hud .stat{border-color:#d8ecd326}
@@ -84,14 +84,14 @@
 .hud .speed-controls button[aria-pressed=true]{
  background:linear-gradient(145deg,#e1f5d635,#bedbaf12);
  border-color:#e0f5cd35;color:#f7fbed;
- box-shadow:inset 0 1px 0 #f0ffe747,0 2px 6px #0c1d1524;
+ box-shadow:inset 0 1px 0 #f0ffe747,0 2px 6px #08211024;
 }
 .hud .speed-controls button:focus-visible{outline:2px solid var(--p-lime-84);outline-offset:2px}
 .hud #stockStatus .stock-item[role=button]{border-radius:10px}
 .hud #stockStatus .stock-item[role=button]:hover{background:#e1f5d611}
-@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.hud{background:#20362a}}
-@media(prefers-reduced-transparency:reduce){.hud{background:#20362a;-webkit-backdrop-filter:none;backdrop-filter:none}}
-@media(prefers-contrast:more){.hud{background:#182e23;border-color:#dcebd2}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.hud{background:#183e24}}
+@media(prefers-reduced-transparency:reduce){.hud{background:#183e24;-webkit-backdrop-filter:none;backdrop-filter:none}}
+@media(prefers-contrast:more){.hud{background:#10361c;border-color:#dcebd2}}
 @media(prefers-reduced-motion:reduce){.hud .speed-controls button{transition:none}}
 
 /* Two-row phone header; keep all live information without a third band. */
@@ -122,7 +122,7 @@
 }
 /* Compact notifications stay readable without competing with the game. */
 .toast{
- background:rgba(26,48,38,.94);
+ background:rgba(18,56,30,.94);
  color:var(--menu-text);
  border:1px solid #c1d7b733;
  border-radius:10px;
@@ -132,7 +132,7 @@
  letter-spacing:0;text-align:left;
  -webkit-backdrop-filter:blur(12px);
  backdrop-filter:blur(12px);
- box-shadow:0 4px 14px #091d1733;
+ box-shadow:0 4px 14px #071f0f33;
  transform:translate(-50%,-4px);
  transition:opacity 180ms ease,transform 220ms cubic-bezier(.22,1,.36,1);
 }
@@ -140,9 +140,9 @@
 .toast.is-upgrade{gap:6px}
 .toast.is-upgrade::before{flex-basis:14px;width:14px;height:14px}
 .toast.is-upgrade::before{color:#c8e7ad}
-@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.toast{background:#243a2e}}
-@media(prefers-reduced-transparency:reduce){.toast{background:#243a2e;-webkit-backdrop-filter:none;backdrop-filter:none}}
-@media(prefers-contrast:more){.toast{background:#182e23;border-color:#e1efd6}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.toast{background:#1c4228}}
+@media(prefers-reduced-transparency:reduce){.toast{background:#1c4228;-webkit-backdrop-filter:none;backdrop-filter:none}}
+@media(prefers-contrast:more){.toast{background:#10361c;border-color:#e1efd6}}
 @media(prefers-reduced-motion:reduce){.toast,.toast.show{transform:translate(-50%,0);transition:opacity 120ms linear}}
 /* An inset arrow on the station plaque keeps affordability in the map itself. */
 .world .marker.station-sign{padding-right:21px}

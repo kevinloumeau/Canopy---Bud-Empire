@@ -71,6 +71,7 @@
   <link rel="stylesheet" href="/src/menu-tabs.css" />
   <link rel="stylesheet" href="/src/empire-map.css" />
   <link rel="stylesheet" href="/src/store-page.css" />
+  <link rel="stylesheet" href="/src/loading-screen.css" />
   <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
   <title>Canopy: Bud Empire</title>
   <script>try{if(localStorage.getItem("canopy-age-ok")==="1")document.documentElement.className+=" age-ok"}catch(e){}</script>
@@ -78,8 +79,7 @@
 <body>
   <div class="age-gate" id="ageGate">
     <div class="age-card" role="dialog" aria-modal="true" aria-labelledby="ageTitle" aria-describedby="ageBody">
-      <svg class="age-mark" viewBox="0 0 48 48" fill="none" aria-hidden="true"><rect width="48" height="48" rx="11" fill="#17251d"/><path d="M24 38V24" stroke="#dce9be" stroke-width="2.5" stroke-linecap="round"/><path d="M24 31C14 32 11 26 12 21c8-1 13 3 12 10Z" fill="#a8c884"/><path d="M24 27c-1-9 4-14 12-14 1 8-3 14-12 14Z" fill="#dce9be"/></svg>
-      <p class="age-eyebrow">Canopy · Bud Empire</p>
+      <img class="age-badge" src="/src/brand/badge.webp" alt="Canopy: Bud Empire" width="720" height="649" />
       <h1 id="ageTitle">Are you 21 or older?</h1>
       <p id="ageBody">Canopy is a work of fiction about running a dispensary. Nothing here is for sale, and no real product is involved.</p>
       <div class="age-actions">
@@ -101,7 +101,7 @@
       });
       document.getElementById('ageNo').addEventListener('click', function () {
         (window.canopyEvents = window.canopyEvents || []).push(['age_gate', { answer: 'no' }]);
-        card.innerHTML = '<p class="age-eyebrow">Canopy \u00b7 Bud Empire</p>' +
+        card.innerHTML = '<img class="age-badge" src="' + card.querySelector('.age-badge').src + '" alt="Canopy: Bud Empire" width="720" height="649" />' +
           '<h1>Come back another time.</h1>' +
           '<p>Canopy is made for players 21 and over. Thanks for stopping by.</p>';
       });
@@ -110,7 +110,7 @@
   </script>
   <main class="app">
     <header class="hud">
-      <div class="brand canopy-brand" aria-label="Canopy: Bud Empire"><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none"><path d="M24 38V24" stroke="#dce9be" stroke-width="2.5" stroke-linecap="round"/><path d="M24 31C14 32 11 26 12 21c8-1 13 3 12 10Z" fill="#a8c884"/><path d="M24 27c-1-9 4-14 12-14 1 8-3 14-12 14Z" fill="#dce9be"/></svg></span><div class="canopy-name"><b>canopy</b><small>BUD EMPIRE</small></div></div>
+      <div class="brand canopy-brand" aria-label="Canopy: Bud Empire"><span aria-hidden="true"><img class="brand-sprout" src="/src/brand/sprout.webp" alt="" width="48" height="47" /></span><div class="canopy-name"><b>canopy</b><small>BUD EMPIRE</small></div></div>
 
       <div class="stat"><small>CASH</small><strong id="money">$0</strong></div>
       <div class="stat output"><small>CAPACITY</small><strong id="rate">$0/s</strong></div>
@@ -124,18 +124,20 @@
 
 
     <section class="world" id="world" aria-label="Isometric dispensary. Drag or use arrow keys to pan, pinch to zoom, and tap a station.">
-      <div class="loading" id="loading" role="status" aria-live="polite">
-        <div class="loading-simple">
-          <p id="loadStatus">Loading…</p>
-          <button class="load-retry" id="loadRetry" onclick="location.reload()" hidden>Retry</button>
-        </div>
-      </div>
       <div class="markers" id="markers"></div><button class="branch-map-marker" id="branchMapMarker" hidden>Manage</button>
       <div class="map-controls" aria-label="Map view"><button id="zoomIn" aria-label="Zoom in">+</button><button id="zoomOut" aria-label="Zoom out">−</button><button id="centerView" aria-label="Center map">⌖</button></div>
       <p class="upgrade-hint mission" id="upgradeHint">Build your seed-to-customer line.</p>
       <div class="gesture-hint" id="gestureHint">DRAG TO PAN · PINCH TO ZOOM</div>
     </section>
 
+    <div class="loading" id="loading" role="status" aria-live="polite" style="--load:.06">
+      <img class="load-art" src="/src/brand/loading-art.webp" alt="" width="852" height="1644" />
+      <div class="load-band">
+        <div class="load-bar" aria-hidden="true"><i class="load-fill"></i><img class="load-sprout" src="/src/brand/sprout.webp" alt="" width="48" height="47" /></div>
+        <p id="loadStatus">Growing your empire…</p>
+        <button class="load-retry" id="loadRetry" onclick="location.reload()" hidden>Retry</button>
+      </div>
+    </div>
     <section class="sheet" id="sheet">
       <div class="panel-header"><button id="panelBack" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg><span>Stations</span></button><b id="panelTitle">Stations</b><button id="panelExpand" type="button" aria-label="Fill the screen with this panel" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 14l6-6 6 6M6 20l6-6 6 6"/></svg></button><button id="panelToggle" aria-label="Expand or collapse controls" aria-expanded="true">⌄</button></div>
       <div data-pane="factory">

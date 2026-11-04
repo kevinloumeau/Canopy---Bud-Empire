@@ -3,24 +3,24 @@
    --p-*   today's most-used colours, values unchanged, named family-lightness (HSL L%). Later phases fold them into --ui-*;
            a literal used fewer than five times stays inline until its surface is restyled. */
 :root{
-  --ui-glass:rgba(20,38,28,.66);
-  --ui-glass-strong:rgba(18,34,25,.8);
+  --ui-glass:rgba(13,45,23,.78);
+  --ui-glass-strong:rgba(12,40,21,.86);
   --ui-sheen:#ffffff14;
   --ui-edge:#ffffff24;
-  --ui-shadow:0 8px 24px rgba(10,20,14,.22);
+  --ui-shadow:0 8px 24px rgba(6,24,12,.22);
   --ui-blur:blur(18px) saturate(1.4);
   --ui-well:rgba(0,0,0,.14);
   --ui-well-soft:rgba(255,255,255,.04);
   --ui-ink:#f2f0e6;
   --ui-soft:rgba(242,240,230,.62);
-  --ui-on-ink:#16261c;
+  --ui-on-ink:#102c19;
   --ui-brass:#e2c68a;
   --ui-brass-ink:#2a2211;
   --ui-brass-wash:rgba(226,198,138,.1);
   --ui-gold:#e7b94a;
-  --ui-leaf:#4f7a3e;
+  --ui-leaf:#3f7d1f;
   --ui-on-leaf:#f5f2e6;
-  --ui-leaf-glow:#7fa765;
+  --ui-leaf-glow:#a8dc52;
   --ui-coral:#e07a5f;
   --ui-coral-wash:rgba(224,122,95,.25);
 
@@ -69,9 +69,9 @@
   --p-gold-60: #e7b94a; /* 6 uses */
   --p-forest-35: #55733e; /* 21 uses */
   --p-forest-34: #4d6050; /* 6 uses */
-  --p-forest-30: #435649; /* 9 uses */
-  --p-forest-22: #304035; /* 6 uses */
-  --p-forest-19: #223f31; /* 5 uses */
+  --p-forest-30: #356444; /* 9 uses */
+  --p-forest-22: #264a31; /* 6 uses */
+  --p-forest-19: #174a27; /* 5 uses */
   --p-forest-19-2: #30332e; /* 5 uses */
-  --p-forest-13: #142c22; /* 11 uses */
+  --p-forest-13: #0c3419; /* 11 uses */
 }

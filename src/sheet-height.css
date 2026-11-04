@@ -141,7 +141,7 @@ html body .sheet>[data-pane=employees]{display:flex;flex-direction:column}
 .world .marker.station-sign.is-bottleneck::after{opacity:1;background:var(--p-gold-75);animation:none;
  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill-rule='evenodd' d='M10 .8a9.2 9.2 0 1 0 0 18.4A9.2 9.2 0 0 0 10 .8Zm0 4.2-4.2 4.7h2.6V15h3.2V9.7h2.6L10 5Z' fill='black'/%3E%3C/svg%3E") center/contain no-repeat;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill-rule='evenodd' d='M10 .8a9.2 9.2 0 1 0 0 18.4A9.2 9.2 0 0 0 10 .8Zm0 4.2-4.2 4.7h2.6V15h3.2V9.7h2.6L10 5Z' fill='black'/%3E%3C/svg%3E") center/contain no-repeat}
 .world .marker.station-sign.is-bottleneck:not(.can-upgrade)::after{background:#efcf8d99}
-.world .marker.station-sign.is-bottleneck.selected::after{background:#3b4a2a}
+.world .marker.station-sign.is-bottleneck.selected::after{background:#1e5630}
 
 /* Station chips keep their labels on phones so the numbers read as sentences: "1k per batch · every 0.04s". */
 @media(max-width:779px){

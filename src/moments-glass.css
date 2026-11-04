@@ -1,6 +1,6 @@
 /* Moments on the forest glass (UI reskin plan, Phase 5): welcome back, settings, age gate, start guide and reset. Loaded last.
    One strong glass card each, a soft scrim behind, mono figures, and brass only on the one thing to tap next. */
-.return-overlay,.settings-wrap{background:rgba(8,18,12,.42);-webkit-backdrop-filter:none;backdrop-filter:none}
+.return-overlay,.settings-wrap{background:rgba(5,21,10,.42);-webkit-backdrop-filter:none;backdrop-filter:none}
 .return-card,.modal.settings{
  border:1px solid var(--ui-edge);border-radius:22px;color:var(--ui-ink);
  background:linear-gradient(180deg,var(--ui-sheen),transparent 30%),var(--ui-glass-strong);
@@ -9,7 +9,7 @@
 
 /* Welcome back: a small celebration in the middle of the screen. A brass coin with the sprout, the total counting up
    in brass, two icon chips for the time, one tile per branch, a ready goal as a row that opens Goals, one brass button. */
-.return-overlay{place-items:center;padding:calc(var(--safe-top,env(safe-area-inset-top,0px)) + 16px) 16px calc(var(--safe-bottom,env(safe-area-inset-bottom,0px)) + 16px);background:radial-gradient(120% 70% at 50% 45%,rgba(8,18,12,.38),rgba(6,14,10,.72));-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.return-overlay{place-items:center;padding:calc(var(--safe-top,env(safe-area-inset-top,0px)) + 16px) 16px calc(var(--safe-bottom,env(safe-area-inset-bottom,0px)) + 16px);background:radial-gradient(120% 70% at 50% 45%,rgba(5,21,10,.38),rgba(4,16,8,.72));-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 .return-card{position:relative;width:min(340px,100%);padding:0 22px 20px;margin-top:38px;border-radius:28px;text-align:center;overflow:visible;
  background:radial-gradient(90% 55% at 50% 0%,rgba(226,198,138,.16),transparent 70%),linear-gradient(180deg,var(--ui-sheen),transparent 30%),var(--ui-glass-strong);
  animation:return-in .5s cubic-bezier(.16,1,.3,1) both}
@@ -19,7 +19,7 @@
 .return-rays{position:absolute;inset:-26px;border-radius:50%;background:repeating-conic-gradient(rgba(226,198,138,.22) 0 7deg,transparent 7deg 22deg);-webkit-mask:radial-gradient(closest-side,#000 35%,transparent 100%);mask:radial-gradient(closest-side,#000 35%,transparent 100%);animation:return-spin 18s linear infinite}
 .return-coin{position:relative;display:grid;place-items:center;width:84px;height:84px;border-radius:50%;
  background:radial-gradient(circle at 34% 28%,#fff3cf 0,#efd59b 22%,#d9b46a 55%,#a9803d 100%);
- box-shadow:inset 0 0 0 4px rgba(255,240,200,.35),inset 0 -6px 10px rgba(90,62,20,.45),0 0 0 3px rgba(18,34,25,.9),0 0 0 4px rgba(226,198,138,.5),0 10px 26px rgba(0,0,0,.45),0 0 44px rgba(226,198,138,.35);
+ box-shadow:inset 0 0 0 4px rgba(255,240,200,.35),inset 0 -6px 10px rgba(90,62,20,.45),0 0 0 3px rgba(12,40,21,.9),0 0 0 4px rgba(226,198,138,.5),0 10px 26px rgba(0,0,0,.45),0 0 44px rgba(226,198,138,.35);
  animation:return-pop .7s cubic-bezier(.34,1.56,.64,1) .08s both}
 .return-coin svg{width:44px;height:44px;fill:none;stroke:#5b4319;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 1px 0 rgba(255,244,210,.6))}
 .return-card .return-kicker{margin:0;font-size:.656rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ui-soft)}
@@ -31,7 +31,7 @@
 .return-card #returnEarnings{display:grid;gap:6px;width:100%;margin:0 0 12px;padding:0;border:0;background:none;list-style:none}
 .return-card #returnEarnings[hidden]{display:none}
 .return-card #returnEarnings li{display:grid;grid-template-columns:auto 1fr auto;column-gap:12px;align-items:center;padding:8px 14px 8px 8px;border:0;border-radius:16px;background:var(--ui-well);box-shadow:inset 0 0 0 1px var(--ui-edge);text-align:left}
-.return-card #returnEarnings li i{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:linear-gradient(160deg,#5f8f4a,#2f5326);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 2px 6px rgba(0,0,0,.3)}
+.return-card #returnEarnings li i{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:linear-gradient(160deg,#5f8f4a,#17622f);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 2px 6px rgba(0,0,0,.3)}
 .return-card #returnEarnings li i svg{width:18px;height:18px;fill:none;stroke:#eaf6dc;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .return-card #returnEarnings li span{font-size:13.5px;line-height:1.2;font-weight:600;color:var(--ui-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .return-card #returnEarnings strong{font:500 14px 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-ink)}
@@ -40,7 +40,7 @@
 .return-card #returnGoals::before{display:none}
 .return-card #returnGoals i{position:relative;display:grid;place-items:center;flex:0 0 40px;height:40px;border-radius:12px;background:linear-gradient(160deg,#3f6f8f,#22435a);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 2px 6px rgba(0,0,0,.3)}
 .return-card #returnGoals i svg{width:22px;height:22px;fill:none;stroke:#e6f2fa;stroke-width:1.8}
-.return-card #returnGoals i b{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--ui-brass);color:var(--ui-brass-ink);font:700 11px/18px 'DM Mono',monospace;box-shadow:0 0 0 2px rgba(18,34,25,.95)}
+.return-card #returnGoals i b{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--ui-brass);color:var(--ui-brass-ink);font:700 11px/18px 'DM Mono',monospace;box-shadow:0 0 0 2px rgba(12,40,21,.95)}
 .return-card #returnGoals span{flex:1}
 .return-card #returnGoals .return-chevron{width:18px;height:18px;fill:none;stroke:var(--ui-soft);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .return-card #returnGoals:active{transform:scale(.98)}
@@ -68,7 +68,7 @@
 .modal .settings-row:focus-visible,.modal .settings-close:focus-visible{outline:2px solid var(--ui-brass);outline-offset:2px}
 @media(hover:hover){.modal .settings-row:hover{color:var(--ui-ink);background:var(--ui-well-soft)}.modal .settings-close:hover{color:var(--ui-ink)}}
 
-@media(prefers-reduced-transparency:reduce){.return-card,.modal.settings{background:#1d3226;-webkit-backdrop-filter:none;backdrop-filter:none}}
+@media(prefers-reduced-transparency:reduce){.return-card,.modal.settings{background:#153a21;-webkit-backdrop-filter:none;backdrop-filter:none}}
 
 /* Age gate, start guide and reset: the same strong glass card. The answer that moves the player on is brass. */
 .age-card,.guide-card,#resetModal .modal{
@@ -107,7 +107,7 @@
 #resetModal .modal button{min-height:44px;border-radius:12px;font:inherit;font-size:13.5px;font-weight:600;letter-spacing:0;text-transform:none}
 #resetModal #resetCancel{border:1px solid var(--ui-edge);background:none;color:var(--ui-ink)}
 #resetModal #resetConfirm{border:1px solid var(--ui-coral);background:none;color:var(--ui-coral)}
-@media(prefers-reduced-transparency:reduce){.age-card,.guide-card,#resetModal .modal{background:#1d3226;-webkit-backdrop-filter:none;backdrop-filter:none}}
+@media(prefers-reduced-transparency:reduce){.age-card,.guide-card,#resetModal .modal{background:#153a21;-webkit-backdrop-filter:none;backdrop-filter:none}}
 
 /* Pressed states (Phase 6): every glass control dips the same way the sheet's buttons already do. Rows darken instead
    of shrinking so a full-width line doesn't jump. */
