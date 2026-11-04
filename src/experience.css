@@ -26,9 +26,9 @@
 .story-task{display:flex;gap:12px;align-items:baseline;margin-top:3px;color:var(--ui-soft);font-size:12px;line-height:1.4}
 .story-task>span{flex:1;min-width:0}.story-task b{font:500 11px 'DM Mono',monospace;white-space:nowrap;color:var(--ui-soft)}
 .story-go{flex:none;font-size:22px;line-height:1;color:var(--ui-soft)}
-.shop-story progress,#deliveryFunding{display:block;width:100%;height:5px;margin:8px 0 12px;border:0;border-radius:4px;overflow:hidden;background:#102c22;accent-color:var(--p-lime-74)}
+.shop-story progress,#deliveryFunding{display:block;width:100%;height:5px;margin:8px 0 12px;border:0;border-radius:4px;overflow:hidden;background:#0b3117;accent-color:var(--p-lime-74)}
 .shop-story progress{height:3px;margin:7px 0 1px}
-.shop-story progress::-webkit-progress-bar,#deliveryFunding::-webkit-progress-bar{background:#102c22}
+.shop-story progress::-webkit-progress-bar,#deliveryFunding::-webkit-progress-bar{background:#0b3117}
 .shop-story progress::-webkit-progress-value,#deliveryFunding::-webkit-progress-value{background:var(--p-lime-74)}
 @media(hover:hover){.shop-story:hover{background:var(--ui-sheen)}}
 .story-entry{display:flex;align-items:center;gap:10px;width:100%;padding:0 0 10px;margin:0 0 10px;border:0;border-bottom:1px solid #d7e5c921;border-radius:0;background:transparent;color:#d1dfc4;text-align:left;cursor:pointer;font:inherit}
@@ -101,7 +101,7 @@
 .order-counter-expansion button[hidden]{display:none}
 .order-counter-expansion button span{font:600 11px 'Bricolage Grotesque',sans-serif}
 .order-counter-expansion button b{font:500 13px 'DM Mono',monospace}
-.order-counter-expansion button:disabled{background:#324934;color:#b8c6ab;cursor:default}
+.order-counter-expansion button:disabled{background:#275435;color:#b8c6ab;cursor:default}
 .order-counter-expansion button:focus-visible{outline:2px solid #e8d59f;outline-offset:3px}
 @media(max-width:480px){.order-counter-expansion{gap:10px}.order-counter-expansion button{padding-inline:10px}}
 
@@ -199,7 +199,7 @@
 .station-team.station-lift #buyLift:disabled{opacity:.5;cursor:default}
 /* Crew ability row: brass while the ability is ready to tap, a quiet countdown while it runs or recharges. */
 .station-team.station-ability{margin-top:6px;grid-template-columns:24px minmax(0,1fr) 88px}
-.station-team.station-ability #useAbility{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:11px;border:1px solid #4a6a58;background:#1c2f26;color:#e2ead8;font:inherit;font-size:11.5px;font-variant-numeric:tabular-nums;cursor:pointer}
+.station-team.station-ability #useAbility{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:11px;border:1px solid #4a6a58;background:#15361f;color:#e2ead8;font:inherit;font-size:11.5px;font-variant-numeric:tabular-nums;cursor:pointer}
 .station-team.station-ability[data-status=ready] #useAbility{border-color:#d0a54e88;background:linear-gradient(#d0a54e38,#d0a54e18);color:#f6efdc}
 .station-team.station-ability[data-status=ready] .team-icon svg{color:#e2bd6a}
 .station-team.station-ability[data-status=active] .team-icon svg{color:#e2bd6a}
@@ -212,13 +212,13 @@
 .sheet .machine-nav button.ability-ready::before{content:"";position:absolute;top:6px;left:6px;width:7px;height:7px;border-radius:50%;background:#e2bd6a;box-shadow:0 0 0 2px #d0a54e33;pointer-events:none}
 /* Purchase tags for the smaller buys (pickup window, drone port, next kiosk): the lounge's tag at about half its size and
    quieter (Kevin, 2026-10-22): see-through glass, a faint dashed edge, no brass ring. */
-.world .marker.station-sign.is-lot.is-mini,.world .marker.station-sign.is-lot.is-mini:not(.selected){padding:2px 7px!important;border-radius:8px;border:1px dashed #f3ead64d;background:#1c2a2299;color:#f3ead6cc;box-shadow:none;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.world .marker.station-sign.is-lot.is-mini,.world .marker.station-sign.is-lot.is-mini:not(.selected){padding:2px 7px!important;border-radius:8px;border:1px dashed #f3ead64d;background:#16301e99;color:#f3ead6cc;box-shadow:none;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
 .world .marker.station-sign.is-lot.is-mini .station-sign-level{color:#f3ead699}
 .world .marker.station-sign.is-lot.is-mini .station-sign-name{font-size:9px}
 .world .marker.station-sign.is-lot.is-mini .station-sign-level{font-size:8.5px}
 .world .marker.station-sign.is-lot.is-mini::after{display:none}
 /* City buildings and the HQ (Kevin, 2026-11-02: "the building tags are a little hidden"): the same small tag, but deep
    forest with a brass edge and a brass price, so it reads over pale facades without growing. */
-.world .marker.station-sign.is-lot.is-mini.is-landmark,.world .marker.station-sign.is-lot.is-mini.is-landmark:not(.selected){border:1px solid #d0a54ecc;background:#173a2aee;color:#f3ead6;box-shadow:0 2px 6px #0b1a1266}
+.world .marker.station-sign.is-lot.is-mini.is-landmark,.world .marker.station-sign.is-lot.is-mini.is-landmark:not(.selected){border:1px solid #d0a54ecc;background:#0f421fee;color:#f3ead6;box-shadow:0 2px 6px #071e0e66}
 .world .marker.station-sign.is-lot.is-mini.is-landmark .station-sign-level{color:#e6c477}
 .world .marker.station-sign.is-lot.is-mini.is-landmark .sign-lock{stroke:#e6c477}

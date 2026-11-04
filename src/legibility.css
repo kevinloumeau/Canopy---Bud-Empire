@@ -45,7 +45,7 @@
 
 /* Sticky bands share the sheet's glass instead of sitting on it as opaque boxes; blur keeps scrolled rows from reading through. */
 .sheet .empire-views{
- background:linear-gradient(145deg,#d1e8cc12,#1e352a08 42%),rgba(26,48,38,.9);
+ background:linear-gradient(145deg,#d1e8cc12,#153e2208 42%),rgba(18,56,30,.9);
  -webkit-backdrop-filter:blur(18px) saturate(130%);backdrop-filter:blur(18px) saturate(130%);
 }
 
@@ -64,7 +64,7 @@ h1,h2,.guide-card h2,.empire-screen h2,.machine-info h1,.canopy-brand b{font-var
 .sheet #stockStatus .stock-online b.stock-full{text-decoration:underline dotted;text-underline-offset:3px}
 
 /* Loading: the full look lives in loading-screen.css. */
-.loading{background:#20372b;color:var(--p-sage-84);font-family:inherit;letter-spacing:0}
+.loading{background:#174024;color:var(--p-sage-84);font-family:inherit;letter-spacing:0}
 /* The finished map fades in from under the card at once (mapReveal in main.js), rather than its models popping in. */
 .loading.reveal{opacity:0;pointer-events:none;transition:opacity .3s ease}
 /* While the shop builds itself (three/intro.js) the map signs wait, then fade in over the standing stations. */
@@ -75,24 +75,24 @@ h1,h2,.guide-card h2,.empire-screen h2,.machine-info h1,.canopy-brand b{font-var
 .world .marker.station-sign,.world .marker.station-sign:not(.selected){
  font-family:'Bricolage Grotesque','Space Grotesk',sans-serif;font-size:11px;letter-spacing:0;
  padding:.32em .6em .36em;border-radius:9px;
- background:rgba(20,44,32,.82);border:1px solid #d6efd233;color:var(--station-tier,#d9ecc7);
- box-shadow:0 2px 8px #0b1c1640,inset 0 1px 0 #f3ffe522;
+ background:rgba(12,52,25,.82);border:1px solid #d6efd233;color:var(--station-tier,#d9ecc7);
+ box-shadow:0 2px 8px #07200f40,inset 0 1px 0 #f3ffe522;
  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
 }
 .world .marker.station-sign .station-sign-name{font-weight:700;letter-spacing:-.01em}
 .world .marker.station-sign .station-sign-level{font:500 10.5px 'DM Mono',monospace;color:var(--p-sage-80);opacity:.9}
-.world .marker.station-sign.selected{background:var(--station-tier,var(--p-lime-81));color:#1c3527;border-color:#f0f8e6;box-shadow:0 4px 14px #0b1c1655}
-.world .marker.station-sign.selected .station-sign-level{color:#2a4a36;opacity:.85}
+.world .marker.station-sign.selected{background:var(--station-tier,var(--p-lime-81));color:#133e20;border-color:#f0f8e6;box-shadow:0 4px 14px #07200f55}
+.world .marker.station-sign.selected .station-sign-level{color:#1e5630;opacity:.85}
 .world .marker.station-sign:after{background:currentColor}
 .world .marker.station-sign.locked{opacity:.6}
-@media(prefers-reduced-transparency:reduce){.world .marker.station-sign{-webkit-backdrop-filter:none;backdrop-filter:none;background:#152d21}}
+@media(prefers-reduced-transparency:reduce){.world .marker.station-sign{-webkit-backdrop-filter:none;backdrop-filter:none;background:#0d3519}}
 
 /* Installed on a home screen: the sheet runs to the bottom edge so the home-indicator area is glass, not gap,
    and the top bar drops its backdrop blur (WebKit rasterises blurred text softly in standalone mode). */
 @media (display-mode: standalone) {
  .sheet{left:0;right:0;bottom:0;border-radius:26px 26px 0 0;border-bottom:0;padding-bottom:max(6px,calc(env(safe-area-inset-bottom,0px) - 4px))}
  .sheet .tray-tabs{margin-bottom:2px}
- .hud{-webkit-backdrop-filter:none;backdrop-filter:none;background:#20362a;transform:translateZ(0)}
+ .hud{-webkit-backdrop-filter:none;backdrop-filter:none;background:#183e24;transform:translateZ(0)}
  .hud>.stat strong,.hud .customer-info b{transform:translateZ(0)}
 }
 @supports (-webkit-touch-callout:none){
