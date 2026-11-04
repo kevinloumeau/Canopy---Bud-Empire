@@ -28,7 +28,25 @@ import { createMapCamera, frameMapCamera, HEIGHT_SCALE } from './camera.js';
 // Blender models are built in metres; the map draws 1.69 units a metre (layout.fixtures use the same scale).
 const BLENDER_SCALE = 1.69;
 const MAX_PEOPLE = 160, MAX_CARS = 32;
-const SUN_COLOUR = '#fff1d6', SKY = '#fffaf0', BOUNCE = '#b8ad94';
+// Golden-hour light, after the loading-screen render (2026-11-04): a warm honey sun, a cream sky and a warm olive
+// bounce, so lit faces glow gold while the shade keeps its colour instead of going grey.
+const SUN_COLOUR = '#ffe7c4', SKY = '#fff4e2', BOUNCE = '#9f9a78';
+const SUN_STRENGTH = 2.5, SKY_STRENGTH = 1.32;
+
+// The colour grade, run in every lit material's own shader as Three.js's custom tone mapping (no extra render pass, so
+// it costs the phone a few instructions a pixel and no fill rate). Graded in display space: richer colour, sunlit
+// highlights pushed toward gold, the darks toward deep forest green, and a gentle S curve for depth. The haze and the
+// sky are mixed in after it at their own colour, so the town's edges still melt into the background exactly.
+THREE.ShaderChunk.tonemapping_pars_fragment = THREE.ShaderChunk.tonemapping_pars_fragment.replace(
+  'vec3 CustomToneMapping( vec3 color ) { return color; }', `vec3 CustomToneMapping( vec3 color ) {
+  vec3 c = pow( clamp( color * toneMappingExposure, 0.0, 1.0 ), vec3( 1.0 / 2.2 ) );
+  float l = dot( c, vec3( .2126, .7152, .0722 ) );
+  c = mix( vec3( l ), c, 1.16 );
+  c += smoothstep( .45, 1.0, l ) * vec3( .022, .01, -.018 ) + ( 1.0 - smoothstep( .0, .5, l ) ) * vec3( -.035, -.008, -.02 );
+  c = clamp( c, 0.0, 1.0 );
+  c = mix( c, c * c * ( 3.0 - 2.0 * c ), .2 );
+  return pow( c, vec3( 2.2 ) );
+}`);
 
 export function createMap3D(canvas, layout) {
   let renderer;
@@ -43,6 +61,7 @@ export function createMap3D(canvas, layout) {
   const loads = THREE.DefaultLoadingManager, track = (url, done, total) => { loading = total - done; loadDone = done; loadTotal = total; };
   loads.onStart = loads.onProgress = track;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.CustomToneMapping; // the colour grade above
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -57,9 +76,9 @@ export function createMap3D(canvas, layout) {
 
   // One sun, high on the left behind the viewer's shoulder, so shadows fall right and a touch up the screen like the
   // renders' own (SUN and SUN_REACH in sunny-world.js: a shadow runs .42 of an object's height along SUN).
-  const hemi = new THREE.HemisphereLight(SKY, BOUNCE, 1.55);
+  const hemi = new THREE.HemisphereLight(SKY, BOUNCE, SKY_STRENGTH);
   scene.add(hemi);
-  const sun = new THREE.DirectionalLight(SUN_COLOUR, 2.1);
+  const sun = new THREE.DirectionalLight(SUN_COLOUR, SUN_STRENGTH);
   const reach = layout.sun.reach, toSun = new THREE.Vector3(-layout.sun.x * reach, 1 / HEIGHT_SCALE, -layout.sun.z * reach).normalize();
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
