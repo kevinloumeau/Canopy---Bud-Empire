@@ -59,7 +59,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Contract progression is defined in depth.js, including post-city milestones.
   var $=function(id){return document.getElementById(id)};
   // A new shop starts as seven construction sites: the door and six stations are raised for free during the intro, then the sign flips.
-  function fresh(){return{researchVersion:RESEARCH_VERSION,forks:freshForks(),shopPlay:migrateShopPlay(),money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),pickupWindow:migrateWindow(),atm:migrateAtm(),atmEarned:0,builds:migrateBuilds(),flagship:0,flagshipSeen:false,city:migrateCity(),citySeen:[],productMenu:migrateMenu(),sound:true,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,offlineLevel:0,spenderClock:180,shopEvents:0,rushTime:0,crosses:{done:[],active:null},achievements:[],reminders:false,perks:{points:0,levels:{}},run:freshRun(),trainerClock:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],abilities:migrateAbilities(),sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeStaff:0,loungeLift:false,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
+  function fresh(){return{researchVersion:RESEARCH_VERSION,forks:freshForks(),shopPlay:migrateShopPlay(),money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),pickupWindow:migrateWindow(),atm:migrateAtm(),atmEarned:0,builds:migrateBuilds(),flagship:0,flagshipSeen:false,city:migrateCity(),citySeen:[],productMenu:migrateMenu(),sound:true,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,offlineLevel:0,spenderClock:180,shopEvents:0,rushTime:0,crosses:{done:[],active:null},achievements:[],reminders:false,perks:{points:0,levels:{}},run:freshRun(),trainerClock:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],abilities:migrateAbilities(),sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeStaff:0,loungeLift:false,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,guideGrant:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
   function readSave(){
     for(var key of ['shift-save','shift-save-backup']){
       try{var raw=localStorage.getItem(key);if(!raw)continue;var value=JSON.parse(raw);if(value&&typeof value==='object'&&!Array.isArray(value))return value}catch(e){}
@@ -72,7 +72,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     next.shopOpen=old.shopOpen!==false;next.doorBuilt=next.shopOpen||old.doorBuilt===true;
     ['trafficLevel','pickupLevel','readyLevel','curingLevel','durationLevel','kioskSpeedLevel','onlineBonusLevel','comfortLevel','scannerLevel','webLevel','seedBatchLevel','growBatchLevel','harvestBatchLevel','packSpeedLevel','serviceLevel','signLevel','loyaltyLevel','basketLevel','terpeneLevel','breedingLevel','displayLevel','trendLevel','fleetLevel','cargoLevel','repeatLevel'].forEach(function(key){next[key]=Math.floor(finite(old[key],0,0,key==='pickupLevel'?12:20))});
     next.offlineLevel=Math.floor(finite(old.offlineLevel,0,0,5));next.researchVersion=Math.floor(finite(old.researchVersion,0,0,RESEARCH_VERSION));var researchRefund=mergeResearch(next);next.forks=migrateForks(old.forks,next);next.spenderClock=finite(old.spenderClock,180,0,600);next.shopEvents=Math.floor(finite(old.shopEvents,0,0,1e9));next.rushTime=finite(old.rushTime,0,0,120);next.crosses=migrateCrosses(old.crosses,old.library,old.breed);next.achievements=migrateAchievements(old.achievements);next.reminders=old.reminders===true;next.perks=migratePerks(old.perks,next.empire.shares);next.run=migrateRun(old.run);next.trainerClock=finite(old.trainerClock,0,0,240);
-    next.idStaff=Math.floor(finite(old.idStaff,0,0,economy.SECURITY_MAX_LEVEL));
+    next.idStaff=Math.floor(finite(old.idStaff,0,0,economy.SECURITY_MAX_LEVEL));next.guideGrant=finite(old.guideGrant,0,0,1e6);
     next.strains=STRAINS.map(function(_,i){return Math.floor(finite(old.strains&&old.strains[i],i===0?1:0,i===0?1:0,strains.STRAIN_MAX))});
     next.activeStrain=Math.floor(finite(old.activeStrain,0,0,STRAINS.length-1));if(!next.strains[next.activeStrain])next.activeStrain=0;
     next.menuStrains=STRAINS.map(function(_,i){return i}).filter(function(i){return next.strains[i]>0&&(!Array.isArray(old.menuStrains)||old.menuStrains.indexOf(i)>=0)});if(!next.menuStrains.length)next.menuStrains=[0];next.strainTrend=strains.migrateTrend(old.strainTrend,STRAINS.length);next.vipBuzz=finite(old.vipBuzz,0,0,strains.VIP_BUZZ_SECONDS);
@@ -2820,7 +2820,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function renderFrame(wallNow){
     if(document.hidden){render.last=wallNow;requestAnimationFrame(render);return}
     stepMapGesture(wallNow);keyboardPan(wallNow);
-    if(districtGlide){var glideDt=Math.min(.1,Math.max(0,(wallNow-(render.glideAt===undefined?wallNow:render.glideAt))/1000));stepGlide(glideDt)}render.glideAt=wallNow;
+    var glideDt=Math.min(.1,Math.max(0,(wallNow-(render.glideAt===undefined?wallNow:render.glideAt))/1000));if(districtGlide)stepGlide(glideDt);if(guideCam)stepGuideCam(glideDt);render.glideAt=wallNow;
     var frameInterval=state.gameSpeed===0?250:1000/60;
     if(!render.invalidated&&render.drawnAt!==undefined&&wallNow-render.drawnAt<frameInterval-1){requestAnimationFrame(render);return}
     render.drawnAt=wallNow;render.invalidated=false;render.frames=(render.frames||0)+1;
@@ -4169,7 +4169,10 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // before a reset or reload would otherwise cover the sites on desktop.
     isBuilt:isBuilt,build:buildStation,shopOpen:function(){return state.shopOpen},openShop:openShop,finish:finishConstruction,
     sheet:collapsePanel,reserve:function(px){guideReserve=px;fitControls()},
-    select:function(key){loungeSelected=key==='lounge';securitySelected=key==='door';if(key!=='door'&&key!=='lounge')selected=key;renderUI()}});var guideReplay=document.createElement('button');guideReplay.type='button';guideReplay.className='guide-replay';guideReplay.textContent='Replay the start guide';guideReplay.onclick=function(){startGuide.open()};document.querySelector('.shop-reset').prepend(guideReplay);mountSettings({getState:function(){return state},setSpeed:setGameSpeed});
+    select:function(key){loungeSelected=key==='lounge';securitySelected=key==='door';if(key!=='door'&&key!=='lounge')selected=key;renderUI()},
+    camera:{look:guideLook,follow:guideFollow,home:guideHome,release:guideRelease},
+    grow:{level:function(){return state.lines[1]},price:function(){return fmt(growGoalCost())},grant:guideGrant,buy:guideUpgradeGrow,settle:guideSettleGrant},
+    guest:guideGuest});var guideReplay=document.createElement('button');guideReplay.type='button';guideReplay.className='guide-replay';guideReplay.textContent='Replay the start guide';guideReplay.onclick=function(){startGuide.open()};document.querySelector('.shop-reset').prepend(guideReplay);mountSettings({getState:function(){return state},setSpeed:setGameSpeed});
   manageDialog($('resetModal'),function(){$('resetModal').hidden=true});manageDialog(prestigeDialog,function(){prestigeDialog.hidden=true});
   Array.prototype.forEach.call(document.querySelectorAll('[data-empire-view]'),function(button){button.onclick=function(){var view=button.getAttribute('data-empire-view');Array.prototype.forEach.call(document.querySelectorAll('[data-empire-view]'),function(b){b.setAttribute('aria-pressed',String(b===button))});Array.prototype.forEach.call(document.querySelectorAll('[data-empire-section]'),function(section){section.hidden=section.getAttribute('data-empire-section')!==view});document.querySelector('[data-pane=empire]').scrollTop=0;fitControls()}});
 
@@ -4209,6 +4212,49 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var lift=at.y*.38*.6124;glideTo(at.x-lift,at.z-lift,1);
     pickedTag=hq?'hq':id;buyBoxFor=-1;renderUI()}
   function glideTo(x,z,z1){if(motionPreference.matches||SNAP){districtGlide=null;zoom=z1;centreOn(x,z);return}districtGlide={from:viewAnchor(),to:{x:x,z:z},z0:zoom,z1:z1,t:0};render.invalidated=true}
+  // The start guide's camera (start-guide.js): it glides in on each site as it is built, then follows the first guest
+  // through the shop, then eases back to the whole shop. The point being watched sits midway between the top bar and
+  // the docked card (on desktop, right of the card), and the view is placed without the clamp so a site near the edge of
+  // the block still centres. Any other camera move stops it. Reduced motion jumps.
+  var guideCam=null,guideMoved=false;
+  // Close enough to read the site on a phone; a desktop frame is about half again as big, so it needs less.
+  function guideZoom(follow){return width>=780?(follow?1.7:1.5):(follow?2.6:2.3)}
+  function guideAnchor(){var top=hudBottom(),low=visibleHeight(),wide=width>=780;return{x:wide?(404+width)/2:width/2,y:top+(low-top)*.5}}
+  function guidePoint(key){if(key==='door')return{x:DOOR_POS.x+.6,y:1.2,z:DOOR_POS.z-.6};var m=machinePos[key];return{x:m.x,y:(m.y||0)+1.4,z:m.z}}
+  // The ground point under the anchor, so a glide starts from wherever the view is now.
+  function guideViewPoint(){var a=guideAnchor(),c=Math.cos(angle),s=Math.sin(angle),rx=(a.x-centerX)/unit,rz=(a.y-centerY)/(unit*FLOOR_SQUASH);return{x:rx*c+rz*s,y:0,z:rz*c-rx*s}}
+  function guidePlace(p,z1){var f=cameraFrame(),u=f.unit*z1,r=rotate(p.x,p.z),a=guideAnchor();zoom=z1;panX=a.x-f.x-r.x*u;panY=a.y-f.y-r.z*u*FLOOR_SQUASH+p.y*u;applyCamera(true)}
+  function guideAim(to,z1,follow){if(mapGesture.mode==='coast')endGesture();districtGlide=null;guideMoved=true;
+    if(motionPreference.matches||SNAP){guideCam=follow?{follow:true,point:to,zoom:z1}:null;guidePlace(to,z1);return}
+    guideCam={from:guideViewPoint(),to:to,z0:zoom,z1:z1,t:0,follow:!!follow};render.invalidated=true}
+  function guideLook(key){guideAim(guidePoint(key),guideZoom(false),false)}
+  var guideWatchFrom=-1,guideGuestId=-1;
+  function guideFollowed(){var c=null;if(guideGuestId>=0)c=customers.find(function(q){return q.id===guideGuestId})||null;
+    else{c=customers.filter(function(q){return q.id>=guideWatchFrom&&!q.lounge&&!q.kiosk}).sort(function(a,b){return a.id-b.id})[0]||null;if(c)guideGuestId=c.id}
+    return c}
+  function guestSpot(c){return c?{x:c.renderX===undefined?c.x:c.renderX,y:1,z:c.renderZ===undefined?c.z:c.renderZ}:guidePoint('door')}
+  function guideFollow(){guideWatchFrom=customerId;guideGuestId=-1;guideAim(guestSpot(guideFollowed()),guideZoom(true),true)}
+  // Where the followed guest is in their visit, for the guide's captions.
+  function guideGuest(){var c=guideFollowed();if(!c)return guideGuestId>=0?'gone':'door';
+    if(c.bag||c.phase==='leaving')return 'out';if(c.ordered)return 'pickup';if(c.idChecked)return 'order';return 'door'}
+  function guideHome(){guideAim({x:0,y:0,z:0},1,false)}
+  function guideRelease(){guideGuestId=-1;guideWatchFrom=-1;guideCam=null;if(!guideMoved)return;guideMoved=false;if(!state.empire.activeStore)lookAtStore(0)}
+  function stepGuideCam(dt){var g=guideCam;if(!g)return;
+    if(mapGesture.mode!=='idle'){guideCam=null;return}
+    if(g.t!==undefined&&g.t<1){g.t=Math.min(1,g.t+dt/1.1);var e=g.t<.5?4*g.t*g.t*g.t:1-Math.pow(-2*g.t+2,3)/2;
+      if(g.follow)g.to=guestSpot(guideFollowed());
+      guidePlace({x:g.from.x+(g.to.x-g.from.x)*e,y:g.from.y+(g.to.y-g.from.y)*e,z:g.from.z+(g.to.z-g.from.z)*e},g.z0*Math.pow(g.z1/g.z0,e));
+      if(g.t>=1){if(g.follow){g.point=g.to;g.zoom=g.z1}else guideCam=null}return}
+    if(g.follow){var to=guestSpot(guideFollowed()),k=1-Math.exp(-dt*4);g.point={x:g.point.x+(to.x-g.point.x)*k,y:g.point.y+(to.y-g.point.y)*k,z:g.point.z+(to.z-g.point.z)*k};guidePlace(g.point,g.zoom);render.invalidated=true}}
+  // The grow room's first new look (Lv 10) is part of the guide, paid with cash the guide grants when it opens.
+  // state.guideGrant is what is left of that grant; the guide takes back whatever was not spent when it closes, so a
+  // finished or skipped guide leaves the normal starting cash.
+  function growGoalCost(){var total=0;for(var level=Math.max(1,state.lines[1]);level<10;level++)total+=economy.stationCost(LINES[1].base,level);return total}
+  function guideGrant(){if(state.guideGrant>0||state.lines[1]>=10)return;var grant=growGoalCost();state.money+=grant;state.guideGrant=grant;renderUI();save()}
+  function guideUpgradeGrow(){if(!state.lines[1])return false;var spent=0;
+    while(state.lines[1]<10){var c=cost(1);if(state.money<c)break;spent+=c;buyStationLevel(1)}
+    state.guideGrant=Math.max(0,state.guideGrant-spent);save();return state.lines[1]>=10}
+  function guideSettleGrant(){if(!(state.guideGrant>0))return;state.money=Math.max(0,state.money-state.guideGrant);state.guideGrant=0;renderUI();save()}
   function stepGlide(dt){
     var g=districtGlide;if(!g)return;
     var far=Math.abs(g.to.x-g.from.x);g.t=Math.min(1,g.t+dt/Math.min(1.4,.55+far/160));

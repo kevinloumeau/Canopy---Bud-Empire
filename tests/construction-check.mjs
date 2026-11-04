@@ -1,5 +1,5 @@
-// Construction intro: a new shop starts as seven sites, the guide raises them one tap at a time, points out the lounge
-// lot for later, then opens the shop.
+// Construction intro: a new shop starts as seven sites, the guide raises them one tap at a time with the camera on each,
+// takes the grow room to Lv 10 with cash it grants, opens the shop, follows the first guest through, then hands over.
 // Drives the installed Google Chrome headlessly over the DevTools protocol (no npm dependency) against a running dev
 // or preview server, with a throwaway profile so nothing touches a real save.
 //
@@ -7,9 +7,10 @@
 //   node tests/construction-check.mjs http://127.0.0.1:5174/
 //
 // Checks, at phone and desktop sizes: a fresh profile opens the hero with every site unbuilt and no customers; each
-// site is built by a tap inside its spotlight ring (the ring never sits under the card); the shop opens only from the
-// final card and customers then arrive; a half-built save resumes at its next site and Skip finishes the job; a save
-// from before the intro loads as an open shop with every station standing.
+// site is built by a tap inside its spotlight ring (the ring never sits under the card); the grant buys Grow to Lv 10
+// and leaves the starting cash; the shop opens from the opening card, the walk follows one guest out with a bag and the
+// hand-over closes the guide; a half-built save resumes at its next site and Skip finishes the job and takes the grant
+// back; a save from before the intro loads as an open shop with every station standing.
 import { spawn } from 'node:child_process';
 import assert from 'node:assert/strict';
 import { mkdtemp, rm } from 'node:fs/promises';
@@ -86,7 +87,7 @@ try {
     // Seven sites, each raised by a tap inside its ring; the card must never cover the ring.
     for (let i = 0; i < SITES.length; i++) {
       const g = await guide();
-      assert.equal(g.eyebrow, `Site ${i + 1} of 7 · ${SITES[i]}`); assert.equal(g.build, true); assert.equal(g.cta, 'Build');
+      assert.equal(g.eyebrow, `Build · ${i + 1} of 7`); assert.equal(g.build, true); assert.equal(g.cta, 'Build');
       const { ring, card } = await rects();
       assert.ok(ring.width > 0 && ring.height > 0, `${name}: ring for ${SITES[i]} is not on screen`);
       const overlap = ring.left < card.right && ring.right > card.left && ring.top < card.bottom && ring.bottom > card.top;
@@ -98,43 +99,41 @@ try {
       assert.equal((await guide()).cta, 'Built');
       await sleep(1000);
     }
-    // The lounge lot is pointed out for later: spotlit and selected on the Stations card, but there is nothing to build.
-    const lounge = await guide();
-    assert.equal(lounge.eyebrow, 'Later · The back room'); assert.equal(lounge.build, false); assert.equal(lounge.cta, 'Next');
-    assert.equal(await evaluate("document.getElementById('machineName').textContent"), 'SMOKING LOUNGE');
-    assert.equal(await evaluate("document.querySelector('[data-marker=lounge]').classList.contains('is-lot')"), true);
-    {
-      const { ring, card } = await rects();
-      assert.ok(ring.width > 0 && ring.height > 0, `${name}: ring for the lounge lot is not on screen`);
-      const overlap = ring.left < card.right && ring.right > card.left && ring.top < card.bottom && ring.bottom > card.top;
-      assert.equal(overlap, false, `${name}: the card covers the lounge lot`);
-    }
-    await evaluate("document.querySelector('.guide-next').click()"); await sleep(400);
-    assert.equal((await status()).lounge.level, 0, 'the intro bought the lounge');
+    // Grow to Lv 10, paid for by the guide's grant: the cash in hand is the starting $30 plus exactly that.
+    const up = await guide();
+    assert.equal(up.eyebrow, 'Upgrade · On the house'); assert.match(up.cta, /^Upgrade · \$/);
+    s = await status(); assert.equal(s.lineLevels[1], 1);
+    await evaluate("document.querySelector('.guide-next').click()"); await sleep(300);
+    s = await status(); assert.equal(s.lineLevels[1], 10, 'the grow room did not reach Lv 10'); assert.equal(s.cash, 30, 'the grant did not cover the upgrade exactly');
+    await sleep(1700);
     const final = await guide();
-    assert.equal(final.eyebrow, 'Canopy · Grand opening'); assert.equal(final.cta, 'Open the shop');
-    s = await status(); assert.deepEqual(s.lineLevels, [1, 1, 1, 1, 1, 1]); assert.equal(s.shopOpen, false);
+    assert.equal(final.eyebrow, 'Grand opening'); assert.equal(final.cta, 'Open the shop');
+    s = await status(); assert.deepEqual(s.lineLevels, [1, 10, 1, 1, 1, 1]); assert.equal(s.shopOpen, false);
     assert.equal(await evaluate("document.querySelector('.marker.is-site')"), null);
 
-    // Flip the sign: the guide closes, the tray comes back, the save marks the shop open and customers arrive.
+    // Flip the sign: the shop opens and the walk follows the first guest until they leave with a bag, then one button
+    // hands the shop over.
+    await evaluate("document.querySelector('.guide-next').click()");
+    await waitFor("document.querySelector('.start-guide').classList.contains('is-walk')", 6000);
+    assert.equal((await save()).shopOpen, true);
+    await waitFor("document.querySelector('.start-guide').classList.contains('is-done')", 90000);
+    assert.equal((await guide()).cta, 'Let’s grow');
     await evaluate("document.querySelector('.guide-next').click()");
     await waitFor("document.querySelector('.start-guide').hidden");
     assert.equal(await evaluate("localStorage.getItem('shift-guide-seen')"), '1');
-    assert.equal((await save()).shopOpen, true);
     assert.equal(await evaluate("document.getElementById('sheet').classList.contains('collapsed')"), false);
-    await waitFor('window.factoryTool.execute().customers.length>0', 8000);
     // A reload keeps the open shop and does not reopen the intro.
     await send('Page.reload'); await waitFor('window.__shiftReady===true'); await waitFor('!!window.factoryTool'); await sleep(900);
     assert.equal((await guide()).open, false);
-    assert.deepEqual((await status()).lineLevels, [1, 1, 1, 1, 1, 1]);
+    assert.deepEqual((await status()).lineLevels, [1, 10, 1, 1, 1, 1]);
 
     // A half-built shop resumes at its next site, and Skip raises the rest and opens up.
     await boot({ lines: [1, 1, 0, 0, 0, 0], doorBuilt: true, shopOpen: false, money: 30, gameSpeed: 0, lastSeen: Date.now() });
     await waitFor("!document.querySelector('.start-guide').hidden");
-    assert.equal((await guide()).eyebrow, 'Site 4 of 7 · Harvest');
+    assert.equal((await guide()).eyebrow, 'Build · 4 of 7');
     assert.deepEqual((await status()).lineLevels, [1, 1, 0, 0, 0, 0]);
     await evaluate("document.querySelector('.guide-skip').click()"); await sleep(400);
-    s = await status(); assert.deepEqual(s.lineLevels, [1, 1, 1, 1, 1, 1]); assert.equal(s.shopOpen, true);
+    s = await status(); assert.deepEqual(s.lineLevels, [1, 1, 1, 1, 1, 1]); assert.equal(s.shopOpen, true); assert.equal(s.cash, 30, 'Skip kept the grant');
     assert.equal((await guide()).open, false);
 
     // A save from before the intro is an open shop with every station standing; the intro stays closed.
@@ -145,7 +144,7 @@ try {
     assert.equal(await evaluate("document.querySelector('.marker.is-site')"), null);
 
     assert.deepEqual(errors, [], `${name}: page errors`);
-    console.log(`${name}: fresh sites, seven taps with clear rings, the lounge lot pointed out, opening, reload, resume, skip and legacy save passed`);
+    console.log(`${name}: fresh sites, seven taps with clear rings, the Lv 10 grow upgrade, opening, the guest walk, reload, resume, skip and legacy save passed`);
   }
   ws.close();
 } finally {
