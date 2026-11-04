@@ -16,7 +16,7 @@
 .store-icon svg{width:22px;height:22px}
 .store-card .store-icon{grid-area:icon;grid-row:1/-1;align-self:start}
 .store-card.is-locked .store-icon{color:var(--p-sage-66)}
-.store-dot{position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:var(--p-gold-77);box-shadow:0 0 0 2px #213a2e,0 0 8px #e3d1a680}
+.store-dot{position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:var(--p-gold-77);box-shadow:0 0 0 2px #184325,0 0 8px #e3d1a680}
 .store-dot[hidden]{display:none}
 
 .store-card .store-copy{grid-area:copy;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name status" "detail detail";align-items:center;gap:2px 8px;min-width:0}
@@ -83,7 +83,7 @@
 .hero-actions{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:8px}
 .sheet .empire-screen .hero-actions button{min-height:48px;border-radius:12px;font-size:13px;font-weight:700;padding-inline:10px;max-width:none;width:100%}
 .sheet .empire-screen .hero-actions [id^=branchBuy]{background:linear-gradient(145deg,#c9e4b820,#c6dfb608),var(--p-forest-35);color:var(--p-sage-96);border:1px solid #d9f1c445;font-variant-numeric:tabular-nums}
-.sheet .empire-screen .store-hero.is-ready .hero-actions [id^=branchBuy]:not(:disabled){box-shadow:0 0 0 1px #d9f1c455,0 0 16px #b6d69040,0 3px 10px #0b1c1626}
+.sheet .empire-screen .store-hero.is-ready .hero-actions [id^=branchBuy]:not(:disabled){box-shadow:0 0 0 1px #d9f1c455,0 0 16px #b6d69040,0 3px 10px #07200f26}
 .sheet .empire-screen .hero-actions [id^=branchBuy]:disabled{background:var(--p-forest-19);color:var(--p-sage-74);border-color:#75936b55;box-shadow:none}
 .sheet .empire-screen .hero-actions [id^=branchVisit]{background:transparent;border-color:#9eb9944d;color:#d4e4c6}
 .sheet .empire-screen .hero-actions [id^=branchVisit][aria-pressed=true]{color:var(--p-gold-77);border-color:#e3d1a655}
@@ -134,7 +134,7 @@
 .branch-project strong{font:500 11px 'DM Mono',monospace;color:var(--p-sage-80);letter-spacing:0;line-height:1.35;white-space:normal}
 .project-mark{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#ffffff0c;color:transparent;box-shadow:inset 0 0 0 1px #c1d7b72a}
 .project-mark svg{width:15px;height:15px}
-.branch-project.is-installed .project-mark{background:var(--p-lime-70);color:#203728;box-shadow:none}
+.branch-project.is-installed .project-mark{background:var(--p-lime-70);color:#174024;box-shadow:none}
 .branch-project.is-ready .project-mark{box-shadow:inset 0 0 0 1px #b6d69080}
 .branch-project.is-locked h4{color:var(--p-sage-80)}
 .branch-project.is-locked .project-mark{opacity:.5}
@@ -156,7 +156,7 @@
 .stock-featured .pill-field,.stock-make .pill-field{margin-top:4px}
 .store-panel .pill-field{margin:8px 0 0}
 .store-panel .pill-field .pill-label{font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:var(--p-sage-70);margin-bottom:6px}
-.sheet .empire-screen .store-panel .pill-group button{min-height:38px;padding:7px 10px;border-radius:10px;background:#1c3328;border-color:#a1b99140;font-size:12px}
+.sheet .empire-screen .store-panel .pill-group button{min-height:38px;padding:7px 10px;border-radius:10px;background:#133c20;border-color:#a1b99140;font-size:12px}
 .sheet .empire-screen .store-panel .pill-group button[aria-pressed=true]{background:linear-gradient(155deg,#e3f5db38,#c4e5b41a);border-color:#c1d7b74d;color:var(--p-sage-95);box-shadow:inset 0 1px 0 #f1ffe752}
 .store-panel .choice-effect,.store-panel .operation-hint{margin:8px 0 0;font-size:11.5px;color:var(--p-sage-70)}
 .op-pane .operation-stats[hidden]{display:none}
@@ -179,7 +179,7 @@
 .line-meter{display:block;height:3px;margin-top:7px;max-width:150px;border-radius:2px;background:var(--p-forest-13);overflow:hidden}
 .line-meter i{display:block;height:100%;border-radius:2px;background:var(--p-gold-77)}
 .line-meter[hidden]{display:none}
-.stock-shelves .shelf-stepper{gap:0;padding:2px;border-radius:11px;background:#0c231c40}
+.stock-shelves .shelf-stepper{gap:0;padding:2px;border-radius:11px;background:#09261240}
 .sheet .empire-screen .stock-shelves .shelf-stepper button{width:38px;min-height:34px;padding:0;border:0;border-radius:9px;background:transparent;font:600 17px 'DM Mono',monospace;color:var(--p-lime-90);box-shadow:none}
 .sheet .empire-screen .stock-shelves .shelf-stepper button:disabled{background:transparent;color:#6f8a73;opacity:1}
 @media(hover:hover){.sheet .empire-screen .stock-shelves .shelf-stepper button:not(:disabled):hover{background:#dce9be14;filter:none}}

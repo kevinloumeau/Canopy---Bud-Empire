@@ -11,7 +11,7 @@
 /* Section switcher: a slim segmented control so it reads as secondary to the tray tabs below. */
 .sheet .empire-views{
  gap:2px;padding:2px 0 8px;margin:0 0 2px;
- background:#213a2e;border-bottom:1px solid #c1d7b71f; /* opaque: scrolled rows must not show through the sticky switcher */
+ background:#184325;border-bottom:1px solid #c1d7b71f; /* opaque: scrolled rows must not show through the sticky switcher */
 }
 .sheet .empire-views button{
  min-height:36px;padding:6px 4px;border-radius:18px;
@@ -30,7 +30,7 @@
 .empire-content progress{height:6px;margin:8px 0 10px}
 .empire-content .empire-section-heading{font-size:15px;margin:22px 0 2px;padding-top:16px;border-top:1px solid #c1d7b71f}
 .empire-content .empire-section-heading+p{margin-top:0;font-size:12px}
-.sheet .empire-content .empire-primary{margin-top:2px;min-height:46px;border-radius:12px;box-shadow:0 3px 10px #0b1c1626}
+.sheet .empire-content .empire-primary{margin-top:2px;min-height:46px;border-radius:12px;box-shadow:0 3px 10px #07200f26}
 .sheet .empire-content .empire-primary:disabled{box-shadow:none}
 .empire-help{margin:2px 0 4px}
 .empire-help summary{font-size:12px;min-height:40px}
@@ -101,7 +101,7 @@
 .daily-track li{padding:8px 1px 7px;border-radius:9px;line-height:1.2}
 .daily-track span{font-size:10px;letter-spacing:.01em;margin-bottom:3px}
 .daily-track b{font:500 11px 'DM Mono',monospace;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-.daily-track li.current{box-shadow:inset 0 0 0 1px var(--p-lime-75),0 3px 10px #0b1c1626}
+.daily-track li.current{box-shadow:inset 0 0 0 1px var(--p-lime-75),0 3px 10px #07200f26}
 .daily-track li.collected{color:var(--p-sage-66);border-color:#c1d7b71f}
 .daily-track li.collected span::after{color:var(--p-lime-75)}
 @media(max-width:360px){.daily-track{gap:3px}.daily-track span{font-size:9.5px}.daily-track b{font-size:10.5px}}
@@ -130,7 +130,7 @@
 .empire-screen progress::-webkit-progress-value{background:var(--p-lime-70)}
 .empire-screen progress::-moz-progress-bar{background:var(--p-lime-70)}
 .sheet .empire-screen button{min-height:44px;border:1px solid #c1d7b76b;border-radius:8px;padding:9px 12px;background:#dce9be20;color:var(--p-sage-93);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer}
-.sheet .empire-screen .empire-primary{width:100%;margin-top:2px;min-height:46px;border-radius:12px;background:var(--p-lime-75);color:#203728;font-weight:700;box-shadow:0 3px 10px #0b1c1626}
+.sheet .empire-screen .empire-primary{width:100%;margin-top:2px;min-height:46px;border-radius:12px;background:var(--p-lime-75);color:#174024;font-weight:700;box-shadow:0 3px 10px #07200f26}
 .sheet .empire-screen button:disabled{background:var(--p-forest-19);color:var(--p-sage-74);border-color:#75936b55;opacity:.8;cursor:default;box-shadow:none}
 .empire-screen button:focus-visible{outline:2px solid var(--p-gold-77);outline-offset:2px}
 @media(hover:hover){.empire-screen button:not(:disabled):hover{filter:brightness(1.12)}}
@@ -155,7 +155,7 @@
 .sheet .empire-screen .reward-chip{display:grid;gap:1px;min-height:48px;padding:7px 12px 6px;border-radius:12px;border:1px solid #e3d1a655;background:linear-gradient(155deg,#e3d1a626,#c3dca512);text-align:left;box-shadow:inset 0 1px 0 #f8edcc33}
 .reward-chip small{font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--p-gold-77);font-family:inherit;font-weight:600}
 .reward-chip b{font:600 14px 'DM Mono',monospace;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:#f6f2e3}
-.sheet .empire-screen .reward-collect{width:100%;min-height:44px;border-radius:12px;background:var(--p-gold-77);border-color:var(--p-gold-77);color:#2c2a1a;font-weight:700;box-shadow:0 3px 10px #0b1c1626}
+.sheet .empire-screen .reward-collect{width:100%;min-height:44px;border-radius:12px;background:var(--p-gold-77);border-color:var(--p-gold-77);color:#2c2a1a;font-weight:700;box-shadow:0 3px 10px #07200f26}
 .sheet .empire-screen .reward-collect[hidden]{display:none}
 
 /* Store list: the existing rows, plus one door to the records. */
@@ -248,16 +248,16 @@
 .prestige-funding{display:grid;gap:7px;padding-top:14px;border-top:1px solid #c1d7b726}
 .prestige-funding>div{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap;font-size:12px;color:var(--p-sage-79)}
 .prestige-funding b{font:500 12px 'DM Mono',monospace;color:var(--p-sage-90);white-space:nowrap}
-.sheet .prestige-funding progress{display:block;width:100%;height:5px;margin:0;border:0;border-radius:3px;overflow:hidden;background:#122b20;accent-color:var(--p-lime-74)}
-.prestige-funding progress::-webkit-progress-bar{background:#122b20}
+.sheet .prestige-funding progress{display:block;width:100%;height:5px;margin:0;border:0;border-radius:3px;overflow:hidden;background:#0c3118;accent-color:var(--p-lime-74)}
+.prestige-funding progress::-webkit-progress-bar{background:#0c3118}
 .prestige-funding progress::-webkit-progress-value{background:var(--p-lime-74)}
 .prestige-funding>small{font-size:11px;color:var(--p-sage-79)}
 .prestige-carryover{display:grid;gap:8px;margin:0;font-size:11px;line-height:1.45}
 .prestige-carryover>div{display:grid;grid-template-columns:48px minmax(0,1fr);gap:8px}
 .prestige-carryover dt{color:var(--p-gold-76);font-weight:600}
 .prestige-carryover dd{margin:0;color:var(--p-sage-79)}
-.sheet .empire-content #prestigeStart{width:100%;max-width:none;min-height:48px;margin:0;padding:12px;border:0;border-radius:12px;background:var(--p-lime-74);color:#213827;font:700 13px 'Bricolage Grotesque',sans-serif;cursor:pointer}
-.sheet .empire-content #prestigeStart:disabled{background:#324a37;color:#b5c5a9;opacity:1;cursor:default}
+.sheet .empire-content #prestigeStart{width:100%;max-width:none;min-height:48px;margin:0;padding:12px;border:0;border-radius:12px;background:var(--p-lime-74);color:#184125;font:700 13px 'Bricolage Grotesque',sans-serif;cursor:pointer}
+.sheet .empire-content #prestigeStart:disabled{background:#275536;color:#b5c5a9;opacity:1;cursor:default}
 .prestige-panel [hidden]{display:none!important}
 .prestige-panel>summary:focus-visible,#prestigeStart:focus-visible{outline:2px solid var(--p-gold-76);outline-offset:3px}
 @media(hover:hover){.sheet .empire-content #prestigeStart:not(:disabled):hover{background:#d6e9b8}}

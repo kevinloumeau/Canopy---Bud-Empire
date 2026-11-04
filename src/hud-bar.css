@@ -24,7 +24,7 @@
 .hud #stockStatus{display:none!important}
 
 /* Speed: one glass pill, pause through 4×, plus the light toggle. */
-.hud .speed-controls{position:static;margin:0;flex:0 0 auto;display:flex;align-items:center;gap:1px;padding:2px;border:1px solid #e3f6d91f;border-radius:14px;background:#0c231c55;box-shadow:inset 0 1px 2px #05180f40}
+.hud .speed-controls{position:static;margin:0;flex:0 0 auto;display:flex;align-items:center;gap:1px;padding:2px;border:1px solid #e3f6d91f;border-radius:14px;background:#09261255;box-shadow:inset 0 1px 2px #06170b40}
 .hud .speed-controls>span.speed-symbol{display:none}
 .hud .speed-controls button{min-width:30px;min-height:30px;padding:0 5px;border-radius:11px;font-size:11.5px;font-weight:600}
 .hud .speed-controls #lightToggle{min-width:30px;min-height:30px;margin-left:1px;border-left:0;padding:5px;border-radius:11px}
