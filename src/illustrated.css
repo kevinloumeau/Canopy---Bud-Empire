@@ -1,38 +1,38 @@
 /* The user's inked isometric shop references define this theme. */
 
 html,body,.world{background:#ecdac3;color:var(--p-forest-19-2)}
-::selection{background:#a9ceb2;color:#283a32}
+::selection{background:#a9ceb2;color:#1f432a}
 button:focus-visible{outline:2px solid #2c617d;outline-offset:3px}
 
-.brand span{background:#8ebda2;color:#263d34;border:1.5px solid #373a32;border-radius:7px}
+.brand span{background:#8ebda2;color:#1d462a;border:1.5px solid #373a32;border-radius:7px}
 
 .speed-controls button:hover:not([aria-pressed=true]){background:#dfdfbe}
-.mission,.mission.ready{background:#f8f0dcf5;color:#3b513d;border:1px solid #696e56;box-shadow:none;border-radius:7px}
+.mission,.mission.ready{background:#f8f0dcf5;color:#2e5e3d;border:1px solid #696e56;box-shadow:none;border-radius:7px}
 
 .world .marker:after{background:#474d3b}
 
-.sheet .tray-tabs{background:#e8dec7;border-color:#9b9f81;border-radius:0}.sheet .tray-tabs button{color:#505b48;border-top:2px solid transparent;font-weight:600}.sheet .tray-tabs button[aria-pressed=true]{background:#c3d6b4;color:#263e30;border-top-color:#465d40}
+.sheet .tray-tabs{background:#e8dec7;border-color:#9b9f81;border-radius:0}.sheet .tray-tabs button{color:#396a49;border-top:2px solid transparent;font-weight:600}.sheet .tray-tabs button[aria-pressed=true]{background:#c3d6b4;color:#1d472a;border-top-color:#326b44}
 .machine-nav{scrollbar-color:#889e78 #e6ddc7}
 .machine-nav button.is-locked,.machine-nav button.is-locked em{color:#747c67}
 
 .selected-line .buy{background:#3e6d86;color:#fff6e2;border:1px solid #2f484e;border-radius:6px}.selected-line .buy:disabled{background:#e1dbc3;color:#6c725a;border-color:#a3a489}
-.upgrade-summary strong{color:#303c2f}.upgrade-summary>span{color:#375842!important}.station-upgrade .next-appearance{color:#657153}
+.upgrade-summary strong{color:#254630}.upgrade-summary>span{color:#2a653d!important}.station-upgrade .next-appearance{color:#657153}
 .machine-nav progress,.station-upgrade progress{background:#d7d4b7;color:#5e8666}progress::-webkit-progress-bar{background:#d7d4b7}progress::-webkit-progress-value{background:#658a67}progress::-moz-progress-bar{background:#658a67}
 .tray-heading p{color:#626d53}
 .online-card>small{color:#57704b}
-.order-row{border-color:#abb093}.order-row button,.order-row .boost,.order-row #claim:not(:disabled){background:#c3d5ac;color:#304a33;border:1px solid #7a8a68}.order-row button:disabled{background:#e1dfc8;border-color:#b0b399;color:#737b60}.order span{background:#d8d7bd}.order i{background:#70916a}
-.shop-status,.shop-status .stock-label,.shop-reset button{color:#606d51}.shop-reset button:hover{color:#2f4f36}
+.order-row{border-color:#abb093}.order-row button,.order-row .boost,.order-row #claim:not(:disabled){background:#c3d5ac;color:#255534;border:1px solid #7a8a68}.order-row button:disabled{background:#e1dfc8;border-color:#b0b399;color:#737b60}.order span{background:#d8d7bd}.order i{background:#70916a}
+.shop-status,.shop-status .stock-label,.shop-reset button{color:#606d51}.shop-reset button:hover{color:#235b35}
 .modal{background:var(--p-cream-92);border:1.5px solid #373a32;border-radius:9px}
-.load-card{background:var(--p-cream-92);color:#394835;border:1px solid #718363}
+.load-card{background:var(--p-cream-92);color:#2a5337;border:1px solid #718363}
 
 .world .marker:after{height:5px}
-@media(min-width:780px){.sheet{left:auto;right:16px;bottom:16px;transform:none;width:418px;max-height:calc(100vh - 144px);max-height:calc(100dvh - 144px);border:1.5px solid #343c31;border-radius:12px}}
+@media(min-width:780px){.sheet{left:auto;right:16px;bottom:16px;transform:none;width:418px;max-height:calc(100vh - 144px);max-height:calc(100dvh - 144px);border:1.5px solid #274631;border-radius:12px}}
 /* Stacked modern dispensary: forest green, mint glazing, and limestone. */
 
-.speed-controls button[aria-pressed=true],.selected-line .buy,.online-card button{background:#365f49;color:#f7f4df}
+.speed-controls button[aria-pressed=true],.selected-line .buy,.online-card button{background:#276e3d;color:#f7f4df}
 
 /* Soft miniature city: porcelain surfaces, garden greens, and ambient shadows. */
-:root{--ink:#34483d;--paper:#fbfcf7;--acid:#568266}
+:root{--ink:#295336;--paper:#fbfcf7;--acid:#568266}
 
 .selected-line .buy,.online-card button{background:#61896c;border-color:#527c5e;border-radius:10px}
 .sheet .tray-tabs{background:#edf2e6;border-color:#d3dfc8}.sheet .tray-tabs button[aria-pressed=true]{background:#dce9d1}
@@ -53,7 +53,7 @@ html,body,.world,.loading{background:#424b43}
 .hud .speed-controls{position:static;top:auto;left:auto;margin-right:auto;pointer-events:auto;flex-shrink:0;background:transparent;border:0;box-shadow:none;padding:0}
 
 /* Level plaques live on the counter fronts instead of floating over equipment. */
-.world .marker,.world .marker:not(.selected),.world .marker.selected{min-width:0;min-height:0;padding:2px 4px;line-height:1;font-weight:600;border:1px solid #afc5a67a;border-radius:3px;background:#355645e8;color:#f3eed8;box-shadow:none;transition:background .15s,border-color .15s}
+.world .marker,.world .marker:not(.selected),.world .marker.selected{min-width:0;min-height:0;padding:2px 4px;line-height:1;font-weight:600;border:1px solid #afc5a67a;border-radius:3px;background:#28633be8;color:#f3eed8;box-shadow:none;transition:background .15s,border-color .15s}
 
 .world .marker:after{display:none}
 .world .marker:before{content:'';position:absolute;inset:50% auto auto 50%;width:34px;height:30px;transform:translate(-50%,-50%)}
@@ -74,10 +74,10 @@ html,body,.world,.loading{background:#424b43}
 .world .mission{display:none}
 
 /* Forest-night interface: warm artwork sits inside quiet dark controls. */
-:root{--paper:var(--p-sage-90);--muted:var(--p-sage-74-2);--panel:#1e2d25;--line:var(--p-forest-30)}
+:root{--paper:var(--p-sage-90);--muted:var(--p-sage-74-2);--panel:#173420;--line:var(--p-forest-30)}
 
 .hud .stat small{color:var(--p-sage-74-2)}
-.hud .brand span{background:#3c5944;color:#dce9cd;border-color:#617b5b}
+.hud .brand span{background:#2f6640;color:#dce9cd;border-color:#617b5b}
 .hud .speed-controls,.hud .speed-controls button{color:#c7d3c0}
 
 .sheet small,.machine-info small{color:var(--p-sage-74-2)}
@@ -89,21 +89,21 @@ html,body,.world,.loading{background:#424b43}
 .station-upgrade .upgrade-funding{color:var(--p-sage-76)}
 .selected-line .buy,.online-card button{background:var(--p-forest-35);color:var(--p-cream-95);border-color:#7f9e69}
 .selected-line .buy:disabled{background:var(--p-forest-22);color:var(--p-sage-69);border-color:var(--p-forest-34)}
-.sheet .tray-tabs{background:#17251d;border-color:var(--p-forest-30)}
+.sheet .tray-tabs{background:#122a19;border-color:var(--p-forest-30)}
 .sheet .tray-tabs button{color:#b7c7ae}
-.sheet .tray-tabs button[aria-pressed=true]{background:#344c35;color:var(--p-sage-91);border-top-color:#a8c68a}
+.sheet .tray-tabs button[aria-pressed=true]{background:#285837;color:var(--p-sage-91);border-top-color:#a8c68a}
 
-.employee-card,.online-card{background:#293c30;border-color:#455d48;color:var(--p-sage-90)}
+.employee-card,.online-card{background:#20452c;border-color:#366c47;color:var(--p-sage-90)}
 .employee-card small,.online-card p,.tray-heading p,.shop-status{color:var(--p-sage-76)}
 
-.modal{background:#23372a;color:#eef0df}.modal p{color:var(--p-sage-76)}.modal button{color:var(--p-sage-90);border-color:#7b9272}
-.sheet progress{background:#405343;accent-color:#97b979}.sheet progress::-webkit-progress-bar{background:#405343}.sheet progress::-webkit-progress-value{background:#97b979}.sheet progress::-moz-progress-bar{background:#97b979}
+.modal{background:#1b3f26;color:#eef0df}.modal p{color:var(--p-sage-76)}.modal button{color:var(--p-sage-90);border-color:#7b9272}
+.sheet progress{background:#336041;accent-color:#97b979}.sheet progress::-webkit-progress-bar{background:#336041}.sheet progress::-webkit-progress-value{background:#97b979}.sheet progress::-moz-progress-bar{background:#97b979}
 .sheet ::selection{background:#68875a;color:#fff7e5}
-.sheet{scrollbar-color:#667e5e #1e2d25}
+.sheet{scrollbar-color:#667e5e #173420}
 button:focus-visible{outline:2px solid #c2dca6;outline-offset:3px}
 
 .machine-nav button .level-funding,.machine-nav button.can-upgrade .level-funding,.station-upgrade .upgrade-funding b{color:#c5d5b7}
-.speed-controls button:hover:not([aria-pressed=true]){background:#354d3b}
+.speed-controls button:hover:not([aria-pressed=true]){background:#295938}
 
 /* Compact station strip: image and name share a row, level and progress sit below. */
 
@@ -121,7 +121,7 @@ button:focus-visible{outline:2px solid #c2dca6;outline-offset:3px}
 .storage-upgrade button{display:grid;align-content:center;gap:5px;border:1px solid #7f9e69;border-radius:8px;background:var(--p-forest-35);color:var(--p-cream-95);cursor:pointer;min-height:48px}.storage-upgrade button:disabled{background:var(--p-forest-22);color:var(--p-sage-69);border-color:var(--p-forest-34);cursor:not-allowed}.storage-upgrade progress{grid-column:1/-1;width:100%;height:4px}
 .online-card #onlineReward{color:#cde1b4}
 
-.factory-info{flex:0 0 100%;display:flex;align-items:center;justify-content:space-between;gap:14px;border-top:1px solid #415347;padding-top:8px}
+.factory-info{flex:0 0 100%;display:flex;align-items:center;justify-content:space-between;gap:14px;border-top:1px solid #346042;padding-top:8px}
 .customer-info b{color:#ebf0dd;font-size:.78rem;font-variant-numeric:tabular-nums}
 .hud #stockStatus{display:flex;gap:16px;margin:0;letter-spacing:0;font-family:inherit}
 
@@ -146,8 +146,8 @@ button:focus-visible{outline:2px solid #c2dca6;outline-offset:3px}
 
 /* Keep guidance inside the controls, beside an explicit next action. */
 .flow-guide{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:3px 3px 8px;color:#c4d4b9;font-size:.68rem;line-height:1.35}
-.flow-guide button{flex-shrink:0;min-height:30px;padding:4px 9px;border:1px solid #617857;border-radius:6px;background:#304734;color:#e5efce;font:inherit;cursor:pointer}
-.flow-guide button:hover{background:#405b40}
+.flow-guide button{flex-shrink:0;min-height:30px;padding:4px 9px;border:1px solid #617857;border-radius:6px;background:#255233;color:#e5efce;font:inherit;cursor:pointer}
+.flow-guide button:hover{background:#326943}
 .stock-item b.stock-full{color:#e9cd91;text-decoration:underline dotted;text-underline-offset:3px}
 button:focus-visible{outline:2px solid #d0e6a7;outline-offset:3px}
 
@@ -160,13 +160,13 @@ button:focus-visible{outline:2px solid #d0e6a7;outline-offset:3px}
 
 .online-batch-copy{display:grid;gap:5px;align-content:center;border-top:1px solid var(--p-forest-30);padding-top:12px;margin-top:4px}
 .online-batch-copy b{font-size:.8rem;color:var(--p-sage-91)}.online-batch-copy small{font-size:12px;color:var(--p-sage-76);line-height:1.4}
-.online-card #fulfillOnlineBatch{margin-top:10px;background:#405b40;border:1px solid #7f9e69;color:var(--p-sage-91)}
+.online-card #fulfillOnlineBatch{margin-top:10px;background:#326943;border:1px solid #7f9e69;color:var(--p-sage-91)}
 .online-card #fulfillOnlineBatch:disabled{background:var(--p-forest-22);color:var(--p-sage-69);border-color:var(--p-forest-34)}
 #onlineBatchReward{font-size:.95rem}
 
 /* Dispatch choices form one compact group with readable rewards. */
 
-[data-pane="orders"] #fulfillOnline{background:#354d3b;border:1px solid #68815d;color:var(--p-sage-91)}
+[data-pane="orders"] #fulfillOnline{background:#295938;border:1px solid #68815d;color:var(--p-sage-91)}
 [data-pane="orders"] #fulfillOnlineBatch{background:var(--p-forest-35);border:1px solid #91ab73;color:var(--p-cream-95)}
 [data-pane="orders"] .dispatch-option button strong{color:inherit!important;font-family:inherit;font-size:1.05rem;line-height:1.1}
 
@@ -191,7 +191,7 @@ button:focus-visible{outline:2px solid #d0e6a7;outline-offset:3px}
 .sheet>[data-pane="employees"]{overflow-y:auto;min-height:0;touch-action:pan-y;scrollbar-gutter:stable}
 .sheet [data-pane="employees"] .employee-list{overflow:visible;max-height:none;overscroll-behavior:auto}
 
-.station-training{display:block;width:100%;min-height:36px;margin:10px 0 0;border:1px solid #61795d;border-radius:8px;background:#2e4535;color:#dce8cf;font:inherit;font-size:11px;cursor:pointer}.station-training:disabled{opacity:.55;cursor:default}
+.station-training{display:block;width:100%;min-height:36px;margin:10px 0 0;border:1px solid #61795d;border-radius:8px;background:#244f31;color:#dce8cf;font:inherit;font-size:11px;cursor:pointer}.station-training:disabled{opacity:.55;cursor:default}
 /* Controls float above a full-width game canvas instead of reserving a sidebar. The map controls take the top-left
    corner under the brand: the sheet opens up the right-hand side and would cover a right-anchored stack. */
 @media(min-width:780px){
@@ -209,7 +209,7 @@ button:focus-visible{outline:2px solid #d0e6a7;outline-offset:3px}
 
 .canopy-name{display:grid;gap:3px}.canopy-name b{line-height:1}.canopy-name small{font-size:7px;letter-spacing:1.5px;color:#bacaaf;font-weight:500}
 
-.employee-intro{font-size:12px;color:var(--p-sage-76);padding:4px 4px 12px}.sheet .employee-list{grid-template-columns:1fr;gap:0;padding:0 3px 8px}.sheet .employee-card{grid-template-columns:32px minmax(0,1fr) 106px;gap:12px;padding:13px 3px;border:0;border-top:1px solid #455c4b;border-radius:0;background:transparent}.sheet .employee-number{display:block;color:#b7cf98}.employee-number svg{display:block;width:26px;height:30px}.sheet .employee-card small{font-family:inherit;font-size:11px;white-space:nowrap;letter-spacing:0}.sheet .employee-card button{min-height:44px;font-family:inherit;font-size:11px}.sheet .employee-card button b{font-family:inherit;font-size:12px}
+.employee-intro{font-size:12px;color:var(--p-sage-76);padding:4px 4px 12px}.sheet .employee-list{grid-template-columns:1fr;gap:0;padding:0 3px 8px}.sheet .employee-card{grid-template-columns:32px minmax(0,1fr) 106px;gap:12px;padding:13px 3px;border:0;border-top:1px solid #376a47;border-radius:0;background:transparent}.sheet .employee-number{display:block;color:#b7cf98}.employee-number svg{display:block;width:26px;height:30px}.sheet .employee-card small{font-family:inherit;font-size:11px;white-space:nowrap;letter-spacing:0}.sheet .employee-card button{min-height:44px;font-family:inherit;font-size:11px}.sheet .employee-card button b{font-family:inherit;font-size:12px}
 
 #stockStatus .stock-item[role="button"]{cursor:pointer;border-radius:6px;touch-action:manipulation}#stockStatus .stock-item[role="button"]:hover{background:#b8d19914}#stockStatus .stock-item[role="button"]:focus-visible{outline:2px solid #c1dc9e;outline-offset:4px}
 .hud #stockStatus .stock-item[role="button"]{pointer-events:auto}

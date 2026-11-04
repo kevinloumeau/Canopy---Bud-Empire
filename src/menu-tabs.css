@@ -127,7 +127,7 @@
 .sheet .machine-nav button[aria-pressed=true] .station-icon,.sheet .machine-nav button[aria-pressed=true] .station-card-name{color:var(--ui-brass)!important;opacity:1!important}
 .sheet .machine-nav button.ability-ready::before{top:5px;left:6px}
 .sheet>[data-pane=factory] .selected-line{border:1px solid var(--ui-edge);border-radius:18px;background:var(--ui-well-soft);padding:14px 14px 12px!important;margin-bottom:8px}
-.sheet>[data-pane=factory] #upgradeGain{display:inline-flex;align-items:center;width:max-content;margin-top:6px;padding:3px 10px;border:1px solid #7fa76566;border-radius:999px;background:#4f7a3e40;color:var(--ui-leaf-glow)}
+.sheet>[data-pane=factory] #upgradeGain{display:inline-flex;align-items:center;width:max-content;margin-top:6px;padding:3px 10px;border:1px solid #a8dc5266;border-radius:999px;background:#3f7d1f40;color:var(--ui-leaf-glow)}
 .sheet>[data-pane=factory] #upgradeGain:empty{display:none}
 .sheet>[data-pane=factory] #buyMachine:not(:disabled){background:var(--ui-brass)!important;color:var(--ui-brass-ink)!important;border-color:var(--ui-brass)!important;box-shadow:0 4px 14px #e2c68a2e!important}
 .sheet>[data-pane=factory] #buyMachine:not(:disabled) *{color:var(--ui-brass-ink)!important}
@@ -151,7 +151,7 @@
 .sheet .selected-line .station-buy-actions #buyMachineMax{min-height:46px!important;border-radius:14px!important}
 .sheet .selected-line .station-buy-actions #buyMachineMax span{text-transform:none;font-size:11px}
 /* Mock colours: brighter ink, clear card edges, a livelier green for levels and gains, and a richer brass. */
-.sheet [data-pane=factory]{--pop-ink:#fbf8ee;--pop-edge:rgba(255,255,255,.2);--pop-fill:rgba(255,255,255,.065);--pop-green:#a8d784;--pop-brass:#f0d69a}
+.sheet [data-pane=factory]{--pop-ink:#fbf8ee;--pop-edge:rgba(255,255,255,.2);--pop-fill:rgba(255,255,255,.065);--pop-green:#a8dc52;--pop-brass:#f0d69a}
 .sheet .machine-nav button{border-color:var(--pop-edge)!important;background:var(--pop-fill)!important}
 .sheet .machine-nav .station-icon,.sheet .machine-nav .station-card-name{color:var(--pop-ink)!important;opacity:1!important}
 .sheet .machine-nav button>em{color:var(--pop-green)!important;opacity:.95}
@@ -174,7 +174,7 @@
 .sheet .machine-nav button.is-boosted .station-icon,.sheet .machine-nav button.is-boosted[aria-pressed=true] .station-icon{color:#d8f2a8!important;animation:station-boost-icon 1.6s ease-in-out infinite}
 .sheet .machine-nav button.is-boosted .station-card-name,.sheet .machine-nav button.is-boosted>em{color:#e2f6c2!important}
 .sheet .machine-nav button.is-boosted::after{content:''!important;display:block!important;position:absolute;inset:0;width:auto!important;height:auto!important;border:0!important;background:linear-gradient(105deg,transparent 30%,rgba(255,250,220,.32) 50%,transparent 70%),radial-gradient(circle at 50% 30%,rgba(168,215,132,.35),transparent 70%)!important;background-size:100% 100%!important;background-repeat:no-repeat!important;animation:station-boost-sweep 2.4s ease-in-out infinite;pointer-events:none;-webkit-mask:none!important;mask:none!important}
-@keyframes station-boost-glow{0%,100%{filter:drop-shadow(0 0 4px #a8d78488)}50%{filter:drop-shadow(0 0 9px #c4ee96) drop-shadow(0 0 20px #a8d784cc)}}
+@keyframes station-boost-glow{0%,100%{filter:drop-shadow(0 0 4px #a8dc5288)}50%{filter:drop-shadow(0 0 9px #c4ee96) drop-shadow(0 0 20px #a8dc52cc)}}
 @keyframes station-boost-icon{0%,100%{transform:scale(1);filter:drop-shadow(0 0 0 transparent)}50%{transform:scale(1.12);filter:drop-shadow(0 0 6px #d8f2a8)}}
 @keyframes station-boost-sweep{0%,35%{background-position:-160px 0,0 0}100%{background-position:160px 0,0 0}}
 @media (prefers-reduced-motion:reduce){.sheet .machine-nav button.is-boosted,.sheet .machine-nav button.is-boosted .station-icon,.sheet .machine-nav button.is-boosted::after{animation:none}.sheet .machine-nav button.is-boosted{filter:drop-shadow(0 0 8px #b8e690)}}
@@ -186,11 +186,11 @@
 .sheet .station-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0 0}
 .sheet .station-tiles .station-team{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto 1fr;justify-items:center;align-content:start;gap:6px;margin:0!important;padding:12px 8px 8px!important;border:1px solid var(--pop-edge,#ffffff33)!important;border-radius:16px!important;background:var(--pop-fill,#ffffff10)!important;text-align:center;min-width:0}
 .sheet .station-tiles .station-team[hidden]{display:none!important}
-.sheet .station-tiles .team-icon{display:grid;place-items:center;position:relative;width:40px;height:40px;border-radius:50%;background:#a8d78424;box-shadow:inset 0 0 0 1.5px #a8d78466}
-.sheet .station-tiles .team-icon svg{width:21px!important;height:21px!important;color:var(--pop-green,#a8d784)!important}
+.sheet .station-tiles .team-icon{display:grid;place-items:center;position:relative;width:40px;height:40px;border-radius:50%;background:#a8dc5224;box-shadow:inset 0 0 0 1.5px #a8dc5266}
+.sheet .station-tiles .team-icon svg{width:21px!important;height:21px!important;color:var(--pop-green,#a8dc52)!important}
 .sheet .station-tiles .team-copy{display:grid;justify-items:center;gap:2px;min-width:0;width:100%}
 .sheet .station-tiles .team-copy b{font:600 13px/1.2 'Bricolage Grotesque',system-ui,sans-serif!important;color:var(--pop-ink,#fbf8ee);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sheet .station-tiles .team-copy small{font:500 11px/1.25 'DM Mono',monospace!important;color:var(--pop-green,#a8d784)!important;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet .station-tiles .team-copy small{font:500 11px/1.25 'DM Mono',monospace!important;color:var(--pop-green,#a8dc52)!important;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sheet .station-tiles .station-team button{align-self:end;width:100%;min-width:0;min-height:40px!important;padding:4px 6px!important;border-radius:11px!important;display:grid!important;place-items:center;gap:0!important}
 .sheet .station-tiles .station-team button span{font:600 11px/1.15 'Bricolage Grotesque',system-ui,sans-serif!important}
 .sheet .station-tiles .station-team button b{font:600 12px/1.15 'DM Mono',monospace!important}
@@ -204,7 +204,7 @@
 .sheet .station-tiles .station-ability .team-copy small{white-space:nowrap!important}
 /* Bought once: a check on the icon in place of a dead "Built" button. */
 .sheet .station-tiles .station-team:has(button.is-owned) button{display:none!important}
-.sheet .station-tiles .station-team:has(button.is-owned) .team-icon::after{content:'';position:absolute;right:-3px;bottom:-3px;width:16px;height:16px;border-radius:50%;background:var(--pop-green,#a8d784) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='%2318301f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat;box-shadow:0 0 0 2px #1d3326}
+.sheet .station-tiles .station-team:has(button.is-owned) .team-icon::after{content:'';position:absolute;right:-3px;bottom:-3px;width:16px;height:16px;border-radius:50%;background:var(--pop-green,#a8dc52) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='%2318301f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat;box-shadow:0 0 0 2px #153b21}
 /* Pickup window line as dots: filled ones are people waiting. */
 .sheet .station-tiles .line-pips{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;max-width:100%;margin-top:3px}
 .sheet .station-tiles .line-pips i{width:6px;height:6px;border-radius:50%;box-shadow:inset 0 0 0 1px #fbf8ee55}
@@ -218,10 +218,10 @@
 .sheet .empire-screen .store-list button.branch-toggle.store-card{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"icon" "copy" "meta" "meter"!important;justify-items:center;align-content:start;row-gap:6px!important;min-width:0;width:auto!important;margin:0!important;padding:12px 6px 10px!important;border:1px solid var(--pop-edge,#ffffff33)!important;border-radius:16px!important;background:rgba(255,255,255,.065)!important;box-shadow:none!important;text-align:center;opacity:1}
 .sheet .empire-screen .store-list button.store-card.has-ready{border-color:#f0d69a99!important;box-shadow:0 0 14px #f0d69a1f!important}
 .sheet .empire-screen .store-list .store-card::after{display:none!important}
-.sheet .empire-screen .store-list .store-card .store-icon{grid-area:icon;grid-row:auto!important;align-self:center;width:42px;height:42px;border-radius:50%;background:#a8d78424;box-shadow:inset 0 0 0 1.5px #a8d78466;color:#a8d784}
+.sheet .empire-screen .store-list .store-card .store-icon{grid-area:icon;grid-row:auto!important;align-self:center;width:42px;height:42px;border-radius:50%;background:#a8dc5224;box-shadow:inset 0 0 0 1.5px #a8dc5266;color:#a8dc52}
 .sheet .empire-screen .store-list .store-card.has-ready .store-icon{background:#f0d69a24;box-shadow:inset 0 0 0 1.5px #f0d69a99;color:#f0d69a}
 .sheet .empire-screen .store-list .store-card.is-locked .store-icon{background:#ffffff0d;box-shadow:inset 0 0 0 1.5px #ffffff2e;color:#fbf8ee8c}
-.sheet .empire-screen .store-list .store-card.is-locked .store-icon::after{content:'';position:absolute;right:-3px;bottom:-3px;width:16px;height:16px;border-radius:50%;background:#2a4234 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e9e4d4' stroke-width='2.2' stroke-linecap='round'%3E%3Crect x='6' y='11' width='12' height='9' rx='2'/%3E%3Cpath d='M9 11V8a3 3 0 0 1 6 0v3'/%3E%3C/svg%3E") center/11px no-repeat;box-shadow:0 0 0 1.5px #ffffff40}
+.sheet .empire-screen .store-list .store-card.is-locked .store-icon::after{content:'';position:absolute;right:-3px;bottom:-3px;width:16px;height:16px;border-radius:50%;background:#204c2e url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e9e4d4' stroke-width='2.2' stroke-linecap='round'%3E%3Crect x='6' y='11' width='12' height='9' rx='2'/%3E%3Cpath d='M9 11V8a3 3 0 0 1 6 0v3'/%3E%3C/svg%3E") center/11px no-repeat;box-shadow:0 0 0 1.5px #ffffff40}
 .sheet .empire-screen .store-list .store-card .store-copy{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"name" "status"!important;justify-items:center;gap:5px!important;width:100%}
 .sheet .empire-screen .store-list .store-card .branch-name{font:600 13px/1.2 'Bricolage Grotesque',system-ui,sans-serif!important;color:#fbf8ee;max-width:100%;display:flex;flex-direction:column;align-items:center;gap:3px}
 .sheet .empire-screen .store-list .store-card .store-detail{display:none!important}
@@ -229,7 +229,7 @@
 .sheet .empire-screen .store-list .store-card .store-meta{justify-content:center;width:100%}
 .sheet .empire-screen .store-list .store-card .store-meta strong{flex-direction:column;gap:3px!important;justify-self:center!important;align-items:center!important}
 .sheet .empire-screen .store-list .store-card .store-locked{display:none!important}
-.sheet .empire-screen .store-list .store-card .store-income{font:500 11px/1.2 'DM Mono',monospace;color:#a8d784}
+.sheet .empire-screen .store-list .store-card .store-income{font:500 11px/1.2 'DM Mono',monospace;color:#a8dc52}
 .sheet .empire-screen .store-list .store-card .store-income svg{display:none}
 .sheet .empire-screen .store-list .store-card .store-meter{width:70%;justify-self:center}
 .sheet .empire-screen .store-list .store-card .store-status .store-stars{display:inline-flex;gap:2px}
@@ -243,7 +243,7 @@
 .sheet [data-pane="flowers"] .strain-perk{display:inline-grid;grid-template-columns:auto auto;grid-template-areas:"star name" "star effect";align-items:center;column-gap:8px;row-gap:1px;margin:8px 0 0;padding:6px 12px 6px 8px;border:1px solid #f0d69a4d;border-radius:12px;background:#f0d69a14}
 .sheet [data-pane="flowers"] .strain-perk .perk-star{grid-area:star;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#f0d69a26;color:#f0d69a;font-size:14px}
 .sheet [data-pane="flowers"] .strain-perk b{grid-area:name;font:600 12px/1.2 'Bricolage Grotesque',system-ui,sans-serif;color:#f0d69a}
-.sheet [data-pane="flowers"] .strain-perk small{grid-area:effect;font:500 11px/1.25 'DM Mono',monospace;color:#a8d784}
+.sheet [data-pane="flowers"] .strain-perk small{grid-area:effect;font:500 11px/1.25 'DM Mono',monospace;color:#a8dc52}
 .sheet [data-pane="flowers"] .strain-perk:not(.is-unlocked){border-color:#ffffff2e;background:#ffffff0a}
 .sheet [data-pane="flowers"] .strain-perk:not(.is-unlocked) .perk-star{background:#ffffff12;color:#fbf8ee99}
 .sheet [data-pane="flowers"] .strain-perk:not(.is-unlocked) b{color:#fbf8eecc}
@@ -256,14 +256,14 @@
 .sheet [data-pane="flowers"] .strain-nav .strain-card-art::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--strain) calc(var(--lv,0)*1turn),#ffffff24 0);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px))}
 .sheet [data-pane="flowers"] .strain-nav button.is-locked .strain-card-art::before{background:#ffffff1a}
 .sheet [data-pane="flowers"] .strain-nav .strain-pips{display:none!important}
-.sheet [data-pane="flowers"] .strain-nav button small{font:500 11px/1.2 'DM Mono',monospace!important;color:#a8d784}
+.sheet [data-pane="flowers"] .strain-nav button small{font:500 11px/1.2 'DM Mono',monospace!important;color:#a8dc52}
 .sheet [data-pane="flowers"] .strain-nav button.is-locked small{color:#fbf8eebf}
-.sheet [data-pane="flowers"] .strain-nav .menu-check{display:none;position:absolute;top:2px;left:calc(50% + 12px);width:16px;height:16px;border-radius:50%;background:#a8d784 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='%2318301f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat;box-shadow:0 0 0 2px #1d3326;z-index:1}
+.sheet [data-pane="flowers"] .strain-nav .menu-check{display:none;position:absolute;top:2px;left:calc(50% + 12px);width:16px;height:16px;border-radius:50%;background:#a8dc52 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='%2318301f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat;box-shadow:0 0 0 2px #153b21;z-index:1}
 .sheet [data-pane="flowers"] .strain-nav button.is-on-menu .menu-check{display:block}
 /* The big jar's menu toggle: a chip under the jar. */
-.sheet [data-pane="flowers"] .strain-hero-art .menu-toggle{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:4px;min-height:26px;padding:3px 10px 3px 8px;border:1px solid #ffffff4d;border-radius:999px;background:#1d3326;color:#fbf8ee;font:600 11px/1 'Bricolage Grotesque',system-ui,sans-serif;white-space:nowrap;cursor:pointer;filter:none;z-index:2;box-shadow:0 2px 8px #0a140e99}
+.sheet [data-pane="flowers"] .strain-hero-art .menu-toggle{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:4px;min-height:26px;padding:3px 10px 3px 8px;border:1px solid #ffffff4d;border-radius:999px;background:#153b21;color:#fbf8ee;font:600 11px/1 'Bricolage Grotesque',system-ui,sans-serif;white-space:nowrap;cursor:pointer;filter:none;z-index:2;box-shadow:0 2px 8px #06180c99}
 .sheet [data-pane="flowers"] .strain-hero-art .menu-toggle::before{content:'+';font-size:13px;line-height:1}
-.sheet [data-pane="flowers"] .strain-hero-art .menu-toggle[aria-pressed=true]{border-color:#a8d784;background:#2c4a2c;color:#d8f2a8}
+.sheet [data-pane="flowers"] .strain-hero-art .menu-toggle[aria-pressed=true]{border-color:#a8dc52;background:#215531;color:#d8f2a8}
 .sheet [data-pane="flowers"] .strain-hero-art .menu-toggle[aria-pressed=true]::before{content:'✓';font-size:11px}
 .sheet [data-pane="flowers"] .strain-hero-art .menu-toggle:disabled{cursor:default;opacity:1}
 /* Upgrade: the single brass action. */
@@ -273,11 +273,11 @@
 .sheet [data-pane="flowers"] .format-benefit{display:none}
 .sheet [data-pane="flowers"] .format-options{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;padding:0!important;border:0!important;background:none!important}
 .sheet [data-pane="flowers"] .strain-format-pill{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto auto auto;justify-items:center;gap:3px!important;min-width:0;padding:10px 6px 8px!important;border:1px solid #ffffff33!important;border-radius:16px!important;background:#ffffff10!important;box-shadow:none!important;text-align:center}
-.sheet [data-pane="flowers"] .strain-format-pill svg{width:34px!important;height:34px!important;padding:7px;border-radius:50%;background:#a8d78424;box-shadow:inset 0 0 0 1.5px #a8d78466;color:#a8d784;box-sizing:border-box}
+.sheet [data-pane="flowers"] .strain-format-pill svg{width:34px!important;height:34px!important;padding:7px;border-radius:50%;background:#a8dc5224;box-shadow:inset 0 0 0 1.5px #a8dc5266;color:#a8dc52;box-sizing:border-box}
 .sheet [data-pane="flowers"] .strain-format-pill strong{font:600 12.5px/1.2 'Bricolage Grotesque',system-ui,sans-serif!important;color:#fbf8ee}
-.sheet [data-pane="flowers"] .strain-format-pill em{font:500 10.5px/1.2 'DM Mono',monospace;font-style:normal;color:#a8d784;white-space:nowrap}
+.sheet [data-pane="flowers"] .strain-format-pill em{font:500 10.5px/1.2 'DM Mono',monospace;font-style:normal;color:#a8dc52;white-space:nowrap}
 .sheet [data-pane="flowers"] .strain-format-pill small{font:600 11.5px/1.2 'DM Mono',monospace!important;color:#f0d69a!important}
-.sheet [data-pane="flowers"] .strain-format-pill[aria-pressed=true]{border-color:#a8d78480!important}
+.sheet [data-pane="flowers"] .strain-format-pill[aria-pressed=true]{border-color:#a8dc5280!important}
 .sheet [data-pane="flowers"] .strain-format-pill[aria-pressed=true] small{color:#d8f2a8!important}
 .sheet [data-pane="flowers"] .strain-format-pill[aria-pressed=true] small::before{content:'✓ '}
 .sheet [data-pane="flowers"] .strain-format-pill:not([aria-pressed=true]) svg{background:#ffffff0d;box-shadow:inset 0 0 0 1.5px #ffffff2e;color:#fbf8eebf}
@@ -286,11 +286,11 @@
 .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill[aria-pressed=true] small{display:block!important}
 .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill:disabled{opacity:.7}
 .sheet [data-pane="flowers"] .strain-hero-art{margin-bottom:8px}
-.sheet [data-pane="flowers"] .strain-hero-art .menu-toggle{background:#1d3326!important;color:#fbf8ee!important}
-.sheet [data-pane="flowers"] .strain-hero-art .menu-toggle[aria-pressed=true]{background:#2c4a2c!important;color:#d8f2a8!important}
+.sheet [data-pane="flowers"] .strain-hero-art .menu-toggle{background:#153b21!important;color:#fbf8ee!important}
+.sheet [data-pane="flowers"] .strain-hero-art .menu-toggle[aria-pressed=true]{background:#215531!important;color:#d8f2a8!important}
 /* 3D station pictures (the same renders as the upgrade card) on the station cards, in place of the line icons. */
 .sheet .machine-nav button{grid-template-rows:44px auto auto!important}
-.sheet .machine-nav button .machine-thumb{display:block!important;grid-column:auto!important;grid-row:auto!important;width:59px!important;height:44px!important;margin:0 auto!important;object-fit:contain;object-position:center bottom;opacity:1;filter:drop-shadow(0 3px 4px #0a140e80)}
+.sheet .machine-nav button .machine-thumb{display:block!important;grid-column:auto!important;grid-row:auto!important;width:59px!important;height:44px!important;margin:0 auto!important;object-fit:contain;object-position:center bottom;opacity:1;filter:drop-shadow(0 3px 4px #06180c80)}
 .sheet .machine-nav button .station-icon{display:none!important}
 .sheet .machine-nav button.is-locked .machine-thumb{opacity:.5}
 /* 3D icons rendered in Blender (public/icons/3d) */
@@ -298,10 +298,10 @@
 .sheet [data-pane="flowers"] .strain-nav .strain-card-art img.icon-3d{position:relative;width:36px;height:36px;object-fit:contain}
 .sheet [data-pane="flowers"] .strain-nav button.is-locked .strain-card-art img.icon-3d{filter:saturate(.75) brightness(.78)}
 .sheet [data-pane="flowers"] .strain-hero-art img.icon-3d{width:100%;height:100%;object-fit:contain;object-position:center bottom}
-.sheet [data-pane="flowers"] .strain-format-pill img.icon-3d{width:54px;height:42px;object-fit:contain;filter:drop-shadow(0 3px 4px #0a140e80)}
+.sheet [data-pane="flowers"] .strain-format-pill img.icon-3d{width:54px;height:42px;object-fit:contain;filter:drop-shadow(0 3px 4px #06180c80)}
 .sheet [data-pane="flowers"] .strain-format-pill:disabled img.icon-3d{filter:grayscale(.85) brightness(.75)}
 .sheet .empire-screen .store-list .store-card .store-icon{background:none!important;box-shadow:none!important;width:48px!important;height:44px!important;border-radius:0!important}
-.sheet .empire-screen .store-list .store-card .store-icon img.icon-3d{width:48px;height:44px;filter:drop-shadow(0 3px 4px #0a140e80)}
+.sheet .empire-screen .store-list .store-card .store-icon img.icon-3d{width:48px;height:44px;filter:drop-shadow(0 3px 4px #06180c80)}
 .sheet .empire-screen .store-list .store-card.is-locked .store-icon img.icon-3d{filter:grayscale(.9) brightness(.7)}
 .sheet .empire-screen .store-list .store-card.is-locked .store-icon::after{right:0;bottom:0}
 .sheet .empire-screen .store-hero .store-icon{background:none!important;box-shadow:none!important;width:56px!important;height:50px!important}
@@ -313,7 +313,7 @@
 .shop-browser .shop-fork>.shop-fork-head b{font:600 12px/1.2 'Bricolage Grotesque',system-ui,sans-serif;color:#f0d69a;letter-spacing:.02em}
 .shop-browser .shop-fork>.shop-fork-or{display:grid!important;place-items:center;margin:0!important;position:relative}
 .shop-browser .shop-fork>.shop-fork-or::before,.shop-browser .shop-fork>.shop-fork-or::after{display:none}
-.shop-browser .shop-fork>.shop-fork-or span{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#2a4234;box-shadow:0 0 0 1.5px #f0d69a80;font:600 10px/1 'DM Mono',monospace;color:#f0d69a;text-transform:lowercase;letter-spacing:0}
+.shop-browser .shop-fork>.shop-fork-or span{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#204c2e;box-shadow:0 0 0 1.5px #f0d69a80;font:600 10px/1 'DM Mono',monospace;color:#f0d69a;text-transform:lowercase;letter-spacing:0}
 .shop-browser .shop-fork>.shop-item{margin:0!important}
 /* Upgrade card pills never run off the card: they wrap inside it at worst. */
 .sheet>[data-pane=factory] #upgradeGain{width:auto!important;max-width:100%!important;white-space:normal!important;box-sizing:border-box}
@@ -322,7 +322,7 @@
    iPhone without scrolling. Smaller 3D picture, tighter name and level, same 4x2 grid. */
 .sheet .machine-nav{gap:5px!important;margin:0 0 8px!important}
 .sheet .machine-nav button{grid-template-rows:30px auto auto!important;row-gap:0!important;padding:5px 3px 4px!important;border-radius:12px!important}
-.sheet .machine-nav button .machine-thumb{width:40px!important;height:30px!important;filter:drop-shadow(0 2px 3px #0a140e80)}
+.sheet .machine-nav button .machine-thumb{width:40px!important;height:30px!important;filter:drop-shadow(0 2px 3px #06180c80)}
 .sheet .machine-nav .station-card-name{font-size:12px!important;line-height:1.15!important}
 .sheet .machine-nav button>em{font-size:11px!important;line-height:1.15!important}
 .sheet .machine-nav button.ability-ready::before{top:4px;left:5px}

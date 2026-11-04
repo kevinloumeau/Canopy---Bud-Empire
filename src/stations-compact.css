@@ -77,7 +77,7 @@
 
 /* Frameless strip: one glass pill for the selected station and nothing else drawn. Affordable upgrades tint the level;
    the bottleneck tints the name. */
-.sheet .machine-nav{gap:0;padding:2px 0 6px;margin-bottom:4px;background:#0c231c40;border-radius:16px}
+.sheet .machine-nav{gap:0;padding:2px 0 6px;margin-bottom:4px;background:#09261240;border-radius:16px}
 .sheet .machine-nav button{background:transparent;border-color:transparent;box-shadow:none;border-radius:14px;padding:8px 0 7px;min-height:50px;row-gap:2px}
 .sheet .machine-nav button[aria-pressed=true]{background:linear-gradient(155deg,#e3f5db38,#c4e5b41a);border-color:transparent;box-shadow:inset 0 1px 0 #f1ffe752,inset 0 0 0 1px #e4fbd31c}
 .sheet .machine-nav .station-card-name{font-size:11px;font-weight:600;color:var(--p-sage-84)}
@@ -102,7 +102,7 @@
 
 /* Bottleneck line: one quiet tappable row with a gold marker and a chevron, not a sentence plus a button. */
 /* Bottleneck card: amber accent, station icon, eyebrow + name, and a solid fix button. */
-.sheet .flow-guide{position:relative;display:flex;align-items:center;gap:10px;min-height:52px;margin:0 0 8px;padding:7px 7px 7px 12px;border-radius:14px;border:1px solid #e3c07a2e;background:linear-gradient(100deg,#e3c07a1c,#2c3d2f00 60%),#1d2d23cc;color:#efe4c6;font-size:12px;cursor:pointer;overflow:hidden;transition:background-color .16s ease,border-color .16s ease}
+.sheet .flow-guide{position:relative;display:flex;align-items:center;gap:10px;min-height:52px;margin:0 0 8px;padding:7px 7px 7px 12px;border-radius:14px;border:1px solid #e3c07a2e;background:linear-gradient(100deg,#e3c07a1c,#23462e00 60%),#163420cc;color:#efe4c6;font-size:12px;cursor:pointer;overflow:hidden;transition:background-color .16s ease,border-color .16s ease}
 .sheet .flow-guide::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--p-gold-75);box-shadow:0 0 10px #efcf8d80}
 .sheet .flow-guide .flow-icon{flex:0 0 34px;display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;background:#e3c07a22;color:#f2d99a}
 .sheet .flow-guide .flow-icon svg{width:20px;height:20px}
@@ -110,10 +110,10 @@
 .sheet .flow-guide .flow-copy small{font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#e2c586}
 .sheet .flow-guide #flowText{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:700;color:#f6eed8}
 .sheet .flow-guide #flowText b{font-weight:500;color:#b9c9ad}
-.sheet .flow-guide button#flowAction{position:static;flex:0 0 auto;width:auto;height:auto;min-height:34px;margin:0;padding:0 14px;border:0;border-radius:10px;background:#e7c77f;color:#25331f;font-size:12px;font-weight:700;letter-spacing:.01em;white-space:nowrap}
+.sheet .flow-guide button#flowAction{position:static;flex:0 0 auto;width:auto;height:auto;min-height:34px;margin:0;padding:0 14px;border:0;border-radius:10px;background:#e7c77f;color:#173b23;font-size:12px;font-weight:700;letter-spacing:.01em;white-space:nowrap}
 .sheet .flow-guide button#flowAction::after{content:none}
 .sheet .flow-guide button#flowAction:hover{background:#f2d692}
-.sheet .flow-guide button#flowAction[data-mode=view]{background:#3b5340;color:#e6efd3}
+.sheet .flow-guide button#flowAction[data-mode=view]{background:#2e603e;color:#e6efd3}
 .sheet .flow-guide:focus-visible{outline:2px solid var(--p-gold-77);outline-offset:2px}
 @media(hover:hover){.sheet .flow-guide:hover{border-color:#e3c07a55}}
 @media(max-width:779px){.flow-guide{padding:6px 6px 6px 12px;font-size:12px}.flow-guide button{min-height:32px;padding:0 12px}}
