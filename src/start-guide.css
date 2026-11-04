@@ -102,6 +102,30 @@
 @media(prefers-reduced-motion:reduce){.guide-card{animation:none}.guide-ring{transition:none}}
 .shop-reset .guide-replay{margin-right:auto}
 
+/* The 3D walkthrough: the camera holds each site in the middle of the map, so the card is a short caption docked under
+   it with one brass action. Building, the upgrade and the hand-over all use the brass button; Skip stays quiet. */
+.start-guide.is-site .guide-next,.start-guide.is-open .guide-next{border:0;background:var(--ui-brass,#e2c68a);color:var(--ui-brass-ink,#1f2a20);box-shadow:0 4px 14px #e2c68a33,inset 0 1px 0 #fff6}
+.start-guide.is-built .guide-next{background:#3f6b45;color:var(--p-lime-85);box-shadow:none}
+.start-guide.is-site .guide-next{min-width:112px}
+.start-guide.is-site h2{text-wrap:balance}
+.start-guide .guide-card #guideText{text-wrap:pretty}
+/* The guest's four stops as a progress strip: done stops brass, the current one breathing. */
+.guide-walk{display:flex;gap:6px;list-style:none;padding:0;margin:0 0 12px}
+.guide-walk[hidden]{display:none}
+.guide-walk li{flex:1;height:4px;border-radius:2px;background:#d8ecd333}
+.guide-walk li.is-on{background:var(--ui-brass,#e2c68a)}
+.guide-walk li.is-now{background:var(--ui-brass,#e2c68a);animation:guide-walk-now 1.2s ease-in-out infinite}
+@keyframes guide-walk-now{0%,100%{opacity:.45}50%{opacity:1}}
+.start-guide.is-walk .guide-card{animation:none}
+.start-guide.is-walk h2,.start-guide.is-walk #guideText{animation:guide-copy-swap .35s ease-out both}
+.start-guide.is-walk .guide-actions{min-height:44px}
+.guide-next[hidden]{display:none}
+.start-guide.is-done .guide-next{flex:1;min-height:50px;font-size:15px}
+/* Coming up: the shop's ghost buy tags breathe brass while the camera shows them. */
+body.guide-ghosts .world .marker.station-sign.is-lot:not(.is-landmark){opacity:1!important;border:1.5px solid var(--ui-brass,#e2c68a)!important;animation:guide-ghost 1.4s ease-in-out infinite}
+@keyframes guide-ghost{0%,100%{box-shadow:0 0 6px #e2c68a44}50%{box-shadow:0 0 18px #e2c68acc}}
+@media(prefers-reduced-motion:reduce){body.guide-ghosts .world .marker.is-lot{animation:none}.guide-walk li.is-now{animation:none}.start-guide.is-walk h2,.start-guide.is-walk #guideText{animation:none}}
+
 /* Welcome-back report: same card language as the guide, over the map, dismissed with one tap. */
 .return-overlay{position:fixed;inset:0;z-index:58;display:grid;place-items:start center;padding:calc(var(--hud-height,60px) + 18px) 16px 16px;background:#08140e66}
 .return-overlay[hidden]{display:none}
