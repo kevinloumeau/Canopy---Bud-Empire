@@ -318,3 +318,24 @@
 /* Upgrade card pills never run off the card: they wrap inside it at worst. */
 .sheet>[data-pane=factory] #upgradeGain{width:auto!important;max-width:100%!important;white-space:normal!important;box-sizing:border-box}
 .sheet .selected-line #nextAppearance:not([hidden]){box-sizing:border-box;white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+/* Compact station cards (Kevin, 2026-11-04): the two rows shrink so the selected station's Upgrade button shows on an
+   iPhone without scrolling. Smaller 3D picture, tighter name and level, same 4x2 grid. */
+.sheet .machine-nav{gap:5px!important;margin:0 0 8px!important}
+.sheet .machine-nav button{grid-template-rows:30px auto auto!important;row-gap:0!important;padding:5px 3px 4px!important;border-radius:12px!important}
+.sheet .machine-nav button .machine-thumb{width:40px!important;height:30px!important;filter:drop-shadow(0 2px 3px #0a140e80)}
+.sheet .machine-nav .station-card-name{font-size:12px!important;line-height:1.15!important}
+.sheet .machine-nav button>em{font-size:11px!important;line-height:1.15!important}
+.sheet .machine-nav button.ability-ready::before{top:4px;left:5px}
+.sheet>[data-pane=factory] .selected-line{padding:12px 14px 10px!important}
+/* The gain pill rides on the same row as the before → after numbers (it wraps under them only when they run long). */
+.sheet>[data-pane=factory] #upgradeBenefit{display:flex!important;flex-wrap:wrap;align-items:center;column-gap:8px;row-gap:4px}
+.sheet>[data-pane=factory] #upgradeMetricLabel{flex:0 0 100%}
+.sheet>[data-pane=factory] .upgrade-comparison{margin-top:2px}
+.sheet>[data-pane=factory] #upgradeGain{margin-top:2px!important;padding:2px 9px!important;font-size:12px!important}
+/* Level step sits on the title line ("Packing bar  Lv 5 → 6"); the look pill and numbers follow underneath. */
+.sheet>[data-pane=factory] .machine-info>div{display:grid!important;grid-template-columns:auto 1fr;align-items:baseline;column-gap:10px}
+.sheet>[data-pane=factory] .machine-info>div>*{grid-column:1/-1;justify-self:start;min-width:0}
+.sheet>[data-pane=factory] .machine-info>div>#machineName{grid-column:1}
+.sheet>[data-pane=factory] .machine-info>div>#upgradeLevel{grid-column:2;margin:0!important;white-space:nowrap}
+.sheet>[data-pane=factory] .machine-info>div>#upgradeBenefit{justify-self:stretch}
+@media (max-width:400px){.sheet .machine-nav button{grid-template-rows:28px auto auto!important;padding:4px 3px 4px!important}.sheet .machine-nav button .machine-thumb{width:38px!important;height:28px!important}.sheet>[data-pane=factory] .selected-line{padding-top:10px!important}.sheet>[data-pane=factory] .selected-line:not(.is-lounge) #upgradePreview{width:92px!important;height:92px!important}}

@@ -3583,12 +3583,14 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     if(!unbuilt&&!maxed&&Math.abs(after-before)>1e-9)while(digits<5&&before.toFixed(digits)===after.toFixed(digits))digits++;
     var formatValue=function(value){return value.toLocaleString('en-US',{minimumFractionDigits:isTime?digits:0,maximumFractionDigits:digits})};
     var gain=isTime?(1-after/before)*100:(after/before-1)*100;
-    var gainText=maxed?(wording&&wording.maxed||'Fully trained'):unbuilt?(wording&&wording.unbuilt||'Ready to build'):wording&&wording.gain?wording.gain(before,after):(isTime?'':'+')+(gain<.1?'<0.1':gain<10?gain.toFixed(1):Math.round(gain))+'% '+(isTime?'less time':'more output');
+    var gainText=maxed?(wording&&wording.maxed||'Fully trained'):unbuilt?(wording&&wording.unbuilt||'Ready to build'):wording&&wording.gain?wording.gain(before,after):(isTime?'−':'+')+(gain<.1?'<0.1':gain<10?gain.toFixed(1):Math.round(gain))+'%';
+    // The short pill sits beside the numbers; screen readers still hear the words.
+    var gainWords=/%$/.test(gainText)?gainText.replace(/^[−+]/,'')+(isTime?' less time':' more output'):gainText;
     $('upgradeMetricLabel').textContent=label;
     $('upgradeBefore').textContent=unbuilt?'—':formatValue(before);
     $('upgradeAfter').textContent=maxed?formatValue(before):formatValue(after);
     $('upgradeGain').textContent=gainText;
-    $('upgradeBenefit').setAttribute('aria-label',label+': '+(unbuilt?'not built':formatValue(before))+(maxed?'':', next level '+formatValue(after))+'. '+gainText);
+    $('upgradeBenefit').setAttribute('aria-label',label+': '+(unbuilt?'not built':formatValue(before))+(maxed?'':', next level '+formatValue(after))+'. '+gainWords);
     $('upgradeBenefit').classList.toggle('is-maxed',maxed);
   }
   function paintDeliveryPreview(){
