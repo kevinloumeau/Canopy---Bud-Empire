@@ -83,7 +83,9 @@ const svg=html=>{const t=document.createElement('template');t.innerHTML=html;ret
 export function shiftTimeLeft(seconds){const left=Math.max(0,SHIFT_SECONDS-seconds);return left<60?'Recap in under a minute':'Recap in '+Math.ceil(left/60)+' min';}
 // The panel, on the glass components: the budtender pick as one-row choices, this shift as open figures with a thin
 // progress line, last shift's advice as the brass next-action card, and operations as one grouped list of rows.
-export function mountShopPlay({getState,getMoment,getAlerts,names,format,choose,skip,navigate,changed,opening,closing}){
+// lane: where the pill and the feedback note live while the panel is closed (the top lane in main.js), so they line up
+// with the other status chips and toasts rather than sitting on their own spot.
+export function mountShopPlay({getState,getMoment,getAlerts,names,format,choose,skip,navigate,changed,opening,closing,lane}){
   const root=document.createElement('div');root.className='shop-play';
   root.innerHTML='<button type="button" id="shopActivity" class="shop-activity" aria-expanded="false" aria-controls="shopActivityPanel">'+LIST+'<span></span></button>'+
     '<section id="shopActivityPanel" class="shop-activity-panel" aria-label="Shop activity" hidden><div class="shop-activity-heading"><h2>Shop activity</h2><button type="button" id="shopActivityClose" aria-label="Close shop activity">'+CLOSE+'</button></div>'+
@@ -92,13 +94,14 @@ export function mountShopPlay({getState,getMoment,getAlerts,names,format,choose,
   document.getElementById('world').appendChild(root);
   const $=id=>root.querySelector('#'+id),panel=$('shopActivityPanel'),pill=$('shopActivity'),bubble=$('momentBubble'),feedback=root.querySelector('.shop-play-feedback');
   let key='',feedbackTimer;
+  const notes=lane&&lane.notes||root;if(lane&&lane.status){lane.status.prepend(pill);notes.appendChild(feedback);pill.addEventListener('keydown',e=>{if(e.key==='Escape'&&!panel.hidden){close();e.stopPropagation()}})}
   function open(){
     if(panel.hidden&&opening)opening();
     panel.hidden=false;panel.querySelector('.shop-activity-heading').after(feedback);pill.setAttribute('aria-expanded','true');
     const moment=getMoment();if(moment)moment.opened=true;getState().shopPlay.recapUnread=false;changed();render();
   }
   function close(){
-    const wasOpen=!panel.hidden;panel.hidden=true;root.appendChild(feedback);pill.setAttribute('aria-expanded','false');
+    const wasOpen=!panel.hidden;panel.hidden=true;notes.appendChild(feedback);pill.setAttribute('aria-expanded','false');
     const moment=getMoment();if(moment)moment.opened=false;if(wasOpen&&closing)closing();pill.focus({preventScroll:true});
   }
   pill.onclick=()=>panel.hidden?open():close();bubble.onclick=open;$('shopActivityClose').onclick=close;

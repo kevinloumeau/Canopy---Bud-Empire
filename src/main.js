@@ -836,7 +836,18 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // A new branch star gets a toast; the third names the bonus and the branch it opens.
   function celebrateStars(list){var last=list[list.length-1],i=last.store,p=state.empire,name=STORES[i].name,count=starCount(p,i);
     notify(count===3?name.toUpperCase()+' FINISHED · +'+Math.round(STAR_BONUS*100)+'% SALES EVERYWHERE':count===STARS_TO_OPEN&&STORES[i+1]?name+' ★ '+count+' of 3 · '+STORES[i+1].name+' can open':name+' ★ '+count+' of 3','upgrade');renderUI()}
-  function notify(message,kind){var cue=kind==='upgrade'?(/BUILT|OPEN|EXPANDED/.test(message)?'build':'upgrade'):/REWARD|MILESTONE|ACHIEVEMENT|GOAL COMPLETE|EVENT COMPLETE|CHAPTER COMPLETE|WHILE AWAY|Prestige/.test(message)?'sparkle':/^Need |previous stage first/.test(message)?'denied':null;if(cue)playSound(cue,state.sound);if(kind!=='dispatch')dispatchSummary=null;$('toast').classList.toggle('is-upgrade',kind==='upgrade');$('toast').textContent=message;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){$('toast').classList.remove('show')},1600)}
+  function notify(message,kind){var cue=kind==='upgrade'?(/BUILT|OPEN|EXPANDED/.test(message)?'build':'upgrade'):/REWARD|MILESTONE|ACHIEVEMENT|GOAL COMPLETE|EVENT COMPLETE|CHAPTER COMPLETE|WHILE AWAY|Prestige/.test(message)?'sparkle':/^Need |previous stage first/.test(message)?'denied':null;if(cue)playSound(cue,state.sound);if(kind!=='dispatch')dispatchSummary=null;queueToast(message,kind)}
+  // Toasts take turns in the lane under the status chips (Kevin, 2026-11-04): one at a time, a second one waits its turn
+  // instead of covering the first, a newer word on the same thing (SEEDS · LEVEL 8 after LEVEL 7) replaces it in place,
+  // and a "Need $X more" answers the tap at once. At most three wait; while some wait each shows a little shorter.
+  var toastQueue=[],toastNow=null;
+  function toastTopic(message){return String(message).split(' · ')[0]}
+  function showToast(item){var t=$('toast');toastNow=item;t.classList.toggle('is-upgrade',item.kind==='upgrade');t.textContent=item.message;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(nextToast,toastQueue.length?1200:1600)}
+  function nextToast(){var item=toastQueue.shift();if(item)return showToast(item);toastNow=null;$('toast').classList.remove('show')}
+  function queueToast(message,kind){var item={message:message,kind:kind},topic=toastTopic(message);
+    if(!toastNow||toastTopic(toastNow.message)===topic||/^Need |previous stage first/.test(message))return showToast(item);
+    for(var i=0;i<toastQueue.length;i++)if(toastTopic(toastQueue[i].message)===topic){toastQueue[i]=item;return}
+    toastQueue.push(item);if(toastQueue.length>3)toastQueue.shift()}
 
   // The map draws with Three.js (src/three/map3d.js) under a transparent 2D canvas that keeps the screen-space effects
   // (queue badges, tickets, sparkles, confetti). There is no 2D map any more: until the 3D map has drawn, and while a
@@ -2966,20 +2977,32 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // A shop event's tag follows the customer who brought it through the shop; the rush pill counts down a tapped rush.
   var spenderTag=document.createElement('button');spenderTag.type='button';spenderTag.className='marker spender-tag';spenderTag.id='spenderTag';spenderTag.hidden=true;$('markers').appendChild(spenderTag);
   function dressEventTag(kind){if(spenderTag.dataset.event===kind)return;var e=SHOP_EVENTS[kind]||SHOP_EVENTS.spender;spenderTag.dataset.event=kind;spenderTag.innerHTML='<span class="spender-badge" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="'+e.icon+'"/></svg></span>'+e.name;spenderTag.setAttribute('aria-label',e.label)}
-  // The rush/boost and contract pills share one stack under the top bar (Kevin, 2026-11-02): it starts level with the map
-  // buttons and the panel, sits under the cash on desktop, and the bigger pill goes on top so the stack reads as a pyramid.
-  var pillStack=document.createElement('div');pillStack.className='center-pills';document.body.appendChild(pillStack);
-  var rushPeak={rush:0,boost:0},rushPill=document.createElement('div');rushPill.id='rushPill';rushPill.className='rush-pill';rushPill.hidden=true;rushPill.setAttribute('role','status');pillStack.appendChild(rushPill);
-  var contractPill=document.createElement('div');contractPill.id='contractPill';contractPill.className='contract-pill';contractPill.hidden=true;contractPill.setAttribute('role','status');pillStack.appendChild(contractPill);
-  function stackPills(){if(rushPill.hidden||contractPill.hidden)return;pillStack.classList.toggle('contract-first',contractPill.offsetWidth*contractPill.offsetHeight>=rushPill.offsetWidth*rushPill.offsetHeight)}
+  // Timed things live as chips in one lane under the top bar (src/top-lane.css), after the shop activity pill: the
+  // event with a ring that fills as its goal does, then rush and boost, each with a ring that drains. The row wraps
+  // instead of overlapping, and toasts hang under it, so nothing up there ever covers anything else.
+  var laneStatus=$('laneStatus'),topLane=$('topLane');
+  function laneChip(id,cls){var el=document.createElement(cls==='contract-pill'?'button':'div');el.id=id;el.className='lane-chip '+cls;el.hidden=true;if(el.tagName==='BUTTON')el.type='button';else el.setAttribute('role','status');laneStatus.appendChild(el);return el}
+  var RING='<svg class="chip-ring" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><circle class="chip-ring-fill" cx="10" cy="10" r="7.5" pathLength="100"/></svg>';
+  var BOLT='<svg class="chip-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>';
+  var contractPill=laneChip('contractPill','contract-pill'),rushPeak={rush:0,boost:0},rushPill=laneChip('rushPill','rush-pill'),boostPill=laneChip('boostPill','rush-pill boost-pill');
+  contractPill.onclick=function(){showTray('goals');renderUI()};
+  rushPill.title='Rush · 2× sales';boostPill.title='Event reward · 2× sales';
+  var MEDAL='<svg class="chip-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h4l1.6 4.2L14.2 2h3.8l-3.3 7.1A6 6 0 1 1 9.3 9L7 2Zm5 9.2-1.2 2.5-2.7.3 2 1.8-.6 2.7 2.5-1.4 2.5 1.4-.6-2.7 2-1.8-2.7-.3z" fill-rule="evenodd"/></svg>';
+  function chipText(el,label,time){if(el.dataset.label!==label){el.dataset.label=label;el.innerHTML=(el===contractPill?RING:el===boostPill?MEDAL:BOLT)+'<span class="chip-name"></span><span class="chip-time"></span>';el.querySelector('.chip-name').textContent=label}var t=el.querySelector('.chip-time');if(t.textContent!==time)t.textContent=time}
+  function stackPills(){topLane.classList.toggle('has-chips',!(contractPill.hidden&&rushPill.hidden&&boostPill.hidden))}
   function spenderInShop(){for(var i=0;i<customers.length;i++){var c=customers[i];if(c.bigSpender&&!c.tapped&&c.phase!=='leaving'&&c.phase!=='lounge')return c}return null}
   spenderTag.onclick=function(){var c=spenderInShop();if(!c)return;c.tapped=true;spenderTag.hidden=true;recordEvent(state.empire,'spender',1);
     var kind=c.shopEvent||'spender',reward=eventReward(kind,incomeRate(),rushLength(state.perks));
     if(reward.rush)state.rushTime=Math.max(state.rushTime,reward.rush);if(reward.cash)add(reward.cash);if(reward.reputation)state.empire.reputation=Math.min(1000,state.empire.reputation+reward.reputation);if(reward.buzz)state.vipBuzz=Math.max(state.vipBuzz||0,reward.buzz);
     notify(eventToast(kind,reward,fmt),'upgrade');telemetry.send('shop_event',{kind:kind});save();renderUI()};
   function updateSpenderTag(branch){var c=branch?null:spenderInShop();spenderTag.hidden=!c;if(c){dressEventTag(c.shopEvent||'spender');var pos=project(c.x,2.75,c.z);spenderTag.style.transform='translate3d('+pos.x+'px,'+pos.y+'px,0) translate(-50%,-100%)'}
-    var rush=state.rushTime>0,boost=state.empire.contracts.boost>0,parts=[];var slim=innerWidth<=700;if(rush)parts.push((slim?'Rush 2× · ':'Rush · 2× sales · ')+Math.ceil(state.rushTime)+'s');if(boost)parts.push((slim?'Boost 2× · ':'Boost · 2× sales · ')+clock(state.empire.contracts.boost*1000/Math.max(1,state.gameSpeed||1)));rushPill.hidden=!parts.length;rushPeak.rush=rush?Math.max(rushPeak.rush,state.rushTime):0;rushPeak.boost=boost?Math.max(rushPeak.boost,state.empire.contracts.boost):0;burstRing(rushPill,Math.min(rush?state.rushTime/rushPeak.rush:1,boost?state.empire.contracts.boost/rushPeak.boost:1)*(parts.length?1:0));var text=parts.join('  ·  '),restack=false;if(rushPill.textContent!==text){rushPill.textContent=text;restack=true}
-    var c=branch?null:activeContract(state.empire);contractPill.hidden=!c;if(c){var line=innerWidth<=700?c.name+'\n'+Math.floor(100*c.progress/c.target)+'% · '+clock(c.remaining):c.name+' · '+abbr(c.progress)+' / '+abbr(c.target)+' · '+clock(c.remaining);if(contractPill.textContent!==line){contractPill.textContent=line;restack=true}}if(restack)stackPills()}
+    var rush=state.rushTime>0,boost=state.empire.contracts.boost>0,was=[contractPill.hidden,rushPill.hidden,boostPill.hidden].join();
+    rushPeak.rush=rush?Math.max(rushPeak.rush,state.rushTime):0;rushPeak.boost=boost?Math.max(rushPeak.boost,state.empire.contracts.boost):0;
+    rushPill.hidden=!rush;if(rush){chipText(rushPill,'Rush',Math.ceil(state.rushTime)+'s');burstRing(rushPill,state.rushTime/rushPeak.rush)}
+    boostPill.hidden=!boost;if(boost){chipText(boostPill,'Boost',clock(state.empire.contracts.boost*1000/Math.max(1,state.gameSpeed||1)));burstRing(boostPill,state.empire.contracts.boost/rushPeak.boost)}
+    var c=branch?null:activeContract(state.empire);contractPill.hidden=!c;if(c){var share=Math.min(1,c.progress/c.target);chipText(contractPill,c.name,clock(c.remaining));contractPill.style.setProperty('--goal',(share*100).toFixed(1));
+      var say=c.name+', '+Math.floor(share*100)+'% done, '+clock(c.remaining)+' left. Open Goals';if(contractPill.getAttribute('aria-label')!==say)contractPill.setAttribute('aria-label',say)}
+    if([contractPill.hidden,rushPill.hidden,boostPill.hidden].join()!==was)stackPills()}
   var loungeMarker=document.createElement('button');loungeMarker.className='marker';loungeMarker.dataset.marker='lounge';loungeMarker.onclick=selectLounge;$('markers').appendChild(loungeMarker);
   // Purchase tags for what can be bought next on the map (Kevin, 2026-10-22, like the lounge's): the pickup window on
   // its spot, then the drone port on its deck once the window is open, and a smaller tag over a ghost of the next kiosk.
@@ -4141,9 +4164,9 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   goalsButton.onclick=function(){if(activeTray==='goals'&&panelOpen)collapsePanel();else openGoals()};
   var empireShell=mountEmpireShell({fit:fitControls,getState:function(){return state},format:fmt,rate:incomeRate,fly:flyToPlace,buyStation:function(i,j){buyBranchLevel(i,j,1)}});
   var shopPlayCollapsed=false;
-  shopPlayUI=mountShopPlay({getState:function(){return state},getMoment:function(){return moment},getAlerts:function(){return operationsAlerts(state.empire)},names:STRAINS.map(function(s){return s.name}),format:fmt,changed:save,
+  shopPlayUI=mountShopPlay({getState:function(){return state},getMoment:function(){return moment},getAlerts:function(){return operationsAlerts(state.empire)},names:STRAINS.map(function(s){return s.name}),format:fmt,changed:save,lane:{status:$('laneStatus'),notes:$('laneNotes')},
     // On a phone, or where the side panel would sit under the list, the sheet steps aside while shop activity is open.
-    opening:function(){var sheet=$('sheet').getBoundingClientRect(),reach=(width<780?12:76)+Math.min(360,width-24);shopPlayCollapsed=panelOpen&&(width<780||sheet.left<reach+12);if(shopPlayCollapsed)collapsePanel()},
+    opening:function(){var sheet=$('sheet').getBoundingClientRect(),reach=(width<780?12:72)+Math.min(360,width-24);shopPlayCollapsed=panelOpen&&(width<780||sheet.left<reach+12);if(shopPlayCollapsed)collapsePanel()},
     closing:function(){if(shopPlayCollapsed){shopPlayCollapsed=false;showTray(activeTray)}},
     choose:function(index){
       if(!moment)return;var result=judgeChoice(moment,index),guest=customers.find(function(c){return c.id===moment.customerId&&!c.ordered});
@@ -4474,12 +4497,9 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   completeBuilds();var offline=collectOffline();if(offline>=1){setTimeout(function(){notify('WHILE AWAY +'+fmt(offline))},500)}
   // The canvas runs full height behind the sheet; the camera frames the building in the strip above it.
   var dockHeight=0;
-  // The pill stack's centre follows the cash readout (money plus its rate) in the top bar; on a phone the cash sits at the
-  // left, so the stack stays on the screen's centre line there.
-  function centerOnCash(){var root=document.documentElement.style,money=document.querySelector('.hud>.stat'),rate=document.querySelector('.hud>.stat.output');
-    if(!money)return;if(innerWidth<=700){var chip=$('shopActivity'),pad=chip&&chip.offsetParent?chip.getBoundingClientRect().right+8:12,end=$('zoomIn').getBoundingClientRect().left-8;
-      root.setProperty('--cash-x',((pad+end)/2).toFixed(1)+'px');root.setProperty('--pill-room',Math.max(120,end-pad).toFixed(0)+'px');return}var a=money.getBoundingClientRect(),b=(rate||money).getBoundingClientRect();root.setProperty('--cash-x',((a.left+b.right)/2).toFixed(1)+'px')}
-  function fitControls(){hudEdges=null;document.documentElement.style.setProperty('--hud-height',hudBottom()+'px');centerOnCash();stackPills();
+  // The shop activity panel opens just under the lane's chip row, however many rows it wraps to.
+  function fitLane(){var r=$('laneStatus').getBoundingClientRect();document.documentElement.style.setProperty('--lane-bottom',Math.round(r.height?r.bottom:hudBottom())+'px')}
+  function fitControls(){hudEdges=null;document.documentElement.style.setProperty('--hud-height',hudBottom()+'px');stackPills();fitLane();
     var sheet=$('sheet');if(!phoneSheet())sheet.classList.remove('tall');
     // A tall or gliding sheet keeps the last settled dock height, so the map is framed for the half-open sheet it sits behind.
     if(!sheet.classList.contains('tall')&&!sheet.classList.contains('fluid')){dockHeight=sheet.getBoundingClientRect().height;if(!sheet.classList.contains('collapsed')&&!paneGlide)sheetHalfHeight=dockHeight}
@@ -4487,7 +4507,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // While the intro's card is docked over the collapsed tray, the map is framed above the card rather than the tray.
   var guideReserve=0;
   function visibleHeight(){return width>=780?height:Math.max(200,height-Math.max(dockHeight,guideReserve))}
-  if(window.ResizeObserver){new ResizeObserver(fitControls).observe($('sheet'));var cashWatch=new ResizeObserver(centerOnCash);Array.prototype.forEach.call(document.querySelectorAll('.hud>.stat'),function(el){cashWatch.observe(el)});if($('shopActivity'))cashWatch.observe($('shopActivity'))}
+  if(window.ResizeObserver){new ResizeObserver(fitControls).observe($('sheet'));new ResizeObserver(fitLane).observe($('laneStatus'))}
   window.addEventListener('resize',fitControls);
   // Desktop conveniences: the hint names the pointer, and speed and tabs have keys when no field has focus.
   // Hint copy follows the active pointer, and drops the keyboard shortcuts where the map is too narrow to fit them.
