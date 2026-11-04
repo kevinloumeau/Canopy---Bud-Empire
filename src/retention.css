@@ -18,17 +18,6 @@
 }
 @keyframes spender-bob{50%{margin-top:-4px}}
 @keyframes spender-ring{0%{box-shadow:0 0 0 0 #e2c68a99}80%,100%{box-shadow:0 0 0 9px #e2c68a00}}
-/* The centre pill stack: level with the map buttons and the panel under the top bar, centred on the cash (main.js sets
-   --cash-x on desktop). Flex order puts the wider pill on top. */
-.center-pills{position:fixed;left:var(--cash-x,50%);top:calc(var(--hud-height,60px) + 12px);transform:translateX(-50%);z-index:30;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;max-width:calc(100vw - 32px)}
-.center-pills.contract-first .contract-pill{order:-1}
-body[data-store-view=branch] .center-pills{display:none}
-/* Phone: the stack stays level with the activity chip and the map buttons, centred in the gap between them (main.js
-   measures it), with slimmer pills and shorter copy so both fit: the contract
-   reads as its name over its percent and clock. */
-@media(max-width:700px){.center-pills{gap:4px;max-width:var(--pill-room,calc(100vw - 200px))}.center-pills>*{max-width:100%;overflow:hidden;text-overflow:ellipsis}
- .center-pills .rush-pill{padding:4px 10px;font-size:.68rem}.center-pills .contract-pill{padding:5px 12px;border-radius:12px;font-size:.66rem;line-height:1.35;white-space:pre-line;text-align:center}}
-.rush-pill{padding:6px 14px;border-radius:999px;background:#2a2410e6;border:1px solid var(--p-gold-72);color:#f6dc95;font:600 .78rem 'DM Mono',ui-monospace,monospace;box-shadow:0 4px 14px #0006;pointer-events:none;white-space:nowrap}
 .rush-pill[hidden]{display:none}
 body[data-store-view=branch] .rush-pill{display:none}
 /* Multi-day event card: kicker, name, countdown, a three-step ladder whose cells fill with progress, and the claim button. */
@@ -91,6 +80,4 @@ body[data-store-view=branch] .rush-pill{display:none}
 .weekly-special{margin:0 0 10px;padding:9px 12px;border-radius:10px;background:#c4e8a714;border:1px solid #c4e8a73d;font-size:13px}
 .weekly-special b{color:var(--p-lime-78)}
 .season-card.is-between .season-tiers,.season-card.is-between #seasonClaim{display:none}
-/* The running contract: name, count and clock in one quiet line, in the centre pill stack. */
-.contract-pill{padding:5px 12px;border-radius:999px;background:var(--ui-glass-strong);border:1px solid var(--ui-edge);color:var(--ui-ink);font:500 .74rem 'DM Mono',ui-monospace,monospace;box-shadow:0 4px 14px #0005;pointer-events:none;white-space:nowrap}
 .contract-pill[hidden],body[data-store-view=branch] .contract-pill{display:none}
