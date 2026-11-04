@@ -54,11 +54,10 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     private var selectedKey = "factory"
     private var panelExpanded = true
     private var loadingCover: UIView?
-    /// The loading bar in the forest band under the art: a lime fill grows inside a cream-rimmed track and a sprout rides
+    /// The loading bar over the scrim at the foot of the art: a glowing lime fill grows inside a cream-rimmed track
     /// its leading end. It only ever moves forward.
     private weak var loadBar: UIView?
     private var loadFillWidth: NSLayoutConstraint?
-    private var loadSproutX: NSLayoutConstraint?
     private var loadShown: CGFloat = 0
     private var pageProgress: NSKeyValueObservation?
     /// Lifts the cover if loading stalls, so the web loader's own Retry button is never hidden behind it.
@@ -128,11 +127,11 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         webView.evaluateJavaScript(nativeAvailability)
     }
 
-    // The launch storyboard shows this same frame (the art, the band, the empty track with the sprout at its start, laid
-    // out by the same constraints), so the hand-off is invisible; from here the bar fills and the line of text fades in.
+    // The launch storyboard shows this same frame (Kevin's background, the scrim, the empty track, laid out by the same constraints), so the hand-off is invisible; from here the badge drops in, the bar fills
+    // and the line of text fades in.
     private func installLoadingCover() {
         let cover = UIView()
-        cover.backgroundColor = UIColor(red: 16/255, green: 45/255, blue: 27/255, alpha: 1)
+        cover.backgroundColor = UIColor(red: 15/255, green: 45/255, blue: 26/255, alpha: 1)
         cover.translatesAutoresizingMaskIntoConstraints = false
         cover.accessibilityViewIsModal = true
         cover.clipsToBounds = true
@@ -145,42 +144,51 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
             cover.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
 
-        // Kevin's art: the shop with the badge on top. Its own top edge fades into the cover's green, and it starts just
-        // under the notch so the badge's sprout clears the Dynamic Island. Anchored at the top, it runs on under the band;
-        // only the budtender's apron gives way. On a wide screen it narrows to a centred column instead of cropping more.
+        // Kevin's background runs full bleed behind the status bar: full width, 60 pt above the top edge, so its empty
+        // ceiling sits under the badge and the floor gives way at the bottom.
         let art = UIImageView(image: UIImage(named: "LoadingArt"))
         art.contentMode = .scaleAspectFill
         art.translatesAutoresizingMaskIntoConstraints = false
         art.isAccessibilityElement = false
         cover.addSubview(art)
 
-        let band = UIView()
-        band.backgroundColor = UIColor(red: 17/255, green: 58/255, blue: 30/255, alpha: 1)
+        // The bar sits over a scrim that deepens toward the bottom edge.
+        let band = UIImageView(image: UIImage(named: "LoadScrim"))
+        band.contentMode = .scaleToFill
         band.translatesAutoresizingMaskIntoConstraints = false
         cover.addSubview(band)
-        let seam = UIView()
-        seam.backgroundColor = UIColor(red: 29/255, green: 97/255, blue: 54/255, alpha: 1)
-        seam.translatesAutoresizingMaskIntoConstraints = false
-        band.addSubview(seam)
 
-        let fullWidth = art.widthAnchor.constraint(equalTo: cover.widthAnchor)
-        fullWidth.priority = .defaultHigh
         NSLayoutConstraint.activate([
-            art.topAnchor.constraint(equalTo: cover.safeAreaLayoutGuide.topAnchor, constant: -12),
+            art.topAnchor.constraint(equalTo: cover.topAnchor, constant: -60),
             art.centerXAnchor.constraint(equalTo: cover.centerXAnchor),
-            art.heightAnchor.constraint(equalTo: art.widthAnchor, multiplier: 1644.0 / 852.0),
-            art.widthAnchor.constraint(lessThanOrEqualTo: cover.widthAnchor),
-            fullWidth,
-            art.bottomAnchor.constraint(lessThanOrEqualTo: band.topAnchor, constant: 200),
+            art.widthAnchor.constraint(equalTo: cover.widthAnchor),
+            art.heightAnchor.constraint(equalTo: art.widthAnchor, multiplier: 2098.0 / 750.0),
             band.leadingAnchor.constraint(equalTo: cover.leadingAnchor),
             band.trailingAnchor.constraint(equalTo: cover.trailingAnchor),
             band.bottomAnchor.constraint(equalTo: cover.bottomAnchor),
-            band.topAnchor.constraint(equalTo: cover.safeAreaLayoutGuide.bottomAnchor, constant: -118),
-            seam.leadingAnchor.constraint(equalTo: band.leadingAnchor),
-            seam.trailingAnchor.constraint(equalTo: band.trailingAnchor),
-            seam.topAnchor.constraint(equalTo: band.topAnchor),
-            seam.heightAnchor.constraint(equalToConstant: 2)
+            band.topAnchor.constraint(equalTo: cover.safeAreaLayoutGuide.bottomAnchor, constant: -220)
         ])
+
+        // The badge drops in with a springy pop once the cover is up, then floats gently while the game loads.
+        let badge = UIImageView(image: UIImage(named: "LoadBadge"))
+        badge.contentMode = .scaleAspectFit
+        badge.translatesAutoresizingMaskIntoConstraints = false
+        badge.isAccessibilityElement = false
+        badge.layer.shadowColor = UIColor.black.cgColor
+        badge.layer.shadowOpacity = 0.35
+        badge.layer.shadowRadius = 9
+        badge.layer.shadowOffset = CGSize(width: 0, height: 10)
+        cover.addSubview(badge)
+        let badgeWide = badge.widthAnchor.constraint(equalTo: cover.widthAnchor, multiplier: 0.74)
+        badgeWide.priority = .defaultHigh
+        NSLayoutConstraint.activate([
+            badge.topAnchor.constraint(equalTo: cover.safeAreaLayoutGuide.topAnchor, constant: 8),
+            badge.centerXAnchor.constraint(equalTo: cover.centerXAnchor),
+            badge.widthAnchor.constraint(lessThanOrEqualToConstant: 340),
+            badgeWide,
+            badge.heightAnchor.constraint(equalTo: badge.widthAnchor, multiplier: 649.0 / 720.0)
+        ])
+        dropInBadge(badge)
 
         let bar = makeLoadBar(in: band)
         let label = UILabel()
@@ -188,8 +196,10 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         let base = UIFont.systemFont(ofSize: 19, weight: .bold)
         label.font = base.fontDescriptor.withDesign(.rounded).map { UIFont(descriptor: $0, size: 19) } ?? base
         label.textColor = UIColor(red: 246/255, green: 236/255, blue: 201/255, alpha: 1)
-        label.shadowColor = UIColor(white: 0, alpha: 0.25)
-        label.shadowOffset = CGSize(width: 0, height: 2)
+        label.layer.shadowColor = UIColor.black.cgColor
+        label.layer.shadowOpacity = 0.5
+        label.layer.shadowRadius = 3
+        label.layer.shadowOffset = CGSize(width: 0, height: 2)
         label.translatesAutoresizingMaskIntoConstraints = false
         label.isAccessibilityElement = false
         label.alpha = 0
@@ -208,8 +218,32 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         armStallTimer(after: 8)
     }
 
-    /// The track is a sliced image (the launch storyboard shows it too, empty, with the sprout at its start). The fill is
-    /// a glossy lime capsule 4 pt inside it; the sprout's stem foot sits on the fill's leading end.
+    /// Springs the badge in from slightly above and small, then sets it floating 5 pt up and down. Reduce Motion fades it in.
+    private func dropInBadge(_ badge: UIView) {
+        badge.alpha = 0
+        if UIAccessibility.isReduceMotionEnabled {
+            UIView.animate(withDuration: 0.4, delay: 0.15, options: .curveEaseOut) { badge.alpha = 1 }
+            return
+        }
+        badge.transform = CGAffineTransform(translationX: 0, y: -28).scaledBy(x: 0.62, y: 0.62)
+        UIView.animate(withDuration: 0.9, delay: 0.15, usingSpringWithDamping: 0.55, initialSpringVelocity: 0.6,
+                       options: [.curveEaseOut]) {
+            badge.alpha = 1
+            badge.transform = .identity
+        } completion: { _ in
+            let float = CABasicAnimation(keyPath: "transform.translation.y")
+            float.fromValue = 0
+            float.toValue = -5
+            float.duration = 1.6
+            float.autoreverses = true
+            float.repeatCount = .infinity
+            float.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            badge.layer.add(float, forKey: "badgeFloat")
+        }
+    }
+
+    /// The track is a sliced image (the launch storyboard shows it too, empty). The fill is a glowing lime capsule 4 pt
+    /// inside it, with a soft halo view behind it.
     private func makeLoadBar(in band: UIView) -> UIView {
         let track = UIImageView(image: UIImage(named: "LoadTrack"))
         track.translatesAutoresizingMaskIntoConstraints = false
@@ -219,36 +253,27 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         track.accessibilityValue = "0 percent"
         band.addSubview(track)
 
-        let fill = UIView()
+        let lime = UIColor(red: 168/255, green: 240/255, blue: 74/255, alpha: 1)
+        let halo = UIView()
+        halo.translatesAutoresizingMaskIntoConstraints = false
+        halo.backgroundColor = lime
+        halo.layer.cornerRadius = 7
+        halo.layer.shadowColor = lime.cgColor
+        halo.layer.shadowOpacity = 0.85
+        halo.layer.shadowRadius = 7
+        halo.layer.shadowOffset = .zero
+        halo.alpha = 0
+        track.addSubview(halo)
+        let fill = LoadFillView()
         fill.translatesAutoresizingMaskIntoConstraints = false
-        fill.layer.cornerRadius = 7
-        fill.layer.masksToBounds = true
-        let gloss = CAGradientLayer()
-        gloss.colors = [UIColor(red: 197/255, green: 245/255, blue: 106/255, alpha: 1).cgColor,
-                        UIColor(red: 143/255, green: 220/255, blue: 42/255, alpha: 1).cgColor,
-                        UIColor(red: 98/255, green: 179/255, blue: 20/255, alpha: 1).cgColor]
-        gloss.locations = [0, 0.48, 1]
-        gloss.frame = CGRect(x: 0, y: 0, width: 600, height: 14)
-        fill.layer.addSublayer(gloss)
         fill.alpha = 0
         track.addSubview(fill)
-
-        let sprout = UIImageView(image: UIImage(named: "LoadSprout"))
-        sprout.translatesAutoresizingMaskIntoConstraints = false
-        sprout.contentMode = .scaleAspectFit
-        sprout.isAccessibilityElement = false
-        sprout.layer.shadowColor = UIColor.black.cgColor
-        sprout.layer.shadowOpacity = 0.35
-        sprout.layer.shadowRadius = 2
-        sprout.layer.shadowOffset = CGSize(width: 0, height: 2)
-        band.addSubview(sprout)
 
         let wide = track.widthAnchor.constraint(equalTo: band.widthAnchor, constant: -56)
         wide.priority = .defaultHigh
         let fillWidth = fill.widthAnchor.constraint(equalToConstant: 14)
-        let sproutX = sprout.centerXAnchor.constraint(equalTo: track.leadingAnchor, constant: 4)
         NSLayoutConstraint.activate([
-            track.topAnchor.constraint(equalTo: band.topAnchor, constant: 36),
+            track.bottomAnchor.constraint(equalTo: (band.superview ?? band).safeAreaLayoutGuide.bottomAnchor, constant: -61),
             track.centerXAnchor.constraint(equalTo: band.centerXAnchor),
             track.heightAnchor.constraint(equalToConstant: 22),
             track.widthAnchor.constraint(lessThanOrEqualToConstant: 400),
@@ -257,14 +282,13 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
             fill.topAnchor.constraint(equalTo: track.topAnchor, constant: 4),
             fill.bottomAnchor.constraint(equalTo: track.bottomAnchor, constant: -4),
             fillWidth,
-            sprout.widthAnchor.constraint(equalToConstant: 40),
-            sprout.heightAnchor.constraint(equalToConstant: 39.5),
-            sprout.bottomAnchor.constraint(equalTo: track.bottomAnchor, constant: -7),
-            sproutX
+            halo.leadingAnchor.constraint(equalTo: fill.leadingAnchor),
+            halo.trailingAnchor.constraint(equalTo: fill.trailingAnchor),
+            halo.topAnchor.constraint(equalTo: fill.topAnchor),
+            halo.bottomAnchor.constraint(equalTo: fill.bottomAnchor)
         ])
         loadBar = track
         loadFillWidth = fillWidth
-        loadSproutX = sproutX
         return track
     }
 
@@ -279,8 +303,7 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         cover.layoutIfNeeded()
         let run = max(bar.bounds.width - 8, 0) * target
         loadFillWidth?.constant = max(14, run)
-        loadSproutX?.constant = 4 + run
-        bar.subviews.first?.alpha = 1
+        bar.subviews.forEach { $0.alpha = 1 }
         let update = { cover.layoutIfNeeded() }
         if UIAccessibility.isReduceMotionEnabled {
             update(); completion?(); return
@@ -305,7 +328,7 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         if UIAccessibility.isReduceMotionEnabled {
             UIView.animate(withDuration: 0.3, animations: { cover.alpha = 0 }) { _ in cover.removeFromSuperview() }
         } else {
-            // A smoky reveal: puffs billow over the whole screen, the art and band drift up into them, and the forest
+            // A smoky reveal: puffs billow over the whole screen, the art, badge and bar drift up into them, and the forest
             // thins away underneath, so the map (building itself at the same moment) appears out of the smoke.
             puffSmoke(over: cover)
             UIView.animate(withDuration: 0.35, delay: 0, options: .curveEaseIn) {
@@ -760,5 +783,53 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
                 buttons[index].accessibilityValue = badges.contains(tab.key) ? "Update available" : nil
             }
         }
+    }
+}
+
+/// The loading bar's fill: brightens toward its leading end, keeps a glossy top edge, and has a highlight sweeping across
+/// it on a loop (the web's .load-fill matches). The sweep moves the gradient's stops, so it keeps pace as the fill grows.
+private final class LoadFillView: UIView {
+    private let base = CAGradientLayer()
+    private let gloss = CAGradientLayer()
+    private let shimmer = CAGradientLayer()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        layer.cornerRadius = 7
+        layer.masksToBounds = true
+        base.startPoint = CGPoint(x: 0, y: 0.5)
+        base.endPoint = CGPoint(x: 1, y: 0.5)
+        base.colors = [UIColor(red: 79/255, green: 158/255, blue: 18/255, alpha: 1).cgColor,
+                       UIColor(red: 143/255, green: 220/255, blue: 42/255, alpha: 1).cgColor,
+                       UIColor(red: 214/255, green: 255/255, blue: 134/255, alpha: 1).cgColor]
+        base.locations = [0, 0.65, 1]
+        gloss.colors = [UIColor(white: 1, alpha: 0.35).cgColor, UIColor(white: 1, alpha: 0).cgColor,
+                        UIColor(white: 0, alpha: 0).cgColor, UIColor(white: 0, alpha: 0.12).cgColor]
+        gloss.locations = [0, 0.3, 0.8, 1]
+        shimmer.startPoint = CGPoint(x: 0, y: 0.5)
+        shimmer.endPoint = CGPoint(x: 1, y: 0.5)
+        shimmer.colors = [UIColor(white: 1, alpha: 0).cgColor, UIColor(white: 1, alpha: 0.6).cgColor,
+                          UIColor(white: 1, alpha: 0).cgColor]
+        shimmer.locations = [-0.45, -0.225, 0]
+        [base, gloss, shimmer].forEach { layer.addSublayer($0) }
+        if !UIAccessibility.isReduceMotionEnabled {
+            let sweep = CABasicAnimation(keyPath: "locations")
+            sweep.fromValue = [-0.45, -0.225, 0]
+            sweep.toValue = [1, 1.225, 1.45]
+            sweep.duration = 1.6
+            sweep.repeatCount = .infinity
+            sweep.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            shimmer.add(sweep, forKey: "sweep")
+        }
+    }
+
+    required init?(coder: NSCoder) { nil }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        [base, gloss, shimmer].forEach { $0.frame = bounds }
+        CATransaction.commit()
     }
 }

@@ -1,38 +1,53 @@
-/* Loading screen (Kevin's art, 2026-11): the shop scene with the badge on top, and a forest band below it where a
-   sprout rides the end of a lime bar over "Growing your empire…". The iOS app draws the same screen natively over the
-   page (CanopyViewController.installLoadingCover) and lifts it at the same moment this one fades. main.js sets --load
-   (0 to 1) as the map's files arrive. */
-.loading{--band:calc(118px + var(--safe-bottom,0px));position:fixed;z-index:60;inset:0;display:block;padding:0;
-  background:#102d1b;color:#f6ecc9;font-family:ui-rounded,'SF Pro Rounded','Bricolage Grotesque',system-ui,sans-serif;letter-spacing:0}
+/* Loading screen (Kevin's art, 2026-11): his shop background runs full bleed behind the status bar, the badge drops in
+   on top with a springy pop and then floats, and a glowing lime bar sits over a soft scrim at the
+   bottom, above "Growing your empire…". The iOS app draws the same screen natively over the page
+   (CanopyViewController.installLoadingCover) and lifts it at the same moment this one fades. main.js sets --load (0 to
+   1) as the map's files arrive. */
+.loading{position:fixed;z-index:60;inset:0;display:block;padding:0;overflow:hidden;
+  background:#0f2d1a;color:#f6ecc9;font-family:ui-rounded,'SF Pro Rounded','Bricolage Grotesque',system-ui,sans-serif;letter-spacing:0}
 .loading[hidden]{display:none}
-/* The art is anchored at the top so the badge never crops; only the budtender's apron gives way on short screens.
-   Its own top edge fades into this green, and it starts just under the notch so the sprout clears the island. */
-.load-art{position:absolute;left:0;right:0;top:max(0px,calc(env(safe-area-inset-top,0px) - 12px));bottom:var(--band);
-  width:100%;height:auto;max-height:none;object-fit:cover;object-position:50% 0;display:block;user-select:none;-webkit-user-drag:none}
+/* Full width, 60px above the top edge, so the empty ceiling sits under the badge and the floor gives way at the
+   bottom. Same placement as the iOS cover and launch screen. */
+.load-art{position:absolute;left:0;top:-60px;width:100%;height:auto;max-height:none;display:block;user-select:none;-webkit-user-drag:none}
+.load-badge{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);width:min(74%,340px);height:auto;
+  transform:translateX(-50%);filter:drop-shadow(0 10px 18px rgba(0,0,0,.35));pointer-events:none}
+@media (prefers-reduced-motion:no-preference){
+  .load-badge{animation:badge-in .9s cubic-bezier(.2,.9,.3,1.25) .15s both,badge-float 3.2s ease-in-out 1.05s infinite}
+}
+@media (prefers-reduced-motion:reduce){.load-badge{animation:badge-fade .4s ease-out both}}
+@keyframes badge-in{0%{opacity:0;transform:translate(-50%,-28px) scale(.62)}55%{opacity:1}100%{opacity:1;transform:translate(-50%,0) scale(1)}}
+@keyframes badge-float{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,-5px)}}
+@keyframes badge-fade{from{opacity:0}to{opacity:1}}
 /* Wide screens show the whole picture as a tall column, its sides fading into the green. */
 @media (min-aspect-ratio:3/4){
-  .load-art{left:50%;right:auto;width:min(100%,calc((100dvh - var(--band)) * .518));transform:translateX(-50%);
+  .load-art{left:50%;width:min(100%,calc((100dvh + 60px) / 2.797));transform:translateX(-50%);
     -webkit-mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent);mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent)}
+  .load-badge{width:min(28vw,300px)}
 }
-.load-band{position:absolute;left:0;right:0;bottom:0;height:var(--band);padding:0 28px var(--safe-bottom,0px);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
-  background:#113a1e;border-top:2px solid #1d6136;box-shadow:0 -10px 24px rgba(4,20,10,.35)}
-.loading .load-bar{position:relative;width:min(100%,400px);height:22px;margin:14px 0 0;border-radius:999px;
+/* The bar overlays the art's floor on a scrim that deepens toward the bottom edge. */
+.load-band{position:absolute;left:0;right:0;bottom:0;height:calc(220px + var(--safe-bottom,0px));padding:0 28px calc(22px + var(--safe-bottom,0px));
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:16px;
+  background:linear-gradient(rgba(9,38,20,0),rgba(9,38,20,.55) 45%,rgba(9,38,20,.92))}
+.loading .load-bar{position:relative;width:min(100%,400px);height:22px;margin:0;border-radius:999px;
   background:#0b2c16;box-shadow:inset 0 0 0 2.5px #e6ecd4,inset 0 3px 6px rgba(0,0,0,.45)}
-.loading .load-fill{position:absolute;left:4px;top:4px;bottom:4px;width:calc((100% - 8px) * var(--load,0));min-width:14px;border-radius:999px;
-  background:linear-gradient(#c5f56a,#8fdc2a 48%,#62b314);box-shadow:inset 0 2px 0 rgba(255,255,255,.35);
+/* The fill glows: it brightens toward its leading end, gives off a soft lime halo, and a highlight sweeps across it
+   while loading. Matches CanopyViewController.LoadFillView. */
+.loading .load-fill{position:absolute;left:4px;top:4px;bottom:4px;height:auto;width:calc((100% - 8px) * var(--load,0));min-width:14px;border-radius:999px;
+  overflow:hidden;background:linear-gradient(90deg,#4f9e12,#8fdc2a 65%,#d6ff86);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.35),inset 0 -2px 0 rgba(0,0,0,.12),0 0 8px rgba(168,240,74,.75),0 0 20px rgba(168,240,74,.35);
   transition:width .35s ease-out}
-/* The sprout's stem foot sits on the fill's leading end. */
-.load-sprout{position:absolute;left:calc(4px + (100% - 8px) * var(--load,0));bottom:7px;width:40px;height:auto;
-  transform:translateX(-50%);filter:drop-shadow(0 2px 2px rgba(0,0,0,.35));transition:left .35s ease-out;pointer-events:none}
+.loading .load-fill::after{content:'';position:absolute;top:0;bottom:0;left:0;width:45%;border-radius:inherit;
+  background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.6) 50%,rgba(255,255,255,0));
+  transform:translateX(-110%);animation:load-shimmer 1.6s ease-in-out infinite}
+@keyframes load-shimmer{to{transform:translateX(330%)}}
 .loading .load-band p{margin:0;font-size:19px;font-weight:700;line-height:1.2;color:#f6ecc9;text-align:center;
-  text-shadow:0 2px 0 rgba(0,0,0,.25);max-width:22em;text-wrap:balance}
+  text-shadow:0 2px 6px rgba(0,0,0,.5);max-width:22em;text-wrap:balance}
 .loading .load-retry{width:auto;height:36px;margin:0;padding:0 18px;border:0;border-radius:999px;background:#a8dc52;color:#103018;
   font-family:inherit;font-size:14px;font-weight:700;cursor:pointer}
 .loading .load-retry[hidden]{display:none}
 /* When Retry shows, the bar is meaningless: the message and button take the band. */
 .loading:has(.load-retry:not([hidden])) .load-bar{display:none}
-@media (prefers-reduced-motion:reduce){.load-fill,.load-sprout{transition:none}}
+@media (prefers-reduced-motion:reduce){.loading .load-fill{transition:none}.loading .load-fill::after{animation:none;opacity:0}}
 /* Age gate and HUD carry the new badge and sprout. */
 .age-badge{display:block;width:min(200px,62%);height:auto;margin:-6px auto 14px}
 .hud .canopy-brand span img.brand-sprout{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))}
