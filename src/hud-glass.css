@@ -46,14 +46,14 @@
    keeps its brass edge, and build sites and lots read as dashed brass. */
 .world .marker.station-sign,.world .marker.station-sign:not(.selected){
  border:1px solid var(--ui-edge);border-radius:10px;background:var(--ui-glass-strong);color:var(--ui-ink);
- -webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);box-shadow:0 3px 10px rgba(10,20,14,.28);
+ -webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);box-shadow:0 3px 10px rgba(6,24,12,.28);
 }
 .world .marker.station-sign .station-sign-level{color:var(--ui-soft)}
 .world .marker.station-sign.can-upgrade::after{background:var(--ui-leaf-glow)}
-.world .marker.station-sign.selected{background:var(--ui-brass);color:var(--ui-brass-ink);border-color:transparent;box-shadow:0 4px 14px rgba(10,20,14,.34)}
+.world .marker.station-sign.selected{background:var(--ui-brass);color:var(--ui-brass-ink);border-color:transparent;box-shadow:0 4px 14px rgba(6,24,12,.34)}
 .world .marker.station-sign.selected .station-sign-level{color:var(--ui-brass-ink);opacity:.75}
 .world .marker.station-sign.selected::after{background:var(--ui-brass-ink)}
-.world .marker.is-bottleneck:not(.selected){border-color:var(--ui-brass);color:var(--ui-ink);box-shadow:0 0 0 1px var(--ui-brass),0 3px 12px rgba(10,20,14,.3)}
+.world .marker.is-bottleneck:not(.selected){border-color:var(--ui-brass);color:var(--ui-ink);box-shadow:0 0 0 1px var(--ui-brass),0 3px 12px rgba(6,24,12,.3)}
 .world .marker.station-sign.is-site,.world .marker.station-sign.is-site:not(.selected),
 .world .marker.station-sign.is-lot,.world .marker.station-sign.is-lot:not(.selected){border:1px dashed var(--ui-brass);background:var(--ui-glass-strong);color:var(--ui-ink)}
 .world .marker.station-sign.is-site .station-sign-level,.world .marker.station-sign.is-lot .station-sign-level{color:var(--ui-brass)}
@@ -73,5 +73,5 @@
 }
 .toast.is-upgrade::before{color:var(--ui-leaf-glow)}
 
-@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.hud,.toast,.map-controls button{background:#1d3226}}
-@media(prefers-reduced-transparency:reduce){.hud,.toast,.map-controls button,.world .marker.station-sign{background:#1d3226;-webkit-backdrop-filter:none;backdrop-filter:none}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.hud,.toast,.map-controls button{background:#153a21}}
+@media(prefers-reduced-transparency:reduce){.hud,.toast,.map-controls button,.world .marker.station-sign{background:#153a21;-webkit-backdrop-filter:none;backdrop-filter:none}}

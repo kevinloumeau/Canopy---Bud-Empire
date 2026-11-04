@@ -7,10 +7,10 @@ button:active{filter:brightness(.88)}
 .stat small{font-size:.75rem;letter-spacing:.07em;margin-bottom:5px}
 .stat strong{font-size:1.125rem;letter-spacing:-.04em;font-variant-numeric:tabular-nums;white-space:nowrap}
 
-.icon{width:44px;height:44px;flex:0 0 44px;border-radius:50%;background:#1d2118;border-color:#343b2c;font-size:1.25rem}
+.icon{width:44px;height:44px;flex:0 0 44px;border-radius:50%;background:#132619;border-color:#23442d;font-size:1.25rem}
 
 .marker.locked{opacity:.65}
-.sheet{padding:0 16px calc(16px + var(--safe-bottom));min-height:0;border:1px solid #454e365c;border-bottom:0;border-radius:24px 24px 0 0;background:#191d16;box-shadow:0 -12px 45px #0004;max-height:65vh;max-height:65dvh;overflow:auto;overscroll-behavior:contain}
+.sheet{padding:0 16px calc(16px + var(--safe-bottom));min-height:0;border:1px solid #454e365c;border-bottom:0;border-radius:24px 24px 0 0;background:#112217;box-shadow:0 -12px 45px #0004;max-height:65vh;max-height:65dvh;overflow:auto;overscroll-behavior:contain}
 
 .machine-nav button{min-width:0;min-height:52px;padding:7px 2px;background:transparent;border:1px solid transparent;color:#b2b9a9;border-radius:10px;font-size:.875rem;font-weight:600;cursor:pointer}
 .machine-nav button small{font-size:.75rem;letter-spacing:.04em;margin-bottom:3px;color:#77836c}
@@ -19,23 +19,23 @@ button:active{filter:brightness(.88)}
 .machine-info{gap:12px;align-items:center}
 
 .production-detail b{color:#edf2e5;margin-left:8px;font:500 .875rem 'DM Mono',monospace}
-.level{border:1px solid #3c4631;border-radius:12px;padding:9px 12px;text-align:center;min-width:66px}
+.level{border:1px solid #265134;border-radius:12px;padding:9px 12px;text-align:center;min-width:66px}
 .level b{display:block;font-size:1.5rem;line-height:1.1;margin-top:4px}
 .machine-stats{display:grid;grid-template-columns:1fr 1.25fr;gap:10px;margin:16px 0}
 .machine-stats .run,.buy{position:static;transform:none;width:100%;min-width:0;height:54px;border-radius:12px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;gap:8px;box-shadow:none;font-size:1rem}
-.machine-stats .run{border:1px solid #566147;background:#282f21;color:#f0efe8}
+.machine-stats .run{border:1px solid #38704a;background:#1a3623;color:#f0efe8}
 .machine-stats .run b{font-size:1rem}.machine-stats .run span,.buy b{font:500 .875rem 'DM Mono',monospace}
-.machine-stats .run:active{transform:scale(.97);background:#35412a}.machine-stats .run:active span{color:var(--acid)}
+.machine-stats .run:active{transform:scale(.97);background:#204b2e}.machine-stats .run:active span{color:var(--acid)}
 .buy:active{transform:scale(.97)}
-.order-row{grid-template-columns:1fr 1fr;gap:10px;padding-top:13px;border-top:1px solid #353d2d}
+.order-row{grid-template-columns:1fr 1fr;gap:10px;padding-top:13px;border-top:1px solid #23472f}
 .order{grid-column:1/-1;display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px}
 .order small{font-size:.75rem;letter-spacing:.04em}
 .order>b{font-size:.75rem;color:#b2b9a9}
-.order span{grid-column:1/-1;grid-row:2;height:5px;border-radius:10px;overflow:hidden;margin:0 0 2px;background:#343e2b}
+.order span{grid-column:1/-1;grid-row:2;height:5px;border-radius:10px;overflow:hidden;margin:0 0 2px;background:#22472e}
 .order i{background:var(--acid);border-radius:10px}
-.order-row button{height:44px;font-size:.875rem;border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 12px;border-color:#46513a;background:#22291c}
+.order-row button{height:44px;font-size:.875rem;border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 12px;border-color:#2d5e3d;background:#162f1e}
 .order-row button b{font-size:.875rem;white-space:nowrap}
-.order-row button:disabled{opacity:1;color:#7d8772;border-color:#303a27;background:transparent}
+.order-row button:disabled{opacity:1;color:#7d8772;border-color:#1e432a;background:transparent}
 .order-row #claim:not(:disabled){color:var(--acid);border-color:#829d45}
 .order-row .boost{grid-column:auto;background:transparent}
 
@@ -52,14 +52,14 @@ button:active{filter:brightness(.88)}
 .machine-nav button.is-locked{color:#8b9482}.machine-nav button.is-locked em{color:#77846a}
 .machine-stats{margin:13px 0 0}
 .buy{position:relative;overflow:hidden}
-.buy:disabled{background:linear-gradient(90deg,#354128 var(--funded,0%),#252e1e var(--funded,0%));color:#b8c5a7;border:1px solid #48573a;opacity:1}
+.buy:disabled{background:linear-gradient(90deg,#1f4a2c var(--funded,0%),#173521 var(--funded,0%));color:#b8c5a7;border:1px solid #2d643e;opacity:1}
 .buy:not(:disabled){box-shadow:0 4px 18px #c2ee301a}
 
 .order-row{padding-top:11px;gap:9px}
 .order-row #claim:not(:disabled){background:var(--p-lime-63);color:#172006;font-weight:700;box-shadow:0 0 16px #d7ff4318}
-.marker{min-width:44px;min-height:44px;border-radius:50%;display:grid;place-content:center;padding:10px;background:#1d261bdd;border-color:#88967555}
+.marker{min-width:44px;min-height:44px;border-radius:50%;display:grid;place-content:center;padding:10px;background:#152c1cdd;border-color:#88967555}
 
 .marker:not(.selected):after{height:7px}.marker.locked{opacity:.55}
-.level{background:#222b1b;border-color:#465934}.level small{color:#a3b291}
+.level{background:#15311e;border-color:#26673b}.level small{color:#a3b291}
 
 @media(prefers-reduced-motion:reduce){.buy:not(:disabled){box-shadow:0 4px 18px #c2ee301a}}

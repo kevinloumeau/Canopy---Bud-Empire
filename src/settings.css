@@ -3,8 +3,8 @@
 .hud .speed-controls #settingsOpen svg{width:17px;height:17px}
 @media(hover:hover){.hud .speed-controls #settingsOpen:hover{background:#dce9be14}}
 .hud .speed-controls #settingsOpen:focus-visible{outline:2px solid var(--p-lime-84);outline-offset:2px}
-.settings-wrap{background:#08140e99;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
-.modal.settings{width:min(360px,100%);padding:16px 16px 14px;border:1px solid #e4f9e133;border-radius:22px;color:var(--p-sage-94);background:linear-gradient(145deg,#d1e8cc14,#1e352a08 42%),rgba(26,48,38,.96);box-shadow:inset 0 1px 0 #f3ffe52b,0 12px 28px #00000055}
+.settings-wrap{background:#05170b99;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.modal.settings{width:min(360px,100%);padding:16px 16px 14px;border:1px solid #e4f9e133;border-radius:22px;color:var(--p-sage-94);background:linear-gradient(145deg,#d1e8cc14,#153e2208 42%),rgba(18,56,30,.96);box-shadow:inset 0 1px 0 #f3ffe52b,0 12px 28px #00000055}
 .modal.settings>div{display:block;justify-content:normal;gap:0;margin:0}
 .modal.settings .settings-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .settings-head h2{margin:0;font-size:18px;letter-spacing:-.02em}
@@ -29,6 +29,6 @@
 .hud .customer-info #goalsOpen{pointer-events:auto;position:relative;display:inline-grid;place-items:center;width:30px;height:30px;margin-left:8px;padding:0;border:1px solid #dce9be22;border-radius:10px;background:#dce9be0f;color:#d2dfc8;cursor:pointer;flex:0 0 auto}
 .hud .customer-info #goalsOpen svg{width:15px;height:15px}
 .hud .customer-info #goalsOpen.has-ready{color:#f2d99a;border-color:#e3c07a55;background:#e3c07a1c}
-.hud .customer-info #goalsOpen #goalsBadge{position:absolute;top:-6px;right:-6px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#e7c77f;color:#25331f;font-size:10px;font-weight:700;line-height:16px;text-align:center}
+.hud .customer-info #goalsOpen #goalsBadge{position:absolute;top:-6px;right:-6px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#e7c77f;color:#173b23;font-size:10px;font-weight:700;line-height:16px;text-align:center}
 @media(hover:hover){.hud .customer-info #goalsOpen:hover{background:#dce9be1c}}
 .hud .customer-info #goalsOpen:focus-visible{outline:2px solid var(--p-lime-84);outline-offset:2px}
