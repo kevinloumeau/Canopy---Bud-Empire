@@ -3840,6 +3840,14 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function boostAll(){if(state.globalLevel>=BOOST_MAX)return;var c=boostCost(state.globalLevel);if(state.money<c)return notify('Need '+fmt(c-state.money)+' more');state.money-=c;state.globalLevel++;state.multiplier=Math.pow(1.25,state.globalLevel);burst({x:0,z:0},colors.orange);notify('ALL STAGES +25%','upgrade');renderUI();save()}
   function claimOrder(){var o=milestone(state.contract);if(!o||state.lifetime<o.goal)return;state.money+=o.reward;state.contract++;notify(fmt(o.reward)+' ORDER BONUS');renderUI();save()}
 
+  // Welcome back: the away time in its largest units only (45m, 3h 20m, 1d 3h), and the total counting up once.
+  function awayLength(seconds){var m=Math.max(1,Math.round(seconds/60)),h=Math.floor(m/60),d=Math.floor(h/24);return d?d+'d'+(h%24?' '+h%24+'h':''):h?h+'h'+(h<10&&m%60?' '+m%60+'m':''):m+'m'}
+  var returnCounted=null;
+  function countUpReturn(total){var node=$('returnTotal');if(returnCounted===total)return;returnCounted=total;
+    var still=window.__canopySnap||(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    if(still||!window.requestAnimationFrame){node.textContent='+'+fmt(total);return}
+    var start=performance.now(),span=1100;node.textContent='+'+fmt(0);
+    (function step(now){if(returnCounted!==total)return;var t=Math.min(1,(now-start)/span),e=1-Math.pow(1-t,3);node.textContent='+'+fmt(total*e);if(t<1)requestAnimationFrame(step)})(start);}
   function duration(ms){var seconds=Math.max(0,Math.ceil(ms/1000));return Math.floor(seconds/3600)+'h '+Math.floor(seconds%3600/60)+'m '+seconds%60+'s'}
   STORES.forEach(function(store,i){
     var details=document.createElement('details');details.className='branch-projects';
@@ -3849,10 +3857,12 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   });
   // Short goals and management live in the existing tray; map gestures remain free.
   var today=document.querySelector('[data-empire-section="today"]');
-  today.innerHTML='<section id="returnSummary" hidden><p class="return-kicker">While you were away</p><h2>Welcome back</h2><p id="returnTotal"></p><p id="returnTime"></p><ul id="returnEarnings"></ul><p id="returnGoals"></p><button id="dismissReturn">Back to the shop</button></section><h2>Next steps</h2><p id="nextInvestment"></p><div id="shortGoals"></div><section class="reputation"><h2 class="empire-section-heading">Reputation</h2><div class="reputation-summary"><strong id="reputationStatus"></strong><span id="reputationNext"></span></div><progress id="reputationProgress" max="60" value="0" aria-label="Customer reputation"></progress><section class="reputation-guide" aria-labelledby="customerGuideTitle">'+customerGuideMarkup()+'</section></section>';
+  today.innerHTML='<section id="returnSummary" hidden><div class="return-medal" aria-hidden="true"><span class="return-rays"></span><span class="return-coin"><svg viewBox="0 0 24 24"><path d="M12 21V11M12 14C3 14 3 7 3 7s9-1 9 7ZM12 11c0-8 9-9 9-9s0 9-9 9Z"/></svg></span></div><p class="return-kicker">While you were away</p><p id="returnTotal"></p><div id="returnTime" class="return-chips"></div><ul id="returnEarnings"></ul><button id="returnGoals" type="button"></button><button id="dismissReturn" type="button">Back to the shop</button></section><h2>Next steps</h2><p id="nextInvestment"></p><div id="shortGoals"></div><section class="reputation"><h2 class="empire-section-heading">Reputation</h2><div class="reputation-summary"><strong id="reputationStatus"></strong><span id="reputationNext"></span></div><progress id="reputationProgress" max="60" value="0" aria-label="Customer reputation"></progress><section class="reputation-guide" aria-labelledby="customerGuideTitle">'+customerGuideMarkup()+'</section></section>';
   paintCustomerGuide();
   [0,1,2].forEach(function(i){var row=document.createElement('div');row.className='short-goal';row.innerHTML='<h3 id="goalTitle'+i+'"></h3><progress id="goalProgress'+i+'" max="100" aria-label="Objective progress"></progress><p id="goalCount'+i+'"></p><button id="goalClaim'+i+'"></button>'; $('shortGoals').appendChild(row);$('goalClaim'+i).onclick=function(){var closing=shiftStatus(state.empire).done===2,reward=claimGoal(state,i,rewardScale());if(reward){save();renderUI();notify((closing?'SHIFT COMPLETE · +':'GOAL COMPLETE · +')+fmt(reward),'upgrade')}}});
   $('dismissReturn').onclick=function(){state.empire.returnReport=null;save();renderUI()};
+  // A ready goal on the welcome back card is a way in: it closes the card and opens Goals.
+  $('returnGoals').onclick=function(){state.empire.returnReport=null;save();showTray('goals');renderUI()};
   STORES.forEach(function(store,i){
     var controls=document.createElement('div');controls.className='branch-management';
     controls.innerHTML='<div class="branch-facts"><span class="specialty">'+['Exclusive strains','Boutique products','Bulk deliveries','Rooftop lounge','Fireside terrace'][i]+'</span><span id="branchLoyalty'+i+'"></span></div>'+(i===2?'<button id="bulkDispatch">Dispatch '+qtyLabel(30)+'</button><p id="bulkDetail"></p>':'')+'<p class="operation-hint" id="storeDetails'+i+'"></p>';
@@ -3999,8 +4009,17 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   var operationsUI=mountOperations({getState:function(){return state},format:fmt,changed:function(message){save();renderUI();if(message)notify(message,'upgrade')},visit:function(i,manage){visitStore(i+1,!manage);if(manage)manageViewedStore()}});
   function renderManagement(){
     var p=state.empire,report=p.returnReport,investment=recommendation();
-    $('returnSummary').hidden=!report;
-    if(report){$('returnTotal').textContent='+'+fmt(report.earnings.reduce(function(a,n){return a+n},0));$('returnTime').textContent=duration(report.seconds*1000)+' away · '+Math.round(offlineCap()/3600)+'-hour cap at 1× rate';$('returnEarnings').hidden=report.earnings.filter(function(n){return n>0}).length<2;$('returnEarnings').innerHTML=report.earnings.map(function(n,i){return n>0?'<li><span>'+(['Home store'].concat(STORES.map(function(s){return s.name})))[i]+'</span><strong>'+fmt(n)+'</strong></li>':''}).join('');$('returnGoals').hidden=!report.goals;$('returnGoals').textContent=report.goals===1?'1 goal ready to claim':report.goals+' goals ready to claim';}
+    $('returnSummary').hidden=!report;if(!report)returnCounted=null;
+    if(report){var total=report.earnings.reduce(function(a,n){return a+n},0),cap=offlineCap(),
+        clock='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+        coin='<svg viewBox="0 0 24 24"><ellipse cx="12" cy="7" rx="7" ry="3"/><path d="M5 7v5c0 1.7 3.1 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/></svg>',
+        store='<svg viewBox="0 0 24 24"><path d="M4 10h16M5 10l1.5-5h11L19 10M6 10v9h12v-9M10 19v-5h4v5"/></svg>';
+      countUpReturn(total);
+      $('returnTime').innerHTML='<span>'+clock+awayLength(report.seconds)+' away</span>'+(report.seconds>cap?'<span>'+coin+awayLength(cap)+' paid</span>':'');
+      $('returnEarnings').hidden=report.earnings.filter(function(n){return n>0}).length<2;
+      $('returnEarnings').innerHTML=report.earnings.map(function(n,i){return n>0?'<li><i>'+store+'</i><span>'+(['Home store'].concat(STORES.map(function(s){return s.name})))[i]+'</span><strong>+'+fmt(n)+'</strong></li>':''}).join('');
+      $('returnGoals').hidden=!report.goals;
+      $('returnGoals').innerHTML='<i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg><b>'+report.goals+'</b></i><span>'+(report.goals===1?'Goal ready to claim':'Goals ready to claim')+'</span><svg class="return-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>';}
     $('nextInvestment').textContent='Next improvement: '+investment.name+' · '+fmt(investment.price)+(state.money<investment.price?' ('+fmt(investment.price-state.money)+' to go)':' · ready');
     settleGoals(state);var goalsReady=[0,1,2].filter(function(i){var g=goalStatus(p,i,rewardScale());return g.progress>=g.target}).length;if($('goalsBadge')){$('goalsBadge').textContent=goalsReady;$('goalsBadge').hidden=!goalsReady;$('goalsOpen').classList.toggle('has-ready',goalsReady>0);if($('shiftGoalsReady'))$('shiftGoalsReady').textContent=goalsReady?goalsReady+' ready':'';if($('shiftProgress')){var shiftNow=shiftStatus(p,rewardScale()),left=3-shiftNow.done,shiftHtml='<span>Shift '+abbr(shiftNow.number)+'</span><span class="shift-pips" aria-hidden="true">'+[0,1,2].map(function(k){return '<i'+(k<shiftNow.done?' class="done"':'')+'></i>'}).join('')+'</span><span>'+(left===1?'1 more goal':left+' more goals')+' for a '+fmt(shiftNow.bonus)+' bonus</span>';if($('shiftProgress').dataset.html!==shiftHtml){$('shiftProgress').innerHTML=shiftHtml;$('shiftProgress').dataset.html=shiftHtml}}}
     [0,1,2].forEach(function(i){var g=goalStatus(p,i,rewardScale());$('goalTitle'+i).textContent=g.title;$('goalProgress'+i).value=g.progress/g.target*100;$('goalCount'+i).textContent=(g.kind==='revenue'?fmt(g.progress)+' / '+fmt(g.target):abbr(g.progress)+' / '+abbr(g.target))+(g.hint&&g.progress<g.target?' · '+g.hint:'');$('goalClaim'+i).textContent='Collect '+fmt(g.reward);$('goalClaim'+i).disabled=g.progress<g.target;$('goalClaim'+i).classList.toggle('ready',g.progress>=g.target);});
