@@ -54,15 +54,11 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     private var selectedKey = "factory"
     private var panelExpanded = true
     private var loadingCover: UIView?
-    /// The loading bar over the scrim at the foot of the art: a lime fill grows inside a cream-rimmed track and a sprout rides
+    /// The loading bar over the scrim at the foot of the art: a glowing lime fill grows inside a cream-rimmed track
     /// its leading end. It only ever moves forward.
     private weak var loadBar: UIView?
     private var loadFillWidth: NSLayoutConstraint?
-    private var loadSproutX: NSLayoutConstraint?
     private var loadShown: CGFloat = 0
-    /// Puts the sprout's stem on the fill's rounded tip: 3.5 pt back from the very end, plus 0.85 pt because the stem
-    /// sits just left of the image's centre (69 of 144 px). The launch storyboard uses the same 18 - 2.65 = 15.35 pt.
-    private let sproutStemOffset: CGFloat = -2.65
     private var pageProgress: NSKeyValueObservation?
     /// Lifts the cover if loading stalls, so the web loader's own Retry button is never hidden behind it.
     private var stallTimer: DispatchWorkItem?
@@ -131,8 +127,7 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         webView.evaluateJavaScript(nativeAvailability)
     }
 
-    // The launch storyboard shows this same frame (Kevin's background, the scrim, the empty track with the sprout at its
-    // start, laid out by the same constraints), so the hand-off is invisible; from here the badge drops in, the bar fills
+    // The launch storyboard shows this same frame (Kevin's background, the scrim, the empty track, laid out by the same constraints), so the hand-off is invisible; from here the badge drops in, the bar fills
     // and the line of text fades in.
     private func installLoadingCover() {
         let cover = UIView()
@@ -247,8 +242,8 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         }
     }
 
-    /// The track is a sliced image (the launch storyboard shows it too, empty, with the sprout at its start). The fill is
-    /// a glossy lime capsule 4 pt inside it; the sprout's stem is seated in the fill's rounded tip, its foot on the fill's lower edge.
+    /// The track is a sliced image (the launch storyboard shows it too, empty). The fill is a glowing lime capsule 4 pt
+    /// inside it, with a soft halo view behind it.
     private func makeLoadBar(in band: UIView) -> UIView {
         let track = UIImageView(image: UIImage(named: "LoadTrack"))
         track.translatesAutoresizingMaskIntoConstraints = false
@@ -258,34 +253,25 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         track.accessibilityValue = "0 percent"
         band.addSubview(track)
 
-        let fill = UIView()
+        let lime = UIColor(red: 168/255, green: 240/255, blue: 74/255, alpha: 1)
+        let halo = UIView()
+        halo.translatesAutoresizingMaskIntoConstraints = false
+        halo.backgroundColor = lime
+        halo.layer.cornerRadius = 7
+        halo.layer.shadowColor = lime.cgColor
+        halo.layer.shadowOpacity = 0.85
+        halo.layer.shadowRadius = 7
+        halo.layer.shadowOffset = .zero
+        halo.alpha = 0
+        track.addSubview(halo)
+        let fill = LoadFillView()
         fill.translatesAutoresizingMaskIntoConstraints = false
-        fill.layer.cornerRadius = 7
-        fill.layer.masksToBounds = true
-        let gloss = CAGradientLayer()
-        gloss.colors = [UIColor(red: 197/255, green: 245/255, blue: 106/255, alpha: 1).cgColor,
-                        UIColor(red: 143/255, green: 220/255, blue: 42/255, alpha: 1).cgColor,
-                        UIColor(red: 98/255, green: 179/255, blue: 20/255, alpha: 1).cgColor]
-        gloss.locations = [0, 0.48, 1]
-        gloss.frame = CGRect(x: 0, y: 0, width: 600, height: 14)
-        fill.layer.addSublayer(gloss)
         fill.alpha = 0
         track.addSubview(fill)
-
-        let sprout = UIImageView(image: UIImage(named: "LoadSprout"))
-        sprout.translatesAutoresizingMaskIntoConstraints = false
-        sprout.contentMode = .scaleAspectFit
-        sprout.isAccessibilityElement = false
-        sprout.layer.shadowColor = UIColor.black.cgColor
-        sprout.layer.shadowOpacity = 0.35
-        sprout.layer.shadowRadius = 2
-        sprout.layer.shadowOffset = CGSize(width: 0, height: 2)
-        band.addSubview(sprout)
 
         let wide = track.widthAnchor.constraint(equalTo: band.widthAnchor, constant: -56)
         wide.priority = .defaultHigh
         let fillWidth = fill.widthAnchor.constraint(equalToConstant: 14)
-        let sproutX = sprout.centerXAnchor.constraint(equalTo: track.leadingAnchor, constant: 4 + 14 + sproutStemOffset)
         NSLayoutConstraint.activate([
             track.bottomAnchor.constraint(equalTo: (band.superview ?? band).safeAreaLayoutGuide.bottomAnchor, constant: -61),
             track.centerXAnchor.constraint(equalTo: band.centerXAnchor),
@@ -296,14 +282,13 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
             fill.topAnchor.constraint(equalTo: track.topAnchor, constant: 4),
             fill.bottomAnchor.constraint(equalTo: track.bottomAnchor, constant: -4),
             fillWidth,
-            sprout.widthAnchor.constraint(equalToConstant: 40),
-            sprout.heightAnchor.constraint(equalToConstant: 39.5),
-            sprout.bottomAnchor.constraint(equalTo: track.bottomAnchor, constant: -4),
-            sproutX
+            halo.leadingAnchor.constraint(equalTo: fill.leadingAnchor),
+            halo.trailingAnchor.constraint(equalTo: fill.trailingAnchor),
+            halo.topAnchor.constraint(equalTo: fill.topAnchor),
+            halo.bottomAnchor.constraint(equalTo: fill.bottomAnchor)
         ])
         loadBar = track
         loadFillWidth = fillWidth
-        loadSproutX = sproutX
         return track
     }
 
@@ -317,10 +302,8 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         bar.accessibilityValue = "\(Int((target * 100).rounded())) percent"
         cover.layoutIfNeeded()
         let run = max(bar.bounds.width - 8, 0) * target
-        let fillWidth = max(14, run)
-        loadFillWidth?.constant = fillWidth
-        loadSproutX?.constant = 4 + fillWidth + sproutStemOffset
-        bar.subviews.first?.alpha = 1
+        loadFillWidth?.constant = max(14, run)
+        bar.subviews.forEach { $0.alpha = 1 }
         let update = { cover.layoutIfNeeded() }
         if UIAccessibility.isReduceMotionEnabled {
             update(); completion?(); return
@@ -800,5 +783,53 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
                 buttons[index].accessibilityValue = badges.contains(tab.key) ? "Update available" : nil
             }
         }
+    }
+}
+
+/// The loading bar's fill: brightens toward its leading end, keeps a glossy top edge, and has a highlight sweeping across
+/// it on a loop (the web's .load-fill matches). The sweep moves the gradient's stops, so it keeps pace as the fill grows.
+private final class LoadFillView: UIView {
+    private let base = CAGradientLayer()
+    private let gloss = CAGradientLayer()
+    private let shimmer = CAGradientLayer()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        layer.cornerRadius = 7
+        layer.masksToBounds = true
+        base.startPoint = CGPoint(x: 0, y: 0.5)
+        base.endPoint = CGPoint(x: 1, y: 0.5)
+        base.colors = [UIColor(red: 79/255, green: 158/255, blue: 18/255, alpha: 1).cgColor,
+                       UIColor(red: 143/255, green: 220/255, blue: 42/255, alpha: 1).cgColor,
+                       UIColor(red: 214/255, green: 255/255, blue: 134/255, alpha: 1).cgColor]
+        base.locations = [0, 0.65, 1]
+        gloss.colors = [UIColor(white: 1, alpha: 0.35).cgColor, UIColor(white: 1, alpha: 0).cgColor,
+                        UIColor(white: 0, alpha: 0).cgColor, UIColor(white: 0, alpha: 0.12).cgColor]
+        gloss.locations = [0, 0.3, 0.8, 1]
+        shimmer.startPoint = CGPoint(x: 0, y: 0.5)
+        shimmer.endPoint = CGPoint(x: 1, y: 0.5)
+        shimmer.colors = [UIColor(white: 1, alpha: 0).cgColor, UIColor(white: 1, alpha: 0.6).cgColor,
+                          UIColor(white: 1, alpha: 0).cgColor]
+        shimmer.locations = [-0.45, -0.225, 0]
+        [base, gloss, shimmer].forEach { layer.addSublayer($0) }
+        if !UIAccessibility.isReduceMotionEnabled {
+            let sweep = CABasicAnimation(keyPath: "locations")
+            sweep.fromValue = [-0.45, -0.225, 0]
+            sweep.toValue = [1, 1.225, 1.45]
+            sweep.duration = 1.6
+            sweep.repeatCount = .infinity
+            sweep.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            shimmer.add(sweep, forKey: "sweep")
+        }
+    }
+
+    required init?(coder: NSCoder) { nil }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        [base, gloss, shimmer].forEach { $0.frame = bounds }
+        CATransaction.commit()
     }
 }

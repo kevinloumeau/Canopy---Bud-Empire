@@ -17,7 +17,7 @@
                         <autoresizingMask key="autoresizingMask"/>
                         <!-- The opening frame of the in-app loading cover (CanopyViewController.installLoadingCover): Kevin's
                              background full width from 60 pt above the top edge, the scrim rising 220 pt above the safe
-                             bottom, the empty track 61 pt above it with the sprout at its start, all by the same
+                             bottom, the empty track 61 pt above it, all by the same
                              constraints, so the hand-off is seamless (the app then drops the badge in). Keep the two in
                              step if either changes. -->
                         <subviews>
@@ -34,19 +34,10 @@
                                             <constraint firstAttribute="width" relation="lessThanOrEqual" constant="400" id="c-Ld-103"/>
                                         </constraints>
                                     </imageView>
-                                    <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" image="LoadSprout" translatesAutoresizingMaskIntoConstraints="NO" id="sprout-Ld-005">
-                                        <rect key="frame" x="23" y="115" width="40" height="39.5"/>
-                                        <constraints>
-                                            <constraint firstAttribute="width" constant="40" id="c-Ld-104"/>
-                                            <constraint firstAttribute="height" constant="39.5" id="c-Ld-105"/>
-                                        </constraints>
-                                    </imageView>
                                 </subviews>
                                 <constraints>
                                     <constraint firstItem="track-Ld-004" firstAttribute="centerX" secondItem="band-Ld-002" secondAttribute="centerX" id="c-Ld-110"/>
                                     <constraint firstItem="track-Ld-004" firstAttribute="width" secondItem="band-Ld-002" secondAttribute="width" priority="750" constant="-56" id="c-Ld-111"/>
-                                    <constraint firstItem="sprout-Ld-005" firstAttribute="bottom" secondItem="track-Ld-004" secondAttribute="bottom" constant="-4" id="c-Ld-112"/>
-                                    <constraint firstItem="sprout-Ld-005" firstAttribute="centerX" secondItem="track-Ld-004" secondAttribute="leading" constant="15.35" id="c-Ld-113"/>
                                 </constraints>
                             </imageView>
                         </subviews>
@@ -72,7 +63,6 @@
     </scenes>
     <resources>
         <image name="LoadScrim" width="4" height="256"/>
-        <image name="LoadSprout" width="48" height="47.333332061767578"/>
         <image name="LoadTrack" width="30" height="22"/>
         <image name="LoadingArt" width="750" height="2098"/>
     </resources>
