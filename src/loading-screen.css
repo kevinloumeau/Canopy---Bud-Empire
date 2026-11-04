@@ -5,13 +5,13 @@
 .loading{--band:calc(118px + var(--safe-bottom,0px));position:fixed;z-index:60;inset:0;display:block;padding:0;
   background:#102d1b;color:#f6ecc9;font-family:ui-rounded,'SF Pro Rounded','Bricolage Grotesque',system-ui,sans-serif;letter-spacing:0}
 .loading[hidden]{display:none}
-/* The art bleeds up behind the status bar: its top 110 px are soft foliage added above the original picture, so the
-   badge's sprout clears the island. Anchored at the top, only the budtender's apron gives way on short screens. */
-.load-art{position:absolute;left:0;right:0;top:0;bottom:var(--band);
+/* The art is anchored at the top so the badge never crops; only the budtender's apron gives way on short screens.
+   Its own top edge fades into this green, and it starts just under the notch so the sprout clears the island. */
+.load-art{position:absolute;left:0;right:0;top:max(0px,calc(env(safe-area-inset-top,0px) - 12px));bottom:var(--band);
   width:100%;height:auto;max-height:none;object-fit:cover;object-position:50% 0;display:block;user-select:none;-webkit-user-drag:none}
 /* Wide screens show the whole picture as a tall column, its sides fading into the green. */
 @media (min-aspect-ratio:3/4){
-  .load-art{left:50%;right:auto;width:min(100%,calc((100dvh - var(--band)) * .486));transform:translateX(-50%);
+  .load-art{left:50%;right:auto;width:min(100%,calc((100dvh - var(--band)) * .518));transform:translateX(-50%);
     -webkit-mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent);mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent)}
 }
 .load-band{position:absolute;left:0;right:0;bottom:0;height:var(--band);padding:0 28px var(--safe-bottom,0px);
@@ -19,7 +19,7 @@
   background:#113a1e;border-top:2px solid #1d6136;box-shadow:0 -10px 24px rgba(4,20,10,.35)}
 .loading .load-bar{position:relative;width:min(100%,400px);height:22px;margin:14px 0 0;border-radius:999px;
   background:#0b2c16;box-shadow:inset 0 0 0 2.5px #e6ecd4,inset 0 3px 6px rgba(0,0,0,.45)}
-.loading .load-fill{position:absolute;left:4px;top:4px;bottom:4px;width:calc((100% - 8px) * var(--load,0));min-width:14px;border-radius:999px;
+.loading .load-fill{position:absolute;left:4px;top:4px;bottom:4px;height:auto;width:calc((100% - 8px) * var(--load,0));min-width:14px;border-radius:999px;
   background:linear-gradient(#c5f56a,#8fdc2a 48%,#62b314);box-shadow:inset 0 2px 0 rgba(255,255,255,.35);
   transition:width .35s ease-out}
 /* The sprout's stem sits in the fill's rounded tip (3.5px back, +0.85px for the stem being left of the image's centre),

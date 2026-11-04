@@ -148,9 +148,8 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
             cover.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
 
-        // Kevin's art: the shop with the badge on top, bleeding up behind the status bar. Its top 110 px are soft foliage
-        // added above the original picture, so the badge's sprout sits clear of the Dynamic Island. Anchored at the top,
-        // it runs on under the band;
+        // Kevin's art: the shop with the badge on top. Its own top edge fades into the cover's green, and it starts just
+        // under the notch so the badge's sprout clears the Dynamic Island. Anchored at the top, it runs on under the band;
         // only the budtender's apron gives way. On a wide screen it narrows to a centred column instead of cropping more.
         let art = UIImageView(image: UIImage(named: "LoadingArt"))
         art.contentMode = .scaleAspectFill
@@ -170,12 +169,12 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         let fullWidth = art.widthAnchor.constraint(equalTo: cover.widthAnchor)
         fullWidth.priority = .defaultHigh
         NSLayoutConstraint.activate([
-            art.topAnchor.constraint(equalTo: cover.topAnchor),
+            art.topAnchor.constraint(equalTo: cover.safeAreaLayoutGuide.topAnchor, constant: -12),
             art.centerXAnchor.constraint(equalTo: cover.centerXAnchor),
-            art.heightAnchor.constraint(equalTo: art.widthAnchor, multiplier: 1754.0 / 852.0),
+            art.heightAnchor.constraint(equalTo: art.widthAnchor, multiplier: 1644.0 / 852.0),
             art.widthAnchor.constraint(lessThanOrEqualTo: cover.widthAnchor),
             fullWidth,
-            art.bottomAnchor.constraint(lessThanOrEqualTo: band.topAnchor, constant: 250),
+            art.bottomAnchor.constraint(lessThanOrEqualTo: band.topAnchor, constant: 200),
             band.leadingAnchor.constraint(equalTo: cover.leadingAnchor),
             band.trailingAnchor.constraint(equalTo: cover.trailingAnchor),
             band.bottomAnchor.constraint(equalTo: cover.bottomAnchor),
