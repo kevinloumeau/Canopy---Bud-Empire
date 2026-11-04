@@ -54,11 +54,11 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     private var selectedKey = "factory"
     private var panelExpanded = true
     private var loadingCover: UIView?
-    /// The loading ring around the sprout: a brass-rimmed sage track, and a glossy fill revealed by two arcs that climb
-    /// from the bottom up both sides and meet at the top. It only ever moves forward.
-    private weak var loadRing: UIView?
-    private weak var loadRingFill: UIView?
-    private var loadArcs: [CAShapeLayer] = []
+    /// The loading bar in the forest band under the art: a lime fill grows inside a cream-rimmed track and a sprout rides
+    /// its leading end. It only ever moves forward.
+    private weak var loadBar: UIView?
+    private var loadFillWidth: NSLayoutConstraint?
+    private var loadSproutX: NSLayoutConstraint?
     private var loadShown: CGFloat = 0
     private var pageProgress: NSKeyValueObservation?
     /// Lifts the cover if loading stalls, so the web loader's own Retry button is never hidden behind it.
@@ -128,13 +128,14 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         webView.evaluateJavaScript(nativeAvailability)
     }
 
-    // The launch storyboard is static and shows this exact frame (the seed inside the empty ring, same centring), so
-    // the hand-off is invisible; from here the seed grows into the sprout, which then sways while the ring fills.
+    // The launch storyboard shows this same frame (the art, the band, the empty track with the sprout at its start, laid
+    // out by the same constraints), so the hand-off is invisible; from here the bar fills and the line of text fades in.
     private func installLoadingCover() {
         let cover = UIView()
-        cover.backgroundColor = UIColor(red: 32/255, green: 55/255, blue: 43/255, alpha: 1)
+        cover.backgroundColor = UIColor(red: 16/255, green: 45/255, blue: 27/255, alpha: 1)
         cover.translatesAutoresizingMaskIntoConstraints = false
         cover.accessibilityViewIsModal = true
+        cover.clipsToBounds = true
         view.addSubview(cover)
         loadingCover = cover
         NSLayoutConstraint.activate([
@@ -143,23 +144,63 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
             cover.topAnchor.constraint(equalTo: view.topAnchor),
             cover.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
-        let plant = UIImageView(image: UIImage(named: "Sprout"))
-        plant.contentMode = .scaleAspectFit
-        plant.translatesAutoresizingMaskIntoConstraints = false
-        plant.isAccessibilityElement = false
-        let ring = makeLoadRing()
-        cover.addSubview(ring)
-        cover.addSubview(plant)
+
+        // Kevin's art: the shop with the badge on top. Its own top edge fades into the cover's green, and it starts just
+        // under the notch so the badge's sprout clears the Dynamic Island. Anchored at the top, it runs on under the band;
+        // only the budtender's apron gives way. On a wide screen it narrows to a centred column instead of cropping more.
+        let art = UIImageView(image: UIImage(named: "LoadingArt"))
+        art.contentMode = .scaleAspectFill
+        art.translatesAutoresizingMaskIntoConstraints = false
+        art.isAccessibilityElement = false
+        cover.addSubview(art)
+
+        let band = UIView()
+        band.backgroundColor = UIColor(red: 17/255, green: 58/255, blue: 30/255, alpha: 1)
+        band.translatesAutoresizingMaskIntoConstraints = false
+        cover.addSubview(band)
+        let seam = UIView()
+        seam.backgroundColor = UIColor(red: 29/255, green: 97/255, blue: 54/255, alpha: 1)
+        seam.translatesAutoresizingMaskIntoConstraints = false
+        band.addSubview(seam)
+
+        let fullWidth = art.widthAnchor.constraint(equalTo: cover.widthAnchor)
+        fullWidth.priority = .defaultHigh
         NSLayoutConstraint.activate([
-            ring.centerXAnchor.constraint(equalTo: cover.centerXAnchor),
-            ring.centerYAnchor.constraint(equalTo: cover.centerYAnchor),
-            // The sprout's own canvas sits 4 pt high in the ring, which centres the plant itself.
-            plant.widthAnchor.constraint(equalToConstant: 96), plant.heightAnchor.constraint(equalToConstant: 96),
-            plant.centerXAnchor.constraint(equalTo: ring.centerXAnchor),
-            plant.centerYAnchor.constraint(equalTo: ring.centerYAnchor, constant: -4)
+            art.topAnchor.constraint(equalTo: cover.safeAreaLayoutGuide.topAnchor, constant: -12),
+            art.centerXAnchor.constraint(equalTo: cover.centerXAnchor),
+            art.heightAnchor.constraint(equalTo: art.widthAnchor, multiplier: 1644.0 / 852.0),
+            art.widthAnchor.constraint(lessThanOrEqualTo: cover.widthAnchor),
+            fullWidth,
+            art.bottomAnchor.constraint(lessThanOrEqualTo: band.topAnchor, constant: 200),
+            band.leadingAnchor.constraint(equalTo: cover.leadingAnchor),
+            band.trailingAnchor.constraint(equalTo: cover.trailingAnchor),
+            band.bottomAnchor.constraint(equalTo: cover.bottomAnchor),
+            band.topAnchor.constraint(equalTo: cover.safeAreaLayoutGuide.bottomAnchor, constant: -118),
+            seam.leadingAnchor.constraint(equalTo: band.leadingAnchor),
+            seam.trailingAnchor.constraint(equalTo: band.trailingAnchor),
+            seam.topAnchor.constraint(equalTo: band.topAnchor),
+            seam.heightAnchor.constraint(equalToConstant: 2)
         ])
-        growSprout(plant)
-        // The first quarter of the ring is the page itself arriving; the game reports the rest as the map loads.
+
+        let bar = makeLoadBar(in: band)
+        let label = UILabel()
+        label.text = "Growing your empire\u{2026}"
+        let base = UIFont.systemFont(ofSize: 19, weight: .bold)
+        label.font = base.fontDescriptor.withDesign(.rounded).map { UIFont(descriptor: $0, size: 19) } ?? base
+        label.textColor = UIColor(red: 246/255, green: 236/255, blue: 201/255, alpha: 1)
+        label.shadowColor = UIColor(white: 0, alpha: 0.25)
+        label.shadowOffset = CGSize(width: 0, height: 2)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isAccessibilityElement = false
+        label.alpha = 0
+        band.addSubview(label)
+        NSLayoutConstraint.activate([
+            label.centerXAnchor.constraint(equalTo: band.centerXAnchor),
+            label.topAnchor.constraint(equalTo: bar.bottomAnchor, constant: 16)
+        ])
+        UIView.animate(withDuration: 0.4, delay: 0.15, options: .curveEaseOut) { label.alpha = 1 }
+
+        // The first quarter of the bar is the page itself arriving; the game reports the rest as the map loads.
         pageProgress = webView?.observe(\.estimatedProgress, options: [.new]) { [weak self] web, _ in
             let fraction = CGFloat(web.estimatedProgress)
             DispatchQueue.main.async { self?.setLoadProgress(0.25 * fraction) }
@@ -167,65 +208,86 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         armStallTimer(after: 8)
     }
 
-    /// Both images are full rings (the launch storyboard shows the same track, empty). The fill is masked by two round-
-    /// capped arcs, one up each side from the bottom centre, each covering half the circle at 100%.
-    private func makeLoadRing() -> UIView {
-        let size: CGFloat = 164, radius: CGFloat = 70
-        let track = UIImageView(image: UIImage(named: "LoadRing"))
+    /// The track is a sliced image (the launch storyboard shows it too, empty, with the sprout at its start). The fill is
+    /// a glossy lime capsule 4 pt inside it; the sprout's stem foot sits on the fill's leading end.
+    private func makeLoadBar(in band: UIView) -> UIView {
+        let track = UIImageView(image: UIImage(named: "LoadTrack"))
         track.translatesAutoresizingMaskIntoConstraints = false
         track.isAccessibilityElement = true
         track.accessibilityLabel = "Loading Canopy"
         track.accessibilityTraits = [.updatesFrequently]
         track.accessibilityValue = "0 percent"
-        let fill = UIImageView(image: UIImage(named: "LoadRingFill"))
-        fill.frame = CGRect(x: 0, y: 0, width: size, height: size)
+        band.addSubview(track)
+
+        let fill = UIView()
+        fill.translatesAutoresizingMaskIntoConstraints = false
+        fill.layer.cornerRadius = 7
+        fill.layer.masksToBounds = true
+        let gloss = CAGradientLayer()
+        gloss.colors = [UIColor(red: 197/255, green: 245/255, blue: 106/255, alpha: 1).cgColor,
+                        UIColor(red: 143/255, green: 220/255, blue: 42/255, alpha: 1).cgColor,
+                        UIColor(red: 98/255, green: 179/255, blue: 20/255, alpha: 1).cgColor]
+        gloss.locations = [0, 0.48, 1]
+        gloss.frame = CGRect(x: 0, y: 0, width: 600, height: 14)
+        fill.layer.addSublayer(gloss)
         fill.alpha = 0
         track.addSubview(fill)
 
-        let mask = CALayer()
-        mask.frame = fill.bounds
-        let centre = CGPoint(x: size / 2, y: size / 2)
-        loadArcs = [true, false].map { clockwise in
-            let arc = CAShapeLayer()
-            arc.frame = mask.bounds
-            // UIKit angles: .pi / 2 is straight down. Clockwise climbs the left side, the other the right.
-            arc.path = UIBezierPath(arcCenter: centre, radius: radius, startAngle: .pi / 2,
-                                    endAngle: clockwise ? .pi * 1.5 : -.pi / 2, clockwise: clockwise).cgPath
-            arc.fillColor = nil
-            arc.strokeColor = UIColor.black.cgColor
-            arc.lineWidth = 8
-            arc.lineCap = .round
-            arc.strokeEnd = 0
-            mask.addSublayer(arc)
-            return arc
-        }
-        fill.layer.mask = mask
-        loadRing = track
-        loadRingFill = fill
+        let sprout = UIImageView(image: UIImage(named: "LoadSprout"))
+        sprout.translatesAutoresizingMaskIntoConstraints = false
+        sprout.contentMode = .scaleAspectFit
+        sprout.isAccessibilityElement = false
+        sprout.layer.shadowColor = UIColor.black.cgColor
+        sprout.layer.shadowOpacity = 0.35
+        sprout.layer.shadowRadius = 2
+        sprout.layer.shadowOffset = CGSize(width: 0, height: 2)
+        band.addSubview(sprout)
+
+        let wide = track.widthAnchor.constraint(equalTo: band.widthAnchor, constant: -56)
+        wide.priority = .defaultHigh
+        let fillWidth = fill.widthAnchor.constraint(equalToConstant: 14)
+        let sproutX = sprout.centerXAnchor.constraint(equalTo: track.leadingAnchor, constant: 4)
         NSLayoutConstraint.activate([
-            track.widthAnchor.constraint(equalToConstant: size), track.heightAnchor.constraint(equalToConstant: size)
+            track.topAnchor.constraint(equalTo: band.topAnchor, constant: 36),
+            track.centerXAnchor.constraint(equalTo: band.centerXAnchor),
+            track.heightAnchor.constraint(equalToConstant: 22),
+            track.widthAnchor.constraint(lessThanOrEqualToConstant: 400),
+            wide,
+            fill.leadingAnchor.constraint(equalTo: track.leadingAnchor, constant: 4),
+            fill.topAnchor.constraint(equalTo: track.topAnchor, constant: 4),
+            fill.bottomAnchor.constraint(equalTo: track.bottomAnchor, constant: -4),
+            fillWidth,
+            sprout.widthAnchor.constraint(equalToConstant: 40),
+            sprout.heightAnchor.constraint(equalToConstant: 39.5),
+            sprout.bottomAnchor.constraint(equalTo: track.bottomAnchor, constant: -7),
+            sproutX
         ])
+        loadBar = track
+        loadFillWidth = fillWidth
+        loadSproutX = sproutX
         return track
     }
 
-    /// Moves the ring forward, never back: the game's file count grows as it discovers more to load, which would
-    /// otherwise make the ring slip.
+    /// Moves the bar forward, never back: the game's file count grows as it discovers more to load, which would
+    /// otherwise make the bar slip.
     private func setLoadProgress(_ value: CGFloat, completion: (() -> Void)? = nil) {
-        guard loadingCover != nil, let ring = loadRing else { completion?(); return }
+        guard let cover = loadingCover, let bar = loadBar else { completion?(); return }
         let target = min(max(value, 0), 1)
         guard target > loadShown else { completion?(); return }
         loadShown = target
-        ring.accessibilityValue = "\(Int((target * 100).rounded())) percent"
-        loadRingFill?.alpha = 1
-        let animated = !UIAccessibility.isReduceMotionEnabled
-        CATransaction.begin()
-        CATransaction.setDisableActions(!animated)
+        bar.accessibilityValue = "\(Int((target * 100).rounded())) percent"
+        cover.layoutIfNeeded()
+        let run = max(bar.bounds.width - 8, 0) * target
+        loadFillWidth?.constant = max(14, run)
+        loadSproutX?.constant = 4 + run
+        bar.subviews.first?.alpha = 1
+        let update = { cover.layoutIfNeeded() }
+        if UIAccessibility.isReduceMotionEnabled {
+            update(); completion?(); return
+        }
         // The last stretch is quick so the reveal does not keep the shop's own build waiting.
-        CATransaction.setAnimationDuration(target >= 1 ? 0.2 : 0.35)
-        CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: .easeOut))
-        CATransaction.setCompletionBlock { completion?() }
-        loadArcs.forEach { $0.strokeEnd = target }
-        CATransaction.commit()
+        UIView.animate(withDuration: target >= 1 ? 0.2 : 0.35, delay: 0, options: [.curveEaseOut, .beginFromCurrentState],
+                       animations: update) { _ in completion?() }
     }
 
     private func armStallTimer(after seconds: Double) {
@@ -233,46 +295,6 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         let lift = DispatchWorkItem { [weak self] in self?.dismissLoadingCover() }
         stallTimer = lift
         DispatchQueue.main.asyncAfter(deadline: .now() + seconds, execute: lift)
-    }
-
-    /// The seed grows once, easing out as the leaves open, then the grown sprout sways from its base. Every frame
-    /// shares one canvas with the stem's foot on the same pixel, so nothing hops between frames.
-    private func growSprout(_ plant: UIImageView) {
-        let frames = (1...21).compactMap { UIImage(named: String(format: "SproutGrow%02d", $0))?.cgImage }
-        guard frames.count == 21, let grown = UIImage(named: "SproutGrow21") else { return }
-        if UIAccessibility.isReduceMotionEnabled {
-            // A fade, not motion: the seed simply becomes the sprout, once the cover is on screen.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                UIView.transition(with: plant, duration: 0.4, options: .transitionCrossDissolve,
-                                  animations: { plant.image = grown })
-            }
-            return
-        }
-        // The grown sprout is the resting state; the frames play over it and leave it in place.
-        plant.image = grown
-        let growTime = 1.5
-        let grow = CAKeyframeAnimation(keyPath: "contents")
-        grow.values = frames
-        // Later frames hold longer, so the stem shoots up and the leaves settle slowly.
-        grow.keyTimes = (0..<frames.count).map { NSNumber(value: pow(Double($0) / Double(frames.count - 1), 1.4)) }
-        grow.calculationMode = .discrete
-        grow.duration = growTime
-        plant.layer.add(grow, forKey: "sproutGrow")
-
-        // Sway pivots on the foot of the stem: 84% down the 96 pt canvas, so 32 pt below the view's centre.
-        let foot: CGFloat = 32
-        func lean(_ degrees: CGFloat) -> NSValue {
-            let pivot = CATransform3DMakeTranslation(0, foot, 0)
-            return NSValue(caTransform3D: CATransform3DTranslate(
-                CATransform3DRotate(pivot, degrees * .pi / 180, 0, 0, 1), 0, -foot, 0))
-        }
-        let sway = CAKeyframeAnimation(keyPath: "transform")
-        sway.values = [lean(0), lean(2), lean(0), lean(-2), lean(0)]
-        sway.timingFunctions = Array(repeating: CAMediaTimingFunction(name: .easeInEaseOut), count: 4)
-        sway.duration = 2.4
-        sway.repeatCount = .infinity
-        sway.beginTime = plant.layer.convertTime(CACurrentMediaTime(), from: nil) + growTime
-        plant.layer.add(sway, forKey: "sproutSway")
     }
 
     private func dismissLoadingCover() {
@@ -283,7 +305,7 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         if UIAccessibility.isReduceMotionEnabled {
             UIView.animate(withDuration: 0.3, animations: { cover.alpha = 0 }) { _ in cover.removeFromSuperview() }
         } else {
-            // A smoky reveal: puffs billow over the whole screen, the sprout and bar drift up into them, and the forest
+            // A smoky reveal: puffs billow over the whole screen, the art and band drift up into them, and the forest
             // thins away underneath, so the map (building itself at the same moment) appears out of the smoke.
             puffSmoke(over: cover)
             UIView.animate(withDuration: 0.35, delay: 0, options: .curveEaseIn) {

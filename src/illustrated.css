@@ -47,9 +47,6 @@ html,body,.world,.loading{background:#424b43}
 /* Startup follows actual readiness, without a staged loading presentation. */
 .loading{background:#424b43;transition:none;color:#e1e5da}
 .loading[hidden]{display:none}
-.loading-simple{text-align:center}
-.loading-simple p{margin:0;font-size:.8125rem;font-weight:400;letter-spacing:0}
-.loading-simple .load-retry{width:auto;height:32px;padding:0 14px;margin-top:12px;border-radius:6px;background:#d4decb;color:#304537;font-size:.75rem}
 
 /* Speed controls share the header rather than floating over the map. */
 
