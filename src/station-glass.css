@@ -41,3 +41,13 @@
 .sheet .selected-line .station-buy-actions.single #buyMachineMax{display:none!important}
 .sheet .selected-line.is-building .station-buy-actions #buyMachine::before{display:none}
 .sheet .selected-line.is-building #upgradeMetricLabel,.sheet .selected-line.is-building .upgrade-comparison{display:none}
+/* While the lounge is being built the brass button turns into its clock: a stopwatch, "Opens in 2:41" and a fill that
+   grows as the builders work. Finish now sits beside it. */
+.sheet .selected-line.is-building .station-buy-actions #buyMachine.is-countdown::before{display:block;-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='13' r='7.5'/%3E%3Cpath d='M12 9v4l2.5 1.5M9 3h6'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='13' r='7.5'/%3E%3Cpath d='M12 9v4l2.5 1.5M9 3h6'/%3E%3C/svg%3E")}
+.sheet .selected-line .station-buy-actions #buyMachine.is-countdown:disabled{background:linear-gradient(90deg,#f0d69a2e var(--funded,0%),#f0d69a0d var(--funded,0%))!important;border-color:#f0d69a66!important;color:var(--pop-brass,#f0d69a)!important;cursor:default}
+.sheet .selected-line .station-buy-actions #buyMachine.is-countdown:disabled::after{display:none}
+.sheet .selected-line .station-buy-actions #buyMachine.is-countdown span{text-transform:none!important}
+.sheet .selected-line .station-buy-actions #buyMachine.is-countdown b{font-variant-numeric:tabular-nums}
+.sheet .selected-line .station-buy-actions #buyMachine.is-countdown b::before{content:''}
+.sheet .selected-line .station-buy-actions #buyMachine.is-countdown span,.sheet .selected-line .station-buy-actions #buyMachine.is-countdown b{white-space:nowrap}
+.sheet .selected-line.is-building #upgradeBenefit{display:none!important}
