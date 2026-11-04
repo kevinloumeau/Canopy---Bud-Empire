@@ -470,7 +470,7 @@ const SILHOUETTES = (() => {
 // the view's anchor stays inside `centre` (the shop block and its first ring of streets), and the visible area stays
 // inside `reach`, measured along the camera's rotated axes (screen-right and screen-down across the ground), so the
 // view never runs past the haze at any zoom; main.js applies it.
-const HAZE = [220, 217, 203];
+const HAZE = [233, 223, 197]; // warm cream, the golden-hour sky of the loading render
 // Kevin (2026-10-19) had the haze pulled in to start just past the first ring's back streets.
 const HAZE_RAMP = { west: [-46, -58], east: [45, 58], north: [-40, -54], south: [35, 47] };
 const ramp = (v, [from, to]) => Math.max(0, Math.min(1, (v - from) / (to - from)));
