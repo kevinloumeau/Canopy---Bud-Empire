@@ -60,6 +60,9 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     private var loadFillWidth: NSLayoutConstraint?
     private var loadSproutX: NSLayoutConstraint?
     private var loadShown: CGFloat = 0
+    /// Puts the sprout's stem on the fill's rounded tip: 3.5 pt back from the very end, plus 0.85 pt because the stem
+    /// sits just left of the image's centre (69 of 144 px). The launch storyboard uses the same 18 - 2.65 = 15.35 pt.
+    private let sproutStemOffset: CGFloat = -2.65
     private var pageProgress: NSKeyValueObservation?
     /// Lifts the cover if loading stalls, so the web loader's own Retry button is never hidden behind it.
     private var stallTimer: DispatchWorkItem?
@@ -145,8 +148,9 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
             cover.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
 
-        // Kevin's art: the shop with the badge on top. Its own top edge fades into the cover's green, and it starts just
-        // under the notch so the badge's sprout clears the Dynamic Island. Anchored at the top, it runs on under the band;
+        // Kevin's art: the shop with the badge on top, bleeding up behind the status bar. Its top 110 px are soft foliage
+        // added above the original picture, so the badge's sprout sits clear of the Dynamic Island. Anchored at the top,
+        // it runs on under the band;
         // only the budtender's apron gives way. On a wide screen it narrows to a centred column instead of cropping more.
         let art = UIImageView(image: UIImage(named: "LoadingArt"))
         art.contentMode = .scaleAspectFill
@@ -166,12 +170,12 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         let fullWidth = art.widthAnchor.constraint(equalTo: cover.widthAnchor)
         fullWidth.priority = .defaultHigh
         NSLayoutConstraint.activate([
-            art.topAnchor.constraint(equalTo: cover.safeAreaLayoutGuide.topAnchor, constant: -12),
+            art.topAnchor.constraint(equalTo: cover.topAnchor),
             art.centerXAnchor.constraint(equalTo: cover.centerXAnchor),
-            art.heightAnchor.constraint(equalTo: art.widthAnchor, multiplier: 1644.0 / 852.0),
+            art.heightAnchor.constraint(equalTo: art.widthAnchor, multiplier: 1754.0 / 852.0),
             art.widthAnchor.constraint(lessThanOrEqualTo: cover.widthAnchor),
             fullWidth,
-            art.bottomAnchor.constraint(lessThanOrEqualTo: band.topAnchor, constant: 200),
+            art.bottomAnchor.constraint(lessThanOrEqualTo: band.topAnchor, constant: 250),
             band.leadingAnchor.constraint(equalTo: cover.leadingAnchor),
             band.trailingAnchor.constraint(equalTo: cover.trailingAnchor),
             band.bottomAnchor.constraint(equalTo: cover.bottomAnchor),
@@ -209,7 +213,7 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     }
 
     /// The track is a sliced image (the launch storyboard shows it too, empty, with the sprout at its start). The fill is
-    /// a glossy lime capsule 4 pt inside it; the sprout's stem foot sits on the fill's leading end.
+    /// a glossy lime capsule 4 pt inside it; the sprout's stem is seated in the fill's rounded tip, its foot on the fill's lower edge.
     private func makeLoadBar(in band: UIView) -> UIView {
         let track = UIImageView(image: UIImage(named: "LoadTrack"))
         track.translatesAutoresizingMaskIntoConstraints = false
@@ -246,7 +250,7 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         let wide = track.widthAnchor.constraint(equalTo: band.widthAnchor, constant: -56)
         wide.priority = .defaultHigh
         let fillWidth = fill.widthAnchor.constraint(equalToConstant: 14)
-        let sproutX = sprout.centerXAnchor.constraint(equalTo: track.leadingAnchor, constant: 4)
+        let sproutX = sprout.centerXAnchor.constraint(equalTo: track.leadingAnchor, constant: 4 + 14 + sproutStemOffset)
         NSLayoutConstraint.activate([
             track.topAnchor.constraint(equalTo: band.topAnchor, constant: 36),
             track.centerXAnchor.constraint(equalTo: band.centerXAnchor),
@@ -259,7 +263,7 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
             fillWidth,
             sprout.widthAnchor.constraint(equalToConstant: 40),
             sprout.heightAnchor.constraint(equalToConstant: 39.5),
-            sprout.bottomAnchor.constraint(equalTo: track.bottomAnchor, constant: -7),
+            sprout.bottomAnchor.constraint(equalTo: track.bottomAnchor, constant: -4),
             sproutX
         ])
         loadBar = track
@@ -278,8 +282,9 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
         bar.accessibilityValue = "\(Int((target * 100).rounded())) percent"
         cover.layoutIfNeeded()
         let run = max(bar.bounds.width - 8, 0) * target
-        loadFillWidth?.constant = max(14, run)
-        loadSproutX?.constant = 4 + run
+        let fillWidth = max(14, run)
+        loadFillWidth?.constant = fillWidth
+        loadSproutX?.constant = 4 + fillWidth + sproutStemOffset
         bar.subviews.first?.alpha = 1
         let update = { cover.layoutIfNeeded() }
         if UIAccessibility.isReduceMotionEnabled {
