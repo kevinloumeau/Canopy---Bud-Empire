@@ -6,7 +6,7 @@
    - the map buttons are one slim glass capsule in their own column, so the lane stops short of them.
    Every item is the same height, radius and forest glass; brass marks only what is running or waiting on a tap. */
 
-.top-lane{position:absolute;z-index:13;left:12px;right:62px;top:calc(var(--hud-height,60px) + 8px);display:flex;flex-direction:column;align-items:flex-start;gap:8px;pointer-events:none;color:var(--ui-ink);font-family:'Bricolage Grotesque',system-ui,sans-serif}
+.top-lane{position:absolute;z-index:13;left:12px;right:62px;top:calc(var(--hud-height,60px) + 8px);display:flex;flex-direction:column;align-items:flex-start;gap:6px;pointer-events:none;color:var(--ui-ink);font-family:'Bricolage Grotesque',system-ui,sans-serif}
 .lane-status{display:flex;flex-wrap:wrap;align-items:center;gap:6px;max-width:100%}
 .lane-status:not(:has(>:not([hidden]))){display:none}
 .lane-notes{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:6px;max-width:100%}
@@ -66,3 +66,21 @@ html body .world .map-controls button:active{background:#ffffff1f;transform:none
 /* Out of the way while the welcome guide runs or the age check shows, and the row steps aside for a full-height sheet. */
 .guide-open .lane-status,html:not(.age-ok) .top-lane{display:none}
 .app:has(.sheet.tall) .lane-status{display:none}
+
+/* Condensed (Kevin, 2026-11-04: "think these can still be condensed"): the status row is one capsule. The activity
+   pill, the event and the boosts are segments split by hairlines rather than separate chips, and a running boost drains
+   as a thin brass line along its segment's foot instead of a glowing ring. On a phone the event keeps its goal ring
+   and clock; its name is on Goals, one tap away. */
+.lane-status{gap:0;height:38px;flex-wrap:nowrap;border:1px solid var(--ui-edge);border-radius:14px;background:linear-gradient(180deg,var(--ui-sheen),transparent 40%),var(--ui-glass);-webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);box-shadow:var(--ui-shadow);overflow:hidden;pointer-events:auto}
+.lane-status>.shop-activity,.lane-status>.lane-chip,.lane-status>.lane-chip.burst-ring{position:relative;left:auto;top:auto;height:36px;min-height:36px;border:0;border-radius:0;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;animation:none}
+.lane-status>:not([hidden])~:not([hidden]){box-shadow:inset 1px 0 0 var(--ui-edge)}
+.lane-status>.lane-chip.burst-ring{background:linear-gradient(var(--ui-brass),var(--ui-brass)) left bottom/calc(var(--burst,1) * 100%) 2px no-repeat;transition:background-size .3s linear}
+.lane-status>.lane-chip.rush-pill{padding:0 11px 0 10px}
+.lane-status>.lane-chip.contract-pill{padding:0 11px 0 10px}
+@media(hover:hover){.lane-status>.lane-chip.contract-pill:hover,.lane-status>.shop-activity:hover{background:var(--ui-sheen)}}
+@media(max-width:700px){
+ .top-lane.has-chips .lane-status>.shop-activity{padding:0 11px}
+ .lane-chip.contract-pill .chip-name{display:none}
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.lane-status{background:#1d3226}}
+@media(prefers-reduced-transparency:reduce){.lane-status{background:#1d3226;-webkit-backdrop-filter:none;backdrop-filter:none}}
