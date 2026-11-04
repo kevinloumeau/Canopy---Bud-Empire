@@ -9,7 +9,8 @@
 //    that at the start and replenish the money after the tutorial").
 // 4. The sign flips, and the camera follows the first guest through the door: ID check, order desk, pickup and out with
 //    the bag, with one caption per step.
-// 5. The camera eases back to the whole shop and play begins.
+// 5. Coming up: the camera pans over the ghost buys, the rooftop lounge and the next city building.
+// 6. The camera eases back to the whole shop and play begins.
 // Seen once (SEEN_KEY), replayable from Settings; on a replay every site is already standing so those steps just read.
 import {manageDialog} from './dialog-focus.js';
 const SEEN_KEY='shift-guide-seen';
@@ -115,10 +116,24 @@ export function mountStartGuide({showTray,collapse,fit,paintHero,sound,report,is
   setCopy(w.title,w.text);
   Array.from(walkDots.children).forEach((d,j)=>{d.classList.toggle('is-on',j<i);d.classList.toggle('is-now',j===i);});
   if(sound&&i>0)sound('tap');
-  if(i===WALK.length-1){clearInterval(walkWatch);walkWatch=0;clearTimeout(walkTimer);walkTimer=setTimeout(handOver,OUT_PAUSE);}
+  if(i===WALK.length-1){clearInterval(walkWatch);walkWatch=0;clearTimeout(walkTimer);walkTimer=setTimeout(startTour,OUT_PAUSE);}
+ }
+ // Coming up: the camera visits what the shop can buy next (the ghost items, the lounge, the next city building), one
+ // caption and one Next each, then hands over.
+ let tour=[],tourAt=-1;
+ function startTour(){tour=camera&&camera.tour?camera.tour():[];tourAt=-1;nextStop();}
+ function nextStop(){
+  tourAt++;document.body.classList.remove('guide-ghosts');
+  if(tourAt>=tour.length){root.classList.remove('is-tour');lastTarget=null;ring.hidden=true;handOver();return;}
+  const t=tour[tourAt];root.classList.add('is-tour');walkDots.hidden=true;
+  $('.guide-eyebrow').textContent=t.eyebrow;setCopy(t.title,t.text);
+  if(t.glow)document.body.classList.add('guide-ghosts');
+  lastTarget=t.target||null;ring.hidden=true;
+  const next=$('.guide-next');next.hidden=false;next.disabled=false;next.textContent='Next';$('.guide-skip').hidden=false;
+  camera.stop(t);if(sound&&tourAt>0)sound('tap');if(reserve)reserve($('.guide-card').offsetHeight+12);next.focus({preventScroll:true});
  }
  function handOver(){
-  $('.guide-eyebrow').textContent='Your turn';setCopy('The shop is yours.','Upgrade the slowest station first.');
+  walkDots.hidden=false;$('.guide-eyebrow').textContent='Your turn';setCopy('The shop is yours.','Upgrade the slowest station first.');
   Array.from(walkDots.children).forEach(d=>{d.classList.add('is-on');d.classList.remove('is-now');});
   const next=$('.guide-next');next.hidden=false;next.textContent='Let’s grow';$('.guide-skip').hidden=true;root.classList.add('is-done');
   if(camera)camera.home();if(reserve)reserve($('.guide-card').offsetHeight+12);next.focus({preventScroll:true});
@@ -140,7 +155,7 @@ export function mountStartGuide({showTray,collapse,fit,paintHero,sound,report,is
   if(report&&!root.hidden)report(finished?'guide_complete':'guide_skip',{step:step+1});
   clearTimeout(advanceTimer);advanceTimer=0;clearTimeout(walkTimer);walkTimer=0;clearInterval(walkWatch);walkWatch=0;openTimers.forEach(clearTimeout);openTimers=[];opening=false;
   root.hidden=true;document.body.classList.remove('guide-open');cancelAnimationFrame(raf);
-  root.classList.remove('is-opening','is-leaving','is-walk','is-done');$('.guide-sign').hidden=true;$('.guide-actions').hidden=false;$('.guide-next').hidden=false;
+  root.classList.remove('is-opening','is-leaving','is-walk','is-done','is-tour');document.body.classList.remove('guide-ghosts');tour=[];tourAt=-1;$('.guide-sign').hidden=true;$('.guide-actions').hidden=false;$('.guide-next').hidden=false;
   try{localStorage.setItem(SEEN_KEY,'1');}catch(e){}
   if(reserve)reserve(0);if(finish)finish();if(grow&&grow.settle)grow.settle();if(camera)camera.release();if(collapse)collapse();
  }
@@ -162,6 +177,7 @@ export function mountStartGuide({showTray,collapse,fit,paintHero,sound,report,is
  // A step's primary action: raise the site, buy the upgrade, open the shop, or move on.
  function act(){
   if(root.classList.contains('is-done')){finished=true;close();return;}
+  if(root.classList.contains('is-tour')){nextStop();return;}
   const s=STEPS[step];if(!s||s.follow)return;
   if(s.build!==undefined&&!built(s)){
    if(!build||!build(s.build))return;

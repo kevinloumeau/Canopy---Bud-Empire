@@ -116,7 +116,14 @@ try {
     await evaluate("document.querySelector('.guide-next').click()");
     await waitFor("document.querySelector('.start-guide').classList.contains('is-walk')", 6000);
     assert.equal((await save()).shopOpen, true);
-    await waitFor("document.querySelector('.start-guide').classList.contains('is-done')", 90000);
+    // Coming up: the camera visits the ghost buys, the lounge and the next city building, one Next each.
+    await waitFor("document.querySelector('.start-guide').classList.contains('is-tour')", 90000);
+    const stops = [];
+    while (await evaluate("document.querySelector('.start-guide').classList.contains('is-tour')")) {
+      stops.push((await guide()).eyebrow); await evaluate("document.querySelector('.guide-next').click()"); await sleep(300);
+    }
+    assert.deepEqual(stops, ['Coming up · Ghosts', 'Coming up · Rooftop', 'Coming up · The block']);
+    await waitFor("document.querySelector('.start-guide').classList.contains('is-done')", 5000);
     assert.equal((await guide()).cta, 'Let’s grow');
     await evaluate("document.querySelector('.guide-next').click()");
     await waitFor("document.querySelector('.start-guide').hidden");

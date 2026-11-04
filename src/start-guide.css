@@ -121,7 +121,10 @@
 .start-guide.is-walk .guide-actions{min-height:44px}
 .guide-next[hidden]{display:none}
 .start-guide.is-done .guide-next{flex:1;min-height:50px;font-size:15px}
-@media(prefers-reduced-motion:reduce){.guide-walk li.is-now{animation:none}.start-guide.is-walk h2,.start-guide.is-walk #guideText{animation:none}}
+/* Coming up: the shop's ghost buy tags breathe brass while the camera shows them. */
+body.guide-ghosts .world .marker.station-sign.is-lot:not(.is-landmark){opacity:1!important;border:1.5px solid var(--ui-brass,#e2c68a)!important;animation:guide-ghost 1.4s ease-in-out infinite}
+@keyframes guide-ghost{0%,100%{box-shadow:0 0 6px #e2c68a44}50%{box-shadow:0 0 18px #e2c68acc}}
+@media(prefers-reduced-motion:reduce){body.guide-ghosts .world .marker.is-lot{animation:none}.guide-walk li.is-now{animation:none}.start-guide.is-walk h2,.start-guide.is-walk #guideText{animation:none}}
 
 /* Welcome-back report: same card language as the guide, over the map, dismissed with one tap. */
 .return-overlay{position:fixed;inset:0;z-index:58;display:grid;place-items:start center;padding:calc(var(--hud-height,60px) + 18px) 16px 16px;background:#08140e66}

@@ -4170,7 +4170,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     isBuilt:isBuilt,build:buildStation,shopOpen:function(){return state.shopOpen},openShop:openShop,finish:finishConstruction,
     sheet:collapsePanel,reserve:function(px){guideReserve=px;fitControls()},
     select:function(key){loungeSelected=key==='lounge';securitySelected=key==='door';if(key!=='door'&&key!=='lounge')selected=key;renderUI()},
-    camera:{look:guideLook,follow:guideFollow,home:guideHome,release:guideRelease},
+    camera:{look:guideLook,follow:guideFollow,home:guideHome,release:guideRelease,tour:guideTour,stop:guideTourStop},
     grow:{level:function(){return state.lines[1]},price:function(){return fmt(growGoalCost())},grant:guideGrant,buy:guideUpgradeGrow,settle:guideSettleGrant},
     guest:guideGuest});var guideReplay=document.createElement('button');guideReplay.type='button';guideReplay.className='guide-replay';guideReplay.textContent='Replay the start guide';guideReplay.onclick=function(){startGuide.open()};document.querySelector('.shop-reset').prepend(guideReplay);mountSettings({getState:function(){return state},setSpeed:setGameSpeed});
   manageDialog($('resetModal'),function(){$('resetModal').hidden=true});manageDialog(prestigeDialog,function(){prestigeDialog.hidden=true});
@@ -4238,6 +4238,16 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function guideGuest(){var c=guideFollowed();if(!c)return guideGuestId>=0?'gone':'door';
     if(c.bag||c.phase==='leaving')return 'out';if(c.ordered)return 'pickup';if(c.idChecked)return 'order';return 'door'}
   function guideHome(){guideAim({x:0,y:0,z:0},1,false)}
+  // "Coming up" (Kevin, 2026-11-04: show the ghost items and the buildings around the shop): after the walk the camera
+  // pans over the shop's ghost buys, the rooftop lounge and the next city building to unlock, one caption each.
+  function guideTour(){var wide=width>=780,stops=[],tags=lotTags(),ghosts=tags.filter(function(t){return !t.locked&&!t.level&&[windowMarker,kioskMarker,atmMarker,counterMarker].indexOf(t.el)>=0});
+    if(ghosts.length){var n=ghosts.length,c=ghosts.reduce(function(a,t){return{x:a.x+t.x/n,y:a.y+t.y/n,z:a.z+t.z/n}},{x:0,y:0,z:0});
+      stops.push({point:c,zoom:wide?1.15:1.6,eyebrow:'Coming up · Ghosts',title:'Faded items are buys',text:'Each one adds a way to sell more.',glow:'ghost'})}
+    if(!state.lounge)stops.push({point:map3d&&map3d.ok?{x:-2.7,y:ROOFTOP.y+1.2,z:-6.1}:{x:LOUNGE_DOOR.x,y:1.5,z:DISPLAY_Z+.5},zoom:wide?1.2:1.7,eyebrow:'Coming up · Rooftop',title:'A lounge on the roof',text:'Guests stay longer and pay more. '+fmt(loungeUpgradeCost(0))+'.',target:'[data-marker=lounge]'});
+    var city=tags.filter(function(t){return t.locked&&t.el.classList.contains('is-landmark')})[0];
+    if(city)stops.push({point:{x:city.x,y:city.y,z:city.z},zoom:wide?.95:1.15,eyebrow:'Coming up · The block',title:city.name+' and beyond',text:'Buildings around you open as you earn.',target:'[data-marker="'+city.el.dataset.marker+'"]'});
+    return stops}
+  function guideTourStop(stop){guideAim(stop.point,stop.zoom,false)}
   function guideRelease(){guideGuestId=-1;guideWatchFrom=-1;guideCam=null;if(!guideMoved)return;guideMoved=false;if(!state.empire.activeStore)lookAtStore(0)}
   function stepGuideCam(dt){var g=guideCam;if(!g)return;
     if(mapGesture.mode!=='idle'){guideCam=null;return}
