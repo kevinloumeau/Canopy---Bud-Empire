@@ -1,0 +1,36 @@
+/* Station badges (Kevin, 2026-11-04: "there are so many tags on the screen here. can the station labels change"). Each
+   station sign is a small round glass badge with the station's line icon, the same icon as its Stations tab. The picked
+   sign (and a hovered one) opens out into icon, name and level. The ready-crew bolt is a small brass dot on the badge's
+   top corner rather than a second circle above it, and the best-buy arrow and bottleneck cue sit on its lower corner. */
+
+.world .marker.station-sign .station-sign-icon{display:none;width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+/* The badge. updateMarkers shows and hides signs with an inline display (block/none), so nothing here sets display on
+   the sign itself: the icon is centred by padding and the picked sign lines its parts up inline. */
+.world .marker.station-sign.is-badge:not(.selected){box-sizing:border-box;width:32px;min-width:32px;height:32px;min-height:32px;padding:7px;border-radius:50%;line-height:0}
+.world .marker.station-sign.is-badge:not(.selected) .station-sign-icon{display:block}
+.world .marker.station-sign.is-badge:not(.selected) .station-sign-name,
+.world .marker.station-sign.is-badge:not(.selected) .station-sign-level{display:none}
+/* Corner cues: the best-buy arrow and the bottleneck mark on the lower right, on a dark backing so they read on glass. */
+.world .marker.station-sign.is-badge:not(.selected)::after{left:auto;top:auto;right:-4px;bottom:-4px;width:14px;height:14px;border-radius:50%;box-shadow:none}
+.world .marker.station-sign.is-badge.can-upgrade:not(.selected),
+.world .marker.station-sign.is-badge.is-bottleneck:not(.selected){overflow:visible}
+
+/* The bolt: a brass dot on the upper right; tapping it fires the crew's burst. Its hit area is larger than the dot. */
+.world .marker.station-sign.is-badge .sign-ability{bottom:auto;left:auto;top:-5px;right:-5px;transform:none;width:15px;height:15px;box-shadow:0 0 0 1.5px #1f2a20cc,0 2px 5px #0006}
+.world .marker.station-sign.is-badge .sign-ability svg{width:9px;height:9px}
+.world .marker.station-sign.is-badge .sign-ability::before{content:'';position:absolute;inset:-8px;border-radius:50%}
+.world .marker.station-sign.is-badge.has-buy .sign-ability{top:50%;right:calc(100% + 5px);transform:translateY(-50%);width:24px;height:24px}
+
+/* Picked: icon, name and level on one line, in brass. */
+.world .marker.station-sign.is-badge.selected{width:max-content;white-space:nowrap;padding:7px 10px 7px 8px;border-radius:14px;line-height:1}
+.world .marker.station-sign.is-badge.selected>*:not(.sign-ability):not(.sign-buy){display:inline-block!important;vertical-align:middle}
+.world .marker.station-sign.is-badge.selected .station-sign-name{margin:0 5px 0 6px}
+.world .marker.station-sign.is-badge.selected .station-sign-name{font-size:12px;line-height:1}
+.world .marker.station-sign.is-badge.selected .station-sign-level{margin:0;padding:0;font-size:11px;line-height:1}
+.world .marker.station-sign.is-badge.selected::after{display:none}
+
+/* A pointer gets the name on hover, as a small label over the badge. */
+@media(hover:hover){
+ .world .marker.station-sign.is-badge:not(.selected):hover .station-sign-name{display:block;position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);padding:3px 8px;border-radius:8px;background:var(--ui-glass-strong);color:var(--ui-ink);font-size:11px;line-height:1.2;white-space:nowrap;pointer-events:none;box-shadow:0 3px 10px rgba(10,20,14,.28)}
+}

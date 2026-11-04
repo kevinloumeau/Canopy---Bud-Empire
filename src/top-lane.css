@@ -1,0 +1,86 @@
+/* The top lane (Kevin, 2026-11-04: "the notifications and map and activity ui all need to be reworked to fit and work
+   together"). Everything that used to claim the same spot under the top bar now shares one lane:
+   - one status row: the shop activity pill, then the running event (a ring that fills with its goal) and the rush and
+     boost chips (rings that drain). The row wraps rather than overlapping when it runs out of room;
+   - notes under that row: toasts (one at a time, queued in main.js) and the budtender's feedback line;
+   - the map buttons are one slim glass capsule in their own column, so the lane stops short of them.
+   Every item is the same height, radius and forest glass; brass marks only what is running or waiting on a tap. */
+
+.top-lane{position:absolute;z-index:13;left:12px;right:62px;top:calc(var(--hud-height,60px) + 8px);display:flex;flex-direction:column;align-items:flex-start;gap:6px;pointer-events:none;color:var(--ui-ink);font-family:'Bricolage Grotesque',system-ui,sans-serif}
+.lane-status{display:flex;flex-wrap:wrap;align-items:center;gap:6px;max-width:100%}
+.lane-status:not(:has(>:not([hidden]))){display:none}
+.lane-notes{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:6px;max-width:100%}
+.top-lane button{pointer-events:auto}
+.top-lane button:focus-visible{outline:2px solid var(--ui-brass);outline-offset:2px}
+.top-lane [hidden]{display:none!important}
+
+/* The status row: one chip shape. */
+.top-lane .shop-activity,.lane-chip{box-sizing:border-box;height:40px;min-height:40px;border:1px solid var(--ui-edge);border-radius:14px;background:linear-gradient(180deg,var(--ui-sheen),transparent 40%),var(--ui-glass);-webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);box-shadow:var(--ui-shadow);color:var(--ui-ink)}
+.top-lane .shop-activity{position:static;max-width:100%;padding:0 13px 0 10px;font-size:13px}
+.top-lane .shop-activity svg{width:20px;height:20px;flex:none}
+.lane-chip{display:inline-flex;align-items:center;gap:7px;padding:0 12px 0 10px;font:600 13px/1 'Bricolage Grotesque',system-ui,sans-serif;white-space:nowrap;pointer-events:none}
+.lane-chip .chip-time{font:500 12px/1 'DM Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;color:var(--ui-soft)}
+/* The event: a goal ring that fills in brass. A tap opens Goals, where its card is. */
+.lane-chip.contract-pill{cursor:pointer;pointer-events:auto}
+.chip-ring{width:18px;height:18px;flex:none;transform:rotate(-90deg)}
+.chip-ring circle{fill:none;stroke:var(--ui-edge);stroke-width:2.6}
+.chip-ring .chip-ring-fill{stroke:var(--ui-brass);stroke-linecap:round;stroke-dasharray:var(--goal,0) 100}
+@media(hover:hover){.lane-chip.contract-pill:hover,.top-lane .shop-activity:hover{background:linear-gradient(180deg,var(--ui-sheen),transparent 40%),var(--ui-glass-strong)}}
+.lane-chip.contract-pill:active{transform:scale(.97)}
+/* Rush and boost: brass, with the draining ring from bottleneck.css on their edge. */
+.lane-chip.rush-pill{color:#f6dc95;padding:0 12px 0 9px}
+.lane-chip.rush-pill .chip-time{color:#f6dc95cc}
+.lane-chip .chip-icon{width:14px;height:14px;flex:none;fill:currentColor}
+
+/* Notes: a toast hangs under the row and fades in; while hidden it sits out of the flow, so the feedback line moves up. */
+.top-lane .toast{position:absolute;left:0;top:0;z-index:auto;box-sizing:border-box;width:max-content;max-width:100%;min-height:36px;padding:8px 13px;border-radius:14px;transform:translateY(-4px);white-space:normal;overflow-wrap:normal;text-wrap:balance;text-align:left;transition:opacity 180ms ease,transform 220ms cubic-bezier(.22,1,.36,1)}
+.top-lane .toast.show{position:relative;transform:none}
+.top-lane .toast.is-upgrade{display:flex;align-items:center}
+.lane-notes .shop-play-feedback{position:relative;left:auto;top:auto;transform:none;box-sizing:border-box;width:max-content;max-width:100%;padding:8px 13px;border-radius:14px;font-size:13px;line-height:1.35;text-align:left;text-wrap:balance}
+@media(prefers-reduced-motion:reduce){.top-lane .toast,.top-lane .toast.show{transform:none;transition:opacity 120ms linear}}
+
+/* The map buttons: one capsule, three 40px buttons split by hairlines, top aligned with the lane. */
+html body .world .map-controls{top:calc(var(--hud-height,60px) + 8px);right:12px;display:flex;flex-direction:column;gap:0;padding:0;border:1px solid var(--ui-edge);border-radius:14px;background:linear-gradient(180deg,var(--ui-sheen),transparent 40%),var(--ui-glass);-webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);box-shadow:var(--ui-shadow);overflow:hidden}
+html body .world .map-controls button{display:grid;place-items:center;width:40px;height:40px;padding:0;border:0;border-radius:0;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;color:var(--ui-ink)}
+html body .world .map-controls button+button{box-shadow:inset 0 1px 0 var(--ui-edge)}
+html body .world .map-controls svg{width:18px;height:18px}
+@media(hover:hover){html body .world .map-controls button:hover{background:var(--ui-sheen)}}
+html body .world .map-controls button:active{background:#ffffff1f;transform:none}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.top-lane .shop-activity,.lane-chip,html body .world .map-controls{background:#1d3226}}
+@media(prefers-reduced-transparency:reduce){.top-lane .shop-activity,.lane-chip,html body .world .map-controls{background:#1d3226;-webkit-backdrop-filter:none;backdrop-filter:none}}
+
+/* Phone: with an event or boost running, the activity pill keeps its icon and brass dot and drops its words. */
+@media(max-width:700px){.top-lane.has-chips .shop-activity{gap:6px;padding:0 10px}.top-lane.has-chips .shop-activity span{display:none}
+ /* Rush and boost keep their icon, ring and clock; the words are in their titles. */
+ .lane-chip.rush-pill{gap:6px;padding:0 11px 0 10px}.lane-chip.rush-pill .chip-name{display:none}}
+/* The shop activity panel opens under the row, however many lines it wraps to (main.js measures --lane-bottom). */
+.shop-activity-panel{top:calc(var(--lane-bottom,var(--hud-height,60px)) + 8px);width:min(360px,calc(100% - 74px));max-height:calc(100dvh - var(--lane-bottom,var(--hud-height,60px)) - var(--dock-height,90px) - 24px)}
+
+/* Desktop: the map capsule sits on the left under the brand and the lane runs from it to the side panel. */
+@media(min-width:780px){
+ html body .world .map-controls{left:20px;right:auto}
+ .top-lane{left:72px;right:446px}
+ .shop-activity-panel{left:72px;width:min(360px,calc(100% - 96px));max-height:calc(100dvh - var(--lane-bottom,var(--hud-height,60px)) - 26px)}
+}
+
+/* Out of the way while the welcome guide runs or the age check shows, and the row steps aside for a full-height sheet. */
+.guide-open .lane-status,html:not(.age-ok) .top-lane{display:none}
+.app:has(.sheet.tall) .lane-status{display:none}
+
+/* Condensed (Kevin, 2026-11-04: "think these can still be condensed"): the status row is one capsule. The activity
+   pill, the event and the boosts are segments split by hairlines rather than separate chips, and a running boost drains
+   as a thin brass line along its segment's foot instead of a glowing ring. On a phone the event keeps its goal ring
+   and clock; its name is on Goals, one tap away. */
+.lane-status{gap:0;height:38px;flex-wrap:nowrap;border:1px solid var(--ui-edge);border-radius:14px;background:linear-gradient(180deg,var(--ui-sheen),transparent 40%),var(--ui-glass);-webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);box-shadow:var(--ui-shadow);overflow:hidden;pointer-events:auto}
+.lane-status>.shop-activity,.lane-status>.lane-chip,.lane-status>.lane-chip.burst-ring{position:relative;left:auto;top:auto;height:36px;min-height:36px;border:0;border-radius:0;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;animation:none}
+.lane-status>:not([hidden])~:not([hidden]){box-shadow:inset 1px 0 0 var(--ui-edge)}
+.lane-status>.lane-chip.burst-ring{background:linear-gradient(var(--ui-brass),var(--ui-brass)) left bottom/calc(var(--burst,1) * 100%) 2px no-repeat;transition:background-size .3s linear}
+.lane-status>.lane-chip.rush-pill{padding:0 11px 0 10px}
+.lane-status>.lane-chip.contract-pill{padding:0 11px 0 10px}
+@media(hover:hover){.lane-status>.lane-chip.contract-pill:hover,.lane-status>.shop-activity:hover{background:var(--ui-sheen)}}
+@media(max-width:700px){
+ .top-lane.has-chips .lane-status>.shop-activity{padding:0 11px}
+ .lane-chip.contract-pill .chip-name{display:none}
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.lane-status{background:#1d3226}}
+@media(prefers-reduced-transparency:reduce){.lane-status{background:#1d3226;-webkit-backdrop-filter:none;backdrop-filter:none}}

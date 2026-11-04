@@ -16,64 +16,43 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <!-- The opening frame of the in-app loading cover (CanopyViewController.installLoadingCover): Kevin's
-                             loading art anchored just under the notch, the forest band 118 pt above the home indicator, the
-                             empty track with the sprout at its start, all by the same constraints, so the hand-off is
-                             seamless. Keep the two in step if either changes. -->
+                             background full width from 60 pt above the top edge, the scrim rising 220 pt above the safe
+                             bottom, the empty track 61 pt above it, all by the same
+                             constraints, so the hand-off is seamless (the app then drops the badge in). Keep the two in
+                             step if either changes. -->
                         <subviews>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" image="LoadingArt" translatesAutoresizingMaskIntoConstraints="NO" id="art-Ld-001">
-                                <rect key="frame" x="0.0" y="8" width="375" height="723"/>
+                                <rect key="frame" x="0.0" y="-60" width="375" height="1049"/>
                             </imageView>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="band-Ld-002">
-                                <rect key="frame" x="0.0" y="549" width="375" height="118"/>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" image="LoadScrim" translatesAutoresizingMaskIntoConstraints="NO" id="band-Ld-002">
+                                <rect key="frame" x="0.0" y="447" width="375" height="220"/>
                                 <subviews>
-                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="seam-Ld-003">
-                                        <rect key="frame" x="0.0" y="0.0" width="375" height="2"/>
-                                        <color key="backgroundColor" red="0.11372549019607843" green="0.38039215686274508" blue="0.21176470588235294" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                        <constraints>
-                                            <constraint firstAttribute="height" constant="2" id="c-Ld-101"/>
-                                        </constraints>
-                                    </view>
                                     <imageView userInteractionEnabled="NO" contentMode="scaleToFill" image="LoadTrack" translatesAutoresizingMaskIntoConstraints="NO" id="track-Ld-004">
-                                        <rect key="frame" x="28" y="36" width="319" height="22"/>
+                                        <rect key="frame" x="28" y="137" width="319" height="22"/>
                                         <constraints>
                                             <constraint firstAttribute="height" constant="22" id="c-Ld-102"/>
                                             <constraint firstAttribute="width" relation="lessThanOrEqual" constant="400" id="c-Ld-103"/>
                                         </constraints>
                                     </imageView>
-                                    <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" image="LoadSprout" translatesAutoresizingMaskIntoConstraints="NO" id="sprout-Ld-005">
-                                        <rect key="frame" x="12" y="11.5" width="40" height="39.5"/>
-                                        <constraints>
-                                            <constraint firstAttribute="width" constant="40" id="c-Ld-104"/>
-                                            <constraint firstAttribute="height" constant="39.5" id="c-Ld-105"/>
-                                        </constraints>
-                                    </imageView>
                                 </subviews>
-                                <color key="backgroundColor" red="0.066666666666666666" green="0.22745098039215686" blue="0.11764705882352941" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <constraints>
-                                    <constraint firstItem="seam-Ld-003" firstAttribute="leading" secondItem="band-Ld-002" secondAttribute="leading" id="c-Ld-106"/>
-                                    <constraint firstItem="seam-Ld-003" firstAttribute="trailing" secondItem="band-Ld-002" secondAttribute="trailing" id="c-Ld-107"/>
-                                    <constraint firstItem="seam-Ld-003" firstAttribute="top" secondItem="band-Ld-002" secondAttribute="top" id="c-Ld-108"/>
-                                    <constraint firstItem="track-Ld-004" firstAttribute="top" secondItem="band-Ld-002" secondAttribute="top" constant="36" id="c-Ld-109"/>
                                     <constraint firstItem="track-Ld-004" firstAttribute="centerX" secondItem="band-Ld-002" secondAttribute="centerX" id="c-Ld-110"/>
                                     <constraint firstItem="track-Ld-004" firstAttribute="width" secondItem="band-Ld-002" secondAttribute="width" priority="750" constant="-56" id="c-Ld-111"/>
-                                    <constraint firstItem="sprout-Ld-005" firstAttribute="bottom" secondItem="track-Ld-004" secondAttribute="bottom" constant="-7" id="c-Ld-112"/>
-                                    <constraint firstItem="sprout-Ld-005" firstAttribute="centerX" secondItem="track-Ld-004" secondAttribute="leading" constant="4" id="c-Ld-113"/>
                                 </constraints>
-                            </view>
+                            </imageView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="safe-Ld-000"/>
-                        <color key="backgroundColor" red="0.062745098039215685" green="0.17647058823529413" blue="0.10588235294117647" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="backgroundColor" red="0.058823529411764705" green="0.17647058823529413" blue="0.10196078431372549" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstItem="art-Ld-001" firstAttribute="top" secondItem="safe-Ld-000" secondAttribute="top" constant="-12" id="c-Ld-201"/>
+                            <constraint firstItem="art-Ld-001" firstAttribute="top" secondItem="snD-IY-ifK" secondAttribute="top" constant="-60" id="c-Ld-201"/>
                             <constraint firstItem="art-Ld-001" firstAttribute="centerX" secondItem="snD-IY-ifK" secondAttribute="centerX" id="c-Ld-202"/>
-                            <constraint firstItem="art-Ld-001" firstAttribute="height" secondItem="art-Ld-001" secondAttribute="width" multiplier="1.9295774647887325" id="c-Ld-203"/>
-                            <constraint firstItem="art-Ld-001" firstAttribute="width" relation="lessThanOrEqual" secondItem="snD-IY-ifK" secondAttribute="width" id="c-Ld-204"/>
-                            <constraint firstItem="art-Ld-001" firstAttribute="width" secondItem="snD-IY-ifK" secondAttribute="width" priority="750" id="c-Ld-205"/>
-                            <constraint firstItem="art-Ld-001" firstAttribute="bottom" relation="lessThanOrEqual" secondItem="band-Ld-002" secondAttribute="top" constant="200" id="c-Ld-206"/>
+                            <constraint firstItem="art-Ld-001" firstAttribute="height" secondItem="art-Ld-001" secondAttribute="width" multiplier="2.7973333333333334" id="c-Ld-203"/>
+                            <constraint firstItem="art-Ld-001" firstAttribute="width" secondItem="snD-IY-ifK" secondAttribute="width" id="c-Ld-204"/>
                             <constraint firstItem="band-Ld-002" firstAttribute="leading" secondItem="snD-IY-ifK" secondAttribute="leading" id="c-Ld-207"/>
                             <constraint firstItem="band-Ld-002" firstAttribute="trailing" secondItem="snD-IY-ifK" secondAttribute="trailing" id="c-Ld-208"/>
                             <constraint firstItem="band-Ld-002" firstAttribute="bottom" secondItem="snD-IY-ifK" secondAttribute="bottom" id="c-Ld-209"/>
-                            <constraint firstItem="band-Ld-002" firstAttribute="top" secondItem="safe-Ld-000" secondAttribute="bottom" constant="-118" id="c-Ld-210"/>
+                            <constraint firstItem="band-Ld-002" firstAttribute="top" secondItem="safe-Ld-000" secondAttribute="bottom" constant="-220" id="c-Ld-210"/>
+                            <constraint firstItem="track-Ld-004" firstAttribute="bottom" secondItem="safe-Ld-000" secondAttribute="bottom" constant="-61" id="c-Ld-211"/>
                         </constraints>
                     </view>
                 </viewController>
@@ -83,8 +62,8 @@
         </scene>
     </scenes>
     <resources>
-        <image name="LoadSprout" width="48" height="47.333332061767578"/>
+        <image name="LoadScrim" width="4" height="256"/>
         <image name="LoadTrack" width="30" height="22"/>
-        <image name="LoadingArt" width="852" height="1644"/>
+        <image name="LoadingArt" width="750" height="2098"/>
     </resources>
 </document>

@@ -72,6 +72,8 @@
   <link rel="stylesheet" href="/src/empire-map.css" />
   <link rel="stylesheet" href="/src/store-page.css" />
   <link rel="stylesheet" href="/src/loading-screen.css" />
+  <link rel="stylesheet" href="/src/top-lane.css" />
+  <link rel="stylesheet" href="/src/station-badges.css" />
   <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
   <title>Canopy: Bud Empire</title>
   <script>try{if(localStorage.getItem("canopy-age-ok")==="1")document.documentElement.className+=" age-ok"}catch(e){}</script>
@@ -121,19 +123,22 @@
       <button type="button" data-speed="4" aria-label="Quadruple speed" title="Quadruple speed" aria-pressed="false"><svg viewBox="0 0 18 16" fill="currentColor" aria-hidden="true"><path d="M0.5 3.5v9l7-4.5z"/><path d="M4.5 3.5v9l7-4.5z"/><path d="M8.5 3.5v9l7-4.5z"/></svg></button>
     </div></div>
     </header>
+    <!-- One lane under the top bar: status chips on one row (shop activity, events, boosts), notes hang under it. -->
+    <div class="top-lane" id="topLane"><div class="lane-status" id="laneStatus"></div><div class="lane-notes" id="laneNotes"><div class="toast" id="toast" role="status" aria-live="polite"></div></div></div>
 
 
     <section class="world" id="world" aria-label="Isometric dispensary. Drag or use arrow keys to pan, pinch to zoom, and tap a station.">
       <div class="markers" id="markers"></div><button class="branch-map-marker" id="branchMapMarker" hidden>Manage</button>
-      <div class="map-controls" aria-label="Map view"><button id="zoomIn" aria-label="Zoom in">+</button><button id="zoomOut" aria-label="Zoom out">−</button><button id="centerView" aria-label="Center map">⌖</button></div>
+      <div class="map-controls" role="group" aria-label="Map view"><button id="zoomIn" type="button" aria-label="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><button id="zoomOut" type="button" aria-label="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/></svg></button><button id="centerView" type="button" aria-label="Center map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/></svg></button></div>
       <p class="upgrade-hint mission" id="upgradeHint">Build your seed-to-customer line.</p>
       <div class="gesture-hint" id="gestureHint">DRAG TO PAN · PINCH TO ZOOM</div>
     </section>
 
     <div class="loading" id="loading" role="status" aria-live="polite" style="--load:.06">
-      <img class="load-art" src="/src/brand/loading-art.webp" alt="" width="852" height="1644" />
+      <img class="load-art" src="/src/brand/loading-art.webp" alt="" width="750" height="2098" />
+      <img class="load-badge" src="/src/brand/badge.webp" alt="Canopy: Bud Empire" width="720" height="649" />
       <div class="load-band">
-        <div class="load-bar" aria-hidden="true"><i class="load-fill"></i><img class="load-sprout" src="/src/brand/sprout.webp" alt="" width="48" height="47" /></div>
+        <div class="load-bar" aria-hidden="true"><i class="load-fill"></i></div>
         <p id="loadStatus">Growing your empire…</p>
         <button class="load-retry" id="loadRetry" onclick="location.reload()" hidden>Retry</button>
       </div>
@@ -242,7 +247,6 @@
     </section>
   </main>
 
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <div class="modal-wrap" id="resetModal" hidden>
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="resetTitle">
       <small>Reset dispensary</small><h2 id="resetTitle">Start over?</h2><p>This clears all stores, stages, stock, upgrades, daily rewards, events, and career progress.</p>
