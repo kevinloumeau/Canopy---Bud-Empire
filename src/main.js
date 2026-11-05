@@ -4148,7 +4148,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
         button.setAttribute('aria-label',name+', '+button.textContent);
       });
       var raising=!level&&isBuilding(state.builds,branchBuildKey(i)),raiseSkip=raising?buildSkipCost(branchBuildKey(i)):0;
-      $('branchBuy'+i).textContent=max?'Maximum':raising?'Finish now '+fmt(raiseSkip):(level?'Upgrade ':'Open ')+fmt(storeCost(p,i));
+      $('branchBuy'+i).textContent=max?'Maximum':raising?'Finish now · '+fmt(raiseSkip):(level?'Upgrade · ':'Open · ')+fmt(storeCost(p,i));
       $('branchBuy'+i).disabled=max||(raising?state.money<raiseSkip:locked||state.money<storeCost(p,i));$('branchVisit'+i).disabled=!level;$('branchVisit'+i).textContent=p.activeStore===i+1?'Viewing':'Visit';$('branchVisit'+i).setAttribute('aria-pressed',String(p.activeStore===i+1));
     });
     $('dailyTitle').textContent=d.available?'Day '+d.day+' is ready':'Day '+d.day+' collected';

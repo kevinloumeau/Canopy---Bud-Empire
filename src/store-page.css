@@ -51,15 +51,18 @@
 .is-stations .map-tile-name{margin-top:3px}
 
 /* ---- Store: the hero row. ---- */
-.sheet .empire-screen .page-hero{display:grid;grid-template-columns:50px minmax(0,1fr) auto;align-items:center;gap:12px;margin:0 0 2px;padding:5px 10px 5px 8px;border-radius:16px;background:var(--ui-well-soft);box-shadow:inset 0 0 0 1px var(--ui-edge)}
+/* Flex that wraps: when a long price won't fit beside the title, the button drops to its own full-width row instead of squeezing the title. */
+.sheet .empire-screen .page-hero{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0 0 2px;padding:5px 10px 5px 8px;border-radius:16px;background:var(--ui-well-soft);box-shadow:inset 0 0 0 1px var(--ui-edge)}
+.page-hero>.map-ring{flex:none}
 .page-hero .map-ring .map-tile-icon{width:40px;height:40px}
 .page-hero.is-locked .map-tile-icon{filter:grayscale(.85) brightness(.62) drop-shadow(0 2px 2px #06180c66)}
 .page-hero.is-locked .map-ring-fill{stroke:rgba(242,240,230,.42)}
-.page-hero-copy{display:grid;gap:3px;min-width:0}
+.page-hero-copy{display:grid;gap:3px;flex:999 1 auto}
 .page-hero-copy b{font:650 14px/1.2 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .page-hero-copy small{font:500 11px/1.2 'DM Mono',monospace;letter-spacing:-.03em;color:#a8dc52;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .page-hero.is-locked .page-hero-copy small{color:var(--ui-soft)}
-.sheet .empire-screen .page-hero .page-buy{min-height:38px;min-width:0;margin:0;padding:0 13px;border:0;border-radius:999px;background:#a8dc522e;box-shadow:inset 0 0 0 1px #a8dc5233;color:#d8efc4;font:600 12px/1 'DM Mono',monospace;letter-spacing:-.03em;white-space:nowrap}
+/* empire.css caps .empire-branch buttons at 112px, which clipped the price; this button sizes to its text instead. */
+.sheet .empire-screen .page-hero .page-buy{min-height:38px;min-width:0;max-width:none;margin:0;padding:0 14px;border:0;border-radius:999px;background:#a8dc522e;box-shadow:inset 0 0 0 1px #a8dc5233;color:#d8efc4;font:600 12.5px/1 'Bricolage Grotesque',system-ui,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap;flex:1 0 auto}
 .sheet .empire-screen .page-hero .page-buy.is-best{background:var(--ui-brass);box-shadow:inset 0 1px 0 #fff6,0 6px 16px -8px #e2c68a99;color:var(--ui-brass-ink)}
 .sheet .empire-screen .page-hero .page-buy:disabled{background:none;box-shadow:inset 0 0 0 1px var(--ui-edge);color:var(--ui-soft);opacity:1}
 .sheet .empire-screen .page-hero .page-buy[hidden]{display:none}
