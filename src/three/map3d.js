@@ -15,6 +15,7 @@ import { buildCityBuildings } from './city-buildings.js';
 import { buildEntrance } from './entrance.js';
 import { createIntro } from './intro.js';
 import { createBranchLayer } from './branch3d.js';
+import { buildBranchShop } from './branch-shops.js';
 import { rigStation, bindStation, moveStation } from './station-motion.js';
 import { compactModel } from './compact.js';
 import { screenState, paintScreen, W as SCREEN_W, H as SCREEN_H, SCALE as SCREEN_SCALE, PAID as PAID_AT, PAID_HOLD } from './kiosk-screen.js';
@@ -1083,7 +1084,9 @@ export function createMap3D(canvas, layout) {
     const g = new THREE.Group(), p = layout.districtPlots[index], P = layout.plazaY;
     // Round the shop itself (its tall boxes), not the whole plot with its river and terrace.
     let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity;
-    (d.scene.boxes || []).forEach(b => { if (b.y + b.h < 2.6 || b.h < 1.6 || Math.max(b.w, b.d) < 1.8) return; x0 = Math.min(x0, d.x + b.x - b.w / 2); x1 = Math.max(x1, d.x + b.x + b.w / 2); z0 = Math.min(z0, d.z + b.z - b.d / 2); z1 = Math.max(z1, d.z + b.z + b.d / 2); });
+    const own = branchShop(index).userData.bounds;
+    if (own) { x0 = d.x + own.x0; x1 = d.x + own.x1; z0 = d.z + own.z0; z1 = d.z + own.z1; }
+    else (d.scene.boxes || []).forEach(b => { if (b.y + b.h < 2.6 || b.h < 1.6 || Math.max(b.w, b.d) < 1.8) return; x0 = Math.min(x0, d.x + b.x - b.w / 2); x1 = Math.max(x1, d.x + b.x + b.w / 2); z0 = Math.min(z0, d.z + b.z - b.d / 2); z1 = Math.max(z1, d.z + b.z + b.d / 2); });
     if (!(x1 > x0)) { x0 = p.x0 + .6; x1 = p.x1 - .6; z0 = p.z0 + .6; z1 = p.z1 - .6; }
     x0 = Math.max(p.x0 + .3, x0 - .5); x1 = Math.min(p.x1 - .3, x1 + .5); z0 = Math.max(p.z0 + .3, z0 - .5); z1 = Math.min(p.z1 - .3, z1 + .6);
     // Uprights every few units along the front and sides, ledgers at each lift, and a planked deck on the front.
@@ -1105,9 +1108,17 @@ export function createMap3D(canvas, layout) {
   }
   // An opening branch (district.opening, 0 when its build finishes and 1 a beat later) springs up with a small
   // overshoot that settles, as the shop does on first load.
+  // Each branch's building in the flagship's style (branch-shops.js), made once when its district first shows.
+  const branchShops = {};
+  function branchShop(index) {
+    if (!branchShops[index]) {
+      try { branchShops[index] = buildBranchShop(world, index, { hazed, model }); } catch (e) { console.warn('3D map: branch shop failed', e); branchShops[index] = new THREE.Group(); }
+    }
+    return branchShops[index];
+  }
   const springUp = t => { if (t <= 0) return .02; if (t >= 1) return 1; const k = t - 1; return Math.max(.02, 1 + 2.7 * k * k * k + 1.7 * k * k); };
   function placeDistricts(list, night) {
-    const shown = new Set(), sites = new Set();
+    const shown = new Set(), sites = new Set(), shops = new Set();
     let used = 0;
     (list || []).forEach(d => {
       if (d.scene) {
@@ -1117,12 +1128,17 @@ export function createMap3D(canvas, layout) {
         const rise = d.build != null ? Math.max(.02, d.build) : d.opening != null ? springUp(d.opening) : 1;
         layer.group.scale.set(1, rise, 1);
         layer.update(d.scene, night);
+        const shop = branchShop(d.index);
+        shop.visible = true; shop.position.set(d.x, 0, d.z); shop.scale.set(1, rise, 1);
+        if (shop.userData.night) shop.userData.night(night);
+        shops.add(d.index);
         if (d.build != null) { const site = districtSite(d.index, d); site.visible = true; site.userData.beacon.visible = Math.floor(performance.now() / 500) % 2 === 0; sites.add(d.index); }
       }
       shown.add(d.index);
       const g = districtGround(d); g.visible = true; g.userData.shownFrame = frameClock;
     });
     Object.keys(districtSites).forEach(k => { if (!sites.has(+k)) districtSites[k].visible = false; });
+    Object.keys(branchShops).forEach(k => { if (!shops.has(+k)) branchShops[k].visible = false; });
     for (let n = used; n < districtLayers.length; n++) districtLayers[n].group.visible = false;
     Object.values(districtGrounds).forEach(g => { if (g.userData.shownFrame !== frameClock) g.visible = false; });
     // Plots not on show: plain paving, so no hole ever shows.
