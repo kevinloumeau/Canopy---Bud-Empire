@@ -2831,7 +2831,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // map's draw calls and triangles and its estimated GPU memory, so a phone shows its own numbers. Players never pass
   // ?stats; window.__canopyStats returns the same numbers to scripts.
   var STATS=/[?&]stats\b/.test(location.search);
-  if(STATS||SNAP)window.__canopyCamera=function(){return{panX:Math.round(panX),panY:Math.round(panY),zoom:+zoom.toFixed(3),mode:mapGesture.mode}};
+  if(STATS||SNAP)window.__canopyCamera=function(){return{panX:Math.round(panX),panY:Math.round(panY),zoom:+zoom.toFixed(3),mode:mapGesture.mode,dock:Math.round(dockHeight),cy:Math.round(centerY),unit:unit}};
   if(STATS||SNAP)window.__canopyStats=function(perModel){return map3d&&map3d.ok?map3d.stats(perModel):null};
   if(STATS){
     var statsBox=document.createElement('div');
@@ -2845,7 +2845,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function render(wallNow){if(SNAP&&!render.snap)return;var t0=performance.now();try{renderFrame(wallNow);render.frameMs=(render.frameMs||0)*.9+(performance.now()-t0)*.1;window.__canopyFrameMs=render.frameMs;if(render.frameMs>13&&dprCap>2){dprCap=2;resize()}}catch(e){if(!render.failed)console.error('Canopy frame failed; retrying',e);ctx=screenCtx;sceneElevation=0;render.failed=true;render.invalidated=true;requestAnimationFrame(render)}}
   function renderFrame(wallNow){
     if(document.hidden){render.last=wallNow;requestAnimationFrame(render);return}
-    stepMapGesture(wallNow);keyboardPan(wallNow);
+    stepDock();stepMapGesture(wallNow);keyboardPan(wallNow);
     var glideDt=Math.min(.1,Math.max(0,(wallNow-(render.glideAt===undefined?wallNow:render.glideAt))/1000));if(districtGlide)stepGlide(glideDt);if(guideCam)stepGuideCam(glideDt);render.glideAt=wallNow;
     var frameInterval=state.gameSpeed===0?250:1000/60;
     if(!render.invalidated&&render.drawnAt!==undefined&&wallNow-render.drawnAt<frameInterval-1){requestAnimationFrame(render);return}
@@ -3474,8 +3474,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     run.onfinish=function(){pane.style.overflow='';if(paneGlide===run)paneGlide=null;if(done)done();fitControls()};
     run.oncancel=function(){pane.style.overflow='';if(paneGlide===run)paneGlide=null};
   }
-  function showTray(name){if(name==='employees')name='factory';if(name==='orders'&&!onlineOpen()){securitySelected=false;loungeSelected=false;selected=5;name='factory'}if(name==='factory')mapPicked=true;if(document.body.dataset.activeTray!==name)playSound('tap',state.sound);document.body.dataset.activeTray=name;if(districtFollow&&state.empire.activeStore&&name!=='empire')visitStore(0,false);activeTray=name;var wasCollapsed=$('sheet').classList.contains('collapsed');panelOpen=true;$('sheet').classList.remove('collapsed');$('panelToggle').setAttribute('aria-expanded','true');$('panelToggle').textContent='⌄';var titles={factory:'Stations',employees:'Staff',orders:'Deliveries',boosts:'Research',flowers:'Menu',goals:'Goals',empire:'Empire'};$('panelTitle').textContent=titles[name];var tabName=name==='orders'?'factory':name;trayTabs.forEach(function(t){t.setAttribute('aria-pressed',String(t.getAttribute('data-tray')===tabName))});$('panelBack').hidden=name!=='orders';Array.prototype.forEach.call(document.querySelectorAll('[data-pane]'),function(p){p.hidden=p.getAttribute('data-pane')!==name});if(wasCollapsed)glidePane(document.querySelector('[data-pane="'+name+'"]'),true);else if(paneGlide){paneGlide.cancel();paneGlide=null}fitControls()}
-  function collapsePanel(){pickedTag=null;buyBoxFor=-1;branchBuyFor=-1;if(mapPicked){mapPicked=false;if(window.__shiftReady)renderUI()}var sheet=$('sheet'),wasOpen=!sheet.classList.contains('collapsed');if(wasOpen&&sheet.classList.contains('tall')){settleSheet('collapsed');return}panelOpen=false;$('panelToggle').setAttribute('aria-expanded','false');$('panelToggle').textContent='⌃';if(!wasOpen){fitControls();return}
+  function showTray(name){if(name==='employees')name='factory';if(name==='orders'&&!onlineOpen()){securitySelected=false;loungeSelected=false;selected=5;name='factory'}if(name==='factory')mapPicked=true;if(document.body.dataset.activeTray!==name)playSound('tap',state.sound);document.body.dataset.activeTray=name;if(districtFollow&&state.empire.activeStore&&name!=='empire')visitStore(0,false);activeTray=name;var wasCollapsed=$('sheet').classList.contains('collapsed'),fromHeight=wasCollapsed?$('sheet').getBoundingClientRect().height:0,closing=sheetGlide&&sheetGlide.target==='collapsed';panelOpen=true;$('sheet').classList.remove('collapsed');$('panelToggle').setAttribute('aria-expanded','true');$('panelToggle').textContent='⌄';var titles={factory:'Stations',employees:'Staff',orders:'Deliveries',boosts:'Research',flowers:'Menu',goals:'Goals',empire:'Empire'};$('panelTitle').textContent=titles[name];var tabName=name==='orders'?'factory':name;trayTabs.forEach(function(t){t.setAttribute('aria-pressed',String(t.getAttribute('data-tray')===tabName))});$('panelBack').hidden=name!=='orders';Array.prototype.forEach.call(document.querySelectorAll('[data-pane]'),function(p){p.hidden=p.getAttribute('data-pane')!==name});if(sheetOpening){}else if((wasCollapsed||closing)&&phoneSheet()){settleSheet('half',wasCollapsed?fromHeight:undefined);return}else if(wasCollapsed)glidePane(document.querySelector('[data-pane="'+name+'"]'),true);else if(paneGlide){paneGlide.cancel();paneGlide=null}fitControls()}
+  function collapsePanel(){pickedTag=null;buyBoxFor=-1;branchBuyFor=-1;if(mapPicked){mapPicked=false;if(window.__shiftReady)renderUI()}var sheet=$('sheet'),wasOpen=!sheet.classList.contains('collapsed');if(wasOpen&&phoneSheet()){settleSheet('collapsed');return}panelOpen=false;$('panelToggle').setAttribute('aria-expanded','false');$('panelToggle').textContent='⌃';if(!wasOpen){fitControls();return}
     // The pane folds away first; the sheet only takes its collapsed shape once nothing is left to hide.
     glidePane(document.querySelector('[data-pane]:not([hidden])'),false,function(){if(!panelOpen){sheet.classList.add('collapsed');fitControls()}});fitControls()}
   // Deliveries lives under Shop › Online, as on iOS; its header carries a way back.
@@ -3489,24 +3489,49 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   var sheetGlide=null,sheetDrag=null,sheetHalfHeight=0,suppressHeaderClick=false;
   function phoneSheet(){return window.innerWidth<780}
   function sheetTallHeight(){return Math.max(240,window.innerHeight-hudBottom()-14)}
-  function settleSheet(target){
-    var sheet=$('sheet'),from=sheet.getBoundingClientRect().height;
+  // The map's framing follows the sheet on the same clock: dockGlide eases the camera's dock height with the sheet's own
+  // animation (its currentTime and easing), stepped in the render loop, so the scene and the glass move as one, with no
+  // per-frame layout reads and no frame of lag behind the sheet.
+  var sheetOpening=false,dockGlide=null,SHEET_EASE=cubicBezier(.2,.8,.2,1),SHEET_GLIDE_MS=380;
+  function cubicBezier(x1,y1,x2,y2){
+    function at(a,b,t){return((1-3*b+3*a)*t+(3*b-6*a))*t*t+3*a*t}
+    function slope(a,b,t){return 3*(1-3*b+3*a)*t*t+2*(3*b-6*a)*t+3*a}
+    return function(x){if(x<=0)return 0;if(x>=1)return 1;var t=x;
+      for(var i=0;i<6;i++){var d=at(x1,x2,t)-x,m=slope(x1,x2,t);if(Math.abs(d)<1e-5)break;if(Math.abs(m)<1e-6)break;t-=d/m}
+      if(Math.abs(at(x1,x2,t)-x)>1e-3){var lo=0,hi=1;t=x;for(var j=0;j<24;j++){if(at(x1,x2,t)<x)lo=t;else hi=t;t=(lo+hi)/2}}
+      return at(y1,y2,t)}}
+  function stepDock(){var g=dockGlide;if(!g)return;
+    var time=g.run.currentTime,t=time===null?0:Math.min(1,time/g.ms);
+    var next=g.from+(g.to-g.from)*SHEET_EASE(t);if(Math.abs(next-dockHeight)<.01)return;dockHeight=next;applyCamera()}
+  function settleSheet(target,startHeight){
+    var sheet=$('sheet'),from=startHeight===undefined?sheet.getBoundingClientRect().height:startHeight;
     if(sheetGlide){sheetGlide.cancel();sheetGlide=null}
     if(paneGlide){paneGlide.cancel();paneGlide=null}
     sheet.style.height='';sheet.classList.add('fluid');
     if(target==='collapsed'){panelOpen=false;$('panelToggle').setAttribute('aria-expanded','false');$('panelToggle').textContent='⌃';sheet.classList.remove('tall')}
-    else{if(!panelOpen){showTray(activeTray);if(paneGlide){paneGlide.cancel();paneGlide=null}}sheet.classList.toggle('tall',target==='tall')}
+    else{if(!panelOpen){sheetOpening=true;try{showTray(activeTray)}finally{sheetOpening=false}if(paneGlide){paneGlide.cancel();paneGlide=null}}sheet.classList.toggle('tall',target==='tall')}
     $('panelExpand').setAttribute('aria-pressed',String(target==='tall'));$('panelExpand').setAttribute('aria-label',target==='tall'?'Return this panel to half height':'Fill the screen with this panel');
     // Measure the destination in its settled classes, then glide the sheet's height there with the pane stretching.
-    sheet.classList.remove('fluid');if(target==='collapsed')sheet.classList.add('collapsed');
+    // The header's own padding and handle size ease between the open and collapsed shapes; .settling holds those
+    // transitions while the sheet is measured and when it lands, so the glide ends exactly where it was aimed instead of
+    // the header easing the sheet a further 10px afterwards.
+    sheet.classList.add('settling');sheet.classList.remove('fluid');if(target==='collapsed')sheet.classList.add('collapsed');
     var to=sheet.getBoundingClientRect().height;
     if(target==='collapsed')sheet.classList.remove('collapsed');
-    function finish(){sheet.classList.remove('fluid');if(target==='collapsed')sheet.classList.add('collapsed');sheetGlide=null;fitControls()}
+    sheet.getBoundingClientRect();sheet.classList.remove('settling');
+    function finish(){sheet.classList.add('settling');sheet.classList.remove('fluid');if(target==='collapsed')sheet.classList.add('collapsed');sheet.getBoundingClientRect();sheet.classList.remove('settling');sheetGlide=null;dockGlide=null;fitControls()}
     if(motionPreference.matches||typeof sheet.animate!=='function'||Math.abs(to-from)<2){finish();return}
     sheet.classList.add('fluid');
-    var run=sheetGlide=sheet.animate([{height:from+'px'},{height:to+'px'}],{duration:360,easing:'cubic-bezier(.2,.8,.2,1)'});
+    // One motion from edge to edge: the sheet's height glides between its measured start and end (the pane stretching
+    // or folding inside it and fading with it), and the map's framing rides the same animation. A tall sheet keeps the
+    // map framed for the half-open sheet it covers.
+    var ms=SHEET_GLIDE_MS,pane=sheet.querySelector('[data-pane]:not([hidden])');
+    var run=sheetGlide=sheet.animate([{height:from+'px'},{height:to+'px'}],{duration:ms,easing:'cubic-bezier(.2,.8,.2,1)'});run.target=target;
+    if(pane&&(target==='collapsed'||startHeight!==undefined))pane.animate(target==='collapsed'?[{opacity:1},{opacity:0}]:[{opacity:0},{opacity:1}],{duration:ms*.7,easing:'ease-out',delay:target==='collapsed'?0:ms*.15,fill:'backwards'});
+    var dockTo=target==='tall'?(sheetHalfHeight||dockHeight):to;
+    dockGlide=Math.abs(dockTo-dockHeight)<1?null:{run:run,from:dockHeight,to:dockTo,ms:ms};render.invalidated=true;
     run.onfinish=function(){if(sheetGlide===run)finish()};
-    run.oncancel=function(){if(sheetGlide===run){sheet.classList.remove('fluid');sheetGlide=null}};
+    run.oncancel=function(){if(sheetGlide===run){sheet.classList.remove('fluid');sheetGlide=null;if(dockGlide&&dockGlide.run===run)dockGlide=null}};
   }
   $('panelExpand').onclick=function(){settleSheet($('sheet').classList.contains('tall')?'half':'tall')};
   // A drag can start anywhere on the sheet that does not scroll: the header, the stats strip and the tab bar. Their
@@ -3532,7 +3557,9 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     if(!d.moved){if(Math.abs(dy)<8)return;d.moved=true;try{sheetSurface.setPointerCapture(e.pointerId)}catch(err){}}
     if(d.collapsed)return;
     var sheet=$('sheet');sheet.classList.add('fluid');
-    sheet.style.height=Math.max(120,Math.min(sheetTallHeight(),d.height-dy))+'px';
+    var h=Math.max(120,Math.min(sheetTallHeight(),d.height-dy));sheet.style.height=h+'px';
+    // Below half height the map reframes with the finger, so letting go only finishes a move already under way.
+    var dock=Math.min(sheetHalfHeight||d.height,h);if(Math.abs(dock-dockHeight)>.5){dockGlide=null;dockHeight=dock;applyCamera()}
   });
   function endSheetDrag(e,cancelled){
     var d=sheetDrag;if(!d||e.pointerId!==d.id)return;sheetDrag=null;
@@ -4591,12 +4618,12 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function fitControls(){hudEdges=null;document.documentElement.style.setProperty('--hud-height',hudBottom()+'px');stackPills();fitLane();
     var sheet=$('sheet');if(!phoneSheet())sheet.classList.remove('tall');
     // A tall or gliding sheet keeps the last settled dock height, so the map is framed for the half-open sheet it sits behind.
-    if(!sheet.classList.contains('tall')&&!sheet.classList.contains('fluid')){dockHeight=sheet.getBoundingClientRect().height;if(!sheet.classList.contains('collapsed')&&!paneGlide)sheetHalfHeight=dockHeight}
+    if(!dockGlide&&!sheet.classList.contains('tall')&&!sheet.classList.contains('fluid')){dockHeight=sheet.getBoundingClientRect().height;if(!sheet.classList.contains('collapsed')&&!paneGlide)sheetHalfHeight=dockHeight}
     document.documentElement.style.setProperty('--dock-height',dockHeight+'px');resize()}
   // While the intro's card is docked over the collapsed tray, the map is framed above the card rather than the tray.
   var guideReserve=0;
   function visibleHeight(){return width>=780?height:Math.max(200,height-Math.max(dockHeight,guideReserve))}
-  if(window.ResizeObserver){new ResizeObserver(fitControls).observe($('sheet'));new ResizeObserver(fitLane).observe($('laneStatus'))}
+  if(window.ResizeObserver){new ResizeObserver(function(){if(!sheetGlide)fitControls()}).observe($('sheet'));new ResizeObserver(fitLane).observe($('laneStatus'))}
   window.addEventListener('resize',fitControls);
   // Desktop conveniences: the hint names the pointer, and speed and tabs have keys when no field has focus.
   // Hint copy follows the active pointer, and drops the keyboard shortcuts where the map is too narrow to fit them.
