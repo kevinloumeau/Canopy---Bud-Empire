@@ -62,14 +62,23 @@ const TALL = ['city_brick_5', 'city_cream_5', 'city_terra_4', 'city_sage_4', 'ci
 const MID = ['city_stone_3', 'city_tan_3', 'city_sage_3', 'building_mid_stone', 'building_apartment_brick', 'building_townhouse_sage', 'building_rowhouse_terracotta'];
 const LOW = ['city_mauve_2', 'city_terra_2', 'building_low_sage', 'building_low_stone', 'building_low_tan', 'building_shop_narrow', 'building_workshop_low'];
 function seeded(n) { let seed = (n + 1) * 2654435761 >>> 0; return () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 4294967296); }
-// A run of lots along one side, from a to b, each `size` long give or take, butted edge to edge.
-function lots(a, b, size, rand) {
-  const out = [], n = Math.max(1, Math.round((b - a) / size)), step = (b - a) / n;
-  for (let k = 0; k < n; k++) out.push([a + k * step, a + (k + 1) * step]);
+// A run of lots along one side, from a to b, butted edge to edge. Widths wander between `min` and `max` (then stretch to
+// fill the run exactly), and a model is fitted to its lot and stands taller the wider it is, so a row of uneven lots
+// reads as a skyline instead of a row of the same box (Kevin, 2026-11-05: "sparse and repetitive").
+function lots(a, b, min, max, rand) {
+  const widths = [];
+  let sum = 0;
+  while (sum < b - a - min * .5) { const w = min + rand() * (max - min); widths.push(w); sum += w; }
+  const k = (b - a) / sum, out = [];
+  let at = a;
+  widths.forEach(w => { out.push([at, at + w * k]); at += w * k; });
   return out;
 }
 export function districtTerraces(i) {
-  const block = districtBlock(i), plot = districtPlot(i), rand = seeded(i * 7 + 3), pick = list => list[Math.floor(rand() * list.length)], out = [];
+  const block = districtBlock(i), plot = districtPlot(i), rand = seeded(i * 7 + 3), out = [];
+  // Never the same model twice in a row, so neighbours always differ.
+  let last = '';
+  const pick = list => { let f = list[Math.floor(rand() * list.length)]; if (f === last) f = list[(list.indexOf(f) + 1) % list.length]; return (last = f); };
   const add = (file, x0, x1, z0, z1) => out.push({ file: file + '.glb', x: (x0 + x1) / 2, z: (z0 + z1) / 2, rot: 0, fit: { w: x1 - x0, d: z1 - z0 } });
   // The flanks: a column each side of the plot, two units in from the cross street's kerb and at most nine wide (a
   // model is fitted to its lot and stands taller the wider it is), any room left between it and the plot an open
@@ -77,12 +86,17 @@ export function districtTerraces(i) {
   const left = [block.x0 + 2, Math.min(plot.x0 - 1, block.x0 + 11)], right = [Math.max(plot.x1 + 1, block.x1 - 11), block.x1 - 2];
   [left, right].forEach(([x0, x1]) => {
     if (x1 - x0 < 5) return;
-    lots(block.z0 + 2, block.z1 - 2, 7.6, rand).forEach(([z0, z1], k, all) => add(k === all.length - 1 ? pick(LOW) : pick(MID), x0, x1, z0, z1));
+    lots(block.z0 + 2, block.z1 - 2, 6.6, 8.8, rand).forEach(([z0, z1], k, all) => add(k === all.length - 1 ? pick(LOW) : pick(rand() < .25 ? LOW : MID), x0, x1, z0, z1));
   });
-  // Behind, across the rear street: a terraced row two units back from its kerb, eight deep.
-  lots(block.x0 + 2, block.x1 - 2, 8.6, rand).forEach(([x0, x1]) => add(pick(rand() < .6 ? TALL : MID), x0, x1, -31.5, -23.5));
-  // In front, across the front street: a low row facing the camera.
-  lots(block.x0 + 2, block.x1 - 2, 8.6, rand).forEach(([x0, x1]) => add(pick(LOW), x0, x1, 28, 35.5));
+  // Behind, across the rear street: a terraced row two units back from its kerb, eight deep, mostly tall with the odd
+  // low one between for a broken skyline, a corner block on the junction at its east end.
+  lots(block.x0 + 2, block.x1 - 2, 6.4, 9.4, rand).forEach(([x0, x1], k, all) => {
+    const r = rand();
+    add(k === all.length - 1 ? 'city_corner_4' : pick(r < .5 ? TALL : r < .82 ? MID : LOW), x0, x1, -31.5, -23.5);
+  });
+  // In front, across the front street: a low row facing the camera (lots kept narrow so none stands tall enough to
+  // hide the shop), a corner shop at its east end.
+  lots(block.x0 + 2, block.x1 - 2, 6.8, 8.8, rand).forEach(([x0, x1], k, all) => add(k === all.length - 1 ? 'building_corner' : pick(LOW), x0, x1, 28, 35.5));
   return out;
 }
 

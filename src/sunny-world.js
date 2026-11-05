@@ -1,4 +1,4 @@
-import { CROSS_STREETS, districtPlot, DISTRICT_COUNT } from './branch-districts.js';
+import { CROSS_STREETS, districtPlot, DISTRICT_COUNT, districtBlock, districtTerraces } from './branch-districts.js';
 // The sunny look (the default since 2026-10-15): instead of a diorama floating in a dark studio, the main shop sits
 // on a sunlit city block that runs to the screen edges. The shop's slab and the sidewalk are one continuous paved plaza, a
 // kerb drops to sunken asphalt streets on all four sides, and muted low-rise neighbours sit beyond the far kerbs so
@@ -406,29 +406,37 @@ function lotFit(b) {
 // water tower only stands on four storeys and up, in the back quarter where it hides nothing; the corner shops lose
 // their cut-off front quarter.
 const PROP_HALF = { roof_hvac: .75, roof_skylight: .65, roof_vents: .45, roof_access: .85, roof_dish: .45, roof_watertower: .86 };
+// A few roof pieces for one terrace: `name` its model, `fit` where the model landed (lotFit's shape), `rand` its own seed.
+function roofPieces(name, fit, rand, lot) {
+  const out = [], tall = fit.top - P > 15, hw = fit.w / 2 - .42, hd = fit.d / 2 - .42;
+  // Quarters in model metres: back-left, back-right, front-left, front-right (front is +z).
+  const quarters = [[-1, -1], [1, -1], [-1, 1], [1, 1]].filter(([qx, qz]) => !(/corner/.test(name) && qx > 0 && qz > 0));
+  const kinds = ['roof_hvac', 'roof_skylight', 'roof_vents', 'roof_access', 'roof_dish', 'roof_hvac', 'roof_skylight'];
+  const n = 2 + Math.floor(rand() * 2);
+  quarters.sort(() => rand() - .5);
+  quarters.slice(0, n).forEach(([qx, qz], k) => {
+    let file = kinds[Math.floor(rand() * kinds.length)];
+    if (k === 0 && tall && rand() < .7) { file = 'roof_watertower'; qx = -1; qz = -1; }
+    // Each piece sits toward its quarter's outer corner, clear of the middle where the next quarter's piece reaches.
+    const half = PROP_HALF[file], mx = qx * Math.max(half + .05, hw - half) + (rand() - .5) * .15, mz = qz * Math.max(half + .05, hd - half) + (rand() - .5) * .15;
+    out.push({ file: file + '.glb', x: fit.x(mx), y: fit.roof, z: fit.z(mz), rot: rand() < .5 ? 0 : Math.PI / 2, scale: fit.sx / 1.69, lot });
+  });
+  return out;
+}
+// One piece per quarter at most, so two never share a spot when a water tower took the back one.
+function onePerSpot(list) {
+  const seen = new Set();
+  return list.filter(p => { const key = Math.round(p.x) + ',' + Math.round(p.z); if (seen.has(key)) return false; seen.add(key); return true; });
+}
 const ROOF_PROPS = (() => {
   const out = [];
   BUILDINGS.forEach((b, i) => {
     if (i === FLAGSHIP_LOT) return;
-    const fit = lotFit(b), name = modelOf(b), tall = fit.top - P > 15, hw = fit.w / 2 - .42, hd = fit.d / 2 - .42;
     let seed = (i + 1) * 2654435761 >>> 0;
     const rand = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 4294967296);
-    // Quarters in model metres: back-left, back-right, front-left, front-right (front is +z).
-    const quarters = [[-1, -1], [1, -1], [-1, 1], [1, 1]].filter(([qx, qz]) => !(/corner/.test(name) && qx > 0 && qz > 0));
-    const kinds = ['roof_hvac', 'roof_skylight', 'roof_vents', 'roof_access', 'roof_dish', 'roof_hvac', 'roof_skylight'];
-    const n = 2 + Math.floor(rand() * 2);
-    quarters.sort(() => rand() - .5);
-    quarters.slice(0, n).forEach(([qx, qz], k) => {
-      let file = kinds[Math.floor(rand() * kinds.length)];
-      if (k === 0 && tall && rand() < .7) { file = 'roof_watertower'; qx = -1; qz = -1; }
-      // Each piece sits toward its quarter's outer corner, clear of the middle where the next quarter's piece reaches.
-      const half = PROP_HALF[file], mx = qx * Math.max(half + .05, hw - half) + (rand() - .5) * .15, mz = qz * Math.max(half + .05, hd - half) + (rand() - .5) * .15;
-      out.push({ file: file + '.glb', x: fit.x(mx), y: fit.roof, z: fit.z(mz), rot: rand() < .5 ? 0 : Math.PI / 2, scale: fit.sx / 1.69, lot: CITY_LOT_OF.get(i) });
-    });
+    out.push(...roofPieces(modelOf(b), lotFit(b), rand, CITY_LOT_OF.get(i)));
   });
-  // One piece per quarter at most, so two never share a spot when a water tower took the back one.
-  const seen = new Set();
-  return out.filter(p => { const key = Math.round(p.x) + ',' + Math.round(p.z); if (seen.has(key)) return false; seen.add(key); return true; });
+  return onePerSpot(out);
 })();
 // Past the first ring of streets the town carries on as plain silhouettes (Kevin, 2026-10-19: lower detail and muted so
 // the eye stays on the shop): every block beyond the back streets filled with lots of two to six storeys, each one
@@ -1096,6 +1104,80 @@ const CITY_PROPS = (() => {
   });
   return out;
 })();
+// The branch districts' streets dressed like the first ring's (Kevin, 2026-11-05: the town round the new stores felt
+// "sparse and repetitive"): roof clutter on every neighbour, lamps and kerbside dressing down every pavement of the
+// block, a cafe terrace and a bus stop on the front row's pavement and parked cars down the quiet cross streets. The
+// branch's own plot (and a margin round it) is left alone, and so is the kerb in front of the shop, so nothing stands
+// between the camera and the store. Fixed seeds per district, so nothing reshuffles; main.js caches each district's.
+const DISTRICT_DRESSING = ['tree', 'bench', 'hydrant', 'tree', 'bin', 'shrub', 'meter', 'tree', 'bikerack', 'scooter', 'tree', 'newsboxes', 'shrub', 'recycling'];
+export function districtDressing(i) {
+  const block = districtBlock(i), plot = districtPlot(i), out = [], taken = [];
+  let seed = (i + 1) * 40503 + 17 >>> 0;
+  const rand = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 4294967296);
+  // Roof clutter on every terrace round the block, worked out from where map3d's p.fit puts the model.
+  districtTerraces(i).forEach((t, k) => {
+    const name = t.file.replace('.glb', ''), [bx0, bx1, bz0, bz1, roof, top] = MODEL_BOUNDS[name], sx = t.fit.w / (bx1 - bx0), sz = t.fit.d / (bz1 - bz0);
+    const fit = { sx, x: mx => t.x + (mx - (bx0 + bx1) / 2) * sx, z: mz => t.z + (mz - (bz0 + bz1) / 2) * sz, roof: P + roof * sx / HEIGHT_UP, top: P + top * sx / HEIGHT_UP, w: -2 * bx0, d: -2 * bz0 };
+    out.push(...onePerSpot(roofPieces(name, fit, rand)));
+  });
+  const nearPlot = (x, z, m) => x > plot.x0 - m && x < plot.x1 + m && z > plot.z0 - m && z < plot.z1 + m;
+  const free = (x, z, r) => !taken.some(t => Math.hypot(t.x - x, t.z - z) < t.r + r) && !nearPlot(x, z, 2);
+  const put = (file, x, z, rot, r, extra) => { out.push({ file: file + '.glb', x, z, rot, ...extra }); taken.push({ x, z, r }); };
+  // A cafe terrace in front of one shop of the row behind (two tables on its pavement, under the awnings) and a bus
+  // stop on the block's own rear kerb. The front row's pavement is left bare: it lies behind that row, out of sight.
+  const cafe = block.x0 + 10 + rand() * (block.x1 - block.x0 - 26);
+  [-1.4, 1.4].forEach(d => { if (free(cafe + d, -22.8, .6)) put('street_cafe_table', cafe + d, -22.8, rand() * .6, .9); });
+  const stop = cafe + (rand() < .5 ? -1 : 1) * 10;
+  if (free(stop, -14.6, 1.2)) put('street_busstop', stop, -14.6, Math.PI, 1.6);
+  // Every pavement in sight round the block: [along, kerb line, side the pavement is on, from, to] (the row behind's,
+  // the block's own four).
+  // Each run stops short of the junctions' zebras (a junction's crossings sit 5.5 either side of it).
+  const left = block.x0 - 3, right = block.x1 + 3, cl = 8;
+  const runs = [
+    ['x', -21.5, -1, left + cl, right - cl], ['x', -15.5, 1, left + cl, right - cl], ['x', 18.5, -1, left + cl, right - cl],
+    ['z', block.x0, 1, -18.5 + cl, 21.5 - cl], ['z', block.x1, -1, -18.5 + cl, 21.5 - cl]
+  ];
+  runs.forEach(([along, kerb, side, u0, u1]) => {
+    const rot = along === 'x' ? (side > 0 ? Math.PI : 0) : (side > 0 ? -Math.PI / 2 : Math.PI / 2);
+    const spot = (u, depth) => along === 'x' ? [u, kerb + side * depth] : [kerb + side * depth, u];
+    // Street lamps first, every dozen units or so, then the dressing between them.
+    for (let u = u0 + 1.5; u < u1; u += 11 + rand() * 3) { const [x, z] = spot(u, .45); if (free(x, z, .6) && !(along === 'x' && kerb === 18.5 && x > plot.x0 - 2 && x < plot.x1 + 2)) put('street_lamp', x, z, rot, 1.2); }
+    let k = Math.floor(rand() * DISTRICT_DRESSING.length);
+    for (let u = u0 + 1; u < u1; u += 2.8 + rand() * 1.8) {
+      const kind = DISTRICT_DRESSING[k++ % DISTRICT_DRESSING.length], depth = kind === 'tree' ? 1 : kind === 'shrub' ? .95 : kind === 'bench' ? 1.2 : .55;
+      const [x, z] = spot(u, depth), r = kind === 'tree' ? 1.3 : kind === 'bench' ? 1 : .7;
+      // The kerb in front of the shop stays clear: nothing between the camera and the store.
+      if (along === 'x' && kerb === 18.5 && x > plot.x0 - 2 && x < plot.x1 + 2) continue;
+      if (!free(x, z, r)) continue;
+      if (kind === 'tree') {
+        const pick = rand(), scale = .8 + rand() * .45, tree = pick < .4 ? 'street_tree' : 'tree';
+        out.push({ file: tree + '.glb#lawn', x, z, rot: rand() * 6.28, scale }, treePit(pick < .7 ? tree : 'grate', x, z)); taken.push({ x, z, r });
+      } else if (kind === 'bench') put('street_bench', x, z, rot + Math.PI, r);
+      else if (kind === 'meter') put('street_lp_meter', x, z, rot, r);
+      else if (kind === 'hydrant') put('street_lp_hydrant', x, z, rot, r);
+      else if (kind === 'bin') put('street_lp_bin', x, z, rot, r);
+      else if (kind === 'recycling') put('street_recycling', x, z, rot, r);
+      else if (kind === 'newsboxes') put('street_lp_newsboxes', x, z, rot, r);
+      else if (kind === 'bikerack') put('street_lp_bikerack', x, z, rot, r);
+      else if (kind === 'shrub') put('street_shrub_planter', x, z, rot, r);
+      else if (kind === 'scooter') put(rand() < .5 ? 'street_scooter_mint' : 'street_scooter_red', x, z, rot + (rand() - .5) * .5, r);
+    }
+  });
+  // Parked cars down both sides of the cross streets either side of the block (each district parks its own east
+  // street and the west one only for the first, which the flagship's ring leaves empty), between the stop bars.
+  (i === 0 ? [left, right] : [right]).forEach(at => [-1, 1].forEach(side => {
+    const heading = -side, lane = at + side * 1.9, rot = heading > 0 ? -Math.PI / 2 : Math.PI / 2;
+    [[-18.5, 21.5], [21.5, 40.5]].forEach(([a, b]) => {
+      for (let u = a + STOP_AT + 3.4; u < b - STOP_AT - 3.4; u += 5.4 + rand() * 1.5) {
+        if (rand() < .25) continue;
+        const van = rand() < .15;
+        out.push({ file: van ? 'van.glb' : 'street_lp_car.glb', x: lane, y: G, z: u, rot, tint: van ? undefined : PARKED_PAINT[Math.floor(rand() * PARKED_PAINT.length)] });
+        if (van) u += 1;
+      }
+    });
+  }));
+  return out;
+}
 function carSprite(colour, view) {
   const name = 'street.' + (colour === 'van' ? 'van' : 'car.' + colour) + '.' + view;
   lazySprite(name, 'sprites/street/' + name + '.png', (colour === 'van' ? VAN_VIEW : CAR_VIEW)[view]);

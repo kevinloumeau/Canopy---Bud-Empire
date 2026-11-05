@@ -67,3 +67,10 @@
 @media(prefers-reduced-motion:reduce){
  .sheet .tray-tabs .tray-icon{transition:none}
 }
+/* The handle swaps between the chevron and the pill without turning (Kevin, 2026-11-05: "it shouldnt be rotating"):
+   the transform no longer transitions, so the glyph changes in place and fades and grows in from 60%. Each state has its own keyframes so the entrance plays on every change. */
+.sheet .panel-header #panelToggle::after{transition:opacity .2s ease!important;animation:handle-in-open .22s cubic-bezier(.22,.9,.24,1)}
+.sheet.collapsed .panel-header #panelToggle::after{animation-name:handle-in-closed}
+@keyframes handle-in-open{from{opacity:0;scale:.6}}
+@keyframes handle-in-closed{from{opacity:0;scale:.6}}
+@media(prefers-reduced-motion:reduce){.sheet .panel-header #panelToggle::after{animation:none}}

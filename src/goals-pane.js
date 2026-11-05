@@ -25,6 +25,9 @@ const ICONS={
  bolt:'<path d="M13 3 5 14h6l-1 7 8-11h-6Z"/>',
  chevron:'<path d="m9 5 7 7-7 7"/>'
 };
+// 3D icons rendered in Blender at the map's angle (public/icons/3d/goal-*.png, art/blender/goal_icons.py), like the other tabs.
+const ICONS_3D=new Set(['gift','trophy','coin','star','up','calendar','contract','book','person','box','bag','leaf','screen','target']);
+const I3D=(n,cls)=>ICONS_3D.has(n)?'<img class="goal-3d'+(cls?' '+cls:'')+'" src="icons/3d/goal-'+n+'.png" alt="" draggable="false" decoding="async">':SVG(ICONS[n]||ICONS.target);
 // Pick an icon from a goal's own words, so a new goal type still gets a sensible picture.
 const iconFor=t=>{t=(t||'').toLowerCase();
  return /deliver|online|drone|web/.test(t)?'box':/kiosk/.test(t)?'screen':/strain|grow|seed|plant/.test(t)?'leaf':/upgrade|level|lv\b|station/.test(t)?'up':
@@ -44,7 +47,7 @@ export function mountGoalsPane({pane,sources,getState,format,rate}){
  // The brass reward box: the total and Collect on top, then one line per reward saying what it is for.
  const reward=document.createElement('div');reward.className='goals-reward';
  const collect=document.createElement('button');collect.type='button';collect.className='goals-collect';
- collect.innerHTML='<span class="goals-collect-icon">'+SVG(ICONS.gift)+'</span><b></b><span class="goals-collect-go">Collect</span>';
+ collect.innerHTML='<span class="goals-collect-icon">'+I3D('gift')+'</span><b></b><span class="goals-collect-go">Collect</span>';
  const why=document.createElement('ul');why.className='goals-why';
  const note=document.createElement('p');note.className='goals-why-note';
  reward.append(collect,why,note);
@@ -69,10 +72,10 @@ export function mountGoalsPane({pane,sources,getState,format,rate}){
    if(bonus)rows.push({icon:'star',label:shiftHead()[0]+' bonus',why:'All '+SHIFT_LENGTH+' goals done',amount:bonus});}
   return rows;}
  const bar=id=>{const n=$(id);return n&&n.value!=null&&n.max?n.value/n.max:null;};
- // A ring is a circle whose stroke covers the share done; finished tiles show a tick instead of the icon.
+ // A ring is a circle whose stroke covers the share done, around the goal's 3D icon; finished tiles add a lime tick badge.
  const ring=(icon,share,done)=>'<span class="goal-ring'+(done?' is-done':'')+'" style="--share:'+(done?1:clamp(share)).toFixed(3)+'">'+
   '<svg class="goal-ring-track" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19"/><circle class="goal-ring-fill" cx="22" cy="22" r="19" pathLength="100"/></svg>'+
-  SVG(ICONS[done?'tick':icon]||ICONS.target)+'</span>';
+  I3D(ICONS_3D.has(icon)?icon:'target')+(done?'<i class="goal-ring-tick">'+SVG(ICONS.tick)+'</i>':'')+'</span>';
  const tile=o=>{const tag=o.act?'button':'div';
   return '<'+tag+' class="goal-tile'+(o.done?' is-done':'')+'"'+(o.act?' type="button" data-act="'+o.act+'"':'')+' title="'+esc(o.title+(o.figure?' · '+o.figure:''))+'">'+
    ring(o.icon||iconFor(o.title),o.share,o.done)+'<b>'+esc(o.label||o.title)+'</b>'+(o.note?'<small>'+esc(o.note)+'</small>':'')+'</'+tag+'>';};
@@ -86,7 +89,7 @@ export function mountGoalsPane({pane,sources,getState,format,rate}){
   const canBoost=boostRow&&!boostRow.hidden&&boost&&!boost.hidden;
   const action=running?'<span class="goal-card-figure">'+esc(text('contractTime'))+'</span>':'<span class="goal-card-go" data-act="contract-start" role="button" tabindex="0">Start</span>';
   const boostChip=canBoost?'<span class="goal-card-go is-brass" data-act="contract-boost" role="button" tabindex="0">'+SVG(ICONS.bolt)+'2×</span>':'';
-  return '<div class="goal-card"><span class="goal-card-icon">'+SVG(ICONS.contract)+'</span><span class="goal-card-copy"><b>'+esc(name)+'</b><small>'+esc(text('contractGoal'))+'</small></span>'+boostChip+action+'</div>';
+  return '<div class="goal-card"><span class="goal-card-icon">'+I3D('contract')+'</span><span class="goal-card-copy"><b>'+esc(name)+'</b><small>'+esc(text('contractGoal'))+'</small></span>'+boostChip+action+'</div>';
  }
  function shift(){return [0,1,2].map(i=>{const b=$('goalClaim'+i),title=text('goalTitle'+i);if(!title)return null;
   return {title,figure:text('goalCount'+i).split(' · ')[0],share:bar('goalProgress'+i),done:!!(b&&b.classList.contains('ready'))};}).filter(Boolean);}
@@ -95,7 +98,7 @@ export function mountGoalsPane({pane,sources,getState,format,rate}){
   const bonus=spans.length>1?/(\$[\d.,]+[KMBT]?) bonus/.exec(spans[spans.length-1].textContent):null;
   return [spans.length?spans[0].textContent.trim():'This shift',bonus?SVG(ICONS.gift)+esc(bonus[1]):''];}
  function story(){const title=text('storyTitle');if(!title)return '';
-  return '<button type="button" class="goal-card is-link" data-act="story"><span class="goal-card-icon">'+SVG(ICONS.book)+'</span><span class="goal-card-copy"><b>'+esc(title)+'</b><small>'+esc(text('storyTask'))+'</small></span><span class="goal-card-figure">'+esc(text('storyCount'))+'</span><span class="goal-card-chevron">'+SVG(ICONS.chevron)+'</span></button>';}
+  return '<button type="button" class="goal-card is-link" data-act="story"><span class="goal-card-icon">'+I3D('book')+'</span><span class="goal-card-copy"><b>'+esc(title)+'</b><small>'+esc(text('storyTask'))+'</small></span><span class="goal-card-figure">'+esc(text('storyCount'))+'</span><span class="goal-card-chevron">'+SVG(ICONS.chevron)+'</span></button>';}
  function stars(p){let i=-1;STORES.forEach((_,k)=>{if(p.stores[k].level>0&&starCount(p,k)<3)i=k;});if(i<0)return '';
   const goals=starStatus(p,i),earned=goals.filter(g=>g.earned).length;
   const figure='<span class="goal-stars" aria-label="'+earned+' of 3 stars">'+[0,1,2].map(k=>'<i class="'+(k<earned?'is-on':'')+'">'+SVG(ICONS.star)+'</i>').join('')+'</span>';
@@ -122,11 +125,11 @@ export function mountGoalsPane({pane,sources,getState,format,rate}){
   const perSec=rate?rate():0,worth=perSec>0&&total>0?'About '+span(total/perSec)+' of your sales · rewards grow as you earn':'';
   const sig=html+'#'+buttons.length+total+worth+rows.map(r=>r.label).join();if(sig===signature)return;signature=sig;
   reward.hidden=!buttons.length;
-  why.innerHTML=rows.map(r=>'<li><span class="goals-why-icon">'+SVG(ICONS[r.icon]||ICONS.target)+'</span><span class="goals-why-copy"><b>'+esc(r.label)+'</b><small>'+esc(r.why)+'</small></span><em>'+esc(format?format(r.amount):'$'+short(r.amount))+'</em></li>').join('');
+  why.innerHTML=rows.map(r=>'<li><span class="goals-why-icon">'+I3D(r.icon)+'</span><span class="goals-why-copy"><b>'+esc(r.label)+'</b><small>'+esc(r.why)+'</small></span><em>'+esc(format?format(r.amount):'$'+short(r.amount))+'</em></li>').join('');
   note.hidden=!worth;note.textContent=worth;
   collect.querySelector('b').textContent=(format?format(total):'$'+short(total));
   collect.setAttribute('aria-label','Collect '+buttons.length+' reward'+(buttons.length===1?'':'s')+', '+(format?format(total):total));
-  quiet.hidden=!!buttons.length;quiet.innerHTML=SVG(ICONS.gift)+'<span>'+(daily?'Next reward in '+daily[1]:'Nothing to collect')+'</span>';
+  quiet.hidden=!!buttons.length;quiet.innerHTML=I3D('gift')+'<span>'+(daily?'Next reward in '+daily[1]:'Nothing to collect')+'</span>';
   list.innerHTML=html;
  }
  const act=name=>{const click=id=>{const b=$(id);if(b&&!b.disabled)b.click();};
