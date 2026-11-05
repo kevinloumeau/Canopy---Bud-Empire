@@ -148,3 +148,6 @@ html body .sheet>[data-pane=employees]{display:flex;flex-direction:column}
  .sheet #stationStatus .stat small{display:inline;font-size:9.5px;color:#aab99f}
  .sheet #stationStatus .stat b{min-width:0}
 }
+
+/* While the sheet is measured for a glide, and as it lands, the header takes its new shape at once (see settleSheet). */
+.sheet.settling .panel-header,.sheet.settling .panel-header #panelToggle{transition:none!important}
