@@ -4,7 +4,14 @@
 // Lounge 3 min, drone port 4 min, pickup window 2 min (Kevin, 2026-10-22: the window's 45 s was too quick). Each can
 // be finished early for cash (skipCost).
 // City buildings (src/city-buildings.js): 5 min a stage for the first two, 6 for the late pair.
+// Branches (Kevin, 2026-11-05: "they should also take time to construct"): paying to open one raises it on its lot,
+// a minute longer for each branch further down the street. Keys branch0..branch4 follow STORES' order.
+export const BRANCH_BUILD_SECONDS=[180,240,300,360,420];
 export const BUILD_SECONDS={lounge:180,deck:240,window:120,flagship:480,warehouse:300,growhouse:300,billboard:360,terplab:360};
+BRANCH_BUILD_SECONDS.forEach((s,i)=>{BUILD_SECONDS['branch'+i]=s;});
+export const branchBuildKey=i=>'branch'+i;
+// The branch a build key opens, or -1.
+export function branchOfBuild(key){const m=/^branch(\d)$/.exec(key);return m?Number(m[1]):-1;}
 
 // A save's timers: each key is an end time in ms, or 0 for no build. A clock set back cannot leave a build longer
 // than its full time.
