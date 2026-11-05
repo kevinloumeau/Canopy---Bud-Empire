@@ -26,18 +26,12 @@
                             </imageView>
                             <imageView userInteractionEnabled="NO" contentMode="scaleToFill" image="LoadScrim" translatesAutoresizingMaskIntoConstraints="NO" id="band-Ld-002">
                                 <rect key="frame" x="0.0" y="447" width="375" height="220"/>
-                                <subviews>
-                                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" image="LoadTrack" translatesAutoresizingMaskIntoConstraints="NO" id="track-Ld-004">
-                                        <rect key="frame" x="28" y="137" width="319" height="22"/>
-                                        <constraints>
-                                            <constraint firstAttribute="height" constant="22" id="c-Ld-102"/>
-                                            <constraint firstAttribute="width" relation="lessThanOrEqual" constant="400" id="c-Ld-103"/>
-                                        </constraints>
-                                    </imageView>
-                                </subviews>
+                            </imageView>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" image="LoadTrack" translatesAutoresizingMaskIntoConstraints="NO" id="track-Ld-004">
+                                <rect key="frame" x="28" y="584" width="319" height="22"/>
                                 <constraints>
-                                    <constraint firstItem="track-Ld-004" firstAttribute="centerX" secondItem="band-Ld-002" secondAttribute="centerX" id="c-Ld-110"/>
-                                    <constraint firstItem="track-Ld-004" firstAttribute="width" secondItem="band-Ld-002" secondAttribute="width" priority="750" constant="-56" id="c-Ld-111"/>
+                                    <constraint firstAttribute="height" constant="22" id="c-Ld-102"/>
+                                    <constraint firstAttribute="width" relation="lessThanOrEqual" constant="400" id="c-Ld-103"/>
                                 </constraints>
                             </imageView>
                         </subviews>
@@ -53,6 +47,8 @@
                             <constraint firstItem="band-Ld-002" firstAttribute="bottom" secondItem="snD-IY-ifK" secondAttribute="bottom" id="c-Ld-209"/>
                             <constraint firstItem="band-Ld-002" firstAttribute="top" secondItem="safe-Ld-000" secondAttribute="bottom" constant="-220" id="c-Ld-210"/>
                             <constraint firstItem="track-Ld-004" firstAttribute="bottom" secondItem="safe-Ld-000" secondAttribute="bottom" constant="-61" id="c-Ld-211"/>
+                            <constraint firstItem="track-Ld-004" firstAttribute="centerX" secondItem="snD-IY-ifK" secondAttribute="centerX" id="c-Ld-110"/>
+                            <constraint firstItem="track-Ld-004" firstAttribute="width" secondItem="snD-IY-ifK" secondAttribute="width" priority="750" constant="-56" id="c-Ld-111"/>
                         </constraints>
                     </view>
                 </viewController>
