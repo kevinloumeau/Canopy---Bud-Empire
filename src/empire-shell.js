@@ -60,7 +60,9 @@ export function mountEmpireShell({fit,getState,format,rate,fly,buyStation}){
  const scrollers={};
  ['store','details'].forEach(name=>{const screen=screens[name],body=el('div','empire-screen-body');while(screen.children.length>1)body.append(screen.children[1]);screen.append(body);scrollers[name]=body;});
  pane.append(screens.home,screens.store,screens.details);
- const storesUI=mountEmpireStores({getState,format,buyStation});
+ // A locked store's page sends the player to the store before it, on the tab where its star goals are worked.
+ const goStore=(i,tab)=>{if(fly)fly('shop',i+1);openStore(i);const t=$('opTab'+i+tab);if(t&&!t.hidden)t.click();};
+ const storesUI=mountEmpireStores({getState,format,buyStation,goStore});
 
  // Navigation.
  let current='home';
