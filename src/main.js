@@ -32,7 +32,7 @@ import {mountSettings} from './settings.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, BRANCH_STATIONS, drawBranchMap } from './branch-maps.js';
 import { districtPlot, districtCentre, districtAt, districtBlock, shownDistricts, eastHaze, leaseLot, districtTerraces, DISTRICT_COUNT, MAIN_EAST_HAZE } from './branch-districts.js';
-import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, PERSON_HEAD_Y, subwayStairs, SUBWAY_HIDDEN_Z, drawSprite, stationSprite, drawPersonSprite, streetItems, floorTextureFiles, fixtureSprite, shellSprite, spriteImage, spritesLoading, drawBoxSprite, softShadow, sunShadow, SUN, SUN_REACH, townLayout, cityLots, carPlacements, walkerPlacements, stationSpriteSize, stationTier as spriteTier } from './sunny-world.js';
+import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, PERSON_HEAD_Y, subwayStairs, SUBWAY_HIDDEN_Z, drawSprite, stationSprite, drawPersonSprite, streetItems, floorTextureFiles, fixtureSprite, shellSprite, spriteImage, spritesLoading, drawBoxSprite, softShadow, sunShadow, SUN, SUN_REACH, townLayout, districtDressing, cityLots, carPlacements, walkerPlacements, stationSpriteSize, stationTier as spriteTier } from './sunny-world.js';
 import * as economy from './economy.js';
 import {ABILITIES,ABILITY_UNLOCK,ABILITY_FACTOR,ABILITY_SALES,ABILITY_SECONDS,migrateAbilities,abilityStatus,useAbility,tickAbilities,abilityFactor,abilitySales,clockLabel} from './crew-abilities.js';
 import * as strains from './strains.js';
@@ -2593,7 +2593,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     shownDistricts(storeLevels()).forEach(function(d){
       var b=districtBlock(d.index),c=districtCentre(d.index);
       if(b.x1+4<span[0]||b.x0-4>span[1])return;
-      (terraceCache[d.index]||(terraceCache[d.index]=districtTerraces(d.index))).forEach(function(t){props.push(t)});
+      (terraceCache[d.index]||(terraceCache[d.index]=districtTerraces(d.index).concat(districtDressing(d.index)))).forEach(function(t){map3d.propReady(t.file);props.push(t)});
       if(!d.open){var lot=leaseLot(d.index);lot.props.forEach(function(p){props.push(p)});out.push({index:d.index,x:c.x,z:c.z,lease:lot});return}
       var local=[],scene=recordBranch(local,d.index+1);
       local.forEach(function(ch){ch.x+=c.x;ch.z+=c.z;ch.id='d'+d.index+ch.id;characters.push(ch)});

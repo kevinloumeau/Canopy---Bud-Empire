@@ -632,7 +632,7 @@ export function createMap3D(canvas, layout) {
   // Street props (main.js passes frame.props: file, feet and turn, from the street's jobs and the queue posts). Each
   // file loads on first need and is baked into one geometry per material, drawn instanced over all its placements, so
   // forty props cost a few dozen draws rather than a thousand. Lamps glow through their LampGlow material after dark.
-  const MAX_PROPS = 160, propSources = {}, propRequested = {}, glowMaterials = new Set();
+  const MAX_PROPS = 320, propSources = {}, propRequested = {}, glowMaterials = new Set();
   function bake(root) {
     root.updateMatrixWorld(true);
     const byMaterial = new Map();
