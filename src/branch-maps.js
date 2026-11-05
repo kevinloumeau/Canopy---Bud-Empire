@@ -988,7 +988,9 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
       [[a[0],a[2]],[c[0],c[2]]].forEach(([bx,bz])=>{const q=p(bx,.02,bz);ellipse(q.x,q.y,unit*.24,unit*.1,'#1a241c33');});
     }
     if(api.realDepth){b(-2.2,.5,-.55,29.6,25,.55,grass);b(16.8,.5,-.55,.4,25,.55,grass);}else b(0,.5,-.55,34,25,.55,grass);
-    meadow(0,.5,34,25,190,11,0,['#55744e','#6c8a60','#7c9a6a']);
+    if(!real)meadow(0,.5,34,25,190,11,0,['#55744e','#6c8a60','#7c9a6a']);
+    // In the 3D map the whole lot (pines, paths, creek, fire pit) comes from branch-shops.js too; the footbridge and people stay.
+    if(!real){
     // The tree line along the rear edge is painted first: everything built later stands in front of it.
     [[-16.2,-9.3,1.3],[-14,-9.6,1.05],[-11.3,-9.2,1.2],[-8.3,-9.5,.9],[-5.6,-9.8,1.1],[1.6,-9.7,1],[5.9,-9.9,.85],[12.4,-9.4,1.25],[15.8,-8.6,1]].forEach(([x,z,sz])=>pine(x,z,sz));
     // The dirt drive hugs the left edge from the road up to the rear parking; log kerbs hold its bends.
@@ -1002,6 +1004,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     // A flagstone path leads from the drive to the courtyard in front of the hall.
     [[-11.5,7.2],[-9.8,6.6],[-8.1,6.1],[-6.4,5.7],[-4.7,5.4]].forEach(([x,z],i)=>patch(x,z,1.4,1.1,i%2?'#b6b0a0':'#c5bfae',.02));
     for(let r=0;r<6;r++)for(let c=0;c<9;c++)patch(-2.9+c*1.05,-.9+r*1.05,.96,.96,(r+c)%3?'#b6b0a0':'#c5bfae',.016);
+    }
     // In the 3D map the building comes from branch-shops.js in the flagship's style; the drawing keeps the 2D map's.
     if(!real){
     // The conservatory wing fills the lodge's left gable end: a stone sill, glass all around, two racks of
@@ -1056,10 +1059,11 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     job(9.2,.9,()=>display(9.2,.9));
     if(level>=3&&!real)job(-.8,-5.9,()=>display(-.8,-5.9));
     if(!real)job(-1.6,3.4,()=>stanchions([[-2.9,4.2],[-1.6,3.4],[-.3,2.8]]));
-    job(-3.9,4.9,()=>aFrame(-3.9,4.9,['HIGHER','DAYS','AHEAD']));
+    if(!real)job(-3.9,4.9,()=>aFrame(-3.9,4.9,['HIGHER','DAYS','AHEAD']));
     // The creek: born in a rock shelf on the right, it falls twice and runs off the front of the plot. The
     // waterfall face and the channel are cut into the ground like Riverside's river, and a timber footbridge
     // carries the garden path over it to the campfire terrace.
+    if(!real){
     const WY=-.3;
     boulder(15.4,-3.7,2.2);boulder(13.3,-3.2,1.8);boulder(16.2,-1.9,1.35);boulder(12.9,-1.8,1.2);
     boulder(14.5,-2.9,1.9,.9);boulder(14.4,-2,1.15,.35);
@@ -1079,7 +1083,9 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     for(let k=0;k<3;k++){const t=(now*.00035+k/3)%1,m=p(14.5+Math.sin(k*2.4+now*.001)*.3,WY+.3+t*1.6,-.8);ellipse(m.x,m.y,unit*(.5+t*.5),unit*(.22+t*.2),'#e6f5ee'+Math.round(40*(1-t)).toString(16).padStart(2,'0'));}
     for(let i=0;i<10;i++){const drift=((i*1.1+now*.0005)%12),z=-.6+drift,a=.4*Math.min(1,drift/1.5,(12-drift)/1.5);if(a<.03)continue;l([[13.3+(i*1.3%2.8),WY+.01,z],[13.35+(i*1.3%2.8),WY+.01,z+.7]],'#e4f3ea'+Math.round(a*255).toString(16).padStart(2,'0'),.035);}
     [[13.2,2.4],[15.9,5.1],[13.6,9.8]].forEach(([x,z])=>{const q=p(x,WY+.008,z);ellipse(q.x,q.y,unit*.2,unit*.12,'#6d9a63');});
+    }
     footbridge(12,16.85,6.6,0,-.02,1.05,1.6);
+    if(!real){
     // The campfire circle: a ring of flat stones and log benches around the pit, lanterns at the openings.
     for(let i=0;i<10;i++){const a=i*Math.PI/5,q=[-4.9+Math.cos(a)*2.3,8.3+Math.sin(a)*1.9];patch(q[0],q[1],1.05,.85,i%2?'#b6b0a0':'#c5bfae',.02);}
     patch(-4.9,8.3,2.6,2.1,'#a89a80',.018);
@@ -1101,6 +1107,7 @@ export function drawBranchMap(api, index, level, now, projects=[], experience={}
     job(9.9,3.9,()=>bench(9.9,3.9,2.4));
     [[-10.7,5.3],[-6.9,4.7],[1.2,6.3],[8.9,7.9]].forEach(([x,z])=>job(x,z,()=>lanternPost(x,z)));
     job(11.9,1.9,()=>lamp(11.9,1.9));job(-14.9,-2.4,()=>lamp(-14.9,-2.4));
+    }
     if(level>=5){job(7.9,10.9,()=>planter(7.9,10.9,1.3,1.3));job(-11.9,7.4,()=>{b(-11.9,7.4,0,1.2,.55,.24,wood);plant(-11.9,7.4,.24,1.1);});}
     visitors([.5,2.8],[5.5,2.8],[3.5,5.4],[-3.4,4.6],[-11.9,8.4],[-14.5,12.4]);
   }
