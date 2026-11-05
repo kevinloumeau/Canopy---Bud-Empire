@@ -36,7 +36,7 @@
 .goal-stars i.is-on svg{fill:currentColor}
 .goal-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .goal-tile,.sheet .empire-screen button.goal-tile{display:grid;justify-items:center;align-content:start;gap:6px;min-width:0;min-height:0;margin:0;padding:12px 6px 10px;border:1px solid var(--ui-edge);border-radius:14px;background:var(--ui-well-soft);color:var(--ui-ink);font:inherit;text-align:center;box-shadow:none}
-.goal-tile>b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:11.5px;font-weight:600;line-height:1.25}
+.goal-tile>b{text-wrap:balance;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:11.5px;font-weight:600;line-height:1.25}
 .goal-tile>small{font:500 11px 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-soft);white-space:nowrap}
 .goal-tile.is-done>b{color:var(--ui-soft)}
 .goal-ring{position:relative;display:grid;place-items:center;width:46px;height:46px;color:var(--ui-ink)}
@@ -58,6 +58,21 @@
 .goal-card-go{flex:none;display:flex;align-items:center;gap:3px;padding:8px 14px;border:1px solid var(--ui-edge);border-radius:10px;font-size:12px;font-weight:600;cursor:pointer}
 .goal-card-go svg{width:14px;height:14px}
 .goal-card-go.is-brass{border-color:var(--ui-brass);background:var(--ui-brass);color:var(--ui-brass-ink)}
+/* 3D goal icons (public/icons/3d/goal-*.png): they sit straight on the glass, no disc behind them, with the same soft
+   drop shadow as the station and store renders. */
+img.goal-3d{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;pointer-events:none;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 2px 3px #06180c80)}
+.goal-ring{width:56px;height:56px}
+.goal-ring>img.goal-3d{width:32px;height:32px}
+.goal-ring-track circle{stroke-width:2.6}
+.goal-ring-tick{position:absolute;right:-1px;bottom:-1px;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--ui-leaf-glow);color:#0d2d17;box-shadow:0 0 0 2px #0d2d17}
+.goal-ring-tick svg{width:13px;height:13px;stroke-width:2.6}
+.goal-tile.is-done img.goal-3d{opacity:.7}
+.goals-collect-icon:has(img.goal-3d),.goal-card-icon:has(img.goal-3d){width:44px;height:44px;border-radius:0;background:none}
+.goals-collect-icon img.goal-3d{width:42px;height:42px;filter:drop-shadow(0 3px 4px #06180c99)}
+.goal-card-icon img.goal-3d{width:40px;height:40px}
+.goals-why-icon{width:30px;height:30px;margin:0 3px}
+.goals-why-icon img.goal-3d{width:28px;height:28px}
+.goals-quiet img.goal-3d{width:22px;height:22px}
 .goal-card-go:focus-visible{outline:2px solid var(--ui-brass);outline-offset:2px}
 
 /* Reopen card on Empire home: keep its brass card look inside the Empire screen's button styles. */
