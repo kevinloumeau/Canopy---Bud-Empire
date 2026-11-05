@@ -19,7 +19,7 @@ FONT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fonts', 'Bricol
 FACE = math.radians(45)          # yaw that turns a part's -Y front towards the camera
 
 
-def render(name, ortho, centre):
+def render(name, ortho, centre, prefix='goal-'):
     scene = bpy.context.scene
     cam_d = bpy.data.cameras.new('IsoCam'); cam_d.type = 'ORTHO'; cam_d.ortho_scale = ortho
     cam = bpy.data.objects.new('IsoCam', cam_d); scene.collection.objects.link(cam)
@@ -39,7 +39,7 @@ def render(name, ortho, centre):
     scene.render.film_transparent = True
     scene.render.resolution_x = scene.render.resolution_y = 256
     scene.view_settings.view_transform = 'AgX'; scene.view_settings.look = 'AgX - Medium High Contrast'
-    scene.render.filepath = os.path.join(OUT, 'goal-' + name + '.png')
+    scene.render.filepath = os.path.join(OUT, prefix + name + '.png')
     bpy.ops.render.render(write_still=True)
 
 
@@ -282,6 +282,7 @@ def target():
 
 JOBS = {'gift': gift, 'trophy': trophy, 'coin': coin, 'star': star, 'up': up, 'calendar': calendar, 'contract': contract,
         'book': book, 'person': person, 'box': box, 'bag': bag, 'leaf': leaf, 'screen': screen, 'target': target}
-for key, job in JOBS.items():
-    if ONLY and key not in ONLY: continue
-    job()
+if __name__ == '__main__':          # research_icons.py imports the camera, lights and palette from here
+    for key, job in JOBS.items():
+        if ONLY and key not in ONLY: continue
+        job()
