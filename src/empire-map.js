@@ -43,6 +43,8 @@ export function mountEmpireMap({getState,format,fly,summary}){
   const k=i-1,store=p.stores[k],def=STORES[k],lvl=store.level,cost=storeCost(p,k);
   if(!branchOpenable(p,k)){const prev=k?starCount(p,k-1):0;return {share:prev/STARS_TO_OPEN,figure:LOCK+prev+'/'+STARS_TO_OPEN+' ★',tone:'locked',label:def.name+', locked. Earn '+STARS_TO_OPEN+' stars at '+STORES[k-1].name};}
   if(s.lifetime<def.goal){const share=clamp(s.lifetime/def.goal);return {share,figure:LOCK+Math.floor(share*100)+'%',tone:'locked',label:def.name+', opens at '+format(def.goal)+' earned, '+Math.floor(share*100)+'% there'};}
+  // Being built: a brass clock and the ring filling as the build runs.
+  if(!lvl&&isBuilding(s.builds,'branch'+k)){const left=buildLeft(s.builds,'branch'+k);return {share:1-buildShareLeft(s.builds,'branch'+k),figure:buildClock(left),tone:'building',label:def.name+', being built, opens in '+buildClock(left)};}
   if(!lvl)return {share:0,figure:format(cost),tone:s.money>=cost?'ready':'',cost:s.money>=cost?cost:null,label:def.name+', ready to open for '+format(cost)};
   // A pill is something to buy; plain figures are what the place earns.
   const rate=storeRate(p,k)*speed,max=lvl>=10,afford=!max&&s.money>=cost,label=def.name+', level '+lvl+' of 10, earning '+format(rate)+' a second'+(max?'':', next level '+format(cost));

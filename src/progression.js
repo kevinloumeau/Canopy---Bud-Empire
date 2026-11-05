@@ -185,6 +185,18 @@ export function buyStore(state,i) {
   if(p.stores[i].level>=10 || state.lifetime<STORES[i].goal || !branchOpenable(p,i) || state.money<cost)return false;
   const before=storeRate(p,i);state.money-=cost;p.stores[i].level++;if(!p.stores[i].lines||!p.stores[i].lines[0])p.stores[i].lines=BRANCH_LINE.map(()=>1);p.network.stores[i].construction=6;p.network.stores[i].incomeGain=storeRate(p,i)-before;recordGoal(p,'invest',1);return true;
 }
+// Opening a branch takes building time (Kevin, 2026-11-05): payStore takes the opening price and main.js starts the
+// branch's build (builds.js branch0..4); openStore opens it when the build is done. buyStore still opens at once.
+export function payStore(state,i){
+  if(!STORES[i])return false;
+  const p=state.empire,cost=storeCost(p,i);
+  if(p.stores[i].level>0 || state.lifetime<STORES[i].goal || !branchOpenable(p,i) || state.money<cost)return false;
+  state.money-=cost;recordGoal(p,'invest',1);return true;
+}
+export function openStore(state,i){
+  const p=state.empire;if(!STORES[i]||p.stores[i].level>0)return false;
+  const before=storeRate(p,i);p.stores[i].level=1;if(!p.stores[i].lines||!p.stores[i].lines[0])p.stores[i].lines=BRANCH_LINE.map(()=>1);p.network.stores[i].incomeGain=storeRate(p,i)-before;return true;
+}
 // Contracts replace the old hourly events: a 30 to 60 minute goal with a twist rule that changes how the shop plays while
 // it runs (faster walk-ins, a door full of VIPs, half the line asking for edibles). The player starts one when they
 // like; the clock is real time, so it keeps running while paused or away, and offline earnings never count. Finishing

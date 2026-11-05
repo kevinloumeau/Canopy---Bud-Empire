@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {nextSeason,weeklySpecial,specialFactor,WEEKLY_SPECIALS,DAY,HOUR,DAILY,CAREER,migrateProgression,dailyStatus,claimDaily,claimCareer,saleMultiplier,branchRate,buyStore,storeRate,storeCost,recordEvent,CONTRACTS,contractOffer,activeContract,contractTwist,contractFactor,startContract,skipContract,settleContract,useContractBoost,tickContractBoost,contractBoostFactor,contractTarget,seasonWindow,seasonStatus,claimSeason,SEASON_REWARDS} from '../src/progression.js';
+import {nextSeason,weeklySpecial,specialFactor,WEEKLY_SPECIALS,DAY,HOUR,DAILY,CAREER,migrateProgression,dailyStatus,claimDaily,claimCareer,saleMultiplier,branchRate,buyStore,payStore,openStore,storeRate,storeCost,recordEvent,CONTRACTS,contractOffer,activeContract,contractTwist,contractFactor,startContract,skipContract,settleContract,useContractBoost,tickContractBoost,contractBoostFactor,contractTarget,seasonWindow,seasonStatus,claimSeason,SEASON_REWARDS} from '../src/progression.js';
 const start=21000*DAY;
 const fresh=()=>({money:1000000,lifetime:1000000,empire:migrateProgression(undefined,start)});
 test('legacy and malformed progression fields migrate without unlocking rewards',()=>{
@@ -213,4 +213,13 @@ test('the third star asks for every branch station at Lv 10',()=>{
  assert.equal(STAR_GOALS[2].kind,'line');assert.equal(starStatus(p,0)[2].title,'Every station Lv 10');
  p.stores[0].lines=[10,10,10,10,10,9];settleStars(p);assert.equal(starStatus(p,0)[2].earned,false);assert.equal(starStatus(p,0)[2].progress,9);
  p.stores[0].lines[5]=10;assert.deepEqual(settleStars(p),[{store:0,goal:2}]);assert.equal(starStatus(p,1)[2].progress,0);
+});
+test('opening a branch is paid first and opens when its build is done',()=>{
+ const s=fresh(),price=storeCost(s.empire,0),cash=s.money;
+ assert.equal(payStore(s,0),true);assert.equal(s.money,cash-price);assert.equal(s.empire.stores[0].level,0);
+ assert.equal(storeRate(s.empire,0),0);
+ assert.equal(openStore(s,0),true);assert.equal(s.empire.stores[0].level,1);assert.deepEqual(s.empire.stores[0].lines,[1,1,1,1,1,1]);
+ assert.ok(storeRate(s.empire,0)>0);
+ // Open branches are upgraded with buyStore; paying or opening again does nothing.
+ assert.equal(payStore(s,0),false);assert.equal(openStore(s,0),false);assert.equal(s.money,cash-price);
 });
