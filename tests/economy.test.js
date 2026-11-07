@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {customerHandoff,HANDOFF_FLOOR,counterLanes,stationTier,tierBoost,retailBoost,batchSize,capacity,stationCost,staffCost,basketSize,storageCapacity,readyCapacity,onlineSize,counterServiceDuration,patience,walkSpeed,preferredStrain,rewardScale,stepsToGain} from '../src/economy.js';
+import {customerHandoff,HANDOFF_FLOOR,counterLanes,stationTier,tierBoost,retailBoost,batchSize,capacity,stationCost,staffCost,basketSize,storageCapacity,readyCapacity,onlineSize,counterServiceDuration,patience,walkSpeed,preferredStrain,rewardScale,stepsToGain,raiseTogether} from '../src/economy.js';
 import {migrateProgression,satisfyCustomer,dailyStatus,claimDaily,goalStatus,claimGoal,recordGoal,storeRate,buyStore,STORES} from '../src/progression.js';
 
 test('tiers double output at 10/20/30/50/75/100 and per-level gains stay linear between them',()=>{
@@ -117,3 +117,22 @@ test('stations tied for slowest only show a gain when raised together',()=>{
   assert.equal(stepsToGain(k=>rate([1+k,3,1,1])-rate(start),6),null);
   assert.equal(stepsToGain(k=>rate([1+k,3,1+k,1+k])-rate(start),6).steps,1);
 });
+
+test('stations a hair apart are priced as one bundle, so the pick stays on a station',()=>{
+  // Minute 12 of a brass-only review sim: Pickup sits 0.05% above three tied stations, so the old exact-tie group left it
+  // out and every single station showed ~0 (the pick went to Loyalty cards at $22K for +4.2/s).
+  const rates=[5,5.2,5,5,6,5.0026],levels=[20,20,20,20,20,14],price=(i,l)=>10*Math.pow(1.07,l);
+  const rateAt=(i,lv)=>rates[i]*(1+.08*(lv[i]-levels[i])),income=lv=>Math.min(...rates.map((_,i)=>rateAt(i,lv)));
+  const base=income(levels),members=[0,1,2,3,4,5];
+  // No one station moves the line.
+  members.forEach(i=>{const lv=levels.slice();lv[i]++;assert.ok(income(lv)-base<base*1e-3)});
+  const options=raiseTogether(members,levels,{gainAt:lv=>income(lv)-base,rateAt,price},6,base*1e-4);
+  assert.equal(options.length,6);
+  const one=options[0];
+  // +1 everywhere lifts the shop; Orders (6/s) is already well ahead and is left out of the bill.
+  assert.ok(one.gain>base*.0005);assert.ok(one.used.indexOf(4)<0);assert.ok(one.used.indexOf(5)>=0);
+  assert.equal(one.first,5);
+  // Raising more levels keeps pricing honestly: gain and spend both grow.
+  assert.ok(options[5].gain>one.gain&&options[5].spend>one.spend);
+});
+
