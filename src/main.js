@@ -2900,7 +2900,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     window.__canopySnap.map3d=function(){return map3d&&map3d.ok?map3d.debug:null};
     window.__canopySnap.stationFx=stationFx;
     // A cash pop frozen at `age` seconds into its rise, for screenshots of the pops (cash-pops.js).
-    window.__canopySnap.cashPop=function(key,amount,age){var site=CASH_SITES[key];livePops.push({key:key,amount:amount,x:site.x,y:site.y,z:site.z,age:age||.4,text:'+'+fmt(amount)})};
+    window.__canopySnap.cashPop=function(key,amount,age){var site=CASH_SITES[key];livePops.push({key:key,amount:amount,x:site.x,y:site.y,z:site.z,age:age||.4,text:fmt(amount)})};
     window.__canopySnap.status=function(){return{map3d:!!(map3d&&map3d.ok),loading:map3d?map3d.loading:-1}};
   }
   // Dev numbers (?stats): a small readout over the map with the frames drawn a second, the frame's script time, the 3D
@@ -3030,28 +3030,32 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function drawTickets(dt){
     for(var i=tickets.length-1;i>=0;i--){
       var t=tickets[i];t.life-=dt*.7;t.y+=dt*.55;if(t.life<=0){tickets.splice(i,1);continue}
-      var p=project(t.x,t.y,t.z),w=Math.max(28,unit*.95),h=Math.max(14,unit*.4),x0=p.x-w/2,y0=p.y-h/2,notch=w*.28;
-      ctx.save();ctx.globalAlpha=Math.min(1,t.life*2.5);
-      ctx.beginPath();roundedRectPath(x0,y0,w,h,h*.25);ctx.fillStyle='#f4e7bd';ctx.fill();ctx.strokeStyle='#8d7950';ctx.lineWidth=Math.max(1,unit*.018);ctx.stroke();
-      ctx.beginPath();ctx.setLineDash([Math.max(1,unit*.03),Math.max(1,unit*.03)]);ctx.moveTo(x0+notch,y0+h*.12);ctx.lineTo(x0+notch,y0+h*.88);ctx.strokeStyle='#8d795088';ctx.stroke();ctx.setLineDash([]);
-      ctx.fillStyle='#1f4a37';ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.font='800 '+Math.max(7,h*.5)+'px "Bricolage Grotesque",sans-serif';ctx.fillText('$',x0+notch/2,p.y+h*.02);
-      ctx.font='800 '+Math.max(8,h*.58)+'px "Bricolage Grotesque",sans-serif';ctx.fillText(t.text,x0+notch+(w-notch)/2,p.y+h*.02,w-notch-4);
-      ctx.restore();
+      paintTicket(project(t.x,t.y,t.z),t.text,Math.min(1,t.life*2.5),1);
     }
   }
-  // A cash pop: "+$1.2K" in the game's display face, cream with a dark green rim, that springs up, drifts and fades.
-  // The HUD cash rolls up to match (rollCash) and gives a small nudge as each pop lands.
+  // The ticket stub itself, shared by the lounge fee, the ATM fee and the cash pops: cream card, brass rim, a dashed
+  // tear line with "$" on the stub and the amount on the rest. It widens to fit a long amount rather than squeezing it.
+  function paintTicket(p,text,alpha,scale){
+    var h=Math.max(14,unit*.4)*(scale||1),textFont='800 '+Math.max(8,h*.58).toFixed(1)+'px "Bricolage Grotesque",sans-serif';
+    ctx.save();ctx.font=textFont;
+    var base=Math.max(28,unit*.95)*(scale||1),notch=base*.28,w=Math.max(base,notch+ctx.measureText(text).width+h*.7),x0=p.x-w/2,y0=p.y-h/2;
+    ctx.globalAlpha=alpha;
+    ctx.beginPath();roundedRectPath(x0,y0,w,h,h*.25);ctx.fillStyle='#f4e7bd';ctx.fill();ctx.strokeStyle='#8d7950';ctx.lineWidth=Math.max(1,unit*.018);ctx.stroke();
+    ctx.beginPath();ctx.setLineDash([Math.max(1,unit*.03),Math.max(1,unit*.03)]);ctx.moveTo(x0+notch,y0+h*.12);ctx.lineTo(x0+notch,y0+h*.88);ctx.strokeStyle='#8d795088';ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#1f4a37';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font='800 '+Math.max(7,h*.5).toFixed(1)+'px "Bricolage Grotesque",sans-serif';ctx.fillText('$',x0+notch/2,p.y+h*.02);
+    ctx.font=textFont;ctx.fillText(text,x0+notch+(w-notch)/2,p.y+h*.02);
+    ctx.restore();
+  }
+  // A cash pop: the lounge fee's ticket stub (Kevin, 2026-11-07: "match the lounge fee style") with the amount landed,
+  // springing up, drifting and fading. The HUD cash rolls up to match (rollCash) and gives a small nudge as each lands.
   function drawCashPops(dt){
     var still=motionPreference.matches;
-    if(still){livePops.length=0;cashPops.clear()}else{var pop=cashPops.tick(dt);if(pop){pop.age=0;pop.text='+'+fmt(pop.amount);livePops.push(pop);var cash=$('money');if(cash){cash.classList.remove('cash-gain');void cash.offsetWidth;cash.classList.add('cash-gain')}}}
+    if(still){livePops.length=0;cashPops.clear()}else{var pop=cashPops.tick(dt);if(pop){pop.age=0;pop.text=fmt(pop.amount);livePops.push(pop);var cash=$('money');if(cash){cash.classList.remove('cash-gain');void cash.offsetWidth;cash.classList.add('cash-gain')}}}
     shownCash=rollCash(shownCash,state.money,dt,still||document.hidden);cashRolledAt=performance.now();var label=fmt(shownCash),el=$('money');if(el&&el.textContent!==label)el.textContent=label;
     for(var i=livePops.length-1;i>=0;i--){
       var p=livePops[i];p.age+=dt;if(p.age>=POP_LIFE){livePops.splice(i,1);continue}
-      var f=popFrame(p.age/POP_LIFE),q=project(p.x,p.y+f.rise,p.z),size=Math.max(13,Math.min(22,unit*.46))*f.scale;
-      ctx.save();ctx.globalAlpha=f.alpha;ctx.font='800 '+size.toFixed(1)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';
-      ctx.shadowColor='rgba(12,32,22,.35)';ctx.shadowBlur=size*.35;ctx.shadowOffsetY=size*.08;ctx.lineWidth=Math.max(2.5,size*.2);ctx.strokeStyle='#173d2b';ctx.strokeText(p.text,q.x,q.y);
-      ctx.shadowColor='transparent';ctx.fillStyle='#ffe7a3';ctx.fillText(p.text,q.x,q.y);ctx.restore();
+      var f=popFrame(p.age/POP_LIFE);paintTicket(project(p.x,p.y+f.rise,p.z),p.text,f.alpha,f.scale);
     }
   }
   function burst(worldPos,color){if(motionPreference.matches)return;for(var i=0;i<12;i++)particles.push({x:worldPos.x,y:1.4+(worldPos.y||0),z:worldPos.z,vx:(Math.random()-.5)*1.8,vz:(Math.random()-.5)*1.8,vy:1.6+Math.random()*1.8,life:1,color:color||colors.acid})}
