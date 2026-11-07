@@ -55,7 +55,7 @@ body[data-active-tray=goals] .sheet:not(.collapsed) .panel-header>#panelToggle{m
 
 /* iPhone SE: the header row takes a little more top room so the Collect pill clears the grab handle, and the pane gives
    the same amount back, so the sheet stands exactly as tall as on the other tabs. */
-@media(max-width:779px) and (max-height:700px){
+@media(max-width:779px) and (max-height:760px){
  body[data-active-tray=goals] .sheet:not(.collapsed) .panel-header{padding-top:8px}
  body[data-active-tray=goals] .sheet:not(.collapsed):not(.tall):not(.fluid)>[data-pane=goals]{height:calc(41vh - 10px);height:calc(41dvh - 10px)}
 }

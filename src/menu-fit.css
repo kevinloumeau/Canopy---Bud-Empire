@@ -108,7 +108,7 @@ body[data-active-tray=flowers] .sheet:not(.collapsed) .panel-header .menu-info[a
 }
 
 /* iPhone SE and other short phones: the same layout a notch tighter. */
-@media(max-width:779px) and (max-height:700px){
+@media(max-width:779px) and (max-height:760px){
  .sheet [data-pane="flowers"] .menu-board{gap:5px}
  .sheet [data-pane="flowers"] .menu-board-summary,.sheet [data-pane="flowers"] .buyer{min-height:28px}
  .sheet [data-pane="flowers"] .strain-nav .strain-card-art{width:36px!important;height:36px!important}
