@@ -1048,7 +1048,11 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var hudEdges=null;
   function hudBottom(){if(!hudEdges){var hud=document.querySelector('.hud'),markers=$('markers');hudEdges={bottom:hud?hud.getBoundingClientRect().bottom:0,markersTop:markers?markers.getBoundingClientRect().top:0}}return hudEdges.bottom}
   function forgetHudEdges(){hudEdges=null;updateMarkers.key=null}
-  if(window.ResizeObserver){var hudWatch=new ResizeObserver(forgetHudEdges);hudWatch.observe(document.querySelector('.hud'))}
+  // The overlays under the bar (top lane, map buttons, panels) hang off --hud-height. The bar is hidden behind the age
+  // check and loading cover at start, where it measures 0 and the lane sat on top of it (Kevin, 2026-11-05), so the
+  // height is set again whenever the bar's box changes, including when it first appears, and a hidden bar is skipped.
+  function syncHudHeight(){forgetHudEdges();var bottom=hudBottom();if(bottom>0){var v=bottom+'px';if(document.documentElement.style.getPropertyValue('--hud-height')!==v){document.documentElement.style.setProperty('--hud-height',v);if(window.__shiftReady)fitLane()}}}
+  if(window.ResizeObserver){var hudWatch=new ResizeObserver(syncHudHeight);hudWatch.observe(document.querySelector('.hud'))}
   window.addEventListener('resize',forgetHudEdges);
 
   function resize(){hudEdges=null;var rect=world.getBoundingClientRect(),oldWidth=width,oldHeight=height,oldDpr=dpr;dpr=Math.min(window.devicePixelRatio||1,dprCap);width=Math.max(1,Math.round(rect.width));height=Math.max(1,Math.round(rect.height));if(oldWidth!==width||oldHeight!==height||oldDpr!==dpr){canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);}canvas.style.width=width+'px';canvas.style.height=height+'px';ctx.setTransform(dpr,0,0,dpr,0,0);applyCamera()}
@@ -4615,7 +4619,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   var dockHeight=0;
   // The shop activity panel opens just under the lane's chip row, however many rows it wraps to.
   function fitLane(){var r=$('laneStatus').getBoundingClientRect();document.documentElement.style.setProperty('--lane-bottom',Math.round(r.height?r.bottom:hudBottom())+'px')}
-  function fitControls(){hudEdges=null;document.documentElement.style.setProperty('--hud-height',hudBottom()+'px');stackPills();fitLane();
+  function fitControls(){hudEdges=null;if(hudBottom()>0)document.documentElement.style.setProperty('--hud-height',hudBottom()+'px');stackPills();fitLane();
     var sheet=$('sheet');if(!phoneSheet())sheet.classList.remove('tall');
     // A tall or gliding sheet keeps the last settled dock height, so the map is framed for the half-open sheet it sits behind.
     if(!dockGlide&&!sheet.classList.contains('tall')&&!sheet.classList.contains('fluid')){dockHeight=sheet.getBoundingClientRect().height;if(!sheet.classList.contains('collapsed')&&!paneGlide)sheetHalfHeight=dockHeight}
