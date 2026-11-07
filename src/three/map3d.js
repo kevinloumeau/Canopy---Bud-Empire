@@ -1859,20 +1859,61 @@ function silhouettes(list, P, material) {
   return mesh;
 }
 
+// The floors' textures (layout.floorTextures), ground to top.
+const FLOOR_FINISH = ['herringbone', 'boards', 'epoxy'];
+
 // The shop: the timber floor on the plaza, the mezzanine and top floor as slabs on posts, the rear and short side
 // walls of the cutaway, and the entrance planter line. Positions are the 2D map's own (drawTower's floors).
 function buildShop(world, layout, { box, span, material, textured, model }) {
   const shop = new THREE.Group();
   world.add(shop);
+  // The upper floors' edges, merged into two meshes whatever their number: every opaque piece (the slab fascias, the
+  // balustrades' green shoes and brass handrails) in one vertex-coloured mesh, every glass pane in one see-through mesh.
+  const trim = [], glass = [];
+  const piece = (list, x0, x1, y0, y1, z0, z1, colour) => {
+    const g = new THREE.BoxGeometry(Math.max(.001, x1 - x0), Math.max(.001, y1 - y0), Math.max(.001, z1 - z0)).translate((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+    const c = new THREE.Color(colour), n = g.attributes.position.count, col = new Float32Array(n * 3);
+    for (let k = 0; k < n; k++) c.toArray(col, k * 3);
+    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    g.deleteAttribute('uv');
+    list.push(g);
+  };
+  // A slab face from (x0, z0) to (x1, z1) (one of them a line along x or z) at floor height y: a forest green band a
+  // touch proud of the slab, from just under its soffit to a brass nosing level with the floor.
+  const fascia = (x0, x1, z0, z1, y) => {
+    const alongX = z0 === z1, t = .05, lip = .015;
+    const [px0, px1, pz0, pz1] = alongX ? [x0, x1, z0, z0 + t] : [x0, x0 + t, z0, z1];
+    piece(trim, px0, px1, y - .36, y - .04, pz0, pz1, '#1d4a33');
+    piece(trim, px0, px1 + (alongX ? 0 : lip), y - .04, y + .02, pz0, pz1 + (alongX ? lip : 0), '#d0a54e');
+  };
+  // A frameless glass balustrade over (x0..x1, z0..z1) on a floor at y: a slim green shoe, a clear pane and a brass cap.
+  const rail = (x0, x1, z0, z1, y) => {
+    const alongX = x1 - x0 > z1 - z0, mid = alongX ? (z0 + z1) / 2 : (x0 + x1) / 2;
+    const thin = (lo, hi) => alongX ? [x0, x1, lo, hi] : [lo, hi, z0, z1];
+    const box3 = ([a0, a1, b0, b1], y0, y1, colour, list) => piece(list, a0, a1, y0, y1, b0, b1, colour);
+    box3(thin(mid - .04, mid + .04), y, y + .1, '#1f5a3c', trim);
+    box3(thin(mid - .012, mid + .012), y + .1, y + .98, '#d8ece6', glass);
+    box3(thin(mid - .035, mid + .035), y + .98, y + 1.05, '#d0a54e', trim);
+  };
+  const finishTrim = () => {
+    const opaque = new THREE.Mesh(mergeGeometries(trim), material('#ffffff', { vertexColors: true, name: 'slabTrim' }));
+    opaque.castShadow = opaque.receiveShadow = true;
+    const panes = new THREE.Mesh(mergeGeometries(glass), material('#ffffff', { vertexColors: true, transparent: true, opacity: .24, depthWrite: false, name: 'slabGlass' }));
+    panes.renderOrder = 1;
+    shop.add(opaque, panes);
+  };
   layout.floors.forEach((f, fi) => {
     // The ground floor's timber stops at the storefront's outer face (Kevin, 2026-11-02: it ran out onto the sidewalk).
     const outer = !fi && layout.entrance ? layout.entrance.x : -Infinity;
     const left = Math.max(outer, (f.x || 0) - f.w / 2), right = (f.x || 0) + f.w / 2, rear = f.z - f.d / 2, front = f.z + f.d / 2;
-    textured(span(shop, left, right, f.y - (fi ? .32 : .02), f.y, rear, front, fi === 2 ? '#e9e4d8' : fi ? '#e4ddcc' : '#c9965f', { cast: fi > 0 }), ['herringbone', 'timber', 'concrete'][fi]);
+    // Each floor its own finish (visual review, 2026-11-07): the shop's oak herringbone, honey oak boards on the
+    // packing level and pale sage sealed epoxy with a tile grid and drain grates in the grow room.
+    textured(span(shop, left, right, f.y - (fi ? .32 : .02), f.y, rear, front, fi === 2 ? '#e9e4d8' : fi ? '#e4ddcc' : '#c9965f', { cast: fi > 0 }), FLOOR_FINISH[fi]);
     // The walls themselves are the shell's (shell.js).
-    // A brass rail along the open front edge of the upper floors.
+    // A glass balustrade along the open front edge of the upper floors, over a crisp fascia on the slab's face.
     if (fi) {
-      span(shop, left, right, f.y, f.y + 1.05, front - .06, front, '#c9a35a', { opts: { transparent: true, opacity: .55 } });
+      fascia(left, right, front, front, f.y);
+      rail(left, right, front - .07, front - .01, f.y);
       // Posts under the slab's front corners and middle.
       // The mezzanine has no middle post: the 2D map leaves the menu board and counters clear.
       (fi === 1 ? [left + .3, right - .3] : [left + .3, 0, right - .3]).forEach(x => box(shop, x, layout.floors[fi - 1].y, front - .3, .3, f.y - layout.floors[fi - 1].y - .32, .3, '#33372f'));
@@ -1914,13 +1955,18 @@ function buildShop(world, layout, { box, span, material, textured, model }) {
     helix(trueSpace, cx, cz, r - .02, a0, a1, y0 + rise - .14, y1 - .14, .09, '#1f5a3c');
   };
   const [, mezz, top] = layout.floors;
-  const up = -Math.PI / 2, rail = (x0, x1, z0, z1, y) => span(shop, x0, x1, y, y + 1.05, z0, z1, '#c9a35a', { opts: { transparent: true, opacity: .55 } });
+  const up = -Math.PI / 2;
   spiral(10.2, .35, 0, mezz.y, 14, up);
-  textured(span(shop, 8.93, 11.35, mezz.y - .32, mezz.y, -2.8, -.8, '#e4ddcc', { cast: true }), 'timber');
+  textured(span(shop, 8.93, 11.35, mezz.y - .32, mezz.y, -2.8, -.8, '#e4ddcc', { cast: true }), FLOOR_FINISH[1]);
   rail(11.29, 11.35, -2.8, -.8, mezz.y);
+  fascia(8.93, 11.35, -.8, -.8, mezz.y); fascia(11.35, 11.35, -2.8, -.8, mezz.y);
   spiral(7.75, -4.4, mezz.y, top.y, 14, up);
-  textured(span(shop, 6.45, 9, top.y - .32, top.y, -6.9, -5.55, '#e9e4d8', { cast: true }), 'concrete');
+  textured(span(shop, 6.45, 9, top.y - .32, top.y, -6.9, -5.55, '#e9e4d8', { cast: true }), FLOOR_FINISH[2]);
   rail(8.94, 9, -6.9, -5.55, top.y);
+  fascia(6.45, 9, -5.55, -5.55, top.y); fascia(9, 9, -6.9, -5.55, top.y);
+  // The slab ends the camera sees (it looks in from +x), from each landing to the floor's front edge.
+  fascia(mezz.w / 2, mezz.w / 2, -.8, mezz.z + mezz.d / 2, mezz.y);
+  fascia(top.w / 2, top.w / 2, -5.55, top.z + top.d / 2, top.y);
   // The same glass along every other open edge: both floors' sides past their short rear walls (shell.js) and the
   // landings, with a gap where each spiral arrives (the stair's top tread, at its post's x).
   const side = (x, z0, z1, y) => rail(x - .03, x + .03, z0, z1, y), across = (x0, x1, z, y) => rail(x0, x1, z - .03, z + .03, y);
@@ -1931,6 +1977,7 @@ function buildShop(world, layout, { box, span, material, textured, model }) {
   side(-top.w / 2 + .03, tRear + 3.5, tFront - .06, top.y);
   side(top.w / 2 - .03, -5.55, tFront - .06, top.y);
   across(top.w / 2, 7.15, -5.58, top.y); across(8.35, 9, -5.58, top.y);
+  finishTrim();
   // The storefront along the entrance side (MARQUEE in main.js): a green plinth, glass, the sign band and pilasters.
   // The sprite shop draws it from its own render instead (wallFaces, below).
   const m = layout.marquee;
