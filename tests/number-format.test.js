@@ -31,3 +31,11 @@ test('counts get a thousands comma and multipliers lose trailing zeros', () => {
   assert.equal(times(2), '2×');
   assert.equal(times(12.44), '12.4×');
 });
+
+// DM Mono is no longer loaded; a stylesheet asking for it would fall back to the system monospace.
+test('no stylesheet asks for DM Mono', async () => {
+  const {readdir,readFile}=await import('node:fs/promises');
+  const dir=new URL('../src/',import.meta.url),hits=[];
+  for(const f of await readdir(dir))if(f.endsWith('.css')){const css=(await readFile(new URL(f,dir),'utf8')).replace(/\/\*[\s\S]*?\*\//g,'');if(/DM Mono/.test(css))hits.push(f);}
+  assert.deepEqual(hits,[],'use Bricolage Grotesque (tabular figures are global) instead of DM Mono in '+hits.join(', '));
+});
