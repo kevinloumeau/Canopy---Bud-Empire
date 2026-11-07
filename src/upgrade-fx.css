@@ -1,0 +1,12 @@
+/* The menu half of the upgrade animation (upgrade-fx.js): the tile, map sign or button just pressed springs a little
+   and a brass halo spreads off its edge; a tile's level ring flashes bright. `scale` rather than `transform`, so it
+   stacks on whatever transform the element already has. Map signs are placed by transform from their centre's
+   offset, so a sign only gets the halo and flash, never the spring. */
+@keyframes upgrade-spring{0%{scale:1}28%{scale:.94}60%{scale:1.05}100%{scale:1}}
+@keyframes upgrade-halo{0%{box-shadow:0 0 0 0 rgba(242,182,64,.8)}100%{box-shadow:0 0 0 14px rgba(242,182,64,0)}}
+@keyframes upgrade-flash{0%,100%{filter:none}30%{filter:brightness(1.35) drop-shadow(0 0 6px rgba(242,182,64,.9))}}
+@media (prefers-reduced-motion:no-preference){
+  body .upgrade-pop:not(.marker){animation:upgrade-spring .46s cubic-bezier(.3,.7,.4,1),upgrade-halo .62s ease-out}
+  body .marker.upgrade-pop{animation:upgrade-halo .62s ease-out,upgrade-flash .62s ease-out}
+  body .upgrade-pop .map-ring,body .upgrade-pop .map-tile-icon,body .upgrade-pop .station-sign-icon{animation:upgrade-flash .62s ease-out}
+}

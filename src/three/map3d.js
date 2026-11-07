@@ -239,6 +239,37 @@ export function createMap3D(canvas, layout) {
     }
     return boostGlows[n];
   }
+  // The squash and spring an upgraded model plays (upgrade-fx.js times it): [across, up] scale factors for s from 0 to 1.
+  // A stretch up, a squash back and a small settle, so it reads as "levelled up" without wobbling. Kept here rather
+  // than imported, so this chunk still pulls in none of the game's own modules.
+  function springScale(s) {
+    if (s === undefined || s === null || s >= 1 || s < 0) return [1, 1];
+    const k = Math.sin(s * Math.PI * 2.5) * Math.pow(1 - s, 2) * .16;
+    return [1 - k * .45, 1 + k];
+  }
+  // An upgrade (frame.upgradeRings, from upgrade-fx.js): a brass ring spreads across the floor and fades over a quick
+  // warm glow; a new look adds a second, later ring. Pooled; hidden the moment nothing is playing.
+  const upgradeRings = [];
+  function upgradeRing(n) {
+    if (!upgradeRings[n]) {
+      const glow = (geometry, extra) => { const m = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial(Object.assign({ color: '#f2b640', transparent: true, depthWrite: false }, extra))); m.renderOrder = 2; m.visible = false; world.add(m); return m; };
+      upgradeRings[n] = { pool: glow(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), { map: glowTexture, color: '#ffd27a' }), ring: glow(new THREE.RingGeometry(.88, 1, 56).rotateX(-Math.PI / 2), { color: '#ffd978' }), echo: glow(new THREE.RingGeometry(.94, 1, 56).rotateX(-Math.PI / 2), { color: '#fff1c8' }) };
+    }
+    return upgradeRings[n];
+  }
+  function updateUpgradeRings(rings) {
+    let n = 0;
+    (rings || []).forEach(p => {
+      const u = upgradeRing(n++), t = Math.max(0, Math.min(1, p.t)), out = 1 - Math.pow(1 - t, 3), y = p.y + .06;
+      u.pool.visible = u.ring.visible = true;
+      u.pool.position.set(p.x, p.y + .03, p.z); u.pool.scale.set(p.r * 3.2, 1, p.r * 3.2); u.pool.material.opacity = .55 * Math.pow(1 - t, 2);
+      u.ring.position.set(p.x, y, p.z); u.ring.scale.set(p.r * (.35 + out), 1, p.r * (.35 + out)); u.ring.material.opacity = .95 * (1 - t);
+      const e = (t - .22) / .78;
+      u.echo.visible = !!p.big && e > 0;
+      if (u.echo.visible) { const eo = 1 - Math.pow(1 - e, 3); u.echo.position.set(p.x, y + .01, p.z); u.echo.scale.set(p.r * (.3 + eo * 1.15), 1, p.r * (.3 + eo * 1.15)); u.echo.material.opacity = .85 * (1 - e); }
+    });
+    for (; n < upgradeRings.length; n++) { const u = upgradeRings[n]; u.pool.visible = u.ring.visible = u.echo.visible = false; }
+  }
   function stationMesh(i) {
     if (!stationMeshes[i]) {
       const group = new THREE.Group(), body = box(group, 0, 0, 0, 1, 1, 1, TIER_COLOURS[1]), top = box(group, 0, 1, 0, 1, .08, 1, '#efe7d4');
@@ -1178,7 +1209,9 @@ export function createMap3D(canvas, layout) {
       group.position.set(s.x, s.y + lift, s.z);
       // The first-load pop (frame pop, 0 to 1): grows out of the floor with a soft overshoot and settles.
       const pop = s.pop === undefined ? 1 : s.pop, k = pop - 1, grow = pop >= 1 ? 1 : 1 + 2.4 * k * k * k + 1.4 * k * k;
-      group.scale.setScalar(Math.max(.001, grow));
+      // An upgrade's squash and spring (frame bump, 0 to 1) rides on top, from the floor up.
+      const spring = springScale(s.bump), g = Math.max(.001, grow);
+      group.scale.set(g * spring[0], g * spring[1], g * spring[0]);
       if (pop <= 0) group.visible = false;
       body.scale.set(s.w, h, s.d);
       top.visible = s.built && !model; top.position.y = h; top.scale.set(s.w + .12, .08, s.d + .12);
@@ -1203,6 +1236,7 @@ export function createMap3D(canvas, layout) {
       ring.position.set(s.x, s.y + .05 + rise * 1.4, s.z); ring.scale.set(r * (.9 + rise * .35), 1, r * (.9 + rise * .35)); ring.material.opacity = .7 * (1 - rise);
     });
     for (let n = glowing; n < boostGlows.length; n++) boostGlows[n].pool.visible = boostGlows[n].ring.visible = false;
+    updateUpgradeRings(frame.upgradeRings);
 
     const figures = frame.figures || [], shade = 1 - night * .55;
     placeFigures(figures, night);
@@ -1265,7 +1299,12 @@ export function createMap3D(canvas, layout) {
     if (flagship) flagship.update(frame);
     if (atms) atms.update(frame);
     cityBuildings.update(frame);
-    Object.entries(fixtures).forEach(([key, holder]) => { holder.visible = !!(frame.fixtures && frame.fixtures[key]); });
+    Object.entries(fixtures).forEach(([key, holder]) => {
+      holder.visible = !!(frame.fixtures && frame.fixtures[key]);
+      // An upgraded fixture (frame.fixtureSprings[key], 0 to 1) springs on its own origin, which sits on the floor.
+      const base = holder.userData.base || (holder.userData.base = holder.scale.clone()), spring = springScale(frame.fixtureSprings && frame.fixtureSprings[key]);
+      holder.scale.set(base.x * spring[0], base.y * spring[1], base.z * spring[0]);
+    });
     updateFixtureSites(frame);
     updateFixtureGhosts(frame);
 
