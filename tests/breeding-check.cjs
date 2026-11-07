@@ -32,7 +32,7 @@ for(const [name,viewport] of [['desktop',{width:1440,height:1000}],['mobile',{wi
     assert.equal(await card.locator('button').innerText(),'Upgrade Amber Bloom');await card.locator('button').click();
     assert.equal(await p.locator('#breedView').isVisible(),false);assert.equal(await p.locator('#strainTab1').getAttribute('aria-selected'),'true');
     // Weekly special line in Events.
-    await p.locator('[data-tray=empire]').click();await p.locator('.empire-more').click();const line=p.locator('#weeklySpecial');await line.scrollIntoViewIfNeeded();
+    await p.locator('[data-tray=empire]').click();await p.locator('.empire-records').click();const line=p.locator('#weeklySpecial');await line.scrollIntoViewIfNeeded();
     assert.match(await line.innerText(),/^This week: .+ · .+/);assert.ok((await status()).weeklySpecial);
     await p.screenshot({path:'artifacts/retention/'+name+'-weekly.png'});
   });
