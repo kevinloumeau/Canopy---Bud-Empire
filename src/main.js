@@ -3280,7 +3280,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
         var basketNow=basketAt(level),basketNext=basketAt(level+1),nextGain=level+1;
         while(nextGain<level+60&&basketAt(nextGain)<=basketNow)nextGain++;
         // Pickup only moves the basket through the retail tier, which both counters have to reach.
-        var retail=economy.retailTier(state.lines),laterGain=basketAt(nextGain)>basketNow?'+1 at Lv '+nextGain:retail<TIER_LEVELS.length-1?(function(at,other){return '×2 when '+(state.lines[other]<at?(other===4?'Orders':'Pickup')+' hits':'both hit')+' Lv '+at})(TIER_LEVELS[retail+1],selected===4?5:4):'';
+        var retail=economy.retailTier(state.lines),laterGain=basketAt(nextGain)>basketNow?'+1 at Lv '+nextGain:retail<TIER_LEVELS.length-1?(function(at,other){return '×2 at '+(state.lines[other]<at?(other===4?'Orders':'Pickup')+' ':'')+'Lv '+at})(TIER_LEVELS[retail+1],selected===4?5:4):'';
         renderUpgradeComparison('Units per basket',basketNow,basketNext,false,false,false,{gain:function(before,after){return after>before?'+'+(after-before)+' per basket':laterGain||'Same basket'}});
       }else renderUpgradeComparison('Seconds per handoff',handoffNow/Math.max(1,state.gameSpeed),handoffNext/Math.max(1,state.gameSpeed),true,!level,false);
     }
@@ -3645,7 +3645,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     $('upgradeFunding').textContent=building?'Opens in '+clock:maxed?'Fully fitted':affordable?(tier?'Ready to upgrade':'Ready to build'):fmt(Math.max(0,price-state.money))+' to go';
     $('upgradeProgress').value=building?(1-buildShareLeft(state.builds,'lounge'))*100:maxed?100:Math.min(100,state.money/price*100);$('upgradeProgress').setAttribute('aria-valuetext',building?'Opens in '+clock:maxed?'Fully fitted':affordable?'Ready':fmt(Math.max(0,price-state.money))+' needed for '+next.name);
     paintUpgradePreview(-2);
-    $('nextAppearance').classList.remove('unlock-road');$('nextAppearance').hidden=false;$('nextAppearance').textContent=next?next.name+' · '+next.seats+' seats · 1 in '+next.share+' guests · jar ×'+next.spend:'Nothing left to fit in the back room.';
+    $('nextAppearance').classList.remove('unlock-road');$('nextAppearance').hidden=false;$('nextAppearance').textContent=next?next.name+' · 1 in '+next.share+' guests · jar ×'+next.spend:'Nothing left to fit in the back room.';
     // Three states on one button: Build · cost, then the build clock counting down (Finish now beside it), then Upgrade.
     var loungeSkip=building?buildSkipCost('lounge'):0;$('buyMachine').classList.toggle('is-countdown',building);
     $('machineCost').textContent=building?clock:maxed?'—':fmt(price);$('buyMachine').disabled=building||!affordable;$('buyMachine').querySelector('span').textContent=building?'Opens in':tier?'Upgrade':'Build';if(building)$('buyMachine').setAttribute('aria-label','Lounge opens in '+clock);$('buyMachine').style.setProperty('--funded',(building?(1-buildShareLeft(state.builds,'lounge'))*100:maxed?0:Math.min(100,state.money/price*100))+'%');
@@ -3779,7 +3779,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // Counters double baskets through the retail tier, which needs both counters at that level.
   function renderUnlockRoad(level,i){
     var next=economy.nextUnlock(Math.max(1,level)),road=$('nextAppearance');road.classList.add('unlock-road');road.hidden=!level;
-    if(!next){road.innerHTML='<b>Flagship</b><span>every level still adds output</span>';return}
+    if(!next){road.innerHTML='<b>Flagship</b><span>+output each level</span>';return}
     var other=i===4?5:i===5?4:-1,gives=other<0?'×2 output':'×2 baskets';road.title=other<0?'':'Baskets double when Orders and Pickup both reach Lv '+next.level;
     road.innerHTML='<b>Lv '+next.level+'</b><span>'+gives+(next.look?' · new look':next.level===FOUNDER_LEVEL&&perkLevel(state.perks,'finish')?' · founder look':'')+'</span>';
   }
