@@ -8,8 +8,8 @@ for(const [name,viewport] of [['desktop',{width:1440,height:1000}],['mobile',{wi
     {money:1e6,lifetime:2e7,lines:[10,10,10,10,10,10],staff:[3,3,3,3,3,3],stock:[80,80,80,80,80],gameSpeed:0,lastSeen:Date.now(),empire:{reputation:80},perks:{points:10,levels:{}}});
   await p.goto(URL);await p.waitForFunction(()=>window.__shiftReady,null,{timeout:60000});
   const status=()=>p.evaluate(()=>window.factoryTool.execute());
-  await p.locator('[data-tray=empire]').click();await p.locator('.empire-more').click();
-  const sum=p.locator('#prestigeStart').locator('xpath=ancestor::details/summary');await sum.scrollIntoViewIfNeeded();await sum.click();
+  await p.locator('[data-tray=empire]').click();await p.locator('.empire-perks').click();
+  
   assert.equal(await p.locator('#perkPoints').innerText(),'10 points');
   for(const id of ['seed','crew','vault']){const b=p.locator(`[data-perk=${id}] button`);await b.scrollIntoViewIfNeeded();await b.click()}
   assert.equal(await p.locator('#perkPoints').innerText(),'3 points');assert.equal(await p.locator('[data-perk=crew] button').isDisabled(),true,'crew level 2 costs 6');
