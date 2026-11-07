@@ -37,7 +37,7 @@ export function mergeResearch(state){
 // gate: levels the branch needs before the fork opens (all three open from the start).
 export const FORKS=[
   {id:'yield',branch:'grow',name:'Steady premium or chase the trend',sides:['curingLevel','trendLevel'],gate:0},
-  {id:'shelf',branch:'retail',name:'Bigger baskets or more shoppers',sides:['basketLevel','trafficLevel'],gate:0},
+  {id:'shelf',branch:'retail',name:'Bigger baskets or more VIPs',sides:['basketLevel','trafficLevel'],gate:0},
   {id:'drones',branch:'delivery',name:'Faster drones or bigger loads',sides:['fleetLevel','cargoLevel'],gate:0}
 ];
 export function forkOf(key){return FORKS.find(f=>f.sides.indexOf(key)>=0)||null;}

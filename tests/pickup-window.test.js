@@ -59,7 +59,7 @@ test('looks change at the station look levels, and each one adds something', () 
   assert.equal(nextWindowLook(1), 10); assert.equal(nextWindowLook(75), null);
   const at = level => ({ owned: true, level });
   assert.deepEqual([1, 10, 30].map(l => windowLineMax(at(l))), [6, 10, 12]);
-  assert.deepEqual([1, 10, 30].map(l => windowServeSeconds(at(l))), [4.5, 3, 2]);
+  assert.deepEqual([1, 10, 30, 75].map(l => windowServeSeconds(at(l))), [4.5, 3, 2, 1.5]);
   assert.equal(windowRequestBoost(at(49)), 1); assert.equal(windowRequestBoost(at(50)), 1.25);
   assert.deepEqual([1, 30, 75].map(walkupFraction), [1 / 3, 1 / 2, 2 / 3]);
   assert.equal(windowPay(1), 1); assert.ok(Math.abs(windowPay(9) - 1.4) < 1e-9 && Math.abs(windowPay(10) - 1.45 * 1.5) < 1e-9);
