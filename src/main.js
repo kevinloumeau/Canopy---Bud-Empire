@@ -1194,6 +1194,17 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // so the far edge of the town still never shows.
     var headroom=TALL_HEADROOM*Math.max(0,Math.min(1,(zoom-.65)/.5))/sq;
     rz=fit(rz,view.reach.rz[0]-headroom+slide*s+Math.max(0,frame.y-top)/(u*sq),view.reach.rz[1]+slide*s-Math.max(0,bottom-frame.y)/(u*sq));
+    // The bottom corners of the view, where the sheet meets the map, look at flat paving with nothing tall to lift it out
+    // of the haze, so they stay out of the thick of it (SUNNY_VIEW.ground): the bottom-left corner is the view's furthest
+    // point south, the bottom-right its furthest east. A corner past its line moves the view straight back across it
+    // (up and across the screen together, so a view at the west or east limit still slides), and the bottom wins over
+    // the top: up there the terraces stand tall enough to rise out of the haze, down here bare ground would show it.
+    var below=Math.max(0,bottom-frame.y)/(u*sq),rxLo=view.reach.rx[0]+slide*c+frame.x/u,rxHi=view.reach.rx[1]+slide*c-(width-frame.x)/u;
+    var corner=function(edge,limit,gx,gz){
+      var e=gx*(rx+edge)+gz*(rz+below)-limit;if(e<=0)return;
+      var mx=rxLo>rxHi?rx:Math.max(rxLo,Math.min(rxHi,rx-e*gx));e-=gx*(rx-mx);rx=mx;if(e>0)rz-=e/gz};
+    corner(-frame.x/u,view.ground.south,-s,c);
+    corner((width-frame.x)/u,eastHaze(storeLevels())[0]+view.ground.east,c,s);
     panX=-rx*u;panY=-rz*u*sq;
   }
   function zoomAt(next,x,y){if(mapGesture.mode==='coast')endGesture();next=Math.max(.65,Math.min(4,next));var ratio=next/zoom,frame=cameraFrame();panX=x-(x-centerX)*ratio-frame.x;panY=y-(y-centerY)*ratio-frame.y;zoom=next;applyCamera()}
