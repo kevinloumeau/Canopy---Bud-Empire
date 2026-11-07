@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {nextSeason,weeklySpecial,specialFactor,WEEKLY_SPECIALS,DAY,HOUR,DAILY,CAREER,migrateProgression,dailyStatus,claimDaily,claimCareer,saleMultiplier,branchRate,buyStore,payStore,openStore,storeRate,storeCost,recordEvent,CONTRACTS,contractOffer,activeContract,contractTwist,contractFactor,startContract,skipContract,settleContract,useContractBoost,tickContractBoost,contractBoostFactor,contractTarget,seasonWindow,seasonStatus,claimSeason,SEASON_REWARDS,carrySeason} from '../src/progression.js';
+import {tickContract,DAILY_BOOST_DAY,nextSeason,weeklySpecial,specialFactor,WEEKLY_SPECIALS,DAY,HOUR,DAILY,CAREER,migrateProgression,dailyStatus,claimDaily,claimCareer,saleMultiplier,branchRate,buyStore,payStore,openStore,storeRate,storeCost,recordEvent,CONTRACTS,contractOffer,activeContract,contractTwist,contractFactor,startContract,skipContract,settleContract,useContractBoost,tickContractBoost,contractBoostFactor,contractTarget,seasonWindow,seasonStatus,claimSeason,SEASON_REWARDS,carrySeason} from '../src/progression.js';
 const start=21000*DAY;
 const fresh=()=>({money:1000000,lifetime:1000000,empire:migrateProgression(undefined,start)});
 test('legacy and malformed progression fields migrate without unlocking rewards',()=>{
@@ -15,6 +15,12 @@ test('daily claims are once per UTC day, cycle after day seven, and keep their p
  assert.equal(dailyStatus(s.empire,start+7*DAY).day,1);
  claimDaily(s,start+7*DAY);assert.equal(dailyStatus(s.empire,start+9*DAY).day,2);assert.equal(dailyStatus(s.empire,start+30*DAY).day,2);
  claimDaily(s,start+9*DAY);assert.equal(claimDaily(s,start+6*DAY),0);
+});
+test('a week of dailies is worth hours of income, and Day 7 banks a contract boost',()=>{
+ // In seconds of income (rewardScale is income over four): Day N pays about N x 6 minutes.
+ DAILY.forEach((r,i)=>{const minutes=r/4/60;assert.ok(minutes>=(i+1)*5&&minutes<=(i+1)*10,'day '+(i+1)+' pays '+minutes+' min')});
+ const s=fresh();for(let i=0;i<DAILY_BOOST_DAY-1;i++)claimDaily(s,start+i*DAY);assert.equal(s.empire.contracts.bank,0);
+ claimDaily(s,start+6*DAY);assert.equal(s.empire.contracts.bank,1,'Day 7 banks a 2x boost');
 });
 test('clock rollback and save/reload cannot duplicate a daily claim',()=>{
  const s=fresh();claimDaily(s,start+DAY);s.empire=migrateProgression(JSON.parse(JSON.stringify(s.empire)),start);
@@ -46,10 +52,19 @@ test('a contract counts only its own kind while its clock runs, then banks a boo
 });
 test('a contract that runs out costs nothing, stops counting and moves on to the next offer',()=>{
  const s=fresh(),p=s.empire;startContract(s,start);
- recordEvent(p,'pickup',1,start+100);recordEvent(p,'pickup',100,start+30*60000);
- assert.equal(activeContract(p,start+30*60000).progress,1);assert.equal(contractTwist(p,start+30*60000),'');
- const r=settleContract(p,start+30*60000);assert.equal(r.expired.id,'night-market');assert.deepEqual([p.contracts.bank,p.trophies],[0,0]);
- assert.equal(activeContract(p,start+31*60000),null);
+ recordEvent(p,'pickup',1,start+100);tickContract(p,30*60);recordEvent(p,'pickup',100,start+30*60000);
+ assert.equal(activeContract(p).progress,1);assert.equal(contractTwist(p),'');
+ const r=settleContract(p);assert.equal(r.expired.id,'night-market');assert.deepEqual([p.contracts.bank,p.trophies],[0,0]);
+ assert.equal(activeContract(p),null);
+});
+test('the contract clock is shop time: wall time, pauses and time away do not burn it',()=>{
+ const s=fresh(),p=s.empire;startContract(s,start);
+ assert.equal(activeContract(p,start+5*3600000).remaining,30*60000,'hours of wall time later nothing has passed');
+ tickContract(p,600);assert.equal(activeContract(p).remaining,20*60000);assert.equal(contractTwist(p),'traffic');
+ const back=migrateProgression(JSON.parse(JSON.stringify(p)),start+DAY);assert.equal(activeContract(back).remaining,20*60000,'a save keeps the shop time left');
+ // A save from before shop time kept a wall-clock end: it keeps what was left of it at load.
+ const old=migrateProgression({clock:start,contracts:{active:{id:'night-market',start:start-10*60000,end:start+20*60000,target:60,progress:3}}},start);
+ assert.equal(activeContract(old).remaining,20*60000);assert.equal(activeContract(old).progress,3);
 });
 test('offers skip contracts the shop cannot work on yet, and another offer can be asked for',()=>{
  const s=fresh();s.productMenu={byStrain:[[true,false,false],[true,false,false],[true,false,false],[true,false,false]]};s.empire.contracts.round=1;
@@ -59,8 +74,8 @@ test('offers skip contracts the shop cannot work on yet, and another offer can b
  startContract(s,start);assert.equal(skipContract(s,start),false,'no skipping a running contract');
  assert.equal(contractTarget(CONTRACTS[4],1e9),5,'big spender counts never grow');assert.ok(contractTarget(CONTRACTS[0],64)>contractTarget(CONTRACTS[0],1));
  assert.ok(contractTarget(CONTRACTS[0],1e12)<=CONTRACTS[0].base*CONTRACTS[0].cap);
- assert.equal(contractTarget(CONTRACTS[0],1,20),360,'with a pace it asks for 60% of what the shop makes in the time');assert.equal(contractTarget(CONTRACTS[0],1,1),60,'never below the base');
- assert.equal(contractOffer(s,1,d=>d.kind==='edible'?10:0).target,360);
+ assert.equal(contractTarget(CONTRACTS[0],1,20),480,'with a pace it asks for 80% of what the shop makes in the time');assert.equal(contractTarget(CONTRACTS[0],1,1),60,'never below the base');
+ assert.equal(contractOffer(s,1,d=>d.kind==='edible'?10:0).target,480);
 });
 test('a banked boost doubles sales for ten minutes of play and stacks time, not size',()=>{
  const p=fresh().empire;assert.equal(useContractBoost(p),false);p.contracts.bank=2;
@@ -130,15 +145,17 @@ test('bulk orders consume packing stock, pay once per dispatch and advance deliv
 test('goals rotate on claim, do not reuse prior progress or count rewards as revenue',async()=>{
  const {recordGoal,goalStatus,claimGoal,settleGoals}=await import('../src/progression.js');const s=fresh(),p=s.empire;
  settleGoals(s);
- assert.equal(claimGoal(s,0),0);recordGoal(p,'pickup',10);const money=s.money;assert.equal(claimGoal(s,0),150);assert.equal(s.money,money+150);assert.equal(claimGoal(s,0),0);assert.equal(goalStatus(p,0).progress,0);
+ assert.equal(claimGoal(s,0),0);recordGoal(p,'pickup',10);const money=s.money;assert.equal(claimGoal(s,0),60);assert.equal(s.money,money+60);assert.equal(claimGoal(s,0),0);assert.equal(goalStatus(p,0).progress,0);
  recordGoal(p,'revenue',500);claimGoal(s,2);assert.equal(goalStatus(p,2).kind,'revenue');assert.equal(goalStatus(p,2).progress,0);assert.equal(p.counters.revenue,500);
  const restored=migrateProgression(JSON.parse(JSON.stringify(p)));assert.deepEqual(restored.goals,p.goals);assert.equal(restored.goalsCompleted,2);
 });
 test('a new shop gets goals it can work on, and the growth slot widens as the shop does',async()=>{
  const {recordGoal,goalStatus,claimGoal,settleGoals}=await import('../src/progression.js');const s=fresh(),p=s.empire;
  // Old saves kept a delivery goal in slot two; with no pad and no progress it becomes an upgrade goal.
- assert.equal(goalStatus(p,1).kind,'online');assert.ok(settleGoals(s));assert.equal(goalStatus(p,1).kind,'upgrade');assert.equal(goalStatus(p,1).target,2);
- recordGoal(p,'upgrade',2);s.autoDrone={owned:true};p.stores[0].level=1;assert.ok(claimGoal(s,1)>0);
+ assert.equal(goalStatus(p,1).kind,'online');assert.ok(settleGoals(s));assert.equal(goalStatus(p,1).kind,'upgrade');assert.equal(goalStatus(p,1).target,240);
+ // The upgrade goal counts cash spent, in minutes of income, so it grows with the shop.
+ assert.equal(goalStatus(p,1,100).target,24000);assert.match(goalStatus(p,1).title,/^Spend \$240 on upgrades$/);
+ recordGoal(p,'upgrade',239);assert.equal(claimGoal(s,1),0);recordGoal(p,'upgrade',1);s.autoDrone={owned:true};p.stores[0].level=1;assert.ok(claimGoal(s,1)>0);
  assert.equal(goalStatus(p,1).kind,'online');recordGoal(p,'online',goalStatus(p,1).target);claimGoal(s,1);assert.equal(goalStatus(p,1).kind,'invest');
  buyStore(s,0);assert.equal(goalStatus(p,1).progress,1);
  // A delivery goal with progress is never swapped away, even if it could not be started today.
@@ -150,10 +167,11 @@ test('a new shop gets goals it can work on, and the growth slot widens as the sh
 test('every third goal closes a shift and pays its bonus once',async()=>{
  const {recordGoal,claimGoal,shiftStatus,settleGoals}=await import('../src/progression.js');const s=fresh(),p=s.empire;settleGoals(s);
  assert.deepEqual([shiftStatus(p).number,shiftStatus(p).done],[1,0]);
- recordGoal(p,'pickup',1e6);recordGoal(p,'revenue',1e6);recordGoal(p,'upgrade',100);
- assert.equal(claimGoal(s,0),150);assert.equal(claimGoal(s,1),200);assert.equal(shiftStatus(p).done,2);
- assert.equal(claimGoal(s,2),200+shiftStatus(p).bonus);assert.deepEqual([shiftStatus(p).number,shiftStatus(p).done],[2,0]);
- recordGoal(p,'pickup',1e6);assert.equal(claimGoal(s,0),150);
+ recordGoal(p,'pickup',1e6);recordGoal(p,'revenue',1e6);recordGoal(p,'upgrade',1e6);
+ assert.equal(claimGoal(s,0),60);assert.equal(claimGoal(s,1),70);assert.equal(shiftStatus(p).done,2);
+ assert.equal(shiftStatus(p).bonus,200,'the shift bonus is the bigger beat, about three goals\' worth');
+ assert.equal(claimGoal(s,2),70+shiftStatus(p).bonus);assert.deepEqual([shiftStatus(p).number,shiftStatus(p).done],[2,0]);
+ recordGoal(p,'pickup',1e6);assert.equal(claimGoal(s,0),60);
 });
 test('multi-day events follow the calendar, climb a three-step ladder and award a lasting badge',()=>{
  assert.equal(seasonWindow(Date.UTC(2026,3,20)).name,'4/20 Week');assert.equal(seasonWindow(Date.UTC(2026,9,16)).name,'Harvest Season');assert.equal(seasonWindow(Date.UTC(2026,9,31,23)).name,'Spooky Season');

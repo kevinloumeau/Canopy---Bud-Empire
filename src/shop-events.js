@@ -18,11 +18,13 @@ export function eventKind(count,twist){return twist==='spender'?'spender':EVENT_
 export function eventGap(seed){return 120+(Math.abs(Math.floor(seed||0))*97)%300;}
 export const INSPECTION_REPUTATION=10,VIP_EVENT_BUZZ=60;
 // What a tap pays, given the shop's income per second and the rush length the perks allow. Cash tips never drop below $50.
+// incomeRate tracks real sales since 2026-11-07, and the tips were trimmed then (spender 90 s, inspection 45 s, VIP 120 s
+// before) so an event every few minutes adds about a sixth to sales rather than a quarter.
 export function eventReward(kind,income,rushSeconds){const tip=s=>Math.max(50,Math.round(Math.max(0,income||0)*s));
   if(kind==='rush')return {rush:rushSeconds,cash:0,reputation:0,buzz:0};
-  if(kind==='inspection')return {rush:0,cash:tip(45),reputation:INSPECTION_REPUTATION,buzz:0};
-  if(kind==='vip')return {rush:0,cash:tip(120),reputation:0,buzz:VIP_EVENT_BUZZ};
-  return {rush:0,cash:tip(90),reputation:0,buzz:0};}
+  if(kind==='inspection')return {rush:0,cash:tip(30),reputation:INSPECTION_REPUTATION,buzz:0};
+  if(kind==='vip')return {rush:0,cash:tip(90),reputation:0,buzz:VIP_EVENT_BUZZ};
+  return {rush:0,cash:tip(60),reputation:0,buzz:0};}
 // The toast after a tap, in the game's caps style.
 export function eventToast(kind,reward,fmt){
   if(kind==='rush')return 'RUSH HOUR · 2× SALES FOR '+reward.rush+'S';

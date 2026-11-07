@@ -47,16 +47,20 @@
 .return-card #returnEarnings li i img{width:28px;height:28px;margin-top:-5px;object-fit:contain;object-position:50% 100%;filter:drop-shadow(0 2px 2px #06180c8c);pointer-events:none}
 .return-card #returnEarnings li span{font-size:14px;line-height:1.2;font-weight:600;letter-spacing:-.01em;color:var(--ui-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .return-card #returnEarnings strong{font:600 14px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums;text-align:right;color:var(--ui-ink)}
-.return-card #returnGoals{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;margin:0 0 12px;padding:8px 12px 8px 8px;border:0;border-radius:16px;background:var(--ui-well);box-shadow:inset 0 0 0 1px var(--ui-edge);color:var(--ui-ink);font:inherit;font-size:14px;font-weight:600;text-align:left;cursor:pointer}
-.return-card #returnGoals[hidden]{display:none}
-.return-card #returnGoals::before{display:none}
-.return-card #returnGoals i{position:relative;display:grid;place-items:center;flex:0 0 40px;height:40px;border-radius:12px;background:linear-gradient(160deg,#3f6f8f,#22435a);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 2px 6px rgba(0,0,0,.3)}
-.return-card #returnGoals i svg{width:22px;height:22px;fill:none;stroke:#e6f2fa;stroke-width:1.8}
-.return-card #returnGoals i b{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--ui-brass);color:var(--ui-brass-ink);font:700 11px/18px 'Bricolage Grotesque',system-ui,sans-serif;box-shadow:0 0 0 2px rgba(12,40,21,.95)}
-.return-card #returnGoals span{flex:1}
-.return-card #returnGoals .return-chevron{width:18px;height:18px;fill:none;stroke:var(--ui-soft);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.return-card #returnGoals:active{transform:scale(.98)}
-.return-card #returnGoals:focus-visible{outline:2px solid var(--ui-ink);outline-offset:2px}
+.return-card #returnGoals,.return-card #returnDaily{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;margin:0 0 12px;padding:8px 12px 8px 8px;border:0;border-radius:16px;background:var(--ui-well);box-shadow:inset 0 0 0 1px var(--ui-edge);color:var(--ui-ink);font:inherit;font-size:14px;font-weight:600;text-align:left;cursor:pointer}
+.return-card #returnGoals[hidden],.return-card #returnDaily[hidden]{display:none}
+.return-card #returnGoals::before,.return-card #returnDaily::before{display:none}
+.return-card #returnGoals i,.return-card #returnDaily i{position:relative;display:grid;place-items:center;flex:0 0 40px;height:40px;border-radius:12px;background:linear-gradient(160deg,#3f6f8f,#22435a);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 2px 6px rgba(0,0,0,.3)}
+.return-card #returnGoals i svg,.return-card #returnDaily i svg{width:22px;height:22px;fill:none;stroke:#e6f2fa;stroke-width:1.8}
+.return-card #returnGoals i b,.return-card #returnDaily i b{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--ui-brass);color:var(--ui-brass-ink);font:700 11px/18px 'Bricolage Grotesque',system-ui,sans-serif;box-shadow:0 0 0 2px rgba(12,40,21,.95)}
+.return-card #returnGoals span,.return-card #returnDaily span{flex:1}
+.return-card #returnGoals .return-chevron,.return-card #returnDaily .return-chevron{width:18px;height:18px;fill:none;stroke:var(--ui-soft);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.return-card #returnGoals:active,.return-card #returnDaily:active{transform:scale(.98)}
+.return-card #returnGoals:focus-visible,.return-card #returnDaily:focus-visible{outline:2px solid var(--ui-ink);outline-offset:2px}
+.return-card #returnDaily i{background:none;box-shadow:none}
+.return-card #returnDaily i img{width:40px;height:40px;object-fit:contain}
+.return-card #returnDaily span{display:flex;flex-direction:column;gap:2px}
+.return-card #returnDaily small{color:var(--ui-soft);font-size:13px;font-weight:600}
 .return-card #dismissReturn{width:100%;min-height:52px;margin:4px 0 0;border:0;border-radius:16px;background:linear-gradient(180deg,#ecd49e,var(--ui-brass));color:var(--ui-brass-ink);font-size:15px;font-weight:700;letter-spacing:-.01em;box-shadow:inset 0 1px 0 rgba(255,250,232,.7),0 6px 18px rgba(226,198,138,.22)}
 .return-card #dismissReturn:active{transform:scale(.98)}
 .return-card #dismissReturn:focus-visible{outline:2px solid var(--ui-ink);outline-offset:2px}
