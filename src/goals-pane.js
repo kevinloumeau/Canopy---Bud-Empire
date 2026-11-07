@@ -1,5 +1,6 @@
 import {abbr,STORES,starStatus,starCount,SHIFT_LENGTH} from './progression.js';
 import {milestone} from './depth.js';
+import {tieLast} from './no-lone-words.js';
 import {ACHIEVEMENTS,achievementRows} from './achievements.js';
 // Goals tab: one brass Collect for every reward that is ready, then goals as tiles: an icon inside a ring that fills with
 // progress, and a short name (the exact figures are in each tile's tooltip). main.js keeps rendering the original controls by id (shift goals, contract, career,
@@ -78,7 +79,7 @@ export function mountGoalsPane({pane,sources,getState,format,rate}){
   I3D(ICONS_3D.has(icon)?icon:'target')+(done?'<i class="goal-ring-tick">'+SVG(ICONS.tick)+'</i>':'')+'</span>';
  const tile=o=>{const tag=o.act?'button':'div';
   return '<'+tag+' class="goal-tile'+(o.done?' is-done':'')+'"'+(o.act?' type="button" data-act="'+o.act+'"':'')+' title="'+esc(o.title+(o.figure?' · '+o.figure:''))+'">'+
-   ring(o.icon||iconFor(o.title),o.share,o.done)+'<b>'+esc(o.label||o.title)+'</b>'+(o.note?'<small>'+esc(o.note)+'</small>':'')+'</'+tag+'>';};
+   ring(o.icon||iconFor(o.title),o.share,o.done)+'<b>'+esc(tieLast(o.label||o.title))+'</b>'+(o.note?'<small>'+esc(o.note)+'</small>':'')+'</'+tag+'>';};
  const group=(title,figure,body)=>body?'<section class="goal-group"><h3 class="goal-head"><span>'+esc(title)+'</span>'+(figure?'<b>'+figure+'</b>':'')+'</h3>'+body+'</section>':'';
  const tiles=items=>items.length?'<div class="goal-tiles">'+items.map(tile).join('')+'</div>':'';
 
