@@ -32,3 +32,4 @@
   .station-team{grid-template-columns:24px minmax(0,1fr) 84px 84px}
   .sheet [data-pane=factory] #stationStatus,.sheet [data-pane=factory] .station-upgrade{display:none!important}
 }
+.station-team #teamTrain.is-pick:not(:disabled){background:var(--ui-brass);border-color:var(--ui-brass);color:var(--ui-brass-ink)}

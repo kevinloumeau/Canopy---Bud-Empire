@@ -44,6 +44,23 @@ export function customerHandoff(station,level,duration){return Math.max(HANDOFF_
 // each basket every second level), so looking one level ahead can miss them. gainAfter(k) is the income gained by k more
 // levels; returns the first k whose gain beats the threshold, or null if none does within the limit.
 export function stepsToGain(gainAfter,limit,threshold=0){for(let k=1;k<=limit;k++){const gain=gainAfter(k);if(gain>threshold)return{steps:k,gain};}return null;}
+// Stations a few percent apart act as one bottleneck: raising one alone shows next to nothing. raiseTogether prices
+// raising every member by k levels (k = 1..limit), then leaves out members already faster than the slowest raised one
+// and prices the rest again. gainAt(levels) and rateAt(i,levels) read a whole trial level array; price(i,level) is
+// one level's cost. Returns one option a k: {steps, used, spend, gain, first} (first: the cheapest member to buy now).
+export function raiseTogether(members,start,{gainAt,rateAt,price},limit,threshold=0){
+  const out=[];if(members.length<2)return out;
+  for(let k=1;k<=limit;k++){
+    const all=start.slice();members.forEach(i=>{all[i]=start[i]+k});let gain=gainAt(all);if(!(gain>threshold))continue;
+    const line=Math.min(...members.map(i=>rateAt(i,all))),used=members.filter(i=>rateAt(i,start)<line*(1+1e-6));
+    if(used.length<2)continue;
+    if(used.length<members.length){const some=start.slice();used.forEach(i=>{some[i]=start[i]+k});gain=gainAt(some);if(!(gain>threshold))continue}
+    let spend=0;used.forEach(i=>{for(let l=start[i];l<start[i]+k;l++)spend+=price(i,l)});
+    const first=used.reduce((a,b)=>price(b,start[b])<price(a,start[a])?b:a);
+    out.push({steps:k,used,spend,gain,first});
+  }
+  return out;
+}
 // The doorman's floor: no ID check takes less than a quarter of a second.
 export const ID_CHECK_FLOOR=.25;
 // How long a full ID check takes on the map when the door has time to spare (the guard reads the ID, then waves the
