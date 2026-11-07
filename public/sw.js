@@ -25,7 +25,7 @@ self.addEventListener('fetch', event => {
     return;
   }
   if (url.origin !== location.origin) return;
-  if (url.pathname.includes('/assets/') || /\.(png|svg|webmanifest)$/.test(url.pathname)) {
+  if (url.pathname.includes('/assets/') || /\.(png|webp|svg|webmanifest)$/.test(url.pathname)) {
     event.respondWith(caches.open(CACHE).then(async cache => {
       const hit = await cache.match(request);
       if (hit) return hit;
