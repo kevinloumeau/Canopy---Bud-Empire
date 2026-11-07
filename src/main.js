@@ -2,6 +2,7 @@ import {PICKUP_WINDOW,PICKUP_SIGN,WINDOW_CLERK,WINDOW_COST,WINDOW_MAX_LEVEL,WIND
 import {ATM_BUILD,ATM_SPOTS,ATM_CORNER,ATM_WINDOW,ATM_MAX_LEVEL,migrateAtm,atmLook,atmFeeShare,atmUseShare,atmUseSeconds,wantsCash,atmIncome,atmLevelCost,atmMachineCost,buyAtm,buyAtmLevel,buyAtmLevels,atmMaxQuote,buyAtmMachine,freeAtm} from './atm.js';
 import {migrateOrderCounters,orderCounterPositions,COUNTER_SHIFT,PICKUP_X,orderCounterCost,buyOrderCounter,ORDER_QUEUE_GATE,assignOrderCounter,assignKiosk,takesKiosk,atOrderCounter,orderAvailability,pickupPlaces} from './order-counters.js';
 import {makeLifts,tickLifts,CAB_SLOTS} from './lounge-lifts.js';
+import {tieLast} from './no-lone-words.js';
 import {LOUNGE_TIERS,LOUNGE_MAX,migrateLounge,loungeTier,loungeUpgradeCost,loungeSeats,loungeSessionSeconds,buyLoungeTier,wantsLounge,loungeAdmission,loungeTake,loungeRate,loungeCurrentRate,migrateLoungeHost,buyLoungeLift,LOUNGE_LIFT_COST,LOUNGE_LIFT_SPEED,loungeHostSpeed,loungeHostCost} from './lounge.js';
 import {migrateShopPlay,picks as momentPicks,createMoment,judgeChoice,tipFor,recordServed,tickShift,operationsAlerts,mountShopPlay} from './shop-play.js';
 import {migrateJourney,advanceJourney,CHAPTERS} from './journey.js';
@@ -3510,7 +3511,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     windowRows.forEach(function(x){var on=show&&(x.key==='window'||w.owned);x.row.hidden=!on;if(!on)return;var note,label,price,disabled,owned=false;
       if(x.key==='window'){if(w.owned){var inLine=windowLineMax(w)-windowRoom(windowLine,w);note=inLine+' / '+windowLineMax(w)+' in line';label='';price='';disabled=true;owned=true;var pips='';for(var k=0;k<windowLineMax(w);k++)pips+='<i'+(k<inLine?' class="on"':'')+'></i>';if(x.row.dataset.pips!==pips){x.row.dataset.pips=pips;x.row.querySelector('.line-pips').innerHTML=pips}}
         else if(building){note='Building';label='Opens in';price=buildClock(buildLeft(state.builds,'window'));disabled=true}
-        else{note='Walk-up web orders';label='Build';price=fmt(WINDOW_COST);disabled=state.money<WINDOW_COST}}
+        else{note=tieLast('Walk-up web orders');label='Build';price=fmt(WINDOW_COST);disabled=state.money<WINDOW_COST}}
       else{var lvl=windowLevel(w),maxed=lvl>=WINDOW_MAX_LEVEL,cost=windowLevelCost(lvl),road=nextWindowLook(lvl),title='Window Lv '+lvl;owned=maxed;
         // The next look, or what one more level pays, under the window's own level.
         note=maxed?'×'+payText(windowPay(lvl))+' walk-ups':road?WINDOW_LOOKS[windowLook(road)-1]+' at Lv '+road:'+5% walk-ups';label=maxed?'Max':'Lv '+(lvl+1);price=maxed?'':fmt(cost);disabled=maxed||state.money<cost;
@@ -4092,7 +4093,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     li.querySelector('button').onclick=function(){if(buyPerk(state.perks,p.id)){upgradeFx.pop();if(p.id==='vault')state.offlineLevel=Math.max(state.offlineLevel,perkLevel(state.perks,'vault'));if(p.id==='finish')paintThumbnails();save();renderUI();notify(p.name.toUpperCase()+' · LEVEL '+perkLevel(state.perks,p.id),'upgrade')}};$('perkGrid').append(li)});
   function renderPerks(){var pts=state.perks.points;$('perkPoints').textContent=pts+' point'+(pts===1?'':'s');
     PERKS.forEach(function(p){var li=$('perkGrid').querySelector('[data-perk="'+p.id+'"]'),l=perkLevel(state.perks,p.id),c=perkCost(state.perks,p.id),b=li.querySelector('button');
-      li.dataset.state=c===null?'known':'open';li.querySelector('b').textContent=p.name;li.querySelector('small').textContent=p.blurb(c===null?l:l+1);li.querySelector('em').textContent='Level '+l+' of '+p.costs.length;
+      li.dataset.state=c===null?'known':'open';li.querySelector('b').textContent=p.name;li.querySelector('small').textContent=tieLast(p.blurb(c===null?l:l+1));li.querySelector('em').textContent='Level '+l+' of '+p.costs.length;
       b.textContent=c===null?'Maxed':'Buy · '+c+' pt'+(c===1?'':'s');b.disabled=c===null||pts<c;b.setAttribute('aria-label',c===null?p.name+' maxed':'Buy '+p.name+' level '+(l+1)+' for '+c+' points')})}
   // Return reminders exist only in the iOS app; the hidden toggle is what the Settings row proxies.
   var reminders=createReminders();
