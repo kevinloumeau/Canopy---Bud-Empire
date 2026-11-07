@@ -13,24 +13,31 @@
  .sheet>[data-pane=factory] .upgrade-comparison svg{width:15px;height:15px}
 }
 
-@media(max-width:779px) and (max-height:900px){
- /* Tiles: a smaller 3D picture and tighter name and level (63px → 54px a row). */
- .sheet .machine-nav{gap:5px!important;margin:0 0 6px!important}
- .sheet .machine-nav button{grid-template-rows:24px auto auto!important;padding:3px 3px 3px!important}
- .sheet .machine-nav button .machine-thumb{width:34px!important;height:24px!important}
+/* Phones: one layout, sized by the sheet scale (sheet-scale.css). The tile pictures and the card's portrait grow a
+   little with the room, the names, levels and figures stay the SE's size, the gaps and the card's padding grow, and
+   the card stretches to the bottom of the half-open sheet so it is never cut off by the crew rows below it. */
+@media(max-width:779px){
+ .sheet>[data-pane=factory]>*{--st-thumb:calc(22px + var(--rp) * .094);--st-tile:calc(var(--st-thumb) + 31px);--st-art:calc(var(--s-art) + 8px)}
+ .sheet .machine-nav{gap:var(--s-tile-gap)!important;margin:0 0 var(--s-gap)!important;padding:0!important;grid-auto-rows:var(--st-tile)}
+ .sheet .machine-nav button{grid-template-rows:var(--st-thumb) auto auto!important;align-content:center;padding:3px 2px 2px!important}
+ .sheet .machine-nav button .machine-thumb{width:calc(var(--st-thumb) * 1.4)!important;height:var(--st-thumb)!important}
  .sheet .machine-nav .station-card-name{font-size:11.5px!important;line-height:1.1!important}
  .sheet .machine-nav button>em{font-size:10.5px!important;line-height:1.15!important}
- /* Card: the gain pill rides on the numbers' line, the portrait sits beside the text only, buttons a touch shorter. */
- .sheet>[data-pane=factory] .selected-line{grid-template-columns:72px minmax(0,1fr)!important;padding:10px 12px 10px!important;row-gap:8px!important;column-gap:12px!important;align-items:start!important}
- .sheet>[data-pane=factory] .selected-line:not(.is-lounge) #upgradePreview{width:72px!important;height:84px!important;align-self:center}
- .sheet>[data-pane=factory] .selected-line.is-lounge{grid-template-columns:96px minmax(0,1fr)!important}
- .sheet .selected-line.is-lounge #upgradePreview{width:96px!important;height:80px!important;align-self:center}
- .sheet .selected-line #nextAppearance:not([hidden]){margin-top:4px!important}
- .sheet .selected-line #upgradeBenefit{margin-top:5px!important;row-gap:2px!important}
+ /* Card: portrait beside the text, the gain pill on the numbers' line, the two buttons along the bottom. */
+ .sheet>[data-pane=factory] .selected-line{grid-template-columns:var(--st-art) minmax(0,1fr)!important;grid-template-rows:1fr auto!important;align-items:center!important;box-sizing:border-box;min-height:calc(100cqh - 2 * var(--st-tile) - var(--s-tile-gap) - var(--s-gap))!important;padding:var(--s-pad) calc(var(--s-pad) + 4px)!important;row-gap:calc(4px + var(--rp) * .125)!important;column-gap:calc(var(--s-pad) + 4px)!important}
+ /* Early on, the bottleneck guide sits above the tiles: the card then keeps its own height so Upgrade stays as high as it can. */
+ .sheet>[data-pane=factory]:has(>.flow-guide:not([hidden])) .selected-line{min-height:0!important}
+ .sheet>[data-pane=factory] .selected-line:not(.is-lounge) #upgradePreview{width:var(--st-art)!important;height:calc(var(--st-art) * 1.12)!important;align-self:center}
+ .sheet>[data-pane=factory] .selected-line.is-lounge{grid-template-columns:calc(var(--st-art) + 16px) minmax(0,1fr)!important}
+ .sheet .selected-line.is-lounge #upgradePreview{width:calc(var(--st-art) + 16px)!important;height:calc(var(--st-art) * .9)!important;align-self:center}
+ .sheet .selected-line h1{font-size:16px!important}
+ .sheet .selected-line #upgradeLevel{font-size:12px!important}
+ .sheet .selected-line #nextAppearance:not([hidden]){margin-top:3px!important}
+ .sheet .selected-line #upgradeBenefit{margin-top:3px!important;row-gap:2px!important}
  .sheet>[data-pane=factory] .upgrade-comparison{margin-top:0!important}
  .sheet>[data-pane=factory] #upgradeGain{margin-top:0!important}
  .sheet .selected-line .station-buy-actions{margin-top:0!important}
- .sheet .selected-line .station-buy-actions #buyMachine,.sheet .selected-line .station-buy-actions #buyMachineMax{min-height:44px!important;height:44px}
+ .sheet .selected-line .station-buy-actions #buyMachine,.sheet .selected-line .station-buy-actions #buyMachineMax{min-height:var(--s-btn)!important;height:var(--s-btn)}
 }
 
 /* iPhone SE and other short phones: a slimmer sheet header and stock strip, a slightly taller sheet, and a smaller card. */
@@ -42,20 +49,4 @@
  .sheet #stockStatus{padding-top:4px;padding-bottom:6px}
  .sheet #stockStatus .stock-item{min-height:32px;padding-block:2px}
  .sheet .tray-tabs{margin-top:4px}
- .sheet .machine-nav button{grid-template-rows:22px auto auto!important;padding:3px 2px 2px!important}
- .sheet .machine-nav button .machine-thumb{width:30px!important;height:22px!important}
- .sheet>[data-pane=factory] .selected-line{grid-template-columns:64px minmax(0,1fr)!important;padding:7px 10px 7px!important;row-gap:6px!important;column-gap:10px!important}
- .sheet .selected-line #nextAppearance:not([hidden]){margin-top:3px!important}
- .sheet .selected-line #upgradeBenefit{margin-top:3px!important}
- .sheet>[data-pane=factory] .selected-line:not(.is-lounge) #upgradePreview{width:64px!important;height:72px!important}
- .sheet>[data-pane=factory] .selected-line.is-lounge{grid-template-columns:80px minmax(0,1fr)!important}
- .sheet .selected-line.is-lounge #upgradePreview{width:80px!important;height:64px!important}
- .sheet .selected-line h1{font-size:16px!important}
- .sheet .selected-line #upgradeLevel{font-size:12px!important}
- .sheet .selected-line .station-buy-actions #buyMachine,.sheet .selected-line .station-buy-actions #buyMachineMax{min-height:42px!important;height:42px}
- .sheet>[data-pane=factory] .selected-line{min-height:calc(41vh - 124px)!important;min-height:calc(41dvh - 124px)!important;grid-template-rows:1fr auto!important;align-items:center!important;box-sizing:border-box}
- .sheet>[data-pane=factory] .selected-line:not(.is-lounge) #upgradePreview{width:clamp(64px,41dvh - 210px,96px)!important;height:clamp(72px,41dvh - 200px,108px)!important}
- .sheet .selected-line.is-lounge #upgradePreview{width:clamp(80px,41dvh - 190px,112px)!important;height:clamp(64px,41dvh - 210px,92px)!important}
- .sheet>[data-pane=factory] .selected-line:not(.is-lounge){grid-template-columns:clamp(64px,41dvh - 210px,96px) minmax(0,1fr)!important}
- .sheet>[data-pane=factory] .selected-line.is-lounge{grid-template-columns:clamp(80px,41dvh - 190px,112px) minmax(0,1fr)!important}
 }

@@ -60,11 +60,12 @@ body[data-active-tray=goals] .sheet:not(.collapsed) .panel-header>#panelToggle{m
  body[data-active-tray=goals] .sheet:not(.collapsed):not(.tall):not(.fluid)>[data-pane=goals]{height:calc(41vh - 10px);height:calc(41dvh - 10px)}
 }
 
-/* Taller phones (iPhone 15/16 and up): a little more air between the rows. */
-@media(max-width:779px) and (min-height:800px){
- .goals-now{margin-bottom:12px}
- .sheet .empire-screen .goal-switch button,.goal-switch button{min-height:40px}
- .goal-switch{margin-bottom:12px}
+/* Phones: the sheet scale (sheet-scale.css) sets the air between the rows, the tab row's height and the tile gaps. */
+@media(max-width:779px){
+ .goals-now{gap:var(--s-tile-gap);margin-bottom:var(--s-gap)}
+ .sheet .empire-screen .goal-switch button,.goal-switch button{min-height:var(--s-tab)}
+ .goal-switch{margin-bottom:var(--s-gap)}
+ .goal-tiles{gap:var(--s-tile-gap)}
 }
 
 /* The pane fills: the goals screen is at least as tall as the pane, and the open group of tiles takes whatever height
@@ -83,18 +84,12 @@ body[data-active-tray=goals] .sheet:not(.collapsed) .panel-header>#panelToggle{m
 .goal-head b{display:flex;align-items:center;gap:4px;font:500 12px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;text-transform:none;color:var(--ui-ink);white-space:nowrap}
 .goal-head b svg{width:14px;height:14px;color:var(--ui-soft)}
 
-/* Taller tiles carry bigger rings and names, so the extra height reads as a larger picture, not padding. */
-@media(max-width:779px) and (min-height:800px){
- .goal-tile,.sheet .empire-screen button.goal-tile{gap:8px}
- .goal-ring{width:62px;height:62px}
- .goal-ring>img.goal-3d{width:36px;height:36px}
- .goal-tile>b{font-size:12.5px}
-}
-@media(max-width:779px) and (min-height:900px){
- .goal-ring{width:70px;height:70px}
- .goal-ring>img.goal-3d{width:42px;height:42px}
- .goal-ring-tick{width:22px;height:22px}
- .goal-tile>b{font-size:13px}
+/* Phones: the ring grows a little with the room (44 → 54px), the names stay the SE's size, and the rest of a taller
+   tile is even padding around its centred content. */
+@media(max-width:779px){
+ .goal-tile,.sheet .empire-screen button.goal-tile{gap:calc(var(--s-pad) - 2px);padding:var(--s-pad) 6px}
+ .goal-tiles .goal-ring{width:var(--s-ring);height:var(--s-ring)}
+ .goal-tiles .goal-ring>img.goal-3d{width:calc(var(--s-ring) * .6);height:calc(var(--s-ring) * .6)}
 }
 @media(min-width:780px){
  .goal-ring{width:56px;height:56px}

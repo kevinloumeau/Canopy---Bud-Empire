@@ -123,38 +123,33 @@ body[data-active-tray=flowers] .sheet:not(.collapsed) .panel-header .menu-info[a
  .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill{padding-block:3px!important}
 }
 
-/* Phones: the board fills the whole pane on every screen. The pane is a size container, so the rings, the strain picture,
-   the sell-type tiles and the Upgrade button scale with the room there is (cqh = 1% of the pane's height), and the
-   sell-type tiles take whatever is left, so no empty band is left under the button. Same for Breed: its rows share
-   the height. */
+/* Phones: the board fills the whole pane on every screen, sized by the sheet scale (sheet-scale.css): the rings, the
+   strain picture, the sell-type icons and the Upgrade button grow a little with the room, the type stays the SE's, the
+   gaps grow, and the sell-type tiles take whatever height is left (their content centred), so no empty band is left
+   under the button. Same for Breed: its rows share the height. */
 @media(max-width:779px){
  html body .sheet>[data-pane="flowers"]:not([hidden]){display:flex;flex-direction:column;container-type:size}
- .sheet [data-pane="flowers"] .menu-board{flex:1 1 0;min-height:0;display:flex;flex-direction:column;gap:clamp(4px,1.6cqh,10px);--ring:clamp(34px,13cqh,48px);--art:clamp(54px,21cqh,84px)}
+ .sheet [data-pane="flowers"] .menu-board{flex:1 1 0;min-height:0;display:flex;flex-direction:column;gap:calc(var(--s-gap) - 1px);--ring:var(--s-ring-sm);--art:var(--s-art)}
  .sheet [data-pane="flowers"] .menu-board>*{flex:none}
- .sheet [data-pane="flowers"] .menu-board-summary,.sheet [data-pane="flowers"] .buyer{min-height:clamp(28px,10cqh,36px)}
+ .sheet [data-pane="flowers"] .menu-board-summary,.sheet [data-pane="flowers"] .buyer{min-height:calc(28px + var(--rp) * .06)}
 
  .sheet [data-pane="flowers"] .strain-nav .strain-card-art{width:var(--ring)!important;height:var(--ring)!important}
  .sheet [data-pane="flowers"] .strain-nav .strain-card-art img.icon-3d{width:calc(var(--ring)*.75);height:calc(var(--ring)*.75)}
  .sheet [data-pane="flowers"] .strain-nav button small{top:calc(var(--ring) - 6px)}
- .sheet [data-pane="flowers"] .strain-nav button b{font-size:clamp(10.5px,3.8cqh,12px)!important}
 
  .sheet [data-pane="flowers"] .menu-board:not([data-menu-view=breed])>.strain-detail{flex:1 1 0;min-height:0;display:flex;flex-direction:column}
- .sheet [data-pane="flowers"] .strain-detail>.strain-hero{flex:1 1 auto;grid-template-columns:var(--art) minmax(0,1fr)!important;grid-template-rows:auto auto minmax(0,1fr) auto!important;row-gap:clamp(4px,1.6cqh,10px)!important}
+ .sheet [data-pane="flowers"] .strain-detail>.strain-hero{flex:1 1 auto;grid-template-columns:var(--art) minmax(0,1fr)!important;grid-template-rows:auto auto minmax(0,1fr) auto!important;row-gap:calc(var(--s-gap) - 1px)!important}
  .sheet [data-pane="flowers"] .strain-hero-art{width:var(--art)!important;height:var(--art)!important}
- .sheet [data-pane="flowers"] .strain-hero h2{font-size:clamp(17px,6cqh,20px)}
  .sheet [data-pane="flowers"] .strain-hero .strain-format{align-self:stretch;display:grid;grid-template-rows:minmax(0,1fr)}
- .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options{height:100%;align-items:stretch}
- .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill{grid-template-columns:clamp(30px,12cqh,42px) minmax(0,1fr)!important;align-content:center}
- .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill>img.icon-3d{width:clamp(30px,12cqh,42px);height:clamp(30px,12cqh,42px)}
- .sheet [data-pane="flowers"] .strain-hero-actions #flowerBuy{min-height:clamp(40px,14cqh,50px)!important;height:clamp(40px,14cqh,50px)}
- .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill>strong{font-size:clamp(11.5px,4cqh,13.5px)!important}
- .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill>em,.sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill>small{font-size:clamp(10px,3.5cqh,12px)!important}
- .sheet [data-pane="flowers"] .strain-hero-actions #flowerBuy{font-size:clamp(13.5px,4.6cqh,15px)}
+ .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options{height:100%;align-items:stretch;gap:var(--s-tile-gap)!important}
+ .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill{grid-template-columns:var(--s-icon) minmax(0,1fr)!important;align-content:center;column-gap:calc(var(--s-pad) - 2px + var(--rp) * .04)!important;padding-inline:var(--s-pad)!important}
+ .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill>strong{white-space:nowrap}
+ .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill>img.icon-3d{width:var(--s-icon);height:var(--s-icon)}
+ .sheet [data-pane="flowers"] .strain-hero-actions #flowerBuy{min-height:calc(var(--s-btn) - 2px)!important;height:calc(var(--s-btn) - 2px)}
 
  .sheet [data-pane="flowers"] .breed-view:not([hidden]){flex:1 1 0;min-height:0;display:flex;flex-direction:column}
  .sheet [data-pane="flowers"] .breed-view .library-head{flex:none}
- .sheet [data-pane="flowers"] .breed-list{flex:1 1 0;min-height:0;grid-auto-rows:minmax(36px,1fr);gap:clamp(3px,1.6cqh,8px)}
+ .sheet [data-pane="flowers"] .breed-list{flex:1 1 0;min-height:0;grid-auto-rows:minmax(36px,1fr);gap:var(--s-tile-gap)}
  .sheet [data-pane="flowers"] .breed-card{min-height:0}
- .sheet [data-pane="flowers"] .breed-copy b{font-size:clamp(12.5px,4.4cqh,14px)}
- .sheet [data-pane="flowers"] .breed-card button{min-height:clamp(30px,10cqh,38px)}
+ .sheet [data-pane="flowers"] .breed-card button{min-height:32px}
 }
