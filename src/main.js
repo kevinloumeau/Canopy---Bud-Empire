@@ -243,7 +243,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     });
     var i=flowerFocus,strain=STRAINS[i],look=STRAIN_LOOKS[i],level=state.strains[i],active=state.menuStrains.indexOf(i)>=0,price=strainCost(i),maxed=level>=strains.STRAIN_MAX,detail=$('strainDetail');
     var isNight=atmosphere(state.empire.network).night,type=strains.STRAIN_TYPE[i],timeNow=strains.timeFactor(type,isNight);
-    var nextValue=Math.round(strain.price*(1+level*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value',i)*trendBoost(i)*displayBoost(i)*terpFactor(state.city,i,state.strainTrend.index)*timeNow);
+    var nextValue=Math.round(flowerValue(i)*(1+level*.1)/(1+Math.max(0,level-1)*.1));
     var stats=level?
       '<span><b>'+fmt(flowerValue(i))+'</b><small>'+'per sale'+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+(maxed?'Max':'+'+fmt(nextValue-flowerValue(i)))+'</b><small>'+(maxed?'level '+strains.STRAIN_MAX:'next lv')+'</small></span>':
       '<span><b>'+fmt(Math.round(strain.price*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value',i)*timeNow))+'</b><small>'+'per sale'+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+fmt(strain.unlock)+'</b><small>unlock</small></span>';
@@ -255,14 +255,14 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       (i===trend?'<li class="is-trend">Trending · +'+Math.round((trendBoost(i)-1)*100)+'% price · <span class="trend-clock"></span></li>':'')+
       (i===reserve?'<li class="is-vip">★ VIP reserve · double baskets</li>':'')+
     '</ul>';
-    var perkLine='<p class="strain-perk'+(tier?' is-unlocked':'')+'" title="'+(tier<2?'Level '+(tier?10:5)+': '+perk.effect[tier]:perk.effect[1])+'"><span class="perk-star" aria-hidden="true">'+(tier?'★':'☆')+'</span><b>'+perk.name+'</b><small>'+(tier?perk.effect[tier-1]:'Lv 5 · '+perk.effect[0])+'</small></p>';
+    var perkLine='<p class="strain-perk'+(tier?' is-unlocked':'')+'" title="'+(tier<2?'Level '+(tier?10:5)+': '+perk.effect[tier]:perk.effect[1])+'"><span class="perk-star" aria-hidden="true">'+(tier?'★':'☆')+'</span><b>'+perk.name+'</b><small>'+(tier?perk.effect[tier-1]:'Lv 5: '+perk.effect[0])+'</small></p>';
     var heroHtml='<div class="strain-hero'+(level?'':' is-locked')+(active?' is-on-menu':'')+(i===trend?' is-trending':'')+'" style="--strain:'+strain.color+'">'+
       '<div class="strain-hero-art">'+icon3d('strain-'+i)+(level?'<button type="button" id="flowerSelect" class="menu-toggle" aria-pressed="'+active+'">'+(active?'On menu':'Add')+'</button>':'')+'</div>'+
-      '<div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">'+look.kind+' · </span>'+strains.TYPES[type]+(level?' · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>'+level+' / '+strains.STRAIN_MAX:' · Locked')+'</small><h2>'+strain.name+'</h2><p>'+(level?look.buyers:'Unlock to put it on the menu. '+look.buyers)+'</p></div>'+
+      '<div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">'+look.kind+' · </span>'+strains.TYPES[type]+(level?' · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>'+level+' / '+strains.STRAIN_MAX:' · Locked')+'<span class="strain-kind-thc"> · '+thcLabel(i)+' THC</span></small><h2>'+strain.name+'</h2><b class="strain-hero-price">'+fmt(level?flowerValue(i):Math.round(strain.price*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value',i)*timeNow))+'<small> / sale</small></b><p>'+(level?look.buyers:'Unlock to put it on the menu. '+look.buyers)+'</p></div>'+
       '<div class="strain-stats">'+stats+'</div>'+
       '<div class="strain-hero-details">'+traits+perkLine+'</div>'+
-      (level?'<div class="product-line strain-format"><h2>Sells as</h2><div class="format-options">'+FORMATS.map(function(f,k){var stocked=stocks(state.productMenu,k,i),cost=formatCost(k,i);return '<button type="button" class="strain-format-pill" data-format="'+k+'" aria-pressed="'+stocked+'"'+(!stocked&&state.money<cost?' disabled':'')+' title="'+f.detail+'">'+icon3d('goods-'+k)+'<strong>'+f.name+'</strong><em>'+(f.value>1?'+'+Math.round((f.value-1)*100)+'% value':'Base price')+'</em><small>'+(stocked?'Selling':fmt(cost))+'</small></button>'}).join('')+'</div><p class="format-benefit">'+(function(){var next=FORMATS.findIndex(function(f,k){return !stocks(state.productMenu,k,i)});return next<0?strain.name+' sells in all three types, to whoever wants each.':'Stock '+FORMATS[next].name.toLowerCase()+' for '+strain.name+' · '+['','+45% value for the 3 in 10 who want them · slower packing','+120% value for the 1 in 5 who want them · slow packing'][next]})()+'</p></div>':'')+
-      '<div class="strain-hero-actions"><button type="button" id="flowerBuy" class="is-primary">'+(maxed?'Fully upgraded':(level?'Upgrade':'Unlock')+' · '+fmt(price))+'</button></div>'+
+      (level?'<div class="product-line strain-format"><h2>Sells as</h2><div class="format-options">'+FORMATS.map(function(f,k){var stocked=stocks(state.productMenu,k,i),cost=formatCost(k,i);return '<button type="button" class="strain-format-pill" data-format="'+k+'" aria-pressed="'+stocked+'"'+(!stocked&&state.money<cost?' disabled':'')+' title="'+f.detail+'">'+icon3d('goods-'+k)+'<strong>'+f.name+'</strong><em>'+(f.value>1?'+'+Math.round((f.value-1)*100)+'%<span class="format-word"> value</span>':'Base<span class="format-word"> price</span>')+'</em><small>'+(stocked?'Selling':fmt(cost))+'</small></button>'}).join('')+'</div><p class="format-benefit">'+(function(){var next=FORMATS.findIndex(function(f,k){return !stocks(state.productMenu,k,i)});return next<0?strain.name+' sells in all three types, to whoever wants each.':'Stock '+FORMATS[next].name.toLowerCase()+' for '+strain.name+' · '+['','+45% value for the 3 in 10 who want them · slower packing','+120% value for the 1 in 5 who want them · slow packing'][next]})()+'</p></div>':'')+
+      '<div class="strain-hero-actions"><button type="button" id="flowerBuy" class="is-primary">'+(maxed?'Fully upgraded':'<span class="buy-label">'+(level?'Upgrade':'Unlock')+' · '+fmt(price)+'</span>'+(level?'<span class="buy-gain">+'+fmt(nextValue-flowerValue(i))+' / sale</span>':''))+'</button></div>'+
     '</div>';
     var heroKey=heroHtml+'|'+(maxed||state.money<price)+'|'+(active&&menu.length===1)+'|'+state.productMenu.byStrain[i].join(',');
     Array.prototype.forEach.call(document.querySelectorAll('.menu-board .trend-clock'),function(el){el.textContent=trendClock});
@@ -321,7 +321,16 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var menuBoard=document.querySelector('[data-pane="flowers"] .menu-board');
   var menuViews=document.createElement('div');menuViews.className='menu-views';menuViews.setAttribute('role','tablist');menuViews.setAttribute('aria-label','Menu views');
   menuViews.innerHTML='<button type="button" role="tab" data-menu-view="strains">Strains</button><button type="button" role="tab" data-menu-view="breed">Breed</button>';
-  menuBoard.insertBefore(menuViews,$('strainNav'));
+  // The Strains / Breed switch and a small "How the menu works" button ride in the sheet's header, beside the Menu
+  // title, so the board below keeps its height for the strains. The guide opens as a card over the board.
+  var sheetHead=document.querySelector('.sheet .panel-header'),menuGuide=menuBoard.querySelector('.strain-guide');
+  if(sheetHead){sheetHead.insertBefore(menuViews,$('panelExpand'));
+    if(menuGuide){var guidePop=document.createElement('p');guidePop.className='menu-guide-pop';guidePop.id='menuGuide';guidePop.hidden=true;guidePop.textContent=menuGuide.querySelector('small').textContent;menuBoard.prepend(guidePop);menuGuide.remove();
+      var guideButton=document.createElement('button');guideButton.type='button';guideButton.className='menu-info';guideButton.setAttribute('aria-label','How the menu works');guideButton.setAttribute('aria-controls','menuGuide');guideButton.setAttribute('aria-expanded','false');guideButton.textContent='i';sheetHead.insertBefore(guideButton,menuViews);
+      var showGuide=function(open){guidePop.hidden=!open;guideButton.setAttribute('aria-expanded',String(open))};
+      guideButton.onclick=function(){showGuide(guidePop.hidden)};
+      document.addEventListener('pointerdown',function(e){if(!guidePop.hidden&&!e.target.closest('.menu-guide-pop,.menu-info'))showGuide(false)},true)}}
+  else menuBoard.insertBefore(menuViews,$('strainNav'));
   var breedPanel=document.createElement('section');breedPanel.className='breed-view';breedPanel.id='breedView';breedPanel.setAttribute('aria-labelledby','breedTitle');breedPanel.hidden=true;
   breedPanel.innerHTML='<div class="library-head"><h3 id="breedTitle">Cultivar journal</h3><small id="breedSummary"></small></div><ul class="breed-list" id="breedList"></ul>';
   menuBoard.append(breedPanel);
