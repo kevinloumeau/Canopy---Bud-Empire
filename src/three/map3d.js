@@ -270,6 +270,57 @@ export function createMap3D(canvas, layout) {
     });
     for (; n < upgradeRings.length; n++) { const u = upgradeRings[n]; u.pool.visible = u.ring.visible = u.echo.visible = false; }
   }
+  // A big purchase's reveal (frame.revealBeams, from reveal-fx.js): a column of warm light rises out of the spot and
+  // fades while brass sparkles burst up and drift out. Pooled (three at most), two draws each while one plays.
+  const beamTexture = (() => {
+    const c = document.createElement('canvas'); c.width = 4; c.height = 64;
+    const g = c.getContext('2d'), grad = g.createLinearGradient(0, 64, 0, 0);
+    grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(.35, 'rgba(255,255,255,.55)'); grad.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = grad; g.fillRect(0, 0, 4, 64);
+    return new THREE.CanvasTexture(c);
+  })();
+  const SPARKS = 28, revealBeams = [];
+  function revealBeam(n) {
+    if (!revealBeams[n]) {
+      const column = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 28, 1, true).translate(0, .5, 0),
+        new THREE.MeshBasicMaterial({ map: beamTexture, color: '#ffc457', transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+      const geometry = new THREE.BufferGeometry(), colours = new Float32Array(SPARKS * 3), tone = new THREE.Color();
+      for (let i = 0; i < SPARKS; i++) tone.set(i % 3 === 0 ? '#fff4d2' : i % 3 === 1 ? '#ffd36a' : '#e9a93a').toArray(colours, i * 3);
+      geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(SPARKS * 3), 3));
+      geometry.setAttribute('color', new THREE.BufferAttribute(colours, 3));
+      const sparks = new THREE.Points(geometry, new THREE.PointsMaterial({ map: glowTexture, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: false }));
+      column.renderOrder = sparks.renderOrder = 3; column.visible = sparks.visible = false; sparks.frustumCulled = false;
+      world.add(column); world.add(sparks);
+      revealBeams[n] = { column, sparks };
+    }
+    return revealBeams[n];
+  }
+  // A small fixed hash, so each sparkle keeps its own path from frame to frame.
+  const hash = (i, k) => { const v = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453; return v - Math.floor(v); };
+  function updateRevealBeams(beams, unit) {
+    let n = 0;
+    (beams || []).forEach(p => {
+      const b = revealBeam(n++), t = Math.max(0, Math.min(1, p.t)), grow = 1 - Math.pow(1 - Math.min(1, t / .32), 3);
+      const fade = t < .12 ? t / .12 : Math.max(0, 1 - (t - .12) / .7);
+      b.column.visible = fade > 0;
+      b.column.position.set(p.x, p.y, p.z);
+      const width = p.r * (.8 - .5 * t);
+      b.column.scale.set(width, Math.max(.01, p.h * grow), width);
+      b.column.material.opacity = .8 * fade;
+      const pos = b.sparks.geometry.attributes.position;
+      for (let i = 0; i < SPARKS; i++) {
+        const a = hash(i, p.seed) * Math.PI * 2, speed = .55 + hash(i, p.seed + 7) * .65, start = hash(i, p.seed + 3) * .25;
+        const k = Math.max(0, Math.min(1, (t - start) / (1 - start))), out = 1 - Math.pow(1 - k, 2), spin = a + k * 1.6;
+        const reach = p.r * (.25 + 1.05 * out * speed), rise = p.h * (.1 + 1.3 * out * speed) - p.h * .55 * k * k;
+        pos.setXYZ(i, p.x + Math.cos(spin) * reach, p.y + Math.max(.05, rise), p.z + Math.sin(spin) * reach);
+      }
+      pos.needsUpdate = true;
+      b.sparks.visible = true;
+      b.sparks.material.size = Math.max(5, unit * .42) * (1 - .35 * t);
+      b.sparks.material.opacity = t < .08 ? t / .08 : Math.min(1, (1 - t) * 2.2) * (.75 + .25 * Math.sin(t * 40));
+    });
+    for (; n < revealBeams.length; n++) { const b = revealBeams[n]; b.column.visible = b.sparks.visible = false; }
+  }
   function stationMesh(i) {
     if (!stationMeshes[i]) {
       const group = new THREE.Group(), body = box(group, 0, 0, 0, 1, 1, 1, TIER_COLOURS[1]), top = box(group, 0, 1, 0, 1, .08, 1, '#efe7d4');
@@ -1237,6 +1288,7 @@ export function createMap3D(canvas, layout) {
     });
     for (let n = glowing; n < boostGlows.length; n++) boostGlows[n].pool.visible = boostGlows[n].ring.visible = false;
     updateUpgradeRings(frame.upgradeRings);
+    updateRevealBeams(frame.revealBeams, frame.unit || 40);
 
     const figures = frame.figures || [], shade = 1 - night * .55;
     placeFigures(figures, night);
@@ -1300,10 +1352,12 @@ export function createMap3D(canvas, layout) {
     if (atms) atms.update(frame);
     cityBuildings.update(frame);
     Object.entries(fixtures).forEach(([key, holder]) => {
-      holder.visible = !!(frame.fixtures && frame.fixtures[key]);
-      // An upgraded fixture (frame.fixtureSprings[key], 0 to 1) springs on its own origin, which sits on the floor.
-      const base = holder.userData.base || (holder.userData.base = holder.scale.clone()), spring = springScale(frame.fixtureSprings && frame.fixtureSprings[key]);
-      holder.scale.set(base.x * spring[0], base.y * spring[1], base.z * spring[0]);
+      // A fixture just bought (frame.fixtureReveal[key]: [across, up], or null while the camera is still on its way)
+      // pops up out of the floor; an upgraded one (frame.fixtureSprings[key], 0 to 1) springs. Both on its own origin, which sits on the floor.
+      const reveal = frame.fixtureReveal ? frame.fixtureReveal[key] : undefined;
+      holder.visible = !!(frame.fixtures && frame.fixtures[key]) && reveal !== null;
+      const base = holder.userData.base || (holder.userData.base = holder.scale.clone()), spring = springScale(frame.fixtureSprings && frame.fixtureSprings[key]), pop = reveal || [1, 1];
+      holder.scale.set(base.x * spring[0] * pop[0], base.y * spring[1] * pop[1], base.z * spring[0] * pop[0]);
     });
     updateFixtureSites(frame);
     updateFixtureGhosts(frame);
