@@ -2,6 +2,7 @@ import {PICKUP_WINDOW,PICKUP_SIGN,WINDOW_CLERK,WINDOW_COST,WINDOW_MAX_LEVEL,WIND
 import {ATM_BUILD,ATM_SPOTS,ATM_CORNER,ATM_WINDOW,ATM_MAX_LEVEL,migrateAtm,atmLook,atmFeeShare,atmUseShare,atmUseSeconds,wantsCash,atmIncome,atmLevelCost,atmMachineCost,buyAtm,buyAtmLevel,buyAtmLevels,atmMaxQuote,buyAtmMachine,freeAtm} from './atm.js';
 import {migrateOrderCounters,orderCounterPositions,COUNTER_SHIFT,PICKUP_X,orderCounterCost,buyOrderCounter,ORDER_QUEUE_GATE,assignOrderCounter,assignKiosk,takesKiosk,atOrderCounter,orderAvailability,pickupPlaces} from './order-counters.js';
 import {makeLifts,tickLifts,CAB_SLOTS} from './lounge-lifts.js';
+import {tieLast} from './no-lone-words.js';
 import {LOUNGE_TIERS,LOUNGE_MAX,migrateLounge,loungeTier,loungeUpgradeCost,loungeSeats,loungeSessionSeconds,buyLoungeTier,wantsLounge,loungeAdmission,loungeTake,loungeRate,loungeCurrentRate,migrateLoungeHost,buyLoungeLift,LOUNGE_LIFT_COST,LOUNGE_LIFT_SPEED,loungeHostSpeed,loungeHostCost} from './lounge.js';
 import {migrateShopPlay,picks as momentPicks,createMoment,judgeChoice,tipFor,recordServed,tickShift,operationsAlerts,mountShopPlay} from './shop-play.js';
 import {migrateJourney,advanceJourney,CHAPTERS} from './journey.js';
@@ -18,6 +19,7 @@ import {migrateRun,freshRun,tickRun,reopenMoment} from './reopen.js';
 import {makeSound} from './sfx.js';
 import {createUpgradeFx} from './upgrade-fx.js';
 import {createRevealFx,popScale} from './reveal-fx.js';
+import {createSparkles} from './sparkles.js';
 import {morph} from './dom-morph.js';
 import {FORKS,RESEARCH_BRANCHES,ALSO,RESEARCH_VERSION,levelCost,mergeResearch,freshForks,migrateForks,sideStatus,takeSide,partnerOf,levelsToGate,forkOf} from './research.js';
 import {installQuietDom} from './quiet-dom.js';
@@ -257,14 +259,14 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       (i===trend?'<li class="is-trend">Trending · +'+Math.round((trendBoost(i)-1)*100)+'% price · <span class="trend-clock"></span></li>':'')+
       (i===reserve?'<li class="is-vip">★ VIP reserve · double baskets</li>':'')+
     '</ul>';
-    var perkLine='<p class="strain-perk'+(tier?' is-unlocked':'')+'" title="'+(tier<2?'Level '+(tier?10:5)+': '+perk.effect[tier]:perk.effect[1])+'"><span class="perk-star" aria-hidden="true">'+(tier?'★':'☆')+'</span><b>'+perk.name+'</b><small>'+(tier?perk.effect[tier-1]:'Lv 5 · '+perk.effect[0])+'</small></p>';
+    var perkLine='<p class="strain-perk'+(tier?' is-unlocked':'')+'" title="'+(tier<2?'Level '+(tier?10:5)+': '+perk.effect[tier]:perk.effect[1])+'"><span class="perk-star" aria-hidden="true">'+(tier?'★':'☆')+'</span><b>'+perk.name+'</b><small>'+(tier?perk.effect[tier-1]:'Lv 5: '+perk.effect[0])+'</small></p>';
     var heroHtml='<div class="strain-hero'+(level?'':' is-locked')+(active?' is-on-menu':'')+(i===trend?' is-trending':'')+'" style="--strain:'+strain.color+'">'+
       '<div class="strain-hero-art">'+icon3d('strain-'+i)+(level?'<button type="button" id="flowerSelect" class="menu-toggle" aria-pressed="'+active+'">'+(active?'On menu':'Add')+'</button>':'')+'</div>'+
-      '<div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">'+look.kind+' · </span>'+strains.TYPES[type]+(level?' · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>'+level+' / '+strains.STRAIN_MAX:' · Locked')+'</small><h2>'+strain.name+'</h2><p>'+(level?look.buyers:'Unlock to put it on the menu. '+look.buyers)+'</p></div>'+
+      '<div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">'+look.kind+' · </span>'+strains.TYPES[type]+(level?' · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>'+level+' / '+strains.STRAIN_MAX:' · Locked')+'<span class="strain-kind-thc"> · '+thcLabel(i)+' THC</span></small><h2>'+strain.name+'</h2><b class="strain-hero-price">'+fmt(level?flowerValue(i):Math.round(strain.price*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value',i)*timeNow))+'<small> / sale</small></b><p>'+(level?look.buyers:'Unlock to put it on the menu. '+look.buyers)+'</p></div>'+
       '<div class="strain-stats">'+stats+'</div>'+
       '<div class="strain-hero-details">'+traits+perkLine+'</div>'+
-      (level?'<div class="product-line strain-format"><h2>Sells as</h2><div class="format-options">'+FORMATS.map(function(f,k){var stocked=stocks(state.productMenu,k,i),cost=formatCost(k,i);return '<button type="button" class="strain-format-pill" data-format="'+k+'" aria-pressed="'+stocked+'"'+(!stocked&&state.money<cost?' disabled':'')+' title="'+f.detail+'">'+icon3d('goods-'+k)+'<strong>'+f.name+'</strong><em>'+(f.value>1?'+'+Math.round((f.value-1)*100)+'% value':'Base price')+'</em><small>'+(stocked?'Selling':fmt(cost))+'</small></button>'}).join('')+'</div><p class="format-benefit">'+(function(){var next=FORMATS.findIndex(function(f,k){return !stocks(state.productMenu,k,i)});return next<0?strain.name+' sells in all three types, to whoever wants each.':'Stock '+FORMATS[next].name.toLowerCase()+' for '+strain.name+' · '+['','+45% value for the 3 in 10 who want them · slower packing','+120% value for the 1 in 5 who want them · slow packing'][next]})()+'</p></div>':'')+
-      '<div class="strain-hero-actions"><button type="button" id="flowerBuy" class="is-primary">'+(maxed?'Fully upgraded':(level?'Upgrade':'Unlock')+' · '+fmt(price))+'</button></div>'+
+      (level?'<div class="product-line strain-format"><h2>Sells as</h2><div class="format-options">'+FORMATS.map(function(f,k){var stocked=stocks(state.productMenu,k,i),cost=formatCost(k,i);return '<button type="button" class="strain-format-pill" data-format="'+k+'" aria-pressed="'+stocked+'"'+(!stocked&&state.money<cost?' disabled':'')+' title="'+f.detail+'">'+icon3d('goods-'+k)+'<strong>'+f.name+'</strong><em>'+(f.value>1?'+'+Math.round((f.value-1)*100)+'%<span class="format-word"> value</span>':'Base<span class="format-word"> price</span>')+'</em><small>'+(stocked?'Selling':fmt(cost))+'</small></button>'}).join('')+'</div><p class="format-benefit">'+(function(){var next=FORMATS.findIndex(function(f,k){return !stocks(state.productMenu,k,i)});return next<0?strain.name+' sells in all three types, to whoever wants each.':'Stock '+FORMATS[next].name.toLowerCase()+' for '+strain.name+' · '+['','+45% value for the 3 in 10 who want them · slower packing','+120% value for the 1 in 5 who want them · slow packing'][next]})()+'</p></div>':'')+
+      '<div class="strain-hero-actions"><button type="button" id="flowerBuy" class="is-primary">'+(maxed?'Fully upgraded':'<span class="buy-label">'+(level?'Upgrade':'Unlock')+' · '+fmt(price)+'</span>'+(level?'<span class="buy-gain">+'+fmt(nextValue-flowerValue(i))+' / sale</span>':''))+'</button></div>'+
     '</div>';
     var heroKey=heroHtml+'|'+(maxed||state.money<price)+'|'+(active&&menu.length===1)+'|'+state.productMenu.byStrain[i].join(',');
     Array.prototype.forEach.call(document.querySelectorAll('.menu-board .trend-clock'),function(el){el.textContent=trendClock});
@@ -324,7 +326,16 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var menuBoard=document.querySelector('[data-pane="flowers"] .menu-board');
   var menuViews=document.createElement('div');menuViews.className='menu-views';menuViews.setAttribute('role','tablist');menuViews.setAttribute('aria-label','Menu views');
   menuViews.innerHTML='<button type="button" role="tab" data-menu-view="strains">Strains</button><button type="button" role="tab" data-menu-view="breed">Breed</button>';
-  menuBoard.insertBefore(menuViews,$('strainNav'));
+  // The Strains / Breed switch and a small "How the menu works" button ride in the sheet's header, beside the Menu
+  // title, so the board below keeps its height for the strains. The guide opens as a card over the board.
+  var sheetHead=document.querySelector('.sheet .panel-header'),menuGuide=menuBoard.querySelector('.strain-guide');
+  if(sheetHead){sheetHead.insertBefore(menuViews,$('panelExpand'));
+    if(menuGuide){var guidePop=document.createElement('p');guidePop.className='menu-guide-pop';guidePop.id='menuGuide';guidePop.hidden=true;guidePop.textContent=menuGuide.querySelector('small').textContent;menuBoard.prepend(guidePop);menuGuide.remove();
+      var guideButton=document.createElement('button');guideButton.type='button';guideButton.className='menu-info';guideButton.setAttribute('aria-label','How the menu works');guideButton.setAttribute('aria-controls','menuGuide');guideButton.setAttribute('aria-expanded','false');guideButton.textContent='i';sheetHead.insertBefore(guideButton,menuViews);
+      var showGuide=function(open){guidePop.hidden=!open;guideButton.setAttribute('aria-expanded',String(open))};
+      guideButton.onclick=function(){showGuide(guidePop.hidden)};
+      document.addEventListener('pointerdown',function(e){if(!guidePop.hidden&&!e.target.closest('.menu-guide-pop,.menu-info'))showGuide(false)},true)}}
+  else menuBoard.insertBefore(menuViews,$('strainNav'));
   var breedPanel=document.createElement('section');breedPanel.className='breed-view';breedPanel.id='breedView';breedPanel.setAttribute('aria-labelledby','breedTitle');breedPanel.hidden=true;
   breedPanel.innerHTML='<div class="library-head"><h3 id="breedTitle">Cultivar journal</h3><small id="breedSummary"></small></div><ul class="breed-list" id="breedList"></ul>';
   menuBoard.append(breedPanel);
@@ -457,7 +468,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     state.stock[3]-=1;add(take.total);state.loungeSessions++;state.loungeEarned+=take.total;state.shopPlay.shift.earned+=take.total;c.loungeLeft=loungeSessionSeconds(state.lounge)*loungeStayJitter(c.id);c.phase='lounge';c.walking=false;c.loungeTake=take.total;
     c.loungeFade=1;c.fadeFromZ=c.z;c.facing=-.3;c.roofWalk=0;c.walkBack=0;c.lift=null;c.liftShaft=null;c.shaft=0;
     recordEvent(state.empire,'pickup',1);playSound('coin',state.sound);
-    if(!motionPreference.matches)tickets.push({x:LOUNGE_DOOR.x,y:2.1,z:LOUNGE_DOOR.z,life:1,text:fmt(take.cover).slice(1)});
+    if(!motionPreference.matches)tickets.push({x:LOUNGE_DOOR.x,y:2.1,z:LOUNGE_DOOR.z,life:1,text:fmt(take.cover)});
   }
   function askLift(c,wait){c.lift=wait;c.liftAsk=++liftAsks;c.liftShaft=null}
   function leaveLounge(c){
@@ -889,7 +900,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   world.insertBefore(canvas,world.firstChild);canvas.setAttribute('aria-hidden','true');
   var screenCtx=ctx;
   var map3d=null,canvas3d=null,map3dModule=null,map3dLayout=null,mapDrawn=false,mapRebuilds=0,mapRebuildTimer=0;
-  // The 2D canvas carries the 3D map's overlay (delivery drones, badges, particles, tickets), so it must stack above
+  // The 2D canvas carries the 3D map's overlay (delivery drones, badges, tickets), so it must stack above
   // the absolutely positioned 3D canvas rather than paint underneath it.
   canvas.style.position='relative';
   {
@@ -1051,7 +1062,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var sceneElevation=0;
   // While the 3D map records a branch scene, the drawing primitives hand their world shapes to it instead (recordBranch).
   var branchRec=null;
-  var tierFlashes=[0,0,0,0,0,0],crateTime=0,cargoOdo=0,particles=[],deliveryDrones=[],sceneTime=0,animationTime=0;
+  var tierFlashes=[0,0,0,0,0,0],crateTime=0,cargoOdo=0,deliveryDrones=[],sceneTime=0,animationTime=0;
   // Rise-in progress (1 → 0) for a freshly built station; index 6 is the security door.
   var buildRise=[0,0,0,0,0,0,0,0];
   // Grand-opening confetti: paper pieces in the shop's own palette, drifting down over the whole building in world space.
@@ -1078,6 +1089,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // A snapshot (?snap) can hold the animation at one moment by setting window.__canopyFxClock (ms).
   var upgradeFx=createUpgradeFx(motionPreference,function(){return window.__canopyFxClock!==undefined?window.__canopyFxClock:performance.now()}),branchStationAt={};
   var revealFx=createRevealFx(motionPreference,function(){return window.__canopyFxClock!==undefined?window.__canopyFxClock:performance.now()});
+  // Upgrade sparkles: soft leaves, glints and coins in the 3D scene (sparkles.js), timed on the same clock as the rings.
+  var sparkles=createSparkles(motionPreference,function(){return window.__canopyFxClock!==undefined?window.__canopyFxClock:performance.now()});
   // A big purchase (Kevin, 2026-11-07: a ghost item bought, then "apply that to other large purchase or upgrades"): if
   // the spot sits off the middle of the map that shows above the sheet, the camera glides it to the middle first, then
   // the reveal plays (reveal-fx.js: rising light, sparkles, the bought fixture popping out of the floor), and at its
@@ -1937,7 +1950,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(!atAtm(c))c.idDistance=Math.max(index*.7,c.idDistance-budget);
     var pos=routePoint(ID_ROUTE,c.idDistance);
     if(c.cash){var spot=ATM_SPOTS[c.cash.machine],goal=c.cash.path.length?c.cash.path[0]:c.cash.stage==='back'?pos:spot.stand,gx=goal.x-c.x,gz=goal.z-c.z,gd=Math.hypot(gx,gz),walk=dt*walkSpeed();
-      if(c.cash.stage==='use'){c.cash.t+=dt;if(c.cash.t>=atmUseSeconds(state.atm.level)){var fee=atmFee();if(fee>0){add(fee);state.atmEarned=(state.atmEarned||0)+fee;if(!motionPreference.matches)tickets.push({x:spot.x,y:2.6,z:spot.z,life:1,text:fmt(fee).slice(1)})}c.cash.stage='back';c.cash.path=[ATM_CORNER];c.cashRejoin=true}}
+      if(c.cash.stage==='use'){c.cash.t+=dt;if(c.cash.t>=atmUseSeconds(state.atm.level)){var fee=atmFee();if(fee>0){add(fee);state.atmEarned=(state.atmEarned||0)+fee;if(!motionPreference.matches)tickets.push({x:spot.x,y:2.6,z:spot.z,life:1,text:fmt(fee)})}c.cash.stage='back';c.cash.path=[ATM_CORNER];c.cashRejoin=true}}
       else if(gd<=walk){c.x=goal.x;c.z=goal.z;if(c.cash.path.length)c.cash.path.shift();else if(c.cash.stage==='go'){c.cash.stage='use';c.cash.t=0}else{c.cash=null;c.cashDone=true}}
       else{c.x+=gx/gd*walk;c.z+=gz/gd*walk}
     }else{c.x=pos.x;c.z=pos.z}
@@ -2551,9 +2564,6 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function positionShopPlay(){
     if(shopPlayUI){var asking=moment&&customers.find(function(c){return c.id===moment.customerId&&!c.ordered}),point=asking?project(asking.renderX===undefined?asking.x:asking.renderX,2.8,asking.renderZ===undefined?asking.z:asking.renderZ):null;shopPlayUI.position(point,!!point&&point.x>24&&point.x<width-24&&point.y>90&&point.y<visibleHeight())}
   }
-  function drawParticles(frameDelta){
-    for(var i=particles.length-1;i>=0;i--){var p=particles[i];p.life-=frameDelta*1.5;if(!motionPreference.matches){p.x+=p.vx*frameDelta;p.z+=p.vz*frameDelta;p.y+=p.vy*frameDelta;}p.vy-=frameDelta*5;var screen=project(p.x,p.y,p.z),size=Math.max(2,unit*.1);ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.fillRect(screen.x-size/2,screen.y-size/2,size,size);ctx.globalAlpha=1;if(p.life<=0)particles.splice(i,1)}
-  }
   // The 3D map's frame: the scene goes to the WebGL canvas, and the 2D canvas, cleared to transparent, keeps
   // what is drawn over the map in screen space. Taps, tags and badges use project(), which the 3D camera matches.
   var STATION_BOXES=[{w:2.6,d:1.5,h:1.5},{w:3.2,d:1.6,h:1.7},{w:2.8,d:1.5,h:1.5},{w:2.6,d:1.5,h:1.5},{w:2.2,d:1.1,h:1.25},{w:2.4,d:1.2,h:1.25},{w:.8,d:1.3,h:1.1}];
@@ -2829,12 +2839,12 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
         if(j===4)staffer('b'+d.index+'s4',STAFF_MODELS.desks[(d.index+1)%STAFF_MODELS.desks.length],q.x-.35,q.y,q.z-1.5,{x:0,z:1},.3,{role:'desk',clock:workClock(4)+d.index*1.7,act:1});
         else{var spot=STAFF_SPOTS[j]||{dx:-.95,dz:-1.65};staffer('b'+d.index+'s'+j,STAFF_MODELS.stations[j],q.x+spot.dx,q.y,q.z+spot.dz,{x:-spot.dx,z:-spot.dz},spot.facing,{role:STAFF_ROLES[j],clock:workClock(j),act:1})}})});
     var fx=upgradeFx.frame(),rv=revealFx.frame();render.reveal=rv;
-    map3d.render({upgradeRings:fx.rings,fixtureSprings:fx.springs,revealBeams:rv.beams,fixtureReveal:revealScales(rv.pops),step:frameDelta,districts:districts,hazeEast:eastHaze(storeLevels()),dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,characters:characters,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,intro:introTime(),loungeOpen:state.lounge>0,loungeTier:state.lounge,city:state.city,cityClaimed:cityClaimed(),cityBuild:cityBuildShares(),atm:atmFrame(),flagship:state.flagship,flagshipBuild:isBuilding(state.builds,'flagship')?1-buildShareLeft(state.builds,'flagship'):null,loungeBuild:isBuilding(state.builds,'lounge')?1-buildShareLeft(state.builds,'lounge'):null,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtureBuild:isBuilding(state.builds,'deck')||isBuilding(state.builds,'window')?Object.assign(isBuilding(state.builds,'deck')?{deck:1-buildShareLeft(state.builds,'deck')}:{},isBuilding(state.builds,'window')?{pickupWindow:1-buildShareLeft(state.builds,'window')}:{}):null,fixtures:Object.assign(windowFixtures(),{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2}),fixtureGhost:fixtureGhosts(),menus:kioskMenus(),menuClock:animationTime/1000,cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    map3d.render({upgradeRings:fx.rings,fixtureSprings:fx.springs,revealBeams:rv.beams,sparkles:sparkles.frame(),fixtureReveal:revealScales(rv.pops),step:frameDelta,districts:districts,hazeEast:eastHaze(storeLevels()),dry:render.dry,width:width,height:height,dpr:dpr,lowPower:window.canopyPowerSaver===true,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,characters:characters,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,intro:introTime(),loungeOpen:state.lounge>0,loungeTier:state.lounge,city:state.city,cityClaimed:cityClaimed(),cityBuild:cityBuildShares(),atm:atmFrame(),flagship:state.flagship,flagshipBuild:isBuilding(state.builds,'flagship')?1-buildShareLeft(state.builds,'flagship'):null,loungeBuild:isBuilding(state.builds,'lounge')?1-buildShareLeft(state.builds,'lounge'):null,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtureBuild:isBuilding(state.builds,'deck')||isBuilding(state.builds,'window')?Object.assign(isBuilding(state.builds,'deck')?{deck:1-buildShareLeft(state.builds,'deck')}:{},isBuilding(state.builds,'window')?{pickupWindow:1-buildShareLeft(state.builds,'window')}:{}):null,fixtures:Object.assign(windowFixtures(),{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2}),fixtureGhost:fixtureGhosts(),menus:kioskMenus(),menuClock:animationTime/1000,cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     // A model that had not loaded when the tabs were painted: try again every half second until all are in.
     var wall=performance.now();if(picturesPending&&!(wall-(renderFrame3d.picturesTried||0)<500)){renderFrame3d.picturesTried=wall;picturesPending=false;paintThumbnails()}
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
     customers.forEach(function(c){if(c.phase!=='lounge'&&customerBadged(c))drawCustomerBadge(Object.assign({},c,{x:c.renderX,z:c.renderZ}))});
-    drawDeliveryExtras(dronePoses,now);drawParticles(frameDelta);drawTickets(frameDelta);drawCashPops(wallDelta);drawConfetti(wallDelta);
+    drawDeliveryExtras(dronePoses,now);drawTickets(frameDelta);drawCashPops(wallDelta);drawConfetti(wallDelta);
     positionShopPlay();
     updateMarkers();updateSpenderTag(false);requestAnimationFrame(render);
   }
@@ -2900,8 +2910,10 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       return window.__canopySnap.status()};
     window.__canopySnap.map3d=function(){return map3d&&map3d.ok?map3d.debug:null};
     window.__canopySnap.stationFx=stationFx;
+    // An upgrade's map effects at station i (sparkles, ring, spring) without buying it, for screenshots.
+    window.__canopySnap.upgrade=function(i){burst(machinePos[i]);stationFx(i)};
     // A cash pop frozen at `age` seconds into its rise, for screenshots of the pops (cash-pops.js).
-    window.__canopySnap.cashPop=function(key,amount,age){var site=CASH_SITES[key];livePops.push({key:key,amount:amount,x:site.x,y:site.y,z:site.z,age:age||.4,text:'+'+fmt(amount)})};
+    window.__canopySnap.cashPop=function(key,amount,age){var site=CASH_SITES[key];livePops.push({key:key,amount:amount,x:site.x,y:site.y,z:site.z,age:age||.4,text:fmt(amount)})};
     window.__canopySnap.status=function(){return{map3d:!!(map3d&&map3d.ok),loading:map3d?map3d.loading:-1}};
   }
   // Dev numbers (?stats): a small readout over the map with the frames drawn a second, the frame's script time, the 3D
@@ -2921,19 +2933,24 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       var s=window.__canopyStats(),heap=performance.memory?' js '+Math.round(performance.memory.usedJSHeapSize/1048576)+'MB':'';
       statsBox.textContent=Math.round(fps/secs)+' fps '+(render.frameMs||0).toFixed(1)+' ms'+heap+(s?'\n'+s.calls+' draws '+Math.round(s.triangles/1000)+'K tris @'+s.pixelRatio+'x\n~'+Math.round(s.mb.total)+'MB gpu: '+Math.round(s.mb.geometry)+' geo '+Math.round(s.mb.texture)+' tex\n'+Math.round(s.mb.buffer)+' screen '+Math.round(s.mb.shadow)+' shadow '+s.textures+' tex':'')},1000);
   }
+  var IDLE_AFTER=12000,lastInputAt=performance.now();
+  ['pointerdown','pointermove','wheel','keydown','touchstart'].forEach(function(type){window.addEventListener(type,function(){lastInputAt=performance.now()},{capture:true,passive:true})});
   function render(wallNow){if(SNAP&&!render.snap)return;var t0=performance.now();try{renderFrame(wallNow);render.frameMs=(render.frameMs||0)*.9+(performance.now()-t0)*.1;window.__canopyFrameMs=render.frameMs;if(render.frameMs>13&&dprCap>2){dprCap=2;resize()}}catch(e){if(!render.failed)console.error('Canopy frame failed; retrying',e);ctx=screenCtx;sceneElevation=0;render.failed=true;render.invalidated=true;requestAnimationFrame(render)}}
   function renderFrame(wallNow){
     if(document.hidden){render.last=wallNow;requestAnimationFrame(render);return}
     stepDock();stepMapGesture(wallNow);keyboardPan(wallNow);
     var glideDt=Math.min(.1,Math.max(0,(wallNow-(render.glideAt===undefined?wallNow:render.glideAt))/1000));if(districtGlide)stepGlide(glideDt);if(guideCam)stepGuideCam(glideDt);if(presentCam)stepPresent(glideDt);render.glideAt=wallNow;
-    var frameInterval=state.gameSpeed===0?250:1000/60;
+    // Battery: the shop is left running for long stretches, so it draws at 30 fps in Low Power Mode (the iOS app sets
+    // window.canopyPowerSaver) and once nobody has touched the screen for IDLE_AFTER ms; any touch brings 60 back.
+    var easy=window.canopyPowerSaver===true||wallNow-lastInputAt>IDLE_AFTER;render.easy=easy;
+    var frameInterval=state.gameSpeed===0?250:easy?1000/30:1000/60;
     if(!render.invalidated&&render.drawnAt!==undefined&&wallNow-render.drawnAt<frameInterval-1){requestAnimationFrame(render);return}
     render.drawnAt=wallNow;render.invalidated=false;render.frames=(render.frames||0)+1;
     var wallDelta=Math.min(.1,Math.max(0,(wallNow-(render.last===undefined?wallNow:render.last))/1000)),frameDelta=wallDelta*state.gameSpeed;
     render.last=wallNow;
     // A freshly built station rises out of its site on wall time, so the reveal plays at the same pace at every game speed.
     if(introAt){var introT=(performance.now()-introAt)/1000;if(introT>.85)$('world').classList.remove('building');if(introT>INTRO_END)introAt=0;render.invalidated=true}
-    if(upgradeFx.busy()||revealFx.busy())render.invalidated=true;
+    if(upgradeFx.busy()||revealFx.busy()||sparkles.count)render.invalidated=true;
     for(var site=0;site<buildRise.length;site++)if(buildRise[site]>0){buildRise[site]=motionPreference.matches?0:Math.max(0,buildRise[site]-wallDelta*1.7);render.invalidated=true}
     animationTime+=frameDelta*1000;tickTaskClocks(frameDelta);
     for(var slot=0;slot<4;slot++){var phase=(taskClocks[1]/9000+slot*.23)%1;var targetGrowth=state.stock[1]>=storageCapacity()?1:phase>.86?Math.max(0,(1-phase)/.14):Math.min(1,phase/.72);cropGrowth[slot]+=(targetGrowth-cropGrowth[slot])*(1-Math.exp(-frameDelta*4))}var now=animationTime;
@@ -3031,32 +3048,37 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function drawTickets(dt){
     for(var i=tickets.length-1;i>=0;i--){
       var t=tickets[i];t.life-=dt*.7;t.y+=dt*.55;if(t.life<=0){tickets.splice(i,1);continue}
-      var p=project(t.x,t.y,t.z),w=Math.max(28,unit*.95),h=Math.max(14,unit*.4),x0=p.x-w/2,y0=p.y-h/2,notch=w*.28;
-      ctx.save();ctx.globalAlpha=Math.min(1,t.life*2.5);
-      ctx.beginPath();roundedRectPath(x0,y0,w,h,h*.25);ctx.fillStyle='#f4e7bd';ctx.fill();ctx.strokeStyle='#8d7950';ctx.lineWidth=Math.max(1,unit*.018);ctx.stroke();
-      ctx.beginPath();ctx.setLineDash([Math.max(1,unit*.03),Math.max(1,unit*.03)]);ctx.moveTo(x0+notch,y0+h*.12);ctx.lineTo(x0+notch,y0+h*.88);ctx.strokeStyle='#8d795088';ctx.stroke();ctx.setLineDash([]);
-      ctx.fillStyle='#1f4a37';ctx.textAlign='center';ctx.textBaseline='middle';
-      // The stub carries the only dollar sign; t.text is the bare amount (39K), so the ticket never reads "$ $39K".
-      ctx.font='800 '+Math.max(7,h*.5)+'px "Bricolage Grotesque",sans-serif';ctx.fillText('$',x0+notch/2,p.y+h*.02);
-      ctx.font='800 '+Math.max(8,h*.58)+'px "Bricolage Grotesque",sans-serif';ctx.fillText(t.text,x0+notch+(w-notch)/2,p.y+h*.02,w-notch-4);
-      ctx.restore();
+      paintTicket(project(t.x,t.y,t.z),t.text,Math.min(1,t.life*2.5),1);
     }
   }
-  // A cash pop: "+$1.2K" in the game's display face, cream with a dark green rim, that springs up, drifts and fades.
-  // The HUD cash rolls up to match (rollCash) and gives a small nudge as each pop lands.
+  // The ticket stub itself, shared by the lounge fee, the ATM fee and the cash pops: cream card, brass rim, a dashed
+  // tear line with "$" on the stub and the amount on the rest. It widens to fit a long amount rather than squeezing it.
+  // The stub is the only dollar sign, so a leading "$" in the amount is dropped (never "$ $39K").
+  function paintTicket(p,text,alpha,scale){text=String(text).replace(/^\$/,'');
+    var h=Math.max(14,unit*.4)*(scale||1),textFont='800 '+Math.max(8,h*.58).toFixed(1)+'px "Bricolage Grotesque",sans-serif';
+    ctx.save();ctx.font=textFont;
+    var base=Math.max(28,unit*.95)*(scale||1),notch=base*.28,w=Math.max(base,notch+ctx.measureText(text).width+h*.7),x0=p.x-w/2,y0=p.y-h/2;
+    ctx.globalAlpha=alpha;
+    ctx.beginPath();roundedRectPath(x0,y0,w,h,h*.25);ctx.fillStyle='#f4e7bd';ctx.fill();ctx.strokeStyle='#8d7950';ctx.lineWidth=Math.max(1,unit*.018);ctx.stroke();
+    ctx.beginPath();ctx.setLineDash([Math.max(1,unit*.03),Math.max(1,unit*.03)]);ctx.moveTo(x0+notch,y0+h*.12);ctx.lineTo(x0+notch,y0+h*.88);ctx.strokeStyle='#8d795088';ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#1f4a37';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font='800 '+Math.max(7,h*.5).toFixed(1)+'px "Bricolage Grotesque",sans-serif';ctx.fillText('$',x0+notch/2,p.y+h*.02);
+    ctx.font=textFont;ctx.fillText(text,x0+notch+(w-notch)/2,p.y+h*.02);
+    ctx.restore();
+  }
+  // A cash pop: the lounge fee's ticket stub (Kevin, 2026-11-07: "match the lounge fee style") with the amount landed,
+  // springing up, drifting and fading. The HUD cash rolls up to match (rollCash) and gives a small nudge as each lands.
   function drawCashPops(dt){
     var still=motionPreference.matches;
-    if(still){livePops.length=0;cashPops.clear()}else{var pop=cashPops.tick(dt);if(pop){pop.age=0;pop.text='+'+fmt(pop.amount);livePops.push(pop);var cash=$('money');if(cash){cash.classList.remove('cash-gain');void cash.offsetWidth;cash.classList.add('cash-gain')}}}
+    if(still){livePops.length=0;cashPops.clear()}else{var pop=cashPops.tick(dt);if(pop){pop.age=0;pop.text=fmt(pop.amount);livePops.push(pop);var cash=$('money');if(cash){cash.classList.remove('cash-gain');void cash.offsetWidth;cash.classList.add('cash-gain')}}}
     shownCash=rollCash(shownCash,state.money,dt,still||document.hidden);cashRolledAt=performance.now();var label=fmt(shownCash),el=$('money');if(el&&el.textContent!==label)el.textContent=label;
     for(var i=livePops.length-1;i>=0;i--){
       var p=livePops[i];p.age+=dt;if(p.age>=POP_LIFE){livePops.splice(i,1);continue}
-      var f=popFrame(p.age/POP_LIFE),q=project(p.x,p.y+f.rise,p.z),size=Math.max(13,Math.min(22,unit*.46))*f.scale;
-      ctx.save();ctx.globalAlpha=f.alpha;ctx.font='800 '+size.toFixed(1)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';
-      ctx.shadowColor='rgba(12,32,22,.35)';ctx.shadowBlur=size*.35;ctx.shadowOffsetY=size*.08;ctx.lineWidth=Math.max(2.5,size*.2);ctx.strokeStyle='#173d2b';ctx.strokeText(p.text,q.x,q.y);
-      ctx.shadowColor='transparent';ctx.fillStyle='#ffe7a3';ctx.fillText(p.text,q.x,q.y);ctx.restore();
+      var f=popFrame(p.age/POP_LIFE);paintTicket(project(p.x,p.y+f.rise,p.z),p.text,f.alpha,f.scale);
     }
   }
-  function burst(worldPos,color){if(motionPreference.matches)return;for(var i=0;i<12;i++)particles.push({x:worldPos.x,y:1.4+(worldPos.y||0),z:worldPos.z,vx:(Math.random()-.5)*1.8,vz:(Math.random()-.5)*1.8,vy:1.6+Math.random()*1.8,life:1,color:color||colors.acid})}
+  // A shower of sparkles off an upgrade (sparkles.js draws them in the 3D scene). worldPos: {x, y (floor height)?, z}.
+  function burst(worldPos,color){sparkles.burst(worldPos,color||colors.acid)}
 
   var markerEls=LINES.map(function(line,i){var b=document.createElement('button');b.className='marker';b.dataset.marker=String(i);b.textContent=line.name;b.onclick=function(){if(!state.lines[i]&&isOpen(i))buildStation(i);else{var open=buyBoxFor===i;selectMachine(i);buyBoxFor=open?-1:i;renderUI()}};$('markers').appendChild(b);return b});
   // The station whose buy box is up: set by a tap on its map sign, cleared by picking anything else.
@@ -3545,7 +3567,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     windowRows.forEach(function(x){var on=show&&(x.key==='window'||w.owned);x.row.hidden=!on;if(!on)return;var note,label,price,disabled,owned=false;
       if(x.key==='window'){if(w.owned){var inLine=windowLineMax(w)-windowRoom(windowLine,w);note=inLine+' / '+windowLineMax(w)+' in line';label='';price='';disabled=true;owned=true;var pips='';for(var k=0;k<windowLineMax(w);k++)pips+='<i'+(k<inLine?' class="on"':'')+'></i>';if(x.row.dataset.pips!==pips){x.row.dataset.pips=pips;x.row.querySelector('.line-pips').innerHTML=pips}}
         else if(building){note='Building';label='Opens in';price=buildClock(buildLeft(state.builds,'window'));disabled=true}
-        else{note='Walk-up web orders';label='Build';price=fmt(WINDOW_COST);disabled=state.money<WINDOW_COST}}
+        else{note=tieLast('Walk-up web orders');label='Build';price=fmt(WINDOW_COST);disabled=state.money<WINDOW_COST}}
       else{var lvl=windowLevel(w),maxed=lvl>=WINDOW_MAX_LEVEL,cost=windowLevelCost(lvl),road=nextWindowLook(lvl),title='Window Lv '+lvl;owned=maxed;
         // The next look, or what one more level pays, under the window's own level.
         note=maxed?'×'+payText(windowPay(lvl))+' walk-ups':road?WINDOW_LOOKS[windowLook(road)-1]+' at Lv '+road:'+5% walk-ups';label=maxed?'Max':'Lv '+(lvl+1);price=maxed?'':fmt(cost);disabled=maxed||state.money<cost;
@@ -3839,28 +3861,6 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       preview.dataset.art=key;
     }finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle;sceneElevation=savedElevation}
   }
-  // Intro hero: a small stage built from the shop's own pieces (counter, jars, plants, two customers, the courier drone),
-  // painted once into the start guide's canvas. It never touches the live scene or camera.
-  function paintIntroArt(target){
-    if(!target||target.dataset.art)return;
-    var art=document.createElement('canvas');art.width=1000;art.height=700;
-    var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle,savedElevation=sceneElevation;
-    try{
-      ctx=art.getContext('2d',{willReadFrequently:true});unit=88;angle=.57;sceneElevation=0;centerX=500;centerY=470;
-      drawBox(0,0,-.22,7.2,4.2,.22,['#cbb085','#7f6a4b','#ac9168']);
-      plant(-2.9,.9,0,1.05,0,1);plant(2.9,.9,0,1.05,1,1);plant(-2.2,-1.3,0,.8,2,1);
-      drawBox(0,-.4,0,2.6,.95,1,['#ede4cb','#a79c81','#d2c5a5']);
-      jar(-.8,-.4,1,0);jar(0,-.4,1,1);jar(.8,-.4,1,2);
-      drawPerson(-1.55,1.15,0,18,false,false,true,{amount:0,phase:0,facing:.35});
-      drawPerson(1.7,1.3,0,13,false,false,false,{amount:0,phase:0,facing:-.3});
-      drawCourierDrone(.9,3.3,-.6,0,0,1);
-      var pixels=ctx.getImageData(0,0,art.width,art.height).data,left=art.width,right=0,top=art.height,bottom=0;
-      for(var y=0;y<art.height;y++)for(var x=0;x<art.width;x++)if(pixels[(y*art.width+x)*4+3]>180){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y)}
-      var pc=target.getContext('2d');pc.clearRect(0,0,target.width,target.height);
-      if(right>=left&&bottom>=top){var w=right-left+1,h=bottom-top+1,scale=Math.min((target.width-24)/w,(target.height-16)/h);pc.drawImage(art,left,top,w,h,(target.width-w*scale)/2,target.height-h*scale-6,w*scale,h*scale)}
-      target.dataset.art='1';
-    }finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle;sceneElevation=savedElevation}
-  }
   function paintCustomerGuide(){
     var guide=document.querySelector('.reputation-guide');if(!guide||guide.dataset.painted)return;
     // The guide borrows the shop's characters once; it never advances their live animation or camera.
@@ -3926,6 +3926,11 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function paintUpgradePreview(index){
     var preview=$('upgradePreview');if(!preview)return;
     var key=[index,index===-2?state.lounge+(state.loungeLift?'+':''):index<0?state.idStaff:stationTier(index),state.menuStrains.join(','),state.productMenu.active].join('|');
+    // The key also names which art is ready (the 3D picture, the sprite), so a stand-in is painted once and repainted
+    // only when the real picture arrives, instead of re-reading 480×600 pixels every few frames while models load.
+    var spriteName=SHOP_SPRITES&&index!==-2?stationSprite(index<0?6:index,index<0?state.idStaff:Math.max(1,state.lines[index])):null,spriteArt=spriteName&&spriteImage(spriteName);
+    var picture=index===-2?loungePicture():index<0?stationPicture(6,state.doorBuilt?state.idStaff:0):stationPicture(index,Math.max(1,state.lines[index]));
+    key+=picture?'|3d':spriteArt?'|sprite':'|drawn';
     if(preview.dataset.art===key)return;
     // Render at native resolution, then frame the opaque equipment rather than its overhead light pool.
     var art=document.createElement('canvas');art.width=480;art.height=600;
@@ -3933,10 +3938,6 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     try{
       ctx=art.getContext('2d',{willReadFrequently:true});unit=90;centerX=240;centerY=480;angle=.57;
       // The sprite shop shows the station's own sprite, so the panel matches the room.
-      var spriteName=SHOP_SPRITES&&index!==-2?stationSprite(index<0?6:index,index<0?state.idStaff:Math.max(1,state.lines[index])):null,spriteArt=spriteName&&spriteImage(spriteName);
-      var picture=index===-2?loungePicture():index<0?stationPicture(6,state.doorBuilt?state.idStaff:0):stationPicture(index,Math.max(1,state.lines[index]));
-      if(SHOP_SPRITES&&index!==-2&&!spriteArt)key=''; // repaint once the sprite has loaded
-      if(picturesPending&&!picture)key=''; // and once the 3D model's picture is ready
       if(picture)drawPictureFit(ctx,picture,480,600);
       else if(spriteArt){var fit=Math.min(440/spriteArt.naturalWidth,560/spriteArt.naturalHeight);ctx.drawImage(spriteArt,240-spriteArt.naturalWidth*fit/2,580-spriteArt.naturalHeight*fit,spriteArt.naturalWidth*fit,spriteArt.naturalHeight*fit)}
       else if(index===-2)drawLoungeThumb(state.lounge);
@@ -3949,7 +3950,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       preview.dataset.art=key;
     }finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}
   }
-  function paintSecurityThumbnail(){var card=document.querySelector('[data-security] canvas');if(!card)return;paintThumb(card,stationPicture(6,state.doorBuilt?Math.max(1,state.idStaff):1),function(){unit=25;centerX=40;centerY=97;angle=.57;if(!state.doorBuilt)drawConstructionSite(0,0,2.6,2.6,function(){drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5'])});else{drawBox(0,0,-.24,2.6,2.6,.24,['#cbb085','#7f6a4b','#ac9168']);drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5']);drawPerson(-.55,-.45,0,7,false,true,false)}})}
+  function paintSecurityThumbnail(){var card=document.querySelector('[data-security] canvas');if(!card)return;paintThumb(card,stationPicture(6,state.doorBuilt?Math.max(1,state.idStaff):1),function(){unit=25;centerX=40;centerY=97;angle=.57;if(!state.doorBuilt)drawConstructionSite(0,0,2.6,2.6,function(){drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5'])});else{drawBox(0,0,-.24,2.6,2.6,.24,['#cbb085','#7f6a4b','#ac9168']);drawBox(.55,-.1,0,.95,.7,1.05,['#ede4cb','#a79c81','#d2c5a5']);drawPerson(-.55,-.45,0,7,false,true,false)}},state.doorBuilt)}
   // The lounge doorway in miniature, dressed for its tier. Every level keeps the lacquer jambs, the slab and the LOUNGE
   // blade so the card still reads as the lounge; what changes is the colour of the neon, the drapes, the room glimpsed
   // between them and the dressing out front — planters for the terrace, a rope for the booths, a doorman and a runner
@@ -4025,13 +4026,16 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     }
     else{drawBox(0,.14,0,1.36,.08,1.72,['#c9a874','#7d6240','#a9895c']);constructionTape([-.75,.8,face+.06],[.75,.7,face+.06]);wallText(0,2.2,face+.01,'LOUNGE',unit*1.2,.32,'#4b3f45',false,'800')}
   }
-  function paintLoungeThumbnail(){var card=document.querySelector('[data-lounge] canvas');if(!card)return;paintThumb(card,loungePicture(),function(){unit=22;centerX=40;centerY=94;angle=.57;drawLoungeThumb()})}
+  function paintLoungeThumbnail(){var card=document.querySelector('[data-lounge] canvas');if(!card)return;paintThumb(card,loungePicture(),function(){unit=22;centerX=40;centerY=94;angle=.57;drawLoungeThumb()},state.lounge)}
   // A station card's thumbnail: the 3D picture, or until it's in the 2D drawing (laid out for an 80×100 box), either
   // way cropped to its solid pixels and fitted to the card's wide canvas, standing on its bottom edge.
-  function paintThumb(card,picture,drawFallback){var c=card&&card.getContext('2d');if(!c)return;
+  // A card already showing this picture, or this same stand-in (fallbackKey), is left alone: paintThumbnails runs
+  // twice a second while models load, and each repaint re-reads the picture's pixels.
+  function paintThumb(card,picture,drawFallback,fallbackKey){var c=card&&card.getContext('2d');if(!c)return;
+    var shows=picture||'drawn:'+fallbackKey;if(card.__shows===shows)return;card.__shows=shows;
     if(!picture){var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;picture=document.createElement('canvas');picture.width=160;picture.height=200;ctx=picture.getContext('2d');ctx.setTransform(2,0,0,2,0,0);try{drawFallback()}finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}}
     c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,card.width,card.height);drawPictureCrop(c,picture,card.width,card.height)}
-  function paintThumbnails(){paintSecurityThumbnail();paintLoungeThumbnail();machineTabs.forEach(function(tab,i){paintThumb(tab.querySelector('canvas'),state.lines[i]?stationPicture(i,state.lines[i]):null,function(){unit=25;centerX=40;centerY=97;angle=.57;drawStage({x:0,z:0},i,0)})})}
+  function paintThumbnails(){paintSecurityThumbnail();paintLoungeThumbnail();machineTabs.forEach(function(tab,i){paintThumb(tab.querySelector('canvas'),state.lines[i]?stationPicture(i,state.lines[i]):null,function(){unit=25;centerX=40;centerY=97;angle=.57;drawStage({x:0,z:0},i,0)},state.lines[i]?stationTier(i):0)})}
   function selectLounge(){securitySelected=false;loungeSelected=true;pickedTag=null;buyBoxFor=-1;showTray('factory');renderUI();var card=document.querySelector('[data-lounge]');if(card&&card.scrollIntoView)card.scrollIntoView({block:'nearest',inline:'nearest'});haptic('select')}
   // Each lounge tier is bought outright; the first one raises the doorway out of its hoarding.
   // Where its reveal plays: the middle of the roof terrace (the start guide's tour looks at the same spot).
@@ -4130,7 +4134,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     li.querySelector('button').onclick=function(){if(buyPerk(state.perks,p.id)){upgradeFx.pop();if(p.id==='vault')state.offlineLevel=Math.max(state.offlineLevel,perkLevel(state.perks,'vault'));if(p.id==='finish')paintThumbnails();save();renderUI();notify(p.name.toUpperCase()+' · LEVEL '+perkLevel(state.perks,p.id),'upgrade')}};$('perkGrid').append(li)});
   function renderPerks(){var pts=state.perks.points;$('perkPoints').textContent=pts+' point'+(pts===1?'':'s');
     PERKS.forEach(function(p){var li=$('perkGrid').querySelector('[data-perk="'+p.id+'"]'),l=perkLevel(state.perks,p.id),c=perkCost(state.perks,p.id),b=li.querySelector('button');
-      li.dataset.state=c===null?'known':'open';li.querySelector('b').textContent=p.name;li.querySelector('small').textContent=p.blurb(c===null?l:l+1);li.querySelector('em').textContent='Level '+l+' of '+p.costs.length;
+      li.dataset.state=c===null?'known':'open';li.querySelector('b').textContent=p.name;li.querySelector('small').textContent=tieLast(p.blurb(c===null?l:l+1));li.querySelector('em').textContent='Level '+l+' of '+p.costs.length;
       b.textContent=c===null?'Maxed':'Buy · '+c+' pt'+(c===1?'':'s');b.disabled=c===null||pts<c;b.setAttribute('aria-label',c===null?p.name+' maxed':'Buy '+p.name+' level '+(l+1)+' for '+c+' points')})}
   // Return reminders exist only in the iOS app; the hidden toggle is what the Settings row proxies.
   var reminders=createReminders();
@@ -4412,7 +4416,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     if(destination==='flowers')return showTray('flowers');showTray('empire');if(destination==='empire'){empireShell.show('home');return;}
     empireShell.openStore(0);operationsUI.showTab(0,0);
   }});
-  var startGuide=mountStartGuide({showTray:showTray,collapse:function(){showTray('factory')},fit:fitControls,paintHero:paintIntroArt,sound:function(kind){playSound(kind,state.sound)},report:function(name,props){telemetry.send(name,props)},
+  var startGuide=mountStartGuide({showTray:showTray,collapse:function(){showTray('factory')},fit:fitControls,sound:function(kind){playSound(kind,state.sound)},report:function(name,props){telemetry.send(name,props)},
     // Construction steps: the guide asks whether a site is built, builds it on a tap, opens the shop at the end and, if
     // skipped, finishes the job itself. The sheet drops away at every size so the map stays in view; a sheet left open
     // before a reset or reload would otherwise cover the sites on desktop.
@@ -4778,7 +4782,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       if(carry.branch){state.empire.stores[carry.branch.index].level=carry.branch.level;state.empire.stores[carry.branch.index].lines=[1,1,1,1,1,1]}}
     // A prestige reopens a standing shop; Start over goes back to the building site and replays the intro.
     if(rank>0){state.lines=LINES.map(function(){return state.startLine||1});delete state.startLine;state.doorBuilt=true;state.idStaff=Math.max(1,state.idStaff);state.shopOpen=true}
-    readyWork=0;work=[0,0,0,0,0,0];batchRemainder=[0,0,0,0];customers=[];arrival=0;customerId=0;deliveryDrones=[];windowLine=createWindowLine();particles=[];tickets=[];livePops=[];cashPops.clear();shownCash=Infinity;taskClocks.fill(0);taskActivity.fill(0);cropGrowth=[.15,.4,.7,.95];tierFlashes.fill(0);buildRise.fill(0);confetti=[];recentPickupRatings=[];animationTime=0;sceneTime=0;crateTime=0;cargoOdo=0;render.last=undefined;securitySelected=false;loungeSelected=false;selected=0;updateMarkers.key=null;save();$('resetModal').hidden=true;notify(rank>0?'FACTORY RESET':'STARTING OVER');syncMapView();paintThumbnails();renderUI();if(!state.shopOpen)setTimeout(function(){startGuide.open()},400)};
+    readyWork=0;work=[0,0,0,0,0,0];batchRemainder=[0,0,0,0];customers=[];arrival=0;customerId=0;deliveryDrones=[];windowLine=createWindowLine();sparkles.clear();tickets=[];livePops=[];cashPops.clear();shownCash=Infinity;taskClocks.fill(0);taskActivity.fill(0);cropGrowth=[.15,.4,.7,.95];tierFlashes.fill(0);buildRise.fill(0);confetti=[];recentPickupRatings=[];animationTime=0;sceneTime=0;crateTime=0;cargoOdo=0;render.last=undefined;securitySelected=false;loungeSelected=false;selected=0;updateMarkers.key=null;save();$('resetModal').hidden=true;notify(rank>0?'FACTORY RESET':'STARTING OVER');syncMapView();paintThumbnails();renderUI();if(!state.shopOpen)setTimeout(function(){startGuide.open()},400)};
 
   // The intro waits behind the 21+ gate; a visitor who answers No never sees it.
   // `resume` picks the intro up at the first unbuilt site when a half-built shop is reloaded.

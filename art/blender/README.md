@@ -35,6 +35,8 @@ other booth files).
 1. Run the script in Blender 5.2 (`blender -b -P grow_bench.py -- OUT_DIR`, or paste it into the Scripting tab).
    It saves a `.blend`, exports a `.glb` and renders a transparent PNG at the game's 30° angle.
 2. Compress the export into the game: `npx @gltf-transform/cli meshopt OUT_DIR/grow_bench.glb public/models/grow_bench.glb`.
+   Then run `node scripts/slim-models.mjs`: it simplifies any model it has not slimmed yet (bevels and round parts
+   the map can't show) so the max-level shop stays inside the phone budget.
    The 3D map loads it with Three.js's meshopt decoder.
 
 The models stay in Blender units: the 3D map scales each one so it spans the same width on screen as the station's

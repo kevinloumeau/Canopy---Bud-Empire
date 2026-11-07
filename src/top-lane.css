@@ -9,7 +9,9 @@
 .top-lane{position:absolute;z-index:13;left:12px;right:62px;top:calc(var(--hud-height,60px) + 8px);display:flex;flex-direction:column;align-items:flex-start;gap:6px;pointer-events:none;color:var(--ui-ink);font-family:'Bricolage Grotesque',system-ui,sans-serif}
 .lane-status{display:flex;flex-wrap:wrap;align-items:center;gap:6px;max-width:100%}
 .lane-status:not(:has(>:not([hidden]))){display:none}
-.lane-notes{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:6px;max-width:100%}
+/* Stretched to the lane's width, so a toast fading out (out of the flow, sized against this box) keeps its width
+   instead of squeezing to one word a line. */
+.lane-notes{position:relative;display:flex;flex-direction:column;align-items:flex-start;align-self:stretch;gap:6px;max-width:100%}
 .top-lane button{pointer-events:auto}
 .top-lane button:focus-visible{outline:2px solid var(--ui-brass);outline-offset:2px}
 .top-lane [hidden]{display:none!important}
