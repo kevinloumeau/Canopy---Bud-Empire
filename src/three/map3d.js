@@ -65,6 +65,17 @@ export function createMap3D(canvas, layout) {
   renderer.toneMapping = THREE.CustomToneMapping; // the colour grade above
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  // Battery: the sun's 2048 soft shadow map is the frame's second full pass over the scene. It is redrawn at most 30
+  // times a second (every other frame at 60 fps), which keeps walking people and cars' shadows smooth while halving
+  // that pass. A skipped frame reuses the last map with the light matrix it was drawn with, so shadows stay put in the
+  // world while the view pans. See shadowsDue().
+  renderer.shadowMap.autoUpdate = false;
+  const SHADOW_EVERY = 1000 / 30;
+  let shadowAt = -Infinity;
+  function shadowsDue() {
+    if (frameClock - shadowAt < SHADOW_EVERY - 4) return;
+    shadowAt = frameClock; renderer.shadowMap.needsUpdate = true;
+  }
 
   const hazeColour = new THREE.Color().setRGB(layout.haze.colour[0] / 255, layout.haze.colour[1] / 255, layout.haze.colour[2] / 255, THREE.SRGBColorSpace);
   const scene = new THREE.Scene();
@@ -999,7 +1010,8 @@ export function createMap3D(canvas, layout) {
   function view(frame, background) {
     frameClock = performance.now();
     sweepTextures();
-    const pixelRatio = Math.min(frame.dpr, 2);
+    // Low Power Mode (frame.lowPower) draws the map at 1.5x, which on a 3x phone is 44% fewer pixels than 2x.
+    const pixelRatio = Math.min(frame.dpr, frame.lowPower ? 1.5 : 2);
     if (renderer.getPixelRatio() !== pixelRatio) renderer.setPixelRatio(pixelRatio);
     const size = renderer.getSize(new THREE.Vector2());
     if (size.x !== frame.width || size.y !== frame.height) renderer.setSize(frame.width, frame.height, false);
@@ -1111,6 +1123,7 @@ export function createMap3D(canvas, layout) {
     placeFigures(frame.figures || [], night);
     const stepSeconds = frameStep(frame);
     placeCharacters(frame.characters, stepSeconds, night);
+    shadowsDue();
     if (!frame.dry) renderer.render(scene, camera);
     return true;
   }
@@ -1365,6 +1378,7 @@ export function createMap3D(canvas, layout) {
     // A dry frame (snap3d.mjs, while models load) sets the scene up and asks for its models without drawing it.
     if (!frame.dry) {
       const posed = intro.apply(frame.intro);
+      shadowsDue();
       renderer.render(scene, camera);
       if (posed) intro.restore();
     }
