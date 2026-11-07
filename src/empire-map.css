@@ -5,7 +5,7 @@
 .sheet .empire-screen .empire-map{margin:0 0 6px}
 .sheet .empire-screen .empire-map-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:8px 2px 2px;padding:0;border:0;font:600 13.5px/1.2 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-ink)}
 .sheet .empire-screen .empire-map-head:first-child{margin-top:2px}
-.sheet .empire-screen .empire-map-head .empire-map-meta{margin:0;padding:0;font:400 11px/1.2 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-soft);white-space:nowrap}
+.sheet .empire-screen .empire-map-head .empire-map-meta{margin:0;padding:0;font:400 11px/1.2 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;color:var(--ui-soft);white-space:nowrap}
 .sheet .empire-screen .map-tiles{display:grid;gap:0;margin:0 -6px}
 .sheet .empire-screen .map-tiles.is-shops{grid-template-columns:repeat(6,minmax(0,1fr))}
 .sheet .empire-screen .map-tiles.is-city{grid-template-columns:repeat(5,minmax(0,1fr))}
@@ -24,7 +24,7 @@
 .map-tile-icon.is-wide{width:44px;height:44px;margin-top:-2px}
 
 .map-tile-name{display:block;max-width:100%;overflow:hidden;font:600 11px/1.15 'Bricolage Grotesque',system-ui,sans-serif;white-space:nowrap;text-overflow:ellipsis;color:var(--ui-ink)}
-.map-tile-figure{display:inline-flex;align-items:center;justify-content:center;gap:2px;max-width:100%;min-height:17px;padding:0 4px;border-radius:999px;overflow:hidden;font:500 10px/1 'DM Mono',monospace;letter-spacing:-.04em;white-space:nowrap;color:#a8dc52}
+.map-tile-figure{display:inline-flex;align-items:center;justify-content:center;gap:2px;max-width:100%;min-height:17px;padding:0 4px;border-radius:999px;overflow:hidden;font:500 10px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.04em;white-space:nowrap;color:#a8dc52}
 .map-per{font-size:8px;letter-spacing:0;opacity:.75}
 .map-lock{flex:0 0 auto;width:10px;height:10px;margin-right:1px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
 

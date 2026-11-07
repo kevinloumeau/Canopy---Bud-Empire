@@ -2,11 +2,23 @@ import {migrateOperations,staffLevel} from './operations.js';
 import {batchSize,stationTier} from './economy.js';
 // Persistent empire systems. Rewards never count as earned revenue.
 // Counts and money alike are abbreviated past a thousand — 15.1K, 2.4M — everywhere the app shows a number.
+// One number style app-wide: capital suffixes, at most three significant figures, no trailing zeros (8K, 1.5K, 40K, 4.23K).
+const SUFFIXES=[['T',1e12],['B',1e9],['M',1e6],['K',1e3]];
+export function trimZeros(text){return text.replace(/\.0+$/,'').replace(/(\.\d*[1-9])0+$/,'$1');}
 export function abbr(n){
   n=Math.max(0,Number.isFinite(n)?n:0);if(n<1000)return String(Math.floor(n));
-  for(const [suffix,size] of [['T',1e12],['B',1e9],['M',1e6],['K',1e3]])if(n>=size){const v=n/size;return v.toFixed(v>=100?0:v>=10?1:2)+suffix;}
+  for(const [suffix,size] of SUFFIXES)if(n>=size){const v=n/size;return trimZeros(v.toFixed(v>=100?0:v>=10?1:2))+suffix;}
   return String(Math.floor(n));
 }
+// The short form for tight cells such as the inventory strip: whole numbers, one decimal only under ten (1.4, 198, 4.8K, 38K).
+export function abbrShort(n){
+  n=Math.max(0,Number.isFinite(n)?n:0);if(n<10)return trimZeros(n.toFixed(1));if(n<1000)return String(Math.round(n));
+  for(const [suffix,size] of SUFFIXES)if(n>=size){const v=n/size;return (v>=10?String(Math.round(v)):trimZeros(v.toFixed(1)))+suffix;}
+  return String(Math.round(n));
+}
+// Whole counts with a thousands comma (22,360) and multipliers without trailing zeros (1.5×, 12.4×, 1,119×).
+export function count(n){return Math.round(Number.isFinite(n)?n:0).toLocaleString('en-US');}
+export function times(x){x=Number.isFinite(x)?x:0;return (x>=100?count(x):trimZeros(x.toFixed(x>=10?1:2)))+'\u00d7';}
 export const DAY = 86400000;
 export const HOUR = 3600000;
 export const DAILY = [150, 250, 400, 600, 900, 1300, 2500];
