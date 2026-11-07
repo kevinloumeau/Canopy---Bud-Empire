@@ -536,7 +536,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Every so often a walk-in who has cleared security asks the budtender for a pick.
   function tickMoment(dt){
     var play=state.shopPlay;play.cooldown=Math.max(0,play.cooldown-dt);
-    if(moment){moment.remaining-=dt;var asking=customers.find(function(c){return c.id===moment.customerId});if(!asking||asking.ordered||moment.remaining<=0)moment=null}
+    // The guest waits while their question is open on screen, so the clock only runs while it is closed.
+    if(moment){if(!moment.opened)moment.remaining-=dt;var asking=customers.find(function(c){return c.id===moment.customerId});if(!asking||asking.ordered||moment.remaining<=0)moment=null}
     if(moment||!state.shopOpen||state.empire.activeStore||play.cooldown>0)return;
     var guest=customers.find(function(c){return !c.ordered&&!c.kiosk&&!c.lounge&&!c.momentOffered&&c.idChecked===true&&c.phase==='entering'});
     if(!guest)return;
@@ -2911,6 +2912,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     window.__canopySnap.stationFx=stationFx;
     // An upgrade's map effects at station i (sparkles, ring, spring) without buying it, for screenshots.
     window.__canopySnap.upgrade=function(i){burst(machinePos[i]);stationFx(i)};
+    // A customer's pick question, open on screen, for screenshots of the card (shop-play.js).
+    window.__canopySnap.moment=function(){moment=createMoment(state.shopPlay,customers[0]||{id:-1},momentPicks(state,menuStrains()));if(moment&&shopPlayUI){shopPlayUI.render();shopPlayUI.open()}return !!moment};
     // A cash pop frozen at `age` seconds into its rise, for screenshots of the pops (cash-pops.js).
     window.__canopySnap.cashPop=function(key,amount,age){var site=CASH_SITES[key];livePops.push({key:key,amount:amount,x:site.x,y:site.y,z:site.z,age:age||.4,text:fmt(amount)})};
     window.__canopySnap.status=function(){return{map3d:!!(map3d&&map3d.ok),loading:map3d?map3d.loading:-1}};
@@ -4396,7 +4399,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   goalsButton.onclick=function(){if(activeTray==='goals'&&panelOpen)collapsePanel();else openGoals()};
   var empireShell=mountEmpireShell({fit:fitControls,getState:function(){return state},format:fmt,rate:incomeRate,fly:flyToPlace,buyStation:function(i,j){buyBranchLevel(i,j,1)}});
   var shopPlayCollapsed=false;
-  shopPlayUI=mountShopPlay({getState:function(){return state},getMoment:function(){return moment},getAlerts:function(){return operationsAlerts(state.empire)},names:STRAINS.map(function(s){return s.name}),format:fmt,changed:save,lane:{status:$('laneStatus'),notes:$('laneNotes')},
+  shopPlayUI=mountShopPlay({getState:function(){return state},getMoment:function(){return moment},getAlerts:function(){return operationsAlerts(state.empire)},names:STRAINS.map(function(s){return s.name}),colors:STRAINS.map(function(s){return s.color}),format:fmt,changed:save,lane:{status:$('laneStatus'),notes:$('laneNotes')},
     // On a phone, or where the side panel would sit under the list, the sheet steps aside while shop activity is open.
     opening:function(){var sheet=$('sheet').getBoundingClientRect(),reach=(width<780?12:72)+Math.min(360,width-24);shopPlayCollapsed=panelOpen&&(width<780||sheet.left<reach+12);if(shopPlayCollapsed)collapsePanel()},
     closing:function(){if(shopPlayCollapsed){shopPlayCollapsed=false;showTray(activeTray)}},

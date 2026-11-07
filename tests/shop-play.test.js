@@ -79,3 +79,13 @@ test('picks offer every strain in each type it stocks, three different strains w
   }
   assert.equal(createMoment(migrateShopPlay(),{id:1},picks(state,[0])),null,'one strain in two types is still no choice');
 });
+
+test('the pick card asks a short question and tags each answer with the word that answers it',async()=>{
+  const {momentQuestion,pickLabel}=await import('../src/shop-play.js');
+  const typeAsk={formatRequest:false,target:1},formatAsk={formatRequest:true,target:2};
+  assert.equal(momentQuestion(typeAsk),'Got something for the daytime?');
+  assert.equal(momentQuestion(formatAsk),'Got something without flower?');
+  const sativa={type:1,trait:'Sativa',formatName:'Edibles'};
+  assert.deepEqual(pickLabel(typeAsk,sativa),{tag:'Daytime',line:'Sativa'});
+  assert.deepEqual(pickLabel(formatAsk,sativa),{tag:'Edibles',line:'Sativa'});
+});

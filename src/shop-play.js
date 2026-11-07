@@ -1,5 +1,7 @@
 import {TYPES,STRAIN_TYPE} from './strains.js';
 import {FORMATS,stockedFormats} from './depth.js';
+import {manageDialog} from './dialog-focus.js';
+import {tieLast} from './no-lone-words.js';
 
 // Shop activity, as on iOS: a pill on the map that leads with whatever needs the player now. Walk-ins sometimes ask the
 // budtender for a pick (a good match tips 20% at pickup), every five minutes of play closes a shift with a recap and one
@@ -71,6 +73,19 @@ export function shiftAdvice(recap,{counters=1,comfortLevel=0}={}){
 // down to stations and upgrades now (2026-11-03), so there is nothing there to chase; the map's brass shows the buys.
 export function operationsAlerts(){return [];}
 
+// The pick card asks in plain words (Kevin, 2026-11-07): a short question in the guest's voice, and on each answer the
+// one word that answers it, so the match reads at a glance. Hybrids are balanced, sativas daytime, indicas evening.
+export const MOOD=['Balanced','Daytime','Evening'];
+export function momentQuestion(moment){
+  return moment.formatRequest?['Got some flower?','Got something rolled and ready?','Got something without flower?'][moment.target]
+    :['Got something balanced?','Got something for the daytime?','Got something for the evening?'][moment.target];
+}
+// What each answer shows: the tag answers the question (a mood, or a product type) and the line under it names the
+// strain's type. The product itself shows as a 3D badge on the strain, so a tile never needs a third line.
+export function pickLabel(moment,option){
+  return {tag:moment.formatRequest?option.formatName:MOOD[option.type],line:option.trait};
+}
+
 const icon=path=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+path+'</svg>';
 const LEAF=icon('<path d="M12 21v-8"/><path d="M12 13c-4.5 0-7-2.5-7-7 4.5 0 7 2.5 7 7Z"/><path d="M12 15c0-4 2.3-6.5 7-6.5 0 4.2-2.5 6.5-7 6.5Z"/>');
 const LIST=icon('<path d="M5 7h14M5 12h14M5 17h9"/>');
@@ -81,54 +96,91 @@ const svg=html=>{const t=document.createElement('template');t.innerHTML=html;ret
 // Minutes to the next recap, rounded up, so the label only changes once a minute.
 // The five-minute recap clock is called the floor, not a shift, so it never reads against the shift goals' "Shift N".
 export function shiftTimeLeft(seconds){const left=Math.max(0,SHIFT_SECONDS-seconds);return left<60?'Recap in under a minute':'Recap in '+Math.ceil(left/60)+' min';}
-// The panel, on the glass components: the budtender pick as one-row choices, this shift as open figures with a thin
-// progress line, last shift's advice as the brass next-action card, and operations as one grouped list of rows.
+// The panel, on the glass components: this shift as open figures with a thin progress line and last shift's advice as
+// the brass next-action card. A customer asking for a pick gets their own card in the middle of the screen instead.
 // lane: where the pill and the feedback note live while the panel is closed (the top lane in main.js), so they line up
 // with the other status chips and toasts rather than sitting on their own spot.
-export function mountShopPlay({getState,getMoment,getAlerts,names,format,choose,skip,navigate,changed,opening,closing,lane}){
+const ART=(name,cls)=>'<img class="'+cls+'" src="icons/3d/'+name+'.png" alt="" draggable="false" decoding="async">';
+export function mountShopPlay({getState,getMoment,getAlerts,names,colors,format,choose,skip,navigate,changed,opening,closing,lane}){
   const root=document.createElement('div');root.className='shop-play';
   root.innerHTML='<button type="button" id="shopActivity" class="shop-activity" aria-expanded="false" aria-controls="shopActivityPanel">'+LIST+'<span></span></button>'+
     '<section id="shopActivityPanel" class="shop-activity-panel" aria-label="Shop activity" hidden><div class="shop-activity-heading"><h2>Shop activity</h2><button type="button" id="shopActivityClose" aria-label="Close shop activity">'+CLOSE+'</button></div>'+
-    '<div id="budtenderMoment"></div><section class="shift-recap" id="shiftRecap"></section></section>'+
+    '<section class="shift-recap" id="shiftRecap"></section></section>'+
     '<button type="button" id="momentBubble" class="moment-bubble" aria-label="Help this customer choose" hidden>'+LEAF+'</button><p class="shop-play-feedback" role="status" hidden></p>';
   document.getElementById('world').appendChild(root);
+  // The pick card: centred over a soft scrim, outside the app so the map and menus go inert behind it.
+  const overlay=document.createElement('div');overlay.className='moment-overlay';overlay.hidden=true;
+  overlay.innerHTML='<section class="moment-card" role="dialog" aria-modal="true" aria-labelledby="momentQuestion" aria-describedby="momentHint">'+
+    '<button type="button" class="moment-close" aria-label="Decide later">'+CLOSE+'</button>'+
+    '<div class="moment-guest" aria-hidden="true">'+ART('goal-person','moment-guest-art')+'</div>'+
+    '<p class="moment-kicker"></p><h2 id="momentQuestion"></h2><p class="moment-hint" id="momentHint">'+tieLast('Suggest one. A good match tips 20%.')+'</p>'+
+    '<div class="moment-picks" role="group" aria-label="Your suggestion"></div>'+
+    '<button type="button" class="moment-skip">Let the team choose</button></section>';
+  document.body.appendChild(overlay);
   const $=id=>root.querySelector('#'+id),panel=$('shopActivityPanel'),pill=$('shopActivity'),bubble=$('momentBubble'),feedback=root.querySelector('.shop-play-feedback');
-  let key='',feedbackTimer;
+  const card=overlay.querySelector('.moment-card'),picksBox=overlay.querySelector('.moment-picks');
+  let key='',momentKey='',feedbackTimer;
   const notes=lane&&lane.notes||root;if(lane&&lane.status){lane.status.prepend(pill);notes.appendChild(feedback);pill.addEventListener('keydown',e=>{if(e.key==='Escape'&&!panel.hidden){close();e.stopPropagation()}})}
+  function openMoment(){
+    const moment=getMoment();if(!moment)return false;
+    if(!panel.hidden)close();
+    moment.opened=true;momentKey='';renderMoment();overlay.hidden=false;pill.setAttribute('aria-expanded','true');changed();return true;
+  }
+  function closeMoment(){
+    if(overlay.hidden)return;overlay.hidden=true;pill.setAttribute('aria-expanded','false');
+    const moment=getMoment();if(moment)moment.opened=false;
+  }
+  manageDialog(overlay,()=>{closeMoment();render()});
   function open(){
+    if(openMoment())return;
     if(panel.hidden&&opening)opening();
     panel.hidden=false;panel.querySelector('.shop-activity-heading').after(feedback);pill.setAttribute('aria-expanded','true');
-    const moment=getMoment();if(moment)moment.opened=true;getState().shopPlay.recapUnread=false;changed();render();
+    getState().shopPlay.recapUnread=false;changed();render();
   }
   function close(){
     const wasOpen=!panel.hidden;panel.hidden=true;notes.appendChild(feedback);pill.setAttribute('aria-expanded','false');
-    const moment=getMoment();if(moment)moment.opened=false;if(wasOpen&&closing)closing();pill.focus({preventScroll:true});
+    if(wasOpen&&closing)closing();pill.focus({preventScroll:true});
   }
   pill.onclick=()=>panel.hidden?open():close();bubble.onclick=open;$('shopActivityClose').onclick=close;
   root.addEventListener('keydown',e=>{if(e.key==='Escape'){close();e.stopPropagation()}});
-  $('budtenderMoment').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.choice!==undefined)choose(Number(b.dataset.choice));else if(b.dataset.skip!==undefined)skip();render();});
+  // A tap on the scrim around the card puts the question off for later; the guest keeps waiting at the door.
+  overlay.addEventListener('click',e=>{if(e.target===overlay){closeMoment();render()}});
+  card.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    if(b.dataset.choice!==undefined){closeMoment();choose(Number(b.dataset.choice))}
+    else if(b.classList.contains('moment-skip')){closeMoment();skip()}
+    else if(b.classList.contains('moment-close'))closeMoment();
+    render();});
   $('shiftRecap').addEventListener('click',e=>{if(!e.target.closest('.activity-advice'))return;const recap=getState().shopPlay.recap,tip=recap&&advice(recap);if(tip&&tip.station!==undefined){close();navigate(tip)}});
   const advice=recap=>{const state=getState();return shiftAdvice(recap,{counters:state.orderCounters,comfortLevel:state.comfortLevel});};
   const el=(tag,props,...kids)=>{const node=Object.assign(document.createElement(tag),props);node.append(...kids);return node;};
   const figure=(label,value)=>el('div',{},el('dt',{textContent:label}),el('dd',{textContent:value}));
+  // Three answer tiles: the strain's own 3D render with its product on a corner badge, the name, the brass-edged word
+  // that answers the question, and the other half underneath.
+  function renderMoment(){
+    const moment=getMoment();if(!moment)return;
+    const next=JSON.stringify([moment.customerId,moment.choices]);if(next===momentKey)return;momentKey=next;
+    overlay.querySelector('.moment-kicker').textContent=moment.name+' asks';
+    overlay.querySelector('#momentQuestion').textContent=tieLast(momentQuestion(moment));
+    picksBox.replaceChildren(...moment.choices.map((option,i)=>{
+      const label=pickLabel(moment,option),name=names[option.strain];
+      const b=el('button',{type:'button',className:'moment-pick'});b.dataset.choice=i;
+      if(colors&&colors[option.strain])b.style.setProperty('--strain',colors[option.strain]);
+      b.setAttribute('aria-label','Suggest '+name+', '+option.formatName+', '+option.trait);
+      b.innerHTML='<span class="moment-pick-art">'+ART('strain-'+option.strain,'moment-pick-strain')+ART('goods-'+option.format,'moment-pick-goods')+'</span>';
+      b.append(el('strong',{textContent:name}),el('span',{className:'moment-pick-tag',textContent:label.tag}),el('small',{textContent:label.line}));
+      return b;}));
+  }
   function render(){
     const play=getState().shopPlay,moment=getMoment(),alerts=getAlerts(),shift=play.shift;
+    if(!moment&&!overlay.hidden){overlay.hidden=true;pill.setAttribute('aria-expanded',String(!panel.hidden))}
+    if(moment&&!overlay.hidden)renderMoment();
     const label=moment?moment.name+' needs a pick':play.recapUnread?'Floor recap ready':alerts.length?alerts[0].title:'Shop activity';
     pill.querySelector('span').textContent=label;pill.classList.toggle('is-moment',!!moment);
     const glyph=moment?'leaf':'list';if(pill.dataset.icon!==glyph){pill.dataset.icon=glyph;pill.querySelector('svg').outerHTML=moment?LEAF:LIST}
-    panel.classList.toggle('has-moment',!!moment);panel.querySelector('h2').textContent=moment?moment.name+' needs a pick':'Shop activity';
-    pill.classList.toggle('has-update',!!moment||play.recapUnread||alerts.length>0);pill.setAttribute('aria-label',label+' · Open shop activity');
-    const next=JSON.stringify([moment&&[moment.customerId,moment.choices,moment.opened],play.recap,alerts,shift.served,shift.matches,Math.floor(shift.earned),Math.floor(shift.seconds/10),getState().orderCounters,getState().comfortLevel]);
+    pill.classList.toggle('has-update',!!moment||play.recapUnread||alerts.length>0);pill.setAttribute('aria-label',label+(moment?' · Open their question':' · Open shop activity'));
+    const next=JSON.stringify([play.recap,alerts,shift.served,shift.matches,Math.floor(shift.earned),Math.floor(shift.seconds/10),getState().orderCounters,getState().comfortLevel]);
     if(next===key)return;key=next;
-    const focused=document.activeElement,scroll=panel.scrollTop,box=$('budtenderMoment');
-    const memory=root.contains(focused)?{choice:focused.dataset.choice,customer:box.dataset.customerId,skip:focused.dataset.skip!==undefined,recap:!!focused.closest('#shiftRecap')}:null;
-    box.dataset.customerId=moment?String(moment.customerId):'';box.replaceChildren();
-    if(moment){
-      const options=el('div',{className:'moment-options'});
-      moment.choices.forEach((option,i)=>{const b=el('button',{type:'button'},el('strong',{textContent:names[option.strain]}),el('span',{className:'moment-format',textContent:option.formatName}),el('small',{textContent:option.trait}));b.dataset.choice=i;options.appendChild(b)});
-      const pass=el('button',{type:'button',className:'moment-skip',textContent:'Let the team choose'});pass.dataset.skip='';
-      box.append(el('p',{className:'moment-quote',textContent:'“'+moment.request+'”'}),options,el('div',{className:'moment-foot'},el('small',{className:'moment-note',textContent:'A good match tips 20% at pickup.'}),pass));
-    }
+    const focused=document.activeElement,scroll=panel.scrollTop,refocus=root.contains(focused)&&!!focused.closest('#shiftRecap');
     const recapBox=$('shiftRecap'),progress=el('progress',{max:SHIFT_SECONDS,value:shift.seconds});progress.setAttribute('aria-label','Time to the next floor recap');
     recapBox.replaceChildren(el('div',{className:'activity-head'},el('h3',{textContent:'On the floor'}),el('span',{textContent:shiftTimeLeft(shift.seconds)})),progress,
       el('dl',{className:'activity-figures'},figure('Served',String(shift.served)),figure('Great picks',String(shift.matches)),figure('Earned',format(shift.earned))));
@@ -138,18 +190,12 @@ export function mountShopPlay({getState,getMoment,getAlerts,names,format,choose,
       recapBox.append(el('div',{className:'activity-last'},el('h4',{textContent:'Last 5 min'}),el('dl',{className:'activity-figures is-last'},figure('Earned',format(r.earned)),figure('Served',String(r.served)),figure('Avg wait',r.served?Math.round(r.waitTotal/r.served)+'s':'–'))));
       if(tip.station!==undefined){const card=el('button',{type:'button',className:'activity-advice',title:tip.text},svg(SPARK),el('strong',{textContent:tip.short||tip.text}),svg(CHEVRON));recapBox.appendChild(card)}
     }
-    if(memory&&!focused.isConnected){
-      let target;
-      if(memory.choice!==undefined&&moment&&memory.customer===String(moment.customerId))target=box.querySelector('[data-choice="'+memory.choice+'"]');
-      else if(memory.skip&&moment&&memory.customer===String(moment.customerId))target=box.querySelector('[data-skip]');
-      else if(memory.recap)target=recapBox.querySelector('button');
-      (target||pill).focus({preventScroll:true});panel.scrollTop=scroll;
-    }
+    if(refocus&&!focused.isConnected){(recapBox.querySelector('button')||pill).focus({preventScroll:true});panel.scrollTop=scroll}
   }
   return {
     render,close,open,
-    position(point,visible){bubble.hidden=!visible||!panel.hidden;if(visible){bubble.style.left=point.x+'px';bubble.style.top=point.y+'px'}},
+    position(point,visible){bubble.hidden=!visible||!panel.hidden||!overlay.hidden;if(visible){bubble.style.left=point.x+'px';bubble.style.top=point.y+'px'}},
     feedback(text){feedback.textContent=text;feedback.hidden=false;clearTimeout(feedbackTimer);feedbackTimer=setTimeout(()=>{feedback.hidden=true},5000)},
-    reset(){key='';panel.hidden=true;pill.setAttribute('aria-expanded','false');bubble.hidden=true;feedback.hidden=true}
+    reset(){key='';momentKey='';panel.hidden=true;overlay.hidden=true;pill.setAttribute('aria-expanded','false');bubble.hidden=true;feedback.hidden=true}
   };
 }
