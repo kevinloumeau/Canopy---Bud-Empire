@@ -23,10 +23,10 @@
  animation:return-pop .7s cubic-bezier(.34,1.56,.64,1) .08s both}
 .return-coin svg{width:44px;height:44px;fill:none;stroke:#5b4319;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 1px 0 rgba(255,244,210,.6))}
 .return-card .return-kicker{margin:0;font-size:.656rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ui-soft)}
-.return-card #returnTotal{margin:6px 0 12px;font:500 46px/1 'DM Mono',monospace;letter-spacing:-.05em;font-variant-numeric:tabular-nums;color:var(--ui-brass);
+.return-card #returnTotal{margin:6px 0 12px;font:500 46px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.05em;font-variant-numeric:tabular-nums;color:var(--ui-brass);
  background:linear-gradient(180deg,#fff1c9,#e2c68a 55%,#c9a45f);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 2px 10px rgba(226,198,138,.28))}
 .return-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 0 18px}
-.return-chips span{display:inline-flex;align-items:center;gap:6px;padding:6px 11px 6px 9px;border-radius:999px;background:var(--ui-well);box-shadow:inset 0 0 0 1px var(--ui-edge);font:500 12.5px 'DM Mono',monospace;letter-spacing:-.01em;color:var(--ui-ink);white-space:nowrap}
+.return-chips span{display:inline-flex;align-items:center;gap:6px;padding:6px 11px 6px 9px;border-radius:999px;background:var(--ui-well);box-shadow:inset 0 0 0 1px var(--ui-edge);font:500 12.5px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.01em;color:var(--ui-ink);white-space:nowrap}
 .return-chips svg{width:15px;height:15px;fill:none;stroke:var(--ui-soft);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .return-card #returnEarnings{display:grid;gap:6px;width:100%;margin:0 0 12px;padding:0;border:0;background:none;list-style:none}
 .return-card #returnEarnings[hidden]{display:none}
@@ -34,13 +34,13 @@
 .return-card #returnEarnings li i{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:linear-gradient(160deg,#5f8f4a,#17622f);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 2px 6px rgba(0,0,0,.3)}
 .return-card #returnEarnings li i svg{width:18px;height:18px;fill:none;stroke:#eaf6dc;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .return-card #returnEarnings li span{font-size:13.5px;line-height:1.2;font-weight:600;color:var(--ui-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.return-card #returnEarnings strong{font:500 14px 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-ink)}
+.return-card #returnEarnings strong{font:500 14px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;color:var(--ui-ink)}
 .return-card #returnGoals{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;margin:0 0 12px;padding:8px 12px 8px 8px;border:0;border-radius:16px;background:var(--ui-well);box-shadow:inset 0 0 0 1px var(--ui-edge);color:var(--ui-ink);font:inherit;font-size:14px;font-weight:600;text-align:left;cursor:pointer}
 .return-card #returnGoals[hidden]{display:none}
 .return-card #returnGoals::before{display:none}
 .return-card #returnGoals i{position:relative;display:grid;place-items:center;flex:0 0 40px;height:40px;border-radius:12px;background:linear-gradient(160deg,#3f6f8f,#22435a);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 2px 6px rgba(0,0,0,.3)}
 .return-card #returnGoals i svg{width:22px;height:22px;fill:none;stroke:#e6f2fa;stroke-width:1.8}
-.return-card #returnGoals i b{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--ui-brass);color:var(--ui-brass-ink);font:700 11px/18px 'DM Mono',monospace;box-shadow:0 0 0 2px rgba(12,40,21,.95)}
+.return-card #returnGoals i b{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--ui-brass);color:var(--ui-brass-ink);font:700 11px/18px 'Bricolage Grotesque',system-ui,sans-serif;box-shadow:0 0 0 2px rgba(12,40,21,.95)}
 .return-card #returnGoals span{flex:1}
 .return-card #returnGoals .return-chevron{width:18px;height:18px;fill:none;stroke:var(--ui-soft);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .return-card #returnGoals:active{transform:scale(.98)}
@@ -60,7 +60,7 @@
 .modal .settings-close{width:34px;height:34px;border:1px solid var(--ui-edge);background:var(--ui-well-soft);color:var(--ui-soft);font-size:20px}
 .modal.settings .settings-list{padding:0 12px;border-radius:14px;background:var(--ui-well)}
 .modal .settings-row{min-height:48px;padding:0;border-top:1px solid var(--ui-sheen);color:var(--ui-ink);font-size:14px}
-.modal .settings-row b{font:500 12.5px 'DM Mono',monospace;color:var(--ui-soft)}
+.modal .settings-row b{font:500 12.5px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-soft)}
 .modal.settings .settings-foot{margin-top:12px;padding:0;border:0}
 .modal .settings-row.settings-danger{padding:0 12px;border:1px solid var(--ui-coral-wash);border-radius:14px;background:none}
 .modal .settings-row.settings-danger span,.modal .settings-row.settings-danger b{color:var(--ui-coral)}

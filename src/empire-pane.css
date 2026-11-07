@@ -39,7 +39,7 @@
 /* Store list: name and figures on one baseline, numerals in the HUD's mono so levels and rates align. */
 .sheet .empire-content .branch-toggle{min-height:60px;padding:10px 2px 10px 0;gap:10px}
 .branch-toggle .branch-name{font-size:15px;letter-spacing:-.01em}
-.branch-toggle strong{font:500 11.5px 'DM Mono',monospace;letter-spacing:0;font-variant-numeric:tabular-nums;color:var(--p-sage-80);text-align:right}
+.branch-toggle strong{font:500 11.5px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:0;font-variant-numeric:tabular-nums;color:var(--p-sage-80);text-align:right}
 .branch-toggle::after{opacity:.75}
 .branch-body{padding-top:4px}
 
@@ -71,7 +71,7 @@
 .reputation-guide .guide-flower svg{width:100%;height:100%}
 .reputation-guide .guide-customer h4{margin:0 0 6px;font-size:14px;font-weight:700;color:var(--p-sage-93)}
 .reputation-guide .guide-time,.reputation-guide .guide-preference{display:flex;align-items:center;justify-content:center;min-height:38px;line-height:1.2;color:var(--p-lime-75)}
-.reputation-guide .guide-time{font:500 20px 'DM Mono',monospace;letter-spacing:-.02em;white-space:nowrap}
+.reputation-guide .guide-time{font:500 20px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;white-space:nowrap}
 .reputation-guide .guide-preference{font-size:14px;font-weight:650}
 .reputation-guide .guide-vip .guide-time,.reputation-guide .guide-vip b{color:#efce84}
 .reputation-guide .guide-vip b{white-space:nowrap}
@@ -100,7 +100,7 @@
 .daily-track{grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin:14px 0 12px}
 .daily-track li{padding:8px 1px 7px;border-radius:9px;line-height:1.2}
 .daily-track span{font-size:10px;letter-spacing:.01em;margin-bottom:3px}
-.daily-track b{font:500 11px 'DM Mono',monospace;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.daily-track b{font:500 11px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .daily-track li.current{box-shadow:inset 0 0 0 1px var(--p-lime-75),0 3px 10px #07200f26}
 .daily-track li.collected{color:var(--p-sage-66);border-color:#c1d7b71f}
 .daily-track li.collected span::after{color:var(--p-lime-75)}
@@ -154,7 +154,7 @@
 .reward-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
 .sheet .empire-screen .reward-chip{display:grid;gap:1px;min-height:48px;padding:7px 12px 6px;border-radius:12px;border:1px solid #e3d1a655;background:linear-gradient(155deg,#e3d1a626,#c3dca512);text-align:left;box-shadow:inset 0 1px 0 #f8edcc33}
 .reward-chip small{font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--p-gold-77);font-family:inherit;font-weight:600}
-.reward-chip b{font:600 14px 'DM Mono',monospace;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:#f6f2e3}
+.reward-chip b{font:600 14px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:#f6f2e3}
 .sheet .empire-screen .reward-collect{width:100%;min-height:44px;border-radius:12px;background:var(--p-gold-77);border-color:var(--p-gold-77);color:#2c2a1a;font-weight:700;box-shadow:0 3px 10px #07200f26}
 .sheet .empire-screen .reward-collect[hidden]{display:none}
 
@@ -167,7 +167,7 @@
 .store-list+.branch-help{margin-top:4px}
 .sheet .empire-screen .empire-more{display:flex;align-items:center;gap:8px;width:100%;min-height:52px;margin-top:14px;padding:8px 6px 8px 12px;border-radius:12px;background:#dce9be12;border-color:#c1d7b72e;font-size:13px;text-align:left}
 .empire-more>span:first-child{flex:1}
-.empire-more-hint{font:500 11px 'DM Mono',monospace;color:var(--p-gold-77);letter-spacing:0}
+.empire-more-hint{font:500 11px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--p-gold-77);letter-spacing:0}
 .empire-more-hint:empty{display:none}
 .empire-more svg{width:18px;height:18px;transform:rotate(180deg);opacity:.75}
 
@@ -190,7 +190,7 @@
 .scoreboard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px;padding:10px 0 14px;border-bottom:1px solid #c1d7b71f}
 .scoreboard .score{display:grid;gap:2px;min-width:0}
 .scoreboard small{font-size:11px;letter-spacing:.01em;color:var(--p-sage-70);font-family:inherit;white-space:nowrap}
-.scoreboard b{font:600 16px 'DM Mono',monospace;letter-spacing:-.03em;color:var(--p-lime-90);font-variant-numeric:tabular-nums;white-space:nowrap}
+.scoreboard b{font:600 16px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.03em;color:var(--p-lime-90);font-variant-numeric:tabular-nums;white-space:nowrap}
 .scoreboard .score:first-child{grid-column:1/-1}
 .scoreboard .score:first-child b{font-size:22px;color:var(--p-lime-85)}
 @media(min-width:780px){.scoreboard{grid-template-columns:repeat(5,minmax(0,1fr))}.scoreboard .score:first-child{grid-column:auto}.scoreboard .score:first-child b{font-size:16px}}
@@ -202,9 +202,9 @@
 .empire-group .shop-milestone .shop-copy{grid-area:copy;display:grid;gap:2px;min-width:0}
 .empire-group .shop-milestone .shop-copy h2{font-size:12px;font-weight:500;color:var(--p-sage-70);margin:0;letter-spacing:0}
 .empire-group .shop-milestone .shop-copy strong{font-size:14px;font-weight:650;color:var(--p-sage-93);line-height:1.2}
-.empire-group .shop-milestone .shop-copy small{font:500 11px 'DM Mono',monospace;color:var(--p-sage-80);letter-spacing:0}
+.empire-group .shop-milestone .shop-copy small{font:500 11px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--p-sage-80);letter-spacing:0}
 .sheet .empire-group .shop-milestone #claim{grid-area:button;display:grid;justify-items:center;gap:1px;min-width:92px;min-height:44px;padding:6px 12px;border-radius:12px;background:linear-gradient(145deg,#c9e4b820,#c6dfb608),var(--p-forest-35);color:var(--p-sage-96);border:1px solid #d9f1c445}
-.sheet .empire-group .shop-milestone #claim b{font:600 13px 'DM Mono',monospace}
+.sheet .empire-group .shop-milestone #claim b{font:600 13px 'Bricolage Grotesque',system-ui,sans-serif}
 .sheet .empire-group .shop-milestone #claim:disabled{background:var(--p-forest-19);color:var(--p-sage-74);border-color:#75936b55}
 .empire-group .shop-milestone .shop-meter{grid-area:meter;height:6px;border-radius:4px;background:var(--p-forest-13);overflow:hidden;margin-top:2px}
 .empire-group .shop-milestone .shop-meter i{display:block;height:100%;background:var(--p-lime-70);border-radius:4px}
@@ -215,11 +215,11 @@
 .branch-toggle .store-pips{display:inline-grid;grid-auto-flow:column;gap:2px}
 .branch-toggle .store-pips i{display:block;width:5px;height:12px;border-radius:2px;background:#ffffff1a}
 .branch-toggle .store-pips i.on{background:var(--p-lime-70);box-shadow:0 0 5px #b6d69055}
-.branch-toggle .store-level b{font:600 12px 'DM Mono',monospace;color:#e6efd8}
-.branch-toggle .store-income{display:inline-flex;align-items:center;gap:4px;padding:3px 9px 3px 6px;border-radius:999px;background:#e3c07a1a;color:#f2d99a;font:600 12px 'DM Mono',monospace}
+.branch-toggle .store-level b{font:600 12px 'Bricolage Grotesque',system-ui,sans-serif;color:#e6efd8}
+.branch-toggle .store-income{display:inline-flex;align-items:center;gap:4px;padding:3px 9px 3px 6px;border-radius:999px;background:#e3c07a1a;color:#f2d99a;font:600 12px 'Bricolage Grotesque',system-ui,sans-serif}
 .branch-toggle .store-income svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .branch-toggle .store-income.muted{background:#ffffff0c;color:#a9b9a5}
-.branch-toggle .store-locked{display:inline-flex;align-items:center;gap:5px;color:#d9e4cf;font:600 12px 'DM Mono',monospace}
+.branch-toggle .store-locked{display:inline-flex;align-items:center;gap:5px;color:#d9e4cf;font:600 12px 'Bricolage Grotesque',system-ui,sans-serif}
 .branch-toggle .store-locked.is-locked{color:var(--p-sage-66)}
 .branch-toggle .store-locked svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 @media(max-width:400px){.branch-toggle .store-pips{display:none}}
@@ -229,7 +229,7 @@
 .sheet .prestige-panel>summary{display:flex;align-items:center;gap:9px;min-height:48px;padding:10px 0;list-style:none;color:var(--p-gold-76);font-size:14px;font-weight:600}
 .prestige-panel>summary::-webkit-details-marker{display:none}
 .prestige-panel>summary>span{flex:1;min-width:0}
-.sheet .prestige-panel>summary>small{font:500 11px 'DM Mono',monospace;color:var(--p-sage-79);white-space:nowrap}
+.sheet .prestige-panel>summary>small{font:500 11px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--p-sage-79);white-space:nowrap}
 .prestige-panel svg{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .prestige-sprout{width:23px;height:23px}
 .prestige-chevron{width:14px;height:14px;transition:transform 160ms ease-out}
@@ -247,7 +247,7 @@
 .sheet .prestige-panel .prestige-gain{margin:0;text-align:center;font-size:13px;font-weight:600;line-height:1.4;color:#d6e9b8}
 .prestige-funding{display:grid;gap:7px;padding-top:14px;border-top:1px solid #c1d7b726}
 .prestige-funding>div{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap;font-size:12px;color:var(--p-sage-79)}
-.prestige-funding b{font:500 12px 'DM Mono',monospace;color:var(--p-sage-90);white-space:nowrap}
+.prestige-funding b{font:500 12px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--p-sage-90);white-space:nowrap}
 .sheet .prestige-funding progress{display:block;width:100%;height:5px;margin:0;border:0;border-radius:3px;overflow:hidden;background:#0c3118;accent-color:var(--p-lime-74)}
 .prestige-funding progress::-webkit-progress-bar{background:#0c3118}
 .prestige-funding progress::-webkit-progress-value{background:var(--p-lime-74)}
@@ -265,14 +265,14 @@
 /* Achievements: one row each, the figure on the right; earned rows carry a sage tick. */
 .achievement-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 .sheet .achievement-head h2{margin:0;font-size:15px}
-.achievement-head b{font:600 13px 'DM Mono',monospace;color:var(--p-lime-85);font-variant-numeric:tabular-nums;white-space:nowrap}
+.achievement-head b{font:600 13px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--p-lime-85);font-variant-numeric:tabular-nums;white-space:nowrap}
 .achievement-list{list-style:none;margin:6px 0 0;padding:0;display:grid}
 .achievement{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px;padding:4px 0;border-bottom:1px solid #c1d7b714}
 .achievement:last-child{border-bottom:0}
 .achievement-copy{display:flex;align-items:baseline;gap:8px;flex:1;min-width:0;overflow:hidden}
 .achievement-copy b{font-size:14px;font-weight:600;color:var(--p-sage-93);white-space:nowrap}
 .achievement-copy small{font-size:12px;font-family:inherit;color:var(--p-sage-70);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.achievement-figure{flex-shrink:0;font:500 12px 'DM Mono',monospace;color:var(--p-sage-80);font-variant-numeric:tabular-nums;white-space:nowrap}
+.achievement-figure{flex-shrink:0;font:500 12px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--p-sage-80);font-variant-numeric:tabular-nums;white-space:nowrap}
 .achievement-figure svg{width:18px;height:18px;color:var(--p-lime-71);display:block}
 .achievement.is-done .achievement-copy b{color:var(--p-sage-80)}
 .achievement-earned{margin-top:4px}

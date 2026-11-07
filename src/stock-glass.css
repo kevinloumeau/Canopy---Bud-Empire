@@ -5,7 +5,7 @@
 .sheet #stockStatus{gap:0;padding:6px 4px 12px;border-top:1px solid var(--ui-edge);color:var(--ui-soft)}
 .sheet #stockStatus .stock-item{position:relative;flex:1 1 auto;gap:5px;padding:4px 6px;border-radius:10px;background:none;box-shadow:none;color:var(--ui-soft);transition:background-color .2s ease,color .2s ease}
 .sheet #stockStatus .stock-item svg{width:16px;height:18px;opacity:.85}
-.sheet #stockStatus .stock-item b{font:500 13px 'DM Mono',monospace;color:var(--ui-ink);letter-spacing:-.03em}
+.sheet #stockStatus .stock-item b{font:500 13px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-ink);letter-spacing:-.03em}
 .sheet #stockStatus .stock-item b small{color:var(--ui-soft);font-weight:500}
 .sheet #stockStatus .stock-item b.stock-full{color:var(--ui-ink);text-decoration:none}
 /* Each stage gets an equal slot with its icon pinned to the left, so a count changing length never nudges the icon or its neighbours.
@@ -15,7 +15,7 @@
 .sheet #stockStatus .stock-item:not(.stock-online)>span::after{content:'';position:absolute;left:50%;top:calc(100% + 2px);width:7px;height:5px;transform:translateX(-50%)}
 .sheet #stockStatus .stock-item[data-trend=up]>span::after{background:#9cc386;clip-path:polygon(50% 0,100% 100%,0 100%)}
 .sheet #stockStatus .stock-item[data-trend=down]>span::after{background:var(--ui-coral);clip-path:polygon(0 0,100% 0,50% 100%)}
-.sheet #stockStatus .stock-item[data-trend=full]>span::after{content:'max';top:100%;width:auto;height:auto;font:500 8.5px/1 'DM Mono',monospace;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-soft)}
+.sheet #stockStatus .stock-item[data-trend=full]>span::after{content:'max';top:100%;width:auto;height:auto;font:500 8.5px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-soft)}
 .sheet #stockStatus .stock-item.is-bottleneck{color:var(--ui-brass)}
 .sheet #stockStatus .stock-item.is-bottleneck svg{opacity:1}
 .sheet #stockStatus .stock-item.is-bottleneck b{color:var(--ui-brass)}

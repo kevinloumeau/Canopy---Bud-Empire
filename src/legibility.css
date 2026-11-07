@@ -80,7 +80,7 @@ h1,h2,.guide-card h2,.empire-screen h2,.machine-info h1,.canopy-brand b{font-var
  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
 }
 .world .marker.station-sign .station-sign-name{font-weight:700;letter-spacing:-.01em}
-.world .marker.station-sign .station-sign-level{font:500 10.5px 'DM Mono',monospace;color:var(--p-sage-80);opacity:.9}
+.world .marker.station-sign .station-sign-level{font:500 10.5px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--p-sage-80);opacity:.9}
 .world .marker.station-sign.selected{background:var(--station-tier,var(--p-lime-81));color:#133e20;border-color:#f0f8e6;box-shadow:0 4px 14px #07200f55}
 .world .marker.station-sign.selected .station-sign-level{color:#1e5630;opacity:.85}
 .world .marker.station-sign:after{background:currentColor}
