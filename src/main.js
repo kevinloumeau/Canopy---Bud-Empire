@@ -4457,15 +4457,25 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   }
   // The finger distance that stretches the map by `shown` past the edge (rubberBand run backwards).
   function unstretch(shown,size){if(!shown)return 0;var a=Math.min(Math.abs(shown),size*.98);return Math.sign(shown)*(1/(1-a/size)-1)*size/.55}
-  canvas.addEventListener('pointerdown',function(e){mapHintActivity();districtGlide=null;try{canvas.setPointerCapture(e.pointerId)}catch(err){}touches[e.pointerId]={x:e.clientX,y:e.clientY};
+  // A finger on a station sign or the Manage tag is a finger on the map too: it pans and pinches with the others, and a
+  // still tap still opens what it landed on. With the menu up the map is short and its signs cover much of it, so
+  // pinches that caught a sign did nothing (Kevin, 2026-11-05). The zoom buttons keep their own presses.
+  var world=canvas.parentElement;
+  function onMap(t){return t===canvas||!!(t&&t.closest&&t.closest('#markers,#branchMapMarker'))}
+  // A sign a pinch finger rested on without moving is not tapped when the fingers lift.
+  var signTapVoid=-1e9;
+  world.addEventListener('click',function(e){if(e.target!==canvas&&onMap(e.target)&&performance.now()-signTapVoid<500){signTapVoid=-1e9;e.stopPropagation();e.preventDefault()}},true);
+  world.addEventListener('pointerdown',function(e){if(!onMap(e.target))return;mapHintActivity();districtGlide=null;if(e.target===canvas)try{canvas.setPointerCapture(e.pointerId)}catch(err){}touches[e.pointerId]={x:e.clientX,y:e.clientY};
     // Catching a gliding map stops it, as on iOS, and is not a tap on whatever is under the finger.
     var caught=mapGesture.mode==='coast'&&Math.hypot(mapGesture.vx,mapGesture.vy)>60;if(mapGesture.mode==='coast'){mapGesture.vx=mapGesture.vy=0}
     if(Object.keys(touches).length===1){gestureMoved=caught;gestureOrigin={x:e.clientX,y:e.clientY};mapGesture.dx=mapGesture.dy=0;mapGesture.scale=1;mapGesture.samples=[];mapGesture.trail={x:0,y:0};mapGesture.liftAt=0}else{gestureMoved=true;mapGesture.samples=[]}render.invalidated=true});
-  canvas.addEventListener('pointermove',function(e){
+  world.addEventListener('pointermove',function(e){
     var t=touches[e.pointerId];if(!t)return;moveHint();var g=mapGesture,ids=Object.keys(touches),before=ids.length>1?ids.slice(0,2).map(function(id){return{x:touches[id].x,y:touches[id].y}}):null;
     var mx=e.clientX-t.x,my=e.clientY-t.y;t.x=e.clientX;t.y=e.clientY;
     if(!gestureMoved&&gestureOrigin&&Math.hypot(e.clientX-gestureOrigin.x,e.clientY-gestureOrigin.y)>5)gestureMoved=true;
     if(!gestureMoved)return;
+    // A sign's finger that has started moving the map hands itself to the canvas, so it keeps up off the sign and its lift is no tap.
+    if(e.target!==canvas&&!(canvas.hasPointerCapture&&canvas.hasPointerCapture(e.pointerId)))try{canvas.setPointerCapture(e.pointerId)}catch(err){}
     if(before){
       // Two fingers: the map follows their midpoint and scales with their spread, around that midpoint.
       var after=ids.slice(0,2).map(function(id){return touches[id]}),d0=Math.hypot(before[0].x-before[1].x,before[0].y-before[1].y),d1=Math.hypot(after[0].x-after[1].x,after[0].y-after[1].y);
@@ -4477,10 +4487,11 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   });
   // A finger lifting takes its last move with it before it is forgotten.
   function flushGesture(e){if(e&&Object.keys(touches).length===1)mapGesture.liftAt=e.timeStamp;if(gestureMoved&&(mapGesture.dx||mapGesture.dy||mapGesture.scale!==1))stepMapGesture(performance.now())}
+  world.addEventListener('pointerup',function(e){if(!touches[e.pointerId])return;mapHintActivity();flushGesture(e);var onCanvas=e.target===canvas;if(gestureMoved&&!onCanvas)signTapVoid=performance.now();if(!onCanvas);else if(!gestureMoved&&Object.keys(touches).length===1&&state.empire.activeStore){var br=canvas.getBoundingClientRect(),f=BRANCH_THEMES[state.empire.activeStore-1].focus,fo=districtCentre(state.empire.activeStore-1),q=project(f.x+fo.x,f.y,f.z+fo.z);if(Math.hypot(e.clientX-br.left-q.x,e.clientY-br.top-q.y)<Math.max(45,unit*3))manageViewedStore()}else if(!gestureMoved&&Object.keys(touches).length===1){var rect=canvas.getBoundingClientRect(),best=-1,distance=60;machinePos.forEach(function(pos,i){var p=project(pos.x,1.4+(pos.y||0),pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=i;distance=d}});orderCounterPositions(state.orderCounters).forEach(function(pos){var p=project(pos.x,1.4,pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=4;distance=d}});var online=project(-10.7,8.45,1.5),od=Math.hypot(e.clientX-rect.left-online.x,e.clientY-rect.top-online.y);if(od<distance){showTray('orders');renderUI()}else if(best>=0)selectMachine(best);else if(mapPicked){mapPicked=false;renderUI()}}delete touches[e.pointerId];if(Object.keys(touches).length)gestureMoved=true;else gestureOrigin=null});
   // Double-tap anywhere on the map (canvas or a station pill) zooms in around the tap, or back out when already close.
   var lastTap={time:0,x:0,y:0};
   canvas.parentElement.addEventListener('pointerup',function(e){
-    if(e.pointerType==='mouse'&&e.button!==0)return;if(Object.keys(touches).length>1||gestureMoved&&e.target===canvas)return;
+    if(e.pointerType==='mouse'&&e.button!==0)return;if(Object.keys(touches).length>1||gestureMoved)return;
     if(e.target.closest&&e.target.closest('.map-controls,button:not(.marker)'))return;
     var now=performance.now(),quick=now-lastTap.time<350&&Math.hypot(e.clientX-lastTap.x,e.clientY-lastTap.y)<30;
     lastTap=quick?{time:0,x:0,y:0}:{time:now,x:e.clientX,y:e.clientY};
@@ -4489,9 +4500,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // The zoom eases in around the tap (or back out to the shop) instead of jumping.
     if(zoom<1.7){var px=panX,py=panY,pz=zoom;zoomAt(2.2,x,y);var to=viewAnchor();panX=px;panY=py;zoom=pz;applyCamera();glideTo(to.x,to.z,2.2)}else glideTo(0,0,1);
   });
-  canvas.addEventListener('pointerup',function(e){mapHintActivity();flushGesture(e);if(!gestureMoved&&Object.keys(touches).length===1&&state.empire.activeStore){var br=canvas.getBoundingClientRect(),f=BRANCH_THEMES[state.empire.activeStore-1].focus,fo=districtCentre(state.empire.activeStore-1),q=project(f.x+fo.x,f.y,f.z+fo.z);if(Math.hypot(e.clientX-br.left-q.x,e.clientY-br.top-q.y)<Math.max(45,unit*3))manageViewedStore()}else if(!gestureMoved&&Object.keys(touches).length===1){var rect=canvas.getBoundingClientRect(),best=-1,distance=60;machinePos.forEach(function(pos,i){var p=project(pos.x,1.4+(pos.y||0),pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=i;distance=d}});orderCounterPositions(state.orderCounters).forEach(function(pos){var p=project(pos.x,1.4,pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=4;distance=d}});var online=project(-10.7,8.45,1.5),od=Math.hypot(e.clientX-rect.left-online.x,e.clientY-rect.top-online.y);if(od<distance){showTray('orders');renderUI()}else if(best>=0)selectMachine(best);else if(mapPicked){mapPicked=false;renderUI()}}delete touches[e.pointerId];if(Object.keys(touches).length)gestureMoved=true;else gestureOrigin=null});
   function cancelPointer(e){if(!touches[e.pointerId])return;mapHintActivity();flushGesture();delete touches[e.pointerId];gestureMoved=true}
-  canvas.addEventListener('pointercancel',cancelPointer);canvas.addEventListener('lostpointercapture',cancelPointer);
+  world.addEventListener('pointercancel',cancelPointer);canvas.addEventListener('lostpointercapture',cancelPointer);
   canvas.addEventListener('wheel',function(e){mapHintActivity();districtGlide=null;e.preventDefault();var r=canvas.getBoundingClientRect();zoomAt(zoom*Math.exp(-e.deltaY*.0015),e.clientX-r.left,e.clientY-r.top)},{passive:false});
   $('zoomIn').onclick=function(){mapHintActivity();zoomAt(zoom*1.2,width/2,height/2)};
   $('zoomOut').onclick=function(){mapHintActivity();zoomAt(zoom/1.2,width/2,height/2)};
