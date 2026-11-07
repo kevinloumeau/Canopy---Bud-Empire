@@ -65,6 +65,17 @@ export function createMap3D(canvas, layout) {
   renderer.toneMapping = THREE.CustomToneMapping; // the colour grade above
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  // Battery: the sun's 2048 soft shadow map is the frame's second full pass over the scene. It is redrawn at most 30
+  // times a second (every other frame at 60 fps), which keeps walking people and cars' shadows smooth while halving
+  // that pass. A skipped frame reuses the last map with the light matrix it was drawn with, so shadows stay put in the
+  // world while the view pans. See shadowsDue().
+  renderer.shadowMap.autoUpdate = false;
+  const SHADOW_EVERY = 1000 / 30;
+  let shadowAt = -Infinity;
+  function shadowsDue() {
+    if (frameClock - shadowAt < SHADOW_EVERY - 4) return;
+    shadowAt = frameClock; renderer.shadowMap.needsUpdate = true;
+  }
 
   const hazeColour = new THREE.Color().setRGB(layout.haze.colour[0] / 255, layout.haze.colour[1] / 255, layout.haze.colour[2] / 255, THREE.SRGBColorSpace);
   const scene = new THREE.Scene();
@@ -126,6 +137,49 @@ export function createMap3D(canvas, layout) {
         #include <dithering_fragment>`);
     };
     m.customProgramCacheKey = () => 'haze';
+    return m;
+  }
+  // Lit windows after dark (Kevin's visual review, 2026-11-07: the night map read as a grey overcast day). A hazed
+  // material gains a warm glow on a random share of its window panes, scaled by the night, inside its own shader, so
+  // the city lights up with no new draw or light. Two ways to find a pane:
+  // - 'pane': a `pane` vertex attribute (paneAttribute, below): 0 off glass, (0, 1] a sash pane's own random number,
+  //   2 + a random number for a shop window. Instanced copies of one terrace mix in their own position, so the same
+  //   model never shows the same lit pattern twice.
+  // - 'grid': a curtain wall or a glass band, one big box, cut into cells of opts.cell (map units) from opts.origin.
+  const nightWindowsUniform = { value: 0 };
+  function nightWindows(m, mode, { share = .4, shopShare = .85, strength = 1, cell = [1, 1, 1], origin = [0, 0, 0] } = {}) {
+    const before = m.onBeforeCompile;
+    m.onBeforeCompile = (shader, r) => {
+      before.call(m, shader, r);
+      Object.assign(shader.uniforms, {
+        nightWindows: nightWindowsUniform, winShare: { value: share }, winShopShare: { value: shopShare }, winStrength: { value: strength },
+        winCell: { value: new THREE.Vector3(cell[0], cell[1] * HEIGHT_SCALE, cell[2]) }, winOrigin: { value: new THREE.Vector3(origin[0], origin[1] * HEIGHT_SCALE, origin[2]) }
+      });
+      const pane = mode === 'pane';
+      shader.vertexShader = (pane ? 'attribute float pane;\nvarying float vPane;\n' : '') + 'varying float vWinSeed;\n' + shader.vertexShader.replace('#include <project_vertex>', `#include <project_vertex>
+        ${pane ? 'vPane = pane;' : ''}
+        #ifdef USE_INSTANCING
+          vWinSeed = fract(sin(dot(instanceMatrix[3].xz, vec2(12.9898, 78.233))) * 43758.5453);
+        #else
+          vWinSeed = fract(sin(dot(modelMatrix[3].xz, vec2(12.9898, 78.233))) * 43758.5453);
+        #endif`);
+      shader.fragmentShader = (pane ? 'varying float vPane;\n' : '') + `varying float vWinSeed;
+        uniform float nightWindows, winShare, winShopShare, winStrength; uniform vec3 winCell, winOrigin;
+        float winHash(vec3 p) { return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
+      ` + shader.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+        if (nightWindows > 0.0) {
+          float winPick = -1.0, winLit = 0.0;
+          ${pane ? `
+          if (vPane > 1.5) { winPick = fract(vPane + vWinSeed * 3.7); winLit = step(winPick, winShopShare) * 1.4; }
+          else if (vPane > 0.0) { winPick = fract(vPane + vWinSeed); winLit = step(winPick, winShare); }` : `
+          winPick = winHash(floor((vHazeWorld - winOrigin) / winCell) + vWinSeed);
+          winLit = step(winPick, winShare);`}
+          // Most lit rooms are a warm lamp, from amber to cream; one in eight is the cool flicker of a screen.
+          vec3 winTone = winPick < winShare * .125 ? vec3(.55, .7, 1.0) : mix(vec3(1.0, .62, .26), vec3(1.0, .86, .58), fract(winPick * 7.13));
+          totalEmissiveRadiance += winTone * winLit * nightWindows * winStrength;
+        }`);
+    };
+    m.customProgramCacheKey = () => 'haze-windows-' + mode;
     return m;
   }
   // Floor textures (the 2D map's own tiles), laid in world units so neighbouring slabs line up: a box's top face runs
@@ -201,7 +255,7 @@ export function createMap3D(canvas, layout) {
     }, undefined, e => console.warn('3D map: could not load ' + file, e));
   }
   const lampStandIns = [];
-  const terraces = buildTown(world, layout, { box, span, material, textured, lampStandIns });
+  const terraces = buildTown(world, layout, { box, span, material, textured, lampStandIns, nightWindows });
   // Everything that is the shop rather than the town round it, for the first-load build (intro.js).
   const shopParts = new Set(), townEnd = world.children.length;
   buildShop(world, layout, { box, span, material, textured, model });
@@ -210,9 +264,9 @@ export function createMap3D(canvas, layout) {
   scene.children.slice(sceneEnd).forEach(o => shopParts.add(o));
   const shell = buildShell(world, layout, { box, span, material, model });
   const rooftop = buildRooftop(world, layout, { box, span, material });
-  const flagship = buildFlagship(world, layout, { material });
+  const flagship = buildFlagship(world, layout, { material, nightWindows });
   const atms = layout.atm ? buildAtms(world, layout, { material }) : null;
-  const cityBuildings = buildCityBuildings(world, layout, { material });
+  const cityBuildings = buildCityBuildings(world, layout, { material, nightWindows });
   buildEntrance(world, layout, { box, span, material, model });
   world.children.slice(townEnd).forEach(o => shopParts.add(o));
 
@@ -269,6 +323,137 @@ export function createMap3D(canvas, layout) {
       if (u.echo.visible) { const eo = 1 - Math.pow(1 - e, 3); u.echo.position.set(p.x, y + .01, p.z); u.echo.scale.set(p.r * (.3 + eo * 1.15), 1, p.r * (.3 + eo * 1.15)); u.echo.material.opacity = .85 * (1 - e); }
     });
     for (; n < upgradeRings.length; n++) { const u = upgradeRings[n]; u.pool.visible = u.ring.visible = u.echo.visible = false; }
+  }
+  // A big purchase's reveal (frame.revealBeams, from reveal-fx.js): a column of warm light rises out of the spot and
+  // fades while brass sparkles burst up and drift out. Pooled (three at most), two draws each while one plays.
+  const beamTexture = (() => {
+    const c = document.createElement('canvas'); c.width = 4; c.height = 64;
+    const g = c.getContext('2d'), grad = g.createLinearGradient(0, 64, 0, 0);
+    grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(.35, 'rgba(255,255,255,.55)'); grad.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = grad; g.fillRect(0, 0, 4, 64);
+    return new THREE.CanvasTexture(c);
+  })();
+  const SPARKS = 28, revealBeams = [];
+  function revealBeam(n) {
+    if (!revealBeams[n]) {
+      const column = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 28, 1, true).translate(0, .5, 0),
+        new THREE.MeshBasicMaterial({ map: beamTexture, color: '#ffc457', transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+      const geometry = new THREE.BufferGeometry(), colours = new Float32Array(SPARKS * 3), tone = new THREE.Color();
+      for (let i = 0; i < SPARKS; i++) tone.set(i % 3 === 0 ? '#fff4d2' : i % 3 === 1 ? '#ffd36a' : '#e9a93a').toArray(colours, i * 3);
+      geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(SPARKS * 3), 3));
+      geometry.setAttribute('color', new THREE.BufferAttribute(colours, 3));
+      const sparks = new THREE.Points(geometry, new THREE.PointsMaterial({ map: glowTexture, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: false }));
+      column.renderOrder = sparks.renderOrder = 3; column.visible = sparks.visible = false; sparks.frustumCulled = false;
+      world.add(column); world.add(sparks);
+      revealBeams[n] = { column, sparks };
+    }
+    return revealBeams[n];
+  }
+  // A small fixed hash, so each sparkle keeps its own path from frame to frame.
+  const hash = (i, k) => { const v = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453; return v - Math.floor(v); };
+  function updateRevealBeams(beams, unit) {
+    let n = 0;
+    (beams || []).forEach(p => {
+      const b = revealBeam(n++), t = Math.max(0, Math.min(1, p.t)), grow = 1 - Math.pow(1 - Math.min(1, t / .32), 3);
+      const fade = t < .12 ? t / .12 : Math.max(0, 1 - (t - .12) / .7);
+      b.column.visible = fade > 0;
+      b.column.position.set(p.x, p.y, p.z);
+      const width = p.r * (.8 - .5 * t);
+      b.column.scale.set(width, Math.max(.01, p.h * grow), width);
+      b.column.material.opacity = .8 * fade;
+      const pos = b.sparks.geometry.attributes.position;
+      for (let i = 0; i < SPARKS; i++) {
+        const a = hash(i, p.seed) * Math.PI * 2, speed = .55 + hash(i, p.seed + 7) * .65, start = hash(i, p.seed + 3) * .25;
+        const k = Math.max(0, Math.min(1, (t - start) / (1 - start))), out = 1 - Math.pow(1 - k, 2), spin = a + k * 1.6;
+        const reach = p.r * (.25 + 1.05 * out * speed), rise = p.h * (.1 + 1.3 * out * speed) - p.h * .55 * k * k;
+        pos.setXYZ(i, p.x + Math.cos(spin) * reach, p.y + Math.max(.05, rise), p.z + Math.sin(spin) * reach);
+      }
+      pos.needsUpdate = true;
+      b.sparks.visible = true;
+      b.sparks.material.size = Math.max(5, unit * .42) * (1 - .35 * t);
+      b.sparks.material.opacity = t < .08 ? t / .08 : Math.min(1, (1 - t) * 2.2) * (.75 + .25 * Math.sin(t * 40));
+    });
+    for (; n < revealBeams.length; n++) { const b = revealBeams[n]; b.column.visible = b.sparks.visible = false; }
+  }
+  // Upgrade sparkles (frame.sparkles, from sparkles.js): soft leaves, four-point glints and coins that rise off what
+  // was upgraded. One instanced quad for all of them, so a burst is one draw call however many play at once. Each quad
+  // faces the camera (the corner is added in view space, so the world's height stretch doesn't squash it), turns on
+  // its own angle and picks its shape from a three-cell sprite sheet. Depth-tested against the scene, so a building in
+  // front hides them, and blended premultiplied: the leaf and coin read as solid little shapes by day while their
+  // halos and the glints add light, which carries at night.
+  const SPARKLE_MAX = 240;
+  const sparkleSheet = (() => {
+    const S = 64, c = document.createElement('canvas'); c.width = S * 3; c.height = S;
+    const g = c.getContext('2d');
+    const halo = (cx, alpha) => { const h = g.createRadialGradient(cx, 32, 0, cx, 32, 31); h.addColorStop(0, `rgba(255,255,255,${alpha})`); h.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = h; g.fillRect(cx - 32, 0, 64, 64); };
+    // Leaf: a pointed blade with a darker midrib and a soft rim of light.
+    halo(32, .35);
+    g.save(); g.translate(32, 32); g.rotate(-Math.PI / 4);
+    g.beginPath(); g.moveTo(0, -24); g.bezierCurveTo(15, -12, 15, 12, 0, 24); g.bezierCurveTo(-15, 12, -15, -12, 0, -24); g.closePath();
+    const leaf = g.createLinearGradient(-12, 0, 12, 0); leaf.addColorStop(0, '#ffffff'); leaf.addColorStop(1, '#c9c9c9');
+    g.fillStyle = leaf; g.fill();
+    g.strokeStyle = 'rgba(120,120,120,.9)'; g.lineWidth = 2; g.beginPath(); g.moveTo(0, -18); g.lineTo(0, 22); g.stroke();
+    g.restore();
+    // Glint: a four-point star with a hot core.
+    halo(96, .6);
+    g.save(); g.translate(96, 32); g.fillStyle = '#ffffff'; g.beginPath();
+    for (let i = 0; i < 8; i++) { const r = i % 2 ? 4.5 : 27, a = i * Math.PI / 4 - Math.PI / 2; g.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
+    g.closePath(); g.fill(); g.restore();
+    // Coin: a disc with a bright rim, a recessed face and a highlight across the top.
+    halo(160, .3);
+    g.save(); g.translate(160, 32);
+    g.fillStyle = '#ffffff'; g.beginPath(); g.arc(0, 0, 19, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#bdbdbd'; g.beginPath(); g.arc(0, 0, 14, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#e6e6e6'; g.font = 'bold 20px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('$', 0, 1);
+    g.fillStyle = 'rgba(255,255,255,.85)'; g.beginPath(); g.ellipse(-6, -10, 7, 3, -.5, 0, Math.PI * 2); g.fill();
+    g.restore();
+    return new THREE.CanvasTexture(c);
+  })();
+  const sparkleGeometry = new THREE.InstancedBufferGeometry();
+  sparkleGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-.5, -.5, 0, .5, -.5, 0, .5, .5, 0, -.5, .5, 0]), 3));
+  sparkleGeometry.setIndex([0, 1, 2, 0, 2, 3]);
+  const sparkleAt = new THREE.InstancedBufferAttribute(new Float32Array(SPARKLE_MAX * 3), 3).setUsage(THREE.DynamicDrawUsage);
+  const sparkleLook = new THREE.InstancedBufferAttribute(new Float32Array(SPARKLE_MAX * 4), 4).setUsage(THREE.DynamicDrawUsage);
+  const sparkleTint = new THREE.InstancedBufferAttribute(new Float32Array(SPARKLE_MAX * 3), 3).setUsage(THREE.DynamicDrawUsage);
+  sparkleGeometry.setAttribute('at', sparkleAt); sparkleGeometry.setAttribute('look', sparkleLook); sparkleGeometry.setAttribute('tint', sparkleTint);
+  sparkleGeometry.instanceCount = 0;
+  const sparkles = new THREE.Mesh(sparkleGeometry, new THREE.ShaderMaterial({
+    uniforms: { sheet: { value: sparkleSheet } },
+    vertexShader: `attribute vec3 at; attribute vec4 look; attribute vec3 tint; varying vec2 vUv; varying vec4 vTint; varying float vGlow;
+      void main() {
+        float c = cos(look.y), s = sin(look.y);
+        vec2 corner = vec2(c * position.x - s * position.y, s * position.x + c * position.y) * look.x;
+        vec4 mv = modelViewMatrix * vec4(at, 1.0); mv.xy += corner;
+        gl_Position = projectionMatrix * mv;
+        vUv = vec2((position.x + .5 + look.w) / 3.0, position.y + .5);
+        vTint = vec4(tint, look.z); vGlow = look.w == 1.0 ? .25 : 1.0;
+      }`,
+    fragmentShader: `uniform sampler2D sheet; varying vec2 vUv; varying vec4 vTint; varying float vGlow;
+      void main() {
+        vec4 t = texture2D(sheet, vUv);
+        float a = t.a * vTint.a;
+        if (a < .004) discard;
+        vec3 col = t.rgb * vTint.rgb * 1.15;
+        gl_FragColor = vec4(col * a, a * vGlow);
+      }`,
+    transparent: true, depthWrite: false, depthTest: true,
+    blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor
+  }));
+  sparkles.frustumCulled = false; sparkles.renderOrder = 4; sparkles.visible = false;
+  world.add(sparkles);
+  function updateSparkles(list) {
+    const n = Math.min(SPARKLE_MAX, (list || []).length);
+    sparkles.visible = n > 0;
+    sparkleGeometry.instanceCount = n;
+    if (!n) return;
+    for (let i = 0; i < n; i++) {
+      const p = list[i];
+      sparkleAt.setXYZ(i, p.x, p.y, p.z);
+      // The quad's size is in view space, where heights are not stretched; HEIGHT_SCALE only moves its centre.
+      sparkleLook.setXYZW(i, p.size, p.angle, p.alpha, p.shape);
+      sparkleTint.setXYZ(i, p.r, p.g, p.b);
+    }
+    sparkleAt.needsUpdate = sparkleLook.needsUpdate = sparkleTint.needsUpdate = true;
   }
   function stationMesh(i) {
     if (!stationMeshes[i]) {
@@ -719,7 +904,8 @@ export function createMap3D(canvas, layout) {
       // A car's body paint takes each copy's own tint (p.tint, the parked cars): the material goes white and every copy
       // carries its colour, the model's own unless tinted.
       if (/Paint$/.test(mat.name)) { mat.userData.paint = mat.color.clone(); mat.color.set('#ffffff'); }
-      const mesh = new THREE.InstancedMesh(mergeGeometries(list), withHaze(mat), MAX_PROPS);
+      const merged = mergeGeometries(list), lit = paneAttribute(merged, mat);
+      const mesh = new THREE.InstancedMesh(merged, lit ? nightWindows(withHaze(mat), 'pane') : withHaze(mat), MAX_PROPS);
       mesh.count = 0; mesh.castShadow = mesh.receiveShadow = true; mesh.frustumCulled = false; mesh.userData.file = root.userData.file;
       // Props stay in the scene on a branch visit: the branch scenes place them too.
       mesh.userData.prop = true;
@@ -775,6 +961,73 @@ export function createMap3D(canvas, layout) {
     // An unused prop is hidden rather than drawn zero times, which still costs its state changes.
     Object.values(propSources).forEach(parts => parts.forEach(m => { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; m.visible = m.count > 0; }));
     glowMaterials.forEach(m => { m.emissive.set('#ffd9a0'); m.emissiveIntensity = night * 2.5; });
+  }
+
+  // Night light on the ground (Kevin's visual review, 2026-11-07): a warm pool under every street lamp, the shop's
+  // light spilling out of its storefront and open front onto the pavement, and car headlight beams, as additive decals
+  // in one instanced draw. No real light and no shadow: the pools are painted, so the phone pays one draw after dark.
+  // shape 0 is a round pool (falls off from the middle), 1 a spill: bright along its local -z edge (the wall, or the
+  // car's nose), fading outward, with soft ends.
+  const MAX_POOLS = 160;
+  const poolShape = new THREE.InstancedBufferAttribute(new Float32Array(MAX_POOLS), 1);
+  const poolGeometry = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
+  poolGeometry.setAttribute('shape', poolShape);
+  const poolMaterial = new THREE.ShaderMaterial({
+    uniforms: { strength: { value: 0 }, ...hazeUniforms },
+    vertexShader: `attribute float shape; varying float vShape; varying vec2 vUv; varying vec3 vTint; varying vec3 vWorld;
+      void main() {
+        vUv = uv; vShape = shape; vTint = vec3(1.0);
+        #ifdef USE_INSTANCING_COLOR
+          vTint = instanceColor;
+        #endif
+        vec4 w = modelMatrix * instanceMatrix * vec4(position, 1.0); vWorld = w.xyz;
+        gl_Position = projectionMatrix * viewMatrix * w;
+      }`,
+    fragmentShader: `uniform float strength; uniform vec4 hazeX, hazeZ; varying float vShape; varying vec2 vUv; varying vec3 vTint; varying vec3 vWorld;
+      void main() {
+        float a;
+        if (vShape < .5) { float d = length(vUv * 2.0 - 1.0); a = pow(max(0.0, 1.0 - d), 1.7); }
+        else a = smoothstep(0.0, .22, vUv.x) * smoothstep(1.0, .78, vUv.x) * pow(vUv.y, 1.6);
+        // Fades out into the haze like the ground under it, so no pool floats at the town's edge.
+        vec2 g = vWorld.xz - vWorld.y;
+        float clear = (1.0 - smoothstep(hazeX.x, hazeX.y, g.x)) * (1.0 - smoothstep(hazeX.z, hazeX.w, g.x)) * (1.0 - smoothstep(hazeZ.x, hazeZ.y, g.y)) * (1.0 - smoothstep(hazeZ.z, hazeZ.w, g.y));
+        gl_FragColor = vec4(vTint * a * strength * clear, 1.0);
+      }`,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false
+  });
+  const pools = new THREE.InstancedMesh(poolGeometry, poolMaterial, MAX_POOLS);
+  pools.count = 0; pools.frustumCulled = false; pools.renderOrder = 1; pools.visible = false;
+  pools.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  world.add(pools);
+  const LAMP_POOL = new THREE.Color('#ffc46a'), SHOP_SPILL = new THREE.Color('#ffc163'), HEADLIGHT = new THREE.Color('#fff1cf'), TAIL = new THREE.Color('#ff3b2a');
+  const poolTurn = new THREE.Quaternion(), poolAt = new THREE.Vector3(), poolSize = new THREE.Vector3();
+  function pool(x, y, z, w, d, turn, shape, tint, gain = 1) {
+    if (pools.count >= MAX_POOLS) return;
+    poolTurn.setFromAxisAngle(yAxis, turn);
+    pools.setMatrixAt(pools.count, matrix.compose(poolAt.set(x, y + .03, z), poolTurn, poolSize.set(w, 1, d)));
+    pools.setColorAt(pools.count, colour.copy(tint).multiplyScalar(gain));
+    poolShape.setX(pools.count++, shape);
+  }
+  function placePools(frame, night, shopLit) {
+    pools.visible = night > .02;
+    if (!pools.visible) return;
+    pools.count = 0;
+    poolMaterial.uniforms.strength.value = night;
+    (frame.props || []).forEach(p => { if (p.file === 'street_lamp.glb') pool(p.x, p.y === undefined ? layout.plazaY : p.y, p.z, 7.2, 7.2, 0, 0, LAMP_POOL, 1.35); });
+    if (shopLit) {
+      // The storefront (MARQUEE) spills out to the left pavement, the open cutaway front toward the camera.
+      const f = layout.floors[0], left = layout.entrance ? layout.entrance.x : (f.x || 0) - f.w / 2, right = (f.x || 0) + f.w / 2, front = f.z + f.d / 2, m = layout.marquee;
+      if (m) pool(left - 1.9, layout.plazaY, (m.zRear + m.zFront) / 2, m.zFront - m.zRear + 1.5, 3.8, -Math.PI / 2, 1, SHOP_SPILL, .6);
+      pool((left + right) / 2, layout.plazaY, front + 1.9, right - left, 3.8, 0, 1, SHOP_SPILL, .45);
+    }
+    // Headlights: a long beam ahead of each car and a faint red glow behind it.
+    (frame.cars || []).forEach(c => {
+      const ax = c.along === 'x', dx = ax ? c.dir : 0, dz = ax ? 0 : c.dir, turn = Math.atan2(dx, dz), half = c.van ? 2.4 : 2.1;
+      pool(c.x + dx * (half + 2.6), layout.streetY, c.z + dz * (half + 2.6), 2.6, 5.4, turn, 1, HEADLIGHT, .95);
+      pool(c.x - dx * (half + .5), layout.streetY, c.z - dz * (half + .5), 2.2, 1.6, 0, 0, TAIL, .45);
+    });
+    pools.instanceMatrix.needsUpdate = true; poolShape.needsUpdate = true;
+    if (pools.instanceColor) pools.instanceColor.needsUpdate = true;
   }
   // Rigged characters (Kevin's Meshy cast): every person on the map and in the branches, one skinned copy each with
   // its own mixer.
@@ -964,7 +1217,11 @@ export function createMap3D(canvas, layout) {
   }
 
   const matrix = new THREE.Matrix4(), position = new THREE.Vector3(), scale = new THREE.Vector3(), quaternion = new THREE.Quaternion(), colour = new THREE.Color();
-  const dayHemi = hemi.intensity, daySun = sun.intensity, nightSky = new THREE.Color('#2b3a48'), daySky = hazeColour.clone();
+  const dayHemi = hemi.intensity, daySun = sun.intensity, nightSky = new THREE.Color('#1d2440'), daySky = hazeColour.clone();
+  // Moonlight (Kevin's visual review, 2026-11-07): after dark the sky light turns a cool blue-violet and the sun a pale
+  // moon, so the night reads as night rather than a dim overcast day, while warm lamps, windows and the shop stand out.
+  const daySkyLight = hemi.color.clone(), dayBounce = hemi.groundColor.clone(), daySunLight = sun.color.clone();
+  const moonSky = new THREE.Color('#8f98e6'), moonBounce = new THREE.Color('#3a3456'), moon = new THREE.Color('#a9b8ff');
   let lost = false;
   canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); lost = true; });
   canvas.addEventListener('webglcontextrestored', () => { lost = false; });
@@ -992,7 +1249,8 @@ export function createMap3D(canvas, layout) {
   function view(frame, background) {
     frameClock = performance.now();
     sweepTextures();
-    const pixelRatio = Math.min(frame.dpr, 2);
+    // Low Power Mode (frame.lowPower) draws the map at 1.5x, which on a 3x phone is 44% fewer pixels than 2x.
+    const pixelRatio = Math.min(frame.dpr, frame.lowPower ? 1.5 : 2);
     if (renderer.getPixelRatio() !== pixelRatio) renderer.setPixelRatio(pixelRatio);
     const size = renderer.getSize(new THREE.Vector2());
     if (size.x !== frame.width || size.y !== frame.height) renderer.setSize(frame.width, frame.height, false);
@@ -1005,8 +1263,12 @@ export function createMap3D(canvas, layout) {
     sun.target.updateMatrixWorld();
 
     const night = frame.night || 0;
-    hemi.intensity = dayHemi * (1 - night * .72);
-    sun.intensity = daySun * (1 - night * .9);
+    hemi.intensity = dayHemi * (1 - night * .66);
+    hemi.color.copy(daySkyLight).lerp(moonSky, night);
+    hemi.groundColor.copy(dayBounce).lerp(moonBounce, night);
+    sun.intensity = daySun * (1 - night * .86);
+    sun.color.copy(daySunLight).lerp(moon, night);
+    nightWindowsUniform.value = night;
     scene.background.copy(background).lerp(nightSky, night);
     hazeUniforms.hazeColour.value.copy(scene.background);
     return night;
@@ -1101,9 +1363,11 @@ export function createMap3D(canvas, layout) {
     const props = (frame.branch.props || []).concat(land ? land.userData.props : []);
     props.forEach(p => propReady(p.file));
     placeProps(props, night);
+    pools.visible = false;
     placeFigures(frame.figures || [], night);
     const stepSeconds = frameStep(frame);
     placeCharacters(frame.characters, stepSeconds, night);
+    shadowsDue();
     if (!frame.dry) renderer.render(scene, camera);
     return true;
   }
@@ -1281,6 +1545,8 @@ export function createMap3D(canvas, layout) {
     });
     for (let n = glowing; n < boostGlows.length; n++) boostGlows[n].pool.visible = boostGlows[n].ring.visible = false;
     updateUpgradeRings(frame.upgradeRings);
+    updateRevealBeams(frame.revealBeams, frame.unit || 40);
+    updateSparkles(frame.sparkles);
 
     const figures = frame.figures || [], shade = 1 - night * .55;
     placeFigures(figures, night);
@@ -1309,6 +1575,7 @@ export function createMap3D(canvas, layout) {
     if (people.instanceColor) people.instanceColor.needsUpdate = true;
 
     placeProps(frame.props, night);
+    placePools(frame, night, true);
     placeCharacters(frame.characters, stepSeconds, night);
     fixtureGlows.forEach(m => { m.emissiveIntensity = .16 + night * .7; });
     fixtureScreens.forEach(m => { m.emissiveIntensity = .35 + night * .55; });
@@ -1334,10 +1601,12 @@ export function createMap3D(canvas, layout) {
     if (atms) atms.update(frame);
     cityBuildings.update(frame);
     Object.entries(fixtures).forEach(([key, holder]) => {
-      holder.visible = !!(frame.fixtures && frame.fixtures[key]);
-      // An upgraded fixture (frame.fixtureSprings[key], 0 to 1) springs on its own origin, which sits on the floor.
-      const base = holder.userData.base || (holder.userData.base = holder.scale.clone()), spring = springScale(frame.fixtureSprings && frame.fixtureSprings[key]);
-      holder.scale.set(base.x * spring[0], base.y * spring[1], base.z * spring[0]);
+      // A fixture just bought (frame.fixtureReveal[key]: [across, up], or null while the camera is still on its way)
+      // pops up out of the floor; an upgraded one (frame.fixtureSprings[key], 0 to 1) springs. Both on its own origin, which sits on the floor.
+      const reveal = frame.fixtureReveal ? frame.fixtureReveal[key] : undefined;
+      holder.visible = !!(frame.fixtures && frame.fixtures[key]) && reveal !== null;
+      const base = holder.userData.base || (holder.userData.base = holder.scale.clone()), spring = springScale(frame.fixtureSprings && frame.fixtureSprings[key]), pop = reveal || [1, 1];
+      holder.scale.set(base.x * spring[0] * pop[0], base.y * spring[1] * pop[1], base.z * spring[0] * pop[0]);
     });
     updateFixtureSites(frame);
     updateFixtureGhosts(frame);
@@ -1345,6 +1614,7 @@ export function createMap3D(canvas, layout) {
     // A dry frame (snap3d.mjs, while models load) sets the scene up and asks for its models without drawing it.
     if (!frame.dry) {
       const posed = intro.apply(frame.intro);
+      shadowsDue();
       renderer.render(scene, camera);
       if (posed) intro.restore();
     }
@@ -1416,7 +1686,7 @@ export function createMap3D(canvas, layout) {
 
 // The town round the shop: one asphalt floor at street level, every block between the streets a paved slab up to the
 // plaza level (so kerbs are the slabs' edges), the terraces as blocks of their wall colour, trees and lamps.
-function buildTown(world, layout, { box, span, material, textured, lampStandIns }) {
+function buildTown(world, layout, { box, span, material, textured, lampStandIns, nightWindows }) {
   const { roads, roadWidth: rw, plazaY: P, streetY: G, extent: L } = layout;
   // Sunken models (the subway well) need openings through both floors: each slab is laid as the strips round them.
   const holes = layout.holes || [];
@@ -1467,7 +1737,9 @@ function buildTown(world, layout, { box, span, material, textured, lampStandIns 
     wall.userData.model = roof.userData.model = b.model; wall.userData.lot = roof.userData.lot = b.lot;
     terraces.push(wall, roof);
   });
-  world.add(silhouettes(layout.silhouettes || [], P, material));
+  const far = silhouettes(layout.silhouettes || [], P, material);
+  nightWindows(far.material, 'pane', { share: .32 });
+  world.add(far);
   const crownGeometry = new THREE.IcosahedronGeometry(1.6, 1);
   layout.trees.forEach(([x, z]) => {
     box(world, x, P, z, .35, 2.2, .35, '#7a5a3e', { opts: { name: 'street' } });
@@ -1484,13 +1756,62 @@ function buildTown(world, layout, { box, span, material, textured, lampStandIns 
   return terraces;
 }
 
+// Night windows (nightWindows in createMap3D): the city terraces (art/blender/city) paint every part through one
+// material by vertex colour, so their sash glass is the WindowGlass colour and their shop windows the Display and
+// ShopGlass colours; the older models give glass its own WindowGlass material. Each pane (the glass triangles joined
+// by shared corners) gets one random number in a `pane` attribute: (0, 1] for a sash, 2 + it for a shop window.
+// Returns whether the geometry has any glass.
+const PANE_GLASS = ['#2f5552'].map(c => new THREE.Color(c)), PANE_SHOP = ['#bfae8a', '#6d6553'].map(c => new THREE.Color(c));
+function paneAttribute(g, mat) {
+  const pos = g.attributes.position, col = g.attributes.color, n = pos.count;
+  const allGlass = mat.name === 'WindowGlass';
+  if (!col && !allGlass) return false;
+  const near = (list, i) => list.some(c => Math.abs(col.getX(i) - c.r) + Math.abs(col.getY(i) - c.g) + Math.abs(col.getZ(i) - c.b) < .01);
+  const kind = new Uint8Array(n / 3);
+  let any = false;
+  for (let t = 0; t < n / 3; t++) {
+    const i = t * 3;
+    kind[t] = allGlass || near(PANE_GLASS, i) ? 1 : near(PANE_SHOP, i) ? 2 : 0;
+    if (kind[t]) any = true;
+  }
+  if (!any) return false;
+  // Join the glass triangles that share a corner into panes (union-find over rounded corner positions).
+  const parent = new Int32Array(n / 3).map((_, i) => i), find = i => { while (parent[i] !== i) i = parent[i] = parent[parent[i]]; return i; };
+  const owner = new Map(), key = i => [pos.getX(i), pos.getY(i), pos.getZ(i)].map(v => Math.round(v * 1000)).join(',') + ':' + kind[Math.floor(i / 3)];
+  for (let t = 0; t < n / 3; t++) {
+    if (!kind[t]) continue;
+    for (let k = 0; k < 3; k++) {
+      const id = key(t * 3 + k), o = owner.get(id);
+      if (o === undefined) owner.set(id, t); else parent[find(t)] = find(o);
+    }
+  }
+  const pick = new Map(), pane = new Float32Array(n);
+  for (let t = 0; t < n / 3; t++) {
+    if (!kind[t]) continue;
+    const root = find(t);
+    if (!pick.has(root)) pick.set(root, Math.max(.001, Math.random()));
+    pane.fill(pick.get(root) + (kind[t] === 2 ? 2 : 0), t * 3, t * 3 + 3);
+  }
+  g.setAttribute('pane', new THREE.BufferAttribute(pane, 1));
+  return true;
+}
+
 // The town beyond the first ring (layout.silhouettes): each lot one box in its muted colour with a pale parapet and a
 // dark band of windows per storey on its two faces toward the camera, all merged into one vertex-coloured mesh (one
 // draw), casting no shadow. Heights match the Blender terraces' storeys: 2.75 m ground, 2.45 m above, 1.69 units a metre.
 function silhouettes(list, P, material) {
-  const pos = [], nor = [], col = [], c = new THREE.Color(), dark = new THREE.Color(), cap = new THREE.Color('#e6dcc6');
-  const quad = (a, b, d, e, n, colour) => {
-    [a, b, d, a, d, e].forEach(v => { pos.push(...v); nor.push(...n); col.push(colour.r, colour.g, colour.b); });
+  const pos = [], nor = [], col = [], pane = [], c = new THREE.Color(), dark = new THREE.Color(), cap = new THREE.Color('#e6dcc6');
+  const quad = (a, b, d, e, n, colour, lit = 0) => {
+    [a, b, d, a, d, e].forEach(v => { pos.push(...v); nor.push(...n); col.push(colour.r, colour.g, colour.b); pane.push(lit); });
+  };
+  // A storey's band of windows, cut into panes about a window and a pier wide, each with its own pick for the night
+  // (nightWindows, 'pane' mode). from/to run along the face; at(u, y) gives the corner.
+  const band = (from, to, y0, y1, n, at) => {
+    const count = Math.max(1, Math.round((to - from) / 1.25)), step = (to - from) / count;
+    for (let k = 0; k < count; k++) {
+      const a = from + k * step + .14, b = from + (k + 1) * step - .14;
+      quad(at(a, y0), at(b, y0), at(b, y1), at(a, y1), n, dark, Math.max(.001, Math.random()));
+    }
   };
   const box = (x0, x1, y0, y1, z0, z1, colour) => {
     quad([x0, y1, z1], [x1, y1, z1], [x1, y1, z0], [x0, y1, z0], [0, 1, 0], colour);
@@ -1507,14 +1828,15 @@ function silhouettes(list, P, material) {
     box(b.x0 - .12, b.x1 + .12, top, top + .3, b.z0 - .12, b.z1 + .12, cap);
     for (let k = 0; k < b.storeys; k++) {
       const y0 = P + (k ? ground + (k - 1) * storey : 0) + (k ? .9 : .5) * up, y1 = y0 + (k ? 1.1 : 1.7) * up;
-      quad([b.x0 + .5, y0, b.z1 + .03], [b.x1 - .5, y0, b.z1 + .03], [b.x1 - .5, y1, b.z1 + .03], [b.x0 + .5, y1, b.z1 + .03], [0, 0, 1], dark);
-      quad([b.x1 + .03, y0, b.z1 - .5], [b.x1 + .03, y0, b.z0 + .5], [b.x1 + .03, y1, b.z0 + .5], [b.x1 + .03, y1, b.z1 - .5], [1, 0, 0], dark);
+      band(b.x0 + .5, b.x1 - .5, y0, y1, [0, 0, 1], (u, y) => [u, y, b.z1 + .03]);
+      band(-(b.z1 - .5), -(b.z0 + .5), y0, y1, [1, 0, 0], (u, y) => [b.x1 + .03, y, -u]);
     }
   });
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
   g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  g.setAttribute('pane', new THREE.Float32BufferAttribute(pane, 1));
   const mesh = new THREE.Mesh(g, material('#ffffff', { vertexColors: true, name: 'silhouette' }));
   mesh.receiveShadow = true; mesh.castShadow = false;
   return mesh;

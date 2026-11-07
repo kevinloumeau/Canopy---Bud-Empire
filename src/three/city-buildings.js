@@ -11,10 +11,11 @@ import { CITY_BUILDINGS, CITY_TOPS } from '../city-buildings.js';
 const FOREST = '#1f4a35', FOREST_DEEP = '#173a2a', BRASS = '#d0a54e', CREAM = '#efe4cf', STONE = '#d8d0bf', STONE_DARK = '#a9a08f';
 const STEEL = '#3c4a44', DIRT = '#8f7a5e', BRICK = '#b0644a', BRICK_DARK = '#8a4b38', ROLLER = '#8d958f', WHITE = '#f3f1ea';
 const COPPER = '#c27a4a', TANK = '#c9cfcc', SCAFFOLD = '#c9a978', POLE = '#9aa39b';
+const NIGHT_GLASS = new THREE.Color('#1c2a36');
 const FONT = '"Bricolage Grotesque", "Helvetica Neue", sans-serif';
 
 
-export function buildCityBuildings(world, layout, { material }) {
+export function buildCityBuildings(world, layout, { material, nightWindows }) {
   const lots = layout.cityLots || {}, P = layout.plazaY;
   const unit = new THREE.BoxGeometry(1, 1, 1).translate(0, .5, 0);
   // A painted canvas texture (a sign or a screen), repainted when the fonts land.
@@ -202,6 +203,9 @@ export function buildCityBuildings(world, layout, { material }) {
     terplab(root, lot) {
       const x0 = lot.x0 + .45, x1 = lot.x1 - .45, z0 = lot.z0 + .45, z1 = lot.z1 - .45, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
       const band = material('#7fb8b0', { emissive: '#bfeee6', emissiveIntensity: 0, name: 'cityLabBand' });
+      // After dark the glass bands go dark with lit rooms behind a share of them (nightWindows), not pale daylight cyan.
+      if (nightWindows) nightWindows(band, 'grid', { share: .35, strength: .75, cell: [1.15, 1.25, 1.15], origin: [x0 + .4, P + .02, z0 + .4] });
+      band.userData.day = band.color.clone();
       const amber = new THREE.MeshLambertMaterial({ color: '#e8a93a', emissive: '#ffb347', emissiveIntensity: .35, transparent: true, opacity: .85 });
       // Stage 1, Extraction room: a white two-storey lab with a long teal glass band and a forest door.
       const s1 = new THREE.Group(), a = parts(s1);
@@ -270,7 +274,7 @@ export function buildCityBuildings(world, layout, { material }) {
           parts.bulb.color.set(Math.floor(t / 400) % 2 ? '#ffd98a' : '#f6b94a');
           parts.leaf.material.color.set('#7fd18f').multiplyScalar(1 + night * .4);
         }
-        if (def.id === 'terplab') { parts.band.emissiveIntensity = night * .3; parts.amber.emissiveIntensity = .35 + .15 * Math.sin(t / 700) + night * .4; }
+        if (def.id === 'terplab') { parts.band.emissiveIntensity = 0; parts.band.color.copy(parts.band.userData.day).lerp(NIGHT_GLASS, night * .85); parts.amber.emissiveIntensity = .35 + .15 * Math.sin(t / 700) + night * .4; }
       });
     }
   };

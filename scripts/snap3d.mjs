@@ -30,7 +30,7 @@ for (let i = 0; i < args.length; i++) {
 }
 const url = new URL(flags.url || 'http://127.0.0.1:4173/');
 if (!flags.live) url.searchParams.set('snap', '');
-const [width, height] = flags.phone ? [390, 844] : (flags.size || '900x600').split('x').map(Number);
+const [width, height] = flags.size ? String(flags.size).split('x').map(Number) : flags.phone ? [390, 844] : [900, 600];
 const dpr = Number(flags.dpr || 1);
 const view = {};
 if (flags.zoom) view.zoom = Number(flags.zoom);

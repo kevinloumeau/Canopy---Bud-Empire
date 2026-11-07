@@ -77,7 +77,8 @@ export function buildAtms(world, layout, { material }) {
     return m;
   }
   const matrix = new THREE.Matrix4(), quarter = new THREE.Quaternion(), place = new THREE.Vector3(), one = new THREE.Vector3(1, 1, 1);
-  const machineMatrix = i => matrix.compose(place.set(ATM_SPOTS[i].x, 0, ATM_SPOTS[i].z), quarter.setFromAxisAngle(new THREE.Vector3(0, 1, 0), ATM_SPOTS[i].rot || 0), one);
+  const machineMatrix = (i, size) => matrix.compose(place.set(ATM_SPOTS[i].x, 0, ATM_SPOTS[i].z), quarter.setFromAxisAngle(new THREE.Vector3(0, 1, 0), ATM_SPOTS[i].rot || 0), size || one);
+  const popSize = new THREE.Vector3();
   const looks = LOOKS.map(look => {
     if (!look) return null;
     const group = new THREE.Group(); group.visible = false; root.add(group);
@@ -110,7 +111,7 @@ export function buildAtms(world, layout, { material }) {
   const ghost = new THREE.Mesh(ghostGeometry, new THREE.MeshBasicMaterial({ color: '#f1e6c6', transparent: true, opacity: .3, depthWrite: false }));
   ghost.visible = false; root.add(ghost);
   const tint = new THREE.Color();
-  let shownLook = 0;
+  let shownLook = 0, shownPop = '', shownPopMachine = -1;
   return {
     // frame.atm: {machines, look, ghost (slot index or null), busy: [bool per machine]}.
     update(frame) {
@@ -126,6 +127,15 @@ export function buildAtms(world, layout, { material }) {
       }
       if (screens.instanceColor) screens.instanceColor.needsUpdate = true;
       glowMaterials.forEach(m => { m.emissiveIntensity = .12 + .75 * night; });
+      // A machine just bought (frame.atm.pop: {machine, scale: [across, up] or null while hidden}) pops up out of the
+      // floor; its instances get their own scale while it plays and go back to the plain matrix once it is done.
+      const pop = a.pop && a.pop.machine < machines ? a.pop : null, key = pop ? pop.machine + ':' + (pop.scale ? pop.scale.join() : 'hidden') : '';
+      if (key !== shownPop) {
+        const sized = [...looks.flatMap(l => l ? l.meshes : []), screens, labels];
+        if (shownPopMachine >= 0 && (!pop || pop.machine !== shownPopMachine)) sized.forEach(m => { m.setMatrixAt(shownPopMachine, machineMatrix(shownPopMachine)); m.instanceMatrix.needsUpdate = true; });
+        if (pop) { const sc = pop.scale || [.001, .001]; popSize.set(sc[0], sc[1], sc[0]); sized.forEach(m => { m.setMatrixAt(pop.machine, machineMatrix(pop.machine, popSize)); m.instanceMatrix.needsUpdate = true; }); }
+        shownPop = key; shownPopMachine = pop ? pop.machine : -1;
+      }
       const g = a.ghost;
       ghost.visible = g != null && g >= 0 && g < count;
       if (ghost.visible) { ghost.position.set(ATM_SPOTS[g].x, 0, ATM_SPOTS[g].z); ghost.rotation.y = ATM_SPOTS[g].rot || 0; }
