@@ -18,6 +18,7 @@ import {migrateRun,freshRun,tickRun,reopenMoment} from './reopen.js';
 import {makeSound} from './sfx.js';
 import {createUpgradeFx} from './upgrade-fx.js';
 import {createRevealFx,popScale} from './reveal-fx.js';
+import {createSparkles} from './sparkles.js';
 import {morph} from './dom-morph.js';
 import {FORKS,RESEARCH_BRANCHES,ALSO,RESEARCH_VERSION,levelCost,mergeResearch,freshForks,migrateForks,sideStatus,takeSide,partnerOf,levelsToGate,forkOf} from './research.js';
 import {installQuietDom} from './quiet-dom.js';
@@ -886,7 +887,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   world.insertBefore(canvas,world.firstChild);canvas.setAttribute('aria-hidden','true');
   var screenCtx=ctx;
   var map3d=null,canvas3d=null,map3dModule=null,map3dLayout=null,mapDrawn=false,mapRebuilds=0,mapRebuildTimer=0;
-  // The 2D canvas carries the 3D map's overlay (delivery drones, badges, particles, tickets), so it must stack above
+  // The 2D canvas carries the 3D map's overlay (delivery drones, badges, tickets), so it must stack above
   // the absolutely positioned 3D canvas rather than paint underneath it.
   canvas.style.position='relative';
   {
@@ -1048,7 +1049,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var sceneElevation=0;
   // While the 3D map records a branch scene, the drawing primitives hand their world shapes to it instead (recordBranch).
   var branchRec=null;
-  var tierFlashes=[0,0,0,0,0,0],crateTime=0,cargoOdo=0,particles=[],deliveryDrones=[],sceneTime=0,animationTime=0;
+  var tierFlashes=[0,0,0,0,0,0],crateTime=0,cargoOdo=0,deliveryDrones=[],sceneTime=0,animationTime=0;
   // Rise-in progress (1 → 0) for a freshly built station; index 6 is the security door.
   var buildRise=[0,0,0,0,0,0,0,0];
   // Grand-opening confetti: paper pieces in the shop's own palette, drifting down over the whole building in world space.
@@ -1075,6 +1076,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // A snapshot (?snap) can hold the animation at one moment by setting window.__canopyFxClock (ms).
   var upgradeFx=createUpgradeFx(motionPreference,function(){return window.__canopyFxClock!==undefined?window.__canopyFxClock:performance.now()}),branchStationAt={};
   var revealFx=createRevealFx(motionPreference,function(){return window.__canopyFxClock!==undefined?window.__canopyFxClock:performance.now()});
+  // Upgrade sparkles: soft leaves, glints and coins in the 3D scene (sparkles.js), timed on the same clock as the rings.
+  var sparkles=createSparkles(motionPreference,function(){return window.__canopyFxClock!==undefined?window.__canopyFxClock:performance.now()});
   // A big purchase (Kevin, 2026-11-07: a ghost item bought, then "apply that to other large purchase or upgrades"): if
   // the spot sits off the middle of the map that shows above the sheet, the camera glides it to the middle first, then
   // the reveal plays (reveal-fx.js: rising light, sparkles, the bought fixture popping out of the floor), and at its
@@ -2548,9 +2551,6 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function positionShopPlay(){
     if(shopPlayUI){var asking=moment&&customers.find(function(c){return c.id===moment.customerId&&!c.ordered}),point=asking?project(asking.renderX===undefined?asking.x:asking.renderX,2.8,asking.renderZ===undefined?asking.z:asking.renderZ):null;shopPlayUI.position(point,!!point&&point.x>24&&point.x<width-24&&point.y>90&&point.y<visibleHeight())}
   }
-  function drawParticles(frameDelta){
-    for(var i=particles.length-1;i>=0;i--){var p=particles[i];p.life-=frameDelta*1.5;if(!motionPreference.matches){p.x+=p.vx*frameDelta;p.z+=p.vz*frameDelta;p.y+=p.vy*frameDelta;}p.vy-=frameDelta*5;var screen=project(p.x,p.y,p.z),size=Math.max(2,unit*.1);ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.fillRect(screen.x-size/2,screen.y-size/2,size,size);ctx.globalAlpha=1;if(p.life<=0)particles.splice(i,1)}
-  }
   // The 3D map's frame: the scene goes to the WebGL canvas, and the 2D canvas, cleared to transparent, keeps
   // what is drawn over the map in screen space. Taps, tags and badges use project(), which the 3D camera matches.
   var STATION_BOXES=[{w:2.6,d:1.5,h:1.5},{w:3.2,d:1.6,h:1.7},{w:2.8,d:1.5,h:1.5},{w:2.6,d:1.5,h:1.5},{w:2.2,d:1.1,h:1.25},{w:2.4,d:1.2,h:1.25},{w:.8,d:1.3,h:1.1}];
@@ -2826,12 +2826,12 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
         if(j===4)staffer('b'+d.index+'s4',STAFF_MODELS.desks[(d.index+1)%STAFF_MODELS.desks.length],q.x-.35,q.y,q.z-1.5,{x:0,z:1},.3,{role:'desk',clock:workClock(4)+d.index*1.7,act:1});
         else{var spot=STAFF_SPOTS[j]||{dx:-.95,dz:-1.65};staffer('b'+d.index+'s'+j,STAFF_MODELS.stations[j],q.x+spot.dx,q.y,q.z+spot.dz,{x:-spot.dx,z:-spot.dz},spot.facing,{role:STAFF_ROLES[j],clock:workClock(j),act:1})}})});
     var fx=upgradeFx.frame(),rv=revealFx.frame();render.reveal=rv;
-    map3d.render({upgradeRings:fx.rings,fixtureSprings:fx.springs,revealBeams:rv.beams,fixtureReveal:revealScales(rv.pops),step:frameDelta,districts:districts,hazeEast:eastHaze(storeLevels()),dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,characters:characters,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,intro:introTime(),loungeOpen:state.lounge>0,loungeTier:state.lounge,city:state.city,cityClaimed:cityClaimed(),cityBuild:cityBuildShares(),atm:atmFrame(),flagship:state.flagship,flagshipBuild:isBuilding(state.builds,'flagship')?1-buildShareLeft(state.builds,'flagship'):null,loungeBuild:isBuilding(state.builds,'lounge')?1-buildShareLeft(state.builds,'lounge'):null,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtureBuild:isBuilding(state.builds,'deck')||isBuilding(state.builds,'window')?Object.assign(isBuilding(state.builds,'deck')?{deck:1-buildShareLeft(state.builds,'deck')}:{},isBuilding(state.builds,'window')?{pickupWindow:1-buildShareLeft(state.builds,'window')}:{}):null,fixtures:Object.assign(windowFixtures(),{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2}),fixtureGhost:fixtureGhosts(),menus:kioskMenus(),menuClock:animationTime/1000,cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    map3d.render({upgradeRings:fx.rings,fixtureSprings:fx.springs,revealBeams:rv.beams,sparkles:sparkles.frame(),fixtureReveal:revealScales(rv.pops),step:frameDelta,districts:districts,hazeEast:eastHaze(storeLevels()),dry:render.dry,width:width,height:height,dpr:dpr,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,characters:characters,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,intro:introTime(),loungeOpen:state.lounge>0,loungeTier:state.lounge,city:state.city,cityClaimed:cityClaimed(),cityBuild:cityBuildShares(),atm:atmFrame(),flagship:state.flagship,flagshipBuild:isBuilding(state.builds,'flagship')?1-buildShareLeft(state.builds,'flagship'):null,loungeBuild:isBuilding(state.builds,'lounge')?1-buildShareLeft(state.builds,'lounge'):null,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtureBuild:isBuilding(state.builds,'deck')||isBuilding(state.builds,'window')?Object.assign(isBuilding(state.builds,'deck')?{deck:1-buildShareLeft(state.builds,'deck')}:{},isBuilding(state.builds,'window')?{pickupWindow:1-buildShareLeft(state.builds,'window')}:{}):null,fixtures:Object.assign(windowFixtures(),{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2}),fixtureGhost:fixtureGhosts(),menus:kioskMenus(),menuClock:animationTime/1000,cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     // A model that had not loaded when the tabs were painted: try again every half second until all are in.
     var wall=performance.now();if(picturesPending&&!(wall-(renderFrame3d.picturesTried||0)<500)){renderFrame3d.picturesTried=wall;picturesPending=false;paintThumbnails()}
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
     customers.forEach(function(c){if(c.phase!=='lounge'&&customerBadged(c))drawCustomerBadge(Object.assign({},c,{x:c.renderX,z:c.renderZ}))});
-    drawDeliveryExtras(dronePoses,now);drawParticles(frameDelta);drawTickets(frameDelta);drawCashPops(wallDelta);drawConfetti(wallDelta);
+    drawDeliveryExtras(dronePoses,now);drawTickets(frameDelta);drawCashPops(wallDelta);drawConfetti(wallDelta);
     positionShopPlay();
     updateMarkers();updateSpenderTag(false);requestAnimationFrame(render);
   }
@@ -2897,6 +2897,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       return window.__canopySnap.status()};
     window.__canopySnap.map3d=function(){return map3d&&map3d.ok?map3d.debug:null};
     window.__canopySnap.stationFx=stationFx;
+    // An upgrade's map effects at station i (sparkles, ring, spring) without buying it, for screenshots.
+    window.__canopySnap.upgrade=function(i){burst(machinePos[i]);stationFx(i)};
     // A cash pop frozen at `age` seconds into its rise, for screenshots of the pops (cash-pops.js).
     window.__canopySnap.cashPop=function(key,amount,age){var site=CASH_SITES[key];livePops.push({key:key,amount:amount,x:site.x,y:site.y,z:site.z,age:age||.4,text:'+'+fmt(amount)})};
     window.__canopySnap.status=function(){return{map3d:!!(map3d&&map3d.ok),loading:map3d?map3d.loading:-1}};
@@ -2930,7 +2932,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     render.last=wallNow;
     // A freshly built station rises out of its site on wall time, so the reveal plays at the same pace at every game speed.
     if(introAt){var introT=(performance.now()-introAt)/1000;if(introT>.85)$('world').classList.remove('building');if(introT>INTRO_END)introAt=0;render.invalidated=true}
-    if(upgradeFx.busy()||revealFx.busy())render.invalidated=true;
+    if(upgradeFx.busy()||revealFx.busy()||sparkles.count)render.invalidated=true;
     for(var site=0;site<buildRise.length;site++)if(buildRise[site]>0){buildRise[site]=motionPreference.matches?0:Math.max(0,buildRise[site]-wallDelta*1.7);render.invalidated=true}
     animationTime+=frameDelta*1000;tickTaskClocks(frameDelta);
     for(var slot=0;slot<4;slot++){var phase=(taskClocks[1]/9000+slot*.23)%1;var targetGrowth=state.stock[1]>=storageCapacity()?1:phase>.86?Math.max(0,(1-phase)/.14):Math.min(1,phase/.72);cropGrowth[slot]+=(targetGrowth-cropGrowth[slot])*(1-Math.exp(-frameDelta*4))}var now=animationTime;
@@ -3052,7 +3054,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       ctx.shadowColor='transparent';ctx.fillStyle='#ffe7a3';ctx.fillText(p.text,q.x,q.y);ctx.restore();
     }
   }
-  function burst(worldPos,color){if(motionPreference.matches)return;for(var i=0;i<12;i++)particles.push({x:worldPos.x,y:1.4+(worldPos.y||0),z:worldPos.z,vx:(Math.random()-.5)*1.8,vz:(Math.random()-.5)*1.8,vy:1.6+Math.random()*1.8,life:1,color:color||colors.acid})}
+  // A shower of sparkles off an upgrade (sparkles.js draws them in the 3D scene). worldPos: {x, y (floor height)?, z}.
+  function burst(worldPos,color){sparkles.burst(worldPos,color||colors.acid)}
 
   var markerEls=LINES.map(function(line,i){var b=document.createElement('button');b.className='marker';b.dataset.marker=String(i);b.textContent=line.name;b.onclick=function(){if(!state.lines[i]&&isOpen(i))buildStation(i);else{var open=buyBoxFor===i;selectMachine(i);buyBoxFor=open?-1:i;renderUI()}};$('markers').appendChild(b);return b});
   // The station whose buy box is up: set by a tap on its map sign, cleared by picking anything else.
@@ -4740,7 +4743,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       if(carry.branch){state.empire.stores[carry.branch.index].level=carry.branch.level;state.empire.stores[carry.branch.index].lines=[1,1,1,1,1,1]}}
     // A prestige reopens a standing shop; Start over goes back to the building site and replays the intro.
     if(rank>0){state.lines=LINES.map(function(){return state.startLine||1});delete state.startLine;state.doorBuilt=true;state.idStaff=Math.max(1,state.idStaff);state.shopOpen=true}
-    readyWork=0;work=[0,0,0,0,0,0];batchRemainder=[0,0,0,0];customers=[];arrival=0;customerId=0;deliveryDrones=[];windowLine=createWindowLine();particles=[];tickets=[];livePops=[];cashPops.clear();shownCash=Infinity;taskClocks.fill(0);taskActivity.fill(0);cropGrowth=[.15,.4,.7,.95];tierFlashes.fill(0);buildRise.fill(0);confetti=[];recentPickupRatings=[];animationTime=0;sceneTime=0;crateTime=0;cargoOdo=0;render.last=undefined;securitySelected=false;loungeSelected=false;selected=0;updateMarkers.key=null;save();$('resetModal').hidden=true;notify(rank>0?'FACTORY RESET':'STARTING OVER');syncMapView();paintThumbnails();renderUI();if(!state.shopOpen)setTimeout(function(){startGuide.open()},400)};
+    readyWork=0;work=[0,0,0,0,0,0];batchRemainder=[0,0,0,0];customers=[];arrival=0;customerId=0;deliveryDrones=[];windowLine=createWindowLine();sparkles.clear();tickets=[];livePops=[];cashPops.clear();shownCash=Infinity;taskClocks.fill(0);taskActivity.fill(0);cropGrowth=[.15,.4,.7,.95];tierFlashes.fill(0);buildRise.fill(0);confetti=[];recentPickupRatings=[];animationTime=0;sceneTime=0;crateTime=0;cargoOdo=0;render.last=undefined;securitySelected=false;loungeSelected=false;selected=0;updateMarkers.key=null;save();$('resetModal').hidden=true;notify(rank>0?'FACTORY RESET':'STARTING OVER');syncMapView();paintThumbnails();renderUI();if(!state.shopOpen)setTimeout(function(){startGuide.open()},400)};
 
   // The intro waits behind the 21+ gate; a visitor who answers No never sees it.
   // `resume` picks the intro up at the first unbuilt site when a half-built shop is reloaded.
