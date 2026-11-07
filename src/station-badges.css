@@ -34,3 +34,6 @@
 @media(hover:hover){
  .world .marker.station-sign.is-badge:not(.selected):hover .station-sign-name{display:block;position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);padding:3px 8px;border-radius:8px;background:var(--ui-glass-strong);color:var(--ui-ink);font-size:11px;line-height:1.2;white-space:nowrap;pointer-events:none;box-shadow:0 3px 10px rgba(10,20,14,.28)}
 }
+/* One dot across the station tiles: the crew burst on offer, or else the best buy (same brass dot, same corner). */
+.sheet .machine-nav button.is-best-buy{position:relative}
+.sheet .machine-nav button.is-best-buy::before{content:"";position:absolute;top:4px;left:5px;width:7px;height:7px;border-radius:50%;background:#e2bd6a;box-shadow:0 0 0 2px #d0a54e33;pointer-events:none}

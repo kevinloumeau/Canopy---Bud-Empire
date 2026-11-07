@@ -35,7 +35,7 @@ import { BRANCH_THEMES, BRANCH_STATIONS, drawBranchMap } from './branch-maps.js'
 import { districtPlot, districtCentre, districtAt, districtBlock, shownDistricts, eastHaze, leaseLot, districtTerraces, DISTRICT_COUNT, MAIN_EAST_HAZE } from './branch-districts.js';
 import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, PERSON_HEAD_Y, subwayStairs, SUBWAY_HIDDEN_Z, drawSprite, stationSprite, drawPersonSprite, streetItems, floorTextureFiles, fixtureSprite, shellSprite, spriteImage, spritesLoading, drawBoxSprite, softShadow, sunShadow, SUN, SUN_REACH, townLayout, districtDressing, cityLots, carPlacements, walkerPlacements, stationSpriteSize, stationTier as spriteTier } from './sunny-world.js';
 import * as economy from './economy.js';
-import {ABILITIES,ABILITY_UNLOCK,ABILITY_FACTOR,ABILITY_SALES,ABILITY_SECONDS,migrateAbilities,abilityStatus,useAbility,tickAbilities,abilityFactor,abilitySales,clockLabel} from './crew-abilities.js';
+import {ABILITIES,ABILITY_UNLOCK,ABILITY_FACTOR,ABILITY_SALES,ABILITY_SECONDS,migrateAbilities,abilityStatus,useAbility,tickAbilities,abilityFactor,abilitySales,clockLabel,featuredAbility} from './crew-abilities.js';
 import * as strains from './strains.js';
 import { BRANCH_LINE, branchStationCost, buyBranchStation, branchStationMax, branchBestStation } from './progression.js';
 import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, settleGoals, shiftStatus, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, payStore, openStore, branchOpenable, STARS_TO_OPEN, settleStars, starCount, branchFinished, STAR_BONUS, recordEvent, contractOffer, activeContract, contractTwist, contractFactor, startContract, skipContract, settleContract, useContractBoost, tickContractBoost, contractBoostFactor, CONTRACT_BOOST_SECONDS, seasonStatus, claimSeason, SEASONS, RETIRED_WEEKLY, nextSeason, weeklySpecial, specialFactor } from './progression.js';
@@ -3032,7 +3032,24 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var kind=c.shopEvent||'spender',reward=eventReward(kind,incomeRate(),rushLength(state.perks));
     if(reward.rush)state.rushTime=Math.max(state.rushTime,reward.rush);if(reward.cash)add(reward.cash);if(reward.reputation)state.empire.reputation=Math.min(1000,state.empire.reputation+reward.reputation);if(reward.buzz)state.vipBuzz=Math.max(state.vipBuzz||0,reward.buzz);
     notify(eventToast(kind,reward,fmt),'upgrade');telemetry.send('shop_event',{kind:kind});save();renderUI()};
-  function updateSpenderTag(branch){var c=branch?null:spenderInShop();spenderTag.hidden=!c;if(c){dressEventTag(c.shopEvent||'spender');var pos=project(c.x,2.75,c.z);spenderTag.style.transform='translate3d('+pos.x+'px,'+pos.y+'px,0) translate(-50%,-100%)'}
+  // The event pill follows its guest, so it would sit on any sign the guest walks under. Each frame it takes the spot
+  // nearest the guest that covers the least of the signs and tags laid out (their spots shift with the camera as in
+  // shiftMarkers): a sign covered counts three times a tag, and every step away from the guest costs a little, so it
+  // stays put when it is clear. It measures itself only when it changes dress. Returns the move as [dx,dy].
+  function eventTagShift(x,y){var laid=updateMarkers.laid;if(!laid)return[0,0];
+    if(spenderTag.dataset.dressed!==spenderTag.dataset.event){spenderTag.dataset.w=spenderTag.offsetWidth;spenderTag.dataset.h=spenderTag.offsetHeight;spenderTag.dataset.dressed=spenderTag.dataset.event}
+    var w=+spenderTag.dataset.w,h=+spenderTag.dataset.h,ox=centerX-updateMarkers.layX,oy=centerY-updateMarkers.layY,gap=4,top=(updateMarkers.ceiling||0)+gap,floor=(updateMarkers.floor||height)-gap;
+    var near=laid.filter(function(l){return l.shown&&l.h&&Math.abs(x-l.x-ox)<(w+l.w)/2+90&&Math.abs(y-h/2-l.y-oy)<(h+l.h)/2+130});
+    function cost(sx,sy){var left=x+sx-w/2-gap,right=x+sx+w/2+gap,bottom=y+sy+gap,upper=y+sy-h-gap,c=(Math.abs(sx)+Math.abs(sy))*.4;
+      if(upper<top)c+=(top-upper)*w;if(bottom>floor)c+=(bottom-floor)*w;
+      for(var i=0;i<near.length;i++){var l=near[i],lx=l.x+ox,ly=l.y+oy,ix=Math.min(right,lx+l.w/2)-Math.max(left,lx-l.w/2),iy=Math.min(bottom,ly+l.h/2)-Math.max(upper,ly-l.h/2);if(ix>0&&iy>0)c+=ix*iy*(l.tag?1:3)}
+      return c}
+    var best=[0,0],bestCost=cost(0,0),last=eventTagShift.last||best;if(bestCost===0)return eventTagShift.last=best;
+    for(var sy=-120;sy<=120;sy+=8)for(var sx=-80;sx<=80;sx+=20){var c=cost(sx,sy);if(c<bestCost){bestCost=c;best=[sx,sy]}}
+    // Keep last frame's spot while it is nearly as good, so the pill doesn't hop as its guest walks.
+    if(cost(last[0],last[1])<=bestCost*1.2+40)best=last;
+    return eventTagShift.last=best}
+  function updateSpenderTag(branch){var c=branch?null:spenderInShop();spenderTag.hidden=!c;if(c){dressEventTag(c.shopEvent||'spender');var pos=project(c.x,2.75,c.z),shift=eventTagShift(pos.x,pos.y);spenderTag.style.transform='translate3d('+(pos.x+shift[0])+'px,'+(pos.y+shift[1])+'px,0) translate(-50%,-100%)'}
     var rush=state.rushTime>0,boost=state.empire.contracts.boost>0,was=[contractPill.hidden,rushPill.hidden,boostPill.hidden].join();
     rushPeak.rush=rush?Math.max(rushPeak.rush,state.rushTime):0;rushPeak.boost=boost?Math.max(rushPeak.boost,state.empire.contracts.boost):0;
     rushPill.hidden=!rush;if(rush){chipText(rushPill,'Rush',Math.ceil(state.rushTime)+'s');burstRing(rushPill,state.rushTime/rushPeak.rush)}
@@ -3158,18 +3175,29 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     branchSignEls.forEach(function(el,j){var pos=branchSignAt(j);if(!pos){el.style.display='none';return}el.style.fontSize=labelSize;labels.push({el:el,x:pos.x,y:pos.y})});
     var manage=$('branchMapMarker');if(!state.empire.activeStore)manage.style.display='none';else{var mp=branchManageAt();manage.style.fontSize=labelSize;labels.push({el:manage,x:mp.x,y:mp.y})}
     labels.forEach(function(l){l.el.style.display=l.x<-40||l.x>width+40||l.y<-30||l.y>height+30?'none':'block'});
-    labels.forEach(function(l){l.w=l.el.offsetWidth;l.h=l.el.offsetHeight});
-    // Keep labels from stacking: later (lower) labels slide down until they clear any earlier one they overlap.
-    var gap=4;labels.sort(function(a,b){return a.y-b.y});
-    for(var pass=0;pass<2;pass++)for(var i=1;i<labels.length;i++){var a=labels[i];if(a.el.style.display==='none')continue;for(var j=0;j<i;j++){var b=labels[j];if(b.el.style.display==='none')continue;
-      if(Math.abs(a.x-b.x)<(a.w+b.w)/2+gap&&Math.abs(a.y-b.y)<(a.h+b.h)/2+gap)a.y=b.y+(a.h+b.h)/2+gap}}
-    hudBottom();var roof=hudEdges.bottom-hudEdges.markersTop+80;
-    labels.forEach(function(l){l.el.style.transform='translate3d('+l.x+'px,'+l.y+'px,0) translate(-50%,-50%)';l.el.classList.toggle('buy-below',l.y<roof)});
-    updateMarkers.laid=labels.map(function(l){return{el:l.el,x:l.x,y:l.y,w:l.w,shown:l.el.style.display!=='none'}});updateMarkers.roof=roof}
+    labels.forEach(function(l){l.w=l.el.offsetWidth;l.h=l.el.offsetHeight;l.tag=(LOT_MARKERS.indexOf(l.el)>=0||l.el===loungeMarker&&!l.el.classList.contains('is-badge'))&&l.el.dataset.marker!==pickedTag&&!l.el.classList.contains('selected')});
+    hudBottom();var ceiling=hudEdges.bottom-hudEdges.markersTop,roof=ceiling+80,floor=sheetTop();
+    var gap=4,shown=function(l){return l.el.style.display!=='none'},hits=function(a,x,y,b,pad){return Math.abs(x-b.x)<(a.w+b.w)/2+pad&&Math.abs(y-b.y)<(a.h+b.h)/2+pad};
+    // Station signs come first and stay on their stations: a later (lower) sign slides down only to clear another sign.
+    var signs=labels.filter(function(l){return!l.tag&&shown(l)}).sort(function(a,b){return a.y-b.y});
+    for(var pass=0;pass<2;pass++)for(var i=1;i<signs.length;i++){var a=signs[i];for(var j=0;j<i;j++){var b=signs[j];if(hits(a,a.x,a.y,b,gap))a.y=b.y+(a.h+b.h)/2+gap}}
+    // Purchase tags give way: each tries its own spot, then a short nudge up, down or aside, and hides if all of those
+    // land on a sign, an earlier tag, under the top bar or under the menu sheet. A tag with its buy box open always stays.
+    var placed=signs.slice();
+    labels.filter(function(l){return l.tag&&shown(l)}).sort(function(a,b){return a.y-b.y}).forEach(function(l){
+      var dy=l.h*.75+gap,dx=l.w*.6,tries=[[0,0],[0,-dy],[0,dy],[-dx,0],[dx,0],[-dx,-dy],[dx,-dy],[0,-2*dy]];
+      for(var k=0;k<tries.length;k++){var x=l.x+tries[k][0],y=l.y+tries[k][1];
+        if(floor&&y+l.h/2>floor-gap||y-l.h/2<ceiling+gap)continue;
+        if(!placed.some(function(b){return hits(l,x,y,b,gap+2)})){l.x=x;l.y=y;placed.push(l);return}}
+      l.el.style.display='none'});
+    labels.forEach(function(l){if(!shown(l))return;l.el.style.transform='translate3d('+l.x+'px,'+l.y+'px,0) translate(-50%,-50%)';l.el.classList.toggle('buy-below',l.y<roof)});
+    updateMarkers.laid=labels.map(function(l){var on=shown(l);return{el:l.el,x:l.x,y:l.y,w:l.w,h:l.h,tag:l.tag,shown:on,dropped:l.tag&&!on&&l.w>0}});updateMarkers.roof=roof;updateMarkers.floor=floor;updateMarkers.ceiling=ceiling}
+  // The top of the menu sheet in map coordinates: tags under it would be cut in half, so they hide instead.
+  function sheetTop(){var sheet=$('sheet');if(!sheet||!hudEdges||!phoneSheet())return 0;var top=sheet.getBoundingClientRect().top-hudEdges.markersTop;return top>0&&top<height?top:0}
   function shiftMarkers(dx,dy){
     var laid=updateMarkers.laid,roof=updateMarkers.roof;
     for(var i=0;i<laid.length;i++){var l=laid[i],x=l.x+dx,y=l.y+dy,show=!(x<-40||x>width+40||y<-30||y>height+30);if(show&&!l.w)return false}
-    for(i=0;i<laid.length;i++){l=laid[i];x=l.x+dx;y=l.y+dy;show=!(x<-40||x>width+40||y<-30||y>height+30);
+    for(i=0;i<laid.length;i++){l=laid[i];x=l.x+dx;y=l.y+dy;show=!l.dropped&&!(x<-40||x>width+40||y<-30||y>height+30)&&!(l.tag&&updateMarkers.floor&&y+l.h/2>updateMarkers.floor);
       if(show!==l.shown){l.el.style.display=show?'block':'none';l.shown=show}
       if(!show)continue;
       l.el.style.transform='translate3d('+x+'px,'+y+'px,0) translate(-50%,-50%)';var below=y<roof;if(l.below!==below){l.el.classList.toggle('buy-below',below);l.below=below}}
@@ -3349,12 +3377,15 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // Suggestions live on the map: only the station the best buy belongs to wears the brass arrow, and a crew whose burst is
     // ready shows a bolt chip on its sign that fires it. Shop upgrades are suggested at the top of the Shop.
     var suggested=state.shopOpen&&fix&&fix.kind==='station'?fix.index:-1;
-    markerEls.forEach(function(el,i){var locked=!isOpen(i),site=!state.lines[i];el.classList.toggle('selected',mapPicked&&!securitySelected&&!loungeSelected&&i===selected);el.classList.toggle('locked',locked);el.classList.toggle('is-site',site);el.classList.toggle('is-bottleneck',i===slowNow&&!locked&&!site);el.classList.add('station-sign');el.classList.toggle('can-upgrade',!locked&&!site&&i===suggested&&state.money>=cost(i));if(el.dataset.level!==String(state.lines[i])){el.classList.toggle('is-badge',!site);el.innerHTML=signIcon(SIGN_PATHS[i])+'<span class=station-sign-name>'+shortNames[i]+'</span><span class=station-sign-level>'+(site?'Build':'Lv '+state.lines[i])+'</span>';el.dataset.level=String(state.lines[i]);updateMarkers.key=null;}el.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);el.setAttribute('aria-label',LINES[i].name+(locked?', locked':site?', under construction. Build it':', level '+state.lines[i]));el.setAttribute('aria-pressed',String(mapPicked&&!securitySelected&&!loungeSelected&&i===selected));abilityChip(el,i,!locked&&!site);signBuy(el,mapPicked&&!securitySelected&&!loungeSelected&&!pickedTag&&i===selected&&i===buyBoxFor?stationBuys(i,suggested):null)});
+    // One crew burst is offered at a time (Kevin's one-next-action rule): the best-buy station's crew if it is ready,
+    // then the bottleneck's, then the first ready one. Only that sign wears the bolt chip and only that tile a dot.
+    var crewPick=featuredCrew(suggested,slowNow);
+    markerEls.forEach(function(el,i){var locked=!isOpen(i),site=!state.lines[i];el.classList.toggle('selected',mapPicked&&!securitySelected&&!loungeSelected&&i===selected);el.classList.toggle('locked',locked);el.classList.toggle('is-site',site);el.classList.toggle('is-bottleneck',i===slowNow&&!locked&&!site);el.classList.add('station-sign');el.classList.toggle('can-upgrade',!locked&&!site&&i===suggested&&state.money>=cost(i));if(el.dataset.level!==String(state.lines[i])){el.classList.toggle('is-badge',!site);el.innerHTML=signIcon(SIGN_PATHS[i])+'<span class=station-sign-name>'+shortNames[i]+'</span><span class=station-sign-level>'+(site?'Build':'Lv '+state.lines[i])+'</span>';el.dataset.level=String(state.lines[i]);updateMarkers.key=null;}el.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);el.setAttribute('aria-label',LINES[i].name+(locked?', locked':site?', under construction. Build it':', level '+state.lines[i]));el.setAttribute('aria-pressed',String(mapPicked&&!securitySelected&&!loungeSelected&&i===selected));abilityChip(el,i,!locked&&!site,i===crewPick);signBuy(el,mapPicked&&!securitySelected&&!loungeSelected&&!pickedTag&&i===selected&&i===buyBoxFor?stationBuys(i,suggested):null)});
     renderBranchSigns();renderHomeChip();
     var loungeCard=document.querySelector('[data-lounge]');if(loungeCard){loungeCard.setAttribute('aria-pressed',String(loungeSelected));loungeCard.classList.toggle('is-lot',loungeLot);loungeCard.classList.toggle('can-upgrade',loungePrice!==null&&state.money>=loungePrice);loungeCard.querySelector('em').textContent=loungeBuilding?loungeClock:loungeLot?'Build':'Lv '+state.lounge;loungeCard.classList.toggle('is-building',loungeBuilding);loungeCard.setAttribute('aria-label',loungeBuilding?'Smoking lounge, being built, opens in '+loungeClock:loungeLot?'Smoking lounge, not built yet':'Smoking lounge, level '+state.lounge);loungeCard.style.setProperty('--station-tier',TIER_COLORS[Math.min(3,state.lounge)])}
     var securityCard=document.querySelector('[data-security]');if(securityCard){securityCard.setAttribute('aria-pressed',String(securitySelected));securityCard.classList.toggle('is-site',doorSite);securityCard.classList.toggle('can-upgrade',!doorSite&&idTrainingQuote(1).levels>0);securityCard.querySelector('em').textContent=doorSite?'Build':'Lv '+state.idStaff;securityCard.setAttribute('aria-label',doorSite?'Security, under construction':'Security, level '+state.idStaff);securityCard.style.setProperty('--station-tier',TIER_COLORS[economy.stationLook(state.idStaff)])}
     updateStationOrbit(slow);
-    machineTabs.forEach(function(tab,i){var locked=!isOpen(i),site=!state.lines[i],available=!locked&&!site&&state.money>=cost(i);tab.title=site?'Under construction':i===slow?'Slowest station · improve this to raise capacity':'';tab.setAttribute('aria-pressed',String(!securitySelected&&!loungeSelected&&i===selected));tab.classList.toggle('is-locked',locked);tab.classList.toggle('is-site',site);tab.classList.toggle('can-upgrade',available);var crewState=site?'':abilityStatus(state.abilities,i,state.staff[i]);tab.classList.toggle('ability-ready',crewState==='ready');tab.classList.toggle('is-boosted',crewState==='active');tab.querySelector('em').innerHTML=locked?'Locked':site?'Build':'Lv '+state.lines[i]+(i===slow?'<span class="slow-tag"> · Slow</span>':'');tab.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);var progress=Math.min(100,state.lines[i]/100*100),progressText=site?'Under construction':state.lines[i]>=100?'Flagship equipment reached':'Level '+state.lines[i]+' of 100 toward flagship equipment';tab.querySelector('progress').value=progress;tab.querySelector('progress').setAttribute('aria-label',LINES[i].name+' equipment progress');tab.querySelector('progress').setAttribute('aria-valuetext',progressText);tab.querySelector('progress').title=progressText;tab.querySelector('.level-funding').textContent=progressText;tab.setAttribute('aria-label',LINES[i].name+(i===slow?', slowest station':'')+', level '+state.lines[i]+', '+STATION_TIERS[stationTier(i)]+(available?', upgrade ready':''))});
+    machineTabs.forEach(function(tab,i){var locked=!isOpen(i),site=!state.lines[i],available=!locked&&!site&&state.money>=cost(i);tab.title=site?'Under construction':i===slow?'Slowest station · improve this to raise capacity':'';tab.setAttribute('aria-pressed',String(!securitySelected&&!loungeSelected&&i===selected));tab.classList.toggle('is-locked',locked);tab.classList.toggle('is-site',site);tab.classList.toggle('can-upgrade',available);var crewState=site?'':abilityStatus(state.abilities,i,state.staff[i]);tab.classList.toggle('ability-ready',crewState==='ready'&&i===crewPick);tab.classList.toggle('is-best-buy',available&&i===suggested&&crewPick<0);tab.classList.toggle('is-boosted',crewState==='active');tab.querySelector('em').innerHTML=locked?'Locked':site?'Build':'Lv '+state.lines[i]+(i===slow?'<span class="slow-tag"> · Slow</span>':'');tab.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);var progress=Math.min(100,state.lines[i]/100*100),progressText=site?'Under construction':state.lines[i]>=100?'Flagship equipment reached':'Level '+state.lines[i]+' of 100 toward flagship equipment';tab.querySelector('progress').value=progress;tab.querySelector('progress').setAttribute('aria-label',LINES[i].name+' equipment progress');tab.querySelector('progress').setAttribute('aria-valuetext',progressText);tab.querySelector('progress').title=progressText;tab.querySelector('.level-funding').textContent=progressText;tab.setAttribute('aria-label',LINES[i].name+(i===slow?', slowest station':'')+', level '+state.lines[i]+', '+STATION_TIERS[stationTier(i)]+(available?', upgrade ready':''))});
     updateCommerceControls();
   }
   var machineTabs=Array.prototype.slice.call(document.querySelectorAll('[data-machine]'));var securityTab=document.querySelector('[data-security]');if(securityTab)securityTab.onclick=selectSecurity;
@@ -3463,8 +3494,11 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // Every running boost draws the same countdown: the element's border becomes a glowing brass ring that drains with the
   // share of the boost left (1 = just started, 0 = over).
   function burstRing(el,share){var on=share>0;el.classList.toggle('burst-ring',on);if(on)el.style.setProperty('--burst',Math.min(1,share).toFixed(3))}
-  function abilityChip(sign,i,built){
-    var status=built?abilityStatus(state.abilities,i,state.staff[i]):'none',ready=status==='ready';
+  function featuredCrew(suggested,slow){
+    return featuredAbility(LINES.map(function(_,i){return i}).filter(function(i){return isOpen(i)&&state.lines[i]>0&&ABILITIES[i]&&abilityStatus(state.abilities,i,state.staff[i])==='ready'}),suggested,slow);
+  }
+  function abilityChip(sign,i,built,featured){
+    var status=built?abilityStatus(state.abilities,i,state.staff[i]):'none',ready=status==='ready'&&featured;
     burstRing(sign,status==='active'?state.abilities.active[i]/ABILITY_SECONDS:0);
     var chip=sign.querySelector('.sign-ability');
     if(!chip){chip=document.createElement('span');chip.className='sign-ability';chip.setAttribute('role','button');chip.setAttribute('aria-label','Use '+ABILITIES[i].name);chip.title=ABILITIES[i].name+' is ready';chip.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3 5 13h6l-1 8 8-10h-6z"/></svg>';chip.addEventListener('click',function(e){e.stopPropagation();triggerAbility(i)});sign.appendChild(chip)}
@@ -4663,7 +4697,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   var dockHeight=0;
   // The shop activity panel opens just under the lane's chip row, however many rows it wraps to.
   function fitLane(){var r=$('laneStatus').getBoundingClientRect();document.documentElement.style.setProperty('--lane-bottom',Math.round(r.height?r.bottom:hudBottom())+'px')}
-  function fitControls(){hudEdges=null;if(hudBottom()>0)document.documentElement.style.setProperty('--hud-height',hudBottom()+'px');stackPills();fitLane();
+  function fitControls(){hudEdges=null;updateMarkers.key=null;if(hudBottom()>0)document.documentElement.style.setProperty('--hud-height',hudBottom()+'px');stackPills();fitLane();
     var sheet=$('sheet');if(!phoneSheet())sheet.classList.remove('tall');
     // A tall or gliding sheet keeps the last settled dock height, so the map is framed for the half-open sheet it sits behind.
     if(!dockGlide&&!sheet.classList.contains('tall')&&!sheet.classList.contains('fluid')){dockHeight=sheet.getBoundingClientRect().height;if(!sheet.classList.contains('collapsed')&&!paneGlide)sheetHalfHeight=dockHeight}
