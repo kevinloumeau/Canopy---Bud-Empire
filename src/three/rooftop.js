@@ -514,7 +514,8 @@ export function buildRooftop(world, layout, { box, span, material }) {
       source.traverse(o => { if (o.isMesh && /^(CandleGlow|LanternGlow)/.test(o.name)) { o.material = flameGlow; o.castShadow = false; } });
       // The vines' leaves darken after dark like the stand-in leaves (update, below).
       source.traverse(o => { const m = o.isMesh && o.material; if (m && /^Vine/.test(m.name) && !vineMats.some(v => v[0] === m)) vineMats.push([m, m.color.clone()]); });
-      compactModel(source);
+      // The bar's hundred-odd bottles are glass: merged too, one mesh per glass colour.
+      compactModel(source, null, true);
       set.at.forEach(([ax, az, turn], i) => {
         const holder = new THREE.Group();
         if (turn) holder.rotation.y = turn;
