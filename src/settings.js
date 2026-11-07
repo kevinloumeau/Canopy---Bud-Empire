@@ -1,4 +1,4 @@
-// Settings sheet: one gear in the HUD gathers sound, the start guide and reset. Pause and lighting stay on the HUD only.
+// Settings sheet: one gear in the HUD gathers sound, music, the start guide and reset. Pause and lighting stay on the HUD only.
 import {manageDialog} from './dialog-focus.js';
 export function mountSettings(){
  const $=id=>document.getElementById(id);
@@ -9,6 +9,7 @@ export function mountSettings(){
  wrap.innerHTML='<div class="modal settings" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><div class="settings-head"><h2 id="settingsTitle">Settings</h2><button type="button" class="settings-close" aria-label="Close settings">×</button></div>'+
   '<div class="settings-list">'+
   '<button type="button" class="settings-row" data-proxy="soundToggle"><span>Sound</span><b data-mirror="soundToggle"></b></button>'+
+  '<button type="button" class="settings-row" data-proxy="musicToggle"><span>Music</span><b data-mirror="musicToggle"></b></button>'+
   '<button type="button" class="settings-row" data-proxy="remindersToggle" hidden><span>Reminders</span><b data-mirror="remindersToggle"></b></button>'+
   '<button type="button" class="settings-row" data-proxy="guide"><span>Start guide</span><b>Replay</b></button>'+
   '</div><div class="settings-foot"><button type="button" class="settings-row settings-danger" data-proxy="resetOpen"><span>Start over</span><b>Reset everything</b></button><div class="settings-logo" role="img" aria-label="Canopy: Bud Empire"></div><p class="settings-note">Your shop saves on this device.</p></div></div>';
@@ -18,6 +19,7 @@ export function mountSettings(){
  function sync(){
   const sound=$('soundToggle');
   wrap.querySelector('[data-mirror=soundToggle]').textContent=sound?(sound.textContent.replace('Sound ','')==='on'?'On':'Off'):'';
+  const music=$('musicToggle');wrap.querySelector('[data-mirror=musicToggle]').textContent=music?(music.textContent==='Music on'?'On':'Off'):'';
   // Reminders only appear in the iOS app, where the game creates their toggle.
   const reminders=$('remindersToggle'),row=wrap.querySelector('[data-proxy=remindersToggle]');row.hidden=!reminders;if(reminders)wrap.querySelector('[data-mirror=remindersToggle]').textContent=reminders.textContent==='Reminders on'?'On':'Off';
  }
