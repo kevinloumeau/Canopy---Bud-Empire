@@ -468,7 +468,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     state.stock[3]-=1;add(take.total);state.loungeSessions++;state.loungeEarned+=take.total;state.shopPlay.shift.earned+=take.total;c.loungeLeft=loungeSessionSeconds(state.lounge)*loungeStayJitter(c.id);c.phase='lounge';c.walking=false;c.loungeTake=take.total;
     c.loungeFade=1;c.fadeFromZ=c.z;c.facing=-.3;c.roofWalk=0;c.walkBack=0;c.lift=null;c.liftShaft=null;c.shaft=0;
     recordEvent(state.empire,'pickup',1);playSound('coin',state.sound);
-    if(!motionPreference.matches)tickets.push({x:LOUNGE_DOOR.x,y:2.1,z:LOUNGE_DOOR.z,life:1,text:fmt(take.cover)});
+    spawnTicket('lounge',LOUNGE_DOOR.x,2.1,LOUNGE_DOOR.z,fmt(take.cover));
   }
   function askLift(c,wait){c.lift=wait;c.liftAsk=++liftAsks;c.liftShaft=null}
   function leaveLounge(c){
@@ -1962,7 +1962,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(!atAtm(c))c.idDistance=Math.max(index*.7,c.idDistance-budget);
     var pos=routePoint(ID_ROUTE,c.idDistance);
     if(c.cash){var spot=ATM_SPOTS[c.cash.machine],goal=c.cash.path.length?c.cash.path[0]:c.cash.stage==='back'?pos:spot.stand,gx=goal.x-c.x,gz=goal.z-c.z,gd=Math.hypot(gx,gz),walk=dt*walkSpeed();
-      if(c.cash.stage==='use'){c.cash.t+=dt;if(c.cash.t>=atmUseSeconds(state.atm.level)){var fee=atmFee();if(fee>0){add(fee);state.atmEarned=(state.atmEarned||0)+fee;if(!motionPreference.matches)tickets.push({x:spot.x,y:2.6,z:spot.z,life:1,text:fmt(fee)})}c.cash.stage='back';c.cash.path=[ATM_CORNER];c.cashRejoin=true}}
+      if(c.cash.stage==='use'){c.cash.t+=dt;if(c.cash.t>=atmUseSeconds(state.atm.level)){var fee=atmFee();if(fee>0){add(fee);state.atmEarned=(state.atmEarned||0)+fee;spawnTicket('atm',ATM_SPOTS[0].x,1.9,ATM_SPOTS[0].z,fmt(fee))}c.cash.stage='back';c.cash.path=[ATM_CORNER];c.cashRejoin=true}}
       else if(gd<=walk){c.x=goal.x;c.z=goal.z;if(c.cash.path.length)c.cash.path.shift();else if(c.cash.stage==='go'){c.cash.stage='use';c.cash.t=0}else{c.cash=null;c.cashDone=true}}
       else{c.x+=gx/gd*walk;c.z+=gz/gd*walk}
     }else{c.x=pos.x;c.z=pos.z}
@@ -2090,6 +2090,14 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Ordering (…) and order-in (✓) badges: a small forest-glass disc floating just clear of the head, so faces stay
   // visible. In the depth-sorted pass it is drawn a little in front of its customer, so the next person in a packed
   // line does not hide it.
+  // The badges never stack (Kevin's visual review, 2026-11-07: checks clustered over a packed line): the customers being
+  // served go first, then the rest front to back, and a badge that would overlap one already drawn, or hide under a map
+  // sign, is left out. The
+  // person behind still shows theirs as the line moves up.
+  function drawCustomerBadges(){var r=Math.max(6,unit*.15),drawn=[],signs=shownSigns(),shift=signShift();
+    customers.filter(function(c){return c.phase!=='lounge'&&customerBadged(c)}).map(function(c){var q=Object.assign({},c,{x:c.renderX,z:c.renderZ}),top=project(q.x,PERSON_HEAD_Y+.07,q.z);q.badgeX=top.x;q.badgeY=top.y-r;q.serving=!c.walking&&c.serviceElapsed>0;return q})
+      .sort(function(a,b){return (b.serving-a.serving)||(b.badgeY-a.badgeY)})
+      .forEach(function(q){if(drawn.some(function(d){return Math.hypot(d.x-q.badgeX,d.y-q.badgeY)<r*2.2})||signs.some(function(l){return Math.abs(q.badgeX-l.x-shift.x)<l.w/2+r&&Math.abs(q.badgeY-l.y-shift.y)<l.h/2+r}))return;drawn.push({x:q.badgeX,y:q.badgeY});drawCustomerBadge(q)})}
   function drawCustomerBadge(c){
     if(!customerBadged(c))return;
     var r=Math.max(6,unit*.15),top=project(c.x,PERSON_HEAD_Y+.07,c.z),x=top.x,y=top.y-r,g=r*.42;
@@ -2859,7 +2867,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // A model that had not loaded when the tabs were painted: try again every half second until all are in.
     var wall=performance.now();if(picturesPending&&!(wall-(renderFrame3d.picturesTried||0)<500)){renderFrame3d.picturesTried=wall;picturesPending=false;paintThumbnails()}
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
-    customers.forEach(function(c){if(c.phase!=='lounge'&&customerBadged(c))drawCustomerBadge(Object.assign({},c,{x:c.renderX,z:c.renderZ}))});
+    drawCustomerBadges();
     drawDeliveryExtras(dronePoses,now);drawTickets(frameDelta);drawCashPops(wallDelta);drawConfetti(wallDelta);
     positionShopPlay();
     updateMarkers();updateSpenderTag(false);requestAnimationFrame(render);
@@ -3066,9 +3074,25 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function drawTickets(dt){
     for(var i=tickets.length-1;i>=0;i--){
       var t=tickets[i];t.life-=dt*.7;t.y+=dt*.55;if(t.life<=0){tickets.splice(i,1);continue}
-      paintTicket(project(t.x,t.y,t.z),t.text,Math.min(1,t.life*2.5),1);
+      var p=project(t.x,t.y,t.z);p.x+=t.dx;paintTicket(p,t.text,Math.min(1,t.life*2.5),1);
     }
   }
+  // One stub at a time per source (Kevin's visual review, 2026-11-07: at the max save the three ATMs each popped their own
+  // fee stub, which piled up over the ATM and security signs). The ATM bank shares one stub, over its middle machine; a
+  // fee that lands while it is still up goes to the till without a second stub. The stub then takes the first spot along
+  // the bank (centre, right, left, further out) whose whole rise stays clear of every map sign and tag, or is skipped.
+  var TICKET_RISE=.55/.7;
+  function spawnTicket(source,x,y,z,text){if(motionPreference.matches||tickets.some(function(t){return t.source===source}))return;
+    var p=project(x,y,z),size=ticketSize(text),signs=shownSigns(),shift=signShift(),rise=TICKET_RISE*unit,pad=6;
+    var offsets=[0,.75,-.75,1.5,-1.5].map(function(k){return k*size.w});
+    for(var i=0;i<offsets.length;i++){var cx=p.x+offsets[i],top=p.y-rise-size.h/2,bottom=p.y+size.h/2;
+      var clear=!signs.some(function(l){var lx=l.x+shift.x,ly=l.y+shift.y;return Math.abs(cx-lx)<(size.w+l.w)/2+pad&&top<ly+l.h/2+pad&&bottom>ly-l.h/2-pad});
+      if(clear){tickets.push({source:source,x:x,y:y,z:z,dx:offsets[i],life:1,text:text});return}}}
+  // The map signs and tags as last laid out (updateMarkers), and how far the camera has moved since.
+  function shownSigns(){return(updateMarkers.laid||[]).filter(function(l){return l.shown&&l.w})}
+  function signShift(){return updateMarkers.laid?{x:centerX-updateMarkers.layX,y:centerY-updateMarkers.layY}:{x:0,y:0}}
+  // The stub's size on screen, as paintTicket draws it.
+  function ticketSize(text){text=String(text).replace(/^\$/,'');var h=Math.max(14,unit*.4);ctx.save();ctx.font='800 '+Math.max(8,h*.58).toFixed(1)+'px "Bricolage Grotesque",sans-serif';var base=Math.max(28,unit*.95),w=Math.max(base,base*.28+ctx.measureText(text).width+h*.7);ctx.restore();return{w:w,h:h}}
   // The ticket stub itself, shared by the lounge fee, the ATM fee and the cash pops: cream card, brass rim, a dashed
   // tear line with "$" on the stub and the amount on the rest. It widens to fit a long amount rather than squeezing it.
   // The stub is the only dollar sign, so a leading "$" in the amount is dropped (never "$ $39K").
