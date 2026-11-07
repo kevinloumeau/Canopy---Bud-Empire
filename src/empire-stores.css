@@ -1,4 +1,4 @@
-/* Empire stores: cards on the home list, a hero-led store screen. Same forest-green glass, cream text, DM Mono figures. */
+/* Empire stores: cards on the home list, a hero-led store screen. Same forest-green glass, cream text, Bricolage tabular figures. */
 
 /* ---- Home: store cards ---- */
 [data-empire-screen] .store-list{display:grid;gap:8px;margin:8px 0 0;border-top:0}
@@ -34,7 +34,7 @@
 .store-card .store-pips i{width:4px;height:11px}
 .store-card .store-income{padding:3px 8px 3px 6px;font-size:11.5px}
 .store-card .store-locked{font-size:11.5px}
-.store-status{flex:none;padding:4px 9px;border-radius:999px;font:600 11px 'DM Mono',monospace;letter-spacing:0;color:#a9b9a5;background:#ffffff0c;white-space:nowrap}
+.store-status{flex:none;padding:4px 9px;border-radius:999px;font:600 11px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:0;color:#a9b9a5;background:#ffffff0c;white-space:nowrap}
 .store-status:empty{display:none}
 .store-status.is-ready{background:var(--p-forest-35);color:var(--p-sage-96);box-shadow:0 0 0 1px #d9f1c445,0 0 12px #b6d69033}
 .store-status.is-ready.is-gold{background:var(--p-gold-77);color:#2c2a1a;box-shadow:0 0 0 1px #f3e6c655,0 0 12px #e3d1a640}
@@ -47,7 +47,7 @@
 
 /* Heading and summary above the cards. */
 [data-empire-screen] .empire-section-heading{font-size:16px}
-[data-empire-screen] #branchSummary{margin:0 0 2px;font:500 11.5px 'DM Mono',monospace;color:var(--p-sage-70);letter-spacing:0}
+[data-empire-screen] #branchSummary{margin:0 0 2px;font:500 11.5px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--p-sage-70);letter-spacing:0}
 
 /* ---- Store screen ---- */
 /* The hero replaces the old scattered rows; these keep rendering (main.js writes them) but no longer show. */
@@ -74,7 +74,7 @@
 .hero-meter i{display:block;height:100%;border-radius:3px;background:var(--p-lime-70)}
 
 .hero-income{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 6px;margin-bottom:12px}
-.hero-income b{font:600 26px 'DM Mono',monospace;letter-spacing:-.03em;color:var(--p-lime-90);font-variant-numeric:tabular-nums;line-height:1}
+.hero-income b{font:600 26px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.03em;color:var(--p-lime-90);font-variant-numeric:tabular-nums;line-height:1}
 .hero-income b.is-next{font-size:16px;color:var(--p-lime-85)}
 .hero-income span{font-size:11px;color:var(--p-sage-70)}
 .hero-arrow{font-style:normal;font-size:14px;color:var(--p-lime-70);margin:0 4px}
@@ -97,14 +97,14 @@
 
 /* Section cards share one surface; titles carry a mono counter on the right. */
 .store-section-title{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:0 0 8px;font-size:13px;font-weight:650;letter-spacing:-.005em;color:var(--p-sage-93)}
-.store-section-count{font:500 11px 'DM Mono',monospace;color:var(--p-sage-70);letter-spacing:0}
+.store-section-count{font:500 11px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--p-sage-70);letter-spacing:0}
 
 .store-opening{margin:0 0 12px;padding:12px 14px;border-radius:14px;background:#e3d1a60d;box-shadow:inset 0 0 0 1px #e3d1a62e}
 .store-opening.is-ready{background:#e3d1a61a;box-shadow:inset 0 0 0 1px #e3d1a655}
 .store-opening[hidden]{display:none}
 .store-opening .opening-task{padding:0;gap:6px 10px}
 .store-opening .opening-task>span{font-size:13px;color:var(--p-sage-93)}
-.sheet .empire-screen .store-opening .opening-task button{min-height:36px;padding:6px 12px;border-radius:10px;font:600 12px 'DM Mono',monospace;letter-spacing:0}
+.sheet .empire-screen .store-opening .opening-task button{min-height:36px;padding:6px 12px;border-radius:10px;font:600 12px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:0}
 .sheet .empire-screen .store-opening.is-ready .opening-task button:not(:disabled){background:var(--p-gold-77);border-color:var(--p-gold-77);color:#2c2a1a;box-shadow:0 0 12px #e3d1a640}
 .store-opening .opening-task progress{margin:4px 0 0;height:5px;accent-color:var(--p-gold-77)}
 .store-opening .opening-task progress::-webkit-progress-value{background:var(--p-gold-77)}
@@ -114,7 +114,7 @@
 .store-stats[hidden]{display:none}
 .store-stat{display:grid;gap:2px;min-width:0;padding:10px 10px 9px;border-radius:12px;background:#dce9be0d;box-shadow:inset 0 0 0 1px #c1d7b71a}
 .store-stat small{font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:var(--p-sage-70);font-family:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.store-stat b{font:600 17px 'DM Mono',monospace;letter-spacing:-.02em;color:var(--p-lime-90);font-variant-numeric:tabular-nums;line-height:1.15}
+.store-stat b{font:600 17px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;color:var(--p-lime-90);font-variant-numeric:tabular-nums;line-height:1.15}
 .store-stat span{font-size:11px;line-height:1.3;color:var(--p-sage-80)}
 
 .store-bulk{margin:0 0 12px;padding:12px 14px;border-radius:14px;background:#dce9be0d;box-shadow:inset 0 0 0 1px #c1d7b71a}
@@ -126,19 +126,19 @@
 .branch-body .branch-projects{margin:0 0 6px;padding:12px 14px 2px;border:0;border-radius:14px;background:#dce9be0d;box-shadow:inset 0 0 0 1px #c1d7b71a}
 .branch-projects summary.store-section-title{display:flex;list-style:none;min-height:0;cursor:default;pointer-events:none;color:var(--p-sage-93);font-size:13px;font-weight:650}
 .branch-projects summary::-webkit-details-marker{display:none}
-.branch-projects.has-ready summary.store-section-title::after{content:'Ready';font:600 11px 'DM Mono',monospace;color:var(--p-lime-70);letter-spacing:0}
+.branch-projects.has-ready summary.store-section-title::after{content:'Ready';font:600 11px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--p-lime-70);letter-spacing:0}
 .branch-projects>.empire-note{margin:-4px 0 4px;font-size:11.5px;color:var(--p-sage-70)}
 .branch-project{grid-template-columns:26px minmax(0,1fr) auto;gap:10px;padding:11px 0;border-top:1px solid #c1d7b71a}
 .branch-project>div{min-width:0}
 .branch-project h4{font-size:13px;margin:0 0 2px;color:var(--p-sage-93)}
-.branch-project strong{font:500 11px 'DM Mono',monospace;color:var(--p-sage-80);letter-spacing:0;line-height:1.35;white-space:normal}
+.branch-project strong{font:500 11px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--p-sage-80);letter-spacing:0;line-height:1.35;white-space:normal}
 .project-mark{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#ffffff0c;color:transparent;box-shadow:inset 0 0 0 1px #c1d7b72a}
 .project-mark svg{width:15px;height:15px}
 .branch-project.is-installed .project-mark{background:var(--p-lime-70);color:#174024;box-shadow:none}
 .branch-project.is-ready .project-mark{box-shadow:inset 0 0 0 1px #b6d69080}
 .branch-project.is-locked h4{color:var(--p-sage-80)}
 .branch-project.is-locked .project-mark{opacity:.5}
-.sheet .empire-screen .branch-project button{min-width:88px;min-height:36px;padding:6px 10px;border-radius:10px;font:600 11.5px 'DM Mono',monospace;letter-spacing:0;white-space:nowrap}
+.sheet .empire-screen .branch-project button{min-width:88px;min-height:36px;padding:6px 10px;border-radius:10px;font:600 11.5px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:0;white-space:nowrap}
 .sheet .empire-screen .branch-project.is-ready button{background:var(--p-forest-35);color:var(--p-sage-96);border-color:#d9f1c445;box-shadow:0 0 12px #b6d69030}
 .sheet .empire-screen .branch-project.is-installed button:disabled{background:transparent;border-color:transparent;color:var(--p-lime-70);opacity:1;min-width:0;padding-inline:4px}
 .sheet .empire-screen .branch-project.is-locked button:disabled{background:transparent;border-color:#c1d7b72a;color:var(--p-sage-66);opacity:1}
@@ -166,7 +166,7 @@
 .supply-strip{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:2px 0 12px}
 .supply-tile{display:grid;gap:3px;min-width:0;padding:10px 12px 11px;border-radius:12px;background:linear-gradient(160deg,#dce9be14,#dce9be06);box-shadow:inset 0 0 0 1px #c1d7b722}
 .supply-tile small{font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:var(--p-sage-70);font-family:inherit}
-.supply-tile b{font:600 17px 'DM Mono',monospace;letter-spacing:-.02em;color:var(--p-lime-90);font-variant-numeric:tabular-nums;line-height:1.15}
+.supply-tile b{font:600 17px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;color:var(--p-lime-90);font-variant-numeric:tabular-nums;line-height:1.15}
 .supply-meter{display:block;height:4px;margin-top:4px;border-radius:2px;background:var(--p-forest-13);overflow:hidden}
 .supply-meter i{display:block;height:100%;border-radius:2px;background:var(--p-lime-70);transition:width .4s ease}
 .stock-make .operation-hint{margin-top:8px}
@@ -174,32 +174,32 @@
 .stock-shelves .shelf-row{padding:11px 0;border-top:1px solid #c1d7b71a;border-bottom:0;gap:10px}
 .stock-shelves .shelf-row:first-child{border-top:0;padding-top:6px}
 .stock-shelves .shelf-row strong{font-size:13px;font-weight:650;color:var(--p-sage-93)}
-.stock-shelves .shelf-row small{margin-top:3px;font:500 11px 'DM Mono',monospace;color:var(--p-sage-80);letter-spacing:0}
+.stock-shelves .shelf-row small{margin-top:3px;font:500 11px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--p-sage-80);letter-spacing:0}
 .stock-shelves .shelf-row.is-locked strong{color:var(--p-sage-80)}
 .line-meter{display:block;height:3px;margin-top:7px;max-width:150px;border-radius:2px;background:var(--p-forest-13);overflow:hidden}
 .line-meter i{display:block;height:100%;border-radius:2px;background:var(--p-gold-77)}
 .line-meter[hidden]{display:none}
 .stock-shelves .shelf-stepper{gap:0;padding:2px;border-radius:11px;background:#09261240}
-.sheet .empire-screen .stock-shelves .shelf-stepper button{width:38px;min-height:34px;padding:0;border:0;border-radius:9px;background:transparent;font:600 17px 'DM Mono',monospace;color:var(--p-lime-90);box-shadow:none}
+.sheet .empire-screen .stock-shelves .shelf-stepper button{width:38px;min-height:34px;padding:0;border:0;border-radius:9px;background:transparent;font:600 17px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--p-lime-90);box-shadow:none}
 .sheet .empire-screen .stock-shelves .shelf-stepper button:disabled{background:transparent;color:#6f8a73;opacity:1}
 @media(hover:hover){.sheet .empire-screen .stock-shelves .shelf-stepper button:not(:disabled):hover{background:#dce9be14;filter:none}}
-.stock-shelves .shelf-stepper span{min-width:28px;font:600 13px 'DM Mono',monospace;color:var(--p-sage-93)}
-.sheet .empire-screen .stock-shelves .shelf-unlock{min-height:36px;padding:6px 10px;border-radius:10px;font:600 11.5px 'DM Mono',monospace;letter-spacing:0;white-space:nowrap}
+.stock-shelves .shelf-stepper span{min-width:28px;font:600 13px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--p-sage-93)}
+.sheet .empire-screen .stock-shelves .shelf-unlock{min-height:36px;padding:6px 10px;border-radius:10px;font:600 11.5px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:0;white-space:nowrap}
 .sheet .empire-screen .stock-shelves .shelf-unlock:not(:disabled){background:var(--p-forest-35);color:var(--p-sage-96);border-color:#d9f1c445}
 .stock-logistics{margin-top:0;border-top:0;padding-bottom:12px}
 .stock-logistics>summary.store-section-title{display:flex;list-style:none;min-height:40px;align-items:center;margin:0;padding:0 0 0 22px;position:relative;cursor:pointer;color:var(--p-sage-93);font-size:13px;font-weight:650}
 .stock-logistics>summary::-webkit-details-marker{display:none}
 .stock-logistics>summary::before{content:'';position:absolute;left:4px;top:50%;width:7px;height:7px;margin-top:-5px;border-right:1.5px solid var(--p-sage-82);border-bottom:1.5px solid var(--p-sage-82);transform:rotate(-45deg);transition:transform .2s ease}
 .stock-logistics[open]>summary::before{transform:rotate(45deg);margin-top:-7px}
-.stock-logistics>summary>span{float:none;margin-left:auto;font:500 11px 'DM Mono',monospace;color:var(--p-sage-70);letter-spacing:0}
+.stock-logistics>summary>span{float:none;margin-left:auto;font:500 11px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--p-sage-70);letter-spacing:0}
 .logistics-group{padding:10px 0 4px;border-top:1px solid #c1d7b71a;margin-top:8px}
 .logistics-title{margin:0 0 4px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--p-gold-77);font-weight:600}
 .logistics-group .operation-row{padding:9px 0;border-bottom:0;font-size:12px}
-.sheet .empire-screen .logistics-group .operation-row button{min-height:36px;padding:6px 10px;border-radius:10px;font:600 11.5px 'DM Mono',monospace;letter-spacing:0;max-width:150px}
+.sheet .empire-screen .logistics-group .operation-row button{min-height:36px;padding:6px 10px;border-radius:10px;font:600 11.5px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:0;max-width:150px}
 .sheet .empire-screen .logistics-group .operation-primary{width:100%;max-width:none;margin-top:10px;min-height:42px;border-radius:12px;background:linear-gradient(145deg,#c9e4b820,#c6dfb608),var(--p-forest-35);color:var(--p-sage-96);border:1px solid #d9f1c445;font-size:13px;font-weight:700}
 .sheet .empire-screen .logistics-group .operation-primary:disabled{background:var(--p-forest-19);color:var(--p-sage-74);border-color:#75936b55}
 .logistics-group .route{margin:8px 0;padding:8px 10px;border-radius:10px;background:#dce9be0a}
-.logistics-group .route small{font:500 11px 'DM Mono',monospace;color:var(--p-gold-77)}
+.logistics-group .route small{font:500 11px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--p-gold-77)}
 
 /* People: who runs the store, the three specialists, and the regular's story. */
 .person-avatar{display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:50%;background:#dce9be14;box-shadow:inset 0 0 0 1px #c1d7b722;color:var(--p-lime-90);font:650 14px/1 'Bricolage Grotesque',sans-serif}
@@ -224,8 +224,8 @@
 .person-level .store-pips{display:inline-grid;grid-auto-flow:column;gap:2px}
 .person-level .store-pips i{display:block;width:5px;height:10px;border-radius:2px;background:#ffffff1a}
 .person-level .store-pips i.on{background:var(--p-lime-70);box-shadow:0 0 5px #b6d69055}
-.person-level b{font:500 11px 'DM Mono',monospace;color:var(--p-sage-80);letter-spacing:0}
-.person-where{font:600 10.5px 'DM Mono',monospace;font-style:normal;letter-spacing:.02em;text-transform:uppercase;padding:2px 7px;border-radius:999px;background:#ffffff0c;color:var(--p-sage-70)}
+.person-level b{font:500 11px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--p-sage-80);letter-spacing:0}
+.person-where{font:600 10.5px 'Bricolage Grotesque',system-ui,sans-serif;font-style:normal;letter-spacing:.02em;text-transform:uppercase;padding:2px 7px;border-radius:999px;background:#ffffff0c;color:var(--p-sage-70)}
 .person-row.is-here .person-where{background:#b6d69022;color:var(--p-lime-85)}
 .sheet .empire-screen .people-team .person-row button{min-width:88px;min-height:36px;padding:6px 10px;border-radius:10px;font-size:11.5px;font-weight:650;white-space:nowrap}
 .sheet .empire-screen .people-team .person-row.is-here button:disabled{background:transparent;border-color:transparent;color:var(--p-lime-70);opacity:1;min-width:0;padding-inline:4px}
@@ -237,7 +237,7 @@
 .regular-pips{display:inline-grid;grid-auto-flow:column;gap:4px}
 .regular-pips i{display:block;width:22px;height:6px;border-radius:3px;background:#ffffff1a}
 .regular-pips i.on{background:var(--p-gold-77);box-shadow:0 0 6px #e3d1a655}
-.people-regular .relationship{margin:0;font:500 11.5px 'DM Mono',monospace;color:var(--p-gold-77);letter-spacing:0}
+.people-regular .relationship{margin:0;font:500 11.5px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--p-gold-77);letter-spacing:0}
 .people-regular>p{margin:2px 0 0;font-size:13px;color:var(--p-sage-93)}
 .people-regular .regular-request{padding:10px 0 4px;border-bottom:0;font-size:12px;color:var(--p-sage-82)}
 .sheet .empire-screen .people-regular .regular-request button{min-height:36px;padding:6px 12px;border-radius:10px;font-size:11.5px;font-weight:650;white-space:nowrap}
@@ -248,7 +248,7 @@
 /* Style: option tiles with a swatch or glyph, the neighborhood as a chip, one primary preview. */
 .style-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:2px 0 12px}
 .style-head .operation-hint{margin:0;font-size:12px;color:var(--p-sage-82)}
-.style-neighborhood{margin:0!important;padding:5px 10px;border-radius:999px;background:#e3d1a61a;color:#f2e4c2;font:600 11px 'DM Mono',monospace!important;letter-spacing:0;white-space:nowrap}
+.style-neighborhood{margin:0!important;padding:5px 10px;border-radius:999px;background:#e3d1a61a;color:#f2e4c2;font:600 11px 'Bricolage Grotesque',system-ui,sans-serif!important;letter-spacing:0;white-space:nowrap}
 .style-look .style-field{margin:10px 0 0;padding-top:10px;border-top:1px solid #c1d7b71a}
 .style-look .style-field:first-of-type{border-top:0;padding-top:0;margin-top:2px}
 .style-look .pill-group{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}

@@ -27,7 +27,7 @@
 .shop-play p{margin:0;font-size:13px;line-height:1.4;color:var(--ui-ink)}
 .shop-play small{display:block;font-size:12px;line-height:1.35;color:var(--ui-soft)}
 .activity-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 2px 8px}
-.activity-head span{font:500 12px 'DM Mono',monospace;color:var(--ui-soft);font-variant-numeric:tabular-nums}
+.activity-head span{font:500 12px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-soft);font-variant-numeric:tabular-nums}
 .shift-recap,.operations-alerts{margin-top:18px}
 
 /* On the floor: a thin progress line, then open figures. */
@@ -38,7 +38,7 @@
 .activity-figures{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 2px 0}
 .activity-figures div{min-width:0}
 .activity-figures dt{font-size:11.5px;color:var(--ui-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.activity-figures dd{margin:2px 0 0;font:500 20px/1.15 'DM Mono',monospace;letter-spacing:-.03em;color:var(--ui-ink);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.activity-figures dd{margin:2px 0 0;font:500 20px/1.15 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.03em;color:var(--ui-ink);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* The last recap's advice is the next thing to tap, so it gets the brass card. */
 .activity-advice{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:10px;width:100%;margin-top:14px;padding:10px 8px 10px 12px;border:1px solid var(--ui-edge);border-radius:14px;background:var(--ui-brass-wash);color:var(--ui-ink);text-align:left;font:inherit;cursor:pointer}
@@ -86,7 +86,7 @@
 @media(min-width:780px){.shop-activity{left:76px}.shop-activity-panel{left:76px;max-height:calc(100dvh - var(--hud-height,60px) - 90px)}}
 /* Last recap: a small label over three open figures, then a one-line brass fix button when a station needs it. */
 .activity-last{margin-top:14px;padding-top:12px;border-top:1px solid var(--ui-edge)}
-.activity-last h4{margin:0 2px;font:600 11px/1.2 'DM Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ui-soft)}
+.activity-last h4{margin:0 2px;font:600 11px/1.2 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--ui-soft)}
 .activity-figures.is-last{margin-top:6px}
 .activity-figures.is-last dd{font-size:17px}
 .activity-advice{grid-template-columns:auto minmax(0,1fr) auto!important;margin-top:10px!important;padding:9px 10px!important;border-color:#e2c68a66!important;background:#e2c68a1f!important}

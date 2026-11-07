@@ -3,7 +3,7 @@
 /* Category tabs mirror the station strip: one translucent rail, borderless items, icon over a mono label, selected item lit. */
 .shop-browser .shop-categories button{display:grid;grid-template-rows:22px auto;justify-items:center;row-gap:4px;min-width:0;min-height:54px;padding:8px 0 7px;border:0;border-radius:14px;background:transparent;color:var(--p-sage-84);font:inherit;box-shadow:none}
 .shop-browser .shop-categories button .shop-category-icon{width:22px;height:22px;opacity:.85}
-.shop-browser .shop-categories button em{font:500 11px 'DM Mono',monospace;font-style:normal;color:var(--p-sage-66);line-height:1.2}
+.shop-browser .shop-categories button em{font:500 11px 'Bricolage Grotesque',system-ui,sans-serif;font-style:normal;color:var(--p-sage-66);line-height:1.2}
 .shop-browser .shop-categories button[aria-pressed=true]{background:linear-gradient(155deg,#e3f5db38,#c4e5b41a);box-shadow:inset 0 1px 0 #f1ffe752,inset 0 0 0 1px #e4fbd31c;color:var(--p-sage-95)}
 .shop-browser .shop-categories button[aria-pressed=true] .shop-category-icon{opacity:1}
 .shop-browser .shop-categories button[aria-pressed=true] em{color:var(--p-lime-90)}
@@ -53,7 +53,7 @@
 /* Research forks: a quiet label over an undecided pair and an "or" between its sides; a closed side sinks and fades. */
 .shop-browser .shop-fork-head{display:flex;gap:8px;align-items:baseline;margin:14px 4px 2px;font-size:11px;color:var(--p-sage-66)}
 .shop-browser .shop-fork-head b{font-weight:600;color:var(--p-sage-91)}
-.shop-browser .shop-fork-or{display:flex;align-items:center;gap:8px;margin:-1px 4px;font:500 10px 'DM Mono',monospace;color:var(--p-sage-66);text-transform:uppercase;letter-spacing:.08em}
+.shop-browser .shop-fork-or{display:flex;align-items:center;gap:8px;margin:-1px 4px;font:500 10px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--p-sage-66);text-transform:uppercase;letter-spacing:.08em}
 .shop-browser .shop-fork-or::before,.shop-browser .shop-fork-or::after{content:'';flex:1;height:1px;background:var(--p-forest-30)}
 .shop-browser .shop-item.is-fork-open{border-bottom:0}
 .shop-browser .shop-item.is-fork-closed{opacity:.45;filter:saturate(.5)}
