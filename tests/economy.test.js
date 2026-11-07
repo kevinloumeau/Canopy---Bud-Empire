@@ -53,14 +53,14 @@ test('fixed rewards scale with income but never shrink, and the scale is applied
   assert.equal(rewardScale(0),1);assert.equal(rewardScale(2),1);assert.equal(rewardScale(400),100);assert.equal(rewardScale(NaN),1);
   const now=Date.UTC(2026,8,17,12);
   const s={money:0,lifetime:0,empire:migrateProgression({daily:{day:0,streak:0}},now)};
-  assert.equal(dailyStatus(s.empire,now).reward,150);assert.equal(dailyStatus(s.empire,now,10).reward,1500);
-  assert.equal(claimDaily(s,now,10),1500);assert.equal(s.money,1500);assert.equal(claimDaily(s,now,10),0);
-  const scaledGoal=goalStatus(s.empire,0,4);assert.equal(scaledGoal.reward,600);
+  assert.equal(dailyStatus(s.empire,now).reward,1500);assert.equal(dailyStatus(s.empire,now,10).reward,15000);
+  assert.equal(claimDaily(s,now,10),15000);assert.equal(s.money,15000);assert.equal(claimDaily(s,now,10),0);
+  const scaledGoal=goalStatus(s.empire,0,4);assert.equal(scaledGoal.reward,240);
   recordGoal(s.empire,'pickup',10);assert.equal(claimGoal(s,0,4),0,'the scaled target is not met by ten pickups');
-  recordGoal(s.empire,'pickup',scaledGoal.target-10);assert.equal(claimGoal(s,0,4),600);
-  assert.equal(goalStatus(s.empire,0,0.5).reward,150);
+  recordGoal(s.empire,'pickup',scaledGoal.target-10);assert.equal(claimGoal(s,0,4),240);
+  assert.equal(goalStatus(s.empire,0,0.5).reward,60);
   // A revenue goal is minutes of income, not seconds: the target tracks income and the bonus stays below it.
-  const revenue=goalStatus(s.empire,2,400);assert.equal(revenue.kind,'revenue');assert.equal(revenue.target,200000);assert.equal(revenue.reward,80000);
+  const revenue=goalStatus(s.empire,2,400);assert.equal(revenue.kind,'revenue');assert.equal(revenue.target,200000);assert.equal(revenue.reward,28000);
   assert.ok(goalStatus(s.empire,2,4000).target/goalStatus(s.empire,2,400).target===10);
 });
 

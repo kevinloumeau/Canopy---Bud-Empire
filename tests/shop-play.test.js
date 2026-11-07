@@ -49,7 +49,7 @@ test('a shift closes after five minutes with a recap and advice',()=>{
   assert.equal(tickShift(play,100,{queue:9}),true);
   assert.equal(play.recap.served,1);assert.equal(play.recap.matches,1);assert.equal(play.recap.queuePeak,9);assert.equal(play.shift.served,0);assert.ok(play.recapUnread);
   assert.equal(shiftAdvice(play.recap).station,4);
-  assert.equal(tipFor(100),20);assert.equal(tipFor(1),1);
+  assert.equal(tipFor(100),1200,'a good pick tips 12 s of income');assert.equal(tipFor(1),50,'never under $50');assert.equal(tipFor(NaN),50);
 });
 
 test('the recap clock counts whole minutes down to the last one',()=>{

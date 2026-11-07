@@ -8,7 +8,9 @@ export const ABILITIES=[
   {name:'Pack sprint'},{name:'Fast orders'},{name:'Express pickup'}
 ];
 export const ABILITY_FACTOR=3;
-export const ABILITY_SALES=.15;
+// +30% sales a burst (was +15%: firing every crew on recharge added about 8% over a played half hour, too small to
+// feel; at +30% it adds about 30%, about what shop events add. 2026-11-07 review).
+export const ABILITY_SALES=.3;
 export const ABILITY_UNLOCK=3;
 export const ABILITY_SECONDS=90;
 export const ABILITY_RECHARGE=900;
