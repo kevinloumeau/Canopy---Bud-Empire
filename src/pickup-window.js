@@ -1,10 +1,11 @@
 // The walk-up pickup window for online orders (Kevin, 2026-10-20): a storefront bay with a hatch on the floor's front edge,
 // a clerk inside it, a line of customers along the front pavement and an A-frame sign on the kerb.
 //
-// It is the first online buy (Kevin picked "window first"): building it opens web orders, and until the drone port is
-// built every order is collected there, as fast as the line moves. Once drones fly, one order in three still walks
-// up. Orders are paid for when they are sent, like every online order; the tip jar adds a quarter on walk-ups. The
-// save keeps only what was bought (migrateWindow); the walk-ups themselves are passing scenery.
+// It is the first online buy (Kevin picked "window first"): building it opens web orders, and every order its line has
+// room for is collected there, as fast as the line moves. The drone port (2026-11) only flies the overflow: it used to
+// take two orders in three away from the window, which paid more, so building it cut online income. Orders are paid
+// for when they are sent, like every online order. The save keeps only what was bought (migrateWindow); the walk-ups
+// themselves are passing scenery.
 //
 // Walk-ups come up out of the subway (main.js passes the stairs' path), walk the pavement to the back of the line,
 // shuffle up to the window, take their bag and go back down. Positions are world units, like the rest of the map.
@@ -19,16 +20,15 @@ export const WINDOW_LINE_MAX = 6;
 // What the window costs and how it levels (Kevin, 2026-11-02: "more upgradeable"). Building it opens web orders at Lv 1;
 // from there it trains to Lv 75 like Security, its look changing at the station look levels (1, 10, 30, 50, 75).
 // Every level pays walk-ups 5% more and each new look doubles that; the look levels also add to what the hatch can do:
-//   Lv 10 awning and second hatch: a line of 10, 3 s hand-offs.   Lv 30 ready shelf: a line of 12, 2 s hand-offs, and
-//   with drones flying 1 order in 2 walks up.   Lv 50 lit blade sign: 25% more web orders.   Lv 75 flagship window:
-//   2 orders in 3 walk up.
+//   Lv 10 awning and second hatch: a line of 10, 3 s hand-offs.   Lv 30 ready shelf: a line of 12, 2 s hand-offs.
+//   Lv 50 lit blade sign: 25% more web orders.   Lv 75 flagship window: 1.5 s hand-offs.
 // Saves from before the track had a second hatch ($12K) and a tip jar ($20K) as one-off buys: the hatch is Lv 10, the
 // tip jar five levels on top.
 export const WINDOW_COST = 40000, WINDOW_MAX_LEVEL = 75, WINDOW_PAY_STEP = .05, WINDOW_SIGN_BOOST = 1.25;
 export const WINDOW_LOOK_LEVELS = [1, 10, 30, 50, 75];
 export const WINDOW_LOOKS = ['Hatch', 'Awning', 'Ready shelf', 'Blade sign', 'Flagship window'];
 // What each look level adds, in a few words for the unlock road.
-export const WINDOW_UNLOCKS = ['', 'Line of 10 · 3s hand-off', '1 in 2 walk up · 2s', '+25% web orders', '2 in 3 walk up'];
+export const WINDOW_UNLOCKS = ['', 'Line of 10 · 3s hand-off', 'Line of 12 · 2s hand-off', '+25% web orders', '1.5s hand-off'];
 export function migrateWindow(raw, droneOwned) {
   // Saves from before the window was its own buy got it free with the drone port, so they keep it.
   const owned = raw?.owned === true || droneOwned === true;
@@ -55,16 +55,16 @@ export function windowLevelsFor(level, money, limit = WINDOW_MAX_LEVEL) {
 // the way a station's output doubles at its tiers, so the window keeps pace with a growing shop.
 export function windowPay(level) { return level > 0 ? (1 + WINDOW_PAY_STEP * (level - 1)) * Math.pow(1.5, windowLook(level) - 1) : 1; }
 export function windowLineMax(w) { const l = windowLevel(w); return l >= 30 ? 12 : l >= 10 ? 10 : WINDOW_LINE_MAX; }
-export function windowServeSeconds(w) { const l = windowLevel(w); return l >= 30 ? 2 : l >= 10 ? 3 : 4.5; }
+export function windowServeSeconds(w) { const l = windowLevel(w); return l >= 75 ? 1.5 : l >= 30 ? 2 : l >= 10 ? 3 : 4.5; }
 // How many web orders arrive, against the plain rate: the lit blade sign at Lv 50 brings a quarter more.
 export function windowRequestBoost(w) { return windowLevel(w) >= 50 ? WINDOW_SIGN_BOOST : 1; }
-// Once drones fly, the share of orders still collected at the window: 1 in 3, 1 in 2 from Lv 30, 2 in 3 from Lv 75.
+// The old split of orders between drones and the window (1 in 3 walked up, 1 in 2 from Lv 30, 2 in 3 from Lv 75), kept
+// for old tests and tools; the game now sends the window every order its line has room for.
 export function walkupFraction(level) { return level >= 75 ? 2 / 3 : level >= 30 ? 1 / 2 : 1 / 3; }
 // Places free in the line.
 export function windowRoom(line, w) { return Math.max(0, windowLineMax(w) - inLine(line).length); }
 
-// Which online orders (by their number) are walk-ups once drones fly: every third, every second from Lv 30, two in
-// three from Lv 75.
+// The old split by order number: every third, every second from Lv 30, two in three from Lv 75.
 export function walkupShare(sequence, level = 1) { return level >= 75 ? sequence % 3 !== 0 : level >= 30 ? sequence % 2 === 1 : sequence % 3 === 2; }
 export function walkupCount(first, count, level = 1) {
   let n = 0;

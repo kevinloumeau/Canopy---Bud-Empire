@@ -74,3 +74,5 @@
 @keyframes handle-in-open{from{opacity:0;scale:.6}}
 @keyframes handle-in-closed{from{opacity:0;scale:.6}}
 @media(prefers-reduced-motion:reduce){.sheet .panel-header #panelToggle::after{animation:none}}
+/* The best buy is a strain: the Menu tab wears the same brass dot the badges use. */
+.sheet .tray-tabs button.has-pick::after{content:'';position:absolute;top:7px;left:calc(50% + 6px);width:8px;height:8px;border-radius:50%;background:var(--ui-brass);box-shadow:0 0 0 2px #143d21,0 0 8px #e9c96a66;pointer-events:none}

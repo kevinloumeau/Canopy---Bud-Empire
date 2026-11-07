@@ -4,11 +4,13 @@ import {manageDialog} from './dialog-focus.js';
 import {tieLast} from './no-lone-words.js';
 
 // Shop activity, as on iOS: a pill on the map that leads with whatever needs the player now. Walk-ins sometimes ask the
-// budtender for a pick (a good match tips 20% at pickup), every five minutes of play closes a shift with a recap and one
+// budtender for a pick (a good match tips about 12 seconds of income at pickup), every five minutes of play closes a shift with a recap and one
 // piece of advice.
 export const SHIFT_SECONDS=300;
 export const MOMENT_SECONDS=18;
-export const TIP_SHARE=.2;
+// A good pick tips TIP_SECONDS of the shop's income (never under $50, like a shop-event tip). It used to tip 20% of one
+// sale, under a quarter of a second of income, every minute or so (2026-11-07 review).
+export const TIP_SECONDS=12, TIP_MIN=50;
 const cap=(n,max=1e300)=>Number.isFinite(n)?Math.max(0,Math.min(max,n)):0;
 const freshShift=()=>({seconds:0,served:0,matches:0,earned:0,deliveries:0,transfers:0,queuePeak:0,waitTotal:0,stockoutSeconds:0});
 function migrateShift(raw){const shift=freshShift();for(const key of Object.keys(shift))shift[key]=cap(raw?.[key],key==='seconds'?SHIFT_SECONDS:1e300);return shift;}
@@ -48,7 +50,7 @@ export function judgeChoice(moment,index){
   const option=moment.choices[index];
   return option?{option,matched:moment.formatRequest?option.format===moment.target:option.type===moment.target}:null;
 }
-export function tipFor(sale){return Math.max(1,Math.round(sale*TIP_SHARE));}
+export function tipFor(income){return Math.max(TIP_MIN,Math.round(Math.max(0,Number.isFinite(income)?income:0)*TIP_SECONDS));}
 export function recordServed(play,customer,earned){
   const shift=play.shift;shift.served++;shift.waitTotal+=cap(customer.waitSeconds);shift.earned+=cap(earned);
   if(customer.momentMatched){shift.matches++;play.matches++}

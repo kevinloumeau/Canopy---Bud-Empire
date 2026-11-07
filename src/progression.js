@@ -26,7 +26,11 @@ export function count(n){return Math.round(Number.isFinite(n)?n:0).toLocaleStrin
 export function times(x){x=Number.isFinite(x)?x:0;return (x>=100?count(x):trimZeros(x.toFixed(x>=10?1:2)))+'\u00d7';}
 export const DAY = 86400000;
 export const HOUR = 3600000;
-export const DAILY = [150, 250, 400, 600, 900, 1300, 2500];
+// Daily rewards in quarter-seconds of income (rewardScale is income over four): Day N pays about N x 6 minutes of
+// income, so a week is worth coming back for (2026-11-07 review: the old week was 25 minutes in all, one goal a day).
+// Day 7 also banks a 2x contract boost (DAILY_BOOST_DAY).
+export const DAILY = [1500, 3000, 4500, 6000, 7500, 9000, 10500];
+export const DAILY_BOOST_DAY = 7;
 export const STORES = [
   {name:'Riverside', price:5000, goal:5000, rate:2, share:.05, detail:'A neighborhood shop with a steady local following.'},
   {name:'Old Town', price:150000, goal:200000, rate:9, share:.08, detail:'A boutique destination for the historic district.'},
@@ -143,7 +147,7 @@ export function migrateProgression(raw, now=Date.now()) {
   const p={network:migrateOperations(r.network),version:4, retailBoost:Math.max(1,num(r.retailBoost,1,64)), flagship:Number.isFinite(r.flagship)&&r.flagship>0?Math.min(r.flagship,BIG):0, prestige:num(r.prestige,0,999), ...prestigeShares(r), clock, activeStore:num(r.activeStore,0,STORES.length), career:num(r.career,0,CAREER.length), daily:{
     day:num(r.daily?.day,0), streak:num(r.daily?.streak,0,7)
   }, stores:STORES.map((_,i)=>({level:num(r.stores?.[i]?.level,0,10),projects:[0,1,2].map(j=>r.stores?.[i]?.projects?.[j]===true), manager:MANAGERS.some(m=>m.id===r.stores?.[i]?.manager)&&!(Array.isArray(r.stores)?r.stores:[]).slice(0,i).some(s=>s?.manager===r.stores?.[i]?.manager)?r.stores[i].manager:'none', featured:PRODUCTS.includes(r.stores?.[i]?.featured)?r.stores[i].featured:'everyday', loyalty:num(r.stores?.[i]?.loyalty,0,1000), served:num(r.stores?.[i]?.served), serviceClock:num(r.stores?.[i]?.serviceClock,0,11), lines:migrateBranchLine(r.stores?.[i]?.lines,num(r.stores?.[i]?.level,0,10))})),
-  contracts:migrateContracts(r.contracts), season:migrateSeason(r.season), badges:(Array.isArray(r.badges)?r.badges:[]).filter(b=>typeof b==='string'&&BADGE_ID.test(b)).filter((b,i,a)=>a.indexOf(b)===i).slice(0,200),
+  contracts:migrateContracts(r.contracts,clock), season:migrateSeason(r.season), badges:(Array.isArray(r.badges)?r.badges:[]).filter(b=>typeof b==='string'&&BADGE_ID.test(b)).filter((b,i,a)=>a.indexOf(b)===i).slice(0,200),
   trophies:num(r.trophies), rewards:[0,1,2].map(i=>r.rewards?.[i]===true), reputation:num(r.reputation,0,1000), counters:Object.fromEntries(GOAL_KINDS.map(k=>[k,num(r.counters?.[k])])), goals:[0,1,2].map(i=>({round:num(r.goals?.[i]?.round),start:num(r.goals?.[i]?.start),kind:GOAL_KINDS.includes(r.goals?.[i]?.kind)?r.goals[i].kind:legacyGoalKind(i,num(r.goals?.[i]?.round))})), goalsCompleted:num(r.goalsCompleted), returnReport:r.returnReport&&Array.isArray(r.returnReport.earnings)?{seconds:num(r.returnReport.seconds),earnings:[...Array(STORES.length+1)].map((_,i)=>num(r.returnReport.earnings[i])),goals:num(r.returnReport.goals,0,3),served:num(r.returnReport.served)}:null,
   stars:STORES.map((_,i)=>{const v=r.stars?.[i];return Number.isInteger(v)&&v>=0&&v<=7?v:0;}),
   runStars:STORES.map((_,i)=>{const v=r.runStars?.[i];return Number.isInteger(v)&&v>=0&&v<=7?v:0;})};
@@ -164,7 +168,8 @@ export function dailyStatus(p, now=Date.now(), scale=1) {
 }
 export function claimDaily(state, now=Date.now(), scale=1) {
   const p=state.empire, d=dailyStatus(p,now,scale);if(!d.available)return 0;
-  p.daily={day:Math.floor(p.clock/DAY),streak:d.day};state.money+=d.reward;return d.reward;
+  p.daily={day:Math.floor(p.clock/DAY),streak:d.day};state.money+=d.reward;
+  if(d.day===DAILY_BOOST_DAY)p.contracts.bank=Math.min(CONTRACT_BANK_MAX,p.contracts.bank+1);return d.reward;
 }
 // p.stake is the Founder's stake perk level, mirrored from state.perks by main.js (+10% sales a level).
 export function saleMultiplier(p) {return (1+p.career*.05)*(1+(p.shares||0)*SHARE_BONUS)*starMultiplier(p)*(1+.1*(p.stake||0));}
@@ -244,7 +249,7 @@ export function branchStationTier(level){return stationTier(level);}
 export function buyBranchStation(state,i,j){
   const s=state.empire.stores[i];if(!s?.level||!BRANCH_LINE[j]||s.lines[j]>=BRANCH_LINE_MAX)return false;
   const cost=branchStationCost(state.empire,i,j,s.lines[j]);if(state.money<cost)return false;
-  const before=storeRate(state.empire,i);state.money-=cost;s.lines[j]++;state.empire.network.stores[i].incomeGain=storeRate(state.empire,i)-before;recordGoal(state.empire,'upgrade',1);return true;
+  const before=storeRate(state.empire,i);state.money-=cost;s.lines[j]++;state.empire.network.stores[i].incomeGain=storeRate(state.empire,i)-before;recordGoal(state.empire,'upgrade',cost);return true;
 }
 // As many levels of one station as the cash buys (the flagship's Max).
 export function branchStationMax(state,i,j){
@@ -273,7 +278,8 @@ export function openStore(state,i){
 }
 // Contracts replace the old hourly events: a 30 to 60 minute goal with a twist rule that changes how the shop plays while
 // it runs (faster walk-ins, a door full of VIPs, half the line asking for edibles). The player starts one when they
-// like; the clock is real time, so it keeps running while paused or away, and offline earnings never count. Finishing
+// like; the clock is shop time (game seconds, so 2x and 4x speed run it faster and it stops while paused or away), and
+// offline earnings never count. Finishing
 // banks a boost (2x sales for 10 minutes) that the player fires whenever they want, plus a trophy; the first three also
 // leave a keepsake on every branch. Running out of time costs nothing and the next offer comes up.
 export const CONTRACTS=[
@@ -286,10 +292,16 @@ export const CONTRACTS=[
 ];
 export const CONTRACT_BOOST_SECONDS=600, CONTRACT_BANK_MAX=9;
 const CONTRACT_ID=new Map(CONTRACTS.map((c,i)=>[c.id,i]));
-function migrateContracts(r){
+function migrateContracts(r,clock){
   const c=r&&typeof r==='object'?r:{},a=c.active&&typeof c.active==='object'&&CONTRACT_ID.has(c.active.id)?c.active:null;
   return {round:num(c.round),done:num(c.done),bank:num(c.bank,0,CONTRACT_BANK_MAX),boost:Math.min(CONTRACT_BOOST_SECONDS*CONTRACT_BANK_MAX,Math.max(0,Number.isFinite(c.boost)?c.boost:0)),
-    active:a?{id:a.id,start:num(a.start),end:num(a.end),target:Math.max(1,num(a.target,1)),progress:num(a.progress)}:null};
+    active:a?{id:a.id,left:contractLeft(a,clock),target:Math.max(1,num(a.target,1)),progress:num(a.progress)}:null};
+}
+// Seconds of shop time left. Saves from before 2026-11-07 stored a wall-clock end; they keep what was left of it then.
+function contractLeft(a,clock){
+  const max=CONTRACTS[CONTRACT_ID.get(a.id)].minutes*60;
+  if(Number.isFinite(a.left))return Math.max(0,Math.min(max,a.left));
+  return Number.isFinite(a.end)?Math.max(0,Math.min(max,(a.end-(Number.isFinite(clock)?clock:Date.now()))/1000)):0;
 }
 // A strain on the menu sells as this type (types are stocked per strain).
 function sellsOnMenu(state,type){const rows=state.productMenu?.byStrain;if(!Array.isArray(rows))return false;const menu=Array.isArray(state.menuStrains)&&state.menuStrains.length?state.menuStrains:rows.map((_,i)=>i);return menu.some(i=>rows[i]?.[type]===true);}
@@ -300,10 +312,11 @@ function contractReady(def,state){
   if(def.needs==='prerolls')return sellsOnMenu(state,1);
   return true;
 }
-// With the shop's current pace for the contract's kind (per minute, from main.js), the target is 60% of what that pace
-// makes in the time, so the twist has to be played into; without one (deliveries, big spenders) it grows with the log of
+// With the shop's current pace for the contract's kind (per minute, from main.js, on the fitted income model), the target
+// is 80% of what that pace makes in the time, so the twist has to be played into: measured 2026-11-07, a shop left alone
+// for the whole contract lands at about 110-120%, at any game speed, and one that keeps growing finishes early; without one (deliveries, big spenders) it grows with the log of
 // income as shift goals do, capped. Never below the base.
-export const CONTRACT_PACE_SHARE=.6;
+export const CONTRACT_PACE_SHARE=.8;
 export function contractTarget(def,scale=1,pace=0){
   if(Number.isFinite(pace)&&pace>0)return Math.max(def.base,Math.round(pace*def.minutes*CONTRACT_PACE_SHARE));
   const growth=1+Math.log2(Math.max(1,Number.isFinite(scale)?scale:1));return Math.max(1,Math.round(def.base*Math.min(def.cap,growth)));
@@ -315,7 +328,7 @@ export function contractOffer(state,scale=1,pace){
 }
 export function activeContract(p,now=Date.now()){
   const a=p.contracts.active;if(!a)return null;const i=CONTRACT_ID.get(a.id),def=CONTRACTS[i];
-  return {...def,index:i,target:a.target,progress:Math.min(a.target,a.progress),goal:def.goalCopy(a.target),remaining:Math.max(0,a.end-time(p,now)),open:time(p,now)<a.end};
+  return {...def,index:i,target:a.target,progress:Math.min(a.target,a.progress),goal:def.goalCopy(a.target),remaining:Math.max(0,a.left)*1000,open:a.left>0};
 }
 // The rule in force right now, for main.js to bend the shop with ('traffic', 'vip', 'edibles', ...), or ''.
 export function contractTwist(p,now=Date.now()){const c=activeContract(p,now);return c&&c.open?c.twist:'';}
@@ -327,7 +340,7 @@ export function contractFactor(p,kind,now=Date.now()){
 }
 export function startContract(state,now=Date.now(),scale=1,pace){
   const p=state.empire;if(activeContract(p,now))return null;const o=contractOffer(state,scale,pace);if(!o)return null;
-  const t=time(p,now);p.contracts.active={id:o.id,start:t,end:t+o.minutes*60000,target:o.target,progress:0};return activeContract(p,now);
+  p.contracts.active={id:o.id,left:o.minutes*60,target:o.target,progress:0};return activeContract(p,now);
 }
 // Passes on the offered contract for the next one, only while none is running.
 export function skipContract(state,now=Date.now(),scale=1){
@@ -343,6 +356,8 @@ export function settleContract(p,now=Date.now()){
 }
 export function useContractBoost(p){const k=p.contracts;if(k.bank<1)return false;k.bank--;k.boost+=CONTRACT_BOOST_SECONDS;return true;}
 export function tickContractBoost(p,seconds){if(p.contracts.boost>0)p.contracts.boost=Math.max(0,p.contracts.boost-Math.max(0,seconds||0));}
+// The running contract's clock, in shop seconds (main.js calls it from simulate with the game step).
+export function tickContract(p,seconds){const a=p.contracts.active;if(a&&a.left>0)a.left=Math.max(0,a.left-Math.max(0,Number.isFinite(seconds)?seconds:0));}
 export function contractBoostFactor(p){return p.contracts.boost>0?2:1;}
 // Every counted action goes through here: shift goals count it, and the running contract counts it while its clock runs.
 export function recordEvent(p,kind,count,now=Date.now()){
@@ -406,7 +421,10 @@ export function recordGoal(p,kind,count){if(Object.prototype.hasOwnProperty.call
 // what the shop can do right now, so a new shop never waits on a delivery pad it has not built. Every three goals
 // collected close a shift and pay a shift bonus on top.
 export const GOAL_KINDS=['pickup','spender','upgrade','online','invest','revenue'];
-const GOAL_REWARDS={pickup:150,spender:200,upgrade:200,online:250,invest:300,revenue:200};
+// Rewards in quarter-seconds of income: a goal pays about 15-22 s of income and the shift bonus 50 s, so goals sit
+// near a quarter of sales instead of matching them (2026-11-07 review).
+const GOAL_REWARDS={pickup:60,spender:70,upgrade:70,online:80,invest:90,revenue:70};
+export const SHIFT_BONUS=200;
 export const SHIFT_LENGTH=3;
 // Older saves stored no kind; their slots ran pickup, deliveries, then revenue alternating with branch work.
 function legacyGoalKind(i,round){return i===0?'pickup':i===1?'online':round%2===0?'revenue':'invest';}
@@ -431,16 +449,17 @@ export function goalStatus(p,i,scale=1){
   // Targets cycle for variety but grow with income (scale) so goals keep demanding more as the empire grows, not just
   // cycling forever at starter size. Counts grow with the log of income; the revenue target grows with income itself
   // (scale is income per second over four, so the target is 2–4 minutes of takings) and pays back a fraction of it,
-  // otherwise a late-game shop earns the target in seconds and collects more than it earned. Upgrades get dearer on
-  // their own and big spenders arrive at their own pace, so those counts stay small.
+  // otherwise a late-game shop earns the target in seconds and collects more than it earned. The upgrade goal counts cash
+  // spent on upgrades, 1-2 minutes of income, so a $20 crew tap no longer counts as much as a new station look. Big
+  // spenders arrive at their own pace, so that count stays small.
   const linear=Math.max(1,Number.isFinite(scale)?scale:1),growth=1+Math.log2(linear);
-  const base={pickup:10+(g.round%3)*5,spender:1+g.round%2,upgrade:2+g.round%3,online:2,invest:1,revenue:500+(g.round%3)*250}[kind];
-  const target=Math.max(1,Math.round(kind==='revenue'?base*linear:kind==='spender'||kind==='upgrade'?base:base*growth));
-  const title={pickup:'Serve '+abbr(target)+' customers',spender:target>1?'Tap '+target+' shop events':'Tap a shop event',upgrade:'Make '+target+' upgrades',
+  const base={pickup:10+(g.round%3)*5,spender:1+g.round%2,upgrade:240+(g.round%3)*120,online:2,invest:1,revenue:500+(g.round%3)*250}[kind];
+  const target=Math.max(1,Math.round(kind==='revenue'||kind==='upgrade'?base*linear:kind==='spender'?base:base*growth));
+  const title={pickup:'Serve '+abbr(target)+' customers',spender:target>1?'Tap '+target+' shop events':'Tap a shop event',upgrade:'Spend $'+abbr(target)+' on upgrades',
     online:'Complete '+abbr(target)+' deliveries',invest:target>1?'Improve '+target+' branches or projects':'Improve a branch or build a project',revenue:'Earn $'+abbr(target)}[kind];
   return {kind,target,reward:scaledReward(GOAL_REWARDS[kind],scale),progress:Math.min(target,Math.max(0,p.counters[kind]-g.start)),title,hint:kind==='spender'?'Tap the gold tag when one shows up':''};
 }
-export function shiftStatus(p,scale=1){return {number:Math.floor(p.goalsCompleted/SHIFT_LENGTH)+1,done:p.goalsCompleted%SHIFT_LENGTH,bonus:scaledReward(450,scale)};}
+export function shiftStatus(p,scale=1){return {number:Math.floor(p.goalsCompleted/SHIFT_LENGTH)+1,done:p.goalsCompleted%SHIFT_LENGTH,bonus:scaledReward(SHIFT_BONUS,scale)};}
 // Pays the goal and, when it is the shift's last, the shift bonus; returns everything paid.
 export function claimGoal(state,i,scale=1){
   if(!Number.isInteger(i)||i<0||i>2)return 0;
