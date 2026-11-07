@@ -36,7 +36,7 @@ body[data-store-view=branch] #customerStatus{display:none}
 /* Stock strip: the old HUD stock row lives above the tray tabs, replacing the mood meters. Each item still opens its station. */
 .sheet .customer-mood{display:none!important}
 .sheet #stockStatus{display:flex!important;justify-content:space-between;align-items:center;gap:4px;flex-shrink:0;margin:0;padding:8px 6px 4px;border-top:1px solid #d8ecd31c;font-family:inherit;letter-spacing:0;color:var(--p-lime-71)}
-.sheet.collapsed #stockStatus{border-top:0;padding-top:4px}
+.sheet.collapsed #stockStatus{border-top-color:transparent;padding-top:3px}
 .sheet #stockStatus .stock-item{display:flex;align-items:center;gap:6px;min-width:0;min-height:36px;padding:2px 8px;border-radius:9px;cursor:pointer}
 .sheet #stockStatus .stock-item svg{width:18px;height:20px;flex-shrink:0}
 .sheet #stockStatus .stock-item>span{display:grid;gap:1px;line-height:1.1}

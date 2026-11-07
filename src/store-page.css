@@ -80,3 +80,20 @@
 /* main.js still renders the old project rows (their buttons are what the upgrade tiles press); they no longer show. */
 .sheet .empire-screen .op-pane>.branch-projects{display:none!important}
 .sheet .empire-screen .page-hero .page-buy.is-off{display:none}
+
+/* ---- A store not open yet: theme and earnings in the hero, the steps to open as tiles, then the star goals at the
+   store before, each a tap that goes there. ---- */
+.page-hero.is-locked .map-tile-icon{filter:grayscale(.55) brightness(.8) drop-shadow(0 2px 2px #06180c66)}
+.page-hero.is-building .map-ring-fill{stroke:var(--ui-brass)}
+.page-hero.is-building .page-hero-copy small{color:var(--ui-brass);font-variant-numeric:tabular-nums}
+.sheet .empire-screen .page-hero .page-go{display:inline-flex;align-items:center;gap:2px;padding:0 8px 0 13px;font:600 12px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:0}
+.sheet .empire-screen .page-hero .page-go[hidden]{display:none}
+.page-chevron{width:15px;height:15px;opacity:.85}
+.sheet .empire-screen .page-group.is-unlock{margin-top:5px}
+.sheet .empire-screen .page-tiles.is-two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.sheet .empire-screen .page-group.is-prev .page-head{margin-bottom:1px}
+.sheet .empire-screen .page-group.is-prev button.page-tile.is-goal{cursor:pointer}
+/* Fits the half sheet: hero, the three steps and the star rows with no scrolling. */
+.sheet .empire-screen .page-group.is-unlock .page-tile{padding:3px 2px 2px;gap:2px}
+.sheet .empire-screen .page-group.is-unlock .map-ring{width:48px;height:48px}
+.sheet .empire-screen .page-group.is-prev{margin-top:2px;padding-top:3px}
