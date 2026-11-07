@@ -1055,7 +1055,11 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var hudEdges=null;
   function hudBottom(){if(!hudEdges){var hud=document.querySelector('.hud'),markers=$('markers');hudEdges={bottom:hud?hud.getBoundingClientRect().bottom:0,markersTop:markers?markers.getBoundingClientRect().top:0}}return hudEdges.bottom}
   function forgetHudEdges(){hudEdges=null;updateMarkers.key=null}
-  if(window.ResizeObserver){var hudWatch=new ResizeObserver(forgetHudEdges);hudWatch.observe(document.querySelector('.hud'))}
+  // The overlays under the bar (top lane, map buttons, panels) hang off --hud-height. The bar is hidden behind the age
+  // check and loading cover at start, where it measures 0 and the lane sat on top of it (Kevin, 2026-11-05), so the
+  // height is set again whenever the bar's box changes, including when it first appears, and a hidden bar is skipped.
+  function syncHudHeight(){forgetHudEdges();var bottom=hudBottom();if(bottom>0){var v=bottom+'px';if(document.documentElement.style.getPropertyValue('--hud-height')!==v){document.documentElement.style.setProperty('--hud-height',v);if(window.__shiftReady)fitLane()}}}
+  if(window.ResizeObserver){var hudWatch=new ResizeObserver(syncHudHeight);hudWatch.observe(document.querySelector('.hud'))}
   window.addEventListener('resize',forgetHudEdges);
 
   function resize(){hudEdges=null;var rect=world.getBoundingClientRect(),oldWidth=width,oldHeight=height,oldDpr=dpr;dpr=Math.min(window.devicePixelRatio||1,dprCap);width=Math.max(1,Math.round(rect.width));height=Math.max(1,Math.round(rect.height));if(oldWidth!==width||oldHeight!==height||oldDpr!==dpr){canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);}canvas.style.width=width+'px';canvas.style.height=height+'px';ctx.setTransform(dpr,0,0,dpr,0,0);applyCamera()}
@@ -3084,7 +3088,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       tags.push({el:leaseMarker,name:STORES[lease].name,price:leaseBuilding?leaseSkip:leasePrice,build:leaseKey,buildBuys:true,locked:leaseShut&&!leaseBuilding,x:lot.tag.x,y:lot.tag.y,z:lot.tag.z,buys:leaseBuilding?[{label:'Finish now',price:leaseSkip,go:function(){pickedTag=null;skipBuildNow(leaseKey)}}]:[{label:'Open',price:leasePrice,best:state.money>=leasePrice,go:function(){pickedTag=null;$('branchBuy'+lease).click()}}]})}
     // The ATM: Build over its ghost; once built its sign carries the level and its box sells levels and machines.
     var atmTag=atmTagInfo();if(atmTag)tags.push(atmTag);
-    var counterAt=nextOrderCounter();if(counterAt)tags.push({el:counterMarker,name:'Counter',price:counterAt.price,x:counterAt.x,y:2.1,z:counterAt.z,buys:[{label:'Buy',price:counterAt.price,go:expandOrderCounter}]});
+    var counterAt=nextOrderCounter();if(counterAt)tags.push({el:counterMarker,name:'Counter',price:counterAt.price,x:counterAt.x,y:2.1,z:counterAt.z,buys:[{label:'Buy',price:counterAt.price,go:expandOrderCounters}]});
     return tags}
   var ATM_NUMBERS=['2nd','3rd'];
   function atmTagInfo(){if(!state.lines[4])return null;var atm=state.atm,spot=ATM_SPOTS[0],fix=state.shopOpen?recommendation():null,best=!!fix&&fix.kind==='atm';
@@ -3504,7 +3508,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // The map's framing follows the sheet on the same clock: dockGlide eases the camera's dock height with the sheet's own
   // animation (its currentTime and easing), stepped in the render loop, so the scene and the glass move as one, with no
   // per-frame layout reads and no frame of lag behind the sheet.
-  var sheetOpening=false,dockGlide=null,SHEET_EASE=cubicBezier(.2,.8,.2,1),SHEET_GLIDE_MS=380;
+  var sheetOpening=false,dockGlide=null,sheetMorph=null,SHEET_EASE=cubicBezier(.2,.8,.2,1),SHEET_GLIDE_MS=380;
   function cubicBezier(x1,y1,x2,y2){
     function at(a,b,t){return((1-3*b+3*a)*t+(3*b-6*a))*t*t+3*a*t}
     function slope(a,b,t){return 3*(1-3*b+3*a)*t*t+2*(3*b-6*a)*t+3*a}
@@ -3517,6 +3521,9 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var next=g.from+(g.to-g.from)*SHEET_EASE(t);if(Math.abs(next-dockHeight)<.01)return;dockHeight=next;applyCamera()}
   function settleSheet(target,startHeight){
     var sheet=$('sheet'),from=startHeight===undefined?sheet.getBoundingClientRect().height:startHeight;
+    // A fold or unfold already under way hands over where it is: the header's height and the pane's fade carry on from there.
+    var header=sheet.querySelector('.panel-header'),headFrom=header.getBoundingClientRect().height,was=sheetMorph,paneFrom=0;
+    if(was){var live=sheet.querySelector('[data-pane]:not([hidden])');paneFrom=was.folded||!live?0:+getComputedStyle(live).opacity;if(was.head)was.head.cancel();if(was.fade)was.fade.cancel();sheetMorph=null}
     if(sheetGlide){sheetGlide.cancel();sheetGlide=null}
     if(paneGlide){paneGlide.cancel();paneGlide=null}
     sheet.style.height='';sheet.classList.add('fluid');
@@ -3527,11 +3534,14 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // The header's own padding and handle size ease between the open and collapsed shapes; .settling holds those
     // transitions while the sheet is measured and when it lands, so the glide ends exactly where it was aimed instead of
     // the header easing the sheet a further 10px afterwards.
+    sheet.classList.remove('folding','unfolding');
     sheet.classList.add('settling');sheet.classList.remove('fluid');if(target==='collapsed')sheet.classList.add('collapsed');
-    var to=sheet.getBoundingClientRect().height;
+    var to=sheet.getBoundingClientRect().height,headTo=header.getBoundingClientRect().height;
     if(target==='collapsed')sheet.classList.remove('collapsed');
+    // Opening from the strip, the header starts from the strip's own handle height.
+    if(startHeight!==undefined&&!was){sheet.classList.add('collapsed');headFrom=header.getBoundingClientRect().height;sheet.classList.remove('collapsed')}
     sheet.getBoundingClientRect();sheet.classList.remove('settling');
-    function finish(){sheet.classList.add('settling');sheet.classList.remove('fluid');if(target==='collapsed')sheet.classList.add('collapsed');sheet.getBoundingClientRect();sheet.classList.remove('settling');sheetGlide=null;dockGlide=null;fitControls()}
+    function finish(){sheetMorph=null;sheet.classList.add('settling');sheet.classList.remove('fluid','folding','unfolding');if(target==='collapsed')sheet.classList.add('collapsed');sheet.getBoundingClientRect();sheet.classList.remove('settling');sheetGlide=null;dockGlide=null;fitControls()}
     if(motionPreference.matches||typeof sheet.animate!=='function'||Math.abs(to-from)<2){finish();return}
     sheet.classList.add('fluid');
     // One motion from edge to edge: the sheet's height glides between its measured start and end (the pane stretching
@@ -3539,11 +3549,23 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // map framed for the half-open sheet it covers.
     var ms=SHEET_GLIDE_MS,pane=sheet.querySelector('[data-pane]:not([hidden])');
     var run=sheetGlide=sheet.animate([{height:from+'px'},{height:to+'px'}],{duration:ms,easing:'cubic-bezier(.2,.8,.2,1)'});run.target=target;
-    if(pane&&(target==='collapsed'||startHeight!==undefined))pane.animate(target==='collapsed'?[{opacity:1},{opacity:0}]:[{opacity:0},{opacity:1}],{duration:ms*.7,easing:'ease-out',delay:target==='collapsed'?0:ms*.15,fill:'backwards'});
+    // Between the open sheet and the strip, the stats and the tab bar never move: they ride the sheet's bottom edge while
+    // the header eases between its two heights on the same clock and the pane folds away above them (.folding and
+    // .unfolding in sheet-height.css). Folding, the header's title and buttons fade first; halfway, once the pane is
+    // gone, the sheet takes its collapsed shape and the handle grows in as it lands.
+    if(target==='collapsed'||startHeight!==undefined||was){
+      var morph=sheetMorph={run:run,folded:false,head:null,fade:null};
+      sheet.classList.add(target==='collapsed'?'folding':'unfolding');
+      if(Math.abs(headTo-headFrom)>.5)morph.head=header.animate([{minHeight:headFrom+'px'},{minHeight:headTo+'px'}],{duration:ms,easing:'cubic-bezier(.2,.8,.2,1)'});
+      // The pane's fade keeps the sheet's clock, so the shape change lands on the same frame however the page is paced.
+      if(target==='collapsed'){var fade=morph.fade=pane&&pane.animate([{opacity:was?paneFrom:1},{opacity:0}],{duration:ms*.42,easing:'ease-out',fill:'forwards'});
+        var fold=function(){if(sheetMorph!==morph)return;sheet.classList.add('collapsed');morph.folded=true;if(fade)fade.cancel();morph.fade=null};if(fade)fade.onfinish=fold;else fold()}
+      else if(pane)morph.fade=pane.animate([{opacity:paneFrom},{opacity:1}],{duration:ms*.7,easing:'ease-out',delay:was?0:ms*.15,fill:'backwards'});
+    }
     var dockTo=target==='tall'?(sheetHalfHeight||dockHeight):to;
     dockGlide=Math.abs(dockTo-dockHeight)<1?null:{run:run,from:dockHeight,to:dockTo,ms:ms};render.invalidated=true;
     run.onfinish=function(){if(sheetGlide===run)finish()};
-    run.oncancel=function(){if(sheetGlide===run){sheet.classList.remove('fluid');sheetGlide=null;if(dockGlide&&dockGlide.run===run)dockGlide=null}};
+    run.oncancel=function(){if(sheetGlide===run){sheet.classList.remove('fluid','folding','unfolding');sheetGlide=null;if(sheetMorph&&sheetMorph.run===run){if(sheetMorph.head)sheetMorph.head.cancel();if(sheetMorph.fade)sheetMorph.fade.cancel();sheetMorph=null}if(dockGlide&&dockGlide.run===run)dockGlide=null}};
   }
   $('panelExpand').onclick=function(){settleSheet($('sheet').classList.contains('tall')?'half':'tall')};
   // A drag can start anywhere on the sheet that does not scroll: the header, the stats strip and the tab bar. Their
@@ -4451,15 +4473,25 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   }
   // The finger distance that stretches the map by `shown` past the edge (rubberBand run backwards).
   function unstretch(shown,size){if(!shown)return 0;var a=Math.min(Math.abs(shown),size*.98);return Math.sign(shown)*(1/(1-a/size)-1)*size/.55}
-  canvas.addEventListener('pointerdown',function(e){mapHintActivity();districtGlide=null;try{canvas.setPointerCapture(e.pointerId)}catch(err){}touches[e.pointerId]={x:e.clientX,y:e.clientY};
+  // A finger on a station sign or the Manage tag is a finger on the map too: it pans and pinches with the others, and a
+  // still tap still opens what it landed on. With the menu up the map is short and its signs cover much of it, so
+  // pinches that caught a sign did nothing (Kevin, 2026-11-05). The zoom buttons keep their own presses.
+  var world=canvas.parentElement;
+  function onMap(t){return t===canvas||!!(t&&t.closest&&t.closest('#markers,#branchMapMarker'))}
+  // A sign a pinch finger rested on without moving is not tapped when the fingers lift.
+  var signTapVoid=-1e9;
+  world.addEventListener('click',function(e){if(e.target!==canvas&&onMap(e.target)&&performance.now()-signTapVoid<500){signTapVoid=-1e9;e.stopPropagation();e.preventDefault()}},true);
+  world.addEventListener('pointerdown',function(e){if(!onMap(e.target))return;mapHintActivity();districtGlide=null;if(e.target===canvas)try{canvas.setPointerCapture(e.pointerId)}catch(err){}touches[e.pointerId]={x:e.clientX,y:e.clientY};
     // Catching a gliding map stops it, as on iOS, and is not a tap on whatever is under the finger.
     var caught=mapGesture.mode==='coast'&&Math.hypot(mapGesture.vx,mapGesture.vy)>60;if(mapGesture.mode==='coast'){mapGesture.vx=mapGesture.vy=0}
     if(Object.keys(touches).length===1){gestureMoved=caught;gestureOrigin={x:e.clientX,y:e.clientY};mapGesture.dx=mapGesture.dy=0;mapGesture.scale=1;mapGesture.samples=[];mapGesture.trail={x:0,y:0};mapGesture.liftAt=0}else{gestureMoved=true;mapGesture.samples=[]}render.invalidated=true});
-  canvas.addEventListener('pointermove',function(e){
+  world.addEventListener('pointermove',function(e){
     var t=touches[e.pointerId];if(!t)return;moveHint();var g=mapGesture,ids=Object.keys(touches),before=ids.length>1?ids.slice(0,2).map(function(id){return{x:touches[id].x,y:touches[id].y}}):null;
     var mx=e.clientX-t.x,my=e.clientY-t.y;t.x=e.clientX;t.y=e.clientY;
     if(!gestureMoved&&gestureOrigin&&Math.hypot(e.clientX-gestureOrigin.x,e.clientY-gestureOrigin.y)>5)gestureMoved=true;
     if(!gestureMoved)return;
+    // A sign's finger that has started moving the map hands itself to the canvas, so it keeps up off the sign and its lift is no tap.
+    if(e.target!==canvas&&!(canvas.hasPointerCapture&&canvas.hasPointerCapture(e.pointerId)))try{canvas.setPointerCapture(e.pointerId)}catch(err){}
     if(before){
       // Two fingers: the map follows their midpoint and scales with their spread, around that midpoint.
       var after=ids.slice(0,2).map(function(id){return touches[id]}),d0=Math.hypot(before[0].x-before[1].x,before[0].y-before[1].y),d1=Math.hypot(after[0].x-after[1].x,after[0].y-after[1].y);
@@ -4471,10 +4503,11 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   });
   // A finger lifting takes its last move with it before it is forgotten.
   function flushGesture(e){if(e&&Object.keys(touches).length===1)mapGesture.liftAt=e.timeStamp;if(gestureMoved&&(mapGesture.dx||mapGesture.dy||mapGesture.scale!==1))stepMapGesture(performance.now())}
+  world.addEventListener('pointerup',function(e){if(!touches[e.pointerId])return;mapHintActivity();flushGesture(e);var onCanvas=e.target===canvas;if(gestureMoved&&!onCanvas)signTapVoid=performance.now();if(!onCanvas);else if(!gestureMoved&&Object.keys(touches).length===1&&state.empire.activeStore){var br=canvas.getBoundingClientRect(),f=BRANCH_THEMES[state.empire.activeStore-1].focus,fo=districtCentre(state.empire.activeStore-1),q=project(f.x+fo.x,f.y,f.z+fo.z);if(Math.hypot(e.clientX-br.left-q.x,e.clientY-br.top-q.y)<Math.max(45,unit*3))manageViewedStore()}else if(!gestureMoved&&Object.keys(touches).length===1){var rect=canvas.getBoundingClientRect(),best=-1,distance=60;machinePos.forEach(function(pos,i){var p=project(pos.x,1.4+(pos.y||0),pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=i;distance=d}});orderCounterPositions(state.orderCounters).forEach(function(pos){var p=project(pos.x,1.4,pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=4;distance=d}});var online=project(-10.7,8.45,1.5),od=Math.hypot(e.clientX-rect.left-online.x,e.clientY-rect.top-online.y);if(od<distance){showTray('orders');renderUI()}else if(best>=0)selectMachine(best);else if(mapPicked){mapPicked=false;renderUI()}}delete touches[e.pointerId];if(Object.keys(touches).length)gestureMoved=true;else gestureOrigin=null});
   // Double-tap anywhere on the map (canvas or a station pill) zooms in around the tap, or back out when already close.
   var lastTap={time:0,x:0,y:0};
   canvas.parentElement.addEventListener('pointerup',function(e){
-    if(e.pointerType==='mouse'&&e.button!==0)return;if(Object.keys(touches).length>1||gestureMoved&&e.target===canvas)return;
+    if(e.pointerType==='mouse'&&e.button!==0)return;if(Object.keys(touches).length>1||gestureMoved)return;
     if(e.target.closest&&e.target.closest('.map-controls,button:not(.marker)'))return;
     var now=performance.now(),quick=now-lastTap.time<350&&Math.hypot(e.clientX-lastTap.x,e.clientY-lastTap.y)<30;
     lastTap=quick?{time:0,x:0,y:0}:{time:now,x:e.clientX,y:e.clientY};
@@ -4483,9 +4516,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // The zoom eases in around the tap (or back out to the shop) instead of jumping.
     if(zoom<1.7){var px=panX,py=panY,pz=zoom;zoomAt(2.2,x,y);var to=viewAnchor();panX=px;panY=py;zoom=pz;applyCamera();glideTo(to.x,to.z,2.2)}else glideTo(0,0,1);
   });
-  canvas.addEventListener('pointerup',function(e){mapHintActivity();flushGesture(e);if(!gestureMoved&&Object.keys(touches).length===1&&state.empire.activeStore){var br=canvas.getBoundingClientRect(),f=BRANCH_THEMES[state.empire.activeStore-1].focus,fo=districtCentre(state.empire.activeStore-1),q=project(f.x+fo.x,f.y,f.z+fo.z);if(Math.hypot(e.clientX-br.left-q.x,e.clientY-br.top-q.y)<Math.max(45,unit*3))manageViewedStore()}else if(!gestureMoved&&Object.keys(touches).length===1){var rect=canvas.getBoundingClientRect(),best=-1,distance=60;machinePos.forEach(function(pos,i){var p=project(pos.x,1.4+(pos.y||0),pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=i;distance=d}});orderCounterPositions(state.orderCounters).forEach(function(pos){var p=project(pos.x,1.4,pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=4;distance=d}});var online=project(-10.7,8.45,1.5),od=Math.hypot(e.clientX-rect.left-online.x,e.clientY-rect.top-online.y);if(od<distance){showTray('orders');renderUI()}else if(best>=0)selectMachine(best);else if(mapPicked){mapPicked=false;renderUI()}}delete touches[e.pointerId];if(Object.keys(touches).length)gestureMoved=true;else gestureOrigin=null});
   function cancelPointer(e){if(!touches[e.pointerId])return;mapHintActivity();flushGesture();delete touches[e.pointerId];gestureMoved=true}
-  canvas.addEventListener('pointercancel',cancelPointer);canvas.addEventListener('lostpointercapture',cancelPointer);
+  world.addEventListener('pointercancel',cancelPointer);canvas.addEventListener('lostpointercapture',cancelPointer);
   canvas.addEventListener('wheel',function(e){mapHintActivity();districtGlide=null;e.preventDefault();var r=canvas.getBoundingClientRect();zoomAt(zoom*Math.exp(-e.deltaY*.0015),e.clientX-r.left,e.clientY-r.top)},{passive:false});
   $('zoomIn').onclick=function(){mapHintActivity();zoomAt(zoom*1.2,width/2,height/2)};
   $('zoomOut').onclick=function(){mapHintActivity();zoomAt(zoom/1.2,width/2,height/2)};
@@ -4631,7 +4663,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   var dockHeight=0;
   // The shop activity panel opens just under the lane's chip row, however many rows it wraps to.
   function fitLane(){var r=$('laneStatus').getBoundingClientRect();document.documentElement.style.setProperty('--lane-bottom',Math.round(r.height?r.bottom:hudBottom())+'px')}
-  function fitControls(){hudEdges=null;document.documentElement.style.setProperty('--hud-height',hudBottom()+'px');stackPills();fitLane();
+  function fitControls(){hudEdges=null;if(hudBottom()>0)document.documentElement.style.setProperty('--hud-height',hudBottom()+'px');stackPills();fitLane();
     var sheet=$('sheet');if(!phoneSheet())sheet.classList.remove('tall');
     // A tall or gliding sheet keeps the last settled dock height, so the map is framed for the half-open sheet it sits behind.
     if(!dockGlide&&!sheet.classList.contains('tall')&&!sheet.classList.contains('fluid')){dockHeight=sheet.getBoundingClientRect().height;if(!sheet.classList.contains('collapsed')&&!paneGlide)sheetHalfHeight=dockHeight}
