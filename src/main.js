@@ -17,6 +17,7 @@ import {PERKS,migratePerks,perkLevel,perkCost,buyPerk,perkStart,spenderGap,rushL
 import {migrateRun,freshRun,tickRun,reopenMoment} from './reopen.js';
 import {makeSound} from './sfx.js';
 import {createUpgradeFx} from './upgrade-fx.js';
+import {morph} from './dom-morph.js';
 import {FORKS,RESEARCH_BRANCHES,ALSO,RESEARCH_VERSION,levelCost,mergeResearch,freshForks,migrateForks,sideStatus,takeSide,partnerOf,levelsToGate,forkOf} from './research.js';
 import {installQuietDom} from './quiet-dom.js';
 import {createTelemetry} from './telemetry.js';
@@ -260,7 +261,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var heroKey=heroHtml+'|'+(maxed||state.money<price)+'|'+(active&&menu.length===1)+'|'+state.productMenu.byStrain[i].join(',');
     Array.prototype.forEach.call(document.querySelectorAll('.menu-board .trend-clock'),function(el){el.textContent=trendClock});
     if(detail.dataset.key===heroKey)return;
-    detail.innerHTML=heroHtml;detail.dataset.key=heroKey;
+    // Patch the card in place so the tapped button, the 3D icon and the sheet's scroll all stay put.
+    var pane=detail.closest('[data-pane]'),scroll=pane?pane.scrollTop:0;
+    morph(detail,heroHtml);detail.dataset.key=heroKey;
+    if(pane&&pane.scrollTop!==scroll)pane.scrollTop=scroll;
     Array.prototype.forEach.call(detail.querySelectorAll('.trend-clock'),function(el){el.textContent=trendClock});
     if(level){var sel=$('flowerSelect');sel.disabled=active&&menu.length===1;sel.title=sel.disabled?'Keep at least one strain on the menu':active?'Remove from menu':'Add to menu';sel.onclick=function(){selectStrain(i)}}
     var buy=$('flowerBuy');buy.disabled=maxed||state.money<price;buy.onclick=function(){buyStrain(i)};
