@@ -89,3 +89,12 @@ test('the pick card asks a short question and tags each answer with the word tha
   assert.deepEqual(pickLabel(typeAsk,sativa),{tag:'Daytime',line:'Sativa'});
   assert.deepEqual(pickLabel(formatAsk,sativa),{tag:'Edibles',line:'Sativa'});
 });
+
+test('guests ask in thirteen different ways, and a moment keeps the wording it drew',async()=>{
+  const {QUESTIONS,momentQuestion}=await import('../src/shop-play.js');
+  const all=Object.values(QUESTIONS).flat(2);
+  assert.ok(all.length>=10&&all.length<=15);
+  assert.equal(new Set(all).size,all.length);
+  for(let variant=0;variant<6;variant++)assert.ok(all.includes(momentQuestion({formatRequest:false,target:2,variant})));
+  assert.equal(momentQuestion({formatRequest:true,target:1,variant:1}),'Anything I can grab and go?');
+});

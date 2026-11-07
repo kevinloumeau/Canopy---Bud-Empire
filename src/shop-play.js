@@ -42,7 +42,7 @@ export function createMoment(play,customer,options){
   for(const o of pool)if(choices.length<3&&!choices.includes(o)&&!choices.some(c=>c.strain===o.strain))choices.push(o);
   for(const o of pool)if(choices.length<3&&!choices.includes(o))choices.push(o);
   for(let i=0;i<sequence%choices.length;i++)choices.push(choices.shift());
-  return {customerId:customer.id,name:NAMES[sequence%NAMES.length],request,choices,remaining:MOMENT_SECONDS,opened:false,formatRequest,target:formatRequest?want.format:want.type};
+  return {customerId:customer.id,name:NAMES[sequence%NAMES.length],request,choices,remaining:MOMENT_SECONDS,opened:false,formatRequest,target:formatRequest?want.format:want.type,variant:Math.floor(Math.random()*6)};
 }
 export function judgeChoice(moment,index){
   const option=moment.choices[index];
@@ -76,9 +76,18 @@ export function operationsAlerts(){return [];}
 // The pick card asks in plain words (Kevin, 2026-11-07): a short question in the guest's voice, and on each answer the
 // one word that answers it, so the match reads at a glance. Hybrids are balanced, sativas daytime, indicas evening.
 export const MOOD=['Balanced','Daytime','Evening'];
+// Thirteen ways to ask (Kevin, 2026-11-07: "10-15 questions that vary"), two or three for each thing a guest can want.
+// Each moment keeps the one it drew (variant), so the card does not change wording while it is open.
+export const QUESTIONS={
+  type:[
+    ['Got something balanced?','Something not too up, not too down?','What\'s good for a chill hang with friends?'],
+    ['Got something for the daytime?','Something to get me going?','Anything for a creative afternoon?'],
+    ['Got something for the evening?','Something to help me unwind tonight?','What\'s good for a lazy night in?']],
+  format:[[],['Got something rolled and ready?','Anything I can grab and go?'],['Got something without flower?','Anything I don\'t have to smoke?']]
+};
 export function momentQuestion(moment){
-  return moment.formatRequest?['Got some flower?','Got something rolled and ready?','Got something without flower?'][moment.target]
-    :['Got something balanced?','Got something for the daytime?','Got something for the evening?'][moment.target];
+  const list=QUESTIONS[moment.formatRequest?'format':'type'][moment.target]||['What would you pick for me?'];
+  return list[(moment.variant||0)%list.length];
 }
 // What each answer shows: the tag answers the question (a mood, or a product type) and the line under it names the
 // strain's type. The product itself shows as a 3D badge on the strain, so a tile never needs a third line.
@@ -158,8 +167,11 @@ export function mountShopPlay({getState,getMoment,getAlerts,names,colors,format,
   // that answers the question, and the other half underneath.
   function renderMoment(){
     const moment=getMoment();if(!moment)return;
-    const next=JSON.stringify([moment.customerId,moment.choices]);if(next===momentKey)return;momentKey=next;
+    const next=JSON.stringify([moment.customerId,moment.choices,moment.variant,moment.portrait]);if(next===momentKey)return;momentKey=next;
     overlay.querySelector('.moment-kicker').textContent=moment.name+' asks';
+    // The guest's own face: a portrait of the shopper model walking in (people-*.png), else a generic figure.
+    const face=overlay.querySelector('.moment-guest-art'),src='icons/3d/'+(moment.portrait||'goal-person')+'.png';if(face.getAttribute('src')!==src)face.setAttribute('src',src);
+    overlay.querySelector('.moment-guest').classList.toggle('is-portrait',!!moment.portrait);
     overlay.querySelector('#momentQuestion').textContent=tieLast(momentQuestion(moment));
     picksBox.replaceChildren(...moment.choices.map((option,i)=>{
       const label=pickLabel(moment,option),name=names[option.strain];
