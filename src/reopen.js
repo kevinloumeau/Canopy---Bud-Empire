@@ -8,14 +8,16 @@ export const REOPEN_PAYBACK=20*60;
 export const REPLAY_SPEED=2;
 // Reopening also has to at least double base sales: smaller jumps showed the card every few minutes in the sim.
 export const MIN_RATIO=2;
+// A 10x jump in base sales is always worth a fresh shop, however fast this run is still climbing.
+export const SURE_RATIO=10;
 const stepOf=rate=>rate>=1?Math.min(MAX_STEP,Math.floor(Math.log2(rate)*STEPS_PER_DOUBLING)):-1;
 // Old saves have no curve; `null` marks a run whose start was never seen.
 export function migrateRun(raw){
   if(!raw||typeof raw!=='object'||!Array.isArray(raw.curve))return {time:0,curve:null};
   const time=Number.isFinite(raw.time)?Math.max(0,raw.time):0;
-  return {time,curve:raw.curve.slice(0,MAX_STEP+1).map(t=>Number.isFinite(t)&&t>=0?Math.min(t,time):null)};
+  return {time,offered:raw.offered===true,curve:raw.curve.slice(0,MAX_STEP+1).map(t=>Number.isFinite(t)&&t>=0?Math.min(t,time):null)};
 }
-export const freshRun=()=>({time:0,curve:[]});
+export const freshRun=()=>({time:0,offered:false,curve:[]});
 export function tickRun(run,dt,rate){
   run.time+=Math.max(0,dt);if(!run.curve)return;
   const top=stepOf(rate);for(let k=run.curve.length;k<=top;k++)run.curve[k]=run.time;
@@ -28,8 +30,14 @@ export function paybackSeconds(run,rate,ratio){
 }
 // The brass card shows once reopening is on offer, at least doubles base sales, and the new shop would be back to
 // today's income within 20 minutes. A save from before the curve existed only needs the doubling.
+// Once the card has shown in a run it stays up (run.offered): the gain only grows from there, and the 20-minute estimate
+// only fails later because today's income keeps climbing (2026-11-07 review: hidden from 90 to 355 min while the gain
+// grew from 498 to 10,239 shares). A 10x jump shows the card on its own. `minutes` is null when the estimate is past
+// 20 minutes, so the card says the sales jump instead of a long wait.
 export function reopenMoment(offer,run,rate){
   if(!offer.eligible)return null;const ratio=offer.multiplier/offer.current;if(ratio<MIN_RATIO)return null;const seconds=paybackSeconds(run,rate,ratio);
-  const replay=seconds===null?null:seconds/REPLAY_SPEED,worth=replay===null||replay<=REOPEN_PAYBACK;
-  return worth?{gain:offer.gain,ratio,minutes:replay===null?null:Math.max(1,Math.ceil(replay/60))}:null;
+  const replay=seconds===null?null:seconds/REPLAY_SPEED,quick=replay===null||replay<=REOPEN_PAYBACK;
+  if(!quick&&!run.offered&&ratio<SURE_RATIO)return null;
+  if(run.curve)run.offered=true;
+  return {gain:offer.gain,ratio,minutes:replay===null||!quick?null:Math.max(1,Math.ceil(replay/60))};
 }
