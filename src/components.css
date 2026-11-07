@@ -2,7 +2,7 @@
    Nothing in the game uses these classes yet; ?ui=kit shows them all. Later phases move each surface onto them. */
 .ui-glass{background:linear-gradient(180deg,var(--ui-sheen),transparent 40%),var(--ui-glass);-webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);border:1px solid var(--ui-edge);box-shadow:var(--ui-shadow);color:var(--ui-ink)}
 .ui-glass.is-strong{background:linear-gradient(180deg,var(--ui-sheen),transparent 30%),var(--ui-glass-strong)}
-.ui-mono{font-family:'DM Mono',monospace;font-weight:500;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.ui-mono{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-weight:500;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .ui-label{font-size:.656rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ui-soft)}
 .ui-title{font-size:1.1875rem;font-weight:700;letter-spacing:-.025em;color:var(--ui-ink);margin:0}
 

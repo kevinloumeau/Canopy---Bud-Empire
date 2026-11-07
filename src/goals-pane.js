@@ -84,7 +84,7 @@ export function mountGoalsPane({pane,sources,getState,format,rate}){
   I3D(ICONS_3D.has(icon)?icon:'target')+(done?'<i class="goal-ring-tick">'+SVG(ICONS.tick)+'</i>':'')+'</span>';
  const tile=o=>{const tag=o.act?'button':'div';
   return '<'+tag+' class="goal-tile'+(o.done?' is-done':'')+'"'+(o.act?' type="button" data-act="'+o.act+'"':'')+' title="'+esc(o.title+(o.figure?' · '+o.figure:''))+'">'+
-   ring(o.icon||iconFor(o.title),o.share,o.done)+'<b>'+esc(tieLast(o.label||o.title))+'</b>'+(o.note?'<small>'+esc(o.note)+'</small>':'')+'</'+tag+'>';};
+   ring(o.icon||iconFor(o.title),o.share,o.done)+'<b>'+esc(tieLast(o.label||o.title))+'</b>'+(o.note?'<small>'+esc(o.note)+'</small>':o.figure&&!o.done?'<small class="goal-tile-figure">'+esc(o.figure)+'</small>':'')+'</'+tag+'>';};
  const tiles=items=>items.length?'<div class="goal-tiles">'+items.map(tile).join('')+'</div>':'';
 
  // Contract and story are half cards: the icon and the thing to do (two balanced lines), then a foot line with a small

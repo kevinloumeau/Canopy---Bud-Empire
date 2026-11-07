@@ -24,10 +24,10 @@ body[data-store-view=branch] .rush-pill{display:none}
 .season-card{display:grid;gap:6px;padding:12px;margin:0 0 14px;border:1px solid #f0cf7f55;border-radius:12px;background:linear-gradient(160deg,#f0cf7f14,#0000 60%)}
 .season-card h2{margin:0}
 .season-card p{margin:0}
-.season-kicker{color:var(--p-gold-72);font:600 11px 'DM Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase}
+.season-kicker{color:var(--p-gold-72);font:600 11px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
 .season-tiers{list-style:none;margin:4px 0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .season-tiers li{--fill:0%;display:grid;gap:2px;padding:7px 8px;border-radius:8px;border:1px solid #ffffff1f;background:linear-gradient(90deg,#c4e8a733 var(--fill),#0000 var(--fill)),#ffffff08;min-width:0}
-.season-tiers li span{font:600 12px 'DM Mono',ui-monospace,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.season-tiers li span{font:600 12px 'Bricolage Grotesque',system-ui,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .season-tiers li b{font-size:11px;font-weight:600;opacity:.8}
 .season-tiers li small{font-size:11px;color:var(--p-gold-72)}
 .season-tiers li.is-ready{border-color:var(--p-lime-78)}
@@ -37,7 +37,7 @@ body[data-store-view=branch] .rush-pill{display:none}
 .strain-library{display:grid;gap:8px;margin-top:6px;padding:10px;border-radius:12px;background:#0b1e11b0;border:1px solid #ffffff10}
 .library-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .library-head h3{margin:0;font-size:15px}
-.library-head small{font:500 11px 'DM Mono',ui-monospace,monospace;opacity:.85}
+.library-head small{font:500 11px 'Bricolage Grotesque',system-ui,sans-serif;opacity:.85}
 .library-note{margin:0;font-size:12px;opacity:.8}
 .library-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px}
 .library-card{display:grid;gap:2px;align-content:start;padding:8px;border-radius:10px;border:1px solid #ffffff14;background:#ffffff06;min-width:0}
@@ -67,7 +67,7 @@ body[data-store-view=branch] .rush-pill{display:none}
 .breed-status{font-style:normal;font-size:12px;color:var(--p-lime-78)}
 .breed-parents{display:grid;gap:3px;margin-top:3px}
 .breed-parents[hidden]{display:none}
-.breed-parents span{--fill:0%;font:500 11px 'DM Mono',ui-monospace,monospace;padding:3px 6px;border-radius:6px;background:linear-gradient(90deg,#c4e8a72e var(--fill),#ffffff08 var(--fill))}
+.breed-parents span{--fill:0%;font:500 11px 'Bricolage Grotesque',system-ui,sans-serif;padding:3px 6px;border-radius:6px;background:linear-gradient(90deg,#c4e8a72e var(--fill),#ffffff08 var(--fill))}
 .breed-card button{flex:none;min-height:44px;max-width:44%;padding:4px 12px;border-radius:10px;border:1px solid #ffffff22;background:var(--p-forest-35);color:#f6f1df;font-size:12px;font-weight:700;line-height:1.2}
 .breed-card button:disabled{background:#ffffff0d;color:#f6f1dfaa;cursor:default}
 .breed-card[data-state=growing]{border-color:#f0cf7f66;background:#f0cf7f10}

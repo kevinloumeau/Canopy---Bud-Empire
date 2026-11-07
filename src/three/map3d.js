@@ -1000,10 +1000,14 @@ export function createMap3D(canvas, layout) {
   pools.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   world.add(pools);
   const LAMP_POOL = new THREE.Color('#ffc46a'), SHOP_SPILL = new THREE.Color('#ffc163'), HEADLIGHT = new THREE.Color('#fff1cf'), TAIL = new THREE.Color('#ff3b2a');
+  const branchGlow = [];
   const poolTurn = new THREE.Quaternion(), poolAt = new THREE.Vector3(), poolSize = new THREE.Vector3();
-  function pool(x, y, z, w, d, turn, shape, tint, gain = 1) {
+  const standUp = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+  // upright: the decal stands as a wall wash facing +z (toward the camera) instead of lying on the ground.
+  function pool(x, y, z, w, d, turn, shape, tint, gain = 1, upright = false) {
     if (pools.count >= MAX_POOLS) return;
     poolTurn.setFromAxisAngle(yAxis, turn);
+    if (upright) poolTurn.multiply(standUp);
     pools.setMatrixAt(pools.count, matrix.compose(poolAt.set(x, y + .03, z), poolTurn, poolSize.set(w, 1, d)));
     pools.setColorAt(pools.count, colour.copy(tint).multiplyScalar(gain));
     poolShape.setX(pools.count++, shape);
@@ -1020,6 +1024,15 @@ export function createMap3D(canvas, layout) {
       if (m) pool(left - 1.9, layout.plazaY, (m.zRear + m.zFront) / 2, m.zFront - m.zRear + 1.5, 3.8, -Math.PI / 2, 1, SHOP_SPILL, .6);
       pool((left + right) / 2, layout.plazaY, front + 1.9, right - left, 3.8, 0, 1, SHOP_SPILL, .45);
     }
+    // The branch stores on the map (placeDistricts): a warm wash over the shop floor, so the line, the counters and the
+    // people read after dark, and the same spill out of the open front as the flagship's.
+    branchGlow.forEach(b => {
+      const cx = (b.x0 + b.x1) / 2, cz = (b.z0 + b.z1) / 2, w = b.x1 - b.x0, d = b.z1 - b.z0;
+      pool(cx, .1, cz + d * .1, w * 1.25, d * 1.3, 0, 0, SHOP_SPILL, 1.25);
+      // Lamplight on the back wall, so the stations stand against a lit room rather than a dark one.
+      pool(cx, 2.4, b.z0 + .45, w * 1.1, 5.2, 0, 0, SHOP_SPILL, .55, true);
+      pool(cx, .1, b.z1 + 1.9, w, 3.8, 0, 1, SHOP_SPILL, .45);
+    });
     // Headlights: a long beam ahead of each car and a faint red glow behind it.
     (frame.cars || []).forEach(c => {
       const ax = c.along === 'x', dx = ax ? c.dir : 0, dz = ax ? 0 : c.dir, turn = Math.atan2(dx, dz), half = c.van ? 2.4 : 2.1;
@@ -1458,6 +1471,7 @@ export function createMap3D(canvas, layout) {
   const springUp = t => { if (t <= 0) return .02; if (t >= 1) return 1; const k = t - 1; return Math.max(.02, 1 + 2.7 * k * k * k + 1.7 * k * k); };
   function placeDistricts(list, night) {
     const shown = new Set(), sites = new Set(), shops = new Set();
+    branchGlow.length = 0;
     let used = 0;
     (list || []).forEach(d => {
       if (d.scene) {
@@ -1470,6 +1484,9 @@ export function createMap3D(canvas, layout) {
         const shop = branchShop(d.index);
         shop.visible = true; shop.position.set(d.x, 0, d.z); shop.scale.set(1, rise, 1);
         if (shop.userData.night) shop.userData.night(night);
+        // An open branch glows from inside after dark like the flagship (placePools); its floor is the plot's y 0.
+        const own = shop.userData.bounds;
+        if (own && d.build == null && d.opening == null) branchGlow.push({ x0: d.x + own.x0, x1: d.x + own.x1, z0: d.z + own.z0, z1: d.z + own.z1 });
         shops.add(d.index);
         if (d.build != null) { const site = districtSite(d.index, d); site.visible = true; site.userData.beacon.visible = Math.floor(performance.now() / 500) % 2 === 0; sites.add(d.index); }
       }

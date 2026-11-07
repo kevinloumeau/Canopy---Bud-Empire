@@ -21,7 +21,7 @@
 .top-lane .shop-activity{position:static;max-width:100%;padding:0 13px 0 10px;font-size:13px}
 .top-lane .shop-activity svg{width:20px;height:20px;flex:none}
 .lane-chip{display:inline-flex;align-items:center;gap:7px;padding:0 12px 0 10px;font:600 13px/1 'Bricolage Grotesque',system-ui,sans-serif;white-space:nowrap;pointer-events:none}
-.lane-chip .chip-time{font:500 12px/1 'DM Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;color:var(--ui-soft)}
+.lane-chip .chip-time{font:500 12px/1 'Bricolage Grotesque',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:var(--ui-soft)}
 /* The event: a goal ring that fills in brass. A tap opens Goals, where its card is. */
 .lane-chip.contract-pill{cursor:pointer;pointer-events:auto}
 .chip-ring{width:18px;height:18px;flex:none;transform:rotate(-90deg)}

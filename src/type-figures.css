@@ -1,0 +1,18 @@
+/* One typeface, one figure style (visual review 2026-11-07). Words and numbers are both Bricolage Grotesque now
+   (DM Mono's slashed zero made $9.00T and Lv 0 read like Ø). Figures are tabular everywhere so ticking numbers hold
+   their width; `font:` shorthands elsewhere reset font-variant-numeric, hence the !important. Loads last. */
+*,*::before,*::after{font-variant-numeric:tabular-nums!important}
+
+/* Inventory strip: five equal cells, each an icon beside a number with MAX centred under the number, so nothing
+   runs into the next icon at 38K and the MAX labels line up. */
+.sheet #stockStatus .stock-item:not(.stock-online){flex:1 1 0;min-width:0;justify-content:center;gap:4px;padding-inline:2px}
+.sheet #stockStatus .stock-item:not(.stock-online)>span{min-width:0;text-align:center}
+.sheet #stockStatus .stock-item:not(.stock-online) b{display:block;letter-spacing:-.01em}
+.sheet #stockStatus .stock-item b small{margin-left:1px}
+.sheet #stockStatus .stock-item[data-trend=full]>span::after{top:calc(100% + 1px);letter-spacing:.06em}
+
+/* Finished city tiles: "+60% walk-ins" fits its 69px tile instead of clipping. */
+.map-tile.is-max .map-tile-figure{padding-inline:0;letter-spacing:-.02em}
+
+/* Goal cards: a long goal wraps onto a balanced second line rather than ending in an ellipsis. */
+.goal-card-copy small{white-space:normal;text-wrap:balance}
