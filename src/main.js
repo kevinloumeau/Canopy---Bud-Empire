@@ -8,8 +8,9 @@ import {migrateShopPlay,picks as momentPicks,createMoment,judgeChoice,tipFor,rec
 import {migrateJourney,advanceJourney,CHAPTERS} from './journey.js';
 import {mountJourney} from './journey-ui.js';
 import {manageDialog} from './dialog-focus.js';
-import {CITY_BUILDINGS,cityBuilding,migrateCity,cityUnlocked,cityNext,cityCost,payCity,openCityStage,awayExtraSeconds,awayPay,outputFactor,trafficFactor as cityTraffic,terpFactor,stageGain,CITY_TOPS} from './city-buildings.js';
-import {FLAGSHIP_UNLOCK_LIFETIME,FLAGSHIP_MAX,FLAGSHIP_STEP,flagshipNext,flagshipCost,flagshipSales as hqSales,flagshipUnlocked,migrateFlagship,payFlagship,openFlagshipStage} from './flagship.js';
+import {CITY_BUILDINGS,cityBuilding,migrateCity,cityUnlocked,cityNext,cityCost,cityQuote,payCity,openCityStage,awayExtraSeconds,awayPay,outputFactor,trafficFactor as cityTraffic,terpFactor,stageGain,CITY_TOPS} from './city-buildings.js';
+import {migrateQuotes,holdQuote,heldQuote} from './stage-quotes.js';
+import {FLAGSHIP_UNLOCK_LIFETIME,FLAGSHIP_MAX,FLAGSHIP_STEP,flagshipNext,flagshipCost,flagshipQuote,flagshipSales as hqSales,flagshipUnlocked,migrateFlagship,payFlagship,openFlagshipStage} from './flagship.js';
 import {migrateBuilds,startBuild,isBuilding,buildLeft,buildShareLeft,finishBuilds,buildClock,skipCost,skipBuild,branchBuildKey,branchOfBuild} from './builds.js';
 import {AUTO_DRONE_COST,AUTO_DRONE_INTERVAL,BULK_DRONE_COST,payAutoDrone,grantAutoDrone,buyBulkDrone,autoDroneLimit,migrateAutoDrone,autoDroneReady} from './auto-drone.js';
 import {FORMATS,wantedFormat,formatPremium,stocks,formatCost,BOOST_MAX,boostCost,migrateMenu,unlockFormat,menuFormatFactor,milestone,prestigeOffer,elapsedSteps,OFFLINE_STEP} from './depth.js';
@@ -70,7 +71,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Contract progression is defined in depth.js, including post-city milestones.
   var $=function(id){return document.getElementById(id)};
   // A new shop starts as seven construction sites: the door and six stations are raised for free during the intro, then the sign flips.
-  function fresh(){return{researchVersion:RESEARCH_VERSION,forks:freshForks(),shopPlay:migrateShopPlay(),money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),pickupWindow:migrateWindow(),atm:migrateAtm(),atmEarned:0,builds:migrateBuilds(),flagship:0,flagshipSeen:false,city:migrateCity(),citySeen:[],productMenu:migrateMenu(),sound:true,music:true,haptics:true,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,offlineLevel:0,spenderClock:180,shopEvents:0,rushTime:0,crosses:{done:[],active:null},achievements:[],reminders:false,reminderOffered:false,perks:{points:0,levels:{}},run:freshRun(),trainerClock:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],abilities:migrateAbilities(),sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeStaff:0,loungeLift:false,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,guideGrant:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
+  function fresh(){return{researchVersion:RESEARCH_VERSION,quotes:{},forks:freshForks(),shopPlay:migrateShopPlay(),money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),pickupWindow:migrateWindow(),atm:migrateAtm(),atmEarned:0,builds:migrateBuilds(),flagship:0,flagshipSeen:false,city:migrateCity(),citySeen:[],productMenu:migrateMenu(),sound:true,music:true,haptics:true,empire:migrateProgression(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,offlineLevel:0,spenderClock:180,shopEvents:0,rushTime:0,crosses:{done:[],active:null},achievements:[],reminders:false,reminderOffered:false,perks:{points:0,levels:{}},run:freshRun(),trainerClock:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],abilities:migrateAbilities(),sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeStaff:0,loungeLift:false,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,guideGrant:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
   function readSave(){
     for(var key of ['shift-save','shift-save-backup']){
       try{var raw=localStorage.getItem(key);if(!raw)continue;var value=JSON.parse(raw);if(value&&typeof value==='object'&&!Array.isArray(value))return value}catch(e){}
@@ -92,7 +93,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     next.lifetime=finite(old.lifetime,0,0,BIG);
     next.sold=Math.floor(finite(old.sold,0,0,Number.MAX_SAFE_INTEGER));
     next.onlineCompleted=Math.floor(finite(old.onlineCompleted,0,0,Number.MAX_SAFE_INTEGER));next.onlineRequests=finite(old.onlineRequests,0,0,onlineRequestLimit(next));next.hints={web:!!(old.hints&&old.hints.web),storage:!!(old.hints&&old.hints.storage),queue:!!(old.hints&&old.hints.queue)};
-    next.contract=Math.floor(finite(old.contract,0,0,1000));next.productMenu=migrateMenu(old.productMenu);next.sound=old.sound!==false;next.haptics=old.haptics!==false;next.lightMode=['day','night'].includes(old.lightMode)?old.lightMode:null;next.autoDrone=migrateAutoDrone(old.autoDrone);next.pickupWindow=migrateWindow(old.pickupWindow,next.autoDrone.owned);next.atm=migrateAtm(old.atm);next.atmEarned=finite(old.atmEarned,0,0,BIG);next.builds=migrateBuilds(old.builds);next.flagship=migrateFlagship(old.flagship);next.flagshipSeen=old.flagshipSeen===true;next.city=migrateCity(old.city);next.citySeen=Array.isArray(old.citySeen)?old.citySeen.filter(function(id){return !!cityBuilding(id)}):[];
+    next.contract=Math.floor(finite(old.contract,0,0,1000));next.productMenu=migrateMenu(old.productMenu);next.sound=old.sound!==false;next.haptics=old.haptics!==false;next.lightMode=['day','night'].includes(old.lightMode)?old.lightMode:null;next.autoDrone=migrateAutoDrone(old.autoDrone);next.pickupWindow=migrateWindow(old.pickupWindow,next.autoDrone.owned);next.atm=migrateAtm(old.atm);next.atmEarned=finite(old.atmEarned,0,0,BIG);next.builds=migrateBuilds(old.builds);next.flagship=migrateFlagship(old.flagship);next.quotes=migrateQuotes(old.quotes);next.flagshipSeen=old.flagshipSeen===true;next.city=migrateCity(old.city);next.citySeen=Array.isArray(old.citySeen)?old.citySeen.filter(function(id){return !!cityBuilding(id)}):[];
     next.globalLevel=Math.floor(finite(old.globalLevel,0,0,500));
     next.multiplier=Math.pow(1.25,next.globalLevel);
     next.lastSeen=finite(old.lastSeen,Date.now(),0,Date.now());next.paidThrough=finite(old.paidThrough,finite(old.empire&&old.empire.clock,0,0,BIG),0,BIG);next.lines=LINES.map(function(_,i){return Math.floor(finite(old.lines&&old.lines[i],1,next.shopOpen?1:0,10000))});next.storageLevel=Math.min(20,Math.max(0,Math.floor(Number(old.storageLevel)||0)));var caps=stockCaps(next);next.stock=Array.from({length:5},function(_,i){return Math.floor(finite(old.stock&&old.stock[i],0,0,caps[i]))});next.staff=LINES.map(function(_,i){return Math.floor(finite(old.staff&&old.staff[i],0,0,10000))});next.abilities=migrateAbilities(old.abilities);next.kiosk=old.kiosk===true;next.lounge=migrateLounge(old.lounge);next.shopPlay=migrateShopPlay(old.shopPlay);next.loungeStaff=migrateLoungeHost(old.loungeStaff);next.loungeLift=next.lounge>0&&old.loungeLift===true;next.loungeSessions=Math.floor(finite(old.loungeSessions,0,0,1e9));next.loungeEarned=finite(old.loungeEarned,0,0,BIG);next.secondKiosk=next.kiosk&&old.secondKiosk===true;next.thirdKiosk=next.secondKiosk&&old.thirdKiosk===true;next.queueLevel=Math.min(7,Math.max(0,Math.floor(Number(old.queueLevel)||0)));next.theme='dispensary';next.gameSpeed=[0,1,2,4].indexOf(old.gameSpeed)>=0?old.gameSpeed:1;return next}catch(e){return fresh()}}
@@ -124,7 +125,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     }catch(e){if(!saveFailed)notify('SAVE UNAVAILABLE · keep this window open to retain progress');saveFailed=true;return false}
   }
   // Demand ceiling counts whole baskets, so offline pay and reward scaling track real sales.
-  function branchIncome(p){return branchRate(p)*specialFactor('branch')}
+  // While the advice weighs a buy, branches follow the flagship's live sales instead of the five-minute average, so a
+  // flagship upgrade is credited with what it adds to every branch too (it used to look smaller than a branch buy).
+  var adviceLive=false;
+  function branchIncome(p){if(!adviceLive)return branchRate(p)*specialFactor('branch');var kept=p.flagship;p.flagship=flagshipSales();var rate=branchRate(p)*specialFactor('branch');p.flagship=kept;return rate}
   function incomeRate(){return flagshipSales()+atmRate()+branchIncome(state.empire)+onlineIncome()}
   // The ATM's fees a second (src/atm.js): customers served a second (walk-in sales over a basket's value), the share who
   // stop for cash as far as the machines keep up, times the fee on a basket.
@@ -406,10 +410,6 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // The order desk's crew preps capacity/2 bags a second (readyWork in simulateStep), whatever the basket: bags, not customers.
     return i===4?Math.min(capacity(i)/2,(service+kioskCount()/kioskServiceDuration())*basketSize()):service*basketSize();
   }
-  // The figure branches have always earned their share of (stations at handoff pace, one basket an arrival). Kept as it
-  // was so branch income stays where the economy plan put it while the advice and offline pay use flagshipSales.
-  function branchBasis(){var rates=LINES.map(function(_,i){if(!state.lines[i])return 0;if(i<4)return stationThroughput(i);var service=(i===4?state.orderCounters:1)/economy.customerHandoff(i,state.lines[i],counterServiceDuration(i));return (i===4?Math.min(capacity(i)/2,service+kioskCount()/kioskServiceDuration()):service)*basketSize()});
-    return Math.min(Math.min.apply(null,rates)*flowerValue(),basketValue()/arrivalInterval())}
   function production(){return Math.min.apply(null,LINES.map(function(_,i){return stationThroughput(i)}))*flowerValue()}
   // The grow house (city-buildings.js) fattens every plant-side batch.
   function batchSize(i){return economy.batchSize(state.lines[i])*(i<3?1+state[['seedBatchLevel','growBatchLevel','harvestBatchLevel'][i]]*.06:1)*(i<4?outputFactor(state.city):1)}
@@ -554,7 +554,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var options=momentPicks(state,menuStrains());if(menuStrains().length<2)return;
     guest.momentOffered=true;moment=createMoment(play,guest,options);if(moment)castMoment(moment,guest.id);play.cooldown=60+(play.sequence%3)*15;
   }
-  // Branches earn a share of the flagship's walk-in sales. p.flagship follows that rate over about five minutes, so a
+  // Branches earn a share of the flagship's walk-in sales (flagshipSales, the same figure the income model uses; until
+  // 2026-11-07 they read an older figure about twice as big). p.flagship follows that rate over about five minutes, so a
   // short rush or crew burst barely moves branch income while every lasting upgrade carries over to every branch.
   // Walk-in customers a second as the floor really moves them, fitted to simulate() across 70 shop set-ups (8% rms):
   // the order line holds queueLimit places from the street walk-up to the counter, the pickup line its reserved places
@@ -573,8 +574,13 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Walk-in bags: what the desk preps and pickup hands over, out of the jars web orders leave, as far as customers come.
   function flagshipSales(){var web=onlineOpen()?onlineOrderRate(windowLevel(state.pickupWindow))*onlineJars():0,bags=Math.min(stationThroughput(4),stationThroughput(5),Math.max(0,jarRate()-web));
     return Math.min(bags,basketSize()*walkInCustomers())*flowerValue()*saleLift()}
-  function trackFlagship(dt){var p=state.empire,now=branchBasis();if(!Number.isFinite(now))return;p.flagship=p.flagship>0?p.flagship+(now-p.flagship)*Math.min(1,dt/300):now}
-  function simulate(dt){simulateStep(dt)}
+  function trackFlagship(dt){var p=state.empire,now=flagshipSales();if(!Number.isFinite(now))return;p.flagship=p.flagship>0?p.flagship+(now-p.flagship)*Math.min(1,dt/300):now}
+  // Canopy HQ and each city building hold the price of the stage up for sale, set from the income of the moment it came
+  // up (src/stage-quotes.js); a stage under construction keeps its price until it opens and the next one is quoted.
+  function holdLateQuotes(){var income=null;function now(){return income===null?(income=incomeRate()):income}
+    if(flagshipUnlocked(state.lifetime,state.flagship,state.run.time)&&state.flagship<FLAGSHIP_MAX&&heldQuote(state,'flagship',state.flagship)===null)holdQuote(state,'flagship',state.flagship,flagshipQuote(state.flagship,now()));
+    CITY_BUILDINGS.forEach(function(b){var stage=state.city[b.id];if(cityUnlocked(b.id,state.lifetime,state.city[b.id],state.run.time)&&stage<b.stages.length&&heldQuote(state,b.id,stage)===null)holdQuote(state,b.id,stage,cityQuote(b.id,stage,now()))})}
+  function simulate(dt){simulateStep(dt);holdLateQuotes()}
   function simulateStep(dt){
     state.empire.retailBoost=retailBoost();trackFlagship(dt);accrueOnlineRequests(dt);
     tickMoment(dt);var shift=state.shopPlay.shift,sentBefore=transfersSent();
@@ -3162,7 +3168,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     b.onclick=function(){branchBuyFor=branchBuyFor===j?-1:j;pickedTag=null;buyBoxFor=-1;renderUI()};$('markers').appendChild(b);return b});
   function branchSignAt(j){var id=state.empire.activeStore;if(!id)return null;var c=districtCentre(id-1),q=BRANCH_STATIONS[id-1][j];return project(c.x+q[0],.63,c.z+q[1]+1.23)}
   function buyBranchLevel(i,j,levels){var bought=0;for(var k=0;k<(levels||1);k++){if(!buyBranchStation(state,i,j))break;bought++}
-    if(!bought){notify('Need '+fmt(branchStationCost(i,j,state.empire.stores[i].lines[j])-state.money)+' more');return}
+    if(!bought){notify('Need '+fmt(branchStationCost(state.empire,i,j,state.empire.stores[i].lines[j])-state.money)+' more');return}
     var level=state.empire.stores[i].lines[j],c=districtCentre(i),q=BRANCH_STATIONS[i][j];burst({x:c.x+q[0],y:0,z:c.z+q[1]});var at=branchStationAt[i+'_'+j]||{x:c.x+q[0],y:0,z:c.z+q[1]};if(economy.stationTier(level)>economy.stationTier(level-bought)){upgradeFx.pop();showcase({x:at.x,y:(at.y||0)+1.2,z:at.z},{floor:at.y||0,r:1.4,h:3.2,station:'b'+i+'_'+j})}else upgradeFx.play({at:at,r:1.4,station:'b'+i+'_'+j});
     notify(STORES[i].name+' '+BRANCH_LINE[j]+' · LEVEL '+level,'upgrade');save();renderUI();haptic(economy.stationTier(level)>economy.stationTier(level-bought)?'firm':'light')}
   function renderBranchSigns(){if(!branchSignEls)return;var id=state.empire.activeStore,store=id?state.empire.stores[id-1]:null;
@@ -3170,7 +3176,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var i=id-1,best=branchBestStation(state.empire,i),opening=branchOpeningAge(i);
     // An opening branch's station signs wait until its stations have popped in.
     if(opening!==null&&opening<BRANCH_OPENING.people){branchSignEls.forEach(function(el){el.hidden=true;signBuy(el,null)});return}
-    branchSignEls.forEach(function(el,j){var level=Math.max(1,store.lines[j]||1),price=branchStationCost(i,j,level),key=id+'|'+level;el.hidden=false;
+    branchSignEls.forEach(function(el,j){var level=Math.max(1,store.lines[j]||1),price=branchStationCost(state.empire,i,j,level),key=id+'|'+level;el.hidden=false;
       el.classList.toggle('selected',branchBuyFor===j);el.classList.toggle('can-upgrade',j===best&&state.money>=price);el.style.setProperty('--station-tier',TIER_COLORS[economy.stationTier(level)]);
       if(el.dataset.level!==key){el.classList.add('is-badge');el.innerHTML=signIcon(SIGN_PATHS[j])+'<span class=station-sign-name>'+BRANCH_SHORT[j]+'</span><span class=station-sign-level>Lv '+level+'</span>';el.dataset.level=key;updateMarkers.key=null}
       el.setAttribute('aria-label',STORES[i].name+' '+BRANCH_LINE[j]+', level '+level+'. Show upgrades');el.setAttribute('aria-pressed',String(branchBuyFor===j));
@@ -3251,18 +3257,18 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     if(windowOpen()&&!deliveryBuilt())tags.push({el:droneMarker,name:'Drones',build:'deck',price:AUTO_DRONE_COST,x:-9.39,y:7.2,z:-.2,buys:[{label:'Build',price:AUTO_DRONE_COST,go:purchaseAutoDrone}]});
     // Canopy HQ (src/flagship.js): from the late game on, the corner lot behind the shop sells its next stage; while a
     // stage builds the tag counts down and its box offers Finish now.
-    if(flagshipUnlocked(state.lifetime)&&state.flagship<FLAGSHIP_MAX){var hqBuilding=isBuilding(state.builds,'flagship'),hqNext=flagshipNext(state.flagship),hqSkip=hqBuilding?buildSkipCost('flagship'):0;
-      tags.push({el:hqMarker,name:'HQ',build:'flagship',price:hqBuilding?hqSkip:flagshipCost(state.flagship),x:HQ_TAG.x,y:hqTagHeight(),z:HQ_TAG.z,buildBuys:true,
-        buys:hqBuilding?[{label:'Finish now',price:hqSkip,go:function(){skipBuildNow('flagship')}}]:[{label:hqNext.name+' · +'+Math.round(FLAGSHIP_STEP*100)+'% sales',price:flagshipCost(state.flagship),best:state.money>=flagshipCost(state.flagship),go:purchaseFlagship}]})}
+    if(flagshipUnlocked(state.lifetime,state.flagship,state.run.time)&&state.flagship<FLAGSHIP_MAX){var hqBuilding=isBuilding(state.builds,'flagship'),hqNext=flagshipNext(state.flagship),hqSkip=hqBuilding?buildSkipCost('flagship'):0;
+      tags.push({el:hqMarker,name:'HQ',build:'flagship',price:hqBuilding?hqSkip:flagshipCost(state.flagship,state),x:HQ_TAG.x,y:hqTagHeight(),z:HQ_TAG.z,buildBuys:true,
+        buys:hqBuilding?[{label:'Finish now',price:hqSkip,go:function(){skipBuildNow('flagship')}}]:[{label:hqNext.name+' · +'+Math.round(FLAGSHIP_STEP*100)+'% sales',price:flagshipCost(state.flagship,state),best:state.money>=flagshipCost(state.flagship,state),go:purchaseFlagship}]})}
     // The city buildings: each lot sells its next stage once it unlocks, like the HQ.
     // Before it unlocks, the next lot to open (HQ included) wears a small locked tag with what it takes; a tap says so.
-    var nextLocked=CITY_BUILDINGS.map(function(b){return{id:b.id,unlock:b.unlock}}).concat([{id:'flagship',unlock:FLAGSHIP_UNLOCK_LIFETIME}]).filter(function(b){return state.lifetime<b.unlock}).sort(function(a,b){return a.unlock-b.unlock})[0];
+    var nextLocked=CITY_BUILDINGS.map(function(b){return{id:b.id,unlock:b.unlock}}).concat([{id:'flagship',unlock:FLAGSHIP_UNLOCK_LIFETIME}]).filter(function(b){return !(b.id==='flagship'?flagshipUnlocked(state.lifetime,state.flagship,state.run.time):cityUnlocked(b.id,state.lifetime,state.city[b.id],state.run.time))}).sort(function(a,b){return a.unlock-b.unlock})[0];
     function lockedBox(unlock){return[{label:'Opens at '+fmt(unlock)+' earned',note:Math.floor(Math.min(1,state.lifetime/unlock)*100)+'%',price:unlock}]}
     if(nextLocked&&nextLocked.id==='flagship')tags.push({el:hqMarker,name:'HQ',price:FLAGSHIP_UNLOCK_LIFETIME,locked:true,lockText:fmt(FLAGSHIP_UNLOCK_LIFETIME),x:HQ_TAG.x,y:hqTagHeight(),z:HQ_TAG.z,buys:lockedBox(FLAGSHIP_UNLOCK_LIFETIME)});
     CITY_BUILDINGS.forEach(function(b){var stage=state.city[b.id];
       if(nextLocked&&nextLocked.id===b.id){var lockAt=cityTagAt(b.id,true);if(lockAt)tags.push({el:cityMarkers[b.id],name:b.name,price:b.unlock,locked:true,lockText:fmt(b.unlock),x:lockAt.x,y:lockAt.y,z:lockAt.z,buys:lockedBox(b.unlock)});return}
-      if(!cityUnlocked(b.id,state.lifetime)||stage>=b.stages.length)return;
-      var building=isBuilding(state.builds,b.id),next=cityNext(b.id,stage),skip=building?buildSkipCost(b.id):0,price=cityCost(b.id,stage),at=cityTagAt(b.id);if(!at)return;
+      if(!cityUnlocked(b.id,state.lifetime,state.city[b.id],state.run.time)||stage>=b.stages.length)return;
+      var building=isBuilding(state.builds,b.id),next=cityNext(b.id,stage),skip=building?buildSkipCost(b.id):0,price=cityCost(b.id,stage,state),at=cityTagAt(b.id);if(!at)return;
       tags.push({el:cityMarkers[b.id],name:b.name,build:b.id,price:building?skip:price,x:at.x,y:at.y,z:at.z,buildBuys:true,
         buys:building?[{label:'Finish now',price:skip,go:function(){skipBuildNow(b.id)}}]:[{label:next.name+' · '+stageGain(b.id),price:price,best:state.money>=price,go:function(){purchaseCity(b.id)}}]})});
     if(orders&&count<3)tags.push({el:kioskMarker,name:'Kiosk',price:KIOSK_PRICES[count],x:-9.75,y:2.1,z:KIOSK_Z[count],buys:[{label:'Buy',price:KIOSK_PRICES[count],go:[buyKiosk,buySecondKiosk,buyThirdKiosk][count]}]});
@@ -3335,7 +3341,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     if(shopBrowser)shopBrowser.render();
   }
   function updateMarkers(){
-    var key=[unit,width,height,state.idStaff,state.lines.join(),state.empire.activeStore,securitySelected,selected,state.lounge,loungeSelected,mapPicked,windowOpen(),deliveryBuilt(),kioskCount(),state.orderCounters,windowLevel(state.pickupWindow),state.atm.level,state.atm.machines,state.flagship,isBuilding(state.builds,'flagship'),flagshipUnlocked(state.lifetime),cityKey(),storeLevels().join(),leaseIndex()>=0&&leaseLocked(leaseIndex())].join("|");
+    var key=[unit,width,height,state.idStaff,state.lines.join(),state.empire.activeStore,securitySelected,selected,state.lounge,loungeSelected,mapPicked,windowOpen(),deliveryBuilt(),kioskCount(),state.orderCounters,windowLevel(state.pickupWindow),state.atm.level,state.atm.machines,state.flagship,isBuilding(state.builds,'flagship'),flagshipUnlocked(state.lifetime,state.flagship,state.run.time),cityKey(),storeLevels().join(),leaseIndex()>=0&&leaseLocked(leaseIndex())].join("|");
     if(updateMarkers.key===key&&updateMarkers.cx===centerX&&updateMarkers.cy===centerY)return;
     // While a finger or a glide moves the map, only the camera's centre changes, and every label moves with it by the
     // same amount, so the labels shift as laid out without measuring anything (a measure forced a layout per frame).
@@ -4255,13 +4261,13 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var lvl=windowLevel(w),maxed=lvl>=WINDOW_MAX_LEVEL,price=windowLevelCost(lvl),b=$('buyWindowLevel'),label=maxed?'Lv '+lvl:'Lv '+(lvl+1),tag=maxed?'Max':fmt(price);
     b.disabled=maxed||state.money<price;b.classList.toggle('is-owned',maxed);if(b.querySelector('span').textContent!==label)b.querySelector('span').textContent=label;if(b.querySelector('b').textContent!==tag)b.querySelector('b').textContent=tag;b.setAttribute('aria-label',maxed?'Pickup window at its top level':'Pickup window level '+(lvl+1)+', '+fmt(price))}
   // What each build cost, for its skip price (builds.js skipCost), and paying to finish it now.
-  function buildPrice(key){var branch=branchOfBuild(key);if(branch>=0)return STORES[branch].price;if(cityBuilding(key))return cityCost(key,state.city[key])||0;return key==='flagship'?flagshipCost(state.flagship)||0:key==='window'?WINDOW_COST:key==='deck'?AUTO_DRONE_COST:LOUNGE_TIERS[0].cost}
+  function buildPrice(key){var branch=branchOfBuild(key);if(branch>=0)return STORES[branch].price;if(cityBuilding(key))return cityCost(key,state.city[key],state)||0;return key==='flagship'?flagshipCost(state.flagship,state)||0:key==='window'?WINDOW_COST:key==='deck'?AUTO_DRONE_COST:LOUNGE_TIERS[0].cost}
   function buildSkipCost(key){return skipCost(state.builds,key,buildPrice(key))}
   function skipBuildNow(key){var price=buildSkipCost(key);if(!price)return;if(state.money<price){notify('Need '+fmt(price-state.money)+' more to finish now');return}
     state.money-=price;skipBuild(state.builds,key);telemetry.once('build_skipped_'+key);playSound('build',state.sound);completeBuilds();renderUI();save()}
   function purchaseWindow(){if(windowOpen()||isBuilding(state.builds,'window')||state.money<WINDOW_COST)return;state.money-=WINDOW_COST;upgradeFx.pop();startBuild(state.builds,'window');showcase({x:PICKUP_WINDOW.x,y:1.3,z:PICKUP_WINDOW.z},{r:1.4,h:2.2});telemetry.once('pickup_window_paid');save();renderUI();notify('PICKUP WINDOW UNDER CONSTRUCTION · opens in '+buildClock(buildLeft(state.builds,'window')),'upgrade')}
   // Canopy HQ's next stage: paid in full, then raised on the build timer; completeBuilds opens it.
-  function purchaseFlagship(){if(isBuilding(state.builds,'flagship')||!flagshipUnlocked(state.lifetime))return;var next=flagshipNext(state.flagship);if(!next||!payFlagship(state))return;
+  function purchaseFlagship(){if(isBuilding(state.builds,'flagship')||!flagshipUnlocked(state.lifetime,state.flagship,state.run.time))return;var next=flagshipNext(state.flagship);if(!next||!payFlagship(state))return;
     startBuild(state.builds,'flagship');pickedTag=null;hqReveal();telemetry.send('flagship_paid',{stage:state.flagship+1});playSound('build',state.sound);haptic('light');notify('CANOPY HQ · '+next.name.toUpperCase()+' UNDER WAY · done in '+buildClock(buildLeft(state.builds,'flagship')),'upgrade');updateMarkers.key=null;render.invalidated=true;save();renderUI()}
   // The tag rides just above whatever stands on the lot now.
   var HQ_TAG={x:13.64,z:-24.2};function hqTagHeight(){return [3.6,5,18.4,18.4,22][state.flagship]||5}
@@ -4269,21 +4275,21 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function hqReveal(){var h=hqTagHeight();showcase({x:HQ_TAG.x,y:h*.45,z:HQ_TAG.z},{r:3.2,h:Math.max(5,h*.8),colour:'#dbc38b'})}
   function cityReveal(id){var at=cityTagAt(id);if(at)showcase({x:at.x,y:at.y*.45,z:at.z},{r:3,h:Math.max(5,at.y*.8),ringZ:1,colour:'#dbc38b'})}
   // A city building's next stage: paid in full, then raised on its build timer; completeBuilds opens it.
-  function purchaseCity(id){var b=cityBuilding(id);if(!b||isBuilding(state.builds,id)||!cityUnlocked(id,state.lifetime))return;var next=cityNext(id,state.city[id]);if(!next||!payCity(state,id))return;
+  function purchaseCity(id){var b=cityBuilding(id);if(!b||isBuilding(state.builds,id)||!cityUnlocked(id,state.lifetime,state.city[id],state.run.time))return;var next=cityNext(id,state.city[id]);if(!next||!payCity(state,id))return;
     startBuild(state.builds,id);pickedTag=null;cityReveal(id);telemetry.send('city_paid',{id:id,stage:state.city[id]+1});playSound('build',state.sound);haptic('light');notify(b.name.toUpperCase()+' · '+next.name.toUpperCase()+' UNDER WAY · done in '+buildClock(buildLeft(state.builds,id)),'upgrade');updateMarkers.key=null;render.invalidated=true;save();renderUI()}
   // Where a city building's tag sits: over the lot's front, just above what stands there now.
   var cityLotRects=null;function cityTagAt(id,terrace){if(!cityLotRects)cityLotRects=cityLots();var lot=cityLotRects[id];if(!lot)return null;// Locked tags ride over the terrace (capped, the tall ones would lift them off screen); a plot for sale gets its tag
     // high enough to clear the shorter neighbours in front of it instead of sitting on their facades.
     if(terrace)return{x:(lot.x0+lot.x1)/2,y:Math.min(lot.top,9)+.6,z:lot.z1-1};var k=Math.min(3,state.city[id]+(isBuilding(state.builds,id)?1:0));return{x:(lot.x0+lot.x1)/2,y:(k?CITY_TOPS[id][k]:7.4)+.6,z:lot.z1-1}}
   // Lots shown as for sale or built: their old terraces step aside (frame.cityClaimed).
-  function cityClaimed(){var out={};CITY_BUILDINGS.forEach(function(b){out[b.id]=state.city[b.id]>0||isBuilding(state.builds,b.id)||cityUnlocked(b.id,state.lifetime)});return out}
+  function cityClaimed(){var out={};CITY_BUILDINGS.forEach(function(b){out[b.id]=state.city[b.id]>0||isBuilding(state.builds,b.id)||cityUnlocked(b.id,state.lifetime,state.city[b.id],state.run.time)});return out}
   function cityBuildShares(){var out={};CITY_BUILDINGS.forEach(function(b){if(isBuilding(state.builds,b.id))out[b.id]=1-buildShareLeft(state.builds,b.id)});return out}
-  function cityKey(){return CITY_BUILDINGS.map(function(b){return state.city[b.id]+(isBuilding(state.builds,b.id)?'b':'')+(cityUnlocked(b.id,state.lifetime)?'u':'')}).join()}
+  function cityKey(){return CITY_BUILDINGS.map(function(b){return state.city[b.id]+(isBuilding(state.builds,b.id)?'b':'')+(cityUnlocked(b.id,state.lifetime,state.city[b.id],state.run.time)?'u':'')}).join()}
   var CITY_WHAT={warehouse:'pays more while you are away',growhouse:'every plant station makes more',billboard:'more walk-ins',terplab:'trending and boutique strains sell for more'};
   // The first time each lot comes up for sale, say what it does.
-  function noticeCity(){CITY_BUILDINGS.forEach(function(b){if(state.citySeen.indexOf(b.id)>=0||!cityUnlocked(b.id,state.lifetime))return;state.citySeen.push(b.id);updateMarkers.key=null;render.invalidated=true;notify(b.name.toUpperCase()+' LOT FOR SALE · '+CITY_WHAT[b.id],'upgrade');save()})}
+  function noticeCity(){CITY_BUILDINGS.forEach(function(b){if(state.citySeen.indexOf(b.id)>=0||!cityUnlocked(b.id,state.lifetime,state.city[b.id],state.run.time))return;state.citySeen.push(b.id);updateMarkers.key=null;render.invalidated=true;notify(b.name.toUpperCase()+' LOT FOR SALE · '+CITY_WHAT[b.id],'upgrade');save()})}
   // The first time the lot comes up for sale, say where it is.
-  function noticeFlagship(){if(state.flagshipSeen||!flagshipUnlocked(state.lifetime))return;state.flagshipSeen=true;updateMarkers.key=null;notify('CANOPY HQ · the corner lot behind the shop is for sale','upgrade');save()}
+  function noticeFlagship(){if(state.flagshipSeen||!flagshipUnlocked(state.lifetime,state.flagship,state.run.time))return;state.flagshipSeen=true;updateMarkers.key=null;notify('CANOPY HQ · the corner lot behind the shop is for sale','upgrade');save()}
   // The window's two upgrades, each bought once: a second hatch (longer line, quicker hand-off) and a tip jar.
   // The window's level track (pickup-window.js): one level, or as many as the cash buys. A look level gets its own toast.
   function windowMaxed(){return windowLevel(state.pickupWindow)>=WINDOW_MAX_LEVEL}
@@ -4544,7 +4550,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       if(state.empire.stores[id-1].level){visitStore(id,false);return}
       if(state.empire.activeStore)visitStore(0,false);var c=districtCentre(id-1);glideTo(c.x,c.z,1);return}
     // The lot's middle, moved back along the view by a bit over a third of the building's height, so the whole building and its buy box clear the bars.
-    var hq=id==='flagship',at=hq?{x:HQ_TAG.x,y:hqTagHeight(),z:HQ_TAG.z-3}:cityTagAt(id,state.lifetime<cityBuilding(id).unlock);if(!at)return;
+    var hq=id==='flagship',at=hq?{x:HQ_TAG.x,y:hqTagHeight(),z:HQ_TAG.z-3}:cityTagAt(id,!cityUnlocked(id,state.lifetime,state.city[id],state.run.time));if(!at)return;
     if(!hq){if(!cityLotRects)cityLotRects=cityLots();var lot=cityLotRects[id];at.z=(lot.z0+lot.z1)/2}
     if(state.empire.activeStore)visitStore(0,false);
     var lift=at.y*.38*.6124;glideTo(at.x-lift,at.z-lift,1);
@@ -4772,7 +4778,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // preferred, so a distant upgrade never heads the list when an affordable one does real work.
   // Upgrades that only pay every few levels (the order desk's basket grows every second level) are looked at a few levels
   // ahead and valued on the total they cost, so a counter at its handoff floor is never bought over and over for nothing.
-  function recommendation(){
+  function recommendation(){adviceLive=true;try{return bestBuy()}finally{adviceLive=false}}
+  function bestBuy(){
     var base=incomeRate(),reach=Math.max(0,state.money)+base*300,best=null,bestReach=null,LOOKAHEAD=6;
     function consider(r){r.value=r.gain/r.spend;if(!best||r.value>best.value)best=r;if(r.price<=reach&&(!bestReach||r.value>bestReach.value))bestReach=r}
     function tryLevels(get,set,limit){var start=get();var found=economy.stepsToGain(function(k){set(start+k);var gain=incomeRate()-base;set(start);return gain},limit,base*1e-4);return found}
@@ -4840,6 +4847,21 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       if(!state.pickupWindow.owned){if(!isBuilding(state.builds,'window')){var built=windowIncome(1);if(built>0)consider({kind:'window',name:'Pickup window',price:WINDOW_COST,spend:WINDOW_COST,gain:built})}}
       else if(wl<WINDOW_MAX_LEVEL){var wNext=windowLevelCost(wl),wGain=windowIncome(wl+1)-wNow;if(wGain>0)consider({kind:'window',name:'Pickup window',price:wNext,spend:wNext,gain:wGain});
         var road=nextWindowLook(wl);if(road&&road-wl>1){var wSpend=0;for(var wk=wl;wk<road;wk++)wSpend+=windowLevelCost(wk);var roadGain=windowIncome(road)-wNow;if(roadGain>0)consider({kind:'window',name:'Pickup window',price:wNext,spend:wSpend,gain:roadGain})}}}
+    // Branches (Empire tab): each open branch's best station level, its whole slowest row lifted one level as a bundle,
+    // its next branch level and its store upgrades, all by what they add to income.
+    var emp=state.empire;emp.stores.forEach(function(store,b){if(!store.level)return;var lines=store.lines,j=branchBestStation(emp,b);
+      if(j>=0){var price=branchStationCost(emp,b,j,lines[j]);lines[j]++;var stGain=incomeRate()-base;lines[j]--;if(stGain>base*1e-4)consider({kind:'branch',store:b,station:j,name:STORES[b].name+' '+BRANCH_LINE[j],price:price,spend:price,gain:stGain})}
+      var low=Math.min.apply(null,lines),row=lines.map(function(_,k){return k}).filter(function(k){return lines[k]===low&&low<100});
+      if(row.length>1){var rowSpend=0,rowFirst=row[0];row.forEach(function(k){var c=branchStationCost(emp,b,k,lines[k]);rowSpend+=c;if(c<branchStationCost(emp,b,rowFirst,lines[rowFirst]))rowFirst=k;lines[k]++});var rowGain=incomeRate()-base;row.forEach(function(k){lines[k]--});
+        if(rowGain>base*1e-4)consider({kind:'branch',store:b,station:rowFirst,name:STORES[b].name+' '+BRANCH_LINE[rowFirst],price:branchStationCost(emp,b,rowFirst,lines[rowFirst]),spend:rowSpend,gain:rowGain})}
+      if(store.level<10&&state.lifetime>=STORES[b].goal){var lp=storeCost(emp,b);store.level++;var lvGain=incomeRate()-base;store.level--;if(lvGain>base*1e-4)consider({kind:'branchLevel',store:b,name:STORES[b].name,price:lp,spend:lp,gain:lvGain})}
+      STORE_PROJECTS[b].forEach(function(name,k){if(store.projects[k]||store.level<PROJECT_LEVELS[k])return;var pc=projectCost(b,k);store.projects[k]=true;var pGain=incomeRate()-base;store.projects[k]=false;if(pGain>base*1e-4)consider({kind:'branchProject',store:b,project:k,name:name,price:pc,spend:pc,gain:pGain})})});
+    // Canopy HQ and the city buildings: each open stage by what it adds to income now (the warehouse pays only while
+    // away, so it shows no gain here). They cost minutes of income, more than the five minutes of reach above, so
+    // a stage that beats everything in reach is still picked within fifteen minutes of it: the advice saves for it.
+    if(flagshipUnlocked(state.lifetime,state.flagship,state.run.time)&&state.flagship<FLAGSHIP_MAX&&!isBuilding(state.builds,'flagship')){var hqPrice=heldQuote(state,'flagship',state.flagship)||flagshipQuote(state.flagship,base);state.flagship++;var hqGain=incomeRate()-base;state.flagship--;if(hqGain>base*1e-4)consider({kind:'hq',name:'Canopy HQ',price:hqPrice,spend:hqPrice,gain:hqGain,save:true})}
+    CITY_BUILDINGS.forEach(function(cb){var st=state.city[cb.id];if(st>=cb.stages.length||isBuilding(state.builds,cb.id)||!cityUnlocked(cb.id,state.lifetime,st,state.run.time))return;var cp=heldQuote(state,cb.id,st)||cityQuote(cb.id,st,base);state.city[cb.id]++;var cg=incomeRate()-base;state.city[cb.id]--;if(cg>base*1e-4)consider({kind:'city',id:cb.id,name:cb.name,price:cp,spend:cp,gain:cg,save:true})});
+    if(best&&best.save&&best!==bestReach&&(!bestReach||best.value>bestReach.value)&&best.price<=Math.max(0,state.money)+base*900)bestReach=best;
     var pick=bestReach||best||legacyRecommendation();
     // A fork still waiting on the player is named as the choice, not bought: the tap opens both sides in the Shop.
     if(pick.kind==='component'&&!componentAdvisable(pick.index)){var f=forkOf(COMPONENTS[pick.index].key);return{kind:'fork',fork:f.id,index:pick.index,name:f.name,price:pick.price}}
@@ -4863,7 +4885,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function onlineIncome(){return state.lines[4]>0&&onlineOpen()?windowIncome(windowLevel(state.pickupWindow)):0}
   function openFork(index){showTray('boosts');if(shopBrowser&&shopBrowser.show)shopBrowser.show(shopBrowser.categoryOf('componentBuy'+index));renderUI();var card=$('componentBuy'+index).parentElement;if(card.scrollIntoView)card.scrollIntoView({block:'nearest'})}
   // A suggestion only points: a tap opens where the pick lives (its station, or its card in the Shop) and the player buys it there.
-  function actOnRecommendation(){var r=recommendation();if(!r)return;if(r.kind==='station')return selectMachine(r.index);if(r.kind==='counter'||r.kind==='kiosk')return selectMachine(4);if(r.kind==='window'){pickedTag='window';buyBoxFor=-1;renderUI();return}if(r.kind==='security')return selectSecurity();if(r.kind==='queue'){showTray('boosts');if(shopBrowser&&shopBrowser.show&&shopBrowser.categoryOf)shopBrowser.show(shopBrowser.categoryOf('upgradeQueue'));renderUI();var q=$('upgradeQueue');if(q&&q.scrollIntoView)q.scrollIntoView({block:'nearest'});return}if(r.kind==='cross'){showTray('flowers');showMenuView('breed');return}if(r.kind==='atm'){mapPicked=false;pickedTag='atm';buyBoxFor=-1;renderUI();return}openFork(r.index)}
+  function actOnRecommendation(){var r=recommendation();if(!r)return;if(r.kind==='station')return selectMachine(r.index);if(r.kind==='counter'||r.kind==='kiosk')return selectMachine(4);if(r.kind==='window'){pickedTag='window';buyBoxFor=-1;renderUI();return}if(r.kind==='security')return selectSecurity();if(r.kind==='queue'){showTray('boosts');if(shopBrowser&&shopBrowser.show&&shopBrowser.categoryOf)shopBrowser.show(shopBrowser.categoryOf('upgradeQueue'));renderUI();var q=$('upgradeQueue');if(q&&q.scrollIntoView)q.scrollIntoView({block:'nearest'});return}if(r.kind==='cross'){showTray('flowers');showMenuView('breed');return}if(r.kind==='atm'){mapPicked=false;pickedTag='atm';buyBoxFor=-1;renderUI();return}if(r.kind==='branch'||r.kind==='branchLevel'||r.kind==='branchProject'){showTray('empire');empireShell.openStore(r.store);return}if(r.kind==='hq'||r.kind==='city'){mapPicked=false;pickedTag=r.kind==='hq'?'hq':r.id;buyBoxFor=-1;renderUI();return}openFork(r.index)}
   $('flowAction').onclick=function(){if(state.gameSpeed===0)return setGameSpeed(1);if(!state.shopOpen){if(!state.doorBuilt)return buildStation('door');var next=state.lines.indexOf(0);return next<0?openShop():buildStation(next)}actOnRecommendation()};
   LINES.forEach(function(_,i){$('staffMax'+i).onclick=function(){trainStaffMax(i)}});
   $('trainIdChecker').onclick=function(){if(!state.doorBuilt)return buildStation('door');trainIdChecker(1)};
