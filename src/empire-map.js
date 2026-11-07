@@ -52,9 +52,9 @@ export function mountEmpireMap({getState,format,fly,summary}){
  function cityInfo(s,id){const hq=id==='flagship',def=hq?null:CITY_BUILDINGS.find(b=>b.id===id),name=hq?'Canopy HQ':def.name;
   const stage=hq?s.flagship|0:(s.city&&s.city[id])|0,max=hq?FLAGSHIP_MAX:CITY_MAX,unlock=hq?FLAGSHIP_UNLOCK_LIFETIME:def.unlock;
   if(isBuilding(s.builds,id)){const left=buildLeft(s.builds,id);return {share:(stage+1-buildShareLeft(s.builds,id))/max,figure:buildClock(left),tone:'building',label:name+', stage '+(stage+1)+' of '+max+' going up, done in '+buildClock(left)};}
-  if(!(hq?flagshipUnlocked(s.lifetime):cityUnlocked(id,s.lifetime))){const share=clamp(s.lifetime/unlock);return {share,figure:LOCK+format(unlock),tone:'locked',label:name+', opens at '+format(unlock)+' earned, '+Math.floor(share*100)+'% there'};}
+  if(!(hq?flagshipUnlocked(s.lifetime,s.flagship,s.run&&s.run.time):cityUnlocked(id,s.lifetime,s.city&&s.city[id],s.run&&s.run.time))){const share=clamp(s.lifetime/unlock);return {share,figure:LOCK+format(unlock),tone:'locked',label:name+', opens at '+format(unlock)+' earned, '+Math.floor(share*100)+'% there'};}
   if(stage>=max)return {share:1,figure:DONE[id],tone:'max',label:name+', finished, '+DONE[id]};
-  const cost=hq?flagshipCost(stage):cityCost(id,stage),afford=s.money>=cost;
+  const cost=hq?flagshipCost(stage,s):cityCost(id,stage,s),afford=s.money>=cost;
   return {share:stage/max,figure:format(cost),tone:afford?'ready':'',cost:afford?cost:null,label:name+', stage '+stage+' of '+max+', next '+format(cost)};}
 
  function paint(t,info,best,here){

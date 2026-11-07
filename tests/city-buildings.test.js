@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {CITY_BUILDINGS,migrateCity,cityUnlocked,cityCost,payCity,openCityStage,awayExtraSeconds,awayPay,outputFactor,trafficFactor,terpFactor} from '../src/city-buildings.js';
+import {CITY_BUILDINGS,migrateCity,cityUnlocked,cityCost,cityQuote,payCity,openCityStage,awayExtraSeconds,awayPay,outputFactor,trafficFactor,terpFactor} from '../src/city-buildings.js';
 import {BUILD_SECONDS} from '../src/builds.js';
 import {FLAGSHIP_UNLOCK_LIFETIME} from '../src/flagship.js';
 import {cityLots} from '../src/sunny-world.js';
@@ -31,4 +31,12 @@ test('each building does its own job',()=>{
 });
 test('every building has a lot on the west or back of the block, clear of the branches to the east',()=>{
   const lots=cityLots();CITY_BUILDINGS.forEach(b=>{assert.ok(lots[b.id],b.id);assert.ok(lots[b.id].x1<22.5,b.id)});
+});
+test('city lots open an hour or more apart, by earnings or by time, and are priced in minutes of income',()=>{
+  for(let i=1;i<CITY_BUILDINGS.length;i++)assert.ok(CITY_BUILDINGS[i].hours-CITY_BUILDINGS[i-1].hours>=1,CITY_BUILDINGS[i].id);
+  assert.equal(cityUnlocked('growhouse',0,0,CITY_BUILDINGS[1].hours*3600),true);assert.equal(cityUnlocked('growhouse',0,0,0),false);
+  assert.equal(cityUnlocked('billboard',0,1),true,'a lot built before the unlocks moved up stays open');
+  const b=CITY_BUILDINGS[2];assert.equal(cityQuote(b.id,0,1e8),Math.round(b.stages[0].minutes*60*1e8));assert.equal(cityQuote(b.id,0,0),b.stages[0].cost);
+  const s={money:0,city:migrateCity(),quotes:{[b.id]:{stage:0,price:123e9}}};assert.equal(cityCost(b.id,0,s),123e9);
+  s.money=123e9;assert.equal(payCity(s,b.id),true);assert.equal(s.money,0);
 });

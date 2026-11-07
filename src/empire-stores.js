@@ -115,7 +115,7 @@ export function mountEmpireStores({getState,format,buyStation,goStore}){
   const u=stationUI[i];if(!u||!d.lvl)return;
   const lines=d.store.lines,best=branchBestStation(d.p,i),money=d.state.money;
   const meta=perText(format(d.rate));if(u.meta.innerHTML!==meta)u.meta.innerHTML=meta;
-  u.tiles.forEach((t,j)=>{const level=Math.max(1,lines[j]||1),max=level>=BRANCH_LINE_MAX,cost=max?0:branchStationCost(i,j,level),afford=!max&&money>=cost,isBest=j===best&&afford;
+  u.tiles.forEach((t,j)=>{const level=Math.max(1,lines[j]||1),max=level>=BRANCH_LINE_MAX,cost=max?0:branchStationCost(d.p,i,j,level),afford=!max&&money>=cost,isBest=j===best&&afford;
    set(t.level,String(level));
    const share=max?1:(level%10)/10,label=STORES[i].name+' '+BRANCH_LINE[j]+', level '+level+(max?', maxed':', next level '+format(cost)+(isBest?', best buy':''));
    paintTile(t,'page-tile map-tile'+(max?' is-max':isBest?' is-best':afford?' is-ready':''),label,max?'Max':format(cost),share);});

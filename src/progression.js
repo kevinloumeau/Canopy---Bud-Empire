@@ -211,32 +211,50 @@ const BRANCH_LINE_BASE=[1,1.3,1.6,1.9,2.2,2.5];
 export function migrateBranchLine(raw,level){
   return BRANCH_LINE.map((_,j)=>{const v=Array.isArray(raw)?raw[j]:undefined;return level>0?Math.max(1,Math.min(BRANCH_LINE_MAX,Number.isFinite(v)?Math.floor(v):1)):0;});
 }
-// The price of a branch station's next level: 2% of the branch's opening price at Lv 1, growing 16% a level as the flagship's.
-export function branchStationCost(i,j,level){return Math.floor(STORES[i].price*.02*BRANCH_LINE_BASE[j]*Math.pow(1.16,Math.max(0,level-1)));}
-// What the line does to the branch's income: 1 with every station at Lv 1. Each station's output is the flagship's
-// batch size at its level (with tier doublings); the line runs at a blend of its slowest (60%) and average (40%), and
-// the square root keeps a whole branch from outgrowing the flagship that feeds it.
+// What the line does to the branch's income: 1 with every station at Lv 1, BRANCH_LINE_GAIN with all six at Lv 100.
+// Each station counts its plain batch size (the flagship's per-level gain, without its tier doublings: a branch is fed
+// by the flagship, so its own tiers would stack on top of the flagship's and run away). The line runs at a blend of its
+// slowest (60%) and average (40%), and the square root and the fixed top keep a whole branch from outgrowing the
+// flagship that feeds it. Before 2026-11-07 the doublings were in and a full line paid 51x; branches took 90% of income
+// from the first hour and nothing else was worth buying.
+export const BRANCH_LINE_GAIN=2.2;
+const plainBatch=l=>1+(Math.max(1,l)-1)*.4;
+const LINE_TOP=Math.sqrt(plainBatch(BRANCH_LINE_MAX))-1;
 export function branchLineFactor(lines){
   if(!Array.isArray(lines)||!lines.length||!lines[0])return 1;
-  const out=lines.map(l=>batchSize(Math.max(1,l))),min=Math.min(...out),avg=out.reduce((a,b)=>a+b,0)/out.length;
-  return Math.sqrt(.6*min+.4*avg);
+  const out=lines.map(plainBatch),min=Math.min(...out),avg=out.reduce((a,b)=>a+b,0)/out.length;
+  return 1+(Math.sqrt(.6*min+.4*avg)-1)*(BRANCH_LINE_GAIN-1)/LINE_TOP;
+}
+// The price of a branch station's next level is set by what it earns: a share of one level across the whole line,
+// times a payback time that starts at BRANCH_PAYBACK seconds at Lv 1 and grows 3% a level (about 1.5 hours at Lv 100).
+// A branch's income follows the flagship, so its prices do too, and a station level is never a free lunch however far
+// the flagship has run ahead. The old fixed price (2% of the branch's opening price, 16% more a level) is the floor.
+export const BRANCH_PAYBACK=600,BRANCH_PAYBACK_GROWTH=1.03;
+const BASE_MEAN=BRANCH_LINE_BASE.reduce((a,b)=>a+b,0)/BRANCH_LINE_BASE.length;
+const evenLine=l=>branchLineFactor(BRANCH_LINE.map(()=>l));
+export function branchStationCost(p,i,j,level){
+  const l=Math.max(1,level|0),floor=Math.floor(STORES[i].price*.02*BRANCH_LINE_BASE[j]*Math.pow(1.16,l-1));
+  const s=p?.stores?.[i];if(!s?.level)return floor;
+  const plain=storeRate(p,i)/branchLineFactor(s.lines),step=(evenLine(l+1)-evenLine(l))/BRANCH_LINE.length;
+  const earn=plain*step*BRANCH_LINE_BASE[j]/BASE_MEAN*BRANCH_PAYBACK*Math.pow(BRANCH_PAYBACK_GROWTH,l-1);
+  return Math.max(floor,Number.isFinite(earn)?Math.floor(earn):0);
 }
 // The station that gains the branch the most per dollar: the line's best buy, which wears the brass on the map.
 export function branchBestStation(p,i){
   const s=p.stores[i];if(!s.level)return -1;let best=-1,score=-1;
-  s.lines.forEach((l,j)=>{if(l>=BRANCH_LINE_MAX)return;const next=s.lines.slice();next[j]++;const gain=(branchLineFactor(next)-branchLineFactor(s.lines))/branchStationCost(i,j,l);if(gain>score){score=gain;best=j;}});
+  s.lines.forEach((l,j)=>{if(l>=BRANCH_LINE_MAX)return;const next=s.lines.slice();next[j]++;const gain=(branchLineFactor(next)-branchLineFactor(s.lines))/branchStationCost(p,i,j,l);if(gain>score){score=gain;best=j;}});
   return best;
 }
 export function branchStationTier(level){return stationTier(level);}
 export function buyBranchStation(state,i,j){
   const s=state.empire.stores[i];if(!s?.level||!BRANCH_LINE[j]||s.lines[j]>=BRANCH_LINE_MAX)return false;
-  const cost=branchStationCost(i,j,s.lines[j]);if(state.money<cost)return false;
+  const cost=branchStationCost(state.empire,i,j,s.lines[j]);if(state.money<cost)return false;
   const before=storeRate(state.empire,i);state.money-=cost;s.lines[j]++;state.empire.network.stores[i].incomeGain=storeRate(state.empire,i)-before;recordGoal(state.empire,'upgrade',cost);return true;
 }
 // As many levels of one station as the cash buys (the flagship's Max).
 export function branchStationMax(state,i,j){
   const s=state.empire.stores[i];if(!s?.level)return {levels:0,cost:0};let levels=0,total=0;
-  while(s.lines[j]+levels<BRANCH_LINE_MAX){const c=branchStationCost(i,j,s.lines[j]+levels);if(total+c>state.money)break;total+=c;levels++;}
+  while(s.lines[j]+levels<BRANCH_LINE_MAX){const c=branchStationCost(state.empire,i,j,s.lines[j]+levels);if(total+c>state.money)break;total+=c;levels++;}
   return {levels,cost:total};
 }
 export function branchRate(p) {return STORES.reduce((sum,_,i)=>sum+storeRate(p,i),0);}
