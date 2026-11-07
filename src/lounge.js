@@ -7,21 +7,21 @@
 // The lounge used to sell one jar a guest, so every guest it took from the counters cost the shop a whole basket
 // (a sim in 2026-11: closing the lounge raised shop income 80%). A guest now always pays more upstairs than down.
 export const LOUNGE_TIERS=[
-  {name:'Speakeasy',cost:250000,seats:4,share:4,cover:150,spend:3,session:18,
+  {name:'Speakeasy',cost:250000,seats:4,share:4,cover:150,spend:3,session:27,
    summary:'Four seats. Every fourth guest goes up and pays 15% over a walk-in basket.'},
-  {name:'Dab bar',cost:750000,seats:6,share:4,cover:220,spend:4,session:16,
+  {name:'Dab bar',cost:750000,seats:6,share:4,cover:220,spend:4,session:29,
    summary:'Six seats and a bar. Guests pay 30% over a basket.'},
-  {name:'Vinyl nights',cost:2000000,seats:9,share:3,cover:320,spend:4.5,session:15,
+  {name:'Vinyl nights',cost:2000000,seats:9,share:3,cover:320,spend:4.5,session:33,
    summary:'Nine seats and a DJ. Every third guest goes up, at +45%.'},
-  {name:'Terrace',cost:6000000,seats:14,share:3,cover:500,spend:5.5,session:14,
+  {name:'Terrace',cost:6000000,seats:14,share:3,cover:500,spend:5.5,session:42,
    summary:'Fourteen seats on a terrace. Guests pay 60% over a basket.'},
-  {name:'Private booths',cost:18000000,seats:20,share:2,cover:800,spend:7,session:13,
+  {name:'Private booths',cost:18000000,seats:20,share:2,cover:800,spend:7,session:48,
    summary:'Twenty booths. Every other guest goes up, at +75%.'},
-  {name:'Tasting bar',cost:55000000,seats:28,share:2,cover:1200,spend:9,session:12,
+  {name:'Tasting bar',cost:55000000,seats:28,share:2,cover:1200,spend:9,session:55,
    summary:'Twenty-eight seats. Guests pay 90% over a basket.'},
-  {name:'Chef’s table',cost:170000000,seats:38,share:2,cover:1800,spend:12,session:11,
-   summary:'Thirty-eight seats, quicker turns, at +105%.'},
-  {name:'Members’ club',cost:500000000,seats:50,share:2,cover:2800,spend:16,session:10,
+  {name:'Chef’s table',cost:170000000,seats:38,share:2,cover:1800,spend:12,session:60,
+   summary:'Thirty-eight seats. Guests pay 105% over a basket.'},
+  {name:'Members’ club',cost:500000000,seats:50,share:2,cover:2800,spend:16,session:67,
    summary:'Fifty seats, more than double a basket, and every VIP goes up.'}
 ];
 export const LOUNGE_MAX=LOUNGE_TIERS.length;
@@ -42,11 +42,12 @@ export function buyLoungeLift(state){
   if(!migrateLounge(state.lounge)||state.loungeLift===true||!Number.isFinite(state.money)||state.money<LOUNGE_LIFT_COST)return false;
   state.money-=LOUNGE_LIFT_COST;state.loungeLift=true;return true;
 }
-// The lounge host works the room: each training level raises the cover and the premium by 10%.
+// The lounge host works the room: training raises the cover and the premium, up to double.
 export function migrateLoungeHost(value){
   return typeof value==='number'&&Number.isFinite(value)?Math.max(0,Math.min(10000,Math.floor(value))):0;
 }
-export function loungeHostSpeed(host){return 1+migrateLoungeHost(host)*LOUNGE_HOST_STEP;}
+// The host's lift tapers off: 10% for the first level, never more than double however far they train.
+export function loungeHostSpeed(host){return 1+(1-Math.exp(-migrateLoungeHost(host)*LOUNGE_HOST_STEP));}
 export function loungeHostCost(host){return Math.floor(20*Math.pow(1.6,migrateLoungeHost(host)));}
 export function buyLoungeTier(state){
   const level=migrateLounge(state.lounge),cost=loungeUpgradeCost(level);
@@ -70,10 +71,11 @@ export function loungeAdmission(level,seated,spareJars){
   const seats=loungeSeats(level);
   return {seats,open:seats>0,seat:seated<seats,jar:spareJars>=1,admit:seats>0&&seated<seats&&spareJars>=1};
 }
-// What a lounge guest pays for each bag over a walk-in: 15% a tier, raised by the host's training (10% a level) and the
-// second lift (a quarter).
+// What a lounge guest pays for each bag over a walk-in: 15% a tier, raised by the host's training (up to double) and the
+// second lift (a quarter). Sessions run longer at the bigger tiers, so the seats turn over from one guest every 20
+// seconds (Speakeasy) to one every 4 (Members' club): the lounge adds a share to the shop, it never outsells it.
 export const LOUNGE_PREMIUM=.15,LOUNGE_HOST_STEP=.1;
-export function loungeBoost(host=0,lift=false){return (1+migrateLoungeHost(host)*LOUNGE_HOST_STEP)*(lift?LOUNGE_LIFT_SPEED:1);}
+export function loungeBoost(host=0,lift=false){return loungeHostSpeed(host)*(lift?LOUNGE_LIFT_SPEED:1);}
 export function loungeMarkup(level,host=0,lift=false){return loungeTier(level)?1+LOUNGE_PREMIUM*migrateLounge(level)*loungeBoost(host,lift):1;}
 // The take for one guest: the cover at the curtain plus their basket (`bags` at `jarValue`, a walk-in's price) at the
 // lounge markup. `bags` defaults to one for callers that only want the per-bag figure.

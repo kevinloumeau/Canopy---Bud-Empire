@@ -63,13 +63,13 @@ test('the rate right now counts one take per session for every seat taken, never
   assert.equal(loungeCurrentRate(1,-2,80),0);assert.equal(loungeCurrentRate(1,NaN,80),0);
 });
 
-test('lounge host raises the cover and the premium 10% a level, never the pace',async()=>{
+test('lounge host raises the cover and the premium, tapering to double, never the pace',async()=>{
   const {loungeMarkup}=await import('../src/lounge.js');
   assert.equal(migrateLoungeHost(undefined),0);assert.equal(migrateLoungeHost(-3),0);assert.equal(migrateLoungeHost(2.7),2);assert.equal(migrateLoungeHost(1e9),10000);
-  assert.equal(loungeHostSpeed(0),1);assert.equal(loungeHostSpeed(2),1.2);
+  assert.equal(loungeHostSpeed(0),1);assert.ok(Math.abs(loungeHostSpeed(2)-(2-Math.exp(-.2)))<1e-12);assert.ok(loungeHostSpeed(1e4)<=2&&loungeHostSpeed(40)>1.98);
   assert.equal(loungeSessionSeconds(1),LOUNGE_TIERS[0].session*3);
-  assert.equal(loungeTake(1,80,2).cover,Math.round(LOUNGE_TIERS[0].cover*3*1.2));
-  assert.ok(Math.abs(loungeMarkup(1,2)-(1+.15*1.2))<1e-12);
+  const h=loungeHostSpeed(2);assert.equal(loungeTake(1,80,2).cover,Math.round(LOUNGE_TIERS[0].cover*3*h));
+  assert.ok(Math.abs(loungeMarkup(1,2)-(1+.15*h))<1e-12);
   assert.ok(loungeRate(1,80,2,false,10)>loungeRate(1,80,0,false,10));
   assert.equal(loungeCurrentRate(1,4,80,2,false,10),loungeRate(1,80,2,false,10));
   assert.equal(loungeHostCost(0),20);assert.equal(loungeHostCost(3),Math.floor(20*Math.pow(1.6,3)));
@@ -84,6 +84,10 @@ test('the second elevator shaft is bought once, only with the lounge open, and l
   assert.equal(loungeTake(1,100,0,true).cover,Math.round(LOUNGE_TIERS[0].cover*3*LOUNGE_LIFT_SPEED));
   assert.ok(loungeCurrentRate(1,2,100,0,true)>loungeCurrentRate(1,2,100,0));
 });
-test('guests stay three times the base session',()=>{
-  for(let level=1;level<=LOUNGE_MAX;level++)assert.equal(loungeSessionSeconds(level),LOUNGE_TIERS[level-1].session*3);
+test('guests stay three times the base session, and the seats turn over between one guest every 20 s and every 4 s',()=>{
+  let last=0;
+  for(let level=1;level<=LOUNGE_MAX;level++){
+    assert.equal(loungeSessionSeconds(level),LOUNGE_TIERS[level-1].session*3);
+    const perSecond=loungeSeats(level)/loungeSessionSeconds(level);assert.ok(perSecond>last&&perSecond>=.045&&perSecond<=.26,LOUNGE_TIERS[level-1].name);last=perSecond;
+  }
 });

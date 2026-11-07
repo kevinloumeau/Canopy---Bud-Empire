@@ -156,9 +156,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Regulars reach for the everyday strain; VIPs take the reserve when the menu offers one.
   // A VIP takes the reserve strain; everyone else takes their strain in the type they came for (see `wantedFormat`),
   // since every strain sells in every stocked type, and pays that type's premium. A VIP pays the menu's mean value.
-  // Trend scout sends regulars after the trend: 4% of them a level (by id) buy the trending strain when it is on the
+  // Trend scout sends regulars after the trend: 7% of them a level (by id) buy the trending strain when it is on the
   // menu, and stay as happy as if they had their everyday strain.
-  var TREND_CHASE=.04;
+  var TREND_CHASE=.07;
   function trendChaseAt(level){return Math.min(1,level*TREND_CHASE)}
   function trendChase(){return trendChaseAt(state.trendLevel)}
   function trendOnMenu(){var t=state.strainTrend.index;return t>0&&menuStrains().indexOf(t)>=0?t:-1}
@@ -548,10 +548,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // comes up its last half unit, the way the doorman does; together they keep sales where they were at full pace.
   var WALK_PACE=.7,PICKUP_REACH=.5;
   function walkSpeed(){return economy.walkSpeed(state.trafficLevel)*WALK_PACE}
-  // Floor flow draws VIPs as well as walk-ins: once reputation opens VIPs and a boutique strain is on the menu, 2.5% more
-  // of the door a level (up to half) are VIPs, who buy a double basket of the best boutique strain.
-  var FLOOR_VIPS=.025;
-  function floorVipShare(){return state.empire.reputation>=60&&strains.reserveStrain(menuStrains(),state.strains)!==null?Math.min(.5,state.trafficLevel*FLOOR_VIPS):0}
+  // Floor flow draws VIPs as well as walk-ins: once reputation opens VIPs and a boutique strain is on the menu, 0.75%
+  // more of the door a level (up to 15%) are VIPs, who buy a double basket of the best boutique strain.
+  var FLOOR_VIPS=.0075;
+  function floorVipShare(){return state.empire.reputation>=60&&strains.reserveStrain(menuStrains(),state.strains)!==null?Math.min(.15,state.trafficLevel*FLOOR_VIPS):0}
   function floorVip(kind,id){return kind!=='vip'&&floorVipShare()>0&&((Number(id)||0)*0.5698402910)%1<floorVipShare()?'vip':kind}
   function pickupReserve(){return pickupPlaces(Math.round(pickupPromised()/WALK_PACE),routeLength(queueRoute(true)),queueGap(false))}
   function queueLimit(){return Math.min(QUEUE_MAX,Math.min(12,6+Math.floor(Math.max(0,state.lines[4]-1)/2)+Math.floor(state.staff[4]/2))+state.queueLevel*2)}
@@ -825,7 +825,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function renderComponents(){
     // Each effect fits one line of a Research tile: a number and one or two words.
     var effectLines={growBatchLevel:function(l){return '+'+(l*6)+'% batches'},curingLevel:function(l){return '+'+(l*3)+'% sale value'},trendLevel:function(l){return Math.round(trendChaseAt(l)*100)+'% follow trend'},breedingLevel:function(l){return '-'+(l*3)+'% grow time'},offlineLevel:function(l){return (4+l*4)+'h offline'},
-      basketLevel:function(l){return '+'+(l*4)+'% baskets'},trafficLevel:function(l){return '+'+Math.round(Math.min(.5,l*FLOOR_VIPS)*100)+'% VIPs'},displayLevel:function(l){return '+'+(l*2)+'% boutique'},loyaltyLevel:function(l){return '+'+(l*6)+'% tips'},serviceLevel:function(l){return economy.securityDuration(state.idStaff,l).toFixed(2)+'s ID check'},
+      basketLevel:function(l){return '+'+(l*4)+'% baskets'},trafficLevel:function(l){return '+'+Math.round(Math.min(.15,l*FLOOR_VIPS)*100)+'% VIPs'},displayLevel:function(l){return '+'+(l*2)+'% boutique'},loyaltyLevel:function(l){return '+'+(l*6)+'% tips'},serviceLevel:function(l){return economy.securityDuration(state.idStaff,l).toFixed(2)+'s ID check'},
       webLevel:function(l){return (requestRate(state.onlineCompleted,1,l)*droneReach()*60).toFixed(1)+' orders/min'},onlineBonusLevel:function(l){return '+'+(l*5)+'% online'},fleetLevel:function(l){return (10*(1-l*.03)).toFixed(1)+'s per drone'},cargoLevel:function(l){return '+'+(l*5)+'% per drop'}},
       describe=COMPONENTS.map(function(c){return effectLines[c.key]});
     COMPONENTS.forEach(function(c,i){var level=state[c.key],max=level>=c.max,side=sideStatus(state,c.key),closed=side==='closed',gated=side==='gated',locked=!componentInstalled(i)||closed||gated,button=$('componentBuy'+i),f=forkOf(c.key);
