@@ -13,7 +13,7 @@ body[data-active-tray=goals] .sheet:not(.collapsed) .panel-header>#panelToggle{m
 .goals-collect-icons>i{display:grid;place-items:center;width:22px;height:22px}
 .goals-collect-icons>i+i{margin-left:-7px}
 .goals-collect-icons img.goal-3d{width:22px;height:22px}
-.goals-head .goals-collect>b{font:500 14px 'DM Mono',monospace;letter-spacing:-.02em;white-space:nowrap}
+.goals-head .goals-collect>b{font:500 14px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;white-space:nowrap}
 .goals-head .goals-collect-go{padding:7px 13px;border-radius:8px;font-size:13px;line-height:1}
 .goals-head .goals-quiet{margin:0 4px 0 0;padding:0;font-size:12px;white-space:nowrap}
 .goals-head .goals-quiet img.goal-3d{width:20px;height:20px}
@@ -39,7 +39,7 @@ body[data-active-tray=goals] .sheet:not(.collapsed) .panel-header>#panelToggle{m
 .goal-switch{display:grid;grid-auto-columns:minmax(0,1fr);grid-auto-flow:column;gap:2px;margin:0 0 8px;padding:2px;border:1px solid var(--ui-edge);border-radius:12px;background:var(--ui-well-soft)}
 .sheet .empire-screen .goal-switch button,.goal-switch button{display:grid;justify-items:center;align-content:center;gap:0;min-width:0;min-height:34px;margin:0;padding:3px 2px;border:0;border-radius:9px;background:none;box-shadow:none;color:var(--ui-soft);font:inherit;cursor:pointer}
 .goal-switch button>span{max-width:100%;overflow:hidden;font-size:11.5px;font-weight:600;line-height:1.2;text-overflow:ellipsis;white-space:nowrap}
-.goal-switch button>b{display:flex;align-items:center;gap:3px;font:500 10.5px 'DM Mono',monospace;letter-spacing:-.02em;line-height:1.2;white-space:nowrap}
+.goal-switch button>b{display:flex;align-items:center;gap:3px;font:500 10.5px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;line-height:1.2;white-space:nowrap}
 .goal-switch button>b svg{width:11px;height:11px}
 .goal-switch .goal-stars i svg{width:11px;height:11px}
 .sheet .empire-screen .goal-switch button[aria-selected=true],.goal-switch button[aria-selected=true]{background:var(--ui-sheen);color:var(--ui-ink)}
@@ -74,5 +74,5 @@ body[data-active-tray=goals] .sheet:not(.collapsed) .panel-header>#panelToggle{m
 .goal-group.is-stacked{margin-top:14px}
 .sheet .goal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 8px;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ui-soft)}
 .goal-head span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.goal-head b{display:flex;align-items:center;gap:4px;font:500 12px 'DM Mono',monospace;letter-spacing:-.02em;text-transform:none;color:var(--ui-ink);white-space:nowrap}
+.goal-head b{display:flex;align-items:center;gap:4px;font:500 12px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;text-transform:none;color:var(--ui-ink);white-space:nowrap}
 .goal-head b svg{width:14px;height:14px;color:var(--ui-soft)}

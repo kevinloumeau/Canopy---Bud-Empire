@@ -11,7 +11,7 @@
 /* Cash is the hero; the rate hangs off it as a suffix. Labels stay for screen readers only. */
 .hud>.stat{flex:0 0 auto;min-width:0;margin:0;padding:0;border:0}
 .hud>.stat small{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:0}
-.hud>.stat strong{display:block;font:600 19px 'DM Mono',monospace;letter-spacing:-.03em;line-height:1;color:var(--p-lime-90);font-variant-numeric:tabular-nums}
+.hud>.stat strong{display:block;font:600 19px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.03em;line-height:1;color:var(--p-lime-90);font-variant-numeric:tabular-nums}
 .hud>.stat #money{color:var(--p-lime-85)}
 .hud>.stat.output{margin-left:-4px;align-self:center;padding-top:5px}
 .hud>.stat.output strong{font-size:11.5px;font-weight:500;color:#aec3a8;letter-spacing:0}
@@ -41,7 +41,7 @@ body[data-store-view=branch] #customerStatus{display:none}
 .sheet #stockStatus .stock-item svg{width:18px;height:20px;flex-shrink:0}
 .sheet #stockStatus .stock-item>span{display:grid;gap:1px;line-height:1.1}
 .sheet #stockStatus .stock-item small{font-size:9px;letter-spacing:.03em;color:var(--p-sage-66);font-family:inherit}
-.sheet #stockStatus .stock-item b{font:600 12.5px 'DM Mono',monospace;color:var(--p-lime-90);font-variant-numeric:tabular-nums;letter-spacing:-.02em;white-space:nowrap}
+.sheet #stockStatus .stock-item b{font:600 12.5px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--p-lime-90);font-variant-numeric:tabular-nums;letter-spacing:-.02em;white-space:nowrap}
 .sheet #stockStatus .stock-item b small{font-size:9px;font-weight:600;letter-spacing:.02em;margin-left:2px;color:#a9b8a3;text-decoration:none}
 .sheet #stockStatus .stock-item b.stock-full{color:#e9cd91;text-decoration:underline dotted;text-underline-offset:3px}
 @media(hover:hover){.sheet #stockStatus .stock-item:hover{background:#e1f5d611}}
