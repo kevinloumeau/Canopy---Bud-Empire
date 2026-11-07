@@ -151,3 +151,23 @@ html body .sheet>[data-pane=employees]{display:flex;flex-direction:column}
 
 /* While the sheet is measured for a glide, and as it lands, the header takes its new shape at once (see settleSheet). */
 .sheet.settling .panel-header,.sheet.settling .panel-header #panelToggle{transition:none!important}
+
+/* Folding to the strip and unfolding from it (settleSheet): the stats and the tab bar stay pinned to the sheet's bottom
+   edge, the pane folds to nothing above them with no bottom padding left to push them down, and the header's height is
+   eased from script on the sheet's own clock, so its own transitions stand aside. Folding, the open header's title and
+   buttons fade out before the sheet takes its collapsed shape; unfolding, they fade in as the pane opens and the stats
+   keep the strip's spacing until the sheet lands, their top edge fading in after. The strip's stats keep a clear 1px
+   edge, so swapping shapes moves nothing below the pane. */
+.sheet.folding>[data-pane],.sheet.unfolding>[data-pane]{padding-bottom:0!important}
+.sheet.folding #stockStatus,.sheet.unfolding #stockStatus{margin-top:auto}
+.sheet.unfolding #stockStatus{border-top-color:transparent;padding-top:3px}
+.sheet.unfolding .customer-mood{border-top-color:transparent;padding-top:3px!important}
+.sheet.folding .panel-header,.sheet.unfolding .panel-header,.sheet.folding .panel-header #panelToggle,.sheet.unfolding .panel-header #panelToggle{transition:none!important}
+.sheet.folding .panel-header,.sheet.unfolding .panel-header{padding-block:0}
+.sheet.folding:not(.collapsed) .panel-header>*,.sheet.folding:not(.collapsed) .panel-header::before{animation:sheet-head-out .14s ease-out both}
+.sheet.unfolding .panel-header>*,.sheet.unfolding .panel-header::before{animation:sheet-head-in .24s ease-out .1s both}
+.sheet.unfolding .panel-header #panelToggle::after{animation:none}
+@keyframes sheet-head-out{to{opacity:0}}
+@keyframes sheet-head-in{from{opacity:0}}
+#stockStatus,.sheet .customer-mood{transition:border-top-color .18s ease}
+@media(prefers-reduced-motion:reduce){#stockStatus,.sheet .customer-mood{transition:none}}

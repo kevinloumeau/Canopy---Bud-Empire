@@ -3496,7 +3496,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // The map's framing follows the sheet on the same clock: dockGlide eases the camera's dock height with the sheet's own
   // animation (its currentTime and easing), stepped in the render loop, so the scene and the glass move as one, with no
   // per-frame layout reads and no frame of lag behind the sheet.
-  var sheetOpening=false,dockGlide=null,SHEET_EASE=cubicBezier(.2,.8,.2,1),SHEET_GLIDE_MS=380;
+  var sheetOpening=false,dockGlide=null,sheetMorph=null,SHEET_EASE=cubicBezier(.2,.8,.2,1),SHEET_GLIDE_MS=380;
   function cubicBezier(x1,y1,x2,y2){
     function at(a,b,t){return((1-3*b+3*a)*t+(3*b-6*a))*t*t+3*a*t}
     function slope(a,b,t){return 3*(1-3*b+3*a)*t*t+2*(3*b-6*a)*t+3*a}
@@ -3509,6 +3509,9 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var next=g.from+(g.to-g.from)*SHEET_EASE(t);if(Math.abs(next-dockHeight)<.01)return;dockHeight=next;applyCamera()}
   function settleSheet(target,startHeight){
     var sheet=$('sheet'),from=startHeight===undefined?sheet.getBoundingClientRect().height:startHeight;
+    // A fold or unfold already under way hands over where it is: the header's height and the pane's fade carry on from there.
+    var header=sheet.querySelector('.panel-header'),headFrom=header.getBoundingClientRect().height,was=sheetMorph,paneFrom=0;
+    if(was){var live=sheet.querySelector('[data-pane]:not([hidden])');paneFrom=was.folded||!live?0:+getComputedStyle(live).opacity;if(was.head)was.head.cancel();if(was.fade)was.fade.cancel();sheetMorph=null}
     if(sheetGlide){sheetGlide.cancel();sheetGlide=null}
     if(paneGlide){paneGlide.cancel();paneGlide=null}
     sheet.style.height='';sheet.classList.add('fluid');
@@ -3519,11 +3522,14 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // The header's own padding and handle size ease between the open and collapsed shapes; .settling holds those
     // transitions while the sheet is measured and when it lands, so the glide ends exactly where it was aimed instead of
     // the header easing the sheet a further 10px afterwards.
+    sheet.classList.remove('folding','unfolding');
     sheet.classList.add('settling');sheet.classList.remove('fluid');if(target==='collapsed')sheet.classList.add('collapsed');
-    var to=sheet.getBoundingClientRect().height;
+    var to=sheet.getBoundingClientRect().height,headTo=header.getBoundingClientRect().height;
     if(target==='collapsed')sheet.classList.remove('collapsed');
+    // Opening from the strip, the header starts from the strip's own handle height.
+    if(startHeight!==undefined&&!was){sheet.classList.add('collapsed');headFrom=header.getBoundingClientRect().height;sheet.classList.remove('collapsed')}
     sheet.getBoundingClientRect();sheet.classList.remove('settling');
-    function finish(){sheet.classList.add('settling');sheet.classList.remove('fluid');if(target==='collapsed')sheet.classList.add('collapsed');sheet.getBoundingClientRect();sheet.classList.remove('settling');sheetGlide=null;dockGlide=null;fitControls()}
+    function finish(){sheetMorph=null;sheet.classList.add('settling');sheet.classList.remove('fluid','folding','unfolding');if(target==='collapsed')sheet.classList.add('collapsed');sheet.getBoundingClientRect();sheet.classList.remove('settling');sheetGlide=null;dockGlide=null;fitControls()}
     if(motionPreference.matches||typeof sheet.animate!=='function'||Math.abs(to-from)<2){finish();return}
     sheet.classList.add('fluid');
     // One motion from edge to edge: the sheet's height glides between its measured start and end (the pane stretching
@@ -3531,11 +3537,23 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // map framed for the half-open sheet it covers.
     var ms=SHEET_GLIDE_MS,pane=sheet.querySelector('[data-pane]:not([hidden])');
     var run=sheetGlide=sheet.animate([{height:from+'px'},{height:to+'px'}],{duration:ms,easing:'cubic-bezier(.2,.8,.2,1)'});run.target=target;
-    if(pane&&(target==='collapsed'||startHeight!==undefined))pane.animate(target==='collapsed'?[{opacity:1},{opacity:0}]:[{opacity:0},{opacity:1}],{duration:ms*.7,easing:'ease-out',delay:target==='collapsed'?0:ms*.15,fill:'backwards'});
+    // Between the open sheet and the strip, the stats and the tab bar never move: they ride the sheet's bottom edge while
+    // the header eases between its two heights on the same clock and the pane folds away above them (.folding and
+    // .unfolding in sheet-height.css). Folding, the header's title and buttons fade first; halfway, once the pane is
+    // gone, the sheet takes its collapsed shape and the handle grows in as it lands.
+    if(target==='collapsed'||startHeight!==undefined||was){
+      var morph=sheetMorph={run:run,folded:false,head:null,fade:null};
+      sheet.classList.add(target==='collapsed'?'folding':'unfolding');
+      if(Math.abs(headTo-headFrom)>.5)morph.head=header.animate([{minHeight:headFrom+'px'},{minHeight:headTo+'px'}],{duration:ms,easing:'cubic-bezier(.2,.8,.2,1)'});
+      // The pane's fade keeps the sheet's clock, so the shape change lands on the same frame however the page is paced.
+      if(target==='collapsed'){var fade=morph.fade=pane&&pane.animate([{opacity:was?paneFrom:1},{opacity:0}],{duration:ms*.42,easing:'ease-out',fill:'forwards'});
+        var fold=function(){if(sheetMorph!==morph)return;sheet.classList.add('collapsed');morph.folded=true;if(fade)fade.cancel();morph.fade=null};if(fade)fade.onfinish=fold;else fold()}
+      else if(pane)morph.fade=pane.animate([{opacity:paneFrom},{opacity:1}],{duration:ms*.7,easing:'ease-out',delay:was?0:ms*.15,fill:'backwards'});
+    }
     var dockTo=target==='tall'?(sheetHalfHeight||dockHeight):to;
     dockGlide=Math.abs(dockTo-dockHeight)<1?null:{run:run,from:dockHeight,to:dockTo,ms:ms};render.invalidated=true;
     run.onfinish=function(){if(sheetGlide===run)finish()};
-    run.oncancel=function(){if(sheetGlide===run){sheet.classList.remove('fluid');sheetGlide=null;if(dockGlide&&dockGlide.run===run)dockGlide=null}};
+    run.oncancel=function(){if(sheetGlide===run){sheet.classList.remove('fluid','folding','unfolding');sheetGlide=null;if(sheetMorph&&sheetMorph.run===run){if(sheetMorph.head)sheetMorph.head.cancel();if(sheetMorph.fade)sheetMorph.fade.cancel();sheetMorph=null}if(dockGlide&&dockGlide.run===run)dockGlide=null}};
   }
   $('panelExpand').onclick=function(){settleSheet($('sheet').classList.contains('tall')?'half':'tall')};
   // A drag can start anywhere on the sheet that does not scroll: the header, the stats strip and the tab bar. Their

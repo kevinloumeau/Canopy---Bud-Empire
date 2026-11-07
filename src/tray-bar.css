@@ -57,7 +57,7 @@
  transform:translate(-50%,-50%) rotate(0deg);
 }
 @media(hover:hover){.sheet.collapsed .panel-header #panelToggle:hover::after{opacity:.9}}
-.sheet.collapsed .customer-mood{border-top:0;padding-top:4px!important}
+.sheet.collapsed .customer-mood{border-top-color:transparent;padding-top:3px!important}
 
 /* Desktop floating panel keeps the same bar with slightly roomier tabs. */
 @media(min-width:780px){
