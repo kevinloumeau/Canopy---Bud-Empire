@@ -3,32 +3,17 @@
 
 /* Goals: one brass Collect, a contract card, then tiles: an icon in a ring that fills with progress and a short name. */
 .goals-screen{min-width:0}
-.goals-sources[hidden],.goals-reward[hidden],.goals-why-note[hidden],.goals-quiet[hidden]{display:none!important}
-/* The brass box holds the total + Collect, then one quiet line per reward: what it is for and what it pays. */
+.goals-sources[hidden],.goals-reward[hidden],.goals-quiet[hidden]{display:none!important}
 .goals-reward{min-width:0;margin:0 0 10px;border:1px solid var(--ui-brass);border-radius:16px;background:var(--ui-brass-wash)}
 .sheet .empire-screen .goals-reward .goals-collect{margin:0;border:0;background:none}
-.goals-why{display:grid;gap:8px;margin:0;padding:2px 12px 10px;list-style:none}
-.goals-why li{display:flex;align-items:center;gap:10px;min-width:0}
-.goals-why-icon{flex:none;display:grid;place-items:center;width:24px;height:24px;margin:0 6px;color:var(--ui-brass)}
-.goals-why-icon svg{width:18px;height:18px}
-.goals-why-copy{flex:1;display:grid;min-width:0}
-.goals-why-copy b,.goals-why-copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.goals-why-copy b{font-size:12.5px;font-weight:600;color:var(--ui-ink)}
-.goals-why-copy small{font-size:11px;color:var(--ui-soft)}
-.goals-why em{flex:none;font:500 13px 'Bricolage Grotesque',system-ui,sans-serif;font-style:normal;letter-spacing:-.02em;color:var(--ui-ink)}
-.goals-why-note{margin:0;padding:8px 12px 10px;border-top:1px solid var(--ui-edge);color:var(--ui-soft);font-size:11px}
 .sheet .empire-screen .goals-collect{display:flex;align-items:center;gap:12px;width:100%;min-width:0;min-height:56px;margin:0 0 10px;padding:8px 8px 8px 12px;border:1px solid var(--ui-brass);border-radius:16px;background:var(--ui-brass-wash);color:var(--ui-ink);text-align:left;box-shadow:none}
 .goals-collect-icon{flex:none;display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--ui-brass);color:var(--ui-brass-ink)}
 .goals-collect-icon svg{width:20px;height:20px}
-.goals-collect>b{flex:1;min-width:0;font:500 18px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.goals-collect-copy>b{flex:1;min-width:0;font:500 18px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .goals-collect-go{flex:none;padding:9px 16px;border-radius:11px;background:var(--ui-brass);color:var(--ui-brass-ink);font-size:13px;font-weight:700}
 .goals-quiet{display:flex;align-items:center;gap:8px;margin:0 0 10px;padding:4px 2px;color:var(--ui-soft);font-size:12px}
 .goals-quiet svg{width:16px;height:16px}
 .goal-group{min-width:0;margin-top:14px}
-.sheet .goal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 8px;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ui-soft)}
-.goal-head span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.goal-head b{display:flex;align-items:center;gap:4px;font:500 12px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;text-transform:none;color:var(--ui-ink);white-space:nowrap}
-.goal-head b svg{width:14px;height:14px;color:var(--ui-soft)}
 .goal-stars{display:flex;gap:2px}
 .goal-stars i{display:block;color:var(--ui-edge)}
 .goal-stars i svg{width:15px;height:15px;color:inherit}
@@ -46,7 +31,6 @@
 .goal-ring-track .goal-ring-fill{stroke:var(--ui-leaf-glow);stroke-linecap:round;stroke-dasharray:calc(var(--share)*100) 100}
 .goal-ring.is-done{color:var(--ui-leaf-glow)}
 .goal-card,.sheet .empire-screen button.goal-card{display:flex;align-items:center;gap:12px;width:100%;min-width:0;min-height:58px;margin:0 0 4px;padding:8px 8px 8px 10px;border:1px solid var(--ui-edge);border-radius:14px;background:var(--ui-well-soft);color:var(--ui-ink);font:inherit;text-align:left;box-shadow:none}
-.sheet .empire-screen .goal-group+.goal-card,.goal-card+.goal-group{margin-top:14px}
 .goal-card-icon{flex:none;display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--ui-sheen);color:var(--ui-ink)}
 .goal-card-icon svg{width:19px;height:19px}
 .goal-card-copy{display:grid;flex:1;min-width:0}
@@ -70,8 +54,6 @@ img.goal-3d{display:block;max-width:100%;max-height:100%;width:auto;height:auto;
 .goals-collect-icon:has(img.goal-3d),.goal-card-icon:has(img.goal-3d){width:44px;height:44px;border-radius:0;background:none}
 .goals-collect-icon img.goal-3d{width:42px;height:42px;filter:drop-shadow(0 3px 4px #06180c99)}
 .goal-card-icon img.goal-3d{width:40px;height:40px}
-.goals-why-icon{width:30px;height:30px;margin:0 3px}
-.goals-why-icon img.goal-3d{width:28px;height:28px}
 .goals-quiet img.goal-3d{width:22px;height:22px}
 .goal-card-go:focus-visible{outline:2px solid var(--ui-brass);outline-offset:2px}
 
