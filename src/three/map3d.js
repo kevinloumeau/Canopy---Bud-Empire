@@ -375,6 +375,86 @@ export function createMap3D(canvas, layout) {
     });
     for (; n < revealBeams.length; n++) { const b = revealBeams[n]; b.column.visible = b.sparks.visible = false; }
   }
+  // Upgrade sparkles (frame.sparkles, from sparkles.js): soft leaves, four-point glints and coins that rise off what
+  // was upgraded. One instanced quad for all of them, so a burst is one draw call however many play at once. Each quad
+  // faces the camera (the corner is added in view space, so the world's height stretch doesn't squash it), turns on
+  // its own angle and picks its shape from a three-cell sprite sheet. Depth-tested against the scene, so a building in
+  // front hides them, and blended premultiplied: the leaf and coin read as solid little shapes by day while their
+  // halos and the glints add light, which carries at night.
+  const SPARKLE_MAX = 240;
+  const sparkleSheet = (() => {
+    const S = 64, c = document.createElement('canvas'); c.width = S * 3; c.height = S;
+    const g = c.getContext('2d');
+    const halo = (cx, alpha) => { const h = g.createRadialGradient(cx, 32, 0, cx, 32, 31); h.addColorStop(0, `rgba(255,255,255,${alpha})`); h.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = h; g.fillRect(cx - 32, 0, 64, 64); };
+    // Leaf: a pointed blade with a darker midrib and a soft rim of light.
+    halo(32, .35);
+    g.save(); g.translate(32, 32); g.rotate(-Math.PI / 4);
+    g.beginPath(); g.moveTo(0, -24); g.bezierCurveTo(15, -12, 15, 12, 0, 24); g.bezierCurveTo(-15, 12, -15, -12, 0, -24); g.closePath();
+    const leaf = g.createLinearGradient(-12, 0, 12, 0); leaf.addColorStop(0, '#ffffff'); leaf.addColorStop(1, '#c9c9c9');
+    g.fillStyle = leaf; g.fill();
+    g.strokeStyle = 'rgba(120,120,120,.9)'; g.lineWidth = 2; g.beginPath(); g.moveTo(0, -18); g.lineTo(0, 22); g.stroke();
+    g.restore();
+    // Glint: a four-point star with a hot core.
+    halo(96, .6);
+    g.save(); g.translate(96, 32); g.fillStyle = '#ffffff'; g.beginPath();
+    for (let i = 0; i < 8; i++) { const r = i % 2 ? 4.5 : 27, a = i * Math.PI / 4 - Math.PI / 2; g.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
+    g.closePath(); g.fill(); g.restore();
+    // Coin: a disc with a bright rim, a recessed face and a highlight across the top.
+    halo(160, .3);
+    g.save(); g.translate(160, 32);
+    g.fillStyle = '#ffffff'; g.beginPath(); g.arc(0, 0, 19, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#bdbdbd'; g.beginPath(); g.arc(0, 0, 14, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#e6e6e6'; g.font = 'bold 20px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('$', 0, 1);
+    g.fillStyle = 'rgba(255,255,255,.85)'; g.beginPath(); g.ellipse(-6, -10, 7, 3, -.5, 0, Math.PI * 2); g.fill();
+    g.restore();
+    return new THREE.CanvasTexture(c);
+  })();
+  const sparkleGeometry = new THREE.InstancedBufferGeometry();
+  sparkleGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-.5, -.5, 0, .5, -.5, 0, .5, .5, 0, -.5, .5, 0]), 3));
+  sparkleGeometry.setIndex([0, 1, 2, 0, 2, 3]);
+  const sparkleAt = new THREE.InstancedBufferAttribute(new Float32Array(SPARKLE_MAX * 3), 3).setUsage(THREE.DynamicDrawUsage);
+  const sparkleLook = new THREE.InstancedBufferAttribute(new Float32Array(SPARKLE_MAX * 4), 4).setUsage(THREE.DynamicDrawUsage);
+  const sparkleTint = new THREE.InstancedBufferAttribute(new Float32Array(SPARKLE_MAX * 3), 3).setUsage(THREE.DynamicDrawUsage);
+  sparkleGeometry.setAttribute('at', sparkleAt); sparkleGeometry.setAttribute('look', sparkleLook); sparkleGeometry.setAttribute('tint', sparkleTint);
+  sparkleGeometry.instanceCount = 0;
+  const sparkles = new THREE.Mesh(sparkleGeometry, new THREE.ShaderMaterial({
+    uniforms: { sheet: { value: sparkleSheet } },
+    vertexShader: `attribute vec3 at; attribute vec4 look; attribute vec3 tint; varying vec2 vUv; varying vec4 vTint; varying float vGlow;
+      void main() {
+        float c = cos(look.y), s = sin(look.y);
+        vec2 corner = vec2(c * position.x - s * position.y, s * position.x + c * position.y) * look.x;
+        vec4 mv = modelViewMatrix * vec4(at, 1.0); mv.xy += corner;
+        gl_Position = projectionMatrix * mv;
+        vUv = vec2((position.x + .5 + look.w) / 3.0, position.y + .5);
+        vTint = vec4(tint, look.z); vGlow = look.w == 1.0 ? .25 : 1.0;
+      }`,
+    fragmentShader: `uniform sampler2D sheet; varying vec2 vUv; varying vec4 vTint; varying float vGlow;
+      void main() {
+        vec4 t = texture2D(sheet, vUv);
+        float a = t.a * vTint.a;
+        if (a < .004) discard;
+        vec3 col = t.rgb * vTint.rgb * 1.15;
+        gl_FragColor = vec4(col * a, a * vGlow);
+      }`,
+    transparent: true, depthWrite: false, depthTest: true,
+    blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor
+  }));
+  sparkles.frustumCulled = false; sparkles.renderOrder = 4; sparkles.visible = false;
+  world.add(sparkles);
+  function updateSparkles(list) {
+    const n = Math.min(SPARKLE_MAX, (list || []).length);
+    sparkles.visible = n > 0;
+    sparkleGeometry.instanceCount = n;
+    if (!n) return;
+    for (let i = 0; i < n; i++) {
+      const p = list[i];
+      sparkleAt.setXYZ(i, p.x, p.y, p.z);
+      // The quad's size is in view space, where heights are not stretched; HEIGHT_SCALE only moves its centre.
+      sparkleLook.setXYZW(i, p.size, p.angle, p.alpha, p.shape);
+      sparkleTint.setXYZ(i, p.r, p.g, p.b);
+    }
+    sparkleAt.needsUpdate = sparkleLook.needsUpdate = sparkleTint.needsUpdate = true;
+  }
   function stationMesh(i) {
     if (!stationMeshes[i]) {
       const group = new THREE.Group(), body = box(group, 0, 0, 0, 1, 1, 1, TIER_COLOURS[1]), top = box(group, 0, 1, 0, 1, .08, 1, '#efe7d4');
@@ -1422,6 +1502,7 @@ export function createMap3D(canvas, layout) {
     for (let n = glowing; n < boostGlows.length; n++) boostGlows[n].pool.visible = boostGlows[n].ring.visible = false;
     updateUpgradeRings(frame.upgradeRings);
     updateRevealBeams(frame.revealBeams, frame.unit || 40);
+    updateSparkles(frame.sparkles);
 
     const figures = frame.figures || [], shade = 1 - night * .55;
     placeFigures(figures, night);
