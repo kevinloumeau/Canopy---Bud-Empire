@@ -1,6 +1,6 @@
 /* Moments on the forest glass (UI reskin plan, Phase 5): welcome back, settings, age gate, start guide and reset. Loaded last.
    One strong glass card each, a soft scrim behind, mono figures, and brass only on the one thing to tap next. */
-.return-overlay,.settings-wrap{background:rgba(5,21,10,.42);-webkit-backdrop-filter:none;backdrop-filter:none}
+.return-overlay{background:rgba(5,21,10,.42);-webkit-backdrop-filter:none;backdrop-filter:none}
 .return-card,.modal.settings{
  border:1px solid var(--ui-edge);border-radius:22px;color:var(--ui-ink);
  background:linear-gradient(180deg,var(--ui-sheen),transparent 30%),var(--ui-glass-strong);
@@ -28,13 +28,21 @@
 .return-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 0 18px}
 .return-chips span{display:inline-flex;align-items:center;gap:6px;padding:6px 11px 6px 9px;border-radius:999px;background:var(--ui-well);box-shadow:inset 0 0 0 1px var(--ui-edge);font:500 12.5px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.01em;color:var(--ui-ink);white-space:nowrap}
 .return-chips svg{width:15px;height:15px;fill:none;stroke:var(--ui-soft);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.return-card #returnEarnings{display:grid;gap:6px;width:100%;margin:0 0 12px;padding:0;border:0;background:none;list-style:none}
+.return-card #returnEarnings{display:block;width:100%;margin:0 0 10px;padding:2px 0;border:0;border-radius:18px;background:var(--ui-well);box-shadow:inset 0 0 0 1px var(--ui-edge);list-style:none}
 .return-card #returnEarnings[hidden]{display:none}
-.return-card #returnEarnings li{display:grid;grid-template-columns:auto 1fr auto;column-gap:12px;align-items:center;padding:8px 14px 8px 8px;border:0;border-radius:16px;background:var(--ui-well);box-shadow:inset 0 0 0 1px var(--ui-edge);text-align:left}
-.return-card #returnEarnings li i{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:linear-gradient(160deg,#5f8f4a,#17622f);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 2px 6px rgba(0,0,0,.3)}
-.return-card #returnEarnings li i svg{width:18px;height:18px;fill:none;stroke:#eaf6dc;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.return-card #returnEarnings li span{font-size:13.5px;line-height:1.2;font-weight:600;color:var(--ui-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.return-card #returnEarnings strong{font:500 14px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;color:var(--ui-ink)}
+/* One grouped list: each place's own 3D storefront (the Empire tab art) in a thin ring of its branch colour,
+   the name in the card's main ink and the amount right-aligned in tabular figures. */
+.return-card #returnEarnings li{--branch:#a8dc52;display:grid;grid-template-columns:auto 1fr auto;column-gap:12px;align-items:center;min-height:42px;margin:0 12px 0 8px;padding:4px 0;border:0;border-radius:0;background:none;box-shadow:none;text-align:left}
+.return-card #returnEarnings li+li{border-top:1px solid rgba(255,255,255,.07)}
+.return-card #returnEarnings li[data-store="1"]{--branch:#5cc9c3}
+.return-card #returnEarnings li[data-store="2"]{--branch:#e8927e}
+.return-card #returnEarnings li[data-store="3"]{--branch:#a3acff}
+.return-card #returnEarnings li[data-store="4"]{--branch:#f2ab62}
+.return-card #returnEarnings li[data-store="5"]{--branch:#bfe4f7}
+.return-card #returnEarnings li i{position:relative;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:color-mix(in srgb,var(--branch) 13%,transparent);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--branch) 70%,transparent)}
+.return-card #returnEarnings li i img{width:28px;height:28px;margin-top:-5px;object-fit:contain;object-position:50% 100%;filter:drop-shadow(0 2px 2px #06180c8c);pointer-events:none}
+.return-card #returnEarnings li span{font-size:14px;line-height:1.2;font-weight:600;letter-spacing:-.01em;color:var(--ui-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.return-card #returnEarnings strong{font:600 14px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums;text-align:right;color:var(--ui-ink)}
 .return-card #returnGoals{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;margin:0 0 12px;padding:8px 12px 8px 8px;border:0;border-radius:16px;background:var(--ui-well);box-shadow:inset 0 0 0 1px var(--ui-edge);color:var(--ui-ink);font:inherit;font-size:14px;font-weight:600;text-align:left;cursor:pointer}
 .return-card #returnGoals[hidden]{display:none}
 .return-card #returnGoals::before{display:none}
@@ -48,27 +56,68 @@
 .return-card #dismissReturn{width:100%;min-height:52px;margin:4px 0 0;border:0;border-radius:16px;background:linear-gradient(180deg,#ecd49e,var(--ui-brass));color:var(--ui-brass-ink);font-size:15px;font-weight:700;letter-spacing:-.01em;box-shadow:inset 0 1px 0 rgba(255,250,232,.7),0 6px 18px rgba(226,198,138,.22)}
 .return-card #dismissReturn:active{transform:scale(.98)}
 .return-card #dismissReturn:focus-visible{outline:2px solid var(--ui-ink);outline-offset:2px}
+@media(max-height:700px){
+ .return-card{margin-top:30px;padding-bottom:16px}
+ .return-medal{width:80px;height:80px;margin:-40px 0 6px}
+ .return-coin{width:70px;height:70px}
+ .return-coin svg{width:36px;height:36px}
+ .return-card #returnTotal{margin:4px 0 8px;font-size:40px}
+ .return-chips{margin-bottom:12px}
+ .return-card #returnEarnings li{min-height:38px;padding:3px 0}
+ .return-card #returnEarnings li i{width:30px;height:30px}
+ .return-card #returnEarnings li i img{width:25px;height:25px}
+ .return-card #returnGoals{min-height:48px;margin-bottom:10px;padding:6px 12px 6px 6px}
+ .return-card #returnGoals i{flex-basis:36px;height:36px}
+ .return-card #dismissReturn{min-height:48px}
+}
 @keyframes return-in{from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none}}
 @keyframes return-pop{from{opacity:0;transform:scale(.4) rotate(-25deg)}to{opacity:1;transform:none}}
 @keyframes return-spin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.return-card,.return-coin,.return-rays{animation:none}}
 
-/* Settings: one grouped list in a well, values in soft mono, the reset row set apart in coral. */
-.modal.settings{width:min(340px,100%);padding:16px}
+/* Settings: a real modal. The map and sheet dim and blur behind it, switches are brass when on and forest when off,
+   the start guide has a small Replay button and the reset is one coral button. */
+.settings-wrap{padding:calc(var(--safe-top,env(safe-area-inset-top,0px)) + 16px) 16px calc(var(--safe-bottom,env(safe-area-inset-bottom,0px)) + 16px);
+ background:radial-gradient(120% 80% at 50% 45%,rgba(4,18,9,.58),rgba(3,13,7,.8));-webkit-backdrop-filter:blur(10px) saturate(.85);backdrop-filter:blur(10px) saturate(.85);
+ animation:settings-fade .22s ease-out both}
+.modal.settings{width:min(340px,100%);padding:16px 16px 18px;animation:settings-in .32s cubic-bezier(.16,1,.3,1) both}
 .modal.settings .settings-head{margin-bottom:12px}
 .settings-head h2{font-size:1.1875rem;font-weight:700;letter-spacing:-.025em;color:var(--ui-ink)}
 .modal .settings-close{width:34px;height:34px;border:1px solid var(--ui-edge);background:var(--ui-well-soft);color:var(--ui-soft);font-size:20px}
 .modal.settings .settings-list{padding:0 12px;border-radius:14px;background:var(--ui-well)}
-.modal .settings-row{min-height:48px;padding:0;border-top:1px solid var(--ui-sheen);color:var(--ui-ink);font-size:14px}
-.modal .settings-row b{font:500 12.5px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-soft)}
-.modal.settings .settings-foot{margin-top:12px;padding:0;border:0}
-.modal .settings-row.settings-danger{padding:0 12px;border:1px solid var(--ui-coral-wash);border-radius:14px;background:none}
-.modal .settings-row.settings-danger span,.modal .settings-row.settings-danger b{color:var(--ui-coral)}
-.settings-note{margin:10px 2px 0;font-size:11.5px;color:var(--ui-soft)}
-.modal .settings-row:focus-visible,.modal .settings-close:focus-visible{outline:2px solid var(--ui-brass);outline-offset:2px}
-@media(hover:hover){.modal .settings-row:hover{color:var(--ui-ink);background:var(--ui-well-soft)}.modal .settings-close:hover{color:var(--ui-ink)}}
+.modal .settings-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:0;border-top:1px solid var(--ui-sheen);color:var(--ui-ink);font-size:14.5px;font-weight:500}
+.modal .settings-row[data-row]{cursor:pointer}
+.modal .settings-row[hidden]{display:none}
+.modal .settings-list>.settings-row:first-child{border-top:0}
 
-@media(prefers-reduced-transparency:reduce){.return-card,.modal.settings{background:#153a21;-webkit-backdrop-filter:none;backdrop-filter:none}}
+/* iOS proportions: a 50×30 track and a 26px knob. Off is a deep forest well, on is brass with a dark knob shadow. */
+.modal .settings-switch{position:relative;flex:0 0 auto;width:50px;height:30px;min-height:0;padding:0;border:1px solid var(--ui-edge);border-radius:15px;
+ background:rgba(3,16,8,.55);box-shadow:inset 0 1px 3px rgba(0,0,0,.35);cursor:pointer;transition:background-color .2s ease,border-color .2s ease}
+.modal .settings-switch i{position:absolute;top:1px;left:1px;width:26px;height:26px;border-radius:50%;background:#d9d6c8;box-shadow:0 2px 4px rgba(0,0,0,.35),0 0 0 .5px rgba(0,0,0,.08);transition:transform .22s cubic-bezier(.3,1.3,.5,1),background-color .2s ease}
+.modal .settings-switch[aria-checked=true]{border-color:#f0dcae;background:var(--ui-brass);box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+.modal .settings-switch[aria-checked=true] i{transform:translateX(20px);background:#fffaf0}
+.modal .settings-switch:active i{width:30px}
+.modal .settings-switch[aria-checked=true]:active i{transform:translateX(16px)}
+
+/* Replay: a small glass pill with a loop arrow. */
+.modal .settings-chip{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 13px 0 11px;border:1px solid var(--ui-edge);border-radius:17px;
+ background:var(--ui-well-soft);color:var(--ui-ink);font:600 13px 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer}
+.modal .settings-chip svg{width:15px;height:15px;color:var(--ui-brass)}
+
+.modal.settings .settings-foot{margin-top:12px;padding:0;border:0}
+/* Reset game: one clear destructive button. It still opens the confirm before anything is lost. */
+.modal .settings-reset{display:block;width:100%;min-height:48px;padding:0 16px;border:1px solid rgba(224,122,95,.42);border-radius:14px;
+ background:rgba(224,122,95,.1);color:#f0a08a;font:600 14.5px 'Bricolage Grotesque',system-ui,sans-serif;text-align:center;cursor:pointer}
+.settings-note{margin:10px 2px 0;font-size:11.5px;color:var(--ui-soft)}
+.modal .settings-switch:focus-visible,.modal .settings-chip:focus-visible,.modal .settings-reset:focus-visible,.modal .settings-close:focus-visible{outline:2px solid var(--ui-brass);outline-offset:3px}
+.modal .settings-chip,.modal .settings-reset{transition:transform .12s ease,background-color .16s ease}
+.modal .settings-chip:active,.modal .settings-reset:active{transform:scale(.97)}
+@media(hover:hover){.modal .settings-chip:hover{background:var(--ui-sheen)}.modal .settings-reset:hover{background:rgba(224,122,95,.16)}.modal .settings-close:hover{color:var(--ui-ink)}}
+@keyframes settings-fade{from{opacity:0}to{opacity:1}}
+@keyframes settings-in{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.settings-wrap,.modal.settings{animation:none}.modal .settings-switch,.modal .settings-switch i{transition:none}.modal .settings-chip:active,.modal .settings-reset:active{transform:none}}
+
+@media(prefers-reduced-transparency:reduce){.return-card,.modal.settings{background:#153a21;-webkit-backdrop-filter:none;backdrop-filter:none}.settings-wrap{background:rgba(3,13,7,.86);-webkit-backdrop-filter:none;backdrop-filter:none}}
 
 /* Age gate, start guide and reset: the same strong glass card. The answer that moves the player on is brass. */
 .age-card,.guide-card,#resetModal .modal{
@@ -114,5 +163,4 @@
 .hud button,.map-controls button,.shop-activity,.return-card button,.age-actions button,.guide-actions button,#resetModal .modal button,.modal .settings-close{transition:transform .12s ease,background-color .16s ease,filter .16s ease}
 .hud button:not(:disabled):active,.map-controls button:active,.shop-activity:active,.return-card button:active,.age-actions button:active,
 .guide-actions button:active,#resetModal .modal button:active,.modal .settings-close:active{transform:scale(.96)}
-.modal .settings-row:active{background:var(--ui-well)}
 @media(prefers-reduced-motion:reduce){.hud button:active,.map-controls button:active,.shop-activity:active,.return-card button:active,.age-actions button:active,.guide-actions button:active,#resetModal .modal button:active,.modal .settings-close:active{transform:none}}

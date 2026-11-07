@@ -1194,6 +1194,17 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // so the far edge of the town still never shows.
     var headroom=TALL_HEADROOM*Math.max(0,Math.min(1,(zoom-.65)/.5))/sq;
     rz=fit(rz,view.reach.rz[0]-headroom+slide*s+Math.max(0,frame.y-top)/(u*sq),view.reach.rz[1]+slide*s-Math.max(0,bottom-frame.y)/(u*sq));
+    // The bottom corners of the view, where the sheet meets the map, look at flat paving with nothing tall to lift it out
+    // of the haze, so they stay out of the thick of it (SUNNY_VIEW.ground): the bottom-left corner is the view's furthest
+    // point south, the bottom-right its furthest east. A corner past its line moves the view straight back across it
+    // (up and across the screen together, so a view at the west or east limit still slides), and the bottom wins over
+    // the top: up there the terraces stand tall enough to rise out of the haze, down here bare ground would show it.
+    var below=Math.max(0,bottom-frame.y)/(u*sq),rxLo=view.reach.rx[0]+slide*c+frame.x/u,rxHi=view.reach.rx[1]+slide*c-(width-frame.x)/u;
+    var corner=function(edge,limit,gx,gz){
+      var e=gx*(rx+edge)+gz*(rz+below)-limit;if(e<=0)return;
+      var mx=rxLo>rxHi?rx:Math.max(rxLo,Math.min(rxHi,rx-e*gx));e-=gx*(rx-mx);rx=mx;if(e>0)rz-=e/gz};
+    corner(-frame.x/u,view.ground.south,-s,c);
+    corner((width-frame.x)/u,eastHaze(storeLevels())[0]+view.ground.east,c,s);
     panX=-rx*u;panY=-rz*u*sq;
   }
   function zoomAt(next,x,y){if(mapGesture.mode==='coast')endGesture();next=Math.max(.65,Math.min(4,next));var ratio=next/zoom,frame=cameraFrame();panX=x-(x-centerX)*ratio-frame.x;panY=y-(y-centerY)*ratio-frame.y;zoom=next;applyCamera()}
@@ -4294,12 +4305,12 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     $('returnSummary').hidden=!report;if(!report)returnCounted=null;
     if(report){var total=report.earnings.reduce(function(a,n){return a+n},0),cap=offlineCap(),
         clock='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
-        coin='<svg viewBox="0 0 24 24"><ellipse cx="12" cy="7" rx="7" ry="3"/><path d="M5 7v5c0 1.7 3.1 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/></svg>',
-        store='<svg viewBox="0 0 24 24"><path d="M4 10h16M5 10l1.5-5h11L19 10M6 10v9h12v-9M10 19v-5h4v5"/></svg>';
+        coin='<svg viewBox="0 0 24 24"><ellipse cx="12" cy="7" rx="7" ry="3"/><path d="M5 7v5c0 1.7 3.1 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/></svg>';
       countUpReturn(total);
       $('returnTime').innerHTML='<span>'+clock+awayLength(report.seconds)+' away</span>'+(report.seconds>cap?'<span>'+coin+awayLength(cap)+' paid</span>':'');
       $('returnEarnings').hidden=report.earnings.filter(function(n){return n>0}).length<2;
-      $('returnEarnings').innerHTML=report.earnings.map(function(n,i){return n>0?'<li><i>'+store+'</i><span>'+(['Home store'].concat(STORES.map(function(s){return s.name})))[i]+'</span><strong>+'+fmt(n)+'</strong></li>':''}).join('');
+      // Each row wears its place's own 3D storefront from the Empire tab, in a thin ring of that branch's colour.
+      $('returnEarnings').innerHTML=report.earnings.map(function(n,i){return n>0?'<li data-store="'+i+'"><i><img src="icons/3d/'+(i?'store-'+(i-1):'landmark-shop')+'.png" alt="" draggable="false" decoding="async"></i><span>'+(['Home store'].concat(STORES.map(function(s){return s.name})))[i]+'</span><strong>+'+fmt(n)+'</strong></li>':''}).join('');
       $('returnGoals').hidden=!report.goals;
       $('returnGoals').innerHTML='<i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg><b>'+report.goals+'</b></i><span>'+(report.goals===1?'Goal ready to claim':'Goals ready to claim')+'</span><svg class="return-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>';}
     $('nextInvestment').textContent='Next improvement: '+investment.name+' · '+fmt(investment.price)+(state.money<investment.price?' ('+fmt(investment.price-state.money)+' to go)':' · ready');
@@ -4462,7 +4473,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     select:function(key){loungeSelected=key==='lounge';securitySelected=key==='door';if(key!=='door'&&key!=='lounge')selected=key;renderUI()},
     camera:{look:guideLook,follow:guideFollow,home:guideHome,release:guideRelease,tour:guideTour,stop:guideTourStop},
     grow:{level:function(){return state.lines[1]},price:function(){return fmt(growGoalCost())},grant:guideGrant,buy:guideUpgradeGrow,settle:guideSettleGrant},
-    guest:guideGuest});var guideReplay=document.createElement('button');guideReplay.type='button';guideReplay.className='guide-replay';guideReplay.textContent='Replay the start guide';guideReplay.onclick=function(){startGuide.open()};document.querySelector('.shop-reset').prepend(guideReplay);mountSettings({getState:function(){return state},setSpeed:setGameSpeed});
+    guest:guideGuest});var guideReplay=document.createElement('button');guideReplay.type='button';guideReplay.className='guide-replay';guideReplay.textContent='Replay the start guide';guideReplay.onclick=function(){startGuide.open()};document.querySelector('.shop-reset').prepend(guideReplay);mountSettings({getState:function(){return state},setSpeed:setGameSpeed,haptic:haptic});
   manageDialog($('resetModal'),function(){$('resetModal').hidden=true});manageDialog(prestigeDialog,function(){prestigeDialog.hidden=true});
   Array.prototype.forEach.call(document.querySelectorAll('[data-empire-view]'),function(button){button.onclick=function(){var view=button.getAttribute('data-empire-view');Array.prototype.forEach.call(document.querySelectorAll('[data-empire-view]'),function(b){b.setAttribute('aria-pressed',String(b===button))});Array.prototype.forEach.call(document.querySelectorAll('[data-empire-section]'),function(section){section.hidden=section.getAttribute('data-empire-section')!==view});document.querySelector('[data-pane=empire]').scrollTop=0;fitControls()}});
 

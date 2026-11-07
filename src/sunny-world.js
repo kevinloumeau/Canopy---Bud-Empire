@@ -484,7 +484,11 @@ const HAZE_RAMP = { west: [-46, -58], east: [45, 58], north: [-40, -54], south: 
 const ramp = (v, [from, to]) => Math.max(0, Math.min(1, (v - from) / (to - from)));
 function hazeAt(x, z) { return Math.max(ramp(x, HAZE_RAMP.west), ramp(x, HAZE_RAMP.east), ramp(z, HAZE_RAMP.north), ramp(z, HAZE_RAMP.south)); }
 const hazeRGBA = a => 'rgba(' + HAZE[0] + ',' + HAZE[1] + ',' + HAZE[2] + ',' + a + ')';
-export const SUNNY_VIEW = { centre: { x: [-32, 42], z: [-30, 34] }, reach: { rx: [-42.3, 52.7], rz: [-43.9, 48.2] } };
+// `ground` keeps the flat paving along the bottom of the map (just above the sheet, where nothing tall stands to lift
+// it out of the haze) clear of the fog: the bottom corners of the view may reach `south` on z and `east` units past the
+// east haze's start on x, a third of the way into each ramp, where the back street still reads as street. Without it a
+// view pulled south with the sheet folded showed a quarter of the screen as cream fog (visual review, 2026-11-07).
+export const SUNNY_VIEW = { centre: { x: [-32, 42], z: [-30, 34] }, reach: { rx: [-42.3, 52.7], rz: [-43.9, 48.2] }, ground: { south: HAZE_RAMP.south[0] + 4, east: 4 } };
 // Down the middle of the two-unit pavement between the kerb and the facades behind it.
 const FAR_TREES = [[-12, -22.5], [-1, -22.5], [10, -22.5], [14.5, -22.5], [-26.5, -13], [-26.5, -2], [-26.5, 9], [-26.5, 20]];
 // A street tree's pit on the 3D map, apart from the tree: the model's own pit (`#low` keeps only its Pit parts) or the
@@ -604,7 +608,7 @@ export function streetItems(api) { return streetJobs(api); }
 // The floor textures and how many world units one tile spans, for the 3D map's floors.
 export function floorTextureFiles() {
   const file = name => TEXTURE_FILES[name] || 'sprites/shell/tex.floor.' + name + '.png';
-  return { sidewalk: { url: file('sidewalk'), size: 6 }, asphalt: { url: file('asphalt'), size: 8 }, herringbone: { url: file('herringbone'), size: 4 }, timber: { url: file('timber'), size: 4 }, concrete: { url: file('concrete'), size: 4 } };
+  return { sidewalk: { url: file('sidewalk'), size: 6 }, asphalt: { url: file('asphalt'), size: 8 }, herringbone: { url: file('herringbone'), size: 4 }, timber: { url: file('timber'), size: 4 }, concrete: { url: file('concrete'), size: 4 }, boards: { url: file('boards'), size: 4 }, epoxy: { url: file('epoxy'), size: 6 } };
 }
 
 
