@@ -3,7 +3,7 @@
 // store's level, its three store upgrades and its stars. main.js keeps rendering branchBuy and projectBuy by id; this
 // module reparents the one and presses the other, and adds the tiles. Tiles share the Empire map's ring look (empire-map.css).
 import {isBuilding,buildLeft,buildClock,branchBuildKey,BRANCH_BUILD_SECONDS} from './builds.js';
-import {abbr,STORES,STORE_PROJECTS,PROJECT_LEVELS,PROJECT_BONUSES,projectCost,storeCost,storeRate,nextStoreRate,branchOpenable,STARS_TO_OPEN,starStatus,starCount,STAR_BONUS,BRANCH_LINE,BRANCH_LINE_MAX,branchStationCost,branchBestStation} from './progression.js';
+import {abbr,STORES,STORE_PROJECTS,PROJECT_LEVELS,PROJECT_BONUSES,projectCost,storeCost,storeRate,nextStoreRate,branchOpenable,STARS_TO_OPEN,starStatus,starCount,STAR_BONUS,ringBonus,ringRank,ringTier,RING_NAMES,BRANCH_LINE,BRANCH_LINE_MAX,branchStationCost,branchBestStation} from './progression.js';
 
 const svg=paths=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+paths+'</svg>';
 // Each store's 3D storefront, rendered in Blender at the map's angle (public/icons/3d).
@@ -12,7 +12,9 @@ const RING='<svg class="map-ring-track" viewBox="0 0 56 56" aria-hidden="true"><
 const LOCK_SMALL='<svg class="map-lock" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 const CHECK_SMALL='<svg class="map-lock" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const STAR='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></svg>';
-const starRow=n=>'<span class="store-stars" aria-hidden="true">'+[0,1,2].map(k=>'<i'+(k<n?' class="on"':'')+'>'+STAR+'</i>').join('')+'</span>';
+// Rings after a reopen are silver, then gold (progression.js ringTier); bronze shows the plain look.
+const ringOf=p=>ringRank(p)?RING_NAMES[ringTier(p)]:'';
+const starRow=(n,ring)=>'<span class="store-stars"'+(ring?' data-ring="'+ring+'"':'')+' aria-hidden="true">'+[0,1,2].map(k=>'<i'+(k<n?' class="on"':'')+'>'+STAR+'</i>').join('')+'</span>';
 // The flagship's own station icons (index.html's Stations tab), so a branch's line reads as the same six stations.
 const STATION_SHORT=['Seeds','Grow','Harvest','Pack','Orders','Pickup'];
 const stationGlyph=j=>{const icon=document.querySelector('[data-machine="'+j+'"] .station-icon');return icon?icon.outerHTML:'';};
@@ -150,17 +152,19 @@ export function mountEmpireStores({getState,format,buyStation,goStore}){
   const canLease=!d.locked&&!paid,leaseFigure=paid?tick('Paid'):d.locked?LOCK_SMALL+format(d.cost):format(d.cost);
   paintTile(u.steps.lease,'page-tile map-tile'+(paid?' is-max':d.locked?' is-locked':canLease&&d.afford?' is-ready':''),'Lease for '+format(d.cost)+', then it builds for '+Math.round(BRANCH_BUILD_SECONDS[i]/60)+' minutes',leaseFigure,paid?1:Math.min(1,d.state.money/d.cost));
   if(!i)return;
-  const goals=starStatus(d.p,i-1),count=goals.filter(g=>g.earned).length;
+  const goals=starStatus(d.p,i-1),count=goals.filter(g=>g.earned).length;setRing(u.prev,ringOf(d.p));
   set(u.prevMeta,count>=STARS_TO_OPEN?count+' of 3 earned':'Any '+STARS_TO_OPEN+' of 3');
   goals.forEach((g,k)=>{const t=u.prevGoals[k];set(t.name,GOAL_NAMES[g.kind]);t.b.onclick=()=>{if(goStore)goStore(i-1,g.kind==='line'?0:1);};
    const figure=g.earned?CHECK_SMALL+'Done':g.kind==='served'?abbr(g.progress)+' / '+abbr(g.target):'Lv '+g.progress+' / '+g.target;
    paintTile(t,'page-tile map-tile is-goal'+(g.earned?' is-max':''),STORES[i-1].name+': '+g.title+(g.earned?', earned':', '+g.progress+' of '+g.target+'. Go there'),figure,g.earned?1:g.progress/g.target);});
  }
  // Stars: three goal tiles, filling as each nears; the head says what all three give.
+ function setRing(node,ring){if(!node)return;if(ring)node.dataset.ring=ring;else delete node.dataset.ring;}
  function syncGoals(i,d){
   const u=storeUI[i],goals=starStatus(d.p,i),count=goals.filter(g=>g.earned).length,show=!!d.lvl||count>0;
   u.stars.hidden=!show;if(!show)return;
-  const next=STORES[i+1],reward=count===3?'Earned: +'+Math.round(STAR_BONUS*100)+'% sales everywhere':(next&&count<STARS_TO_OPEN?'Any '+STARS_TO_OPEN+' open '+next.name+'. ':'')+'All 3: +'+Math.round(STAR_BONUS*100)+'% sales';
+  const ring=ringOf(d.p),bonus=Math.round(ringBonus(d.p)*100)+'% sales'+(ring?' this run':'');setRing(u.stars,ring);
+  const next=STORES[i+1],reward=(ring?ring[0].toUpperCase()+ring.slice(1)+' ring. ':'')+(count===3?'Earned: +'+bonus+(ring?'':' everywhere'):(next&&count<STARS_TO_OPEN?'Any '+STARS_TO_OPEN+' open '+next.name+'. ':'')+'All 3: +'+bonus);
   u.stars.title=reward;u.stars.setAttribute('aria-label','Stars, '+count+' of 3. '+reward);
   goals.forEach((g,k)=>{const t=u.goals[k];set(t.name,GOAL_NAMES[g.kind]);
    const figure=g.earned?CHECK_SMALL+'Done':g.kind==='served'?abbr(g.progress)+' / '+abbr(g.target):'Lv '+g.progress+' / '+g.target;
@@ -190,10 +194,10 @@ export function mountEmpireStores({getState,format,buyStation,goStore}){
   else if(d.max){chip='Max level';tone='max';}
   else{chip=(d.afford?'':'Next · ')+format(d.cost);tone=d.afford?'ready':'';dot=d.projectReady;}
   const starred=d.lvl?starCount(d.p,i):0;
-  const sig=[chip,tone,dot,d.locked&&Math.round(d.unlockPct),starred].join('|');
+  const ring=ringOf(d.p),sig=[chip,tone,dot,d.locked&&Math.round(d.unlockPct),starred,ring].join('|');
   if(sig===c.sig)return;c.sig=sig;
-  c.stars.innerHTML=d.lvl?starRow(starred):'';c.stars.title=d.lvl?starred+' of 3 stars':'';
-  if(d.gated){c.status.innerHTML=starRow(d.prevStars);c.status.title='Earn '+STARS_TO_OPEN+' stars at '+STORES[i-1].name;c.status.setAttribute('aria-label',chip);}else{set(c.status,chip);c.status.removeAttribute('title');c.status.removeAttribute('aria-label');}c.status.className='store-status'+(tone?' '+tone.split(' ').map(t=>'is-'+t).join(' '):'');
+  c.stars.innerHTML=d.lvl?starRow(starred,ring):'';c.stars.title=d.lvl?starred+' of 3 stars':'';
+  if(d.gated){c.status.innerHTML=starRow(d.prevStars,ring);c.status.title='Earn '+STARS_TO_OPEN+' stars at '+STORES[i-1].name;c.status.setAttribute('aria-label',chip);}else{set(c.status,chip);c.status.removeAttribute('title');c.status.removeAttribute('aria-label');}c.status.className='store-status'+(tone?' '+tone.split(' ').map(t=>'is-'+t).join(' '):'');
   c.dot.hidden=!dot;c.meter.hidden=!d.locked||d.gated;if(d.locked)c.meter.firstChild.style.width=(d.gated?Math.min(1,d.prevStars/STARS_TO_OPEN)*100:d.unlockPct)+'%';
   c.toggle.classList.toggle('is-locked',d.locked);c.toggle.classList.toggle('has-ready',!!tone&&tone!=='max'&&tone!=='locked');
  }

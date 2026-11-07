@@ -164,3 +164,12 @@
 .hud button:not(:disabled):active,.map-controls button:active,.shop-activity:active,.return-card button:active,.age-actions button:active,
 .guide-actions button:active,#resetModal .modal button:active,.modal .settings-close:active{transform:scale(.96)}
 @media(prefers-reduced-motion:reduce){.hud button:active,.map-controls button:active,.shop-activity:active,.return-card button:active,.age-actions button:active,.guide-actions button:active,#resetModal .modal button:active,.modal .settings-close:active{transform:none}}
+
+/* Reminders offer (main.js offerReminders): the welcome back card's look, one bell, one line and one brass answer. */
+.reminder-offer{position:fixed;inset:0;z-index:60;display:grid}
+.reminder-card{display:flex;flex-direction:column;align-items:center}
+.reminder-card h2{margin:6px 0 16px;font:500 22px/1.15 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;color:var(--ui-ink);text-wrap:balance}
+.reminder-card .reminder-yes{width:100%;min-height:52px;border:0;border-radius:16px;background:linear-gradient(180deg,#ecd49e,var(--ui-brass));color:var(--ui-brass-ink);font:inherit;font-size:15px;font-weight:700;letter-spacing:-.01em;box-shadow:inset 0 1px 0 rgba(255,250,232,.7),0 6px 18px rgba(226,198,138,.22);cursor:pointer}
+.reminder-card .reminder-no{margin-top:8px;min-height:40px;padding:0 16px;border:0;background:none;color:var(--ui-soft);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.reminder-card button:active{transform:scale(.98)}
+.reminder-card button:focus-visible{outline:2px solid var(--ui-ink);outline-offset:2px}

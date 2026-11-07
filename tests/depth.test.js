@@ -24,7 +24,7 @@ test('old saves keep every type they had, on every strain; new saves round-trip 
   assert.ok(Math.abs(menuFormatFactor(all,'value',undefined,[0,1])-((5*1+3*1.45+2*2.2)/10+1)/2)<1e-9,'the door averages the menu');
   assert.ok(Math.abs(menuFormatFactor(legacy,'packing',2)-(8*1+2*3)/10)<1e-9,'pre-roll fans buy flower until pre-rolls are stocked');
 });
-test('milestones continue past city without non-finite costs or rewards',()=>{assert.equal(milestone(3).goal,250000);assert.equal(milestone(4).goal,1000000);for(let i=0;i<=20;i++){const m=milestone(i);assert.ok(Number.isSafeInteger(m.goal));assert.ok(m.reward<m.goal)}assert.equal(milestone(21),null);assert.ok(boostCost(BOOST_MAX-1)<250*4**(BOOST_MAX-1));assert.ok(Number.isSafeInteger(boostCost(500)))});
+test('milestones continue past city without non-finite costs or rewards',()=>{assert.equal(milestone(3).goal,250000);assert.equal(milestone(4).goal,1000000);for(let i=0;i<=20;i++){const m=milestone(i);assert.ok(Number.isSafeInteger(m.goal));assert.ok(m.reward<m.goal)}assert.ok(milestone(21));assert.ok(boostCost(BOOST_MAX-1)<250*4**(BOOST_MAX-1));assert.ok(Number.isSafeInteger(boostCost(500)))});
 test('prestige pays shares for all-time revenue, migrates old ranks and multiplies base sales',()=>{const s={money:0,lifetime:9999999,empire:migrateProgression({prestige:0})};assert.equal(prestigeOffer(s).eligible,false);s.lifetime++;let o=prestigeOffer(s);assert.equal(o.eligible,true);assert.equal(o.gain,10);assert.equal(o.multiplier,1.5);s.lifetime=40000000;assert.equal(prestigeOffer(s).gain,20);s.empire.shares=20;s.empire.lifetimeAll=40000000;s.lifetime=0;assert.equal(prestigeOffer(s).eligible,false);assert.equal(prestigeOffer(s).target,44100000);s.lifetime=4100000;assert.equal(prestigeOffer(s).gain,1);assert.equal(saleMultiplier(s.empire),2);const old=migrateProgression({prestige:2});assert.equal(old.shares,8);assert.equal(old.lifetimeAll,40000000);assert.ok(Math.abs(saleMultiplier(old)-1.4)<1e-9);assert.equal(migrateProgression({prestige:2,shares:3,lifetimeAll:5}).shares,3);assert.equal(migrateProgression({prestige:Infinity}).prestige,0);assert.equal(migrateProgression({prestige:9999}).prestige,999)});
 test('VIP reward requires reputation unlock and a fast handoff',()=>{assert.equal(customerType(60,6),'vip');assert.notEqual(customerType(59,6),'vip');const p=migrateProgression({reputation:70});assert.equal(satisfyCustomer(p,-1,'vip','everyday',15),2);assert.equal(satisfyCustomer(p,-1,'vip','everyday',16),1)});
 test('delayed timers preserve fixed steps, cap long-stall estimates and respect pause',()=>{assert.deepEqual(elapsedSteps(.2,4),{steps:16,offline:0});assert.deepEqual(elapsedSteps(.2,0),{steps:0,offline:0});assert.deepEqual(elapsedSteps(100000,1),{steps:0,offline:86400});assert.deepEqual(elapsedSteps(100000,0),{steps:0,offline:86400});assert.equal(elapsedSteps(-1,1).steps,0);assert.equal(elapsedSteps(NaN,1).steps,0);assert.equal(migrateProgression({returnReport:{seconds:86400,earnings:[1,2,3,4]}}).returnReport.seconds,86400)});
@@ -40,4 +40,12 @@ test('customers come for a type — half flower, three in ten pre-rolls, one in 
   // Ten customers' takings times the door's demand: stocking every type beats flower alone.
   const takings=menu=>[...Array(10).keys()].reduce((n,id)=>n+formatPremium(menu,wantedFormat(menu,id,0),0),0)*menuFormatFactor(menu,'demand',0);
   assert.ok(takings(all)>takings(flower),`every type (${takings(all)}) should beat flower alone (${takings(flower)})`);
+});
+
+test('the order milestone ladder keeps going past $43T with the same formula',()=>{
+  for(let i=21;i<=60;i++){const m=milestone(i),prev=milestone(i-1);assert.ok(m,'step '+i);assert.equal(m.name,'EMPIRE CONTRACT '+(i-3));
+    assert.ok(Math.abs(m.goal/prev.goal-3)<1e-9);assert.ok(Math.abs(m.reward/m.goal-.2)<1e-9);assert.ok(Number.isFinite(m.reward));}
+  assert.equal(milestone(-1),null);assert.equal(milestone(1.5),null);
+  // It ends only before the numbers overflow.
+  assert.equal(milestone(1000),null);
 });

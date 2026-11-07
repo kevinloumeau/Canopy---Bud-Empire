@@ -63,28 +63,65 @@ export const STAR_GOALS=[
   {kind:'line',target:[10,10,10,10,10]}
 ];
 export const STAR_BONUS=.1;
+// Rings after a reopen (2026-11-07 review): bronze stars above are kept for good, so from the second run on every
+// tile read Done and branches opened on cash alone. Each run after the first gets a fresh ring on the same three goals,
+// silver on rank 1 and gold from rank 2, with targets that keep rising with rank. The ring is what the store pages show
+// and what opens the next branch; it starts empty every run. A full ring adds RING_BONUS sales for the rest of that run.
+export const RING_BONUS=.05;
+export const RING_NAMES=['bronze','silver','gold'];
+const LINE_RINGS=[10,30,50,75];
+export const ringRank=p=>Math.max(0,Math.floor(p?.prestige||0));
+export const ringTier=p=>Math.min(2,ringRank(p));
+export function ringTarget(kind,i,rank){
+  const r=Math.max(0,Math.floor(rank||0)),base=STAR_GOALS.find(g=>g.kind===kind).target[i];
+  if(kind==='served')return Math.round(base*(1+.5*Math.min(r,4)));
+  if(kind==='line')return LINE_RINGS[Math.min(r,LINE_RINGS.length-1)];
+  return base;
+}
 function starValue(p,i,kind){
   if(kind==='served')return p.stores[i].served;
   if(kind==='level')return p.stores[i].level;
   const lines=p.stores[i].lines;return p.stores[i].level&&Array.isArray(lines)&&lines.length?Math.min(...lines):0;
 }
-export const starCount=(p,i)=>[0,1,2].filter(k=>(p.stars?.[i]||0)&1<<k).length;
-export const branchFinished=(p,i)=>starCount(p,i)===3;
+const bits=v=>[0,1,2].filter(k=>(v||0)&1<<k).length;
+// The bits the store page shows: bronze stars on the first run, this run's ring after that.
+const ringBits=(p,i)=>ringRank(p)?(p.runStars?.[i]||0):(p.stars?.[i]||0);
+// Stars on the ring in play (what opens the next branch and what the pages show).
+export const starCount=(p,i)=>bits(ringBits(p,i));
+// Bronze stars, kept for good.
+export const bronzeCount=(p,i)=>bits(p.stars?.[i]);
+export const branchFinished=(p,i)=>bronzeCount(p,i)===3;
 export const finishedBranches=p=>STORES.filter((_,i)=>branchFinished(p,i)).length;
-export function starMultiplier(p){return 1+finishedBranches(p)*STAR_BONUS;}
-// A branch opens once the one before it has STARS_TO_OPEN stars. A branch already open stays open (older saves keep their stores).
+export const ringsFinished=p=>ringRank(p)?STORES.filter((_,i)=>bits(p.runStars?.[i])===3).length:0;
+export function starMultiplier(p){return 1+finishedBranches(p)*STAR_BONUS+ringsFinished(p)*RING_BONUS;}
+// What a full ring on the board in play adds.
+export const ringBonus=p=>ringRank(p)?RING_BONUS:STAR_BONUS;
+// A branch opens once the one before it has STARS_TO_OPEN stars on the ring in play. A branch already open stays open (older saves keep their stores).
 export const STARS_TO_OPEN=2;
 export function branchOpenable(p,i){return i===0||p.stores[i].level>0||starCount(p,i-1)>=STARS_TO_OPEN;}
 export function starStatus(p,i){
-  return STAR_GOALS.map((g,k)=>{const target=g.target[i],earned=!!((p.stars?.[i]||0)&1<<k),value=Math.min(target,starValue(p,i,g.kind));
+  const rank=ringRank(p),tier=ringTier(p),held=ringBits(p,i);
+  return STAR_GOALS.map((g,k)=>{const target=ringTarget(g.kind,i,rank),earned=!!(held&1<<k),value=Math.min(target,starValue(p,i,g.kind));
     const title=g.kind==='served'?'Serve '+abbr(target)+' customers':g.kind==='level'?'Reach level '+target:'Every station Lv '+target;
-    return {kind:g.kind,target,progress:earned?target:value,earned,title};});
+    return {kind:g.kind,target,progress:earned?target:value,earned,title,tier:RING_NAMES[tier]};});
 }
-// Latches every goal met right now; returns [{store,goal}] for stars earned by this call so the UI can celebrate them.
+// Latches every goal met right now; returns [{store,goal}] for stars on the ring in play earned by this call so the UI
+// can celebrate them (a bronze star latched quietly behind a later run's ring is not listed).
 export function settleStars(p){
-  const earned=[];
-  STORES.forEach((_,i)=>{if(!p.stores[i].level&&!p.stars[i])return;STAR_GOALS.forEach((g,k)=>{if(p.stars[i]&1<<k)return;if(starValue(p,i,g.kind)>=g.target[i]){p.stars[i]|=1<<k;earned.push({store:i,goal:k});}});});
+  const earned=[],rank=ringRank(p);
+  if(!Array.isArray(p.runStars))p.runStars=STORES.map(()=>0);
+  STORES.forEach((_,i)=>{if(!p.stores[i].level&&!p.stars[i])return;STAR_GOALS.forEach((g,k)=>{
+    if(!(p.stars[i]&1<<k)&&starValue(p,i,g.kind)>=g.target[i]){p.stars[i]|=1<<k;if(!rank)earned.push({store:i,goal:k});}
+    if(rank&&p.stores[i].level&&!(p.runStars[i]&1<<k)&&starValue(p,i,g.kind)>=ringTarget(g.kind,i,rank)){p.runStars[i]|=1<<k;earned.push({store:i,goal:k});}
+  });});
   return earned;
+}
+// Branches serve one customer every 12 s while the game is closed too (the Customers star used to count only in the
+// foreground). Adds the customers for `seconds` away to every open branch and returns how many were served in all.
+export function creditOfflineServed(p,seconds){
+  const away=Math.max(0,Number.isFinite(seconds)?seconds:0);let total=0;
+  p.stores.forEach(s=>{if(!s.level)return;const clock=(s.serviceClock||0)+away,n=Math.floor(clock/12);s.serviceClock=clock-n*12;s.served=Math.min(Number.MAX_SAFE_INTEGER,(s.served||0)+n);total+=n;});
+  return total;
 }
 export function nextStoreRate(p,i) {
   if(p.stores[i].level>=10)return storeRate(p,i);
@@ -107,8 +144,9 @@ export function migrateProgression(raw, now=Date.now()) {
     day:num(r.daily?.day,0), streak:num(r.daily?.streak,0,7)
   }, stores:STORES.map((_,i)=>({level:num(r.stores?.[i]?.level,0,10),projects:[0,1,2].map(j=>r.stores?.[i]?.projects?.[j]===true), manager:MANAGERS.some(m=>m.id===r.stores?.[i]?.manager)&&!(Array.isArray(r.stores)?r.stores:[]).slice(0,i).some(s=>s?.manager===r.stores?.[i]?.manager)?r.stores[i].manager:'none', featured:PRODUCTS.includes(r.stores?.[i]?.featured)?r.stores[i].featured:'everyday', loyalty:num(r.stores?.[i]?.loyalty,0,1000), served:num(r.stores?.[i]?.served), serviceClock:num(r.stores?.[i]?.serviceClock,0,11), lines:migrateBranchLine(r.stores?.[i]?.lines,num(r.stores?.[i]?.level,0,10))})),
   contracts:migrateContracts(r.contracts), season:migrateSeason(r.season), badges:(Array.isArray(r.badges)?r.badges:[]).filter(b=>typeof b==='string'&&BADGE_ID.test(b)).filter((b,i,a)=>a.indexOf(b)===i).slice(0,200),
-  trophies:num(r.trophies), rewards:[0,1,2].map(i=>r.rewards?.[i]===true), reputation:num(r.reputation,0,1000), counters:Object.fromEntries(GOAL_KINDS.map(k=>[k,num(r.counters?.[k])])), goals:[0,1,2].map(i=>({round:num(r.goals?.[i]?.round),start:num(r.goals?.[i]?.start),kind:GOAL_KINDS.includes(r.goals?.[i]?.kind)?r.goals[i].kind:legacyGoalKind(i,num(r.goals?.[i]?.round))})), goalsCompleted:num(r.goalsCompleted), returnReport:r.returnReport&&Array.isArray(r.returnReport.earnings)?{seconds:num(r.returnReport.seconds),earnings:[...Array(STORES.length+1)].map((_,i)=>num(r.returnReport.earnings[i])),goals:num(r.returnReport.goals,0,3)}:null,
-  stars:STORES.map((_,i)=>{const v=r.stars?.[i];return Number.isInteger(v)&&v>=0&&v<=7?v:0;})};
+  trophies:num(r.trophies), rewards:[0,1,2].map(i=>r.rewards?.[i]===true), reputation:num(r.reputation,0,1000), counters:Object.fromEntries(GOAL_KINDS.map(k=>[k,num(r.counters?.[k])])), goals:[0,1,2].map(i=>({round:num(r.goals?.[i]?.round),start:num(r.goals?.[i]?.start),kind:GOAL_KINDS.includes(r.goals?.[i]?.kind)?r.goals[i].kind:legacyGoalKind(i,num(r.goals?.[i]?.round))})), goalsCompleted:num(r.goalsCompleted), returnReport:r.returnReport&&Array.isArray(r.returnReport.earnings)?{seconds:num(r.returnReport.seconds),earnings:[...Array(STORES.length+1)].map((_,i)=>num(r.returnReport.earnings[i])),goals:num(r.returnReport.goals,0,3),served:num(r.returnReport.served)}:null,
+  stars:STORES.map((_,i)=>{const v=r.stars?.[i];return Number.isInteger(v)&&v>=0&&v<=7?v:0;}),
+  runStars:STORES.map((_,i)=>{const v=r.runStars?.[i];return Number.isInteger(v)&&v>=0&&v<=7?v:0;})};
   // Saves from before stars are credited with every goal they already meet.
   settleStars(p);return p;
 }
