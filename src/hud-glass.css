@@ -75,3 +75,8 @@
 
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.hud,.toast,.map-controls button{background:#153a21}}
 @media(prefers-reduced-transparency:reduce){.hud,.toast,.map-controls button,.world .marker.station-sign{background:#153a21;-webkit-backdrop-filter:none;backdrop-filter:none}}
+/* Cash pops (src/cash-pops.js): the cash figure gives a small lift as each "+$" lands; transform only, so the HUD never shifts. */
+.hud>.stat #money{display:inline-block;transform-origin:left center}
+.hud>.stat #money.cash-gain{animation:cash-gain .42s cubic-bezier(.3,1.5,.5,1)}
+@keyframes cash-gain{0%{transform:scale(1)}35%{transform:scale(1.07)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.hud>.stat #money.cash-gain{animation:none}}
