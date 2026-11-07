@@ -13,7 +13,7 @@
 .sheet .flow-guide button#flowAction{display:grid;align-self:center;align-content:center;justify-items:end;gap:1px;min-width:0;max-width:44vw;min-height:40px;padding:6px 12px;border:0;border-radius:11px;background:var(--ui-brass);color:var(--ui-brass-ink);font-size:11px;font-weight:600;line-height:1.15;text-align:right;white-space:nowrap}
 .sheet .flow-guide button#flowAction:not(.has-price){font-size:12.5px}
 .sheet .flow-guide button#flowAction span{max-width:100%;overflow:hidden;text-overflow:ellipsis}
-.sheet .flow-guide button#flowAction b{font:500 13.5px 'DM Mono',monospace;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.sheet .flow-guide button#flowAction b{font:500 13.5px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .sheet .flow-guide button#flowAction:hover{background:var(--ui-brass);filter:brightness(1.06)}
 .sheet .flow-guide button#flowAction[data-mode=view]{background:none;border:1px solid var(--ui-edge);color:var(--ui-ink)}
 .sheet .flow-guide .flow-meter{grid-column:1/-1;display:block;height:4px;border-radius:4px;background:var(--ui-well);overflow:hidden}

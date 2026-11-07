@@ -5,7 +5,7 @@
 .sheet .empire-screen .story-entry>svg{width:22px;height:22px;color:var(--ui-brass)}
 .sheet .empire-screen .story-entry small{font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ui-soft)}
 .sheet .empire-screen .story-entry b{margin-top:2px;font-size:13px;font-weight:600;color:var(--ui-ink)}
-.sheet .empire-screen .story-entry .story-entry-count{font:500 11.5px 'DM Mono',monospace;color:var(--ui-soft)}
+.sheet .empire-screen .story-entry .story-entry-count{font:500 11.5px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-soft)}
 .sheet .empire-screen .story-entry>span:last-child{font-size:20px;line-height:1;color:var(--ui-soft)}
 .sheet .empire-screen .empire-more{margin:8px 0 0;font-size:13px;font-weight:600}
 .sheet .empire-screen .empire-more-hint{color:var(--ui-brass)}
@@ -16,22 +16,22 @@
 .sheet .empire-screen .reward-chip{display:grid;gap:1px;min-height:0;padding:2px 12px 2px 0;margin-right:12px;border:0;border-right:1px solid var(--ui-edge);border-radius:0;background:none;box-shadow:none;text-align:left}
 .sheet .empire-screen .reward-chip:last-child{margin-right:0;border-right:0}
 .sheet .empire-screen .reward-chip small{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ui-brass)}
-.sheet .empire-screen .reward-chip b{font:500 14px 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-ink)}
+.sheet .empire-screen .reward-chip b{font:500 14px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;color:var(--ui-ink)}
 .sheet .empire-screen .reward-collect{min-height:40px;padding:0 14px;border:0;border-radius:11px;background:var(--ui-brass);color:var(--ui-brass-ink);font-size:12.5px;font-weight:600;box-shadow:none}
 .sheet .empire-screen .reward-strip .reward-quiet{color:var(--ui-soft)}
 
 .sheet .empire-screen .empire-section-heading{margin:2px 0 0;font-size:13px;font-weight:600;color:var(--ui-ink)}
-.sheet .empire-screen #branchSummary{margin:0;font:500 11.5px 'DM Mono',monospace;color:var(--ui-soft)}
+.sheet .empire-screen #branchSummary{margin:0;font:500 11.5px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-soft)}
 .sheet .empire-screen .store-list{display:block;gap:0;margin:8px 0 0;border:1px solid var(--ui-edge);border-radius:14px;background:var(--ui-well-soft);overflow:hidden}
 /* Each row draws the hairline above it, pulled up 1px so the list clips the first one away. */
 .sheet .empire-screen .store-list .branch-toggle.store-card{grid-template-columns:22px minmax(0,1fr) 10px;column-gap:12px;row-gap:3px;width:100%;margin:-1px 0 0;padding:9px 10px 9px 12px;border:0;border-top:1px solid var(--ui-edge);border-bottom:0;border-radius:0;background:none;box-shadow:none;opacity:1}
 .sheet .empire-screen .store-card .store-icon{width:22px;height:22px;align-self:center;border-radius:0;background:none;box-shadow:none;color:var(--ui-soft)}
 .sheet .empire-screen .store-card .store-icon svg{width:22px;height:22px}
 .sheet .empire-screen .store-card .branch-name{font-size:13.5px;font-weight:600;color:var(--ui-ink)}
-.sheet .empire-screen .store-list .store-card strong{font:400 11.5px 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-soft)}
+.sheet .empire-screen .store-list .store-card strong{font:400 11.5px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;color:var(--ui-soft)}
 .sheet .empire-screen .store-card .store-locked,.sheet .empire-screen .store-card .store-income{padding:0;font-size:11.5px;background:none;color:var(--ui-soft)}
 .sheet .empire-screen .store-card svg{stroke:currentColor}
-.sheet .empire-screen .store-status{padding:0;border-radius:0;background:none;box-shadow:none;font:500 11.5px 'DM Mono',monospace;color:var(--ui-soft)}
+.sheet .empire-screen .store-status{padding:0;border-radius:0;background:none;box-shadow:none;font:500 11.5px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-soft)}
 .sheet .empire-screen .store-status.is-ready{color:var(--ui-leaf-glow)}
 .sheet .empire-screen .store-status.is-ready.is-gold{color:var(--ui-brass)}
 .sheet .empire-screen .store-card.is-locked .branch-name{color:var(--ui-soft)}
@@ -43,7 +43,7 @@
 .sheet .empire-screen .store-card .store-locked,.sheet .empire-screen .store-card .store-income,.sheet .empire-screen .store-card .store-level b{font-weight:400}
 /* A store you can afford shows its price on a button-shaped chip, like the Shop rows: brass to open, leaf to upgrade.
    The line under the name then shows what the store earns once open, so the price is not said twice. */
-.sheet .empire-screen .store-status.is-ready{padding:7px 11px;border-radius:10px;background:var(--ui-leaf);color:var(--ui-on-leaf);font:500 13px 'DM Mono',monospace;letter-spacing:-.02em}
+.sheet .empire-screen .store-status.is-ready{padding:7px 11px;border-radius:10px;background:var(--ui-leaf);color:var(--ui-on-leaf);font:500 13px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em}
 .sheet .empire-screen .store-status.is-ready.is-gold{background:var(--ui-brass);color:var(--ui-brass-ink)}
 .sheet .empire-screen .store-card .store-copy{row-gap:0}
 .sheet .empire-screen .store-card.has-ready .store-locked:not(.is-locked){display:none}
@@ -70,13 +70,13 @@
 .sheet .empire-screen .contract-card .contract-goal{font-size:12.5px;color:var(--ui-ink)}
 .sheet .empire-screen .contract-card .contract-twist{font-size:12px;color:var(--ui-soft)}
 .sheet .empire-screen .contract-card .contract-twist b{font-weight:600;color:var(--ui-ink)}
-.sheet .empire-screen .contract-card .event-time{font:500 11.5px 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-soft)}
+.sheet .empire-screen .contract-card .event-time{font:500 11.5px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;color:var(--ui-soft)}
 .sheet .empire-screen .contract-card .contract-actions{grid-column:2;grid-row:1 / span 5;display:grid;justify-items:end;gap:4px}
 .sheet .empire-screen .contract-card .contract-actions[hidden],.sheet .empire-screen .contract-card [hidden]{display:none}
-.sheet .empire-screen .contract-card #contractStart{width:auto;min-height:38px;margin:0;padding:0 14px;border:0;border-radius:10px;background:var(--ui-leaf);color:var(--ui-on-leaf);font:500 13px 'DM Mono',monospace;letter-spacing:-.02em;box-shadow:none}
+.sheet .empire-screen .contract-card #contractStart{width:auto;min-height:38px;margin:0;padding:0 14px;border:0;border-radius:10px;background:var(--ui-leaf);color:var(--ui-on-leaf);font:500 13px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;box-shadow:none}
 .sheet .empire-screen .contract-card #contractStart:disabled{background:var(--ui-well);color:var(--ui-soft)}
 .sheet .empire-screen .contract-card .contract-skip{min-height:28px;padding:0 2px;border:0;background:none;box-shadow:none;font-size:11.5px;color:var(--ui-soft);text-decoration:underline;text-underline-offset:3px}
-.sheet .empire-screen .contract-card .contract-boost{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid var(--ui-edge);font:500 12px 'DM Mono',monospace;color:var(--ui-ink)}
+.sheet .empire-screen .contract-card .contract-boost{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid var(--ui-edge);font:500 12px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-ink)}
 .sheet .empire-screen .contract-card #contractBoost{min-height:36px;padding:0 12px;border:0;border-radius:10px;background:var(--ui-brass);color:var(--ui-brass-ink);font-size:12.5px;font-weight:600;box-shadow:none}
 .sheet .empire-screen .contract-card #contractBoost{flex:none}
 
@@ -94,7 +94,7 @@
 .star-goal:first-child{border-top:0}
 .star-mark svg{width:16px;height:16px}
 .star-title{font-size:13px;color:var(--ui-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.star-figure{font:500 12px 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-soft)}
+.star-figure{font:500 12px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;color:var(--ui-soft)}
 .star-goal.is-earned .star-title{color:var(--ui-soft)}
 .star-goal.is-earned .star-figure{color:var(--ui-leaf-glow)}
 .star-reward{margin:6px 0 0;font-size:11.5px;color:var(--ui-soft)}

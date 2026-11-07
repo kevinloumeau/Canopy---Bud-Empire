@@ -23,7 +23,7 @@
 
 /* ---- Heads and tile grids. ---- */
 .sheet .empire-screen .page-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:2px 2px 2px;font:600 13.5px/1.2 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-ink)}
-.sheet .empire-screen .page-meta{font:400 11px/1.2 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-soft);white-space:nowrap}
+.sheet .empire-screen .page-meta{font:400 11px/1.2 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;color:var(--ui-soft);white-space:nowrap}
 .sheet .empire-screen .page-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin:0 -4px}
 .sheet .empire-screen .page-group{margin-top:3px}
 .sheet .empire-screen .page-group[hidden]{display:none}
@@ -46,7 +46,7 @@
 .page-glyph.is-star svg{width:22px;height:22px}
 .page-tile.is-max .page-glyph.is-star svg{fill:currentColor}
 /* A station's level as a chip on the ring's foot. */
-.page-level{position:absolute;left:50%;bottom:-5px;transform:translateX(-50%);min-width:20px;padding:2px 5px;border-radius:999px;background:#143d21;box-shadow:inset 0 0 0 1px var(--ui-edge);font:600 9.5px/1 'DM Mono',monospace;letter-spacing:-.03em;color:var(--ui-ink);font-variant-numeric:tabular-nums}
+.page-level{position:absolute;left:50%;bottom:-5px;transform:translateX(-50%);min-width:20px;padding:2px 5px;border-radius:999px;background:#143d21;box-shadow:inset 0 0 0 1px var(--ui-edge);font:600 9.5px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.03em;color:var(--ui-ink);font-variant-numeric:tabular-nums}
 .page-tile.is-best .page-level{box-shadow:inset 0 0 0 1px #e2c68a77;color:var(--ui-brass)}
 .is-stations .map-tile-name{margin-top:3px}
 
@@ -59,7 +59,7 @@
 .page-hero.is-locked .map-ring-fill{stroke:rgba(242,240,230,.42)}
 .page-hero-copy{display:grid;gap:3px;flex:999 1 auto}
 .page-hero-copy b{font:650 14px/1.2 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.page-hero-copy small{font:500 11px/1.2 'DM Mono',monospace;letter-spacing:-.03em;color:#a8dc52;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.page-hero-copy small{font:500 11px/1.2 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.03em;color:#a8dc52;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .page-hero.is-locked .page-hero-copy small{color:var(--ui-soft)}
 /* empire.css caps .empire-branch buttons at 112px, which clipped the price; this button sizes to its text instead. */
 .sheet .empire-screen .page-hero .page-buy{min-height:38px;min-width:0;max-width:none;margin:0;padding:0 14px;border:0;border-radius:999px;background:#a8dc522e;box-shadow:inset 0 0 0 1px #a8dc5233;color:#d8efc4;font:600 12.5px/1 'Bricolage Grotesque',system-ui,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap;flex:1 0 auto}
@@ -74,7 +74,7 @@
 .page-tile.is-goal .page-glyph,.page-tile.is-goal .page-glyph.is-star svg{width:15px;height:15px}
 .page-tile.is-goal .map-tile-name{font-size:10.5px;color:var(--ui-soft)}
 .page-tile.is-goal .map-tile-figure{justify-content:flex-start;padding:0;min-height:0;color:var(--ui-ink)}
-.page-tile.is-goal.is-max .map-tile-figure{color:#a8dc52;font:500 10px/1 'DM Mono',monospace}
+.page-tile.is-goal.is-max .map-tile-figure{color:#a8dc52;font:500 10px/1 'Bricolage Grotesque',system-ui,sans-serif}
 
 .sheet .empire-screen .page-group.is-stars{margin-top:4px;padding-top:4px;border-top:1px solid var(--ui-sheen)}
 /* main.js still renders the old project rows (their buttons are what the upgrade tiles press); they no longer show. */

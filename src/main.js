@@ -45,7 +45,7 @@ import * as economy from './economy.js';
 import {ABILITIES,ABILITY_UNLOCK,ABILITY_FACTOR,ABILITY_SALES,ABILITY_SECONDS,migrateAbilities,abilityStatus,useAbility,tickAbilities,abilityFactor,abilitySales,clockLabel,featuredAbility} from './crew-abilities.js';
 import * as strains from './strains.js';
 import { BRANCH_LINE, branchStationCost, buyBranchStation, branchStationMax, branchBestStation } from './progression.js';
-import { abbr, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, settleGoals, shiftStatus, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, payStore, openStore, branchOpenable, STARS_TO_OPEN, settleStars, starCount, branchFinished, STAR_BONUS, recordEvent, contractOffer, activeContract, contractTwist, contractFactor, startContract, skipContract, settleContract, useContractBoost, tickContractBoost, contractBoostFactor, CONTRACT_BOOST_SECONDS, seasonStatus, claimSeason, SEASONS, RETIRED_WEEKLY, nextSeason, weeklySpecial, specialFactor } from './progression.js';
+import { abbr, abbrShort, count as countText, times, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, settleGoals, shiftStatus, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, payStore, openStore, branchOpenable, STARS_TO_OPEN, settleStars, starCount, branchFinished, STAR_BONUS, recordEvent, contractOffer, activeContract, contractTwist, contractFactor, startContract, skipContract, settleContract, useContractBoost, tickContractBoost, contractBoostFactor, CONTRACT_BOOST_SECONDS, seasonStatus, claimSeason, SEASONS, RETIRED_WEEKLY, nextSeason, weeklySpecial, specialFactor } from './progression.js';
 import {mountUiKit} from './ui-kit.js';
 import {makeMusic} from './music.js';
 import {createCashPops,rollCash,popFrame,POP_LIFE} from './cash-pops.js';
@@ -247,10 +247,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     });
     var i=flowerFocus,strain=STRAINS[i],look=STRAIN_LOOKS[i],level=state.strains[i],active=state.menuStrains.indexOf(i)>=0,price=strainCost(i),maxed=level>=strains.STRAIN_MAX,detail=$('strainDetail');
     var isNight=atmosphere(state.empire.network).night,type=strains.STRAIN_TYPE[i],timeNow=strains.timeFactor(type,isNight);
-    var nextValue=Math.round(flowerValue(i)*(1+level*.1)/(1+Math.max(0,level-1)*.1));
+    var nextValue=flowerValue(i,level+1);
     var stats=level?
       '<span><b>'+fmt(flowerValue(i))+'</b><small>'+'per sale'+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+(maxed?'Max':'+'+fmt(nextValue-flowerValue(i)))+'</b><small>'+(maxed?'level '+strains.STRAIN_MAX:'next lv')+'</small></span>':
-      '<span><b>'+fmt(Math.round(strain.price*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value',i)*timeNow))+'</b><small>'+'per sale'+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+fmt(strain.unlock)+'</b><small>unlock</small></span>';
+      '<span><b>'+fmt(flowerValue(i,1))+'</b><small>'+'per sale'+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+fmt(strain.unlock)+'</b><small>unlock</small></span>';
     var growPct=Math.round((1-strains.strainGrowFactor(i,Math.max(1,level)))*100),tipVip=Math.round((strains.tipFactor('vip',strains.potency(i,level)+state.terpeneLevel*.25)-1)*100),tier=strains.perkTier(level),perk=strains.PERKS[i];
     var traits='<ul class="strain-traits">'+
       '<li'+(growPct?' class="is-cost"':'')+'>'+(growPct?'Grow room −'+growPct+'%'+(level<10?' · masters with levels':''):'Easy to grow')+'</li>'+
@@ -289,10 +289,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function unitShort(){var f=state.productMenu.active;return f===1?'joint':f===2?'edible':'⅛'}
   function weightLabel(n){var oz=Math.floor(n/8),rem=n%8,frac=['','⅛','¼','⅜','½','⅝','¾','⅞'][rem];return (oz?abbr(oz):'')+(oz>=1000?'':frac)+(oz||rem?' oz':'0 oz')}
   function qtyLabel(n){return state.productMenu.active===0?weightLabel(n):abbr(n)+' '+unitWord(n)}
-  // One compact number style for every HUD counter: 24000 → 24k, 3000 → 3k, 1250 → 1.3k.
-  function compactCount(n){return n>=100000?Math.round(n/1000)+'k':n>=1000?(Math.round(n/100)/10).toFixed(n%1000?1:0).replace(/\.0$/,'')+'k':Math.round(n*10)/10+''}
+  // One compact number style for every HUD counter: 24000 → 24K, 3000 → 3K, 1250 → 1.3K.
+  function compactCount(n){return n<1000?String(Math.round(n*10)/10):abbrShort(n)}
   function secondsLabel(t){return (t>=10?Math.round(t):t>=1?t.toFixed(1):t.toFixed(2))+'s'}
-  function qtyShort(n){var f=state.productMenu.active;if(f===0){var oz=n/8;return (oz>=1000?(oz/1000).toFixed(oz>=10000?0:1)+'k':oz>=10?Math.round(oz):Math.round(oz*10)/10)+' oz'}return (n>=1000?(n/1000).toFixed(n>=10000?0:1)+'k':n)+(f===1?' jt':' ed')}
+  function qtyShort(n){var f=state.productMenu.active;if(f===0){var oz=n/8;return compactCount(oz)+' oz'}return compactCount(n)+(f===1?' jt':' ed')}
   var playSound=makeSound();
   // Background music (music.js) shares the effects' audio context; it starts at the first tap and dips under big moments.
   var music=makeMusic(playSound.context);music.set(state.music);
@@ -306,7 +306,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function trackStationLevel(i){var lv=state.lines[i];[10,25,50,100].forEach(function(m){if(lv>=m)telemetry.once('station_level_'+m,{station:LINES[i].name})})}
   // Browsers only start audio inside a gesture: the first tap or key press primes the context while sound is on.
   ['pointerdown','keydown'].forEach(function(type){window.addEventListener(type,function prime(){playSound.unlock(state.sound);music.unlock()},{passive:true})});
-  function flowerValue(index){if(index===undefined){var menu=menuStrains();return menu.reduce(function(total,i){return total+flowerValue(i)},0)/menu.length}var i=index;return Math.round(STRAINS[i].price*(1+Math.max(0,state.strains[i]-1)*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value',i)*trendBoost(i)*displayBoost(i)*strains.timeFactor(strains.STRAIN_TYPE[i],atmosphere(state.empire.network).night)*(1+crossBonus(state.crosses))*(1+achievementBonus(state))*(i>0?specialFactor('boutique'):1)*terpFactor(state.city,i,state.strainTrend.index)*hqSales(state.flagship))}
+  // `level` prices the strain at another level (the Menu card's next-level gain) with every bonus the real sale gets.
+  function flowerValue(index,level){if(index===undefined){var menu=menuStrains();return menu.reduce(function(total,i){return total+flowerValue(i)},0)/menu.length}var i=index,lv=level===undefined?state.strains[i]:level;return Math.round(STRAINS[i].price*(1+Math.max(0,lv-1)*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value',i)*trendBoost(i)*displayBoost(i)*strains.timeFactor(strains.STRAIN_TYPE[i],atmosphere(state.empire.network).night)*(1+crossBonus(state.crosses))*(1+achievementBonus(state))*(i>0?specialFactor('boutique'):1)*terpFactor(state.city,i,state.strainTrend.index)*hqSales(state.flagship))}
   function onlineValue(sequence){return Math.round(flowerValue(menuChoice(sequence===undefined?state.onlineCompleted:sequence))*4/3*(1+state.onlineBonusLevel*.05)*specialFactor('online')*contractFactor(state.empire,'online'))}
   function strainCost(i){return state.strains[i]?Math.round(Math.max(250,STRAINS[i].unlock*.35)*Math.pow(1.85,state.strains[i]-1)):STRAINS[i].unlock}
   function buyStrain(i){
@@ -367,17 +368,17 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if($('perkGrid'))renderPerks();
     if($('prestigeStart')){
       // Shares turn all-time revenue into a permanent bonus; the panel compares the bonus now with the bonus after reopening.
-      var offer=prestigeOffer(state),pct=function(m){return '+'+Math.round((m-1)*100)+'%'},rate=function(m){return m.toFixed(2).replace(/0$/,'')+'×'};
+      var offer=prestigeOffer(state),pct=function(m){return '+'+Math.round((m-1)*100)+'%'},rate=times;
       $('prestigeStatus').textContent=offer.shares?pct(offer.current)+' sales':(offer.eligible?'Ready':'Rank 0');
       $('prestigeCurrentRank').textContent='Now';$('prestigeCurrentRate').textContent=rate(offer.current);
       $('prestigeNextRank').textContent='After reopening';$('prestigeNextRate').textContent=rate(offer.multiplier);
       $('prestigeComparison').classList.remove('is-max');$('prestigeComparison').setAttribute('aria-label','Base sales now '+rate(offer.current)+', after reopening '+rate(offer.multiplier));
       $('prestigeNext').hidden=false;$('prestigeArrow').removeAttribute('hidden');
-      $('prestigeGain').textContent=offer.gain?'+'+offer.gain+' share'+(offer.gain===1?'':'s')+' · '+pct(1+offer.gain*.05)+' base sales · permanent':'Each share adds +5% base sales · permanent';
+      $('prestigeGain').textContent=offer.gain?'+'+countText(offer.gain)+' share'+(offer.gain===1?'':'s')+' · '+pct(1+offer.gain*.05)+' base sales · permanent':'Each share adds +5% base sales · permanent';
       $('prestigeFunding').hidden=false;$('prestigeRevenue').textContent=fmt(offer.allTime)+' / '+fmt(offer.target);
       $('prestigeProgress').value=Math.min(100,offer.allTime/offer.target*100);$('prestigeProgress').setAttribute('aria-valuetext',fmt(offer.allTime)+' of '+fmt(offer.target)+' all-time revenue');
       $('prestigeFundingStatus').textContent=offer.allTime<offer.target?fmt(offer.target-offer.allTime)+' to '+(offer.total?'the next share':'unlock'):'Next share earned';
-      $('prestigeStart').disabled=!offer.eligible;$('prestigeStart').textContent=offer.eligible?'Reopen for +'+offer.gain+' share'+(offer.gain===1?'':'s'):'Reopen';
+      $('prestigeStart').disabled=!offer.eligible;$('prestigeStart').textContent=offer.eligible?'Reopen for +'+countText(offer.gain)+' share'+(offer.gain===1?'':'s'):'Reopen';
       $('prestigeStart').setAttribute('aria-describedby','prestigeFundingStatus prestigeCarryover');
       $('prestigeCarryover').hidden=false;
       $('soundToggle').textContent=state.sound?'Sound on':'Sound off';$('soundToggle').setAttribute('aria-pressed',String(state.sound));if($('musicToggle')){$('musicToggle').textContent=state.music?'Music on':'Music off';$('musicToggle').setAttribute('aria-pressed',String(state.music))}if($('hapticsToggle')){$('hapticsToggle').textContent=state.haptics!==false?'Haptics on':'Haptics off';$('hapticsToggle').setAttribute('aria-pressed',String(state.haptics!==false))}
@@ -385,7 +386,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
 
     renderStrainMenu();
   }
-  function fmt(n){if(n<1000)return '$'+Math.floor(n).toLocaleString();var units=[['T',1e12],['B',1e9],['M',1e6],['K',1e3]];for(var i=0;i<units.length;i++)if(n>=units[i][1])return '$'+(n/units[i][1]).toFixed(n/units[i][1]>=100?0:n/units[i][1]>=10?1:2)+units[i][0]}
+  function fmt(n){n=Number.isFinite(n)?n:0;return (n<0?'-$':'$')+abbr(Math.abs(n))}
   function capacity(i){return economy.capacity(state.lines[i],state.staff[i],state.multiplier)}
   var STATION_TIERS=economy.STATION_TIERS,TIER_COLORS=economy.TIER_COLORS,TIER_LEVELS=economy.TIER_LEVELS;
   function stationTier(i){return economy.stationTier(state.lines[i])}
@@ -536,7 +537,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Every so often a walk-in who has cleared security asks the budtender for a pick.
   function tickMoment(dt){
     var play=state.shopPlay;play.cooldown=Math.max(0,play.cooldown-dt);
-    if(moment){moment.remaining-=dt;var asking=customers.find(function(c){return c.id===moment.customerId});if(!asking||asking.ordered||moment.remaining<=0)moment=null}
+    // The guest waits while their question is open on screen, so the clock only runs while it is closed.
+    if(moment){if(!moment.opened)moment.remaining-=dt;var asking=customers.find(function(c){return c.id===moment.customerId});if(!asking||asking.ordered||moment.remaining<=0)moment=null}
     if(moment||!state.shopOpen||state.empire.activeStore||play.cooldown>0)return;
     var guest=customers.find(function(c){return !c.ordered&&!c.kiosk&&!c.lounge&&!c.momentOffered&&c.idChecked===true&&c.phase==='entering'});
     if(!guest)return;
@@ -2911,6 +2913,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     window.__canopySnap.stationFx=stationFx;
     // An upgrade's map effects at station i (sparkles, ring, spring) without buying it, for screenshots.
     window.__canopySnap.upgrade=function(i){burst(machinePos[i]);stationFx(i)};
+    // A customer's pick question, open on screen, for screenshots of the card (shop-play.js).
+    window.__canopySnap.moment=function(){moment=createMoment(state.shopPlay,customers[0]||{id:-1},momentPicks(state,menuStrains()));if(moment&&shopPlayUI){shopPlayUI.render();shopPlayUI.open()}return !!moment};
     // A cash pop frozen at `age` seconds into its rise, for screenshots of the pops (cash-pops.js).
     window.__canopySnap.cashPop=function(key,amount,age){var site=CASH_SITES[key];livePops.push({key:key,amount:amount,x:site.x,y:site.y,z:site.z,age:age||.4,text:fmt(amount)})};
     window.__canopySnap.status=function(){return{map3d:!!(map3d&&map3d.ok),loading:map3d?map3d.loading:-1}};
@@ -3052,7 +3056,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   }
   // The ticket stub itself, shared by the lounge fee, the ATM fee and the cash pops: cream card, brass rim, a dashed
   // tear line with "$" on the stub and the amount on the rest. It widens to fit a long amount rather than squeezing it.
-  function paintTicket(p,text,alpha,scale){
+  // The stub is the only dollar sign, so a leading "$" in the amount is dropped (never "$ $39K").
+  function paintTicket(p,text,alpha,scale){text=String(text).replace(/^\$/,'');
     var h=Math.max(14,unit*.4)*(scale||1),textFont='800 '+Math.max(8,h*.58).toFixed(1)+'px "Bricolage Grotesque",sans-serif';
     ctx.save();ctx.font=textFont;
     var base=Math.max(28,unit*.95)*(scale||1),notch=base*.28,w=Math.max(base,notch+ctx.measureText(text).width+h*.7),x0=p.x-w/2,y0=p.y-h/2;
@@ -3385,7 +3390,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     selectedLine.classList.toggle('is-lounge',loungeSelected);selectedLine.classList.toggle('is-building',loungeSelected&&isBuilding(state.builds,'lounge'));$('buyMachine').removeAttribute('aria-label');$('buyMachine').classList.remove('is-countdown');buyActions.classList.toggle('single',loungeSelected&&!isBuilding(state.builds,'lounge'));
     if(securitySelected){renderSecuritySelection()}else if(loungeSelected){renderLoungeSelection()}else{
     $('machineNumber').textContent=!open?'BUILD PREVIOUS STAGE':level?'STAGE 0'+(selected+1)+' · '+stationStatus(selected):'STAGE 0'+(selected+1)+' · UNDER CONSTRUCTION';
-    $('machineName').textContent=line.name;$('machineLevel').textContent=level;$('machineRate').textContent=!level?'Under construction':selected<4?batchSize(selected).toFixed(1)+' avg / batch · '+([2,3,2,2][selected]/cycleSpeed(selected)).toFixed(1)+'s':capacity(selected).toFixed(1)+'× service';
+    $('machineName').textContent=line.name;$('machineLevel').textContent=level;$('machineRate').textContent=!level?'Under construction':selected<4?batchSize(selected).toFixed(1)+' avg / batch · '+([2,3,2,2][selected]/cycleSpeed(selected)).toFixed(1)+'s':times(capacity(selected))+' service';
     var tier=stationTier(selected),next=nextCapacity(selected);
     // Stat strip: a colour-coded status chip, then icon tiles instead of a sentence.
     var statusText=level?stationStatus(selected):'Under construction',statusTone=!level?'wait':/full/i.test(statusText)?'stop':/waiting/i.test(statusText)?'wait':'go',statusWord=!level?'Site':/full/i.test(statusText)?'Full':/waiting/i.test(statusText)?'Waiting':selected<4?'Producing':'Serving',heldMatch=/(\d+) orders? held/.exec(statusText);
@@ -3457,7 +3462,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     $('trainLoungeStaff').title=!hostOpen?'Open the lounge first':state.money<hostPrice?fmt(hostPrice-state.money)+' more needed':'Train lounge host';
     $('trainLoungeStaffMax').disabled=!hostMax.levels;$('trainLoungeStaffMax').querySelector('span').textContent=hostMax.levels?'+'+hostMax.levels+' lv':'Max';$('trainLoungeStaffMax').querySelector('b').textContent=hostMax.levels?fmt(hostMax.cost):'—';
     LINES.forEach(function(line,i){var quote=maxStaffTraining(i),button=$('staffMax'+i);button.disabled=!quote.levels;button.querySelector('span').textContent=quote.levels?'+'+quote.levels+' lv':'Maxed';button.querySelector('b').textContent=quote.levels?fmt(quote.cost):'—';button.setAttribute('aria-label','Train '+line.name+' employee by '+quote.levels+' levels for '+fmt(quote.cost))});
-    staffButtons.forEach(function(button,i){button.disabled=!state.lines[i]||state.money<staffCost(i);button.querySelector('b').textContent=fmt(staffCost(i));button.querySelector('span').textContent='+'+Math.round(.3/(1+state.staff[i]*.3)*100)+'%';$('employeeInfo'+i).innerHTML='<span>Lv '+state.staff[i]+'</span><span>'+(1+state.staff[i]*.3).toFixed(1)+'× speed'+'</span>';button.title=state.money<staffCost(i)?fmt(staffCost(i)-state.money)+' more needed':'Train '+shortNames[i]+' employee';button.setAttribute('aria-label','Train '+shortNames[i]+' employee, '+button.querySelector('span').textContent+', '+fmt(staffCost(i)));});renderStationTeam();
+    staffButtons.forEach(function(button,i){button.disabled=!state.lines[i]||state.money<staffCost(i);button.querySelector('b').textContent=fmt(staffCost(i));button.querySelector('span').textContent='+'+Math.round(.3/(1+state.staff[i]*.3)*100)+'%';$('employeeInfo'+i).innerHTML='<span>Lv '+state.staff[i]+'</span><span>'+times(1+state.staff[i]*.3)+' speed'+'</span>';button.title=state.money<staffCost(i)?fmt(staffCost(i)-state.money)+' more needed':'Train '+shortNames[i]+' employee';button.setAttribute('aria-label','Train '+shortNames[i]+' employee, '+button.querySelector('span').textContent+', '+fmt(staffCost(i)));});renderStationTeam();
     var installedKiosks=kioskCount(),nextKioskPrice=[25000,50000,100000][installedKiosks];
     $('kioskCountLabel').textContent=installedKiosks+' / 3 installed';
     $('buyKiosk').disabled=installedKiosks===3||state.money<nextKioskPrice;
@@ -3477,10 +3482,10 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // The caption under the send button doubles as the hint line, so the card never changes height.
     if($('dispatchHint').textContent){$('onlineMaxInfo').textContent=$('dispatchHint').textContent;$('onlineMaxInfo').classList.add('is-hint')}else $('onlineMaxInfo').classList.remove('is-hint');var webItem=$('stockCountOnline').closest('.stock-item'),webCount=onlineRequestsReady();$('stockCountOnline').textContent=webCount;webItem.dataset.heat=String(requestHeat(webCount));$('stockCountOnline').classList.toggle('stock-full',webCount>=onlineRequestCap());webItem.title=webCount+' deliver'+(webCount===1?'y':'ies')+' requested · '+onlineRequestCap()+' max';$('onlineBadge').hidden=$('fulfillOnlineMax').disabled;
     renderCustomerRatings();
-    var waiting=customers.filter(inOrderFlow).length;firstTimeHints(waiting);state.stock.forEach(function(n,i){var packed=i===3,oz=state.productMenu.active===0,v=packed&&oz?n/8:n;$('stockCount'+i).innerHTML=compactCount(v)+(packed?'<small>'+(oz?'oz':state.productMenu.active===1?'jt':'ed')+'</small>':'');$('stockCount'+i).title=i===4?n+' / '+readyCapacity()+' packed orders ready for walk-in pickup':i===3?qtyLabel(n)+' packed of '+qtyLabel(storageCapacity())+(n>=storageCapacity()?' · Storage full':''):n+' / '+storageCapacity()+(n>=storageCapacity()?' · Storage full':'');var cap=i===4?readyCapacity():storageCapacity(),item=$('stockCount'+i).parentNode.parentNode;$('stockCount'+i).classList.toggle('stock-full',n>=cap);item.dataset.trend=stockTrend(i,n,cap);item.classList.toggle('is-bottleneck',!trafficBound&&STOCK_STATIONS[i].indexOf(slow)>=0)});var order=milestone(state.contract);
+    var waiting=customers.filter(inOrderFlow).length;firstTimeHints(waiting);state.stock.forEach(function(n,i){var packed=i===3,oz=state.productMenu.active===0,v=packed&&oz?n/8:n;$('stockCount'+i).innerHTML=abbrShort(v)+(packed?'<small>'+(oz?'oz':state.productMenu.active===1?'jt':'ed')+'</small>':'');$('stockCount'+i).title=i===4?n+' / '+readyCapacity()+' packed orders ready for walk-in pickup':i===3?qtyLabel(n)+' packed of '+qtyLabel(storageCapacity())+(n>=storageCapacity()?' · Storage full':''):n+' / '+storageCapacity()+(n>=storageCapacity()?' · Storage full':'');var cap=i===4?readyCapacity():storageCapacity(),item=$('stockCount'+i).parentNode.parentNode;$('stockCount'+i).classList.toggle('stock-full',n>=cap);item.dataset.trend=stockTrend(i,n,cap);item.classList.toggle('is-bottleneck',!trafficBound&&STOCK_STATIONS[i].indexOf(slow)>=0)});var order=milestone(state.contract);
     if(order){$('orderName').textContent=state.lifetime>=order.goal?'ORDER READY TO CLAIM':order.name;$('orderProgress').textContent=fmt(Math.min(state.lifetime,order.goal))+' / '+fmt(order.goal);$('orderFill').style.width=Math.min(100,state.lifetime/order.goal*100)+'%';$('claimReward').textContent='+'+fmt(order.reward);$('claim').disabled=state.lifetime<order.goal}
     else{$('orderName').textContent='ALL ORDERS FILLED';$('orderProgress').textContent='COMPLETE';$('orderFill').style.width='100%';$('claimReward').textContent='✓';$('claim').disabled=true}
-    $('boostPreview').textContent=state.multiplier.toFixed(2)+'× → '+(state.multiplier*1.25).toFixed(2)+'× all stations';
+    $('boostPreview').textContent=times(state.multiplier)+' → '+times(state.multiplier*1.25)+' all stations';
     var boostPrice=boostCost(state.globalLevel);$('boostCost').textContent=state.globalLevel>=BOOST_MAX?'MAX':fmt(boostPrice);$('boost').disabled=state.globalLevel>=BOOST_MAX||state.money<boostPrice;
     var slowNow=slowestStation();
     // Suggestions live on the map: only the station the best buy belongs to wears the brass arrow, and a crew whose burst is
@@ -4151,17 +4156,17 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   var soundButton=document.createElement('button');soundButton.id='soundToggle';soundButton.type='button';soundButton.onclick=function(){state.sound=!state.sound;playSound('sale',state.sound);save();renderUI()};document.querySelector('.shop-reset').prepend(soundButton);
   if(haptic.available){var hapticsButton=document.createElement('button');hapticsButton.id='hapticsToggle';hapticsButton.type='button';hapticsButton.hidden=true;hapticsButton.onclick=function(){state.haptics=state.haptics===false;save();renderUI();haptic('light')};document.body.append(hapticsButton)}
   var prestigeDialog=document.createElement('div');prestigeDialog.id='prestigeModal';prestigeDialog.className='modal-wrap';prestigeDialog.hidden=true;prestigeDialog.innerHTML='<div class="modal" role="dialog" aria-modal="true" aria-labelledby="prestigeTitle"><h2 id="prestigeTitle">Reopen your empire?</h2><p id="prestigePreview"></p><p>Clears cash, stores, staff, stock, strains, reputation, collections, goals and events. Only your shares, founder perks, branch stars, event badges, strain library and sound preference carry over.</p><div><button id="prestigeCancel">Keep playing</button><button id="prestigeConfirm">Reopen from scratch</button></div></div>';document.body.append(prestigeDialog);
-  $('prestigeStart').onclick=function(){var o=prestigeOffer(state);if(!o.eligible)return;$('prestigePreview').textContent='+'+o.gain+' share'+(o.gain===1?'':'s')+': '+o.multiplier.toFixed(2).replace(/0$/,'')+'× base main-shop and branch income from now on.';prestigeDialog.hidden=false;$('prestigeCancel').focus()};
+  $('prestigeStart').onclick=function(){var o=prestigeOffer(state);if(!o.eligible)return;$('prestigePreview').textContent='+'+countText(o.gain)+' share'+(o.gain===1?'':'s')+': '+times(o.multiplier)+' base main-shop and branch income from now on.';prestigeDialog.hidden=false;$('prestigeCancel').focus()};
   var prestigeOpener=null;
   $('prestigeCancel').onclick=function(){prestigeDialog.hidden=true;(prestigeOpener&&!prestigeOpener.hidden?prestigeOpener:$('prestigeStart')).focus();prestigeOpener=null};
   // The brass reopen card: shown once a fresh shop would earn back today's income within about 20 minutes of play.
   function renderReopenCard(){var card=$('reopenCard');if(!card)return;var m=state.empire.activeStore?null:reopenMoment(prestigeOffer(state),state.run,incomeRate());card.hidden=!m;$('empireBadge').hidden=!m;if(!m)return;
-    var text=(m.minutes?'Back on pace in ~'+m.minutes+' min':'Fresh shop, '+m.ratio.toFixed(2).replace(/0$/,'')+'\u00d7 sales'),gain='+'+m.gain+' share'+(m.gain===1?'':'s');
+    var text=(m.minutes?'Back on pace in ~'+m.minutes+' min':'Fresh shop, '+times(m.ratio)+' sales'),gain='+'+countText(m.gain)+' share'+(m.gain===1?'':'s');
     if($('reopenText').textContent!==text)$('reopenText').textContent=text;if($('reopenGain').textContent!==gain)$('reopenGain').textContent=gain;
     card.setAttribute('aria-label','Reopen for '+gain+'. '+(m.minutes?'A fresh shop is back to today\u2019s income in about '+m.minutes+' minutes':text))}
   $('reopenCard').onclick=function(){prestigeOpener=$('reopenCard');$('prestigeStart').onclick()};
   prestigeDialog.addEventListener('keydown',function(e){if(e.key==='Escape')$('prestigeCancel').click();if(e.key==='Tab'){e.preventDefault();(document.activeElement===$('prestigeCancel')?$('prestigeConfirm'):$('prestigeCancel')).focus()}});
-  $('prestigeConfirm').onclick=function(){var offer=prestigeOffer(state);if(!offer.eligible)return;var rank=offer.rank+1,sound=state.sound;state.perks.points+=offer.gain;var kept=keptBranch(state.empire.stores.map(function(s){return s.level}),STORES.map(function(_,i){return storeRate(state.empire,i)}),perkStart(state.perks).branchCap);resetRun(rank,sound,{branch:kept,shares:offer.total,lifetimeAll:offer.allTime,badges:state.empire.badges,stars:state.empire.stars,crosses:state.crosses,achievements:state.achievements,perks:state.perks,contracts:state.empire.contracts});prestigeDialog.hidden=true;save();showTray('factory');renderUI();notify('Reopened · +'+offer.gain+' shares · '+offer.multiplier.toFixed(2).replace(/0$/,'')+'× sales','upgrade')};
+  $('prestigeConfirm').onclick=function(){var offer=prestigeOffer(state);if(!offer.eligible)return;var rank=offer.rank+1,sound=state.sound;state.perks.points+=offer.gain;var kept=keptBranch(state.empire.stores.map(function(s){return s.level}),STORES.map(function(_,i){return storeRate(state.empire,i)}),perkStart(state.perks).branchCap);resetRun(rank,sound,{branch:kept,shares:offer.total,lifetimeAll:offer.allTime,badges:state.empire.badges,stars:state.empire.stars,crosses:state.crosses,achievements:state.achievements,perks:state.perks,contracts:state.empire.contracts});prestigeDialog.hidden=true;save();showTray('factory');renderUI();notify('Reopened · +'+countText(offer.gain)+' shares · '+times(offer.multiplier)+' sales','upgrade')};
   var droneRow=document.createElement('div');droneRow.className='shop-upgrade';droneRow.innerHTML='<div class="shop-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="11" y="11" width="10" height="9" rx="2"/><path d="m11 12-5-5m15 5 5-5m-15 12-5 6m15-6 5 6M2 7h8m12 0h8M2 25h8m12 0h8M13 24h6"/></svg></div><div class="shop-copy"><h2>Auto drone</h2><strong id="autoDroneBenefit">Send a ready order every 10s</strong></div><button id="buyAutoDrone"><span>Install</span><b id="autoDronePrice"></b></button>';
   document.querySelector('[data-pane="boosts"]').append(droneRow);
   var droneControl=document.createElement('div');droneControl.className='auto-drone-control';droneControl.innerHTML='<span class="drone-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 10h6v4H9zM4 6h3M17 6h3M5.5 6v4h3.5M18.5 6v4H15M9 14l-3 4M15 14l3 4"/></svg></span><div><strong>Auto drone</strong><small id="autoDroneStatus"></small></div><button id="autoDroneToggle" type="button" class="drone-switch"></button><button id="autoDroneBulk" type="button" hidden></button>';document.querySelector('.dispatch-desk').append(droneControl);
@@ -4396,7 +4401,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   goalsButton.onclick=function(){if(activeTray==='goals'&&panelOpen)collapsePanel();else openGoals()};
   var empireShell=mountEmpireShell({fit:fitControls,getState:function(){return state},format:fmt,rate:incomeRate,fly:flyToPlace,buyStation:function(i,j){buyBranchLevel(i,j,1)}});
   var shopPlayCollapsed=false;
-  shopPlayUI=mountShopPlay({getState:function(){return state},getMoment:function(){return moment},getAlerts:function(){return operationsAlerts(state.empire)},names:STRAINS.map(function(s){return s.name}),format:fmt,changed:save,lane:{status:$('laneStatus'),notes:$('laneNotes')},
+  shopPlayUI=mountShopPlay({getState:function(){return state},getMoment:function(){return moment},getAlerts:function(){return operationsAlerts(state.empire)},names:STRAINS.map(function(s){return s.name}),colors:STRAINS.map(function(s){return s.color}),format:fmt,changed:save,lane:{status:$('laneStatus'),notes:$('laneNotes')},
     // On a phone, or where the side panel would sit under the list, the sheet steps aside while shop activity is open.
     opening:function(){var sheet=$('sheet').getBoundingClientRect(),reach=(width<780?12:72)+Math.min(360,width-24);shopPlayCollapsed=panelOpen&&(width<780||sheet.left<reach+12);if(shopPlayCollapsed)collapsePanel()},
     closing:function(){if(shopPlayCollapsed){shopPlayCollapsed=false;showTray(activeTray)}},

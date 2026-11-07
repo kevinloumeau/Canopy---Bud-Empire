@@ -9,9 +9,9 @@
 .shop-browser .shop-desk.is-unbuilt .shop-desk-copy{display:grid;gap:2px;min-width:0}
 .shop-browser .shop-desk.is-unbuilt .shop-desk-copy em{display:block;font:600 10.5px/1.2 'Bricolage Grotesque',system-ui,sans-serif;font-style:normal;letter-spacing:.12em;text-transform:uppercase;color:var(--ui-brass);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .shop-browser .shop-desk.is-unbuilt .shop-desk-copy b{font-size:13px;font-weight:600;line-height:1.25;color:var(--ui-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.shop-browser .shop-desk.is-unbuilt .shop-desk-copy small{font:400 11.5px/1.3 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shop-browser .shop-desk.is-unbuilt .shop-desk-copy small{font:400 11.5px/1.3 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;color:var(--ui-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .shop-browser .shop-desk.is-unbuilt .shop-desk-chevron{display:none}
-.shop-browser .shop-desk-price{display:flex;align-items:center;gap:4px;min-height:34px;padding:0 8px 0 12px;border-radius:10px;background:var(--ui-brass);color:var(--ui-brass-ink);font:500 13.5px 'DM Mono',monospace;letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.shop-browser .shop-desk-price{display:flex;align-items:center;gap:4px;min-height:34px;padding:0 8px 0 12px;border-radius:10px;background:var(--ui-brass);color:var(--ui-brass-ink);font:500 13.5px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
 .shop-browser .shop-desk-price svg{width:14px;height:14px}
 .shop-browser .shop-desk-price[hidden],.shop-browser .shop-desk-meter[hidden]{display:none}
 .shop-browser .shop-desk.is-short .shop-desk-price{background:none;box-shadow:inset 0 0 0 1px var(--ui-edge);color:var(--ui-ink)}
@@ -21,13 +21,13 @@
 @media(hover:hover){.shop-browser .shop-desk.is-unbuilt:hover{border-color:#e2c68a66}}
 
 /* Build page: savings line, meter and button straight on the sheet's glass. */
-.delivery-site #deliveryFundingText{font:500 11.5px/1.4 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-soft)}
+.delivery-site #deliveryFundingText{font:500 11.5px/1.4 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;color:var(--ui-soft)}
 .delivery-site #deliveryFunding{height:3px;border-radius:3px;background:#ffffff14}
 .delivery-site #deliveryFunding::-webkit-progress-bar{background:#ffffff14}
 .delivery-site #deliveryFunding::-webkit-progress-value{background:var(--ui-brass)}
 .delivery-site #deliveryFunding::-moz-progress-bar{background:var(--ui-brass)}
 .delivery-site button{min-height:48px;padding:10px 10px 10px 16px;border:0;border-radius:12px;background:var(--ui-brass);color:var(--ui-brass-ink);box-shadow:none;font:600 14px/1.3 'Bricolage Grotesque',system-ui,sans-serif}
-.delivery-site button b{display:flex;align-items:center;min-height:30px;padding:0 10px;border-radius:9px;background:#2a22111a;font:500 14px 'DM Mono',monospace;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.delivery-site button b{display:flex;align-items:center;min-height:30px;padding:0 10px;border-radius:9px;background:#2a22111a;font:500 14px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .delivery-site button:disabled{background:none;box-shadow:inset 0 0 0 1px var(--ui-edge);color:var(--ui-ink)}
 .delivery-site button:disabled b{background:var(--ui-well-soft);color:var(--ui-soft)}
 .delivery-site button:focus-visible{outline:2px solid var(--ui-brass);outline-offset:3px}

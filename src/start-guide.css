@@ -39,7 +39,7 @@
 @keyframes guide-sparkle{from{opacity:.45}to{opacity:1}}
 .start-guide.is-hero .guide-dots,.start-guide.is-hero h2,.start-guide.is-hero #guideText,.guide-eyebrow,.guide-beats,.start-guide.is-hero .guide-actions{margin-left:18px;margin-right:18px}
 .start-guide.is-hero .guide-dots{margin-top:14px;margin-bottom:10px}
-.guide-card .guide-eyebrow{margin:0 18px 5px;font:600 11px/1.2 'DM Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--p-gold-77)}
+.guide-card .guide-eyebrow{margin:0 18px 5px;font:600 11px/1.2 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--p-gold-77)}
 .guide-eyebrow[hidden]{display:none}
 .start-guide.is-hero h2{font-size:26px;line-height:1.08;letter-spacing:-.025em}
 .start-guide.is-hero #guideText{margin-bottom:12px}
@@ -135,7 +135,7 @@ body.guide-ghosts .world .marker.station-sign.is-lot:not(.is-landmark){opacity:1
 .return-card p{margin:0 0 10px;font-size:13px;line-height:1.5;color:var(--p-sage-84)}
 .return-card #returnEarnings{list-style:none;padding:0;margin:8px 0 10px;border-top:1px solid #c1d7b71f}
 .return-card #returnEarnings li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #c1d7b71f;font-size:14px;font-variant-numeric:tabular-nums}
-.return-card #returnEarnings strong{font:600 14px 'DM Mono',monospace;color:var(--p-lime-85);letter-spacing:-.02em}
+.return-card #returnEarnings strong{font:600 14px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--p-lime-85);letter-spacing:-.02em}
 .return-card #dismissReturn{display:block;width:100%;min-height:46px;margin-top:6px;border:1px solid #d9f1c445;border-radius:12px;background:linear-gradient(145deg,#c9e4b820,#c6dfb608),var(--p-forest-35);color:var(--p-sage-96);font:inherit;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 3px 9px #0b1c1626}
 .return-card #dismissReturn:focus-visible{outline:2px solid var(--p-gold-77);outline-offset:2px}
 @media(min-width:780px){.return-overlay{place-items:center}}
