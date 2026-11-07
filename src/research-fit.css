@@ -1,10 +1,13 @@
 /* Research tab fits the half-open sheet on every phone, down to the iPhone SE (375×667), without scrolling. Loaded last.
-   A branch is one 4-across grid of icon tiles: the 3D icon in its level ring, a one-line name, what the next level
-   gives, and the price. The whole tile buys. A fork is two tiles inside one brass outline with "or" between them, and
+   A branch is one grid of icon tiles: the 3D icon in its level ring, a one-line name, what the next level gives, and
+   the price. The whole tile buys. The grid fills the sheet: a few tiles go two across, a full branch four across
+   (shop-browser.js sets --cols and --rows), and the rings grow into whatever height the phone gives. A fork is two tiles inside one brass outline with "or" between them, and
    "Maxed and closed" is the grid's last tile. The branch tabs become one slim row of pills. Desktop is unchanged. */
 
 @media(max-width:779px){
  html body .sheet>[data-pane=boosts].shop-browser{padding-bottom:4px}
+ html body .sheet>[data-pane=boosts].shop-browser:not([hidden]){display:flex;flex-direction:column}
+ .sheet>[data-pane=boosts].shop-browser>*{flex:none}
 
  /* Branch tabs: icon beside the name, one slim row. */
  .sheet>[data-pane=boosts] .shop-browser-header{padding:0 0 6px!important}
@@ -15,15 +18,27 @@
  .sheet>[data-pane=boosts] .shop-categories button em{font-size:12px!important}
  .sheet>[data-pane=boosts] .shop-categories button.has-pick::after{top:5px;right:5px}
 
- /* The grid: four across. */
- html body .sheet>[data-pane=boosts].shop-browser .shop-items{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px 5px!important;padding:0!important}
+ /* The grid fills the rest of the pane: --cols across, --rows rows sharing the height. Each tile works out its own
+    ring from that share (what is left after the text and price) and its width, between 30px and 76px. */
+ html body .sheet>[data-pane=boosts].shop-browser>.shop-items{flex:1 1 auto;min-height:0;container-type:size;grid-template-columns:repeat(var(--cols,4),minmax(0,1fr))!important;grid-template-rows:repeat(var(--rows,2),minmax(0,1fr));align-content:stretch;gap:6px 5px!important;padding:0!important}
+ .sheet>[data-pane=boosts] .shop-items{--text:76px}
+ .sheet>[data-pane=boosts] .shop-items :is(.shop-item,.shop-done-toggle){--tile-h:calc((100cqh - (var(--rows,2) - 1) * 6px) / var(--rows,2));--tile-w:calc((100cqw - (var(--cols,4) - 1) * 5px) / var(--cols,4));--ring:clamp(30px,min(var(--tile-h) - var(--text),var(--tile-w) - 24px),76px)}
+ /* Two or three across: a touch bigger type. */
+ .sheet>[data-pane=boosts] .shop-items:is([data-cols="2"],[data-cols="3"]){--text:82px}
+ .sheet>[data-pane=boosts] .shop-items:is([data-cols="2"],[data-cols="3"]) .shop-item .shop-short{font-size:13px!important}
+ .sheet>[data-pane=boosts] .shop-items:is([data-cols="2"],[data-cols="3"]) .shop-item .shop-effect{font-size:11.5px!important}
+ html body .sheet>[data-pane=boosts].shop-browser .shop-items:is([data-cols="2"],[data-cols="3"]) .shop-item button{min-height:30px!important;height:30px}
+ .sheet>[data-pane=boosts] .shop-items:is([data-cols="2"],[data-cols="3"]) .shop-item button b{font-size:13px!important}
+ /* Opened "Maxed and closed" with more than two rows: fixed small tiles, and the pane scrolls. */
+ html body .sheet>[data-pane=boosts].shop-browser>.shop-items[data-rows=many]{flex:none;container-type:normal;grid-template-rows:none;grid-auto-rows:auto}
+ .sheet>[data-pane=boosts] .shop-items[data-rows=many] :is(.shop-item,.shop-done-toggle){--ring:36px}
 
  /* A tile: ring, name, effect, price. */
- html body .sheet>[data-pane=boosts].shop-browser .shop-item{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:36px auto auto 26px!important;grid-template-areas:"icon" "title" "effect" "button"!important;justify-items:center;align-content:start!important;row-gap:2px!important;padding:6px 2px 4px!important;border-radius:13px!important;cursor:pointer}
- .sheet>[data-pane=boosts] .shop-item .shop-symbol.has-3d{width:36px!important;height:36px!important;margin:0!important}
- .sheet>[data-pane=boosts] .shop-item .shop-symbol.has-3d>img.research-3d{width:24px!important;height:24px!important}
+ html body .sheet>[data-pane=boosts].shop-browser .shop-item{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:var(--ring) auto auto minmax(0,1fr)!important;grid-template-areas:"icon" "title" "effect" "button"!important;justify-items:center;align-content:start!important;row-gap:2px!important;padding:6px 2px 4px!important;border-radius:13px!important;cursor:pointer}
+ .sheet>[data-pane=boosts] .shop-item .shop-symbol.has-3d{width:var(--ring)!important;height:var(--ring)!important;margin:0!important}
+ .sheet>[data-pane=boosts] .shop-item .shop-symbol.has-3d>img.research-3d{width:calc(var(--ring) * .67)!important;height:calc(var(--ring) * .67)!important}
  /* The level rides on the ring's lower edge as a small pill, clear of the icon at any level. */
- .sheet>[data-pane=boosts] .shop-item .shop-level{top:32px!important;right:auto!important;left:50%;transform:translateX(-50%);z-index:1;padding:1px 5px;border-radius:7px;background:#173f24;box-shadow:0 0 0 1px var(--ui-edge);font-size:9px!important;line-height:11px;letter-spacing:-.02em;white-space:nowrap}
+ .sheet>[data-pane=boosts] .shop-item .shop-level{top:calc(var(--ring) - 4px)!important;right:auto!important;left:50%;transform:translateX(-50%);z-index:1;padding:1px 5px;border-radius:7px;background:#173f24;box-shadow:0 0 0 1px var(--ui-edge);font-size:9px!important;line-height:11px;letter-spacing:-.02em;white-space:nowrap}
  .sheet>[data-pane=boosts] .shop-item.is-pick .shop-level{box-shadow:0 0 0 1px var(--ui-brass)}
  .sheet>[data-pane=boosts] .shop-item h2,.sheet>[data-pane=boosts] .shop-item .storage-copy>b{display:none!important}
  .sheet>[data-pane=boosts] .shop-item .shop-short{grid-area:title;display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;font:600 11.5px/1.15 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.01em;color:var(--ui-ink);text-align:center}
@@ -47,9 +62,9 @@
  .sheet>[data-pane=boosts] .shop-fork>.shop-item{grid-row:1}
 
  /* "Maxed and closed" as the last tile of the grid. */
- html body .sheet>[data-pane=boosts].shop-browser .shop-items>.shop-done-toggle{display:grid;grid-template-rows:36px auto auto;justify-items:center;align-content:start;row-gap:2px;width:auto;min-height:0;margin:0;padding:6px 3px 4px;border:1px dashed var(--ui-edge);border-radius:13px;background:none;text-align:center;color:var(--ui-soft)}
+ html body .sheet>[data-pane=boosts].shop-browser .shop-items>.shop-done-toggle{display:grid;grid-template-rows:var(--ring) auto auto;justify-items:center;align-content:start;row-gap:2px;width:auto;min-height:0;margin:0;padding:6px 3px 4px;border:1px dashed var(--ui-edge);border-radius:13px;background:none;text-align:center;color:var(--ui-soft)}
  .sheet>[data-pane=boosts] .shop-items>.shop-done-toggle[hidden]{display:none!important}
- .sheet>[data-pane=boosts] .shop-items>.shop-done-toggle b{grid-row:1;align-self:center;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--ui-well);font-size:13px}
+ .sheet>[data-pane=boosts] .shop-items>.shop-done-toggle b{grid-row:1;align-self:center;display:grid;place-items:center;width:calc(var(--ring) - 4px);height:calc(var(--ring) - 4px);border-radius:50%;background:var(--ui-well);font-size:13px}
  .sheet>[data-pane=boosts] .shop-items>.shop-done-toggle span{grid-row:2;flex:none;font:600 11px/1.2 'Bricolage Grotesque',system-ui,sans-serif;text-wrap:balance}
  .sheet>[data-pane=boosts] .shop-items>.shop-done-toggle svg{grid-row:3;width:14px;height:14px}
 

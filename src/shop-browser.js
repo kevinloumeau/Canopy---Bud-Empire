@@ -109,6 +109,11 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
     later.innerHTML=gateLines.map(g=>'<span><b>Opens at '+g.replace(' · ','</b> · ')+'<small>'+gates[g].join(' or ')+'</small></span>').join('');
     doneToggle.hidden=!done;if(doneToggle.parentElement!==list||list.lastElementChild!==doneToggle)list.appendChild(doneToggle);doneToggle.setAttribute('aria-expanded',String(showDone));
     doneToggle.innerHTML='<span>'+(showDone?'Hide maxed and closed':'Maxed and closed')+'</span><b>'+done+'</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+(showDone?'m6 15 6-6 6 6':'m6 9 6 6 6-6')+'"/></svg>';
+    // Phones size the grid to fill the sheet (src/research-fit.css): a few tiles go two across and grow, a full branch
+    // goes four across. A fork takes two cells. Rows come from laying the cells out in order, as the grid does.
+    const cells=[...list.children].filter(n=>!n.hidden&&n!==desk).map(n=>n.classList.contains('shop-fork')?2:1),total=cells.reduce((a,b)=>a+b,0);
+    const cols=total<=4?2:total<=6?3:4;let rowsUsed=total?1:0,at=0;cells.forEach(w=>{if(at+w>cols){rowsUsed++;at=0}at+=w});
+    list.style.setProperty('--cols',cols);list.dataset.cols=cols;list.style.setProperty('--rows',Math.max(1,rowsUsed));list.dataset.rows=rowsUsed>2?'many':String(rowsUsed);
     empty.hidden=count>0||done>0||gateLines.length>0;
     empty.textContent='Nothing here yet.';
     // The best buy, when it is research, gets the brass price; its tab gets a brass dot. Station advice stays on the map.
