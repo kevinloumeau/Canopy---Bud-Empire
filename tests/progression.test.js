@@ -223,3 +223,34 @@ test('opening a branch is paid first and opens when its build is done',()=>{
  // Open branches are upgraded with buyStore; paying or opening again does nothing.
  assert.equal(payStore(s,0),false);assert.equal(openStore(s,0),false);assert.equal(s.money,cash-price);
 });
+import {creditOfflineServed,ringTarget,ringTier,RING_BONUS,bronzeCount} from '../src/progression.js';
+test('branches serve customers while the game is closed, so the Customers star moves on time away',()=>{
+ const s=fresh(),p=s.empire;s.lifetime=1e9;s.money=1e12;buyStore(s,0);p.stores[0].serviceClock=6;
+ // 6 s on the clock plus an hour away is 300 customers and 6 s left over; branches not open serve nobody.
+ assert.equal(creditOfflineServed(p,3600),300);assert.equal(p.stores[0].served,300);assert.equal(p.stores[0].serviceClock,6);assert.equal(p.stores[1].served,0);
+ assert.equal(creditOfflineServed(p,5),0);assert.equal(creditOfflineServed(p,1),1);assert.equal(p.stores[0].serviceClock,0);
+ assert.equal(creditOfflineServed(p,NaN),0);assert.equal(creditOfflineServed(p,-50),0);
+ assert.deepEqual(settleStars(p),[{store:0,goal:0}]);
+ // The clock survives a save.
+ p.stores[0].serviceClock=7;assert.equal(migrateProgression(JSON.parse(JSON.stringify(p)),start).stores[0].serviceClock,7);
+});
+test('after a reopen each run gets a fresh silver, then gold, ring with rising targets',()=>{
+ const s=fresh(),p=s.empire;s.lifetime=1e12;s.money=1e15;
+ // Run 1 finished Riverside for good.
+ buyStore(s,0);while(p.stores[0].level<10)buyStore(s,0);p.stores[0].served=1e4;p.stores[0].lines.fill(10);settleStars(p);
+ assert.equal(bronzeCount(p,0),3);assert.equal(starMultiplier(p),1+STAR_BONUS);
+ // Run 2: the bronze stars and their bonus stay, the ring starts empty and gates the next branch again.
+ const r=migrateProgression({prestige:1,stars:p.stars},start);s.empire=r;
+ assert.equal(ringTier(r),1);assert.equal(bronzeCount(r,0),3);assert.equal(starCount(r,0),0);assert.equal(branchOpenable(r,1),false);
+ const goals=starStatus(r,0);assert.ok(goals.every(g=>!g.earned&&g.tier==='silver'));
+ assert.equal(goals[0].target,Math.round(STAR_GOALS[0].target[0]*1.5));assert.equal(goals[2].target,30);
+ buyStore(s,0);while(r.stores[0].level<10)buyStore(s,0);r.stores[0].lines.fill(10);
+ assert.deepEqual(settleStars(r),[{store:0,goal:1}],'Lv 10 line is bronze-only now');assert.equal(starCount(r,0),1);
+ r.stores[0].served=goals[0].target;settleStars(r);assert.equal(starCount(r,0),2);assert.equal(branchOpenable(r,1),true);
+ r.stores[0].lines.fill(30);settleStars(r);assert.equal(starCount(r,0),3);assert.ok(Math.abs(starMultiplier(r)-(1+STAR_BONUS+RING_BONUS))<1e-9);
+ // Run 3 is gold and asks for more; targets keep rising past it.
+ const g=migrateProgression({prestige:2,stars:r.stars,runStars:[0,0,0,0,0]},start);
+ assert.equal(ringTier(g),2);assert.equal(starStatus(g,0)[0].tier,'gold');assert.equal(starStatus(g,0)[2].target,50);
+ assert.ok(ringTarget('served',0,6)>ringTarget('served',0,3));assert.ok(ringTarget('line',0,3)>ringTarget('line',0,2));
+ assert.equal(ringTarget('level',0,5),10);
+});

@@ -5,6 +5,9 @@ export const ACHIEVEMENT_BONUS=.01;
 const sum=a=>a.reduce((t,v)=>t+v,0);
 const minLine=s=>Math.min(...(s.lines||[0]));
 const openStores=s=>(s.empire?.stores||[]).filter(b=>b&&b.level>0).length;
+const cityStages=s=>sum(Object.values(s.city||{}).map(v=>Number(v)||0));
+const fullStores=s=>(s.empire?.stores||[]).filter((_,i)=>((s.empire?.stars?.[i]||0)&7)===7).length;
+const contractsDone=s=>s.empire?.contracts?.done||0;
 const kiosks=s=>(s.kiosk?1:0)+(s.secondKiosk?1:0)+(s.thirdKiosk?1:0);
 // [id, name, goal, value(state), target]
 const ROWS=[
@@ -33,7 +36,17 @@ const ROWS=[
  ['lounge','Rooftop open','Open the lounge',s=>s.lounge||0,1],
  ['branch-1','Second shop','Open a branch',openStores,1],
  ['branch-all','Citywide','Open every branch',openStores,s=>(s.empire?.stores||[]).length||Infinity],
- ['reopen','Fresh start','Reopen for shares',s=>s.empire?.shares||0,1]
+ ['reopen','Fresh start','Reopen for shares',s=>s.empire?.shares||0,1],
+ // The long game (2026-11-07 review): the list above was 22 of 26 done by minute 48, so these land from hour 1 on.
+ ['city-6','City block','Raise 6 city building stages',cityStages,6],
+ ['hq-4','Head office','Finish all of Canopy HQ',s=>s.flagship||0,4],
+ ['stars-all','Five-star empire','Every branch at 3 stars',fullStores,s=>(s.empire?.stores||[]).length||Infinity],
+ ['deal-5','Dealmaker','Finish 5 contracts',contractsDone,5],
+ ['deal-25','Supplier','Finish 25 contracts',contractsDone,25],
+ ['deal-100','Wholesaler','Finish 100 contracts',contractsDone,100],
+ ['shares-10','Shareholder','Hold 10 shares',s=>s.empire?.shares||0,10],
+ ['shares-100','Board seat','Hold 100 shares',s=>s.empire?.shares||0,100],
+ ['shares-1k','Founders club','Hold 1,000 shares',s=>s.empire?.shares||0,1e3]
 ];
 export const ACHIEVEMENTS=ROWS.map(([id,name,goal,value,target])=>({id,name,goal,value,target}));
 const ids=ACHIEVEMENTS.map(a=>a.id);
