@@ -9,9 +9,9 @@ import {tieLast} from './no-lone-words.js';
 export const SHIFT_SECONDS=300;
 export const MOMENT_SECONDS=18;
 export const TIP_SHARE=.2;
-const cap=(n,max=1e12)=>Number.isFinite(n)?Math.max(0,Math.min(max,n)):0;
+const cap=(n,max=1e300)=>Number.isFinite(n)?Math.max(0,Math.min(max,n)):0;
 const freshShift=()=>({seconds:0,served:0,matches:0,earned:0,deliveries:0,transfers:0,queuePeak:0,waitTotal:0,stockoutSeconds:0});
-function migrateShift(raw){const shift=freshShift();for(const key of Object.keys(shift))shift[key]=cap(raw?.[key],key==='seconds'?SHIFT_SECONDS:1e12);return shift;}
+function migrateShift(raw){const shift=freshShift();for(const key of Object.keys(shift))shift[key]=cap(raw?.[key],key==='seconds'?SHIFT_SECONDS:1e300);return shift;}
 export function migrateShopPlay(raw){
   return {version:1,cooldown:cap(raw?.cooldown??35,90),sequence:Math.floor(cap(raw?.sequence)),matches:Math.floor(cap(raw?.matches)),tips:cap(raw?.tips),
     shift:migrateShift(raw?.shift),recap:raw?.recap?migrateShift(raw.recap):null,recapUnread:raw?.recapUnread===true};

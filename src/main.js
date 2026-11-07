@@ -37,6 +37,7 @@ import {mountEmpireShell} from './empire-shell.js';
 import {mountStartGuide} from './start-guide.js';
 import {mountSettings} from './settings.js';
 import {makeHaptics} from './haptics.js';
+import {idCheckLength,stockCaps,onlineRequestLimit,offlineSeconds,BIG} from './save-guards.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, BRANCH_STATIONS, drawBranchMap } from './branch-maps.js';
 import { districtPlot, districtCentre, districtAt, districtBlock, shownDistricts, eastHaze, leaseLot, districtTerraces, DISTRICT_COUNT, MAIN_EAST_HAZE } from './branch-districts.js';
@@ -87,14 +88,14 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     next.activeStrain=Math.floor(finite(old.activeStrain,0,0,STRAINS.length-1));if(!next.strains[next.activeStrain])next.activeStrain=0;
     next.menuStrains=STRAINS.map(function(_,i){return i}).filter(function(i){return next.strains[i]>0&&(!Array.isArray(old.menuStrains)||old.menuStrains.indexOf(i)>=0)});if(!next.menuStrains.length)next.menuStrains=[0];next.strainTrend=strains.migrateTrend(old.strainTrend,STRAINS.length);next.vipBuzz=finite(old.vipBuzz,0,0,strains.VIP_BUZZ_SECONDS);
     next.journey=migrateJourney(old.journey);next.orderCounters=migrateOrderCounters(old.orderCounters);
-    next.money=finite(old.money,30,0,Number.MAX_SAFE_INTEGER)+researchRefund;
-    next.lifetime=finite(old.lifetime,0,0,Number.MAX_SAFE_INTEGER);
+    next.money=finite(old.money,30,0,BIG)+researchRefund;
+    next.lifetime=finite(old.lifetime,0,0,BIG);
     next.sold=Math.floor(finite(old.sold,0,0,Number.MAX_SAFE_INTEGER));
-    next.onlineCompleted=Math.floor(finite(old.onlineCompleted,0,0,Number.MAX_SAFE_INTEGER));next.onlineRequests=finite(old.onlineRequests,0,0,40);next.hints={web:!!(old.hints&&old.hints.web),storage:!!(old.hints&&old.hints.storage),queue:!!(old.hints&&old.hints.queue)};
-    next.contract=Math.floor(finite(old.contract,0,0,21));next.productMenu=migrateMenu(old.productMenu);next.sound=old.sound!==false;next.haptics=old.haptics!==false;next.lightMode=['day','night'].includes(old.lightMode)?old.lightMode:null;next.autoDrone=migrateAutoDrone(old.autoDrone);next.pickupWindow=migrateWindow(old.pickupWindow,next.autoDrone.owned);next.atm=migrateAtm(old.atm);next.atmEarned=finite(old.atmEarned,0,0,1e18);next.builds=migrateBuilds(old.builds);next.flagship=migrateFlagship(old.flagship);next.flagshipSeen=old.flagshipSeen===true;next.city=migrateCity(old.city);next.citySeen=Array.isArray(old.citySeen)?old.citySeen.filter(function(id){return !!cityBuilding(id)}):[];
+    next.onlineCompleted=Math.floor(finite(old.onlineCompleted,0,0,Number.MAX_SAFE_INTEGER));next.onlineRequests=finite(old.onlineRequests,0,0,onlineRequestLimit(next));next.hints={web:!!(old.hints&&old.hints.web),storage:!!(old.hints&&old.hints.storage),queue:!!(old.hints&&old.hints.queue)};
+    next.contract=Math.floor(finite(old.contract,0,0,21));next.productMenu=migrateMenu(old.productMenu);next.sound=old.sound!==false;next.haptics=old.haptics!==false;next.lightMode=['day','night'].includes(old.lightMode)?old.lightMode:null;next.autoDrone=migrateAutoDrone(old.autoDrone);next.pickupWindow=migrateWindow(old.pickupWindow,next.autoDrone.owned);next.atm=migrateAtm(old.atm);next.atmEarned=finite(old.atmEarned,0,0,BIG);next.builds=migrateBuilds(old.builds);next.flagship=migrateFlagship(old.flagship);next.flagshipSeen=old.flagshipSeen===true;next.city=migrateCity(old.city);next.citySeen=Array.isArray(old.citySeen)?old.citySeen.filter(function(id){return !!cityBuilding(id)}):[];
     next.globalLevel=Math.floor(finite(old.globalLevel,0,0,500));
     next.multiplier=Math.pow(1.25,next.globalLevel);
-    next.lastSeen=finite(old.lastSeen,Date.now(),0,Date.now());next.lines=LINES.map(function(_,i){return Math.floor(finite(old.lines&&old.lines[i],1,next.shopOpen?1:0,10000))});next.storageLevel=Math.min(20,Math.max(0,Math.floor(Number(old.storageLevel)||0)));next.stock=Array.from({length:5},function(_,i){return Math.floor(finite(old.stock&&old.stock[i],0,0,i===4?100+next.readyLevel*50:100+next.storageLevel*100))});next.staff=LINES.map(function(_,i){return Math.floor(finite(old.staff&&old.staff[i],0,0,10000))});next.abilities=migrateAbilities(old.abilities);next.kiosk=old.kiosk===true;next.lounge=migrateLounge(old.lounge);next.shopPlay=migrateShopPlay(old.shopPlay);next.loungeStaff=migrateLoungeHost(old.loungeStaff);next.loungeLift=next.lounge>0&&old.loungeLift===true;next.loungeSessions=Math.floor(finite(old.loungeSessions,0,0,1e9));next.loungeEarned=finite(old.loungeEarned,0,0,1e15);next.secondKiosk=next.kiosk&&old.secondKiosk===true;next.thirdKiosk=next.secondKiosk&&old.thirdKiosk===true;next.queueLevel=Math.min(7,Math.max(0,Math.floor(Number(old.queueLevel)||0)));next.theme='dispensary';next.gameSpeed=[0,1,2,4].indexOf(old.gameSpeed)>=0?old.gameSpeed:1;return next}catch(e){return fresh()}}
+    next.lastSeen=finite(old.lastSeen,Date.now(),0,Date.now());next.paidThrough=finite(old.paidThrough,finite(old.empire&&old.empire.clock,0,0,BIG),0,BIG);next.lines=LINES.map(function(_,i){return Math.floor(finite(old.lines&&old.lines[i],1,next.shopOpen?1:0,10000))});next.storageLevel=Math.min(20,Math.max(0,Math.floor(Number(old.storageLevel)||0)));var caps=stockCaps(next);next.stock=Array.from({length:5},function(_,i){return Math.floor(finite(old.stock&&old.stock[i],0,0,caps[i]))});next.staff=LINES.map(function(_,i){return Math.floor(finite(old.staff&&old.staff[i],0,0,10000))});next.abilities=migrateAbilities(old.abilities);next.kiosk=old.kiosk===true;next.lounge=migrateLounge(old.lounge);next.shopPlay=migrateShopPlay(old.shopPlay);next.loungeStaff=migrateLoungeHost(old.loungeStaff);next.loungeLift=next.lounge>0&&old.loungeLift===true;next.loungeSessions=Math.floor(finite(old.loungeSessions,0,0,1e9));next.loungeEarned=finite(old.loungeEarned,0,0,BIG);next.secondKiosk=next.kiosk&&old.secondKiosk===true;next.thirdKiosk=next.secondKiosk&&old.thirdKiosk===true;next.queueLevel=Math.min(7,Math.max(0,Math.floor(Number(old.queueLevel)||0)));next.theme='dispensary';next.gameSpeed=[0,1,2,4].indexOf(old.gameSpeed)>=0?old.gameSpeed:1;return next}catch(e){return fresh()}}
   var firstRun=false;try{firstRun=!localStorage.getItem('shift-save')}catch(e){}
   var securitySelected=false,loungeSelected=false;
   // False once the player closes the station menu or taps empty map: the panel keeps its station, the map shows no pick.
@@ -136,7 +137,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Daily, goal and event payouts grow with the shop so they are still worth a tap hours in.
   function rewardScale(){return economy.rewardScale(incomeRate())}
   function collectOffline(elapsed){
-    var away=elapsed===undefined?Math.max(0,(Date.now()-state.lastSeen)/1000):elapsed;
+    var now=Date.now(),away=elapsed===undefined?offlineSeconds(now,state.lastSeen,state.paidThrough):elapsed;state.paidThrough=Math.max(state.paidThrough||0,now);
     var seconds=Math.min(offlineCap(),away);accrueOnlineRequests(seconds);tickAbilities(state.abilities,away);
     var rates=[Math.min(production(),flowerValue()*basketSize()/arrivalInterval())+atmRate()].concat(STORES.map(function(_,i){return storeRate(state.empire,i)}));
     var earnings=rates.map(function(rate){return rate*seconds*awayPay(state.city)});
@@ -572,7 +573,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       // Every two to seven minutes a shop event walks in with a customer (shop-events.js): a big spender, rush hour, an
       // inspection or a VIP request, taking turns. Tapping its tag pays; missing one costs nothing.
       var bigSpender=state.spenderClock<=0&&!lounge&&!eventGuest&&arrivingKind!=='vip',twist=contractTwist(state.empire),shopEvent=null;if(bigSpender){shopEvent=eventKind(state.shopEvents,twist);state.shopEvents++;state.spenderClock=twist==='spender'?60:spenderGap(state.perks,eventGap(customerId))}
-      arrival=0;customers.push({bigSpender:bigSpender,shopEvent:shopEvent,eventGuest:eventGuest,kind:arrivingKind,id:customerId++,phase:'entering',idChecked:false,idCheckTime:0,lounge:lounge,kiosk:wantsKiosk(lounge),kioskIndex:null,wantsCash:wantsCash(customerId-1,state.atm.level),t:0,bag:false,ordered:false,x:-12.4,z:-10});
+      arrival=0;customers.push({bigSpender:bigSpender,shopEvent:shopEvent,eventGuest:eventGuest,kind:arrivingKind,id:customerId++,phase:'entering',idChecked:false,idCheckTime:0,idDistance:routeLength(ID_ROUTE),lounge:lounge,kiosk:wantsKiosk(lounge),kioskIndex:null,wantsCash:wantsCash(customerId-1,state.atm.level),t:0,bag:false,ordered:false,x:-12.4,z:-10});
     }
     tickLounge(dt);windowServing=windowOpen()&&stepWindowLine(windowLine,dt,windowStairs,windowServeSeconds(state.pickupWindow));
     // Before the drone port the window is the only way out: the clerk takes ready orders as the line has room.
@@ -1975,7 +1976,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       // longer than the next walker needs to reach their place behind, and never shorter than the trained speed. So the
       // next guest is never held up and the door clears exactly as many people as before; only a packed line gets the
       // trained quick check.
-      if(c.idCheckFor===undefined){var behind=queue[1],gap=behind?(behind.idDistance-.7)/walkSpeed():Infinity;c.idCheckFor=Math.max(securityDuration(),Math.min(economy.ID_CHECK_SHOW,gap))}
+      // A NaN here once froze the door for good (gameplay review 2026-11-07), so idCheckLength always returns a real length.
+      if(c.idCheckFor===undefined){var behind=queue[1];c.idCheckFor=idCheckLength(securityDuration(),economy.ID_CHECK_SHOW,behind?behind.idDistance:undefined,walkSpeed())}
       c.idCheckTime+=dt;
       if(c.idCheckTime>=c.idCheckFor){
         c.idChecked=true;c.phase='entering';

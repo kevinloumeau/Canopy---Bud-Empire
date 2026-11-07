@@ -1,9 +1,14 @@
 import {migrateOperations,staffLevel} from './operations.js';
 import {batchSize,stationTier} from './economy.js';
+const BIG=1e300; // finite guard for idle totals (same as save-guards.js)
 // Persistent empire systems. Rewards never count as earned revenue.
 // Counts and money alike are abbreviated past a thousand — 15.1K, 2.4M — everywhere the app shows a number.
 // One number style app-wide: capital suffixes, at most three significant figures, no trailing zeros (8K, 1.5K, 40K, 4.23K).
-const SUFFIXES=[['T',1e12],['B',1e9],['M',1e6],['K',1e3]];
+// Past a trillion: quadrillion Qa, quintillion Qi, sextillion Sx, then Sp, Oc, No and Dc (reopened runs pass 1e15).
+export const SUFFIXES=[['Dc',1e33],['No',1e30],['Oc',1e27],['Sp',1e24],['Sx',1e21],['Qi',1e18],['Qa',1e15],['T',1e12],['B',1e9],['M',1e6],['K',1e3]];
+export const SUFFIX_VALUE=Object.fromEntries([['',1]].concat(SUFFIXES));
+// Reads a figure written by abbr back to a number: 1.5K, 300Qa, 2,400.
+export function unabbr(text){const m=/([\d.,]+)(Dc|No|Oc|Sp|Sx|Qi|Qa|[KMBT])?/.exec(text||'');return m?parseFloat(m[1].replace(/,/g,''))*SUFFIX_VALUE[m[2]||'']:0;}
 export function trimZeros(text){return text.replace(/\.0+$/,'').replace(/(\.\d*[1-9])0+$/,'$1');}
 export function abbr(n){
   n=Math.max(0,Number.isFinite(n)?n:0);if(n<1000)return String(Math.floor(n));
@@ -98,7 +103,7 @@ const num = (v, fallback=0, max=Number.MAX_SAFE_INTEGER) => Number.isFinite(v) ?
 export function migrateProgression(raw, now=Date.now()) {
   const r=raw && typeof raw==='object' ? raw : {};
   const clock=num(r.clock, now);
-  const p={network:migrateOperations(r.network),version:4, retailBoost:Math.max(1,num(r.retailBoost,1,64)), flagship:Number.isFinite(r.flagship)&&r.flagship>0?Math.min(r.flagship,1e15):0, prestige:num(r.prestige,0,999), ...prestigeShares(r), clock, activeStore:num(r.activeStore,0,STORES.length), career:num(r.career,0,CAREER.length), daily:{
+  const p={network:migrateOperations(r.network),version:4, retailBoost:Math.max(1,num(r.retailBoost,1,64)), flagship:Number.isFinite(r.flagship)&&r.flagship>0?Math.min(r.flagship,BIG):0, prestige:num(r.prestige,0,999), ...prestigeShares(r), clock, activeStore:num(r.activeStore,0,STORES.length), career:num(r.career,0,CAREER.length), daily:{
     day:num(r.daily?.day,0), streak:num(r.daily?.streak,0,7)
   }, stores:STORES.map((_,i)=>({level:num(r.stores?.[i]?.level,0,10),projects:[0,1,2].map(j=>r.stores?.[i]?.projects?.[j]===true), manager:MANAGERS.some(m=>m.id===r.stores?.[i]?.manager)&&!(Array.isArray(r.stores)?r.stores:[]).slice(0,i).some(s=>s?.manager===r.stores?.[i]?.manager)?r.stores[i].manager:'none', featured:PRODUCTS.includes(r.stores?.[i]?.featured)?r.stores[i].featured:'everyday', loyalty:num(r.stores?.[i]?.loyalty,0,1000), served:num(r.stores?.[i]?.served), serviceClock:num(r.stores?.[i]?.serviceClock,0,11), lines:migrateBranchLine(r.stores?.[i]?.lines,num(r.stores?.[i]?.level,0,10))})),
   contracts:migrateContracts(r.contracts), season:migrateSeason(r.season), badges:(Array.isArray(r.badges)?r.badges:[]).filter(b=>typeof b==='string'&&BADGE_ID.test(b)).filter((b,i,a)=>a.indexOf(b)===i).slice(0,200),
@@ -131,7 +136,7 @@ export const SHARE_BONUS=.05, SHARE_BASE=10000000;
 export function sharesFor(revenue){return revenue>=SHARE_BASE?Math.floor(10*Math.sqrt(revenue/SHARE_BASE)+1e-9):0;}
 function prestigeShares(r){
   const rank=num(r.prestige,0,999);
-  if(Number.isFinite(r.shares))return {shares:num(r.shares,0,1e6),lifetimeAll:num(r.lifetimeAll)};
+  if(Number.isFinite(r.shares))return {shares:num(r.shares,0,BIG),lifetimeAll:num(r.lifetimeAll,0,BIG)};
   let past=0;for(let k=0;k<Math.min(rank,19);k++)past+=SHARE_BASE*3**k;
   return {shares:Math.min(rank,19)*4,lifetimeAll:past};
 }
