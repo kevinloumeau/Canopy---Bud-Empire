@@ -2,6 +2,7 @@ import {PICKUP_WINDOW,PICKUP_SIGN,WINDOW_CLERK,WINDOW_COST,WINDOW_MAX_LEVEL,WIND
 import {ATM_BUILD,ATM_SPOTS,ATM_CORNER,ATM_WINDOW,ATM_MAX_LEVEL,migrateAtm,atmLook,atmFeeShare,atmUseShare,atmUseSeconds,wantsCash,atmIncome,atmLevelCost,atmMachineCost,buyAtm,buyAtmLevel,buyAtmLevels,atmMaxQuote,buyAtmMachine,freeAtm} from './atm.js';
 import {migrateOrderCounters,orderCounterPositions,COUNTER_SHIFT,PICKUP_X,orderCounterCost,buyOrderCounter,ORDER_QUEUE_GATE,assignOrderCounter,assignKiosk,takesKiosk,atOrderCounter,orderAvailability,pickupPlaces} from './order-counters.js';
 import {makeLifts,tickLifts,CAB_SLOTS} from './lounge-lifts.js';
+import {tieLast} from './no-lone-words.js';
 import {LOUNGE_TIERS,LOUNGE_MAX,migrateLounge,loungeTier,loungeUpgradeCost,loungeSeats,loungeSessionSeconds,buyLoungeTier,wantsLounge,loungeAdmission,loungeTake,loungeRate,loungeCurrentRate,migrateLoungeHost,buyLoungeLift,LOUNGE_LIFT_COST,LOUNGE_LIFT_SPEED,loungeHostSpeed,loungeHostCost} from './lounge.js';
 import {migrateShopPlay,picks as momentPicks,createMoment,judgeChoice,tipFor,recordServed,tickShift,operationsAlerts,mountShopPlay} from './shop-play.js';
 import {migrateJourney,advanceJourney,CHAPTERS} from './journey.js';
@@ -246,7 +247,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     });
     var i=flowerFocus,strain=STRAINS[i],look=STRAIN_LOOKS[i],level=state.strains[i],active=state.menuStrains.indexOf(i)>=0,price=strainCost(i),maxed=level>=strains.STRAIN_MAX,detail=$('strainDetail');
     var isNight=atmosphere(state.empire.network).night,type=strains.STRAIN_TYPE[i],timeNow=strains.timeFactor(type,isNight);
-    var nextValue=Math.round(strain.price*(1+level*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value',i)*trendBoost(i)*displayBoost(i)*terpFactor(state.city,i,state.strainTrend.index)*timeNow);
+    var nextValue=Math.round(flowerValue(i)*(1+level*.1)/(1+Math.max(0,level-1)*.1));
     var stats=level?
       '<span><b>'+fmt(flowerValue(i))+'</b><small>'+'per sale'+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+(maxed?'Max':'+'+fmt(nextValue-flowerValue(i)))+'</b><small>'+(maxed?'level '+strains.STRAIN_MAX:'next lv')+'</small></span>':
       '<span><b>'+fmt(Math.round(strain.price*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value',i)*timeNow))+'</b><small>'+'per sale'+'</small></span><span><b>'+thcLabel(i)+'</b><small>THC</small></span><span><b>'+fmt(strain.unlock)+'</b><small>unlock</small></span>';
@@ -258,14 +259,14 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       (i===trend?'<li class="is-trend">Trending · +'+Math.round((trendBoost(i)-1)*100)+'% price · <span class="trend-clock"></span></li>':'')+
       (i===reserve?'<li class="is-vip">★ VIP reserve · double baskets</li>':'')+
     '</ul>';
-    var perkLine='<p class="strain-perk'+(tier?' is-unlocked':'')+'" title="'+(tier<2?'Level '+(tier?10:5)+': '+perk.effect[tier]:perk.effect[1])+'"><span class="perk-star" aria-hidden="true">'+(tier?'★':'☆')+'</span><b>'+perk.name+'</b><small>'+(tier?perk.effect[tier-1]:'Lv 5 · '+perk.effect[0])+'</small></p>';
+    var perkLine='<p class="strain-perk'+(tier?' is-unlocked':'')+'" title="'+(tier<2?'Level '+(tier?10:5)+': '+perk.effect[tier]:perk.effect[1])+'"><span class="perk-star" aria-hidden="true">'+(tier?'★':'☆')+'</span><b>'+perk.name+'</b><small>'+(tier?perk.effect[tier-1]:'Lv 5: '+perk.effect[0])+'</small></p>';
     var heroHtml='<div class="strain-hero'+(level?'':' is-locked')+(active?' is-on-menu':'')+(i===trend?' is-trending':'')+'" style="--strain:'+strain.color+'">'+
       '<div class="strain-hero-art">'+icon3d('strain-'+i)+(level?'<button type="button" id="flowerSelect" class="menu-toggle" aria-pressed="'+active+'">'+(active?'On menu':'Add')+'</button>':'')+'</div>'+
-      '<div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">'+look.kind+' · </span>'+strains.TYPES[type]+(level?' · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>'+level+' / '+strains.STRAIN_MAX:' · Locked')+'</small><h2>'+strain.name+'</h2><p>'+(level?look.buyers:'Unlock to put it on the menu. '+look.buyers)+'</p></div>'+
+      '<div class="strain-hero-info"><small class="strain-kind"><span class="strain-kind-tier">'+look.kind+' · </span>'+strains.TYPES[type]+(level?' · <span class="strain-kind-long">Level </span><span class="strain-kind-short">Lv </span>'+level+' / '+strains.STRAIN_MAX:' · Locked')+'<span class="strain-kind-thc"> · '+thcLabel(i)+' THC</span></small><h2>'+strain.name+'</h2><b class="strain-hero-price">'+fmt(level?flowerValue(i):Math.round(strain.price*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value',i)*timeNow))+'<small> / sale</small></b><p>'+(level?look.buyers:'Unlock to put it on the menu. '+look.buyers)+'</p></div>'+
       '<div class="strain-stats">'+stats+'</div>'+
       '<div class="strain-hero-details">'+traits+perkLine+'</div>'+
-      (level?'<div class="product-line strain-format"><h2>Sells as</h2><div class="format-options">'+FORMATS.map(function(f,k){var stocked=stocks(state.productMenu,k,i),cost=formatCost(k,i);return '<button type="button" class="strain-format-pill" data-format="'+k+'" aria-pressed="'+stocked+'"'+(!stocked&&state.money<cost?' disabled':'')+' title="'+f.detail+'">'+icon3d('goods-'+k)+'<strong>'+f.name+'</strong><em>'+(f.value>1?'+'+Math.round((f.value-1)*100)+'% value':'Base price')+'</em><small>'+(stocked?'Selling':fmt(cost))+'</small></button>'}).join('')+'</div><p class="format-benefit">'+(function(){var next=FORMATS.findIndex(function(f,k){return !stocks(state.productMenu,k,i)});return next<0?strain.name+' sells in all three types, to whoever wants each.':'Stock '+FORMATS[next].name.toLowerCase()+' for '+strain.name+' · '+['','+45% value for the 3 in 10 who want them · slower packing','+120% value for the 1 in 5 who want them · slow packing'][next]})()+'</p></div>':'')+
-      '<div class="strain-hero-actions"><button type="button" id="flowerBuy" class="is-primary">'+(maxed?'Fully upgraded':(level?'Upgrade':'Unlock')+' · '+fmt(price))+'</button></div>'+
+      (level?'<div class="product-line strain-format"><h2>Sells as</h2><div class="format-options">'+FORMATS.map(function(f,k){var stocked=stocks(state.productMenu,k,i),cost=formatCost(k,i);return '<button type="button" class="strain-format-pill" data-format="'+k+'" aria-pressed="'+stocked+'"'+(!stocked&&state.money<cost?' disabled':'')+' title="'+f.detail+'">'+icon3d('goods-'+k)+'<strong>'+f.name+'</strong><em>'+(f.value>1?'+'+Math.round((f.value-1)*100)+'%<span class="format-word"> value</span>':'Base<span class="format-word"> price</span>')+'</em><small>'+(stocked?'Selling':fmt(cost))+'</small></button>'}).join('')+'</div><p class="format-benefit">'+(function(){var next=FORMATS.findIndex(function(f,k){return !stocks(state.productMenu,k,i)});return next<0?strain.name+' sells in all three types, to whoever wants each.':'Stock '+FORMATS[next].name.toLowerCase()+' for '+strain.name+' · '+['','+45% value for the 3 in 10 who want them · slower packing','+120% value for the 1 in 5 who want them · slow packing'][next]})()+'</p></div>':'')+
+      '<div class="strain-hero-actions"><button type="button" id="flowerBuy" class="is-primary">'+(maxed?'Fully upgraded':'<span class="buy-label">'+(level?'Upgrade':'Unlock')+' · '+fmt(price)+'</span>'+(level?'<span class="buy-gain">+'+fmt(nextValue-flowerValue(i))+' / sale</span>':''))+'</button></div>'+
     '</div>';
     var heroKey=heroHtml+'|'+(maxed||state.money<price)+'|'+(active&&menu.length===1)+'|'+state.productMenu.byStrain[i].join(',');
     Array.prototype.forEach.call(document.querySelectorAll('.menu-board .trend-clock'),function(el){el.textContent=trendClock});
@@ -324,7 +325,16 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var menuBoard=document.querySelector('[data-pane="flowers"] .menu-board');
   var menuViews=document.createElement('div');menuViews.className='menu-views';menuViews.setAttribute('role','tablist');menuViews.setAttribute('aria-label','Menu views');
   menuViews.innerHTML='<button type="button" role="tab" data-menu-view="strains">Strains</button><button type="button" role="tab" data-menu-view="breed">Breed</button>';
-  menuBoard.insertBefore(menuViews,$('strainNav'));
+  // The Strains / Breed switch and a small "How the menu works" button ride in the sheet's header, beside the Menu
+  // title, so the board below keeps its height for the strains. The guide opens as a card over the board.
+  var sheetHead=document.querySelector('.sheet .panel-header'),menuGuide=menuBoard.querySelector('.strain-guide');
+  if(sheetHead){sheetHead.insertBefore(menuViews,$('panelExpand'));
+    if(menuGuide){var guidePop=document.createElement('p');guidePop.className='menu-guide-pop';guidePop.id='menuGuide';guidePop.hidden=true;guidePop.textContent=menuGuide.querySelector('small').textContent;menuBoard.prepend(guidePop);menuGuide.remove();
+      var guideButton=document.createElement('button');guideButton.type='button';guideButton.className='menu-info';guideButton.setAttribute('aria-label','How the menu works');guideButton.setAttribute('aria-controls','menuGuide');guideButton.setAttribute('aria-expanded','false');guideButton.textContent='i';sheetHead.insertBefore(guideButton,menuViews);
+      var showGuide=function(open){guidePop.hidden=!open;guideButton.setAttribute('aria-expanded',String(open))};
+      guideButton.onclick=function(){showGuide(guidePop.hidden)};
+      document.addEventListener('pointerdown',function(e){if(!guidePop.hidden&&!e.target.closest('.menu-guide-pop,.menu-info'))showGuide(false)},true)}}
+  else menuBoard.insertBefore(menuViews,$('strainNav'));
   var breedPanel=document.createElement('section');breedPanel.className='breed-view';breedPanel.id='breedView';breedPanel.setAttribute('aria-labelledby','breedTitle');breedPanel.hidden=true;
   breedPanel.innerHTML='<div class="library-head"><h3 id="breedTitle">Cultivar journal</h3><small id="breedSummary"></small></div><ul class="breed-list" id="breedList"></ul>';
   menuBoard.append(breedPanel);
@@ -3160,6 +3170,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // One tag per city building (city-buildings.js), on its lot.
   var cityMarkers={};CITY_BUILDINGS.forEach(function(b){cityMarkers[b.id]=lotMarker(b.id,function(){pickTag(b.id)});cityMarkers[b.id].classList.add('is-landmark')});hqMarker.classList.add('is-landmark');
   var leaseMarker=lotMarker('lease',function(){var i=leaseIndex();if(i>=0&&leaseLocked(i)){showTray('empire');document.querySelector('[data-empire-view="growth"]').click();expandBranch(i);$('branchToggle'+i).scrollIntoView({block:'start'})}else pickTag('lease')});
+  // Each tag's line icon: a quiet tag shows only this, in a small dashed circle over its ghost.
+  var LOT_ICONS={window:'M4 20V8h16v12M3 8h18M7 8v6h10V8M6 14h12M9 4h6',drone:'M9 10h6v4H9zM4 6h3M17 6h3M5.5 6v4h3.5M18.5 6v4H15M9 14l-3 5M15 14l3 5M12 14v6',kiosk:'M7 3h10v13H7zM10 7h4M10 10h4M12 16v5M8 21h8',counter:'M4 10h16v10H4zM3 10l2-5h14l2 5M9 14h6',atm:'M5 4h14v16H5zM8 8h8v4H8zM9 16h6',building:'M4 21V9l8-6 8 6v12M9 21v-6h6v6M8 11h2M14 11h2'};
   var LOT_MARKERS=[windowMarker,droneMarker,kioskMarker,counterMarker,hqMarker,leaseMarker,atmMarker].concat(CITY_BUILDINGS.map(function(b){return cityMarkers[b.id]}));LOT_MARKERS.forEach(function(el){el.classList.add('is-mini')});
   var LOCK_ICON='<svg class=sign-lock viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
   var KIOSK_PRICES=[25000,50000,100000],KIOSK_Z=[0,1,2].map(kioskZ);
@@ -3225,7 +3237,11 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var building=!!t.build&&isBuilding(state.builds,t.build),clock=building?buildClock(buildLeft(state.builds,t.build)):'',shownLevel=building?clock:t.level?'Lv '+t.level:fmt(t.price),key=t.name+'|'+shownLevel+'|'+(state.money>=t.price);
     el.classList.toggle('is-building',building);el.classList.toggle('can-upgrade',!building&&!!t.best&&state.money>=t.price);
     if(building)el.style.setProperty('--build-left',buildShareLeft(state.builds,t.build).toFixed(3));else el.style.removeProperty('--build-left');
-    if(t.locked)key+='|locked';if(el.dataset.level!==key){el.innerHTML='<span class=station-sign-name>'+t.name+'</span><span class=station-sign-level>'+(t.locked&&!building?LOCK_ICON+(t.lockText||''):shownLevel)+'</span>';el.dataset.level=key;updateMarkers.key=null}
+    // Quiet by default (Kevin, 2026-11-07: "the upgrade buttons on the map feel too much"): a tag is just its small icon
+    // unless it is the best buy and affordable, being built, or picked. The ghost under it shows what it sells; a tap
+    // opens its buy box with the name and price.
+    var quiet=!building&&!(t.best&&state.money>=t.price)&&pickedTag!==el.dataset.marker;if(el.classList.contains('is-quiet')!==quiet){el.classList.toggle('is-quiet',quiet);updateMarkers.key=null}el.title=t.name;
+    if(t.locked)key+='|locked';if(el.dataset.level!==key){el.innerHTML=signIcon(LOT_ICONS[el.dataset.marker]||LOT_ICONS.building)+'<span class=station-sign-name>'+t.name+'</span><span class=station-sign-level>'+(t.locked&&!building?LOCK_ICON+(t.lockText||''):shownLevel)+'</span>';el.dataset.level=key;updateMarkers.key=null}
     el.setAttribute('aria-label',building?t.name+', being built. Opens in '+clock:t.locked?t.name+(t.lockText?', locked until '+t.lockText+' earned':', for lease. Locked, show what opens it'):t.name+(t.level?', level '+t.level+', next '+fmt(t.price):', '+fmt(t.price))+'. Show what to buy');
     signBuy(el,pickedTag===el.dataset.marker&&(!t.locked||t.lockText)&&(!building||t.buildBuys)?t.buys:null)});
     if(pickedTag&&!shown.some(function(t){return t.el.dataset.marker===pickedTag}))pickedTag=null}
@@ -3424,7 +3440,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // While the roof is being built the sign counts down, and its border drains with the time left (--build-left).
     var loungeBuilding=isBuilding(state.builds,'lounge'),loungeClock=buildClock(buildLeft(state.builds,'lounge'));
     var loungeLot=!state.lounge,loungePrice=loungeBuilding?null:loungeUpgradeCost(state.lounge),loungeKey=String(state.lounge)+'|'+(loungePrice!==null&&state.money>=loungePrice)+'|'+(loungeBuilding?loungeClock:'');
-    loungeMarker.classList.add('station-sign');loungeMarker.classList.toggle('selected',mapPicked&&loungeSelected);loungeMarker.classList.toggle('is-lot',loungeLot);loungeMarker.classList.toggle('is-building',loungeBuilding);loungeMarker.classList.toggle('can-upgrade',loungePrice!==null&&state.money>=loungePrice);
+    loungeMarker.classList.add('station-sign');loungeMarker.classList.toggle('selected',mapPicked&&loungeSelected);loungeMarker.classList.toggle('is-lot',loungeLot);loungeMarker.classList.toggle('is-building',loungeBuilding);loungeMarker.classList.toggle('can-upgrade',loungePrice!==null&&state.money>=loungePrice);var loungeQuiet=loungeLot&&!(mapPicked&&loungeSelected);if(loungeMarker.classList.contains('is-quiet')!==loungeQuiet){loungeMarker.classList.toggle('is-quiet',loungeQuiet);updateMarkers.key=null}
     if(loungeBuilding)loungeMarker.style.setProperty('--build-left',buildShareLeft(state.builds,'lounge').toFixed(3));else loungeMarker.style.removeProperty('--build-left');
     renderLotTags();
     if(loungeMarker.dataset.level!==loungeKey){loungeMarker.classList.toggle('is-badge',!loungeBuilding&&!loungeLot);loungeMarker.innerHTML=signIcon(SIGN_LOUNGE)+'<span class=station-sign-name>Lounge</span><span class=station-sign-level>'+(loungeBuilding?loungeClock:loungeLot?fmt(loungePrice):'Lv '+state.lounge)+'</span>';loungeMarker.dataset.level=loungeKey;updateMarkers.key=null;}
@@ -3555,7 +3571,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     windowRows.forEach(function(x){var on=show&&(x.key==='window'||w.owned);x.row.hidden=!on;if(!on)return;var note,label,price,disabled,owned=false;
       if(x.key==='window'){if(w.owned){var inLine=windowLineMax(w)-windowRoom(windowLine,w);note=inLine+' / '+windowLineMax(w)+' in line';label='';price='';disabled=true;owned=true;var pips='';for(var k=0;k<windowLineMax(w);k++)pips+='<i'+(k<inLine?' class="on"':'')+'></i>';if(x.row.dataset.pips!==pips){x.row.dataset.pips=pips;x.row.querySelector('.line-pips').innerHTML=pips}}
         else if(building){note='Building';label='Opens in';price=buildClock(buildLeft(state.builds,'window'));disabled=true}
-        else{note='Walk-up web orders';label='Build';price=fmt(WINDOW_COST);disabled=state.money<WINDOW_COST}}
+        else{note=tieLast('Walk-up web orders');label='Build';price=fmt(WINDOW_COST);disabled=state.money<WINDOW_COST}}
       else{var lvl=windowLevel(w),maxed=lvl>=WINDOW_MAX_LEVEL,cost=windowLevelCost(lvl),road=nextWindowLook(lvl),title='Window Lv '+lvl;owned=maxed;
         // The next look, or what one more level pays, under the window's own level.
         note=maxed?'×'+payText(windowPay(lvl))+' walk-ups':road?WINDOW_LOOKS[windowLook(road)-1]+' at Lv '+road:'+5% walk-ups';label=maxed?'Max':'Lv '+(lvl+1);price=maxed?'':fmt(cost);disabled=maxed||state.money<cost;
@@ -4122,7 +4138,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     li.querySelector('button').onclick=function(){if(buyPerk(state.perks,p.id)){upgradeFx.pop();if(p.id==='vault')state.offlineLevel=Math.max(state.offlineLevel,perkLevel(state.perks,'vault'));if(p.id==='finish')paintThumbnails();save();renderUI();notify(p.name.toUpperCase()+' · LEVEL '+perkLevel(state.perks,p.id),'upgrade')}};$('perkGrid').append(li)});
   function renderPerks(){var pts=state.perks.points;$('perkPoints').textContent=pts+' point'+(pts===1?'':'s');
     PERKS.forEach(function(p){var li=$('perkGrid').querySelector('[data-perk="'+p.id+'"]'),l=perkLevel(state.perks,p.id),c=perkCost(state.perks,p.id),b=li.querySelector('button');
-      li.dataset.state=c===null?'known':'open';li.querySelector('b').textContent=p.name;li.querySelector('small').textContent=p.blurb(c===null?l:l+1);li.querySelector('em').textContent='Level '+l+' of '+p.costs.length;
+      li.dataset.state=c===null?'known':'open';li.querySelector('b').textContent=p.name;li.querySelector('small').textContent=tieLast(p.blurb(c===null?l:l+1));li.querySelector('em').textContent='Level '+l+' of '+p.costs.length;
       b.textContent=c===null?'Maxed':'Buy · '+c+' pt'+(c===1?'':'s');b.disabled=c===null||pts<c;b.setAttribute('aria-label',c===null?p.name+' maxed':'Buy '+p.name+' level '+(l+1)+' for '+c+' points')})}
   // Return reminders exist only in the iOS app; the hidden toggle is what the Settings row proxies.
   var reminders=createReminders();

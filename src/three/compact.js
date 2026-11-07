@@ -19,8 +19,8 @@ const local = new THREE.Matrix4(), rootInverse = new THREE.Matrix4();
 
 const kept = (o, keep) => !!o.userData.motion || DRIVEN.test(o.name) || (keep && keep(o));
 
-function mergeable(o) {
-  return o.isMesh && !o.isInstancedMesh && !o.isSkinnedMesh && o.visible && !Array.isArray(o.material) && !o.material.transparent &&
+function mergeable(o, glass) {
+  return o.isMesh && !o.isInstancedMesh && !o.isSkinnedMesh && o.visible && !Array.isArray(o.material) && (glass || !o.material.transparent) &&
     !Object.keys(o.geometry.morphAttributes).length && !o.geometry.groups.length && o.children.length === 0;
 }
 
@@ -57,8 +57,9 @@ function rewind(g) {
   });
 }
 
-// Merges root's static parts; returns how many meshes it removed.
-export function compactModel(root, keep) {
+// Merges root's static parts; returns how many meshes it removed. glass: merge see-through parts too, for a model whose
+// glass is many small pieces that never overlap much (the rooftop bar's bottles), where one sort per material is enough.
+export function compactModel(root, keep, glass = false) {
   root.updateMatrixWorld(true);
   rootInverse.copy(root.matrixWorld).invert();
   const groups = new Map(), inner = [];
@@ -66,7 +67,7 @@ export function compactModel(root, keep) {
     // A hidden part stays as it is, children and all: merged, they would show.
     if (!c.visible) return;
     if (kept(c, keep)) { inner.push(c); return; }
-    if (mergeable(c)) {
+    if (mergeable(c, glass)) {
       const key = c.material.uuid + (c.castShadow ? 'c' : '') + (c.receiveShadow ? 'r' : '') + signature(c.geometry);
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key).push(c);
@@ -100,6 +101,6 @@ export function compactModel(root, keep) {
     if ((c.type === 'Group' || c.type === 'Object3D') && !c.children.length) c.removeFromParent();
   });
   prune(root);
-  inner.forEach(o => { if (o.children.length) removed += compactModel(o, keep); });
+  inner.forEach(o => { if (o.children.length) removed += compactModel(o, keep, glass); });
   return removed;
 }
