@@ -14,6 +14,12 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
   // One label over each undecided fork and an "or" between its sides.
   // An undecided fork sits at the end of its branch as one card: both sides side by side with an "or" between them.
   const forkMarks=FORKS.map(f=>{const box=document.createElement('div');box.className='shop-fork';box.setAttribute('role','group');box.setAttribute('aria-label','Pick one: '+f.name);const head=document.createElement('p');head.className='shop-fork-head';head.innerHTML='<b>Pick one</b><span>The other closes until you reopen</span>';const or=document.createElement('p');or.className='shop-fork-or';or.setAttribute('aria-hidden','true');or.innerHTML='<span>or</span>';const end=document.createElement('i');end.className='shop-fork-end';end.setAttribute('aria-hidden','true');return {fork:f,box,head,or,end,ids:f.sides.map(byKey)}});
+  // 3D icons rendered in Blender at the map's angle (public/icons/3d/research-*.png, art/blender/research_icons.py),
+  // like the Goals tab. They replace each card's line drawing inside its level ring.
+  const ICONS_3D={upgradeStorage:'storage',boost:'boost',growBatchLevel:'grow',curingLevel:'curing',trendLevel:'trend',breedingLevel:'breeding',offlineLevel:'offline',
+    basketLevel:'basket',trafficLevel:'traffic',displayLevel:'display',loyaltyLevel:'loyalty',serviceLevel:'service',
+    webLevel:'web',onlineBonusLevel:'premium',fleetLevel:'fleet',cargoLevel:'cargo'};
+  const img3d=src=>'<img class="research-3d" src="icons/3d/'+src+'.png" alt="" draggable="false" decoding="async">';
   const rows=definitions.map(([id,category])=>{
     const button=document.getElementById(id),node=button.parentElement;
     node.classList.add('shop-item');
@@ -21,11 +27,15 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
     badge.className='shop-level';copy.append(badge);
     button.setAttribute('aria-label',copy.querySelector('h2,b').textContent+' upgrade');
     const effect=document.createElement('small');effect.className='shop-effect';node.append(effect);
-    return {id,category,node,button,badge,effect,symbol:node.querySelector('.shop-symbol')};
+    const symbol=node.querySelector('.shop-symbol'),key=id.startsWith('componentBuy')?components[Number(id.replace('componentBuy',''))].key:id;
+    if(symbol&&ICONS_3D[key]){symbol.innerHTML=img3d('research-'+ICONS_3D[key]);symbol.classList.add('has-3d')}
+    return {id,category,node,button,badge,effect,symbol};
   });
   const header=document.createElement('div');header.className='shop-browser-header';
   const icons={Grow:'<path d="M12 21c-4.5-2.5-7-6-7-10a7 7 0 0 1 14 0c0 4-2.5 7.5-7 10ZM12 21V9"/>',Retail:'<path d="M4 17h16M6 17a6 6 0 0 1 12 0M12 8v3M10 8h4"/>',Delivery:'<path d="M9 10h6v4H9zM4 6h3M17 6h3M5.5 6v4h3.5M18.5 6v4H15M9 14l-3 5M15 14l3 5M12 14v6"/>'};
-  header.innerHTML='<nav class="shop-categories" aria-label="Upgrade categories">'+categories.map((name,i)=>'<button type="button" data-shop-category="'+i+'" aria-pressed="'+(i===0)+'"><svg class="shop-category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(icons[name]||'')+'</svg><em>'+name+'</em></button>').join('')+'</nav>';
+  // The branch tabs get 3D icons too: the potted plant, the shopping bag and the drone.
+  const tabs3d={Grow:'goal-leaf',Retail:'goal-bag',Delivery:'research-fleet'};
+  header.innerHTML='<nav class="shop-categories" aria-label="Upgrade categories">'+categories.map((name,i)=>'<button type="button" data-shop-category="'+i+'" aria-pressed="'+(i===0)+'">'+(tabs3d[name]?'<span class="shop-category-icon is-3d" aria-hidden="true">'+img3d(tabs3d[name])+'</span>':'<svg class="shop-category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(icons[name]||'')+'</svg>')+'<em>'+name+'</em></button>').join('')+'</nav>';
   const list=document.createElement('div');list.className='shop-items';
   const empty=document.createElement('p');empty.className='shop-empty';empty.textContent='Nothing affordable here yet. Turn off the filter to see what’s next.';
   const milestone=pane.querySelector('.shop-milestone'),reset=pane.querySelector('.shop-reset');
