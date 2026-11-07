@@ -123,7 +123,8 @@ export function claimDaily(state, now=Date.now(), scale=1) {
   const p=state.empire, d=dailyStatus(p,now,scale);if(!d.available)return 0;
   p.daily={day:Math.floor(p.clock/DAY),streak:d.day};state.money+=d.reward;return d.reward;
 }
-export function saleMultiplier(p) {return (1+p.career*.05)*(1+(p.shares||0)*SHARE_BONUS)*starMultiplier(p);}
+// p.stake is the Founder's stake perk level, mirrored from state.perks by main.js (+10% sales a level).
+export function saleMultiplier(p) {return (1+p.career*.05)*(1+(p.shares||0)*SHARE_BONUS)*starMultiplier(p)*(1+.1*(p.stake||0));}
 // Reopening pays in shares: each is worth +5% base sales, and the all-time total grows with the square root of
 // all-time revenue, so a longer run earns more of them. Saves from the flat +20%-per-rank system convert at four
 // shares per rank (the same bonus) and are credited with the revenue those ranks required.
@@ -419,8 +420,12 @@ const REVENUE_HOURS=[.5,2,6];
 function migrateSeason(r){
   if(!r||typeof r!=='object'||typeof r.id!=='string'||!BADGE_ID.test(r.id))return null;
   const kind=['pickup','online','revenue'].includes(r.kind)?r.kind:'pickup',targets=[0,1,2].map(i=>Math.max(1,num(r.targets?.[i],1)));
-  return {id:r.id,kind,start:num(r.start,0),targets,claimed:num(r.claimed,0,3)};
+  return {id:r.id,kind,start:num(r.start,0),carried:num(r.carried,0),targets,claimed:num(r.claimed,0,3)};
 }
+// A reopen zeroes the goal counters, so the season ladder carries the progress it had made (and its claims) instead of
+// rebuilding at zero and paying the same rungs again.
+export function carrySeason(season,counters){const s=migrateSeason(season);if(!s)return null;
+  return {...s,start:0,carried:Math.max(0,num(counters?.[s.kind])-s.start)+s.carried};}
 export function seasonWindow(now=Date.now()){
   const d=new Date(now),y=d.getUTCFullYear(),day=Date.UTC(y,d.getUTCMonth(),d.getUTCDate());
   for(const s of SEASONS){const from=Date.UTC(y,s.from[0]-1,s.from[1]),to=Date.UTC(y,s.to[0]-1,s.to[1])+DAY;if(day>=from&&day<to)return {...s,id:s.id+'-'+y,badge:s.id,start:from,end:to};}
@@ -438,7 +443,7 @@ export function seasonStatus(p,now=Date.now(),scale=1){
     const income=Math.max(4,scale*4),targets=w.kind==='revenue'?REVENUE_HOURS.map(h=>Math.max(1000,Math.round(income*h*3600))):FIXED_TARGETS[w.kind].slice();
     p.season={id:w.id,kind:w.kind,start:p.counters[w.kind],targets,claimed:0};
   }
-  const r=p.season,progress=Math.max(0,p.counters[r.kind]-r.start),reached=r.targets.filter(t=>progress>=t).length;
+  const r=p.season,progress=Math.max(0,p.counters[r.kind]-r.start)+(r.carried||0),reached=r.targets.filter(t=>progress>=t).length;
   const next=r.claimed<reached?r.claimed:-1;
   return {...w,targets:r.targets,progress,claimed:r.claimed,reached,next,remaining:w.end-p.clock,
     reward:next>=0?scaledReward(SEASON_REWARDS[next],scale):scaledReward(SEASON_REWARDS[Math.min(2,r.claimed)],scale),hasBadge:p.badges.includes(w.badge)};
