@@ -5,7 +5,7 @@
 // seconds: customers arrive faster than once a second, so per-event playback turns into a constant jingle.
 // makeSound() returns play(kind, enabled). Mobile browsers only start audio inside a user gesture, so main.js also
 // calls play.unlock() on the first pointer or key event to create and resume the context while sound is on.
-const THROTTLE={tap:60,sale:9000,upgrade:200,denied:250,whoosh:12000,sparkle:400,build:400,open:1000,coin:90};
+const THROTTLE={fanfare:1500,tap:60,sale:9000,upgrade:200,denied:250,whoosh:12000,sparkle:400,build:400,open:1000,coin:90};
 export const AMBIENT_MIN_GAP=Math.min(THROTTLE.sale,THROTTLE.whoosh);
 export function makeSound(){
  let context=null,master=null,noise=null;const last={};
@@ -50,6 +50,11 @@ export function makeSound(){
   sparkle(){[[1319,0],[1568,.05],[2093,.1],[2637,.15]].forEach(([f,at])=>note('sine',f,.05,.28,at));hiss(.03,.25,.1,4000,6000,1);},
   // Construction finished: a thud, then the upgrade arpeggio.
   build(){hiss(.12,.18,0,180,60,1);note('sine',90,.08,.22,0,55);[[523,.16],[659,.23],[784,.3],[1047,.38]].forEach(([f,at])=>note('triangle',f,.06,.24,at));},
+  // A big milestone (a branch, HQ or city stage opening, the lounge, the window, a reopen): the loudest cue, about
+  // -14 dBFS. A low thump, a bright major chord that swells and rings, a rising run and a shimmer on top. Music ducks for it.
+  fanfare(){hiss(.16,.22,0,200,60,1);note('sine',82,.12,.35,0,52);
+   [[392,.04],[523,.08],[659,.12],[784,.16],[1047,.2]].forEach(([f,at])=>{note('triangle',f,.07,1.5,at);note('sine',f*2,.018,1,at+.01);});
+   [[1047,.42],[1319,.5],[1568,.58],[2093,.66]].forEach(([f,at])=>note('sine',f,.06,.5,at));hiss(.05,1.1,.45,3000,8000,.8);},
   // Opening the shop: a warm chord swell with a bell on top.
   open(){[[262,0],[330,.02],[392,.04],[523,.06]].forEach(([f,at])=>note('triangle',f,.05,.9,at));note('sine',1568,.05,.7,.25);note('sine',2093,.04,.8,.4);hiss(.03,.6,.2,2000,5000,1);}
  };
@@ -57,9 +62,13 @@ export function makeSound(){
   if(!enabled||document.hidden||!CUES[kind])return;
   try{
    const now=Date.now();if(now-(last[kind]||0)<(THROTTLE[kind]||150))return;last[kind]=now;
-   if(!ensure())return;CUES[kind]();
+   if(!ensure())return;CUES[kind]();if(play.onCue)play.onCue(kind);
   }catch(e){/* Audio is optional when the browser denies playback. */}
  }
  play.unlock=function(enabled){if(!enabled)return;try{ensure();}catch(e){}};
+ // The shared context for the music (music.js), created on first use; the music has its own bus to the speakers.
+ play.context=function(){try{return ensure();}catch(e){return null;}};
+ // A hook run when a cue starts, so main.js can duck the music under the big ones.
+ play.onCue=null;
  return play;
 }
