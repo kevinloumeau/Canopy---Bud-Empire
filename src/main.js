@@ -543,7 +543,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var guest=customers.find(function(c){return !c.ordered&&!c.kiosk&&!c.lounge&&!c.momentOffered&&c.idChecked===true&&c.phase==='entering'});
     if(!guest)return;
     var options=momentPicks(state,menuStrains());if(menuStrains().length<2)return;
-    guest.momentOffered=true;moment=createMoment(play,guest,options);play.cooldown=60+(play.sequence%3)*15;
+    guest.momentOffered=true;moment=createMoment(play,guest,options);if(moment)castMoment(moment,guest.id);play.cooldown=60+(play.sequence%3)*15;
   }
   // What the shop really earns a second, smoothed over about a minute of play. The advice compares it with what the
   // stations could sell: well short means customers can't get through the door fast enough (see flowFix).
@@ -2572,6 +2572,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var STAFF_MODELS=(function(f){return{stations:[f('green-uniform-woman'),f('green-uniform-man'),f('chef'),f('staff-young'),null,f('staff-gray')],desks:[f('staff-dark-hair'),f('staff-young'),f('staff-gray')],door:f('security-guard'),host:f('staff-dark-hair'),window:f('staff-young')}})(function(n){return 'people/'+n+'.glb'});
 var STAFF_ROLES=['seeds','grow','harvest','pack','desk','pickup'];
 var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-shirt','utility-vest','office-woman','bearded-blue-shirt','tie-dye-hoodie','cream-outfit','trench-coat','linen-tunic','blazer-woman','beanie-hoodie','puffer-vest-woman','fleece-man','yellow-jacket-woman','athletic-man','hijab-woman','pattern-shirt-man','tweed-senior','green-sweater-man','chef-woman','overalls-woman','punk-jacket-woman','bomber-jacket-man'].map(function(n){return 'people/'+n+'.glb'});
+  // Who is asking on the pick card: the shopper model this customer walks in as (customer() casts CUSTOMER_MODELS by id),
+  // with a first name of their own and their head-and-shoulders portrait (art/blender/people_portraits.py).
+  var CUSTOMER_NAMES=['Remy','Jules','Morgan','Casey','Riley','Dana','Marcus','Sky','Noa','Elliot','Sage','Priya','Kai','Maya','Owen','Lena','Andre','Amira','Luis','Walter','Theo','Rosa','June','Vee','Jay'];
+  function castMoment(m,id){var k=Math.abs(id|0)%CUSTOMER_MODELS.length;m.name=CUSTOMER_NAMES[k];m.portrait='people-'+CUSTOMER_MODELS[k].replace(/^people\/|\.glb$/g,'');return m}
   // Records the images one 2D figure draws (with every transform it applies) and turns each into four world points: a
   // flat card standing upright at the figure's feet, spanning screen-right and up, so the 3D camera shows it exactly
   // where the 2D map would while counters in front of it still hide it. Nothing else the figure draws is kept.
@@ -2914,7 +2918,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // An upgrade's map effects at station i (sparkles, ring, spring) without buying it, for screenshots.
     window.__canopySnap.upgrade=function(i){burst(machinePos[i]);stationFx(i)};
     // A customer's pick question, open on screen, for screenshots of the card (shop-play.js).
-    window.__canopySnap.moment=function(){moment=createMoment(state.shopPlay,customers[0]||{id:-1},momentPicks(state,menuStrains()));if(moment&&shopPlayUI){shopPlayUI.render();shopPlayUI.open()}return !!moment};
+    window.__canopySnap.moment=function(cast,variant){var guest=customers[0]||{id:0};moment=createMoment(state.shopPlay,guest,momentPicks(state,menuStrains()));if(moment){castMoment(moment,cast===undefined?guest.id:cast);if(variant!==undefined)moment.variant=variant}if(moment&&shopPlayUI){shopPlayUI.render();shopPlayUI.open()}return !!moment};
     // A cash pop frozen at `age` seconds into its rise, for screenshots of the pops (cash-pops.js).
     window.__canopySnap.cashPop=function(key,amount,age){var site=CASH_SITES[key];livePops.push({key:key,amount:amount,x:site.x,y:site.y,z:site.z,age:age||.4,text:fmt(amount)})};
     window.__canopySnap.status=function(){return{map3d:!!(map3d&&map3d.ok),loading:map3d?map3d.loading:-1}};
