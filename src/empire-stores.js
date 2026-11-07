@@ -2,6 +2,7 @@
 // station and store upgrades"). Stations: the branch's six-station line as ring tiles, a tap buys a level. Store: the
 // store's level, its three store upgrades and its stars. main.js keeps rendering branchBuy and projectBuy by id; this
 // module reparents the one and presses the other, and adds the tiles. Tiles share the Empire map's ring look (empire-map.css).
+import {isBuilding,buildLeft,buildClock,branchBuildKey,BRANCH_BUILD_SECONDS} from './builds.js';
 import {abbr,STORES,STORE_PROJECTS,PROJECT_LEVELS,PROJECT_BONUSES,projectCost,storeCost,storeRate,nextStoreRate,branchOpenable,STARS_TO_OPEN,starStatus,starCount,STAR_BONUS,BRANCH_LINE,BRANCH_LINE_MAX,branchStationCost,branchBestStation} from './progression.js';
 
 const svg=paths=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+paths+'</svg>';
@@ -18,10 +19,17 @@ const stationGlyph=j=>{const icon=document.querySelector('[data-machine="'+j+'"]
 // Store upgrades: showcases, checkout, planting.
 const PROJECT_GLYPHS=[svg('<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 11h16M9 16h6"/>'),svg('<rect x="3" y="9" width="18" height="11" rx="2"/><path d="M7 9V6h10v3M8 14h3"/>'),svg('<path d="M12 20v-8M12 12c-4 0-6-3-6-7 4 0 6 3 6 7Zm0 0c4 0 6-3 6-7-4 0-6 3-6 7ZM7 20h10"/>')];
 const GOAL_NAMES={served:'Customers',level:'Store level',line:'Stations'};
+// A store not open yet (Kevin, 2026-11-05: "the unbought lot info doesnt make sense or explains how to get it"): its theme
+// and what it earns, then the steps to open it as tiles (stars at the store before, lifetime sales, the lease), then the
+// star goals at the store before, each a tap that goes there.
+const THEMES=['Neighborhood shop','Historic boutique','Downtown flagship','Desert courtyard','Mountain lodge'];
+const COIN=svg('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M14.5 10a2.5 2 0 0 0-5 0c0 2.5 5 1.5 5 4a2.5 2 0 0 1-5 0"/>');
+const KEY=svg('<circle cx="8" cy="15" r="4"/><path d="M11 12l8-8M16 7l2 2M14 9l2 2"/>');
+const CHEVRON='<svg class="page-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
 // A rate with a small '/s'.
 const perText=text=>text+'<span class="map-per">/s</span>';
 
-export function mountEmpireStores({getState,format,buyStation}){
+export function mountEmpireStores({getState,format,buyStation,goStore}){
  const $=id=>document.getElementById(id);
  const el=(tag,cls,html)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(html!=null)n.innerHTML=html;return n;};
  const set=(node,text)=>{if(node.textContent!==text)node.textContent=text;};
@@ -62,7 +70,28 @@ export function mountEmpireStores({getState,format,buyStation}){
   const hero=el('section','page-hero');
   const ring=el('span','map-ring',RING+STORE_ICON(i));
   const copy=el('span','page-hero-copy','<b></b><small></small>');
-  hero.append(ring,copy,buy);buy.classList.add('page-buy');
+  // While the store before still owes stars, the hero's button goes there instead of buying.
+  const go=el('button','page-buy page-go');go.type='button';go.hidden=true;
+  if(i)go.innerHTML='<span>'+STORES[i-1].name+'</span>'+CHEVRON,go.setAttribute('aria-label','Go to '+STORES[i-1].name+' to earn stars');
+  go.onclick=()=>{if(goStore)goStore(i-1,1);};
+  hero.append(ring,copy,buy,go);buy.classList.add('page-buy');
+  // To open: one tile per step, read left to right.
+  const unlock=el('section','page-group is-unlock');unlock.setAttribute('aria-label','To open');
+  const unlockHead=el('div','page-head','<b>To open</b><span class="page-meta"></span>');
+  const unlockGrid=el('div','page-tiles'+(i?'':' is-two'));
+  const step=(glyph,name)=>{const d=el('div','page-tile map-tile');d.innerHTML='<span class="map-ring">'+RING+'<span class="page-glyph'+(glyph===STAR?' is-star':'')+'">'+glyph+'</span></span><b class="map-tile-name"></b><small class="map-tile-figure"></small>';set(d.querySelector('.map-tile-name'),name);unlockGrid.append(d);
+   return {b:d,ring:d.querySelector('.map-ring'),figure:d.querySelector('.map-tile-figure'),sig:''};};
+  const steps={stars:i?step(STAR,STORES[i-1].name+' stars'):null,sales:step(COIN,'Total sales'),lease:step(KEY,'Lease')};
+  unlock.append(unlockHead,unlockGrid);
+  // The store before's three star goals; each opens that store on the tab where the goal is worked.
+  const prev=el('section','page-group is-stars is-prev');prev.hidden=true;
+  let prevGoals=[],prevMeta=null;
+  if(i){prev.setAttribute('aria-label',STORES[i-1].name+' stars');
+   const head=el('div','page-head','<b>'+STORES[i-1].name+' stars</b><span class="page-meta"></span>');prevMeta=head.lastChild;
+   const grid=el('div','page-tiles');
+   prevGoals=[0,1,2].map(k=>{const b=el('button','page-tile map-tile is-goal');b.type='button';b.innerHTML='<span class="map-ring">'+RING+'<span class="page-glyph is-star">'+STAR+'</span></span><b class="map-tile-name"></b><small class="map-tile-figure"></small>';grid.append(b);
+    return {b,ring:b.querySelector('.map-ring'),name:b.querySelector('.map-tile-name'),figure:b.querySelector('.map-tile-figure'),sig:''};});
+   prev.append(head,grid);}
   const upgrades=el('section','page-group');upgrades.setAttribute('aria-label','Store upgrades');
   const upgradeGrid=el('div','page-tiles');
   const projects=STORE_PROJECTS[i].map((name,j)=>{const b=el('button','page-tile');b.type='button';
@@ -74,8 +103,8 @@ export function mountEmpireStores({getState,format,buyStation}){
   const goals=[0,1,2].map(()=>{const d=el('div','page-tile is-goal');d.innerHTML='<span class="map-ring">'+RING+'<span class="page-glyph is-star">'+STAR+'</span></span><b class="map-tile-name"></b><small class="map-tile-figure"></small>';starGrid.append(d);
    return {b:d,ring:d.querySelector('.map-ring'),name:d.querySelector('.map-tile-name'),figure:d.querySelector('.map-tile-figure'),sig:''};});
   stars.append(starGrid);
-  pane.prepend(hero,upgrades,stars);
-  storeUI[i]={hero,ring,copy,buy,upgrades,projects,stars,goals,sig:''};
+  pane.prepend(hero,unlock,prev,upgrades,stars);
+  storeUI[i]={hero,ring,copy,buy,go,upgrades,projects,stars,goals,unlock,unlockMeta:unlockHead.lastChild,steps,prev,prevMeta,prevGoals,sig:''};
  }
  const ringShare=(ring,share)=>ring.style.setProperty('--share',Math.max(0,Math.min(1,share)).toFixed(3));
  const paintTile=(t,cls,label,figure,share)=>{const sig=[cls,label,figure,share.toFixed(3)].join('|');if(sig===t.sig)return;t.sig=sig;
@@ -93,23 +122,39 @@ export function mountEmpireStores({getState,format,buyStation}){
   const u=storeUI[i];if(!u)return;
   // Hero: the level ring, what the store earns (or what opens it), and its one buy button.
   let title,sub,share;
-  if(d.gated){title=STARS_TO_OPEN+' stars at '+STORES[i-1].name;sub=d.prevStars+' of '+STARS_TO_OPEN+' earned there';share=d.prevStars/STARS_TO_OPEN;}
-  else if(d.locked){title='Opens at '+format(d.def.goal);sub=Math.round(d.unlockPct)+'% of the way there';share=d.unlockPct/100;}
-  else if(!d.lvl){title='Ready to open';sub='Earns '+perText(format(d.baseRate));share=0;}
+  if(!d.lvl){title=THEMES[i];sub=d.building?'Opens in '+d.building:'Earns '+perText(format(d.baseRate))+' once open';share=d.building?d.buildShare:d.locked?d.openShare:1;}
   else{title='Level '+d.lvl+' of 10';sub=d.max?'Earns '+perText(format(d.rate)):perText(format(d.rate))+' → '+perText(format(d.next));share=d.lvl/10;}
-  const sig=[title,sub,share.toFixed(3),d.locked,d.afford,d.max].join('|');
+  const sig=[title,sub,share.toFixed(3),d.locked,d.gated,d.afford,d.max].join('|');
   if(sig!==u.sig){u.sig=sig;set(u.copy.firstChild,title);u.copy.lastChild.innerHTML=sub;ringShare(u.ring,share);
-   u.hero.classList.toggle('is-locked',d.locked);u.buy.classList.toggle('is-off',d.locked||d.max);}
+   u.hero.classList.toggle('is-locked',d.locked);u.hero.classList.toggle('is-building',!!d.building);u.buy.classList.toggle('is-off',d.locked||d.max);u.go.hidden=!d.gated;}
+  syncUnlock(i,d);
   // One brass on this tab: the cheapest thing it can buy right now, the next level or a store upgrade.
   const buys=[];if(!d.locked&&!d.max&&d.afford)buys.push({k:-1,cost:d.cost});
   if(d.lvl)STORE_PROJECTS[i].forEach((_,j)=>{const cost=projectCost(i,j);if(!d.store.projects[j]&&d.lvl>=PROJECT_LEVELS[j]&&d.state.money>=cost)buys.push({k:j,cost});});
   const best=buys.length?buys.reduce((a,b)=>b.cost<a.cost?b:a).k:null;
-  u.buy.classList.toggle('is-best',best===-1);
+  u.buy.classList.toggle('is-best',best===-1||(!!d.building&&!u.buy.disabled));
   u.upgrades.hidden=!d.lvl;
   if(d.lvl)u.projects.forEach((t,j)=>{const done=!!d.store.projects[j],need=PROJECT_LEVELS[j],cost=projectCost(i,j),lockedAt=d.lvl<need,afford=!done&&!lockedAt&&d.state.money>=cost,bonus='+'+Math.round(PROJECT_BONUSES[j]*100)+'%';
    const label=STORE_PROJECTS[i][j]+', '+(done?'built, '+bonus+' sales':lockedAt?'opens at store level '+need:'build for '+format(cost)+', '+bonus+' sales')+(best===j?', best buy':'');
    paintTile(t,'page-tile map-tile'+(done?' is-max':lockedAt?' is-locked':best===j?' is-best':afford?' is-ready':''),label,done?CHECK_SMALL+bonus:lockedAt?LOCK_SMALL+'Lv '+need:format(cost),done?1:lockedAt?d.lvl/need:Math.min(1,d.state.money/cost));});
   syncGoals(i,d);
+ }
+ // A store not open yet: the steps to open it, then the star goals at the store before (hidden once it opens).
+ function syncUnlock(i,d){
+  const u=storeUI[i],show=!d.lvl;u.unlock.hidden=!show;u.prev.hidden=!show||!i;if(!show)return;
+  const salesDone=d.state.lifetime>=d.def.goal,starsDone=!d.gated,paid=!!d.building,done=[starsDone,salesDone,paid].slice(i?0:1).filter(Boolean).length,total=i?3:2;
+  const meta=paid?'Building':done+' of '+total+' done';set(u.unlockMeta,meta);
+  const tick=text=>CHECK_SMALL+text;
+  if(u.steps.stars)paintTile(u.steps.stars,'page-tile map-tile'+(starsDone?' is-max':''),STARS_TO_OPEN+' stars at '+STORES[i-1].name+', '+Math.min(STARS_TO_OPEN,d.prevStars)+' of '+STARS_TO_OPEN+(starsDone?', done':''),starsDone?tick('Done'):d.prevStars+' / '+STARS_TO_OPEN,Math.min(1,d.prevStars/STARS_TO_OPEN));
+  paintTile(u.steps.sales,'page-tile map-tile'+(salesDone?' is-max':''),'Total sales '+format(Math.min(d.state.lifetime,d.def.goal))+' of '+format(d.def.goal)+(salesDone?', done':''),salesDone?tick('Done'):format(d.state.lifetime)+' / '+format(d.def.goal),d.unlockPct/100);
+  const canLease=!d.locked&&!paid,leaseFigure=paid?tick('Paid'):d.locked?LOCK_SMALL+format(d.cost):format(d.cost);
+  paintTile(u.steps.lease,'page-tile map-tile'+(paid?' is-max':d.locked?' is-locked':canLease&&d.afford?' is-ready':''),'Lease for '+format(d.cost)+', then it builds for '+Math.round(BRANCH_BUILD_SECONDS[i]/60)+' minutes',leaseFigure,paid?1:Math.min(1,d.state.money/d.cost));
+  if(!i)return;
+  const goals=starStatus(d.p,i-1),count=goals.filter(g=>g.earned).length;
+  set(u.prevMeta,count>=STARS_TO_OPEN?count+' of 3 earned':'Any '+STARS_TO_OPEN+' of 3');
+  goals.forEach((g,k)=>{const t=u.prevGoals[k];set(t.name,GOAL_NAMES[g.kind]);t.b.onclick=()=>{if(goStore)goStore(i-1,g.kind==='line'?0:1);};
+   const figure=g.earned?CHECK_SMALL+'Done':g.kind==='served'?abbr(g.progress)+' / '+abbr(g.target):'Lv '+g.progress+' / '+g.target;
+   paintTile(t,'page-tile map-tile is-goal'+(g.earned?' is-max':''),STORES[i-1].name+': '+g.title+(g.earned?', earned':', '+g.progress+' of '+g.target+'. Go there'),figure,g.earned?1:g.progress/g.target);});
  }
  // Stars: three goal tiles, filling as each nears; the head says what all three give.
  function syncGoals(i,d){
@@ -128,7 +173,11 @@ export function mountEmpireStores({getState,format,buyStation}){
   const rate=storeRate(p,i)*state.gameSpeed,next=nextStoreRate(p,i)*state.gameSpeed;
   const baseRate=lvl?rate:nextStoreRate(p,i)*state.gameSpeed;
   const projectReady=lvl?STORE_PROJECTS[i].some((_,j)=>!store.projects[j]&&lvl>=PROJECT_LEVELS[j]&&state.money>=projectCost(i,j)):false;
-  return {state,p,store,def,lvl,gated,prevStars,locked,max,cost,afford,rate,next,baseRate,projectReady,
+  const key=branchBuildKey(i),building=!lvl&&isBuilding(state.builds,key)?buildClock(buildLeft(state.builds,key)):'';
+  const buildShare=building?1-buildLeft(state.builds,key)/BRANCH_BUILD_SECONDS[i]:0;
+  // How far along the steps to open are, for the hero ring: stars and sales, each half (sales alone for the first branch).
+  const openShare=i?(Math.min(1,prevStars/STARS_TO_OPEN)+Math.min(1,state.lifetime/def.goal))/2:Math.min(1,state.lifetime/def.goal);
+  return {state,p,store,def,lvl,gated,prevStars,locked,max,cost,afford,rate,next,baseRate,projectReady,building,buildShare,openShare,
    unlockPct:Math.min(100,state.lifetime/def.goal*100)};
  }
 
