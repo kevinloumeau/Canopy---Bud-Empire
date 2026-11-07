@@ -604,7 +604,7 @@ export function streetItems(api) { return streetJobs(api); }
 // The floor textures and how many world units one tile spans, for the 3D map's floors.
 export function floorTextureFiles() {
   const file = name => TEXTURE_FILES[name] || 'sprites/shell/tex.floor.' + name + '.png';
-  return { sidewalk: { url: file('sidewalk'), size: 6 }, asphalt: { url: file('asphalt'), size: 8 }, herringbone: { url: file('herringbone'), size: 4 }, timber: { url: file('timber'), size: 4 }, concrete: { url: file('concrete'), size: 4 } };
+  return { sidewalk: { url: file('sidewalk'), size: 6 }, asphalt: { url: file('asphalt'), size: 8 }, herringbone: { url: file('herringbone'), size: 4 }, timber: { url: file('timber'), size: 4 }, concrete: { url: file('concrete'), size: 4 }, boards: { url: file('boards'), size: 4 }, epoxy: { url: file('epoxy'), size: 6 } };
 }
 
 
