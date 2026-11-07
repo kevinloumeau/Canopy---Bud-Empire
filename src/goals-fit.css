@@ -1,0 +1,78 @@
+/* Goals tab fits the half-open sheet on every phone, down to the iPhone SE (375×667), with nothing to scroll: a slim
+   brass Collect strip, the contract and the story side by side, then one group of goal tiles at a time behind a row of
+   tabs (Shift, Stars, Awards, Milestones) that each carry the group's headline figure. Loaded last. */
+
+/* Collect sits in the sheet's header row, right of the "Goals" title, and only while the Goals tab is open: the 3D
+   icons of what pays out, the total, and the brass Collect. With nothing ready, a quiet line says when the next one lands. */
+.sheet .panel-header>.goals-head{display:none}
+body[data-active-tray=goals] .sheet:not(.collapsed) .panel-header>.goals-head{display:flex;align-items:center;min-width:0;margin:-2px 0 -2px auto}
+body[data-active-tray=goals] .sheet:not(.collapsed) .panel-header>#panelToggle{margin-left:0}
+.goals-head .goals-reward{margin:0;border:0;border-radius:0;background:none}
+.sheet .panel-header .goals-head .goals-collect,.sheet .panel-header .goals-head button.goals-collect{display:flex;align-items:center;gap:8px;width:auto;height:auto;min-width:0;min-height:32px;margin:0;padding:2px 2px 2px 6px;border:1px solid var(--ui-brass);border-radius:11px;background:var(--ui-brass-wash);color:var(--ui-ink);font:inherit;box-shadow:none;cursor:pointer}
+.goals-collect-icons{display:flex;flex:none}
+.goals-collect-icons>i{display:grid;place-items:center;width:22px;height:22px}
+.goals-collect-icons>i+i{margin-left:-7px}
+.goals-collect-icons img.goal-3d{width:22px;height:22px}
+.goals-head .goals-collect>b{font:500 14px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;white-space:nowrap}
+.goals-head .goals-collect-go{padding:7px 13px;border-radius:8px;font-size:13px;line-height:1}
+.goals-head .goals-quiet{margin:0 4px 0 0;padding:0;font-size:12px;white-space:nowrap}
+.goals-head .goals-quiet img.goal-3d{width:20px;height:20px}
+
+/* Contract and story: two half cards. A top line with the icon, a small label (contract name, time left, story count)
+   and the action; under it, the thing to do across the card's full width in up to two balanced lines. Either card alone
+   takes the full row. A running contract's icon sits in a ring that fills with its progress. */
+.goals-now{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 8px}
+.goals-now.is-single{grid-template-columns:minmax(0,1fr)}
+.goal-card.goal-half,.sheet .empire-screen button.goal-card.goal-half{display:grid;grid-template-columns:32px minmax(0,1fr);grid-template-areas:"icon foot" "main main";align-items:center;align-content:start;gap:4px 8px;min-height:0;margin:0;padding:6px 9px 7px}
+.goal-half .goal-card-icon,.goal-half .goal-card-icon:has(img.goal-3d){grid-area:icon;width:32px;height:32px}
+.goal-half .goal-card-icon>img.goal-3d{width:30px;height:30px}
+.goal-half .goal-ring.goal-card-icon>img.goal-3d{width:20px;height:20px}
+.goal-half .goal-card-main{grid-area:main;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:12.5px;font-weight:600;line-height:1.25;text-wrap:balance}
+.goal-half .goal-card-foot{grid-area:foot;display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0;min-height:28px}
+.goal-half .goal-card-foot>small{min-width:0;overflow:hidden;font-family:inherit;font-size:11px;line-height:1.25;color:var(--ui-soft);text-overflow:ellipsis;white-space:nowrap}
+.goal-half .goal-card-go{flex:none;padding:5px 11px;border-radius:9px;font-size:12px}
+.goal-half .goal-card-go:not(.is-brass){border-color:var(--ui-brass);color:var(--ui-brass)}
+.goal-half .goal-card-go.is-brass{padding:5px 9px}
+.goal-half .goal-card-chevron svg{width:15px;height:15px}
+
+/* Group tabs: a quiet segmented row; the open group is lit, each tab shows its figure (bonus, stars, count) under it. */
+.goal-switch{display:grid;grid-auto-columns:minmax(0,1fr);grid-auto-flow:column;gap:2px;margin:0 0 8px;padding:2px;border:1px solid var(--ui-edge);border-radius:12px;background:var(--ui-well-soft)}
+.sheet .empire-screen .goal-switch button,.goal-switch button{display:grid;justify-items:center;align-content:center;gap:0;min-width:0;min-height:34px;margin:0;padding:3px 2px;border:0;border-radius:9px;background:none;box-shadow:none;color:var(--ui-soft);font:inherit;cursor:pointer}
+.goal-switch button>span{max-width:100%;overflow:hidden;font-size:11.5px;font-weight:600;line-height:1.2;text-overflow:ellipsis;white-space:nowrap}
+.goal-switch button>b{display:flex;align-items:center;gap:3px;font:500 10.5px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;line-height:1.2;white-space:nowrap}
+.goal-switch button>b svg{width:11px;height:11px}
+.goal-switch .goal-stars i svg{width:11px;height:11px}
+.sheet .empire-screen .goal-switch button[aria-selected=true],.goal-switch button[aria-selected=true]{background:var(--ui-sheen);color:var(--ui-ink)}
+.goal-switch button:focus-visible{outline:2px solid var(--ui-brass);outline-offset:-2px}
+.goal-group{margin-top:0}
+
+/* Tiles: a slightly smaller ring and tighter padding, so a row of three sits under the tabs on the SE. */
+.goal-tile,.sheet .empire-screen button.goal-tile{gap:4px;padding:6px 6px 6px}
+.goal-ring{width:44px;height:44px}
+.goal-ring>img.goal-3d{width:26px;height:26px}
+.goal-ring-tick{width:18px;height:18px}
+.goal-ring-tick svg{width:12px;height:12px}
+
+/* iPhone SE: the header row takes a little more top room so the Collect pill clears the grab handle, and the pane gives
+   the same amount back, so the sheet stands exactly as tall as on the other tabs. */
+@media(max-width:779px) and (max-height:700px){
+ body[data-active-tray=goals] .sheet:not(.collapsed) .panel-header{padding-top:8px}
+ body[data-active-tray=goals] .sheet:not(.collapsed):not(.tall):not(.fluid)>[data-pane=goals]{height:calc(41vh - 10px);height:calc(41dvh - 10px)}
+}
+
+/* Taller phones (iPhone 15/16 and up) have room to spare: the tiles and tabs take back the roomier sizes. */
+@media(max-width:779px) and (min-height:800px){
+ .goals-now{margin-bottom:12px}
+ .sheet .empire-screen .goal-switch button,.goal-switch button{min-height:40px}
+ .goal-switch{margin-bottom:12px}
+ .goal-tile,.sheet .empire-screen button.goal-tile{gap:6px;padding:12px 6px 10px}
+ .goal-ring{width:56px;height:56px}
+ .goal-ring>img.goal-3d{width:32px;height:32px}
+}
+
+/* Desktop side panel: tall enough for every group at once, each under a small heading with its figure. */
+.goal-group.is-stacked{margin-top:14px}
+.sheet .goal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 8px;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ui-soft)}
+.goal-head span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.goal-head b{display:flex;align-items:center;gap:4px;font:500 12px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;text-transform:none;color:var(--ui-ink);white-space:nowrap}
+.goal-head b svg{width:14px;height:14px;color:var(--ui-soft)}

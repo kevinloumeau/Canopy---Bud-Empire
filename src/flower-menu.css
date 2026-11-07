@@ -4,7 +4,7 @@
 /* Head: the average take per pickup, then who-buys-what as glyph tiles. */
 .menu-board-head{display:flex;align-items:flex-start;gap:8px}
 .menu-board-summary{display:grid;align-content:center;gap:0;min-height:50px;box-sizing:border-box;padding:6px 12px;border-radius:12px;background:#0b1e11b0;border:1px solid #ffffff10;min-width:76px}
-.menu-board-summary b{font:600 16px 'DM Mono',monospace;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--p-sage-94-2);line-height:1.1}
+.menu-board-summary b{font:600 16px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--p-sage-94-2);line-height:1.1}
 .menu-board-summary small{font-size:9px;letter-spacing:.05em;text-transform:uppercase;font-weight:600;color:var(--p-sage-65)}
 .menu-buyers{display:flex;flex:1;flex-wrap:wrap;gap:6px;margin:0;min-width:0}
 .buyer{position:relative;display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;align-items:center;column-gap:5px;row-gap:1px;padding:5px 9px 4px 8px;border-radius:12px;background:#ffffff08;border:1px solid #ffffff12}
@@ -13,7 +13,7 @@
 .buyer .bud svg{width:20px;height:20px;filter:drop-shadow(0 1px 1px #0006)}
 .buyer .bud em{position:absolute;right:-6px;bottom:-4px;font-style:normal;font-size:9px;line-height:1;padding:1px 3px;border-radius:999px;background:#2a2f2a;color:var(--p-gold-75);border:1px solid #efcf8d66}
 .buyer small{grid-column:1/-1;grid-row:2;font-size:9px;letter-spacing:.05em;text-transform:uppercase;font-weight:600;color:var(--p-sage-65);white-space:nowrap}
-.buyer b{grid-row:1;font:600 11px 'DM Mono',monospace;color:var(--p-gold-76-3);font-variant-numeric:tabular-nums}
+.buyer b{grid-row:1;font:600 11px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--p-gold-76-3);font-variant-numeric:tabular-nums}
 .buyer.is-unmet{border-color:#efcf8d55;background:#efcf8d12}
 .buyer.is-unmet .bud{width:18px;height:18px;border-radius:50%;background:var(--p-gold-75);color:#2a2a1c;font-size:12px;font-weight:700}
 .buyer.is-vip>svg{fill:var(--p-gold-72);color:var(--p-gold-72)}
@@ -37,7 +37,7 @@
 .strain-card-art{display:block;width:36px;height:45px}
 .strain-card-art svg{width:100%;height:100%}
 .strain-nav b{font-size:11px;line-height:1.2;min-height:2.4em;text-align:center;letter-spacing:-.01em;font-weight:600;color:#eef2df;overflow-wrap:anywhere}
-.strain-nav small{font:600 10px 'DM Mono',monospace;letter-spacing:0;color:var(--p-sage-76)}
+.strain-nav small{font:600 10px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:0;color:var(--p-sage-76)}
 .strain-nav .is-on-menu small{color:var(--strain)}
 .strain-nav .is-locked small{color:#c7b98a}
 /* Locked strains wear a hanging price tag: notched left edge, punched hole, kraft-paper colour. */
@@ -90,7 +90,7 @@
 .strain-hero-info p{margin:0;font-size:11px;line-height:1.4;color:var(--p-sage-76)}
 .strain-stats{grid-area:stats;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;min-width:0;margin:0}
 .strain-stats span{display:grid;gap:0;padding:5px 6px 4px;border-radius:10px;background:#0b1e11b0;border:1px solid #ffffff10;min-width:0}
-.strain-stats b{font:600 13px 'DM Mono',monospace;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--p-sage-94-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.strain-stats b{font:600 13px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--p-sage-94-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .strain-stats small{font-size:8.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--p-sage-65);font-weight:600;white-space:nowrap}
 .strain-hero-actions{grid-area:actions;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:0}
 .strain-hero-actions button{min-height:42px;padding:6px 12px;border:1px solid var(--p-sage-49);border-radius:12px;background:#245534;color:var(--p-sage-91);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s ease,border-color .15s ease}

@@ -13,7 +13,7 @@
 .shop-browser .shop-desk-copy{display:grid;gap:1px;min-width:0;flex:1}
 .shop-browser .shop-desk-copy b{font-size:14px;font-weight:700}
 .shop-browser .shop-desk-copy small{font-size:12px;color:var(--p-sage-70)}
-.shop-browser .shop-desk-count{flex:0 0 auto;min-width:24px;padding:2px 8px;border-radius:999px;background:#e9c96a;color:#2b2416;font:600 12px DM Mono,monospace;font-style:normal;text-align:center}
+.shop-browser .shop-desk-count{flex:0 0 auto;min-width:24px;padding:2px 8px;border-radius:999px;background:#e9c96a;color:#2b2416;font:600 12px 'Bricolage Grotesque',system-ui,sans-serif;font-style:normal;text-align:center}
 .shop-browser .shop-desk-chevron{flex:0 0 16px;width:16px;height:16px;opacity:.7}
 
 .station-team{display:grid;grid-template-columns:24px minmax(0,1fr) 96px 96px;align-items:center;gap:8px;margin:6px 0 0;padding:6px 8px;border:1px solid #d6efd21c;border-radius:14px;background:linear-gradient(150deg,#dce9be0c,#dce9be04)}
