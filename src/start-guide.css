@@ -34,7 +34,7 @@
  radial-gradient(1px 1px at 30% 10%,#fff8d999,transparent 60%),radial-gradient(1.5px 1.5px at 66% 28%,#fff8d9bb,transparent 60%),
  radial-gradient(1px 1px at 92% 44%,#fff8d988,transparent 60%),radial-gradient(1px 1px at 6% 52%,#fff8d977,transparent 60%);
  animation:guide-sparkle 3.2s ease-in-out infinite alternate;pointer-events:none}
-.guide-hero-art{position:absolute;left:50%;bottom:0;width:380px;height:190px;transform:translateX(-50%);animation:guide-float 4.2s ease-in-out infinite}
+.guide-hero-art{position:absolute;left:50%;bottom:0;width:380px;height:190px;object-fit:contain;user-select:none;-webkit-user-drag:none;transform:translateX(-50%);animation:guide-float 4.2s ease-in-out infinite}
 @keyframes guide-float{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}
 @keyframes guide-sparkle{from{opacity:.45}to{opacity:1}}
 .start-guide.is-hero .guide-dots,.start-guide.is-hero h2,.start-guide.is-hero #guideText,.guide-eyebrow,.guide-beats,.start-guide.is-hero .guide-actions{margin-left:18px;margin-right:18px}

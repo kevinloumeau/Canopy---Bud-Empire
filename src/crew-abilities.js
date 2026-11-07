@@ -35,3 +35,9 @@ export function tickAbilities(abilities,seconds){
 export function abilityFactor(abilities,i){return abilities&&abilities.active[i]>0?ABILITY_FACTOR:1}
 export function abilitySales(abilities){return 1+ABILITY_SALES*(abilities?abilities.active.filter(s=>s>0).length:0)}
 export function clockLabel(seconds){const s=Math.ceil(Math.max(0,seconds));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+
+// The map offers one crew burst at a time: of the stations whose burst is ready, the best buy's crew first, then the
+// bottleneck's, then the first in line. -1 when none is ready.
+export function featuredAbility(ready,suggested,slow){
+  return ready.indexOf(suggested)>=0?suggested:ready.indexOf(slow)>=0?slow:ready.length?ready[0]:-1;
+}

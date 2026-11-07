@@ -90,8 +90,10 @@ export function mountEmpireShell({fit,getState,format,rate,fly,buyStation}){
   const title=ready?'Reopen':'Perks',sub=ready?gain:status==='Ready'?'Can reopen':status,sig=title+'|'+sub;if(sig===perksSig)return;perksSig=sig;
   perksLink.classList.toggle('is-ready',!!ready);perksLink.querySelector('b').textContent=title;perksLink.querySelector('small').textContent=sub;
   perksLink.setAttribute('aria-label',ready?'Reopen for '+gain+'. Open reopening and founder perks':'Reopening and founder perks'+(sub?', '+sub:''));}
- function sync(){if(!document.hidden){storesUI.sync();map.sync();syncPerks();}}
+ // Only while the Empire tab is showing (the 250 ms tick otherwise rebuilt hidden tiles all game long); opening it syncs at once.
+ function sync(){if(!document.hidden&&!pane.hidden){storesUI.sync();map.sync();syncPerks();}}
  if(window.MutationObserver){const watch=new MutationObserver(syncPerks);[reopen,$('prestigeStatus'),$('reopenGain')].forEach(n=>{if(n)watch.observe(n,{attributes:true,attributeFilter:['hidden'],childList:true,characterData:true,subtree:true});});}
  pane.addEventListener('click',()=>requestAnimationFrame(sync));setInterval(sync,250);sync();
+ if(window.MutationObserver)new MutationObserver(sync).observe(pane,{attributes:true,attributeFilter:['hidden']});
  return {show,openStore,sync};
 }

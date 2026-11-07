@@ -42,3 +42,11 @@ test('sales lift stacks with each running crew',()=>{
 });
 
 test('countdown label',()=>{assert.equal(clockLabel(899.2),'15:00');assert.equal(clockLabel(61),'1:01');assert.equal(clockLabel(0),'0:00')});
+
+test('the map offers one ready crew burst at a time',async()=>{
+  const {featuredAbility}=await import('../src/crew-abilities.js');
+  assert.equal(featuredAbility([0,1,2,3,4,5],2,4),2,'the best buy first');
+  assert.equal(featuredAbility([0,1,3,4,5],2,4),4,'then the bottleneck');
+  assert.equal(featuredAbility([1,3],2,4),1,'then the first ready');
+  assert.equal(featuredAbility([],2,4),-1,'none ready');
+});
