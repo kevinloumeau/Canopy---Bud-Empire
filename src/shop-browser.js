@@ -19,6 +19,10 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
   const ICONS_3D={upgradeStorage:'storage',boost:'boost',growBatchLevel:'grow',curingLevel:'curing',trendLevel:'trend',breedingLevel:'breeding',offlineLevel:'offline',
     basketLevel:'basket',trafficLevel:'traffic',displayLevel:'display',loyaltyLevel:'loyalty',serviceLevel:'service',
     webLevel:'web',onlineBonusLevel:'premium',fleetLevel:'fleet',cargoLevel:'cargo'};
+  // Phones show a 4-across grid (src/research-fit.css), so each tile carries a one-line name; the full name stays in
+  // the aria label and tooltip, and on desktop.
+  const SHORT={boost:'Store boost',curingLevel:'Curing',breedingLevel:'Breeding',offlineLevel:'Safe',basketLevel:'Baskets',displayLevel:'Displays',loyaltyLevel:'Loyalty',serviceLevel:'Express',webLevel:'Web ads',onlineBonusLevel:'Premium',fleetLevel:'Drones',cargoLevel:'Cargo',trendLevel:'Trends',trafficLevel:'Floor flow',growBatchLevel:'Grow lights',upgradeStorage:'Storage'};
+  const phoneTiles=window.matchMedia('(max-width:779px)');
   const img3d=src=>'<img class="research-3d" src="icons/3d/'+src+'.png" alt="" draggable="false" decoding="async">';
   const rows=definitions.map(([id,category])=>{
     const button=document.getElementById(id),node=button.parentElement;
@@ -28,6 +32,9 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
     button.setAttribute('aria-label',copy.querySelector('h2,b').textContent+' upgrade');
     const effect=document.createElement('small');effect.className='shop-effect';node.append(effect);
     const symbol=node.querySelector('.shop-symbol'),key=id.startsWith('componentBuy')?components[Number(id.replace('componentBuy',''))].key:id;
+    // On phones the whole tile buys (a 26px price pill alone is too small to hit).
+    node.addEventListener('click',e=>{if(e.target.closest('button')||!phoneTiles.matches||button.disabled)return;button.click()});
+    const short=document.createElement('span');short.className='shop-short';short.setAttribute('aria-hidden','true');short.textContent=SHORT[key]||copy.querySelector('h2,b').textContent;copy.append(short);
     if(symbol&&ICONS_3D[key]){symbol.innerHTML=img3d('research-'+ICONS_3D[key]);symbol.classList.add('has-3d')}
     return {id,category,node,button,badge,effect,symbol};
   });
@@ -74,7 +81,8 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
       if(row.symbol)row.symbol.style.setProperty('--lv',Math.min(1,Number.isFinite(max)&&max?level/max:0).toFixed(3));
       // Under the name: what the next level gives ("+0% → +6% seed batch" shows "+6% seed batch"), the full line as tooltip.
       const effect=row.node.querySelector('strong'),full=effect?effect.textContent.trim():'',next=full.split('→').pop().split(' · ')[0].trim();
-      if(row.effect.textContent!==next)row.effect.textContent=next;row.node.title=full?row.node.querySelector('h2,b').textContent+' · '+full:'';
+      const tight=next.replace(/^(\d{2,})\.\d /,'$1 ').replace(/ per (stage|drone|run)$/,'/$1').replace(' production',' output');
+      if(row.effect.textContent!==tight)row.effect.textContent=tight;row.node.title=full?row.node.querySelector('h2,b').textContent+' · '+full:'';
       const here=row.category===category;
       if(here&&gated){const gate=forkOf(key).gate+' '+categories[row.category]+' levels · '+levelsToGate(state,key)+' to go';(gates[gate]=gates[gate]||[]).push(row.node.querySelector('h2,b').textContent);}
       row.node.hidden=!here||gated||(isDone&&!showDone);
@@ -99,8 +107,13 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
       count.hidden=!d.built||!d.waiting;count.textContent=d.waiting;desk.setAttribute('aria-label',unbuilt?'Build the pickup window, '+d.price+', '+note.textContent:'Delivery desk, '+note.textContent)}
     const gateLines=Object.keys(gates);later.hidden=!gateLines.length;
     later.innerHTML=gateLines.map(g=>'<span><b>Opens at '+g.replace(' · ','</b> · ')+'<small>'+gates[g].join(' or ')+'</small></span>').join('');
-    doneToggle.hidden=!done;doneToggle.setAttribute('aria-expanded',String(showDone));
+    doneToggle.hidden=!done;if(doneToggle.parentElement!==list||list.lastElementChild!==doneToggle)list.appendChild(doneToggle);doneToggle.setAttribute('aria-expanded',String(showDone));
     doneToggle.innerHTML='<span>'+(showDone?'Hide maxed and closed':'Maxed and closed')+'</span><b>'+done+'</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+(showDone?'m6 15 6-6 6 6':'m6 9 6 6 6-6')+'"/></svg>';
+    // Phones size the grid to fill the sheet (src/research-fit.css): a few tiles go two across and grow, a full branch
+    // goes four across. A fork takes two cells. Rows come from laying the cells out in order, as the grid does.
+    const cells=[...list.children].filter(n=>!n.hidden&&n!==desk).map(n=>n.classList.contains('shop-fork')?2:1),total=cells.reduce((a,b)=>a+b,0);
+    const cols=total<=4?2:total<=6?3:4;let rowsUsed=total?1:0,at=0;cells.forEach(w=>{if(at+w>cols){rowsUsed++;at=0}at+=w});
+    list.style.setProperty('--cols',cols);list.dataset.cols=cols;list.style.setProperty('--rows',Math.max(1,rowsUsed));list.dataset.rows=rowsUsed>2?'many':String(rowsUsed);
     empty.hidden=count>0||done>0||gateLines.length>0;
     empty.textContent='Nothing here yet.';
     // The best buy, when it is research, gets the brass price; its tab gets a brass dot. Station advice stays on the map.
