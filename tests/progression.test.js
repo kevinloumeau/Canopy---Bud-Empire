@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {nextSeason,weeklySpecial,specialFactor,WEEKLY_SPECIALS,DAY,HOUR,DAILY,CAREER,migrateProgression,dailyStatus,claimDaily,claimCareer,saleMultiplier,branchRate,buyStore,payStore,openStore,storeRate,storeCost,recordEvent,CONTRACTS,contractOffer,activeContract,contractTwist,contractFactor,startContract,skipContract,settleContract,useContractBoost,tickContractBoost,contractBoostFactor,contractTarget,seasonWindow,seasonStatus,claimSeason,SEASON_REWARDS} from '../src/progression.js';
+import {nextSeason,weeklySpecial,specialFactor,WEEKLY_SPECIALS,DAY,HOUR,DAILY,CAREER,migrateProgression,dailyStatus,claimDaily,claimCareer,saleMultiplier,branchRate,buyStore,payStore,openStore,storeRate,storeCost,recordEvent,CONTRACTS,contractOffer,activeContract,contractTwist,contractFactor,startContract,skipContract,settleContract,useContractBoost,tickContractBoost,contractBoostFactor,contractTarget,seasonWindow,seasonStatus,claimSeason,SEASON_REWARDS,carrySeason} from '../src/progression.js';
 const start=21000*DAY;
 const fresh=()=>({money:1000000,lifetime:1000000,empire:migrateProgression(undefined,start)});
 test('legacy and malformed progression fields migrate without unlocking rewards',()=>{
@@ -253,4 +253,21 @@ test('after a reopen each run gets a fresh silver, then gold, ring with rising t
  assert.equal(ringTier(g),2);assert.equal(starStatus(g,0)[0].tier,'gold');assert.equal(starStatus(g,0)[2].target,50);
  assert.ok(ringTarget('served',0,6)>ringTarget('served',0,3));assert.ok(ringTarget('line',0,3)>ringTarget('line',0,2));
  assert.equal(ringTarget('level',0,5),10);
+});
+test('a reopen keeps the daily track, a running boost and the season ladder',()=>{
+  const now=Date.UTC(2026,3,18,12);// 4/20 Week (pickup ladder 300 / 1,200 / 4,000)
+  const s={money:0,empire:migrateProgression({counters:{pickup:500}},now)};s.empire.daily={day:Math.floor(now/DAY),streak:6};
+  seasonStatus(s.empire,now);recordEvent(s.empire,'pickup',1500,now);assert.ok(claimSeason(s,now)>0);assert.ok(claimSeason(s,now)>0);
+  const kind=s.empire.season.kind,before=seasonStatus(s.empire,now).progress;
+  // What resetRun does: a fresh empire, then the carried daily, boost and season.
+  const next=migrateProgression({},now);next.daily={...s.empire.daily};next.season=carrySeason(s.empire.season,s.empire.counters);
+  assert.equal(next.counters[kind],0);
+  const e=seasonStatus(next,now);assert.equal(e.progress,before);assert.equal(e.claimed,2);
+  const t={money:0,empire:next};assert.equal(claimSeason(t,now),0,'claimed rungs are not paid again');
+  assert.equal(dailyStatus(next,now).available,false,"today's daily is not claimable again");
+  assert.equal(dailyStatus(next,now+DAY).day,7,'Day 6 goes on to Day 7, not back to Day 1');
+  recordEvent(next,kind,100,now);assert.equal(seasonStatus(next,now).progress,before+100);
+  assert.equal(carrySeason(null,{}),null);
+  assert.equal(migrateProgression({season:next.season},now).season.carried,next.season.carried,'survives a save');
+  assert.ok(Math.abs(saleMultiplier({...migrateProgression({},now),stake:2})/saleMultiplier(migrateProgression({},now))-1.2)<1e-9,"Founder's stake adds 10% a level");
 });

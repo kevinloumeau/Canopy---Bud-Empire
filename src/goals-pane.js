@@ -1,4 +1,4 @@
-import {abbr,STORES,starStatus,starCount,SHIFT_LENGTH,ringRank} from './progression.js';
+import {abbr,unabbr,STORES,starStatus,starCount,SHIFT_LENGTH,ringRank} from './progression.js';
 import {milestone} from './depth.js';
 import {tieLast} from './no-lone-words.js';
 import {ACHIEVEMENTS,achievementRows} from './achievements.js';
@@ -40,8 +40,8 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;',
 const title=t=>String(t||'').toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());
 const span=sec=>sec<90?Math.max(1,Math.round(sec))+' s':sec<5400?Math.round(sec/60)+' min':(Math.round(sec/360)/10)+' h';
 // "$1.50K" -> 1500, so the Collect card can show one total.
-const dollars=text=>{const m=/\$([\d.,]+)([KMBT]?)/.exec(text||'');if(!m)return 0;return parseFloat(m[1].replace(/,/g,''))*({'':1,K:1e3,M:1e6,B:1e9,T:1e12}[m[2]]);};
-const short=n=>abbr(Math.floor(n)).replace(/\.0+([KMBT])$/,'$1').replace(/(\.\d)0([KMBT])$/,'$1$2');
+export const dollars=text=>{const m=/\$[\d.,]+(?:Dc|No|Oc|Sp|Sx|Qi|Qa|[KMBT])?/.exec(text||'');return m?unabbr(m[0].slice(1)):0;};
+const short=n=>abbr(Math.floor(n)).replace(/\.0+([A-Za-z]+)$/,'$1').replace(/(\.\d)0([A-Za-z]+)$/,'$1$2');
 const clamp=v=>Math.max(0,Math.min(1,Number(v)||0));
 
 export function mountGoalsPane({pane,sources,getState,format,rate}){
@@ -89,7 +89,7 @@ export function mountGoalsPane({pane,sources,getState,format,rate}){
 
  // Contract and story are half cards: the icon and the thing to do (two balanced lines), then a foot line with a small
  // label on the left and the action on the right. A running contract's icon sits in a ring that fills with its progress.
- const amount=t=>{const m=/([\d.,]+)([KMBT]?)/.exec(t||'');return m?parseFloat(m[1].replace(/,/g,''))*({'':1,K:1e3,M:1e6,B:1e9,T:1e12}[m[2]]):0;};
+ const amount=unabbr;
  const half=(o)=>'<'+(o.act?'button type="button" data-act="'+o.act+'"':'div')+' class="goal-card goal-half'+(o.act?' is-link':'')+'" title="'+esc(o.title)+'">'+
   (o.share==null?'<span class="goal-card-icon">'+I3D(o.icon)+'</span>':ring(o.icon,o.share,false).replace('goal-ring','goal-ring goal-card-icon'))+
   '<b class="goal-card-main">'+esc(tieLast(o.main))+'</b><span class="goal-card-foot">'+(o.foot?'<small>'+esc(tieLast(o.foot))+'</small>':'<i></i>')+o.action+'</span></'+(o.act?'button':'div')+'>';
@@ -109,7 +109,7 @@ export function mountGoalsPane({pane,sources,getState,format,rate}){
   return {title,figure:text('goalCount'+i).split(' · ')[0],share:bar('goalProgress'+i),done:!!(b&&b.classList.contains('ready'))};}).filter(Boolean);}
  // #shiftProgress is "<span>Shift 4</span><pips/><span>2 more goals for a $476K bonus</span>".
  function shiftHead(){const spans=$('shiftProgress')?$('shiftProgress').querySelectorAll(':scope>span:not(.shift-pips)'):[];
-  const bonus=spans.length>1?/(\$[\d.,]+[KMBT]?) bonus/.exec(spans[spans.length-1].textContent):null;
+  const bonus=spans.length>1?/(\$[\d.,]+(?:Dc|No|Oc|Sp|Sx|Qi|Qa|[KMBT])?) bonus/.exec(spans[spans.length-1].textContent):null;
   return [spans.length?spans[0].textContent.trim():'This shift',bonus?SVG(ICONS.gift)+esc(bonus[1]):''];}
  // The task leads (what to do next; #storyTask can carry a cost after a dot); the foot counts its progress.
  function story(){const title=text('storyTitle');if(!title)return '';
