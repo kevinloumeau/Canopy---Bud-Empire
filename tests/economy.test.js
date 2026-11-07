@@ -27,9 +27,9 @@ test('counter handoff keeps its 1.4s floor and the service format factor',()=>{
 
 test('queue comfort stretches patience, floor flow speeds walking, curing/duration are exposed as sale bonuses',()=>{
   assert.equal(patience('hurried',0),20);assert.equal(patience('vip',0),15);assert.ok(Math.abs(patience('hurried',1)-23)<1e-9);assert.ok(Math.abs(patience('vip',8)-33)<1e-9);
-  assert.ok(Math.abs(walkSpeed(0)-2.8)<1e-9);assert.ok(walkSpeed(8)>2.8*1.7&&walkSpeed(8)<2.8*1.9);assert.ok(Math.abs(walkSpeed(undefined)-2.8)<1e-9);
+  assert.ok(Math.abs(walkSpeed(0)-2.8)<1e-9);assert.ok(walkSpeed(8)>2.8*1.15&&walkSpeed(8)<2.8*1.2);assert.ok(Math.abs(walkSpeed(undefined)-2.8)<1e-9);
   // Floor flow's pace tops out: level 20 is under 2.2× and level 40 barely faster than 20, so the shop never blurs.
-  assert.ok(walkSpeed(20)<2.8*2.2&&walkSpeed(40)-walkSpeed(20)<.2);
+  assert.ok(walkSpeed(20)<2.8*1.25&&walkSpeed(40)-walkSpeed(20)<.05);
   // A handoff never drops below the floor however many lanes a counter runs.
   assert.equal(customerHandoff(4,64,1.4),HANDOFF_FLOOR[4]);assert.equal(customerHandoff(5,64,1.4),HANDOFF_FLOOR[5]);
   assert.ok(Math.abs(customerHandoff(4,1,3.4)-3.4)<1e-9);assert.ok(Math.abs(customerHandoff(4,6,3.4)-1.7)<1e-9);
