@@ -2900,7 +2900,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     window.__canopySnap.map3d=function(){return map3d&&map3d.ok?map3d.debug:null};
     window.__canopySnap.stationFx=stationFx;
     // A cash pop frozen at `age` seconds into its rise, for screenshots of the pops (cash-pops.js).
-    window.__canopySnap.cashPop=function(key,amount,age){var site=CASH_SITES[key];livePops.push({key:key,amount:amount,x:site.x,y:site.y,z:site.z,age:age||.4,text:'+'+fmt(amount)})};
+    window.__canopySnap.cashPop=function(key,amount,age){var site=CASH_SITES[key];livePops.push({key:key,amount:amount,x:site.x,y:site.y,z:site.z,age:age||.4,text:fmt(amount)})};
     window.__canopySnap.status=function(){return{map3d:!!(map3d&&map3d.ok),loading:map3d?map3d.loading:-1}};
   }
   // Dev numbers (?stats): a small readout over the map with the frames drawn a second, the frame's script time, the 3D
@@ -3035,28 +3035,32 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function drawTickets(dt){
     for(var i=tickets.length-1;i>=0;i--){
       var t=tickets[i];t.life-=dt*.7;t.y+=dt*.55;if(t.life<=0){tickets.splice(i,1);continue}
-      var p=project(t.x,t.y,t.z),w=Math.max(28,unit*.95),h=Math.max(14,unit*.4),x0=p.x-w/2,y0=p.y-h/2,notch=w*.28;
-      ctx.save();ctx.globalAlpha=Math.min(1,t.life*2.5);
-      ctx.beginPath();roundedRectPath(x0,y0,w,h,h*.25);ctx.fillStyle='#f4e7bd';ctx.fill();ctx.strokeStyle='#8d7950';ctx.lineWidth=Math.max(1,unit*.018);ctx.stroke();
-      ctx.beginPath();ctx.setLineDash([Math.max(1,unit*.03),Math.max(1,unit*.03)]);ctx.moveTo(x0+notch,y0+h*.12);ctx.lineTo(x0+notch,y0+h*.88);ctx.strokeStyle='#8d795088';ctx.stroke();ctx.setLineDash([]);
-      ctx.fillStyle='#1f4a37';ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.font='800 '+Math.max(7,h*.5)+'px "Bricolage Grotesque",sans-serif';ctx.fillText('$',x0+notch/2,p.y+h*.02);
-      ctx.font='800 '+Math.max(8,h*.58)+'px "Bricolage Grotesque",sans-serif';ctx.fillText(t.text,x0+notch+(w-notch)/2,p.y+h*.02,w-notch-4);
-      ctx.restore();
+      paintTicket(project(t.x,t.y,t.z),t.text,Math.min(1,t.life*2.5),1);
     }
   }
-  // A cash pop: "+$1.2K" in the game's display face, cream with a dark green rim, that springs up, drifts and fades.
-  // The HUD cash rolls up to match (rollCash) and gives a small nudge as each pop lands.
+  // The ticket stub itself, shared by the lounge fee, the ATM fee and the cash pops: cream card, brass rim, a dashed
+  // tear line with "$" on the stub and the amount on the rest. It widens to fit a long amount rather than squeezing it.
+  function paintTicket(p,text,alpha,scale){
+    var h=Math.max(14,unit*.4)*(scale||1),textFont='800 '+Math.max(8,h*.58).toFixed(1)+'px "Bricolage Grotesque",sans-serif';
+    ctx.save();ctx.font=textFont;
+    var base=Math.max(28,unit*.95)*(scale||1),notch=base*.28,w=Math.max(base,notch+ctx.measureText(text).width+h*.7),x0=p.x-w/2,y0=p.y-h/2;
+    ctx.globalAlpha=alpha;
+    ctx.beginPath();roundedRectPath(x0,y0,w,h,h*.25);ctx.fillStyle='#f4e7bd';ctx.fill();ctx.strokeStyle='#8d7950';ctx.lineWidth=Math.max(1,unit*.018);ctx.stroke();
+    ctx.beginPath();ctx.setLineDash([Math.max(1,unit*.03),Math.max(1,unit*.03)]);ctx.moveTo(x0+notch,y0+h*.12);ctx.lineTo(x0+notch,y0+h*.88);ctx.strokeStyle='#8d795088';ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#1f4a37';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font='800 '+Math.max(7,h*.5).toFixed(1)+'px "Bricolage Grotesque",sans-serif';ctx.fillText('$',x0+notch/2,p.y+h*.02);
+    ctx.font=textFont;ctx.fillText(text,x0+notch+(w-notch)/2,p.y+h*.02);
+    ctx.restore();
+  }
+  // A cash pop: the lounge fee's ticket stub (Kevin, 2026-11-07: "match the lounge fee style") with the amount landed,
+  // springing up, drifting and fading. The HUD cash rolls up to match (rollCash) and gives a small nudge as each lands.
   function drawCashPops(dt){
     var still=motionPreference.matches;
-    if(still){livePops.length=0;cashPops.clear()}else{var pop=cashPops.tick(dt);if(pop){pop.age=0;pop.text='+'+fmt(pop.amount);livePops.push(pop);var cash=$('money');if(cash){cash.classList.remove('cash-gain');void cash.offsetWidth;cash.classList.add('cash-gain')}}}
+    if(still){livePops.length=0;cashPops.clear()}else{var pop=cashPops.tick(dt);if(pop){pop.age=0;pop.text=fmt(pop.amount);livePops.push(pop);var cash=$('money');if(cash){cash.classList.remove('cash-gain');void cash.offsetWidth;cash.classList.add('cash-gain')}}}
     shownCash=rollCash(shownCash,state.money,dt,still||document.hidden);cashRolledAt=performance.now();var label=fmt(shownCash),el=$('money');if(el&&el.textContent!==label)el.textContent=label;
     for(var i=livePops.length-1;i>=0;i--){
       var p=livePops[i];p.age+=dt;if(p.age>=POP_LIFE){livePops.splice(i,1);continue}
-      var f=popFrame(p.age/POP_LIFE),q=project(p.x,p.y+f.rise,p.z),size=Math.max(13,Math.min(22,unit*.46))*f.scale;
-      ctx.save();ctx.globalAlpha=f.alpha;ctx.font='800 '+size.toFixed(1)+'px "Bricolage Grotesque",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';
-      ctx.shadowColor='rgba(12,32,22,.35)';ctx.shadowBlur=size*.35;ctx.shadowOffsetY=size*.08;ctx.lineWidth=Math.max(2.5,size*.2);ctx.strokeStyle='#173d2b';ctx.strokeText(p.text,q.x,q.y);
-      ctx.shadowColor='transparent';ctx.fillStyle='#ffe7a3';ctx.fillText(p.text,q.x,q.y);ctx.restore();
+      var f=popFrame(p.age/POP_LIFE);paintTicket(project(p.x,p.y+f.rise,p.z),p.text,f.alpha,f.scale);
     }
   }
   function burst(worldPos,color){if(motionPreference.matches)return;for(var i=0;i<12;i++)particles.push({x:worldPos.x,y:1.4+(worldPos.y||0),z:worldPos.z,vx:(Math.random()-.5)*1.8,vz:(Math.random()-.5)*1.8,vy:1.6+Math.random()*1.8,life:1,color:color||colors.acid})}
@@ -3842,28 +3846,6 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       preview.dataset.art=key;
     }finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle;sceneElevation=savedElevation}
   }
-  // Intro hero: a small stage built from the shop's own pieces (counter, jars, plants, two customers, the courier drone),
-  // painted once into the start guide's canvas. It never touches the live scene or camera.
-  function paintIntroArt(target){
-    if(!target||target.dataset.art)return;
-    var art=document.createElement('canvas');art.width=1000;art.height=700;
-    var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle,savedElevation=sceneElevation;
-    try{
-      ctx=art.getContext('2d',{willReadFrequently:true});unit=88;angle=.57;sceneElevation=0;centerX=500;centerY=470;
-      drawBox(0,0,-.22,7.2,4.2,.22,['#cbb085','#7f6a4b','#ac9168']);
-      plant(-2.9,.9,0,1.05,0,1);plant(2.9,.9,0,1.05,1,1);plant(-2.2,-1.3,0,.8,2,1);
-      drawBox(0,-.4,0,2.6,.95,1,['#ede4cb','#a79c81','#d2c5a5']);
-      jar(-.8,-.4,1,0);jar(0,-.4,1,1);jar(.8,-.4,1,2);
-      drawPerson(-1.55,1.15,0,18,false,false,true,{amount:0,phase:0,facing:.35});
-      drawPerson(1.7,1.3,0,13,false,false,false,{amount:0,phase:0,facing:-.3});
-      drawCourierDrone(.9,3.3,-.6,0,0,1);
-      var pixels=ctx.getImageData(0,0,art.width,art.height).data,left=art.width,right=0,top=art.height,bottom=0;
-      for(var y=0;y<art.height;y++)for(var x=0;x<art.width;x++)if(pixels[(y*art.width+x)*4+3]>180){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y)}
-      var pc=target.getContext('2d');pc.clearRect(0,0,target.width,target.height);
-      if(right>=left&&bottom>=top){var w=right-left+1,h=bottom-top+1,scale=Math.min((target.width-24)/w,(target.height-16)/h);pc.drawImage(art,left,top,w,h,(target.width-w*scale)/2,target.height-h*scale-6,w*scale,h*scale)}
-      target.dataset.art='1';
-    }finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle;sceneElevation=savedElevation}
-  }
   function paintCustomerGuide(){
     var guide=document.querySelector('.reputation-guide');if(!guide||guide.dataset.painted)return;
     // The guide borrows the shop's characters once; it never advances their live animation or camera.
@@ -4419,7 +4401,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     if(destination==='flowers')return showTray('flowers');showTray('empire');if(destination==='empire'){empireShell.show('home');return;}
     empireShell.openStore(0);operationsUI.showTab(0,0);
   }});
-  var startGuide=mountStartGuide({showTray:showTray,collapse:function(){showTray('factory')},fit:fitControls,paintHero:paintIntroArt,sound:function(kind){playSound(kind,state.sound)},report:function(name,props){telemetry.send(name,props)},
+  var startGuide=mountStartGuide({showTray:showTray,collapse:function(){showTray('factory')},fit:fitControls,sound:function(kind){playSound(kind,state.sound)},report:function(name,props){telemetry.send(name,props)},
     // Construction steps: the guide asks whether a site is built, builds it on a tap, opens the shop at the end and, if
     // skipped, finishes the job itself. The sheet drops away at every size so the map stays in view; a sheet left open
     // before a reset or reload would otherwise cover the sites on desktop.
