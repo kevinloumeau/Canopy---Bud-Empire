@@ -8,7 +8,7 @@ for(const [name,viewport] of [['desktop',{width:1440,height:1000}],['mobile',{wi
  const chip=p.locator('.reward-chip',{hasText:'Week'});assert.equal(await chip.count(),1,'week chip in rewards strip');
  await p.screenshot({path:'artifacts/retention/'+name+'-strip.png'});
  await chip.click();await p.waitForTimeout(200);
- await p.locator('.empire-more').click();const card=p.locator('#seasonCard');await card.scrollIntoViewIfNeeded();
+ await p.locator('.empire-records').click();const card=p.locator('#seasonCard');await card.scrollIntoViewIfNeeded();
  assert.equal(await p.locator('#seasonName').innerText(),'Harvest Season');assert.match(await p.locator('#seasonClaim').innerText(),/^Collect/);
  assert.match(await p.locator('#seasonBadges').innerText(),/Neighborhood Week/);
  await p.waitForTimeout(200);await p.screenshot({path:'artifacts/retention/'+name+'-season.png'});

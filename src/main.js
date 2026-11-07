@@ -3172,6 +3172,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // One tag per city building (city-buildings.js), on its lot.
   var cityMarkers={};CITY_BUILDINGS.forEach(function(b){cityMarkers[b.id]=lotMarker(b.id,function(){pickTag(b.id)});cityMarkers[b.id].classList.add('is-landmark')});hqMarker.classList.add('is-landmark');
   var leaseMarker=lotMarker('lease',function(){var i=leaseIndex();if(i>=0&&leaseLocked(i)){showTray('empire');document.querySelector('[data-empire-view="growth"]').click();expandBranch(i);$('branchToggle'+i).scrollIntoView({block:'start'})}else pickTag('lease')});
+  // Each tag's line icon: a quiet tag shows only this, in a small dashed circle over its ghost.
+  var LOT_ICONS={window:'M4 20V8h16v12M3 8h18M7 8v6h10V8M6 14h12M9 4h6',drone:'M9 10h6v4H9zM4 6h3M17 6h3M5.5 6v4h3.5M18.5 6v4H15M9 14l-3 5M15 14l3 5M12 14v6',kiosk:'M7 3h10v13H7zM10 7h4M10 10h4M12 16v5M8 21h8',counter:'M4 10h16v10H4zM3 10l2-5h14l2 5M9 14h6',atm:'M5 4h14v16H5zM8 8h8v4H8zM9 16h6',building:'M4 21V9l8-6 8 6v12M9 21v-6h6v6M8 11h2M14 11h2'};
   var LOT_MARKERS=[windowMarker,droneMarker,kioskMarker,counterMarker,hqMarker,leaseMarker,atmMarker].concat(CITY_BUILDINGS.map(function(b){return cityMarkers[b.id]}));LOT_MARKERS.forEach(function(el){el.classList.add('is-mini')});
   var LOCK_ICON='<svg class=sign-lock viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
   var KIOSK_PRICES=[25000,50000,100000],KIOSK_Z=[0,1,2].map(kioskZ);
@@ -3237,7 +3239,11 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var building=!!t.build&&isBuilding(state.builds,t.build),clock=building?buildClock(buildLeft(state.builds,t.build)):'',shownLevel=building?clock:t.level?'Lv '+t.level:fmt(t.price),key=t.name+'|'+shownLevel+'|'+(state.money>=t.price);
     el.classList.toggle('is-building',building);el.classList.toggle('can-upgrade',!building&&!!t.best&&state.money>=t.price);
     if(building)el.style.setProperty('--build-left',buildShareLeft(state.builds,t.build).toFixed(3));else el.style.removeProperty('--build-left');
-    if(t.locked)key+='|locked';if(el.dataset.level!==key){el.innerHTML='<span class=station-sign-name>'+t.name+'</span><span class=station-sign-level>'+(t.locked&&!building?LOCK_ICON+(t.lockText||''):shownLevel)+'</span>';el.dataset.level=key;updateMarkers.key=null}
+    // Quiet by default (Kevin, 2026-11-07: "the upgrade buttons on the map feel too much"): a tag is just its small icon
+    // unless it is the best buy and affordable, being built, or picked. The ghost under it shows what it sells; a tap
+    // opens its buy box with the name and price.
+    var quiet=!building&&!(t.best&&state.money>=t.price)&&pickedTag!==el.dataset.marker;if(el.classList.contains('is-quiet')!==quiet){el.classList.toggle('is-quiet',quiet);updateMarkers.key=null}el.title=t.name;
+    if(t.locked)key+='|locked';if(el.dataset.level!==key){el.innerHTML=signIcon(LOT_ICONS[el.dataset.marker]||LOT_ICONS.building)+'<span class=station-sign-name>'+t.name+'</span><span class=station-sign-level>'+(t.locked&&!building?LOCK_ICON+(t.lockText||''):shownLevel)+'</span>';el.dataset.level=key;updateMarkers.key=null}
     el.setAttribute('aria-label',building?t.name+', being built. Opens in '+clock:t.locked?t.name+(t.lockText?', locked until '+t.lockText+' earned':', for lease. Locked, show what opens it'):t.name+(t.level?', level '+t.level+', next '+fmt(t.price):', '+fmt(t.price))+'. Show what to buy');
     signBuy(el,pickedTag===el.dataset.marker&&(!t.locked||t.lockText)&&(!building||t.buildBuys)?t.buys:null)});
     if(pickedTag&&!shown.some(function(t){return t.el.dataset.marker===pickedTag}))pickedTag=null}
@@ -3436,7 +3442,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // While the roof is being built the sign counts down, and its border drains with the time left (--build-left).
     var loungeBuilding=isBuilding(state.builds,'lounge'),loungeClock=buildClock(buildLeft(state.builds,'lounge'));
     var loungeLot=!state.lounge,loungePrice=loungeBuilding?null:loungeUpgradeCost(state.lounge),loungeKey=String(state.lounge)+'|'+(loungePrice!==null&&state.money>=loungePrice)+'|'+(loungeBuilding?loungeClock:'');
-    loungeMarker.classList.add('station-sign');loungeMarker.classList.toggle('selected',mapPicked&&loungeSelected);loungeMarker.classList.toggle('is-lot',loungeLot);loungeMarker.classList.toggle('is-building',loungeBuilding);loungeMarker.classList.toggle('can-upgrade',loungePrice!==null&&state.money>=loungePrice);
+    loungeMarker.classList.add('station-sign');loungeMarker.classList.toggle('selected',mapPicked&&loungeSelected);loungeMarker.classList.toggle('is-lot',loungeLot);loungeMarker.classList.toggle('is-building',loungeBuilding);loungeMarker.classList.toggle('can-upgrade',loungePrice!==null&&state.money>=loungePrice);var loungeQuiet=loungeLot&&!(mapPicked&&loungeSelected);if(loungeMarker.classList.contains('is-quiet')!==loungeQuiet){loungeMarker.classList.toggle('is-quiet',loungeQuiet);updateMarkers.key=null}
     if(loungeBuilding)loungeMarker.style.setProperty('--build-left',buildShareLeft(state.builds,'lounge').toFixed(3));else loungeMarker.style.removeProperty('--build-left');
     renderLotTags();
     if(loungeMarker.dataset.level!==loungeKey){loungeMarker.classList.toggle('is-badge',!loungeBuilding&&!loungeLot);loungeMarker.innerHTML=signIcon(SIGN_LOUNGE)+'<span class=station-sign-name>Lounge</span><span class=station-sign-level>'+(loungeBuilding?loungeClock:loungeLot?fmt(loungePrice):'Lv '+state.lounge)+'</span>';loungeMarker.dataset.level=loungeKey;updateMarkers.key=null;}
