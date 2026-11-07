@@ -3073,7 +3073,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       tags.push({el:leaseMarker,name:STORES[lease].name,price:leaseBuilding?leaseSkip:leasePrice,build:leaseKey,buildBuys:true,locked:leaseShut&&!leaseBuilding,x:lot.tag.x,y:lot.tag.y,z:lot.tag.z,buys:leaseBuilding?[{label:'Finish now',price:leaseSkip,go:function(){pickedTag=null;skipBuildNow(leaseKey)}}]:[{label:'Open',price:leasePrice,best:state.money>=leasePrice,go:function(){pickedTag=null;$('branchBuy'+lease).click()}}]})}
     // The ATM: Build over its ghost; once built its sign carries the level and its box sells levels and machines.
     var atmTag=atmTagInfo();if(atmTag)tags.push(atmTag);
-    var counterAt=nextOrderCounter();if(counterAt)tags.push({el:counterMarker,name:'Counter',price:counterAt.price,x:counterAt.x,y:2.1,z:counterAt.z,buys:[{label:'Buy',price:counterAt.price,go:expandOrderCounter}]});
+    var counterAt=nextOrderCounter();if(counterAt)tags.push({el:counterMarker,name:'Counter',price:counterAt.price,x:counterAt.x,y:2.1,z:counterAt.z,buys:[{label:'Buy',price:counterAt.price,go:expandOrderCounters}]});
     return tags}
   var ATM_NUMBERS=['2nd','3rd'];
   function atmTagInfo(){if(!state.lines[4])return null;var atm=state.atm,spot=ATM_SPOTS[0],fix=state.shopOpen?recommendation():null,best=!!fix&&fix.kind==='atm';
