@@ -60,19 +60,47 @@ body[data-active-tray=goals] .sheet:not(.collapsed) .panel-header>#panelToggle{m
  body[data-active-tray=goals] .sheet:not(.collapsed):not(.tall):not(.fluid)>[data-pane=goals]{height:calc(41vh - 10px);height:calc(41dvh - 10px)}
 }
 
-/* Taller phones (iPhone 15/16 and up) have room to spare: the tiles and tabs take back the roomier sizes. */
+/* Taller phones (iPhone 15/16 and up): a little more air between the rows. */
 @media(max-width:779px) and (min-height:800px){
  .goals-now{margin-bottom:12px}
  .sheet .empire-screen .goal-switch button,.goal-switch button{min-height:40px}
  .goal-switch{margin-bottom:12px}
- .goal-tile,.sheet .empire-screen button.goal-tile{gap:6px;padding:12px 6px 10px}
- .goal-ring{width:56px;height:56px}
- .goal-ring>img.goal-3d{width:32px;height:32px}
 }
 
+/* The pane fills: the goals screen is at least as tall as the pane, and the open group of tiles takes whatever height
+   is left, so a taller phone gets taller tiles instead of an empty band at the bottom. The rings and names grow with
+   the room the tiles get (container queries on the group). */ 
+.sheet>[data-pane=goals]>.goals-screen{display:flex;flex-direction:column;box-sizing:border-box;min-height:100%}
+.goals-screen>.goals-list{display:flex;flex:1 1 auto;flex-direction:column;min-height:0}
+.goals-list>.goal-group{display:flex;flex:1 1 auto;flex-direction:column;min-height:max-content}
+.goals-list>.goal-group>.goal-tiles{flex:1 1 auto;grid-auto-rows:1fr}
+.goal-tile,.sheet .empire-screen button.goal-tile{align-content:center}
+.goals-list>.goal-group.is-stacked>.goal-tiles{flex:1 1 auto}
 /* Desktop side panel: tall enough for every group at once, each under a small heading with its figure. */
 .goal-group.is-stacked{margin-top:14px}
 .sheet .goal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 8px;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ui-soft)}
 .goal-head span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .goal-head b{display:flex;align-items:center;gap:4px;font:500 12px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;text-transform:none;color:var(--ui-ink);white-space:nowrap}
 .goal-head b svg{width:14px;height:14px;color:var(--ui-soft)}
+
+/* Taller tiles carry bigger rings and names, so the extra height reads as a larger picture, not padding. */
+@media(max-width:779px) and (min-height:800px){
+ .goal-tile,.sheet .empire-screen button.goal-tile{gap:8px}
+ .goal-ring{width:62px;height:62px}
+ .goal-ring>img.goal-3d{width:36px;height:36px}
+ .goal-tile>b{font-size:12.5px}
+}
+@media(max-width:779px) and (min-height:900px){
+ .goal-ring{width:70px;height:70px}
+ .goal-ring>img.goal-3d{width:42px;height:42px}
+ .goal-ring-tick{width:22px;height:22px}
+ .goal-tile>b{font-size:13px}
+}
+@media(min-width:780px){
+ .goal-ring{width:56px;height:56px}
+ .goal-ring>img.goal-3d{width:32px;height:32px}
+}
+
+/* The exact figure ("45 / 110") shows under the name only where the tiles have the height for it. */
+.goal-tile>small.goal-tile-figure{display:none}
+@media(max-width:779px) and (min-height:800px){.goal-tile>small.goal-tile-figure{display:block}}
