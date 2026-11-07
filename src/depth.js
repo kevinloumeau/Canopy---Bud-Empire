@@ -46,7 +46,11 @@ export function menuFormatFactor(menu,property,strain,strains){
   const list=strains&&strains.length?strains:[0];return list.reduce((n,i)=>n+one(i),0)/list.length;
 }
 const FIRST=[['FIRST BATCH',100,40],['STEADY SUPPLY',1500,450],['MASS MARKET',20000,6000],['CITY CONTRACT',250000,90000]];
-export function milestone(index){if(!Number.isInteger(index)||index<0||index>20)return null;const row=FIRST[index];return row?{name:row[0],goal:row[1],reward:row[2]}:{name:'EMPIRE CONTRACT '+(index-3),goal:1000000*3**(index-4),reward:200000*3**(index-4)};}
+// The order ladder never runs out (it used to stop after index 20, about $43T lifetime, and read ALL ORDERS FILLED):
+// each Empire contract asks three times the last and pays a fifth of its goal. It ends only where the numbers stop
+// being finite.
+export function milestone(index){if(!Number.isInteger(index)||index<0)return null;const row=FIRST[index];if(row)return {name:row[0],goal:row[1],reward:row[2]};
+  const goal=1000000*3**(index-4),reward=200000*3**(index-4);return Number.isFinite(goal)&&goal<Number.MAX_VALUE/3?{name:'EMPIRE CONTRACT '+(index-3),goal,reward}:null;}
 // Prestige pays shares for all-time revenue (earlier runs plus this one), never for hoarded cash. The first
 // reopen needs $10M; after that any new share makes reopening worthwhile, and the player chooses when.
 export function prestigeOffer(state){

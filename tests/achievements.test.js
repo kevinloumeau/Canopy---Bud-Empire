@@ -36,3 +36,15 @@ test('unlock road: next output tier, with a new look on the look levels',()=>{
   assert.deepEqual(nextUnlock(80),{level:100,double:true,look:false});
   assert.equal(nextUnlock(100),null);
 });
+
+test('late-game achievements land after the first hour: city stages, HQ, every star, contracts and shares',()=>{
+  const s=fresh();checkAchievements(s);
+  const late=['city-6','hq-4','stars-all','deal-5','deal-25','deal-100','shares-10','shares-100','shares-1k'];
+  for(const id of late)assert.ok(ACHIEVEMENTS.some(a=>a.id===id),id);
+  assert.ok(!s.achievements.some(id=>late.includes(id)));
+  s.city={warehouse:3,growhouse:2,billboard:1,terplab:0};s.flagship=4;s.empire.stars=[7,7,7,7,3];s.empire.contracts={done:30};s.empire.shares=120;
+  const got=checkAchievements(s).map(a=>a.id);
+  for(const id of ['city-6','hq-4','deal-5','deal-25','shares-10','shares-100'])assert.ok(got.includes(id),id);
+  for(const id of ['stars-all','deal-100','shares-1k'])assert.ok(!got.includes(id),id);
+  s.empire.stars[4]=7;assert.deepEqual(checkAchievements(s).map(a=>a.id),['stars-all']);
+});

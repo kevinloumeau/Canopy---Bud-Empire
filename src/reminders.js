@@ -2,12 +2,16 @@
 // and cleared when it comes back. No server and no account. They need Capacitor's LocalNotifications plugin; in a
 // browser (or before the plugin is installed) every call is a quiet no-op and Settings hides the option.
 // 103 was the strain-cross reminder; crosses now run on game time, but the id stays so clearing removes old ones.
-const IDS={safe:101,daily:102,cross:103};
+// 104: the next build (lounge, drone port, HQ stage, branch, city building) to finish while the app is closed.
+const IDS={safe:101,daily:102,cross:103,build:104};
 const MINUTE=60000,DAY=86400000;
 // What to remind about, from plain numbers so it can be tested: when the offline safe fills, when tomorrow's daily
-// reward unlocks (only if today's is collected). Anything under a minute away is skipped.
-export function planReminders({now,offlineCapMs,dailyAvailable,dailyClock}){
+// reward unlocks (only if today's is collected), and when the next build finishes ({name, at} each). Anything under a
+// minute away is skipped.
+export function planReminders({now,offlineCapMs,dailyAvailable,dailyClock,builds}){
   const list=[];
+  const next=(Array.isArray(builds)?builds:[]).filter(b=>b&&Number.isFinite(b.at)&&b.at>now+MINUTE).sort((a,b)=>a.at-b.at)[0];
+  if(next)list.push({id:IDS.build,at:next.at,title:next.name+' is ready',body:'Construction is done. Come and see it.'});
   if(offlineCapMs>0)list.push({id:IDS.safe,at:now+offlineCapMs,title:'Your back-room safe is full',body:'The shop banked '+Math.round(offlineCapMs/3600000)+' hours of sales. Come collect them.'});
   if(!dailyAvailable&&Number.isFinite(dailyClock))list.push({id:IDS.daily,at:(Math.floor(dailyClock/DAY)+1)*DAY,title:'Daily reward ready',body:'A new day on the reward track is waiting.'});
   return list.filter(r=>r.at>now+MINUTE).sort((a,b)=>a.at-b.at);

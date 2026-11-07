@@ -1,4 +1,4 @@
-import {abbr,unabbr,STORES,starStatus,starCount,SHIFT_LENGTH} from './progression.js';
+import {abbr,unabbr,STORES,starStatus,starCount,SHIFT_LENGTH,ringRank} from './progression.js';
 import {milestone} from './depth.js';
 import {tieLast} from './no-lone-words.js';
 import {ACHIEVEMENTS,achievementRows} from './achievements.js';
@@ -33,7 +33,7 @@ const ICONS_3D=new Set(['gift','trophy','coin','star','up','calendar','contract'
 const I3D=(n,cls)=>ICONS_3D.has(n)?'<img class="goal-3d'+(cls?' '+cls:'')+'" src="icons/3d/goal-'+n+'.png" alt="" draggable="false" decoding="async">':SVG(ICONS[n]||ICONS.target);
 // Pick an icon from a goal's own words, so a new goal type still gets a sensible picture.
 const iconFor=t=>{t=(t||'').toLowerCase();
- return /deliver|online|drone|web/.test(t)?'box':/kiosk/.test(t)?'screen':/strain|grow|seed|plant/.test(t)?'leaf':/upgrade|level|lv\b|station/.test(t)?'up':
+ return /contract/.test(t)?'contract':/share/.test(t)?'trophy':/city|hq|building/.test(t)?'up':/deliver|online|drone|web/.test(t)?'box':/kiosk/.test(t)?'screen':/strain|grow|seed|plant/.test(t)?'leaf':/upgrade|level|lv\b|station/.test(t)?'up':
   /earn|revenue|cash|\$/.test(t)?'coin':/sell|bag|pack/.test(t)?'bag':/serve|customer|walk-in|spender|guest|welcome/.test(t)?'person':/star/.test(t)?'star':'target';};
 const SOURCES=['dailyClaim','careerClaim','claim','seasonClaim','goalClaim0','goalClaim1','goalClaim2'];
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -117,8 +117,9 @@ export function mountGoalsPane({pane,sources,getState,format,rate}){
    action:'<span class="goal-card-chevron">'+SVG(ICONS.chevron)+'</span>',title:title+' · '+text('storyTask')});}
  function stars(p){let i=-1;STORES.forEach((_,k)=>{if(p.stores[k].level>0&&starCount(p,k)<3)i=k;});if(i<0)return null;
   const goals=starStatus(p,i),earned=goals.filter(g=>g.earned).length;
-  const figure='<span class="goal-stars" aria-label="'+earned+' of 3 stars">'+[0,1,2].map(k=>'<i class="'+(k<earned?'is-on':'')+'">'+SVG(ICONS.star)+'</i>').join('')+'</span>';
-  return {key:'stars',label:'Stars',title:STORES[i].name+' stars',figure,body:tiles(goals.map(g=>({title:g.title,icon:'star',done:g.earned,share:g.progress/g.target,
+  const ring=ringRank(p)?goals[0].tier:'';
+  const figure='<span class="goal-stars"'+(ring?' data-ring="'+ring+'"':'')+' aria-label="'+earned+' of 3 '+(ring?ring+' ':'')+'stars">'+[0,1,2].map(k=>'<i class="'+(k<earned?'is-on':'')+'">'+SVG(ICONS.star)+'</i>').join('')+'</span>';
+  return {key:'stars',label:'Stars',title:STORES[i].name+(ring?' '+ring:'')+' stars',figure,body:tiles(goals.map(g=>({title:g.title,icon:'star',done:g.earned,share:g.progress/g.target,
    figure:g.kind!=='served'?'Lv '+g.progress+' / '+g.target:abbr(g.progress)+' / '+abbr(g.target)})))};}
  function awards(s){const all=achievementRows(s),todo=all.filter(r=>!r.done).slice(0,3),done=all.length-all.filter(r=>!r.done).length;
   const fig=(n,r)=>(r.id.startsWith('rev-')?'$':'')+short(n);
