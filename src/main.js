@@ -4294,12 +4294,12 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     $('returnSummary').hidden=!report;if(!report)returnCounted=null;
     if(report){var total=report.earnings.reduce(function(a,n){return a+n},0),cap=offlineCap(),
         clock='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
-        coin='<svg viewBox="0 0 24 24"><ellipse cx="12" cy="7" rx="7" ry="3"/><path d="M5 7v5c0 1.7 3.1 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/></svg>',
-        store='<svg viewBox="0 0 24 24"><path d="M4 10h16M5 10l1.5-5h11L19 10M6 10v9h12v-9M10 19v-5h4v5"/></svg>';
+        coin='<svg viewBox="0 0 24 24"><ellipse cx="12" cy="7" rx="7" ry="3"/><path d="M5 7v5c0 1.7 3.1 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/></svg>';
       countUpReturn(total);
       $('returnTime').innerHTML='<span>'+clock+awayLength(report.seconds)+' away</span>'+(report.seconds>cap?'<span>'+coin+awayLength(cap)+' paid</span>':'');
       $('returnEarnings').hidden=report.earnings.filter(function(n){return n>0}).length<2;
-      $('returnEarnings').innerHTML=report.earnings.map(function(n,i){return n>0?'<li><i>'+store+'</i><span>'+(['Home store'].concat(STORES.map(function(s){return s.name})))[i]+'</span><strong>+'+fmt(n)+'</strong></li>':''}).join('');
+      // Each row wears its place's own 3D storefront from the Empire tab, in a thin ring of that branch's colour.
+      $('returnEarnings').innerHTML=report.earnings.map(function(n,i){return n>0?'<li data-store="'+i+'"><i><img src="icons/3d/'+(i?'store-'+(i-1):'landmark-shop')+'.png" alt="" draggable="false" decoding="async"></i><span>'+(['Home store'].concat(STORES.map(function(s){return s.name})))[i]+'</span><strong>+'+fmt(n)+'</strong></li>':''}).join('');
       $('returnGoals').hidden=!report.goals;
       $('returnGoals').innerHTML='<i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg><b>'+report.goals+'</b></i><span>'+(report.goals===1?'Goal ready to claim':'Goals ready to claim')+'</span><svg class="return-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>';}
     $('nextInvestment').textContent='Next improvement: '+investment.name+' · '+fmt(investment.price)+(state.money<investment.price?' ('+fmt(investment.price-state.money)+' to go)':' · ready');
