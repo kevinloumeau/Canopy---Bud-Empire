@@ -3801,28 +3801,6 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       preview.dataset.art=key;
     }finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle;sceneElevation=savedElevation}
   }
-  // Intro hero: a small stage built from the shop's own pieces (counter, jars, plants, two customers, the courier drone),
-  // painted once into the start guide's canvas. It never touches the live scene or camera.
-  function paintIntroArt(target){
-    if(!target||target.dataset.art)return;
-    var art=document.createElement('canvas');art.width=1000;art.height=700;
-    var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle,savedElevation=sceneElevation;
-    try{
-      ctx=art.getContext('2d',{willReadFrequently:true});unit=88;angle=.57;sceneElevation=0;centerX=500;centerY=470;
-      drawBox(0,0,-.22,7.2,4.2,.22,['#cbb085','#7f6a4b','#ac9168']);
-      plant(-2.9,.9,0,1.05,0,1);plant(2.9,.9,0,1.05,1,1);plant(-2.2,-1.3,0,.8,2,1);
-      drawBox(0,-.4,0,2.6,.95,1,['#ede4cb','#a79c81','#d2c5a5']);
-      jar(-.8,-.4,1,0);jar(0,-.4,1,1);jar(.8,-.4,1,2);
-      drawPerson(-1.55,1.15,0,18,false,false,true,{amount:0,phase:0,facing:.35});
-      drawPerson(1.7,1.3,0,13,false,false,false,{amount:0,phase:0,facing:-.3});
-      drawCourierDrone(.9,3.3,-.6,0,0,1);
-      var pixels=ctx.getImageData(0,0,art.width,art.height).data,left=art.width,right=0,top=art.height,bottom=0;
-      for(var y=0;y<art.height;y++)for(var x=0;x<art.width;x++)if(pixels[(y*art.width+x)*4+3]>180){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y)}
-      var pc=target.getContext('2d');pc.clearRect(0,0,target.width,target.height);
-      if(right>=left&&bottom>=top){var w=right-left+1,h=bottom-top+1,scale=Math.min((target.width-24)/w,(target.height-16)/h);pc.drawImage(art,left,top,w,h,(target.width-w*scale)/2,target.height-h*scale-6,w*scale,h*scale)}
-      target.dataset.art='1';
-    }finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle;sceneElevation=savedElevation}
-  }
   function paintCustomerGuide(){
     var guide=document.querySelector('.reputation-guide');if(!guide||guide.dataset.painted)return;
     // The guide borrows the shop's characters once; it never advances their live animation or camera.
@@ -4374,7 +4352,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     if(destination==='flowers')return showTray('flowers');showTray('empire');if(destination==='empire'){empireShell.show('home');return;}
     empireShell.openStore(0);operationsUI.showTab(0,0);
   }});
-  var startGuide=mountStartGuide({showTray:showTray,collapse:function(){showTray('factory')},fit:fitControls,paintHero:paintIntroArt,sound:function(kind){playSound(kind,state.sound)},report:function(name,props){telemetry.send(name,props)},
+  var startGuide=mountStartGuide({showTray:showTray,collapse:function(){showTray('factory')},fit:fitControls,sound:function(kind){playSound(kind,state.sound)},report:function(name,props){telemetry.send(name,props)},
     // Construction steps: the guide asks whether a site is built, builds it on a tap, opens the shop at the end and, if
     // skipped, finishes the job itself. The sheet drops away at every size so the map stays in view; a sheet left open
     // before a reset or reload would otherwise cover the sites on desktop.
