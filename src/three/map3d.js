@@ -651,15 +651,43 @@ export function createMap3D(canvas, layout) {
   world.add(people);
   const carBodies = new THREE.InstancedMesh(unitBox, material('#ffffff', { name: 'street' }), MAX_CARS), carCabins = new THREE.InstancedMesh(unitBox, material('#dfe8ea', { name: 'street' }), MAX_CARS);
   [carBodies, carCabins].forEach(m => { m.castShadow = true; m.count = 0; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); world.add(m); });
-  // Blender cars (layout.carModels): one car and one van, copied per car with its own paint, nose along +x at the
-  // shared Blender scale, and the wheels turned by the distance driven. The boxes stand in until both have loaded.
+  // Blender cars (layout.carModels): one car and one van, nose along +x at the shared Blender scale, with the wheels
+  // turned by the distance driven. The boxes stand in until both have loaded. Every part of a model is one instanced
+  // mesh over all the cars of that kind, so ten cars cost a part's draw once rather than ten times (they were about
+  // 600 draws a frame with the shadow pass). The paint takes each car's colour from its instance colour, and a wheel's
+  // parts are placed through their wheel, turned about its axle.
   const CAR_SCALE = 1.69, axle = new THREE.Vector3(0, 0, 1), spin = new THREE.Quaternion();
-  const carSources = {}, carCopies = [];
+  const carSources = {};
   Object.entries(layout.carModels || {}).forEach(([kind, file]) => loader.load(layout.modelBase + file, gltf => {
-    prepare(gltf.scene);
-    compactModel(gltf.scene);
-    const wheel = gltf.scene.getObjectByName('WheelFL');
-    carSources[kind] = { scene: gltf.scene, radius: wheel ? new THREE.Box3().setFromObject(wheel).getSize(new THREE.Vector3()).y / 2 : .25 };
+    const root = gltf.scene;
+    prepare(root);
+    compactModel(root);
+    root.updateMatrixWorld(true);
+    const toRoot = root.matrixWorld.clone().invert();
+    const wheels = ['WheelFL', 'WheelFR', 'WheelBL', 'WheelBR'].map(n => root.getObjectByName(n)).filter(Boolean);
+    const parts = [];
+    root.traverse(o => {
+      if (!o.isMesh) return;
+      let wheel = null;
+      for (let p = o; p && !wheel; p = p.parent) if (wheels.includes(p)) wheel = p;
+      const paint = /Paint$/.test(o.material.name), material = paint ? o.material.clone() : o.material;
+      if (paint) material.color.set('#ffffff');
+      const mesh = new THREE.InstancedMesh(o.geometry, material, MAX_CARS);
+      mesh.castShadow = o.castShadow; mesh.receiveShadow = o.receiveShadow; mesh.count = 0;
+      mesh.renderOrder = o.renderOrder;
+      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      if (paint) mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(MAX_CARS * 3).fill(1), 3).setUsage(THREE.DynamicDrawUsage);
+      world.add(mesh);
+      parts.push(wheel ? {
+        mesh, paint,
+        // The part in its wheel's space, and the wheel's parent in the car's space; the wheel's own turn goes between.
+        local: wheel.matrixWorld.clone().invert().multiply(o.matrixWorld),
+        mount: toRoot.clone().multiply(wheel.parent.matrixWorld),
+        wheel: { position: wheel.position.clone(), rest: wheel.quaternion.clone(), scale: wheel.scale.clone() }
+      } : { mesh, paint, local: toRoot.clone().multiply(o.matrixWorld) });
+    });
+    const wheel = wheels[0];
+    carSources[kind] = { parts, radius: wheel ? new THREE.Box3().setFromObject(wheel).getSize(new THREE.Vector3()).y / 2 : .25 };
   }, undefined, e => console.warn('3D map: could not load ' + file, e)));
   // Street props (main.js passes frame.props: file, feet and turn, from the street's jobs and the queue posts). Each
   // file loads on first need and is baked into one geometry per material, drawn instanced over all its placements, so
@@ -905,18 +933,34 @@ export function createMap3D(canvas, layout) {
     characterYaw.forEach((v, id) => { if (!seen.has(id)) characterYaw.delete(id); });
   }
   const carsModelled = () => !!layout.carModels && Object.keys(layout.carModels).every(k => carSources[k]);
-  function carCopy(i, c) {
-    const kind = c.van ? 'van' : 'car', source = carSources[kind];
-    let copy = carCopies[i];
-    if (copy && copy.kind === kind && copy.paint === c.paint) return copy;
-    if (copy) world.remove(copy.holder);
-    const holder = new THREE.Group(), body = source.scene.clone(true);
-    body.traverse(o => { if (o.isMesh && /Paint$/.test(o.material.name)) { o.material = o.material.clone(); o.material.color.set(c.paint); } });
-    holder.add(body);
-    holder.scale.set(CAR_SCALE, CAR_SCALE / HEIGHT_SCALE, CAR_SCALE);
-    world.add(holder);
-    const wheels = ['WheelFL', 'WheelFR', 'WheelBL', 'WheelBR'].map(n => body.getObjectByName(n)).filter(Boolean).map(w => ({ w, rest: w.quaternion.clone() }));
-    return (carCopies[i] = { kind, paint: c.paint, holder, wheels, radius: source.radius });
+  const carMatrix = new THREE.Matrix4(), wheelMatrix = new THREE.Matrix4(), partMatrix = new THREE.Matrix4(), turned = new THREE.Quaternion();
+  const carPaint = new THREE.Color(), carScale = new THREE.Vector3(), carTurn = new THREE.Quaternion(), carAt = new THREE.Vector3(), upright = new THREE.Vector3(0, 1, 0);
+  function placeCars(cars) {
+    Object.values(carSources).forEach(source => source.parts.forEach(p => { p.mesh.count = 0; }));
+    cars.forEach(c => {
+      const source = carSources[c.van ? 'van' : 'car'], ax = c.along === 'x';
+      if (!source || source.parts[0].mesh.count >= MAX_CARS) return;
+      carTurn.setFromAxisAngle(upright, ax ? (c.dir > 0 ? 0 : Math.PI) : (c.dir > 0 ? -Math.PI / 2 : Math.PI / 2));
+      carMatrix.compose(carAt.set(c.x, layout.streetY, c.z), carTurn, carScale.set(CAR_SCALE, CAR_SCALE / HEIGHT_SCALE, CAR_SCALE));
+      // Rolling forward along +x turns the wheels clockwise about the axle (z) as seen from +z.
+      spin.setFromAxisAngle(axle, -c.roll / (source.radius * CAR_SCALE));
+      carPaint.set(c.paint);
+      source.parts.forEach(p => {
+        const i = p.mesh.count++;
+        if (p.wheel) {
+          wheelMatrix.compose(p.wheel.position, turned.multiplyQuaternions(spin, p.wheel.rest), p.wheel.scale);
+          partMatrix.multiplyMatrices(carMatrix, p.mount).multiply(wheelMatrix).multiply(p.local);
+        } else partMatrix.multiplyMatrices(carMatrix, p.local);
+        p.mesh.setMatrixAt(i, partMatrix);
+        if (p.paint) p.mesh.setColorAt(i, carPaint);
+      });
+    });
+    Object.values(carSources).forEach(source => source.parts.forEach(p => {
+      p.mesh.instanceMatrix.needsUpdate = true;
+      if (p.paint) p.mesh.instanceColor.needsUpdate = true;
+      // Bounds round this frame's cars, so a part with every car off screen (or out of the sun's view) is skipped.
+      if (p.mesh.count) p.mesh.computeBoundingSphere();
+    }));
   }
 
   const matrix = new THREE.Matrix4(), position = new THREE.Vector3(), scale = new THREE.Vector3(), quaternion = new THREE.Quaternion(), colour = new THREE.Color();
@@ -1271,17 +1315,7 @@ export function createMap3D(canvas, layout) {
     Object.entries(menuScreens).forEach(([key, screen]) => showMenu(screen, frame.menus ? frame.menus[key] : null, frame.menuClock || 0));
     lampStandIns.forEach(m => { m.visible = !propSources['street_lamp.glb']; });
     const modelled = carsModelled();
-    frame.cars.forEach((c, i) => {
-      if (!modelled) return;
-      const copy = carCopy(i, c), ax = c.along === 'x';
-      copy.holder.visible = true;
-      copy.holder.position.set(c.x, layout.streetY, c.z);
-      copy.holder.rotation.y = ax ? (c.dir > 0 ? 0 : Math.PI) : (c.dir > 0 ? -Math.PI / 2 : Math.PI / 2);
-      // Rolling forward along +x turns the wheels clockwise about the axle (z) as seen from +z.
-      spin.setFromAxisAngle(axle, -c.roll / (copy.radius * CAR_SCALE));
-      copy.wheels.forEach(({ w, rest }) => w.quaternion.multiplyQuaternions(spin, rest));
-    });
-    for (let i = modelled ? frame.cars.length : 0; i < carCopies.length; i++) if (carCopies[i]) carCopies[i].holder.visible = false;
+    placeCars(modelled ? frame.cars : []);
     carBodies.count = carCabins.count = modelled ? 0 : Math.min(MAX_CARS, frame.cars.length);
     for (let i = 0; i < carBodies.count; i++) {
       const c = frame.cars[i], ax = c.along === 'x', van = c.van, length = van ? 4.6 : 4, wide = 1.8;
@@ -1685,12 +1719,15 @@ function buildTransport(scene, world, transport, { box, material }) {
         const piece = name => { const o = gltf.scene.getObjectByName(name); if (o) o.position.set(0, 0, 0); return o; };
         const section = piece('Section'), end = piece('End'), leg = piece('Leg');
         if (!section || !end || !leg) return;
+        // Every piece of every belt goes into one group, merged below into one mesh per material: the belts never move,
+        // and placed one by one they were some 300 small meshes, each a draw twice over with the shadow pass.
+        const pieces = new THREE.Group();
         const add = (source, x, y, z, sx, sy, turn) => {
           const holder = new THREE.Group(), copy = source.clone();
           copy.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
           holder.add(copy); holder.scale.set(1.69 * sx, 1.69 * sy / K, 1.69); holder.position.set(x, y, z);
           if (turn) holder.rotation.y = turn;
-          world.add(holder);
+          pieces.add(holder);
         };
         belts.forEach(b => {
           const lo = Math.min(b.x1, b.x2), hi = Math.max(b.x1, b.x2), length = hi - lo, count = Math.max(1, Math.round(length));
@@ -1700,6 +1737,8 @@ function buildTransport(scene, world, transport, { box, material }) {
           const legs = [lo + .25, hi - .25].concat(length > 5 ? [(lo + hi) / 2] : []);
           legs.forEach(x => add(leg, x, b.floor, b.z, 1, (b.height - .18) / .87));
         });
+        world.add(pieces);
+        compactModel(pieces);
         beltStandIns.visible = false;
       }, undefined, e => console.warn('3D map: could not load conveyor_parts.glb', e));
       loader.load(base + 'cargo_items.glb', gltf => {
