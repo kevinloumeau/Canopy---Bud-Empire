@@ -15,7 +15,7 @@ const STEEL = '#3c4a44', SLAB = '#bfb8aa', AMBER = '#e8b13a', DIRT = '#8f7a5e';
 // Five storeys keep the crown in view under the haze, a storey or two over the tallest neighbours.
 const PODIUM = 3.4, STOREY = 2.9, STOREYS = 5;
 
-export function buildFlagship(world, layout, { material }) {
+export function buildFlagship(world, layout, { material, nightWindows }) {
   const lot = layout.flagshipLot;
   if (!lot) return null;
   const P = layout.plazaY;
@@ -129,6 +129,9 @@ export function buildFlagship(world, layout, { material }) {
     }
     return g.seal({ glass: curtain });
   });
+  // After dark the curtain wall goes dark glass with a few lit bays, one cell per mullion bay and storey (nightWindows).
+  if (nightWindows) nightWindows(curtain, 'grid', { share: .3, strength: 1.1, cell: [(x1 - x0) / 5, STOREY, (z1 - z0) / 5], origin: [x0, P + PODIUM, z0] });
+  const curtainDay = curtain.color.clone(), curtainNight = new THREE.Color('#1c2a36');
 
   // Stage 4, Grand opening: a stepped crown with brass fins, the vertical CANOPY blade on the street corner, a
   // lit leaf on the roof and a flag. The hoarding and crane are gone by now.
@@ -221,7 +224,8 @@ export function buildFlagship(world, layout, { material }) {
       scaffoldLevels.forEach((g, k) => { g.visible = k < lifts; });
       // Lights after dark.
       shopGlass.emissiveIntensity = .05 + night * .6;
-      curtain.emissiveIntensity = night * .26;
+      curtain.emissiveIntensity = 0;
+      curtain.color.copy(curtainDay).lerp(curtainNight, night * .85);
       bladeMat.emissiveIntensity = .15 + night * .75;
       crownGlow.color.set(BRASS).multiplyScalar(1 + night * .4);
     },
