@@ -22,6 +22,8 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
     private weak var loadBar: UIView?
     private var loadFillWidth: NSLayoutConstraint?
     private var loadShown: CGFloat = 0
+    /// Keeps the web view at 1x; see capacitorDidLoad.
+    private var pageZoom: NSKeyValueObservation?
     private var pageProgress: NSKeyValueObservation?
     /// Lifts the cover if loading stalls, so the web loader's own Retry button is never hidden behind it.
     private var stallTimer: DispatchWorkItem?
@@ -47,6 +49,22 @@ final class CanopyViewController: CAPBridgeViewController, WKScriptMessageHandle
             scroll.alwaysBounceHorizontal = false
             scroll.contentInsetAdjustmentBehavior = .never
             scroll.pinchGestureRecognizer?.isEnabled = false
+            // Nor may it zoom: a double tap on the menu once enlarged the whole page and pushed the UI off screen.
+            // The page's viewport and touch-action already forbid it; this pins the scale natively too, and snaps
+            // back at once if WebKit ever changes it (it can reset zoom limits when the viewport is re-read).
+            scroll.minimumZoomScale = 1
+            scroll.maximumZoomScale = 1
+            scroll.bouncesZoom = false
+            scroll.setZoomScale(1, animated: false)
+            pageZoom = scroll.observe(\.zoomScale, options: [.new]) { scroll, _ in
+                guard abs(scroll.zoomScale - 1) > 0.001 else { return }
+                DispatchQueue.main.async {
+                    scroll.minimumZoomScale = 1
+                    scroll.maximumZoomScale = 1
+                    scroll.setZoomScale(1, animated: false)
+                    scroll.contentOffset = .zero
+                }
+            }
         }
     }
 

@@ -73,7 +73,9 @@ export function mountEmpireShell({fit,getState,format,rate,fly,buyStation}){
  // main.js still opens a branch body directly (Manage on the map, bottleneck shortcuts); follow it.
  if(window.MutationObserver){const watcher=new MutationObserver(()=>{const open=articles.findIndex((_,i)=>$('branchBody'+i)&&!$('branchBody'+i).hidden);if(open>=0&&(current!=='store'||storeBar.heading.textContent!==toggles[open].querySelector('.branch-name').textContent)){openStore(open);}});articles.forEach((_,i)=>{const body=$('branchBody'+i);if(body)watcher.observe(body,{attributes:true,attributeFilter:['hidden']});});}
  const todayView=pane.querySelector('[data-empire-view=today]');if(todayView)todayView.addEventListener('click',()=>{if(current!=='home')show('home');});
- function sync(){if(!document.hidden){storesUI.sync();map.sync();}}
+ // Only while the Empire tab is showing (the 250 ms tick otherwise rebuilt hidden tiles all game long); opening it syncs at once.
+ function sync(){if(!document.hidden&&!pane.hidden){storesUI.sync();map.sync();}}
  pane.addEventListener('click',()=>requestAnimationFrame(sync));setInterval(sync,250);sync();
+ if(window.MutationObserver)new MutationObserver(sync).observe(pane,{attributes:true,attributeFilter:['hidden']});
  return {show,openStore,sync};
 }
