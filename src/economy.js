@@ -56,7 +56,10 @@ export const SECURITY_MAX_LEVEL=75;
 export const SECURITY_TIERS=['Door podium','ID desk','ID check booth','Monitored booth','Flagship booth'];
 export function securityCost(level){return Math.floor(level<9?20*Math.pow(1.6,level):20*Math.pow(1.6,9)*Math.pow(1.2,level-9));}
 export function securityFloor(level){return ID_CHECK_FLOOR*Math.pow(.4,Math.min(SECURITY_MAX_LEVEL,Math.max(0,level))/SECURITY_MAX_LEVEL);}
-export function securityDuration(level,scannerLevel){return Math.max(securityFloor(level),.9/((1+level*.3)*(1+(scannerLevel||0)*.12)));}
+// Kevin (2026-11-05): Security should be slow at first. A new door (Lv 1) takes the full read-and-wave, ID_CHECK_SHOW
+// seconds, and every level after checks 30% faster, so the door reaches the quick checks it used to start near only
+// around Lv 30 instead of Lv 9.
+export function securityDuration(level,scannerLevel){return Math.max(securityFloor(level),ID_CHECK_SHOW/((1+Math.max(0,level-1)*.3)*(1+(scannerLevel||0)*.12)));}
 // Regulars want the everyday strain; VIPs reach for the priciest boutique strain on the menu.
 export function preferredStrain(type,menu,levels){
   const boutique=menu.filter(i=>i>0&&levels[i]>0);
