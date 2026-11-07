@@ -1,7 +1,7 @@
 import {abbr} from './progression.js';
 import {mountGoalsPane} from './goals-pane.js';
 // Empire and Goals shells. Reparents the existing controls (main.js and operations-ui.js keep rendering them by id).
-// Empire has three screens: Home (reopen card, the map's places, founder perks), Store (one branch: Stations and Store tabs), Records.
+// Empire has four screens: Home (the map's places, then Perks and Records doors), Store (one branch: Stations and Store tabs), Perks (reopen card, rank, founder perks), Records.
 // Goals (goals-pane.js) gets the contract, shift goals, story and reward controls as hidden sources.
 import {mountEmpireStores} from './empire-stores.js';
 import {mountEmpireMap} from './empire-map.js';
@@ -11,7 +11,7 @@ export function mountEmpireShell({fit,getState,format,rate,fly,buyStation}){
  const section=name=>pane.querySelector('[data-empire-section="'+name+'"]');
  const el=(tag,cls,html)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(html!=null)n.innerHTML=html;return n;};
  const chevron='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
- const screens={home:el('div','empire-screen empire-content'),store:el('div','empire-screen empire-content'),details:el('div','empire-screen empire-content')};
+ const screens={home:el('div','empire-screen empire-content'),store:el('div','empire-screen empire-content'),details:el('div','empire-screen empire-content'),perks:el('div','empire-screen empire-content')};
  Object.keys(screens).forEach(name=>{screens[name].dataset.screen=name;screens[name].hidden=name!=='home';});
  const backBar=(label,title)=>{const bar=el('div','empire-back');const button=el('button','empire-back-button','<span class="empire-back-icon">'+chevron+'</span><span>'+label+'</span>');button.type='button';const heading=el('b','empire-back-title',title||'');bar.append(button,heading);button.onclick=()=>show('home');return {bar,heading};};
  const group=(title,nodes)=>{const g=el('section','empire-group');if(title)g.append(el('h2','empire-group-title',title));nodes.forEach(n=>n&&g.append(n));return g;};
@@ -22,13 +22,24 @@ export function mountEmpireShell({fit,getState,format,rate,fly,buyStation}){
  const list=el('div','store-list');
  const toggles=[],articles=[];
  growth.querySelectorAll('.empire-branch').forEach((article,i)=>{const toggle=article.querySelector('.branch-toggle');toggles[i]=toggle;articles[i]=article;list.append(toggle);});
- const more=el('button','empire-more','<span>Records</span><span class="empire-more-hint">Lifetime figures, reputation</span>'+chevron);more.type='button';more.onclick=()=>show('details');
- // Empire home: the reopen card leads (it pays for the perks below), then the map's places as tiles (empire-map.js),
- // then reopening and founder perks. The old store rows stay in the page, hidden, as each branch page's toggle.
+ // Two doors side by side under the map, so the whole home fits the half-open sheet on an iPhone SE: Perks (reopening
+ // and founder perks, brass with the shares on offer once reopening pays) and Records.
+ const ahead='<svg class="empire-link-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>';
+ const link=(cls,icon,title,sub)=>{const b=el('button','empire-link '+cls,'<span class="empire-link-icon">'+icon+'</span><span class="empire-link-copy"><b>'+title+'</b><small>'+sub+'</small></span>'+ahead);b.type='button';return b;};
+ const perksLink=link('empire-perks','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V11M12 14C3 14 3 7 3 7s9-1 9 7ZM12 11c0-8 9-9 9-9s0 9-9 9Z"/></svg>','Perks','');
+ const more=link('empire-records','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10m6 10V4m6 16v-7m4 7H2"/></svg>','Records','Lifetime figures');more.querySelector('small').classList.add('is-words');
+ more.onclick=()=>show('details');perksLink.onclick=()=>show('perks');
+ const links=el('div','empire-links');links.append(perksLink,more);
+ // Empire home: the map's places as tiles (empire-map.js), then the Perks and Records doors. The old store rows stay
+ // in the page, hidden, as each branch page's toggle.
  const reopen=$('reopenCard');
  const map=mountEmpireMap({getState,format,summary:storesSummary,fly:(kind,id)=>{if(fly)fly(kind,id);if(kind==='shop'&&id>0)openStore(id-1);}});
  const rows=el('div','store-rows');rows.hidden=true;rows.append(storesHead,list);
- screens.home.append(reopen||'',map.root,group(null,[growth.querySelector('.depth-panel')]),more,rows);
+ screens.home.append(map.root,links,rows);
+ // Perks: the reopen card leads (when reopening pays), then the rank, funding and founder perks, always open.
+ const perksBar=backBar('Empire','Reopen & perks');screens.perks.append(perksBar.bar);
+ const depth=growth.querySelector('.depth-panel');if(depth){depth.open=true;depth.addEventListener('toggle',()=>{if(!depth.open)depth.open=true;});}
+ screens.perks.append(reopen||'',group(null,[depth]));
  // The welcome-back report is a moment over the map, not a row in a tab.
  const summary=$('returnSummary');if(summary){const overlay=el('div','return-overlay');overlay.hidden=true;const card=el('div','return-card');card.append(summary);overlay.append(card);document.body.append(overlay);
   const reflect=()=>{overlay.hidden=summary.hidden;if(!summary.hidden){const b=$('dismissReturn');if(b)b.focus({preventScroll:true});}};
@@ -58,8 +69,8 @@ export function mountEmpireShell({fit,getState,format,rate,fly,buyStation}){
   document.querySelector('.shop-milestone'),group(null,Array.from(section('daily').children)),group(null,Array.from(section('events').children))]});
  // Keep the back controls outside the scrolling content so their background can be the panel itself.
  const scrollers={};
- ['store','details'].forEach(name=>{const screen=screens[name],body=el('div','empire-screen-body');while(screen.children.length>1)body.append(screen.children[1]);screen.append(body);scrollers[name]=body;});
- pane.append(screens.home,screens.store,screens.details);
+ ['store','details','perks'].forEach(name=>{const screen=screens[name],body=el('div','empire-screen-body');while(screen.children.length>1)body.append(screen.children[1]);screen.append(body);scrollers[name]=body;});
+ pane.append(screens.home,screens.store,screens.details,screens.perks);
  // A locked store's page sends the player to the store before it, on the tab where its star goals are worked.
  const goStore=(i,tab)=>{if(fly)fly('shop',i+1);openStore(i);const t=$('opTab'+i+tab);if(t&&!t.hidden)t.click();};
  const storesUI=mountEmpireStores({getState,format,buyStation,goStore});
@@ -73,7 +84,16 @@ export function mountEmpireShell({fit,getState,format,rate,fly,buyStation}){
  // main.js still opens a branch body directly (Manage on the map, bottleneck shortcuts); follow it.
  if(window.MutationObserver){const watcher=new MutationObserver(()=>{const open=articles.findIndex((_,i)=>$('branchBody'+i)&&!$('branchBody'+i).hidden);if(open>=0&&(current!=='store'||storeBar.heading.textContent!==toggles[open].querySelector('.branch-name').textContent)){openStore(open);}});articles.forEach((_,i)=>{const body=$('branchBody'+i);if(body)watcher.observe(body,{attributes:true,attributeFilter:['hidden']});});}
  const todayView=pane.querySelector('[data-empire-view=today]');if(todayView)todayView.addEventListener('click',()=>{if(current!=='home')show('home');});
- function sync(){if(!document.hidden){storesUI.sync();map.sync();}}
+ // The Perks door mirrors the reopen card: brass with the shares on offer, otherwise the rank's sales bonus.
+ let perksSig='';
+ function syncPerks(){const ready=reopen&&!reopen.hidden,gain=ready&&$('reopenGain')?$('reopenGain').textContent:'',status=$('prestigeStatus')?$('prestigeStatus').textContent:'';
+  const title=ready?'Reopen':'Perks',sub=ready?gain:status==='Ready'?'Can reopen':status,sig=title+'|'+sub;if(sig===perksSig)return;perksSig=sig;
+  perksLink.classList.toggle('is-ready',!!ready);perksLink.querySelector('b').textContent=title;perksLink.querySelector('small').textContent=sub;
+  perksLink.setAttribute('aria-label',ready?'Reopen for '+gain+'. Open reopening and founder perks':'Reopening and founder perks'+(sub?', '+sub:''));}
+ // Only while the Empire tab is showing (the 250 ms tick otherwise rebuilt hidden tiles all game long); opening it syncs at once.
+ function sync(){if(!document.hidden&&!pane.hidden){storesUI.sync();map.sync();syncPerks();}}
+ if(window.MutationObserver){const watch=new MutationObserver(syncPerks);[reopen,$('prestigeStatus'),$('reopenGain')].forEach(n=>{if(n)watch.observe(n,{attributes:true,attributeFilter:['hidden'],childList:true,characterData:true,subtree:true});});}
  pane.addEventListener('click',()=>requestAnimationFrame(sync));setInterval(sync,250);sync();
+ if(window.MutationObserver)new MutationObserver(sync).observe(pane,{attributes:true,attributeFilter:['hidden']});
  return {show,openStore,sync};
 }

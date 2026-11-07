@@ -1,0 +1,124 @@
+/* Menu tab fits the half-open sheet on every phone, down to the iPhone SE (375×667), with no scrolling: live stats,
+   the four strain rings, the selected strain, its three sell types and the Upgrade button all sit on one screen.
+   The Strains / Breed switch moved into the sheet header (main.js), "How the menu works" folds into an info button at
+   the end of the stats row, THC joins the kind line, the price per sale sits beside the name and the next level's
+   gain rides on the Upgrade button. Loaded last. */
+
+/* Strains / Breed switch in the sheet header: only while the Menu tab is open. */
+.panel-header .menu-views{display:none}
+body[data-active-tray=flowers] .sheet:not(.collapsed) .panel-header .menu-views{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-left:auto;padding:2px;border:0;border-radius:10px;background:var(--ui-well)}
+.panel-header .menu-views button{width:auto;height:auto;min-height:28px;padding:0 14px;border:0;border-radius:8px;background:none;box-shadow:none;color:var(--ui-soft);font:600 12.5px/1 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer}
+.panel-header .menu-views button[aria-selected=true]{background:var(--ui-sheen);box-shadow:inset 0 0 0 1px var(--ui-edge),inset 0 1px 0 #ffffff1c;color:var(--ui-ink)}
+.panel-header .menu-views button:focus-visible{outline:2px solid var(--ui-brass);outline-offset:1px}
+body[data-active-tray=flowers] .sheet:not(.collapsed) .panel-header{justify-content:flex-start}
+body[data-active-tray=flowers] .sheet:not(.collapsed) .panel-header .menu-views{margin:0 0 0 auto!important}
+body[data-active-tray=flowers] .sheet:not(.collapsed) .panel-header .menu-views~button{margin-left:4px!important}
+
+/* "How the menu works": a small round info button after the Menu title; its text opens as a card over the board. */
+.panel-header .menu-info{display:none}
+body[data-active-tray=flowers] .sheet:not(.collapsed) .panel-header .menu-info{display:grid;place-items:center;flex:none;box-sizing:border-box;width:26px;height:26px;margin-left:-4px;padding:0;border:0;border-radius:50%;background:none;box-shadow:inset 0 0 0 1px var(--ui-edge);color:var(--ui-soft);font:italic 600 13px/1 Georgia,serif;cursor:pointer}
+body[data-active-tray=flowers] .sheet:not(.collapsed) .panel-header .menu-info[aria-expanded=true]{background:var(--ui-sheen);color:var(--ui-ink)}
+.sheet [data-pane="flowers"] .menu-board{position:relative}
+.sheet [data-pane="flowers"] .menu-guide-pop{position:absolute;z-index:4;top:0;left:0;right:0;margin:0;padding:12px 14px;border-radius:14px;background:#123420;box-shadow:inset 0 0 0 1px var(--ui-edge),0 12px 28px -8px #06180ccc;color:var(--ui-ink);font:500 12px/1.45 'Bricolage Grotesque',system-ui,sans-serif;text-wrap:pretty}
+.sheet [data-pane="flowers"] .menu-guide-pop[hidden]{display:none}
+
+/* Live stats row: one column per stat however many there are (VIP buzz adds one). */
+.sheet [data-pane="flowers"] .menu-board-head{grid-template-columns:none!important;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
+
+/* Words that only the wider desktop panel shows. */
+.sheet [data-pane="flowers"] .strain-kind-thc,.sheet [data-pane="flowers"] .strain-hero-price,.sheet [data-pane="flowers"] .buy-gain{display:none}
+
+@media(max-width:779px){
+ html body .sheet>[data-pane="flowers"]{padding-bottom:6px}
+ .sheet [data-pane="flowers"] .menu-board{gap:6px;padding:0 2px 0}
+ .sheet [data-pane="flowers"] .menu-board-head{padding:0 0 2px}
+ .sheet [data-pane="flowers"] .menu-board-summary,.sheet [data-pane="flowers"] .buyer{min-height:30px;padding:0 6px 0 9px;column-gap:6px}
+ .sheet [data-pane="flowers"] .menu-board-summary small,.sheet [data-pane="flowers"] .buyer>small{letter-spacing:.05em;text-overflow:clip}
+ .sheet [data-pane="flowers"] .menu-board-summary{padding-left:2px}
+
+ /* Strain rings: smaller ring, the level (or unlock price) as a pill on the ring's foot, the name on one or two lines. */
+ .sheet [data-pane="flowers"] .strain-nav{padding:0 0 6px!important;gap:2px!important}
+ .sheet [data-pane="flowers"] .strain-nav button{gap:2px!important;padding:2px 2px 0!important}
+ .sheet [data-pane="flowers"] .strain-nav .strain-card-art{width:40px!important;height:40px!important}
+ .sheet [data-pane="flowers"] .strain-nav .strain-card-art img.icon-3d{width:30px;height:30px}
+ .sheet [data-pane="flowers"] .strain-nav .menu-check{top:0;left:calc(50% + 10px);width:14px;height:14px;background-size:10px}
+ .sheet [data-pane="flowers"] .strain-nav button small{position:absolute;top:34px;left:50%;transform:translateX(-50%);padding:1px 5px;border-radius:999px;background:#153b21;box-shadow:0 0 0 1px #a8dc5255;font:600 9.5px/1.2 'DM Mono',monospace!important;white-space:nowrap;z-index:1}
+ .sheet [data-pane="flowers"] .strain-nav button.is-locked small{box-shadow:0 0 0 1px #ffffff2e}
+ .sheet [data-pane="flowers"] .strain-nav button b{margin-top:3px;font-size:10.5px!important;line-height:1.15!important;letter-spacing:-.01em;white-space:nowrap}
+ .sheet [data-pane="flowers"] .strain-nav button b br{display:none}
+ .sheet [data-pane="flowers"] .strain-nav button[aria-selected=true]::after{bottom:-7px}
+
+ /* Selected strain: picture left; kind + THC, name + price per sale, signature perk on the right. */
+ .sheet [data-pane="flowers"] .strain-hero{grid-template-columns:62px minmax(0,1fr)!important;grid-template-areas:"art info" "art details" "format format" "actions actions"!important;grid-template-rows:auto 1fr!important;column-gap:12px!important;row-gap:6px!important;align-items:start!important;padding:0 2px!important}
+ .sheet [data-pane="flowers"] .strain-hero-art{width:62px!important;height:62px!important;margin:0!important;align-self:center}
+ .sheet [data-pane="flowers"] .strain-hero-art .menu-toggle{bottom:-8px;min-height:22px;padding:2px 8px 2px 6px;font-size:10.5px}
+ .sheet [data-pane="flowers"] .strain-hero-info{grid-template-columns:minmax(0,1fr) auto;column-gap:8px;row-gap:1px;align-items:baseline}
+ .sheet [data-pane="flowers"] .strain-hero-info .strain-kind{grid-column:1/-1;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .sheet [data-pane="flowers"] .strain-kind-thc{display:inline}
+ .sheet [data-pane="flowers"] .strain-hero h2{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .sheet [data-pane="flowers"] .strain-hero-price{display:block;font:500 15px/1.1 'DM Mono',monospace;letter-spacing:-.02em;color:var(--ui-ink);white-space:nowrap}
+ .sheet [data-pane="flowers"] .strain-hero-price small{display:inline!important;font:600 9.5px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--ui-soft)}
+ .sheet [data-pane="flowers"] .strain-stats{display:none!important}
+ .sheet [data-pane="flowers"] .strain-hero-details{align-self:end}
+ .sheet [data-pane="flowers"] .strain-perk{display:inline-flex!important;align-items:center;gap:6px;margin:2px 0 0!important;padding:3px 10px 3px 4px!important;max-width:100%;box-sizing:border-box}
+ .sheet [data-pane="flowers"] .strain-perk .perk-star{flex:none;width:18px!important;height:18px!important;font-size:11px!important}
+ .sheet [data-pane="flowers"] .strain-perk b{display:none}
+ .sheet [data-pane="flowers"] .strain-perk small{font:500 11px/1.25 'Bricolage Grotesque',system-ui,sans-serif!important;white-space:nowrap}
+
+ /* Sell types: three short tiles, picture left, name, what it adds and its price (or Selling). */
+ .sheet [data-pane="flowers"] .strain-format{gap:0!important}
+ .sheet [data-pane="flowers"] .strain-format>h2{display:none}
+ .sheet [data-pane="flowers"] .format-options{gap:6px!important}
+ .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill{grid-template-columns:30px minmax(0,1fr)!important;grid-template-rows:auto auto auto;justify-items:start;align-items:center;column-gap:6px!important;row-gap:0!important;min-height:0!important;padding:4px 6px!important;border-radius:12px!important;text-align:left}
+ .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill>img.icon-3d{grid-column:1!important;grid-row:1/4!important;width:30px;height:30px;align-self:center!important}
+ .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill>strong{grid-column:2!important;grid-row:1!important;font-size:11.5px!important;line-height:1.15!important}
+ .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill>em{grid-column:2!important;grid-row:2!important;font-size:10px;line-height:1.15}
+ .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill>small{grid-column:2!important;grid-row:3!important;display:block!important;font-size:10.5px!important;line-height:1.15!important;white-space:nowrap}
+ .sheet [data-pane="flowers"] .format-word{display:none}
+
+ /* Upgrade: price on the left, what the next level adds on the right. */
+ .sheet [data-pane="flowers"] .strain-hero-actions #flowerBuy{display:flex;align-items:center;justify-content:center;gap:10px;min-height:42px!important;height:42px;padding:0 14px}
+ .sheet [data-pane="flowers"] .strain-hero-actions #flowerBuy .buy-gain{display:inline-block;padding:3px 8px;border-radius:999px;background:#2a24141a;font:600 11.5px/1.1 'DM Mono',monospace;letter-spacing:-.02em}
+ .sheet [data-pane="flowers"] .strain-hero-actions #flowerBuy:disabled .buy-gain{background:#ffffff12}
+}
+
+/* With VIP buzz there are four stats: smaller icons and labels so every word still shows whole. */
+@media(max-width:779px){
+ .sheet [data-pane="flowers"] .menu-board-head:has(.is-buzz) .buyer{padding:0 4px 0 7px;column-gap:5px}
+ .sheet [data-pane="flowers"] .menu-board-head:has(.is-buzz) .buyer>svg,.sheet [data-pane="flowers"] .menu-board-head:has(.is-buzz) .buyer>.bud,.sheet [data-pane="flowers"] .menu-board-head:has(.is-buzz) .buyer .bud svg{width:14px;height:14px}
+ .sheet [data-pane="flowers"] .menu-board-head:has(.is-buzz) small{font-size:9px!important;letter-spacing:.02em!important}
+}
+
+/* Breed view on phones: no live stats row (it is about selling), and one slim row per cultivar with its button. */
+@media(max-width:779px){
+ .sheet [data-pane="flowers"] .menu-board[data-menu-view=breed]>.menu-board-head{display:none}
+ .sheet [data-pane="flowers"] .breed-view{gap:5px}
+ .sheet [data-pane="flowers"] .breed-view .library-head{flex-wrap:nowrap;padding:0 2px}
+ .sheet [data-pane="flowers"] .breed-view .library-head h3{font-size:13.5px;white-space:nowrap}
+ .sheet [data-pane="flowers"] .breed-view .library-head small{font-size:10.5px;white-space:nowrap}
+ .sheet [data-pane="flowers"] .breed-list{gap:4px}
+ .sheet [data-pane="flowers"] .breed-card{gap:8px;min-height:36px;padding:3px 4px 3px 10px;box-sizing:border-box}
+ .sheet [data-pane="flowers"] .breed-copy{gap:1px}
+ .sheet [data-pane="flowers"] .breed-copy b{font-size:12.5px;line-height:1.2}
+ .sheet [data-pane="flowers"] .breed-copy small{font-size:10px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .sheet [data-pane="flowers"] .breed-copy .breed-status,.sheet [data-pane="flowers"] .breed-parents{display:none!important}
+ .sheet [data-pane="flowers"] .breed-card[data-state=growing] .breed-copy small{display:none}
+ .sheet [data-pane="flowers"] .breed-card[data-state=growing] .breed-copy .breed-status{display:block!important;font-size:10.5px;line-height:1.2}
+ .sheet [data-pane="flowers"] .breed-card button{min-height:30px;max-width:48%;padding:2px 10px;border-radius:9px;font-size:11.5px;line-height:1.15;white-space:nowrap}
+}
+
+/* iPhone SE and other short phones: the same layout a notch tighter. */
+@media(max-width:779px) and (max-height:700px){
+ .sheet [data-pane="flowers"] .menu-board{gap:5px}
+ .sheet [data-pane="flowers"] .menu-board-summary,.sheet [data-pane="flowers"] .buyer{min-height:28px}
+ .sheet [data-pane="flowers"] .strain-nav .strain-card-art{width:36px!important;height:36px!important}
+ .sheet [data-pane="flowers"] .strain-nav .strain-card-art img.icon-3d{width:27px;height:27px}
+ .sheet [data-pane="flowers"] .strain-nav button small{top:30px}
+ .sheet [data-pane="flowers"] .strain-hero{row-gap:5px!important}
+ .sheet [data-pane="flowers"] .strain-hero-art{width:56px!important;height:56px!important}
+ .sheet [data-pane="flowers"] .strain-hero{grid-template-columns:56px minmax(0,1fr)!important}
+ .sheet [data-pane="flowers"] .strain-hero-actions #flowerBuy{min-height:40px!important;height:40px}
+ html body .sheet>[data-pane="flowers"]{padding-bottom:4px}
+ .sheet [data-pane="flowers"] .breed-list{gap:3px}
+ .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill{padding-block:3px!important}
+}

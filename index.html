@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#20372b" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -76,6 +76,9 @@
   <link rel="stylesheet" href="/src/station-badges.css" />
   <link rel="stylesheet" href="/src/upgrade-fx.css" />
   <link rel="stylesheet" href="/src/station-fit.css" />
+  <link rel="stylesheet" href="/src/menu-fit.css" />
+  <link rel="stylesheet" href="/src/goals-fit.css" />
+  <link rel="stylesheet" href="/src/empire-fit.css" />
   <link rel="stylesheet" href="/src/research-fit.css" />
   <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
   <title>Canopy: Bud Empire</title>
@@ -99,6 +102,25 @@
       var gate = document.getElementById('ageGate');
       if (!gate || document.documentElement.classList.contains('age-ok')) return;
       var card = gate.querySelector('.age-card');
+      // First launch in the iOS app: its native loading cover would otherwise wait for the whole 3D map while this
+      // gate already sits ready behind it. Once the badge has decoded and the gate has painted, tell the app the page
+      // is ready so the cover lifts straight to the gate; the map keeps loading underneath, and if it is still going
+      // after Yes, the page's own loading screen (below the gate) carries on with the same look.
+      var tray = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.canopyTray;
+      if (tray) {
+        var told = false, tell = function () {
+          if (told) return; told = true;
+          requestAnimationFrame(function () { requestAnimationFrame(function () {
+            try { tray.postMessage({ ready: true }); } catch (e) {}
+          }); });
+        };
+        var badge = gate.querySelector('.age-badge'), fonts = document.fonts && document.fonts.ready;
+        Promise.all([
+          badge && badge.decode ? badge.decode().catch(function () {}) : null,
+          fonts ? fonts.catch(function () {}) : null
+        ]).then(tell, tell);
+        setTimeout(tell, 2500);
+      }
       document.getElementById('ageYes').addEventListener('click', function () {
         try { localStorage.setItem('canopy-age-ok', '1'); } catch (e) {}
         (window.canopyEvents = window.canopyEvents || []).push(['age_gate', { answer: 'yes' }]);

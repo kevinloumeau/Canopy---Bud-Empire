@@ -36,14 +36,14 @@ const WALK=[
  {stage:'out',title:'Sold!',text:'Every bag out the door pays the till.'}
 ];
 const BUILT_PAUSE=900,UPGRADED_PAUSE=1500,OUT_PAUSE=2600;
-export function mountStartGuide({showTray,collapse,fit,paintHero,sound,report,isBuilt,build,shopOpen,openShop,finish,sheet,reserve,select,camera,grow,guest}){
+export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,build,shopOpen,openShop,finish,sheet,reserve,select,camera,grow,guest}){
  // `sheet` folds the tray away on every step and `reserve` keeps the map framed above the docked card. `camera` points
  // the 3D view (look at a site, follow the guest, hand back); `grow` reads and buys the grow room's upgrade with the
  // guide's grant; `guest` reports where the followed guest is in their visit.
  const root=document.createElement('div');root.className='start-guide';root.hidden=true;
  root.innerHTML='<div class="guide-dim"></div><div class="guide-ring" hidden></div>'+
   '<section class="guide-card" role="dialog" aria-modal="true" aria-labelledby="guideTitle">'+
-  '<div class="guide-hero" hidden><canvas class="guide-hero-art" width="760" height="380" aria-hidden="true"></canvas></div>'+
+  '<div class="guide-hero" hidden><img class="guide-hero-art" src="guide/hero.webp" width="380" height="190" alt="" decoding="async"></div>'+
   '<div class="guide-dots" aria-hidden="true"></div><p class="guide-eyebrow" hidden></p><h2 id="guideTitle"></h2><p id="guideText" aria-live="polite"></p><ul class="guide-beats" hidden></ul>'+
   '<ol class="guide-walk" hidden aria-hidden="true">'+WALK.map(()=>'<li></li>').join('')+'</ol>'+
   '<div class="guide-sign" hidden aria-hidden="true"><i class="guide-sign-string"></i><i class="guide-sign-string"></i><div class="guide-plaque"><span class="guide-face is-closed">Closed</span><span class="guide-face is-open">Open</span></div></div>'+
@@ -78,7 +78,6 @@ export function mountStartGuide({showTray,collapse,fit,paintHero,sound,report,is
   root.classList.toggle('is-hero',!!s.hero);$('.guide-hero').hidden=!s.hero;$('.guide-eyebrow').hidden=!s.eyebrow;$('.guide-eyebrow').textContent=s.eyebrow||'';
   const beats=$('.guide-beats');beats.hidden=!s.beats;walkDots.hidden=true;
   if(s.beats&&!beats.childElementCount){s.beats.forEach(([tray,label])=>{const li=document.createElement('li'),icon=document.querySelector('[data-tray='+tray+'] svg');if(icon)li.append(icon.cloneNode(true));li.append(Object.assign(document.createElement('span'),{textContent:label}));beats.append(li);});}
-  if(s.hero&&paintHero)paintHero($('.guide-hero-art'));
   const pending=!built(s),upgrading=s.upgrade!==undefined&&!upgraded(),opening=!!s.open&&!!shopOpen&&!shopOpen();
   root.classList.toggle('is-site',docked(s));root.classList.toggle('is-build',pending||upgrading);root.classList.remove('is-built','is-walk');root.classList.toggle('is-open',!!s.open);
   $('.guide-tap').hidden=!pending;

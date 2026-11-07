@@ -34,3 +34,18 @@
 @media(hover:hover){
  .world .marker.station-sign.is-badge:not(.selected):hover .station-sign-name{display:block;position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);padding:3px 8px;border-radius:8px;background:var(--ui-glass-strong);color:var(--ui-ink);font-size:11px;line-height:1.2;white-space:nowrap;pointer-events:none;box-shadow:0 3px 10px rgba(10,20,14,.28)}
 }
+/* One dot across the station tiles: the crew burst on offer, or else the best buy (same brass dot, same corner). */
+.sheet .machine-nav button.is-best-buy{position:relative}
+.sheet .machine-nav button.is-best-buy::before{content:"";position:absolute;top:4px;left:5px;width:7px;height:7px;border-radius:50%;background:#e2bd6a;box-shadow:0 0 0 2px #d0a54e33;pointer-events:none}
+
+/* Quiet purchase tags (Kevin, 2026-11-07: "the upgrade buttons on the map feel too much"). A tag that isn't the best buy,
+   isn't being built and isn't picked is only its line icon in a small dashed glass circle, half the size of a station
+   badge, with no name or price. Nothing here sets display on the sign itself (updateMarkers owns it). */
+.world .marker.station-sign .station-sign-icon{vertical-align:middle}
+.world .marker.station-sign.is-lot:not(.is-quiet):not(.selected) .station-sign-icon{display:inline-block;width:11px;height:11px;margin-right:4px;opacity:.85}
+.world .marker.station-sign.is-quiet,.world .marker.station-sign.is-quiet:not(.selected),
+.world .marker.station-sign.is-lot.is-mini.is-quiet,.world .marker.station-sign.is-lot.is-mini.is-quiet:not(.selected){box-sizing:border-box;width:22px;min-width:22px;height:22px;min-height:22px;padding:4px!important;border-radius:50%;line-height:0;border:1px dashed #f3ead659;background:#16301e8c;color:#f3ead6b3;box-shadow:none;opacity:.88}
+.world .marker.station-sign.is-quiet .station-sign-icon{display:block!important;width:12px;height:12px;margin:0}
+.world .marker.station-sign.is-quiet .station-sign-name,.world .marker.station-sign.is-quiet .station-sign-level,.world .marker.station-sign.is-quiet::after{display:none!important}
+.world .marker.station-sign.is-quiet:hover{opacity:1;border-color:#e2c68a99;color:#f3ead6}
+.world .marker.station-sign.is-quiet::before{content:'';position:absolute;inset:-9px;border-radius:50%}

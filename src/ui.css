@@ -1,5 +1,9 @@
 /* Compact industrial controls; the factory remains the main surface. */
 
+/* The page itself never zooms: pans still scroll the panels, but a double tap or a pinch on the UI does nothing.
+   The map sets touch-action:none and runs its own pinch in JS, so that keeps working. */
+html,body{touch-action:pan-x pan-y}
+
 button{touch-action:manipulation;transition:background .16s,border-color .16s,transform .16s}
 button:focus-visible{outline:2px solid var(--acid);outline-offset:4px}
 button:active{filter:brightness(.88)}

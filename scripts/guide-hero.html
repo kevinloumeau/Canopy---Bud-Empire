@@ -1,0 +1,137 @@
+<!doctype html>
+<!-- Renders the start guide's hero picture (public/guide/hero.webp): the Lv 1 order counter on a slab of shop floor,
+     a budtender behind it, two of the Meshy shoppers in front and a delivery drone overhead, lit and graded like the
+     3D map and seen from its camera. Run `npm run dev`, then `node scripts/render-guide-hero.mjs`. -->
+<html><head><meta charset="utf-8"><style>html,body{margin:0;background:transparent}canvas{display:block}</style></head>
+<body><canvas id="c"></canvas>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { createMapCamera, HEIGHT_SCALE } from '/src/three/camera.js';
+import '/src/three/map3d.js'; // installs the map's colour grade (CustomToneMapping)
+
+const W = 1520, H = 760; // rendered at 4x and trimmed to the card's 2x by render-guide-hero.mjs
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H, false); renderer.setPixelRatio(1);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.CustomToneMapping;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setClearColor(0x000000, 0);
+
+const scene = new THREE.Scene();
+scene.add(new THREE.HemisphereLight('#fff4e2', '#9f9a78', 1.32));
+const sun = new THREE.DirectionalLight('#ffe7c4', 2.5);
+sun.position.set(-6, 9, 3.2); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
+Object.assign(sun.shadow.camera, { left: -6, right: 6, top: 6, bottom: -6, near: 1, far: 30 });
+scene.add(sun, sun.target);
+
+// Everything is built in metres; the world group stretches heights the way the map does.
+const world = new THREE.Group(); world.scale.y = HEIGHT_SCALE; scene.add(world);
+const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+const load = file => new Promise((ok, no) => loader.load(file, ok, undefined, no));
+const shadows = o => o.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } });
+
+const SW = 3.9, SD = 2.7;
+// The slab of shop floor: warm oak planks with a darker lip, like the flagship's floor.
+const planks = document.createElement('canvas'); planks.width = planks.height = 512;
+const p = planks.getContext('2d'); const tones = ['#e0c193', '#d8b685', '#e6c99d', '#dcbb8a', '#d2ae7c'];
+for (let row = 0; row < 16; row++) for (let x = -((row * 97) % 160); x < 512; x += 160) {
+  p.fillStyle = tones[(row * 7 + Math.round(x / 160) * 3 + 20) % tones.length]; p.fillRect(x, row * 32, 159, 31);
+  p.fillStyle = '#a77d4d55'; p.fillRect(x + 158, row * 32, 2, 32);
+}
+p.fillStyle = '#a77d4d44'; for (let row = 0; row < 16; row++) p.fillRect(0, row * 32 + 31, 512, 1);
+const plankTex = new THREE.CanvasTexture(planks); plankTex.colorSpace = THREE.SRGBColorSpace; plankTex.wrapS = plankTex.wrapT = THREE.RepeatWrapping; plankTex.repeat.set(1.25, .9); plankTex.anisotropy = 8;
+const slab = new THREE.Mesh(new RoundedBoxGeometry(SW, .22, SD, 4, .08));
+slab.material = new THREE.MeshLambertMaterial({ color: '#c49766' });
+// The planks sit on top as their own sheet so the rounded lip stays one plain colour.
+const deck = new THREE.Mesh(new THREE.PlaneGeometry(SW - .14, SD - .14), new THREE.MeshLambertMaterial({ map: plankTex }));
+deck.rotation.x = -Math.PI / 2; deck.position.y = .001; deck.receiveShadow = true; world.add(deck);
+slab.position.y = -.11; slab.receiveShadow = true; world.add(slab);
+// A brass trim under the plank top so the slab reads as a built stage, not a crate.
+const trim = new THREE.Mesh(new RoundedBoxGeometry(SW + .06, .06, SD + .06, 3, .03), new THREE.MeshLambertMaterial({ color: '#c9a35a' }));
+trim.position.y = -.2; world.add(trim);
+const base = new THREE.Mesh(new RoundedBoxGeometry(SW - .1, .16, SD - .1, 3, .05), new THREE.MeshLambertMaterial({ color: '#2d4a39' }));
+base.position.y = -.3; world.add(base);
+
+function place(obj, x, z, turn = 0, s = 1) { const h = new THREE.Group(); h.add(obj); h.position.set(x, 0, z); h.rotation.y = turn; h.scale.setScalar(s); world.add(h); return h; }
+
+// A person: Meshy model with the map's character look (emissive lift, richer colour, warm rim), held in its idle.
+async function person(file, x, z, turn, time) {
+  const gltf = await load('/models/people/' + file);
+  gltf.scene.traverse(o => {
+    if (!o.isMesh) return; o.frustumCulled = false; o.castShadow = true;
+    const map = o.material.map || o.material.emissiveMap;
+    o.material = new THREE.MeshStandardMaterial({ map, emissiveMap: map, emissive: '#ffffff', emissiveIntensity: .16, roughness: .4, metalness: 0 });
+    o.material.onBeforeCompile = shader => {
+      shader.fragmentShader = shader.fragmentShader
+        .replace('#include <map_fragment>', `#include <map_fragment>
+        diffuseColor.rgb = max(mix(vec3(dot(diffuseColor.rgb, vec3(.2126, .7152, .0722))), diffuseColor.rgb, 1.2), 0.0) * 1.12;`)
+        .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+        float rimFacing = 1.0 - abs(dot(normal, vec3(0.0, 0.0, 1.0)));
+        totalEmissiveRadiance += diffuseColor.rgb * vec3(1.0, .93, .8) * pow(rimFacing, 3.0) * .9;`);
+    };
+  });
+  const mixer = new THREE.AnimationMixer(gltf.scene), idle = gltf.animations.find(c => /^Idle/.test(c.name));
+  if (idle) { mixer.clipAction(idle).play(); mixer.setTime(time); }
+  return place(gltf.scene, x, z, turn);
+}
+
+// The delivery drone, after the map's courier drone: a white shell, four arms with spinning rotor blurs, green
+// running lights and a kraft parcel hanging from its belly.
+function drone() {
+  const g = new THREE.Group(), white = new THREE.MeshStandardMaterial({ color: '#f3efe4', roughness: .45 }), dark = new THREE.MeshStandardMaterial({ color: '#33413a', roughness: .6 });
+  const body = new THREE.Mesh(new RoundedBoxGeometry(.62, .2, .44, 4, .08), white); g.add(body);
+  const canopy = new THREE.Mesh(new THREE.SphereGeometry(.17, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), white); canopy.position.y = .08; canopy.scale.set(1.2, .7, 1); g.add(canopy);
+  const eye = new THREE.Mesh(new RoundedBoxGeometry(.05, .07, .26, 2, .02), new THREE.MeshBasicMaterial({ color: '#1d2a24' })); eye.position.set(.31, .02, 0); g.add(eye);
+  for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(.5, .05, .06), dark); arm.position.set(sx * .3, .05, sz * .24); arm.rotation.y = Math.atan2(sz * .24, sx * .3) * -1; g.add(arm);
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(.05, .06, .12, 12), dark); hub.position.set(sx * .5, .1, sz * .4); g.add(hub);
+    const blur = new THREE.Mesh(new THREE.CylinderGeometry(.27, .27, .012, 32), new THREE.MeshBasicMaterial({ color: '#dfe9e2', transparent: true, opacity: .26, depthWrite: false }));
+    blur.position.set(sx * .5, .17, sz * .4); g.add(blur);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(.27, .012, 6, 40), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: .5 })); ring.rotation.x = Math.PI / 2; ring.position.copy(blur.position); g.add(ring);
+    const led = new THREE.Mesh(new THREE.SphereGeometry(.035, 10, 8), new THREE.MeshBasicMaterial({ color: sx > 0 ? '#9df27a' : '#ffd36b' })); led.position.set(sx * .5, .03, sz * .4); g.add(led);
+  }
+  const strap = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, .2, 6), dark); strap.position.y = -.18; g.add(strap);
+  const parcel = new THREE.Mesh(new RoundedBoxGeometry(.36, .26, .3, 2, .02), new THREE.MeshLambertMaterial({ color: '#c99a62' })); parcel.position.y = -.4; g.add(parcel);
+  const tape = new THREE.Mesh(new THREE.BoxGeometry(.37, .265, .06), new THREE.MeshLambertMaterial({ color: '#2f6b47' })); tape.position.y = -.4; g.add(tape);
+  g.traverse(o => { if (o.isMesh && o.material.type !== 'MeshBasicMaterial') o.castShadow = true; });
+  return g;
+}
+
+const params = new URLSearchParams(location.search);
+const pick = (k, d) => params.has(k) ? params.get(k) : d;
+const [desk, planter, menu] = await Promise.all(['order_desk_tier1.glb', 'shop_planter.glb', 'menu_board.glb'].map(f => load('/models/' + f)));
+[desk, planter, menu].forEach(g => shadows(g.scene));
+const deskTurn = +pick('deskTurn', Math.PI / 4);
+// Turned to face the counter's front.
+const facing = (x, z) => Math.atan2(-.25 + .35 - x, -.45 + .35 - z);
+place(desk.scene, -.25, -.45, deskTurn);
+place(planter.scene.clone(), -1.45, .8, 0, .36);
+place(planter.scene.clone(), 1.45, -.95, 0, .36);
+await Promise.all([
+  // The budtender stands beside the counter rather than behind it, where its arch would hide her.
+  person(pick('staff', 'staff-young.glb'), +pick('sx', -.95), +pick('sz', 0), deskTurn, .4),
+  person(pick('a', 'blazer-woman.glb'), +pick('ax', .75), +pick('az', -.05), facing(.75, -.05), 1.1),
+  person(pick('b', 'beanie-hoodie.glb'), +pick('bx', 1.25), +pick('bz', .75), Math.PI / 4 + .2, 2.3),
+]);
+const d = drone(); d.position.set(+pick('dx', 1.5), +pick('dy', 2.2), +pick('dz', -.75)); d.rotation.y = Math.PI / 4 + .3; world.add(d);
+// Its shadow on the floor, soft, so it reads as hovering over the stage.
+const dropShadow = new THREE.Mesh(new THREE.CircleGeometry(.42, 32), new THREE.MeshBasicMaterial({ color: '#1b2a20', transparent: true, opacity: .16, depthWrite: false }));
+dropShadow.rotation.x = -Math.PI / 2; dropShadow.position.set(d.position.x + .5, .005, d.position.z + .2); world.add(dropShadow);
+
+// Frame the whole thing from the map's camera, leaving room at the top for the drone and a little air all round.
+const camera = createMapCamera();
+world.updateMatrixWorld(true); camera.updateMatrixWorld(true);
+const box = new THREE.Box3().setFromObject(base).union(new THREE.Box3().setFromObject(d)).union(new THREE.Box3().setFromObject(desk.scene)), inv = camera.matrixWorldInverse, xs = [], ys = [];
+for (let k = 0; k < 8; k++) { const c = new THREE.Vector3(k & 1 ? box.max.x : box.min.x, k & 2 ? box.max.y : box.min.y, k & 4 ? box.max.z : box.min.z).applyMatrix4(inv); xs.push(c.x); ys.push(c.y); }
+const pad = +pick('pad', 1.06), cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+const half = Math.max((Math.max(...xs) - Math.min(...xs)) / 2 / W * H, (Math.max(...ys) - Math.min(...ys)) / 2) * pad;
+Object.assign(camera, { left: cx - half * W / H, right: cx + half * W / H, top: cy + half, bottom: cy - half });
+camera.updateProjectionMatrix();
+renderer.render(scene, camera);
+window.heroDone = true;
+</script></body></html>
