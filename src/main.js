@@ -4292,9 +4292,9 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function dealUsable(family){if(!state.shopOpen)return family==='rush';if(family==='crew')return dealCrews().length>=2;if(family==='flyers')return flyerLift()>=FLYER_MIN_LIFT;if(family==='night')return !nightBonus(state.deals);return true}
   function dealAdded(id){var d=DEALS[id];if(d.family==='crew')return ABILITY_SALES*ABILITY_SECONDS*dealCrews().length;if(d.family==='flyers')return d.buzz*flyerLift();return 0}
   function dealsNow(){var now=Date.now(),w=dealWindow(now);if(rollDeals(state.deals,w,dealUsable))save();
-    return {ends:windowEnds(w),offers:state.deals.offers.map(function(id){var d=DEALS[id],tokens=tokenPrice(id),price=tokens?0:dealPrice(id,incomeRate(),dealAdded(id));
-      return {id:id,name:d.name,effect:d.effect,icon:d.icon,label:tokens?tokens+' token'+(tokens>1?'s':''):fmt(price),bought:!canBuy(state.deals,id),afford:tokens?state.store.tokens>=tokens:state.money>=price}})}}
-  function buyDeal(id){if(!canBuy(state.deals,id))return false;var d=DEALS[id],tokens=tokenPrice(id),price=tokens?0:dealPrice(id,incomeRate(),dealAdded(id));
+    return {ends:windowEnds(w),offers:state.deals.offers.map(function(id){var d=DEALS[id],tokens=tokenPrice(id),price=tokens?0:dealPrice(id,incomeRate(),dealAdded(id)),blocked=d.family==='flyers'&&flyerLift()<FLYER_MIN_LIFT;
+      return {blocked:blocked,id:id,name:d.name,effect:d.effect,icon:d.icon,label:tokens?tokens+' token'+(tokens>1?'s':''):fmt(price),bought:!canBuy(state.deals,id),afford:tokens?state.store.tokens>=tokens:state.money>=price}})}}
+  function buyDeal(id){if(!canBuy(state.deals,id))return false;if(DEALS[id].family==='flyers'&&flyerLift()<FLYER_MIN_LIFT){notify('The shop is full · more shoppers would not help now');return false}var d=DEALS[id],tokens=tokenPrice(id),price=tokens?0:dealPrice(id,incomeRate(),dealAdded(id));
     // A token deal without a token opens the store; with the boost bank full it waits rather than waste the token.
     if(tokens){if(state.store.tokens<tokens){if(storeUI)storeUI.open();return false}if(!addBoost(state.store,Date.now(),d.boost)){notify('Boost bank is full');return false}state.store.tokens-=tokens;state.store.spent+=tokens}
     else if(state.money<price){notify('Need '+fmt(price-state.money)+' more');return false}

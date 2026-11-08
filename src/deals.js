@@ -10,12 +10,12 @@ export const DEALS={
   rush5:{family:'rush',name:'Rush hour',effect:'2× sales for 5 min',icon:'research-service',rush:300,price:150},
   rush10:{family:'rush',name:'Long rush',effect:'2× sales for 10 min',icon:'research-service',rush:600,price:300},
   coffee:{family:'crew',name:'Crew coffee',effect:'Every crew bursts now',icon:'goal-person',price:0},
-  flyers:{family:'flyers',name:'Flyer drop',effect:'More walk-ins for 10 min',icon:'research-traffic',buzz:600,price:0},
+  flyers:{family:'flyers',name:'Flyer drop',effect:'More shoppers for 10 min',icon:'research-traffic',buzz:600,price:0},
   night2:{family:'night',name:'Night shift',effect:'+2 h away pay next time',icon:'research-offline',night:7200,price:720},
   night4:{family:'night',name:'Double shift',effect:'+4 h away pay next time',icon:'research-offline',night:14400,price:1200},
   // Priced in the store's boost tokens (store.js): one token buys 3 hours of 2× instead of the usual 2. Without a token
   // the tap opens the store.
-  token3:{family:'token',name:'Token deal',effect:'3 h of 2× earnings',icon:'research-boost',tokens:1,boost:10800,price:0}
+  token3:{family:'token',name:'Token deal',effect:'2× earnings for 3 h',icon:'research-boost',tokens:1,boost:10800,price:0}
 };
 export const FAMILIES=['rush','crew','flyers','night','token'];
 // A crew burst is +30% sales for 90 s per crew (crew-abilities.js); coffee charges half of what the bursts add.

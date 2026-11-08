@@ -137,7 +137,7 @@ export function mountGoalsPane({pane,sources,getState,format,rate,deals}){
  function offers(){if(!deals||!deals.get)return null;const d=deals.get();if(!d.offers.length)return null;
   const until=untilLabel(d.ends-Date.now());
   return {key:'deals',label:'Deals',title:'Deals',figure:esc(until),body:tiles(d.offers.map(o=>({title:o.name+' · '+o.effect,label:o.effect,icon:o.icon,share:0,done:o.bought,
-   act:o.bought?null:'deal:'+o.id,price:o.bought?'':o.label,afford:o.afford,note:o.bought?'Bought':''})))};}
+   act:o.bought||o.blocked?null:'deal:'+o.id,price:o.bought||o.blocked?'':o.label,afford:o.afford,note:o.bought?'Bought':o.blocked?'Shop is full':''})))};}
  let signature='',picked='shift';
  function render(force){
   if(document.hidden||!getState)return;
