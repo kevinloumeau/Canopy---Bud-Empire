@@ -49,10 +49,9 @@ const clamp=v=>Math.max(0,Math.min(1,Number(v)||0));
 export function mountGoalsPane({pane,sources,getState,format,rate,deals}){
  const $=id=>document.getElementById(id);
  const screen=document.createElement('div');screen.className='empire-screen empire-content goals-screen';
- // Collect takes over the sheet's whole header row while a reward is ready (the "Goals" title steps aside; the tab bar
- // already says Goals), large enough to be the tab's one obvious action: the 3D icons of what pays out (daily visit,
- // career, shift goal...), the total, and the brass Collect. With nothing ready the title returns, with a quiet line
- // beside it saying when the next daily reward lands.
+ // Collect sits in the sheet's header row, right of the "Goals" title, as a solid brass pill: the 3D icons of what pays
+ // out (daily visit, career, shift goal...), the total, and Collect. With nothing ready, a quiet line there says when
+ // the next daily reward lands.
  const reward=document.createElement('div');reward.className='goals-reward';
  const collect=document.createElement('button');collect.type='button';collect.className='goals-collect';
  collect.innerHTML='<span class="goals-collect-icons"></span><b></b><span class="goals-collect-go">Collect</span>';
@@ -95,7 +94,7 @@ export function mountGoalsPane({pane,sources,getState,format,rate,deals}){
  const amount=unabbr;
  const half=(o)=>'<'+(o.act?'button type="button" data-act="'+o.act+'"':'div')+' class="goal-card goal-half'+(o.act?' is-link':'')+'" title="'+esc(o.title)+'">'+
   (o.share==null?'<span class="goal-card-icon">'+I3D(o.icon)+'</span>':ring(o.icon,o.share,false).replace('goal-ring','goal-ring goal-card-icon'))+
-  '<b class="goal-card-main">'+esc(tieLast(o.main))+'</b><span class="goal-card-foot">'+(o.foot?'<small>'+esc(tieLast(o.foot))+'</small>':'<i></i>')+o.action+'</span></'+(o.act?'button':'div')+'>';
+  '<span class="goal-card-text"><b class="goal-card-main">'+esc(String(o.main||'').replace(/-/g,'\u2011'))+'</b>'+(o.foot?'<small>'+esc(tieLast(o.foot))+'</small>':'')+'</span>'+o.action+'</'+(o.act?'button':'div')+'>';
  function contract(){
   const name=text('contractName');if(!name||name==='No contract yet')return '';
   const running=text('contractKicker')==='Contract running',boost=$('contractBoost'),boostRow=$('contractBoostRow');
@@ -122,11 +121,11 @@ export function mountGoalsPane({pane,sources,getState,format,rate,deals}){
   const goals=starStatus(p,i),earned=goals.filter(g=>g.earned).length;
   const ring=ringRank(p)?goals[0].tier:'';
   const figure='<span class="goal-stars"'+(ring?' data-ring="'+ring+'"':'')+' aria-label="'+earned+' of 3 '+(ring?ring+' ':'')+'stars">'+[0,1,2].map(k=>'<i class="'+(k<earned?'is-on':'')+'">'+SVG(ICONS.star)+'</i>').join('')+'</span>';
-  return {key:'stars',label:'Stars',title:STORES[i].name+(ring?' '+ring:'')+' stars',figure,body:tiles(goals.map(g=>({title:g.title,icon:'star',done:g.earned,share:g.progress/g.target,
+  return {key:'stars',label:'Stars',chip:earned+'/3',title:STORES[i].name+(ring?' '+ring:'')+' stars',figure,body:tiles(goals.map(g=>({title:g.title,icon:'star',done:g.earned,share:g.progress/g.target,
    figure:g.kind!=='served'?'Lv '+g.progress+' / '+g.target:abbr(g.progress)+' / '+abbr(g.target)})))};}
  function awards(s){const all=achievementRows(s),todo=all.filter(r=>!r.done).slice(0,3),done=all.length-all.filter(r=>!r.done).length;
   const fig=(n,r)=>(r.id.startsWith('rev-')?'$':'')+short(n);
-  return {key:'awards',label:'Awards',title:'Achievements',figure:done+'/'+ACHIEVEMENTS.length,body:tiles(todo.map(r=>({title:r.goal,icon:iconFor(r.goal),share:r.share,figure:fig(r.value,r)+' / '+fig(r.target,r)})))};}
+  return {key:'awards',label:'Awards',chip:done+'/'+ACHIEVEMENTS.length,title:'Achievements',figure:done+'/'+ACHIEVEMENTS.length,body:tiles(todo.map(r=>({title:r.goal,icon:iconFor(r.goal),share:r.share,figure:fig(r.value,r)+' / '+fig(r.target,r)})))};}
  function ladders(){const items=[];
   if(text('careerName')&&text('careerDetail'))items.push({title:text('careerName'),icon:'trophy',share:bar('careerProgress'),figure:'+5% sales'});
   if(text('orderName')&&text('orderName')!=='ALL ORDERS FILLED'){const fill=$('orderFill');items.push({title:'Milestone bonus',label:'Bonus '+text('claimReward'),icon:'gift',share:fill?parseFloat(fill.style.width)/100:0,figure:text('claimReward')});}
@@ -137,7 +136,7 @@ export function mountGoalsPane({pane,sources,getState,format,rate,deals}){
  // a tap buys. The tab counts down to the next set.
  function offers(){if(!deals||!deals.get)return null;const d=deals.get();if(!d.offers.length)return null;
   const until=untilLabel(d.ends-Date.now());
-  return {key:'deals',label:'Deals',title:'Deals',figure:esc(until),body:tiles(d.offers.map(o=>({title:o.name+' · '+o.effect,label:o.effect,icon:o.icon,share:0,done:o.bought,
+  return {key:'deals',label:'Deals',chip:until.split(' ')[0],title:'Deals',figure:esc(until),body:tiles(d.offers.map(o=>({title:o.name+' · '+o.effect,label:o.effect,icon:o.icon,share:0,done:o.bought,
    act:o.bought||o.blocked?null:'deal:'+o.id,price:o.bought||o.blocked?'':o.label,afford:o.afford,note:o.bought?'Bought':o.blocked?'Shop is full':''})))};}
  let signature='',picked='shift';
  function render(force){
@@ -152,17 +151,31 @@ export function mountGoalsPane({pane,sources,getState,format,rate,deals}){
   const groups=[{key:'shift',label:shiftTitle,title:shiftTitle,figure:shiftFigure,body:tiles(shift())},stars(s.empire),awards(s),ladders(),offers()].filter(g=>g&&g.body);
   // The tab you picked stays picked; while its group is empty (shift goals load a moment after start) the first one shows.
   const open=groups.find(g=>g.key===picked)||groups[0];
-  // A desktop side panel, or a phone sheet pulled up to full screen with room for it, is tall enough for every group
-  // at once, each under its own heading.
+  // A very tall desktop side panel stacks every group, each as its own card. A phone sheet pulled up past half open keeps the
+  // shift card and adds a second card under the contract and story for the group its chip picks (stars by default),
+  // so both stay in view with nothing to scroll; the room left over goes into the gaps between the blocks.
   const sheet=pane.closest('.sheet');
-  const wide=window.matchMedia&&matchMedia('(min-width:780px)').matches||!!(sheet&&sheet.classList.contains('tall')&&pane.clientHeight>=640);
-  const html=wide?(now?'<div class="goals-now'+(deal&&tale?'':' is-single')+'">'+now+'</div>':'')+groups.map(g=>'<section class="goal-group is-stacked"><h3 class="goal-head"><span>'+esc(g.title)+'</span>'+(g.figure?'<b>'+g.figure+'</b>':'')+'</h3>'+g.body+'</section>').join(''):(now?'<div class="goals-now'+(deal&&tale?'':' is-single')+'">'+now+'</div>':'')+
-   (groups.length?'<div class="goal-switch" role="tablist" aria-label="Goal groups">'+groups.map(g=>'<button type="button" role="tab" data-group="'+g.key+'" aria-selected="'+(g===open)+'" title="'+esc(g.title)+'"'+'><span>'+esc(g.label)+'</span>'+(g.figure?'<b>'+g.figure+'</b>':'')+'</button>').join('')+'</div>'+
-    '<section class="goal-group" role="tabpanel" aria-label="'+esc(open.title)+'">'+open.body+'</section>':'');
+  const wide=!!(window.matchMedia&&matchMedia('(min-width:780px)').matches)&&pane.clientHeight>=760,tall=!wide&&pane.clientHeight>=440;
+  // Phone: the open group is one big card (the shift by default: its three goals as large rings, the pips and the bonus);
+  // under it the contract and the story side by side, then a row of chips for the other groups. A chip opens its group
+  // in the big card; tapping it again, or the card's close button, brings the shift back.
+  const nowRow=now?'<div class="goals-now'+(deal&&tale?'':' is-single')+'">'+now+'</div>':'';
+  const pips=$('shiftProgress')&&$('shiftProgress').querySelector('.shift-pips');
+  const CHIP={stars:'star',awards:'trophy',ladders:'calendar',deals:'gift'};
+  const hero=open?'<section class="goal-group goal-hero" aria-label="'+esc(open.title)+'"><div class="goal-hero-head"><b class="goal-hero-title">'+esc(open.key==='shift'?shiftTitle:open.title)+'</b>'+
+   (open.key==='shift'&&pips?pips.outerHTML:'')+(open.figure?'<span class="goal-hero-figure">'+open.figure+'</span>':'')+
+   (open.key!=='shift'?'<button type="button" class="goal-hero-close" data-group="shift" aria-label="Back to the shift">'+SVG('<path d="M6 6l12 12M18 6 6 18"/>')+'</button>':'')+'</div>'+open.body+'</section>':'';
+  const chips=groups.filter(g=>g.key!=='shift'),minor=tall?(chips.find(g=>g.key===picked)||chips[0]):null;
+  const chipRow=chips.length?'<div class="goal-chips">'+chips.map(g=>{const on=tall?g===minor:g===open;
+   return '<button type="button" class="goal-chip" data-group="'+(on&&!tall?'shift':g.key)+'" aria-pressed="'+on+'" title="'+esc(g.title)+'">'+I3D(CHIP[g.key]||'target')+'<span>'+esc(g.label)+'</span>'+(g.chip?'<small>'+esc(g.chip)+'</small>':'')+'</button>';}).join('')+'</div>':'';
+  const card=(g,cls)=>'<section class="goal-group goal-hero is-stacked'+(cls||'')+'" aria-label="'+esc(g.title)+'"><div class="goal-hero-head"><b class="goal-hero-title">'+esc(g.key==='shift'?shiftTitle:g.title)+'</b>'+
+   (g.key==='shift'&&pips?pips.outerHTML:'')+(g.figure?'<span class="goal-hero-figure">'+g.figure+'</span>':'')+'</div>'+g.body+'</section>';
+  const shiftCard=groups[0]&&groups[0].key==='shift'?card(groups[0]):'';
+  const html=wide?shiftCard+nowRow+chips.map(g=>card(g,' is-minor')).join(''):tall?shiftCard+nowRow+(minor?card(minor,' is-minor'):'')+chipRow:hero+nowRow+chipRow;
   const daily=/in (\d+h \d+m)/.exec(text('dailyTime'));
   const perSec=rate?rate():0,worth=perSec>0&&total>0?'About '+span(total/perSec)+' of your sales · rewards grow as you earn':'';
   const sig=html+'#'+buttons.length+total+worth+rows.map(r=>r.label).join();if(sig===signature)return;signature=sig;
-  reward.hidden=!buttons.length;document.body.classList.toggle('goals-ready',!!buttons.length);
+  reward.hidden=!buttons.length;
   // Under the total, one line names what pays out; the full reasons and amounts sit in the strip's tooltip.
   const icons=[...new Set(rows.map(r=>r.icon))].slice(0,3);
   collect.querySelector('.goals-collect-icons').innerHTML=icons.map(n=>'<i>'+I3D(n)+'</i>').join('');
