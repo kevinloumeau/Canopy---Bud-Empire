@@ -11,24 +11,91 @@
    5. The sheet stays filled: one block per tab (the tile grid or the card) stretches to the bottom and centres its
       content, so no empty band is left and nothing is clipped.
 
-   How: every pane is a size container, and --rp is the pane's height over the SE's: 0px on the SE (273px pane), about
-   30px on the 8 Plus, 40px on the iPhone 15/16 and 64px on the Plus and Pro Max (340px pane). It is a registered
-   <length>, so it is worked out once on the pane's children and inherits as pixels (nested size containers, like the
-   Research grid, don't change it). Every token interpolates between its SE size and its largest size along it. */
+   6. Half open to full screen is one continuous scale: pulling the sheet up keeps growing the pictures and the
+      spacing in step with the room (rings up to about 88px), so a full-screen tab is a bigger, calmer version of the
+      half-open one, never the half-open one with an empty band under it. Buttons, tabs and text stop growing at the
+      half-open Pro Max size: touch targets and words don't need to be bigger.
+
+   How: every pane is a size container, and --rp is the pane's height over the SE's: 0px on the SE's half-open sheet
+   (273px pane), about 30px on the 8 Plus, 40px on the iPhone 15/16, 64px on the Plus and Pro Max (340px), and on up
+   to 420px as the sheet is pulled to full screen. It is a registered <length>, so it is worked out once on the pane's
+   children and inherits as pixels (nested size containers, like the Research grid, don't change it). Every token
+   grows along it from its SE size and stops at its own cap. */
 @property --rp{syntax:'<length>';inherits:true;initial-value:0px}
 
 @media(max-width:779px){
  html body .sheet>[data-pane]{container-type:size}
  html body .sheet>[data-pane]>*{
-  --rp:clamp(0px,100cqh - 266px,64px);
-  --s-gap:calc(6px + var(--rp) * .094);        /* between blocks: 6 → 12 */
-  --s-tile-gap:calc(5px + var(--rp) * .047);   /* between tiles: 5 → 8 */
-  --s-pad:calc(6px + var(--rp) * .063);        /* inside tiles and cards: 6 → 10 */
-  --s-ring:calc(44px + var(--rp) * .156);      /* goal, research and map rings: 44 → 54 */
-  --s-ring-sm:calc(36px + var(--rp) * .125);   /* strain rings: 36 → 44 */
-  --s-icon:calc(30px + var(--rp) * .125);      /* small 3D icons in tiles: 30 → 38 */
-  --s-art:calc(56px + var(--rp) * .25);        /* the selected strain or station picture: 56 → 72 */
-  --s-btn:calc(42px + var(--rp) * .094);       /* brass action button: 42 → 48 */
-  --s-tab:calc(32px + var(--rp) * .094);       /* segmented tab rows: 32 → 38 */
+  --rp:clamp(0px,100cqh - 266px,420px);
+  --s-gap:min(calc(6px + var(--rp) * .094),20px);       /* between blocks: 6 → 12 half open → 20 */
+  --s-tile-gap:min(calc(5px + var(--rp) * .047),12px);  /* between tiles: 5 → 8 → 12 */
+  --s-pad:min(calc(6px + var(--rp) * .063),16px);       /* inside tiles and cards: 6 → 10 → 16 */
+  --s-ring:min(calc(44px + var(--rp) * .156),88px);     /* goal, research and map rings: 44 → 54 → 88 */
+  --s-ring-sm:min(calc(36px + var(--rp) * .125),64px);  /* strain rings: 36 → 44 → 64 */
+  --s-icon:min(calc(30px + var(--rp) * .125),56px);     /* small 3D icons in tiles: 30 → 38 → 56 */
+  --s-art:min(calc(56px + var(--rp) * .25),120px);      /* the selected strain or station picture: 56 → 72 → 120 */
+  --s-btn:min(calc(42px + var(--rp) * .094),48px);      /* brass action button: 42 → 48, then stays */
+  --s-tab:min(calc(32px + var(--rp) * .094),38px);      /* segmented tab rows: 32 → 38, then stays */
  }
+}
+
+/* Pulled up past half open (the pane is 400px or taller): the same tabs, with the room spread evenly. Tiles grow with
+   their pictures but stop short of becoming tall empty boxes; the spare height goes into even gaps between the
+   blocks, and where a tab has more to show (the station's crew rows, every goal group) it shows it. */
+@media(max-width:779px){
+ /* Rows of map places never overlap, however big the ring gets: six shops share the width. */
+ .sheet .empire-screen .map-tiles{--s-ring:min(calc(44px + var(--rp) * .156),88px,calc(100cqw / 6 - 6px))}
+ .sheet .empire-screen .map-tiles.is-city{--s-ring:min(calc(44px + var(--rp) * .156),88px,calc(100cqw / 5 - 8px))}
+}
+@container (min-height:400px){
+ /* Stations: the card keeps its own height and the crew and ability rows below it come into view. */
+ .sheet>[data-pane=factory] .selected-line{min-height:0!important;grid-template-rows:auto auto!important}
+
+ /* Menu: the sell-type tiles take the extra height (as at half open) with their picture over the name, what it adds and
+    the price, all centred. */
+ .sheet [data-pane="flowers"] .breed-list{grid-auto-rows:minmax(36px,72px);align-content:space-evenly}
+
+ /* Research: rows as tall as their tiles need, spread evenly down the pane. */
+ html body .sheet>[data-pane=boosts].shop-browser>.shop-items:not([data-rows=many]){grid-template-rows:repeat(var(--rows,2),auto);align-content:space-evenly}
+ .sheet>[data-pane=boosts] .shop-items:not([data-rows=many]) :is(.shop-item,.shop-done-toggle){--ring:min(var(--ring-max),var(--tile-w) - 24px)}
+
+ /* Goals: with room for it (a 580px pane), goals-pane.js shows every group at once under its heading; each group gets an
+    equal share of the height and its tiles a compact ring. */
+ .goals-list>.goal-group.is-stacked{margin-top:var(--s-gap)}
+ .goals-list>.goal-group.is-stacked>.goal-head{margin-bottom:4px}
+ .goals-list>.goal-group.is-stacked .goal-tile{gap:2px;padding:6px 4px}
+ .goals-list>.goal-group.is-stacked .goal-ring{width:46px;height:46px}
+ .goals-list>.goal-group.is-stacked .goal-ring>img.goal-3d{width:28px;height:28px}
+ .goals-list>.goal-group.is-stacked .goal-tile>small.goal-tile-figure{display:none}
+
+ /* Empire: a branch store page spreads its blocks down the pane like the map does. */
+ html body .sheet>[data-pane=empire]:has(>[data-screen=store]:not([hidden])){display:flex;flex-direction:column}
+ .sheet .empire-screen[data-screen=store]:not([hidden]){display:flex;flex:1 1 auto;flex-direction:column;min-height:0}
+ .sheet .empire-screen[data-screen=store] .empire-screen-body{display:flex;flex:1 1 auto;flex-direction:column;min-height:0}
+ .sheet .empire-screen[data-screen=store] .empire-branch:has(>.branch-body:not([hidden])),.sheet .empire-screen[data-screen=store] .branch-body:not([hidden]){display:flex;flex:1 0 auto;flex-direction:column;align-items:stretch;align-self:stretch}
+ .sheet .empire-screen[data-screen=store] .op-pane:not([hidden]){display:flex;flex:1 0 auto;flex-direction:column;justify-content:space-evenly}
+ /* The Stations page is one heading over one grid: the grid takes the height and spreads its two rows. */
+ .sheet .empire-screen[data-screen=store] .station-pane:not([hidden]){justify-content:flex-start}
+ .sheet .empire-screen[data-screen=store] .station-pane>.page-head{margin-top:var(--s-gap)}
+ .sheet .empire-screen[data-screen=store] .station-pane>.page-tiles.is-stations{flex:1 0 auto;align-content:space-evenly}
+}
+@container (min-height:480px){
+ /* One group with the room of a pulled-up sheet: each goal becomes a full-width row, its ring on the left and the goal
+    and its figure beside it, the rows sharing the height. */
+ .goals-list>.goal-group:not(.is-stacked)>.goal-tiles{grid-template-columns:minmax(0,1fr);grid-auto-rows:minmax(0,1fr)}
+ .goals-list>.goal-group:not(.is-stacked) .goal-tile,.sheet .goals-list>.goal-group:not(.is-stacked) button.goal-tile{grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;justify-items:start;align-content:center;column-gap:calc(var(--s-pad) + 6px);row-gap:2px;padding:min(var(--s-pad),12px) calc(min(var(--s-pad),12px) + 6px);text-align:left}
+ .goals-list>.goal-group:not(.is-stacked) .goal-tile>.goal-ring{grid-row:1/3;width:min(var(--s-ring),64px);height:min(var(--s-ring),64px)}
+ .goals-list>.goal-group:not(.is-stacked) .goal-tile>.goal-ring>img.goal-3d{width:calc(min(var(--s-ring),64px) * .6);height:calc(min(var(--s-ring),64px) * .6)}
+ .goals-list>.goal-group:not(.is-stacked) .goal-tile>b{align-self:end;font-size:13px}
+ .goals-list>.goal-group:not(.is-stacked) .goal-tile>small.goal-tile-figure{display:block;align-self:start}
+ .goals-list>.goal-group:not(.is-stacked) .goal-tile>:not(.goal-ring):not(b):not(small){grid-column:2}
+ .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto auto auto!important;justify-items:center!important;align-content:center!important;row-gap:2px!important;padding:var(--s-pad) 6px!important;text-align:center!important}
+ .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill>img.icon-3d{grid-column:1!important;grid-row:1!important;width:var(--s-icon);height:var(--s-icon);margin-bottom:4px}
+ .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill>strong{grid-column:1!important;grid-row:2!important}
+ .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill>em{grid-column:1!important;grid-row:3!important}
+ .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill>small{grid-column:1!important;grid-row:4!important}
+}
+@container (min-height:660px){
+ .goals-list>.goal-group.is-stacked .goal-ring{width:52px;height:52px}
+ .goals-list>.goal-group.is-stacked .goal-ring>img.goal-3d{width:31px;height:31px}
 }
