@@ -15,6 +15,16 @@ const LOCK='<svg class="map-lock" viewBox="0 0 24 24" aria-hidden="true"><rect x
 const SHORT=['Riverside','Old Town','City','Desert','Alpine'];
 // What a finished building gives, in a few words, for its tile once nothing is left to buy.
 const DONE={flagship:'+'+Math.round(FLAGSHIP_MAX*FLAGSHIP_STEP*100)+'% sales',warehouse:'+12h away',growhouse:'+60% output',billboard:'+60% walk-ins',terplab:'+105% trend'};
+// A finished place's chip is an icon and a figure (icon audit, 2026-11-08): five city chips share a 375px row, and the
+// spelled-out words ("+60% output") were cut off. The full wording stays in each tile's label.
+const chipIcon=paths=>'<svg class="map-chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+paths+'</svg>';
+const DONE_CHIP={
+ flagship:chipIcon('<path d="M4 17l6-6 4 4 6-7"/><path d="M15 8h5v5"/>')+DONE.flagship.replace(' sales',''),
+ warehouse:chipIcon('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>')+'+12h',
+ growhouse:chipIcon('<path d="M12 21v-8"/><path d="M12 13c-4.5 0-7-2.5-7-7 4.5 0 7 2.5 7 7Z"/><path d="M12 15c0-4 2.3-6.5 7-6.5 0 4.2-2.5 6.5-7 6.5Z"/>')+'+60%',
+ billboard:chipIcon('<circle cx="12" cy="7.5" r="3.5"/><path d="M5 20c.8-4 3.6-6 7-6s6.2 2 7 6"/>')+'+60%',
+ terplab:chipIcon('<path d="M12 2.5c1 4 5 5.5 5 11a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5.2 1.6 1 2.5 2 2.5 0-4 .5-6.5 1-9Z"/>')+'+105%',
+};
 // A rate with a small '/s', so six figures fit across a phone.
 const perSecond=text=>text+'<span class="map-per">/s</span>';
 const clamp=v=>Math.max(0,Math.min(1,Number.isFinite(v)?v:0));
@@ -53,7 +63,7 @@ export function mountEmpireMap({getState,format,fly,summary}){
   const stage=hq?s.flagship|0:(s.city&&s.city[id])|0,max=hq?FLAGSHIP_MAX:CITY_MAX,unlock=hq?FLAGSHIP_UNLOCK_LIFETIME:def.unlock;
   if(isBuilding(s.builds,id)){const left=buildLeft(s.builds,id);return {share:(stage+1-buildShareLeft(s.builds,id))/max,figure:buildClock(left),tone:'building',label:name+', stage '+(stage+1)+' of '+max+' going up, done in '+buildClock(left)};}
   if(!(hq?flagshipUnlocked(s.lifetime,s.flagship,s.run&&s.run.time):cityUnlocked(id,s.lifetime,s.city&&s.city[id],s.run&&s.run.time))){const share=clamp(s.lifetime/unlock);return {share,figure:LOCK+format(unlock),tone:'locked',label:name+', opens at '+format(unlock)+' earned, '+Math.floor(share*100)+'% there'};}
-  if(stage>=max)return {share:1,figure:DONE[id],tone:'max',label:name+', finished, '+DONE[id]};
+  if(stage>=max)return {share:1,figure:DONE_CHIP[id]||DONE[id],tone:'max',label:name+', finished, '+DONE[id]};
   const cost=hq?flagshipCost(stage,s):cityCost(id,stage,s),afford=s.money>=cost;
   return {share:stage/max,figure:format(cost),tone:afford?'ready':'',cost:afford?cost:null,label:name+', stage '+stage+' of '+max+', next '+format(cost)};}
 

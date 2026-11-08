@@ -53,8 +53,6 @@ body[data-active-tray=goals] .sheet:not(.collapsed) .panel-header>#panelToggle{m
 .goal-ring-tick{width:18px;height:18px}
 .goal-ring-tick svg{width:12px;height:12px}
 
-}
-
 /* Phones: the sheet scale (sheet-scale.css) sets the air between the rows, the tab row's height and the tile gaps. */
 @media(max-width:779px){
  .goals-now{gap:var(--s-tile-gap);margin-bottom:var(--s-gap)}
@@ -94,3 +92,8 @@ body[data-active-tray=goals] .sheet:not(.collapsed) .panel-header>#panelToggle{m
 /* The exact figure ("45 / 110") shows under the name only where the tiles have the height for it. */
 .goal-tile>small.goal-tile-figure{display:none}
 @media(max-width:779px) and (min-height:800px){.goal-tile>small.goal-tile-figure{display:block}}
+/* Deals (goals-pane.js offers): the price sits in a small pill under what the deal does. Leaf when you can pay it,
+   quiet when you cannot yet; brass stays for the one next action (Collect). */
+.goals-list .goal-tile>small.deal-price{display:inline-block;justify-self:center;padding:1px 9px;border:1px solid var(--ui-edge);border-radius:999px;background:var(--ui-well-soft);color:var(--ui-soft);font-weight:600;line-height:1.45}
+.goals-list .goal-tile>small.deal-price.is-ready{border-color:transparent;background:var(--ui-leaf-glow);color:#0d2d17}
+@container (min-height:480px){.goals-list>.goal-group:not(.is-stacked) .goal-tile>small.deal-price{justify-self:start;align-self:start}}
