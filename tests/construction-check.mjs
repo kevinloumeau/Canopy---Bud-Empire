@@ -101,7 +101,7 @@ try {
     }
     // Grow to Lv 10, paid for by the guide's grant: the cash in hand is the starting $30 plus exactly that.
     const up = await guide();
-    assert.equal(up.eyebrow, 'Upgrade · On the house'); assert.match(up.cta, /^Upgrade · \$/);
+    assert.equal(up.eyebrow, 'Upgrade · On the house'); assert.equal(up.cta, 'Upgrade · Free');
     s = await status(); assert.equal(s.lineLevels[1], 1);
     await evaluate("document.querySelector('.guide-next').click()"); await sleep(300);
     s = await status(); assert.equal(s.lineLevels[1], 10, 'the grow room did not reach Lv 10'); assert.equal(s.cash, 30, 'the grant did not cover the upgrade exactly');

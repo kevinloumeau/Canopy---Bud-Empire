@@ -3,7 +3,7 @@
 .start-guide[hidden]{display:none}
 .guide-dim{position:absolute;inset:0;background:#08140e66}
 .start-guide.is-spotlight .guide-dim{background:transparent}
-.guide-ring{position:fixed;z-index:1;border:2px solid var(--p-gold-77);border-radius:16px;box-shadow:0 0 0 9999px #08140e73;pointer-events:none;transition:left .35s cubic-bezier(.2,.8,.2,1),top .35s cubic-bezier(.2,.8,.2,1),width .35s cubic-bezier(.2,.8,.2,1),height .35s cubic-bezier(.2,.8,.2,1)}
+.guide-ring{position:fixed;z-index:1;border:2px solid var(--p-gold-77);border-radius:16px;box-shadow:0 0 0 9999px #08140e73;pointer-events:none}
 .guide-ring[hidden]{display:none}
 .guide-card{
  position:fixed;z-index:2;left:16px;right:16px;top:calc(var(--hud-height,60px) + 18px);max-width:400px;margin:0 auto;
@@ -99,7 +99,7 @@
 @keyframes guide-out{to{opacity:0;transform:translateY(-16px) scale(.97)}}
 @media(prefers-reduced-motion:reduce){.guide-sign,.guide-plaque,.start-guide.is-opening .guide-dim,.start-guide.is-leaving .guide-card,.start-guide.is-opening h2,.start-guide.is-opening #guideText{animation:none}}
 @media(min-width:780px){.guide-card,.start-guide[data-step] .guide-card{left:auto;right:420px;top:auto;bottom:40px;width:380px}.start-guide.is-site .guide-card,.start-guide.is-open .guide-card{left:24px;right:auto;top:calc(var(--hud-height,60px) + 18px);bottom:auto}}
-@media(prefers-reduced-motion:reduce){.guide-card{animation:none}.guide-ring{transition:none}}
+@media(prefers-reduced-motion:reduce){.guide-card{animation:none}}
 .shop-reset .guide-replay{margin-right:auto}
 
 /* The 3D walkthrough: the camera holds each site in the middle of the map, so the card is a short caption docked under
@@ -117,14 +117,13 @@
 .guide-walk li.is-now{background:var(--ui-brass,#e2c68a);animation:guide-walk-now 1.2s ease-in-out infinite}
 @keyframes guide-walk-now{0%,100%{opacity:.45}50%{opacity:1}}
 .start-guide.is-walk .guide-card{animation:none}
-.start-guide.is-walk h2,.start-guide.is-walk #guideText{animation:guide-copy-swap .35s ease-out both}
 .start-guide.is-walk .guide-actions{min-height:44px}
 .guide-next[hidden]{display:none}
 .start-guide.is-done .guide-next{flex:1;min-height:50px;font-size:15px}
 /* Coming up: the shop's ghost buy tags breathe brass while the camera shows them. */
 body.guide-ghosts .world .marker.station-sign.is-lot:not(.is-landmark){opacity:1!important;border:1.5px solid var(--ui-brass,#e2c68a)!important;animation:guide-ghost 1.4s ease-in-out infinite}
 @keyframes guide-ghost{0%,100%{box-shadow:0 0 6px #e2c68a44}50%{box-shadow:0 0 18px #e2c68acc}}
-@media(prefers-reduced-motion:reduce){body.guide-ghosts .world .marker.is-lot{animation:none}.guide-walk li.is-now{animation:none}.start-guide.is-walk h2,.start-guide.is-walk #guideText{animation:none}}
+@media(prefers-reduced-motion:reduce){body.guide-ghosts .world .marker.is-lot{animation:none}.guide-walk li.is-now{animation:none}}
 
 /* Welcome-back report: same card language as the guide, over the map, dismissed with one tap. */
 .return-overlay{position:fixed;inset:0;z-index:58;display:grid;place-items:start center;padding:calc(var(--hud-height,60px) + 18px) 16px 16px;background:#08140e66}
