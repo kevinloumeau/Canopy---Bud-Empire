@@ -1,5 +1,6 @@
 import {BOOST_MAX} from './depth.js';
 import {FORKS,sideStatus,levelsToGate,forkOf} from './research.js';
+import {roomy} from './sheet-room.js';
 // Reuse the original purchase nodes so prices, handlers and saves remain authoritative. Order counters, kiosks and the
 // customer line live on the Orders station instead (see order-extras.js); Start over lives in Settings.
 export function mountShopBrowser({getState,components,kiosks,queueLimit,recommend,recommendInfo,openDeliveries,deliveryDesk}) {
@@ -56,13 +57,15 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
   const doneToggle=document.createElement('button');doneToggle.type='button';doneToggle.className='shop-done-toggle';doneToggle.hidden=true;doneToggle.setAttribute('aria-expanded','false');
   let showDone=false;doneToggle.onclick=()=>{showDone=!showDone;render();};
   pane.prepend(header,list,later,doneToggle,empty);
+  // Full open (src/full-open.css) has room for every row, so the maxed and closed ones show under the rest, no fold.
+  pane.addEventListener('sheetroom',()=>{render.key=null;render()});
   pane.append(milestone,reset);reset.hidden=true;
   // Building the delivery pad and its drones live on the Online card in Stations (the deliveries panel).
   const droneNode=document.getElementById('buyAutoDrone');if(droneNode&&droneNode.parentElement&&pane.contains(droneNode))droneNode.parentElement.hidden=true;
   let category=0;
   header.querySelectorAll('[data-shop-category]').forEach(button=>button.onclick=()=>{category=Number(button.dataset.shopCategory);showDone=false;render()});
   function render(){
-    const state=getState(),affordable=false;
+    const state=getState(),affordable=false,roomFull=roomy(pane);
     let count=0,done=0;const order=[],gates={};
     header.querySelectorAll('[data-shop-category]').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.shopCategory)===category)));
     rows.forEach(row=>{
@@ -85,7 +88,7 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
       if(row.effect.textContent!==tight)row.effect.textContent=tight;row.node.title=full?row.node.querySelector('h2,b').textContent+' · '+full:'';
       const here=row.category===category;
       if(here&&gated){const gate=forkOf(key).gate+' '+categories[row.category]+' levels · '+levelsToGate(state,key)+' to go';(gates[gate]=gates[gate]||[]).push(row.node.querySelector('h2,b').textContent);}
-      row.node.hidden=!here||gated||(isDone&&!showDone);
+      row.node.hidden=!here||gated||(isDone&&!showDone&&!roomFull);
       if(here){if(isDone)done++;else if(!gated)count++}
     });
     const sequence=order.filter(o=>!o.isDone).concat(order.filter(o=>o.isDone)).map(o=>o.row);
@@ -107,7 +110,7 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
       count.hidden=!d.built||!d.waiting;count.textContent=d.waiting;desk.setAttribute('aria-label',unbuilt?'Build the pickup window, '+d.price+', '+note.textContent:'Delivery desk, '+note.textContent)}
     const gateLines=Object.keys(gates);later.hidden=!gateLines.length;
     later.innerHTML=gateLines.map(g=>'<span><b>Opens at '+g.replace(' · ','</b> · ')+'<small>'+gates[g].join(' or ')+'</small></span>').join('');
-    doneToggle.hidden=!done;if(doneToggle.parentElement!==list||list.lastElementChild!==doneToggle)list.appendChild(doneToggle);doneToggle.setAttribute('aria-expanded',String(showDone));
+    doneToggle.hidden=!done||roomFull;if(doneToggle.parentElement!==list||list.lastElementChild!==doneToggle)list.appendChild(doneToggle);doneToggle.setAttribute('aria-expanded',String(showDone));
     doneToggle.innerHTML='<span>'+(showDone?'Hide maxed and closed':'Maxed and closed')+'</span><b>'+done+'</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+(showDone?'m6 15 6-6 6 6':'m6 9 6 6 6-6')+'"/></svg>';
     // Phones size the grid to fill the sheet (src/research-fit.css): a few tiles go two across and grow, a full branch
     // goes four across. A fork takes two cells. Rows come from laying the cells out in order, as the grid does.

@@ -27,6 +27,7 @@ import {morph} from './dom-morph.js';
 import {FORKS,RESEARCH_BRANCHES,ALSO,RESEARCH_VERSION,levelCost,mergeResearch,freshForks,migrateForks,sideStatus,takeSide,partnerOf,levelsToGate,forkOf,branchLevels} from './research.js';
 import {installQuietDom} from './quiet-dom.js';
 import {installNoPageZoom} from './no-page-zoom.js';
+import {installSheetRoom} from './sheet-room.js';
 import {createTelemetry} from './telemetry.js';
 import {deckProvider} from './telemetry-deck.js';
 import {createReminders,planReminders} from './reminders.js';
@@ -34,6 +35,7 @@ import {migrateAchievements,checkAchievements,achievementBonus} from './achievem
 import {CULTIVARS,PARENT_LEVEL,migrateCrosses,crossBonus,crossCost,cultivarStatus,startCross,tickCross,sortedCultivars} from './breeding.js';
 installQuietDom();
 installNoPageZoom();
+installSheetRoom();
 import {mountShopBrowser} from './shop-browser.js';
 import {tickOperations,atmosphere,neighborhood} from './operations.js';
 import {mountOperations} from './operations-ui.js';
