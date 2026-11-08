@@ -1,4 +1,4 @@
-import { CROSS_STREETS, districtPlot, DISTRICT_COUNT, districtBlock, districtTerraces } from './branch-districts.js';
+import { CROSS_STREETS, blockEast, districtPlot, DISTRICT_SLOTS, districtBlock, districtTerraces } from './branch-districts.js';
 // The sunny look (the default since 2026-10-15): instead of a diorama floating in a dark studio, the main shop sits
 // on a sunlit city block that runs to the screen edges. The shop's slab and the sidewalk are one continuous paved plaza, a
 // kerb drops to sunken asphalt streets on all four sides, and muted low-rise neighbours sit beyond the far kerbs so
@@ -300,7 +300,11 @@ const ROADS = [{ along: 'x', at: -18.5 }, { along: 'x', at: 21.5 }, { along: 'z'
   // The branch districts' cross streets (branch-districts.js): the streets along x carry on east past the first ring to
   // a block per branch, and these split the blocks. They run on to XE, the town's east end, always deep in the haze.
   ...CROSS_STREETS.map(at => ({ along: 'z', at }))];
-const XE = CROSS_STREETS[CROSS_STREETS.length - 1] + 40;
+// (On past the spare block where the weekend market sets up, which has no cross street of its own.)
+const XE = blockEast(DISTRICT_SLOTS - 1) + 40;
+// Where the parked cars stop, as they did before the spare block: their spacing is seeded down the whole run, so a
+// longer run would move every parked car in town.
+const XE_PARKED = CROSS_STREETS[CROSS_STREETS.length - 1] + 40;
 // How far a street runs: those along x from the west haze to the town's east end, those along z across the town.
 const runOf = along => along === 'x' ? [-L, XE] : [-L, L];
 const RW = 6; // street width kerb to kerb
@@ -458,7 +462,8 @@ const SILHOUETTES = (() => {
   xs.forEach(([bx0, bx1], i) => zs.forEach(([bz0, bz1], j) => {
     const outer = i === 0 || j === 0 || i === xs.length - 1 || j === zs.length - 1;
     if (!outer) return;
-    const near = i === xs.length - 1 || j === zs.length - 1, x0 = bx0 + 2, x1 = bx1 - 2, z0 = bz0 + 2, z1 = bz1 - 2;
+    // The east end's band starts past the spare block (the weekend market's), which brings its own terraces.
+    const near = i === xs.length - 1 || j === zs.length - 1, x0 = i === xs.length - 1 ? Math.max(bx0, blockEast(DISTRICT_SLOTS - 1) + RW / 2) + 2 : bx0 + 2, x1 = bx1 - 2, z0 = bz0 + 2, z1 = bz1 - 2;
     // Rows from the block's front (+z) back, lots from its right (+x) end, so the fronts line up along the kerbs.
     for (let zb = z1; zb - 5 > z0 - .01;) {
       const d = Math.min(zb - z0, 6 + rand() * 2.5);
@@ -1093,7 +1098,7 @@ const CITY_PROPS = (() => {
   });
   // Parked cars on the back streets, between the junctions' stop bars.
   ROADS.slice(4).forEach(({ along, at }) => {
-    const cross = ROADS.filter(r => r.along !== along).map(r => r.at).sort((a, b) => a - b), stops = [runOf(along)[0]].concat(cross, [runOf(along)[1]]);
+    const cross = ROADS.filter(r => r.along !== along).map(r => r.at).sort((a, b) => a - b), stops = [runOf(along)[0]].concat(cross, [along === 'x' ? XE_PARKED : runOf(along)[1]]);
     for (let i = 0; i + 1 < stops.length; i++) [-1, 1].forEach(side => {
       const heading = along === 'x' ? side : -side, lane = at + side * 1.9;
       const rot = along === 'x' ? (heading > 0 ? 0 : Math.PI) : (heading > 0 ? -Math.PI / 2 : Math.PI / 2);
@@ -1354,7 +1359,7 @@ export function drawWalker(api, { g, s, x, z, facing, heading }) {
 
 // The block's layout for the 3D map: streets, terraces (footprints from their renders), trees, lamps and haze, in
 // the same world units the 2D passes above use.
-const DISTRICT_PLOTS = Array.from({ length: DISTRICT_COUNT }, (_, i) => districtPlot(i));
+const DISTRICT_PLOTS = Array.from({ length: DISTRICT_SLOTS }, (_, i) => districtPlot(i));
 export function townLayout() {
   return {
     roads: ROADS.map(r => ({ ...r })), roadWidth: RW, plazaY: P, streetY: G, extent: L, eastEnd: XE,

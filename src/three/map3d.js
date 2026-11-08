@@ -17,6 +17,8 @@ import { buildEntrance } from './entrance.js';
 import { createIntro } from './intro.js';
 import { createBranchLayer } from './branch3d.js';
 import { buildBranchShop } from './branch-shops.js';
+import { buildPopupMarket } from './popup-market.js';
+import { buildKeepsakeBunting } from './keepsake-bunting.js';
 import { rigStation, bindStation, moveStation } from './station-motion.js';
 import { compactModel } from './compact.js';
 import { screenState, paintScreen, W as SCREEN_W, H as SCREEN_H, SCALE as SCREEN_SCALE, PAID as PAID_AT, PAID_HOLD } from './kiosk-screen.js';
@@ -1422,11 +1424,15 @@ export function createMap3D(canvas, layout) {
   // out with the empire (frame.hazeEast).
   const districtLayers = [], districtGrounds = {}, PLOT_FILL = '#d2c8ab';
   function districtGround(d) {
-    const key = d.index + (d.lease ? ':lease' : d.scene ? ':open' : ':plain');
+    const key = d.index + (d.popup ? ':popup' : d.lease ? ':lease' : d.scene ? ':open' : ':plain');
     if (districtGrounds[key]) return districtGrounds[key];
     const group = new THREE.Group(), p = layout.districtPlots[d.index];
     group.userData.land = true;
-    if (d.scene) {
+    if (d.popup) {
+      // The weekend market's plot under its brick square (popup-market.js lays the bricks).
+      const P = layout.plazaY;
+      span(group, p.x0, p.x1, P - 1, P + .02, p.z0, p.z1, '#d6c6a2', { cast: false });
+    } else if (d.scene) {
       const spec = d.land, c = { x: p.x0 - spec.plot[0], z: p.z0 - spec.plot[2] };
       let ground = [[p.x0, p.x1, p.z0, p.z1]];
       const strips = (spec.strips || []).map(w => [w.x0 === undefined ? p.x0 : c.x + w.x0, w.x1 === undefined ? p.x1 : c.x + w.x1, w.z0 === undefined ? p.z0 : c.z + w.z0, w.z1 === undefined ? p.z1 : c.z + w.z1].map((v, k) => Math.max(k < 2 ? p.x0 : p.z0, Math.min(k < 2 ? p.x1 : p.z1, v))));
@@ -1491,7 +1497,22 @@ export function createMap3D(canvas, layout) {
     }
     return branchShops[index];
   }
+  // The weekend pop-up market (popup-market.js), made the first time a market shows and moved to whichever block it is on.
+  let popupMarket = null;
+  function placePopup(d, night) {
+    if (!d) { if (popupMarket) popupMarket.visible = false; return; }
+    if (!popupMarket) { try { popupMarket = buildPopupMarket(world, { hazed }); } catch (e) { console.warn('3D map: pop-up market failed', e); popupMarket = new THREE.Group(); world.add(popupMarket); } }
+    popupMarket.visible = true; popupMarket.position.set(d.x, layout.plazaY, d.z);
+    if (popupMarket.userData.update) popupMarket.userData.update({ theme: d.popup.theme, open: d.popup.open, night: night > .5 });
+  }
   const springUp = t => { if (t <= 0) return .02; if (t >= 1) return 1; const k = t - 1; return Math.max(.02, 1 + 2.7 * k * k * k + 1.7 * k * k); };
+  // The weekend markets' keepsakes: bunting on the flagship's street, built the first time one is won.
+  let bunting = null;
+  function placeBunting(ids) {
+    if (!ids || !ids.length) { if (bunting) bunting.visible = false; return; }
+    if (!bunting) { try { bunting = buildKeepsakeBunting(world, { hazed }); } catch (e) { console.warn('3D map: keepsake bunting failed', e); bunting = new THREE.Group(); world.add(bunting); } }
+    if (bunting.userData.update) bunting.userData.update(ids);
+  }
   function placeDistricts(list, night) {
     const shown = new Set(), sites = new Set(), shops = new Set();
     branchGlow.length = 0;
@@ -1519,6 +1540,7 @@ export function createMap3D(canvas, layout) {
     Object.keys(districtSites).forEach(k => { if (!sites.has(+k)) districtSites[k].visible = false; });
     Object.keys(branchShops).forEach(k => { if (!shops.has(+k)) branchShops[k].visible = false; });
     for (let n = used; n < districtLayers.length; n++) districtLayers[n].group.visible = false;
+    placePopup(list && list.find(d => d.popup), night);
     Object.values(districtGrounds).forEach(g => { if (g.userData.shownFrame !== frameClock) g.visible = false; });
     // Plots not on show: plain paving, so no hole ever shows.
     (layout.districtPlots || []).forEach((p, i) => { if (!shown.has(i)) { const g = districtGround({ index: i }); g.visible = true; g.userData.shownFrame = frameClock; } });
@@ -1530,6 +1552,7 @@ export function createMap3D(canvas, layout) {
     const night = view(frame, daySky);
     if (frame.hazeEast) { hazeUniforms.hazeX.value.z = frame.hazeEast[0]; hazeUniforms.hazeX.value.w = frame.hazeEast[1]; }
     placeDistricts(frame.districts, night);
+    placeBunting(frame.keepsakes);
 
     const stepSeconds = frameStep(frame);
     let ringShown = false;

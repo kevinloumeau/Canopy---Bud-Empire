@@ -7,7 +7,7 @@
 //   node tests/lone-words-check.mjs http://127.0.0.1:5174/
 //
 // For each save (a fresh start, the showcase shop and a maxed empire), each phone width (390×844 and 375×667) and each
-// menu tab (Stations, Menu, Research, Goals, every Empire section and the Perks and Records screens), it walks every visible text node, measures each
+// menu tab (Stations, Menu, Research, Goals, every Empire section and the Perks, Records and pop-up market screens), it walks every visible text node, measures each
 // word's Range rect, groups the words of one block by line and fails on any block of two or more lines whose last line
 // holds one word (two-word labels may stack as a pair). The top lane's toasts are scanned too. Station card chips belong to the station card fit work, so .station-card is skipped for now.
 // Chrome comes from CHROME, Playwright's Chromium (/opt/pw-browsers) or the default macOS path.
@@ -20,6 +20,8 @@ import { setTimeout as sleep } from 'node:timers/promises';
 
 const gameUrl = new URL(process.argv[2] || process.env.GAME_URL || 'http://127.0.0.1:4173/');
 gameUrl.searchParams.set('snap', '');
+// ?popup opens the next weekend market now, so its Empire door and page are scanned too.
+gameUrl.searchParams.set('popup', '');
 const SKIP = '.station-card';
 
 const showcase = {
@@ -42,7 +44,7 @@ const max = {
 const saves = { fresh: { money: 500, gameSpeed: 1 }, showcase, max };
 const sizes = [[390, 844], [375, 667]];
 // "While away" is shown a minute after the last visit, so the top lane toast is on screen while the tabs are scanned.
-const tabs = ['factory', 'flowers', 'boosts', 'goals', 'goals:deals', 'empire:today', 'empire:growth', 'empire:daily', 'empire:events', 'empire:perks', 'empire:records'];
+const tabs = ['factory', 'flowers', 'boosts', 'goals', 'goals:deals', 'empire:today', 'empire:growth', 'empire:daily', 'empire:events', 'empire:perks', 'empire:records', 'empire:popup'];
 
 // Runs in the page: every block's text grouped into lines, reporting blocks whose last line is one word.
 const scan = `(() => {
@@ -135,7 +137,7 @@ try {
       await evaluate(`document.querySelectorAll('.welcome-back button, .intro-card button, [data-dismiss]').forEach(b=>{try{b.click()}catch{}})`);
       for (const tab of tabs) {
         const [tray, view] = tab.split(':');
-        await evaluate(`(()=>{document.querySelector('[data-tray="${tray}"]').click();${view ? `const v=document.querySelector('[data-empire-view="${view}"]')||document.querySelector('.empire-${view}')||document.querySelector('.goal-switch [data-group="${view}"]');if(v)v.click();` : ''}})()`);
+        await evaluate(`(()=>{document.querySelector('[data-tray="${tray}"]').click();${view ? `const v=document.querySelector('[data-empire-view="${view}"]')||document.querySelector('.empire-${view}')||document.querySelector('.goal-switch [data-group="${view}"]');if(v&&!v.hidden)v.click();` : ''}})()`);
         await sleep(450);
         for (const f of await evaluate(scan)) failures.push(`${saveName} ${width}×${height} ${tab}: "${f.text}" leaves "${f.lone}" alone (${f.where})`);
       }
