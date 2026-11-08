@@ -76,3 +76,12 @@
 }
 /* Taller phones have the room: the name clears the level chip by a little more. */
 @media(max-width:779px) and (min-height:761px){.sheet .machine-nav button>.station-card-name{margin-top:8px}.sheet>[data-pane=factory]>*{--st-tile:calc(var(--st-ring) + 25px)}}
+/* Desktop panel: the tiles take the ring's height rather than the old picture row's. */
+@media(min-width:780px){
+ .sheet .machine-nav{grid-auto-rows:auto!important}
+ .sheet .machine-nav button{grid-template-rows:var(--st-ring,46px) auto!important;row-gap:0!important;height:auto!important;min-height:0!important;padding:7px 2px 6px!important}
+ .sheet .machine-nav button>.station-card-name{margin-top:8px}
+}
+/* The chip only carries the level: the slowest station already wears the brass ring. */
+.sheet .machine-nav .station-ring .slow-tag{display:none!important}
+.sheet .machine-nav .station-ring>em{white-space:nowrap!important;width:auto!important;max-width:none!important}
