@@ -35,7 +35,9 @@ const WALK=[
  {stage:'pickup',title:'Bag at pickup',text:'A packed jar goes in the bag.'},
  {stage:'out',title:'Sold!',text:'Every bag out the door pays the till.'}
 ];
-const BUILT_PAUSE=900,UPGRADED_PAUSE=1500,OUT_PAUSE=2600;
+// HELLO_HOLD keeps "Here they come" up long enough to read before the first stage caption replaces it. RING_GLIDE is
+// how long the spotlight ring takes to slide from one site to the next.
+const BUILT_PAUSE=900,UPGRADED_PAUSE=1500,OUT_PAUSE=2600,HELLO_HOLD=1400,RING_GLIDE=350;
 export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,build,shopOpen,openShop,finish,sheet,reserve,select,camera,grow,guest}){
  // `sheet` folds the tray away on every step and `reserve` keeps the map framed above the docked card. `camera` points
  // the 3D view (look at a site, follow the guest, hand back); `grow` reads and buys the grow room's upgrade with the
@@ -52,20 +54,35 @@ export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,buil
  const $=s=>root.querySelector(s),ring=$('.guide-ring'),dots=$('.guide-dots'),walkDots=$('.guide-walk');
  const steps=STEPS.filter(s=>!s.follow);
  dots.innerHTML=steps.map(()=>'<i></i>').join('');
- let step=-1,raf=0,lastTarget=null,finished=false,advanceTimer=0,walk=-1,walkTimer=0,walkWatch=0;
+ let step=-1,raf=0,lastTarget=null,finished=false,advanceTimer=0,walk=-1,walkTimer=0,walkWatch=0,walkSince=0;
  const built=s=>s.build===undefined||!isBuilt||isBuilt(s.build);
  const upgraded=()=>!grow||grow.level()>=GROW_GOAL;
  // Steps that dock the card under the map and pin the camera: the sites, the upgrade, the opening and the walk.
  const docked=s=>s.build!==undefined||s.upgrade!==undefined||!!s.open||!!s.follow;
+ // The ring is placed every frame, so it stays locked on the sign while the camera glides. A CSS transition here would
+ // trail the moving sign and cut through it; instead a new target eases in from where the ring was, over RING_GLIDE.
+ let ringBox=null,ringFrom=null,ringSince=0,ringFor=null;
  function place(){
   const target=lastTarget&&document.querySelector(lastTarget);
-  if(!target){ring.hidden=true;return;}
+  if(!target){ring.hidden=true;ringBox=null;return;}
   const r=target.getBoundingClientRect(),pad=6;
-  if(r.width===0||r.height===0){ring.hidden=true;return;}
-  ring.hidden=false;ring.style.left=(r.left-pad)+'px';ring.style.top=(r.top-pad)+'px';ring.style.width=(r.width+pad*2)+'px';ring.style.height=(r.height+pad*2)+'px';
+  if(r.width===0||r.height===0){ring.hidden=true;ringBox=null;return;}
+  const to=[r.left-pad,r.top-pad,r.width+pad*2,r.height+pad*2],now=performance.now();
+  if(ringFor!==lastTarget){ringFor=lastTarget;ringFrom=ringBox;ringSince=now;}
+  const t=ringFrom?Math.min(1,(now-ringSince)/RING_GLIDE):1,e=1-Math.pow(1-t,3);
+  if(t>=1)ringFrom=null;
+  ringBox=ringFrom?to.map((v,k)=>ringFrom[k]+(v-ringFrom[k])*e):to;
+  ring.hidden=false;ring.style.left=ringBox[0]+'px';ring.style.top=ringBox[1]+'px';ring.style.width=ringBox[2]+'px';ring.style.height=ringBox[3]+'px';
  }
  function track(){place();raf=requestAnimationFrame(track);}
  function setCopy(title,text){$('#guideTitle').textContent=title;$('#guideText').textContent=text;}
+ // The walk and tour captions fade in fresh each time they change. A one-shot animation (no fill) always ends fully
+ // visible, so a caption can never be left blank by a fade that was held at its first frame.
+ const still=()=>typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+ function swapCopy(title,text){
+  setCopy(title,text);if(still())return;
+  [$('#guideTitle'),$('#guideText')].forEach(el=>{if(el.animate)el.animate([{opacity:0,transform:'translateY(4px)'},{opacity:1,transform:'none'}],{duration:350,easing:'ease-out'});});
+ }
  function show(i){
   clearTimeout(advanceTimer);advanceTimer=0;
   step=i;const s=STEPS[i];if(report)report('guide_step',{step:i+1});
@@ -84,7 +101,8 @@ export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,buil
   const next=$('.guide-next');next.disabled=false;
   // The opening card has one job; a Skip beside "Open the shop" would do the same thing.
   $('.guide-skip').hidden=!!s.open;
-  next.textContent=pending?'Build':upgrading?'Upgrade · '+(grow.price?grow.price():'Lv '+GROW_GOAL):s.open?(opening?s.cta:'Follow a guest'):s.cta||'Next';
+  // The guide pays for this upgrade, so the button says so instead of showing a price.
+  next.textContent=pending?'Build':upgrading?'Upgrade · Free':s.open?(opening?s.cta:'Follow a guest'):s.cta||'Next';
   Array.from(dots.children).forEach((d,j)=>d.classList.toggle('is-on',j<=i));
   lastTarget=s.target||null;root.dataset.step=String(i);root.classList.toggle('is-spotlight',!!s.target||!!s.open);
   if(fit)fit();if(reserve)reserve(docked(s)?$('.guide-card').offsetHeight+12:0);requestAnimationFrame(place);next.focus({preventScroll:true});
@@ -96,7 +114,7 @@ export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,buil
   root.classList.remove('is-hero','is-build','is-built','is-open');root.classList.add('is-site','is-walk','is-spotlight');
   $('.guide-hero').hidden=true;$('.guide-beats').hidden=true;$('.guide-tap').hidden=true;$('.guide-sign').hidden=true;$('.guide-actions').hidden=false;
   $('.guide-eyebrow').hidden=false;$('.guide-eyebrow').textContent='Your first guest';
-  setCopy('Here they come','Watch one visit, start to finish.');
+  swapCopy('Here they come','Watch one visit, start to finish.');walkSince=performance.now();
   walkDots.hidden=false;Array.from(walkDots.children).forEach(d=>d.className='');
   $('.guide-skip').hidden=false;const next=$('.guide-next');next.hidden=true;
   if(camera)camera.follow();
@@ -108,11 +126,15 @@ export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,buil
   const at=WALK.findIndex(w=>w.stage===stage);
   // A guest who vanished without a bag (or a game with no guest at all) still ends the walk.
   if(stage==='gone'&&walk<WALK.length-1){showWalk(WALK.length-1);return;}
-  if(at>walk)showWalk(at);
+  if(at<=walk)return;
+  // Let the hello line be read before the first stage replaces it.
+  const wait=walk<0?HELLO_HOLD-(performance.now()-walkSince):0;
+  if(wait>0){clearTimeout(walkTimer);walkTimer=setTimeout(watchGuest,wait);return;}
+  showWalk(at);
  }
  function showWalk(i){
   walk=i;const w=WALK[i];if(report)report('guide_walk',{stage:w.stage});
-  setCopy(w.title,w.text);
+  swapCopy(w.title,w.text);
   Array.from(walkDots.children).forEach((d,j)=>{d.classList.toggle('is-on',j<i);d.classList.toggle('is-now',j===i);});
   if(sound&&i>0)sound('tap');
   if(i===WALK.length-1){clearInterval(walkWatch);walkWatch=0;clearTimeout(walkTimer);walkTimer=setTimeout(startTour,OUT_PAUSE);}
@@ -125,14 +147,14 @@ export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,buil
   tourAt++;document.body.classList.remove('guide-ghosts');
   if(tourAt>=tour.length){root.classList.remove('is-tour');lastTarget=null;ring.hidden=true;handOver();return;}
   const t=tour[tourAt];root.classList.add('is-tour');walkDots.hidden=true;
-  $('.guide-eyebrow').textContent=t.eyebrow;setCopy(t.title,t.text);
+  $('.guide-eyebrow').textContent=t.eyebrow;swapCopy(t.title,t.text);
   if(t.glow)document.body.classList.add('guide-ghosts');
   lastTarget=t.target||null;ring.hidden=true;
   const next=$('.guide-next');next.hidden=false;next.disabled=false;next.textContent='Next';$('.guide-skip').hidden=false;
   camera.stop(t);if(sound&&tourAt>0)sound('tap');if(reserve)reserve($('.guide-card').offsetHeight+12);next.focus({preventScroll:true});
  }
  function handOver(){
-  walkDots.hidden=false;$('.guide-eyebrow').textContent='Your turn';setCopy('The shop is yours.','Upgrade the slowest station first.');
+  walkDots.hidden=false;$('.guide-eyebrow').textContent='Your turn';swapCopy('The shop is yours.','Upgrade the slowest station first.');
   Array.from(walkDots.children).forEach(d=>{d.classList.add('is-on');d.classList.remove('is-now');});
   const next=$('.guide-next');next.hidden=false;next.textContent='Let’s grow';$('.guide-skip').hidden=true;root.classList.add('is-done');
   if(camera)camera.home();if(reserve)reserve($('.guide-card').offsetHeight+12);next.focus({preventScroll:true});
