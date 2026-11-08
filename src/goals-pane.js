@@ -1,6 +1,7 @@
 import {abbr,unabbr,STORES,starStatus,starCount,SHIFT_LENGTH,ringRank} from './progression.js';
 import {milestone} from './depth.js';
 import {tieLast} from './no-lone-words.js';
+import {untilLabel} from './deals.js';
 import {ACHIEVEMENTS,achievementRows} from './achievements.js';
 // Goals tab, built to fit the half-open sheet on an iPhone SE without scrolling: one brass Collect in the sheet's header
 // row (the icons of what pays out, then the total), the contract and the story side by side, then one group of goal
@@ -30,7 +31,8 @@ const ICONS={
 };
 // 3D icons rendered in Blender at the map's angle (public/icons/3d/goal-*.png, art/blender/goal_icons.py), like the other tabs.
 const ICONS_3D=new Set(['gift','trophy','coin','star','up','calendar','contract','book','person','box','bag','leaf','screen','target']);
-const I3D=(n,cls)=>ICONS_3D.has(n)?'<img class="goal-3d'+(cls?' '+cls:'')+'" src="icons/3d/goal-'+n+'.png" alt="" draggable="false" decoding="async">':SVG(ICONS[n]||ICONS.target);
+// A name with a dash is a whole file name in icons/3d (the deals reuse the research icons).
+const I3D=(n,cls)=>/-/.test(n)?'<img class="goal-3d'+(cls?' '+cls:'')+'" src="icons/3d/'+n+'.png" alt="" draggable="false" decoding="async">':ICONS_3D.has(n)?'<img class="goal-3d'+(cls?' '+cls:'')+'" src="icons/3d/goal-'+n+'.png" alt="" draggable="false" decoding="async">':SVG(ICONS[n]||ICONS.target);
 // Pick an icon from a goal's own words, so a new goal type still gets a sensible picture.
 const iconFor=t=>{t=(t||'').toLowerCase();
  return /contract/.test(t)?'contract':/share/.test(t)?'trophy':/city|hq|building/.test(t)?'up':/deliver|online|drone|web/.test(t)?'box':/kiosk/.test(t)?'screen':/strain|grow|seed|plant/.test(t)?'leaf':/upgrade|level|lv\b|station/.test(t)?'up':
@@ -44,7 +46,7 @@ export const dollars=text=>{const m=/\$[\d.,]+(?:Dc|No|Oc|Sp|Sx|Qi|Qa|[KMBT])?/.
 const short=n=>abbr(Math.floor(n)).replace(/\.0+([A-Za-z]+)$/,'$1').replace(/(\.\d)0([A-Za-z]+)$/,'$1$2');
 const clamp=v=>Math.max(0,Math.min(1,Number(v)||0));
 
-export function mountGoalsPane({pane,sources,getState,format,rate}){
+export function mountGoalsPane({pane,sources,getState,format,rate,deals}){
  const $=id=>document.getElementById(id);
  const screen=document.createElement('div');screen.className='empire-screen empire-content goals-screen';
  // Collect lives in the sheet's header row, beside the "Goals" title, so the pane below is all goals: the icons of what
@@ -81,10 +83,10 @@ export function mountGoalsPane({pane,sources,getState,format,rate}){
  // A ring is a circle whose stroke covers the share done, around the goal's 3D icon; finished tiles add a lime tick badge.
  const ring=(icon,share,done)=>'<span class="goal-ring'+(done?' is-done':'')+'" style="--share:'+(done?1:clamp(share)).toFixed(3)+'">'+
   '<svg class="goal-ring-track" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19"/><circle class="goal-ring-fill" cx="22" cy="22" r="19" pathLength="100"/></svg>'+
-  I3D(ICONS_3D.has(icon)?icon:'target')+(done?'<i class="goal-ring-tick">'+SVG(ICONS.tick)+'</i>':'')+'</span>';
+  I3D(ICONS_3D.has(icon)||/-/.test(icon)?icon:'target')+(done?'<i class="goal-ring-tick">'+SVG(ICONS.tick)+'</i>':'')+'</span>';
  const tile=o=>{const tag=o.act?'button':'div';
   return '<'+tag+' class="goal-tile'+(o.done?' is-done':'')+'"'+(o.act?' type="button" data-act="'+o.act+'"':'')+' title="'+esc(o.title+(o.figure?' · '+o.figure:''))+'">'+
-   ring(o.icon||iconFor(o.title),o.share,o.done)+'<b>'+esc(tieLast(o.label||o.title))+'</b>'+(o.note?'<small>'+esc(o.note)+'</small>':o.figure&&!o.done?'<small class="goal-tile-figure">'+esc(o.figure)+'</small>':'')+'</'+tag+'>';};
+   ring(o.icon||iconFor(o.title),o.share,o.done)+'<b>'+esc(tieLast(o.label||o.title))+'</b>'+(o.price?'<small class="deal-price'+(o.afford?' is-ready':'')+'">'+esc(o.price)+'</small>':o.note?'<small>'+esc(o.note)+'</small>':o.figure&&!o.done?'<small class="goal-tile-figure">'+esc(o.figure)+'</small>':'')+'</'+tag+'>';};
  const tiles=items=>items.length?'<div class="goal-tiles">'+items.map(tile).join('')+'</div>':'';
 
  // Contract and story are half cards: the icon and the thing to do (two balanced lines), then a foot line with a small
@@ -130,6 +132,12 @@ export function mountGoalsPane({pane,sources,getState,format,rate}){
   if(text('seasonName'))items.push({title:text('seasonName'),icon:'calendar',share:0,note:text('seasonTime').replace(/^Ends in /,'').replace(/^Starts in /,'in ')});
   return items.length?{key:'ladders',label:'Milestones',title:'Milestones',figure:'',body:tiles(items)}:null;}
 
+ // Deals (deals.js via main.js): the offers of this four-hour window as tiles, each saying what it does and its price;
+ // a tap buys. The tab counts down to the next set.
+ function offers(){if(!deals||!deals.get)return null;const d=deals.get();if(!d.offers.length)return null;
+  const fmt=n=>format?format(n):'$'+short(n),until=untilLabel(d.ends-Date.now());
+  return {key:'deals',label:'Deals',title:'Deals',figure:esc(until),body:tiles(d.offers.map(o=>({title:o.name+' · '+o.effect,label:o.effect,icon:o.icon,share:0,done:o.bought,
+   act:o.bought?null:'deal:'+o.id,price:o.bought?'':fmt(o.price),afford:o.afford,note:o.bought?'Bought':''})))};}
  let signature='',picked='shift';
  function render(force){
   if(document.hidden||!getState)return;
@@ -140,7 +148,7 @@ export function mountGoalsPane({pane,sources,getState,format,rate}){
   // Contract and story share a row; then one goal group at a time, picked from a row of tabs that each show the
   // group's headline figure.
   const deal=contract(),tale=story(),now=deal+tale;
-  const groups=[{key:'shift',label:shiftTitle,title:shiftTitle,figure:shiftFigure,body:tiles(shift())},stars(s.empire),awards(s),ladders()].filter(g=>g&&g.body);
+  const groups=[{key:'shift',label:shiftTitle,title:shiftTitle,figure:shiftFigure,body:tiles(shift())},stars(s.empire),awards(s),ladders(),offers()].filter(g=>g&&g.body);
   // The tab you picked stays picked; while its group is empty (shift goals load a moment after start) the first one shows.
   const open=groups.find(g=>g.key===picked)||groups[0];
   // A desktop side panel, or a phone sheet pulled up to full screen with room for it, is tall enough for every group
@@ -164,7 +172,7 @@ export function mountGoalsPane({pane,sources,getState,format,rate}){
   list.innerHTML=html;
  }
  const act=name=>{const click=id=>{const b=$(id);if(b&&!b.disabled)b.click();};
-  if(name.startsWith('group:'))picked=name.slice(6);else if(name==='contract-start')click('contractStart');else if(name==='contract-boost')click('contractBoost');else if(name==='story')click('storyAction');
+  if(name.startsWith('group:'))picked=name.slice(6);else if(name.startsWith('deal:')){if(deals&&deals.buy)deals.buy(name.slice(5));}else if(name==='contract-start')click('contractStart');else if(name==='contract-boost')click('contractBoost');else if(name==='story')click('storyAction');
   requestAnimationFrame(()=>render(true));};
  list.addEventListener('click',e=>{const g=e.target.closest('[data-group]');if(g){act('group:'+g.dataset.group);return;}const t=e.target.closest('[data-act]');if(t)act(t.dataset.act);});
  list.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[role=button][data-act]')){e.preventDefault();act(e.target.dataset.act);}});
