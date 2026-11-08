@@ -76,7 +76,7 @@ export function buildShell(world, layout, { box, span, material, model }) {
   const tRear = top.z - top.d / 2, tLeft = -top.w / 2, glassH = layout.rooftop ? layout.rooftop.y - .34 - top.y : 3.9;
   // The fan housing's height at model scale, and the glazing's top.
   const fanBase = top.y + glassH, fanBandH = 1.44;
-  const glass = new THREE.MeshStandardMaterial({ color: '#cfe6df', roughness: .1, metalness: 0, transparent: true, opacity: .26, depthWrite: false });
+  const glass = new THREE.MeshStandardMaterial({ color: '#cfe6df', emissive: '#ffc27a', emissiveIntensity: 0, roughness: .1, metalness: 0, transparent: true, opacity: .26, depthWrite: false });
   function glazing(alongZ, a0, a1, at, fan) {
     const n = Math.max(2, Math.round((a1 - a0) / s.glazingBay)), step = (a1 - a0) / n, y = top.y;
     let solid = null;
@@ -586,6 +586,8 @@ export function buildShell(world, layout, { box, span, material, model }) {
       glows.forEach(([m, from]) => { m.emissiveIntensity = from.emissiveIntensity; });
       marqueeMat.emissiveIntensity = .15 + night * .7;
       lamps.forEach(l => { l.intensity = l.userData.power * (.2 + night * 5); });
+      // The top floor's glazing takes the room's lamplight after dark, so the glass box reads lit from inside.
+      glass.emissiveIntensity = night * .55;
     }
   };
 }
