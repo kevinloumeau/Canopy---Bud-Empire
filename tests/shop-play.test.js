@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {migrateShopPlay,createMoment,judgeChoice,tickShift,recordServed,shiftAdvice,tipFor,shiftTimeLeft,paceAgainst,SHIFT_SECONDS,MAX_ORDER_COUNTERS} from '../src/shop-play.js';
+import {migrateShopPlay,createMoment,judgeChoice,tickShift,recordServed,shiftAdvice,tipFor,shiftTimeLeft,paceAgainst,stillTrue,SHIFT_SECONDS,MAX_ORDER_COUNTERS} from '../src/shop-play.js';
 
 test('old saves get a fresh shop activity state and bad values are clamped',()=>{
   const p=migrateShopPlay(undefined);
@@ -106,4 +106,16 @@ test('the pace chip compares this round with the last one only once it has run h
   assert.deepEqual(paceAgainst({seconds:60,earned:600},recap),{tone:'even',pct:0,text:'Same pace as last round'});
   const up=paceAgainst({seconds:60,earned:720},recap);assert.equal(up.tone,'up');assert.equal(up.text,'▲ 20% on last round');
   const down=paceAgainst({seconds:100,earned:500},recap);assert.equal(down.tone,'down');assert.equal(down.text,'▼ 50% on last round');
+});
+
+test('last round\'s advice only shows while the problem is still on the floor',()=>{
+  const line=shiftAdvice({served:40,waitTotal:200,queuePeak:12,stockoutSeconds:0},{counters:1});
+  assert.equal(line.kind,'line');
+  assert.equal(stillTrue(line,{stages:[{label:'Ordering',busy:false}]}),false);
+  assert.equal(stillTrue(line,{stages:[{label:'Ordering',busy:true}]}),true);
+  const dry=shiftAdvice({served:40,waitTotal:200,queuePeak:2,stockoutSeconds:60});
+  assert.equal(stillTrue(dry,{stages:[{label:'Pickup',busy:false}]}),false);
+  const wait=shiftAdvice({served:10,waitTotal:400,queuePeak:2,stockoutSeconds:0});
+  assert.equal(stillTrue(wait,{stages:[]},{served:10,waitTotal:100}),false);
+  assert.equal(stillTrue(wait,{stages:[]},{served:10,waitTotal:300}),true);
 });

@@ -758,7 +758,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     }
     if(autoDroneReady(state.autoDrone,dt,state.lines[4]>0&&state.stock[3]>=onlineSize()&&onlineRequestsReady()>0)){state.autoDrone.remaining*=1-state.fleetLevel*.03;sendOnlineOrders(autoDroneLimit(state.autoDrone)+(state.autoDrone.bulk&&state.autoDrone.mode==='bulk'?state.cargoLevel:0),true,'drone')}
     // Shifts run on wall time, so a recap always covers five minutes of play whatever the game speed.
-    if(state.shopOpen&&tickShift(state.shopPlay,dt/(state.gameSpeed||1),{queue:customers.filter(inOrderFlow).length,stockout:customers.some(function(c){return c.ordered&&!c.bag})&&state.stock[4]<1})&&shopPlayUI)shopPlayUI.render();
+    if(state.shopOpen&&tickShift(state.shopPlay,dt/(state.gameSpeed||1),{queue:customers.filter(function(c){return !c.ordered&&(c.phase==='ordering'||c.phase==='kiosk')}).length,stockout:customers.some(function(c){return c.ordered&&!c.bag})&&state.stock[4]<1})&&shopPlayUI)shopPlayUI.render();
   }
   function staffCost(i){return economy.staffCost(state.staff[i])}
   function idTrainingQuote(limit){
