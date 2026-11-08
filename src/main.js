@@ -844,7 +844,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(shopBrowser)shopBrowser.render()}
   function queueCost(){return Math.round(150*Math.pow(1.8,state.queueLevel))}
   function upgradeQueue(){if(queueLimit()>=QUEUE_MAX||state.money<queueCost())return;recordGoal(state.empire,'upgrade',queueCost());state.money-=queueCost();state.queueLevel++;upgradeFx.pop();save();renderUI();notify('LINE EXPANDED · '+queueLimit()+' customers','upgrade')}
-  function storageCapacity(){return economy.storageCapacity(state.storageLevel,state.lines)}
+  // A shelf always holds two baskets, so a big basket can never outgrow storage and stall the counter.
+  function storageCapacity(){return Math.max(economy.storageCapacity(state.storageLevel,state.lines),2*basketSize())}
   function storageCost(){return Math.round(250*Math.pow(1.7,state.storageLevel))}
   function upgradeStorage(){if(state.storageLevel>=20||state.money<storageCost())return;recordGoal(state.empire,'upgrade',storageCost());state.money-=storageCost();state.storageLevel++;upgradeFx.pop();save();renderUI();notify('STORAGE EXPANDED · '+storageCapacity()+' per stage','upgrade')}
   function onlineSize(){return economy.onlineSize(state.onlineCompleted,state.lines)}
@@ -1130,9 +1131,17 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Lv 75 with the perk); windowTube keeps the glass bag tube down to it whichever look stands.
   function windowLookNow(){var l=windowLevel(state.pickupWindow),look=windowLook(l);return look===5&&perkLevel(state.perks,'finish')&&l>=WINDOW_MAX_LEVEL?6:look}
   function windowFixtures(){var open=windowOpen(),look=open?windowLookNow():0,out={windowTube:open};WINDOW_FIXTURE_KEYS.forEach(function(k,n){out[k]=open&&look===n+1});if(!open)out.pickupWindow=false;return out}
-  // Pale see-through copies of what is next to buy (Kevin, 2026-11-02): the next kiosk, and the pickup window over its
-  // lot while its tag offers it.
-  function fixtureGhosts(){var g={},orders=state.lines[4]>0;if(orders&&kioskCount()<3)g['kiosk'+kioskCount()]=true;if(orders&&!windowOpen()&&!isBuilding(state.builds,'window'))g.pickupWindow=true;return Object.keys(g).length?g:null}
+  // Blueprints of what is next to buy where it will stand (Kevin, 2026-11-02; drawn by three/blueprint.js).
+  // Only the next buy in line wears a ghost (game review 2026-11-08: four milky copies by the door read as glitches): of
+  // the pickup window, the next kiosk, the next order counter and the next ATM, the cheapest one left. The others keep
+  // their small tags, so they can still be bought from the map.
+  function nextGhost(){if(!(state.lines[4]>0))return null;var picks=[],atm=state.atm,counter=nextOrderCounter();
+    if(!windowOpen()&&!isBuilding(state.builds,'window'))picks.push({kind:'window',price:WINDOW_COST});
+    if(kioskCount()<3)picks.push({kind:'kiosk',price:KIOSK_PRICES[kioskCount()]});
+    if(counter)picks.push({kind:'counter',price:counter.price});
+    var atmPrice=atm.level?atmMachineCost(atm):ATM_BUILD;if(atmPrice!==null&&atm.machines<3)picks.push({kind:'atm',price:atmPrice});
+    return picks.sort(function(a,b){return a.price-b.price})[0]||null}
+  function fixtureGhosts(){var next=nextGhost(),g={};if(!next)return null;if(next.kind==='kiosk')g['kiosk'+kioskCount()]=true;else if(next.kind==='window')g.pickupWindow=true;else return null;return g}
   function frontFixtures(){return windowOpen()?FRONT_FIXTURES.filter(function(f){return !f.window}).concat(WINDOW_FIXTURES):isBuilding(state.builds,'window')?FRONT_FIXTURES.filter(function(f){return !f.window}):FRONT_FIXTURES}
   // The back-wall shelving stands just behind the counters; the smoking lounge is the room behind it (z −7 → −1.76).
   var DISPLAY_Z=-1.6,LOUNGE_FRONT=DISPLAY_Z+.65;
@@ -1184,15 +1193,34 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function presentAt(at){
     if(motionPreference.matches||SNAP||!booted||!map3d||!map3d.ok||document.body.classList.contains('guide-open')||guideCam||document.hidden)return 0;
     if(mapGesture.mode==='drag')return 0;if(mapGesture.mode==='coast')endGesture();
-    var wide=width>=780,left=wide?404:0,top=hudBottom(),low=visibleHeight();if(low-top<150)return 0;
-    var y=at.y||0,sp=project(at.x,y,at.z),mx=(width-left)*.2,my=(low-top)*.2;
-    if(sp.x>left+mx&&sp.x<width-mx&&sp.y>top+my&&sp.y<low-my)return 0;
+    var span=mapSpan(),left=span.left,right=span.right,top=hudBottom(),low=visibleHeight();if(low-top<150)return 0;
+    var y=at.y||0,sp=project(at.x,y,at.z),mx=(right-left)*.2,my=(low-top)*.2;
+    if(sp.x>left+mx&&sp.x<right-mx&&sp.y>top+my&&sp.y<low-my)return 0;
     var f=cameraFrame(),u=f.unit*zoom,r=rotate(at.x,at.z),a=guideAnchor(),to=clampedPan(a.x-f.x-r.x*u,a.y-f.y-r.z*u*FLOOR_SQUASH+y*u);
     var far=Math.hypot(to.x-panX,to.y-panY);if(far<24)return 0;
     districtGlide=null;var dur=Math.min(1.05,.5+far/1600);presentCam={fx:panX,fy:panY,tx:to.x,ty:to.y,t:0,dur:dur};render.invalidated=true;return dur}
   function stepPresent(dt){var g=presentCam;if(!g)return;if(mapGesture.mode!=='idle'){presentCam=null;return}
     g.t=Math.min(1,g.t+dt/g.dur);var e=g.t<.5?4*g.t*g.t*g.t:1-Math.pow(-2*g.t+2,3)/2;
-    panX=g.fx+(g.tx-g.fx)*e;panY=g.fy+(g.ty-g.fy)*e;applyCamera();if(g.t>=1)presentCam=null}
+    if(g.at){var to=focusPan(g.at,g.z1),z=g.z0+(g.z1-g.z0)*e;
+      // Pan over zoom is the frame's ground position, so easing it moves the view in a straight line while the zoom eases.
+      panX=(g.fx/g.z0+(to.x/g.z1-g.fx/g.z0)*e)*z;panY=(g.fy/g.z0+(to.y/g.z1-g.fy/g.z0)*e)*z;zoom=z;applyCamera()}
+    else{panX=g.fx+(g.tx-g.fx)*e;panY=g.fy+(g.ty-g.fy)*e;applyCamera()}
+    if(g.t>=1)presentCam=null}
+  // A station tapped in the menu (Kevin, 2026-11-08: "the map should focus on the station when clicked on in the menu"):
+  // the camera glides it to the middle of the map that shows above the sheet and eases in close enough to read it,
+  // keeping a closer zoom the player already chose. The target is worked out again every frame, so it follows the sheet
+  // as it opens or changes height, and the pan clamp keeps the view over the streets. A finger on the map stops it.
+  function focusZoom(){return width>=780?1.5:1.7}
+  function focusPan(at,z1){var sz=zoom;zoom=z1;var f=cameraFrame(),u=f.unit*z1,r=rotate(at.x,at.z),a=guideAnchor(),y=at.y||0;
+    var to=clampedPan(a.x-f.x-r.x*u,a.y-f.y-r.z*u*FLOOR_SQUASH+y*u);zoom=sz;return to}
+  function focusOn(at){
+    if(!map3d||!map3d.ok||document.body.classList.contains('guide-open')||guideCam)return;
+    if(mapGesture.mode==='drag')return;if(mapGesture.mode==='coast')endGesture();
+    var z1=Math.min(4,Math.max(zoom,focusZoom())),to=focusPan(at,z1);
+    if(motionPreference.matches||SNAP||!booted||document.hidden){districtGlide=null;presentCam=null;zoom=z1;panX=to.x;panY=to.y;applyCamera();return}
+    var far=Math.hypot(to.x-panX,to.y-panY);if(far<12&&Math.abs(z1-zoom)<.02)return;
+    districtGlide=null;presentCam={fx:panX,fy:panY,z0:zoom,z1:z1,at:at,t:0,dur:Math.min(1,.45+far/1400+Math.abs(z1-zoom)*.25)};render.invalidated=true}
+  function stationSpot(i){if(i===6)return{x:ID_DESK.x,y:1.2,z:ID_DESK.z};if(i===7)return LOUNGE_SPOT;var m=machinePos[i];return{x:m.x,y:(m.y||0)+1.2,z:m.z}}
   // The fixtures popping in, as map3d wants them: [across, up] per key, null while hidden.
   function revealScales(pops){if(!pops)return null;var out={};Object.keys(pops).forEach(function(k){out[k]=popScale(pops[k])});return out}
   // A new look (Lv 10, 30, 50, 75, the founder's finish) is a big upgrade: the camera finds the station and it gets the reveal.
@@ -1204,7 +1232,12 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // getBoundingClientRect forced a layout per frame (and per touch event), so it is measured once and measured again
   // only when the bar or the window changes size.
   var hudEdges=null;
-  function hudBottom(){if(!hudEdges){var hud=document.querySelector('.hud'),markers=$('markers');hudEdges={bottom:hud?hud.getBoundingClientRect().bottom:0,markersTop:markers?markers.getBoundingClientRect().top:0}}return hudEdges.bottom}
+  function hudBottom(){if(!hudEdges){var hud=document.querySelector('.hud'),markers=$('markers');hudEdges={bottom:hud?hud.getBoundingClientRect().bottom:0,markersTop:markers?markers.getBoundingClientRect().top:0};
+    // The open map beside a docked desktop card: the card sits on the right now, so the map is the span left of it.
+    var sh=width>=780&&$('sheet'),wr=sh&&world.getBoundingClientRect(),sr=sh&&sh.getBoundingClientRect();hudEdges.left=0;hudEdges.right=width;
+    if(sr&&sr.width>0){if(sr.left-wr.left>width/2)hudEdges.right=Math.max(width*.4,sr.left-wr.left-12);else if(sr.right-wr.left<width/2)hudEdges.left=Math.min(width*.6,sr.right-wr.left+12)}}return hudEdges.bottom}
+  // The left and right edges of the map that shows beside the sheet (the whole width on a phone).
+  function mapSpan(){hudBottom();return{left:hudEdges.left,right:hudEdges.right}}
   function forgetHudEdges(){hudEdges=null;updateMarkers.key=null}
   // The overlays under the bar (top lane, map buttons, panels) hang off --hud-height. The bar is hidden behind the age
   // check and loading cover at start, where it measures 0 and the lane sat on top of it (Kevin, 2026-11-05), so the
@@ -1283,7 +1316,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     corner((width-frame.x)/u,eastHaze(storeLevels())[0]+view.ground.east,c,s);
     panX=-rx*u;panY=-rz*u*sq;
   }
-  function zoomAt(next,x,y){if(mapGesture.mode==='coast')endGesture();next=Math.max(.65,Math.min(4,next));var ratio=next/zoom,frame=cameraFrame();panX=x-(x-centerX)*ratio-frame.x;panY=y-(y-centerY)*ratio-frame.y;zoom=next;applyCamera()}
+  function zoomAt(next,x,y){if(mapGesture.mode==='coast')endGesture();presentCam=null;next=Math.max(.65,Math.min(4,next));var ratio=next/zoom,frame=cameraFrame();panX=x-(x-centerX)*ratio-frame.x;panY=y-(y-centerY)*ratio-frame.y;zoom=next;applyCamera()}
   // Desktop keyboard panning: arrows or WASD glide the camera while held. Direction is the way the view moves, so the
   // content slides the other way. Velocity eases toward the held direction, so a tap nudges and a hold coasts to speed,
   // and the render loop steps it on wall time so panning runs at any game speed, including paused.
@@ -2836,7 +2869,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     stations.push({index:6,x:ID_DESK.x,y:0,z:ID_DESK.z,w:1.3,d:2.4,h:1.6,tier:state.doorBuilt?stationLookFor(6,state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,pop:stationPop(6),bump:upgradeFx.bump('f6'),selected:mapPicked&&securitySelected});
     // A see-through copy of the next order counter where it will stand, as the kiosks show theirs (Kevin, 2026-11-02).
     // It goes last, so every built station keeps its slot.
-    var nextCounter=nextOrderCounter();if(nextCounter){station(4,nextCounter.x,0,nextCounter.z,state.lines[4],true,4);var g=stations[stations.length-1];g.ghost=true;g.selected=false;g.boost=0;g.act=0;g.rise=0;g.pop=1}
+    var nextCounter=nextOrderCounter();if(nextCounter){station(4,nextCounter.x,0,nextCounter.z,state.lines[4],true,4);var g=stations[stations.length-1];g.ghost=true;g.visible=(nextGhost()||{}).kind==='counter';g.selected=false;g.boost=0;g.act=0;g.rise=0;g.pop=1}
     // With no ghost its slot stays, hidden, so the branches' stations that follow keep theirs.
     else stations.push({index:4,x:0,y:0,z:0,w:1,d:1,h:1,tier:0,built:false,visible:false});
     // The doorman stands behind the booth, on the room side, facing the front door across the desk.
@@ -3349,7 +3382,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // What the 3D map draws of the ATM: its machines, their look, the ghost over the next slot and which screens are busy.
   function atmFrame(){var atm=state.atm,busy=[false,false,false];customers.forEach(function(c){if(c.cash&&c.cash.stage==='use')busy[c.cash.machine]=true});
     var rv=render.reveal&&render.reveal.atm;
-    return{machines:atm.machines,look:atm.level?atmLook(atm.level):0,ghost:state.lines[4]>0&&atm.machines<3?atm.machines:null,busy:busy,pop:rv?{machine:rv.machine,scale:popScale(rv.t)}:null}}
+    return{machines:atm.machines,look:atm.level?atmLook(atm.level):0,ghost:(nextGhost()||{}).kind==='atm'?atm.machines:null,busy:busy,pop:rv?{machine:rv.machine,scale:popScale(rv.t)}:null}}
   function leaseIndex(){var shown=shownDistricts(storeLevels()),last=shown[shown.length-1];return last&&!last.open?last.index:-1}
   function leaseLocked(i){return state.lifetime<STORES[i].goal||!branchOpenable(state.empire,i)}
   // Where the next order counter will stand and what it costs, while Orders is open and a counter is left to buy.
@@ -3414,6 +3447,9 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // Station signs come first and stay on their stations: a later (lower) sign slides down only to clear another sign.
     var signs=labels.filter(function(l){return!l.tag&&shown(l)}).sort(function(a,b){return a.y-b.y});
     for(var pass=0;pass<2;pass++)for(var i=1;i<signs.length;i++){var a=signs[i];for(var j=0;j<i;j++){var b=signs[j];if(hits(a,a.x,a.y,b,gap))a.y=b.y+(a.h+b.h)/2+gap}}
+    // A station sign that the camera has carried up under the top bar hides rather than sitting on the cash or the speed
+    // buttons; it comes back as soon as its station is lower on the screen.
+    signs.forEach(function(l){if(l.y-l.h/2<ceiling+gap)l.el.style.display='none'});
     // Purchase tags give way: each tries its own spot, then a short nudge up, down or aside, and hides if all of those
     // land on a sign, an earlier tag, under the top bar or under the menu sheet. A tag with its buy box open always stays.
     var placed=signs.slice();
@@ -3556,7 +3592,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     $('buyMachine').style.setProperty('--funded',(!level?100:Math.min(100,state.money/price*100))+'%');
     $('upgradeHint').textContent=!open?'Build '+LINES[selected-1].name.toLowerCase()+' first.':!level?'Under construction · tap the site on the map, or Build here, to raise it.':!affordable?fmt(price-state.money)+' to go · customer sales earn cash automatically.':selected<4?'Larger batches per cycle. Train employees to shorten each cycle.':'Upgrade for faster '+['','','','','order preparation','customer service'][selected]+'.';
     $('upgradeHint').classList.toggle('ready',affordable);
-    if(selected===4&&level)$('upgradeHint').textContent+=' Training applies to all '+state.orderCounters+' counters. Baskets: '+qtyLabel(basketSize())+' per customer (+1 every 2 desk levels). Queue: '+queueLimit()+' customers · every 2 desk or employee upgrades adds a place (max 12).';
+    if(selected===4&&level)$('upgradeHint').textContent+=' Training applies to all '+state.orderCounters+' counters. Baskets: '+qtyLabel(basketSize())+' per customer (+1 every desk level). Queue: '+queueLimit()+' customers · every 2 desk or employee upgrades adds a place (max 12).';
     }
     renderOrderCounters();
     var doorSite=!state.doorBuilt,doorKey=doorSite?'site':String(state.idStaff);
@@ -3621,8 +3657,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     machineTabs.forEach(function(tab,i){var locked=!isOpen(i),site=!state.lines[i],available=!locked&&!site&&state.money>=cost(i);tab.title=site?'Under construction':i===slow?'Slowest station · improve this to raise capacity':'';tab.setAttribute('aria-pressed',String(!securitySelected&&!loungeSelected&&i===selected));tab.classList.toggle('is-locked',locked);tab.classList.toggle('is-site',site);tab.classList.toggle('can-upgrade',available);var crewState=site?'':abilityStatus(state.abilities,i,state.staff[i]);tab.classList.toggle('ability-ready',crewState==='ready'&&i===crewPick);tab.classList.toggle('is-best-buy',!locked&&!site&&i===suggested&&suggestedReady&&crewPick<0);tab.classList.toggle('is-boosted',crewState==='active');tab.querySelector('em').innerHTML=locked?'Locked':site?'Build':'Lv '+state.lines[i]+(i===slow?'<span class="slow-tag"> · Slow</span>':'');tab.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);var progress=Math.min(100,state.lines[i]/100*100),progressText=site?'Under construction':state.lines[i]>=100?'Flagship equipment reached':'Level '+state.lines[i]+' of 100 toward flagship equipment';tab.querySelector('progress').value=progress;tab.querySelector('progress').setAttribute('aria-label',LINES[i].name+' equipment progress');tab.querySelector('progress').setAttribute('aria-valuetext',progressText);tab.querySelector('progress').title=progressText;tab.querySelector('.level-funding').textContent=progressText;tab.setAttribute('aria-label',LINES[i].name+(i===slow?', slowest station':'')+', level '+state.lines[i]+', '+STATION_TIERS[stationTier(i)]+(available?', upgrade ready':''))});
     updateCommerceControls();
   }
-  var machineTabs=Array.prototype.slice.call(document.querySelectorAll('[data-machine]'));var securityTab=document.querySelector('[data-security]');if(securityTab)securityTab.onclick=selectSecurity;
-  var loungeTab=document.querySelector('[data-lounge]');if(loungeTab)loungeTab.onclick=selectLounge;
+  var machineTabs=Array.prototype.slice.call(document.querySelectorAll('[data-machine]'));var securityTab=document.querySelector('[data-security]');if(securityTab)securityTab.onclick=function(){selectSecurity();focusOn(stationSpot(6))};
+  var loungeTab=document.querySelector('[data-lounge]');if(loungeTab)loungeTab.onclick=function(){selectLounge();focusOn(stationSpot(7))};
   // Online orders sit with the stations: the last card opens the deliveries panel (build the pad, send orders).
   var stationOrbitIndex=-1,stationOrbitOffset=0;
   function updateStationOrbit(index){
@@ -3651,7 +3687,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       if(stationMotionObserver)stationMotionObserver.observe(el);else el.classList.add('station-motion-visible');
     });
   });
-  machineTabs.forEach(function(tab,i){var progress=document.createElement('progress');progress.max=100;progress.value=0;progress.setAttribute('aria-label',LINES[i].name+' equipment progress');tab.appendChild(progress);var label=document.createElement('span');label.className='level-funding';tab.appendChild(label);tab.onclick=function(){selectMachine(Number(tab.getAttribute('data-machine')))}});
+  machineTabs.forEach(function(tab,i){var progress=document.createElement('progress');progress.max=100;progress.value=0;progress.setAttribute('aria-label',LINES[i].name+' equipment progress');tab.appendChild(progress);var label=document.createElement('span');label.className='level-funding';tab.appendChild(label);tab.onclick=function(){var i=Number(tab.getAttribute('data-machine'));selectMachine(i);focusOn(stationSpot(i))}});
   var trayTabs=Array.prototype.slice.call(document.querySelectorAll('[data-tray]'));
   var activeTray='factory',panelOpen=true;
   // Staff training sits on the selected station, as on iOS. The row mirrors that station's buttons in the hidden
@@ -4605,7 +4641,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function viewAnchor(){var frame=cameraFrame(),u=frame.unit*zoom,c=Math.cos(angle),s=Math.sin(angle),rx=-panX/u,rz=-panY/(u*FLOOR_SQUASH);return{x:rx*c+rz*s,z:rz*c-rx*s}}
   function centreOn(x,z){var frame=cameraFrame(),u=frame.unit*zoom,c=Math.cos(angle),s=Math.sin(angle);panX=-(x*c-z*s)*u;panY=-(x*s+z*c)*u*FLOOR_SQUASH;applyCamera()}
   function lookAtStore(id,animate){
-    var to=storeSpot(id),z1=id?branchFit(id):1;
+    var to=storeSpot(id),z1=id?branchFit(id):1;presentCam=null;
     if(animate===false||motionPreference.matches||SNAP){districtGlide=null;zoom=z1;centreOn(to.x,to.z);return}
     districtGlide={from:viewAnchor(),to:to,z0:zoom,z1:z1,t:0};render.invalidated=true;
   }
@@ -4621,7 +4657,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     if(state.empire.activeStore)visitStore(0,false);
     var lift=at.y*.38*.6124;glideTo(at.x-lift,at.z-lift,1);
     pickedTag=hq?'hq':id;buyBoxFor=-1;renderUI()}
-  function glideTo(x,z,z1){if(motionPreference.matches||SNAP){districtGlide=null;zoom=z1;centreOn(x,z);return}districtGlide={from:viewAnchor(),to:{x:x,z:z},z0:zoom,z1:z1,t:0};render.invalidated=true}
+  function glideTo(x,z,z1){presentCam=null;if(motionPreference.matches||SNAP){districtGlide=null;zoom=z1;centreOn(x,z);return}districtGlide={from:viewAnchor(),to:{x:x,z:z},z0:zoom,z1:z1,t:0};render.invalidated=true}
   // The start guide's camera (start-guide.js): it glides in on each site as it is built, then follows the first guest
   // through the shop, then eases back to the whole shop. The point being watched sits midway between the top bar and
   // the docked card (on desktop, right of the card), and the view is placed without the clamp so a site near the edge of
@@ -4629,7 +4665,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   var guideCam=null,guideMoved=false;
   // Close enough to read the site on a phone; a desktop frame is about half again as big, so it needs less.
   function guideZoom(follow){return width>=780?(follow?1.7:1.5):(follow?2.6:2.3)}
-  function guideAnchor(){var top=hudBottom(),low=visibleHeight(),wide=width>=780;return{x:wide?(404+width)/2:width/2,y:top+(low-top)*.5}}
+  function guideAnchor(){var top=hudBottom(),low=visibleHeight(),span=mapSpan();return{x:(span.left+span.right)/2,y:top+(low-top)*.5}}
   function guidePoint(key){if(key==='door')return{x:DOOR_POS.x+.6,y:1.2,z:DOOR_POS.z-.6};var m=machinePos[key];return{x:m.x,y:(m.y||0)+1.4,z:m.z}}
   // The ground point under the anchor, so a glide starts from wherever the view is now.
   function guideViewPoint(){var a=guideAnchor(),c=Math.cos(angle),s=Math.sin(angle),rx=(a.x-centerX)/unit,rz=(a.y-centerY)/(unit*FLOOR_SQUASH);return{x:rx*c+rz*s,y:0,z:rz*c-rx*s}}
@@ -4703,7 +4739,9 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   homeChip.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5M6.5 9.5V19h11V9.5M10 19v-5h4v5"/></svg><span>Home</span>';
   homeChip.setAttribute('aria-label','Back to the main shop');$('world').appendChild(homeChip);
   homeChip.onclick=function(){mapHintActivity();if(state.empire.activeStore)visitStore(0,false);else lookAtStore(0)};
-  function renderHomeChip(){if(!homeChip)return;var q=project(0,1,0),low=Math.min(height,visibleHeight()),away=state.empire.activeStore>0||q.x<-width*.08||q.x>width*1.08||q.y<-height*.1||q.y>low+height*.1;
+  function renderHomeChip(){if(!homeChip)return;var q=project(0,1,0),low=Math.min(height,visibleHeight()),off=function(p){return p.x<-width*.08||p.x>width*1.08||p.y<-height*.1||p.y>low+height*.1},away=state.empire.activeStore>0||off(q);
+    // Close in on a station at the edge of the shop (a menu tap focuses the ID desk or the lounge) is still home.
+    if(away&&!state.empire.activeStore&&zoom>1.2)for(var hi=0;hi<8&&away;hi++){var hs=stationSpot(hi);if(!off(project(hs.x,hs.y,hs.z)))away=false}
     if(homeChip.hidden!==!away)homeChip.hidden=!away;if(!away)return;
     var chipTop=Math.max(0,low-58)+'px';if(homeChip.style.top!==chipTop)homeChip.style.top=chipTop;var right=q.x>width;if(homeChip.classList.contains('points-right')!==right)homeChip.classList.toggle('points-right',right)}
   $('branchMapMarker').onclick=manageViewedStore;
@@ -4808,7 +4846,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   canvas.addEventListener('wheel',function(e){mapHintActivity();districtGlide=null;presentCam=null;e.preventDefault();var r=canvas.getBoundingClientRect();zoomAt(zoom*Math.exp(-e.deltaY*.0015),e.clientX-r.left,e.clientY-r.top)},{passive:false});
   $('zoomIn').onclick=function(){mapHintActivity();zoomAt(zoom*1.2,width/2,height/2)};
   $('zoomOut').onclick=function(){mapHintActivity();zoomAt(zoom/1.2,width/2,height/2)};
-  $('centerView').onclick=function(){mapHintActivity();zoom=1;panX=0;panY=0;applyCamera()};
+  $('centerView').onclick=function(){mapHintActivity();presentCam=null;districtGlide=null;zoom=1;panX=0;panY=0;applyCamera()};
   var staffButtons=Array.prototype.slice.call(document.querySelectorAll('[data-staff]'));
   staffButtons.forEach(function(button){button.onclick=function(){upgradeStaff(Number(button.getAttribute('data-staff')))}});
   COMPONENTS.forEach(function(_,i){$('componentBuy'+i).onclick=function(){upgradeComponent(i)}});
@@ -4817,8 +4855,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var station=[0,1,2,3,5][i];
     item.setAttribute('role','button');item.setAttribute('tabindex','0');
     item.setAttribute('aria-label','Open '+LINES[station].name.toLowerCase()+' upgrades');
-    item.onclick=function(){selectMachine(station)};
-    item.onkeydown=function(event){if(event.key==='Enter'||event.key===' '){event.preventDefault();selectMachine(station)}};
+    item.onclick=function(){selectMachine(station);focusOn(stationSpot(station))};
+    item.onkeydown=function(event){if(event.key==='Enter'||event.key===' '){event.preventDefault();selectMachine(station);focusOn(stationSpot(station))}};
   });
   $('buyKiosk').onclick=function(){if(!state.kiosk)buyKiosk();else if(!state.secondKiosk)buySecondKiosk();else buyThirdKiosk()};
 
@@ -4843,7 +4881,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // and undone, so a counter already at its handoff floor (where more levels cannot speed it up) is never the answer; the
   // fix is then whatever lifts bags per customer, arrivals or prices. Purchases within about five minutes of income are
   // preferred, so a distant upgrade never heads the list when an affordable one does real work.
-  // Upgrades that only pay every few levels (the order desk's basket grows every second level) are looked at a few levels
+  // Upgrades that only pay every few levels (retail tiers double baskets at set levels) are looked at a few levels
   // ahead and valued on the total they cost, so a counter at its handoff floor is never bought over and over for nothing.
   function recommendation(){adviceLive=true;try{return bestBuy()}finally{adviceLive=false}}
   function bestBuy(){
@@ -5033,6 +5071,13 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function visibleHeight(){return width>=780?height:Math.max(200,height-Math.max(dockHeight,guideReserve))}
   if(window.ResizeObserver){new ResizeObserver(function(){if(!sheetGlide)fitControls()}).observe($('sheet'));new ResizeObserver(fitLane).observe($('laneStatus'))}
   window.addEventListener('resize',fitControls);
+  // The bar can move without changing size: on iPhone the notch inset (env(safe-area-inset-top)) often arrives after the
+  // first measure, which pushes the bar down while --hud-height still holds the old edge, so the activity pill sat on the
+  // cash and the map signs ran under the bar (Kevin, 2026-11-08). A ResizeObserver can't see a move, so the edge is
+  // checked twice a second (one cheap read) and on the events that shift the inset, and everything refits when it moved.
+  function watchHud(){if(sheetGlide||dockGlide)return;var hud=document.querySelector('.hud'),b=hud?Math.round(hud.getBoundingClientRect().bottom*10)/10:0;if(b>0&&Math.abs(b-(parseFloat(document.documentElement.style.getPropertyValue('--hud-height'))||0))>.5)fitControls()}
+  setInterval(watchHud,500);['orientationchange','pageshow','visibilitychange'].forEach(function(e){window.addEventListener(e,function(){requestAnimationFrame(watchHud)})});
+  if(window.visualViewport)window.visualViewport.addEventListener('resize',function(){requestAnimationFrame(watchHud)});
   // Desktop conveniences: the hint names the pointer, and speed and tabs have keys when no field has focus.
   // Hint copy follows the active pointer, and drops the keyboard shortcuts where the map is too narrow to fit them.
   var coarsePointer=window.matchMedia('(pointer:coarse)');

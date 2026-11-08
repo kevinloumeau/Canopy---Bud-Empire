@@ -20,8 +20,9 @@ export function batchSize(level){return (1+(level-1)*.4)*tierBoost(level);}
 export function capacity(level,staff,multiplier){return level>0?batchSize(level)*(1+staff*.3)*multiplier:0;}
 export function stationCost(base,level){return Math.floor(base*Math.pow(1.16,level));}
 export function staffCost(level){return Math.floor(20*Math.pow(1.6,level));}
-// Customers buy a basket of bags that grows with the order desk and doubles with each retail tier.
-export function basketSize(lines){return (1+Math.floor(Math.max(0,lines[4]-1)/2))*retailBoost(lines);}
+// Customers buy a basket that grows by a bag with every order desk level and doubles with each retail tier. (It grew a
+// bag every second level until 2026-11-08; walk-ins cap at about 0.74 a second, so the basket is what lets sales grow.)
+export function basketSize(lines){return Math.max(1,lines[4]|0)*retailBoost(lines);}
 export function storageCapacity(level,lines){return (100+level*100)*retailBoost(lines);}
 export function readyCapacity(level,lines){return (100+level*50)*retailBoost(lines);}
 export function onlineSize(completed,lines){return (4+(completed%5)*3)*retailBoost(lines);}
@@ -40,8 +41,8 @@ export function walkSpeed(trafficLevel){return 2.8*(1+.25*(1-Math.exp(-Math.max(
 // of one at pickup. Past that point the shop grows through more counters, kiosks, baskets and prices, not faster hands.
 export const HANDOFF_FLOOR={4:1,5:.7};
 export function customerHandoff(station,level,duration){return Math.max(HANDOFF_FLOOR[station]||0,duration/counterLanes(level));}
-// How many more levels an upgrade needs before it pays: some only move every few levels (the order desk adds a bag to
-// each basket every second level), so looking one level ahead can miss them. gainAfter(k) is the income gained by k more
+// How many more levels an upgrade needs before it pays: some only move every few levels (a retail tier doubles
+// baskets at Lv 10, 20, 30...), so looking one level ahead can miss them. gainAfter(k) is the income gained by k more
 // levels; returns the first k whose gain beats the threshold, or null if none does within the limit.
 export function stepsToGain(gainAfter,limit,threshold=0){for(let k=1;k<=limit;k++){const gain=gainAfter(k);if(gain>threshold)return{steps:k,gain};}return null;}
 // Stations a few percent apart act as one bottleneck: raising one alone shows next to nothing. raiseTogether prices

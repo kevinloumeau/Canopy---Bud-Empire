@@ -26,7 +26,7 @@
  /* The sheet scale caps the ring (sheet-scale.css): 44 → 54px four across, 52 → 64px two or three across, and the rest of
     a taller tile is even padding around its centred content. */
  .sheet>[data-pane=boosts] .shop-items{--ring-max:var(--s-ring)}
- .sheet>[data-pane=boosts] .shop-items:is([data-cols="2"],[data-cols="3"]){--ring-max:calc(var(--s-ring) + 8px + var(--rp) * .03)}
+ .sheet>[data-pane=boosts] .shop-items:is([data-cols="2"],[data-cols="3"]){--ring-max:min(calc(var(--s-ring) + 8px + var(--rp) * .03),100px)}
  /* Two or three across: a touch bigger type. */
  .sheet>[data-pane=boosts] .shop-items:is([data-cols="2"],[data-cols="3"]){--text:82px}
  .sheet>[data-pane=boosts] .shop-items:is([data-cols="2"],[data-cols="3"]) .shop-item .shop-short{font-size:13px!important}

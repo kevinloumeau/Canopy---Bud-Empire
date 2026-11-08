@@ -18,7 +18,7 @@ export function idCheckLength(trained,show,behindDistance,walkSpeed){
 // What each of the five stock cells may hold on load: the live caps, with the line levels' retail boost.
 export function stockCaps(next){
   const basket=Math.max(1,Math.round(basketSize(next.lines)*(1+(next.basketLevel||0)*.04)));
-  const shelf=storageCapacity(next.storageLevel||0,next.lines);
+  const shelf=Math.max(storageCapacity(next.storageLevel||0,next.lines),2*basket);
   return [shelf,shelf,shelf,shelf,Math.max(readyCapacity(next.readyLevel||0,next.lines),4*basket)];
 }
 export function onlineRequestLimit(next){return requestCap(next.onlineCompleted,next.webLevel);}
