@@ -31,3 +31,12 @@ export function blueprint(root) {
   });
   return root;
 }
+
+// Once a frame (Kevin, 2026-11-08: push the ghost buys): while the cash covers the one ghost on the map, its blueprint
+// breathes, the fill and edges brightening and fading about every two seconds, so it reads as "ready to build". After
+// dark the edges drop by a third, since pale lines glow hard against the night street.
+export function breatheBlueprint(ready, time, night = 0) {
+  const pulse = ready ? .5 + .5 * Math.sin((time || 0) * 3.2) : 0;
+  BLUEPRINT_FILL.opacity = .14 + pulse * .14;
+  BLUEPRINT_EDGE.opacity = (ready ? .7 + pulse * .3 : .9) * (1 - night * .35);
+}

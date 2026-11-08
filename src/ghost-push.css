@@ -1,0 +1,20 @@
+/* Pushing the ghost buys (Kevin, 2026-11-08: "should push to purchase the ghost items more"). Only the one blueprint on
+   the map (main.js nextGhost) gets these, so the map stays calm.
+   Saving: its quiet circle becomes a ring that fills with the cash toward its price (--save, 0-100%).
+   Ready: once the cash covers it, the tag opens out with its name and price, a cream edge that breathes, and one hop.
+   The brass stays for the best buy: a ready ghost that is also the best buy wears can-upgrade's brass ring over this. */
+.world .marker.station-sign.is-lot.is-mini.is-quiet.is-saving,.world .marker.station-sign.is-lot.is-mini.is-quiet.is-saving:not(.selected){
+  border:0;opacity:1;color:#f3ead6;
+  background:radial-gradient(closest-side,#16301ee6 calc(100% - 2.5px),transparent calc(100% - 2px)),conic-gradient(#f3ead6 var(--save,0%),#0b1f1299 0)}
+.world .marker.station-sign.is-lot.is-mini.is-ready:not(.selected){border:1px solid #f3ead6d9;background:#16301ef2;color:#f3ead6;opacity:1;animation:ghost-ready 1.8s ease-in-out infinite}
+.world .marker.station-sign.is-lot.is-mini.is-ready:not(.selected) .station-sign-level{color:#f3ead6}
+.world .marker.station-sign.is-lot.is-mini.is-ready.can-upgrade:not(.selected){border-color:var(--ui-brass,#e2c68a);animation-name:ghost-ready-brass}
+.world .marker.station-sign.is-lot.is-hop{animation:ghost-hop .7s cubic-bezier(.3,1.6,.5,1) 1,ghost-ready 1.8s ease-in-out .7s infinite}
+@keyframes ghost-ready{0%,100%{box-shadow:0 0 0 0 #f3ead600,0 2px 6px #071e0e66}50%{box-shadow:0 0 0 3px #f3ead633,0 2px 10px #071e0e66}}
+@keyframes ghost-ready-brass{0%,100%{box-shadow:0 0 0 1.5px var(--ui-brass,#e2c68a),0 2px 6px #071e0e66}50%{box-shadow:0 0 0 3.5px #e2c68a66,0 2px 10px #071e0e66}}
+@keyframes ghost-hop{0%{translate:0 0}35%{translate:0 -7px}65%{translate:0 1px}100%{translate:0 0}}
+@media(prefers-reduced-motion:reduce){.world .marker.station-sign.is-lot.is-ready,.world .marker.station-sign.is-lot.is-hop{animation:none}}
+/* The ready tag reads on one line: icon, name, price. */
+.world .marker.station-sign.is-lot.is-mini.is-ready:not(.selected){padding:3px 8px 3px 6px!important;border-radius:9px}
+.world .marker.station-sign.is-lot.is-mini.is-ready .station-sign-name{display:inline;vertical-align:middle}
+.world .marker.station-sign.is-lot.is-mini.is-ready .station-sign-level{vertical-align:middle;margin:0 0 0 .5em;padding:0;line-height:1.25;font-weight:700}

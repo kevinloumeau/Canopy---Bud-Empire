@@ -11,7 +11,7 @@ import { buildShell } from './shell.js';
 import { buildRooftop } from './rooftop.js';
 import { buildFlagship } from './flagship.js';
 import { buildAtms } from './atm.js';
-import { blueprint } from './blueprint.js';
+import { blueprint, breatheBlueprint } from './blueprint.js';
 import { buildCityBuildings } from './city-buildings.js';
 import { buildEntrance } from './entrance.js';
 import { createIntro } from './intro.js';
@@ -1318,6 +1318,7 @@ export function createMap3D(canvas, layout) {
     sun.target.updateMatrixWorld();
 
     const night = frame.night || 0;
+    breatheBlueprint(!!frame.ghostReady, (frame.time || 0) / 1000, night);
     hemi.intensity = dayHemi * (1 - night * .66);
     hemi.color.copy(daySkyLight).lerp(moonSky, night);
     hemi.groundColor.copy(dayBounce).lerp(moonBounce, night);
