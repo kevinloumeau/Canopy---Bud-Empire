@@ -15,7 +15,7 @@
 /* The prizes' names can run to two words (Market bunting); they wrap rather than clip. */
 .sheet .empire-screen .popup-prizes .map-tile-name{white-space:normal;text-wrap:balance;line-height:1.1}
 /* Three doors across while a market runs: the subtitles stay one short line and the chevrons go. */
-.sheet .empire-screen .empire-links.has-popup{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.sheet .empire-screen .empire-links.has-popup{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
 .sheet .empire-screen .empire-links.has-popup button.empire-link{grid-template-columns:auto minmax(0,1fr);column-gap:6px;padding-inline:7px 4px}
 .sheet .empire-screen .empire-links.has-popup .empire-link-chevron{display:none}
 .sheet .empire-screen .empire-links.has-popup .empire-link-icon{width:24px;height:24px}
