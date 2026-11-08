@@ -55,8 +55,10 @@ export function milestone(index){if(!Number.isInteger(index)||index<0)return nul
 // reopen needs $10M; after that any new share makes reopening worthwhile, and the player chooses when.
 export function prestigeOffer(state){
   const p=state.empire,rank=p.prestige||0,shares=p.shares||0,allTime=(p.lifetimeAll||0)+Math.max(0,state.lifetime||0);
-  const total=Math.max(shares,sharesFor(allTime)),gain=total-shares,next=total+1;
-  const target=allTime<SHARE_BASE?SHARE_BASE:Math.ceil(SHARE_BASE*(next/10)**2-1e-6);
+  // A reopen pays the shares the curve adds between the last reopen's all-time revenue and now, on top of the shares
+  // already held, so saves that earned shares on the older, steeper curve keep them and keep earning at the new pace.
+  const earned=sharesFor(p.lifetimeAll||0),reached=sharesFor(allTime),gain=Math.max(0,reached-earned),total=shares+gain;
+  const target=allTime<SHARE_BASE?SHARE_BASE:Math.ceil(SHARE_BASE*(Math.max(earned,reached)+1)**3/1000-1e-6);
   return {rank,shares,total,gain,allTime,target,eligible:gain>=1,current:1+shares*SHARE_BONUS,multiplier:1+total*SHARE_BONUS};
 }
 export const OFFLINE_STEP=14400, OFFLINE_MAX=OFFLINE_STEP*6;

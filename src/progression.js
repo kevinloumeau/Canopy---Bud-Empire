@@ -173,11 +173,12 @@ export function claimDaily(state, now=Date.now(), scale=1) {
 }
 // p.stake is the Founder's stake perk level, mirrored from state.perks by main.js (+10% sales a level).
 export function saleMultiplier(p) {return (1+p.career*.05)*(1+(p.shares||0)*SHARE_BONUS)*starMultiplier(p)*(1+.1*(p.stake||0));}
-// Reopening pays in shares: each is worth +5% base sales, and the all-time total grows with the square root of
-// all-time revenue, so a longer run earns more of them. Saves from the flat +20%-per-rank system convert at four
+// Reopening pays in shares: each is worth +5% base sales, and the all-time total grows with the cube root of
+// all-time revenue, so a longer run earns more of them. (Square root until 2026-11-08: a 6-hour first run paid ~4,800
+// shares, a 240x sales bonus that also bought the whole founder perk shop at once; the cube root pays ~600.) Saves from the flat +20%-per-rank system convert at four
 // shares per rank (the same bonus) and are credited with the revenue those ranks required.
 export const SHARE_BONUS=.05, SHARE_BASE=10000000;
-export function sharesFor(revenue){return revenue>=SHARE_BASE?Math.floor(10*Math.sqrt(revenue/SHARE_BASE)+1e-9):0;}
+export function sharesFor(revenue){return revenue>=SHARE_BASE?Math.floor(10*Math.cbrt(revenue/SHARE_BASE)+1e-9):0;}
 function prestigeShares(r){
   const rank=num(r.prestige,0,999);
   if(Number.isFinite(r.shares))return {shares:num(r.shares,0,BIG),lifetimeAll:num(r.lifetimeAll,0,BIG)};
