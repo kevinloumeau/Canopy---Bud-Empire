@@ -49,9 +49,10 @@ const clamp=v=>Math.max(0,Math.min(1,Number(v)||0));
 export function mountGoalsPane({pane,sources,getState,format,rate,deals}){
  const $=id=>document.getElementById(id);
  const screen=document.createElement('div');screen.className='empire-screen empire-content goals-screen';
- // Collect lives in the sheet's header row, beside the "Goals" title, so the pane below is all goals: the icons of what
- // pays out (daily visit, career, shift goal...), the total, and the brass Collect. With nothing ready, a quiet line
- // says when the next daily reward lands.
+ // Collect takes over the sheet's whole header row while a reward is ready (the "Goals" title steps aside; the tab bar
+ // already says Goals), large enough to be the tab's one obvious action: the 3D icons of what pays out (daily visit,
+ // career, shift goal...), the total, and the brass Collect. With nothing ready the title returns, with a quiet line
+ // beside it saying when the next daily reward lands.
  const reward=document.createElement('div');reward.className='goals-reward';
  const collect=document.createElement('button');collect.type='button';collect.className='goals-collect';
  collect.innerHTML='<span class="goals-collect-icons"></span><b></b><span class="goals-collect-go">Collect</span>';
@@ -161,7 +162,7 @@ export function mountGoalsPane({pane,sources,getState,format,rate,deals}){
   const daily=/in (\d+h \d+m)/.exec(text('dailyTime'));
   const perSec=rate?rate():0,worth=perSec>0&&total>0?'About '+span(total/perSec)+' of your sales · rewards grow as you earn':'';
   const sig=html+'#'+buttons.length+total+worth+rows.map(r=>r.label).join();if(sig===signature)return;signature=sig;
-  reward.hidden=!buttons.length;
+  reward.hidden=!buttons.length;document.body.classList.toggle('goals-ready',!!buttons.length);
   // Under the total, one line names what pays out; the full reasons and amounts sit in the strip's tooltip.
   const icons=[...new Set(rows.map(r=>r.icon))].slice(0,3);
   collect.querySelector('.goals-collect-icons').innerHTML=icons.map(n=>'<i>'+I3D(n)+'</i>').join('');

@@ -2,19 +2,26 @@
    brass Collect strip, the contract and the story side by side, then one group of goal tiles at a time behind a row of
    tabs (Shift, Stars, Awards, Milestones) that each carry the group's headline figure. Loaded last. */
 
-/* Collect sits in the sheet's header row, right of the "Goals" title, and only while the Goals tab is open: the 3D
-   icons of what pays out, the total, and the brass Collect. With nothing ready, a quiet line says when the next one lands. */
+/* While a reward is ready, Collect takes over the sheet's whole header row (the "Goals" title steps aside, the tab bar
+   already says Goals): the 3D icons of what pays out, the total in large figures, and a solid brass Collect, so it is
+   the tab's one obvious action. With nothing ready the title returns with a quiet line beside it saying when the next
+   one lands. Loaded last, so these win over the slim 42px phone header. */
 .sheet .panel-header>.goals-head{display:none}
 body[data-active-tray=goals] .sheet:not(.collapsed) .panel-header>.goals-head{display:flex;align-items:center;min-width:0;margin:-2px 0 -2px auto}
-body[data-active-tray=goals] .sheet:not(.collapsed) .panel-header>#panelToggle{margin-left:0}
-.goals-head .goals-reward{margin:0;border:0;border-radius:0;background:none}
-.sheet .panel-header .goals-head .goals-collect,.sheet .panel-header .goals-head button.goals-collect{display:flex;align-items:center;gap:8px;width:auto;height:auto;min-width:0;min-height:32px;margin:0;padding:2px 2px 2px 6px;border:1px solid var(--ui-brass);border-radius:11px;background:var(--ui-brass-wash);color:var(--ui-ink);font:inherit;box-shadow:none;cursor:pointer}
+body[data-active-tray=goals] .sheet:not(.collapsed) .panel-header>.goals-head~#panelToggle{margin-left:0}
+body.goals-ready[data-active-tray=goals] .sheet:not(.collapsed) .panel-header{height:auto;min-height:42px;padding-top:8px;gap:8px}
+body.goals-ready[data-active-tray=goals] .sheet:not(.collapsed) .panel-header>#panelTitle{display:none}
+body.goals-ready[data-active-tray=goals] .sheet:not(.collapsed) .panel-header>#panelExpand{margin-left:0}
+body.goals-ready[data-active-tray=goals] .sheet:not(.collapsed) .panel-header>.goals-head{flex:1;margin:0}
+.goals-head .goals-reward{flex:1;min-width:0;margin:0;border:0;border-radius:0;background:none}
+.sheet .panel-header .goals-head button.goals-collect{display:flex;align-items:center;gap:10px;width:100%;min-width:0;min-height:48px;height:auto;margin:0;padding:4px 5px 4px 10px;border:1.5px solid var(--ui-brass);border-radius:15px;background:linear-gradient(180deg,color-mix(in srgb,var(--ui-brass) 22%,transparent),var(--ui-brass-wash));color:var(--ui-ink);font:inherit;text-align:left;box-shadow:0 0 0 3px color-mix(in srgb,var(--ui-brass) 12%,transparent),0 6px 16px #06180c55;cursor:pointer}
 .goals-collect-icons{display:flex;flex:none}
-.goals-collect-icons>i{display:grid;place-items:center;width:22px;height:22px}
-.goals-collect-icons>i+i{margin-left:-7px}
-.goals-collect-icons img.goal-3d{width:22px;height:22px}
-.goals-head .goals-collect>b{font:500 14px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;white-space:nowrap}
-.goals-head .goals-collect-go{padding:7px 13px;border-radius:8px;font-size:13px;line-height:1}
+.goals-collect-icons>i{display:grid;place-items:center;width:34px;height:34px}
+.goals-collect-icons>i+i{margin-left:-10px}
+.goals-collect-icons img.goal-3d{width:34px;height:34px;filter:drop-shadow(0 3px 4px #06180c99)}
+.goals-head .goals-collect>b{flex:1;min-width:0;overflow:hidden;font:600 21px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;white-space:nowrap;text-overflow:ellipsis}
+.goals-head .goals-collect-go{flex:none;display:grid;place-items:center;min-height:38px;padding:0 20px;border-radius:11px;background:var(--ui-brass);color:var(--ui-brass-ink);font-size:16px;font-weight:700;line-height:1}
+.goals-head .goals-collect:active{transform:scale(.98)}
 .goals-head .goals-quiet{margin:0 4px 0 0;padding:0;font-size:12px;white-space:nowrap}
 .goals-head .goals-quiet img.goal-3d{width:20px;height:20px}
 
