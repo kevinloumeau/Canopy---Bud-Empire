@@ -52,3 +52,27 @@
  .sheet #stockStatus .stock-item{min-height:32px;padding-block:2px}
  .sheet .tray-tabs{margin-top:4px}
 }
+
+/* Station tiles as ring tiles, like Research, Goals and Empire (icon audit, 2026-11-08): the 3D station stands in a
+   progress ring (it fills toward the next doubling, lime when maxed, brass on the best buy), its level is a chip on the
+   ring's foot, and the name sits under it. The ring follows the sheet scale: 36px on the SE's half-open sheet, up to 64. */
+.sheet .machine-nav .station-ring{--st-ring:46px;grid-column:1;grid-row:1;justify-self:center;width:var(--st-ring);height:var(--st-ring);margin:0 auto}
+.sheet .machine-nav .station-ring .machine-thumb{position:relative;display:block!important;width:calc(var(--st-ring) * .84)!important;height:calc(var(--st-ring) * .72)!important;margin:calc(var(--st-ring) * -.1) 0 0!important;object-fit:contain}
+.sheet .machine-nav .station-ring>em{position:absolute;left:50%;bottom:-4px;transform:translateX(-50%);margin:0!important;padding:1px 5px;border-radius:999px;background:#143d21;box-shadow:inset 0 0 0 1px var(--ui-edge);font:600 9.5px/1.1 'Bricolage Grotesque',system-ui,sans-serif!important;letter-spacing:-.02em;font-style:normal;white-space:nowrap;color:#a8dc52;font-variant-numeric:tabular-nums;z-index:1}
+.sheet .machine-nav button{grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"icon" "name"!important}
+.sheet .machine-nav .station-ring{grid-area:icon}
+.sheet .machine-nav button>.station-card-name{grid-column:1;grid-row:2;margin-top:5px;line-height:1.1!important;text-align:center}
+.sheet .machine-nav button.can-upgrade .station-ring .map-ring-fill{stroke:var(--ui-leaf-glow)}
+.sheet .machine-nav button.is-max .station-ring .map-ring-fill{stroke:#a8dc52}
+.sheet .machine-nav button[aria-pressed=true] .station-ring .map-ring-track circle:first-child{stroke:#e2c68a77;fill:#e2c68a14}
+.sheet .machine-nav button[aria-pressed=true] .station-ring>em{color:var(--ui-brass);box-shadow:inset 0 0 0 1px #e2c68a77}
+.sheet .machine-nav button.is-bottleneck .station-ring .map-ring-fill{stroke:var(--ui-brass)}
+.sheet .machine-nav button:is(.is-locked,.is-site) .station-ring>em{color:var(--ui-soft)}
+@media(max-width:779px){
+ .sheet>[data-pane=factory]>*{--st-ring:min(calc(36px + var(--rp) * .2),64px);--st-tile:calc(var(--st-ring) + 22px)}
+ .sheet .machine-nav .station-ring{--st-ring:inherit}
+ .sheet .machine-nav button{grid-template-rows:var(--st-ring) auto!important;row-gap:0!important}
+ .sheet .machine-nav .station-ring .machine-thumb{width:calc(var(--st-ring) * .84)!important;height:calc(var(--st-ring) * .72)!important}
+}
+/* Taller phones have the room: the name clears the level chip by a little more. */
+@media(max-width:779px) and (min-height:761px){.sheet .machine-nav button>.station-card-name{margin-top:8px}.sheet>[data-pane=factory]>*{--st-tile:calc(var(--st-ring) + 25px)}}
