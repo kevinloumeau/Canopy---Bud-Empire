@@ -91,3 +91,6 @@
 .station-team .team-icon>.team-face{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 12%;background:radial-gradient(circle at 50% 35%,#e9f3dc33,#a8dc5214 70%);pointer-events:none}
 .sheet .station-tiles #stationTeam .team-icon.has-face{width:48px;height:48px;box-shadow:inset 0 0 0 2px #a8dc5288}
 .sheet .station-tiles #stationTeam .team-icon.has-face>.team-face{box-sizing:border-box;padding:2px 2px 0;object-fit:cover}
+
+/* Ability card: its name wraps to a balanced second line instead of cutting off ("Express pick…" at 375). */
+.sheet .station-tiles .station-ability .team-copy b{white-space:normal!important;text-wrap:balance;overflow:visible!important;text-overflow:clip!important;text-align:center;line-height:1.15!important}
