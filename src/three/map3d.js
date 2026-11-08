@@ -969,7 +969,7 @@ export function createMap3D(canvas, layout) {
   // in one instanced draw. No real light and no shadow: the pools are painted, so the phone pays one draw after dark.
   // shape 0 is a round pool (falls off from the middle), 1 a spill: bright along its local -z edge (the wall, or the
   // car's nose), fading outward, with soft ends.
-  const MAX_POOLS = 160;
+  const MAX_POOLS = 200;
   const poolShape = new THREE.InstancedBufferAttribute(new Float32Array(MAX_POOLS), 1);
   const poolGeometry = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
   poolGeometry.setAttribute('shape', poolShape);
@@ -1013,6 +1013,27 @@ export function createMap3D(canvas, layout) {
     pools.setColorAt(pools.count, colour.copy(tint).multiplyScalar(gain));
     poolShape.setX(pools.count++, shape);
   }
+  // The shop's own light after dark (Kevin, 2026-11-08: "improve in-store lighting at night"). The point lamps in
+  // shell.js light the rooms evenly; these painted pools give them the pockets a lit room has: a task light on every
+  // working station (the grow benches in their lamps' violet), a brighter pool under each hanging lamp and a soft wash
+  // over the upper floors. All in the pools' one draw, so the phone pays nothing extra.
+  const TASK_LIGHT = new THREE.Color('#ffc477'), GROW_LIGHT = new THREE.Color('#d98cff'), COUNTER_LIGHT = new THREE.Color('#ffd79a');
+  function shopInterior(frame) {
+    (frame.stations || []).forEach(s => {
+      if (!s.built || s.visible === false || (s.pop !== undefined && s.pop < 1) || s.index === undefined) return;
+      const r = Math.max(s.w, s.d), grow = s.index === 1, counter = s.index === 4 || s.index === 6;
+      pool(s.x, s.y, s.z, r * 2.6, r * 2.6, 0, 0, grow ? GROW_LIGHT : counter ? COUNTER_LIGHT : TASK_LIGHT, grow ? .85 : s.y > 0 ? .55 : .4);
+    });
+    const sh = layout.shell;
+    if (!sh) return;
+    // Each lamp's own pool on the floor below it.
+    sh.lamps.forEach(([x, y, z, power]) => {
+      const floor = [...layout.floors].reverse().find(f => f.y < y);
+      if (floor) pool(x, floor.y, z, 6.4, 6.4, 0, 0, TASK_LIGHT, (floor.y > 0 ? .45 : .3) * power);
+    });
+    // The upper floors sit out of the ground floor's lamps, so they take a soft wash of their own.
+    layout.floors.forEach((f, n) => { if (n) pool(f.x || 0, f.y, f.z + f.d * .1, f.w * .95, f.d * 1.5, 0, 0, TASK_LIGHT, n === 2 ? .55 : .3); });
+  }
   function placePools(frame, night, shopLit) {
     pools.visible = night > .02;
     if (!pools.visible) return;
@@ -1024,6 +1045,7 @@ export function createMap3D(canvas, layout) {
       const f = layout.floors[0], left = layout.entrance ? layout.entrance.x : (f.x || 0) - f.w / 2, right = (f.x || 0) + f.w / 2, front = f.z + f.d / 2, m = layout.marquee;
       if (m) pool(left - 1.9, layout.plazaY, (m.zRear + m.zFront) / 2, m.zFront - m.zRear + 1.5, 3.8, -Math.PI / 2, 1, SHOP_SPILL, .6);
       pool((left + right) / 2, layout.plazaY, front + 1.9, right - left, 3.8, 0, 1, SHOP_SPILL, .45);
+      shopInterior(frame);
     }
     // The branch stores on the map (placeDistricts): a warm wash over the shop floor, so the line, the counters and the
     // people read after dark, and the same spill out of the open front as the flagship's.
