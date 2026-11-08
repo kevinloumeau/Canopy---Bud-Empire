@@ -1,0 +1,90 @@
+/* Research done well (Kevin, 2026-11-08: "once maxed don't like how it looks"). Loaded after full-open.css.
+   - Mastery (levels 21-30): the green ring is full at Lv 20, then a brass sweep runs round it to Lv 30.
+   - Maxed is an achievement, not a disabled row: a full brass ring, a brass Max pill, the final bonus in brass.
+     A fork side closed this run is the only thing that stays quiet.
+   - A branch with nothing left to buy shows one card instead of a lone fold tile: the branch's icon in a brass ring with
+     a check, and every pick's final bonus in its own brass ring. Its tab gets a small brass check. */
+
+/* ---------- Rings and pills ---------- */
+.shop-browser .shop-item.is-mastery .shop-symbol::before{background:conic-gradient(var(--ui-brass) calc(var(--mv,0)*1turn),var(--ui-leaf-glow) 0)!important}
+.shop-browser .shop-item.is-mastered .shop-symbol::before{background:var(--ui-brass)!important}
+.shop-browser .shop-item.is-mastered .shop-symbol{box-shadow:0 0 14px #e2c68a33;border-radius:50%}
+.sheet .shop-browser .shop-item.is-mastery .shop-level{color:var(--ui-brass)!important;box-shadow:0 0 0 1px #e2c68a8c!important}
+.sheet .shop-browser .shop-item.is-mastered .shop-level{background:var(--ui-brass)!important;color:var(--ui-brass-ink)!important;box-shadow:none!important;font-weight:700!important}
+html body .sheet .shop-browser .shop-item.is-mastered .shop-effect{color:var(--ui-brass)!important}
+.shop-browser .shop-item.is-mastered{opacity:1!important;filter:none!important}
+.shop-browser .shop-item.is-mastered .shop-symbol.has-3d>img.research-3d{opacity:1!important}
+.shop-browser .shop-item.is-closed{opacity:.5}
+html body .sheet>[data-pane=boosts][data-room=full].shop-browser .shop-item.is-mastered>*{opacity:1!important}
+html body .sheet>[data-pane=boosts][data-room=full].shop-browser .shop-item.is-mastered{background:linear-gradient(100deg,#e2c68a14,#e2c68a05 60%)!important;box-shadow:inset 0 0 0 1px #e2c68a33!important}
+
+/* The half-open fold for maxed picks: a brass count in a brass ring, not an empty dashed slot. */
+html body .sheet>[data-pane=boosts].shop-browser .shop-items>.shop-done-toggle{border:1px solid #e2c68a33!important;background:var(--ui-brass-wash)!important;color:var(--ui-ink)!important}
+html body .sheet>[data-pane=boosts].shop-browser .shop-items>.shop-done-toggle b{background:#e2c68a14!important;box-shadow:inset 0 0 0 2px var(--ui-brass);color:var(--ui-brass)!important;font:650 15px/1 'Bricolage Grotesque',system-ui,sans-serif!important}
+html body .sheet>[data-pane=boosts].shop-browser .shop-items>.shop-done-toggle svg{color:var(--ui-brass)}
+
+/* ---------- Branch tab: a check once the branch is done ---------- */
+.shop-browser .shop-categories button.is-done .shop-category-icon{position:relative}
+.shop-browser .shop-categories button.is-done .shop-category-icon::after{content:'';position:absolute;right:-5px;bottom:-3px;width:12px;height:12px;border-radius:50%;background:var(--ui-brass) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='%232a2211' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/10px no-repeat;box-shadow:0 0 0 1.5px #143d21}
+
+/* ---------- Branch complete card ---------- */
+.shop-browser .shop-complete[hidden]{display:none!important}
+.shop-browser.is-branch-done>.shop-items{display:none!important}
+.shop-browser .shop-complete{--badge:76px;--chip:44px;position:relative;display:flex;flex-direction:column;justify-content:space-evenly;gap:14px;margin:2px 0 0;padding:16px 12px 14px;border-radius:18px;background:radial-gradient(120% 70% at 50% 0%,#e2c68a1f,transparent 70%),var(--ui-well-soft,#ffffff0a);box-shadow:inset 0 0 0 1px #e2c68a40}
+.shop-browser .shop-complete-head{display:grid;justify-items:center;gap:10px;text-align:center}
+.shop-browser .shop-complete-badge{position:relative;display:grid;place-items:center;width:var(--badge);height:var(--badge);border-radius:50%;background:radial-gradient(circle,#e2c68a26 0 55%,transparent 72%);box-shadow:inset 0 0 0 3px var(--ui-brass),0 0 22px #e2c68a40}
+.shop-browser .shop-complete-badge>img.research-3d{width:calc(var(--badge) * .62);height:calc(var(--badge) * .62);filter:drop-shadow(0 2px 4px #06180c99)}
+.shop-browser .shop-complete-badge>i{position:absolute;right:-2px;bottom:0;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--ui-brass);box-shadow:0 0 0 3px #173f24}
+.shop-browser .shop-complete-badge>i svg{width:16px;height:16px;fill:none;stroke:var(--ui-brass-ink);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.shop-browser .shop-complete-copy{display:grid;gap:3px}
+.shop-browser .shop-complete-copy b{font:650 18px/1.15 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.015em;color:var(--ui-ink)}
+.shop-browser .shop-complete-copy small{font:500 12px/1.3 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-soft);text-wrap:balance}
+/* The picks: four across, a short last row centred. */
+.shop-browser .shop-complete-list{display:flex;flex-wrap:wrap;justify-content:center;row-gap:12px;margin:0;padding:0;list-style:none}
+.shop-browser .shop-complete-list>li{display:grid;grid-template-rows:var(--chip) auto auto;justify-items:center;row-gap:3px;flex:0 0 25%;min-width:0;padding:0 2px;text-align:center}
+.shop-browser .shop-complete-ring{display:grid;place-items:center;width:var(--chip);height:var(--chip);border-radius:50%;background:#e2c68a14;box-shadow:inset 0 0 0 2px var(--ui-brass)}
+.shop-browser .shop-complete-ring>img.research-3d{width:calc(var(--chip) * .66);height:calc(var(--chip) * .66)}
+.shop-browser .shop-complete-list b{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 11.5px/1.15 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.01em;color:var(--ui-ink)}
+.shop-browser .shop-complete-list small{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 10.5px/1.2 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-brass)}
+.shop-browser .shop-complete-list>li.is-closed{opacity:.5}
+.shop-browser .shop-complete-list>li.is-closed .shop-complete-ring{background:none;box-shadow:inset 0 0 0 1.5px var(--ui-edge)}
+.shop-browser .shop-complete-list>li.is-closed small{color:var(--ui-soft)}
+
+/* The figure alone in a chip; the full line shows at full open. */
+.shop-browser .shop-complete-full{display:none}
+
+/* Half open on a phone: the card fills the pane under the tabs. The rings grow with the room (the card is a size
+   container), and a short pane (the SE) puts the badge beside the title so both rows of picks fit. */
+@media(max-width:779px){
+ html body .sheet>[data-pane=boosts].shop-browser>.shop-complete{flex:1 1 auto;min-height:0;container-type:size;padding:0}
+ .sheet>[data-pane=boosts] .shop-complete>*{--badge:clamp(52px,24cqh,96px);--chip:clamp(32px,(100cqh - 150px) / 2 - 26px,56px)}
+ .sheet>[data-pane=boosts] .shop-complete{justify-content:space-evenly;gap:0}
+ .sheet>[data-pane=boosts] .shop-complete-head{padding:0 12px}
+ .sheet>[data-pane=boosts] .shop-complete-list{padding:0 6px}
+ @container (max-height:300px){
+  .sheet>[data-pane=boosts] .shop-complete>*{--badge:52px;--chip:clamp(30px,(100cqh - 104px) / 2 - 27px,44px)}
+  .sheet>[data-pane=boosts] .shop-complete-head{grid-template-columns:var(--badge) auto;justify-content:center;align-items:center;column-gap:14px;text-align:left}
+  .sheet>[data-pane=boosts] .shop-complete-badge>i{width:20px;height:20px;box-shadow:0 0 0 2px #173f24}
+  .sheet>[data-pane=boosts] .shop-complete-badge>i svg{width:13px;height:13px}
+  .sheet>[data-pane=boosts] .shop-complete-copy b{font-size:16px}
+  .sheet>[data-pane=boosts] .shop-complete-list{row-gap:8px}
+ }
+}
+/* Full open: show more, not bigger. The picks become rows with their full names and bonuses. */
+@media(max-width:779px){
+ html body .sheet>[data-pane=boosts][data-room=full].shop-browser>.shop-complete{flex:none;container-type:normal;justify-content:flex-start;gap:16px;padding:18px 12px 12px}
+ html body .sheet>[data-pane=boosts][data-room=full] .shop-complete{--badge:88px;--chip:40px}
+ html body .sheet>[data-pane=boosts][data-room=full] .shop-complete-list{display:grid;grid-template-columns:minmax(0,1fr);row-gap:0}
+ html body .sheet>[data-pane=boosts][data-room=full] .shop-complete-list>li{grid-template-columns:var(--chip) minmax(0,1fr) auto;grid-template-rows:auto;align-items:center;justify-items:start;column-gap:12px;padding:6px 4px;text-align:left}
+ html body .sheet>[data-pane=boosts][data-room=full] .shop-complete-list>li+li{box-shadow:inset 0 1px 0 var(--ui-edge)}
+ html body .sheet>[data-pane=boosts][data-room=full] .shop-complete-list b{font-size:14px}
+ html body .sheet>[data-pane=boosts][data-room=full] .shop-complete-list small{justify-self:end;font-size:12.5px}
+ html body .sheet>[data-pane=boosts][data-room=full] .shop-complete-num{display:none}
+ html body .sheet>[data-pane=boosts][data-room=full] .shop-complete-full{display:inline}
+ html body .sheet>[data-pane=boosts][data-room=full].shop-browser>.shop-complete{gap:12px;padding:14px 12px 8px}
+ html body .sheet>[data-pane=boosts][data-room=full] .shop-complete>*{--badge:76px;--chip:36px}
+}
+@media(prefers-reduced-motion:no-preference){
+ .shop-browser .shop-complete:not([hidden]) .shop-complete-badge{animation:shop-complete-in .6s cubic-bezier(.16,1,.3,1) both}
+ @keyframes shop-complete-in{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+}

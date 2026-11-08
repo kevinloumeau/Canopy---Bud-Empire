@@ -1,5 +1,6 @@
 import {BOOST_MAX} from './depth.js';
-import {FORKS,sideStatus,levelsToGate,forkOf} from './research.js';
+import {FORKS,sideStatus,levelsToGate,forkOf,MASTERY_FROM} from './research.js';
+import {tieLast} from './no-lone-words.js';
 import {roomy} from './sheet-room.js';
 // Reuse the original purchase nodes so prices, handlers and saves remain authoritative. Order counters, kiosks and the
 // customer line live on the Orders station instead (see order-extras.js); Start over lives in Settings.
@@ -24,6 +25,9 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
   // the aria label and tooltip, and on desktop.
   const SHORT={boost:'Store boost',curingLevel:'Curing',breedingLevel:'Breeding',offlineLevel:'Safe',basketLevel:'Baskets',displayLevel:'Displays',loyaltyLevel:'Loyalty',serviceLevel:'Express',webLevel:'Web ads',onlineBonusLevel:'Premium',fleetLevel:'Drones',cargoLevel:'Cargo',trendLevel:'Trends',trafficLevel:'Floor flow',growBatchLevel:'Grow lights',upgradeStorage:'Storage'};
   const phoneTiles=window.matchMedia('(max-width:779px)');
+  // The complete card's chips have room for the figure alone ("+180%"), and big plain numbers shorten ("134.4K/stage").
+  const shortNumber=t=>String(t).trim().replace(/^(\d{4,})(\.\d+)?/,n=>{const v=Number(n);return v>=1e6?(v/1e6).toFixed(1).replace(/\.0$/,'')+'M':(v/1e3).toFixed(1).replace(/\.0$/,'')+'K'});
+  const shortFigure=t=>shortNumber(String(t).trim().split(' ')[0]);
   const img3d=src=>'<img class="research-3d" src="icons/3d/'+src+'.png" alt="" draggable="false" decoding="async">';
   const rows=definitions.map(([id,category])=>{
     const button=document.getElementById(id),node=button.parentElement;
@@ -56,7 +60,9 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
   const later=document.createElement('p');later.className='shop-later';later.hidden=true;
   const doneToggle=document.createElement('button');doneToggle.type='button';doneToggle.className='shop-done-toggle';doneToggle.hidden=true;doneToggle.setAttribute('aria-expanded','false');
   let showDone=false;doneToggle.onclick=()=>{showDone=!showDone;render();};
-  pane.prepend(header,list,later,doneToggle,empty);
+  // A branch with nothing left to buy this run: one card that celebrates it, every pick's final bonus in a brass ring.
+  const complete=document.createElement('section');complete.className='shop-complete';complete.hidden=true;
+  pane.prepend(header,list,complete,later,doneToggle,empty);
   // Full open (src/full-open.css) has room for every row, so the maxed and closed ones show under the rest, no fold.
   pane.addEventListener('sheetroom',()=>{render.key=null;render()});
   pane.append(milestone,reset);reset.hidden=true;
@@ -75,16 +81,21 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
       else if(row.id==='upgradeStorage'){level=state.storageLevel;max=20}
       else {level=state.globalLevel;max=BOOST_MAX}
       const key=row.id.startsWith('componentBuy')?components[Number(row.id.replace('componentBuy',''))].key:null,side=key?sideStatus(state,key):'open';
-      const isDone=level>=max||side==='closed',gated=side==='gated'&&!isDone;row.node.classList.toggle('is-maxed',isDone);order.push({row,isDone});
+      const isDone=level>=max||side==='closed',gated=side==='gated'&&!isDone;row.node.classList.toggle('is-maxed',isDone);order.push({row,isDone,closed:side==='closed',level});
+      // Maxed reads as an achievement (brass), a closed fork side stays quiet; levels past 20 are the brass Mastery tier.
+      const mastery=!!key&&max>MASTERY_FROM&&level>=MASTERY_FROM;
+      row.node.classList.toggle('is-mastered',level>=max&&side!=='closed');row.node.classList.toggle('is-closed',side==='closed');row.node.classList.toggle('is-mastery',mastery&&level<max);
       // Rows keep one short figure; the long states fold into the lines under the list.
       row.badge.textContent=side==='closed'?'Closed':isDone?'Max':'Lv '+level;
       row.badge.setAttribute('aria-label',side==='closed'?'Closed this run'+(level?', level '+level+' kept':''):'Level '+level);
       row.node.classList.toggle('shows-verb',side==='pick');
       // The ring around the icon fills with the level; the effect line is the tile's tooltip.
-      if(row.symbol)row.symbol.style.setProperty('--lv',Math.min(1,Number.isFinite(max)&&max?level/max:0).toFixed(3));
+      // Mastery picks fill the green ring by Lv 20, then sweep it brass from 21 to 30.
+      const base=key&&max>MASTERY_FROM?MASTERY_FROM:max;
+      if(row.symbol){row.symbol.style.setProperty('--lv',Math.min(1,Number.isFinite(base)&&base?level/base:0).toFixed(3));row.symbol.style.setProperty('--mv',max>base?Math.max(0,Math.min(1,(level-base)/(max-base))).toFixed(3):'0')}
       // Under the name: what the next level gives ("+0% → +6% seed batch" shows "+6% seed batch"), the full line as tooltip.
       const effect=row.node.querySelector('strong'),full=effect?effect.textContent.trim():'',next=full.split('→').pop().split(' · ')[0].trim();
-      const tight=next.replace(/^(\d{2,})\.\d /,'$1 ').replace(/ per (stage|drone|run)$/,'/$1').replace(' production',' output');
+      const tight=shortNumber(next).replace(/^(\d{2,})\.\d /,'$1 ').replace(/ per (stage|drone|run)$/,'/$1').replace(' production',' output');
       if(row.effect.textContent!==tight)row.effect.textContent=tight;row.node.title=full?row.node.querySelector('h2,b').textContent+' · '+full:'';
       const here=row.category===category;
       if(here&&gated){const gate=forkOf(key).gate+' '+categories[row.category]+' levels · '+levelsToGate(state,key)+' to go';(gates[gate]=gates[gate]||[]).push(row.node.querySelector('h2,b').textContent);}
@@ -109,11 +120,25 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
       price.hidden=meter.hidden=!unbuilt;price.firstChild.textContent=(d.building?d.clock:d.price)||'';meter.firstChild.style.width=Math.round((d.progress||0)*100)+'%';
       count.hidden=!d.built||!d.waiting;count.textContent=d.waiting;desk.setAttribute('aria-label',unbuilt?'Build the pickup window, '+d.price+', '+note.textContent:'Delivery desk, '+note.textContent)}
     const gateLines=Object.keys(gates);later.hidden=!gateLines.length;
+    // Everything in the branch maxed or closed: the card replaces the rows and the fold.
+    const finished=count===0&&done>0&&!gateLines.length;
+    pane.classList.toggle('is-branch-done',finished);complete.hidden=!finished;
+    if(finished){
+      const here=order.filter(o=>o.row.category===category),mastered=here.filter(o=>!o.closed).length;
+      const ckey=category+'|'+here.map(o=>o.row.id+':'+o.closed+':'+o.row.effect.textContent).join(',');
+      if(complete.dataset.key!==ckey){complete.dataset.key=ckey;const name=categories[category];
+        complete.setAttribute('aria-label',name+' research complete for this run');
+        complete.innerHTML='<header class="shop-complete-head"><span class="shop-complete-badge" aria-hidden="true">'+img3d(tabs3d[name])+'<i><svg viewBox="0 0 16 16"><path d="M4 8.5l2.5 2.5L12 5.5"/></svg></i></span><span class="shop-complete-copy"><b>'+name+' complete</b><small>'+tieLast(here.length>mastered?mastered+' maxed · '+(here.length-mastered)+' closed this run':'All '+mastered+' maxed this run')+'</small></span></header>'+
+          '<ul class="shop-complete-list">'+here.map(o=>{const r=o.row,k=r.id.startsWith('componentBuy')?components[Number(r.id.replace('componentBuy',''))].key:r.id,nm=r.node.querySelector('h2,b').textContent;
+            return '<li class="'+(o.closed?'is-closed':'is-mastered')+'" title="'+nm+'"><span class="shop-complete-ring">'+(ICONS_3D[k]?img3d('research-'+ICONS_3D[k]):'')+'</span><b>'+(SHORT[k]||nm)+'</b><small><span class="shop-complete-num">'+(o.closed?'Closed':shortFigure(r.effect.textContent))+'</span><span class="shop-complete-full">'+(o.closed?'Closed':shortNumber(r.effect.textContent))+'</span></small></li>'}).join('')+'</ul>'}
+    }
+    header.querySelectorAll('[data-shop-category]').forEach(b=>{const c=Number(b.dataset.shopCategory),all=rows.filter(r=>r.category===c);b.classList.toggle('is-done',all.length>0&&all.every(r=>r.node.classList.contains('is-maxed')))});
     later.innerHTML=gateLines.map(g=>'<span><b>Opens at '+g.replace(' · ','</b> · ')+'<small>'+gates[g].join(' or ')+'</small></span>').join('');
-    doneToggle.hidden=!done||roomFull;if(doneToggle.parentElement!==list||list.lastElementChild!==doneToggle)list.appendChild(doneToggle);doneToggle.setAttribute('aria-expanded',String(showDone));
+    doneToggle.hidden=!done||roomFull||finished;if(doneToggle.parentElement!==list||list.lastElementChild!==doneToggle)list.appendChild(doneToggle);doneToggle.setAttribute('aria-expanded',String(showDone));
     doneToggle.innerHTML='<span>'+(showDone?'Hide maxed and closed':'Maxed and closed')+'</span><b>'+done+'</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+(showDone?'m6 15 6-6 6 6':'m6 9 6 6 6-6')+'"/></svg>';
     // Phones size the grid to fill the sheet (src/research-fit.css): a few tiles go two across and grow, a full branch
     // goes four across. A fork takes two cells. Rows come from laying the cells out in order, as the grid does.
+    if(finished)rows.forEach(r=>{if(r.category===category)r.node.hidden=true});
     const cells=[...list.children].filter(n=>!n.hidden&&n!==desk).map(n=>n.classList.contains('shop-fork')?2:1),total=cells.reduce((a,b)=>a+b,0);
     const cols=total<=4?2:total<=6?3:4;let rowsUsed=total?1:0,at=0;cells.forEach(w=>{if(at+w>cols){rowsUsed++;at=0}at+=w});
     list.style.setProperty('--cols',cols);list.dataset.cols=cols;list.style.setProperty('--rows',Math.max(1,rowsUsed));list.dataset.rows=rowsUsed>2?'many':String(rowsUsed);

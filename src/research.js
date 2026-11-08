@@ -22,8 +22,16 @@ export const ALSO={
 // Ready-bag storage now grows with the basket on its own (see readyCapacity in main.js).
 export const CUT={pickupLevel:1200,readyLevel:600,terpeneLevel:2800};
 export const RESEARCH_VERSION=2;
-// The price research charges for a level (same curve as the Research cards): gentle for eight levels, steep after.
-export function levelCost(base,level){return Math.round(base*Math.pow(1.8,Math.min(level,8))*Math.pow(2.15,Math.max(0,level-8)));}
+// The price research charges for a level (same curve as the Research cards): gentle for eight levels, steep to 20, and
+// ×1.6 a level through Mastery (levels 21 to 30), so the last levels are a late-run project. Levels 1-20 cost what they
+// always did, so nothing a save already bought changes price.
+export const MASTERY_FROM=20,MASTERY_MAX=30;
+export function levelCost(base,level){return Math.round(base*Math.pow(1.8,Math.min(level,8))*Math.pow(2.15,Math.max(0,Math.min(level,MASTERY_FROM)-8))*Math.pow(1.6,Math.max(0,level-MASTERY_FROM)));}
+// Effects that would run past sense over 30 levels give half a step a level in Mastery: Breeding's grow-time cut and the
+// drone fleet's launch gap (3% a level to 60%, then 1.5% to 75%), and repeat web orders (4% to 80%, then 1% to 90%).
+export function tapered(level,step,tail){const l=Math.max(0,Number(level)||0);return Math.min(l,MASTERY_FROM)*step+Math.max(0,l-MASTERY_FROM)*tail;}
+// Is a level in the Mastery tier (past 20)?
+export function isMastery(level){return level>MASTERY_FROM;}
 // Brings a save from the 26-pick list to this one, once. Merged lines all take the highest level any of them had, so
 // nobody loses a level; cut lines go to zero and their whole cost comes back as cash. Returns the refund.
 export function mergeResearch(state){
