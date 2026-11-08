@@ -3438,6 +3438,9 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // Station signs come first and stay on their stations: a later (lower) sign slides down only to clear another sign.
     var signs=labels.filter(function(l){return!l.tag&&shown(l)}).sort(function(a,b){return a.y-b.y});
     for(var pass=0;pass<2;pass++)for(var i=1;i<signs.length;i++){var a=signs[i];for(var j=0;j<i;j++){var b=signs[j];if(hits(a,a.x,a.y,b,gap))a.y=b.y+(a.h+b.h)/2+gap}}
+    // A station sign that the camera has carried up under the top bar hides rather than sitting on the cash or the speed
+    // buttons; it comes back as soon as its station is lower on the screen.
+    signs.forEach(function(l){if(l.y-l.h/2<ceiling+gap)l.el.style.display='none'});
     // Purchase tags give way: each tries its own spot, then a short nudge up, down or aside, and hides if all of those
     // land on a sign, an earlier tag, under the top bar or under the menu sheet. A tag with its buy box open always stays.
     var placed=signs.slice();
@@ -5053,6 +5056,13 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function visibleHeight(){return width>=780?height:Math.max(200,height-Math.max(dockHeight,guideReserve))}
   if(window.ResizeObserver){new ResizeObserver(function(){if(!sheetGlide)fitControls()}).observe($('sheet'));new ResizeObserver(fitLane).observe($('laneStatus'))}
   window.addEventListener('resize',fitControls);
+  // The bar can move without changing size: on iPhone the notch inset (env(safe-area-inset-top)) often arrives after the
+  // first measure, which pushes the bar down while --hud-height still holds the old edge, so the activity pill sat on the
+  // cash and the map signs ran under the bar (Kevin, 2026-11-08). A ResizeObserver can't see a move, so the edge is
+  // checked twice a second (one cheap read) and on the events that shift the inset, and everything refits when it moved.
+  function watchHud(){if(sheetGlide||dockGlide)return;var hud=document.querySelector('.hud'),b=hud?Math.round(hud.getBoundingClientRect().bottom*10)/10:0;if(b>0&&Math.abs(b-(parseFloat(document.documentElement.style.getPropertyValue('--hud-height'))||0))>.5)fitControls()}
+  setInterval(watchHud,500);['orientationchange','pageshow','visibilitychange'].forEach(function(e){window.addEventListener(e,function(){requestAnimationFrame(watchHud)})});
+  if(window.visualViewport)window.visualViewport.addEventListener('resize',function(){requestAnimationFrame(watchHud)});
   // Desktop conveniences: the hint names the pointer, and speed and tabs have keys when no field has focus.
   // Hint copy follows the active pointer, and drops the keyboard shortcuts where the map is too narrow to fit them.
   var coarsePointer=window.matchMedia('(pointer:coarse)');
