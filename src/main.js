@@ -3054,6 +3054,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // of them (both face +z), the kiosk screen on their left by the shop window, the ID desk; in a line, its front.
   function customerLook(c){
     if(c.walking)return null;
+    // Taking out cash: into the ATM's screen, which faces the pavement (+z) from the shop's front ledge (Kevin, 2026-11-08).
+    if(c.cash&&c.cash.stage==='use')return{x:0,z:-1};
     if(atOrderCounter(c,state.orderCounters)||c.phase==='pickup'&&Math.hypot(c.x-PICKUP_X,c.z-4.9)<.15)return{x:0,z:-1};
     if(c.phase==='kiosk'&&c.kioskIndex!=null&&!c.ordered&&Math.hypot(c.x+8.95,c.z-kioskZ(c.kioskIndex))<.15)return{x:-1,z:0};
     if(c.phase==='idCheck'&&Math.hypot(c.x-ID_CHECK.x,c.z-ID_CHECK.z)<.15)return{x:ID_DESK.x-c.x,z:ID_DESK.z-c.z};
