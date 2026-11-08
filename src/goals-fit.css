@@ -53,8 +53,6 @@ body[data-active-tray=goals] .sheet:not(.collapsed) .panel-header>#panelToggle{m
 .goal-ring-tick{width:18px;height:18px}
 .goal-ring-tick svg{width:12px;height:12px}
 
-}
-
 /* Phones: the sheet scale (sheet-scale.css) sets the air between the rows, the tab row's height and the tile gaps. */
 @media(max-width:779px){
  .goals-now{gap:var(--s-tile-gap);margin-bottom:var(--s-gap)}
