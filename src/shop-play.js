@@ -107,13 +107,20 @@ const SPARK=icon('<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.5 2.5M15.2 1
 const svg=html=>{const t=document.createElement('template');t.innerHTML=html;return t.content.firstChild;};
 // Minutes to the next recap, rounded up, so the label only changes once a minute.
 // The five-minute recap clock is called the floor, not a shift, so it never reads against the shift goals' "Shift N".
+// This round's earnings per second against the last round's, once the round has run long enough to mean something.
+export function paceAgainst(shift,recap){
+  if(!recap||!(recap.earned>0)||shift.seconds<30)return null;
+  const pct=Math.round(((shift.earned/shift.seconds)/(recap.earned/SHIFT_SECONDS)-1)*100);
+  if(Math.abs(pct)<3)return {tone:'even',pct:0,text:'Same pace as last round'};
+  return {tone:pct>0?'up':'down',pct,text:(pct>0?'▲ ':'▼ ')+Math.min(999,Math.abs(pct))+'% on last round'};
+}
 export function shiftTimeLeft(seconds){const left=Math.max(0,SHIFT_SECONDS-seconds);return left<60?'Recap in under a minute':'Recap in '+Math.ceil(left/60)+' min';}
-// The panel, on the glass components: this shift as open figures with a thin progress line and last shift's advice as
+// The panel, on the glass components: this round's earnings in a ring, the floor stage by stage and one fix as
 // the brass next-action card. A customer asking for a pick gets their own card in the middle of the screen instead.
 // lane: where the pill and the feedback note live while the panel is closed (the top lane in main.js), so they line up
 // with the other status chips and toasts rather than sitting on their own spot.
 const ART=(name,cls)=>'<img class="'+cls+'" src="icons/3d/'+name+'.png" alt="" draggable="false" decoding="async">';
-export function mountShopPlay({getState,getMoment,getAlerts,names,colors,format,choose,skip,navigate,changed,opening,closing,lane}){
+export function mountShopPlay({getState,getMoment,getAlerts,getFloor,getFocus,names,colors,format,choose,skip,navigate,changed,opening,closing,lane}){
   const root=document.createElement('div');root.className='shop-play';
   root.innerHTML='<button type="button" id="shopActivity" class="shop-activity" aria-expanded="false" aria-controls="shopActivityPanel">'+PULSE+'<span></span></button>'+
     '<section id="shopActivityPanel" class="shop-activity-panel" aria-label="Shop activity" hidden><div class="shop-activity-heading"><h2>Shop activity</h2><button type="button" id="shopActivityClose" aria-label="Close shop activity">'+CLOSE+'</button></div>'+
@@ -162,7 +169,7 @@ export function mountShopPlay({getState,getMoment,getAlerts,names,colors,format,
     else if(b.classList.contains('moment-skip')){closeMoment();skip()}
     else if(b.classList.contains('moment-close'))closeMoment();
     render();});
-  $('shiftRecap').addEventListener('click',e=>{if(!e.target.closest('.activity-advice'))return;const recap=getState().shopPlay.recap,tip=recap&&advice(recap);if(tip&&tip.station!==undefined){close();navigate(tip)}});
+  $('shiftRecap').addEventListener('click',e=>{const card=e.target.closest('.activity-advice');if(!card||card.dataset.station===undefined)return;close();navigate({station:Number(card.dataset.station)})});
   const advice=recap=>{const state=getState();return shiftAdvice(recap,{counters:state.orderCounters,comfortLevel:state.comfortLevel});};
   const el=(tag,props,...kids)=>{const node=Object.assign(document.createElement(tag),props);node.append(...kids);return node;};
   const figure=(label,value)=>el('div',{},el('dt',{textContent:label}),el('dd',{textContent:value}));
@@ -185,6 +192,24 @@ export function mountShopPlay({getState,getMoment,getAlerts,names,colors,format,
       b.append(el('strong',{textContent:name}),el('span',{className:'moment-pick-tag',textContent:label.tag}),el('small',{textContent:label.line}));
       return b;}));
   }
+  // The panel answers three questions at a glance (Kevin, 2026-11-08: "whats actually important and visually makes
+  // sense"): how is this round going (the earnings, the ring filling to the recap and the pace against the last round),
+  // where are the customers right now (the floor as a row of stages, each with the faces of the shoppers in it and a
+  // coral edge where they pile up), and what to fix (one brass card that opens the station).
+  function stageTile(stage){
+    const faces=el('span',{className:'floor-faces'});
+    if(stage.faces.length)faces.append(...stage.faces.slice(0,3).map(f=>{const img=el('img',{alt:'',draggable:false,decoding:'async'});img.src='icons/3d/'+f+'.png';return img;}));
+    else faces.append(el('i'));
+    const tile=el('li',{className:'floor-stage'+(stage.busy?' is-busy':'')+(stage.count?'':' is-empty')},faces,el('b',{textContent:String(stage.count)}),el('span',{textContent:stage.label}));
+    tile.setAttribute('aria-label',stage.label+': '+stage.count+(stage.count===1?' customer':' customers')+(stage.busy?', backed up':''));
+    return tile;
+  }
+  let floorKey='';
+  function renderFloor(){
+    const box=root.querySelector('.activity-floor');if(!box)return;
+    const floor=getFloor?getFloor():{stages:[]},next=JSON.stringify(floor.stages);if(next===floorKey)return;floorKey=next;
+    box.replaceChildren(...floor.stages.map(stageTile));box.style.setProperty('--stages',String(floor.stages.length||1));
+  }
   function render(){
     const play=getState().shopPlay,moment=getMoment(),alerts=getAlerts(),shift=play.shift;
     if(!moment&&!overlay.hidden){overlay.hidden=true;pill.setAttribute('aria-expanded',String(!panel.hidden))}
@@ -193,19 +218,37 @@ export function mountShopPlay({getState,getMoment,getAlerts,names,colors,format,
     pill.querySelector('span').textContent=label;pill.classList.toggle('is-moment',!!moment);
     const glyph=moment?'leaf':'pulse';if(pill.dataset.icon!==glyph){pill.dataset.icon=glyph;pill.querySelector('svg').outerHTML=moment?LEAF:PULSE}
     pill.classList.toggle('has-update',!!moment||play.recapUnread||alerts.length>0);pill.setAttribute('aria-label',label+(moment?' · Open their question':' · Open shop activity'));
-    const next=JSON.stringify([play.recap,alerts,shift.served,shift.matches,Math.floor(shift.earned),Math.floor(shift.seconds/10),getState().orderCounters,getState().comfortLevel]);
-    if(next===key)return;key=next;
-    const focused=document.activeElement,scroll=panel.scrollTop,refocus=root.contains(focused)&&!!focused.closest('#shiftRecap');
-    const recapBox=$('shiftRecap'),progress=el('progress',{max:SHIFT_SECONDS,value:shift.seconds});progress.setAttribute('aria-label','Time to the next floor recap');
-    recapBox.replaceChildren(el('div',{className:'activity-head'},el('h3',{textContent:'On the floor'}),el('span',{textContent:shiftTimeLeft(shift.seconds)})),progress,
-      el('dl',{className:'activity-figures'},figure('Served',String(shift.served)),figure('Great picks',String(shift.matches)),figure('Earned',format(shift.earned))));
-    if(play.recap){
-      // Last recap as three open figures; a brass button only when there is a station to fix, and it opens that station.
-      const r=play.recap,tip=advice(r);
-      recapBox.append(el('div',{className:'activity-last'},el('h4',{textContent:'Last 5 min'}),el('dl',{className:'activity-figures is-last'},figure('Earned',format(r.earned)),figure('Served',String(r.served)),figure('Avg wait',r.served?Math.round(r.waitTotal/r.served)+'s':'–'))));
-      if(tip.station!==undefined){const card=el('button',{type:'button',className:'activity-advice',title:tip.text},svg(SPARK),el('strong',{textContent:tip.short||tip.text}),svg(CHEVRON));recapBox.appendChild(card)}
+    if(panel.hidden){key='';floorKey='';return}
+    const focus=getFocus?getFocus():null;
+    const next=JSON.stringify([play.recap,shift.served,shift.matches,Math.floor(shift.earned),Math.floor(shift.seconds/10),getState().orderCounters,getState().comfortLevel,focus]);
+    if(next!==key){key=next;
+      const focused=document.activeElement,scroll=panel.scrollTop,refocus=root.contains(focused)&&!!focused.closest('#shiftRecap');
+      const recapBox=$('shiftRecap'),recap=play.recap;
+      recapBox.replaceChildren(heroBlock(shift,recap),floorList(),figuresBlock(shift));
+      const tip=recap?advice(recap):null,fix=tip&&tip.station!==undefined?{station:tip.station,text:tip.short||tip.text,icon:focus&&focus.station===tip.station?focus.icon:null}:focus&&focus.station!==undefined?focus:null;
+      if(fix){const card=el('button',{type:'button',className:'activity-advice',title:fix.text},fix.icon?svg(fix.icon):svg(SPARK),el('strong',{textContent:tieLast(fix.text)}),svg(CHEVRON));card.dataset.station=fix.station;recapBox.appendChild(card)}
+      else if(focus&&focus.text)recapBox.appendChild(el('p',{className:'activity-calm',textContent:tieLast(focus.text)}));
+      floorKey='';
+      if(refocus&&!focused.isConnected){(recapBox.querySelector('button')||pill).focus({preventScroll:true});panel.scrollTop=scroll}
     }
-    if(refocus&&!focused.isConnected){(recapBox.querySelector('button')||pill).focus({preventScroll:true});panel.scrollTop=scroll}
+    renderFloor();
+  }
+  // The round's earnings beside a ring that fills to the next recap, and the pace against the last round as a green or
+  // coral chip once there is one to compare with.
+  function floorList(){const list=el('ol',{className:'activity-floor'});list.setAttribute('aria-label','Customers on the floor');return list;}
+  function heroBlock(shift,recap){
+    const left=Math.max(0,SHIFT_SECONDS-shift.seconds),mins=Math.max(1,Math.ceil(left/60)),pace=paceAgainst(shift,recap);
+    const ring=el('div',{className:'activity-ring'},el('b',{textContent:left<60?'<1':String(mins)}),el('small',{textContent:'min'}));
+    ring.style.setProperty('--fill',(Math.min(1,shift.seconds/SHIFT_SECONDS)*100).toFixed(1)+'%');ring.setAttribute('role','img');ring.setAttribute('aria-label',shiftTimeLeft(shift.seconds));
+    const copy=el('div',{className:'activity-hero-copy'},el('small',{textContent:'Earned this round'}),el('strong',{textContent:format(shift.earned)}));
+    if(pace)copy.append(el('span',{className:'activity-pace is-'+pace.tone,textContent:pace.text}));
+    else copy.append(el('span',{className:'activity-pace',textContent:'Recap when the ring fills'}));
+    return el('div',{className:'activity-hero'},ring,copy);
+  }
+  function figuresBlock(shift){
+    const wait=shift.served?Math.round(shift.waitTotal/shift.served):null;
+    const waitFigure=figure('Avg wait',wait===null?'–':wait+'s');if(wait!==null)waitFigure.dataset.tone=wait>25?'slow':wait<=15?'quick':'';
+    return el('dl',{className:'activity-figures'},figure('Served',String(shift.served)),waitFigure,figure('Great picks',String(shift.matches)));
   }
   return {
     render,close,open,

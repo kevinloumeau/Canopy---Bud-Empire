@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {migrateShopPlay,createMoment,judgeChoice,tickShift,recordServed,shiftAdvice,tipFor,shiftTimeLeft,SHIFT_SECONDS,MAX_ORDER_COUNTERS} from '../src/shop-play.js';
+import {migrateShopPlay,createMoment,judgeChoice,tickShift,recordServed,shiftAdvice,tipFor,shiftTimeLeft,paceAgainst,SHIFT_SECONDS,MAX_ORDER_COUNTERS} from '../src/shop-play.js';
 
 test('old saves get a fresh shop activity state and bad values are clamped',()=>{
   const p=migrateShopPlay(undefined);
@@ -97,4 +97,13 @@ test('guests ask in thirteen different ways, and a moment keeps the wording it d
   assert.equal(new Set(all).size,all.length);
   for(let variant=0;variant<6;variant++)assert.ok(all.includes(momentQuestion({formatRequest:false,target:2,variant})));
   assert.equal(momentQuestion({formatRequest:true,target:1,variant:1}),'Anything I can grab and go?');
+});
+
+test('the pace chip compares this round with the last one only once it has run half a minute',()=>{
+  const recap={earned:3000};
+  assert.equal(paceAgainst({seconds:20,earned:500},recap),null);
+  assert.equal(paceAgainst({seconds:60,earned:600},null),null);
+  assert.deepEqual(paceAgainst({seconds:60,earned:600},recap),{tone:'even',pct:0,text:'Same pace as last round'});
+  const up=paceAgainst({seconds:60,earned:720},recap);assert.equal(up.tone,'up');assert.equal(up.text,'▲ 20% on last round');
+  const down=paceAgainst({seconds:100,earned:500},recap);assert.equal(down.tone,'down');assert.equal(down.text,'▼ 50% on last round');
 });

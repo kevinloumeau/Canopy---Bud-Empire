@@ -26,15 +26,8 @@
 .shop-play h3{margin:0;font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ui-soft)}
 .shop-play p{margin:0;font-size:13px;line-height:1.4;color:var(--ui-ink)}
 .shop-play small{display:block;font-size:12px;line-height:1.35;color:var(--ui-soft)}
-.activity-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 2px 8px}
-.activity-head span{font:500 12px 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-soft);font-variant-numeric:tabular-nums}
 .shift-recap,.operations-alerts{margin-top:18px}
 
-/* On the floor: a thin progress line, then open figures. */
-.shop-play progress{display:block;width:100%;height:3px;margin:0;border:0;border-radius:3px;background:var(--ui-well);accent-color:var(--ui-leaf-glow);-webkit-appearance:none;appearance:none}
-.shop-play progress::-webkit-progress-bar{background:var(--ui-well);border-radius:3px}
-.shop-play progress::-webkit-progress-value{background:var(--ui-leaf-glow);border-radius:3px}
-.shop-play progress::-moz-progress-bar{background:var(--ui-leaf-glow);border-radius:3px}
 .activity-figures{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 2px 0}
 .activity-figures div{min-width:0}
 .activity-figures dt{font-size:11.5px;color:var(--ui-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -49,18 +42,7 @@
 .activity-advice strong{font-size:13px;font-weight:600;line-height:1.3}
 @media(hover:hover){.activity-advice:hover{border-color:#e2c68a55}}
 
-/* Operations and the budtender's picks: grouped lists of single rows. */
-#operationsAlerts{display:block;border:1px solid var(--ui-edge);border-radius:14px;background:var(--ui-well-soft);overflow:hidden}
-.activity-head #operationsCount{min-width:0}
-#operationsAlerts button{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:10px;width:100%;min-height:52px;padding:8px 10px 8px 12px;border:0;border-radius:0;background:none;color:var(--ui-ink);text-align:left;font:inherit;cursor:pointer}
-#operationsAlerts button+button{box-shadow:inset 0 1px var(--ui-sheen)}
 @media(hover:hover){#operationsAlerts button:hover{background:var(--ui-sheen)}}
-#operationsAlerts button>svg{width:16px;height:16px;color:var(--ui-soft)}
-.activity-row-copy{display:grid;gap:2px;min-width:0}
-.activity-row-copy strong{font-size:13.5px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.activity-row-copy small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.activity-clear{display:flex;align-items:center;gap:8px;min-height:48px;padding:0 12px;color:var(--ui-soft)!important}
-.activity-clear svg{width:16px;height:16px;color:var(--ui-leaf-glow)}
 
 /* A customer asking for a pick (Kevin, 2026-11-07): one card in the middle of the screen over a soft scrim, like the
    welcome back card. The guest in 3D on a brass-ringed medallion, their question in a few words, then three answer
@@ -109,12 +91,44 @@
 .shop-activity-panel .shop-play-feedback{position:static;transform:none;width:auto;max-width:none;margin:2px 0 10px;border-color:#e2c68a44;background:var(--ui-brass-wash);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
 
 @media(min-width:780px){.shop-activity{left:76px}.shop-activity-panel{left:76px;max-height:calc(100dvh - var(--hud-height,60px) - 90px)}}
-/* Last recap: a small label over three open figures, then a one-line brass fix button when a station needs it. */
-.activity-last{margin-top:14px;padding-top:12px;border-top:1px solid var(--ui-edge)}
-.activity-last h4{margin:0 2px;font:600 11px/1.2 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--ui-soft)}
-.activity-figures.is-last{margin-top:6px}
-.activity-figures.is-last dd{font-size:17px}
 .activity-advice{grid-template-columns:auto minmax(0,1fr) auto!important;margin-top:10px!important;padding:9px 10px!important;border-color:#e2c68a66!important;background:#e2c68a1f!important}
 .activity-advice strong{font-size:13px;font-weight:600;line-height:1.25;color:var(--ui-ink);text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* A shopper's own portrait fills the medallion, head and shoulders, cut off at the ring like a coin. */
 .moment-guest.is-portrait .moment-guest-art{height:80px;margin-bottom:-2px}
+
+/* Redesign (Kevin, 2026-11-08): the round as a ring and one big figure, the floor as a row of stages with the shoppers'
+   own faces, three small figures, then the one fix. */
+.shift-recap{margin-top:8px}
+.activity-hero{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:14px;margin:0 2px}
+.activity-ring{position:relative;display:grid;place-content:center;justify-items:center;width:60px;height:60px;border-radius:50%;background:radial-gradient(farthest-side,var(--ui-glass-strong) calc(100% - 5px),transparent calc(100% - 4.5px)),conic-gradient(var(--ui-leaf-glow) var(--fill,0%),rgba(255,255,255,.1) 0)}
+.activity-ring b{font:600 19px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ui-ink)}
+.activity-ring small{margin-top:1px;font-size:10px!important;line-height:1!important;letter-spacing:.06em;text-transform:uppercase}
+.activity-hero-copy{display:grid;justify-items:start;gap:1px;min-width:0}
+.activity-hero-copy small{font-size:11.5px}
+.activity-hero-copy strong{max-width:100%;font:600 28px/1.1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.03em;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.activity-pace{margin-top:4px;padding:2px 8px;border-radius:99px;background:var(--ui-well);font-size:11.5px;font-weight:600;line-height:1.35;color:var(--ui-soft);white-space:nowrap}
+.activity-pace.is-up{background:rgba(168,220,82,.14);color:var(--ui-leaf-glow)}
+.activity-pace.is-down{background:var(--ui-coral-wash);color:#f2a48f}
+
+/* The floor: one tile per stage, the first three shoppers' faces overlapping on a medallion, the count, the stage. */
+.activity-floor{position:relative;display:grid;grid-template-columns:repeat(var(--stages,3),minmax(0,1fr));gap:6px;margin:16px 0 0;padding:0;list-style:none}
+.floor-stage{position:relative;display:grid;justify-items:center;gap:2px;min-width:0;padding:10px 4px 9px;border:1px solid var(--ui-edge);border-radius:16px;background:var(--ui-well-soft)}
+.floor-stage+.floor-stage::before{content:'';position:absolute;left:-6px;top:28px;width:6px;height:1px;background:var(--ui-edge)}
+.floor-faces{display:flex;justify-content:center;height:30px;padding-left:10px}
+.floor-faces img,.floor-faces i{box-sizing:border-box;width:30px;height:30px;margin-left:-10px;border-radius:50%;object-fit:cover;object-position:50% 12%;background:radial-gradient(circle at 50% 30%,#3d7a4a,#163f24 70%);box-shadow:0 0 0 2px var(--ui-glass-strong)}
+.floor-faces i{background:none;box-shadow:inset 0 0 0 1.5px var(--ui-edge);border:0}
+.floor-stage b{margin-top:4px;font:600 18px/1.1 'Bricolage Grotesque',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:var(--ui-ink)}
+.floor-stage span{max-width:100%;font-size:11.5px;line-height:1.25;color:var(--ui-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.floor-stage.is-empty b{color:var(--ui-soft)}
+.floor-stage.is-busy{border-color:rgba(224,122,95,.6);background:var(--ui-coral-wash)}
+.floor-stage.is-busy b,.floor-stage.is-busy span{color:#f6c2b3}
+
+/* Three small figures under the floor, the wait coloured by how it feels to a customer. */
+.shift-recap .activity-figures{margin:14px 4px 0;text-align:center}
+.shift-recap .activity-figures dd{font-size:17px}
+.activity-figures [data-tone=quick] dd{color:var(--ui-leaf-glow)}
+.activity-figures [data-tone=slow] dd{color:#f2a48f}
+.shift-recap .activity-advice{margin-top:14px!important}
+.shift-recap .activity-advice>svg:first-child{width:22px;height:22px;color:var(--ui-brass)}
+.shift-recap .activity-advice strong{white-space:normal;text-wrap:balance}
+.activity-calm{margin:14px 4px 0!important;font-size:12.5px!important;color:var(--ui-soft)!important;text-align:center;text-wrap:balance}
