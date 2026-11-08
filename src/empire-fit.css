@@ -1,8 +1,9 @@
 /* Empire home fits the half-open sheet on every phone, down to the iPhone SE (375×667): the map's two rows of places,
    then one row with two doors, Perks and Records, each opening its own screen. Loaded after station-fit.css. */
 
-/* The two doors: equal glass tiles, icon, title over a one-line figure, chevron. Perks turns brass when reopening pays. */
-.sheet .empire-screen .empire-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:6px 0 0}
+/* The doors: Perks alone runs full width; while a pop-up market is open its door sits beside it. Glass tiles, icon,
+   title over a one-line figure, chevron. Perks turns brass when reopening pays. */
+.sheet .empire-screen .empire-links{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin:6px 0 0}
 .sheet .empire-screen button.empire-link{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:7px;width:100%;min-width:0;min-height:48px;margin:0;padding:6px 5px 6px 9px;border:1px solid var(--ui-edge);border-radius:14px;background:var(--ui-well-soft);box-shadow:none;color:var(--ui-ink);font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s,transform .1s}
 .sheet .empire-screen button.empire-link::after{display:none}
 .sheet .empire-screen .empire-link-icon{display:grid;place-items:center;width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.05);color:var(--ui-leaf-glow)}
