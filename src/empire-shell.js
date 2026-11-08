@@ -1,7 +1,7 @@
 import {abbr} from './progression.js';
 import {mountGoalsPane} from './goals-pane.js';
 // Empire and Goals shells. Reparents the existing controls (main.js and operations-ui.js keep rendering them by id).
-// Empire has four screens: Home (the map's places, then Perks and Records doors), Store (one branch: Stations and Store tabs), Perks (reopen card, rank, founder perks), Records.
+// Empire has four screens: Home (the map's places, then the Perks door), Store (one branch: Stations and Store tabs), Perks (reopen card, rank, founder perks), Records.
 // Goals (goals-pane.js) gets the contract, shift goals, story and reward controls as hidden sources.
 import {mountEmpireStores} from './empire-stores.js';
 import {mountEmpireMap} from './empire-map.js';
@@ -24,18 +24,17 @@ export function mountEmpireShell({fit,getState,format,rate,fly,buyStation,paintS
  const list=el('div','store-list');
  const toggles=[],articles=[];
  growth.querySelectorAll('.empire-branch').forEach((article,i)=>{const toggle=article.querySelector('.branch-toggle');toggles[i]=toggle;articles[i]=article;list.append(toggle);});
- // Two doors side by side under the map, so the whole home fits the half-open sheet on an iPhone SE: Perks (reopening
- // and founder perks, brass with the shares on offer once reopening pays) and Records.
+ // One door under the map, full width: Perks (reopening and founder perks, brass with the shares on offer once
+ // reopening pays). Records left the home on 2026-11-08 (Kevin: "remove the records section"); its screen stays unused.
  const ahead='<svg class="empire-link-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>';
  const link=(cls,icon,title,sub)=>{const b=el('button','empire-link '+cls,'<span class="empire-link-icon">'+icon+'</span><span class="empire-link-copy"><b>'+title+'</b><small>'+sub+'</small></span>'+ahead);b.type='button';return b;};
  const perksLink=link('empire-perks','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V11M12 14C3 14 3 7 3 7s9-1 9 7ZM12 11c0-8 9-9 9-9s0 9-9 9Z"/></svg>','Perks','');
- const more=link('empire-records','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10m6 10V4m6 16v-7m4 7H2"/></svg>','Records','Lifetime figures');more.querySelector('small').classList.add('is-words');
- more.onclick=()=>show('details');perksLink.onclick=()=>show('perks');
+ perksLink.onclick=()=>show('perks');
  // The weekend market's door (popup-pane.js), first in the row while a market is open: the theme and the time left,
  // brass while a stall can be bought.
  const popupLink=link('empire-popup',TENT,'Pop-up','');popupLink.hidden=true;popupLink.onclick=()=>{if(popup&&popup.open)popup.open();show('popup');};
- const links=el('div','empire-links');links.append(popupLink,perksLink,more);
- // Empire home: the map's places as tiles (empire-map.js), then the Perks and Records doors. The old store rows stay
+ const links=el('div','empire-links');links.append(popupLink,perksLink);
+ // Empire home: the map's places as tiles (empire-map.js), then the Perks door. The old store rows stay
  // in the page, hidden, as each branch page's toggle.
  const reopen=$('reopenCard');
  const map=mountEmpireMap({getState,format,summary:storesSummary,fly:(kind,id)=>{if(fly)fly(kind,id);if(kind==='shop'&&id>0)openStore(id-1);}});
@@ -107,8 +106,7 @@ export function mountEmpireShell({fit,getState,format,rate,fly,buyStation,paintS
   const sub=on?popupClock(win.end-Date.now())+' left':'',ready=on&&popup.ready(),sig=[on,sub,ready,on&&win.theme.name].join('|');
   if(sig!==popupSig){popupSig=sig;popupLink.hidden=!on;links.classList.toggle('has-popup',on);popupLink.classList.toggle('is-ready',!!ready);
    popupLink.querySelector('small').textContent=sub;popupClockEl.textContent=sub;
-   // Three doors across leave Records room for one word.
-   more.querySelector('small').textContent=on?'Lifetime':'Lifetime figures';popupLink.setAttribute('aria-label',on?win.theme.name+' pop-up market, '+sub+(ready?', a stall to buy':''):'');
+   popupLink.setAttribute('aria-label',on?win.theme.name+' pop-up market, '+sub+(ready?', a stall to buy':''):'');
    if(on)popupBar.heading.textContent=win.theme.name;}
   if(on&&current==='popup'&&popupPage)popupPage.sync();}
  function sync(){if(!document.hidden&&!pane.hidden){storesUI.sync();map.sync();syncPerks();syncPopup();}}
