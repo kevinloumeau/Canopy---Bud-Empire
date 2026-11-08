@@ -49,7 +49,7 @@ try {
   // An open shop with the speakeasy tier bought, three staffed order counters, heavy foot traffic, a quick doorman, a slow
   // pickup counter and deep jar stock.
   const save = { lines: [5, 5, 5, 5, 5, 5], staff: [0, 0, 0, 0, 0, 0], idStaff: 10, scannerLevel: 5, queueLevel: 6, pickupLevel: 4, readyLevel: 4,
-    stock: [50, 50, 50, 90, 90], kiosk: true, lounge: 1, orderCounters: 3, trafficLevel: 12, doorBuilt: true, shopOpen: true, money: 5000, gameSpeed: 4, lastSeen: Date.now() };
+    stock: [50, 50, 50, 90, 90], kiosk: true, lounge: 1, orderCounters: 3, trafficLevel: 12, doorBuilt: true, shopOpen: true, money: 5000, gameSpeed: 2, lastSeen: Date.now() };
   await send('Page.navigate', { url: new URL('/manifest.webmanifest', gameUrl).href });
   await sleep(300);
   await evaluate(`try{localStorage.clear();localStorage.setItem('canopy-age-ok','1');localStorage.setItem('canopy-telemetry','off');localStorage.setItem('shift-guide-seen','1');localStorage.setItem('shift-save',${JSON.stringify(JSON.stringify(save))});}catch(e){}`);
@@ -57,7 +57,7 @@ try {
   await send('Page.navigate', { url: gameUrl });
   // The status tool is registered a few statements after the ready flag; wait for it too.
   await waitFor('window.__shiftReady===true'); await waitFor('!!window.factoryTool');
-  await evaluate("document.querySelector('[data-speed=\"4\"]').click()");
+  await evaluate("document.querySelector('[data-speed=\"2\"]').click()");
 
   const first = await status();
   assert.equal(first.lounge.level, 1); assert.equal(first.lounge.seats, 4); assert.equal(first.lounge.nextCost, 750000);
