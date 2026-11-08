@@ -241,7 +241,7 @@ export function createBranchLayer(parent, { lights: lightCount = MAX_LIGHTS } = 
       lights.forEach((light, i) => {
         const f = fixtures[i];
         // Lights stay in the scene at zero when unused: changing how many there are recompiles every material.
-        light.intensity = f ? night * 6 * Math.min(1.5, f.size) : 0;
+        light.intensity = f ? night * 7.5 * Math.min(1.5, f.size) : 0;
         if (f) light.position.set(f.x, f.y, f.z);
       });
     }

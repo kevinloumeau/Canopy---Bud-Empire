@@ -375,6 +375,21 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   }
   // Breeding, as in the iOS app: the Menu tab's Breed view lists six cultivars, one per pair of base strains.
   // Crosses need the Breeding bench and both parents at level 5, and run on game time; each discovery is +2% sales.
+  // How the menu works, as eight icon tiles (one rule each) instead of a paragraph, built on first open (the bud art
+  // needs the colour helpers set up further down). Signature perks and hybrids are
+  // left out: each strain's card already shows its perk, and the board's Sativa / Indica tile shows the hour's pick.
+  function menuGuideTiles(){
+    var icon=function(d,fill){return '<svg viewBox="0 0 24 24" aria-hidden="true"'+(fill?' class="is-fill"':'')+'><path d="'+d+'"/></svg>'};
+    var tiles=[
+      ['#9fd36b',strainBud(0),'Meadow Mint','Regulars’ pick'],
+      ['#c9a2ef',strainBud(2),'Boutique','Slower to grow'],
+      ['#8fc7f0',icon('M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM2.5 20a6.5 6.5 0 0 1 13 0M16 4.3a3.5 3.5 0 0 1 0 6.4M18 13.6a6.5 6.5 0 0 1 3.5 6.4'),'Full menu','Bigger crowd'],
+      ['#f0835a',icon('M12 2c1 4 5 5.5 5 11a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5.2 1.6 1 2.5 2 2.5 0-4 .5-6.5 1-9Z',true),'Trending','+35% for 8 min'],
+      ['#f6c453',typeGlyph(strains.SATIVA,true),'Sativa','+15% by day'],
+      ['#9aa8f5',typeGlyph(strains.INDICA,true),'Indica','+15% at night'],
+      ['#ef9ac0',icon('M12 3c3 4.2 6 7.4 6 11a6 6 0 0 1-12 0c0-3.6 3-6.8 6-11Z',true),'Potency','THC earns tips'],
+      ['#f0cf7f',icon('M12 2.5l2.7 6 6.5.6-4.9 4.3 1.5 6.4L12 16.4l-5.8 3.4 1.5-6.4L2.8 9.1l6.5-.6Z',true),'VIPs','Top boutique']];
+    return tiles.map(function(t){return '<li style="--tint:'+t[0]+'"><i>'+t[1]+'</i><b>'+t[2]+'</b><small>'+t[3]+'</small></li>'}).join('')}
   var menuBoard=document.querySelector('[data-pane="flowers"] .menu-board');
   var menuViews=document.createElement('div');menuViews.className='menu-views';menuViews.setAttribute('role','tablist');menuViews.setAttribute('aria-label','Menu views');
   menuViews.innerHTML='<button type="button" role="tab" data-menu-view="strains">Strains</button><button type="button" role="tab" data-menu-view="breed">Breed</button>';
@@ -382,9 +397,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // title, so the board below keeps its height for the strains. The guide opens as a card over the board.
   var sheetHead=document.querySelector('.sheet .panel-header'),menuGuide=menuBoard.querySelector('.strain-guide');
   if(sheetHead){sheetHead.insertBefore(menuViews,$('panelExpand'));
-    if(menuGuide){var guidePop=document.createElement('p');guidePop.className='menu-guide-pop';guidePop.id='menuGuide';guidePop.hidden=true;guidePop.textContent=menuGuide.querySelector('small').textContent;menuBoard.prepend(guidePop);menuGuide.remove();
+    if(menuGuide){var guidePop=document.createElement('ul');guidePop.className='menu-guide-pop';guidePop.id='menuGuide';guidePop.hidden=true;guidePop.setAttribute('aria-label','How the menu works');menuBoard.prepend(guidePop);menuGuide.remove();
       var guideButton=document.createElement('button');guideButton.type='button';guideButton.className='menu-info';guideButton.setAttribute('aria-label','How the menu works');guideButton.setAttribute('aria-controls','menuGuide');guideButton.setAttribute('aria-expanded','false');guideButton.textContent='i';sheetHead.insertBefore(guideButton,menuViews);
-      var showGuide=function(open){guidePop.hidden=!open;guideButton.setAttribute('aria-expanded',String(open))};
+      var showGuide=function(open){if(open&&!guidePop.firstChild)guidePop.innerHTML=menuGuideTiles();guidePop.hidden=!open;menuBoard.classList.toggle('is-guide-open',open);guideButton.setAttribute('aria-expanded',String(open))};
       guideButton.onclick=function(){showGuide(guidePop.hidden)};
       document.addEventListener('pointerdown',function(e){if(!guidePop.hidden&&!e.target.closest('.menu-guide-pop,.menu-info'))showGuide(false)},true)}}
   else menuBoard.insertBefore(menuViews,$('strainNav'));
