@@ -3882,7 +3882,15 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     chip.hidden=!ready;
   }
   function triggerAbility(i){if(!useAbility(state.abilities,i,state.staff[i]))return;burst(machinePos[i],'#d0a54e');notify(ABILITIES[i].name.toUpperCase()+' · '+ABILITY_FACTOR+'× SPEED, +'+Math.round(ABILITY_SALES*100)+'% SALES','upgrade');renderUI();save()}
-  function renderStationTeam(){renderStationLift();renderStationAbility();var row=$('stationTeam'),staff=stationStaff();if(!staff.train||!staff.max){row.hidden=true;return}row.hidden=false;
+  // The Team card's icon is a closeup of the crew who work the open station (Kevin, 2026-11-08: "replace the team icon
+  // under the station menu with a closeup of the characters"): the same Meshy model the map shows there, rendered head and
+  // shoulders by art/blender/people_portraits.py into icons/3d/crew-*.png.
+  function crewModelFor(){var m=securitySelected?STAFF_MODELS.door:loungeSelected?STAFF_MODELS.host:selected===4?STAFF_MODELS.desks[0]:STAFF_MODELS.stations[selected];return m?m.replace(/^people\/|\.glb$/g,''):null}
+  function paintTeamFace(){var icon=document.querySelector('#stationTeam .team-icon');if(!icon)return;var name=crewModelFor(),src=name?'icons/3d/crew-'+name+'.png':'';
+    var img=icon.querySelector('img.team-face');if(!src){if(img)img.remove();icon.classList.remove('has-face');return}
+    if(!img){img=document.createElement('img');img.className='team-face';img.alt='';img.draggable=false;img.decoding='async';icon.appendChild(img)}
+    if(img.getAttribute('src')!==src)img.setAttribute('src',src);icon.classList.add('has-face')}
+  function renderStationTeam(){renderStationLift();renderStationAbility();var row=$('stationTeam'),staff=stationStaff();if(!staff.train||!staff.max){row.hidden=true;return}row.hidden=false;paintTeamFace();
     $('teamTrain').classList.toggle('is-pick',!!lastFix&&state.shopOpen&&lastFix.kind==='staff'&&lastFix.index===selected&&!securitySelected&&!loungeSelected);
     [[$('teamTrain'),staff.train],[$('teamMax'),staff.max]].forEach(function(pair){var mine=pair[0],source=pair[1];mine.disabled=source.disabled;['span','b'].forEach(function(tag){var text=source.querySelector(tag).textContent;if(mine.querySelector(tag).textContent!==text)mine.querySelector(tag).textContent=text});mine.setAttribute('aria-label',source.getAttribute('aria-label')||'');mine.title=source.title||''});
     if($('teamName').textContent!==staff.name)$('teamName').textContent=staff.name;
