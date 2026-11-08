@@ -1,0 +1,121 @@
+/* Full open shows more, not bigger. Loaded last.
+
+   Kevin, 2026-11-08: "these need to be redone at full open, each menu scaling isn't making sense, think through
+   hierarchy, scale, and what's important." Stretching the half-open layout to the full-screen sheet left tall empty
+   tiles, rows floating in gaps and a lone circle in the middle of Research. So once a phone pane is tall enough
+   (src/sheet-room.js sets data-room="full" at 440px), each tab changes layout instead of scale:
+
+   1. Pictures, rings and tiles stop at their half-open Pro Max size. Nothing grows past what it needs.
+   2. Every block keeps its natural height, most important first, and the spare room becomes even gaps between the
+      blocks (as on Goals): nothing stretches into a tall empty box. Research is a list, so its rows stack from the top.
+   3. The room this frees goes to what half open has to hide: every research row with its full name and effect, the
+      station's crew rows in full, the strain's numbers, the branch's checklist as readable rows.
+
+   Half open, and the iPhone SE even pulled up (a 433px pane, too short for these), keep the fitted layouts in the *-fit.css files and sheet-scale.css. */
+
+@media(max-width:779px){
+ /* Rule 1 for every tab: the sheet scale (sheet-scale.css) stops where a Pro Max's half-open sheet leaves it, a little
+    past it at most. Goals has its own full-open layout (goals-pane.js), so it keeps the continuous scale. */
+ html body .sheet>[data-pane][data-room=full]:not([data-pane=goals])>*{--rp:clamp(0px,100cqh - 266px,96px)}
+
+ /* ---------- Stations: the card at its own height, the crew rows in full under it ---------- */
+ html body .sheet>[data-pane=factory][data-room=full]{justify-content:space-evenly}
+ html body .sheet>[data-pane=factory][data-room=full]>*{flex:none!important}
+ html body .sheet>[data-pane=factory][data-room=full] .machine-nav{margin-bottom:0!important}
+ html body .sheet>[data-pane=factory][data-room=full] .selected-line{min-height:0!important;grid-template-rows:auto auto!important;row-gap:14px!important;padding:14px 16px!important}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles{grid-template-columns:minmax(0,1fr)!important;gap:8px!important;margin:0!important}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles>:is(#stationTeam,.station-team){grid-column:auto!important;grid-template-columns:40px minmax(0,1fr) 84px 84px!important;grid-template-rows:auto!important;align-items:center!important;justify-items:stretch!important;column-gap:10px!important;row-gap:0!important;min-height:0!important;margin:0!important;padding:10px 12px!important;text-align:left!important}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles>:is(#stationTeam,.station-team):is(.station-ability,#stationAbility),html body .sheet>[data-pane=factory][data-room=full] .station-tiles>:is(#stationTeam,.station-team):has(>button:only-of-type){grid-template-columns:40px minmax(0,1fr) 96px!important}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles .team-copy small{display:block!important;white-space:nowrap!important;text-overflow:ellipsis}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles>:is(#stationTeam,.station-team)>*{grid-column:auto!important;grid-row:auto!important;margin:0!important}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles>:is(#stationTeam,.station-team) .team-copy{justify-items:start!important;text-align:left!important}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles>:is(#stationTeam,.station-team) button{width:auto!important;min-height:44px!important;height:44px}
+
+ /* ---------- Menu: the strain's story at its own height, then what it sells as, then its upgrade ---------- */
+ html body .sheet>[data-pane=flowers][data-room=full] .menu-board:not([data-menu-view=breed])>.strain-detail{margin-top:4px}
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-detail>.strain-hero{align-content:space-evenly!important;--art:96px;grid-template-columns:var(--art) minmax(0,1fr)!important;grid-template-rows:auto auto auto auto!important;grid-template-areas:"art info" "details details" "format format" "actions actions"!important;column-gap:16px!important;row-gap:14px!important;align-items:center!important}
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-hero-art{width:var(--art)!important;height:var(--art)!important}
+ /* Under the name: the strain's one line of flavour. */
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-hero-info>p{display:block!important;grid-column:1/-1;margin:4px 0 0!important;font:500 12px/1.3 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-soft);text-wrap:balance}
+ /* What the strain does: its traits and its signature perk as one row of chips. */
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-hero-details{display:flex!important;flex-wrap:wrap;align-items:center;align-self:start!important;gap:6px;margin:0!important}
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-traits{display:contents!important}
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-traits li{display:inline-flex!important;align-items:center;gap:5px;margin:0!important;padding:4px 10px!important;border:1px solid var(--ui-edge);border-radius:999px;background:var(--ui-well-soft);font:500 11.5px/1.2 'Bricolage Grotesque',system-ui,sans-serif!important;color:var(--ui-ink);white-space:nowrap;list-style:none}
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-traits li::before{display:none!important}
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-traits li .type-glyph{width:13px;height:13px;color:var(--ui-leaf-glow)}
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-perk{margin:0!important}
+ /* Sells as: a small heading over three tiles, each its natural height. */
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-hero .strain-format{display:grid!important;grid-template-rows:auto auto!important;gap:8px!important;align-self:start!important}
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-format>h2{display:block!important;margin:0 2px!important;font:600 11px/1 'Bricolage Grotesque',system-ui,sans-serif!important;letter-spacing:.06em;text-transform:uppercase;color:var(--ui-soft)}
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-hero .strain-format .format-options{height:auto!important;align-items:stretch;gap:8px!important}
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-hero .strain-format .format-options .strain-format-pill{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto auto auto!important;justify-items:center!important;align-content:center!important;row-gap:2px!important;min-height:0!important;padding:14px 6px 12px!important;text-align:center!important}
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-hero .strain-format .format-options .strain-format-pill>img.icon-3d{grid-column:1!important;grid-row:1!important;width:48px!important;height:48px!important;margin-bottom:6px}
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-hero .strain-format .format-options .strain-format-pill>strong{grid-column:1!important;grid-row:2!important;font-size:13px!important}
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-hero .strain-format .format-options .strain-format-pill>em{grid-column:1!important;grid-row:3!important;font-size:11.5px!important}
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-hero .strain-format .format-options .strain-format-pill>small{grid-column:1!important;grid-row:4!important;font-size:12px!important}
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-hero-actions #flowerBuy{min-height:48px!important;height:48px}
+
+ /* ---------- Empire home: each section a small heading over one glass card of places, three across ---------- */
+ html body .sheet>[data-pane=empire][data-room=full]:has(>[data-screen=home]:not([hidden])){padding-bottom:4px}
+ /* Auto margins share the spare height evenly above each heading and above the doors. */
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=home] .empire-map-head{margin:auto 4px 8px!important;padding-top:12px}
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=home] .empire-map-head:first-child{padding-top:4px}
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=home] .map-tiles{--s-ring:clamp(44px,(100cqh - 370px) / 4,64px)!important;flex:none!important;display:flex!important;flex-wrap:wrap;justify-content:center;gap:4px 0;margin:0!important;padding:8px 4px;border-radius:16px;background:var(--ui-well-soft);box-shadow:inset 0 0 0 1px var(--ui-edge)}
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=home] .map-tiles>button.map-tile{flex:0 0 33.333%;gap:3px;padding:4px 2px!important}
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=home] .map-tile-name{font-size:12px!important}
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=home] .map-tile-figure{font-size:11px!important;min-height:19px}
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=home] .empire-links{margin-top:auto!important;padding-top:12px}
+
+ /* ---------- Empire store pages: blocks from the top, and every list of steps or goals as readable rows ---------- */
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=store] .op-pane:not([hidden]){justify-content:space-evenly!important;gap:16px}
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=store] .page-hero{margin:0!important;padding:10px 12px!important}
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=store] .page-group{margin:0!important;padding:0!important;border:0!important}
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=store] .page-head{margin:0 4px 8px!important}
+ /* While a store waits on the one before, its stars are the way there: each star row opens that store, so the hero
+    needs no second button. */
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=store] .page-hero>.page-go{display:none!important}
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=store] .page-group:not(:has(.is-stations))>.page-tiles{display:flex!important;flex-direction:column;align-items:stretch!important;gap:0!important;margin:0!important;padding:2px 0;border-radius:16px;background:var(--ui-well-soft);box-shadow:inset 0 0 0 1px var(--ui-edge)}
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=store] .page-group:not(:has(.is-stations))>.page-tiles>.page-tile{--s-ring:40px;display:grid!important;grid-template-columns:40px minmax(0,1fr) auto!important;grid-template-rows:auto!important;grid-template-areas:none!important;align-items:center!important;justify-items:start!important;column-gap:12px!important;width:100%!important;max-width:none!important;box-sizing:border-box;min-height:56px;padding:8px 12px!important;border-radius:0!important;text-align:left}
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=store] .page-group:not(:has(.is-stations))>.page-tiles>.page-tile+.page-tile{box-shadow:inset 0 1px 0 var(--ui-edge)}
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=store] .page-group:not(:has(.is-stations))>.page-tiles>.page-tile>.map-ring{grid-column:1;grid-row:1;width:40px!important;height:40px!important}
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=store] .page-group:not(:has(.is-stations))>.page-tiles>.page-tile>.map-tile-name{grid-column:2;grid-row:1;min-height:0!important;margin:0!important;font-size:13px!important;color:var(--ui-ink);-webkit-line-clamp:1}
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=store] .page-group:not(:has(.is-stations))>.page-tiles>.page-tile>.map-tile-figure{grid-column:3;grid-row:1;justify-self:end;align-self:center!important;display:inline-flex!important;align-items:center;line-height:1!important;font-size:12px!important;min-height:22px;padding:0 8px}
+ /* The rows that open somewhere wear a chevron. */
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=store] .page-group:not(:has(.is-stations))>.page-tiles>button.page-tile.is-goal{grid-template-columns:40px minmax(0,1fr) auto 14px!important}
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=store] .page-group:not(:has(.is-stations))>.page-tiles>button.page-tile.is-goal::after{content:''!important;display:block!important;position:static!important;grid-column:4;width:14px;height:14px;background:currentColor;opacity:.5;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 6 6 6-6 6'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 6 6 6-6 6'/%3E%3C/svg%3E") center/contain no-repeat}
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=store] .page-group:not(:has(.is-stations))>.page-tiles>.page-tile.is-best{background:none!important}
+ /* An open store's upgrades and stars get the same small heading as To open. */
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=store] .store-pane>.page-group:not(.is-unlock):not(.is-prev)::before{display:block;margin:0 4px 8px;font:600 13.5px/1.2 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-ink)}
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=store] .store-pane>.page-group:not(.is-unlock):not(.is-prev):not(.is-stars)::before{content:'Upgrades'}
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=store] .store-pane>.page-group.is-stars:not(.is-prev)::before{content:'Stars'}
+ /* The open store's line: six stations three across, as at half open but with even room. */
+ html body .sheet>[data-pane=empire][data-room=full] .empire-screen[data-screen=store] .station-pane>.page-tiles.is-stations{flex:none!important;row-gap:12px!important;padding:10px 4px;border-radius:16px;background:var(--ui-well-soft);box-shadow:inset 0 0 0 1px var(--ui-edge);margin:0!important}
+
+ /* ---------- Research: the branch as a list ---------- */
+ html body .sheet>[data-pane=boosts][data-room=full].shop-browser>.shop-items{display:flex!important;flex:none!important;flex-direction:column;gap:8px!important;container-type:normal!important;margin-top:4px}
+ html body .sheet>[data-pane=boosts][data-room=full].shop-browser>.shop-items>*{margin-top:0!important}
+ html body .sheet>[data-pane=boosts][data-room=full].shop-browser .shop-item{--ring:48px;position:relative;grid-template-columns:var(--ring) minmax(0,1fr) auto!important;grid-template-rows:auto auto!important;grid-template-areas:"icon title button" "icon effect button"!important;justify-items:start;align-items:center;align-content:center!important;column-gap:12px;row-gap:3px!important;min-height:62px;padding:8px 10px 8px 12px!important;border-radius:14px!important;text-align:left}
+ html body .sheet>[data-pane=boosts][data-room=full] .shop-item .shop-symbol.has-3d{grid-area:icon;grid-row:1/3;align-self:center;width:var(--ring)!important;height:var(--ring)!important}
+ html body .sheet>[data-pane=boosts][data-room=full] .shop-item .shop-symbol.has-3d>img.research-3d{width:calc(var(--ring) * .67)!important;height:calc(var(--ring) * .67)!important}
+ html body .sheet>[data-pane=boosts][data-room=full] .shop-item :is(h2,.storage-copy>b){display:block!important;grid-area:title;align-self:end;max-width:100%;overflow:hidden;margin:0;font:600 14px/1.2 'Bricolage Grotesque',system-ui,sans-serif!important;letter-spacing:-.01em;white-space:nowrap;text-overflow:ellipsis;color:var(--ui-ink)}
+ html body .sheet>[data-pane=boosts][data-room=full] .shop-item .shop-short{display:none!important}
+ html body .sheet>[data-pane=boosts][data-room=full] .shop-item .shop-effect{grid-area:effect;align-self:start;font:500 12px/1.25 'Bricolage Grotesque',system-ui,sans-serif!important;letter-spacing:-.01em!important}
+ html body .sheet>[data-pane=boosts][data-room=full] .shop-item :is(.shop-copy,.storage-copy)>:is(strong,small),html body .sheet>[data-pane=boosts][data-room=full] .shop-item>progress{display:none!important}
+ /* The level pill rides the ring's lower edge, as on the tiles. */
+ html body .sheet>[data-pane=boosts][data-room=full] .shop-item .shop-level{top:auto!important;bottom:calc(50% - var(--ring) / 2 - 5px)!important;left:calc(12px + var(--ring) / 2)!important}
+ /* The price: a full-size button on the right. */
+ html body .sheet>[data-pane=boosts][data-room=full].shop-browser .shop-item button{grid-area:button;grid-row:1/3;align-self:center;justify-self:end;min-width:88px;min-height:40px!important;height:40px;margin:0!important;padding:0 12px!important;border-radius:11px!important}
+ html body .sheet>[data-pane=boosts][data-room=full] .shop-item button b{font-size:14px!important}
+ /* Maxed and closed: the same row, slimmer and quiet, after everything still to buy. */
+ html body .sheet>[data-pane=boosts][data-room=full].shop-browser .shop-item.is-maxed{--ring:40px;min-height:58px;padding-block:8px!important}
+ html body .sheet>[data-pane=boosts][data-room=full].shop-browser .shop-item.is-maxed{grid-template-columns:var(--ring) minmax(0,1fr)!important;grid-template-areas:"icon title" "icon effect"!important}
+ html body .sheet>[data-pane=boosts][data-room=full].shop-browser .shop-item.is-maxed button{display:none!important}
+ /* One small heading over the first of them (rows of other branches are hidden, so skip those). */
+ html body .sheet>[data-pane=boosts][data-room=full] .shop-item.is-maxed:not([hidden]):not(.shop-item.is-maxed:not([hidden])~*){margin-top:26px!important}
+ html body .sheet>[data-pane=boosts][data-room=full] .shop-item.is-maxed:not([hidden]):not(.shop-item.is-maxed:not([hidden])~*)::before{content:'Maxed and closed';position:absolute;top:-21px;left:4px;font:600 11px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-soft)}
+ html body .sheet>[data-pane=boosts][data-room=full].shop-browser .shop-item.is-maxed{opacity:1}
+ html body .sheet>[data-pane=boosts][data-room=full].shop-browser .shop-item.is-maxed>*{opacity:.55}
+ /* A fork: its two rows inside one brass outline, "or" between them. */
+ html body .sheet>[data-pane=boosts][data-room=full].shop-browser .shop-items>.shop-fork{display:grid;grid-template-columns:minmax(0,1fr)!important;grid-auto-rows:auto;gap:10px!important;margin:8px 0 0!important}
+ html body .sheet>[data-pane=boosts][data-room=full] .shop-fork>.shop-item{grid-row:auto}
+}
