@@ -112,11 +112,13 @@
 
 /* The floor: one tile per stage, the first three shoppers' faces overlapping on a medallion, the count, the stage. */
 .activity-floor{position:relative;display:grid;grid-template-columns:repeat(var(--stages,3),minmax(0,1fr));gap:6px;margin:16px 0 0;padding:0;list-style:none}
-.floor-stage{position:relative;display:grid;justify-items:center;gap:2px;min-width:0;padding:10px 4px 9px;border:1px solid var(--ui-edge);border-radius:16px;background:var(--ui-well-soft)}
-.floor-stage+.floor-stage::before{content:'';position:absolute;left:-6px;top:28px;width:6px;height:1px;background:var(--ui-edge)}
+.activity-floor>li{position:relative;display:grid;min-width:0}
+.floor-stage{position:relative;display:grid;width:100%;font:inherit;color:var(--ui-ink);cursor:pointer;transition:transform .14s ease,background-color .14s ease;justify-items:center;gap:2px;min-width:0;padding:10px 4px 9px;border:1px solid var(--ui-edge);border-radius:16px;background:var(--ui-well-soft)}
+.activity-floor>li+li::before{content:'';position:absolute;left:-6px;top:28px;width:6px;height:1px;background:var(--ui-edge)}
 .floor-faces{display:flex;justify-content:center;height:30px;padding-left:10px}
-.floor-faces img,.floor-faces i{box-sizing:border-box;width:30px;height:30px;margin-left:-10px;border-radius:50%;object-fit:cover;object-position:50% 12%;background:radial-gradient(circle at 50% 30%,#3d7a4a,#163f24 70%);box-shadow:0 0 0 2px var(--ui-glass-strong)}
-.floor-faces i{background:none;box-shadow:inset 0 0 0 1.5px var(--ui-edge);border:0}
+.floor-face{position:relative;display:block;width:30px;height:30px;margin-left:-10px;flex:none}
+.floor-faces img,.floor-faces i{box-sizing:border-box;width:30px;height:30px;border-radius:50%;object-fit:cover;object-position:50% 12%;background:radial-gradient(circle at 50% 30%,#3d7a4a,#163f24 70%);box-shadow:0 0 0 2px var(--ui-glass-strong)}
+.floor-faces i{margin-left:-10px;background:none;box-shadow:inset 0 0 0 1.5px var(--ui-edge);border:0}
 .floor-stage b{margin-top:4px;font:600 18px/1.1 'Bricolage Grotesque',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:var(--ui-ink)}
 .floor-stage span{max-width:100%;font-size:11.5px;line-height:1.25;color:var(--ui-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .floor-stage.is-empty b{color:var(--ui-soft)}
@@ -132,3 +134,13 @@
 .shift-recap .activity-advice>svg:first-child{width:22px;height:22px;color:var(--ui-brass)}
 .shift-recap .activity-advice strong{white-space:normal;text-wrap:balance}
 .activity-calm{margin:14px 4px 0!important;font-size:12.5px!important;color:var(--ui-soft)!important;text-align:center;text-wrap:balance}
+
+.floor-stage:active{transform:scale(.96)}
+@media(hover:hover){.floor-stage:hover{background:var(--ui-sheen)}}
+/* Badges on a face: a brass crown for a VIP, a coral clock for a hurried shopper running out of patience. */
+.floor-face.is-vip img{box-shadow:0 0 0 2px var(--ui-glass-strong),0 0 0 3.5px var(--ui-brass)}
+.floor-face.is-hurry img{box-shadow:0 0 0 2px var(--ui-glass-strong),0 0 0 3.5px var(--ui-coral)}
+.floor-face.is-vip,.floor-face.is-hurry{z-index:1}
+.floor-face.is-vip::after,.floor-face.is-hurry::after{content:'';position:absolute;right:-4px;bottom:-3px;width:14px;height:14px;border-radius:50%;background:var(--ui-brass) center/9px no-repeat;box-shadow:0 0 0 1.5px var(--ui-glass-strong)}
+.floor-face.is-vip::after{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%232a2211' d='M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z'/%3E%3C/svg%3E")}
+.floor-face.is-hurry::after{background-color:var(--ui-coral);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='8'/%3E%3Cpath d='M12 8v4l2.5 2'/%3E%3C/svg%3E")}
