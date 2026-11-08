@@ -31,7 +31,7 @@ const CHEVRON='<svg class="page-chevron" viewBox="0 0 24 24" fill="none" stroke=
 // A rate with a small '/s'.
 const perText=text=>text+'<span class="map-per">/s</span>';
 
-export function mountEmpireStores({getState,format,buyStation,goStore}){
+export function mountEmpireStores({getState,format,buyStation,goStore,paintStation}){
  const $=id=>document.getElementById(id);
  const el=(tag,cls,html)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(html!=null)n.innerHTML=html;return n;};
  const set=(node,text)=>{if(node.textContent!==text)node.textContent=text;};
@@ -60,8 +60,8 @@ export function mountEmpireStores({getState,format,buyStation,goStore}){
   const head=el('div','page-head','<b>Line</b><span class="page-meta"></span>');
   const grid=el('div','page-tiles is-stations');
   const tiles=BRANCH_LINE.map((name,j)=>{const b=el('button','page-tile');b.type='button';
-   b.innerHTML='<span class="map-ring">'+RING+'<span class="page-glyph">'+stationGlyph(j)+'</span><b class="page-level"></b></span><b class="map-tile-name">'+STATION_SHORT[j]+'</b><small class="map-tile-figure"></small>';
-   b.onclick=()=>{if(buyStation)buyStation(i,j);sync();};grid.append(b);return {b,ring:b.querySelector('.map-ring'),level:b.querySelector('.page-level'),figure:b.querySelector('.map-tile-figure'),sig:''};});
+   b.innerHTML='<span class="map-ring">'+RING+'<span class="page-glyph">'+stationGlyph(j)+'<canvas class="page-art" width="132" height="120" aria-hidden="true"></canvas></span><b class="page-level"></b></span><b class="map-tile-name">'+STATION_SHORT[j]+'</b><small class="map-tile-figure"></small>';
+   b.onclick=()=>{if(buyStation)buyStation(i,j);sync();};grid.append(b);return {b,ring:b.querySelector('.map-ring'),glyph:b.querySelector('.page-glyph'),art:b.querySelector('.page-art'),level:b.querySelector('.page-level'),figure:b.querySelector('.map-tile-figure'),sig:''};});
   pane.append(head,grid);
   stationUI[i]={meta:head.querySelector('.page-meta'),tiles};
  }
@@ -117,6 +117,8 @@ export function mountEmpireStores({getState,format,buyStation,goStore}){
   const meta=perText(format(d.rate));if(u.meta.innerHTML!==meta)u.meta.innerHTML=meta;
   u.tiles.forEach((t,j)=>{const level=Math.max(1,lines[j]||1),max=level>=BRANCH_LINE_MAX,cost=max?0:branchStationCost(d.p,i,j,level),afford=!max&&money>=cost,isBest=j===best&&afford;
    set(t.level,String(level));
+   // The station's 3D picture once the flagship has drawn it; the line icon stays until then.
+   if(paintStation&&!t.glyph.classList.contains('has-art')&&paintStation(t.art,j))t.glyph.classList.add('has-art');
    const share=max?1:(level%10)/10,label=STORES[i].name+' '+BRANCH_LINE[j]+', level '+level+(max?', maxed':', next level '+format(cost)+(isBest?', best buy':''));
    paintTile(t,'page-tile map-tile'+(max?' is-max':isBest?' is-best':afford?' is-ready':''),label,max?'Max':format(cost),share);});
  }

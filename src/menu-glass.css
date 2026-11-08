@@ -9,9 +9,13 @@
 .sheet [data-pane="flowers"] .menu-board-summary,.sheet [data-pane="flowers"] .buyer{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;align-content:center;column-gap:7px;row-gap:3px;min-width:0;min-height:34px;margin:0;padding:0 12px;border:0;border-radius:0;background:none;box-shadow:none}
 .sheet [data-pane="flowers"] .menu-board-summary{grid-template-columns:minmax(0,1fr);padding-left:2px}
 .sheet [data-pane="flowers"] .buyer{border-left:1px solid var(--ui-edge)}
-.sheet [data-pane="flowers"] .buyer>svg,.sheet [data-pane="flowers"] .buyer>.bud{grid-column:1;grid-row:1/3;align-self:center;width:16px;height:16px}
+.sheet [data-pane="flowers"] .menu-board-summary>svg,.sheet [data-pane="flowers"] .buyer>svg,.sheet [data-pane="flowers"] .buyer>.bud{grid-column:1;grid-row:1/3;align-self:center;width:16px;height:16px}
 .sheet [data-pane="flowers"] .buyer .bud svg{width:16px;height:16px}
-.sheet [data-pane="flowers"] .buyer.is-trend>svg{display:none}
+/* Trending shows its flame (orange while the strain is on the menu and cashing in, muted when it is not); the strain
+   itself wears the same flame on its card below, so the header no longer squeezes a 16 px bud in. */
+.sheet [data-pane="flowers"] .buyer.is-trend>.bud{display:none}
+.sheet [data-pane="flowers"] .buyer.is-trend>svg{fill:#f0a062;color:#f0a062}
+.sheet [data-pane="flowers"] .buyer.is-trend:not(.is-live)>svg{fill:var(--ui-soft);color:var(--ui-soft)}
 .sheet [data-pane="flowers"] .menu-board-summary b,.sheet [data-pane="flowers"] .buyer>b{grid-column:2;grid-row:1;justify-self:start;font:500 14px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;color:var(--ui-ink)}
 .sheet [data-pane="flowers"] .menu-board-summary b{grid-column:1}
 .sheet [data-pane="flowers"] .menu-board-summary small,.sheet [data-pane="flowers"] .buyer>small{grid-column:2;grid-row:2;font:600 9.5px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ui-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -43,7 +47,7 @@
 .sheet [data-pane="flowers"] .strain-nav button.is-locked .strain-card-art{opacity:.7}
 .sheet [data-pane="flowers"] .strain-nav button .price-tag{margin:0;padding:0;clip-path:none;border-radius:0;background:none;box-shadow:none;font:500 11px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;color:var(--ui-ink)}
 .sheet [data-pane="flowers"] .strain-nav button .price-tag::before{display:none}
-.sheet [data-pane="flowers"] .strain-nav button.is-trending::before{top:4px;left:calc(50% - 26px);font-size:11px}
+.sheet [data-pane="flowers"] .strain-nav button.is-trending::before{top:2px;left:calc(50% - 28px)}
 @media(hover:hover){.sheet [data-pane="flowers"] .strain-nav button:not([aria-selected=true]):hover b{color:var(--ui-ink)}}
 .sheet [data-pane="flowers"] .strain-nav button:focus-visible{outline:2px solid var(--ui-brass);outline-offset:-2px}
 
@@ -84,3 +88,17 @@
 @media(hover:hover){.sheet [data-pane="flowers"] .strain-hero-actions button:hover:not(:disabled){filter:brightness(1.08)}}
 .sheet [data-pane="flowers"] .strain-hero-actions button:focus-visible{outline:2px solid var(--ui-brass);outline-offset:2px}
 .sheet [data-pane="flowers"] .strain-guide summary{color:var(--ui-soft)}
+
+/* Icon audit (2026-11-08): the average order wears a coin like its neighbours' sun and flame, so all three figures in the
+   Menu header read icon, figure, label. The coin is drawn in the sun's brass. */
+.sheet [data-pane="flowers"] .menu-board-summary>svg{color:var(--p-gold-76-3);fill:none}
+.menu-board-summary>.summary-coin{display:none}
+.sheet [data-pane="flowers"] .menu-board-summary>.summary-coin{display:block}
+.sheet [data-pane="flowers"] .menu-board-summary:has(>.summary-coin){grid-template-columns:auto minmax(0,1fr)}
+.sheet [data-pane="flowers"] .menu-board-summary:has(>.summary-coin)>:is(b,small){grid-column:2}
+/* The flame's outline is narrower than the sun's, so it draws a touch larger to carry the same weight. */
+.sheet [data-pane="flowers"] .buyer.is-trend>svg{width:18px;height:18px}
+/* With VIP buzz the header carries four figures; the coin steps aside so none of the labels clip on a 375 px phone. */
+.sheet [data-pane="flowers"] .menu-board-head:has(.is-buzz) .menu-board-summary>.summary-coin{display:none}
+.sheet [data-pane="flowers"] .menu-board-head:has(.is-buzz) .menu-board-summary:has(>.summary-coin){grid-template-columns:minmax(0,1fr)}
+.sheet [data-pane="flowers"] .menu-board-head:has(.is-buzz) .menu-board-summary:has(>.summary-coin)>:is(b,small){grid-column:1}

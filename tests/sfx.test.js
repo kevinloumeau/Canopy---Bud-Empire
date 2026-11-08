@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {makeSound,AMBIENT_MIN_GAP} from '../src/sfx.js';
+import {makeSound,AMBIENT_MIN_GAP,DUCKING,streakStep} from '../src/sfx.js';
+import {cueFor,PASSIVE_HAPTIC} from '../src/sound-cues.js';
 
 // A stub Web Audio graph that records what each cue builds, so a broken cue fails here instead of being swallowed in the browser.
 function stubAudio(){
@@ -25,7 +26,7 @@ function withBrowser(fn){
  try{return fn(log);}finally{delete globalThis.window;delete globalThis.document;}
 }
 
-const KINDS=['tap','sale','coin','upgrade','denied','whoosh','sparkle','build','open'];
+const KINDS=['tap','sale','coin','buy','upgrade','levelup','tier','cash','denied','whoosh','sparkle','start','build','achievement','fanfare','reopen','open'];
 
 test('every cue builds and starts an audio graph without throwing',()=>{
  withBrowser(log=>{
@@ -70,4 +71,38 @@ test('simulation-driven cues stay rare so a busy shop is not a constant jingle',
 
 test('customers walk in silently: there is no door chime cue',()=>{
  withBrowser(log=>{makeSound()('chime',true);assert.equal(log.oscillators,0);});
+});
+
+test('the kit has every cue the game asks for, and the stub exercises a compressor and reverb when they exist',()=>{
+ withBrowser(log=>{
+  const play=makeSound();assert.deepEqual([...play.kinds].sort(),[...KINDS].sort());
+  globalThis.window.AudioContext.prototype.createDynamicsCompressor=function(){const p=()=>({value:0});return {threshold:p(),knee:p(),ratio:p(),attack:p(),release:p(),connect(){}};};
+  globalThis.window.AudioContext.prototype.createConvolver=function(){return {buffer:null,connect(){}};};
+  const full=makeSound();KINDS.forEach(k=>full(k,true));assert.ok(full.output(),'the music has a shared output to join');
+ });
+});
+
+test('level-ups bought in a run climb the scale, then settle back after a pause',()=>{
+ let s=0;for(let i=0;i<10;i++)s=streakStep(s,300);assert.equal(s,6,'tops out six steps up');
+ assert.equal(streakStep(s,2000),0);assert.equal(streakStep(0,300),1);
+});
+
+test('only the big moments duck the music',()=>{assert.deepEqual(Object.keys(DUCKING).sort(),['achievement','fanfare','reopen']);});
+
+test('each toast plays the sound that matches what happened',()=>{
+ const cases=[
+  ['DOWNTOWN IS OPEN · +$1.2K/s','upgrade','fanfare'],['Reopened · +12 shares · 1.4× sales','upgrade','reopen'],
+  ['ACHIEVEMENT · FIRST HARVEST · +1% SALES',undefined,'achievement'],['CHAPTER COMPLETE · Street corner','upgrade','achievement'],
+  ['GOAL COMPLETE · +$500','upgrade','cash'],['DAILY REWARD · +$2K','upgrade','cash'],['WHILE AWAY +$4.1K',undefined,'cash'],['$900 ORDER BONUS',undefined,'cash'],
+  ['Need $40 more',undefined,'denied'],['STORAGE FULL · expand it in Research',undefined,null],
+  ['LOUNGE UNDER CONSTRUCTION · opens in 3:00','upgrade','start'],['CANOPY HQ · LOBBY UNDER WAY · done in 5:00','upgrade','start'],
+  ['DELIVERY PAD BUILT · drones take the rest','upgrade','build'],['LINE EXPANDED · 8 customers','upgrade','build'],
+  ['Grow · LEVEL 12','upgrade','levelup'],['SECURITY · LEVEL 4','upgrade','levelup'],['Pack EMPLOYEE · +3 LEVELS','upgrade','levelup'],
+  ['AMBER BLOOM UNLOCKED','upgrade','buy'],['BOOST · 2× SALES FOR 10 MIN','upgrade','buy'],['GAME SPEED · 2×',undefined,null]
+ ];
+ cases.forEach(([m,k,want])=>assert.equal(cueFor(m,k),want,m));
+});
+
+test('passive cues bring their own haptic; tapped ones rely on the tap',()=>{
+ assert.equal(PASSIVE_HAPTIC.achievement,'firm');assert.equal(PASSIVE_HAPTIC.cash,'light');assert.equal(PASSIVE_HAPTIC.levelup,undefined);
 });

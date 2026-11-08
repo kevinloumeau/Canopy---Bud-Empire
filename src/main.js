@@ -17,7 +17,8 @@ import {FORMATS,wantedFormat,formatPremium,stocks,formatCost,BOOST_MAX,boostCost
 import {SHOP_EVENTS,eventKind,eventGap,eventReward,eventToast} from './shop-events.js';
 import {PERKS,perkMax,startGrant,migratePerks,perkLevel,perkCost,buyPerk,perkStart,spenderGap,rushLength,trainerGap,keptBranch,FOUNDER_LOOK,FOUNDER_LEVEL} from './perks.js';
 import {migrateRun,freshRun,tickRun,reopenMoment} from './reopen.js';
-import {makeSound} from './sfx.js';
+import {makeSound,DUCKING} from './sfx.js';
+import {cueFor,PASSIVE_HAPTIC} from './sound-cues.js';
 import {createUpgradeFx} from './upgrade-fx.js';
 import {createRevealFx,popScale} from './reveal-fx.js';
 import {createSparkles} from './sparkles.js';
@@ -38,6 +39,8 @@ import {mountEmpireShell} from './empire-shell.js';
 import {mountStartGuide} from './start-guide.js';
 import {mountSettings} from './settings.js';
 import {makeHaptics} from './haptics.js';
+import {nativePlugin} from './native-plugins.js';
+import {createNativeSave,saveSeq} from './native-save.js';
 import {idCheckLength,stockCaps,onlineRequestLimit,offlineSeconds,BIG} from './save-guards.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, BRANCH_STATIONS, drawBranchMap } from './branch-maps.js';
@@ -120,13 +123,25 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var tickTime=performance.now(),tickRemainder=0;
   function tick(){if(SNAP)return;var now=performance.now(),seconds=(now-tickTime)/1000;tickTime=now;if(document.hidden){tickRemainder=0;return}completeBuilds();noticeFlagship();noticeCity();var elapsed=elapsedSteps(seconds+tickRemainder,state.gameSpeed);if(elapsed.offline){tickRemainder=0;collectOffline(elapsed.offline)}else{tickRemainder=Math.max(0,seconds+tickRemainder-Math.floor((seconds+tickRemainder+1e-8)/.05)*.05);for(var step=0;step<elapsed.steps;step++)simulate(.05)}}
   var saveFailed=false;
+  // Every save is also mirrored to the iOS app's own storage (src/native-save.js), so a WebKit storage wipe can't lose
+  // the shop. saveCounter only goes up, across Start over and prestige too, so the newer copy is always the bigger one.
+  var saveCounter=saveSeq(state);
+  var nativeSave=createNativeSave({plugin:nativePlugin('Preferences'),
+    getLocal:function(){try{return localStorage.getItem('shift-save')||localStorage.getItem('shift-save-backup')}catch(e){return null}},
+    setLocal:function(raw){try{localStorage.setItem('shift-save',raw);return localStorage.getItem('shift-save')===raw}catch(e){return false}},
+    reload:function(){location.reload()},session:(function(){try{return sessionStorage}catch(e){return null}})()});
+  // After a wipe the age gate asks again, so the note waits until it is answered.
+  nativeSave.start().then(function(result){if(result!=='recovered')return;var root=document.documentElement,tell=function(){setTimeout(function(){notify('SAVE RESTORED · your shop came back from the app')},1200)};
+    if(!document.getElementById('ageGate')||root.classList.contains('age-ok')||!window.MutationObserver)return tell();new MutationObserver(function(_,observer){if(root.classList.contains('age-ok')){observer.disconnect();tell()}}).observe(root,{attributes:true,attributeFilter:['class']})});
   function save(){
-    state.lastSeen=Date.now();
+    if(nativeSave.blocked)return false;
+    state.lastSeen=Date.now();state.saveSeq=++saveCounter;
+    var raw=JSON.stringify(state);nativeSave.write(raw);
     try{
       var previous=localStorage.getItem('shift-save');
       if(previous){try{var parsed=JSON.parse(previous);if(parsed&&typeof parsed==='object'&&!Array.isArray(parsed))localStorage.setItem('shift-save-backup',previous)}catch(e){}}
-      localStorage.setItem('shift-save',JSON.stringify(state));saveFailed=false;return true;
-    }catch(e){if(!saveFailed)notify('SAVE UNAVAILABLE · keep this window open to retain progress');saveFailed=true;return false}
+      localStorage.setItem('shift-save',raw);saveFailed=false;return true;
+    }catch(e){if(!saveFailed&&!nativeSave.available)notify('SAVE UNAVAILABLE · keep this window open to retain progress');saveFailed=true;return false}
   }
   // Demand ceiling counts whole baskets, so offline pay and reward scaling track real sales.
   // While the advice weighs a buy, branches follow the flagship's live sales instead of the five-minute average, so a
@@ -318,17 +333,19 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function qtyShort(n){var f=state.productMenu.active;if(f===0){var oz=n/8;return compactCount(oz)+' oz'}return compactCount(n)+(f===1?' jt':' ed')}
   var playSound=makeSound();
   // Background music (music.js) shares the effects' audio context; it starts at the first tap and dips under big moments.
-  var music=makeMusic(playSound.context);music.set(state.music);
+  var music=makeMusic(playSound.context,{output:playSound.output,night:function(){return visualLight().night}});music.set(state.music);
   // One sound per big moment: a reveal (showcase) plays its sparkle only when no fanfare has just played or is about
   // to play for the same moment (the opening notify runs in the same handler, so the check waits a tick).
   var lastFanfare=-1e9;
-  playSound.onCue=function(kind){if(kind==='fanfare'){lastFanfare=performance.now();music.duck(1.9)}};
+  playSound.onCue=function(kind){if(DUCKING[kind]){if(kind!=='achievement')lastFanfare=performance.now();music.duck(DUCKING[kind])}};
   function revealSound(){setTimeout(function(){if(performance.now()-lastFanfare>2500)playSound('sparkle',state.sound)},0)}
   var telemetry=createTelemetry();
   // Progression markers: the first time any station reaches these levels on this device.
   function trackStationLevel(i){var lv=state.lines[i];[10,25,50,100].forEach(function(m){if(lv>=m)telemetry.once('station_level_'+m,{station:LINES[i].name})})}
   // Browsers only start audio inside a gesture: the first tap or key press primes the context while sound is on.
-  ['pointerdown','keydown'].forEach(function(type){window.addEventListener(type,function prime(){playSound.unlock(state.sound);music.unlock()},{passive:true})});
+  // iOS counts touchend and click as the gesture, not touchstart, so each of them primes (and, after a phone call or
+  // Siri has interrupted the context, revives) the audio.
+  ['pointerdown','pointerup','touchend','click','keydown'].forEach(function(type){window.addEventListener(type,function prime(){playSound.unlock(state.sound);music.unlock()},{passive:true})});
   // `level` prices the strain at another level (the Menu card's next-level gain) with every bonus the real sale gets.
   function flowerValue(index,level){if(index===undefined){var menu=menuStrains();return menu.reduce(function(total,i){return total+flowerValue(i)},0)/menu.length}var i=index,lv=level===undefined?state.strains[i]:level;return Math.round(STRAINS[i].price*(1+Math.max(0,lv-1)*.1)*(1+state.curingLevel*.03)*saleMultiplier(state.empire)*formatFactor('value',i)*trendBoost(i)*displayBoost(i)*strains.timeFactor(strains.STRAIN_TYPE[i],atmosphere(state.empire.network).night)*(1+crossBonus(state.crosses))*(1+achievementBonus(state))*(i>0?specialFactor('boutique'):1)*terpFactor(state.city,i,state.strainTrend.index)*hqSales(state.flagship))}
   function onlineValue(sequence){return Math.round(flowerValue(menuChoice(sequence===undefined?state.onlineCompleted:sequence))*4/3*(1+state.onlineBonusLevel*.05)*specialFactor('online')*contractFactor(state.empire,'online'))}
@@ -964,8 +981,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var ring=ringRank(p)?RING_NAMES[ringTier(p)].toUpperCase()+' ':'';notify(count===3?name.toUpperCase()+' '+ring+'FINISHED · +'+Math.round(ringBonus(p)*100)+'% SALES '+(ring?'THIS RUN':'EVERYWHERE'):count===STARS_TO_OPEN&&STORES[i+1]?name+' ★ '+count+' of 3 · '+STORES[i+1].name+' can open':name+' ★ '+count+' of 3','upgrade');renderUI()}
   // The few moments that get the loud fanfare (sfx.js): a branch or HQ opening, the lounge, the window, a finished
   // HQ or city stage, a finished branch, a reopen.
-  var BIG_MOMENT=/ IS OPEN|^LOUNGE OPEN|^PICKUP WINDOW OPEN| DONE · | FINISHED · |^Reopened/;
-  function notify(message,kind){var cue=kind==='upgrade'&&BIG_MOMENT.test(message)?'fanfare':kind==='upgrade'?(/BUILT|OPEN|EXPANDED/.test(message)?'build':'upgrade'):/REWARD|MILESTONE|ACHIEVEMENT|GOAL COMPLETE|EVENT COMPLETE|CHAPTER COMPLETE|WHILE AWAY|Prestige/.test(message)?'sparkle':/^Need |previous stage first/.test(message)?'denied':null;if(cue)playSound(cue,state.sound);if(kind!=='dispatch')dispatchSummary=null;queueToast(message,kind)}
+  function notify(message,kind,cueOverride){var cue=cueOverride||cueFor(message,kind);if(cue){playSound(cue,state.sound);if(PASSIVE_HAPTIC[cue])haptic(PASSIVE_HAPTIC[cue])}if(kind!=='dispatch')dispatchSummary=null;queueToast(message,kind)}
   // Toasts take turns in the lane under the status chips (Kevin, 2026-11-04): one at a time, a second one waits its turn
   // instead of covering the first, a newer word on the same thing (SEEDS · LEVEL 8 after LEVEL 7) replaces it in place,
   // and a "Need $X more" answers the tap at once. At most three wait; while some wait each shows a little shorter.
@@ -1139,9 +1155,17 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Lv 75 with the perk); windowTube keeps the glass bag tube down to it whichever look stands.
   function windowLookNow(){var l=windowLevel(state.pickupWindow),look=windowLook(l);return look===5&&perkLevel(state.perks,'finish')&&l>=WINDOW_MAX_LEVEL?6:look}
   function windowFixtures(){var open=windowOpen(),look=open?windowLookNow():0,out={windowTube:open};WINDOW_FIXTURE_KEYS.forEach(function(k,n){out[k]=open&&look===n+1});if(!open)out.pickupWindow=false;return out}
-  // Pale see-through copies of what is next to buy (Kevin, 2026-11-02): the next kiosk, and the pickup window over its
-  // lot while its tag offers it.
-  function fixtureGhosts(){var g={},orders=state.lines[4]>0;if(orders&&kioskCount()<3)g['kiosk'+kioskCount()]=true;if(orders&&!windowOpen()&&!isBuilding(state.builds,'window'))g.pickupWindow=true;return Object.keys(g).length?g:null}
+  // Blueprints of what is next to buy where it will stand (Kevin, 2026-11-02; drawn by three/blueprint.js).
+  // Only the next buy in line wears a ghost (game review 2026-11-08: four milky copies by the door read as glitches): of
+  // the pickup window, the next kiosk, the next order counter and the next ATM, the cheapest one left. The others keep
+  // their small tags, so they can still be bought from the map.
+  function nextGhost(){if(!(state.lines[4]>0))return null;var picks=[],atm=state.atm,counter=nextOrderCounter();
+    if(!windowOpen()&&!isBuilding(state.builds,'window'))picks.push({kind:'window',price:WINDOW_COST});
+    if(kioskCount()<3)picks.push({kind:'kiosk',price:KIOSK_PRICES[kioskCount()]});
+    if(counter)picks.push({kind:'counter',price:counter.price});
+    var atmPrice=atm.level?atmMachineCost(atm):ATM_BUILD;if(atmPrice!==null&&atm.machines<3)picks.push({kind:'atm',price:atmPrice});
+    return picks.sort(function(a,b){return a.price-b.price})[0]||null}
+  function fixtureGhosts(){var next=nextGhost(),g={};if(!next)return null;if(next.kind==='kiosk')g['kiosk'+kioskCount()]=true;else if(next.kind==='window')g.pickupWindow=true;else return null;return g}
   function frontFixtures(){return windowOpen()?FRONT_FIXTURES.filter(function(f){return !f.window}).concat(WINDOW_FIXTURES):isBuilding(state.builds,'window')?FRONT_FIXTURES.filter(function(f){return !f.window}):FRONT_FIXTURES}
   // The back-wall shelving stands just behind the counters; the smoking lounge is the room behind it (z −7 → −1.76).
   var DISPLAY_Z=-1.6,LOUNGE_FRONT=DISPLAY_Z+.65;
@@ -2869,7 +2893,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     stations.push({index:6,x:ID_DESK.x,y:0,z:ID_DESK.z,w:1.3,d:2.4,h:1.6,tier:state.doorBuilt?stationLookFor(6,state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,pop:stationPop(6),bump:upgradeFx.bump('f6'),selected:mapPicked&&securitySelected});
     // A see-through copy of the next order counter where it will stand, as the kiosks show theirs (Kevin, 2026-11-02).
     // It goes last, so every built station keeps its slot.
-    var nextCounter=nextOrderCounter();if(nextCounter){station(4,nextCounter.x,0,nextCounter.z,state.lines[4],true,4);var g=stations[stations.length-1];g.ghost=true;g.selected=false;g.boost=0;g.act=0;g.rise=0;g.pop=1}
+    var nextCounter=nextOrderCounter();if(nextCounter){station(4,nextCounter.x,0,nextCounter.z,state.lines[4],true,4);var g=stations[stations.length-1];g.ghost=true;g.visible=(nextGhost()||{}).kind==='counter';g.selected=false;g.boost=0;g.act=0;g.rise=0;g.pop=1}
     // With no ghost its slot stays, hidden, so the branches' stations that follow keep theirs.
     else stations.push({index:4,x:0,y:0,z:0,w:1,d:1,h:1,tier:0,built:false,visible:false});
     // The doorman stands behind the booth, on the room side, facing the front door across the desk.
@@ -3384,7 +3408,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // What the 3D map draws of the ATM: its machines, their look, the ghost over the next slot and which screens are busy.
   function atmFrame(){var atm=state.atm,busy=[false,false,false];customers.forEach(function(c){if(c.cash&&c.cash.stage==='use')busy[c.cash.machine]=true});
     var rv=render.reveal&&render.reveal.atm;
-    return{machines:atm.machines,look:atm.level?atmLook(atm.level):0,ghost:state.lines[4]>0&&atm.machines<3?atm.machines:null,busy:busy,pop:rv?{machine:rv.machine,scale:popScale(rv.t)}:null}}
+    return{machines:atm.machines,look:atm.level?atmLook(atm.level):0,ghost:(nextGhost()||{}).kind==='atm'?atm.machines:null,busy:busy,pop:rv?{machine:rv.machine,scale:popScale(rv.t)}:null}}
   function leaseIndex(){var shown=shownDistricts(storeLevels()),last=shown[shown.length-1];return last&&!last.open?last.index:-1}
   function leaseLocked(i){return state.lifetime<STORES[i].goal||!branchOpenable(state.empire,i)}
   // Where the next order counter will stand and what it costs, while Orders is open and a counter is left to buy.
@@ -4203,6 +4227,12 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var shows=picture||'drawn:'+fallbackKey;if(card.__shows===shows)return;card.__shows=shows;
     if(!picture){var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;picture=document.createElement('canvas');picture.width=160;picture.height=200;ctx=picture.getContext('2d');ctx.setTransform(2,0,0,2,0,0);try{drawFallback()}finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}}
     c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,card.width,card.height);drawPictureCrop(c,picture,card.width,card.height)}
+  // A branch line tile's art (Empire > store > Stations): the flagship's own 3D station, the picture its Stations tab
+  // already shows, so the two lines read as the same six stations. No new model loads: until the flagship has the
+  // station (or the 3D map is up) it answers false and the tile keeps its line icon.
+  function paintStationArt(card,i){var picture=state.lines[i]?stationPicture(i,state.lines[i]):null;if(!picture||!card)return false;
+    if(card.__shows!==picture){var c=card.getContext('2d');if(!c)return false;card.__shows=picture;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,card.width,card.height);drawPictureCrop(c,picture,card.width,card.height)}
+    return true}
   function paintThumbnails(){paintSecurityThumbnail();paintLoungeThumbnail();machineTabs.forEach(function(tab,i){paintThumb(tab.querySelector('canvas'),state.lines[i]?stationPicture(i,state.lines[i]):null,function(){unit=25;centerX=40;centerY=97;angle=.57;drawStage({x:0,z:0},i,0)},state.lines[i]?stationTier(i):0)})}
   function selectLounge(){securitySelected=false;loungeSelected=true;pickedTag=null;buyBoxFor=-1;showTray('factory');renderUI();var card=document.querySelector('[data-lounge]');if(card&&card.scrollIntoView)card.scrollIntoView({block:'nearest',inline:'nearest'});haptic('select')}
   // Each lounge tier is bought outright; the first one raises the doorway out of its hoarding.
@@ -4212,9 +4242,9 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     if(isBuilding(state.builds,'lounge')){skipBuildNow('lounge');return}
     var price=loungeUpgradeCost(state.lounge);if(price===null)return;if(state.money<price)return notify('Need '+fmt(price-state.money)+' more');
     // The first level pays for the build; the roof opens when the builders finish (completeBuilds).
-    if(!state.lounge){state.money-=price;startBuild(state.builds,'lounge');recordGoal(state.empire,'upgrade',price);playSound('build',state.sound);upgradeFx.pop();showcase(LOUNGE_SPOT,{floor:ROOFTOP.y,r:2.2,h:3.5,colour:'#f0a7c8'});telemetry.send('lounge_build',{});notify('LOUNGE UNDER CONSTRUCTION · opens in '+buildClock(buildLeft(state.builds,'lounge')),'upgrade');paintThumbnails();updateMarkers.key=null;render.invalidated=true;renderUI();save();haptic('light');return}
+    if(!state.lounge){state.money-=price;startBuild(state.builds,'lounge');recordGoal(state.empire,'upgrade',price);playSound('start',state.sound);upgradeFx.pop();showcase(LOUNGE_SPOT,{floor:ROOFTOP.y,r:2.2,h:3.5,colour:'#f0a7c8'});telemetry.send('lounge_build',{});notify('LOUNGE UNDER CONSTRUCTION · opens in '+buildClock(buildLeft(state.builds,'lounge')),'upgrade');paintThumbnails();updateMarkers.key=null;render.invalidated=true;renderUI();save();haptic('light');return}
     var wasLot=!state.lounge;buyLoungeTier(state);recordGoal(state.empire,'upgrade',price);upgradeFx.pop();showcase(LOUNGE_SPOT,{floor:ROOFTOP.y,r:2.4,h:4,colour:'#f0a7c8'});var tier=loungeTier(state.lounge);
-    if(wasLot)buildRise[7]=1;playSound(wasLot?'build':'upgrade',state.sound);telemetry.send('lounge_tier',{tier:state.lounge});
+    if(wasLot)buildRise[7]=1;telemetry.send('lounge_tier',{tier:state.lounge});
     notify(wasLot?'LOUNGE OPEN · '+tier.name:'LOUNGE · '+tier.name.toUpperCase(),'upgrade');paintThumbnails();updateMarkers.key=null;render.invalidated=true;renderUI();save();haptic('firm');
   }
   function selectSecurity(){loungeSelected=false;securitySelected=true;pickedTag=null;buyBoxFor=-1;showTray('factory');renderUI();var card=document.querySelector('[data-security]');if(card&&card.scrollIntoView)card.scrollIntoView({block:'nearest',inline:'nearest'});haptic('select')}
@@ -4238,7 +4268,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // Skipping or escaping the intro still leaves a working shop behind.
   function finishConstruction(){if(!state.shopOpen)openShop()}
   function buySelected(){if(loungeSelected)return upgradeLounge();if(securitySelected)return state.doorBuilt?trainIdChecker(1):buildStation('door');buyStationLevel(selected)}
-  function buyStationLevel(i){var line=LINES[i];if(!isOpen(i))return notify('Build the previous stage first');if(!state.lines[i])return buildStation(i);var c=cost(i);if(state.money<c)return notify('Need '+fmt(c-state.money)+' more');var oldTier=stationTier(i);state.money-=c;state.lines[i]++;recordGoal(state.empire,'upgrade',c);telemetry.once('first_upgrade',{station:line.name});trackStationLevel(i);var newLook=stationTier(i)>oldTier;if(newLook){tierFlashes[i]=1;burst(machinePos[i],'#f0d89a')}paintThumbnails();burst(machinePos[i]);stationFx(i,newLook);notify(line.name+' · LEVEL '+state.lines[i],'upgrade');renderUI();save();haptic(newLook?'firm':'light')}
+  function buyStationLevel(i){var line=LINES[i];if(!isOpen(i))return notify('Build the previous stage first');if(!state.lines[i])return buildStation(i);var c=cost(i);if(state.money<c)return notify('Need '+fmt(c-state.money)+' more');var oldTier=stationTier(i);state.money-=c;state.lines[i]++;recordGoal(state.empire,'upgrade',c);telemetry.once('first_upgrade',{station:line.name});trackStationLevel(i);var newLook=stationTier(i)>oldTier;if(newLook){tierFlashes[i]=1;burst(machinePos[i],'#f0d89a')}paintThumbnails();burst(machinePos[i]);stationFx(i,newLook);notify(line.name+' · LEVEL '+state.lines[i],'upgrade',newLook?'tier':null);renderUI();save();haptic(newLook?'firm':'light')}
   function boostAll(){if(state.globalLevel>=BOOST_MAX)return;var c=boostCost(state.globalLevel);if(state.money<c)return notify('Need '+fmt(c-state.money)+' more');state.money-=c;state.globalLevel++;state.multiplier=Math.pow(1.25,state.globalLevel);burst({x:0,z:0},colors.orange);upgradeFx.pop();notify('ALL STAGES +25%','upgrade');renderUI();save()}
   function claimOrder(){var o=milestone(state.contract);if(!o||state.lifetime<o.goal)return;state.money+=o.reward;state.contract++;haptic('firm');notify(fmt(o.reward)+' ORDER BONUS');renderUI();save()}
 
@@ -4335,7 +4365,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     overlay.querySelector('.reminder-yes').onclick=function(){close();reminders.enable().then(function(ok){state.reminders=ok;save();if(remindersButton)remindersButton.textContent=ok?'Reminders on':'Reminders off';notify(ok?'REMINDERS ON':'NOTIFICATIONS ARE OFF IN IOS SETTINGS')})};
     document.body.append(overlay);manageDialog(overlay,close);overlay.querySelector('.reminder-yes').focus({preventScroll:true})}
   var musicButton=document.createElement('button');musicButton.id='musicToggle';musicButton.type='button';musicButton.onclick=function(){state.music=!state.music;music.set(state.music);if(state.music)music.unlock();save();renderUI()};document.querySelector('.shop-reset').prepend(musicButton);
-  var soundButton=document.createElement('button');soundButton.id='soundToggle';soundButton.type='button';soundButton.onclick=function(){state.sound=!state.sound;playSound('sale',state.sound);save();renderUI()};document.querySelector('.shop-reset').prepend(soundButton);
+  var soundButton=document.createElement('button');soundButton.id='soundToggle';soundButton.type='button';soundButton.onclick=function(){state.sound=!state.sound;playSound('tap',state.sound);save();renderUI()};document.querySelector('.shop-reset').prepend(soundButton);
   if(haptic.available){var hapticsButton=document.createElement('button');hapticsButton.id='hapticsToggle';hapticsButton.type='button';hapticsButton.hidden=true;hapticsButton.onclick=function(){state.haptics=state.haptics===false;save();renderUI();haptic('light')};document.body.append(hapticsButton)}
   var prestigeDialog=document.createElement('div');prestigeDialog.id='prestigeModal';prestigeDialog.className='modal-wrap';prestigeDialog.hidden=true;prestigeDialog.innerHTML='<div class="modal" role="dialog" aria-modal="true" aria-labelledby="prestigeTitle"><h2 id="prestigeTitle">Reopen your empire?</h2><p id="prestigePreview"></p><p>Clears cash, stores, staff, stock, strains, reputation, collections, goals and events. Your shares, founder perks, daily streak, season, banked boosts, branch stars, event badges, strain library and sound preference carry over. Perks you buy apply at once.</p><div><button id="prestigeCancel">Keep playing</button><button id="prestigeConfirm">Reopen from scratch</button></div></div>';document.body.append(prestigeDialog);
   $('prestigeStart').onclick=function(){var o=prestigeOffer(state);if(!o.eligible)return;$('prestigePreview').textContent=tieLast('+'+countText(o.gain)+' share'+(o.gain===1?'':'s')+' and '+countText(o.gain)+' perk point'+(o.gain===1?'':'s')+': '+times(o.multiplier)+' base main-shop and branch income from now on.');prestigeDialog.hidden=false;$('prestigeCancel').focus()};
@@ -4365,11 +4395,11 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function buildPrice(key){var branch=branchOfBuild(key);if(branch>=0)return STORES[branch].price;if(cityBuilding(key))return cityCost(key,state.city[key],state)||0;return key==='flagship'?flagshipCost(state.flagship,state)||0:key==='window'?WINDOW_COST:key==='deck'?AUTO_DRONE_COST:LOUNGE_TIERS[0].cost}
   function buildSkipCost(key){return skipCost(state.builds,key,buildPrice(key))}
   function skipBuildNow(key){var price=buildSkipCost(key);if(!price)return;if(state.money<price){notify('Need '+fmt(price-state.money)+' more to finish now');return}
-    state.money-=price;skipBuild(state.builds,key);telemetry.once('build_skipped_'+key);playSound('build',state.sound);completeBuilds();renderUI();save()}
+    state.money-=price;skipBuild(state.builds,key);telemetry.once('build_skipped_'+key);completeBuilds();renderUI();save()}
   function purchaseWindow(){if(windowOpen()||isBuilding(state.builds,'window')||state.money<WINDOW_COST)return;state.money-=WINDOW_COST;upgradeFx.pop();startBuild(state.builds,'window');showcase({x:PICKUP_WINDOW.x,y:1.3,z:PICKUP_WINDOW.z},{r:1.4,h:2.2});telemetry.once('pickup_window_paid');save();renderUI();notify('PICKUP WINDOW UNDER CONSTRUCTION · opens in '+buildClock(buildLeft(state.builds,'window')),'upgrade')}
   // Canopy HQ's next stage: paid in full, then raised on the build timer; completeBuilds opens it.
   function purchaseFlagship(){if(isBuilding(state.builds,'flagship')||!flagshipUnlocked(state.lifetime,state.flagship,state.run.time))return;var next=flagshipNext(state.flagship);if(!next||!payFlagship(state))return;
-    startBuild(state.builds,'flagship');pickedTag=null;hqReveal();telemetry.send('flagship_paid',{stage:state.flagship+1});playSound('build',state.sound);haptic('light');notify('CANOPY HQ · '+next.name.toUpperCase()+' UNDER WAY · done in '+buildClock(buildLeft(state.builds,'flagship')),'upgrade');updateMarkers.key=null;render.invalidated=true;save();renderUI()}
+    startBuild(state.builds,'flagship');pickedTag=null;hqReveal();telemetry.send('flagship_paid',{stage:state.flagship+1});playSound('start',state.sound);haptic('light');notify('CANOPY HQ · '+next.name.toUpperCase()+' UNDER WAY · done in '+buildClock(buildLeft(state.builds,'flagship')),'upgrade');updateMarkers.key=null;render.invalidated=true;save();renderUI()}
   // The tag rides just above whatever stands on the lot now.
   var HQ_TAG={x:13.64,z:-24.2};function hqTagHeight(){return [3.6,5,18.4,18.4,22][state.flagship]||5}
   // HQ and the city buildings: the camera centres on the building's middle and a tall light rises out of the lot.
@@ -4377,7 +4407,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function cityReveal(id){var at=cityTagAt(id);if(at)showcase({x:at.x,y:at.y*.45,z:at.z},{r:3,h:Math.max(5,at.y*.8),ringZ:1,colour:'#dbc38b'})}
   // A city building's next stage: paid in full, then raised on its build timer; completeBuilds opens it.
   function purchaseCity(id){var b=cityBuilding(id);if(!b||isBuilding(state.builds,id)||!cityUnlocked(id,state.lifetime,state.city[id],state.run.time))return;var next=cityNext(id,state.city[id]);if(!next||!payCity(state,id))return;
-    startBuild(state.builds,id);pickedTag=null;cityReveal(id);telemetry.send('city_paid',{id:id,stage:state.city[id]+1});playSound('build',state.sound);haptic('light');notify(b.name.toUpperCase()+' · '+next.name.toUpperCase()+' UNDER WAY · done in '+buildClock(buildLeft(state.builds,id)),'upgrade');updateMarkers.key=null;render.invalidated=true;save();renderUI()}
+    startBuild(state.builds,id);pickedTag=null;cityReveal(id);telemetry.send('city_paid',{id:id,stage:state.city[id]+1});playSound('start',state.sound);haptic('light');notify(b.name.toUpperCase()+' · '+next.name.toUpperCase()+' UNDER WAY · done in '+buildClock(buildLeft(state.builds,id)),'upgrade');updateMarkers.key=null;render.invalidated=true;save();renderUI()}
   // Where a city building's tag sits: over the lot's front, just above what stands there now.
   var cityLotRects=null;function cityTagAt(id,terrace){if(!cityLotRects)cityLotRects=cityLots();var lot=cityLotRects[id];if(!lot)return null;// Locked tags ride over the terrace (capped, the tall ones would lift them off screen); a plot for sale gets its tag
     // high enough to clear the shorter neighbours in front of it instead of sitting on their facades.
@@ -4543,7 +4573,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   STORES.forEach(function(store,i){$('branchBuy'+i).onclick=function(){
     // A branch not open yet is paid for and then built on its lot (Kevin, 2026-11-05); while it builds this button finishes it now.
     if(state.empire.stores[i].level===0){var key=branchBuildKey(i);if(isBuilding(state.builds,key)){skipBuildNow(key);return}
-      if(!payStore(state,i))return;startBuild(state.builds,key);pickedTag=null;telemetry.send('store_paid',{store:store.name});playSound('build',state.sound);haptic('light');
+      if(!payStore(state,i))return;startBuild(state.builds,key);pickedTag=null;telemetry.send('store_paid',{store:store.name});playSound('start',state.sound);haptic('light');
       notify(store.name.toUpperCase()+' UNDER CONSTRUCTION · opens in '+buildClock(buildLeft(state.builds,key)),'upgrade');updateMarkers.key=null;render.invalidated=true;save();renderUI();flyToPlace('shop',i+1);return}
     if(buyStore(state,i)){storeFx(i,true);haptic('light');save();renderUI();notify(store.name+' upgraded · +'+fmt(state.empire.network.stores[i].incomeGain)+'/s','upgrade')}}});
   // Contracts: one offer at a time, started when the player likes; the HUD pill tracks the running one.
@@ -4581,11 +4611,11 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   var flowGuide=document.querySelector('.flow-guide');if(flowGuide){flowGuide.setAttribute('role','button');flowGuide.setAttribute('tabindex','0');flowGuide.addEventListener('click',function(e){if(e.target!==$('flowAction'))$('flowAction').click()});flowGuide.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();$('flowAction').click()}});$('flowAction').setAttribute('tabindex','-1');$('flowAction').setAttribute('aria-hidden','true');}
   // A flag beside the customer count opens the Goals tab.
   var goalsButton=document.createElement('button');goalsButton.type='button';goalsButton.id='goalsOpen';goalsButton.setAttribute('aria-label','Open goals');goalsButton.title='Goals';
-  goalsButton.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg><span id="goalsBadge" hidden></span>';
+  goalsButton.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8"/></svg><span id="goalsBadge" hidden></span>';
   $('customerStatus').appendChild(goalsButton);
-  // The store: a bag beside the goals flag (store-ui.js). Packs are sold only in the iOS app; the web build shows them.
+  // the store: a bag beside the goals target (store-ui.js). Packs are sold only in the iOS app; the web build shows them.
   storeUI=mountStore({getState:function(){return state},purchases:purchases,ads:ads,format:fmt,incomeRate:incomeRate,changed:function(){save();renderUI()},notify:notify,haptic:haptic});
-  // Shift goals open the Goals tab (the Empire shell places this block there); the flag is a shortcut to it.
+  // Shift goals open the Goals tab (the Empire shell places this block there); the target, the Goals tab's own icon, is a shortcut to it.
   var goalsBody=document.createElement('section');goalsBody.className='goals-body empire-group';goalsBody.setAttribute('aria-labelledby','goalsTitle');
   goalsBody.innerHTML='<div class="goals-head"><h2 class="empire-group-title" id="goalsTitle">Shift goals</h2><span id="shiftGoalsReady"></span></div>';
   var nextStepsHeading=today.querySelector('h2:not(.empire-section-heading)');if(nextStepsHeading)nextStepsHeading.remove();
@@ -4596,7 +4626,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function openGoals(){showTray('goals');renderUI()}
   function closeGoals(){}
   goalsButton.onclick=function(){if(activeTray==='goals'&&panelOpen)collapsePanel();else openGoals()};
-  var empireShell=mountEmpireShell({fit:fitControls,getState:function(){return state},format:fmt,rate:incomeRate,fly:flyToPlace,buyStation:function(i,j){buyBranchLevel(i,j,1)}});
+  var empireShell=mountEmpireShell({fit:fitControls,getState:function(){return state},format:fmt,rate:incomeRate,fly:flyToPlace,buyStation:function(i,j){buyBranchLevel(i,j,1)},paintStation:paintStationArt});
   var shopPlayCollapsed=false;
   shopPlayUI=mountShopPlay({getState:function(){return state},getMoment:function(){return moment},getAlerts:function(){return operationsAlerts(state.empire)},names:STRAINS.map(function(s){return s.name}),colors:STRAINS.map(function(s){return s.color}),format:fmt,changed:save,lane:{status:$('laneStatus'),notes:$('laneNotes')},
     // On a phone, or where the side panel would sit under the list, the sheet steps aside while shop activity is open.

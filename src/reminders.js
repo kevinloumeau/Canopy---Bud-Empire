@@ -1,3 +1,4 @@
+import {nativePlugin} from './native-plugins.js';
 // Return reminders for the iOS app: local notifications scheduled on the device when the game goes to the background
 // and cleared when it comes back. No server and no account. They need Capacitor's LocalNotifications plugin; in a
 // browser (or before the plugin is installed) every call is a quiet no-op and Settings hides the option.
@@ -16,8 +17,10 @@ export function planReminders({now,offlineCapMs,dailyAvailable,dailyClock,builds
   if(!dailyAvailable&&Number.isFinite(dailyClock))list.push({id:IDS.daily,at:(Math.floor(dailyClock/DAY)+1)*DAY,title:'Daily reward ready',body:'A new day on the reward track is waiting.'});
   return list.filter(r=>r.at>now+MINUTE).sort((a,b)=>a.at-b.at);
 }
+function globalWindow(){return typeof window!=='undefined'?window:null;}
 export function createReminders(win=typeof window!=='undefined'?window:null){
-  const plugin=win&&win.Capacitor&&win.Capacitor.Plugins&&win.Capacitor.Plugins.LocalNotifications;
+  // Tests pass a fake window with the plugin on it; the app asks core for the native plugin (src/native-plugins.js).
+  const plugin=(win&&win.Capacitor&&win.Capacitor.Plugins&&win.Capacitor.Plugins.LocalNotifications)||(win===globalWindow()?nativePlugin('LocalNotifications'):null);
   const cancelAll=()=>plugin?plugin.cancel({notifications:Object.values(IDS).map(id=>({id}))}).catch(()=>{}):Promise.resolve();
   return {
     available:!!plugin,

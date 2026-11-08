@@ -106,3 +106,11 @@
 .page-group[data-ring] .page-tile.is-goal .page-glyph.is-star{color:var(--ring-tone)}
 .page-group[data-ring] .page-tile.is-goal.is-max .map-tile-figure{color:var(--ring-tone)}
 .store-stars[data-ring] i.on,.sheet .empire-screen .store-list .store-card .store-status .store-stars[data-ring] i.on,.goal-stars[data-ring] i.is-on{color:var(--ring-tone)}
+
+/* Icon audit (2026-11-08): a branch's line tiles show the flagship's own 3D stations (the Stations tab's pictures)
+   instead of line icons, so the line reads as the same six stations and matches the 3D store art beside it. The glyph
+   box grows to the ring's 3D-icon size; until the picture is ready the line icon shows. */
+.page-art{display:none}
+.page-glyph.has-art{width:calc(var(--s-ring,50px) * .8);height:calc(var(--s-ring,50px) * .8);margin-top:calc(var(--s-ring,50px) * -.08)}
+.page-glyph.has-art>svg{display:none}
+.page-glyph.has-art>.page-art{display:block;width:100%;height:100%;filter:drop-shadow(0 3px 3px #06180c8c);pointer-events:none}

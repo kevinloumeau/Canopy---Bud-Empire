@@ -39,11 +39,11 @@
  .sheet .empire-screen :is(.map-tiles,:is(.page-tiles.is-stations,.page-group:not(.is-unlock) .page-tiles)>.page-tile:not(.is-goal)) .map-tile-icon.is-wide{width:calc(var(--s-ring) * .9);height:calc(var(--s-ring) * .9);margin-top:calc(var(--s-ring) * -.05)}
  /* A branch store's page carries more rows than the map, so its station and project rings start a size smaller on the
     SE (36px) and reach the same 54px on the tallest sheet. */
- .sheet .empire-screen :is(.page-tiles.is-stations,.page-group:not(.is-unlock) .page-tiles)>.page-tile:not(.is-goal){--s-ring:calc(36px + var(--rp) * .28)}
+ .sheet .empire-screen :is(.page-tiles.is-stations,.page-group:not(.is-unlock) .page-tiles)>.page-tile:not(.is-goal){--s-ring:min(calc(36px + var(--rp) * .28),88px)}
  /* Its level card's ring follows the same scale, 40px on the SE, and the star row's divider sits closer there. */
  .sheet .empire-screen .page-hero>.map-ring{width:calc(var(--s-ring) - 4px);height:calc(var(--s-ring) - 4px)}
- .sheet .empire-screen .page-hero{padding-block:calc(3px + var(--rp) * .03)}
- .sheet .empire-screen .page-group.is-stars{margin-top:calc(2px + var(--rp) * .03);padding-top:calc(2px + var(--rp) * .03)}
+ .sheet .empire-screen .page-hero{padding-block:min(calc(3px + var(--rp) * .03),10px)}
+ .sheet .empire-screen .page-group.is-stars{margin-top:min(calc(2px + var(--rp) * .03),10px);padding-top:min(calc(2px + var(--rp) * .03),10px)}
  .sheet .empire-screen .empire-map button.map-tile{gap:2px;padding:4px 0 3px}
  .sheet .empire-screen[data-screen=home] .empire-map-head{margin:var(--s-gap) 2px 0}
  .sheet .empire-screen[data-screen=home] .empire-map-head:first-child{margin-top:0}

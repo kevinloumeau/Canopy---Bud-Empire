@@ -17,7 +17,7 @@
    little with the room, the names, levels and figures stay the SE's size, the gaps and the card's padding grow, and
    the card stretches to the bottom of the half-open sheet so it is never cut off by the crew rows below it. */
 @media(max-width:779px){
- .sheet>[data-pane=factory]>*{--st-thumb:calc(22px + var(--rp) * .094);--st-tile:calc(var(--st-thumb) + 31px);--st-art:calc(var(--s-art) + 8px)}
+ .sheet>[data-pane=factory]>*{--st-thumb:min(calc(22px + var(--rp) * .094),52px);--st-tile:calc(var(--st-thumb) + 31px);--st-art:calc(var(--s-art) + 8px)}
  .sheet .machine-nav{gap:var(--s-tile-gap)!important;margin:0 0 var(--s-gap)!important;padding:0!important;grid-auto-rows:var(--st-tile)}
  .sheet .machine-nav button{grid-template-rows:var(--st-thumb) auto auto!important;align-content:center;padding:3px 2px 2px!important}
  .sheet .machine-nav button .machine-thumb{width:calc(var(--st-thumb) * 1.4)!important;height:var(--st-thumb)!important}
@@ -44,7 +44,9 @@
 @media(max-width:779px) and (max-height:760px){
  html body .sheet{max-height:66vh;max-height:66dvh}
  html body .sheet:not(.tall):not(.fluid)>[data-pane]{height:41vh;height:41dvh}
- .sheet:not(.collapsed) .panel-header{min-height:0;padding-block:0}
+ /* One header height on every tab (so switching tabs never moves the sheet), with 10px over its controls so the grab
+    handle never touches the Strains switch or the Collect pill. */
+ .sheet:not(.collapsed) .panel-header{box-sizing:border-box;min-height:0;height:42px;padding-block:10px 0;align-items:center}
  .sheet:not(.collapsed) .panel-header #panelToggle{width:28px;height:28px}
  .sheet #stockStatus{padding-top:4px;padding-bottom:6px}
  .sheet #stockStatus .stock-item{min-height:32px;padding-block:2px}
