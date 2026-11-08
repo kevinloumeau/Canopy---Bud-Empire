@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {migrateShopPlay,createMoment,judgeChoice,tickShift,recordServed,shiftAdvice,tipFor,shiftTimeLeft,paceAgainst,stillTrue,SHIFT_SECONDS,MAX_ORDER_COUNTERS} from '../src/shop-play.js';
+import {migrateShopPlay,createMoment,judgeChoice,tickShift,recordServed,shiftAdvice,tipFor,shiftTimeLeft,paceAgainst,stillTrue,pillPace,SHIFT_SECONDS,MAX_ORDER_COUNTERS} from '../src/shop-play.js';
 
 test('old saves get a fresh shop activity state and bad values are clamped',()=>{
   const p=migrateShopPlay(undefined);
@@ -118,4 +118,12 @@ test('last round\'s advice only shows while the problem is still on the floor',(
   const wait=shiftAdvice({served:10,waitTotal:400,queuePeak:2,stockoutSeconds:0});
   assert.equal(stillTrue(wait,{stages:[]},{served:10,waitTotal:100}),false);
   assert.equal(stillTrue(wait,{stages:[]},{served:10,waitTotal:300}),true);
+});
+
+test('the pill reads the round\'s earnings and pace when nothing is waiting',()=>{
+  const fmt=n=>'$'+Math.round(n);
+  assert.equal(pillPace({seconds:10,earned:0},null,fmt),'Shop activity');
+  assert.equal(pillPace({seconds:60,earned:720},null,fmt),'$720');
+  assert.equal(pillPace({seconds:60,earned:720},{earned:3000},fmt),'$720 ▲20%');
+  assert.equal(pillPace({seconds:60,earned:600},{earned:3000},fmt),'$600');
 });

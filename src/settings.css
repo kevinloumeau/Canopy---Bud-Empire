@@ -13,7 +13,7 @@
 .settings-note{margin:6px 4px 0;font-size:12px;color:var(--p-sage-70)}
 /* The Shop tab keeps its links for now but they are no longer the way in. */
 .shop-reset{display:none}
-/* Pill order on every size: 1× 2× 4× · day/night · settings. */
+/* Pill order on every size: pause 1× 2× · day/night · settings. */
 .hud .speed-controls #lightToggle{order:5}
 .hud .speed-controls #settingsOpen{order:6}
 
