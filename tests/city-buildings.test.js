@@ -25,7 +25,7 @@ test('stages get dearer and unlocks come in order around the HQ',()=>{
 test('each building does its own job',()=>{
   const none=migrateCity(),full={warehouse:3,growhouse:3,billboard:3,terplab:3};
   assert.equal(awayExtraSeconds(none),0);assert.equal(awayPay(none),1);assert.equal(outputFactor(none),1);assert.equal(trafficFactor(none),1);assert.equal(terpFactor(none,1,1),1);
-  assert.equal(awayExtraSeconds(full),12*3600);assert.ok(Math.abs(awayPay(full)-1.75)<1e-9);assert.ok(Math.abs(outputFactor(full)-1.6)<1e-9);assert.ok(Math.abs(trafficFactor(full)-1.6)<1e-9);
+  assert.equal(awayExtraSeconds(full),12*3600);assert.equal(awayPay(full),1);assert.ok(Math.abs(outputFactor(full)-1.6)<1e-9);assert.ok(Math.abs(trafficFactor(full)-1.6)<1e-9);
   // The house strain off trend gets nothing; trending and boutique strains do.
   assert.equal(terpFactor(full,0,2),1);assert.ok(terpFactor(full,0,0)>2);assert.ok(terpFactor(full,2,3)>1.5);assert.ok(terpFactor(full,2,2)>terpFactor(full,2,3));
 });

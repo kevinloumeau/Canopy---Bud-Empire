@@ -2,7 +2,7 @@ import {heldQuote,quotePrice} from './stage-quotes.js';
 // City buildings (Kevin, 2026-11-02: "similar to the HQ should there be other buildings around; ie terp lab, grow
 // house, warehouse"). Four more lots round the block come up for sale one by one, each in three paid stages raised on
 // a build timer like Canopy HQ (src/flagship.js), and each does its own job rather than another flat +% sales:
-//   Warehouse      pays more while you are away (longer cap, bigger offline pay),
+//   Warehouse      keeps paying for longer while you are away (a longer offline cap, at the normal rate),
 //   Grow house     every station makes more (capacity, not price),
 //   Billboard      more walk-ins (demand, so counters and kiosks matter again),
 //   Terp lab       the trending and boutique strains sell for more (rewards the menu you pick).
@@ -57,14 +57,15 @@ export function payCity(state,id){
 export function openCityStage(state,id){const b=cityBuilding(id);state.city[id]=Math.min(b.stages.length,(state.city[id]|0)+1);return state.city[id];}
 
 // Effects, each a plain factor from the stages open (city = state.city).
-export const AWAY_HOURS=4,AWAY_PAY=.25,OUTPUT_STEP=.2,TRAFFIC_STEP=.2,TREND_STEP=.35,BOUTIQUE_STEP=.2;
+// Kevin (2026-11-08) chose a cap-only Warehouse: away pay runs at the shop's real rate, never more than playing.
+export const AWAY_HOURS=4,OUTPUT_STEP=.2,TRAFFIC_STEP=.2,TREND_STEP=.35,BOUTIQUE_STEP=.2;
 export function awayExtraSeconds(city){return (city?.warehouse|0)*AWAY_HOURS*3600;}
-export function awayPay(city){return 1+(city?.warehouse|0)*AWAY_PAY;}
+export function awayPay(city){return 1;}
 export function outputFactor(city){return 1+(city?.growhouse|0)*OUTPUT_STEP;}
 export function trafficFactor(city){return 1+(city?.billboard|0)*TRAFFIC_STEP;}
 // Strain i's price factor: trending strain, boutique strains (every strain past the house one), or neither.
 export function terpFactor(city,i,trending){const n=city?.terplab|0;return (i===trending?1+n*TREND_STEP:1)*(i>0?1+n*BOUTIQUE_STEP:1);}
 // What one more stage gives, in a few words for the buy box.
 export function stageGain(id){
-  return {warehouse:'+4h away · +25% pay',growhouse:'+20% output',billboard:'+20% walk-ins',terplab:'+35% trend strain'}[id]||'';
+  return {warehouse:'+4h away',growhouse:'+20% output',billboard:'+20% walk-ins',terplab:'+35% trend strain'}[id]||'';
 }
