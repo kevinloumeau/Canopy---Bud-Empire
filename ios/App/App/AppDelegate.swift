@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import AVFoundation
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -7,7 +8,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // The game's music and sounds mix with whatever the player is already listening to (a podcast, their own
+        // music) instead of stopping it, and they follow the ring/silent switch, as an idle game should.
+        try? AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
         return true
     }
 
