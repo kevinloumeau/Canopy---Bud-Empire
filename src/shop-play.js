@@ -66,13 +66,23 @@ export function tickShift(play,dt,{queue=0,stockout=false}={}){
 export const MAX_ORDER_COUNTERS=3;
 export const MAX_COMFORT=20;
 export function shiftAdvice(recap,{counters=1,comfortLevel=0}={}){
-  if(recap.stockoutSeconds>30)return {text:'Keep pickup stocked: check your Pack and Orders stations.',short:'Pickup ran dry · check Pack',station:3};
-  if(recap.served&&recap.waitTotal/recap.served>25)return {text:comfortLevel>=MAX_COMFORT?'Customers waited a while. Train the Orders team to serve faster.':'Customers waited a while. Train the Orders team or buy Express lanes.',short:'Long waits · speed up Orders',station:4};
-  if(recap.queuePeak>8)return {text:counters>=MAX_ORDER_COUNTERS?'A busy shift. Upgrade the Orders desk and team so every counter serves faster.':'A busy shift. Add an order counter to spread the queue.',short:counters>=MAX_ORDER_COUNTERS?'Long line · upgrade Orders':'Long line · add a counter',station:4};
+  if(recap.stockoutSeconds>30)return {kind:'stockout',text:'Keep pickup stocked: check your Pack and Orders stations.',short:'Pickup ran dry · check Pack',station:3};
+  if(recap.served&&recap.waitTotal/recap.served>25)return {kind:'wait',text:comfortLevel>=MAX_COMFORT?'Customers waited a while. Train the Orders team to serve faster.':'Customers waited a while. Train the Orders team or buy Express lanes.',short:'Long waits · speed up Orders',station:4};
+  if(recap.queuePeak>8)return {kind:'line',text:counters>=MAX_ORDER_COUNTERS?'A busy shift. Upgrade the Orders desk and team so every counter serves faster.':'A busy shift. Add an order counter to spread the queue.',short:counters>=MAX_ORDER_COUNTERS?'Long line · upgrade Orders':'Long line · add a counter',station:4};
   return {text:'Try another customer recommendation next shift. Great matches earn extra tips.',moment:true};
 }
 // Branch alerts pointed at the old Stock and People tabs (shelves, transfers, drivers, regulars). The store pages are
 // down to stations and upgrades now (2026-11-03), so there is nothing there to chase; the map's brass shows the buys.
+// The recap's advice is about a round that has already ended, so the card only repeats it while the problem is still
+// there now (Kevin, 2026-11-08: "suggests Long line · upgrade Orders when there is no line"). floor is getFloor()'s stages.
+export function stillTrue(tip,{stages=[]}={},shift){
+  if(!tip||tip.station===undefined)return false;
+  const busy=label=>stages.some(s=>s.label===label&&s.busy);
+  if(tip.kind==='line')return busy('Ordering');
+  if(tip.kind==='stockout')return busy('Pickup');
+  if(tip.kind==='wait')return !!shift&&shift.served>=5&&shift.waitTotal/shift.served>25;
+  return true;
+}
 export function operationsAlerts(){return [];}
 
 // The pick card asks in plain words (Kevin, 2026-11-07): a short question in the guest's voice, and on each answer the
@@ -219,13 +229,13 @@ export function mountShopPlay({getState,getMoment,getAlerts,getFloor,getFocus,na
     const glyph=moment?'leaf':'pulse';if(pill.dataset.icon!==glyph){pill.dataset.icon=glyph;pill.querySelector('svg').outerHTML=moment?LEAF:PULSE}
     pill.classList.toggle('has-update',!!moment||play.recapUnread||alerts.length>0);pill.setAttribute('aria-label',label+(moment?' · Open their question':' · Open shop activity'));
     if(panel.hidden){key='';floorKey='';return}
-    const focus=getFocus?getFocus():null;
-    const next=JSON.stringify([play.recap,shift.served,shift.matches,Math.floor(shift.earned),Math.floor(shift.seconds/10),getState().orderCounters,getState().comfortLevel,focus]);
+    const focus=getFocus?getFocus():null,floor=getFloor?getFloor():{stages:[]};
+    const next=JSON.stringify([floor.stages.map(s=>s.busy),play.recap,shift.served,shift.matches,Math.floor(shift.earned),Math.floor(shift.seconds/10),getState().orderCounters,getState().comfortLevel,focus]);
     if(next!==key){key=next;
       const focused=document.activeElement,scroll=panel.scrollTop,refocus=root.contains(focused)&&!!focused.closest('#shiftRecap');
       const recapBox=$('shiftRecap'),recap=play.recap;
       recapBox.replaceChildren(heroBlock(shift,recap),floorList(),figuresBlock(shift));
-      const tip=recap?advice(recap):null,fix=tip&&tip.station!==undefined?{station:tip.station,text:tip.short||tip.text,icon:focus&&focus.station===tip.station?focus.icon:null}:focus&&focus.station!==undefined?focus:null;
+      const tip=recap?advice(recap):null,fix=stillTrue(tip,floor,shift)?{station:tip.station,text:tip.short||tip.text,icon:focus&&focus.station===tip.station?focus.icon:null}:focus&&focus.station!==undefined?focus:null;
       if(fix){const card=el('button',{type:'button',className:'activity-advice',title:fix.text},fix.icon?svg(fix.icon):svg(SPARK),el('strong',{textContent:tieLast(fix.text)}),svg(CHEVRON));card.dataset.station=fix.station;recapBox.appendChild(card)}
       else if(focus&&focus.text)recapBox.appendChild(el('p',{className:'activity-calm',textContent:tieLast(focus.text)}));
       floorKey='';
