@@ -1,0 +1,27 @@
+/* The weekend pop-up market (popup-pane.js): its page in the Empire tab, its door on the Empire home and its map tag.
+   Built on the branch page's tiles (store-page.css, empire-fit.css); only what differs is here. */
+.popup-ticket{flex:none;width:1.1em;height:1.1em;margin-right:1px;vertical-align:-.18em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+/* Four stalls across, like four of a branch's stations. */
+.sheet .empire-screen .page-tiles.is-four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.sheet .empire-screen .popup-hero .page-glyph,.sheet .empire-screen .popup-hero .page-glyph svg{width:26px;height:26px}
+.sheet .empire-screen .popup-hero .page-glyph{color:var(--ui-brass)}
+.sheet .empire-screen .popup-hero .map-ring-fill{stroke:var(--ui-brass)}
+.sheet .empire-screen .popup-hero .page-hero-copy b{display:flex;align-items:center;gap:2px;font-variant-numeric:tabular-nums}
+.sheet .empire-screen .popup-hero .page-hero-copy small{font-variant-numeric:tabular-nums}
+.sheet .empire-screen .popup-hero .page-buy{display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.sheet .empire-screen .popup-hero .page-buy span{overflow:hidden;text-overflow:ellipsis}
+.sheet .empire-screen .page-head .popup-ticket{width:1em;height:1em}
+.sheet .empire-screen .popup-prizes .page-meta,.sheet .empire-screen .popup-stalls .page-meta{display:inline-flex;align-items:center;gap:1px;font-variant-numeric:tabular-nums}
+/* The prizes' names can run to two words (Market bunting); they wrap rather than clip. */
+.sheet .empire-screen .popup-prizes .map-tile-name{white-space:normal;text-wrap:balance;line-height:1.1}
+/* Three doors across while a market runs: the subtitles stay one short line and the chevrons go. */
+.sheet .empire-screen .empire-links.has-popup{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.sheet .empire-screen .empire-links.has-popup button.empire-link{grid-template-columns:auto minmax(0,1fr);column-gap:6px;padding-inline:7px 4px}
+.sheet .empire-screen .empire-links.has-popup .empire-link-chevron{display:none}
+.sheet .empire-screen .empire-links.has-popup .empire-link-icon{width:24px;height:24px}
+.sheet .empire-screen button.empire-link.empire-popup .empire-link-copy small{font-variant-numeric:tabular-nums}
+.sheet .empire-screen button.empire-link[hidden]{display:none}
+/* The back bar's right end: the time the market has left, in brass. */
+.empire-back.is-popup .popup-clock{margin-left:auto;padding:4px 9px;border-radius:999px;background:var(--ui-brass-wash);box-shadow:inset 0 0 0 1px #e2c68a44;font:600 11.5px/1 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-brass);font-variant-numeric:tabular-nums;white-space:nowrap}
+.empire-back.is-popup .popup-clock:empty{display:none}
+.sheet .empire-screen .popup-stalls .popup-rate{margin-left:6px;color:#a8dc52}

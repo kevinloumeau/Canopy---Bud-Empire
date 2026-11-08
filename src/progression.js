@@ -172,7 +172,8 @@ export function claimDaily(state, now=Date.now(), scale=1) {
   if(d.day===DAILY_BOOST_DAY)p.contracts.bank=Math.min(CONTRACT_BANK_MAX,p.contracts.bank+1);return d.reward;
 }
 // p.stake is the Founder's stake perk level, mirrored from state.perks by main.js (+10% sales a level).
-export function saleMultiplier(p) {return (1+p.career*.05)*(1+(p.shares||0)*SHARE_BONUS)*starMultiplier(p)*(1+.1*(p.stake||0));}
+// popupBonus: the weekend markets' trophies (popup-event.js popupSalesBonus), set by main.js.
+export function saleMultiplier(p) {return (1+p.career*.05)*(1+(p.shares||0)*SHARE_BONUS)*starMultiplier(p)*(1+.1*(p.stake||0))*(1+(p.popupBonus||0));}
 // Reopening pays in shares: each is worth +5% base sales, and the all-time total grows with the cube root of
 // all-time revenue, so a longer run earns more of them. (Square root until 2026-11-08: a 6-hour first run paid ~4,800
 // shares, a 240x sales bonus that also bought the whole founder perk shop at once; the cube root pays ~600.) Saves from the flat +20%-per-rank system convert at four

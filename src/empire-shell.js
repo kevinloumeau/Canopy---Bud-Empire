@@ -6,12 +6,14 @@ import {mountGoalsPane} from './goals-pane.js';
 import {mountEmpireStores} from './empire-stores.js';
 import {mountEmpireMap} from './empire-map.js';
 import {manageDialog} from './dialog-focus.js';
-export function mountEmpireShell({fit,getState,format,rate,fly,buyStation,paintStation}){
+import {mountPopupPage,TENT} from './popup-pane.js';
+import {popupClock} from './popup-event.js';
+export function mountEmpireShell({fit,getState,format,rate,fly,buyStation,paintStation,popup}){
  const pane=document.querySelector('[data-pane=empire]'),$=id=>document.getElementById(id);
  const section=name=>pane.querySelector('[data-empire-section="'+name+'"]');
  const el=(tag,cls,html)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(html!=null)n.innerHTML=html;return n;};
  const chevron='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
- const screens={home:el('div','empire-screen empire-content'),store:el('div','empire-screen empire-content'),details:el('div','empire-screen empire-content'),perks:el('div','empire-screen empire-content')};
+ const screens={home:el('div','empire-screen empire-content'),store:el('div','empire-screen empire-content'),details:el('div','empire-screen empire-content'),perks:el('div','empire-screen empire-content'),popup:el('div','empire-screen empire-content')};
  Object.keys(screens).forEach(name=>{screens[name].dataset.screen=name;screens[name].hidden=name!=='home';});
  const backBar=(label,title)=>{const bar=el('div','empire-back');const button=el('button','empire-back-button','<span class="empire-back-icon">'+chevron+'</span><span>'+label+'</span>');button.type='button';const heading=el('b','empire-back-title',title||'');bar.append(button,heading);button.onclick=()=>show('home');return {bar,heading};};
  const group=(title,nodes)=>{const g=el('section','empire-group');if(title)g.append(el('h2','empire-group-title',title));nodes.forEach(n=>n&&g.append(n));return g;};
@@ -29,7 +31,10 @@ export function mountEmpireShell({fit,getState,format,rate,fly,buyStation,paintS
  const perksLink=link('empire-perks','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V11M12 14C3 14 3 7 3 7s9-1 9 7ZM12 11c0-8 9-9 9-9s0 9-9 9Z"/></svg>','Perks','');
  const more=link('empire-records','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10m6 10V4m6 16v-7m4 7H2"/></svg>','Records','Lifetime figures');more.querySelector('small').classList.add('is-words');
  more.onclick=()=>show('details');perksLink.onclick=()=>show('perks');
- const links=el('div','empire-links');links.append(perksLink,more);
+ // The weekend market's door (popup-pane.js), first in the row while a market is open: the theme and the time left,
+ // brass while a stall can be bought.
+ const popupLink=link('empire-popup',TENT,'Pop-up','');popupLink.hidden=true;popupLink.onclick=()=>{if(popup&&popup.open)popup.open();show('popup');};
+ const links=el('div','empire-links');links.append(popupLink,perksLink,more);
  // Empire home: the map's places as tiles (empire-map.js), then the Perks and Records doors. The old store rows stay
  // in the page, hidden, as each branch page's toggle.
  const reopen=$('reopenCard');
@@ -52,6 +57,10 @@ export function mountEmpireShell({fit,getState,format,rate,fly,buyStation,paintS
  const navs=articles.map(article=>{const nav=article.querySelector('.operation-tabs');if(nav)storeBar.bar.append(nav);return nav;});
  articles.forEach(article=>screens.store.append(article));
 
+ // The weekend market: a back bar with its theme, then its page.
+ const popupBar=backBar('Empire','');popupBar.bar.classList.add('is-popup');const popupClockEl=el('span','popup-clock');popupBar.bar.append(popupClockEl);screens.popup.append(popupBar.bar);
+ const popupPage=popup?mountPopupPage({getState,getWindow:popup.window,buy:popup.buy,format}):null;
+ if(popupPage)popupPage.nodes.forEach(n=>screens.popup.append(n));
  // Details: records and long-cycle rewards, each under its own heading.
  const detailsBar=backBar('Empire','Records');screens.details.append(detailsBar.bar);
  // Scoreboard: the lifetime figures that left the HUD, at the top of the records.
@@ -69,15 +78,15 @@ export function mountEmpireShell({fit,getState,format,rate,fly,buyStation,paintS
   document.querySelector('.shop-milestone'),group(null,Array.from(section('daily').children)),group(null,Array.from(section('events').children))]});
  // Keep the back controls outside the scrolling content so their background can be the panel itself.
  const scrollers={};
- ['store','details','perks'].forEach(name=>{const screen=screens[name],body=el('div','empire-screen-body');while(screen.children.length>1)body.append(screen.children[1]);screen.append(body);scrollers[name]=body;});
- pane.append(screens.home,screens.store,screens.details,screens.perks);
+ ['store','details','perks','popup'].forEach(name=>{const screen=screens[name],body=el('div','empire-screen-body');while(screen.children.length>1)body.append(screen.children[1]);screen.append(body);scrollers[name]=body;});
+ pane.append(screens.home,screens.store,screens.details,screens.perks,screens.popup);
  // A locked store's page sends the player to the store before it, on the tab where its star goals are worked.
  const goStore=(i,tab)=>{if(fly)fly('shop',i+1);openStore(i);const t=$('opTab'+i+tab);if(t&&!t.hidden)t.click();};
  const storesUI=mountEmpireStores({getState,format,buyStation,goStore,paintStation});
 
  // Navigation.
  let current='home';
- function show(name){current=name;if(name==='details')syncBoard();Object.keys(screens).forEach(k=>screens[k].hidden=k!==name);pane.dataset.empireScreen=name;pane.scrollTop=0;if(scrollers[name])scrollers[name].scrollTop=0;if(name!=='store')closeBranches();if(fit)fit();}
+ function show(name){current=name;if(name==='details')syncBoard();if(name==='popup'){popupSig='';requestAnimationFrame(()=>syncPopup());}Object.keys(screens).forEach(k=>screens[k].hidden=k!==name);pane.dataset.empireScreen=name;pane.scrollTop=0;if(scrollers[name])scrollers[name].scrollTop=0;if(name!=='store')closeBranches();if(fit)fit();}
  function closeBranches(){articles.forEach((article,i)=>{const body=$('branchBody'+i),nav=navs[i];if(body)body.hidden=true;if(nav)nav.hidden=true;toggles[i].setAttribute('aria-expanded','false');});}
  function openStore(i){articles.forEach((article,j)=>{const body=$('branchBody'+j),nav=navs[j];if(body)body.hidden=j!==i;if(nav)nav.hidden=j!==i;toggles[j].setAttribute('aria-expanded',String(j===i));});storeBar.heading.textContent=toggles[i].querySelector('.branch-name').textContent;show('store');}
  toggles.forEach((toggle,i)=>{toggle.onclick=()=>openStore(i);toggle.removeAttribute('aria-expanded');toggle.setAttribute('aria-haspopup','false');});
@@ -91,9 +100,19 @@ export function mountEmpireShell({fit,getState,format,rate,fly,buyStation,paintS
   perksLink.classList.toggle('is-ready',!!ready);perksLink.querySelector('b').textContent=title;perksLink.querySelector('small').textContent=sub;
   perksLink.setAttribute('aria-label',ready?'Reopen for '+gain+'. Open reopening and founder perks':'Reopening and founder perks'+(sub?', '+sub:''));}
  // Only while the Empire tab is showing (the 250 ms tick otherwise rebuilt hidden tiles all game long); opening it syncs at once.
- function sync(){if(!document.hidden&&!pane.hidden){storesUI.sync();map.sync();syncPerks();}}
+ let popupSig='';
+ function syncPopup(){const win=popup&&popup.window(),s=getState(),pp=s&&s.popup,on=!!win&&!!pp&&pp.key>=0;
+  if(!on&&current==='popup')show('home');
+  const sub=on?popupClock(win.end-Date.now())+' left':'',ready=on&&popup.ready(),sig=[on,sub,ready,on&&win.theme.name].join('|');
+  if(sig!==popupSig){popupSig=sig;popupLink.hidden=!on;links.classList.toggle('has-popup',on);popupLink.classList.toggle('is-ready',!!ready);
+   popupLink.querySelector('small').textContent=sub;popupClockEl.textContent=sub;
+   // Three doors across leave Records room for one word.
+   more.querySelector('small').textContent=on?'Lifetime':'Lifetime figures';popupLink.setAttribute('aria-label',on?win.theme.name+' pop-up market, '+sub+(ready?', a stall to buy':''):'');
+   if(on)popupBar.heading.textContent=win.theme.name;}
+  if(on&&current==='popup'&&popupPage)popupPage.sync();}
+ function sync(){if(!document.hidden&&!pane.hidden){storesUI.sync();map.sync();syncPerks();syncPopup();}}
  if(window.MutationObserver){const watch=new MutationObserver(syncPerks);[reopen,$('prestigeStatus'),$('reopenGain')].forEach(n=>{if(n)watch.observe(n,{attributes:true,attributeFilter:['hidden'],childList:true,characterData:true,subtree:true});});}
  pane.addEventListener('click',()=>requestAnimationFrame(sync));setInterval(sync,250);sync();
  if(window.MutationObserver)new MutationObserver(sync).observe(pane,{attributes:true,attributeFilter:['hidden']});
- return {show,openStore,sync};
+ return {show,openStore,sync,openPopup:()=>show('popup')};
 }

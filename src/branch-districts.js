@@ -11,8 +11,17 @@ import { BRANCH_THEMES } from './branch-maps.js';
 
 export const DISTRICT_PITCH = 70, FIRST_DISTRICT_X = 77, DISTRICT_Z = 1.5;
 // The cross streets along z: the flagship ring's east back street (x 42) and one after every district.
-export const CROSS_STREETS = BRANCH_THEMES.map((_, i) => FIRST_DISTRICT_X + DISTRICT_PITCH / 2 + i * DISTRICT_PITCH);
 export const DISTRICT_COUNT = BRANCH_THEMES.length;
+// One block more than there are branches: the weekend pop-up market (popup-event.js) sets up on the first block past
+// the lot for lease, which with every branch open is this spare one at the end of the street.
+export const DISTRICT_SLOTS = DISTRICT_COUNT + 1;
+// The spare block has no cross street of its own past it (adding one would reshuffle the dressing of every street,
+// which is seeded street by street): the streets along x simply run on past it into the haze (sunny-world's XE).
+export const CROSS_STREETS = BRANCH_THEMES.map((_, i) => FIRST_DISTRICT_X + DISTRICT_PITCH / 2 + i * DISTRICT_PITCH);
+// The x of the east kerb line of block i (its east cross street's centre, for the spare block where one would be).
+export const blockEast = i => FIRST_DISTRICT_X + DISTRICT_PITCH / 2 + i * DISTRICT_PITCH;
+// The market's plot, in a block's own units: inside every branch's plot, so the market fits whichever block it is on.
+export const POPUP_PLOT = [-16, 16, -11.5, 12];
 // The flagship's own east haze ramp (sunny-world HAZE_RAMP.east) and the flagship view's east limits (SUNNY_VIEW):
 // with no branch on the way the town ends where it always did.
 export const MAIN_EAST_HAZE = [45, 58];
@@ -23,9 +32,10 @@ export function districtBlock(i) {
   const c = districtCentre(i).x;
   return { x0: c - DISTRICT_PITCH / 2 + 3, x1: c + DISTRICT_PITCH / 2 - 3, z0: -15.5, z1: 18.5 };
 }
-// The branch's plot in world units: its scene's land plot moved onto the district (BRANCH_THEMES[].land.plot).
+// The branch's plot in world units: its scene's land plot moved onto the district (BRANCH_THEMES[].land.plot). The
+// spare block past the last branch has the market's plot.
 export function districtPlot(i) {
-  const c = districtCentre(i), [x0, x1, z0, z1] = BRANCH_THEMES[i].land.plot;
+  const c = districtCentre(i), [x0, x1, z0, z1] = BRANCH_THEMES[i] ? BRANCH_THEMES[i].land.plot : POPUP_PLOT;
   return { x0: c.x + x0, x1: c.x + x1, z0: c.z + z0, z1: c.z + z1 };
 }
 
@@ -40,12 +50,15 @@ export function shownDistricts(levels) {
   }
   return out;
 }
+// The block the pop-up market takes while a weekend market runs: the first one past every shown district.
+export function popupSlot(levels) { return Math.min(DISTRICT_SLOTS - 1, shownDistricts(levels).length); }
 // The east haze ramp: from just past the last shown district's far cross street to gone a dozen units on, so its
-// right-hand column of terraces stands in the clear and nothing beyond is ever seen.
-export function eastHaze(levels) {
+// right-hand column of terraces stands in the clear and nothing beyond is ever seen. While the market runs
+// (`popup`), the town reaches on to its block.
+export function eastHaze(levels, popup = false) {
   const shown = shownDistricts(levels), last = shown[shown.length - 1];
   if (!last) return MAIN_EAST_HAZE.slice();
-  const edge = CROSS_STREETS[last.index] + 3;
+  const edge = blockEast(popup ? popupSlot(levels) : last.index) + 3;
   return [edge + 3, edge + 16];
 }
 

@@ -43,6 +43,6 @@ test('the town leaves a hole for every plot and runs its streets east to the las
   const layout = townLayout();
   assert.ok(layout.eastEnd > CROSS_STREETS[CROSS_STREETS.length - 1]);
   CROSS_STREETS.forEach(x => assert.ok(layout.roads.some(r => r.along === 'z' && r.at === x), 'cross street at ' + x));
-  assert.equal(layout.districtPlots.length, DISTRICT_COUNT);
+  assert.equal(layout.districtPlots.length, DISTRICT_COUNT + 1, "every branch and the market's spare block");
   layout.districtPlots.forEach(p => assert.ok(layout.holes.some(h => h.x0 === p.x0 && h.z1 === p.z1)));
 });
