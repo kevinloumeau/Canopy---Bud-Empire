@@ -39,7 +39,8 @@ export function mountEmpireShell({fit,getState,format,rate,fly,buyStation,paintS
  // Perks: the reopen card leads (when reopening pays), then the rank, funding and founder perks, always open.
  const perksBar=backBar('Empire','Reopen & perks');screens.perks.append(perksBar.bar);
  const depth=growth.querySelector('.depth-panel');if(depth){depth.open=true;depth.addEventListener('toggle',()=>{if(!depth.open)depth.open=true;});}
- screens.perks.append(reopen||'',group(null,[depth]));
+ // Franchise tiers (franchise.js): the late, slower layer above shares, after the founder perks.
+ screens.perks.append(reopen||'',group(null,[depth]),group('Franchise',[$('franchiseCard')]));
  // The welcome-back report is a moment over the map, not a row in a tab.
  const summary=$('returnSummary');if(summary){const overlay=el('div','return-overlay');overlay.hidden=true;const card=el('div','return-card');card.append(summary);overlay.append(card);document.body.append(overlay);
   const reflect=()=>{overlay.hidden=summary.hidden;if(!summary.hidden){const b=$('dismissReturn');if(b)b.focus({preventScroll:true});}};
