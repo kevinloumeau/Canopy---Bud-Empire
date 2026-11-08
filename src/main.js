@@ -3099,6 +3099,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // A cash pop frozen at `age` seconds into its rise, for screenshots of the pops (cash-pops.js).
     window.__canopySnap.cashPop=function(key,amount,age){var site=CASH_SITES[key];livePops.push({key:key,amount:amount,x:site.x,y:site.y,z:site.z,age:age||.4,text:fmt(amount)})};
     window.__canopySnap.status=function(){return{map3d:!!(map3d&&map3d.ok),loading:map3d?map3d.loading:-1}};
+    window.__canopySnap.state=function(){return state};
   }
   // Dev numbers (?stats): a small readout over the map with the frames drawn a second, the frame's script time, the 3D
   // map's draw calls and triangles and its estimated GPU memory, so a phone shows its own numbers. Players never pass
@@ -4699,7 +4700,28 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   goalsButton.onclick=function(){if(activeTray==='goals'&&panelOpen)collapsePanel();else openGoals()};
   var empireShell=mountEmpireShell({fit:fitControls,getState:function(){return state},format:fmt,rate:incomeRate,fly:flyToPlace,buyStation:function(i,j){buyBranchLevel(i,j,1)},paintStation:paintStationArt,deals:{get:dealsNow,buy:buyDeal},popup:{window:marketOn,buy:buyMarketStall,ready:marketReady,open:function(){var w=marketOn();if(w){var c=districtCentre(popupSlot(storeLevels()));if(state.empire.activeStore)visitStore(0,false);glideTo(c.x,c.z+1,1)}}}});
   var shopPlayCollapsed=false;
-  shopPlayUI=mountShopPlay({getState:function(){return state},getMoment:function(){return moment},getAlerts:function(){return operationsAlerts(state.empire)},names:STRAINS.map(function(s){return s.name}),colors:STRAINS.map(function(s){return s.color}),format:fmt,changed:save,lane:{status:$('laneStatus'),notes:$('laneNotes')},
+  shopPlayUI=mountShopPlay({getState:function(){return state},getMoment:function(){return moment},getAlerts:function(){return operationsAlerts(state.empire)},
+    // Where the customers are right now, stage by stage, with the faces of the first three in each (the shopper models they
+    // walk in as). A stage turns coral where they pile up: a long order line, or bags waiting on an empty pickup shelf.
+    getFloor:function(){
+      var stages={door:[],order:[],pickup:[],lounge:[]};
+      customers.forEach(function(c){var k=c.phase==='leaving'?null:c.phase==='entering'||c.phase==='idCheck'?'door':c.phase==='toLounge'||c.phase==='lounge'?'lounge':c.ordered?'pickup':'order';if(k)stages[k].push(c)});
+      var face=function(c){return 'people-'+CUSTOMER_MODELS[Math.abs(c.id|0)%CUSTOMER_MODELS.length].replace(/^people\/|\.glb$/g,'')};
+      var stage=function(label,list,busy){return {label:label,count:list.length,faces:list.slice(0,3).map(face),busy:!!busy}};
+      var dry=stages.pickup.some(function(c){return !c.bag})&&state.stock[4]<1;
+      var out=[stage('Door',stages.door,stages.door.length>8),stage('Ordering',stages.order,stages.order.length>6*Math.max(1,state.orderCounters||1)),stage('Pickup',stages.pickup,dry)];
+      if(state.lounge>0)out.push(stage('Lounge',stages.lounge,false));
+      return {stages:out};
+    },
+    // The live bottleneck, as one tappable line with the station's own icon. While customers are the limit there is no
+    // station to open, so it says so in a calm line instead.
+    getFocus:function(){
+      if(!state.shopOpen||state.gameSpeed===0)return null;
+      var slow=slowestStation(),names=['Seeds','Grow','Harvest','Pack','Orders','Pickup'];
+      if(isTrafficBound(slow))return {text:'Every counter keeps up · more customers would sell more'};
+      var src=machineTabs[slow]&&machineTabs[slow].querySelector('.station-icon');
+      return {station:slow,text:names[slow]+' is holding the shop back',icon:src?src.outerHTML:null};
+    },names:STRAINS.map(function(s){return s.name}),colors:STRAINS.map(function(s){return s.color}),format:fmt,changed:save,lane:{status:$('laneStatus'),notes:$('laneNotes')},
     // On a phone, or where the side panel would sit under the list, the sheet steps aside while shop activity is open.
     opening:function(){var sheet=$('sheet').getBoundingClientRect(),reach=(width<780?12:72)+Math.min(360,width-24);shopPlayCollapsed=panelOpen&&(width<780||sheet.left<reach+12);if(shopPlayCollapsed)collapsePanel()},
     closing:function(){if(shopPlayCollapsed){shopPlayCollapsed=false;showTray(activeTray)}},
