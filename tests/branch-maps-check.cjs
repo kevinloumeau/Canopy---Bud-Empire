@@ -19,7 +19,7 @@ const fs=require('node:fs');
    assert.equal((await status()).viewedStore,i);
    const box=await page.locator('#branchMapMarker').boundingBox();assert.ok(box.x>=0&&box.y>=0&&box.x+box.width<=viewport.width);
    await page.screenshot({path:'artifacts/branch-maps/'+name+'-'+i+'.png'});
-   const camera=(await status()).camera;await page.locator('#zoomIn').click();assert.ok((await status()).camera.zoom>camera.zoom);
+   const camera=(await status()).camera;if(viewport.width<780){assert.equal(await page.locator('#zoomIn').isVisible(),false);await page.locator('#zoomIn').dispatchEvent('click')}else await page.locator('#zoomIn').click();assert.ok((await status()).camera.zoom>camera.zoom);
    const after=await page.locator('#branchMapMarker').boundingBox();assert.notEqual(after.y,box.y);
    const canvas=page.locator('#world>canvas'),bounds=await canvas.boundingBox();const x=viewport.width*.38,y=viewport.height*.55;
    await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+25,y+25,{steps:5});await page.mouse.up();assert.notEqual((await status()).camera.panX,0);
