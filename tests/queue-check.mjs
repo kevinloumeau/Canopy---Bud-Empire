@@ -60,7 +60,7 @@ try {
   // A busy open shop: a quick doorman, a slow order desk and pickup counter so both lines fill, a kiosk so kiosk and
   // counter customers share the pickup line, deep stock, and the line expanded to twenty places.
   const save = { lines: [5, 5, 5, 5, 5, 5], staff: [0, 0, 0, 0, 0, 0], idStaff: 10, scannerLevel: 5, queueLevel: 6, pickupLevel: 4, readyLevel: 4,
-    stock: [50, 50, 50, 90, 90], kiosk: true, doorBuilt: true, shopOpen: true, money: 5000, gameSpeed: 4, lastSeen: Date.now() };
+    stock: [50, 50, 50, 90, 90], kiosk: true, doorBuilt: true, shopOpen: true, money: 5000, gameSpeed: 2, lastSeen: Date.now() };
   await send('Page.navigate', { url: new URL('/manifest.webmanifest', gameUrl).href });
   await sleep(300);
   await evaluate(`try{localStorage.clear();localStorage.setItem('canopy-age-ok','1');localStorage.setItem('canopy-telemetry','off');localStorage.setItem('shift-guide-seen','1');localStorage.setItem('shift-save',${JSON.stringify(JSON.stringify(save))});}catch(e){}`);
