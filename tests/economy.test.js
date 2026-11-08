@@ -13,7 +13,7 @@ test('tiers double output at 10/20/30/50/75/100 and per-level gains stay linear 
 
 test('retail tier needs both counters and scales baskets, storage and web orders',()=>{
   assert.equal(retailBoost([1,1,1,1,10,9]),1);assert.equal(retailBoost([1,1,1,1,10,10]),2);assert.equal(retailBoost([1,1,1,1,50,75]),16);
-  assert.equal(basketSize([1,1,1,1,1,1]),1);assert.equal(basketSize([1,1,1,1,5,1]),3);assert.equal(basketSize([1,1,1,1,11,10]),12);
+  assert.equal(basketSize([1,1,1,1,1,1]),1);assert.equal(basketSize([1,1,1,1,5,1]),5);assert.equal(basketSize([1,1,1,1,11,10]),22);
   assert.equal(storageCapacity(0,[1,1,1,1,1,1]),100);assert.equal(storageCapacity(2,[1,1,1,1,20,20]),1200);
   assert.equal(readyCapacity(1,[1,1,1,1,1,1]),150);assert.equal(readyCapacity(0,[1,1,1,1,10,10]),200);
   assert.equal(onlineSize(0,[1,1,1,1,1,1]),4);assert.equal(onlineSize(6,[1,1,1,1,1,1]),7);assert.equal(onlineSize(0,[1,1,1,1,30,30]),32);
@@ -105,9 +105,9 @@ test('a pickup counter at its handoff floor gains nothing per level, so the fix 
   assert.equal(handoff(131),HANDOFF_FLOOR[5]);assert.equal(handoff(136),HANDOFF_FLOOR[5]);
   const pickupRate=(orders,pickup)=>basketSize([150,150,150,150,orders,pickup])/handoff(pickup);
   assert.equal(stepsToGain(k=>pickupRate(41,131+k)-pickupRate(41,131),6),null);
-  // The order desk adds a bag per basket every second level: one level ahead shows nothing, two levels ahead pays.
-  assert.equal(pickupRate(42,131),pickupRate(41,131));
-  assert.deepEqual(stepsToGain(k=>pickupRate(41+k,131)-pickupRate(41,131),6).steps,2);
+  // The order desk adds a bag to every basket each level, so the very next level pays.
+  assert.ok(pickupRate(42,131)>pickupRate(41,131));
+  assert.deepEqual(stepsToGain(k=>pickupRate(41+k,131)-pickupRate(41,131),6).steps,1);
 });
 
 test('stations tied for slowest only show a gain when raised together',()=>{

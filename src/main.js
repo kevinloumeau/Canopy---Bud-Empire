@@ -844,7 +844,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(shopBrowser)shopBrowser.render()}
   function queueCost(){return Math.round(150*Math.pow(1.8,state.queueLevel))}
   function upgradeQueue(){if(queueLimit()>=QUEUE_MAX||state.money<queueCost())return;recordGoal(state.empire,'upgrade',queueCost());state.money-=queueCost();state.queueLevel++;upgradeFx.pop();save();renderUI();notify('LINE EXPANDED · '+queueLimit()+' customers','upgrade')}
-  function storageCapacity(){return economy.storageCapacity(state.storageLevel,state.lines)}
+  // A shelf always holds two baskets, so a big basket can never outgrow storage and stall the counter.
+  function storageCapacity(){return Math.max(economy.storageCapacity(state.storageLevel,state.lines),2*basketSize())}
   function storageCost(){return Math.round(250*Math.pow(1.7,state.storageLevel))}
   function upgradeStorage(){if(state.storageLevel>=20||state.money<storageCost())return;recordGoal(state.empire,'upgrade',storageCost());state.money-=storageCost();state.storageLevel++;upgradeFx.pop();save();renderUI();notify('STORAGE EXPANDED · '+storageCapacity()+' per stage','upgrade')}
   function onlineSize(){return economy.onlineSize(state.onlineCompleted,state.lines)}
@@ -3556,7 +3557,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     $('buyMachine').style.setProperty('--funded',(!level?100:Math.min(100,state.money/price*100))+'%');
     $('upgradeHint').textContent=!open?'Build '+LINES[selected-1].name.toLowerCase()+' first.':!level?'Under construction · tap the site on the map, or Build here, to raise it.':!affordable?fmt(price-state.money)+' to go · customer sales earn cash automatically.':selected<4?'Larger batches per cycle. Train employees to shorten each cycle.':'Upgrade for faster '+['','','','','order preparation','customer service'][selected]+'.';
     $('upgradeHint').classList.toggle('ready',affordable);
-    if(selected===4&&level)$('upgradeHint').textContent+=' Training applies to all '+state.orderCounters+' counters. Baskets: '+qtyLabel(basketSize())+' per customer (+1 every 2 desk levels). Queue: '+queueLimit()+' customers · every 2 desk or employee upgrades adds a place (max 12).';
+    if(selected===4&&level)$('upgradeHint').textContent+=' Training applies to all '+state.orderCounters+' counters. Baskets: '+qtyLabel(basketSize())+' per customer (+1 every desk level). Queue: '+queueLimit()+' customers · every 2 desk or employee upgrades adds a place (max 12).';
     }
     renderOrderCounters();
     var doorSite=!state.doorBuilt,doorKey=doorSite?'site':String(state.idStaff);
@@ -4837,7 +4838,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // and undone, so a counter already at its handoff floor (where more levels cannot speed it up) is never the answer; the
   // fix is then whatever lifts bags per customer, arrivals or prices. Purchases within about five minutes of income are
   // preferred, so a distant upgrade never heads the list when an affordable one does real work.
-  // Upgrades that only pay every few levels (the order desk's basket grows every second level) are looked at a few levels
+  // Upgrades that only pay every few levels (retail tiers double baskets at set levels) are looked at a few levels
   // ahead and valued on the total they cost, so a counter at its handoff floor is never bought over and over for nothing.
   function recommendation(){adviceLive=true;try{return bestBuy()}finally{adviceLive=false}}
   function bestBuy(){
