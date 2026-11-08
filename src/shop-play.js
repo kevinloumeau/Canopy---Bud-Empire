@@ -99,7 +99,8 @@ export function pickLabel(moment,option){
 
 const icon=path=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+path+'</svg>';
 const LEAF=icon('<path d="M12 21v-8"/><path d="M12 13c-4.5 0-7-2.5-7-7 4.5 0 7 2.5 7 7Z"/><path d="M12 15c0-4 2.3-6.5 7-6.5 0 4.2-2.5 6.5-7 6.5Z"/>');
-const LIST=icon('<path d="M5 7h14M5 12h14M5 17h9"/>');
+// The floor's pulse, not three lines: a hamburger reads as the game's main menu.
+const PULSE=icon('<path d="M3 12h4l2.5-6 5 12 2.5-6h4"/>');
 const CLOSE=icon('<path d="M6 6l12 12M18 6 6 18"/>');
 const CHEVRON=icon('<path d="m9 6 6 6-6 6"/>');
 const SPARK=icon('<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.5 2.5M15.2 15.2l2.5 2.5M6.3 17.7l2.5-2.5M15.2 8.8l2.5-2.5"/>');
@@ -114,7 +115,7 @@ export function shiftTimeLeft(seconds){const left=Math.max(0,SHIFT_SECONDS-secon
 const ART=(name,cls)=>'<img class="'+cls+'" src="icons/3d/'+name+'.png" alt="" draggable="false" decoding="async">';
 export function mountShopPlay({getState,getMoment,getAlerts,names,colors,format,choose,skip,navigate,changed,opening,closing,lane}){
   const root=document.createElement('div');root.className='shop-play';
-  root.innerHTML='<button type="button" id="shopActivity" class="shop-activity" aria-expanded="false" aria-controls="shopActivityPanel">'+LIST+'<span></span></button>'+
+  root.innerHTML='<button type="button" id="shopActivity" class="shop-activity" aria-expanded="false" aria-controls="shopActivityPanel">'+PULSE+'<span></span></button>'+
     '<section id="shopActivityPanel" class="shop-activity-panel" aria-label="Shop activity" hidden><div class="shop-activity-heading"><h2>Shop activity</h2><button type="button" id="shopActivityClose" aria-label="Close shop activity">'+CLOSE+'</button></div>'+
     '<section class="shift-recap" id="shiftRecap"></section></section>'+
     '<button type="button" id="momentBubble" class="moment-bubble" aria-label="Help this customer choose" hidden>'+LEAF+'</button><p class="shop-play-feedback" role="status" hidden></p>';
@@ -190,7 +191,7 @@ export function mountShopPlay({getState,getMoment,getAlerts,names,colors,format,
     if(moment&&!overlay.hidden)renderMoment();
     const label=moment?moment.name+' needs a pick':play.recapUnread?'Floor recap ready':alerts.length?alerts[0].title:'Shop activity';
     pill.querySelector('span').textContent=label;pill.classList.toggle('is-moment',!!moment);
-    const glyph=moment?'leaf':'list';if(pill.dataset.icon!==glyph){pill.dataset.icon=glyph;pill.querySelector('svg').outerHTML=moment?LEAF:LIST}
+    const glyph=moment?'leaf':'pulse';if(pill.dataset.icon!==glyph){pill.dataset.icon=glyph;pill.querySelector('svg').outerHTML=moment?LEAF:PULSE}
     pill.classList.toggle('has-update',!!moment||play.recapUnread||alerts.length>0);pill.setAttribute('aria-label',label+(moment?' · Open their question':' · Open shop activity'));
     const next=JSON.stringify([play.recap,alerts,shift.served,shift.matches,Math.floor(shift.earned),Math.floor(shift.seconds/10),getState().orderCounters,getState().comfortLevel]);
     if(next===key)return;key=next;

@@ -181,3 +181,13 @@
 .reminder-card .reminder-no{margin-top:8px;min-height:40px;padding:0 16px;border:0;background:none;color:var(--ui-soft);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
 .reminder-card button:active{transform:scale(.98)}
 .reminder-card button:focus-visible{outline:2px solid var(--ui-ink);outline-offset:2px}
+
+/* Settings rows lead with an icon tile (icon audit, 2026-11-08): sage line art on a soft glass square, brass when the
+   row's switch is on, like the switch itself. The close is drawn, not a typed ×, so it matches every other close. */
+.modal .settings-label{display:inline-flex;align-items:center;gap:12px;min-width:0}
+.modal .settings-icon{display:grid;place-items:center;flex:0 0 auto;width:30px;height:30px;border-radius:9px;border:1px solid var(--ui-edge);background:var(--ui-well-soft);color:var(--ui-soft);transition:color .2s ease,background-color .2s ease,border-color .2s ease}
+.modal .settings-icon svg{width:17px;height:17px}
+.modal .settings-row:has([aria-checked=true]) .settings-icon{color:var(--ui-brass);border-color:color-mix(in srgb,var(--ui-brass) 35%,transparent);background:color-mix(in srgb,var(--ui-brass) 12%,transparent)}
+.modal .settings-close{display:grid;place-items:center}
+.modal .settings-close svg{width:16px;height:16px}
+@media(prefers-reduced-motion:reduce){.modal .settings-icon{transition:none}}

@@ -42,6 +42,7 @@ body[data-active-tray=flowers] .sheet:not(.collapsed) .panel-header .menu-info[a
  .sheet [data-pane="flowers"] .strain-nav .strain-card-art{width:40px!important;height:40px!important}
  .sheet [data-pane="flowers"] .strain-nav .strain-card-art img.icon-3d{width:30px;height:30px}
  .sheet [data-pane="flowers"] .strain-nav .menu-check{top:0;left:calc(50% + 10px);width:14px;height:14px;background-size:10px}
+ .sheet [data-pane="flowers"] .strain-nav button.is-trending::before{top:0;left:calc(50% - 24px);width:14px;height:14px;background-size:9px}
  .sheet [data-pane="flowers"] .strain-nav button small{position:absolute;top:34px;left:50%;transform:translateX(-50%);padding:1px 5px;border-radius:999px;background:#153b21;box-shadow:0 0 0 1px #a8dc5255;font:600 9.5px/1.2 'Bricolage Grotesque',system-ui,sans-serif!important;white-space:nowrap;z-index:1}
  .sheet [data-pane="flowers"] .strain-nav button.is-locked small{box-shadow:0 0 0 1px #ffffff2e}
  .sheet [data-pane="flowers"] .strain-nav button b{margin-top:3px;font-size:10.5px!important;line-height:1.15!important;letter-spacing:-.01em;white-space:nowrap}
@@ -85,7 +86,7 @@ body[data-active-tray=flowers] .sheet:not(.collapsed) .panel-header .menu-info[a
 /* With VIP buzz there are four stats: smaller icons and labels so every word still shows whole. */
 @media(max-width:779px){
  .sheet [data-pane="flowers"] .menu-board-head:has(.is-buzz) .buyer{padding:0 4px 0 7px;column-gap:5px}
- .sheet [data-pane="flowers"] .menu-board-head:has(.is-buzz) .buyer>svg,.sheet [data-pane="flowers"] .menu-board-head:has(.is-buzz) .buyer>.bud,.sheet [data-pane="flowers"] .menu-board-head:has(.is-buzz) .buyer .bud svg{width:14px;height:14px}
+ .sheet [data-pane="flowers"] .menu-board-head:has(.is-buzz) .menu-board-summary>svg,.sheet [data-pane="flowers"] .menu-board-head:has(.is-buzz) .buyer>svg,.sheet [data-pane="flowers"] .menu-board-head:has(.is-buzz) .buyer>.bud,.sheet [data-pane="flowers"] .menu-board-head:has(.is-buzz) .buyer .bud svg{width:14px;height:14px}
  .sheet [data-pane="flowers"] .menu-board-head:has(.is-buzz) small{font-size:9px!important;letter-spacing:.02em!important}
 }
 

@@ -4217,6 +4217,12 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var shows=picture||'drawn:'+fallbackKey;if(card.__shows===shows)return;card.__shows=shows;
     if(!picture){var savedCtx=ctx,savedUnit=unit,savedX=centerX,savedY=centerY,savedAngle=angle;picture=document.createElement('canvas');picture.width=160;picture.height=200;ctx=picture.getContext('2d');ctx.setTransform(2,0,0,2,0,0);try{drawFallback()}finally{ctx=savedCtx;unit=savedUnit;centerX=savedX;centerY=savedY;angle=savedAngle}}
     c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,card.width,card.height);drawPictureCrop(c,picture,card.width,card.height)}
+  // A branch line tile's art (Empire > store > Stations): the flagship's own 3D station, the picture its Stations tab
+  // already shows, so the two lines read as the same six stations. No new model loads: until the flagship has the
+  // station (or the 3D map is up) it answers false and the tile keeps its line icon.
+  function paintStationArt(card,i){var picture=state.lines[i]?stationPicture(i,state.lines[i]):null;if(!picture||!card)return false;
+    if(card.__shows!==picture){var c=card.getContext('2d');if(!c)return false;card.__shows=picture;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,card.width,card.height);drawPictureCrop(c,picture,card.width,card.height)}
+    return true}
   function paintThumbnails(){paintSecurityThumbnail();paintLoungeThumbnail();machineTabs.forEach(function(tab,i){paintThumb(tab.querySelector('canvas'),state.lines[i]?stationPicture(i,state.lines[i]):null,function(){unit=25;centerX=40;centerY=97;angle=.57;drawStage({x:0,z:0},i,0)},state.lines[i]?stationTier(i):0)})}
   function selectLounge(){securitySelected=false;loungeSelected=true;pickedTag=null;buyBoxFor=-1;showTray('factory');renderUI();var card=document.querySelector('[data-lounge]');if(card&&card.scrollIntoView)card.scrollIntoView({block:'nearest',inline:'nearest'});haptic('select')}
   // Each lounge tier is bought outright; the first one raises the doorway out of its hoarding.
@@ -4580,9 +4586,9 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   var flowGuide=document.querySelector('.flow-guide');if(flowGuide){flowGuide.setAttribute('role','button');flowGuide.setAttribute('tabindex','0');flowGuide.addEventListener('click',function(e){if(e.target!==$('flowAction'))$('flowAction').click()});flowGuide.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();$('flowAction').click()}});$('flowAction').setAttribute('tabindex','-1');$('flowAction').setAttribute('aria-hidden','true');}
   // A flag beside the customer count opens the Goals tab.
   var goalsButton=document.createElement('button');goalsButton.type='button';goalsButton.id='goalsOpen';goalsButton.setAttribute('aria-label','Open goals');goalsButton.title='Goals';
-  goalsButton.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg><span id="goalsBadge" hidden></span>';
+  goalsButton.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8"/></svg><span id="goalsBadge" hidden></span>';
   $('customerStatus').appendChild(goalsButton);
-  // Shift goals open the Goals tab (the Empire shell places this block there); the flag is a shortcut to it.
+  // Shift goals open the Goals tab (the Empire shell places this block there); the target, the Goals tab's own icon, is a shortcut to it.
   var goalsBody=document.createElement('section');goalsBody.className='goals-body empire-group';goalsBody.setAttribute('aria-labelledby','goalsTitle');
   goalsBody.innerHTML='<div class="goals-head"><h2 class="empire-group-title" id="goalsTitle">Shift goals</h2><span id="shiftGoalsReady"></span></div>';
   var nextStepsHeading=today.querySelector('h2:not(.empire-section-heading)');if(nextStepsHeading)nextStepsHeading.remove();
@@ -4593,7 +4599,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function openGoals(){showTray('goals');renderUI()}
   function closeGoals(){}
   goalsButton.onclick=function(){if(activeTray==='goals'&&panelOpen)collapsePanel();else openGoals()};
-  var empireShell=mountEmpireShell({fit:fitControls,getState:function(){return state},format:fmt,rate:incomeRate,fly:flyToPlace,buyStation:function(i,j){buyBranchLevel(i,j,1)}});
+  var empireShell=mountEmpireShell({fit:fitControls,getState:function(){return state},format:fmt,rate:incomeRate,fly:flyToPlace,buyStation:function(i,j){buyBranchLevel(i,j,1)},paintStation:paintStationArt});
   var shopPlayCollapsed=false;
   shopPlayUI=mountShopPlay({getState:function(){return state},getMoment:function(){return moment},getAlerts:function(){return operationsAlerts(state.empire)},names:STRAINS.map(function(s){return s.name}),colors:STRAINS.map(function(s){return s.color}),format:fmt,changed:save,lane:{status:$('laneStatus'),notes:$('laneNotes')},
     // On a phone, or where the side panel would sit under the list, the sheet steps aside while shop activity is open.

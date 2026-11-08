@@ -6,7 +6,7 @@ import {mountGoalsPane} from './goals-pane.js';
 import {mountEmpireStores} from './empire-stores.js';
 import {mountEmpireMap} from './empire-map.js';
 import {manageDialog} from './dialog-focus.js';
-export function mountEmpireShell({fit,getState,format,rate,fly,buyStation}){
+export function mountEmpireShell({fit,getState,format,rate,fly,buyStation,paintStation}){
  const pane=document.querySelector('[data-pane=empire]'),$=id=>document.getElementById(id);
  const section=name=>pane.querySelector('[data-empire-section="'+name+'"]');
  const el=(tag,cls,html)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(html!=null)n.innerHTML=html;return n;};
@@ -73,7 +73,7 @@ export function mountEmpireShell({fit,getState,format,rate,fly,buyStation}){
  pane.append(screens.home,screens.store,screens.details,screens.perks);
  // A locked store's page sends the player to the store before it, on the tab where its star goals are worked.
  const goStore=(i,tab)=>{if(fly)fly('shop',i+1);openStore(i);const t=$('opTab'+i+tab);if(t&&!t.hidden)t.click();};
- const storesUI=mountEmpireStores({getState,format,buyStation,goStore});
+ const storesUI=mountEmpireStores({getState,format,buyStation,goStore,paintStation});
 
  // Navigation.
  let current='home';
