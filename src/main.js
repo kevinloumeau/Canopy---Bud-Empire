@@ -4062,13 +4062,14 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       '<span class="stat" title="What a guest pays over a walk-in basket">'+ICON_JAR+'<b>+'+Math.round(loungeMarkup(1)*100-100)+'%</b><small>basket</small></span>'+
       '<span class="stat" title="Seats once open">'+ICON_SEAT+'<b>'+LOUNGE_TIERS[0].seats+'</b><small>seats</small></span>');
     if($('stationStatus').dataset.html!==loungeHtml){$('stationStatus').innerHTML=loungeHtml;$('stationStatus').dataset.html=loungeHtml}
-    $('upgradeLevel').textContent=!tier?'':maxed?'Lv '+level+' · '+tier.name:'Lv '+level+' → '+(level+1)+' · '+next.name;
-    renderUpgradeComparison('Seats',seats,next?next.seats:seats,false,!tier,maxed,{maxed:'Fully fitted',unbuilt:building?'Opens in '+clock:null,gain:function(before,after){return '+'+(after-before)+' seats · jar ×'+(next?next.spend:tier.spend)}});
+    // The level stays short so it never clips beside the title; the tier's name and what it does sit in the pill below.
+    $('upgradeLevel').textContent=!tier?'':maxed?'Lv '+level:'Lv '+level+' → '+(level+1);
+    renderUpgradeComparison('Seats',seats,next?next.seats:seats,false,!tier,maxed,{maxed:'Fully fitted',unbuilt:building?'Opens in '+clock:null,gain:function(before,after){return '+'+(after-before)+' seats'}});
     $('stationTier').textContent=tier?tier.name:'Construction site';$('stationTier').style.color=TIER_COLORS[Math.min(3,level)];
     $('upgradeFunding').textContent=building?'Opens in '+clock:maxed?'Fully fitted':affordable?(tier?'Ready to upgrade':'Ready to build'):fmt(Math.max(0,price-state.money))+' to go';
     $('upgradeProgress').value=building?(1-buildShareLeft(state.builds,'lounge'))*100:maxed?100:Math.min(100,state.money/price*100);$('upgradeProgress').setAttribute('aria-valuetext',building?'Opens in '+clock:maxed?'Fully fitted':affordable?'Ready':fmt(Math.max(0,price-state.money))+' needed for '+next.name);
     paintUpgradePreview(-2);
-    $('nextAppearance').classList.remove('unlock-road');$('nextAppearance').hidden=false;$('nextAppearance').textContent=next?next.name+' · 1 in '+next.share+' guests · jar ×'+next.spend:'Nothing left to fit in the back room.';
+    $('nextAppearance').classList.remove('unlock-road');$('nextAppearance').hidden=false;$('nextAppearance').textContent=next?tieLast(next.name+' · basket +'+Math.round((loungeMarkup(level+1,state.loungeStaff,state.loungeLift)-1)*100)+'%'):tieLast(tier.name+' · fully fitted');
     // Three states on one button: Build · cost, then the build clock counting down (Finish now beside it), then Upgrade.
     var loungeSkip=building?buildSkipCost('lounge'):0;$('buyMachine').classList.toggle('is-countdown',building);
     $('machineCost').textContent=building?clock:maxed?'—':fmt(price);$('buyMachine').disabled=building||!affordable;$('buyMachine').querySelector('span').textContent=building?'Opens in':tier?'Upgrade':'Build';if(building)$('buyMachine').setAttribute('aria-label','Lounge opens in '+clock);$('buyMachine').style.setProperty('--funded',(building?(1-buildShareLeft(state.builds,'lounge'))*100:maxed?0:Math.min(100,state.money/price*100))+'%');
@@ -4247,7 +4248,13 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     {neon:'#ffb6a8',glow:'#ff9a8a4a',halo:'#ff8a78',velvet:'#5c1e30',wall:['#2e1a24','#160c11','#22131b'],floor:'#2a1b22',gap:[.02,.05,.035]},
     {neon:'#9fe8d8',glow:'#7fdcc84a',halo:'#6fd8c4',velvet:'#1f4a4a',wall:['#173432','#0a1a19','#112826'],floor:'#142523',gap:[.2,.48,.42]},
     {neon:'#ffb07a',glow:'#ff9a5c4a',halo:'#ff8c4a',velvet:'#5a2a1c',wall:['#3a2418','#1d110a','#2c1a11'],floor:'#2a1b13',gap:[.22,.5,.44]},
-    {neon:'#ffd98a',glow:'#ffc86a4a',halo:'#ffbe55',velvet:'#3a1522',wall:['#4a3020','#261710','#382317'],floor:'#3b1a24',gap:[.15,.42,.34]}
+    {neon:'#ffd98a',glow:'#ffc86a4a',halo:'#ffbe55',velvet:'#3a1522',wall:['#4a3020','#261710','#382317'],floor:'#3b1a24',gap:[.15,.42,.34]},
+    // The four late tiers keep the members' club room and change the neon: heater orange, marquee cream, searchlight
+    // white, penthouse gold.
+    {neon:'#ffa36b',glow:'#ff8a4a4a',halo:'#ff7a38',velvet:'#3a1522',wall:['#4a3020','#261710','#382317'],floor:'#3b1a24',gap:[.15,.42,.34]},
+    {neon:'#fff0c8',glow:'#ffe6a84a',halo:'#ffd98a',velvet:'#1d4a35',wall:['#4a3020','#261710','#382317'],floor:'#3b1a24',gap:[.15,.42,.34]},
+    {neon:'#f4f8ff',glow:'#dfe9ff4a',halo:'#cfe0ff',velvet:'#24304a',wall:['#2c3446','#151a24','#202837'],floor:'#2a2f3b',gap:[.15,.42,.34]},
+    {neon:'#ffe08a',glow:'#ffd25a5a',halo:'#ffc640',velvet:'#3a1522',wall:['#5a3c22','#2e1d10','#452c19'],floor:'#3b1a24',gap:[.15,.42,.34]}
   ];
   function drawLoungeThumb(level){
     var tier=migrateLounge(level===undefined?state.lounge:level),open=tier>0,look=LOUNGE_LOOKS[Math.max(0,tier-1)],face=.16;
@@ -4286,7 +4293,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
         drawBox(0,-.4,0,1.05,.46,.34,['#e9dcc0','#9d8f72','#c7b995']);[-.28,.28].forEach(function(px){var plate=project(px,.35,-.4);ellipse(plate.x,plate.y,unit*.11,unit*.05,'#fbf8ee');ellipse(plate.x,plate.y,unit*.045,unit*.022,'#7a8a4a')});
         worldLine([[0,1.75,-.4],[0,1.31,-.4]],'#3a2a1e',.02);drawBox(0,-.4,1.18,.34,.34,.13,['#d9905b','#8a4f2c','#b8703f']);var bulb=project(0,1.15,-.4);litEllipse(bulb.x,bulb.y,unit*.05,unit*.03,'#fff0c8');lightCone(0,1.15,-.4,.44,.12,.5,'#ffd7a0',.1);var table=project(0,.36,-.4);glow(table.x,table.y,unit*.6,'#ffcf9a55',unit*.3);
       }
-      if(tier===8){
+      if(tier>=8){
         drawBox(0,-.5,0,1,.38,.4,['#6b2436','#3c1220','#8a3448']);drawBox(0,-.66,.4,1,.1,.42,['#6b2436','#3c1220','#8a3448']);
         [-.45,.45].forEach(function(sx){var sconce=project(sx,1.3,-.7);litEllipse(sconce.x,sconce.y,unit*.045,unit*.03,'#ffe2a8');glow(sconce.x,sconce.y,unit*.34,'#ffc86a48')});
       }
