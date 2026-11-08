@@ -1131,9 +1131,17 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Lv 75 with the perk); windowTube keeps the glass bag tube down to it whichever look stands.
   function windowLookNow(){var l=windowLevel(state.pickupWindow),look=windowLook(l);return look===5&&perkLevel(state.perks,'finish')&&l>=WINDOW_MAX_LEVEL?6:look}
   function windowFixtures(){var open=windowOpen(),look=open?windowLookNow():0,out={windowTube:open};WINDOW_FIXTURE_KEYS.forEach(function(k,n){out[k]=open&&look===n+1});if(!open)out.pickupWindow=false;return out}
-  // Pale see-through copies of what is next to buy (Kevin, 2026-11-02): the next kiosk, and the pickup window over its
-  // lot while its tag offers it.
-  function fixtureGhosts(){var g={},orders=state.lines[4]>0;if(orders&&kioskCount()<3)g['kiosk'+kioskCount()]=true;if(orders&&!windowOpen()&&!isBuilding(state.builds,'window'))g.pickupWindow=true;return Object.keys(g).length?g:null}
+  // Blueprints of what is next to buy where it will stand (Kevin, 2026-11-02; drawn by three/blueprint.js).
+  // Only the next buy in line wears a ghost (game review 2026-11-08: four milky copies by the door read as glitches): of
+  // the pickup window, the next kiosk, the next order counter and the next ATM, the cheapest one left. The others keep
+  // their small tags, so they can still be bought from the map.
+  function nextGhost(){if(!(state.lines[4]>0))return null;var picks=[],atm=state.atm,counter=nextOrderCounter();
+    if(!windowOpen()&&!isBuilding(state.builds,'window'))picks.push({kind:'window',price:WINDOW_COST});
+    if(kioskCount()<3)picks.push({kind:'kiosk',price:KIOSK_PRICES[kioskCount()]});
+    if(counter)picks.push({kind:'counter',price:counter.price});
+    var atmPrice=atm.level?atmMachineCost(atm):ATM_BUILD;if(atmPrice!==null&&atm.machines<3)picks.push({kind:'atm',price:atmPrice});
+    return picks.sort(function(a,b){return a.price-b.price})[0]||null}
+  function fixtureGhosts(){var next=nextGhost(),g={};if(!next)return null;if(next.kind==='kiosk')g['kiosk'+kioskCount()]=true;else if(next.kind==='window')g.pickupWindow=true;else return null;return g}
   function frontFixtures(){return windowOpen()?FRONT_FIXTURES.filter(function(f){return !f.window}).concat(WINDOW_FIXTURES):isBuilding(state.builds,'window')?FRONT_FIXTURES.filter(function(f){return !f.window}):FRONT_FIXTURES}
   // The back-wall shelving stands just behind the counters; the smoking lounge is the room behind it (z −7 → −1.76).
   var DISPLAY_Z=-1.6,LOUNGE_FRONT=DISPLAY_Z+.65;
@@ -2861,7 +2869,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     stations.push({index:6,x:ID_DESK.x,y:0,z:ID_DESK.z,w:1.3,d:2.4,h:1.6,tier:state.doorBuilt?stationLookFor(6,state.idStaff):0,built:state.doorBuilt,rise:buildRise[6]||0,pop:stationPop(6),bump:upgradeFx.bump('f6'),selected:mapPicked&&securitySelected});
     // A see-through copy of the next order counter where it will stand, as the kiosks show theirs (Kevin, 2026-11-02).
     // It goes last, so every built station keeps its slot.
-    var nextCounter=nextOrderCounter();if(nextCounter){station(4,nextCounter.x,0,nextCounter.z,state.lines[4],true,4);var g=stations[stations.length-1];g.ghost=true;g.selected=false;g.boost=0;g.act=0;g.rise=0;g.pop=1}
+    var nextCounter=nextOrderCounter();if(nextCounter){station(4,nextCounter.x,0,nextCounter.z,state.lines[4],true,4);var g=stations[stations.length-1];g.ghost=true;g.visible=(nextGhost()||{}).kind==='counter';g.selected=false;g.boost=0;g.act=0;g.rise=0;g.pop=1}
     // With no ghost its slot stays, hidden, so the branches' stations that follow keep theirs.
     else stations.push({index:4,x:0,y:0,z:0,w:1,d:1,h:1,tier:0,built:false,visible:false});
     // The doorman stands behind the booth, on the room side, facing the front door across the desk.
@@ -3374,7 +3382,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // What the 3D map draws of the ATM: its machines, their look, the ghost over the next slot and which screens are busy.
   function atmFrame(){var atm=state.atm,busy=[false,false,false];customers.forEach(function(c){if(c.cash&&c.cash.stage==='use')busy[c.cash.machine]=true});
     var rv=render.reveal&&render.reveal.atm;
-    return{machines:atm.machines,look:atm.level?atmLook(atm.level):0,ghost:state.lines[4]>0&&atm.machines<3?atm.machines:null,busy:busy,pop:rv?{machine:rv.machine,scale:popScale(rv.t)}:null}}
+    return{machines:atm.machines,look:atm.level?atmLook(atm.level):0,ghost:(nextGhost()||{}).kind==='atm'?atm.machines:null,busy:busy,pop:rv?{machine:rv.machine,scale:popScale(rv.t)}:null}}
   function leaseIndex(){var shown=shownDistricts(storeLevels()),last=shown[shown.length-1];return last&&!last.open?last.index:-1}
   function leaseLocked(i){return state.lifetime<STORES[i].goal||!branchOpenable(state.empire,i)}
   // Where the next order counter will stand and what it costs, while Orders is open and a counter is left to buy.

@@ -11,6 +11,7 @@ import { buildShell } from './shell.js';
 import { buildRooftop } from './rooftop.js';
 import { buildFlagship } from './flagship.js';
 import { buildAtms } from './atm.js';
+import { blueprint } from './blueprint.js';
 import { buildCityBuildings } from './city-buildings.js';
 import { buildEntrance } from './entrance.js';
 import { createIntro } from './intro.js';
@@ -654,9 +655,9 @@ export function createMap3D(canvas, layout) {
       s.beacon.visible = Math.floor((frame.time || 0) / 500) % 2 === 0;
     });
   }
-  // The next thing to buy shown where it will stand (frame.fixtureGhost[key], Kevin 2026-10-22: the next kiosk): a pale,
-  // see-through copy of the fixture's model, with no shadow, so it reads as a promise rather than a placed object.
-  const fixtureGhosts = {}, ghostMaterial = new THREE.MeshBasicMaterial({ color: '#f1e6c6', transparent: true, opacity: .3, depthWrite: false });
+  // The next thing to buy shown where it will stand (frame.fixtureGhost[key], Kevin 2026-10-22: the next kiosk): a
+  // blueprint of the fixture's model (blueprint.js), so it reads as a plan rather than a placed object.
+  const fixtureGhosts = {};
   function updateFixtureGhosts(frame) {
     const wanted = frame.fixtureGhost || {};
     Object.entries(fixtures).forEach(([key, holder]) => {
@@ -664,7 +665,7 @@ export function createMap3D(canvas, layout) {
       if (!show) { if (fixtureGhosts[key]) fixtureGhosts[key].visible = false; return; }
       if (!fixtureGhosts[key]) {
         const ghost = holder.clone();
-        ghost.traverse(o => { if (o.isMesh) { o.material = ghostMaterial; o.castShadow = false; o.receiveShadow = false; } });
+        blueprint(ghost);
         world.add(ghost); fixtureGhosts[key] = ghost;
       }
       fixtureGhosts[key].visible = true;
@@ -1543,10 +1544,10 @@ export function createMap3D(canvas, layout) {
       const model = s.built && s.index !== undefined && models[sourceKey];
       const clones = group.userData.clones || (group.userData.clones = {});
       const rigs = group.userData.rigs || (group.userData.rigs = {});
-      // A ghost (the next order counter) is the same pale see-through copy the next kiosk uses, standing still.
+      // A ghost (the next order counter) is the same blueprint the next kiosk uses, standing still.
       if (model && !clones[modelKey]) {
         group.add(clones[modelKey] = model.clone());
-        if (s.ghost) clones[modelKey].traverse(o => { if (o.isMesh) { o.material = ghostMaterial; o.castShadow = false; o.receiveShadow = false; } });
+        if (s.ghost) blueprint(clones[modelKey]);
         else rigs[modelKey] = bindStation(clones[modelKey], s.index);
       }
       if (model && rigs[modelKey]) moveStation(rigs[modelKey], s, stepSeconds);
