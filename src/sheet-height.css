@@ -87,7 +87,7 @@ html body .sheet>[data-pane=employees]{display:flex;flex-direction:column}
 /* The map runs full height behind the glass sheet instead of stopping at its top edge; the gesture hint moves up with it. */
 @media(max-width:779px){
  .world{bottom:0}
- .gesture-hint{bottom:calc(var(--dock-height,250px) + 10px)}
+ .gesture-hint{bottom:calc(var(--dock-height,250px) + 18px)}
 }
 
 /* Pulling the sheet up. On phones the header is a grabber: dragged (or tapped with the double chevron) past its
