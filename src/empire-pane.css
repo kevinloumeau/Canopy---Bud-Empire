@@ -278,3 +278,6 @@
 .achievement-figure svg{width:18px;height:18px;color:var(--p-lime-71);display:block}
 .achievement.is-done .achievement-copy b{color:var(--p-sage-80)}
 .achievement-earned{margin-top:4px}
+/* Franchise tiers (Perks screen): tier name, progress, one line, sign button. */
+.franchise-card{display:grid;gap:8px}
+.franchise-card progress{width:100%}

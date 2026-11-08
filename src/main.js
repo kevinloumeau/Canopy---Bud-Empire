@@ -13,6 +13,7 @@ import {migrateQuotes,holdQuote,heldQuote} from './stage-quotes.js';
 import {FLAGSHIP_UNLOCK_LIFETIME,FLAGSHIP_MAX,FLAGSHIP_STEP,flagshipNext,flagshipCost,flagshipQuote,flagshipSales as hqSales,flagshipUnlocked,migrateFlagship,payFlagship,openFlagshipStage} from './flagship.js';
 import {migrateBuilds,startBuild,isBuilding,buildLeft,buildShareLeft,finishBuilds,buildClock,skipCost,skipBuild,branchBuildKey,branchOfBuild} from './builds.js';
 import {AUTO_DRONE_COST,AUTO_DRONE_INTERVAL,BULK_DRONE_COST,payAutoDrone,grantAutoDrone,buyBulkDrone,autoDroneLimit,migrateAutoDrone,autoDroneReady} from './auto-drone.js';
+import {FRANCHISE_TIERS,FRANCHISE_GAIN,franchiseOffer,signFranchise} from './franchise.js';
 import {FORMATS,wantedFormat,formatPremium,stocks,formatCost,BOOST_MAX,boostCost,migrateMenu,unlockFormat,menuFormatFactor,milestone,prestigeOffer,elapsedSteps,OFFLINE_STEP} from './depth.js';
 import {SHOP_EVENTS,eventKind,eventGap,eventReward,eventToast} from './shop-events.js';
 import {PERKS,perkMax,startGrant,migratePerks,perkLevel,perkCost,buyPerk,perkStart,spenderGap,rushLength,trainerGap,keptBranch,FOUNDER_LOOK,FOUNDER_LEVEL} from './perks.js';
@@ -47,7 +48,7 @@ import { BRANCH_THEMES, BRANCH_STATIONS, drawBranchMap } from './branch-maps.js'
 import { districtPlot, districtCentre, districtAt, districtBlock, shownDistricts, eastHaze, leaseLot, districtTerraces, DISTRICT_COUNT, MAIN_EAST_HAZE, popupSlot } from './branch-districts.js';
 import { SUNNY, SHOP_SPRITES, SUNNY_VIEW, PERSON_HEAD_Y, subwayStairs, SUBWAY_HIDDEN_Z, drawSprite, stationSprite, drawPersonSprite, streetItems, floorTextureFiles, fixtureSprite, shellSprite, spriteImage, spritesLoading, drawBoxSprite, softShadow, sunShadow, SUN, SUN_REACH, townLayout, districtDressing, cityLots, carPlacements, walkerPlacements, stationSpriteSize, stationTier as spriteTier } from './sunny-world.js';
 import * as economy from './economy.js';
-import {ABILITIES,ABILITY_UNLOCK,ABILITY_FACTOR,ABILITY_SALES,ABILITY_SECONDS,migrateAbilities,abilityStatus,useAbility,tickAbilities,abilityFactor,abilitySales,clockLabel,featuredAbility} from './crew-abilities.js';
+import {ABILITIES,ABILITY_UNLOCK,ABILITY_FACTOR,ABILITY_SALES,ABILITY_SECONDS,ABILITY_RECHARGE,migrateAbilities,abilityStatus,useAbility,tickAbilities,abilityFactor,abilitySales,clockLabel,featuredAbility} from './crew-abilities.js';
 import * as strains from './strains.js';
 import { BRANCH_LINE, branchStationCost, buyBranchStation, branchStationMax, branchBestStation, carrySeason } from './progression.js';
 import { abbr, abbrShort, count as countText, times, SPECIALTIES, customerType, satisfyCustomer, tickBranches, bulkReward, dispatchBulk, recordGoal, goalStatus, claimGoal, settleGoals, shiftStatus, STORE_PROJECTS, PROJECT_LEVELS, PROJECT_BONUSES, projectCost, projectBonus, buyProject, nextStoreRate, selectedStore, selectStore, migrateProgression, dailyStatus, claimDaily, DAILY_BOOST_DAY, saleMultiplier, claimCareer, CAREER, STORES, DAILY, storeCost, storeRate, branchRate, buyStore, payStore, openStore, branchOpenable, STARS_TO_OPEN, settleStars, creditOfflineServed, ringRank, ringTier, ringBonus, RING_NAMES, starCount, branchFinished, STAR_BONUS, recordEvent, contractOffer, activeContract, contractTwist, contractFactor, startContract, skipContract, settleContract, useContractBoost, tickContractBoost, contractBoostFactor, tickContract, CONTRACT_BOOST_SECONDS, seasonStatus, claimSeason, SEASONS, RETIRED_WEEKLY, nextSeason, weeklySpecial, specialFactor } from './progression.js';
@@ -58,6 +59,11 @@ import {rubberBand,addSample,releaseVelocity,coastAxis} from './map-gesture.js';
 import {POPUP_STALLS,POPUP_PRIZES,POPUP_GIFT_BASE,POPUP_AWAY_PAY,migratePopup,popupWindow,previewWindow,syncPopup,tickPopup,claimPrize,buyStall,bestStall,stallCost,awayOverlap,popupSalesBonus,popupUnlocked,popupClock} from './popup-event.js';
 import {STALL_X,STALL_Z,STALL_D,POPUP_PROPS,POPUP_TAG,popupWalker,popupCrowd} from './popup-market-layout.js';
 import {scaledReward} from './progression.js';
+import {DEALS,FLYER_MIN_LIFT,tokenPrice,dealWindow,windowEnds,migrateDeals,rollDeals,dealPrice,canBuy,nightBonus,spendNight} from './deals.js';
+import {freshStore,migrateStore,earnFactor,awayFactor,boostLeft,useToken,addBoost,countAd,adsLeft,dayNumber,doubleRoute,boostClock,BOOST_SECONDS,AD_BOOST_SECONDS} from './store.js';
+import {mountStore} from './store-ui.js';
+import {createPurchases} from './purchases.js';
+import {createAds} from './rewarded-ads.js';
 // The self-order kiosks stand along the storefront glass from z 6.8 toward the back, KIOSK_GAP apart (Kevin 2026-11-02:
 // "a tad closer together", 1.8 -> 1.5). Customers, screens, the ghost and its purchase tag all read kioskZ.
 const KIOSK_Z0=6.8,KIOSK_GAP=1.5;
@@ -77,7 +83,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Contract progression is defined in depth.js, including post-city milestones.
   var $=function(id){return document.getElementById(id)};
   // A new shop starts as seven construction sites: the door and six stations are raised for free during the intro, then the sign flips.
-  function fresh(){return{researchVersion:RESEARCH_VERSION,quotes:{},forks:freshForks(),shopPlay:migrateShopPlay(),money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),pickupWindow:migrateWindow(),atm:migrateAtm(),atmEarned:0,builds:migrateBuilds(),flagship:0,flagshipSeen:false,city:migrateCity(),citySeen:[],productMenu:migrateMenu(),sound:true,music:true,haptics:true,empire:migrateProgression(),popup:migratePopup(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,offlineLevel:0,spenderClock:180,shopEvents:0,rushTime:0,crosses:{done:[],active:null},achievements:[],reminders:false,reminderOffered:false,perks:{points:0,levels:{}},run:freshRun(),trainerClock:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],abilities:migrateAbilities(),sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeStaff:0,loungeLift:false,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,guideGrant:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
+  function fresh(){return{researchVersion:RESEARCH_VERSION,store:freshStore(),quotes:{},forks:freshForks(),shopPlay:migrateShopPlay(),money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),pickupWindow:migrateWindow(),atm:migrateAtm(),atmEarned:0,builds:migrateBuilds(),flagship:0,flagshipSeen:false,city:migrateCity(),citySeen:[],productMenu:migrateMenu(),sound:true,music:true,haptics:true,empire:migrateProgression(),popup:migratePopup(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,offlineLevel:0,spenderClock:180,shopEvents:0,rushTime:0,deals:migrateDeals(),crosses:{done:[],active:null},achievements:[],reminders:false,reminderOffered:false,perks:{points:0,levels:{}},run:freshRun(),trainerClock:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],abilities:migrateAbilities(),sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeStaff:0,loungeLift:false,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,guideGrant:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
   function readSave(){
     for(var key of ['shift-save','shift-save-backup']){
       try{var raw=localStorage.getItem(key);if(!raw)continue;var value=JSON.parse(raw);if(value&&typeof value==='object'&&!Array.isArray(value))return value}catch(e){}
@@ -89,7 +95,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // Saves from before the construction intro have no `shopOpen`; they are open shops with every station standing.
     next.shopOpen=old.shopOpen!==false;next.doorBuilt=next.shopOpen||old.doorBuilt===true;
     ['trafficLevel','pickupLevel','readyLevel','curingLevel','durationLevel','kioskSpeedLevel','onlineBonusLevel','comfortLevel','scannerLevel','webLevel','seedBatchLevel','growBatchLevel','harvestBatchLevel','packSpeedLevel','serviceLevel','signLevel','loyaltyLevel','basketLevel','terpeneLevel','breedingLevel','displayLevel','trendLevel','fleetLevel','cargoLevel','repeatLevel'].forEach(function(key){next[key]=Math.floor(finite(old[key],0,0,key==='pickupLevel'?12:20))});
-    next.offlineLevel=Math.floor(finite(old.offlineLevel,0,0,5));next.researchVersion=Math.floor(finite(old.researchVersion,0,0,RESEARCH_VERSION));var researchRefund=mergeResearch(next);next.forks=migrateForks(old.forks,next);next.spenderClock=finite(old.spenderClock,180,0,600);next.shopEvents=Math.floor(finite(old.shopEvents,0,0,1e9));next.rushTime=finite(old.rushTime,0,0,120);next.crosses=migrateCrosses(old.crosses,old.library,old.breed);next.achievements=migrateAchievements(old.achievements);next.reminders=old.reminders===true;next.reminderOffered=old.reminderOffered===true;next.perks=migratePerks(old.perks,next.empire.shares);next.run=migrateRun(old.run);next.trainerClock=finite(old.trainerClock,0,0,240);
+    next.offlineLevel=Math.floor(finite(old.offlineLevel,0,0,5));next.researchVersion=Math.floor(finite(old.researchVersion,0,0,RESEARCH_VERSION));var researchRefund=mergeResearch(next);next.forks=migrateForks(old.forks,next);next.spenderClock=finite(old.spenderClock,180,0,600);next.shopEvents=Math.floor(finite(old.shopEvents,0,0,1e9));next.rushTime=finite(old.rushTime,0,0,120);next.crosses=migrateCrosses(old.crosses,old.library,old.breed);next.achievements=migrateAchievements(old.achievements);next.reminders=old.reminders===true;next.reminderOffered=old.reminderOffered===true;next.perks=migratePerks(old.perks,next.empire.shares);next.store=migrateStore(old.store);next.run=migrateRun(old.run);next.trainerClock=finite(old.trainerClock,0,0,240);
     next.idStaff=Math.floor(finite(old.idStaff,0,0,economy.SECURITY_MAX_LEVEL));if(next.doorBuilt&&next.idStaff<1)next.idStaff=1;next.guideGrant=finite(old.guideGrant,0,0,1e6);
     next.strains=STRAINS.map(function(_,i){return Math.floor(finite(old.strains&&old.strains[i],i===0?1:0,i===0?1:0,strains.STRAIN_MAX))});
     next.activeStrain=Math.floor(finite(old.activeStrain,0,0,STRAINS.length-1));if(!next.strains[next.activeStrain])next.activeStrain=0;
@@ -99,7 +105,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     next.lifetime=finite(old.lifetime,0,0,BIG);
     next.sold=Math.floor(finite(old.sold,0,0,Number.MAX_SAFE_INTEGER));
     next.onlineCompleted=Math.floor(finite(old.onlineCompleted,0,0,Number.MAX_SAFE_INTEGER));next.onlineRequests=finite(old.onlineRequests,0,0,onlineRequestLimit(next));next.hints={web:!!(old.hints&&old.hints.web),storage:!!(old.hints&&old.hints.storage),queue:!!(old.hints&&old.hints.queue)};
-    next.contract=Math.floor(finite(old.contract,0,0,1000));next.productMenu=migrateMenu(old.productMenu);next.sound=old.sound!==false;next.haptics=old.haptics!==false;next.lightMode=['day','night'].includes(old.lightMode)?old.lightMode:null;next.autoDrone=migrateAutoDrone(old.autoDrone);next.pickupWindow=migrateWindow(old.pickupWindow,next.autoDrone.owned);next.atm=migrateAtm(old.atm);next.atmEarned=finite(old.atmEarned,0,0,BIG);next.builds=migrateBuilds(old.builds);next.flagship=migrateFlagship(old.flagship);next.quotes=migrateQuotes(old.quotes);next.flagshipSeen=old.flagshipSeen===true;next.city=migrateCity(old.city);next.citySeen=Array.isArray(old.citySeen)?old.citySeen.filter(function(id){return !!cityBuilding(id)}):[];
+    next.contract=Math.floor(finite(old.contract,0,0,1000));next.productMenu=migrateMenu(old.productMenu);next.sound=old.sound!==false;next.haptics=old.haptics!==false;next.lightMode=['day','night'].includes(old.lightMode)?old.lightMode:null;next.autoDrone=migrateAutoDrone(old.autoDrone);next.pickupWindow=migrateWindow(old.pickupWindow,next.autoDrone.owned);next.atm=migrateAtm(old.atm);next.atmEarned=finite(old.atmEarned,0,0,BIG);next.builds=migrateBuilds(old.builds);next.deals=migrateDeals(old.deals);next.flagship=migrateFlagship(old.flagship);next.quotes=migrateQuotes(old.quotes);next.flagshipSeen=old.flagshipSeen===true;next.city=migrateCity(old.city);next.citySeen=Array.isArray(old.citySeen)?old.citySeen.filter(function(id){return !!cityBuilding(id)}):[];
     next.globalLevel=Math.floor(finite(old.globalLevel,0,0,500));next.popup=migratePopup(old.popup);
     next.multiplier=Math.pow(1.25,next.globalLevel);
     next.lastSeen=finite(old.lastSeen,Date.now(),0,Date.now());next.paidThrough=finite(old.paidThrough,finite(old.empire&&old.empire.clock,0,0,BIG),0,BIG);next.lines=LINES.map(function(_,i){return Math.floor(finite(old.lines&&old.lines[i],1,next.shopOpen?1:0,10000))});next.storageLevel=Math.min(20,Math.max(0,Math.floor(Number(old.storageLevel)||0)));var caps=stockCaps(next);next.stock=Array.from({length:5},function(_,i){return Math.floor(finite(old.stock&&old.stock[i],0,0,caps[i]))});next.staff=LINES.map(function(_,i){return Math.floor(finite(old.staff&&old.staff[i],0,0,10000))});next.abilities=migrateAbilities(old.abilities);next.kiosk=old.kiosk===true;next.lounge=migrateLounge(old.lounge);next.shopPlay=migrateShopPlay(old.shopPlay);next.loungeStaff=migrateLoungeHost(old.loungeStaff);next.loungeLift=next.lounge>0&&old.loungeLift===true;next.loungeSessions=Math.floor(finite(old.loungeSessions,0,0,1e9));next.loungeEarned=finite(old.loungeEarned,0,0,BIG);next.secondKiosk=next.kiosk&&old.secondKiosk===true;next.thirdKiosk=next.secondKiosk&&old.thirdKiosk===true;next.queueLevel=Math.min(7,Math.max(0,Math.floor(Number(old.queueLevel)||0)));next.theme='dispensary';next.gameSpeed=[0,1,2,4].indexOf(old.gameSpeed)>=0?old.gameSpeed:1;return next}catch(e){return fresh()}}
@@ -154,18 +160,20 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function atmRate(){var basket=basketValue();return basket>0?atmIncome(state.atm,flagshipSales()/(basket*saleLift()),basket):0}
   function atmFee(){return Math.max(1,Math.round(atmFeeShare(state.atm.level)*basketValue()))}
   // Offline earnings accrue whether or not the game was paused; the Back-room safe raises the cap in four-hour steps.
-  function offlineCap(){return OFFLINE_STEP*(1+state.offlineLevel)+awayExtraSeconds(state.city)}
+  function offlineCap(){return OFFLINE_STEP*(1+state.offlineLevel)+awayExtraSeconds(state.city)+nightBonus(state.deals)}
   // Daily, goal and event payouts grow with the shop so they are still worth a tap hours in.
   function rewardScale(){return economy.rewardScale(incomeRate())}
   function collectOffline(elapsed){
     var now=Date.now(),away=elapsed===undefined?offlineSeconds(now,state.lastSeen,state.paidThrough):elapsed;state.paidThrough=Math.max(state.paidThrough||0,now);
-    var seconds=Math.min(offlineCap(),away);tickAbilities(state.abilities,away);
+    var seconds=Math.min(offlineCap(),away);spendNight(state.deals,away);tickAbilities(state.abilities,away);
     // Walk-in sales, ATM fees and web orders at the rate the shop really sells. Web orders are paid at their rate rather
     // than left to pile up as requests (which stop at the request cap a few minutes in), so a long break pays like play.
     var rates=[flagshipSales()+atmRate()+onlineIncome()].concat(STORES.map(function(_,i){return storeRate(state.empire,i)}));
-    var earnings=rates.map(function(rate){return rate*seconds*awayPay(state.city)});
+    // The store's boost pays double for the part of the break it covered (the break's first paid seconds).
+    var boosted=awayFactor(state.store,now-away*1000,seconds);
+    var earnings=rates.map(function(rate){return rate*seconds*awayPay(state.city)*boosted});
     var reward=earnings.reduce(function(a,b){return a+b},0);
-    if(reward>=1)add(reward);
+    if(reward>=1)add(reward,true);
     // Branches keep serving while the game is closed, so their Customers star moves on the time away too.
     var served=creditOfflineServed(state.empire,seconds),stars=settleStars(state.empire);if(stars.length)celebrateStars(stars);
     // The weekend market sells on at POPUP_AWAY_PAY while the game is shut, for the part of the time away it was open.
@@ -960,7 +968,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     notify(LINES[selected].name+' · +'+batch.levels+' LEVEL'+(batch.levels===1?'':'S')+' · LEVEL '+state.lines[selected],'upgrade');
     renderUI();save();haptic(newLook?'firm':'light');
   }
-  function add(n){state.money+=n;state.lifetime+=n;recordGoal(state.empire,'revenue',n)}
+  // Every dollar earned passes here, so the store's 2× boost and 2× sales forever double it (see store.js). `raw` skips
+  // that for pay that already counted it (the away pay works out its own boosted share).
+  function add(n,raw){if(!raw)n*=earnFactor(state.store,Date.now());state.money+=n;state.lifetime+=n;recordGoal(state.empire,'revenue',n)}
   // Cash pops (cash-pops.js): money that lands at the counter, the window or the drone deck rises there as a small
   // "+$…", grouped to about one a second; none under reduced motion.
   var cashPops=createCashPops(),livePops=[],shownCash=state.money,cashRolledAt=0;
@@ -3309,12 +3319,12 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function laneChip(id,cls){var el=document.createElement(cls==='contract-pill'?'button':'div');el.id=id;el.className='lane-chip '+cls;el.hidden=true;if(el.tagName==='BUTTON')el.type='button';else el.setAttribute('role','status');laneStatus.appendChild(el);return el}
   var RING='<svg class="chip-ring" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><circle class="chip-ring-fill" cx="10" cy="10" r="7.5" pathLength="100"/></svg>';
   var BOLT='<svg class="chip-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>';
-  var contractPill=laneChip('contractPill','contract-pill'),rushPeak={rush:0,boost:0},rushPill=laneChip('rushPill','rush-pill'),boostPill=laneChip('boostPill','rush-pill boost-pill');
+  var contractPill=laneChip('contractPill','contract-pill'),rushPeak={rush:0,boost:0},rushPill=laneChip('rushPill','rush-pill'),boostPill=laneChip('boostPill','rush-pill boost-pill'),storePill=laneChip('storeBoostPill','rush-pill store-pill');
   contractPill.onclick=function(){showTray('goals');renderUI()};
-  rushPill.title='Rush · 2× sales';boostPill.title='Event reward · 2× sales';
+  rushPill.title='Rush · 2× sales';boostPill.title='Event reward · 2× sales';storePill.title='Store boost · 2× earnings';
   var MEDAL='<svg class="chip-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h4l1.6 4.2L14.2 2h3.8l-3.3 7.1A6 6 0 1 1 9.3 9L7 2Zm5 9.2-1.2 2.5-2.7.3 2 1.8-.6 2.7 2.5-1.4 2.5 1.4-.6-2.7 2-1.8-2.7-.3z" fill-rule="evenodd"/></svg>';
   function chipText(el,label,time){if(el.dataset.label!==label){el.dataset.label=label;el.innerHTML=(el===contractPill?RING:el===boostPill?MEDAL:BOLT)+'<span class="chip-name"></span><span class="chip-time"></span>';el.querySelector('.chip-name').textContent=label}var t=el.querySelector('.chip-time');if(t.textContent!==time)t.textContent=time}
-  function stackPills(){topLane.classList.toggle('has-chips',!(contractPill.hidden&&rushPill.hidden&&boostPill.hidden))}
+  function stackPills(){topLane.classList.toggle('has-chips',!(contractPill.hidden&&rushPill.hidden&&boostPill.hidden&&storePill.hidden))}
   function spenderInShop(){for(var i=0;i<customers.length;i++){var c=customers[i];if(c.bigSpender&&!c.tapped&&c.phase!=='leaving'&&c.phase!=='lounge')return c}return null}
   spenderTag.onclick=function(){var c=spenderInShop();if(!c)return;c.tapped=true;spenderTag.hidden=true;recordEvent(state.empire,'spender',1);
     var kind=c.shopEvent||'spender',reward=eventReward(kind,incomeRate(),rushLength(state.perks));
@@ -3338,13 +3348,15 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     if(cost(last[0],last[1])<=bestCost*1.2+40)best=last;
     return eventTagShift.last=best}
   function updateSpenderTag(branch){var c=branch?null:spenderInShop();spenderTag.hidden=!c;if(c){dressEventTag(c.shopEvent||'spender');var pos=project(c.x,2.75,c.z),shift=eventTagShift(pos.x,pos.y);spenderTag.style.transform='translate3d('+(pos.x+shift[0])+'px,'+(pos.y+shift[1])+'px,0) translate(-50%,-100%)'}
-    var rush=state.rushTime>0,boost=state.empire.contracts.boost>0,was=[contractPill.hidden,rushPill.hidden,boostPill.hidden].join();
+    var rush=state.rushTime>0,boost=state.empire.contracts.boost>0,was=[contractPill.hidden,rushPill.hidden,boostPill.hidden,storePill.hidden].join();
     rushPeak.rush=rush?Math.max(rushPeak.rush,state.rushTime):0;rushPeak.boost=boost?Math.max(rushPeak.boost,state.empire.contracts.boost):0;
-    rushPill.hidden=!rush;if(rush){chipText(rushPill,'Rush',Math.ceil(state.rushTime)+'s');burstRing(rushPill,state.rushTime/rushPeak.rush)}
+    rushPill.hidden=!rush;if(rush){chipText(rushPill,'Rush',state.rushTime>99?clockLabel(state.rushTime):Math.ceil(state.rushTime)+'s');burstRing(rushPill,state.rushTime/rushPeak.rush)}
     boostPill.hidden=!boost;if(boost){chipText(boostPill,'Boost',clock(state.empire.contracts.boost*1000/Math.max(1,state.gameSpeed||1)));burstRing(boostPill,state.empire.contracts.boost/rushPeak.boost)}
     var c=branch?null:activeContract(state.empire);contractPill.hidden=!c;if(c){var share=Math.min(1,c.progress/c.target);chipText(contractPill,c.name,clock(c.remaining));contractPill.style.setProperty('--goal',(share*100).toFixed(1));
       var say=c.name+', '+Math.floor(share*100)+'% done, '+clock(c.remaining)+' left. Open Goals';if(contractPill.getAttribute('aria-label')!==say)contractPill.setAttribute('aria-label',say)}
-    if([contractPill.hidden,rushPill.hidden,boostPill.hidden].join()!==was)stackPills()}
+    // The store's boost runs on real time, so its clock ignores game speed; its ring empties over the 2 hours.
+    var storeLeft=boostLeft(state.store,Date.now());storePill.hidden=!(storeLeft>0);if(storeLeft>0){chipText(storePill,'2×',boostClock(storeLeft));burstRing(storePill,storeLeft/Math.max(BOOST_SECONDS,storeLeft))}
+    if([contractPill.hidden,rushPill.hidden,boostPill.hidden,storePill.hidden].join()!==was)stackPills()}
   var loungeMarker=document.createElement('button');loungeMarker.className='marker';loungeMarker.dataset.marker='lounge';loungeMarker.onclick=selectLounge;$('markers').appendChild(loungeMarker);
   // Purchase tags for what can be bought next on the map (Kevin, 2026-10-22, like the lounge's): the pickup window on
   // its spot, then the drone port on its deck once the window is open, and a smaller tag over a ghost of the next kiosk.
@@ -3576,7 +3588,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // While the shop is still a building site the guide row counts sites instead of naming a bottleneck.
     if(!state.shopOpen){var raised=(state.doorBuilt?1:0)+state.lines.filter(function(n){return n>0}).length,nextSite=!state.doorBuilt?'Security':raised<7?shortNames[slow]:null;$('flowLabel').textContent='Under construction';$('flowText').textContent=raised+' of 7 sites raised'+(nextSite?' · next: '+nextSite:' · ready to open');$('flowText').title='Tap a site on the map to raise it. Customers arrive once the shop opens.';flowButton(nextSite?'Build '+nextSite:'Open the shop','');flowMeter(raised/7);$('flowAction').dataset.mode='fix'}
     var line=LINES[selected],open=isOpen(selected),level=state.lines[selected],price=cost(selected),affordable=open&&(!level||state.money>=price);
-    $('rate').dataset.paused=String(state.gameSpeed===0);document.body.dataset.gamePaused=String(state.gameSpeed===0);if(state.money<shownCash||performance.now()-cashRolledAt>500)shownCash=state.money;$('money').textContent=fmt(shownCash);$('rate').textContent=state.gameSpeed===0?'Paused':fmt((state.empire.activeStore?storeRate(state.empire,state.empire.activeStore-1):production()+branchIncome(state.empire))*state.gameSpeed)+'/s';document.querySelector('.stat.output small').textContent=state.empire.activeStore?'BRANCH INCOME':'CAPACITY';
+    $('rate').dataset.paused=String(state.gameSpeed===0);document.body.dataset.gamePaused=String(state.gameSpeed===0);if(state.money<shownCash||performance.now()-cashRolledAt>500)shownCash=state.money;$('money').textContent=fmt(shownCash);$('rate').textContent=state.gameSpeed===0?'Paused':fmt((state.empire.activeStore?storeRate(state.empire,state.empire.activeStore-1):production()+branchIncome(state.empire))*state.gameSpeed*earnFactor(state.store,Date.now()))+'/s';document.querySelector('.stat.output small').textContent=state.empire.activeStore?'BRANCH INCOME':'CAPACITY';
     var paused=state.gameSpeed===0;speedButtons.forEach(function(button){var value=Number(button.getAttribute('data-speed'));button.setAttribute('aria-pressed',String(value===state.gameSpeed||(value===1&&paused)))});
     var glyph=paused?'pause':'play';if(speedOne.getAttribute('data-glyph')!==glyph){speedOne.setAttribute('data-glyph',glyph);speedOne.innerHTML=paused?PAUSE_GLYPH:PLAY_GLYPH}speedOne.setAttribute('aria-label',paused?'Paused. Resume normal speed':'Normal speed. Press again to pause');speedOne.title=paused?'Paused · press to resume':'Normal speed · press again to pause';speedOne.parentElement.setAttribute('data-paused',String(paused));
     // The lounge's picture is the whole rooftop, wider than a station's, and each level is bought outright, so no MAX.
@@ -3691,7 +3703,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     renderBranchSigns();renderHomeChip();
     var loungeCard=document.querySelector('[data-lounge]');if(loungeCard){loungeCard.setAttribute('aria-pressed',String(loungeSelected));loungeCard.classList.toggle('is-lot',loungeLot);loungeCard.classList.toggle('can-upgrade',loungePrice!==null&&state.money>=loungePrice);loungeCard.querySelector('em').textContent=loungeBuilding?loungeClock:loungeLot?'Build':'Lv '+state.lounge;loungeCard.classList.toggle('is-building',loungeBuilding);loungeCard.setAttribute('aria-label',loungeBuilding?'Smoking lounge, being built, opens in '+loungeClock:loungeLot?'Smoking lounge, not built yet':'Smoking lounge, level '+state.lounge);loungeCard.style.setProperty('--station-tier',TIER_COLORS[Math.min(3,state.lounge)])}
     var securityCard=document.querySelector('[data-security]');if(securityCard){securityCard.setAttribute('aria-pressed',String(securitySelected));securityCard.classList.toggle('is-site',doorSite);securityCard.classList.toggle('can-upgrade',!doorSite&&idTrainingQuote(1).levels>0);securityCard.querySelector('em').textContent=doorSite?'Build':'Lv '+state.idStaff;securityCard.setAttribute('aria-label',doorSite?'Security, under construction':'Security, level '+state.idStaff);securityCard.style.setProperty('--station-tier',TIER_COLORS[economy.stationLook(state.idStaff)])}
-    updateStationOrbit(slow);
+    updateStationOrbit(slow);syncStationRings();
     machineTabs.forEach(function(tab,i){var locked=!isOpen(i),site=!state.lines[i],available=!locked&&!site&&state.money>=cost(i);tab.title=site?'Under construction':i===slow?'Slowest station · improve this to raise capacity':'';tab.setAttribute('aria-pressed',String(!securitySelected&&!loungeSelected&&i===selected));tab.classList.toggle('is-locked',locked);tab.classList.toggle('is-site',site);tab.classList.toggle('can-upgrade',available);var crewState=site?'':abilityStatus(state.abilities,i,state.staff[i]);tab.classList.toggle('ability-ready',crewState==='ready'&&i===crewPick);tab.classList.toggle('is-best-buy',!locked&&!site&&i===suggested&&suggestedReady&&crewPick<0);tab.classList.toggle('is-boosted',crewState==='active');tab.querySelector('em').innerHTML=locked?'Locked':site?'Build':'Lv '+state.lines[i]+(i===slow?'<span class="slow-tag"> · Slow</span>':'');tab.style.setProperty('--station-tier',TIER_COLORS[stationTier(i)]);var progress=Math.min(100,state.lines[i]/100*100),progressText=site?'Under construction':state.lines[i]>=100?'Flagship equipment reached':'Level '+state.lines[i]+' of 100 toward flagship equipment';tab.querySelector('progress').value=progress;tab.querySelector('progress').setAttribute('aria-label',LINES[i].name+' equipment progress');tab.querySelector('progress').setAttribute('aria-valuetext',progressText);tab.querySelector('progress').title=progressText;tab.querySelector('.level-funding').textContent=progressText;tab.setAttribute('aria-label',LINES[i].name+(i===slow?', slowest station':'')+', level '+state.lines[i]+', '+STATION_TIERS[stationTier(i)]+(available?', upgrade ready':''))});
     updateCommerceControls();
   }
@@ -3713,6 +3725,19 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     stationOrbitIndex=index;
   }
   var stationMotionObserver=typeof IntersectionObserver==='function'?new IntersectionObserver(function(entries){entries.forEach(function(entry){entry.target.classList.toggle('station-motion-visible',entry.isIntersecting)})}):null;
+  // Stations tab tiles wear the same progress ring as Research, Goals and Empire (icon audit, 2026-11-08): the 3D
+  // picture sits in the ring, the level is a chip on its foot, and the ring fills toward the station's next doubling
+  // (the lounge toward its top tier, security toward its last look), full once there is none.
+  var STATION_RING='<svg class="map-ring-track" viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="25"/><circle class="map-ring-fill" cx="28" cy="28" r="25" pathLength="100"/></svg>';
+  document.querySelectorAll('.machine-nav button').forEach(function(tab){var thumb=tab.querySelector('.machine-thumb'),level=tab.querySelector(':scope>em');if(!thumb)return;
+    var ring=document.createElement('span');ring.className='map-ring station-ring';ring.innerHTML=STATION_RING;tab.insertBefore(ring,thumb);ring.appendChild(thumb);if(level)ring.appendChild(level)});
+  function ringShareFor(level,steps){if(!(level>0))return 0;var next=steps.find(function(l){return l>level});if(!next)return 1;var prev=steps.filter(function(l){return l<=level}).pop()||0;return (level-prev)/(next-prev)}
+  function syncStationRings(){
+    var set=function(tab,share,max){var ring=tab&&tab.querySelector('.station-ring');if(!ring)return;var v=Math.max(0,Math.min(1,share)).toFixed(3);if(ring.style.getPropertyValue('--share')!==v)ring.style.setProperty('--share',v);tab.classList.toggle('is-max',!!max)};
+    machineTabs.forEach(function(tab,i){var l=state.lines[i]||0;set(tab,l>=100?1:ringShareFor(l,economy.TIER_LEVELS),l>=100)});
+    var sec=document.querySelector('[data-security]');if(sec)set(sec,state.idStaff>=economy.SECURITY_MAX_LEVEL?1:ringShareFor(state.idStaff,economy.STATION_LOOK_LEVELS.concat([economy.SECURITY_MAX_LEVEL])),state.idStaff>=economy.SECURITY_MAX_LEVEL);
+    var lounge=document.querySelector('[data-lounge]');if(lounge)set(lounge,(state.lounge||0)/LOUNGE_MAX,state.lounge>=LOUNGE_MAX);
+  }
   machineTabs.forEach(function(tab){
     var orbit=document.createElementNS('http://www.w3.org/2000/svg','svg'),rim=document.createElementNS('http://www.w3.org/2000/svg','rect');
     orbit.setAttribute('class','station-orbit');orbit.setAttribute('aria-hidden','true');orbit.setAttribute('focusable','false');
@@ -4282,16 +4307,37 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function buySelected(){if(loungeSelected)return upgradeLounge();if(securitySelected)return state.doorBuilt?trainIdChecker(1):buildStation('door');buyStationLevel(selected)}
   function buyStationLevel(i){var line=LINES[i];if(!isOpen(i))return notify('Build the previous stage first');if(!state.lines[i])return buildStation(i);var c=cost(i);if(state.money<c)return notify('Need '+fmt(c-state.money)+' more');var oldTier=stationTier(i);state.money-=c;state.lines[i]++;recordGoal(state.empire,'upgrade',c);telemetry.once('first_upgrade',{station:line.name});trackStationLevel(i);var newLook=stationTier(i)>oldTier;if(newLook){tierFlashes[i]=1;burst(machinePos[i],'#f0d89a')}paintThumbnails();burst(machinePos[i]);stationFx(i,newLook);notify(line.name+' · LEVEL '+state.lines[i],'upgrade',newLook?'tier':null);renderUI();save();haptic(newLook?'firm':'light')}
   function boostAll(){if(state.globalLevel>=BOOST_MAX)return;var c=boostCost(state.globalLevel);if(state.money<c)return notify('Need '+fmt(c-state.money)+' more');state.money-=c;state.globalLevel++;state.multiplier=Math.pow(1.25,state.globalLevel);burst({x:0,z:0},colors.orange);upgradeFx.pop();notify('ALL STAGES +25%','upgrade');renderUI();save()}
+  // Daily deals (deals.js): three offers a four-hour window, priced in seconds of income. Crew coffee needs two trained
+  // crews; flyers show only when more walk-ins would really lift sales (not when the pickup line is the limit); a night
+  // shift waits while one is already banked.
+  function dealCrews(){return LINES.map(function(_,i){return i}).filter(function(i){return isOpen(i)&&state.lines[i]>0&&ABILITIES[i]&&state.staff[i]>=ABILITY_UNLOCK})}
+  function flyerLift(){var base=incomeRate();if(base<=0)return 0;var was=state.vipBuzz;state.vipBuzz=1;var lifted=incomeRate();state.vipBuzz=was;return Math.max(0,lifted/base-1)}
+  function dealUsable(family){if(!state.shopOpen)return family==='rush';if(family==='crew')return dealCrews().length>=2;if(family==='flyers')return flyerLift()>=FLYER_MIN_LIFT;if(family==='night')return !nightBonus(state.deals);return true}
+  function dealAdded(id){var d=DEALS[id];if(d.family==='crew')return ABILITY_SALES*ABILITY_SECONDS*dealCrews().length;if(d.family==='flyers')return d.buzz*flyerLift();return 0}
+  function dealsNow(){var now=Date.now(),w=dealWindow(now);if(rollDeals(state.deals,w,dealUsable))save();
+    return {ends:windowEnds(w),offers:state.deals.offers.map(function(id){var d=DEALS[id],tokens=tokenPrice(id),price=tokens?0:dealPrice(id,incomeRate(),dealAdded(id)),blocked=d.family==='flyers'&&flyerLift()<FLYER_MIN_LIFT;
+      return {blocked:blocked,id:id,name:d.name,effect:d.effect,icon:d.icon,label:tokens?tokens+' token'+(tokens>1?'s':''):fmt(price),bought:!canBuy(state.deals,id),afford:tokens?state.store.tokens>=tokens:state.money>=price}})}}
+  function buyDeal(id){if(!canBuy(state.deals,id))return false;if(DEALS[id].family==='flyers'&&flyerLift()<FLYER_MIN_LIFT){notify('The shop is full · more shoppers would not help now');return false}var d=DEALS[id],tokens=tokenPrice(id),price=tokens?0:dealPrice(id,incomeRate(),dealAdded(id));
+    // A token deal without a token opens the store; with the boost bank full it waits rather than waste the token.
+    if(tokens){if(state.store.tokens<tokens){if(storeUI)storeUI.open();return false}if(!addBoost(state.store,Date.now(),d.boost)){notify('Boost bank is full');return false}state.store.tokens-=tokens;state.store.spent+=tokens}
+    else if(state.money<price){notify('Need '+fmt(price-state.money)+' more');return false}
+    state.money-=price;state.deals.bought.push(id);
+    if(d.rush)state.rushTime+=d.rush;
+    if(d.family==='crew')dealCrews().forEach(function(i){state.abilities.active[i]=ABILITY_SECONDS;state.abilities.recharge[i]=ABILITY_RECHARGE});
+    if(d.buzz)state.vipBuzz=Math.max(state.vipBuzz||0,d.buzz);
+    if(d.night)state.deals.night=d.night;
+    telemetry.send('deal_buy',{deal:id});playSound('start',state.sound);upgradeFx.pop();
+    notify(d.name.toUpperCase()+' · '+d.effect.toUpperCase(),'upgrade');save();renderUI();haptic('firm');return true}
   function claimOrder(){var o=milestone(state.contract);if(!o||state.lifetime<o.goal)return;state.money+=o.reward;state.contract++;haptic('firm');notify(fmt(o.reward)+' ORDER BONUS');renderUI();save()}
 
   // Welcome back: the away time in its largest units only (45m, 3h 20m, 1d 3h), and the total counting up once.
   function awayLength(seconds){var m=Math.max(1,Math.round(seconds/60)),h=Math.floor(m/60),d=Math.floor(h/24);return d?d+'d'+(h%24?' '+h%24+'h':''):h?h+'h'+(h<10&&m%60?' '+m%60+'m':''):m+'m'}
   var returnCounted=null;
-  function countUpReturn(total){var node=$('returnTotal');if(returnCounted===total)return;returnCounted=total;
+  function countUpReturn(total){var node=$('returnTotal');if(returnCounted===total)return;var from=returnCounted&&returnCounted<total?returnCounted:0;returnCounted=total;
     var still=window.__canopySnap||(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     if(still||!window.requestAnimationFrame){node.textContent='+'+fmt(total);return}
-    var start=performance.now(),span=1100;node.textContent='+'+fmt(0);
-    (function step(now){if(returnCounted!==total)return;var t=Math.min(1,(now-start)/span),e=1-Math.pow(1-t,3);node.textContent='+'+fmt(total*e);if(t<1)requestAnimationFrame(step)})(start);}
+    var start=performance.now(),span=1100;node.textContent='+'+fmt(from);
+    (function step(now){if(returnCounted!==total)return;var t=Math.min(1,(now-start)/span),e=1-Math.pow(1-t,3);node.textContent='+'+fmt(from+(total-from)*e);if(t<1)requestAnimationFrame(step)})(start);}
   function duration(ms){var seconds=Math.max(0,Math.ceil(ms/1000));return Math.floor(seconds/3600)+'h '+Math.floor(seconds%3600/60)+'m '+seconds%60+'s'}
   STORES.forEach(function(store,i){
     var details=document.createElement('details');details.className='branch-projects';
@@ -4300,14 +4346,23 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     STORE_PROJECTS[i].forEach(function(name,j){$('projectBuy'+i+j).onclick=function(){if(buyProject(state,i,j)){storeFx(i,false);save();renderUI();notify(name+' · +'+fmt(state.empire.network.stores[i].incomeGain)+'/s','upgrade')}}});
   });
   // Short goals and management live in the existing tray; map gestures remain free.
+  var purchases=createPurchases(),ads=createAds(),storeUI=null;
   var today=document.querySelector('[data-empire-section="today"]');
-  today.innerHTML='<section id="returnSummary" hidden><div class="return-medal" aria-hidden="true"><span class="return-rays"></span><span class="return-coin"><svg viewBox="0 0 24 24"><path d="M12 21V11M12 14C3 14 3 7 3 7s9-1 9 7ZM12 11c0-8 9-9 9-9s0 9-9 9Z"/></svg></span></div><p class="return-kicker">While you were away</p><p id="returnTotal"></p><div id="returnTime" class="return-chips"></div><ul id="returnEarnings"></ul><button id="returnGoals" type="button"></button><button id="returnDaily" type="button" hidden></button><button id="dismissReturn" type="button">Collect rewards</button></section><h2>Next steps</h2><p id="nextInvestment"></p><div id="shortGoals"></div><section class="reputation"><h2 class="empire-section-heading">Reputation</h2><div class="reputation-summary"><strong id="reputationStatus"></strong><span id="reputationNext"></span></div><progress id="reputationProgress" max="60" value="0" aria-label="Customer reputation"></progress><section class="reputation-guide" aria-labelledby="customerGuideTitle">'+customerGuideMarkup()+'</section></section>';
+  today.innerHTML='<section id="returnSummary" hidden><div class="return-medal" aria-hidden="true"><span class="return-rays"></span><span class="return-coin"><svg viewBox="0 0 24 24"><path d="M12 21V11M12 14C3 14 3 7 3 7s9-1 9 7ZM12 11c0-8 9-9 9-9s0 9-9 9Z"/></svg></span></div><p class="return-kicker">While you were away</p><p id="returnTotal"></p><div id="returnTime" class="return-chips"></div><ul id="returnEarnings"></ul><button id="returnGoals" type="button"></button><button id="returnDaily" type="button" hidden></button><button id="returnDouble" type="button" hidden></button><button id="dismissReturn" type="button">Collect rewards</button></section><h2>Next steps</h2><p id="nextInvestment"></p><div id="shortGoals"></div><section class="reputation"><h2 class="empire-section-heading">Reputation</h2><div class="reputation-summary"><strong id="reputationStatus"></strong><span id="reputationNext"></span></div><progress id="reputationProgress" max="60" value="0" aria-label="Customer reputation"></progress><section class="reputation-guide" aria-labelledby="customerGuideTitle">'+customerGuideMarkup()+'</section></section>';
   paintCustomerGuide();
   [0,1,2].forEach(function(i){var row=document.createElement('div');row.className='short-goal';row.innerHTML='<h3 id="goalTitle'+i+'"></h3><progress id="goalProgress'+i+'" max="100" aria-label="Objective progress"></progress><p id="goalCount'+i+'"></p><button id="goalClaim'+i+'"></button>'; $('shortGoals').appendChild(row);$('goalClaim'+i).onclick=function(){var closing=shiftStatus(state.empire).done===2,reward=claimGoal(state,i,rewardScale());if(reward){haptic('firm');save();renderUI();notify((closing?'SHIFT COMPLETE · +':'GOAL COMPLETE · +')+fmt(reward),'upgrade')}}});
   $('dismissReturn').onclick=function(){state.empire.returnReport=null;save();renderUI();setTimeout(offerReminders,450)};
   // A ready goal on the welcome back card is a way in: it closes the card and opens Goals.
   $('returnGoals').onclick=function(){state.empire.returnReport=null;save();showTray('goals');renderUI();setTimeout(offerReminders,450)};
   $('returnDaily').onclick=$('returnGoals').onclick;
+  // Double it: the away pay again, for one boost token, else a rewarded ad, else a way into the store.
+  function doubleWay(){return doubleRoute(state.store,{adReady:ads.available&&adsLeft(state.store,dayNumber(Date.now()))>0,canBuy:purchases.available})}
+  $('returnDouble').onclick=function(){var report=state.empire.returnReport,button=$('returnDouble');if(!report||report.doubled||button.dataset.busy)return;
+    var total=report.earnings.reduce(function(a,n){return a+n},0),way=doubleWay();
+    function paid(){var r=state.empire.returnReport;if(!r||r.doubled)return;r.doubled=true;add(total,true);telemetry.send('away_doubled',{way:way});haptic('firm');notify('AWAY PAY DOUBLED · +'+fmt(total),'upgrade');save();renderUI()}
+    if(way==='token'){state.store.tokens--;state.store.spent++;paid()}
+    else if(way==='ad'){button.dataset.busy='1';renderUI();ads.show().then(function(ok){delete button.dataset.busy;if(ok&&countAd(state.store,dayNumber(Date.now())))paid();else renderUI()})}
+    else if(way==='store'&&storeUI)storeUI.open()};
   // The paid chip, when the break ran past the offline cap, opens the Back-room safe, which raises the cap.
   $('returnTime').onclick=function(e){if(!e.target.closest('.return-safe'))return;state.empire.returnReport=null;save();openFork(componentIndex('offlineLevel'))};
   $('returnTime').onkeydown=function(e){if((e.key==='Enter'||e.key===' ')&&e.target.closest('.return-safe')){e.preventDefault();e.target.click()}};
@@ -4381,7 +4436,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     card.setAttribute('aria-label','Reopen for '+gain+'. '+(m.minutes?'A fresh shop is back to today\u2019s income in about '+m.minutes+' minutes':text))}
   $('reopenCard').onclick=function(){prestigeOpener=$('reopenCard');$('prestigeStart').onclick()};
   prestigeDialog.addEventListener('keydown',function(e){if(e.key==='Escape')$('prestigeCancel').click();if(e.key==='Tab'){e.preventDefault();(document.activeElement===$('prestigeCancel')?$('prestigeConfirm'):$('prestigeCancel')).focus()}});
-  $('prestigeConfirm').onclick=function(){var offer=prestigeOffer(state);if(!offer.eligible)return;var rank=offer.rank+1,sound=state.sound;state.perks.points+=offer.gain;var kept=keptBranch(state.empire.stores.map(function(s){return s.level}),STORES.map(function(_,i){return storeRate(state.empire,i)}),perkStart(state.perks).branchCap);resetRun(rank,sound,{branch:kept,shares:offer.total,lifetimeAll:offer.allTime,badges:state.empire.badges,stars:state.empire.stars,crosses:state.crosses,achievements:state.achievements,perks:state.perks,contracts:state.empire.contracts,daily:state.empire.daily,season:state.empire.season,counters:state.empire.counters,popup:state.popup});prestigeDialog.hidden=true;save();showTray('factory');renderUI();notify('Reopened · +'+countText(offer.gain)+' shares · '+times(offer.multiplier)+' sales','upgrade')};
+  $('prestigeConfirm').onclick=function(){var offer=prestigeOffer(state);if(!offer.eligible)return;var rank=offer.rank+1,sound=state.sound;state.perks.points+=offer.gain;var kept=keptBranch(state.empire.stores.map(function(s){return s.level}),STORES.map(function(_,i){return storeRate(state.empire,i)}),perkStart(state.perks).branchCap);resetRun(rank,sound,{branch:kept,shares:offer.total,lifetimeAll:offer.allTime,franchise:state.empire.franchise,badges:state.empire.badges,stars:state.empire.stars,crosses:state.crosses,achievements:state.achievements,perks:state.perks,contracts:state.empire.contracts,daily:state.empire.daily,season:state.empire.season,counters:state.empire.counters,popup:state.popup});prestigeDialog.hidden=true;save();showTray('factory');renderUI();notify('Reopened · +'+countText(offer.gain)+' shares · '+times(offer.multiplier)+' sales','upgrade')};
   var droneRow=document.createElement('div');droneRow.className='shop-upgrade';droneRow.innerHTML='<div class="shop-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="11" y="11" width="10" height="9" rx="2"/><path d="m11 12-5-5m15 5 5-5m-15 12-5 6m15-6 5 6M2 7h8m12 0h8M2 25h8m12 0h8M13 24h6"/></svg></div><div class="shop-copy"><h2>Auto drone</h2><strong id="autoDroneBenefit">Send a ready order every 10s</strong></div><button id="buyAutoDrone"><span>Install</span><b id="autoDronePrice"></b></button>';
   document.querySelector('[data-pane="boosts"]').append(droneRow);
   var droneControl=document.createElement('div');droneControl.className='auto-drone-control';droneControl.innerHTML='<span class="drone-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 10h6v4H9zM4 6h3M17 6h3M5.5 6v4h3.5M18.5 6v4H15M9 14l-3 4M15 14l3 4"/></svg></span><div><strong>Auto drone</strong><small id="autoDroneStatus"></small></div><button id="autoDroneToggle" type="button" class="drone-switch"></button><button id="autoDroneBulk" type="button" hidden></button>';document.querySelector('.dispatch-desk').append(droneControl);
@@ -4483,7 +4538,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
         clock='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
         person='<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.8 3.6-6 7-6s6.2 2.2 7 6"/></svg>',
         coin='<svg viewBox="0 0 24 24"><ellipse cx="12" cy="7" rx="7" ry="3"/><path d="M5 7v5c0 1.7 3.1 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/></svg>';
-      countUpReturn(total);
+      countUpReturn(total*(report.doubled?2:1));
       $('returnTime').innerHTML='<span>'+clock+awayLength(report.seconds)+' away</span>'+(report.seconds>cap?(state.offlineLevel<COMPONENTS[componentIndex('offlineLevel')].max?'<span class="return-safe" role="button" tabindex="0" aria-label="'+awayLength(cap)+' paid. Open the Back-room safe to raise the cap">'+coin+awayLength(cap)+' paid<svg class="return-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></span>':'<span>'+coin+awayLength(cap)+' paid</span>'):'')+(report.served?'<span>'+person+abbr(report.served)+' served</span>':'');
       $('returnEarnings').hidden=report.earnings.filter(function(n){return n>0}).length<2;
       // Each row wears its place's own 3D storefront from the Empire tab, in a thin ring of that branch's colour.
@@ -4492,7 +4547,13 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       $('returnGoals').innerHTML='<i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg><b>'+report.goals+'</b></i><span>'+(report.goals===1?'Goal ready to claim':'Goals ready to claim')+'</span><svg class="return-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>';
       // A ready daily gets its own row under the goals: the 3D calendar, the day and what it pays.
       var daily=dailyStatus(p,Date.now(),rewardScale());$('returnDaily').hidden=!daily.available;
-      if(daily.available){var dailyHtml='<i><img src="icons/3d/goal-calendar.png" alt="" draggable="false" decoding="async"></i><span>Day '+daily.day+' reward\u00a0ready<small>'+fmt(daily.reward)+(daily.day===DAILY_BOOST_DAY?' + 2×\u00a0boost':'')+'</small></span><svg class="return-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>';if($('returnDaily').dataset.html!==dailyHtml){$('returnDaily').innerHTML=dailyHtml;$('returnDaily').dataset.html=dailyHtml}}}
+      if(daily.available){var dailyHtml='<i><img src="icons/3d/goal-calendar.png" alt="" draggable="false" decoding="async"></i><span>Day '+daily.day+' reward\u00a0ready<small>'+fmt(daily.reward)+(daily.day===DAILY_BOOST_DAY?' + 2×\u00a0boost':'')+'</small></span><svg class="return-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>';if($('returnDaily').dataset.html!==dailyHtml){$('returnDaily').innerHTML=dailyHtml;$('returnDaily').dataset.html=dailyHtml}}
+      // Double it sits right above Collect: what it pays, and what it costs as a small chip (a boost, an ad, the store).
+      var way=report.doubled?'done':doubleWay(),busy=!!$('returnDouble').dataset.busy;$('returnDouble').hidden=!way;
+      if(way){var doubleHtml='<i><img src="icons/3d/research-boost.png" alt="" draggable="false" decoding="async"></i><span>'+(way==='done'?'Doubled':'Double it')+'<small>+'+fmt(total)+'</small></span><em>'+(way==='done'?'<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>':way==='token'?'1 boost':way==='ad'?(busy?'Playing…':'<svg viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5Z"/></svg>Ad'):'Store')+'</em>';
+        if($('returnDouble').dataset.html!==doubleHtml){$('returnDouble').innerHTML=doubleHtml;$('returnDouble').dataset.html=doubleHtml}
+        $('returnDouble').disabled=way==='done'||busy;$('returnDouble').dataset.way=way;
+        $('returnDouble').setAttribute('aria-label',way==='done'?'Away pay doubled':'Double the away pay, +'+fmt(total)+(way==='token'?', for 1 boost':way==='ad'?', by watching an ad':', from the store'))}}
     $('nextInvestment').textContent='Next improvement: '+investment.name+' · '+fmt(investment.price)+(state.money<investment.price?' ('+fmt(investment.price-state.money)+' to go)':' · ready');
     settleGoals(state);var goalsReady=[0,1,2].filter(function(i){var g=goalStatus(p,i,rewardScale());return g.progress>=g.target}).length;if($('goalsBadge')){$('goalsBadge').textContent=goalsReady;$('goalsBadge').hidden=!goalsReady;$('goalsOpen').classList.toggle('has-ready',goalsReady>0);if($('shiftGoalsReady'))$('shiftGoalsReady').textContent=goalsReady?goalsReady+' ready':'';if($('shiftProgress')){var shiftNow=shiftStatus(p,rewardScale()),left=3-shiftNow.done,shiftHtml='<span>Shift '+abbr(shiftNow.number)+'</span><span class="shift-pips" aria-hidden="true">'+[0,1,2].map(function(k){return '<i'+(k<shiftNow.done?' class="done"':'')+'></i>'}).join('')+'</span><span>'+(left===1?'1 more goal':left+' more goals')+' for a '+fmt(shiftNow.bonus)+' bonus</span>';if($('shiftProgress').dataset.html!==shiftHtml){$('shiftProgress').innerHTML=shiftHtml;$('shiftProgress').dataset.html=shiftHtml}}}
     [0,1,2].forEach(function(i){var g=goalStatus(p,i,rewardScale());$('goalTitle'+i).textContent=g.title;$('goalProgress'+i).value=g.progress/g.target*100;$('goalCount'+i).textContent=(g.kind==='revenue'||g.kind==='upgrade'?fmt(g.progress)+' / '+fmt(g.target):abbr(g.progress)+' / '+abbr(g.target))+(g.hint&&g.progress<g.target?' · '+g.hint:'');$('goalClaim'+i).textContent='Collect '+fmt(g.reward);$('goalClaim'+i).disabled=g.progress<g.target;$('goalClaim'+i).classList.toggle('ready',g.progress>=g.target);});
@@ -4524,6 +4585,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     $('careerBonus').textContent='Permanent sale bonus: +'+(p.career*5)+'% · '+p.career+' / 6 milestones';
     $('careerClaim').disabled=!m||state.lifetime<m.goal;
     $('careerClaim').textContent=m?'Collect '+fmt(m.reward)+' + 5% sale bonus':'Career complete';
+    renderFranchise();
     $('branchSummary').textContent=(1+p.stores.filter(function(s){return s.level>0}).length)+'/'+(STORES.length+1)+' open · '+fmt(branchIncome(p)*state.gameSpeed)+'/s';
     STORES.forEach(function(store,i){var level=p.stores[i].level,gated=!branchOpenable(p,i),locked=state.lifetime<store.goal||gated,max=level>=10,lockText=gated?'Finish '+STORES[i-1].name:'Unlock at '+fmt(store.goal);
       // Store row: level pips and an income figure instead of a sentence; unopened stores show a lock and the opening price.
@@ -4561,6 +4623,14 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     $('seasonBadges').textContent=p.badges.length?'Badges: '+p.badges.map(function(b){var d=SEASONS.concat(RETIRED_WEEKLY).filter(function(s){return s.id===b})[0];return d?d.name:b}).join(' · '):'Finish a ladder to earn its badge.';
     $('eventTrophies').textContent=p.trophies+' '+(p.trophies===1?'trophy':'trophies')+' · '+p.rewards.filter(Boolean).length+' / 3 scene keepsakes collected';
   }
+  // Franchise tiers: locked until every branch is finished, then all-time revenue opens each tier and cash signs it.
+  function renderFranchise(){var f=franchiseOffer(state),n=f.next,rate=times(f.current);
+    $('franchiseName').textContent=n?(f.tier?FRANCHISE_TIERS[f.tier-1].name+' · '+rate+' sales':'Next: '+n.name):FRANCHISE_TIERS[FRANCHISE_TIERS.length-1].name+' · '+rate+' sales';
+    $('franchiseProgress').hidden=!n;$('franchiseProgress').value=!n?100:f.need==='branches'?f.finished/STORES.length*100:Math.min(100,f.allTime/n.revenue*100);
+    $('franchiseDetail').textContent=tieLast(!n?'Every tier signed.':f.need==='branches'?'Finish all '+STORES.length+' branches to open it · '+f.finished+' / '+STORES.length:f.need==='revenue'?fmt(f.allTime)+' / '+fmt(n.revenue)+' all-time revenue':times(FRANCHISE_GAIN)+' sales in every shop, kept through reopens');
+    $('franchiseSign').hidden=!n;$('franchiseSign').disabled=!n||!!f.need;if(n)$('franchiseSign').textContent=(f.need==='branches'||f.need==='revenue'?'Locked · ':'Sign '+n.name+' · ')+fmt(f.cost)}
+  function buyFranchise(){if(!signFranchise(state))return false;return franchiseOffer(state)}
+  $('franchiseSign').onclick=function(){var f=buyFranchise();if(!f)return;upgradeFx.pop();haptic('firm');save();renderUI();notify(FRANCHISE_TIERS[f.tier-1].name.toUpperCase()+' · '+times(f.current)+' SALES IN EVERY SHOP','upgrade')};
   $('seasonClaim').onclick=function(){var reward=claimSeason(state,Date.now(),rewardScale());if(reward){haptic('firm');save();renderUI();notify((state.empire.season.claimed===3?'LADDER COMPLETE · BADGE · +':'EVENT STEP · +')+fmt(reward),'upgrade')}};
   $('dailyClaim').onclick=function(){var boostDay=dailyStatus(state.empire,Date.now()).day===DAILY_BOOST_DAY,reward=claimDaily(state,Date.now(),rewardScale());if(reward){haptic('firm');save();renderUI();notify('DAILY REWARD · +'+fmt(reward)+(boostDay?' · 2× BOOST BANKED':''),'upgrade')}};
   $('careerClaim').onclick=function(){var reward=claimCareer(state);if(reward){haptic('firm');save();renderUI();notify('CAREER MILESTONE · +'+fmt(reward)+' · +5% sale value','upgrade')}};
@@ -4610,6 +4680,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   var goalsButton=document.createElement('button');goalsButton.type='button';goalsButton.id='goalsOpen';goalsButton.setAttribute('aria-label','Open goals');goalsButton.title='Goals';
   goalsButton.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8"/></svg><span id="goalsBadge" hidden></span>';
   $('customerStatus').appendChild(goalsButton);
+  // the store: a bag beside the goals target (store-ui.js). Packs are sold only in the iOS app; the web build shows them.
+  storeUI=mountStore({getState:function(){return state},purchases:purchases,ads:ads,format:fmt,incomeRate:incomeRate,changed:function(){save();renderUI()},notify:notify,haptic:haptic});
   // Shift goals open the Goals tab (the Empire shell places this block there); the target, the Goals tab's own icon, is a shortcut to it.
   var goalsBody=document.createElement('section');goalsBody.className='goals-body empire-group';goalsBody.setAttribute('aria-labelledby','goalsTitle');
   goalsBody.innerHTML='<div class="goals-head"><h2 class="empire-group-title" id="goalsTitle">Shift goals</h2><span id="shiftGoalsReady"></span></div>';
@@ -4621,7 +4693,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function openGoals(){showTray('goals');renderUI()}
   function closeGoals(){}
   goalsButton.onclick=function(){if(activeTray==='goals'&&panelOpen)collapsePanel();else openGoals()};
-  var empireShell=mountEmpireShell({fit:fitControls,getState:function(){return state},format:fmt,rate:incomeRate,fly:flyToPlace,buyStation:function(i,j){buyBranchLevel(i,j,1)},paintStation:paintStationArt,popup:{window:marketOn,buy:buyMarketStall,ready:marketReady,open:function(){var w=marketOn();if(w){var c=districtCentre(popupSlot(storeLevels()));if(state.empire.activeStore)visitStore(0,false);glideTo(c.x,c.z+1,1)}}}});
+  var empireShell=mountEmpireShell({fit:fitControls,getState:function(){return state},format:fmt,rate:incomeRate,fly:flyToPlace,buyStation:function(i,j){buyBranchLevel(i,j,1)},paintStation:paintStationArt,deals:{get:dealsNow,buy:buyDeal},popup:{window:marketOn,buy:buyMarketStall,ready:marketReady,open:function(){var w=marketOn();if(w){var c=districtCentre(popupSlot(storeLevels()));if(state.empire.activeStore)visitStore(0,false);glideTo(c.x,c.z+1,1)}}}});
   var shopPlayCollapsed=false;
   shopPlayUI=mountShopPlay({getState:function(){return state},getMoment:function(){return moment},getAlerts:function(){return operationsAlerts(state.empire)},names:STRAINS.map(function(s){return s.name}),colors:STRAINS.map(function(s){return s.color}),format:fmt,changed:save,lane:{status:$('laneStatus'),notes:$('laneNotes')},
     // On a phone, or where the side panel would sit under the list, the sheet steps aside while shop activity is open.
@@ -5109,7 +5181,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     for(var k=1;k<=start.strains&&k<state.strains.length;k++){if(!state.strains[k])state.strains[k]=1;if(state.menuStrains.indexOf(k)<0)state.menuStrains.push(k)}
     if(start.drone&&(!state.autoDrone.owned||(start.drone>1&&!state.autoDrone.bulk))){state.pickupWindow.owned=true;state.autoDrone={owned:true,enabled:true,remaining:0,bulk:start.drone>1,mode:start.drone>1?'bulk':'single'}}
     state.lounge=Math.max(state.lounge,start.lounge);state.empire.stake=perkLevel(state.perks,'stake')}
-  function resetRun(rank,sound,carry){if(rank>0)telemetry.send('prestige',{rank:rank});var haptics=state.haptics!==false,keptMusic=state.music!==false,keptReminders=[state.reminders,state.reminderOffered];state=fresh();state.haptics=haptics;state.music=keptMusic;state.reminders=keptReminders[0]===true;state.reminderOffered=keptReminders[1]===true;moment=null;if(shopPlayUI)shopPlayUI.reset();state.empire.prestige=rank;state.sound=sound;if(carry){state.empire.shares=carry.shares;state.empire.lifetimeAll=carry.lifetimeAll;if(carry.contracts){state.empire.contracts.bank=carry.contracts.bank;state.empire.contracts.done=carry.contracts.done;state.empire.contracts.round=carry.contracts.round}state.empire.badges=carry.badges.slice();if(carry.stars)state.empire.stars=carry.stars.slice();state.crosses=carry.crosses;state.achievements=(carry.achievements||[]).slice();state.perks=carry.perks;var start=perkStart(state.perks);state.money+=start.money;state.startLine=start.line;applyStart(start);
+  function resetRun(rank,sound,carry){if(rank>0)telemetry.send('prestige',{rank:rank});var keptDeals=state.deals,keptStore=state.store,haptics=state.haptics!==false,keptMusic=state.music!==false,keptReminders=[state.reminders,state.reminderOffered];state=fresh();state.deals=keptDeals||state.deals;state.store=keptStore;state.haptics=haptics;state.music=keptMusic;state.reminders=keptReminders[0]===true;state.reminderOffered=keptReminders[1]===true;moment=null;if(shopPlayUI)shopPlayUI.reset();state.empire.prestige=rank;state.sound=sound;if(carry){state.empire.shares=carry.shares;state.empire.lifetimeAll=carry.lifetimeAll;state.empire.franchise=carry.franchise||0;if(carry.contracts){state.empire.contracts.bank=carry.contracts.bank;state.empire.contracts.done=carry.contracts.done;state.empire.contracts.round=carry.contracts.round}state.empire.badges=carry.badges.slice();if(carry.stars)state.empire.stars=carry.stars.slice();state.crosses=carry.crosses;state.achievements=(carry.achievements||[]).slice();state.perks=carry.perks;var start=perkStart(state.perks);state.money+=start.money;state.startLine=start.line;applyStart(start);
       // A reopen keeps your place on the daily track, a running contract boost and the season ladder (claims included).
       if(carry.daily)state.empire.daily={day:carry.daily.day,streak:carry.daily.streak};if(carry.contracts)state.empire.contracts.boost=carry.contracts.boost||0;
       if(carry.season)state.empire.season=carrySeason(carry.season,carry.counters);

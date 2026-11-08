@@ -8,7 +8,7 @@ import {mountEmpireMap} from './empire-map.js';
 import {manageDialog} from './dialog-focus.js';
 import {mountPopupPage,TENT} from './popup-pane.js';
 import {popupClock} from './popup-event.js';
-export function mountEmpireShell({fit,getState,format,rate,fly,buyStation,paintStation,popup}){
+export function mountEmpireShell({fit,getState,format,rate,fly,buyStation,paintStation,deals,popup}){
  const pane=document.querySelector('[data-pane=empire]'),$=id=>document.getElementById(id);
  const section=name=>pane.querySelector('[data-empire-section="'+name+'"]');
  const el=(tag,cls,html)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(html!=null)n.innerHTML=html;return n;};
@@ -44,7 +44,8 @@ export function mountEmpireShell({fit,getState,format,rate,fly,buyStation,paintS
  // Perks: the reopen card leads (when reopening pays), then the rank, funding and founder perks, always open.
  const perksBar=backBar('Empire','Reopen & perks');screens.perks.append(perksBar.bar);
  const depth=growth.querySelector('.depth-panel');if(depth){depth.open=true;depth.addEventListener('toggle',()=>{if(!depth.open)depth.open=true;});}
- screens.perks.append(reopen||'',group(null,[depth]));
+ // Franchise tiers (franchise.js): the late, slower layer above shares, after the founder perks.
+ screens.perks.append(reopen||'',group(null,[depth]),group('Franchise',[$('franchiseCard')]));
  // The welcome-back report is a moment over the map, not a row in a tab.
  const summary=$('returnSummary');if(summary){const overlay=el('div','return-overlay');overlay.hidden=true;const card=el('div','return-card');card.append(summary);overlay.append(card);document.body.append(overlay);
   const reflect=()=>{overlay.hidden=summary.hidden;if(!summary.hidden){const b=$('dismissReturn');if(b)b.focus({preventScroll:true});}};
@@ -73,7 +74,7 @@ export function mountEmpireShell({fit,getState,format,rate,fly,buyStation,paintS
  setInterval(()=>{if(!document.hidden&&current==='details')syncBoard();},500);
  screens.details.append(group(null,[today.querySelector('.reputation')]),storesHelp);
  const goalsPane=document.querySelector('[data-pane=goals]');
- if(goalsPane)mountGoalsPane({pane:goalsPane,getState,format,rate,sources:[$('contractCard'),document.querySelector('.goals-body'),
+ if(goalsPane)mountGoalsPane({pane:goalsPane,getState,format,rate,deals,sources:[$('contractCard'),document.querySelector('.goals-body'),
   group(null,[$('careerName'),$('careerDetail'),$('careerProgress'),$('careerBonus'),$('careerClaim')]),
   document.querySelector('.shop-milestone'),group(null,Array.from(section('daily').children)),group(null,Array.from(section('events').children))]});
  // Keep the back controls outside the scrolling content so their background can be the panel itself.

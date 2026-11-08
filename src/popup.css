@@ -25,3 +25,7 @@
 .empire-back.is-popup .popup-clock{margin-left:auto;padding:4px 9px;border-radius:999px;background:var(--ui-brass-wash);box-shadow:inset 0 0 0 1px #e2c68a44;font:600 11.5px/1 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-brass);font-variant-numeric:tabular-nums;white-space:nowrap}
 .empire-back.is-popup .popup-clock:empty{display:none}
 .sheet .empire-screen .popup-stalls .popup-rate{margin-left:6px;color:#a8dc52}
+/* A stall to buy lights the door green, not brass: the brass stays on the shop's one next buy (Kevin's one brass rule). */
+.sheet .empire-screen button.empire-link.empire-popup.is-ready{border-color:#a8dc5266;background:#a8dc521f}
+.sheet .empire-screen button.empire-link.empire-popup.is-ready .empire-link-icon{background:#a8dc5233;color:#bfe39a}
+.sheet .empire-screen button.empire-link.empire-popup.is-ready .empire-link-copy small{color:#bfe39a}

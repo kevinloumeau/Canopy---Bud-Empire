@@ -144,11 +144,11 @@ const num = (v, fallback=0, max=Number.MAX_SAFE_INTEGER) => Number.isFinite(v) ?
 export function migrateProgression(raw, now=Date.now()) {
   const r=raw && typeof raw==='object' ? raw : {};
   const clock=num(r.clock, now);
-  const p={network:migrateOperations(r.network),version:4, retailBoost:Math.max(1,num(r.retailBoost,1,64)), flagship:Number.isFinite(r.flagship)&&r.flagship>0?Math.min(r.flagship,BIG):0, prestige:num(r.prestige,0,999), ...prestigeShares(r), clock, activeStore:num(r.activeStore,0,STORES.length), career:num(r.career,0,CAREER.length), daily:{
+  const p={network:migrateOperations(r.network),version:4, retailBoost:Math.max(1,num(r.retailBoost,1,64)), flagship:Number.isFinite(r.flagship)&&r.flagship>0?Math.min(r.flagship,BIG):0, prestige:num(r.prestige,0,999), franchise:num(r.franchise,0,6), ...prestigeShares(r), clock, activeStore:num(r.activeStore,0,STORES.length), career:num(r.career,0,CAREER.length), daily:{
     day:num(r.daily?.day,0), streak:num(r.daily?.streak,0,7)
   }, stores:STORES.map((_,i)=>({level:num(r.stores?.[i]?.level,0,10),projects:[0,1,2].map(j=>r.stores?.[i]?.projects?.[j]===true), manager:MANAGERS.some(m=>m.id===r.stores?.[i]?.manager)&&!(Array.isArray(r.stores)?r.stores:[]).slice(0,i).some(s=>s?.manager===r.stores?.[i]?.manager)?r.stores[i].manager:'none', featured:PRODUCTS.includes(r.stores?.[i]?.featured)?r.stores[i].featured:'everyday', loyalty:num(r.stores?.[i]?.loyalty,0,1000), served:num(r.stores?.[i]?.served), serviceClock:num(r.stores?.[i]?.serviceClock,0,11), lines:migrateBranchLine(r.stores?.[i]?.lines,num(r.stores?.[i]?.level,0,10))})),
   contracts:migrateContracts(r.contracts,clock), season:migrateSeason(r.season), badges:(Array.isArray(r.badges)?r.badges:[]).filter(b=>typeof b==='string'&&BADGE_ID.test(b)).filter((b,i,a)=>a.indexOf(b)===i).slice(0,200),
-  trophies:num(r.trophies), rewards:[0,1,2].map(i=>r.rewards?.[i]===true), reputation:num(r.reputation,0,1000), counters:Object.fromEntries(GOAL_KINDS.map(k=>[k,num(r.counters?.[k])])), goals:[0,1,2].map(i=>({round:num(r.goals?.[i]?.round),start:num(r.goals?.[i]?.start),kind:GOAL_KINDS.includes(r.goals?.[i]?.kind)?r.goals[i].kind:legacyGoalKind(i,num(r.goals?.[i]?.round))})), goalsCompleted:num(r.goalsCompleted), returnReport:r.returnReport&&Array.isArray(r.returnReport.earnings)?{seconds:num(r.returnReport.seconds),earnings:[...Array(STORES.length+1)].map((_,i)=>num(r.returnReport.earnings[i])),goals:num(r.returnReport.goals,0,3),served:num(r.returnReport.served)}:null,
+  trophies:num(r.trophies), rewards:[0,1,2].map(i=>r.rewards?.[i]===true), reputation:num(r.reputation,0,1000), counters:Object.fromEntries(GOAL_KINDS.map(k=>[k,num(r.counters?.[k])])), goals:[0,1,2].map(i=>({round:num(r.goals?.[i]?.round),start:num(r.goals?.[i]?.start),kind:GOAL_KINDS.includes(r.goals?.[i]?.kind)?r.goals[i].kind:legacyGoalKind(i,num(r.goals?.[i]?.round))})), goalsCompleted:num(r.goalsCompleted), returnReport:r.returnReport&&Array.isArray(r.returnReport.earnings)?{seconds:num(r.returnReport.seconds),earnings:[...Array(STORES.length+1)].map((_,i)=>num(r.returnReport.earnings[i])),goals:num(r.returnReport.goals,0,3),served:num(r.returnReport.served),doubled:r.returnReport.doubled===true}:null,
   stars:STORES.map((_,i)=>{const v=r.stars?.[i];return Number.isInteger(v)&&v>=0&&v<=7?v:0;}),
   runStars:STORES.map((_,i)=>{const v=r.runStars?.[i];return Number.isInteger(v)&&v>=0&&v<=7?v:0;})};
   // Saves from before stars are credited with every goal they already meet.
@@ -173,7 +173,9 @@ export function claimDaily(state, now=Date.now(), scale=1) {
 }
 // p.stake is the Founder's stake perk level, mirrored from state.perks by main.js (+10% sales a level).
 // popupBonus: the weekend markets' trophies (popup-event.js popupSalesBonus), set by main.js.
-export function saleMultiplier(p) {return (1+p.career*.05)*(1+(p.shares||0)*SHARE_BONUS)*starMultiplier(p)*(1+.1*(p.stake||0))*(1+(p.popupBonus||0));}
+// Franchise tiers (franchise.js) multiply everything else, FRANCHISE_GAIN each.
+export const FRANCHISE_GAIN=5;
+export function saleMultiplier(p) {return (1+p.career*.05)*(1+(p.shares||0)*SHARE_BONUS)*starMultiplier(p)*(1+.1*(p.stake||0))*FRANCHISE_GAIN**(p.franchise||0)*(1+(p.popupBonus||0));}
 // Reopening pays in shares: each is worth +5% base sales, and the all-time total grows with the cube root of
 // all-time revenue, so a longer run earns more of them. (Square root until 2026-11-08: a 6-hour first run paid ~4,800
 // shares, a 240x sales bonus that also bought the whole founder perk shop at once; the cube root pays ~600.) Saves from the flat +20%-per-rank system convert at four
