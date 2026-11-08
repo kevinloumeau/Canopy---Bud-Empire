@@ -6,7 +6,7 @@ import {mountGoalsPane} from './goals-pane.js';
 import {mountEmpireStores} from './empire-stores.js';
 import {mountEmpireMap} from './empire-map.js';
 import {manageDialog} from './dialog-focus.js';
-export function mountEmpireShell({fit,getState,format,rate,fly,buyStation,paintStation}){
+export function mountEmpireShell({fit,getState,format,rate,fly,buyStation,paintStation,deals}){
  const pane=document.querySelector('[data-pane=empire]'),$=id=>document.getElementById(id);
  const section=name=>pane.querySelector('[data-empire-section="'+name+'"]');
  const el=(tag,cls,html)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(html!=null)n.innerHTML=html;return n;};
@@ -64,7 +64,7 @@ export function mountEmpireShell({fit,getState,format,rate,fly,buyStation,paintS
  setInterval(()=>{if(!document.hidden&&current==='details')syncBoard();},500);
  screens.details.append(group(null,[today.querySelector('.reputation')]),storesHelp);
  const goalsPane=document.querySelector('[data-pane=goals]');
- if(goalsPane)mountGoalsPane({pane:goalsPane,getState,format,rate,sources:[$('contractCard'),document.querySelector('.goals-body'),
+ if(goalsPane)mountGoalsPane({pane:goalsPane,getState,format,rate,deals,sources:[$('contractCard'),document.querySelector('.goals-body'),
   group(null,[$('careerName'),$('careerDetail'),$('careerProgress'),$('careerBonus'),$('careerClaim')]),
   document.querySelector('.shop-milestone'),group(null,Array.from(section('daily').children)),group(null,Array.from(section('events').children))]});
  // Keep the back controls outside the scrolling content so their background can be the panel itself.
