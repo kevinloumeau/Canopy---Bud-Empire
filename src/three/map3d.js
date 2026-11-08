@@ -1024,17 +1024,33 @@ export function createMap3D(canvas, layout) {
     (frame.stations || []).forEach(s => {
       if (!s.built || s.visible === false || (s.pop !== undefined && s.pop < 1) || s.index === undefined) return;
       const r = Math.max(s.w, s.d), grow = s.index === 1, counter = s.index === 4 || s.index === 6;
-      pool(s.x, s.y, s.z, r * 2.6, r * 2.6, 0, 0, grow ? GROW_LIGHT : counter ? COUNTER_LIGHT : TASK_LIGHT, grow ? .85 : s.y > 0 ? .55 : .4);
+      pool(s.x, s.y, s.z, r * 2.6, r * 2.6, 0, 0, grow ? GROW_LIGHT : counter ? COUNTER_LIGHT : TASK_LIGHT, grow ? .95 : s.y > 0 ? .75 : .55);
     });
     const sh = layout.shell;
     if (!sh) return;
     // Each lamp's own pool on the floor below it.
     sh.lamps.forEach(([x, y, z, power]) => {
       const floor = [...layout.floors].reverse().find(f => f.y < y);
-      if (floor) pool(x, floor.y, z, 6.4, 6.4, 0, 0, TASK_LIGHT, (floor.y > 0 ? .45 : .3) * power);
+      if (floor) pool(x, floor.y, z, 6.4, 6.4, 0, 0, TASK_LIGHT, (floor.y > 0 ? .6 : .42) * power);
     });
     // The upper floors sit out of the ground floor's lamps, so they take a soft wash of their own.
-    layout.floors.forEach((f, n) => { if (n) pool(f.x || 0, f.y, f.z + f.d * .1, f.w * .95, f.d * 1.5, 0, 0, TASK_LIGHT, n === 2 ? .55 : .3); });
+    layout.floors.forEach((f, n) => { if (n) pool(f.x || 0, f.y, f.z + f.d * .1, f.w * .95, f.d * 1.5, 0, 0, TASK_LIGHT, n === 2 ? .75 : .45); });
+  }
+  // The online pickup window after dark (Kevin, 2026-11-08: "add exterior lighting for the pick up"): it sits on the
+  // sidewalk outside the shop's own light, so it takes its own: a warm glow inside the hatch, a pool on the counter and
+  // the pavement where the line waits, and a soft one round its A-frame sign. Painted pools in the same one draw.
+  const PICKUP_LIGHT = new THREE.Color('#ffc16a');
+  function pickupLight(frame) {
+    const shown = frame.fixtures && Object.keys(frame.fixtures).some(k => k.startsWith('pickupWindow') && frame.fixtures[k]);
+    const w = shown && (layout.fixtures || []).find(f => f.key === 'pickupWindow');
+    if (!w) return;
+    const y = layout.plazaY;
+    // Lamplight in the hatch, on the back of the opening, so the clerk and the shelf read as lit.
+    pool(w.x, 1.3, w.z + 1.25, 3.2, 3.4, 0, 0, PICKUP_LIGHT, .32, true);
+    // The light falling out of the hatch onto the pavement in front, where the line waits.
+    pool(w.x, y, w.z + 2.4, 4.8, 4.4, 0, 1, PICKUP_LIGHT, .7);
+    pool(w.x, y, w.z + 1.8, 5, 5, 0, 0, PICKUP_LIGHT, .45);
+    (frame.props || []).forEach(p => { if (p.file === 'aframe_sign.glb') pool(p.x, Math.max(y, p.y || 0), p.z + .4, 3.4, 3.4, 0, 0, PICKUP_LIGHT, .8); });
   }
   function placePools(frame, night, shopLit) {
     pools.visible = night > .02;
@@ -1048,14 +1064,15 @@ export function createMap3D(canvas, layout) {
       if (m) pool(left - 1.9, layout.plazaY, (m.zRear + m.zFront) / 2, m.zFront - m.zRear + 1.5, 3.8, -Math.PI / 2, 1, SHOP_SPILL, .6);
       pool((left + right) / 2, layout.plazaY, front + 1.9, right - left, 3.8, 0, 1, SHOP_SPILL, .45);
       shopInterior(frame);
+      pickupLight(frame);
     }
     // The branch stores on the map (placeDistricts): a warm wash over the shop floor, so the line, the counters and the
     // people read after dark, and the same spill out of the open front as the flagship's.
     branchGlow.forEach(b => {
       const cx = (b.x0 + b.x1) / 2, cz = (b.z0 + b.z1) / 2, w = b.x1 - b.x0, d = b.z1 - b.z0;
-      pool(cx, .1, cz + d * .1, w * 1.25, d * 1.3, 0, 0, SHOP_SPILL, 1.25);
+      pool(cx, .1, cz + d * .1, w * 1.25, d * 1.3, 0, 0, SHOP_SPILL, 1.55);
       // Lamplight on the back wall, so the stations stand against a lit room rather than a dark one.
-      pool(cx, 2.4, b.z0 + .45, w * 1.1, 5.2, 0, 0, SHOP_SPILL, .55, true);
+      pool(cx, 2.4, b.z0 + .45, w * 1.1, 5.2, 0, 0, SHOP_SPILL, .7, true);
       pool(cx, .1, b.z1 + 1.9, w, 3.8, 0, 1, SHOP_SPILL, .45);
     });
     // Headlights: a long beam ahead of each car and a faint red glow behind it.

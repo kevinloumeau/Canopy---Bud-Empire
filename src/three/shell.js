@@ -585,7 +585,7 @@ export function buildShell(world, layout, { box, span, material, model }) {
       exitLamp.material.emissiveIntensity = .4 + night * 1.2;
       glows.forEach(([m, from]) => { m.emissiveIntensity = from.emissiveIntensity; });
       marqueeMat.emissiveIntensity = .15 + night * .7;
-      lamps.forEach(l => { l.intensity = l.userData.power * (.2 + night * 5); });
+      lamps.forEach(l => { l.intensity = l.userData.power * (.2 + night * 6.5); });
       // The top floor's glazing takes the room's lamplight after dark, so the glass box reads lit from inside.
       glass.emissiveIntensity = night * .55;
     }
