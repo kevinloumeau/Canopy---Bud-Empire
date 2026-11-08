@@ -143,8 +143,10 @@ export function mountGoalsPane({pane,sources,getState,format,rate}){
   const groups=[{key:'shift',label:shiftTitle,title:shiftTitle,figure:shiftFigure,body:tiles(shift())},stars(s.empire),awards(s),ladders()].filter(g=>g&&g.body);
   // The tab you picked stays picked; while its group is empty (shift goals load a moment after start) the first one shows.
   const open=groups.find(g=>g.key===picked)||groups[0];
-  // A desktop side panel is tall enough for every group at once, each under its own heading.
-  const wide=window.matchMedia&&matchMedia('(min-width:780px)').matches;
+  // A desktop side panel, or a phone sheet pulled up to full screen with room for it, is tall enough for every group
+  // at once, each under its own heading.
+  const sheet=pane.closest('.sheet');
+  const wide=window.matchMedia&&matchMedia('(min-width:780px)').matches||!!(sheet&&sheet.classList.contains('tall')&&pane.clientHeight>=640);
   const html=wide?(now?'<div class="goals-now'+(deal&&tale?'':' is-single')+'">'+now+'</div>':'')+groups.map(g=>'<section class="goal-group is-stacked"><h3 class="goal-head"><span>'+esc(g.title)+'</span>'+(g.figure?'<b>'+g.figure+'</b>':'')+'</h3>'+g.body+'</section>').join(''):(now?'<div class="goals-now'+(deal&&tale?'':' is-single')+'">'+now+'</div>':'')+
    (groups.length?'<div class="goal-switch" role="tablist" aria-label="Goal groups">'+groups.map(g=>'<button type="button" role="tab" data-group="'+g.key+'" aria-selected="'+(g===open)+'" title="'+esc(g.title)+'"'+'><span>'+esc(g.label)+'</span>'+(g.figure?'<b>'+g.figure+'</b>':'')+'</button>').join('')+'</div>'+
     '<section class="goal-group" role="tabpanel" aria-label="'+esc(open.title)+'">'+open.body+'</section>':'');
