@@ -3118,7 +3118,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // A cash pop frozen at `age` seconds into its rise, for screenshots of the pops (cash-pops.js).
     window.__canopySnap.cashPop=function(key,amount,age){var site=CASH_SITES[key];livePops.push({key:key,amount:amount,x:site.x,y:site.y,z:site.z,age:age||.4,text:fmt(amount)})};
     window.__canopySnap.status=function(){return{map3d:!!(map3d&&map3d.ok),loading:map3d?map3d.loading:-1}};
-    window.__canopySnap.state=function(){return state};
+    window.__canopySnap.state=function(){return state};window.__canopySnap.customers=function(){return customers};
   }
   // Dev numbers (?stats): a small readout over the map with the frames drawn a second, the frame's script time, the 3D
   // map's draw calls and triangles and its estimated GPU memory, so a phone shows its own numbers. Players never pass
@@ -4722,15 +4722,24 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // Where the customers are right now, stage by stage, with the faces of the first three in each (the shopper models they
     // walk in as). A stage turns coral where they pile up: a long order line, or bags waiting on an empty pickup shelf.
     getFloor:function(){
-      var stages={door:[],order:[],pickup:[],lounge:[]};
-      customers.forEach(function(c){var k=c.phase==='leaving'?null:c.phase==='entering'||c.phase==='idCheck'?'door':c.phase==='toLounge'||c.phase==='lounge'?'lounge':c.ordered?'pickup':'order';if(k)stages[k].push(c)});
-      var face=function(c){return 'people-'+CUSTOMER_MODELS[Math.abs(c.id|0)%CUSTOMER_MODELS.length].replace(/^people\/|\.glb$/g,'')};
-      var stage=function(label,list,busy){return {label:label,count:list.length,faces:list.slice(0,3).map(face),busy:!!busy}};
+      var stages={door:[],order:[],pickup:[],lounge:[]},crowd=[];
+      customers.forEach(function(c){var k=c.phase==='leaving'?null:c.phase==='entering'||c.phase==='idCheck'?'door':c.phase==='toLounge'||c.phase==='lounge'?'lounge':c.ordered?'pickup':'order';if(k){stages[k].push(c);crowd.push(c)}});
+      // A VIP wears a crown; a hurried shopper wears a clock once they have used most of their patience, and both come
+      // first in their tile so the three faces shown are the ones worth watching.
+      var hurry=economy.patience('hurried',state.comfortLevel);
+      var badge=function(c){return c.kind==='vip'?'vip':c.kind==='hurried'&&!c.bag&&(c.waitSeconds||0)>hurry*.6?'hurry':''};
+      var face=function(c){return {p:'people-'+CUSTOMER_MODELS[Math.abs(c.id|0)%CUSTOMER_MODELS.length].replace(/^people\/|\.glb$/g,''),b:badge(c)}};
+      var centre=function(list,fallback){if(!list.length)return fallback;var x=0,z=0;list.forEach(function(c){x+=c.renderX===undefined?c.x:c.renderX;z+=c.renderZ===undefined?c.z:c.renderZ});return {x:x/list.length,z:z/list.length}};
+      var stage=function(key,label,list,busy,fallback){var sorted=list.map(face).sort(function(a,b){return (b.b?1:0)-(a.b?1:0)});return {key:key,label:label,count:list.length,faces:sorted.slice(0,3),busy:!!busy,at:centre(list,fallback)}};
       var dry=stages.pickup.some(function(c){return !c.bag})&&state.stock[4]<1;
-      var out=[stage('Door',stages.door,stages.door.length>8),stage('Ordering',stages.order,stages.order.length>6*Math.max(1,state.orderCounters||1)),stage('Pickup',stages.pickup,dry)];
-      if(state.lounge>0)out.push(stage('Lounge',stages.lounge,false));
-      return {stages:out};
+      var out=[stage('door','Door',stages.door,stages.door.length>8,ID_CHECK),stage('order','Ordering',stages.order,stages.order.length>6*Math.max(1,state.orderCounters||1),machinePos[4]),stage('pickup','Pickup',stages.pickup,dry,machinePos[5])];
+      if(state.lounge>0)out.push(stage('lounge','Lounge',stages.lounge,false,centre(stages.lounge,machinePos[4])));
+      var moods=crowd.map(function(c){return customerRatings(c).happiness});
+      return {stages:out,happiness:moods.length?Math.round(moods.reduce(function(a,b){return a+b},0)/moods.length):null};
     },
+    // A floor tile takes the camera to where those customers are.
+    // The sheet stays down after it, so the spot is in view.
+    showFloor:function(at){shopPlayCollapsed=false;if(at)glideTo(at.x,at.z,Math.max(zoom,1.8))},
     // The live bottleneck, as one tappable line with the station's own icon. While customers are the limit there is no
     // station to open, so it says so in a calm line instead.
     getFocus:function(){
