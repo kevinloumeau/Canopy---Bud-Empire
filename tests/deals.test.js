@@ -22,3 +22,5 @@ test('old and broken saves migrate',()=>{assert.deepEqual(migrateDeals(null),{wi
  const d=migrateDeals({window:'12',offers:['rush5','bogus','night2'],bought:['night2','coffee'],night:1e9});
  assert.deepEqual(d,{window:12,offers:['rush5','night2'],bought:['night2'],night:DEALS.night4.night});});
 test('the countdown reads in hours and minutes',()=>{assert.equal(untilLabel(3*3600000+5*60000),'3h 5m');assert.equal(untilLabel(20000),'1m');assert.equal(untilLabel(45*60000),'45m');});
+test('the token deal costs one boost token and beats a plain token',async()=>{const {BOOST_SECONDS}=await import('../src/store.js');const {tokenPrice}=await import('../src/deals.js');
+ assert.equal(tokenPrice('token3'),1);assert.equal(tokenPrice('rush5'),0);assert.ok(DEALS.token3.boost>BOOST_SECONDS);});

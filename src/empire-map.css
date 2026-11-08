@@ -47,3 +47,5 @@
 /* The shop under the camera. */
 .map-tile.is-here .map-ring-track circle:first-child{fill:rgba(127,167,101,.16)}
 @media(prefers-reduced-motion:reduce){.map-tile.is-building .map-ring::after{animation:none}.map-ring-fill{transition:none}}
+/* A finished place's chip: an icon and its figure (empire-map.js DONE_CHIP). */
+.map-tile-figure .map-chip-icon{flex:none;width:10px;height:10px;margin-right:1px}

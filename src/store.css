@@ -1,0 +1,93 @@
+/* The store: a bag beside the goals flag and one forest-glass dialog. Brass is the accent only: the one action button,
+   the token count and the badge. Pack tiles are 3D icons over a well, like the Goals and Research tiles. */
+.hud .customer-info #storeOpen{pointer-events:auto;position:relative;display:inline-grid;place-items:center;width:30px;height:30px;margin-left:6px;padding:0;border:1px solid #dce9be22;border-radius:10px;background:#dce9be0f;color:#d2dfc8;cursor:pointer;flex:0 0 auto}
+.hud .customer-info #storeOpen svg{width:16px;height:16px}
+.hud .customer-info #storeOpen.has-gift,.hud .customer-info #storeOpen.is-boosting{color:#f2d99a;border-color:#e3c07a55;background:#e3c07a1c}
+.hud .customer-info #storeOpen #storeBadge{position:absolute;top:-6px;right:-6px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#e7c77f;color:#173b23;font-size:10px;font-weight:700;line-height:16px;text-align:center}
+.hud .customer-info #storeOpen #storeBadge[hidden]{display:none}
+@media(hover:hover){.hud .customer-info #storeOpen:hover{background:#dce9be1c}}
+.hud .customer-info #storeOpen:focus-visible{outline:2px solid var(--p-lime-84);outline-offset:2px}
+
+.modal-wrap.store-wrap{z-index:60;padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom))}
+.modal.store{display:flex;flex-direction:column;gap:12px;width:min(380px,100%);max-height:100%;overflow:auto;padding:16px;border:1px solid #e4f9e133;border-radius:24px;color:var(--ui-ink);background:linear-gradient(145deg,#d1e8cc14,#153e2208 42%),rgba(18,56,30,.96);box-shadow:inset 0 1px 0 #f3ffe52b,0 12px 28px #00000055;text-align:left}
+.modal.store>div,.modal.store>section,.modal.store>ul{margin:0}
+.modal.store .store-head{display:flex;align-items:center;justify-content:space-between;gap:0}
+.modal.store .store-head h2{margin:0;font-size:20px;letter-spacing:-.02em;color:var(--ui-ink)}
+.modal.store .store-close{width:36px;height:36px;min-height:0;padding:0;border:0;border-radius:50%;background:#ecffe60d;color:var(--ui-ink);font-size:22px;line-height:1;cursor:pointer}
+
+/* The boost card: the bolt in a ring that empties over the 2 hours, the count of boosts, then the one brass button. */
+.modal.store .store-boost{display:grid;grid-template-columns:64px 1fr auto;align-items:center;column-gap:12px;row-gap:12px;padding:14px;border-radius:20px;background:var(--ui-well);box-shadow:inset 0 0 0 1px var(--ui-edge)}
+.store-boost-art{position:relative;display:grid;place-items:center;width:64px;height:64px}
+.store-boost-art img{position:relative;width:46px;height:auto;filter:drop-shadow(0 3px 4px #06180c8c);pointer-events:none}
+.store-ring{position:absolute;inset:0;width:64px;height:64px;transform:rotate(-90deg)}
+.store-ring circle{fill:#e2c68a14;stroke:#ffffff1a;stroke-width:3}
+.store-ring .store-ring-fill{fill:none;stroke:var(--ui-brass);stroke-linecap:round;stroke-dasharray:calc(var(--boost,0) * 100) 100;transition:stroke-dasharray .4s linear}
+.store-boost:not(.is-on) .store-ring .store-ring-fill{stroke:none}
+.store-boost-text h3{margin:0;font-size:17px;line-height:1.15;letter-spacing:-.02em;color:var(--ui-ink)}
+.store-boost-text p{margin:3px 0 0;font-size:13px;line-height:1.25;font-weight:600;color:var(--ui-soft);font-variant-numeric:tabular-nums}
+.store-boost.is-on .store-boost-text p{color:var(--ui-brass)}
+.store-tokens{align-self:start;padding:5px 9px;border-radius:999px;background:var(--ui-brass-wash);box-shadow:inset 0 0 0 1px #e2c68a40;color:var(--ui-brass);font:700 12px/1 'Bricolage Grotesque',system-ui,sans-serif;white-space:nowrap}
+.modal.store .store-use{grid-column:1/-1;width:100%;min-height:50px;margin:0;border:0;border-radius:16px;background:linear-gradient(180deg,#ecd49e,var(--ui-brass));color:var(--ui-brass-ink);font:700 15px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.01em;box-shadow:inset 0 1px 0 rgba(255,250,232,.7),0 6px 18px rgba(226,198,138,.22);cursor:pointer}
+.modal.store .store-use:disabled{background:#ffffff12;color:var(--ui-soft);box-shadow:inset 0 0 0 1px var(--ui-edge);cursor:default}
+.modal.store .store-ad{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:44px;margin:-4px 0 0;border:0;border-radius:14px;background:#ffffff0d;box-shadow:inset 0 0 0 1px var(--ui-edge);color:var(--ui-ink);font:600 14px/1 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer}
+.modal.store .store-ad[hidden]{display:none}
+.modal.store .store-ad svg{width:14px;height:14px;fill:var(--ui-brass)}
+.modal.store .store-ad:disabled{color:var(--ui-soft);cursor:default}
+
+/* Packs: a 2×2 grid of tiles, each a 3D icon, a name, one line on what it does and its price. */
+.modal.store .store-packs{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0;list-style:none}
+.modal.store .store-packs li{display:flex}
+.modal.store .store-pack{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;width:100%;min-height:0;margin:0;padding:12px 8px 10px;border:0;border-radius:18px;background:var(--ui-well);box-shadow:inset 0 0 0 1px var(--ui-edge);color:var(--ui-ink);font:inherit;text-align:center;cursor:pointer}
+.store-pack-art{position:relative;display:flex;justify-content:center;align-items:flex-end;height:56px;margin-bottom:4px}
+.store-pack-art i{position:absolute;right:-14px;bottom:-2px;padding:3px 6px;border-radius:999px;background:var(--ui-brass);color:var(--ui-brass-ink);font:800 11px/1 'Bricolage Grotesque',system-ui,sans-serif;font-style:normal;box-shadow:0 0 0 2px rgba(18,56,30,.96)}
+.store-pack-art img{height:52px;width:auto;filter:drop-shadow(0 3px 4px #06180c8c);pointer-events:none}
+.modal.store .store-pack b{font-size:14px;line-height:1.2;letter-spacing:-.01em;color:var(--ui-ink)}
+.modal.store .store-pack small{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:12px;line-height:1.25;font-weight:600;letter-spacing:0;text-transform:none;color:var(--ui-soft)}
+.modal.store .store-price{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-width:72px;margin-top:auto;padding:7px 12px;border-radius:999px;background:#ffffff12;box-shadow:inset 0 0 0 1px var(--ui-edge);color:var(--ui-ink);font:700 13px/1 'Bricolage Grotesque',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.modal.store .store-pack small{margin-bottom:8px}
+.store-price svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.modal.store .store-tag{position:absolute;top:8px;right:8px;padding:3px 7px;border-radius:999px;box-shadow:inset 0 0 0 1px #e2c68a66;color:var(--ui-brass);font:700 10px/1 'Bricolage Grotesque',system-ui,sans-serif;font-style:normal;letter-spacing:.02em}
+.modal.store .store-pack.is-owned{cursor:default}
+.modal.store .store-pack.is-owned .store-price{background:#a8dc521a;box-shadow:inset 0 0 0 1px #a8dc5240;color:var(--ui-leaf-glow)}
+.modal.store .store-pack.is-busy{opacity:.7}
+@media(hover:hover){.modal.store .store-pack:not(:disabled):hover{background:#ffffff0f}}
+.modal.store .store-pack:not(:disabled):active,.modal.store .store-use:not(:disabled):active,.modal.store .store-ad:not(:disabled):active{transform:scale(.98)}
+.modal.store button:focus-visible{outline:2px solid var(--ui-ink);outline-offset:2px}
+
+.modal.store .store-foot{display:flex;flex-direction:column;align-items:center;gap:2px}
+.modal.store .store-restore{min-height:36px;padding:0 12px;border:0;background:none;color:var(--ui-soft);font:600 13px/1 'Bricolage Grotesque',system-ui,sans-serif;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.modal.store .store-restore[hidden]{display:none}
+.modal.store .store-note{margin:0;font-size:12px;color:var(--ui-soft);text-align:center}
+.modal.store .store-note:empty{display:none}
+
+/* Small phones (SE): the same layout, a little tighter, so it all fits without scrolling. */
+@media(max-height:700px){
+ .modal.store{gap:10px;padding:14px}
+ .modal.store .store-boost{padding:12px;row-gap:10px}
+ .modal.store .store-use{min-height:46px}
+ .store-pack-art{height:48px}
+ .store-pack-art img{height:46px}
+ .modal.store .store-pack{padding:10px 8px 9px}
+}
+
+/* The store boost's lane chip: the bolt and its clock, in brass like the rush. */
+.lane-chip.store-pill .chip-name{font-weight:700}
+
+/* Double it on the welcome back card: the same row as Goals and Daily, with its cost as a small chip on the right. */
+.return-card #returnDouble{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;margin:0 0 12px;padding:8px 10px 8px 8px;border:0;border-radius:16px;background:var(--ui-well);box-shadow:inset 0 0 0 1px var(--ui-edge);color:var(--ui-ink);font:inherit;font-size:14px;font-weight:600;text-align:left;cursor:pointer}
+.return-card #returnDouble[hidden]{display:none}
+.return-card #returnDouble i{display:grid;place-items:center;flex:0 0 40px;height:40px}
+.return-card #returnDouble i img{width:auto;height:38px;object-fit:contain;filter:drop-shadow(0 2px 3px #06180c8c)}
+.return-card #returnDouble span{flex:1;display:flex;flex-direction:column;gap:2px}
+.return-card #returnDouble small{color:var(--ui-soft);font-size:13px;font-weight:600}
+.return-card #returnDouble em{display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border-radius:999px;background:var(--ui-brass-wash);box-shadow:inset 0 0 0 1px #e2c68a40;color:var(--ui-brass);font:700 12px/1 'Bricolage Grotesque',system-ui,sans-serif;font-style:normal;white-space:nowrap}
+.return-card #returnDouble em svg{width:12px;height:12px;fill:currentColor}
+.return-card #returnDouble[data-way=done]{cursor:default}
+.return-card #returnDouble[data-way=done] em{background:#a8dc521a;box-shadow:inset 0 0 0 1px #a8dc5240;color:var(--ui-leaf-glow)}
+.return-card #returnDouble[data-way=done] em svg{fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.return-card #returnDouble:not(:disabled):active{transform:scale(.98)}
+.return-card #returnDouble:focus-visible{outline:2px solid var(--ui-ink);outline-offset:2px}
+@media(max-height:700px){.return-card #returnDouble{min-height:48px;margin-bottom:10px;padding:6px 10px 6px 6px}}
+
+/* Test mode's stand-in ad (?ads=test). */
+.ad-standin{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:#06180cf2;color:var(--ui-soft);font:600 15px 'Bricolage Grotesque',system-ui,sans-serif}

@@ -2,18 +2,22 @@
 // bought once per window. They are priced in seconds of the shop's income, like every reward since the 2026-11-07
 // retune, so a deal costs the same share of sales at $5/s and at $5M/s. A deal is a real bargain: what it buys is
 // worth about twice its price when the player uses it (rush, crew, flyers), or covers hours of away pay (night shift).
+// Prices are cash, except the token deal, which costs one of the store's boost tokens.
 // Families: at most one deal of each family shows at a time, so a window never offers two rushes.
 // Each deal names its 3D icon (public/icons/3d/<icon>.png), a short name, and what it does in a few words.
 export const DEAL_HOURS=4,DEAL_SLOTS=3;
 export const DEALS={
   rush5:{family:'rush',name:'Rush hour',effect:'2× sales for 5 min',icon:'research-service',rush:300,price:150},
   rush10:{family:'rush',name:'Long rush',effect:'2× sales for 10 min',icon:'research-service',rush:600,price:300},
-  coffee:{family:'crew',name:'Crew coffee',effect:'Every crew bursts now',icon:'research-boost',price:0},
+  coffee:{family:'crew',name:'Crew coffee',effect:'Every crew bursts now',icon:'goal-person',price:0},
   flyers:{family:'flyers',name:'Flyer drop',effect:'More walk-ins for 10 min',icon:'research-traffic',buzz:600,price:0},
   night2:{family:'night',name:'Night shift',effect:'+2 h away pay next time',icon:'research-offline',night:7200,price:720},
-  night4:{family:'night',name:'Double shift',effect:'+4 h away pay next time',icon:'research-offline',night:14400,price:1200}
+  night4:{family:'night',name:'Double shift',effect:'+4 h away pay next time',icon:'research-offline',night:14400,price:1200},
+  // Priced in the store's boost tokens (store.js): one token buys 3 hours of 2× instead of the usual 2. Without a token
+  // the tap opens the store.
+  token3:{family:'token',name:'Token deal',effect:'3 h of 2× earnings',icon:'research-boost',tokens:1,boost:10800,price:0}
 };
-export const FAMILIES=['rush','crew','flyers','night'];
+export const FAMILIES=['rush','crew','flyers','night','token'];
 // A crew burst is +30% sales for 90 s per crew (crew-abilities.js); coffee charges half of what the bursts add.
 export const COFFEE_SHARE=.5,FLYER_SHARE=.5,FLYER_MIN_LIFT=.08;
 export const MIN_PRICE=50;
@@ -36,6 +40,8 @@ export function pickDeals(window,usable){const r=rng(window),fams=FAMILIES.filte
 // Rolls a new set when the window changes. Returns true when it did.
 export function rollDeals(d,window,usable){if(d.window===window&&d.offers.length)return false;
   d.window=window;d.offers=pickDeals(window,usable);d.bought=[];return true;}
+// Token deals cost tokens, not cash: dealPrice is the cash price only.
+export function tokenPrice(id){return DEALS[id]&&DEALS[id].tokens||0;}
 // The price, given income per second and, for crew and flyers, the seconds of income the deal adds.
 export function dealPrice(id,income,addedSeconds=0){const deal=DEALS[id];if(!deal)return Infinity;
   const seconds=deal.family==='crew'?addedSeconds*COFFEE_SHARE:deal.family==='flyers'?addedSeconds*FLYER_SHARE:deal.price;

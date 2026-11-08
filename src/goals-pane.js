@@ -135,9 +135,9 @@ export function mountGoalsPane({pane,sources,getState,format,rate,deals}){
  // Deals (deals.js via main.js): the offers of this four-hour window as tiles, each saying what it does and its price;
  // a tap buys. The tab counts down to the next set.
  function offers(){if(!deals||!deals.get)return null;const d=deals.get();if(!d.offers.length)return null;
-  const fmt=n=>format?format(n):'$'+short(n),until=untilLabel(d.ends-Date.now());
+  const until=untilLabel(d.ends-Date.now());
   return {key:'deals',label:'Deals',title:'Deals',figure:esc(until),body:tiles(d.offers.map(o=>({title:o.name+' · '+o.effect,label:o.effect,icon:o.icon,share:0,done:o.bought,
-   act:o.bought?null:'deal:'+o.id,price:o.bought?'':fmt(o.price),afford:o.afford,note:o.bought?'Bought':''})))};}
+   act:o.bought?null:'deal:'+o.id,price:o.bought?'':o.label,afford:o.afford,note:o.bought?'Bought':''})))};}
  let signature='',picked='shift';
  function render(force){
   if(document.hidden||!getState)return;
