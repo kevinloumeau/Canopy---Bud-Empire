@@ -39,6 +39,8 @@ import {mountEmpireShell} from './empire-shell.js';
 import {mountStartGuide} from './start-guide.js';
 import {mountSettings} from './settings.js';
 import {makeHaptics} from './haptics.js';
+import {nativePlugin} from './native-plugins.js';
+import {createNativeSave,saveSeq} from './native-save.js';
 import {idCheckLength,stockCaps,onlineRequestLimit,offlineSeconds,BIG} from './save-guards.js';
 import {requestCap,requestRate,accrueRequests,requestsReady,consumeRequests,requestHeat} from './deliveries.js';
 import { BRANCH_THEMES, BRANCH_STATIONS, drawBranchMap } from './branch-maps.js';
@@ -117,13 +119,25 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var tickTime=performance.now(),tickRemainder=0;
   function tick(){if(SNAP)return;var now=performance.now(),seconds=(now-tickTime)/1000;tickTime=now;if(document.hidden){tickRemainder=0;return}completeBuilds();noticeFlagship();noticeCity();var elapsed=elapsedSteps(seconds+tickRemainder,state.gameSpeed);if(elapsed.offline){tickRemainder=0;collectOffline(elapsed.offline)}else{tickRemainder=Math.max(0,seconds+tickRemainder-Math.floor((seconds+tickRemainder+1e-8)/.05)*.05);for(var step=0;step<elapsed.steps;step++)simulate(.05)}}
   var saveFailed=false;
+  // Every save is also mirrored to the iOS app's own storage (src/native-save.js), so a WebKit storage wipe can't lose
+  // the shop. saveCounter only goes up, across Start over and prestige too, so the newer copy is always the bigger one.
+  var saveCounter=saveSeq(state);
+  var nativeSave=createNativeSave({plugin:nativePlugin('Preferences'),
+    getLocal:function(){try{return localStorage.getItem('shift-save')||localStorage.getItem('shift-save-backup')}catch(e){return null}},
+    setLocal:function(raw){try{localStorage.setItem('shift-save',raw);return localStorage.getItem('shift-save')===raw}catch(e){return false}},
+    reload:function(){location.reload()},session:(function(){try{return sessionStorage}catch(e){return null}})()});
+  // After a wipe the age gate asks again, so the note waits until it is answered.
+  nativeSave.start().then(function(result){if(result!=='recovered')return;var root=document.documentElement,tell=function(){setTimeout(function(){notify('SAVE RESTORED · your shop came back from the app')},1200)};
+    if(!document.getElementById('ageGate')||root.classList.contains('age-ok')||!window.MutationObserver)return tell();new MutationObserver(function(_,observer){if(root.classList.contains('age-ok')){observer.disconnect();tell()}}).observe(root,{attributes:true,attributeFilter:['class']})});
   function save(){
-    state.lastSeen=Date.now();
+    if(nativeSave.blocked)return false;
+    state.lastSeen=Date.now();state.saveSeq=++saveCounter;
+    var raw=JSON.stringify(state);nativeSave.write(raw);
     try{
       var previous=localStorage.getItem('shift-save');
       if(previous){try{var parsed=JSON.parse(previous);if(parsed&&typeof parsed==='object'&&!Array.isArray(parsed))localStorage.setItem('shift-save-backup',previous)}catch(e){}}
-      localStorage.setItem('shift-save',JSON.stringify(state));saveFailed=false;return true;
-    }catch(e){if(!saveFailed)notify('SAVE UNAVAILABLE · keep this window open to retain progress');saveFailed=true;return false}
+      localStorage.setItem('shift-save',raw);saveFailed=false;return true;
+    }catch(e){if(!saveFailed&&!nativeSave.available)notify('SAVE UNAVAILABLE · keep this window open to retain progress');saveFailed=true;return false}
   }
   // Demand ceiling counts whole baskets, so offline pay and reward scaling track real sales.
   // While the advice weighs a buy, branches follow the flagship's live sales instead of the five-minute average, so a
