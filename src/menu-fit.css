@@ -19,7 +19,20 @@ body[data-active-tray=flowers] .sheet:not(.collapsed) .panel-header .menu-views~
 body[data-active-tray=flowers] .sheet:not(.collapsed) .panel-header .menu-info{display:grid;place-items:center;flex:none;box-sizing:border-box;width:26px;height:26px;margin-left:-4px;padding:0;border:0;border-radius:50%;background:none;box-shadow:inset 0 0 0 1px var(--ui-edge);color:var(--ui-soft);font:italic 600 13px/1 Georgia,serif;cursor:pointer}
 body[data-active-tray=flowers] .sheet:not(.collapsed) .panel-header .menu-info[aria-expanded=true]{background:var(--ui-sheen);color:var(--ui-ink)}
 .sheet [data-pane="flowers"] .menu-board{position:relative}
-.sheet [data-pane="flowers"] .menu-guide-pop{position:absolute;z-index:4;top:0;left:0;right:0;margin:0;padding:12px 14px;border-radius:14px;background:#123420;box-shadow:inset 0 0 0 1px var(--ui-edge),0 12px 28px -8px #06180ccc;color:var(--ui-ink);font:500 12px/1.45 'Bricolage Grotesque',system-ui,sans-serif;text-wrap:pretty}
+/* How the menu works: eight icon tiles, one rule each, in a 2 × 4 grid that covers the whole board (top to bottom, opaque)
+   so no card peeks out from under it. Tap anywhere to close. */
+.sheet [data-pane="flowers"] .menu-guide-pop{position:absolute;z-index:4;inset:0;display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:var(--s-tile-gap,8px);margin:0;padding:var(--s-tile-gap,8px);list-style:none;border-radius:16px;background:#123420;box-shadow:inset 0 0 0 1px var(--ui-edge),0 12px 28px -8px #06180ccc;color:var(--ui-ink);font-family:'Bricolage Grotesque',system-ui,sans-serif;animation:guide-in .18s ease-out}
+.sheet [data-pane="flowers"] .menu-guide-pop li{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;align-content:center;column-gap:10px;row-gap:1px;min-width:0;padding:6px 10px;border-radius:12px;background:#ffffff08;box-shadow:inset 0 0 0 1px #d8ead21a}
+.sheet [data-pane="flowers"] .menu-guide-pop i{grid-row:1/3;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:color-mix(in srgb,var(--tint) 20%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--tint) 45%,transparent);color:var(--tint)}
+.sheet [data-pane="flowers"] .menu-guide-pop i svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sheet [data-pane="flowers"] .menu-guide-pop i svg.is-fill,.sheet [data-pane="flowers"] .menu-guide-pop i svg.type-glyph{fill:currentColor;stroke:none}
+.sheet [data-pane="flowers"] .menu-guide-pop i svg.type-glyph circle{fill:currentColor}
+.sheet [data-pane="flowers"] .menu-guide-pop b{align-self:end;font-weight:650;font-size:13px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet [data-pane="flowers"] .menu-guide-pop small{align-self:start;color:var(--tint);font-weight:550;font-size:11.5px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Whatever the guide covers is hidden too, so nothing that overhangs the board (the On menu chip) peeks out beside it. */
+.sheet [data-pane="flowers"] .menu-board.is-guide-open>:not(.menu-guide-pop){visibility:hidden}
+@keyframes guide-in{from{opacity:0;transform:translateY(4px)}}
+@media (prefers-reduced-motion:reduce){.sheet [data-pane="flowers"] .menu-guide-pop{animation:none}}
 .sheet [data-pane="flowers"] .menu-guide-pop[hidden]{display:none}
 
 /* Live stats row: one column per stat however many there are (VIP buzz adds one). */
