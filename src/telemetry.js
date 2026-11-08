@@ -1,8 +1,7 @@
 // Telemetry: a handful of funnel events (first session, guide, first upgrade, delivery pad, chapters, stores, prestige,
-// return days) sent through whichever provider is present. Nothing here identifies a player: there is no user id, no
-// cookie, and every property is a small enum or number. With no provider loaded the events are queued in
-// window.plausible.q (the official Plausible stub) so uncommenting the snippet in index.html later loses nothing that
-// happened after the script arrived, and nothing at all is sent until then.
+// return days) sent to the provider passed in (TelemetryDeck, see src/telemetry-deck.js) and to window.canopyTrack.
+// Nothing here identifies a player: every property is a small enum or number, and the provider only ever sees a
+// hashed random install id. With no provider nothing leaves the device.
 //
 // Switches, all in localStorage: `canopy-telemetry=off` silences everything on this device; `=debug` logs each event.
 const STORAGE={first:'canopy-first-seen',returnDay:'canopy-return-day',once:'canopy-tracked'};
@@ -15,14 +14,13 @@ export function createTelemetry(options){
  const mode=read('canopy-telemetry');
  const enabled=mode!=='off'&&!!win;
  const tracked=new Set((read(STORAGE.once)||'').split(',').filter(Boolean));
- // Plausible's documented stub: calls before the script loads queue in .q and are flushed once it arrives.
- if(enabled&&win&&!win.plausible)win.plausible=function(){(win.plausible.q=win.plausible.q||[]).push(arguments)};
+ const provider=typeof o.provider==='function'?o.provider:null;
  function send(name,props){
   if(!enabled)return false;
   const clean={};Object.keys(props||{}).forEach(k=>{const v=props[k];if(v===undefined||v===null)return;clean[k]=typeof v==='number'?Math.round(v*100)/100:String(v)});
   if(mode==='debug'&&win.console)win.console.info('[telemetry]',name,clean);
   try{if(typeof win.canopyTrack==='function')win.canopyTrack(name,clean)}catch(e){}
-  try{if(typeof win.plausible==='function')win.plausible(name,{props:clean})}catch(e){}
+  try{if(provider)provider(name,clean)}catch(e){}
   return true;
  }
  // Fire once per device: funnel steps such as the first upgrade or building the delivery pad.

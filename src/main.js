@@ -28,6 +28,7 @@ import {FORKS,RESEARCH_BRANCHES,ALSO,RESEARCH_VERSION,levelCost,mergeResearch,fr
 import {installQuietDom} from './quiet-dom.js';
 import {installNoPageZoom} from './no-page-zoom.js';
 import {createTelemetry} from './telemetry.js';
+import {deckProvider} from './telemetry-deck.js';
 import {createReminders,planReminders} from './reminders.js';
 import {migrateAchievements,checkAchievements,achievementBonus} from './achievements.js';
 import {CULTIVARS,PARENT_LEVEL,migrateCrosses,crossBonus,crossCost,cultivarStatus,startCross,tickCross,sortedCultivars} from './breeding.js';
@@ -346,7 +347,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var lastFanfare=-1e9;
   playSound.onCue=function(kind){if(DUCKING[kind]){if(kind!=='achievement')lastFanfare=performance.now();music.duck(DUCKING[kind])}};
   function revealSound(){setTimeout(function(){if(performance.now()-lastFanfare>2500)playSound('sparkle',state.sound)},0)}
-  var telemetry=createTelemetry();
+  var telemetry=(function(){var store=null;try{store=window.localStorage}catch(e){}var host=location.hostname,native=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+    // Signals from a local dev server, or with ?telemetry=test, land in TelemetryDeck's Test Mode, out of the real numbers.
+    var test=!native&&(host==='localhost'||host==='127.0.0.1'||/^192\.168\./.test(host)||/[?&]telemetry=test/.test(location.search));
+    return createTelemetry({provider:deckProvider({storage:store,testMode:test,payload:{platform:native?'ios':'web'},random:function(){return window.crypto&&window.crypto.randomUUID?window.crypto.randomUUID():String(Math.random()).slice(2)+Date.now()}})})})();
   // Progression markers: the first time any station reaches these levels on this device.
   function trackStationLevel(i){var lv=state.lines[i];[10,25,50,100].forEach(function(m){if(lv>=m)telemetry.once('station_level_'+m,{station:LINES[i].name})})}
   // Browsers only start audio inside a gesture: the first tap or key press primes the context while sound is on.
