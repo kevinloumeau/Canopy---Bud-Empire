@@ -56,7 +56,7 @@ import { abbr, abbrShort, count as countText, times, SPECIALTIES, customerType, 
 import {mountUiKit} from './ui-kit.js';
 import {makeMusic} from './music.js';
 import {createCashPops,rollCash,popFrame,POP_LIFE} from './cash-pops.js';
-import {rubberBand,addSample,releaseVelocity,coastAxis} from './map-gesture.js';
+import {rubberBand,addSample,releaseVelocity,coastAxis,slideAlong} from './map-gesture.js';
 import {POPUP_STALLS,POPUP_PRIZES,POPUP_GIFT_BASE,POPUP_AWAY_PAY,migratePopup,popupWindow,previewWindow,syncPopup,tickPopup,claimPrize,buyStall,bestStall,stallCost,awayOverlap,popupSalesBonus,popupUnlocked,popupClock} from './popup-event.js';
 import {STALL_X,STALL_Z,STALL_D,POPUP_PROPS,POPUP_TAG,popupWalker,popupCrowd} from './popup-market-layout.js';
 import {scaledReward} from './progression.js';
@@ -4957,6 +4957,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       }
       g.x+=g.dx;g.y+=g.dy;g.dx=g.dy=0;
       if(g.scale!==1){if(!g.rect)g.rect=canvas.getBoundingClientRect();gestureZoom(zoom*g.scale,g.fx-g.rect.left,g.fy-g.rect.top);g.scale=1}
+      var slid=slideAlongStreet(g.x,g.y);g.x=slid.x;g.y=slid.y;
       var edge=clampedPan(g.x,g.y);placeGesture(edge.x+rubberBand(g.x-edge.x,width),edge.y+rubberBand(g.y-edge.y,visibleHeight()));
       g.at=now;return;
     }
@@ -4968,6 +4969,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     }
     if(g.mode!=='coast')return;
     var dt=Math.min(.05,Math.max(0,(now-g.at)/1000));g.at=now;if(!dt){render.invalidated=true;return}
+    var glide=slideAlongStreet(g.x,g.y);if(glide.slid){g.x=glide.x;g.y=glide.y;var gv=g.vx*glide.tx+g.vy*glide.ty;g.vx=gv*glide.tx;g.vy=gv*glide.ty}
     var edge2=clampedPan(g.x,g.y);
     if(motionPreference.matches){placeGesture(edge2.x,edge2.y);endGesture();return}
     var ax=coastAxis(g.x,g.vx,Math.abs(g.x-edge2.x)>.01?g.x-edge2.x:0,dt),ay=coastAxis(g.y,g.vy,Math.abs(g.y-edge2.y)>.01?g.y-edge2.y:0,dt);
@@ -4975,6 +4977,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     placeGesture(g.x,g.y);
     if(!g.vx&&!g.vy){var rest=clampedPan(g.x,g.y);if(Math.abs(rest.x-g.x)<.5&&Math.abs(rest.y-g.y)<.5)endGesture()}
   }
+  // A push against the long street's edge slides the view along the street (map-gesture.js slideAlong).
+  function slideAlongStreet(x,y){return slideAlong(x,y,clampedPan,angle,FLOOR_SQUASH)}
   // The finger distance that stretches the map by `shown` past the edge (rubberBand run backwards).
   function unstretch(shown,size){if(!shown)return 0;var a=Math.min(Math.abs(shown),size*.98);return Math.sign(shown)*(1/(1-a/size)-1)*size/.55}
   // A finger on a station sign or the Manage tag is a finger on the map too: it pans and pinches with the others, and a
