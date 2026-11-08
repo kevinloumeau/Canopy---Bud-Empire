@@ -846,7 +846,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   var ENTRY_TAIL=[{x:-9.7,z:8.15},{x:-10.3,z:8.75},{x:-10.9,z:9.3},{x:-11.7,z:9.3},{x:-12.4,z:7.8}];
   function laneJoinIndex(route){return route.length-ENTRY_TAIL.length}
   function kioskRoute(index){var z=kioskZ(index);return [{x:-8.95,z:z},{x:-8.45,z:z},{x:-8.45,z:7.7}].concat(ENTRY_TAIL)}
-  // Thirteen research picks, thirty levels each (five for the safe). The first eight levels climb gently; to 20 each costs
+  // Fourteen research picks, thirty levels each (five for the safe). The first eight levels climb gently; to 20 each costs
   // 2.15× the last, and levels 21-30 are Mastery at 1.6× (research.js levelCost), so research lasts most of a run. A pick with lines in research.js ALSO raises
   // them all at once, so each tap does something you can see.
   var COMPONENTS=[{key:'growBatchLevel',name:'Grow lights',base:1500,max:MASTERY_MAX},{key:'curingLevel',name:'Curing equipment',base:1800,max:MASTERY_MAX},{key:'trendLevel',name:'Trend scout',base:3000,max:MASTERY_MAX},{key:'breedingLevel',name:'Breeding bench',base:3200,max:MASTERY_MAX},{key:'offlineLevel',name:'Back-room safe',base:5000,max:5},

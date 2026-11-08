@@ -81,7 +81,9 @@ html body .sheet>[data-pane=boosts].shop-browser .shop-items>.shop-done-toggle s
  html body .sheet>[data-pane=boosts][data-room=full] .shop-complete-list small{justify-self:end;font-size:12.5px}
  html body .sheet>[data-pane=boosts][data-room=full] .shop-complete-num{display:none}
  html body .sheet>[data-pane=boosts][data-room=full] .shop-complete-full{display:inline}
- html body .sheet>[data-pane=boosts][data-room=full].shop-browser>.shop-complete{gap:12px;padding:14px 12px 8px}
+ html body .sheet>[data-pane=boosts][data-room=full].shop-browser>.shop-complete{flex:1 1 auto;gap:12px;padding:14px 12px 8px}
+ /* A tall phone's spare room spreads the rows evenly instead of pooling under the card. */
+ html body .sheet>[data-pane=boosts][data-room=full] .shop-complete-list{flex:1 1 auto;align-content:space-evenly}
  html body .sheet>[data-pane=boosts][data-room=full] .shop-complete>*{--badge:76px;--chip:36px}
 }
 @media(prefers-reduced-motion:no-preference){
