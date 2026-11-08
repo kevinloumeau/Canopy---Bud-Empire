@@ -58,8 +58,8 @@ html body .world .map-controls button:active{background:#ffffff1f;transform:none
 /* The shop activity panel opens under the row, however many lines it wraps to (main.js measures --lane-bottom). */
 .shop-activity-panel{top:calc(var(--lane-bottom,var(--hud-height,60px)) + 8px);width:min(360px,calc(100% - 74px));max-height:calc(100dvh - var(--lane-bottom,var(--hud-height,60px)) - var(--dock-height,90px) - 24px)}
 
-/* Phone: pinch does the zooming, so the capsule keeps only the recentre button (Kevin, 2026-11-08). */
-@media(max-width:779px){html body .world .map-controls #zoomIn,html body .world .map-controls #zoomOut{display:none}html body .world .map-controls #centerView{box-shadow:none}}
+/* Phone: no map buttons at all, pinch and drag do the work (Kevin, 2026-11-08), so the lane runs to the right edge. */
+@media(max-width:779px){html body .world .map-controls{display:none}.top-lane{right:12px}}
 
 /* Desktop: the map capsule sits on the left under the brand and the lane runs from it to the side panel. */
 @media(min-width:780px){

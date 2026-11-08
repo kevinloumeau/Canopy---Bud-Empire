@@ -34,3 +34,20 @@
 
 @media(max-width:360px){.sheet #stockStatus .stock-item{gap:4px;padding-inline:3px}}
 .sheet #stockStatus .stock-online>span{min-width:2.4ch}
+
+/* Icon audit, part 3 (2026-11-08): each stage shows its 3D picture, the same art as Goals, Research and the Menu tiles
+   (Kevin's own bud render for flowers), so the six stages tell apart at a glance. The line icons stay in the markup
+   for the old layouts and as the fallback. The bottleneck stage keeps its brass count and gets a brass glow under the
+   picture; an empty deliveries chip dims its drone. */
+.stock-3d{display:none}
+.sheet #stockStatus .stock-item>.stock-3d{display:block;flex:none;width:22px;height:22px;object-fit:contain;object-position:50% 100%;filter:drop-shadow(0 2px 2px #06180c80);pointer-events:none}
+.sheet #stockStatus .stock-item>.stock-3d.is-wide{width:25px}
+.sheet #stockStatus .stock-item>.stock-3d+svg{display:none}
+.sheet #stockStatus .stock-item.is-bottleneck>.stock-3d{filter:drop-shadow(0 0 5px #e2c68aaa) drop-shadow(0 2px 2px #06180c80)}
+.sheet #stockStatus .stock-online[data-heat="0"]>.stock-3d{opacity:.5;filter:grayscale(.6) drop-shadow(0 2px 2px #06180c80)}
+@media(max-width:380px){.sheet #stockStatus .stock-item>.stock-3d{width:21px;height:21px}.sheet #stockStatus .stock-item>.stock-3d.is-wide{width:23px}}
+
+/* Tab bar (icon audit, part 3): the line icons stay, as an iOS tab bar's do, a touch heavier so they hold at 22px; the
+   open tab fills its icon with a soft brass wash under a brass line, so where you are reads at a glance. */
+.sheet .tray-tabs .tray-icon{stroke-width:1.75}
+.sheet .tray-tabs button[aria-pressed=true] .tray-icon{color:var(--ui-brass);fill:color-mix(in srgb,var(--ui-brass) 24%,transparent)}

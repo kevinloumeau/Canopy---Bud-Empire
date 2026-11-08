@@ -282,7 +282,7 @@ export function openStore(state,i){
 }
 // Contracts replace the old hourly events: a 30 to 60 minute goal with a twist rule that changes how the shop plays while
 // it runs (faster walk-ins, a door full of VIPs, half the line asking for edibles). The player starts one when they
-// like; the clock is shop time (game seconds, so 2x and 4x speed run it faster and it stops while paused or away), and
+// like; the clock is shop time (game seconds, so 2x speed runs it faster and it stops while paused or away), and
 // offline earnings never count. Finishing
 // banks a boost (2x sales for 10 minutes) that the player fires whenever they want, plus a trophy; the first three also
 // leave a keepsake on every branch. Running out of time costs nothing and the next offer comes up.

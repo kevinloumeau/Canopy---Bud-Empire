@@ -82,13 +82,13 @@
 @container (min-height:480px){
  /* One group with the room of a pulled-up sheet: each goal becomes a full-width row, its ring on the left and the goal
     and its figure beside it, the rows sharing the height. */
- .goals-list>.goal-group:not(.is-stacked)>.goal-tiles{grid-template-columns:minmax(0,1fr);grid-auto-rows:minmax(0,1fr)}
- .goals-list>.goal-group:not(.is-stacked) .goal-tile,.sheet .goals-list>.goal-group:not(.is-stacked) button.goal-tile{grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;justify-items:start;align-content:center;column-gap:calc(var(--s-pad) + 6px);row-gap:2px;padding:min(var(--s-pad),12px) calc(min(var(--s-pad),12px) + 6px);text-align:left}
- .goals-list>.goal-group:not(.is-stacked) .goal-tile>.goal-ring{grid-row:1/3;width:min(var(--s-ring),64px);height:min(var(--s-ring),64px)}
- .goals-list>.goal-group:not(.is-stacked) .goal-tile>.goal-ring>img.goal-3d{width:calc(min(var(--s-ring),64px) * .6);height:calc(min(var(--s-ring),64px) * .6)}
- .goals-list>.goal-group:not(.is-stacked) .goal-tile>b{align-self:end;font-size:13px}
- .goals-list>.goal-group:not(.is-stacked) .goal-tile>small.goal-tile-figure{display:block;align-self:start}
- .goals-list>.goal-group:not(.is-stacked) .goal-tile>:not(.goal-ring):not(b):not(small){grid-column:2}
+ .goals-list>.goal-group:not(.is-stacked):not(.goal-focus)>.goal-tiles{grid-template-columns:minmax(0,1fr);grid-auto-rows:minmax(0,1fr)}
+ .goals-list>.goal-group:not(.is-stacked):not(.goal-focus) .goal-tile,.sheet .goals-list>.goal-group:not(.is-stacked):not(.goal-focus) button.goal-tile{grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;justify-items:start;align-content:center;column-gap:calc(var(--s-pad) + 6px);row-gap:2px;padding:min(var(--s-pad),12px) calc(min(var(--s-pad),12px) + 6px);text-align:left}
+ .goals-list>.goal-group:not(.is-stacked):not(.goal-focus) .goal-tile>.goal-ring{grid-row:1/3;width:min(var(--s-ring),64px);height:min(var(--s-ring),64px)}
+ .goals-list>.goal-group:not(.is-stacked):not(.goal-focus) .goal-tile>.goal-ring>img.goal-3d{width:calc(min(var(--s-ring),64px) * .6);height:calc(min(var(--s-ring),64px) * .6)}
+ .goals-list>.goal-group:not(.is-stacked):not(.goal-focus) .goal-tile>b{align-self:end;font-size:13px}
+ .goals-list>.goal-group:not(.is-stacked):not(.goal-focus) .goal-tile>small.goal-tile-figure{display:block;align-self:start}
+ .goals-list>.goal-group:not(.is-stacked):not(.goal-focus) .goal-tile>:not(.goal-ring):not(b):not(small){grid-column:2}
  .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto auto auto!important;justify-items:center!important;align-content:center!important;row-gap:2px!important;padding:var(--s-pad) 6px!important;text-align:center!important}
  .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill>img.icon-3d{grid-column:1!important;grid-row:1!important;width:var(--s-icon);height:var(--s-icon);margin-bottom:4px}
  .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill>strong{grid-column:1!important;grid-row:2!important}

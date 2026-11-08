@@ -29,11 +29,11 @@ const fs=require('node:fs');
   await page.locator('[data-tray="employees"]').click();await page.locator('[data-staff="0"]').click();assert.equal((await status()).employeeLevels[0],2);
   await page.locator('[data-tray="orders"]').click();const online=(await status()).onlineCompleted;await page.locator('#fulfillOnline').click();assert.equal((await status()).onlineCompleted,online+1);
   const paused=(await status()).cash;await page.waitForTimeout(600);assert.equal((await status()).cash,paused);
-  await page.locator('[data-speed="4"]').click();let served=false;
+  await page.locator('[data-speed="2"]').click();let served=false;
   for(let i=0;i<16;i++){await page.waitForTimeout(500);const current=await status();assert.ok(current.customers.every(c=>!c.bag||c.ordered),'pickup requires completed order');if(current.customersServed>77){served=true;break}}
   assert.ok(served,'customers complete order then pickup');assert.ok((await status()).cash>paused,'branches and shop generate income');
   await page.locator('[data-speed="0"]').click();
-  const cameraBefore=(await status()).camera;if(viewport.width<780){assert.equal(await page.locator('#zoomIn').isVisible(),false);await page.locator('#zoomIn').dispatchEvent('click')}else await page.locator('#zoomIn').click();assert.ok((await status()).camera.zoom>cameraBefore.zoom);await page.locator('#centerView').click();assert.equal((await status()).camera.zoom,1);
+  const cameraBefore=(await status()).camera;if(viewport.width<780){assert.equal(await page.locator('#zoomIn').isVisible(),false);await page.locator('#zoomIn').dispatchEvent('click')}else await page.locator('#zoomIn').click();assert.ok((await status()).camera.zoom>cameraBefore.zoom);if(viewport.width<780){assert.equal(await page.locator('#centerView').isVisible(),false);await page.locator('#centerView').dispatchEvent('click')}else await page.locator('#centerView').click();assert.equal((await status()).camera.zoom,1);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'no page overflow');assert.deepEqual(errors,[]);
   const offlineSetup=await page.evaluate(()=>JSON.parse(localStorage.getItem('shift-save')));
   await page.close();

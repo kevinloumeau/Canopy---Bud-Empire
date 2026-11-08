@@ -66,13 +66,23 @@ export function tickShift(play,dt,{queue=0,stockout=false}={}){
 export const MAX_ORDER_COUNTERS=3;
 export const MAX_COMFORT=20;
 export function shiftAdvice(recap,{counters=1,comfortLevel=0}={}){
-  if(recap.stockoutSeconds>30)return {text:'Keep pickup stocked: check your Pack and Orders stations.',short:'Pickup ran dry · check Pack',station:3};
-  if(recap.served&&recap.waitTotal/recap.served>25)return {text:comfortLevel>=MAX_COMFORT?'Customers waited a while. Train the Orders team to serve faster.':'Customers waited a while. Train the Orders team or buy Express lanes.',short:'Long waits · speed up Orders',station:4};
-  if(recap.queuePeak>8)return {text:counters>=MAX_ORDER_COUNTERS?'A busy shift. Upgrade the Orders desk and team so every counter serves faster.':'A busy shift. Add an order counter to spread the queue.',short:counters>=MAX_ORDER_COUNTERS?'Long line · upgrade Orders':'Long line · add a counter',station:4};
+  if(recap.stockoutSeconds>30)return {kind:'stockout',text:'Keep pickup stocked: check your Pack and Orders stations.',short:'Pickup ran dry · check Pack',station:3};
+  if(recap.served&&recap.waitTotal/recap.served>25)return {kind:'wait',text:comfortLevel>=MAX_COMFORT?'Customers waited a while. Train the Orders team to serve faster.':'Customers waited a while. Train the Orders team or buy Express lanes.',short:'Long waits · speed up Orders',station:4};
+  if(recap.queuePeak>8)return {kind:'line',text:counters>=MAX_ORDER_COUNTERS?'A busy shift. Upgrade the Orders desk and team so every counter serves faster.':'A busy shift. Add an order counter to spread the queue.',short:counters>=MAX_ORDER_COUNTERS?'Long line · upgrade Orders':'Long line · add a counter',station:4};
   return {text:'Try another customer recommendation next shift. Great matches earn extra tips.',moment:true};
 }
 // Branch alerts pointed at the old Stock and People tabs (shelves, transfers, drivers, regulars). The store pages are
 // down to stations and upgrades now (2026-11-03), so there is nothing there to chase; the map's brass shows the buys.
+// The recap's advice is about a round that has already ended, so the card only repeats it while the problem is still
+// there now (Kevin, 2026-11-08: "suggests Long line · upgrade Orders when there is no line"). floor is getFloor()'s stages.
+export function stillTrue(tip,{stages=[]}={},shift){
+  if(!tip||tip.station===undefined)return false;
+  const busy=label=>stages.some(s=>s.label===label&&s.busy);
+  if(tip.kind==='line')return busy('Ordering');
+  if(tip.kind==='stockout')return busy('Pickup');
+  if(tip.kind==='wait')return !!shift&&shift.served>=5&&shift.waitTotal/shift.served>25;
+  return true;
+}
 export function operationsAlerts(){return [];}
 
 // The pick card asks in plain words (Kevin, 2026-11-07): a short question in the guest's voice, and on each answer the
@@ -114,13 +124,20 @@ export function paceAgainst(shift,recap){
   if(Math.abs(pct)<3)return {tone:'even',pct:0,text:'Same pace as last round'};
   return {tone:pct>0?'up':'down',pct,text:(pct>0?'▲ ':'▼ ')+Math.min(999,Math.abs(pct))+'% on last round'};
 }
+// With nothing waiting on the player, the pill reads the round's earnings and its pace, so the round can be followed
+// without opening the panel.
+export function pillPace(shift,recap,format){
+  if(!(shift.earned>0))return 'Shop activity';
+  const pace=paceAgainst(shift,recap);
+  return format(shift.earned)+(pace&&pace.tone!=='even'?(pace.tone==='up'?' ▲':' ▼')+Math.min(999,Math.abs(pace.pct))+'%':'');
+}
 export function shiftTimeLeft(seconds){const left=Math.max(0,SHIFT_SECONDS-seconds);return left<60?'Recap in under a minute':'Recap in '+Math.ceil(left/60)+' min';}
 // The panel, on the glass components: this round's earnings in a ring, the floor stage by stage and one fix as
 // the brass next-action card. A customer asking for a pick gets their own card in the middle of the screen instead.
 // lane: where the pill and the feedback note live while the panel is closed (the top lane in main.js), so they line up
 // with the other status chips and toasts rather than sitting on their own spot.
 const ART=(name,cls)=>'<img class="'+cls+'" src="icons/3d/'+name+'.png" alt="" draggable="false" decoding="async">';
-export function mountShopPlay({getState,getMoment,getAlerts,getFloor,getFocus,names,colors,format,choose,skip,navigate,changed,opening,closing,lane}){
+export function mountShopPlay({getState,getMoment,getAlerts,getFloor,getFocus,showFloor,names,colors,format,choose,skip,navigate,changed,opening,closing,lane}){
   const root=document.createElement('div');root.className='shop-play';
   root.innerHTML='<button type="button" id="shopActivity" class="shop-activity" aria-expanded="false" aria-controls="shopActivityPanel">'+PULSE+'<span></span></button>'+
     '<section id="shopActivityPanel" class="shop-activity-panel" aria-label="Shop activity" hidden><div class="shop-activity-heading"><h2>Shop activity</h2><button type="button" id="shopActivityClose" aria-label="Close shop activity">'+CLOSE+'</button></div>'+
@@ -169,6 +186,7 @@ export function mountShopPlay({getState,getMoment,getAlerts,getFloor,getFocus,na
     else if(b.classList.contains('moment-skip')){closeMoment();skip()}
     else if(b.classList.contains('moment-close'))closeMoment();
     render();});
+  $('shiftRecap').addEventListener('click',e=>{const tile=e.target.closest('.floor-stage');if(!tile||!showFloor||!lastFloor)return;const stage=lastFloor.stages.find(s=>s.key===tile.dataset.stage);if(stage){showFloor(stage.at);close()}});
   $('shiftRecap').addEventListener('click',e=>{const card=e.target.closest('.activity-advice');if(!card||card.dataset.station===undefined)return;close();navigate({station:Number(card.dataset.station)})});
   const advice=recap=>{const state=getState();return shiftAdvice(recap,{counters:state.orderCounters,comfortLevel:state.comfortLevel});};
   const el=(tag,props,...kids)=>{const node=Object.assign(document.createElement(tag),props);node.append(...kids);return node;};
@@ -196,36 +214,41 @@ export function mountShopPlay({getState,getMoment,getAlerts,getFloor,getFocus,na
   // sense"): how is this round going (the earnings, the ring filling to the recap and the pace against the last round),
   // where are the customers right now (the floor as a row of stages, each with the faces of the shoppers in it and a
   // coral edge where they pile up), and what to fix (one brass card that opens the station).
+  // Each tile is a button that takes the map to those customers. A VIP's face wears a crown and a hurried shopper about
+  // to run out of patience wears a clock.
   function stageTile(stage){
     const faces=el('span',{className:'floor-faces'});
-    if(stage.faces.length)faces.append(...stage.faces.slice(0,3).map(f=>{const img=el('img',{alt:'',draggable:false,decoding:'async'});img.src='icons/3d/'+f+'.png';return img;}));
+    if(stage.faces.length)faces.append(...stage.faces.map(f=>{const img=el('img',{alt:'',draggable:false,decoding:'async'});img.src='icons/3d/'+f.p+'.png';return f.b?el('span',{className:'floor-face is-'+f.b},img):el('span',{className:'floor-face'},img);}));
     else faces.append(el('i'));
-    const tile=el('li',{className:'floor-stage'+(stage.busy?' is-busy':'')+(stage.count?'':' is-empty')},faces,el('b',{textContent:String(stage.count)}),el('span',{textContent:stage.label}));
-    tile.setAttribute('aria-label',stage.label+': '+stage.count+(stage.count===1?' customer':' customers')+(stage.busy?', backed up':''));
-    return tile;
+    const vips=stage.faces.filter(f=>f.b==='vip').length,hurried=stage.faces.filter(f=>f.b==='hurry').length;
+    const tile=el('button',{type:'button',className:'floor-stage'+(stage.busy?' is-busy':'')+(stage.count?'':' is-empty')},faces,el('b',{textContent:String(stage.count)}),el('span',{textContent:stage.label}));
+    tile.dataset.stage=stage.key;
+    tile.setAttribute('aria-label',stage.label+': '+stage.count+(stage.count===1?' customer':' customers')+(vips?', '+vips+' VIP':'')+(hurried?', '+hurried+' in a hurry':'')+(stage.busy?', backed up':'')+'. Show on the map');
+    return el('li',{},tile);
   }
-  let floorKey='';
+  let floorKey='',lastFloor=null;
   function renderFloor(){
     const box=root.querySelector('.activity-floor');if(!box)return;
-    const floor=getFloor?getFloor():{stages:[]},next=JSON.stringify(floor.stages);if(next===floorKey)return;floorKey=next;
-    box.replaceChildren(...floor.stages.map(stageTile));box.style.setProperty('--stages',String(floor.stages.length||1));
+    const floor=getFloor?getFloor():{stages:[]},next=JSON.stringify([floor.stages.map(s=>[s.count,s.faces,s.busy]),floor.happiness]);if(next===floorKey)return;floorKey=next;
+    lastFloor=floor;box.replaceChildren(...floor.stages.map(stageTile));box.style.setProperty('--stages',String(floor.stages.length||1));
+    const mood=root.querySelector('[data-figure=happiness]');if(mood){const h=floor.happiness;mood.querySelector('dd').textContent=h===null?'–':h+'%';mood.dataset.tone=h===null?'':h>=75?'quick':h<50?'slow':''}
   }
   function render(){
     const play=getState().shopPlay,moment=getMoment(),alerts=getAlerts(),shift=play.shift;
     if(!moment&&!overlay.hidden){overlay.hidden=true;pill.setAttribute('aria-expanded',String(!panel.hidden))}
     if(moment&&!overlay.hidden)renderMoment();
-    const label=moment?moment.name+' needs a pick':play.recapUnread?'Floor recap ready':alerts.length?alerts[0].title:'Shop activity';
+    const label=moment?moment.name+' needs a pick':play.recapUnread?'Floor recap ready':alerts.length?alerts[0].title:pillPace(shift,play.recap,format);
     pill.querySelector('span').textContent=label;pill.classList.toggle('is-moment',!!moment);
     const glyph=moment?'leaf':'pulse';if(pill.dataset.icon!==glyph){pill.dataset.icon=glyph;pill.querySelector('svg').outerHTML=moment?LEAF:PULSE}
     pill.classList.toggle('has-update',!!moment||play.recapUnread||alerts.length>0);pill.setAttribute('aria-label',label+(moment?' · Open their question':' · Open shop activity'));
     if(panel.hidden){key='';floorKey='';return}
-    const focus=getFocus?getFocus():null;
-    const next=JSON.stringify([play.recap,shift.served,shift.matches,Math.floor(shift.earned),Math.floor(shift.seconds/10),getState().orderCounters,getState().comfortLevel,focus]);
+    const focus=getFocus?getFocus():null,floor=getFloor?getFloor():{stages:[]};
+    const next=JSON.stringify([floor.stages.map(s=>s.busy),play.recap,shift.served,shift.matches,Math.floor(shift.earned),Math.floor(shift.seconds/10),getState().orderCounters,getState().comfortLevel,focus]);
     if(next!==key){key=next;
       const focused=document.activeElement,scroll=panel.scrollTop,refocus=root.contains(focused)&&!!focused.closest('#shiftRecap');
       const recapBox=$('shiftRecap'),recap=play.recap;
       recapBox.replaceChildren(heroBlock(shift,recap),floorList(),figuresBlock(shift));
-      const tip=recap?advice(recap):null,fix=tip&&tip.station!==undefined?{station:tip.station,text:tip.short||tip.text,icon:focus&&focus.station===tip.station?focus.icon:null}:focus&&focus.station!==undefined?focus:null;
+      const tip=recap?advice(recap):null,fix=stillTrue(tip,floor,shift)?{station:tip.station,text:tip.short||tip.text,icon:focus&&focus.station===tip.station?focus.icon:null}:focus&&focus.station!==undefined?focus:null;
       if(fix){const card=el('button',{type:'button',className:'activity-advice',title:fix.text},fix.icon?svg(fix.icon):svg(SPARK),el('strong',{textContent:tieLast(fix.text)}),svg(CHEVRON));card.dataset.station=fix.station;recapBox.appendChild(card)}
       else if(focus&&focus.text)recapBox.appendChild(el('p',{className:'activity-calm',textContent:tieLast(focus.text)}));
       floorKey='';
@@ -248,7 +271,8 @@ export function mountShopPlay({getState,getMoment,getAlerts,getFloor,getFocus,na
   function figuresBlock(shift){
     const wait=shift.served?Math.round(shift.waitTotal/shift.served):null;
     const waitFigure=figure('Avg wait',wait===null?'–':wait+'s');if(wait!==null)waitFigure.dataset.tone=wait>25?'slow':wait<=15?'quick':'';
-    return el('dl',{className:'activity-figures'},figure('Served',String(shift.served)),waitFigure,figure('Great picks',String(shift.matches)));
+    const mood=figure('Happiness','–');mood.dataset.figure='happiness';
+    return el('dl',{className:'activity-figures'},figure('Served',String(shift.served)),waitFigure,mood);
   }
   return {
     render,close,open,

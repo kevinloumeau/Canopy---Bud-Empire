@@ -23,13 +23,13 @@ const fs=require('node:fs');
    const after=await page.locator('#branchMapMarker').boundingBox();assert.notEqual(after.y,box.y);
    const canvas=page.locator('#world>canvas'),bounds=await canvas.boundingBox();const x=viewport.width*.38,y=viewport.height*.55;
    await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+25,y+25,{steps:5});await page.mouse.up();assert.notEqual((await status()).camera.panX,0);
-   await page.locator('#centerView').click();assert.equal((await status()).camera.panX,0);
+   if(viewport.width<780)await page.locator('#centerView').dispatchEvent('click');else await page.locator('#centerView').click();assert.equal((await status()).camera.panX,0);
    const levels=(await status()).branchLevels;const cash=(await status()).cash;
    await page.evaluate(()=>document.getElementById('branchMapMarker').click());await page.locator('#branchBuy'+(i-1)).click();
    const expected=levels.slice();expected[i-1]++;assert.deepEqual((await status()).branchLevels,expected);assert.ok((await status()).cash<cash);
    await page.locator('#branchVisit'+(i-1)).click();await page.reload();await page.waitForFunction(()=>window.__shiftReady);assert.equal((await status()).viewedStore,i);assert.deepEqual((await status()).branchLevels,expected);
   }
-  const before=(await status()).cash;await page.locator('[data-speed="4"]').click();await page.waitForTimeout(1000);assert.ok((await status()).cash>before);await page.locator('[data-speed="0"]').click();
+  const before=(await status()).cash;await page.locator('[data-speed="2"]').click();await page.waitForTimeout(1000);assert.ok((await status()).cash>before);await page.locator('[data-speed="0"]').click();
   await page.locator('[data-tray="factory"]').click();assert.equal((await status()).viewedStore,0);assert.equal(await page.locator('#markers').isVisible(),true);assert.deepEqual((await status()).lineLevels,original.lineLevels);
   await page.waitForTimeout(1800);await page.screenshot({path:'artifacts/branch-maps/'+name+'-main.png'});
   await page.locator('[data-tray="empire"]').click();await page.locator('#branchVisit0').click();assert.equal((await status()).viewedStore,1);
