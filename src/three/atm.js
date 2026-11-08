@@ -11,6 +11,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ATM_SPOTS } from '../atm.js';
+import { blueprint } from './blueprint.js';
 
 const LOOKS = [
   null,
@@ -106,9 +107,9 @@ export function buildAtms(world, layout, { material }) {
   const labels = new THREE.InstancedMesh(labelGeometry, new THREE.MeshBasicMaterial({ map: labelTexture, transparent: true, depthWrite: false }), count);
   for (let i = 0; i < count; i++) labels.setMatrixAt(i, machineMatrix(i));
   labels.count = 0; labels.frustumCulled = false; root.add(labels);
-  // The ghost: the plain machine merged into one see-through mesh, moved to the next slot.
+  // The ghost: the plain machine merged into one mesh, drawn as a blueprint (blueprint.js) on the next slot.
   const ghostGeometry = mergeGeometries([...machineParts(LOOKS[1]).values()].flat().concat([screenGeometry.clone()]));
-  const ghost = new THREE.Mesh(ghostGeometry, new THREE.MeshBasicMaterial({ color: '#f1e6c6', transparent: true, opacity: .3, depthWrite: false }));
+  const ghost = blueprint(new THREE.Mesh(ghostGeometry));
   ghost.visible = false; root.add(ghost);
   const tint = new THREE.Color();
   let shownLook = 0, shownPop = '', shownPopMachine = -1;
