@@ -924,6 +924,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(state.lines[4])while(count<limit){var need=economy.onlineSize(state.onlineCompleted+count,state.lines);if(jars<need)break;jars-=need;used+=need;reward+=need*onlineValue(state.onlineCompleted+count);count++}
     return {count:count,jars:used,reward:reward};
   }
+  // Online orders sparkle where they leave: off the pickup window's awning for walk-ups, off the drone pad on the deck for
+  // drone orders. Before the drone port is built the deck spot is empty air over the side street, so nothing bursts there.
+  var WINDOW_BURST={x:PICKUP_WINDOW.x,y:.4,z:PICKUP_WINDOW.z+.9};
   function sendOnlineOrders(limit,automatic,via){
     var space=windowSpace(),batch=onlineBatch(onlineLimit(limit,via));if(!batch.count)return;
     state.stock[3]-=batch.jars;state.onlineCompleted+=batch.count;state.shopPlay.shift.deliveries+=batch.count;consumeRequests(state,batch.count);
@@ -934,7 +937,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // Each window level pays walk-ups more, half again at each new look; Cargo bays pay drone orders more.
     var walkPay=walks?batch.reward*walks/batch.count*windowPay(wl):0,dronePay=batch.reward*(batch.count-walks)/batch.count*cargoPay();
     queueDeliveryWave(batch.count-walks);batch.reward=walkPay+dronePay;
-    recordEvent(state.empire,'online',batch.count);add(batch.reward);creditPop('window',CASH_SITES.window,walkPay);creditPop('deck',CASH_SITES.deck,dronePay);if(!automatic)notifyDispatch(batch);burst({x:DECK_X,z:DECK_Z,y:7.05},'#dbc38b');slideReceipts(batch.count);renderUI();save();
+    recordEvent(state.empire,'online',batch.count);add(batch.reward);creditPop('window',CASH_SITES.window,walkPay);creditPop('deck',CASH_SITES.deck,dronePay);if(!automatic)notifyDispatch(batch);if(walkPay)burst(WINDOW_BURST,'#dbc38b');if(dronePay&&deliveryBuilt())burst({x:DECK_X,z:DECK_Z,y:7.05},'#dbc38b');slideReceipts(batch.count);renderUI();save();
   }
   // Each order is a parcel set on its own spot on the launch pad; couriers come in one after another to fetch them. With
   // every spot taken, further orders ride along with a waiting parcel (shown as ×N), so the pad never fills up.
@@ -3110,7 +3113,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     window.__canopySnap.map3d=function(){return map3d&&map3d.ok?map3d.debug:null};
     window.__canopySnap.stationFx=stationFx;
     // An upgrade's map effects at station i (sparkles, ring, spring) without buying it, for screenshots.
-    window.__canopySnap.upgrade=function(i){burst(machinePos[i]);stationFx(i)};
+    window.__canopySnap.upgrade=function(i){burst(machinePos[i]);stationFx(i)};window.__canopySnap.burst=burst;
     // A customer's pick question, open on screen, for screenshots of the card (shop-play.js).
     window.__canopySnap.moment=function(cast,variant){var guest=customers[0]||{id:0};moment=createMoment(state.shopPlay,guest,momentPicks(state,menuStrains()));if(moment){castMoment(moment,cast===undefined?guest.id:cast);if(variant!==undefined)moment.variant=variant}if(moment&&shopPlayUI){shopPlayUI.render();shopPlayUI.open()}return !!moment};
     // A cash pop frozen at `age` seconds into its rise, for screenshots of the pops (cash-pops.js).
