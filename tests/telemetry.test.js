@@ -4,11 +4,12 @@ import {createTelemetry} from '../src/telemetry.js';
 
 const DAY=86400000;
 function fakeStorage(seed){const m=new Map(Object.entries(seed||{}));return {getItem:k=>m.has(k)?m.get(k):null,setItem:(k,v)=>m.set(k,String(v)),map:m};}
-function fakeWindow(){const sent=[];return {sent,plausible:(name,opts)=>sent.push([name,opts.props]),document:{hidden:false},setTimeout:()=>0};}
+function fakeWindow(){const sent=[];return {sent,provider:(name,props)=>sent.push([name,props]),document:{hidden:false},setTimeout:()=>0};}
+const make=o=>createTelemetry(Object.assign({provider:o.window&&o.window.provider},o));
 
 test('first session is day 0 with no return signal; the next day sends return_day once',()=>{
  const win=fakeWindow(),storage=fakeStorage();let t=1_000_000;
- const tel=createTelemetry({window:win,storage,now:()=>t});
+ const tel=make({window:win,storage,now:()=>t});
  assert.equal(tel.session({returning:false}),0);
  assert.deepEqual(win.sent,[['session_start',{returning:'false',day:0}]]);
  t+=DAY+1;tel.session();tel.session();
@@ -19,34 +20,32 @@ test('first session is day 0 with no return signal; the next day sends return_da
 
 test('once() fires a funnel event a single time per device and survives a reload',()=>{
  const storage=fakeStorage(),win=fakeWindow();
- const tel=createTelemetry({window:win,storage});
+ const tel=make({window:win,storage});
  assert.equal(tel.once('first_upgrade',{station:'SEED STATION'}),true);
  assert.equal(tel.once('first_upgrade',{station:'GROW ROOM'}),false);
- const again=createTelemetry({window:fakeWindow(),storage});
+ const again=make({window:fakeWindow(),storage});
  assert.equal(again.once('first_upgrade'),false,'the marker persisted in storage');
  assert.equal(win.sent.length,1);
 });
 
 test('the off switch silences everything, including once() and sessions',()=>{
- const win=fakeWindow(),tel=createTelemetry({window:win,storage:fakeStorage({'canopy-telemetry':'off'})});
+ const win=fakeWindow(),tel=make({window:win,storage:fakeStorage({'canopy-telemetry':'off'})});
  tel.session();tel.once('delivery_pad_built');tel.send('chapter_complete',{chapter:'x'});
  assert.equal(win.sent.length,0);
 });
 
 test('events queued before load are drained, later pushes go straight through, and props are sanitised',()=>{
- const bare=fakeWindow();createTelemetry({window:bare,storage:fakeStorage()}).drain();bare.canopyEvents.push(['age_gate',{answer:'no'}]);
+ const bare=fakeWindow();make({window:bare,storage:fakeStorage()}).drain();bare.canopyEvents.push(['age_gate',{answer:'no'}]);
  assert.deepEqual(bare.sent,[['age_gate',{answer:'no'}]],'a push after boot with nothing queued before still sends');
  const win=fakeWindow();win.canopyEvents=[['age_gate',{answer:'yes'}]];
- const tel=createTelemetry({window:win,storage:fakeStorage()});
+ const tel=make({window:win,storage:fakeStorage()});
  tel.drain();win.canopyEvents.push(['age_gate',{answer:'no',skip:undefined,seconds:1.2345}]);
  assert.deepEqual(win.sent,[['age_gate',{answer:'yes'}],['age_gate',{answer:'no',seconds:1.23}]]);
 });
 
-test('without a provider the Plausible stub queues calls for a script that loads later',()=>{
+test('without a provider nothing is sent and nothing is queued on window',()=>{
  const win={document:{hidden:false},setTimeout:()=>0};
  const tel=createTelemetry({window:win,storage:fakeStorage()});
- tel.send('session_start',{day:0});
- assert.equal(typeof win.plausible,'function');
- assert.equal(win.plausible.q.length,1);
- assert.equal(win.plausible.q[0][0],'session_start');
+ assert.equal(tel.send('session_start',{day:0}),true);
+ assert.equal(win.plausible,undefined);
 });

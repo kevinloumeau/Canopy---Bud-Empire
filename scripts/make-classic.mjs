@@ -13,8 +13,8 @@ if (compatible === html) {
 // A classic script cannot import or export, so a split-off shared chunk would stop the game at start-up.
 const entry = compatible.match(/<script defer src="\.?\/(assets\/shift-[^"]+\.js)">/)[1];
 const entryCode = await readFile(new URL(`../dist/${entry}`, import.meta.url), 'utf8');
-if (/^import[\s{*"']|\bexport\s*\{/m.test(entryCode)) {
-  throw new Error(`${entry} has a module import or export, so it cannot run as a classic script.`);
+if (/^import[\s{*"']|\bexport\s*\{|\bimport\.meta\b/m.test(entryCode)) {
+  throw new Error(`${entry} has a module import, export or import.meta, so it cannot run as a classic script.`);
 }
 
 // The 3D map's entry is loaded on demand by main.js, which finds its hashed name in this meta tag.
