@@ -4339,7 +4339,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function cityClaimed(){var out={};CITY_BUILDINGS.forEach(function(b){out[b.id]=state.city[b.id]>0||isBuilding(state.builds,b.id)||cityUnlocked(b.id,state.lifetime,state.city[b.id],state.run.time)});return out}
   function cityBuildShares(){var out={};CITY_BUILDINGS.forEach(function(b){if(isBuilding(state.builds,b.id))out[b.id]=1-buildShareLeft(state.builds,b.id)});return out}
   function cityKey(){return CITY_BUILDINGS.map(function(b){return state.city[b.id]+(isBuilding(state.builds,b.id)?'b':'')+(cityUnlocked(b.id,state.lifetime,state.city[b.id],state.run.time)?'u':'')}).join()}
-  var CITY_WHAT={warehouse:'pays more while you are away',growhouse:'every plant station makes more',billboard:'more walk-ins',terplab:'trending and boutique strains sell for more'};
+  var CITY_WHAT={warehouse:'keeps paying longer while you are away',growhouse:'every plant station makes more',billboard:'more walk-ins',terplab:'trending and boutique strains sell for more'};
   // The first time each lot comes up for sale, say what it does.
   function noticeCity(){CITY_BUILDINGS.forEach(function(b){if(state.citySeen.indexOf(b.id)>=0||!cityUnlocked(b.id,state.lifetime,state.city[b.id],state.run.time))return;state.citySeen.push(b.id);updateMarkers.key=null;render.invalidated=true;notify(b.name.toUpperCase()+' LOT FOR SALE · '+CITY_WHAT[b.id],'upgrade');save()})}
   // The first time the lot comes up for sale, say where it is.
