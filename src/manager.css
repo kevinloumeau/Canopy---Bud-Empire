@@ -4,7 +4,8 @@
 .world .marker.manager-tag,.world .marker.manager-tag:not(.selected){left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0;min-height:0;padding:0;border:0;background:none;box-shadow:none;opacity:1;cursor:pointer;z-index:3;pointer-events:auto}
 .manager-tag .manager-goal{position:relative;display:flex;align-items:center;gap:6px;max-width:210px;height:30px;padding:0 11px 0 4px;border-radius:999px;background:linear-gradient(180deg,var(--ui-sheen),transparent 45%),var(--ui-glass);border:1px solid var(--ui-edge);box-shadow:var(--ui-shadow);-webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);color:var(--ui-ink);font:600 12px/1 'Bricolage Grotesque',system-ui,sans-serif;white-space:nowrap}
 .manager-tag .manager-goal::after{content:'';position:absolute;left:50%;bottom:-5px;width:9px;height:9px;transform:translateX(-50%) rotate(45deg);background:var(--ui-glass);border-right:1px solid var(--ui-edge);border-bottom:1px solid var(--ui-edge)}
-.manager-tag .manager-goal img{width:22px;height:22px;flex:none;filter:drop-shadow(0 1px 2px #06180c8c)}
+.manager-tag .manager-badge{display:grid;place-items:center;flex:none;width:22px;height:22px;border-radius:50%;background:var(--ui-leaf-glow);box-shadow:inset 0 1px 0 #ffffff59,0 1px 2px #06180c8c}
+.manager-tag .manager-badge svg{width:14px;height:14px;fill:none;stroke:#123020;stroke-width:2.2;stroke-linecap:round}
 .manager-tag .manager-goal b{min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:600}
 .manager-tag .manager-goal em{flex:none;font-style:normal;font-weight:700;color:var(--ui-leaf-glow);font-variant-numeric:tabular-nums}
 .manager-tag.is-ready .manager-goal{border-color:#a8dc5266}
@@ -15,3 +16,4 @@
 .manager-tag:active .manager-goal{transform:scale(.97)}
 .world .marker.manager-tag{text-transform:none;letter-spacing:0}
 .manager-tag .manager-goal em:empty{display:none}
+.world .marker.manager-tag[hidden]{display:none!important}
