@@ -48,7 +48,8 @@ export function route(from,spot){let f=floorOf(from.y);const g=floorOf(spot.y);l
   out.push(...onFloor(at,spot,f));
   return out.filter((p,i)=>i===0?Math.hypot(p.x-from.x,p.z-from.z)+Math.abs(p.y-from.y)>.01:true);}
 // A fresh manager: standing at their home station (`at`, -1 for none) on the given spot.
-export function migrateManager(raw){const at=raw&&Number.isInteger(raw.at)&&raw.at>=0&&raw.at<6?raw.at:-1;return {at};}
+// `met`: the player has been shown who the manager is (the one-time "This is you" tip).
+export function migrateManager(raw){const at=raw&&Number.isInteger(raw.at)&&raw.at>=0&&raw.at<6?raw.at:-1;return {at,met:!!(raw&&raw.met===true)};}
 // The live walker (not saved): where the figure is, the route left, the ground covered (drives the walk cycle).
 export function createWalker(spot){return {x:spot.x,y:spot.y,z:spot.z,path:[],heading:spot.look||{x:-1,z:1},look:spot.look||null,ground:0,moving:false,target:-1};}
 // Sends the walker to station i's spot. Returns false when already there (or on the way).
