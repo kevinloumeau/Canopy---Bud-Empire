@@ -70,8 +70,11 @@
 .moment-pick:active{transform:scale(.96);border-color:#e2c68a88}
 @media(hover:hover){.moment-pick:hover{border-color:#e2c68a66;background:var(--ui-sheen)}}
 .moment-pick-art{position:relative;display:grid;place-items:center;width:76px;height:72px;margin-bottom:4px;background:radial-gradient(closest-side,color-mix(in srgb,var(--strain,#aacb85) 30%,transparent),transparent)}
-.moment-pick-strain{width:auto;height:70px;filter:drop-shadow(0 6px 8px rgba(0,0,0,.35))}
-.moment-pick-goods{position:absolute;right:-2px;bottom:-4px;box-sizing:border-box;width:32px;height:32px;padding:4px;object-fit:contain;border-radius:50%;background:var(--ui-glass-strong);box-shadow:0 0 0 1px var(--ui-edge),0 3px 8px rgba(0,0,0,.4)}
+.moment-pick-hero{width:auto;height:70px;filter:drop-shadow(0 6px 8px rgba(0,0,0,.35))}
+/* Product renders are jars, trays and bowls of different shapes: fit each inside the same box so none towers over the rest. */
+.moment-pick-hero.is-goods{width:72px;height:62px;object-fit:contain}
+.moment-pick-badge{position:absolute;right:-2px;bottom:-4px;box-sizing:border-box;width:32px;height:32px;padding:4px;object-fit:contain;border-radius:50%;background:var(--ui-glass-strong);box-shadow:0 0 0 1px var(--ui-edge),0 3px 8px rgba(0,0,0,.4)}
+.moment-pick-badge.is-strain{padding:2px}
 .moment-pick strong{max-width:100%;font-size:13.5px;font-weight:600;line-height:1.15;text-wrap:balance}
 .moment-pick-tag{margin-top:4px;padding:3px 9px;border-radius:99px;box-shadow:inset 0 0 0 1px #e2c68a66;color:var(--ui-brass);font-size:11.5px;font-weight:600;line-height:1.3;white-space:nowrap}
 .moment-pick small{font-size:11px;line-height:1.3;color:var(--ui-soft);white-space:nowrap}
@@ -79,7 +82,7 @@
 @keyframes moment-in{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
 @keyframes moment-pop{from{transform:scale(.6)}to{transform:none}}
 @media(prefers-reduced-motion:reduce){.moment-card,.moment-guest{animation:none}}
-@media(max-height:600px){.moment-card{margin-top:40px}.moment-picks{margin-top:12px}.moment-pick-art{height:60px}.moment-pick-strain{height:58px}}
+@media(max-height:600px){.moment-card{margin-top:40px}.moment-picks{margin-top:12px}.moment-pick-art{height:60px}.moment-pick-hero{height:58px}.moment-pick-hero.is-goods{height:52px}}
 
 /* The bubble over the customer asking, and the toast after a pick. */
 .moment-bubble{position:absolute;width:44px;height:44px;display:grid;place-items:center;transform:translate(-50%,-115%);border:0;border-radius:50%;background:var(--ui-brass);color:var(--ui-brass-ink);box-shadow:0 4px 12px #0b2e164d;cursor:pointer;animation:momentPulse 1.8s ease-out infinite}
