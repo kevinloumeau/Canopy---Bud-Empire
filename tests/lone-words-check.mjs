@@ -44,7 +44,7 @@ const max = {
 const saves = { fresh: { money: 500, gameSpeed: 1 }, showcase, max };
 const sizes = [[390, 844], [375, 667]];
 // "While away" is shown a minute after the last visit, so the top lane toast is on screen while the tabs are scanned.
-const tabs = ['factory', 'flowers', 'boosts', 'goals', 'goals:deals', 'empire:today', 'empire:growth', 'empire:daily', 'empire:events', 'empire:perks', 'empire:records', 'empire:popup'];
+const tabs = ['factory', 'flowers', 'boosts', 'goals', 'goals:deals', 'goals:awards', 'empire:today', 'empire:growth', 'empire:daily', 'empire:events', 'empire:perks', 'empire:records', 'empire:popup'];
 
 // Runs in the page: every block's text grouped into lines, reporting blocks whose last line is one word.
 const scan = `(() => {
@@ -137,7 +137,7 @@ try {
       await evaluate(`document.querySelectorAll('.welcome-back button, .intro-card button, [data-dismiss]').forEach(b=>{try{b.click()}catch{}})`);
       for (const tab of tabs) {
         const [tray, view] = tab.split(':');
-        await evaluate(`(()=>{document.querySelector('[data-tray="${tray}"]').click();${view ? `const v=document.querySelector('[data-empire-view="${view}"]')||document.querySelector('.empire-${view}')||document.querySelector('.goal-switch [data-group="${view}"]');if(v&&!v.hidden)v.click();` : ''}})()`);
+        await evaluate(`(()=>{document.querySelector('[data-tray="${tray}"]').click();${view ? `const v=document.querySelector('[data-empire-view="${view}"]')||document.querySelector('.empire-${view}')||document.querySelector('.gb-tabs [data-section="${view}"]');if(v&&!v.hidden)v.click();` : ''}})()`);
         await sleep(450);
         for (const f of await evaluate(scan)) failures.push(`${saveName} ${width}×${height} ${tab}: "${f.text}" leaves "${f.lone}" alone (${f.where})`);
       }
