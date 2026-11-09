@@ -3409,10 +3409,12 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var near=laid.filter(function(l){return l.shown&&l.h&&Math.abs(x-l.x-ox)<(w+l.w)/2+90&&Math.abs(y-h/2-l.y-oy)<(h+l.h)/2+130});
     function cost(sx,sy){var left=x+sx-w/2-gap,right=x+sx+w/2+gap,bottom=y+sy+gap,upper=y+sy-h-gap,c=(Math.abs(sx)+Math.abs(sy))*.4;
       if(upper<top)c+=(top-upper)*w;if(bottom>floor)c+=(bottom-floor)*w;
+      // Keep the whole pill (and its pulse) on screen at the sides too.
+      if(left<gap+9)c+=(gap+9-left)*h*4;if(right>width-gap-9)c+=(right-width+gap+9)*h*4;
       for(var i=0;i<near.length;i++){var l=near[i],lx=l.x+ox,ly=l.y+oy,ix=Math.min(right,lx+l.w/2)-Math.max(left,lx-l.w/2),iy=Math.min(bottom,ly+l.h/2)-Math.max(upper,ly-l.h/2);if(ix>0&&iy>0)c+=ix*iy*(l.tag?1:3)}
       return c}
     var best=[0,0],bestCost=cost(0,0),last=eventTagShift.last||best;if(bestCost===0)return eventTagShift.last=best;
-    for(var sy=-120;sy<=120;sy+=8)for(var sx=-80;sx<=80;sx+=20){var c=cost(sx,sy);if(c<bestCost){bestCost=c;best=[sx,sy]}}
+    for(var sy=-120;sy<=120;sy+=8)for(var sx=-160;sx<=160;sx+=20){var c=cost(sx,sy);if(c<bestCost){bestCost=c;best=[sx,sy]}}
     // Keep last frame's spot while it is nearly as good, so the pill doesn't hop as its guest walks.
     if(cost(last[0],last[1])<=bestCost*1.2+40)best=last;
     return eventTagShift.last=best}
