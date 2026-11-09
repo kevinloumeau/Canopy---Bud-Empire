@@ -11,24 +11,38 @@ const PLAY='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10-6.
 // the next buy's).
 const COLOURS={cash10:'#2c6a49',boost15:'#3b8a5f',coffee:'#245a3d',cash30:'#4a9c6e',token1:'#2f7351',token3:'#8fd3a8',jackpot:'#f1e3b8'};
 const INK={token3:'#123020',jackpot:'#123020'};
-function wheelSvg(){const R=100,c=110;let paths='',labels='';
-  sliceAngles().forEach(sl=>{const p=prizeById(sl.id),a0=(sl.start-90)*Math.PI/180,a1=(sl.end-90)*Math.PI/180,sweep=sl.end-sl.start;
+// Kevin's clay art (2026-11-09, public/icons/spin): the rim, pointer and hub stay still around the turning slices, and
+// each prize's icon rides on its slice. The slices themselves stay drawn here, each as wide as its odds.
+const ART='icons/spin/',ICON={cash10:'coins',cash30:'coins',boost15:'double',coffee:'coffee',token1:'boost1',token3:'boost3',jackpot:'jackpot'};
+const LABEL={cash10:'10 min',cash30:'30 min',boost15:'15 min'};
+export function prizeIcon(id){return ART+ICON[id]+'.webp';}
+// The rim picture's ring centre and size in the 220-unit wheel (measured off the art: outer radius 108, opening 82).
+const RIM={x:2.16,y:-1.25,w:216.3,h:220.9},R=86,c=110;
+function wheelSvg(){let paths='',art='';
+  sliceAngles().forEach(sl=>{const a0=(sl.start-90)*Math.PI/180,a1=(sl.end-90)*Math.PI/180,sweep=sl.end-sl.start;
     const x0=c+R*Math.cos(a0),y0=c+R*Math.sin(a0),x1=c+R*Math.cos(a1),y1=c+R*Math.sin(a1);
     paths+='<path d="M'+c+' '+c+'L'+x0.toFixed(2)+' '+y0.toFixed(2)+'A'+R+' '+R+' 0 '+(sweep>180?1:0)+' 1 '+x1.toFixed(2)+' '+y1.toFixed(2)+'Z" fill="'+COLOURS[sl.id]+'"/>';
-    if(sweep>=7){const mid=(sl.start+sl.end)/2,m=(mid-90)*Math.PI/180,r=sweep>=25?R*.64:R*.8,tx=c+r*Math.cos(m),ty=c+r*Math.sin(m),rot=mid>90&&mid<270?mid+180:mid;
-      labels+='<text x="'+tx.toFixed(1)+'" y="'+ty.toFixed(1)+'" transform="rotate('+rot.toFixed(1)+' '+tx.toFixed(1)+' '+ty.toFixed(1)+')" fill="'+(INK[sl.id]||'#f3f0e4')+'" font-size="'+(sweep>=50?13:11)+'">'+p.slice+'</text>';}});
+    // The icon as big as the slice allows at its radius (none on a sliver), the time beside it on the wide slices. The
+    // icons are clay objects, so they stay upright as the wheel turns (play() counter-turns them).
+    const mid=(sl.start+sl.end)/2,label=LABEL[sl.id]&&sweep>=50,r=label?R*.5:R*.66,size=Math.min(28,2*Math.PI*r*sweep/360*.72);
+    if(size<12)return;
+    const m=(mid-90)*Math.PI/180,tx=c+r*Math.cos(m),ty=c+r*Math.sin(m);
+    art+='<image class="spin-icon" href="'+prizeIcon(sl.id)+'" x="'+(tx-size/2).toFixed(1)+'" y="'+(ty-size/2).toFixed(1)+'" width="'+size.toFixed(1)+'" height="'+size.toFixed(1)+'"/>';
+    if(label){const lr=R*.8,lx=c+lr*Math.cos(m),ly=c+lr*Math.sin(m),rot=mid>90&&mid<270?mid+180:mid;
+      art+='<text x="'+lx.toFixed(1)+'" y="'+ly.toFixed(1)+'" transform="rotate('+rot.toFixed(1)+' '+lx.toFixed(1)+' '+ly.toFixed(1)+')" fill="'+(INK[sl.id]||'#f3f0e4')+'" font-size="10.5">'+LABEL[sl.id]+'</text>';}});
   const lines=sliceAngles().map(sl=>{const a=(sl.start-90)*Math.PI/180;return '<path d="M'+c+' '+c+'L'+(c+R*Math.cos(a)).toFixed(2)+' '+(c+R*Math.sin(a)).toFixed(2)+'"/>';}).join('');
-  return '<svg class="spin-wheel" viewBox="0 0 220 220" aria-hidden="true"><circle cx="110" cy="110" r="108" class="spin-rim"/><g class="spin-turn">'+paths+'<g class="spin-lines">'+lines+'</g><g class="spin-labels">'+labels+'</g></g>'+
-    '<circle cx="110" cy="110" r="17" class="spin-hub"/><path class="spin-leaf" d="M110 121c-.4-3.6-.1-6.4 1-8.5 1.6-2.9 4.6-4.5 8-4.9-.2 3.7-1.7 6.5-4.7 8-1.4.7-2.8 1-4.3 1m-1-1.6c-2.6-.1-4.7-1-6.2-2.7-1.2-1.4-1.8-3.2-1.8-5.3 2.3 0 4.3.6 5.8 1.9 1.4 1.3 2.1 3.2 2.2 6.1"/></svg>';}
+  return '<svg class="spin-wheel" viewBox="0 0 220 220" aria-hidden="true"><g class="spin-turn">'+paths+'<g class="spin-lines">'+lines+'</g><g class="spin-art">'+art+'</g></g>'+
+    '<image class="spin-rim" href="'+ART+'rim.webp" x="'+RIM.x+'" y="'+RIM.y+'" width="'+RIM.w+'" height="'+RIM.h+'"/>'+
+    '<image class="spin-hub" href="'+ART+'hub.webp" x="'+(c-21)+'" y="'+(c-21.4)+'" width="42" height="42.8"/></svg>';}
 
 export function mountSpin({getState,ads,format,incomeRate,pay,changed,notify,haptic,sound=()=>{},now=()=>Date.now(),random=Math.random}){
   const spin=()=>getState().store.spin,store=()=>getState().store;
   const wrap=document.createElement('div');wrap.className='modal-wrap store-wrap spin-wrap';wrap.id='spinModal';wrap.hidden=true;
   wrap.innerHTML='<div class="modal store spin" role="dialog" aria-modal="true" aria-labelledby="spinTitle">'+
     '<div class="store-head"><h2 id="spinTitle">Lucky spin</h2><button type="button" class="store-close" aria-label="Close the lucky spin">×</button></div>'+
-    '<div class="spin-stage"><span class="spin-pointer" aria-hidden="true"></span>'+wheelSvg()+'</div>'+
+    '<div class="spin-stage"><img class="spin-pointer" src="'+ART+'pointer.webp" alt="" draggable="false">'+wheelSvg()+'</div>'+
     '<p class="spin-result" id="spinResult" role="status" aria-live="polite"></p>'+
-    '<ul class="spin-odds" aria-label="Prizes and their odds">'+PRIZES.map(p=>'<li><i style="background:'+COLOURS[p.id]+'"></i><span>'+tieLast(p.name)+'</span><b>'+p.odds+'%</b></li>').join('')+'</ul>'+
+    '<ul class="spin-odds" aria-label="Prizes and their odds">'+PRIZES.map(p=>'<li><img src="'+prizeIcon(p.id)+'" alt="" draggable="false"><span>'+tieLast(p.name)+'</span><b>'+p.odds+'%</b></li>').join('')+'</ul>'+
     '<button type="button" class="spin-free" id="spinFree"></button>'+
     '<button type="button" class="store-ad spin-ad" id="spinAd" hidden>'+PLAY+'<span></span><small></small></button>'+
     '<p class="spin-note" id="spinNote"></p>'+
@@ -44,6 +58,7 @@ export function mountSpin({getState,ads,format,incomeRate,pay,changed,notify,hap
   function play(prize){busy=true;result='';render();sound('start');
     const target=landingTurn(prize.id,random(),still()?0:6),base=angle-angle%360;angle=base+360+target;
     const ms=still()?0:3600;turn.style.transition=ms?'transform '+ms+'ms cubic-bezier(.12,.72,.16,1)':'none';turn.style.transform='rotate('+angle+'deg)';
+    turn.querySelectorAll('.spin-icon').forEach(el=>{el.style.transition=turn.style.transition;el.style.transform='rotate('+(-angle)+'deg)';});
     setTimeout(()=>{busy=false;const got=pay(prize);spin().last=prize.id;result=got||prize.name;changed();haptic('firm');render();},ms+80);}
   $('#spinFree').onclick=()=>{const t=now();if(busy||!takeSpin(spin(),t,'free'))return;play(rollPrize(random()));};
   $('#spinAd').onclick=async()=>{const t=now(),day=dayNumber(t);if(busy||!ads.available||adSpinsLeft(spin(),day)<1||adsLeft(store(),day)<1)return;
