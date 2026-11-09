@@ -15,3 +15,11 @@ test('the walker gets there, and hands-on counts only once it stands still at th
   assert.ok(!w.moving&&t<60,'reaches the top floor in under a minute: '+t.toFixed(1));assert.equal(w.y,FLOOR_Y[2]);assert.equal(handsOn(w,0),HANDS_ON);
   assert.ok(w.ground>5);assert.equal(sendTo(w,0,spots[0]),false,'already there');});
 test('the saved station survives a bad save',()=>{assert.deepEqual(migrateManager(null),{at:-1,met:false});assert.deepEqual(migrateManager({at:3,met:true}),{at:3,met:true});assert.deepEqual(migrateManager({at:9,met:'yes'}),{at:-1,met:false});});
+import {floorSpot} from '../src/manager.js';
+test('a floor tap lands on the top slab it hits, kept inside its edges',()=>{
+  const floors=[{y:0,x:.75,z:2.475,w:24.5,d:18.95},{y:4.7,z:-2.95,w:18,d:7.4},{y:9.4,z:-3.6,w:13,d:6.6}];
+  // The same screen point lands further back on higher floors (a plain stand-in for the camera).
+  const ground=y=>({x:2,z:3-y*.8});
+  const top=floorSpot(ground,floors);assert.equal(top.floor,2);assert.equal(top.y,9.4);
+  const ground2=y=>({x:-11.4,z:8});const g=floorSpot(ground2,floors);assert.equal(g.floor,0);assert.ok(g.x>=-11.5+.6-1e-9);
+  assert.equal(floorSpot(()=>({x:40,z:40}),floors),null);});

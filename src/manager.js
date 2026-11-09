@@ -5,7 +5,7 @@
 //
 // Pure: positions in map units (x, z on each floor, y the floor's height), a route as a list of points, and a step
 // function that walks it. main.js owns the state, draws the figure and applies the factor.
-export const HANDS_ON=1.5,WALK_SPEED=2.4,STAIR_SPEED=1.5;
+export const HANDS_ON=1.5,WALK_SPEED=4.4,STAIR_SPEED=2.8;
 export const FLOOR_Y=[0,4.7,9.4];
 // Which floor each station stands on: Seeds and Grow on top, Harvest and Pack on the mezzanine, Orders and Pickup down.
 export const STATION_FLOOR=[2,2,1,1,0,0];
@@ -47,6 +47,16 @@ export function route(from,spot){let f=floorOf(from.y);const g=floorOf(spot.y);l
     out.push(...onFloor(at,leg[0],f));out.push(...leg.slice(1));at=leg[leg.length-1];f+=up?1:-1;}
   out.push(...onFloor(at,spot,f));
   return out.filter((p,i)=>i===0?Math.hypot(p.x-from.x,p.z-from.z)+Math.abs(p.y-from.y)>.01:true);}
+// Where a tap on the screen lands for the manager: `ground(y)` turns the tap into the floor point at height y (or
+// null), and `floors` are the shop's slabs ({y,x,z,w,d}). Upper floors are tried first, since they sit in front of the
+// floors below from the camera. The spot is kept `margin` inside the slab's edges. Null when the tap misses the shop.
+export function floorSpot(ground,floors,margin=.6){
+  const order=floors.map((f,k)=>k).sort((a,b)=>floors[b].y-floors[a].y);
+  for(const k of order){const f=floors[k],p=ground(f.y);if(!p)continue;const cx=f.x||0,hw=f.w/2-margin,hd=f.d/2-margin;
+    if(Math.abs(p.x-cx)<=f.w/2&&Math.abs(p.z-f.z)<=f.d/2)return {x:Math.max(cx-hw,Math.min(cx+hw,p.x)),y:f.y,z:Math.max(f.z-hd,Math.min(f.z+hd,p.z)),floor:k};}
+  return null;}
+// Sends the walker to a free spot on the floor (no station: nothing works faster while they stand there).
+export function sendToSpot(w,spot){w.target=-1;w.path=route(w,spot);w.look=null;w.moving=w.path.length>0;return w.moving;}
 // A fresh manager: standing at their home station (`at`, -1 for none) on the given spot.
 // `met`: the player has been shown who the manager is (the one-time "This is you" tip).
 export function migrateManager(raw){const at=raw&&Number.isInteger(raw.at)&&raw.at>=0&&raw.at<6?raw.at:-1;return {at,met:!!(raw&&raw.met===true)};}

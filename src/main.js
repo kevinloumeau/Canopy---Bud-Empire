@@ -67,7 +67,7 @@ import {freshStore,migrateStore,earnFactor,awayFactor,boostLeft,useToken,addBoos
 import {mountStore} from './store-ui.js';
 import {mountSpin} from './spin-ui.js';
 import {freeReady} from './spin.js';
-import {HANDS_ON,workSpots,createWalker,sendTo,stepWalker,handsOn,migrateManager} from './manager.js';
+import {HANDS_ON,workSpots,createWalker,sendTo,sendToSpot,floorSpot,stepWalker,handsOn,migrateManager} from './manager.js';
 import {createPurchases} from './purchases.js';
 import {createAds} from './rewarded-ads.js';
 // The self-order kiosks stand along the storefront glass from z 6.8 toward the back, KIOSK_GAP apart (Kevin 2026-11-02:
@@ -487,6 +487,13 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     stepWalker(managerWalker,dt)}
   // For screenshots (scripts/snap3d.mjs, whose frames stand still): stand the manager at station i at once.
   if(window.__canopySnap!==undefined||/[?&]snap\b/.test(location.search))window.__canopyManagerAt=function(i,walk){managerGo(i);if(managerWalker&&walk){stepWalker(managerWalker,walk);renderUI();return [managerWalker.x,managerWalker.y,managerWalker.z].map(function(v){return +v.toFixed(2)})}if(managerWalker){var sp=managerSpots()[i];managerWalker.x=sp.x;managerWalker.y=sp.y;managerWalker.z=sp.z;managerWalker.path=[];managerWalker.moving=false;managerWalker.heading=sp.look}renderUI();return 'manager at '+i};
+  // A tap on the shop floor that hits no station walks the manager there (Kevin, 2026-11-09: "manager should move to
+  // where you tap"). The tap is turned back into map units on each floor's height, top floor first.
+  function managerWalkTap(sx,sy){if(!managerWalker||state.empire.activeStore||!state.shopOpen||!map3dLayout||!map3dLayout.floors)return false;
+    var c=Math.cos(angle),s=Math.sin(angle);
+    var spot=floorSpot(function(y){var rx=(sx-centerX)/unit,rz=(sy-centerY+y*unit)/(unit*FLOOR_SQUASH);return {x:rx*c+rz*s,z:-rx*s+rz*c}},map3dLayout.floors);
+    if(!spot)return false;sendToSpot(managerWalker,spot);render.invalidated=true;haptic('select');return true}
+  if(window.__canopySnap!==undefined||/[?&]snap\b/.test(location.search))window.__canopyManagerTap=function(sx,sy,walk){if(!managerWalkTap(sx,sy))return null;var end=managerWalker.path[managerWalker.path.length-1];if(walk){stepWalker(managerWalker,walk);renderUI()}return end};
   function managerFactor(i){return managerWalker?handsOn(managerWalker,i):1}
   function managerSpots(){var counters=orderCounterPositions(state.orderCounters);return workSpots(machinePos,counters[0])}
   // Sends the manager to a built station of the flagship, the first time placing them there.
@@ -3336,7 +3343,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // A shower of sparkles off an upgrade (sparkles.js draws them in the 3D scene). worldPos: {x, y (floor height)?, z}.
   function burst(worldPos,color){sparkles.burst(worldPos,color||colors.acid)}
 
-  var markerEls=LINES.map(function(line,i){var b=document.createElement('button');b.className='marker';b.dataset.marker=String(i);b.textContent=line.name;b.onclick=function(){if(!state.lines[i]&&isOpen(i))buildStation(i);else{var open=buyBoxFor===i;selectMachine(i);buyBoxFor=open?-1:i;renderUI()}};$('markers').appendChild(b);return b});
+  var markerEls=LINES.map(function(line,i){var b=document.createElement('button');b.className='marker line-sign';b.dataset.marker=String(i);b.textContent=line.name;b.onclick=function(){if(!state.lines[i]&&isOpen(i))buildStation(i);else{var open=buyBoxFor===i;selectMachine(i);buyBoxFor=open?-1:i;renderUI()}};$('markers').appendChild(b);return b});
   // The station whose buy box is up: set by a tap on its map sign, cleared by picking anything else.
   var buyBoxFor=-1;
   // The viewed branch's station signs (Kevin, 2026-11-02: every branch has the flagship's stations and upgrades): one per
@@ -3428,18 +3435,20 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // floor under them (map3d.js updateYouMarker) it picks them out from the crew. A tap explains what the manager does.
   // It hides in a branch and off screen.
   var managerTag=document.createElement('button');managerTag.type='button';managerTag.className='marker manager-tag';managerTag.id='managerTag';managerTag.hidden=true;
-  managerTag.innerHTML='<span class="manager-goal"><img src="icons/3d/goal-person.png" alt="" draggable="false" decoding="async"><b>You</b><em></em></span>';
+  managerTag.innerHTML='<span class="manager-goal"><i class="manager-badge" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.6" r="3.6"/><path d="M5.2 19.4c.7-3.6 3.4-5.6 6.8-5.6s6.1 2 6.8 5.6"/></svg></i><em></em></span>';
   $('markers').appendChild(managerTag);
-  var MANAGER_TIP='You’re the manager. Tap a station and you walk over and work it '+HANDS_ON+'× faster.';
+  var MANAGER_TIP='You’re the manager. Tap a station to work it '+HANDS_ON+'× faster, or tap the floor to walk.';
   managerTag.onclick=function(){notify(MANAGER_TIP,'info');haptic('select')};
   function managerShown(){return !!managerWalker&&state.shopOpen&&!state.empire.activeStore&&!!map3d&&map3d.characterReady(MANAGER_MODEL)}
   function updateManagerTag(){var w=managerWalker,show=managerShown();
+    // Only while they work a station (Kevin, 2026-11-09: no "You" label): the station and its hands-on speed.
+    if(show&&(w.moving||!(w.target>=0&&state.lines[w.target]>0)))show=false;
     var pos=show?project(w.x,w.y+2.15,w.z):null;if(pos&&(pos.x<-40||pos.x>width+40||pos.y<40||pos.y>visibleHeight()))show=false;
     if(managerTag.hidden!==!show)managerTag.hidden=!show;if(!show)return;
     // The first time the manager is on screen, say who they are once.
     if(!state.manager.met&&introTime()>6){state.manager.met=true;save();setTimeout(function(){notify(MANAGER_TIP,'info')},600)}
-    var at=w.target>=0&&state.lines[w.target]>0,name=at?MANAGER_STATION_NAMES[w.target]:'',hk=!at?'':w.moving?'to '+name:name+' '+HANDS_ON+'×';
-    if(managerTag.dataset.hands!==hk){managerTag.dataset.hands=hk;managerTag.classList.toggle('is-hands',at&&!w.moving);managerTag.querySelector('em').textContent=hk;managerTag.setAttribute('aria-label','You, the manager'+(hk?'. '+(w.moving?'Walking to '+name:'Working '+name+', '+HANDS_ON+' times faster'):'')+'. Tap for what the manager does')}
+    var name=MANAGER_STATION_NAMES[w.target],hk=name+' '+HANDS_ON+'×';
+    if(managerTag.dataset.hands!==hk){managerTag.dataset.hands=hk;managerTag.querySelector('em').textContent=hk;managerTag.setAttribute('aria-label','Manager working '+name+', '+HANDS_ON+' times faster. Tap for what the manager does')}
     managerTag.style.transform='translate3d('+pos.x+'px,'+pos.y+'px,0) translate(-50%,-100%)'}
   var loungeMarker=document.createElement('button');loungeMarker.className='marker';loungeMarker.dataset.marker='lounge';loungeMarker.onclick=selectLounge;$('markers').appendChild(loungeMarker);
   // Purchase tags for what can be bought next on the map (Kevin, 2026-10-22, like the lounge's): the pickup window on
@@ -5132,7 +5141,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // A finger lifting takes its last move with it before it is forgotten.
   function flushGesture(e){if(e&&Object.keys(touches).length===1)mapGesture.liftAt=e.timeStamp;if(gestureMoved&&(mapGesture.dx||mapGesture.dy||mapGesture.scale!==1))stepMapGesture(performance.now())}
   world.addEventListener('pointerup',function(e){if(!touches[e.pointerId])return;mapHintActivity();flushGesture(e);var onCanvas=e.target===canvas;if(gestureMoved&&!onCanvas)signTapVoid=performance.now();if(!onCanvas);else if(!gestureMoved&&Object.keys(touches).length===1&&state.empire.activeStore){var br=canvas.getBoundingClientRect(),f=BRANCH_THEMES[state.empire.activeStore-1].focus,fo=districtCentre(state.empire.activeStore-1),q=project(f.x+fo.x,f.y,f.z+fo.z);if(Math.hypot(e.clientX-br.left-q.x,e.clientY-br.top-q.y)<Math.max(45,unit*3))manageViewedStore()}else if(!gestureMoved&&Object.keys(touches).length===1){var rect=canvas.getBoundingClientRect(),best=-1,distance=60;machinePos.forEach(function(pos,i){var p=project(pos.x,1.4+(pos.y||0),pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=i;distance=d}});orderCounterPositions(state.orderCounters).forEach(function(pos){var p=project(pos.x,1.4,pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=4;distance=d}});var online=project(-10.7,8.45,1.5),od=Math.hypot(e.clientX-rect.left-online.x,e.clientY-rect.top-online.y);var gm=ghostMarker(),gt=gm&&lotTags().filter(function(x){return x.el===gm})[0],gp=gt&&project(gt.x,Math.max(.6,gt.y-1.3),gt.z),gd=gp?Math.hypot(e.clientX-rect.left-gp.x,e.clientY-rect.top-gp.y):Infinity;
-    if(gd<Math.min(distance,od,Math.max(40,unit*2.2))){pickedTag=null;pickGhost(gm.dataset.marker)}else if(od<distance){showTray('orders');renderUI()}else if(best>=0)selectMachine(best);else if(mapPicked){mapPicked=false;renderUI()}}delete touches[e.pointerId];if(Object.keys(touches).length)gestureMoved=true;else gestureOrigin=null});
+    if(gd<Math.min(distance,od,Math.max(40,unit*2.2))){pickedTag=null;pickGhost(gm.dataset.marker)}else if(od<distance){showTray('orders');renderUI()}else if(best>=0)selectMachine(best);else{var walked=managerWalkTap(e.clientX-rect.left,e.clientY-rect.top);if(mapPicked){mapPicked=false;renderUI()}else if(walked)renderUI()}}delete touches[e.pointerId];if(Object.keys(touches).length)gestureMoved=true;else gestureOrigin=null});
   // Double-tap anywhere on the map (canvas or a station pill) zooms in around the tap, or back out when already close.
   var lastTap={time:0,x:0,y:0};
   canvas.parentElement.addEventListener('pointerup',function(e){

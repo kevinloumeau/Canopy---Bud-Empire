@@ -66,3 +66,8 @@
 .world .marker.station-sign.is-quiet,.world .marker.station-sign.is-quiet:not(.selected),
 .world .marker.station-sign.is-lot.is-mini.is-quiet,.world .marker.station-sign.is-lot.is-mini.is-quiet:not(.selected){width:18px;min-width:18px;height:18px;min-height:18px;padding:3px!important}
 .world .marker.station-sign.is-quiet .station-sign-icon{width:10px;height:10px}
+
+/* The flagship's stations go bare (Kevin, 2026-11-09: "remove the circle icons over the stations"): a station is tapped
+   on the station itself (main.js picks the nearest station to the tap), so its badge only shows when it has something
+   to say: the brass best-buy arrow or a ready crew bolt. The picked station still opens out into name and level. */
+.world .marker.line-sign.is-badge:not(.selected):not(.can-upgrade):not(:has(.sign-ability:not([hidden]))){visibility:hidden;pointer-events:none}
