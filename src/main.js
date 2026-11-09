@@ -63,8 +63,10 @@ import {POPUP_STALLS,POPUP_PRIZES,POPUP_GIFT_BASE,POPUP_AWAY_PAY,migratePopup,po
 import {STALL_X,STALL_Z,STALL_D,POPUP_PROPS,POPUP_TAG,popupWalker,popupCrowd} from './popup-market-layout.js';
 import {scaledReward} from './progression.js';
 import {DEALS,FLYER_MIN_LIFT,tokenPrice,dealWindow,windowEnds,migrateDeals,rollDeals,dealPrice,canBuy,nightBonus,spendNight} from './deals.js';
-import {freshStore,migrateStore,earnFactor,awayFactor,boostLeft,useToken,addBoost,countAd,adsLeft,dayNumber,doubleRoute,boostClock,BOOST_SECONDS,AD_BOOST_SECONDS} from './store.js';
+import {freshStore,migrateStore,earnFactor,awayFactor,boostLeft,useToken,addBoost,countAd,adsLeft,dayNumber,doubleRoute,boostClock,rewardWay,fillJar,BOOST_SECONDS,AD_BOOST_SECONDS} from './store.js';
 import {mountStore} from './store-ui.js';
+import {mountSpin} from './spin-ui.js';
+import {freeReady} from './spin.js';
 import {createPurchases} from './purchases.js';
 import {createAds} from './rewarded-ads.js';
 // The self-order kiosks stand along the storefront glass from z 6.8 toward the back, KIOSK_GAP apart (Kevin 2026-11-02:
@@ -3353,15 +3355,17 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // event with a ring that fills as its goal does, then rush and boost, each with a ring that drains. The row wraps
   // instead of overlapping, and toasts hang under it, so nothing up there ever covers anything else.
   var laneStatus=$('laneStatus'),topLane=$('topLane');
-  function laneChip(id,cls){var el=document.createElement(cls==='contract-pill'?'button':'div');el.id=id;el.className='lane-chip '+cls;el.hidden=true;if(el.tagName==='BUTTON')el.type='button';else el.setAttribute('role','status');laneStatus.appendChild(el);return el}
+  function laneChip(id,cls){var el=document.createElement(/contract-pill|store-pill|spin-pill/.test(cls)?'button':'div');el.id=id;el.className='lane-chip '+cls;el.hidden=true;if(el.tagName==='BUTTON')el.type='button';else el.setAttribute('role','status');laneStatus.appendChild(el);return el}
   var RING='<svg class="chip-ring" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><circle class="chip-ring-fill" cx="10" cy="10" r="7.5" pathLength="100"/></svg>';
   var BOLT='<svg class="chip-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>';
-  var contractPill=laneChip('contractPill','contract-pill'),rushPeak={rush:0,boost:0},rushPill=laneChip('rushPill','rush-pill'),boostPill=laneChip('boostPill','rush-pill boost-pill'),storePill=laneChip('storeBoostPill','rush-pill store-pill');
+  var contractPill=laneChip('contractPill','contract-pill'),rushPeak={rush:0,boost:0},rushPill=laneChip('rushPill','rush-pill'),boostPill=laneChip('boostPill','rush-pill boost-pill'),storePill=laneChip('storeBoostPill','rush-pill store-pill'),spinPill=laneChip('spinPill','spin-pill');
+  storePill.onclick=function(){if(storeUI)storeUI.open()};spinPill.onclick=function(){if(spinUI)spinUI.open()};
   contractPill.onclick=function(){showTray('goals');renderUI()};
-  rushPill.title='Rush · 2× sales';boostPill.title='Event reward · 2× sales';storePill.title='Store boost · 2× earnings';
+  rushPill.title='Rush · 2× sales';spinPill.title='Lucky spin';boostPill.title='Event reward · 2× sales';storePill.title='Store boost · 2× earnings';
+  var SPIN_ICON='<svg class="chip-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8.5" stroke="currentColor" stroke-width="1.8"/><path d="M12 13V4.5M12 13l7.4 4.2M12 13l-7.4 4.2" stroke="currentColor" stroke-width="1.6"/><path d="M9.5 1.5h5L12 5z" fill="currentColor"/></svg>';
   var MEDAL='<svg class="chip-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h4l1.6 4.2L14.2 2h3.8l-3.3 7.1A6 6 0 1 1 9.3 9L7 2Zm5 9.2-1.2 2.5-2.7.3 2 1.8-.6 2.7 2.5-1.4 2.5 1.4-.6-2.7 2-1.8-2.7-.3z" fill-rule="evenodd"/></svg>';
-  function chipText(el,label,time){if(el.dataset.label!==label){el.dataset.label=label;el.innerHTML=(el===contractPill?RING:el===boostPill?MEDAL:BOLT)+'<span class="chip-name"></span><span class="chip-time"></span>';el.querySelector('.chip-name').textContent=label}var t=el.querySelector('.chip-time');if(t.textContent!==time)t.textContent=time}
-  function stackPills(){topLane.classList.toggle('has-chips',!(contractPill.hidden&&rushPill.hidden&&boostPill.hidden&&storePill.hidden))}
+  function chipText(el,label,time){if(el.dataset.label!==label){el.dataset.label=label;el.innerHTML=(el===contractPill?RING:el===boostPill?MEDAL:el===spinPill?SPIN_ICON:BOLT)+'<span class="chip-name"></span><span class="chip-time"></span>';el.querySelector('.chip-name').textContent=label}var t=el.querySelector('.chip-time');if(t.textContent!==time)t.textContent=time}
+  function stackPills(){topLane.classList.toggle('has-chips',!(contractPill.hidden&&rushPill.hidden&&boostPill.hidden&&storePill.hidden&&spinPill.hidden))}
   function spenderInShop(){for(var i=0;i<customers.length;i++){var c=customers[i];if(c.bigSpender&&!c.tapped&&c.phase!=='leaving'&&c.phase!=='lounge')return c}return null}
   spenderTag.onclick=function(){var c=spenderInShop();if(!c)return;c.tapped=true;spenderTag.hidden=true;recordEvent(state.empire,'spender',1);
     var kind=c.shopEvent||'spender',reward=eventReward(kind,incomeRate(),rushLength(state.perks));
@@ -3385,15 +3389,19 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     if(cost(last[0],last[1])<=bestCost*1.2+40)best=last;
     return eventTagShift.last=best}
   function updateSpenderTag(branch){var c=branch?null:spenderInShop();spenderTag.hidden=!c;if(c){dressEventTag(c.shopEvent||'spender');var pos=project(c.x,2.75,c.z),shift=eventTagShift(pos.x,pos.y);spenderTag.style.transform='translate3d('+(pos.x+shift[0])+'px,'+(pos.y+shift[1])+'px,0) translate(-50%,-100%)'}
-    var rush=state.rushTime>0,boost=state.empire.contracts.boost>0,was=[contractPill.hidden,rushPill.hidden,boostPill.hidden,storePill.hidden].join();
+    var rush=state.rushTime>0,boost=state.empire.contracts.boost>0,was=[contractPill.hidden,rushPill.hidden,boostPill.hidden,storePill.hidden,spinPill.hidden].join();
     rushPeak.rush=rush?Math.max(rushPeak.rush,state.rushTime):0;rushPeak.boost=boost?Math.max(rushPeak.boost,state.empire.contracts.boost):0;
     rushPill.hidden=!rush;if(rush){chipText(rushPill,'Rush',state.rushTime>99?clockLabel(state.rushTime):Math.ceil(state.rushTime)+'s');burstRing(rushPill,state.rushTime/rushPeak.rush)}
     boostPill.hidden=!boost;if(boost){chipText(boostPill,'Boost',clock(state.empire.contracts.boost*1000/Math.max(1,state.gameSpeed||1)));burstRing(boostPill,state.empire.contracts.boost/rushPeak.boost)}
     var c=branch?null:activeContract(state.empire);contractPill.hidden=!c;if(c){var share=Math.min(1,c.progress/c.target);chipText(contractPill,c.name,clock(c.remaining));contractPill.style.setProperty('--goal',(share*100).toFixed(1));
       var say=c.name+', '+Math.floor(share*100)+'% done, '+clock(c.remaining)+' left. Open Goals';if(contractPill.getAttribute('aria-label')!==say)contractPill.setAttribute('aria-label',say)}
     // The store's boost runs on real time, so its clock ignores game speed; its ring empties over the 2 hours.
-    var storeLeft=boostLeft(state.store,Date.now());storePill.hidden=!(storeLeft>0);if(storeLeft>0){chipText(storePill,'2×',boostClock(storeLeft));burstRing(storePill,storeLeft/Math.max(BOOST_SECONDS,storeLeft))}
-    if([contractPill.hidden,rushPill.hidden,boostPill.hidden,storePill.hidden].join()!==was)stackPills()}
+    var storeLeft=boostLeft(state.store,Date.now());storePill.hidden=!(storeLeft>0);if(storeLeft>0){chipText(storePill,'2×',boostClock(storeLeft));burstRing(storePill,storeLeft/Math.max(BOOST_SECONDS,storeLeft));
+      // A tap opens the store, where the ad adds 30 minutes; the chip says so while an ad can still play today.
+      var plus=ads.available&&adsLeft(state.store,dayNumber(Date.now()))>0;storePill.classList.toggle('has-plus',plus);var say='2× earnings, '+boostClock(storeLeft)+' left'+(plus?'. Open the store to add 30 minutes':'. Open the store');if(storePill.getAttribute('aria-label')!==say)storePill.setAttribute('aria-label',say)}
+    // A free spin waiting shows as a chip once the shop is open (not during the first minute's guide).
+    var spinReady=state.shopOpen&&!branch&&freeReady(state.store.spin,Date.now());spinPill.hidden=!spinReady;if(spinReady)chipText(spinPill,'Free spin','');
+    if([contractPill.hidden,rushPill.hidden,boostPill.hidden,storePill.hidden,spinPill.hidden].join()!==was)stackPills()}
   var loungeMarker=document.createElement('button');loungeMarker.className='marker';loungeMarker.dataset.marker='lounge';loungeMarker.onclick=selectLounge;$('markers').appendChild(loungeMarker);
   // Purchase tags for what can be bought next on the map (Kevin, 2026-10-22, like the lounge's): the pickup window on
   // its spot, then the drone port on its deck once the window is open, and a smaller tag over a ghost of the next kiosk.
@@ -4411,7 +4419,10 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     STORE_PROJECTS[i].forEach(function(name,j){$('projectBuy'+i+j).onclick=function(){if(buyProject(state,i,j)){storeFx(i,false);save();renderUI();notify(name+' · +'+fmt(state.empire.network.stores[i].incomeGain)+'/s','upgrade')}}});
   });
   // Short goals and management live in the existing tray; map gestures remain free.
-  var purchases=createPurchases(),ads=createAds(),storeUI=null;
+  // Ads go through one wrapper: with Ad-free rewards (store.js) every ad button pays at once, without an ad, and still
+  // counts against the same daily cap.
+  var purchases=createPurchases(),rawAds=createAds(),storeUI=null,spinUI=null;
+  var ads={get available(){return !!rewardWay(state.store,rawAds.available)},get free(){return state.store.owned.adfree===true},show:function(){return state.store.owned.adfree?Promise.resolve(true):rawAds.show()}};
   var today=document.querySelector('[data-empire-section="today"]');
   today.innerHTML='<section id="returnSummary" hidden><div class="return-medal" aria-hidden="true"><span class="return-rays"></span><span class="return-coin"><svg viewBox="0 0 24 24"><path d="M12 21V11M12 14C3 14 3 7 3 7s9-1 9 7ZM12 11c0-8 9-9 9-9s0 9-9 9Z"/></svg></span></div><p class="return-kicker">While you were away</p><p id="returnTotal"></p><div id="returnTime" class="return-chips"></div><ul id="returnEarnings"></ul><button id="returnGoals" type="button"></button><button id="returnDaily" type="button" hidden></button><button id="returnDouble" type="button" hidden></button><button id="dismissReturn" type="button">Collect rewards</button></section><h2>Next steps</h2><p id="nextInvestment"></p><div id="shortGoals"></div><section class="reputation"><h2 class="empire-section-heading">Reputation</h2><div class="reputation-summary"><strong id="reputationStatus"></strong><span id="reputationNext"></span></div><progress id="reputationProgress" max="60" value="0" aria-label="Customer reputation"></progress><section class="reputation-guide" aria-labelledby="customerGuideTitle">'+customerGuideMarkup()+'</section></section>';
   paintCustomerGuide();
@@ -4615,7 +4626,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       if(daily.available){var dailyHtml='<i><img src="icons/3d/goal-calendar.png" alt="" draggable="false" decoding="async"></i><span>Day '+daily.day+' reward\u00a0ready<small>'+fmt(daily.reward)+(daily.day===DAILY_BOOST_DAY?' + 2×\u00a0boost':'')+'</small></span><svg class="return-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>';if($('returnDaily').dataset.html!==dailyHtml){$('returnDaily').innerHTML=dailyHtml;$('returnDaily').dataset.html=dailyHtml}}
       // Double it sits right above Collect: what it pays, and what it costs as a small chip (a boost, an ad, the store).
       var way=report.doubled?'done':doubleWay(),busy=!!$('returnDouble').dataset.busy;$('returnDouble').hidden=!way;
-      if(way){var doubleHtml='<i><img src="icons/3d/research-boost.png" alt="" draggable="false" decoding="async"></i><span>'+(way==='done'?'Doubled':'Double it')+'<small>+'+fmt(total)+'</small></span><em>'+(way==='done'?'<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>':way==='token'?'1 boost':way==='ad'?(busy?'Playing…':'<svg viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5Z"/></svg>Ad'):'Store')+'</em>';
+      if(way){var doubleHtml='<i><img src="icons/3d/research-boost.png" alt="" draggable="false" decoding="async"></i><span>'+(way==='done'?'Doubled':'Double it')+'<small>+'+fmt(total)+'</small></span><em>'+(way==='done'?'<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>':way==='token'?'1 boost':way==='ad'?(busy?'Playing…':ads.free?'Free':'<svg viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5Z"/></svg>Ad'):'Store')+'</em>';
         if($('returnDouble').dataset.html!==doubleHtml){$('returnDouble').innerHTML=doubleHtml;$('returnDouble').dataset.html=doubleHtml}
         $('returnDouble').disabled=way==='done'||busy;$('returnDouble').dataset.way=way;
         $('returnDouble').setAttribute('aria-label',way==='done'?'Away pay doubled':'Double the away pay, +'+fmt(total)+(way==='token'?', for 1 boost':way==='ad'?', by watching an ad':', from the store'))}}
@@ -4746,7 +4757,20 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   goalsButton.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8"/></svg><span id="goalsBadge" hidden></span>';
   $('customerStatus').appendChild(goalsButton);
   // the store: a bag beside the goals target (store-ui.js). Packs are sold only in the iOS app; the web build shows them.
-  storeUI=mountStore({getState:function(){return state},purchases:purchases,ads:ads,format:fmt,incomeRate:incomeRate,changed:function(){save();renderUI()},notify:notify,haptic:haptic});
+  storeUI=mountStore({getState:function(){return state},purchases:purchases,ads:ads,format:fmt,incomeRate:incomeRate,changed:function(){save();renderUI()},notify:notify,haptic:haptic,openSpin:function(){if(spinUI)spinUI.open()}});
+  // The lucky spin (spin.js): prizes sized in today's income. A 2× that wouldn't fit the 12-hour bank, or coffee with no
+  // trained crew, pays 10 minutes of sales instead, so a spin never comes up empty.
+  function spinPay(p){var t=Date.now(),cash=0,label=p.name;
+    if(p.cash)cash=Math.max(50,Math.round(incomeRate()*p.cash*60));
+    if(p.boost&&!addBoost(state.store,t,p.boost)){cash=Math.max(50,Math.round(incomeRate()*600));label='10 min of sales'}
+    if(p.tokens)state.store.tokens+=p.tokens;
+    if(p.coffee){var crews=dealCrews();
+      if(crews.length)crews.forEach(function(i){state.abilities.active[i]=ABILITY_SECONDS;state.abilities.recharge[i]=ABILITY_RECHARGE});else{cash=Math.max(50,Math.round(incomeRate()*600));label='10 min of sales'}}
+    if(cash){add(cash,true);label+=' · +'+fmt(cash)}
+    telemetry.send('spin',{prize:p.id});notify('LUCKY SPIN · '+label.toUpperCase(),'upgrade');upgradeFx.pop();return label}
+  spinUI=mountSpin({getState:function(){return state},ads:ads,format:fmt,incomeRate:incomeRate,pay:spinPay,changed:function(){save();renderUI();if(storeUI)storeUI.render()},notify:notify,haptic:haptic,sound:function(k){playSound(k,state.sound)}});
+  // The tip jar fills with real seconds of play while the shop is open and on screen (store.js fillJar).
+  setInterval(function(){if(!document.hidden&&state.shopOpen&&!window.__canopySnap)fillJar(state.store,1)},1000);
   // Shift goals open the Goals tab (the Empire shell places this block there); the target, the Goals tab's own icon, is a shortcut to it.
   var goalsBody=document.createElement('section');goalsBody.className='goals-body empire-group';goalsBody.setAttribute('aria-labelledby','goalsTitle');
   goalsBody.innerHTML='<div class="goals-head"><h2 class="empire-group-title" id="goalsTitle">Shift goals</h2><span id="shiftGoalsReady"></span></div>';

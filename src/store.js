@@ -15,12 +15,20 @@ export const PRODUCTS=[
   {key:'double',id:ID+'double',type:'nonconsumable',price:'$9.99',name:'2× sales forever'},
   {key:'boosts5',id:ID+'boosts5',type:'consumable',price:'$1.99',tokens:5,name:'5 boosts'},
   {key:'boosts20',id:ID+'boosts20',type:'consumable',price:'$5.99',tokens:20,name:'20 boosts'},
+  // 2026-11-09 (manager & fair play plan): every ad button pays without playing the ad. The daily cap stays, so it
+  // buys convenience, not more rewards.
+  {key:'adfree',id:ID+'adfree',type:'nonconsumable',price:'$4.99',name:'Ad-free rewards'},
+  // The tip jar fills with boost tokens while the shop is played (one an hour, up to 10); buying it pays what it holds,
+  // shown on the tile before the tap. It can be bought again once it holds JAR_MIN.
+  {key:'tipjar',id:ID+'tipjar',type:'consumable',price:'$2.99',name:'Tip jar'},
 ];
+export const JAR_MAX=10,JAR_MIN=3,JAR_SECONDS=3600;
 export function productByKey(key){return PRODUCTS.find(p=>p.key===key)||null;}
 export function productById(id){return PRODUCTS.find(p=>p.id===id)||null;}
+import {freshSpin,migrateSpin} from './spin.js';
 const DAY=86400000;
 const num=(v,lo,hi)=>Number.isFinite(v)?Math.min(hi,Math.max(lo,v)):lo;
-export function freshStore(){return {tokens:0,boostEnds:0,owned:{},txns:[],gift:false,ads:{day:0,count:0},spent:0};}
+export function freshStore(){return {tokens:0,boostEnds:0,owned:{},txns:[],gift:false,ads:{day:0,count:0},spent:0,jar:0,spin:freshSpin()};}
 export function migrateStore(old){
   const s=freshStore();if(!old||typeof old!=='object')return s;
   s.tokens=Math.floor(num(old.tokens,0,1e6));s.boostEnds=num(old.boostEnds,0,8.64e15);
@@ -29,6 +37,7 @@ export function migrateStore(old){
   s.gift=old.gift===true;
   if(old.ads&&typeof old.ads==='object')s.ads={day:Math.floor(num(old.ads.day,0,1e9)),count:Math.floor(num(old.ads.count,0,99))};
   s.spent=Math.floor(num(old.spent,0,1e9));
+  s.jar=num(old.jar,0,JAR_MAX);s.spin=migrateSpin(old.spin);
   return s;
 }
 // Seconds of boost left at `now` (ms).
@@ -51,8 +60,13 @@ export function claimGift(s){if(s.gift)return false;s.gift=true;s.tokens+=GIFT_T
 export function adsLeft(s,day){return s.ads.day===day?Math.max(0,ADS_PER_DAY-s.ads.count):ADS_PER_DAY;}
 export function countAd(s,day){if(s.ads.day!==day)s.ads={day,count:0};if(s.ads.count>=ADS_PER_DAY)return false;s.ads.count++;return true;}
 export function dayNumber(now){const d=new Date(now);return Math.floor((now-d.getTimezoneOffset()*60000)/DAY);}
-// Is this pack still for sale? One-time packs disappear once owned.
-export function forSale(s,key){const p=productByKey(key);return !!p&&!(p.type==='nonconsumable'&&s.owned[key]);}
+// Is this pack still for sale? One-time packs disappear once owned; the tip jar waits until it holds JAR_MIN.
+export function forSale(s,key){const p=productByKey(key);return !!p&&!(p.type==='nonconsumable'&&s.owned[key])&&!(key==='tipjar'&&s.jar<JAR_MIN);}
+// The tip jar fills with real seconds of play (the caller passes only time the shop was open and on screen).
+export function fillJar(s,seconds){if(seconds>0)s.jar=Math.min(JAR_MAX,s.jar+seconds/JAR_SECONDS);return s.jar;}
+export function jarTokens(s){return Math.floor(s.jar);}
+// How an ad button pays: 'free' with Ad-free rewards, 'ad' when an ad can play, else null (the button hides).
+export function rewardWay(s,adsAvailable){return s.owned.adfree?'free':adsAvailable?'ad':null;}
 // Hands over what a purchase pays, once per App Store transaction. `cashFor(hours)` turns the starter pack's hours of
 // sales into dollars at today's rate. Returns {tokens,cash,double} or null when there is nothing (new) to give.
 export function grantPurchase(s,productId,txn,cashFor){
@@ -60,8 +74,9 @@ export function grantPurchase(s,productId,txn,cashFor){
   if(txn&&s.txns.indexOf(String(txn))>=0)return null;
   if(p.type==='nonconsumable'&&s.owned[p.key])return null;
   if(txn){s.txns.push(String(txn));if(s.txns.length>60)s.txns.splice(0,s.txns.length-60);}
-  const got={key:p.key,tokens:p.tokens||0,cash:p.cashHours&&cashFor?Math.max(0,Math.round(cashFor(p.cashHours))):0,double:p.key==='double'};
+  const got={key:p.key,tokens:p.key==='tipjar'?Math.floor(s.jar):p.tokens||0,cash:p.cashHours&&cashFor?Math.max(0,Math.round(cashFor(p.cashHours))):0,double:p.key==='double'};
   if(p.type==='nonconsumable')s.owned[p.key]=true;
+  if(p.key==='tipjar')s.jar=0;
   s.tokens+=got.tokens;
   return got;
 }

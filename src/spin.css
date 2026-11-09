@@ -1,0 +1,37 @@
+/* The lucky spin dialog (spin-ui.js): the store's glass dialog with the wheel, its odds, and two buttons. The free spin
+   is cream (the dialog's main action); brass stays the next buy's. */
+.modal.spin{gap:10px}
+.spin-stage{position:relative;display:grid;place-items:center;margin:2px auto 0;width:min(240px,64vw);aspect-ratio:1}
+.spin-wheel{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 8px 14px #06180c80)}
+.spin-wheel .spin-rim{fill:#163526;stroke:#e9d9a8;stroke-width:3}
+.spin-wheel .spin-turn{transform-box:view-box;transform-origin:110px 110px}
+.spin-wheel .spin-lines path{stroke:#163526;stroke-width:2}
+.spin-wheel text{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-weight:700;text-anchor:middle;dominant-baseline:middle}
+.spin-wheel .spin-hub{fill:#e9d9a8;stroke:#163526;stroke-width:3}
+.spin-wheel .spin-leaf{fill:#1f4a33}
+.spin-pointer{position:absolute;top:-6px;left:50%;z-index:1;width:0;height:0;transform:translateX(-50%);border-left:11px solid transparent;border-right:11px solid transparent;border-top:19px solid #e9d9a8;filter:drop-shadow(0 2px 3px #0008)}
+.modal.spin .spin-result{min-height:20px;margin:0;font-size:15px;font-weight:600;text-align:center;color:var(--ui-soft)}
+.modal.spin .spin-result b{color:var(--ui-leaf-glow)}
+.modal.spin .spin-result:empty{min-height:0;display:none}
+.modal.spin .spin-odds{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;margin:0;padding:0 2px;list-style:none;font-size:12.5px;line-height:1.25}
+.modal.spin .spin-odds li{display:flex;align-items:center;gap:6px;min-width:0;color:var(--ui-ink)}
+.modal.spin .spin-odds i{flex:0 0 9px;height:9px;border-radius:3px}
+.modal.spin .spin-odds span{min-width:0}
+.modal.spin .spin-odds b{margin-left:auto;font-weight:600;color:var(--ui-soft);font-variant-numeric:tabular-nums}
+.modal.spin .spin-free{width:100%;min-height:50px;margin:2px 0 0;border:0;border-radius:16px;background:linear-gradient(180deg,#f6ead0,#e8d4a6);color:#2a2414;font:700 16px/1 'Bricolage Grotesque',system-ui,sans-serif;box-shadow:inset 0 1px 0 #fff8e4;cursor:pointer}
+.modal.spin .spin-free.is-wait,.modal.spin .spin-free:disabled{background:#ffffff12;color:var(--ui-soft);box-shadow:inset 0 0 0 1px var(--ui-edge);cursor:default;font-weight:600;font-size:14px}
+.modal.spin .spin-ad{margin:0}
+.modal.spin .spin-note{margin:0;font-size:12px;line-height:1.3;color:var(--ui-soft);text-align:center}
+.modal.spin button:focus-visible{outline:2px solid var(--ui-ink);outline-offset:2px}
+.modal.spin .spin-free:not(:disabled):active{transform:scale(.98)}
+@media(max-height:700px){.spin-stage{width:min(190px,52vw)}.modal.spin .spin-free{min-height:46px}}
+
+/* The free spin chip in the top lane: the little wheel and "Free spin", like the other lane chips. */
+.lane-chip.spin-pill{cursor:pointer}
+.lane-chip.spin-pill .chip-icon{fill:none}
+.lane-chip.store-pill{pointer-events:auto;cursor:pointer}
+.lane-chip.store-pill.has-plus::after{content:'+30';margin-left:2px;padding:3px 6px;border-radius:999px;background:#a8dc5226;box-shadow:inset 0 0 0 1px #a8dc5259;color:var(--ui-leaf-glow);font:700 10.5px/1 'Bricolage Grotesque',system-ui,sans-serif}
+.lane-chip.spin-pill{pointer-events:auto;color:var(--ui-leaf-glow)}
+.lane-chip.spin-pill .chip-time:empty{display:none}
+@media(hover:hover){.lane-chip.spin-pill:hover,.lane-chip.store-pill:hover{background:linear-gradient(180deg,var(--ui-sheen),transparent 40%),var(--ui-glass-strong)}}
+.lane-chip.spin-pill:active,.lane-chip.store-pill:active{transform:scale(.97)}

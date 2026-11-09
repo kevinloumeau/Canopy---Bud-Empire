@@ -91,3 +91,70 @@
 
 /* Test mode's stand-in ad (?ads=test). */
 .ad-standin{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:#06180cf2;color:var(--ui-soft);font:600 15px 'Bricolage Grotesque',system-ui,sans-serif}
+
+/* 2026-11-09: ad count beside the ad button, the lucky spin row, the tip jar's fill and the boost packs row. */
+.modal.store .store-ad small{font:600 12px/1 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-soft)}
+.modal.store .store-spin{display:flex;align-items:center;gap:12px;width:100%;min-height:58px;margin:0;padding:8px 12px 8px 8px;border:0;border-radius:18px;background:var(--ui-well);box-shadow:inset 0 0 0 1px var(--ui-edge);color:var(--ui-ink);font:inherit;text-align:left;cursor:pointer}
+.store-spin-art{display:grid;place-items:center;flex:0 0 42px;height:42px}
+.store-spin-art svg{width:40px;height:40px;filter:drop-shadow(0 2px 3px #06180c8c)}
+.modal.store .store-spin.is-ready .store-spin-art svg{animation:spin-wobble 2.6s ease-in-out infinite}
+@keyframes spin-wobble{0%,70%,100%{transform:rotate(0)}80%{transform:rotate(-14deg)}90%{transform:rotate(8deg)}}
+@media(prefers-reduced-motion:reduce){.modal.store .store-spin.is-ready .store-spin-art svg{animation:none}}
+.store-spin-text{display:flex;flex-direction:column;gap:2px;min-width:0;margin-right:auto}
+.store-spin-text b{font-size:15px;line-height:1.15;letter-spacing:-.01em}
+.store-spin-text small{font-size:12.5px;line-height:1.25;font-weight:600;color:var(--ui-soft)}
+.modal.store .store-spin.is-ready .store-spin-text small{color:var(--ui-leaf-glow)}
+.modal.store .store-spin em{font:700 12px/1 'Bricolage Grotesque',system-ui,sans-serif;font-style:normal;padding:7px 12px;border-radius:999px;background:#ffffff12;box-shadow:inset 0 0 0 1px var(--ui-edge)}
+.modal.store .store-spin.is-ready em{background:#a8dc5226;box-shadow:inset 0 0 0 1px #a8dc5266;color:var(--ui-leaf-glow)}
+.modal.store .store-spin em:empty{display:none}
+.modal.store .store-jar{display:block;width:72%;height:5px;margin:-3px 0 8px;border-radius:3px;background:#ffffff1a;overflow:hidden}
+.modal.store .store-jar i{display:block;width:calc(var(--jar,0) * 100%);height:100%;border-radius:3px;background:var(--ui-leaf-glow)}
+.modal.store .store-pack.is-filling{cursor:default}
+.modal.store .store-pack.is-filling .store-price{color:var(--ui-soft);font-weight:600}
+.modal.store .store-row{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 10px;border-radius:18px;background:var(--ui-well);box-shadow:inset 0 0 0 1px var(--ui-edge)}
+.store-row-art{display:grid;place-items:center;flex:0 0 34px}
+.store-row-art img{width:auto;height:34px;filter:drop-shadow(0 2px 3px #06180c8c)}
+.store-row-text{display:flex;flex-direction:column;gap:1px;min-width:0;margin-right:auto}
+.store-row-text b{font-size:14px;line-height:1.15}
+.store-row-text small{font-size:12px;font-weight:600;color:var(--ui-soft);line-height:1.2}
+.modal.store .store-chip{display:flex;flex-direction:column;align-items:center;gap:4px;min-height:0;margin:0;padding:0;border:0;background:none;color:var(--ui-ink);font:inherit;cursor:pointer}
+.store-chip-n{font:800 12px/1 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-soft)}
+.modal.store .store-chip .store-price{min-width:62px;margin:0;padding:7px 10px}
+.modal.store .store-chip.is-busy{opacity:.7}
+@media(hover:hover){.modal.store .store-spin:hover{background:#ffffff0f}}
+.modal.store .store-spin:active,.modal.store .store-chip:not(:disabled):active{transform:scale(.98)}
+/* Shorter phones: tighter tiles so the whole store fits without scrolling. */
+@media(max-height:760px){
+ .modal.store{gap:8px}
+ .modal.store .store-boost{grid-template-columns:52px 1fr auto;padding:10px;row-gap:8px}
+ .store-boost-art,.store-ring{width:52px;height:52px}
+ .store-boost-art img{width:38px}
+ .modal.store .store-use{min-height:44px}
+ .modal.store .store-ad{min-height:40px}
+ .modal.store .store-spin{min-height:50px;padding-block:5px}
+ .store-pack-art{height:40px;margin-bottom:2px}
+ .store-pack-art img{height:40px}
+ .modal.store .store-pack{padding:8px 6px}
+ .modal.store .store-pack small{margin-bottom:6px}
+ .modal.store .store-price{padding:6px 10px}
+ .modal.store .store-foot{gap:0}
+ .modal.store .store-restore{min-height:28px}
+}
+.modal.store small,.modal.spin small{letter-spacing:0;text-transform:none;font-family:'Bricolage Grotesque',system-ui,sans-serif}
+/* SE-size phones: tiles drop their one-line description (the tip jar keeps its count) so the store fits one screen. */
+@media(max-height:700px){
+ .modal.store{gap:7px;padding:12px}
+ .modal.store .store-head h2{font-size:18px}
+ .modal.store .store-close{width:32px;height:32px}
+ .modal.store .store-pack:not([data-pack=tipjar]) small{display:none}
+ .modal.store .store-pack b{margin-bottom:6px}
+ .modal.store .store-pack[data-pack=tipjar] b{margin-bottom:0}
+ .modal.store .store-pack[data-pack=tipjar] small{margin-bottom:2px}
+ .modal.store .store-jar{margin:2px 0 6px}
+ .store-pack-art{height:34px}
+ .store-pack-art img{height:34px}
+ .modal.store .store-row-text small{display:none}
+ .modal.store .store-boost{grid-template-columns:44px 1fr auto}
+ .store-boost-art,.store-ring{width:44px;height:44px}
+ .store-boost-art img{width:32px}
+}
