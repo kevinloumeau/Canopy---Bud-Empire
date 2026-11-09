@@ -166,15 +166,11 @@ img.goal-3d{display:block;max-width:100%;max-height:100%;width:auto;height:auto;
 .sheet .selected-line .station-buy-actions #buyMachineMax span,.sheet .selected-line .station-buy-actions #buyMachineMax b{grid-column:2;text-align:left;color:inherit}
 .sheet .selected-line .station-buy-actions #buyMachineMax:not(:disabled):hover{border-color:var(--pop-brass)!important;background:rgba(240,214,154,.12)!important}
 .sheet .selected-line .station-buy-actions #buyMachineMax:disabled{border-color:var(--pop-edge)!important;background:none!important;opacity:.55}
-/* Boosted station card: a breathing green-gold glow with a light sweep while the crew ability runs. */
-.sheet .machine-nav button.is-boosted,.sheet .machine-nav button.is-boosted[aria-pressed=true]{position:relative;overflow:hidden;border-color:#c9e89a!important;animation:station-boost-glow 1.6s ease-in-out infinite}
-.sheet .machine-nav button.is-boosted .station-icon,.sheet .machine-nav button.is-boosted[aria-pressed=true] .station-icon{color:#d8f2a8!important;animation:station-boost-icon 1.6s ease-in-out infinite}
-.sheet .machine-nav button.is-boosted .station-card-name,.sheet .machine-nav button.is-boosted>em{color:#e2f6c2!important}
-.sheet .machine-nav button.is-boosted::after{content:''!important;display:block!important;position:absolute;inset:0;width:auto!important;height:auto!important;border:0!important;background:linear-gradient(105deg,transparent 30%,rgba(255,250,220,.32) 50%,transparent 70%),radial-gradient(circle at 50% 30%,rgba(168,215,132,.35),transparent 70%)!important;background-size:100% 100%!important;background-repeat:no-repeat!important;animation:station-boost-sweep 2.4s ease-in-out infinite;pointer-events:none;-webkit-mask:none!important;mask:none!important}
-@keyframes station-boost-glow{0%,100%{filter:drop-shadow(0 0 4px #a8dc5288)}50%{filter:drop-shadow(0 0 9px #c4ee96) drop-shadow(0 0 20px #a8dc52cc)}}
-@keyframes station-boost-icon{0%,100%{transform:scale(1);filter:drop-shadow(0 0 0 transparent)}50%{transform:scale(1.12);filter:drop-shadow(0 0 6px #d8f2a8)}}
-@keyframes station-boost-sweep{0%,35%{background-position:-160px 0,0 0}100%{background-position:160px 0,0 0}}
-@media (prefers-reduced-motion:reduce){.sheet .machine-nav button.is-boosted,.sheet .machine-nav button.is-boosted .station-icon,.sheet .machine-nav button.is-boosted::after{animation:none}.sheet .machine-nav button.is-boosted{filter:drop-shadow(0 0 8px #b8e690)}}
+/* Boosted station card: the crew ability is running. A small green bolt badge in the corner, and nothing else, so the
+   tile never reads as "upgrade me" (Kevin 2026-11-09: a glowing tile looked like the one to upgrade). Only brass
+   marks the next buy; this is a status, not an action. */
+.sheet .machine-nav button.is-boosted{position:relative}
+.sheet .machine-nav button.is-boosted::after{content:''!important;display:block!important;position:absolute;top:4px;right:4px;left:auto!important;bottom:auto!important;width:16px!important;height:16px!important;border:0!important;border-radius:50%;background:var(--pop-green,#a8dc52) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M9.2 1.5 3.6 9h3.6l-.9 5.5L12.4 7H8.6z' fill='%2318301f'/%3E%3C/svg%3E") center/11px no-repeat!important;box-shadow:0 0 0 2px #153b21!important;transform:none!important;animation:none!important;opacity:1!important;pointer-events:none;-webkit-mask:none!important;mask:none!important}
 /* The pickup window and its upgrades live on the Pickup station now; Deliveries keeps the drone port. */
 .sheet [data-pane=orders] .window-control,.sheet [data-pane=orders] #deliverySite{display:none!important}
 .sheet .station-extra button.is-owned{opacity:.6}
