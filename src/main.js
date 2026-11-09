@@ -4175,6 +4175,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     $('upgradeGain').textContent=gainText;
     $('upgradeBenefit').setAttribute('aria-label',label+': '+(unbuilt?'not built':formatValue(before))+(maxed?'':', next level '+formatValue(after))+'. '+gainWords);
     $('upgradeBenefit').classList.toggle('is-maxed',maxed);
+    $('upgradeBenefit').classList.toggle('is-same',!maxed&&!unbuilt&&formatValue(before)===formatValue(after));
   }
   function paintDeliveryPreview(){
     var preview=$('deliveryPreview'),key=[state.productMenu.active,state.menuStrains.join(',')].join('|');
@@ -4231,7 +4232,9 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // Counters double baskets through the retail tier, which needs both counters at that level.
   function renderUnlockRoad(level,i){
     var next=economy.nextUnlock(Math.max(1,level)),road=$('nextAppearance');road.classList.add('unlock-road');road.hidden=!level;
-    if(!next){road.innerHTML='<b>Flagship</b><span>+output each level</span>';return}
+    // Past the last tier the production lines and the order desk still grow every level; pickup does not, so its road
+    // says only that the top look is reached rather than promising output.
+    if(!next){road.removeAttribute('title');road.innerHTML='<b>Flagship</b><span>'+(i===5?'top look':'+output each level')+'</span>';return}
     var other=i===4?5:i===5?4:-1,gives=other<0?'×2 output':'×2 baskets';road.title=other<0?'':'Baskets double when Orders and Pickup both reach Lv '+next.level;
     road.innerHTML='<b>Lv '+next.level+'</b><span>'+gives+(next.look?' · new look':next.level===FOUNDER_LEVEL&&perkLevel(state.perks,'finish')?' · founder look':'')+'</span>';
   }
