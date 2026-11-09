@@ -42,16 +42,19 @@ export function mountSpin({getState,ads,format,incomeRate,pay,changed,notify,hap
     '<div class="store-head"><h2 id="spinTitle">Lucky spin</h2><button type="button" class="store-close" aria-label="Close the lucky spin">×</button></div>'+
     '<div class="spin-stage"><img class="spin-pointer" src="'+ART+'pointer.webp" alt="" draggable="false">'+wheelSvg()+'</div>'+
     '<p class="spin-result" id="spinResult" role="status" aria-live="polite"></p>'+
-    '<ul class="spin-odds" aria-label="Prizes and their odds">'+PRIZES.map(p=>'<li><img src="'+prizeIcon(p.id)+'" alt="" draggable="false"><span>'+tieLast(p.name)+'</span><b>'+p.odds+'%</b></li>').join('')+'</ul>'+
+    // The odds sit behind a small "Odds" link under the buttons (Kevin, 2026-11-09: the list was too much on show); the
+    // slices are still drawn as wide as their odds.
+    '<ul class="spin-odds" id="spinOdds" aria-label="Prizes and their odds" hidden>'+PRIZES.map(p=>'<li><img src="'+prizeIcon(p.id)+'" alt="" draggable="false"><span>'+tieLast(p.name)+'</span><b>'+p.odds+'%</b></li>').join('')+'</ul>'+
     '<button type="button" class="spin-free" id="spinFree"></button>'+
     '<button type="button" class="store-ad spin-ad" id="spinAd" hidden>'+PLAY+'<span></span><small></small></button>'+
-    '<p class="spin-note" id="spinNote"></p>'+
+    '<p class="spin-note"><span id="spinNote"></span>&nbsp;<button type="button" class="spin-odds-link" id="spinOddsLink" aria-expanded="false" aria-controls="spinOdds">Odds</button></p>'+
   '</div>';
   document.body.append(wrap);
   const $=sel=>wrap.querySelector(sel),turn=$('.spin-turn');
   let busy=false,angle=0,opener=null,result='';
   function close(){if(busy)return;wrap.hidden=true;result='';if(opener&&opener.focus)opener.focus();}
   function open(){opener=document.activeElement;render();wrap.hidden=false;$('.store-close').focus();}
+  $('#spinOddsLink').onclick=()=>{const list=$('#spinOdds'),open=list.hidden;list.hidden=!open;$('#spinOddsLink').setAttribute('aria-expanded',String(open));$('#spinOddsLink').textContent=open?'Hide odds':'Odds';};
   $('.store-close').onclick=close;wrap.addEventListener('click',e=>{if(e.target===wrap)close();});manageDialog(wrap,close);
   function still(){return !!(window.__canopySnap||(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches));}
   // Turns the wheel to the prize, then pays it.

@@ -139,8 +139,12 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
     // Phones size the grid to fill the sheet (src/research-fit.css): a few tiles go two across and grow, a full branch
     // goes four across. A fork takes two cells. Rows come from laying the cells out in order, as the grid does.
     if(finished)rows.forEach(r=>{if(r.category===category)r.node.hidden=true});
-    const cells=[...list.children].filter(n=>!n.hidden&&n!==desk).map(n=>n.classList.contains('shop-fork')?2:1),total=cells.reduce((a,b)=>a+b,0);
-    const cols=total<=4?2:total<=6?3:4;let rowsUsed=total?1:0,at=0;cells.forEach(w=>{if(at+w>cols){rowsUsed++;at=0}at+=w});
+    const nodes=[...list.children].filter(n=>!n.hidden&&n!==desk),cells=nodes.map(n=>n.classList.contains('shop-fork')?2:1),total=cells.reduce((a,b)=>a+b,0);
+    const cols=total<=4?2:total<=6?3:4;let rowsUsed=total?1:0,at=0;
+    // No empty cells: the last tile (or fork) of a row that comes up short stretches across what is left of it.
+    const widen=(i,span)=>{const n=nodes[i];if(!n)return;if(span>cells[i]&&phoneTiles.matches)n.style.setProperty('grid-column','span '+span,'important');else n.style.removeProperty('grid-column')};
+    cells.forEach((w,i)=>{if(at+w>cols){widen(i-1,cells[i-1]+cols-at);rowsUsed++;at=0}else widen(i-1,cells[i-1]);at+=w});
+    if(nodes.length)widen(nodes.length-1,cells[nodes.length-1]+cols-at);
     list.style.setProperty('--cols',cols);list.dataset.cols=cols;list.style.setProperty('--rows',Math.max(1,rowsUsed));list.dataset.rows=rowsUsed>2?'many':String(rowsUsed);
     empty.hidden=count>0||done>0||gateLines.length>0;
     empty.textContent='Nothing here yet.';

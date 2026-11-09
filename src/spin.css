@@ -23,7 +23,7 @@
 .modal.spin .spin-note{margin:0;font-size:12px;line-height:1.3;color:var(--ui-soft);text-align:center}
 .modal.spin button:focus-visible{outline:2px solid var(--ui-ink);outline-offset:2px}
 .modal.spin .spin-free:not(:disabled):active{transform:scale(.98)}
-@media(max-height:700px){.spin-stage{width:min(190px,52vw)}.modal.spin .spin-free{min-height:46px}}
+@media(max-height:700px){.spin-stage{width:min(220px,60vw)}.modal.spin .spin-free{min-height:46px}}
 
 /* The free spin chip in the top lane: the little wheel and "Free spin", like the other lane chips. */
 .lane-chip.spin-pill{cursor:pointer}
@@ -34,3 +34,5 @@
 .lane-chip.spin-pill .chip-time:empty{display:none}
 @media(hover:hover){.lane-chip.spin-pill:hover,.lane-chip.store-pill:hover{background:linear-gradient(180deg,var(--ui-sheen),transparent 40%),var(--ui-glass-strong)}}
 .lane-chip.spin-pill:active,.lane-chip.store-pill:active{transform:scale(.97)}
+.modal.spin .spin-odds[hidden]{display:none}
+.modal.spin .spin-odds-link{display:inline;margin:0;padding:2px 0;border:0;background:none;color:var(--ui-ink);font:600 12px/1.3 'Bricolage Grotesque',system-ui,sans-serif;text-decoration:underline;text-decoration-color:#f3f0e466;text-underline-offset:2px;cursor:pointer;white-space:nowrap}
