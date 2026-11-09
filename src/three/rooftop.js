@@ -11,6 +11,7 @@
 import * as THREE from 'three';
 import { HEIGHT_SCALE } from './camera.js';
 import { compactModel } from './compact.js';
+import { softTexture, softDot, ramp } from './soft-texture.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 const BRASS = '#d0a54e', OAK = '#b98d5c', OAK_DARK = '#6e4a2c', STEEL = '#1f4a35', CREAM = '#efe4cf', VELVET = '#6b2436';
@@ -288,17 +289,14 @@ export function buildRooftop(world, layout, { box, span, material }) {
 
   // Smoke: each seated guest breathes out a soft puff now and then that drifts up and fades. A small pool of sprites
   // shared by every guest, four puffs each, so it stays cheap on phones.
-  const smokeCanvas = document.createElement('canvas'); smokeCanvas.width = smokeCanvas.height = 64;
-  const sc = smokeCanvas.getContext('2d'), grad = sc.createRadialGradient(32, 32, 0, 32, 32, 32);
-  grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(.5, 'rgba(255,255,255,.6)'); grad.addColorStop(1, 'rgba(255,255,255,0)');
-  sc.fillStyle = grad; sc.fillRect(0, 0, 64, 64);
-  const smokeTexture = new THREE.CanvasTexture(smokeCanvas);
+  // A wide Gaussian-like falloff with no visible rim, so overlapping puffs blend into one soft haze.
+  const smokeTexture = softDot(64, d => Math.exp(-d * d * 1.6) * (1 - d * d));
   const SMOKE_PUFFS = 4, SMOKE_PERIOD = 4400, SMOKE_LIFE = 4200;
   const puffs = [];
   const smoke = new THREE.Group(); open.add(smoke);
   function puff(i) {
     while (puffs.length <= i) {
-      const m = new THREE.SpriteMaterial({ map: smokeTexture, color: '#e9e4dc', transparent: true, depthWrite: false, opacity: 0 });
+      const m = new THREE.SpriteMaterial({ map: smokeTexture, color: '#e9e4dc', transparent: true, depthWrite: false, opacity: 0, fog: false });
       const sprite = new THREE.Sprite(m); sprite.renderOrder = 5; smoke.add(sprite); puffs.push(sprite);
     }
     return puffs[i];
@@ -451,13 +449,7 @@ export function buildRooftop(world, layout, { box, span, material }) {
   }
   // Searchlight gala: a searchlight on a brass drum at each back corner, so the beams rise behind the deck rather than
   // across it; each is a soft cone fading to nothing at its tip, faint by day and bright at night.
-  const beamCanvas = document.createElement('canvas'); beamCanvas.width = 4; beamCanvas.height = 128;
-  {
-    const c = beamCanvas.getContext('2d'), fade = c.createLinearGradient(0, 0, 0, 128);
-    fade.addColorStop(0, '#000000'); fade.addColorStop(.55, '#6b6250'); fade.addColorStop(1, '#fff3d0');
-    c.fillStyle = fade; c.fillRect(0, 0, 4, 128);
-  }
-  const beamTexture = new THREE.CanvasTexture(beamCanvas); beamTexture.colorSpace = THREE.SRGBColorSpace;
+  const beamTexture = softTexture(4, 128, (u, v) => [...ramp([[0, [0, 0, 0]], [.55, [107 / 255, 98 / 255, 80 / 255]], [1, [1, 243 / 255, 208 / 255]]], 1 - v), 1], { srgb: true });
   const beamMat = new THREE.MeshBasicMaterial({ map: beamTexture, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
   const beams = [];
   [[x0 + .45, z0 + .45, 1], [x1 - .45, z0 + .45, -1]].forEach(([sx, sz, dir], k) => {
@@ -725,8 +717,8 @@ export function buildRooftop(world, layout, { box, span, material }) {
           sprite.visible = true;
           sprite.position.set(g.x + (g.facing || 0) * .4 + drift + t * .25, y + 1.65 + t * 2, g.z + .1 - t * .15);
           sprite.scale.set(size, size / HEIGHT_SCALE, 1);
-          sprite.material.opacity = Math.min(1, t * 6) * Math.pow(1 - t, .8) * .95;
-          sprite.material.color.setScalar(.72 - night * .25);
+          sprite.material.opacity = Math.min(1, t * 5) * Math.pow(1 - t, .9) * .95;
+          sprite.material.color.setScalar(.86 - night * .3);
         }
       });
       for (let i = used; i < puffs.length; i++) puffs[i].visible = false;
