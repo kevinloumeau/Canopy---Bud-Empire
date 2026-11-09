@@ -21,34 +21,40 @@
  /* The grid fills the rest of the pane: --cols across, --rows rows sharing the height. Each tile works out its own
     ring from that share (what is left after the text and price) and its width, between 30px and 76px. */
  html body .sheet>[data-pane=boosts].shop-browser>.shop-items{flex:1 1 auto;min-height:0;container-type:size;grid-template-columns:repeat(var(--cols,4),minmax(0,1fr))!important;grid-template-rows:repeat(var(--rows,2),minmax(0,1fr));align-content:stretch;gap:var(--s-tile-gap)!important;padding:0!important}
- .sheet>[data-pane=boosts] .shop-items{--text:76px}
+ /* --text is everything under the ring, so the ring takes only what is left: padding (s-pad top, s-pad - 2 bottom, s-pad - 6
+    over the price), the gap under the level pill, the name and effect lines and the price. */
+ .sheet>[data-pane=boosts] .shop-items{--btn-gap:max(2px,var(--s-pad) - 6px);--text:calc(2 * var(--s-pad) + var(--btn-gap) + 66px)}
  .sheet>[data-pane=boosts] .shop-items :is(.shop-item,.shop-done-toggle){--tile-h:calc((100cqh - (var(--rows,2) - 1) * var(--s-tile-gap)) / var(--rows,2));--tile-w:calc((100cqw - (var(--cols,4) - 1) * var(--s-tile-gap)) / var(--cols,4));--ring:clamp(30px,min(var(--tile-h) - var(--text),var(--tile-w) - 24px),var(--ring-max))}
  /* The sheet scale caps the ring (sheet-scale.css): 44 → 54px four across, 52 → 64px two or three across, and the rest of
     a taller tile is even padding around its centred content. */
  .sheet>[data-pane=boosts] .shop-items{--ring-max:var(--s-ring)}
  .sheet>[data-pane=boosts] .shop-items:is([data-cols="2"],[data-cols="3"]){--ring-max:min(calc(var(--s-ring) + 8px + var(--rp) * .03),100px)}
- /* Two or three across: a touch bigger type. */
- .sheet>[data-pane=boosts] .shop-items:is([data-cols="2"],[data-cols="3"]){--text:82px}
- .sheet>[data-pane=boosts] .shop-items:is([data-cols="2"],[data-cols="3"]) .shop-item .shop-short{font-size:13px!important}
- .sheet>[data-pane=boosts] .shop-items:is([data-cols="2"],[data-cols="3"]) .shop-item .shop-effect{font-size:11.5px!important}
- html body .sheet>[data-pane=boosts].shop-browser .shop-items:is([data-cols="2"],[data-cols="3"]) .shop-item button{min-height:30px!important;height:30px}
- .sheet>[data-pane=boosts] .shop-items:is([data-cols="2"],[data-cols="3"]) .shop-item button b{font-size:13px!important}
+ /* Two or three across: a touch bigger type, once the grid is tall enough to keep a real ring under it (not on the
+    iPhone SE, where the bigger lines would squeeze the ring below its 30px floor). */
+ @container (min-height:250px){
+  .sheet>[data-pane=boosts] .shop-items:is([data-cols="2"],[data-cols="3"]) :is(.shop-item,.shop-done-toggle){--text:calc(2 * var(--s-pad) + var(--btn-gap) + 73px)}
+  .sheet>[data-pane=boosts] .shop-items:is([data-cols="2"],[data-cols="3"]) .shop-item .shop-short{font-size:13px!important}
+  .sheet>[data-pane=boosts] .shop-items:is([data-cols="2"],[data-cols="3"]) .shop-item .shop-effect{font-size:11.5px!important}
+  html body .sheet>[data-pane=boosts].shop-browser .shop-items:is([data-cols="2"],[data-cols="3"]) .shop-item button{min-height:30px!important;height:30px}
+  .sheet>[data-pane=boosts] .shop-items:is([data-cols="2"],[data-cols="3"]) .shop-item button b{font-size:13px!important}
+ }
  /* Opened "Maxed and closed" with more than two rows: fixed small tiles, and the pane scrolls. */
  html body .sheet>[data-pane=boosts].shop-browser>.shop-items[data-rows=many]{flex:none;container-type:normal;grid-template-rows:none;grid-auto-rows:auto}
  .sheet>[data-pane=boosts] .shop-items[data-rows=many] :is(.shop-item,.shop-done-toggle){--ring:36px}
 
  /* A tile: ring, name, effect, price. */
- html body .sheet>[data-pane=boosts].shop-browser .shop-item{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:var(--ring) auto auto auto!important;grid-template-areas:"icon" "title" "effect" "button"!important;justify-items:center;align-content:center!important;row-gap:2px!important;padding:var(--s-pad) 2px calc(var(--s-pad) - 2px)!important;border-radius:13px!important;cursor:pointer}
+ html body .sheet>[data-pane=boosts].shop-browser .shop-item{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:var(--ring) min-content min-content min-content!important;grid-template-areas:"icon" "title" "effect" "button"!important;justify-items:center;align-content:center!important;row-gap:2px!important;padding:var(--s-pad) 2px calc(var(--s-pad) - 2px)!important;border-radius:13px!important;cursor:pointer}
  .sheet>[data-pane=boosts] .shop-item .shop-symbol.has-3d{width:var(--ring)!important;height:var(--ring)!important;margin:0!important}
- .sheet>[data-pane=boosts] .shop-item .shop-symbol.has-3d>img.research-3d{width:calc(var(--ring) * .67)!important;height:calc(var(--ring) * .67)!important}
- /* The level rides on the ring's lower edge as a small pill, clear of the icon at any level. */
- .sheet>[data-pane=boosts] .shop-item .shop-level{top:calc(var(--ring) - 4px)!important;right:auto!important;left:50%;transform:translateX(-50%);z-index:1;padding:1px 5px;border-radius:7px;background:#173f24;box-shadow:0 0 0 1px var(--ui-edge);font-size:9px!important;line-height:11px;letter-spacing:-.02em;white-space:nowrap}
+ .sheet>[data-pane=boosts] .shop-item .shop-symbol.has-3d>img.research-3d{width:calc(var(--ring) * .8)!important;height:calc(var(--ring) * .8)!important}
+ /* The level sits centred on the ring's lower edge as a small pill, clear of the name under it. The tile's top padding
+    comes first: the pill is placed against the tile, not the ring. */
+ .sheet>[data-pane=boosts] .shop-item .shop-level{top:calc(var(--s-pad) + var(--ring) - 6px)!important;right:auto!important;left:50%;transform:translateX(-50%);z-index:1;padding:1px 5px;border-radius:7px;background:#173f24;box-shadow:0 0 0 1px var(--ui-edge);font-size:9px!important;line-height:11px;letter-spacing:-.02em;white-space:nowrap}
  .sheet>[data-pane=boosts] .shop-item.is-pick .shop-level{box-shadow:0 0 0 1px var(--ui-brass)}
  .sheet>[data-pane=boosts] .shop-item h2,.sheet>[data-pane=boosts] .shop-item .storage-copy>b{display:none!important}
- .sheet>[data-pane=boosts] .shop-item .shop-short{grid-area:title;display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;font:600 11.5px/1.15 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.01em;color:var(--ui-ink);text-align:center}
+ .sheet>[data-pane=boosts] .shop-item .shop-short{grid-area:title;display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:9px;font:600 11.5px/1.2 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.01em;color:var(--ui-ink);text-align:center}
  .sheet>[data-pane=boosts] .shop-item .shop-effect{display:block!important;min-height:0!important;margin:0!important;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 10.5px/1.25 'Bricolage Grotesque',system-ui,sans-serif!important;letter-spacing:-.02em!important}
  /* The price is the tile's button; a tap anywhere on the tile presses it (shop-browser.js). */
- html body .sheet>[data-pane=boosts].shop-browser .shop-item button{align-self:end;justify-self:stretch;min-height:26px!important;height:26px;margin:calc(var(--s-pad) - 4px) 0 0!important;padding:0 4px!important;border-radius:9px!important}
+ html body .sheet>[data-pane=boosts].shop-browser .shop-item button{align-self:end;justify-self:stretch;min-height:26px!important;height:26px;margin:var(--btn-gap) 0 0!important;padding:0 4px!important;border-radius:9px!important}
  .sheet>[data-pane=boosts] .shop-item button b{font-size:12px!important;letter-spacing:-.03em}
  .sheet>[data-pane=boosts] .shop-item button span{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;opacity:1}
  /* A fork side's first tap arms it: the price turns into "Confirm" until the second tap. */
