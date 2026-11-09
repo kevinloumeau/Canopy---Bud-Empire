@@ -27,3 +27,9 @@ test('WebKit pinch and double-click zoom are cancelled once', () => {
     assert.ok(prevented, type);
   }
 });
+
+test('long press never selects text or opens the callout, but typed fields still can', () => {
+  const css = readFileSync(new URL('../src/ui.css', import.meta.url), 'utf8');
+  assert.match(css, /\*,\*::before,\*::after\{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent\}/);
+  assert.match(css, /input,textarea,\[contenteditable\][^{]*\{-webkit-user-select:text;user-select:text/);
+});
