@@ -1,182 +1,192 @@
-/* Goals tab fits the half-open sheet on every phone, down to the iPhone SE (375×667), with nothing to scroll: a slim
-   brass Collect strip, the contract and the story side by side, then one group of goal tiles at a time behind a row of
-   tabs (Shift, Stars, Awards, Milestones) that each carry the group's headline figure. Loaded last. */
+/* Goals tab (goals-pane.js, redesign 2026-11-09). Three layers that fill the pane on every phone, half open on the
+   iPhone SE (a 273px pane) up to full screen, with nothing to scroll:
+     1. a segmented row of three sections (Shift, Deals, Awards), each an icon, a name and one figure;
+     2. the open section, which takes the room between and spreads its blocks evenly;
+     3. the reward button, pinned at the bottom and never hidden, in one of four states (ready, in progress, locked,
+        collected).
+   Sizes follow the sheet scale (sheet-scale.css): text stays the SE's size, pictures grow a little, spacing takes the
+   rest. Loaded after menu-tabs.css, which keeps the shared ring styles. */
 
-/* Collect sits in the sheet's header row, right of the "Goals" title, and only while the Goals tab is open: a solid
-   brass pill with the 3D icons of what pays out, the total, and a dark Collect inside it, the tab's one brass action.
-   With nothing ready, a quiet line there says when the next one lands. */
-.sheet .panel-header>.goals-head{display:none}
-body[data-active-tray=goals] .sheet:not(.collapsed) .panel-header>.goals-head{display:flex;align-items:center;min-width:0;margin:-2px 0 -2px auto}
-body[data-active-tray=goals] .sheet:not(.collapsed) .panel-header>#panelToggle{margin-left:0}
-.goals-head .goals-reward{margin:0;border:0;border-radius:0;background:none}
-.sheet .panel-header .goals-head button.goals-collect{display:flex;align-items:center;gap:8px;width:auto;height:auto;min-width:0;min-height:36px;margin:0;padding:2px 3px 2px 6px;border:0;border-radius:12px;background:var(--ui-brass);color:var(--ui-brass-ink);font:inherit;box-shadow:0 0 0 4px color-mix(in srgb,var(--ui-brass) 18%,transparent),0 4px 14px #06180c66;cursor:pointer}
-.goals-collect-icons{display:flex;flex:none}
-.goals-collect-icons>i{display:grid;place-items:center;width:26px;height:26px}
-.goals-collect-icons>i+i{margin-left:-8px}
-.goals-collect-icons img.goal-3d{width:26px;height:26px;filter:drop-shadow(0 2px 2px #2a221155)}
-.goals-head .goals-collect>b{font:700 16px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;white-space:nowrap}
-.goals-head .goals-collect-go{padding:8px 12px;border-radius:9px;background:var(--ui-brass-ink);color:var(--ui-brass);font-size:14px;font-weight:700;line-height:1}
-.goals-head .goals-collect:active{transform:scale(.97)}
-.goals-head .goals-quiet{margin:0 4px 0 0;padding:0;font-size:12px;white-space:nowrap}
-.goals-head .goals-quiet img.goal-3d{width:20px;height:20px}
+.sheet>[data-pane=goals]>.goals-screen.gb{display:flex;flex-direction:column;gap:var(--s-gap,10px);box-sizing:border-box;min-height:100%;min-width:0}
+.gb-body{display:flex;flex:1 1 auto;flex-direction:column;min-height:0}
+.gb-sec{display:flex;flex:1 1 auto;flex-direction:column;justify-content:space-evenly;gap:var(--s-gap,10px);min-height:max-content}
+.goals-sources[hidden]{display:none!important}
 
-/* Contract and story: two small cards side by side, each one line across: the icon, the thing to do (a small label
-   under it: story count, time left), then the action. Either card alone takes the full row. A running contract's icon
-   sits in a ring that fills with its progress. */
-.goals-now{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 8px}
-.goals-now.is-single{grid-template-columns:minmax(0,1fr)}
-.goal-card.goal-half,.sheet .empire-screen button.goal-card.goal-half{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:3px 8px;height:auto;min-height:52px;margin:0;padding:5px 8px 5px 7px;text-align:left}
-.goal-half .goal-card-icon,.goal-half .goal-card-icon:has(img.goal-3d){grid-row:1/3;width:32px;height:32px}
-.goal-half .goal-card-icon>img.goal-3d{width:32px;height:32px}
-.goal-half .goal-ring.goal-card-icon>img.goal-3d{width:20px;height:20px}
-.goal-half .goal-card-text{display:grid;grid-column:2;min-width:0;gap:1px}
-.goal-half .goal-card-main{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:12.5px;font-weight:600;line-height:1.2;text-wrap:balance}
-.goal-half .goal-card-text>small{overflow:hidden;font-family:inherit;font-size:11px;line-height:1.25;color:var(--ui-soft);text-overflow:ellipsis;white-space:nowrap}
-.goal-half .goal-card-go{grid-column:2;justify-self:start;padding:3px 12px;border-radius:9px;font-size:12.5px;font-weight:700}
-.goal-half .goal-card-go:not(.is-brass){border:1.5px solid var(--ui-brass);background:none;color:var(--ui-brass)}
-.goal-half .goal-card-go.is-brass{padding:6px 9px}
-.goal-half .goal-card-chevron{grid-column:3;grid-row:1/3;display:grid;place-items:center;color:var(--ui-soft)}
-.goal-half .goal-card-chevron svg{width:15px;height:15px}
+/* ---------- 1. The segmented row ---------- */
+.gb-tabs{display:grid;grid-auto-columns:minmax(0,1fr);grid-auto-flow:column;gap:3px;padding:3px;border:1px solid var(--ui-edge);border-radius:14px;background:var(--ui-well)}
+.sheet .gb button.gb-tab{position:relative;display:flex;align-items:center;justify-content:center;gap:6px;min-width:0;height:auto;min-height:var(--s-tab,36px);margin:0;padding:2px 6px;border:0;border-radius:11px;background:none;box-shadow:none;color:var(--ui-soft);font:inherit;text-align:left;cursor:pointer;transition:background-color .18s ease,color .18s ease}
+.sheet .gb button.gb-tab[aria-selected=true]{background:var(--ui-sheen);color:var(--ui-ink);box-shadow:inset 0 0 0 1px var(--ui-edge)}
+.gb-tab-art{display:grid;flex:none;place-items:center;width:24px;height:24px}
+.gb-tab-art>img.goal-3d{width:24px;height:24px;filter:drop-shadow(0 2px 2px #06180c88)}
+.gb-tab:not([aria-selected=true]) .gb-tab-art>img.goal-3d{opacity:.72;filter:saturate(.7) drop-shadow(0 2px 2px #06180c88)}
+.gb-tab-copy{display:grid;min-width:0}
+.gb-tab-copy>b{overflow:hidden;font-size:12.5px;font-weight:600;line-height:1.15;letter-spacing:-.01em;text-overflow:ellipsis;white-space:nowrap}
+.gb-tab-copy>small{overflow:hidden;font:500 10.5px/1.15 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;color:var(--ui-soft);text-overflow:ellipsis;white-space:nowrap}
+.gb-dot{position:absolute;top:5px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--ui-leaf-glow);box-shadow:0 0 0 2px #0d2d17}
+.sheet .gb button.gb-tab:focus-visible{outline:2px solid var(--ui-brass);outline-offset:-2px}
 
-/* The focus: the open group (the shift by default) under a head line with its name, the pips and the headline figure
-   (the shift bonus in brass). Its goals are big open rings straight on the sheet, no card around them; another group
-   shows a close button that brings the shift back. */
-.goals-list>.goal-group.goal-focus{flex:0 0 auto;min-height:0;margin:0;padding:0 2px}
-.goal-hero-head{display:flex;align-items:center;gap:8px;min-height:24px;margin:0 2px 2px}
-.goal-hero-title{font-size:15px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
-.goal-hero-head .shift-pips i{width:16px;height:5px;border-radius:3px}
-.goal-hero-figure{display:flex;align-items:center;gap:5px;margin-left:auto;font:600 13.5px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;color:var(--ui-brass);white-space:nowrap}
-.goal-hero-figure svg{width:17px;height:17px}
-.goal-hero-figure .goal-stars i svg{width:13px;height:13px}
-.sheet .empire-screen .goal-hero-close,.sheet .goal-hero-close,.goal-hero-close{display:grid;place-items:center;flex:none;width:26px;height:26px;min-height:0;max-height:26px;margin:0 -2px 0 6px;padding:0;border:0;border-radius:50%;background:var(--ui-sheen);color:var(--ui-soft);box-shadow:none;cursor:pointer}
-.goal-hero-head>.goal-hero-close:nth-child(2){margin-left:auto}
-.goal-hero-close svg{width:14px;height:14px}
-.goal-focus .goal-tile,.sheet .empire-screen .goal-focus button.goal-tile,.goal-hero .goal-tile,.sheet .empire-screen .goal-hero button.goal-tile{border:0;background:none;box-shadow:none}
-.goal-focus .goal-tile,.sheet .empire-screen .goal-focus button.goal-tile{gap:4px;padding:2px 2px 0}
-.goal-focus .goal-tile>b{font-size:13px}
-.goal-focus .goal-tile>small.goal-tile-figure{display:none}
-.goal-focus .goal-ring{width:60px;height:60px}
-.goal-focus .goal-ring>img.goal-3d{width:36px;height:36px}
+/* ---------- 2a. Shift: a head line, three big rings, the contract and the story ---------- */
+.gb-head{display:flex;align-items:center;gap:8px;min-height:22px;margin:0 2px}
+.gb-head>b{font-size:15px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+.gb-head .shift-pips i{width:16px;height:5px;border-radius:3px}
+.gb-bonus{display:flex;align-items:center;gap:5px;margin-left:auto;font:600 13.5px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;color:var(--ui-brass);white-space:nowrap}
+.gb-bonus svg{width:17px;height:17px}
+.gb-rings{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s-tile-gap,8px)}
+.gb-goal{display:grid;justify-items:center;align-content:start;gap:4px;min-width:0;text-align:center}
+.gb-goal>.goal-ring{width:calc(var(--s-ring,52px) + 4px);height:calc(var(--s-ring,52px) + 4px)}
+.gb-goal>.goal-ring>img.goal-3d{width:calc((var(--s-ring,52px) + 4px) * .6);height:calc((var(--s-ring,52px) + 4px) * .6)}
+.gb-goal>b{display:-webkit-box;max-width:100%;overflow:hidden;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:12.5px;font-weight:600;line-height:1.2;text-wrap:balance}
+.gb-goal>small{display:none;font:500 11px/1.2 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;color:var(--ui-soft);white-space:nowrap}
+.gb-goal.is-done>small{color:var(--ui-leaf-glow)}
+.gb-goal.is-done>.goal-ring>img.goal-3d{opacity:1}
 
-/* Phone: Collect is a full-width brass bar between the rings and the strip, the sheet's one brass action. */
-.goal-collect-slot{flex:none}
-.goal-collect-slot>.goals-reward{margin:0;border:0;border-radius:0;background:none}
-.sheet .empire-screen .goal-collect-slot button.goals-collect,.goal-collect-slot button.goals-collect{display:flex;align-items:center;gap:8px;width:100%;min-width:0;min-height:40px;height:auto;margin:0;padding:3px 3px 3px 8px;border:0;border-radius:13px;background:var(--ui-brass);color:var(--ui-brass-ink);font:inherit;text-align:left;box-shadow:0 0 0 3px color-mix(in srgb,var(--ui-brass) 16%,transparent),0 4px 14px #06180c66;cursor:pointer}
-.goal-collect-slot .goals-collect-icons>i,.goal-collect-slot .goals-collect-icons img.goal-3d{width:30px;height:30px}
-.goal-collect-slot .goals-collect>b{flex:1;min-width:0;overflow:hidden;font:700 17px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;white-space:nowrap;text-overflow:ellipsis}
-.goal-collect-slot .goals-collect-go{padding:9px 14px;border-radius:10px;background:var(--ui-brass-ink);color:var(--ui-brass);font-size:14px;font-weight:700;line-height:1}
-.goal-collect-slot .goals-collect:active{transform:scale(.98)}
-.goals-screen.is-tall .goal-collect-slot button.goals-collect,.sheet .empire-screen .goals-screen.is-tall .goal-collect-slot button.goals-collect{min-height:48px;border-radius:15px}
-.goals-screen.is-tall .goal-collect-slot .goals-collect>b{font-size:19px}
-.goals-screen.is-tall .goal-collect-slot .goals-collect-go{padding:12px 18px;font-size:15px}
+.gb-tasks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s-tile-gap,8px)}
+.gb-tasks.is-single{grid-template-columns:minmax(0,1fr)}
+.sheet .gb button.gb-task{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:6px;min-width:0;height:auto;min-height:42px;margin:0;padding:4px 7px 4px 5px;border:1px solid var(--ui-edge);border-radius:13px;background:var(--ui-well-soft);box-shadow:none;color:var(--ui-ink);font:inherit;text-align:left;overflow:visible;cursor:pointer}
+.sheet .gb button.gb-task.has-go{border-color:color-mix(in srgb,var(--ui-leaf-glow) 55%,transparent);background:color-mix(in srgb,var(--ui-leaf-glow) 7%,transparent)}
+.sheet .gb button.gb-task:active{transform:scale(.98)}
+.gb-task-art{display:grid;place-items:center;width:32px;height:32px}
+.gb-task-art>img.goal-3d{width:30px;height:30px}
+.gb-task>.goal-ring.gb-task-art>img.goal-3d{width:19px;height:19px}
+.gb-task-copy{display:grid;min-width:0}
+.gb-task-copy>b{display:-webkit-box;overflow:hidden;-webkit-line-clamp:3;-webkit-box-orient:vertical;font-size:11.5px;font-weight:600;line-height:1.15;text-wrap:balance}
+/* The right edge: a small figure (story steps, time left) or the boost button. */
+.gb-chip{font:600 11.5px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;color:var(--ui-soft);white-space:nowrap}
+.gb-go{display:flex;align-items:center;gap:3px;padding:6px 8px;border-radius:9px;background:var(--ui-leaf-glow);color:#0d2d17;font-size:12px;font-weight:700;line-height:1;white-space:nowrap}
+.gb-go svg{width:11px;height:11px;fill:currentColor;stroke-width:1.5}
+/* A contract not yet started: a leaf Start badge on the card's top edge; the whole card starts it. */
+.gb-go.is-badge{position:absolute;top:-8px;right:8px;padding:3px 8px 3px 6px;border-radius:999px;font-size:11px;box-shadow:0 0 0 2px #133a20}
+.gb-go.is-badge svg{width:9px;height:9px}
 
-/* The strip: one row of six small icon tiles under the focus. The contract carries a brass Start badge (or a bolt
-   while it runs and can be boosted); a deal you can afford gets a leaf dot; the group that is the focus is lit. */
-.goal-strip{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;padding-top:5px}
-.sheet .empire-screen .goal-strip .goal-sq,.goal-sq{position:relative;display:grid;justify-items:center;align-content:center;gap:2px;min-width:0;min-height:0;margin:0;padding:5px 0 4px;border:1px solid var(--ui-edge);border-radius:13px;background:var(--ui-well-soft);box-shadow:none;color:var(--ui-ink);font:inherit;text-align:center;cursor:pointer}
-.goal-sq-art{display:grid;place-items:center;width:28px;height:28px}
-.goal-sq-art>img.goal-3d{width:28px;height:28px;filter:drop-shadow(0 3px 3px #06180c88)}
-.goal-sq>b{max-width:100%;overflow:hidden;font-size:10.5px;font-weight:600;line-height:1.15;letter-spacing:-.02em;text-overflow:ellipsis;white-space:nowrap}
-.goal-sq>small{max-width:100%;overflow:hidden;font-size:10px;line-height:1.1;color:var(--ui-soft);text-overflow:ellipsis;white-space:nowrap}
-.sheet .empire-screen .goal-strip .goal-sq.is-go,.goal-sq.is-go,.sheet .empire-screen .goal-strip .goal-sq.is-on,.goal-sq.is-on{border-color:var(--ui-brass);background:var(--ui-brass-wash)}
-.goal-sq-badge{position:absolute;top:-7px;left:50%;display:flex;align-items:center;gap:2px;padding:2px 7px;border-radius:999px;background:var(--ui-brass);color:var(--ui-brass-ink);font-size:10px;font-weight:700;line-height:1.2;white-space:nowrap;transform:translateX(-50%)}
-.goal-sq-badge svg{width:10px;height:10px}
-.goal-sq-dot{position:absolute;top:5px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--ui-leaf-glow)}
-.goal-sq:focus-visible{outline:2px solid var(--ui-brass);outline-offset:-2px}
+/* ---------- 2b. Deals: three shop tiles with price buttons ---------- */
+.gb-offers{display:grid;flex:1 1 auto;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;gap:var(--s-tile-gap,8px)}
+.sheet .gb button.gb-offer{position:relative;display:grid;grid-template-rows:auto auto auto auto;justify-items:center;align-content:center;gap:3px;min-width:0;height:auto;min-height:0;margin:0;padding:var(--s-pad,8px) 6px 6px;border:1px solid var(--ui-edge);border-radius:14px;background:var(--ui-well-soft);box-shadow:none;color:var(--ui-ink);font:inherit;text-align:center;opacity:1;cursor:pointer}
+.sheet .gb button.gb-offer:active{transform:scale(.97)}
+.gb-offer-art{display:grid;place-items:center;width:calc(var(--s-icon,30px) + 8px);height:calc(var(--s-icon,30px) + 8px);margin-bottom:2px}
+.gb-offer-art>img.goal-3d{width:calc(var(--s-icon,30px) + 8px);height:calc(var(--s-icon,30px) + 8px);max-width:none;max-height:none;object-fit:contain;filter:drop-shadow(0 3px 3px #06180c88)}
+.gb-offer>b{max-width:100%;overflow:hidden;font-size:12.5px;font-weight:600;line-height:1.2;letter-spacing:-.01em;text-overflow:ellipsis;white-space:nowrap}
+.gb-offer>small{display:-webkit-box;max-width:100%;overflow:hidden;-webkit-line-clamp:2;-webkit-box-orient:vertical;align-self:start;font-size:11px;line-height:1.2;color:var(--ui-soft);text-wrap:balance}
+/* The price button: the tile's one action, full width at its foot. */
+.gb-price{position:relative;display:flex;align-items:center;justify-content:center;gap:4px;align-self:end;justify-self:stretch;min-height:30px;margin-top:4px;padding:0 6px;overflow:hidden;border-radius:10px;font:700 13px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;white-space:nowrap}
+.gb-price>b{position:relative;font-weight:700}
+.gb-price svg{position:relative;flex:none;width:13px;height:13px}
+/* You can pay: a solid leaf button. */
+.gb-offer.is-afford{border-color:color-mix(in srgb,var(--ui-leaf-glow) 45%,transparent)}
+.gb-offer.is-afford .gb-price{background:var(--ui-leaf-glow);color:#0d2d17;box-shadow:0 3px 10px #06180c55}
+/* Not yet: a lock and the price, the button filling as your cash grows toward it. */
+.gb-offer.is-short .gb-price{border:1px solid var(--ui-edge);background:linear-gradient(90deg,color-mix(in srgb,var(--ui-leaf-glow) 22%,transparent) calc(var(--save,0) * 100%),transparent 0);color:var(--ui-soft)}
+.gb-offer.is-short .gb-offer-art>img.goal-3d{opacity:.8}
+/* Bought: a lime tick, the tile quiet. */
+.sheet .gb button.gb-offer.is-bought,.sheet .gb button.gb-offer.is-blocked{background:none;border-style:dashed;color:var(--ui-soft);cursor:default}
+.gb-offer.is-bought .gb-offer-art>img.goal-3d,.gb-offer.is-blocked .gb-offer-art>img.goal-3d{opacity:.45;filter:saturate(.4)}
+.gb-offer.is-bought .gb-price{color:var(--ui-leaf-glow);font-size:12.5px}
+.gb-offer.is-blocked .gb-price{color:var(--ui-soft);font:600 11.5px/1 inherit}
+.sheet .gb button.gb-offer:focus-visible{outline:2px solid var(--ui-brass);outline-offset:2px}
 
-/* Group tabs: a quiet segmented row; the open group is lit, each tab shows its figure (bonus, stars, count) under it. */
-.goal-switch{display:grid;grid-auto-columns:minmax(0,1fr);grid-auto-flow:column;gap:2px;margin:0 0 8px;padding:2px;border:1px solid var(--ui-edge);border-radius:12px;background:var(--ui-well-soft)}
-.sheet .empire-screen .goal-switch button,.goal-switch button{display:grid;justify-items:center;align-content:center;gap:0;min-width:0;min-height:34px;margin:0;padding:3px 2px;border:0;border-radius:9px;background:none;box-shadow:none;color:var(--ui-soft);font:inherit;cursor:pointer}
-.goal-switch button>span{max-width:100%;overflow:hidden;font-size:11.5px;font-weight:600;line-height:1.2;text-overflow:ellipsis;white-space:nowrap}
-.goal-switch button>b{display:flex;align-items:center;gap:3px;font:500 10.5px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;line-height:1.2;white-space:nowrap}
-.goal-switch button>b svg{width:11px;height:11px}
-.goal-switch .goal-stars i svg{width:11px;height:11px}
-.sheet .empire-screen .goal-switch button[aria-selected=true],.goal-switch button[aria-selected=true]{background:var(--ui-sheen);color:var(--ui-ink)}
-.goal-switch button:focus-visible{outline:2px solid var(--ui-brass);outline-offset:-2px}
-.goal-group{margin-top:0}
+/* ---------- 2c. Awards: ring tiles that name the next step ---------- */
+.gb-awards{display:grid;flex:1 1 auto;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);gap:var(--s-tile-gap,8px)}
+.gb-award{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;column-gap:8px;align-content:center;align-items:center;min-width:0;padding:var(--s-pad,8px) 8px var(--s-pad,8px) 6px;border:1px solid var(--ui-edge);border-radius:14px;background:var(--ui-well-soft);text-align:left}
+.gb-awards>.gb-award:last-child:nth-child(odd){grid-column:1/-1}
+.gb-award>.goal-ring{grid-row:1/3;width:min(calc(var(--s-ring,44px) - 2px),50px);height:min(calc(var(--s-ring,44px) - 2px),50px)}
+.gb-award>.goal-ring>img.goal-3d{width:calc(min(calc(var(--s-ring,44px) - 2px),50px) * .6);height:calc(min(calc(var(--s-ring,44px) - 2px),50px) * .6)}
+.gb-award-top{display:flex;align-items:baseline;gap:6px;min-width:0}
+.gb-award-top>b{font-size:12.5px;font-weight:600;line-height:1.2}
+.gb-fig{margin-left:auto;font:600 12px/1.2 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;color:var(--ui-brass);white-space:nowrap}
+.gb-award>small{display:-webkit-box;grid-column:2;max-width:100%;overflow:hidden;-webkit-line-clamp:2;-webkit-box-orient:vertical;align-self:start;margin-top:1px;font-size:10.5px;line-height:1.2;color:var(--ui-soft);text-wrap:balance}
 
-/* Tiles: a slightly smaller ring and tighter padding, so a row of three sits under the tabs on the SE. */
-.goal-tile,.sheet .empire-screen button.goal-tile{gap:4px;padding:6px 6px 6px}
-.goal-ring{width:44px;height:44px}
-.goal-ring>img.goal-3d{width:26px;height:26px}
-.goal-ring-tick{width:18px;height:18px}
-.goal-ring-tick svg{width:12px;height:12px}
+/* ---------- 3. The reward button, always at the bottom ---------- */
+.sheet .gb button.gb-reward{position:relative;display:grid;flex:none;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:9px;width:100%;min-width:0;height:auto;min-height:calc(var(--s-btn,42px) + 4px);margin:0;padding:3px 3px 3px 7px;overflow:hidden;border:1px solid var(--ui-edge);border-radius:14px;background:var(--ui-well);box-shadow:none;color:var(--ui-ink);font:inherit;text-align:left;opacity:1;cursor:pointer;transition:background-color .25s ease,border-color .25s ease,box-shadow .25s ease}
+.gb-reward>*{position:relative}
+/* The fill behind an in-progress bar: how close the nearest reward is. */
+.sheet .gb button.gb-reward::before{content:'';position:absolute;inset:0;width:calc(var(--fill,0) * 100%);background:linear-gradient(90deg,color-mix(in srgb,var(--ui-leaf-glow) 10%,transparent),color-mix(in srgb,var(--ui-leaf-glow) 22%,transparent));opacity:0;transition:width .4s ease,opacity .25s ease}
+.sheet .gb button.gb-reward.is-progress::before{opacity:1}
+.gb-r-art{display:grid;place-items:center;width:34px;height:34px;color:var(--ui-soft)}
+.gb-r-art>svg{width:20px;height:20px}
+.gb-r-art>.goal-ring{width:34px;height:34px}
+.gb-r-art>.goal-ring>img.goal-3d{width:21px;height:21px}
+.gb-r-art.is-stack{display:flex;width:auto}
+.gb-r-art.is-stack>i{display:grid;place-items:center;width:32px;height:32px}
+.gb-r-art.is-stack>i+i{margin-left:-10px}
+.gb-r-art.is-stack img.goal-3d{width:32px;height:32px;filter:drop-shadow(0 2px 2px #2a221155)}
+.gb-r-copy{display:grid;min-width:0}
+.gb-r-copy>b{overflow:hidden;font:700 16px/1.1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;text-overflow:ellipsis;white-space:nowrap}
+.gb-r-copy>small{overflow:hidden;font-size:11px;line-height:1.25;color:var(--ui-soft);text-overflow:ellipsis;white-space:nowrap}
+.gb-r-go{display:flex;align-items:center;justify-content:center;gap:4px;min-width:64px;height:100%;min-height:var(--s-btn,42px);box-sizing:border-box;padding:0 14px;border-radius:11px;font:700 14px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.01em;white-space:nowrap}
+.gb-r-go svg{width:15px;height:15px}
+/* Ready: the tab's one brass action. */
+.sheet .gb button.gb-reward.is-ready{border-color:transparent;background:var(--ui-brass);color:var(--ui-brass-ink);box-shadow:0 0 0 3px color-mix(in srgb,var(--ui-brass) 16%,transparent),0 4px 14px #06180c66;animation:gb-glow 2.4s ease-in-out infinite}
+.gb-reward.is-ready .gb-r-copy>small{color:color-mix(in srgb,var(--ui-brass-ink) 72%,transparent)}
+.gb-reward.is-ready .gb-r-go{background:var(--ui-brass-ink);color:var(--ui-brass)}
+.sheet .gb button.gb-reward.is-ready:active{transform:scale(.98)}
+/* In progress: the next reward and how far along it is, the button locked. */
+.gb-reward.is-progress .gb-r-go{border:1px solid var(--ui-edge);color:var(--ui-soft);font-size:13px}
+/* Locked: nothing under way. */
+.gb-reward.is-locked .gb-r-copy>b{font-size:14px;font-family:inherit;font-weight:600}
+.gb-reward.is-locked .gb-r-go{border:1px dashed var(--ui-edge);color:var(--ui-soft)}
+/* Collected: a lime tick and the amount, for a moment. */
+.sheet .gb button.gb-reward.is-done{border-color:color-mix(in srgb,var(--ui-leaf-glow) 55%,transparent);background:color-mix(in srgb,var(--ui-leaf-glow) 14%,var(--ui-well));animation:gb-pop .35s ease-out}
+.gb-reward.is-done .gb-r-copy>b{color:var(--ui-leaf-glow)}
+.gb-r-tick{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--ui-leaf-glow);color:#0d2d17}
+.gb-r-tick svg{width:17px;height:17px;stroke-width:2.6}
+.gb-reward.is-done .gb-r-go{background:var(--ui-leaf-glow);color:#0d2d17}
+.gb-reward.is-done .gb-r-go svg{stroke-width:2.6}
+.sheet .gb button.gb-reward:focus-visible{outline:2px solid var(--ui-brass);outline-offset:2px}
+@keyframes gb-glow{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--ui-brass) 24%,transparent),0 4px 16px #06180c77}}
+@keyframes gb-pop{0%{transform:scale(.97)}60%{transform:scale(1.01)}100%{transform:none}}
+@media(prefers-reduced-motion:reduce){.sheet .gb button.gb-reward.is-ready,.sheet .gb button.gb-reward.is-done{animation:none}}
 
-/* Phones: the sheet scale (sheet-scale.css) sets the air between the rows, the tab row's height and the tile gaps. */
-@media(max-width:779px){
- .goals-now{gap:var(--s-tile-gap);margin-bottom:var(--s-gap)}
- .sheet .empire-screen .goal-switch button,.goal-switch button{min-height:var(--s-tab)}
- .goal-switch{margin-bottom:var(--s-gap)}
- .goal-strip{gap:var(--s-tile-gap)}
- .goals-list>.goal-group.goal-focus{margin-bottom:var(--s-gap)}
- /* The focus rings grow with the room, from 60px at half open on the SE to 96px pulled up. */
- .goal-focus .goal-tiles .goal-ring{width:min(calc(var(--s-ring) + 12px),96px);height:min(calc(var(--s-ring) + 12px),96px)}
- .goal-focus .goal-tiles .goal-ring>img.goal-3d{width:calc(min(calc(var(--s-ring) + 12px),96px) * .6);height:calc(min(calc(var(--s-ring) + 12px),96px) * .6)}
- .goals-list:has(>.goal-focus){justify-content:space-evenly}
+/* ---------- With more room ---------- */
+/* An iPhone 15 or bigger at half open, and anything pulled up: the figures show under the rings. */
+@container (min-height:280px){
+ .gb-goal>small{display:block}
 }
-
-/* The pane fills: the goals screen is at least as tall as the pane, and the open group of tiles takes whatever height
-   is left, so a taller phone gets taller tiles instead of an empty band at the bottom. The rings and names grow with
-   the room the tiles get (container queries on the group). */ 
-.sheet>[data-pane=goals]>.goals-screen{display:flex;flex-direction:column;box-sizing:border-box;min-height:100%}
-.goals-screen>.goals-list{display:flex;flex:1 1 auto;flex-direction:column;min-height:0}
-.goals-list>.goal-group{display:flex;flex:1 1 auto;flex-direction:column;min-height:max-content}
-.goals-list>.goal-group>.goal-tiles{flex:1 1 auto;grid-auto-rows:1fr}
-.goal-tile,.sheet .empire-screen button.goal-tile{align-content:center}
-.goals-list>.goal-group.is-stacked>.goal-tiles{flex:1 1 auto}
-/* Desktop side panel: tall enough for every group at once, each under a small heading with its figure. */
-.goal-group.is-stacked{margin-top:14px}
-.sheet .goal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 8px;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ui-soft)}
-.goal-head span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.goal-head b{display:flex;align-items:center;gap:4px;font:500 12px 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;text-transform:none;color:var(--ui-ink);white-space:nowrap}
-.goal-head b svg{width:14px;height:14px;color:var(--ui-soft)}
-
-/* Phones: the ring grows a little with the room (44 → 54px), the names stay the SE's size, and the rest of a taller
-   tile is even padding around its centred content. */
-@media(max-width:779px){
- .goal-tile,.sheet .empire-screen button.goal-tile{gap:calc(var(--s-pad) - 2px);padding:var(--s-pad) 6px}
- .goal-tiles .goal-ring{width:var(--s-ring);height:var(--s-ring)}
- .goal-tiles .goal-ring>img.goal-3d{width:calc(var(--s-ring) * .6);height:calc(var(--s-ring) * .6)}
+/* Half open on any phone: the shift's head line steps aside (its bonus is on the Shift tab) so the rings and cards fit. */
+@container (max-height:339px){
+ .gb-head{display:none}
 }
+/* Pulled up past half open: rings and tiles grow, the reward button gets taller. */
+.gb.is-tall .gb-goal>.goal-ring{width:min(calc(var(--s-ring,52px) + 16px),100px);height:min(calc(var(--s-ring,52px) + 16px),100px)}
+.gb.is-tall .gb-goal>.goal-ring>img.goal-3d{width:calc(min(calc(var(--s-ring,52px) + 16px),100px) * .6);height:calc(min(calc(var(--s-ring,52px) + 16px),100px) * .6)}
+.gb.is-tall .gb-goal>b{font-size:14px}
+.sheet .gb.is-tall button.gb-task{min-height:58px;padding:8px 10px 8px 8px;border-radius:15px}
+.gb.is-tall .gb-task-art{width:40px;height:40px}
+.gb.is-tall .gb-task-art>img.goal-3d{width:38px;height:38px}
+.gb.is-tall .gb-task>.goal-ring.gb-task-art>img.goal-3d{width:24px;height:24px}
+.gb.is-tall .gb-tasks{grid-template-columns:minmax(0,1fr)}
+.gb.is-tall .gb-task-copy>b{font-size:13px;-webkit-line-clamp:3}
+/* With room (pulled up past half open), the deals become three full-width rows: picture, name and effect, the price button at the right. */
+.gb.is-roomy .gb-offers{grid-template-columns:minmax(0,1fr);grid-auto-rows:1fr;align-items:center}
+.sheet .gb.is-roomy button.gb-offer{height:100%;max-height:132px}
+.sheet .gb.is-roomy button.gb-offer{grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:auto auto;justify-items:start;align-items:center;column-gap:12px;row-gap:2px;padding:var(--s-pad,10px) 12px;text-align:left}
+.gb.is-roomy .gb-offer-art{grid-row:1/3;margin:0}
+.gb.is-roomy .gb-offer-art,.gb.is-roomy .gb-offer-art>img.goal-3d{width:min(calc(var(--s-icon,30px) + 16px),72px);height:min(calc(var(--s-icon,30px) + 16px),72px)}
+.gb.is-roomy .gb-offer>b{grid-column:2;align-self:end}
+.gb.is-roomy .gb-offer>small{grid-column:2;align-self:start}
+.gb.is-roomy .gb-price{grid-column:3;grid-row:1/3;align-self:center;min-width:104px;margin:0;padding:0 14px}
+/* With room, each award tile stacks: the ring, the name and figure, then the next step. */
+.gb.is-roomy .gb-awards{grid-auto-rows:1fr;align-items:center}
+.gb.is-roomy .gb-award{height:100%;max-height:220px;box-sizing:border-box}
+.gb.is-roomy .gb-award{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;justify-items:center;row-gap:4px;text-align:center}
+.gb.is-roomy .gb-award>.goal-ring{grid-row:auto}
+.gb.is-roomy .gb-award>small{grid-column:1;align-self:start;font-size:11.5px}
+.gb.is-roomy .gb-award-top{flex-direction:column;align-items:center;gap:2px}
+.gb.is-roomy .gb-fig{margin-left:0;font-size:13px}
+.gb.is-tall .gb-chip{font-size:12.5px}
+.gb.is-tall .gb-offer>b,.gb.is-tall .gb-award-top>b{font-size:14.5px}
+.gb.is-tall .gb-award>.goal-ring{width:min(calc(var(--s-ring,44px) + 4px),80px);height:min(calc(var(--s-ring,44px) + 4px),80px)}
+.gb.is-tall .gb-award>.goal-ring>img.goal-3d{width:calc(min(calc(var(--s-ring,44px) + 4px),80px) * .6);height:calc(min(calc(var(--s-ring,44px) + 4px),80px) * .6)}
+.gb.is-tall .gb-offer>small{font-size:12.5px}
+.gb.is-tall .gb-price{min-height:38px;font-size:15px;border-radius:12px}
+.sheet .gb.is-tall button.gb-reward{min-height:56px;border-radius:16px}
+.gb.is-tall .gb-r-copy>b{font-size:18px}
+.gb.is-tall .gb-r-art,.gb.is-tall .gb-r-art>.goal-ring{width:40px;height:40px}
+.gb.is-tall .gb-r-art>.goal-ring>img.goal-3d{width:25px;height:25px}
+
+/* The desktop side panel: the same three layers with roomier sizes. */
 @media(min-width:780px){
- .goal-ring{width:56px;height:56px}
- .goal-ring>img.goal-3d{width:32px;height:32px}
+ .gb-goal>small{display:block}
+ .gb-goal>.goal-ring{width:72px;height:72px}
+ .gb-goal>.goal-ring>img.goal-3d{width:43px;height:43px}
+ .gb-offer-art,.gb-offer-art>img.goal-3d{width:48px;height:48px}
+ .sheet>[data-pane=goals]>.goals-screen.gb{gap:14px}
 }
-
-/* The exact figure ("45 / 110") shows under the name only where the tiles have the height for it. */
-.goal-tile>small.goal-tile-figure{display:none}
-@media(max-width:779px) and (min-height:800px){.goal-tile>small.goal-tile-figure{display:block}}
-/* Deals (goals-pane.js offers): the price sits in a small pill under what the deal does. Leaf when you can pay it,
-   quiet when you cannot yet; brass stays for the one next action (Collect). */
-.goals-list .goal-tile>small.deal-price{display:inline-block;justify-self:center;padding:1px 9px;border:1px solid var(--ui-edge);border-radius:999px;background:var(--ui-well-soft);color:var(--ui-soft);font-weight:600;line-height:1.45}
-.goals-list .goal-tile>small.deal-price.is-ready{border-color:transparent;background:var(--ui-leaf-glow);color:#0d2d17}
-@container (min-height:480px){.goals-list>.goal-group:not(.is-stacked) .goal-tile>small.deal-price{justify-self:start;align-self:start}}
-
-/* Pulled up past half open, and the desktop panel: cards at their natural height, never stretched into tall empty
-   boxes. On a phone the blocks spread evenly down the pane (the room goes into the gaps, as on the other tabs). The
-   shift card keeps large rings that grow with the room; the second group card gets a smaller ring. */
-.goals-list:has(>.goal-group.is-stacked){justify-content:flex-start;gap:var(--s-gap,12px)}
-@media(max-width:779px){.goals-list:has(>.goal-group.is-stacked){justify-content:space-evenly;gap:var(--s-gap)}}
-.goals-list:has(>.goal-group.is-stacked)>*,.goals-list>.goal-group.goal-hero.is-stacked{flex:0 0 auto;min-height:0;margin:0}
-.goals-list>.goal-group.is-stacked>.goal-tiles{flex:0 0 auto;grid-auto-rows:auto}
-.goals-list>.goal-group.goal-hero.is-stacked .goal-tile,.sheet .goals-list>.goal-group.goal-hero.is-stacked button.goal-tile{padding:4px 2px 6px}
-.goals-list>.goal-group.goal-hero.is-stacked:not(.is-minor) .goal-ring{width:min(calc(var(--s-ring,56px) + 10px),84px);height:min(calc(var(--s-ring,56px) + 10px),84px)}
-.goals-list>.goal-group.goal-hero.is-stacked:not(.is-minor) .goal-ring>img.goal-3d{width:calc(min(calc(var(--s-ring,56px) + 10px),84px) * .6);height:calc(min(calc(var(--s-ring,56px) + 10px),84px) * .6)}
-.goals-list>.goal-group.goal-hero.is-minor{padding:6px 8px 4px}
-.goals-list>.goal-group.goal-hero.is-minor .goal-hero-title{font-size:14px}
-.goals-list>.goal-group.goal-hero.is-minor .goal-ring{width:min(var(--s-ring,48px),64px);height:min(var(--s-ring,48px),64px)}
-.goals-list>.goal-group.goal-hero.is-minor .goal-ring>img.goal-3d{width:calc(min(var(--s-ring,48px),64px) * .6);height:calc(min(var(--s-ring,48px),64px) * .6)}
-.goals-list>.goal-group.goal-hero.is-stacked .goal-tile>small.goal-tile-figure{display:block}
-/* Pulled up past half open (the screen is .is-tall): the figures show under the rings and the strip becomes two rows of
-   three bigger tiles, each group with its own progress ring; the spare height goes into even gaps. */
-.goals-screen.is-tall .goal-focus .goal-tile>small.goal-tile-figure{display:block}
-.goals-screen.is-tall .goal-focus .goal-tile>b{font-size:14px}
-.goals-screen.is-tall .goal-strip{grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s-tile-gap,8px)}
-.goals-screen.is-tall .goal-sq,.sheet .empire-screen .goals-screen.is-tall .goal-strip .goal-sq{gap:4px;padding:10px 6px 9px;border-radius:16px}
-.goals-screen.is-tall .goal-sq-art{width:48px;height:48px}
-.goals-screen.is-tall .goal-sq-art>img.goal-3d{width:40px;height:40px}
-.goals-screen.is-tall .goal-sq-art>.goal-ring{width:48px;height:48px}
-.goals-screen.is-tall .goal-sq-art>.goal-ring>img.goal-3d{width:28px;height:28px}
-.goals-screen.is-tall .goal-sq>b{font-size:12.5px}
-.goals-screen.is-tall .goal-sq>small{font-size:11.5px}
-.goals-screen.is-tall .goal-sq-badge{top:-8px;padding:3px 9px;font-size:11px}

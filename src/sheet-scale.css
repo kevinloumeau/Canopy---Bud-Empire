@@ -58,14 +58,6 @@
  html body .sheet>[data-pane=boosts].shop-browser>.shop-items:not([data-rows=many]){grid-template-rows:repeat(var(--rows,2),auto);align-content:space-evenly}
  .sheet>[data-pane=boosts] .shop-items:not([data-rows=many]) :is(.shop-item,.shop-done-toggle){--ring:min(var(--ring-max),var(--tile-w) - 24px)}
 
- /* Goals: with room for it (a 580px pane), goals-pane.js shows every group at once under its heading; each group gets an
-    equal share of the height and its tiles a compact ring. */
- .goals-list>.goal-group.is-stacked{margin-top:var(--s-gap)}
- .goals-list>.goal-group.is-stacked>.goal-head{margin-bottom:4px}
- .goals-list>.goal-group.is-stacked .goal-tile{gap:2px;padding:6px 4px}
- .goals-list>.goal-group.is-stacked .goal-ring{width:46px;height:46px}
- .goals-list>.goal-group.is-stacked .goal-ring>img.goal-3d{width:28px;height:28px}
- .goals-list>.goal-group.is-stacked .goal-tile>small.goal-tile-figure{display:none}
 
  /* Empire: a branch store page spreads its blocks down the pane like the map does. */
  html body .sheet>[data-pane=empire]:has(>[data-screen=store]:not([hidden])){display:flex;flex-direction:column}
@@ -79,22 +71,9 @@
  .sheet .empire-screen[data-screen=store] .station-pane>.page-tiles.is-stations{flex:1 0 auto;align-content:space-evenly}
 }
 @container (min-height:480px){
- /* One group with the room of a pulled-up sheet: each goal becomes a full-width row, its ring on the left and the goal
-    and its figure beside it, the rows sharing the height. */
- .goals-list>.goal-group:not(.is-stacked):not(.goal-focus)>.goal-tiles{grid-template-columns:minmax(0,1fr);grid-auto-rows:minmax(0,1fr)}
- .goals-list>.goal-group:not(.is-stacked):not(.goal-focus) .goal-tile,.sheet .goals-list>.goal-group:not(.is-stacked):not(.goal-focus) button.goal-tile{grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;justify-items:start;align-content:center;column-gap:calc(var(--s-pad) + 6px);row-gap:2px;padding:min(var(--s-pad),12px) calc(min(var(--s-pad),12px) + 6px);text-align:left}
- .goals-list>.goal-group:not(.is-stacked):not(.goal-focus) .goal-tile>.goal-ring{grid-row:1/3;width:min(var(--s-ring),64px);height:min(var(--s-ring),64px)}
- .goals-list>.goal-group:not(.is-stacked):not(.goal-focus) .goal-tile>.goal-ring>img.goal-3d{width:calc(min(var(--s-ring),64px) * .6);height:calc(min(var(--s-ring),64px) * .6)}
- .goals-list>.goal-group:not(.is-stacked):not(.goal-focus) .goal-tile>b{align-self:end;font-size:13px}
- .goals-list>.goal-group:not(.is-stacked):not(.goal-focus) .goal-tile>small.goal-tile-figure{display:block;align-self:start}
- .goals-list>.goal-group:not(.is-stacked):not(.goal-focus) .goal-tile>:not(.goal-ring):not(b):not(small){grid-column:2}
  .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto auto auto!important;justify-items:center!important;align-content:center!important;row-gap:2px!important;padding:var(--s-pad) 6px!important;text-align:center!important}
  .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill>img.icon-3d{grid-column:1!important;grid-row:1!important;width:var(--s-icon);height:var(--s-icon);margin-bottom:4px}
  .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill>strong{grid-column:1!important;grid-row:2!important}
  .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill>em{grid-column:1!important;grid-row:3!important}
  .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill>small{grid-column:1!important;grid-row:4!important}
-}
-@container (min-height:660px){
- .goals-list>.goal-group.is-stacked .goal-ring{width:52px;height:52px}
- .goals-list>.goal-group.is-stacked .goal-ring>img.goal-3d{width:31px;height:31px}
 }
