@@ -67,6 +67,7 @@ import {freshStore,migrateStore,earnFactor,awayFactor,boostLeft,useToken,addBoos
 import {mountStore} from './store-ui.js';
 import {mountSpin} from './spin-ui.js';
 import {freeReady} from './spin.js';
+import {HANDS_ON,workSpots,createWalker,sendTo,stepWalker,handsOn,migrateManager} from './manager.js';
 import {createPurchases} from './purchases.js';
 import {createAds} from './rewarded-ads.js';
 // The self-order kiosks stand along the storefront glass from z 6.8 toward the back, KIOSK_GAP apart (Kevin 2026-11-02:
@@ -88,7 +89,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Contract progression is defined in depth.js, including post-city milestones.
   var $=function(id){return document.getElementById(id)};
   // A new shop starts as seven construction sites: the door and six stations are raised for free during the intro, then the sign flips.
-  function fresh(){return{researchVersion:RESEARCH_VERSION,store:freshStore(),quotes:{},forks:freshForks(),shopPlay:migrateShopPlay(),money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),pickupWindow:migrateWindow(),atm:migrateAtm(),atmEarned:0,builds:migrateBuilds(),flagship:0,flagshipSeen:false,city:migrateCity(),citySeen:[],productMenu:migrateMenu(),sound:true,music:true,haptics:true,empire:migrateProgression(),popup:migratePopup(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,offlineLevel:0,spenderClock:180,shopEvents:0,rushTime:0,deals:migrateDeals(),crosses:{done:[],active:null},achievements:[],reminders:false,reminderOffered:false,perks:{points:0,levels:{}},run:freshRun(),trainerClock:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],abilities:migrateAbilities(),sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeStaff:0,loungeLift:false,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,guideGrant:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
+  function fresh(){return{researchVersion:RESEARCH_VERSION,store:freshStore(),manager:{at:-1},quotes:{},forks:freshForks(),shopPlay:migrateShopPlay(),money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),pickupWindow:migrateWindow(),atm:migrateAtm(),atmEarned:0,builds:migrateBuilds(),flagship:0,flagshipSeen:false,city:migrateCity(),citySeen:[],productMenu:migrateMenu(),sound:true,music:true,haptics:true,empire:migrateProgression(),popup:migratePopup(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,offlineLevel:0,spenderClock:180,shopEvents:0,rushTime:0,deals:migrateDeals(),crosses:{done:[],active:null},achievements:[],reminders:false,reminderOffered:false,perks:{points:0,levels:{}},run:freshRun(),trainerClock:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],abilities:migrateAbilities(),sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeStaff:0,loungeLift:false,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,guideGrant:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
   function readSave(){
     for(var key of ['shift-save','shift-save-backup']){
       try{var raw=localStorage.getItem(key);if(!raw)continue;var value=JSON.parse(raw);if(value&&typeof value==='object'&&!Array.isArray(value))return value}catch(e){}
@@ -100,7 +101,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // Saves from before the construction intro have no `shopOpen`; they are open shops with every station standing.
     next.shopOpen=old.shopOpen!==false;next.doorBuilt=next.shopOpen||old.doorBuilt===true;
     ['trafficLevel','pickupLevel','readyLevel','curingLevel','durationLevel','kioskSpeedLevel','onlineBonusLevel','comfortLevel','scannerLevel','webLevel','seedBatchLevel','growBatchLevel','harvestBatchLevel','packSpeedLevel','serviceLevel','signLevel','loyaltyLevel','basketLevel','terpeneLevel','breedingLevel','displayLevel','trendLevel','fleetLevel','cargoLevel','repeatLevel'].forEach(function(key){next[key]=Math.floor(finite(old[key],0,0,key==='pickupLevel'?12:MASTERY_MAX))});
-    next.offlineLevel=Math.floor(finite(old.offlineLevel,0,0,5));next.researchVersion=Math.floor(finite(old.researchVersion,0,0,RESEARCH_VERSION));var researchRefund=mergeResearch(next);next.forks=migrateForks(old.forks,next);next.spenderClock=finite(old.spenderClock,180,0,600);next.shopEvents=Math.floor(finite(old.shopEvents,0,0,1e9));next.rushTime=finite(old.rushTime,0,0,120);next.crosses=migrateCrosses(old.crosses,old.library,old.breed);next.achievements=migrateAchievements(old.achievements);next.reminders=old.reminders===true;next.reminderOffered=old.reminderOffered===true;next.perks=migratePerks(old.perks,next.empire.shares);next.store=migrateStore(old.store);next.run=migrateRun(old.run);next.trainerClock=finite(old.trainerClock,0,0,240);
+    next.offlineLevel=Math.floor(finite(old.offlineLevel,0,0,5));next.researchVersion=Math.floor(finite(old.researchVersion,0,0,RESEARCH_VERSION));var researchRefund=mergeResearch(next);next.forks=migrateForks(old.forks,next);next.spenderClock=finite(old.spenderClock,180,0,600);next.shopEvents=Math.floor(finite(old.shopEvents,0,0,1e9));next.rushTime=finite(old.rushTime,0,0,120);next.crosses=migrateCrosses(old.crosses,old.library,old.breed);next.achievements=migrateAchievements(old.achievements);next.reminders=old.reminders===true;next.reminderOffered=old.reminderOffered===true;next.perks=migratePerks(old.perks,next.empire.shares);next.store=migrateStore(old.store);next.manager=migrateManager(old.manager);next.run=migrateRun(old.run);next.trainerClock=finite(old.trainerClock,0,0,240);
     next.idStaff=Math.floor(finite(old.idStaff,0,0,economy.SECURITY_MAX_LEVEL));if(next.doorBuilt&&next.idStaff<1)next.idStaff=1;next.guideGrant=finite(old.guideGrant,0,0,1e6);
     next.strains=STRAINS.map(function(_,i){return Math.floor(finite(old.strains&&old.strains[i],i===0?1:0,i===0?1:0,strains.STRAIN_MAX))});
     next.activeStrain=Math.floor(finite(old.activeStrain,0,0,STRAINS.length-1));if(!next.strains[next.activeStrain])next.activeStrain=0;
@@ -170,9 +171,11 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function collectOffline(elapsed){
     var now=Date.now(),away=elapsed===undefined?offlineSeconds(now,state.lastSeen,state.paidThrough):elapsed;state.paidThrough=Math.max(state.paidThrough||0,now);
     var seconds=Math.min(offlineCap(),away);spendNight(state.deals,away);tickAbilities(state.abilities,away);
+    // The manager's hands-on speed is live play only: the away pay is worked out without them.
+    var keptWalker=managerWalker;managerWalker=null;
     // Walk-in sales, ATM fees and web orders at the rate the shop really sells. Web orders are paid at their rate rather
     // than left to pile up as requests (which stop at the request cap a few minutes in), so a long break pays like play.
-    var rates=[flagshipSales()+atmRate()+onlineIncome()].concat(STORES.map(function(_,i){return storeRate(state.empire,i)}));
+    var rates=[flagshipSales()+atmRate()+onlineIncome()].concat(STORES.map(function(_,i){return storeRate(state.empire,i)}));managerWalker=keptWalker;
     // The store's boost pays double for the part of the break it covered (the break's first paid seconds).
     var boosted=awayFactor(state.store,now-away*1000,seconds);
     var earnings=rates.map(function(rate){return rate*seconds*awayPay(state.city)*boosted});
@@ -475,7 +478,22 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function production(){return Math.min.apply(null,LINES.map(function(_,i){return stationThroughput(i)}))*flowerValue()}
   // The grow house (city-buildings.js) fattens every plant-side batch.
   function batchSize(i){return economy.batchSize(state.lines[i])*(i<3?1+state[['seedBatchLevel','growBatchLevel','harvestBatchLevel'][i]]*.06:1)*(i<4?outputFactor(state.city):1)}
-  function cycleSpeed(i){return (1+state.staff[i]*.3)*abilityFactor(state.abilities,i)*state.multiplier/(i===3?formatFactor('packing'):1)*(i===1?growFactorNow()*specialFactor('grow'):i===3?strains.packBonus(state.strains)*(1+state.packSpeedLevel*.06):1)}
+  // The manager on the floor (manager.js): the station they stand at works HANDS_ON times faster. The walker is live
+  // only (not saved; state.manager.at keeps their station), and null while the away pay is worked out.
+  var managerWalker=null,MANAGER_MODEL='people/blazer-woman.glb',MANAGER_STATION_NAMES=['Seeds','Grow','Harvest','Pack','Orders','Pickup'];
+  // Each frame: the manager appears once the shop is open (at their saved station, else Orders), and walks on real time.
+  function tickManager(dt){if(!state.shopOpen||state.empire.activeStore)return;
+    if(!managerWalker){var home=state.manager.at>=0&&state.lines[state.manager.at]>0?state.manager.at:state.lines[4]>0?4:-1;if(home<0)return;managerWalker=createWalker(managerSpots()[home]);managerWalker.target=home}
+    stepWalker(managerWalker,dt)}
+  // For screenshots (scripts/snap3d.mjs, whose frames stand still): stand the manager at station i at once.
+  if(window.__canopySnap!==undefined||/[?&]snap\b/.test(location.search))window.__canopyManagerAt=function(i,walk){managerGo(i);if(managerWalker&&walk){stepWalker(managerWalker,walk);renderUI();return [managerWalker.x,managerWalker.y,managerWalker.z].map(function(v){return +v.toFixed(2)})}if(managerWalker){var sp=managerSpots()[i];managerWalker.x=sp.x;managerWalker.y=sp.y;managerWalker.z=sp.z;managerWalker.path=[];managerWalker.moving=false;managerWalker.heading=sp.look}renderUI();return 'manager at '+i};
+  function managerFactor(i){return managerWalker?handsOn(managerWalker,i):1}
+  function managerSpots(){var counters=orderCounterPositions(state.orderCounters);return workSpots(machinePos,counters[0])}
+  // Sends the manager to a built station of the flagship, the first time placing them there.
+  function managerGo(i){if(state.empire.activeStore||!(state.lines[i]>0))return;var spot=managerSpots()[i];
+    if(!managerWalker){managerWalker=createWalker(spot);managerWalker.target=i}else sendTo(managerWalker,i,spot);
+    if(state.manager.at!==i){state.manager.at=i;save()}}
+  function cycleSpeed(i){return (1+state.staff[i]*.3)*abilityFactor(state.abilities,i)*managerFactor(i)*state.multiplier/(i===3?formatFactor('packing'):1)*(i===1?growFactorNow()*specialFactor('grow'):i===3?strains.packBonus(state.strains)*(1+state.packSpeedLevel*.06):1)}
   // Breeding bench claws back part of the boutique grow penalty on top of strain mastery.
   function growFactorNow(){var g=strains.growFactor(menuStrains(),state.strains);return 1-(1-g)*(1-tapered(state.breedingLevel,.03,.015))}
   var batchRemainder=[0,0,0,0];
@@ -614,7 +632,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function advanceCounterService(c,i,dt){
     if(c.serviceStation!==i){c.serviceStation=i;c.serviceElapsed=0}
     c.serviceElapsed+=dt;
-    work[i]=Math.min(1,c.serviceElapsed*abilityFactor(state.abilities,i)/economy.customerHandoff(i,state.lines[i],counterServiceDuration(i)));
+    work[i]=Math.min(1,c.serviceElapsed*abilityFactor(state.abilities,i)*managerFactor(i)/economy.customerHandoff(i,state.lines[i],counterServiceDuration(i)));
     return work[i]>=1;
   }
   var moment=null,shopPlayUI=null;
@@ -710,7 +728,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // Prepare pickup bags independently of the number of customers collecting, but never from jars a waiting web order needs.
     var spareJars=state.stock[3]-reservedJars();
     if(state.lines[4]&&spareJars>0&&state.stock[4]<readyCapacity()){
-      readyWork+=dt*capacity(4)*abilityFactor(state.abilities,4)/2;
+      readyWork+=dt*capacity(4)*abilityFactor(state.abilities,4)*managerFactor(4)/2;
       var bags=Math.min(Math.floor(readyWork),spareJars,readyCapacity()-state.stock[4]);
       if(bags>0){readyWork-=bags;state.stock[3]-=bags;state.stock[4]+=bags}
     }else readyWork=Math.min(readyWork,.9);
@@ -740,7 +758,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       var kioskCustomer=customers.find(function(c){return c.kiosk&&c.kioskIndex===kioskIndex&&!c.ordered&&c.phase==='kiosk'&&Math.hypot(c.x-kioskX,c.z-kioskAtZ)<.15});
       var kioskAvailable=orderAvailability(customers,state.stock[4],pickupReserve());
       if(kioskCustomer&&kioskAvailable.places>0&&kioskAvailable.bags>0){
-        kioskCustomer.orderTime=(kioskCustomer.orderTime||0)+dt*abilityFactor(state.abilities,4);
+        kioskCustomer.orderTime=(kioskCustomer.orderTime||0)+dt*abilityFactor(state.abilities,4)*managerFactor(4);
         if(kioskCustomer.orderTime>=kioskServiceDuration()){kioskCustomer.strain=strainFor(kioskCustomer);kioskCustomer.bags=Math.min(Math.round(basketSize()*(1+KIOSK_UPSELL))*(kioskCustomer.kind==='vip'?strains.VIP_BASKET:1),kioskAvailable.bags);kioskCustomer.salePrice=salePriceFor(kioskCustomer,kioskCustomer.strain);kioskCustomer.ordered=true;kioskCustomer.phase='toPickup'}
       }
     }
@@ -3008,6 +3026,9 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var streetApi=sunnyApi(now);
     // Pavement walkers and subway riders wear the shoppers' cast too, walking by the ground they cover.
     walkerPlacements(now).forEach(function(w){customer('walker'+w.g,w.x,w.y===undefined?-.012:w.y,w.z,{amount:1,phase:w.s*5,heading:w.heading,facing:w.facing},w.g*3+1)});
+    // The manager (the player): a stand-in from the shoppers' cast until Kevin's own Meshy manager exists.
+    if(managerWalker&&!state.empire.activeStore&&map3d.characterReady(MANAGER_MODEL)){var mw=managerWalker,mStill=motionPreference.matches;
+      characters.push({file:MANAGER_MODEL,id:'manager',x:mw.x,y:mw.y,z:mw.z,ground:mw.ground,amount:mStill||!mw.moving?0:1,heading:mw.heading,look:mw.moving?null:mw.look,facing:mw.heading.x-mw.heading.z>0?.3:-.3,still:mStill})}
     // The pickup window's clerk inside it, and its walk-ups (cast after the shop's own customers).
     if(windowOpen()){
       staffer('window',STAFF_MODELS.window,WINDOW_CLERK.x,0,WINDOW_CLERK.z,null,-1,{role:'window',clock:sceneTime/1000,act:windowServing?1:0});
@@ -3060,7 +3081,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     drawCustomerBadges();
     drawDeliveryExtras(dronePoses,now);drawTickets(frameDelta);drawCashPops(wallDelta);drawConfetti(wallDelta);
     positionShopPlay();
-    updateMarkers();updateSpenderTag(false);requestAnimationFrame(render);
+    updateMarkers();updateSpenderTag(false);updateManagerTag();requestAnimationFrame(render);
   }
   // Eases a customer's drawn position toward the simulation's and updates their stride, facing and service progress.
   // What a customer standing at a service spot looks at, for the 3D figures: the order desk or pickup counter in front
@@ -3165,7 +3186,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var frameInterval=state.gameSpeed===0?250:easy?1000/30:1000/60;
     if(!render.invalidated&&render.drawnAt!==undefined&&wallNow-render.drawnAt<frameInterval-1){requestAnimationFrame(render);return}
     render.drawnAt=wallNow;render.invalidated=false;render.frames=(render.frames||0)+1;
-    var wallDelta=Math.min(.1,Math.max(0,(wallNow-(render.last===undefined?wallNow:render.last))/1000)),frameDelta=wallDelta*state.gameSpeed;
+    var wallDelta=Math.min(.1,Math.max(0,(wallNow-(render.last===undefined?wallNow:render.last))/1000)),frameDelta=wallDelta*state.gameSpeed;tickManager(wallDelta);
     render.last=wallNow;
     // A freshly built station rises out of its site on wall time, so the reveal plays at the same pace at every game speed.
     if(introAt){var introT=(performance.now()-introAt)/1000;if(introT>.85)$('world').classList.remove('building');if(introT>INTRO_END)introAt=0;render.invalidated=true}
@@ -3402,6 +3423,20 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // A free spin waiting shows as a chip once the shop is open (not during the first minute's guide).
     var spinReady=state.shopOpen&&!branch&&freeReady(state.store.spin,Date.now());spinPill.hidden=!spinReady;if(spinReady)chipText(spinPill,'Free spin','');
     if([contractPill.hidden,rushPill.hidden,boostPill.hidden,storePill.hidden,spinPill.hidden].join()!==was)stackPills()}
+  // The manager's clipboard: a small glass bubble over their head with the goal closest to done (a tap opens Goals),
+  // and a mint "Hands-on" line while they work a station. It hides in a branch, during the intro and off screen.
+  var managerTag=document.createElement('button');managerTag.type='button';managerTag.className='marker manager-tag';managerTag.id='managerTag';managerTag.hidden=true;
+  managerTag.innerHTML='<span class="manager-goal"><img src="icons/3d/goal-target.png" alt="" draggable="false" decoding="async"><b></b><em></em></span><span class="manager-hands">Hands-on <i></i></span>';
+  $('markers').appendChild(managerTag);managerTag.onclick=function(){openGoals()};
+  function managerGoal(){var p=state.empire,best=null;[0,1,2].forEach(function(i){var g=goalStatus(p,i,rewardScale()),share=g.progress/g.target;if(!best||share>best.share)best={g:g,share:share}});return best}
+  function updateManagerTag(){var w=managerWalker,show=!!w&&state.shopOpen&&!state.empire.activeStore&&map3d&&map3d.characterReady(MANAGER_MODEL);
+    var pos=show?project(w.x,w.y+2.15,w.z):null;if(pos&&(pos.x<-40||pos.x>width+40||pos.y<40||pos.y>visibleHeight()))show=false;
+    if(managerTag.hidden!==!show)managerTag.hidden=!show;if(!show)return;
+    var best=managerGoal(),g=best.g,done=g.progress>=g.target,name=done?'Goal ready':g.title,count=done?'Collect':(g.kind==='revenue'||g.kind==='upgrade'?(best.share>=.01?Math.floor(best.share*100)+'%':''):abbr(g.progress)+'/'+abbr(g.target));
+    var key=name+'|'+count;if(managerTag.dataset.key!==key){managerTag.dataset.key=key;managerTag.querySelector('b').textContent=name;managerTag.querySelector('em').textContent=count;managerTag.classList.toggle('is-ready',done);managerTag.setAttribute('aria-label','Manager. '+name+', '+count+'. Open Goals')}
+    var hands=!w.moving&&w.target>=0&&state.lines[w.target]>0,hk=hands?MANAGER_STATION_NAMES[w.target]+' '+HANDS_ON+'×':'';
+    if(managerTag.dataset.hands!==hk){managerTag.dataset.hands=hk;managerTag.classList.toggle('is-hands',hands);managerTag.querySelector('.manager-hands i').textContent=hk}
+    managerTag.style.transform='translate3d('+pos.x+'px,'+pos.y+'px,0) translate(-50%,-100%)'}
   var loungeMarker=document.createElement('button');loungeMarker.className='marker';loungeMarker.dataset.marker='lounge';loungeMarker.onclick=selectLounge;$('markers').appendChild(loungeMarker);
   // Purchase tags for what can be bought next on the map (Kevin, 2026-10-22, like the lounge's): the pickup window on
   // its spot, then the drone port on its deck once the window is open, and a smaller tag over a ghost of the next kiosk.
@@ -4358,7 +4393,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     notify(wasLot?'LOUNGE OPEN · '+tier.name:'LOUNGE · '+tier.name.toUpperCase(),'upgrade');paintThumbnails();updateMarkers.key=null;render.invalidated=true;renderUI();save();haptic('firm');
   }
   function selectSecurity(){loungeSelected=false;securitySelected=true;pickedTag=null;buyBoxFor=-1;showTray('factory');renderUI();var card=document.querySelector('[data-security]');if(card&&card.scrollIntoView)card.scrollIntoView({block:'nearest',inline:'nearest'});haptic('select')}
-  function selectMachine(i){securitySelected=false;loungeSelected=false;pickedTag=null;buyBoxFor=-1;selected=i;showTray('factory');renderUI();if(machineTabs[i]&&machineTabs[i].scrollIntoView)machineTabs[i].scrollIntoView({block:'nearest',inline:'nearest'});haptic('select')}
+  function selectMachine(i){managerGo(i);securitySelected=false;loungeSelected=false;pickedTag=null;buyBoxFor=-1;selected=i;showTray('factory');renderUI();if(machineTabs[i]&&machineTabs[i].scrollIntoView)machineTabs[i].scrollIntoView({block:'nearest',inline:'nearest'});haptic('select')}
   // Construction: the door and each station are raised for free, in line order, with the intro explaining what each one does.
   // Building never charges cash because a shop with no pickup counter cannot earn any.
   var DOOR_POS=ID_DESK;
