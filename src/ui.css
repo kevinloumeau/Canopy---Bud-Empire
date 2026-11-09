@@ -4,6 +4,11 @@
    The map sets touch-action:none and runs its own pinch in JS, so that keeps working. */
 html,body{touch-action:pan-x pan-y}
 
+/* A game, not a page: a long press never selects text, shows the copy/look-up callout or flashes a tap box.
+   Fields people type in (none today) keep normal selection. */
+*,*::before,*::after{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+input,textarea,[contenteditable]:not([contenteditable=false]){-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+
 button{touch-action:manipulation;transition:background .16s,border-color .16s,transform .16s}
 button:focus-visible{outline:2px solid var(--acid);outline-offset:4px}
 button:active{filter:brightness(.88)}
