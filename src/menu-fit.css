@@ -103,22 +103,9 @@ body[data-active-tray=flowers] .sheet:not(.collapsed) .panel-header .menu-info[a
  .sheet [data-pane="flowers"] .menu-board-head:has(.is-buzz) small{font-size:9px!important;letter-spacing:.02em!important}
 }
 
-/* Breed view on phones: no live stats row (it is about selling), and one slim row per cultivar with its button. */
+/* Breed view on phones: no live stats row (it is about selling). The view itself is styled in breed.css. */
 @media(max-width:779px){
  .sheet [data-pane="flowers"] .menu-board[data-menu-view=breed]>.menu-board-head{display:none}
- .sheet [data-pane="flowers"] .breed-view{gap:5px}
- .sheet [data-pane="flowers"] .breed-view .library-head{flex-wrap:nowrap;padding:0 2px}
- .sheet [data-pane="flowers"] .breed-view .library-head h3{font-size:13.5px;white-space:nowrap}
- .sheet [data-pane="flowers"] .breed-view .library-head small{font-size:10.5px;white-space:nowrap}
- .sheet [data-pane="flowers"] .breed-list{gap:4px}
- .sheet [data-pane="flowers"] .breed-card{gap:8px;min-height:36px;padding:3px 4px 3px 10px;box-sizing:border-box}
- .sheet [data-pane="flowers"] .breed-copy{gap:1px}
- .sheet [data-pane="flowers"] .breed-copy b{font-size:12.5px;line-height:1.2}
- .sheet [data-pane="flowers"] .breed-copy small{font-size:10px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
- .sheet [data-pane="flowers"] .breed-copy .breed-status,.sheet [data-pane="flowers"] .breed-parents{display:none!important}
- .sheet [data-pane="flowers"] .breed-card[data-state=growing] .breed-copy small{display:none}
- .sheet [data-pane="flowers"] .breed-card[data-state=growing] .breed-copy .breed-status{display:block!important;font-size:10.5px;line-height:1.2}
- .sheet [data-pane="flowers"] .breed-card button{min-height:30px;max-width:48%;padding:2px 10px;border-radius:9px;font-size:11.5px;line-height:1.15;white-space:nowrap}
 }
 
 /* iPhone SE and other short phones: the same layout a notch tighter. */
@@ -133,7 +120,6 @@ body[data-active-tray=flowers] .sheet:not(.collapsed) .panel-header .menu-info[a
  .sheet [data-pane="flowers"] .strain-hero{grid-template-columns:56px minmax(0,1fr)!important}
  .sheet [data-pane="flowers"] .strain-hero-actions #flowerBuy{min-height:40px!important;height:40px}
  html body .sheet>[data-pane="flowers"]{padding-bottom:3px}
- .sheet [data-pane="flowers"] .breed-list{gap:3px}
  .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill{padding-block:3px!important}
 }
 
@@ -161,9 +147,4 @@ body[data-active-tray=flowers] .sheet:not(.collapsed) .panel-header .menu-info[a
  .sheet [data-pane="flowers"] .strain-hero .strain-format .format-options .strain-format-pill>img.icon-3d{width:min(var(--s-icon),40px);height:min(var(--s-icon),40px)}
  .sheet [data-pane="flowers"] .strain-hero-actions #flowerBuy{min-height:calc(var(--s-btn) - 2px)!important;height:calc(var(--s-btn) - 2px)}
 
- .sheet [data-pane="flowers"] .breed-view:not([hidden]){flex:1 1 0;min-height:0;display:flex;flex-direction:column}
- .sheet [data-pane="flowers"] .breed-view .library-head{flex:none}
- .sheet [data-pane="flowers"] .breed-list{flex:1 1 0;min-height:0;grid-auto-rows:minmax(36px,1fr);gap:var(--s-tile-gap)}
- .sheet [data-pane="flowers"] .breed-card{min-height:0}
- .sheet [data-pane="flowers"] .breed-card button{min-height:32px}
 }

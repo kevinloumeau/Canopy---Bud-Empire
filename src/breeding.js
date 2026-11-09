@@ -63,3 +63,15 @@ export function tickCross(state,dt){
 // Card order as in the app: the cross in progress, pairs ready to breed, pairs being prepared, then discoveries.
 const ORDER={growing:0,open:1,bench:2,prepare:2,known:3};
 export function sortedCultivars(state){return CULTIVARS.map(c=>({c,s:cultivarStatus(state,c)})).sort((a,b)=>ORDER[a.s.kind]-ORDER[b.s.kind]);}
+// Finish now (Kevin's build-timer rule, 2026-10-22): half the cross's price for the share of time still to go, rounded up
+// to $10 and never under $100. The price paid is the cost at the current count, since a running cross is not yet found.
+export function crossSkipCost(state){
+  const a=state.crosses?.active;if(!a||!(a.remaining>0))return 0;
+  const total=crossSeconds(state.perks,CROSS_SECONDS);
+  return Math.max(100,Math.ceil(crossCost(state.crosses)*.5*Math.min(1,a.remaining/total)/10)*10);
+}
+// Pays and ends the running cross; returns the cultivar found, or null.
+export function finishCross(state){
+  const price=crossSkipCost(state);if(!price||state.money<price)return null;
+  state.money-=price;return tickCross(state,state.crosses.active.remaining);
+}

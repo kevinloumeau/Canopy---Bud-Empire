@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {CULTIVARS,migrateCrosses,crossBonus,crossCost,cultivarStatus,startCross,tickCross,sortedCultivars} from '../src/breeding.js';
+import {CULTIVARS,migrateCrosses,crossBonus,crossCost,cultivarStatus,startCross,tickCross,sortedCultivars,crossSkipCost,finishCross} from '../src/breeding.js';
 const base=o=>({money:1e9,strains:[5,5,5,5],breedingLevel:1,perks:{points:0,levels:{}},crosses:{done:[],active:null},...o});
 test('six cultivars, one per pair of different strains',()=>{
   assert.equal(CULTIVARS.length,6);assert.ok(CULTIVARS.every(c=>c.parents[0]<c.parents[1]&&c.id===c.parents.join('-')));
@@ -29,4 +29,11 @@ test('web library saves keep every discovery',()=>{
   assert.deepEqual(migrateCrosses({done:['0-1','0-1','9-9'],active:{pair:'0-1',remaining:50}},[]),{done:['0-1'],active:null});
   assert.deepEqual(migrateCrosses({done:[],active:{pair:'1-3',remaining:900}},[]),{done:[],active:{pair:'1-3',remaining:300}});
   assert.deepEqual(migrateCrosses(null,null,null),{done:[],active:null});
+});
+test('Finish now: half the price for the time still to go, then the cultivar is found',()=>{
+  const s=base({crosses:{done:['0-1'],active:null}});assert.equal(crossSkipCost(s),0);
+  startCross(s,'0-2');assert.equal(crossSkipCost(s),22500);tickCross(s,150);assert.equal(crossSkipCost(s),11250);
+  const poor=base({money:100,crosses:{done:[],active:{pair:'0-3',remaining:299.9}}});assert.equal(finishCross(poor),null);assert.equal(poor.money,100);
+  const money=s.money;assert.equal(finishCross(s).name,'Lavender Field');assert.equal(s.money,money-11250);assert.deepEqual(s.crosses,{done:['0-1','0-2'],active:null});
+  assert.equal(crossSkipCost(base({crosses:{done:[],active:{pair:'0-1',remaining:1}}})),100,'never under $100');
 });

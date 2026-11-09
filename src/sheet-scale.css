@@ -53,7 +53,6 @@
 
  /* Menu: the sell-type tiles take the extra height (as at half open) with their picture over the name, what it adds and
     the price, all centred. */
- .sheet [data-pane="flowers"] .breed-list{grid-auto-rows:minmax(36px,72px);align-content:space-evenly}
 
  /* Research: rows as tall as their tiles need, spread evenly down the pane. */
  html body .sheet>[data-pane=boosts].shop-browser>.shop-items:not([data-rows=many]){grid-template-rows:repeat(var(--rows,2),auto);align-content:space-evenly}

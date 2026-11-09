@@ -1,0 +1,24 @@
+/* Marketing, the fourth Research branch (marketing.js). Loaded after research-done.css. The tiles are research tiles:
+   - Ready: a full green ring and the price.
+   - Running: the ring drains brass with the time left, and the pill says "Live · 4:59".
+   - Resting: the ring refills green until the campaign can run again, and the pill counts down to it.
+   - Not usable now (no shop yet, no VIPs, a full shop): the tile dims and the effect line says why. */
+.shop-browser .shop-categories{grid-template-columns:repeat(var(--tabs,3),minmax(0,1fr))!important}
+.shop-browser .shop-campaign .shop-level{display:none!important}
+.shop-browser .shop-campaign.is-running .shop-symbol::before{background:conic-gradient(var(--ui-brass) calc(var(--mv,0)*1turn),var(--ui-edge) 0)!important}
+.shop-browser .shop-campaign.is-running .shop-symbol{box-shadow:0 0 14px #e2c68a33;border-radius:50%}
+.shop-browser .shop-campaign.is-running{background:linear-gradient(160deg,#e2c68a1a,#e2c68a05 70%)!important;box-shadow:inset 0 0 0 1px #e2c68a4d!important}
+html body .sheet .shop-browser .shop-campaign.is-running .shop-effect{color:var(--ui-brass)!important}
+html body .sheet .shop-browser .shop-campaign.is-running button,html body .sheet .shop-browser .shop-campaign.is-resting button,html body .sheet .shop-browser .shop-campaign.is-blocked button{opacity:1!important;filter:none!important}
+html body .sheet .shop-browser .shop-campaign.is-running button{background:#e2c68a1f!important;box-shadow:inset 0 0 0 1px #e2c68a80!important;color:var(--ui-brass)!important}
+html body .sheet .shop-browser .shop-campaign.is-running button b,html body .sheet .shop-browser .shop-campaign.is-resting button b{font-variant-numeric:tabular-nums;color:inherit!important}
+html body .sheet .shop-browser .shop-campaign.is-resting button{background:transparent!important;box-shadow:inset 0 0 0 1px var(--ui-edge)!important;color:var(--ui-soft)!important}
+.shop-browser .shop-campaign.is-blocked .shop-symbol.has-3d>img.research-3d{opacity:.55;filter:saturate(.5)}
+html body .sheet .shop-browser .shop-campaign.is-blocked .shop-effect{color:var(--ui-soft)!important}
+html body .sheet .shop-browser .shop-campaign.is-blocked button{background:transparent!important;box-shadow:inset 0 0 0 1px var(--ui-edge)!important;color:var(--ui-soft)!important}
+@media(max-width:779px){
+ /* Four branch tabs on one row: a touch tighter so "Marketing" fits beside its icon on an SE. */
+ .sheet>[data-pane=boosts] .shop-categories[style*="--tabs:4"] button{column-gap:3px!important;padding:0 2px!important}
+ .sheet>[data-pane=boosts] .shop-categories[style*="--tabs:4"] button .shop-category-icon.is-3d,.sheet>[data-pane=boosts] .shop-categories[style*="--tabs:4"] button .shop-category-icon.is-3d img.research-3d{width:18px!important;height:18px!important}
+ .sheet>[data-pane=boosts] .shop-categories[style*="--tabs:4"] button em{font-size:11px!important;letter-spacing:-.02em;text-overflow:clip!important}
+}

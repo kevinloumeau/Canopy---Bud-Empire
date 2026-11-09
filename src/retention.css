@@ -8,16 +8,17 @@
 .world .marker.spender-tag[data-event=inspection] .spender-badge{color:#9fe0b0}
 .world .marker.spender-tag[data-event=vip] .spender-badge{color:#f2b6e8}
 .world .marker.spender-tag::after{content:'';display:block;position:absolute;left:50%;top:100%;width:10px;height:10px;margin-top:-6px;border-radius:0 0 3px 0;background:var(--ui-brass);border:solid #fff3d080;border-width:0 1px 1px 0;transform:translateX(-50%) rotate(45deg)}
-/* The pill is smaller than a fingertip; an invisible margin brings the tap area to 44px, and carries the pulsing ring. */
+/* The pill is smaller than a fingertip; an invisible margin brings the tap area to 44px. */
 .world .marker.spender-tag::before{content:'';position:absolute;inset:-5px -4px;border-radius:999px}
 .world .marker.spender-tag:active{filter:brightness(.92)}
 .world .marker.spender-tag[hidden]{display:none!important}
 @media (prefers-reduced-motion:no-preference){
- .world .marker.spender-tag{animation:spender-bob 1.6s ease-in-out infinite!important}
- .world .marker.spender-tag::before{animation:spender-ring 1.6s ease-out infinite}
+ .world .marker.spender-tag{animation:spender-bob 1.6s ease-in-out infinite,spender-ring 1.6s ease-out infinite!important}
 }
+/* The ring pulses from the pill's own shadow, not a pseudo-element: on iOS an animated ::before stayed on its own layer
+   and lagged where the pill had been as the guest walked, leaving a stray oval over the street (Kevin, 2026-11-09). */
 @keyframes spender-bob{50%{margin-top:-4px}}
-@keyframes spender-ring{0%{box-shadow:0 0 0 0 #e2c68a99}80%,100%{box-shadow:0 0 0 9px #e2c68a00}}
+@keyframes spender-ring{0%{box-shadow:0 5px 14px rgba(6,24,12,.38),0 0 18px #e7b94a40,0 0 0 0 #e2c68a99}80%,100%{box-shadow:0 5px 14px rgba(6,24,12,.38),0 0 18px #e7b94a40,0 0 0 13px #e2c68a00}}
 .rush-pill[hidden]{display:none}
 body[data-store-view=branch] .rush-pill{display:none}
 /* Multi-day event card: kicker, name, countdown, a three-step ladder whose cells fill with progress, and the claim button. */
@@ -57,25 +58,6 @@ body[data-store-view=branch] .rush-pill{display:none}
 .menu-views button{min-height:40px;border:0;border-radius:9px;background:none;color:#f6f1dfb3;font-weight:600}
 .menu-views button[aria-selected=true]{background:#c4e8a71f;color:#f6f1df;box-shadow:inset 0 0 0 1px #c4e8a740}
 .menu-board[data-menu-view=breed]>:not(.menu-board-head):not(.menu-views):not(.breed-view){display:none}
-.breed-view{display:grid;gap:8px}
-.breed-view[hidden]{display:none}
-.breed-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
-.breed-card{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;border:1px solid #ffffff14;background:#ffffff06}
-.breed-copy{display:grid;gap:2px;min-width:0;flex:1}
-.breed-copy b{font-size:14px}
-.breed-copy small{font-size:11px;opacity:.75}
-.breed-status{font-style:normal;font-size:12px;color:var(--p-lime-78)}
-.breed-parents{display:grid;gap:3px;margin-top:3px}
-.breed-parents[hidden]{display:none}
-.breed-parents span{--fill:0%;font:500 11px 'Bricolage Grotesque',system-ui,sans-serif;padding:3px 6px;border-radius:6px;background:linear-gradient(90deg,#c4e8a72e var(--fill),#ffffff08 var(--fill))}
-.breed-card button{flex:none;min-height:44px;max-width:44%;padding:4px 12px;border-radius:10px;border:1px solid #ffffff22;background:var(--p-forest-35);color:#f6f1df;font-size:12px;font-weight:700;line-height:1.2}
-.breed-card button:disabled{background:#ffffff0d;color:#f6f1dfaa;cursor:default}
-.breed-card[data-state=growing]{border-color:#f0cf7f66;background:#f0cf7f10}
-.breed-card[data-state=growing] .breed-status{color:var(--p-gold-72)}
-.breed-card[data-state=open]{border-color:#c4e8a766}
-.breed-card[data-state=known]{background:#c4e8a70d}
-.breed-card[data-state=known] .breed-status{color:#f6f1dfb3}
-.breed-card[data-state=bench] .breed-status,.breed-card[data-state=prepare] .breed-status{color:#f6f1dfb3}
 /* Weekly special: one line at the top of Events. Between seasons the season card previews the next one. */
 .weekly-special{margin:0 0 10px;padding:9px 12px;border-radius:10px;background:#c4e8a714;border:1px solid #c4e8a73d;font-size:13px}
 .weekly-special b{color:var(--p-lime-78)}
