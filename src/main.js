@@ -58,7 +58,7 @@ import { abbr, abbrShort, count as countText, times, SPECIALTIES, customerType, 
 import {mountUiKit} from './ui-kit.js';
 import {makeMusic} from './music.js';
 import {createCashPops,rollCash,popFrame,POP_LIFE} from './cash-pops.js';
-import {rubberBand,addSample,releaseVelocity,coastAxis} from './map-gesture.js';
+import {rubberBand,addSample,releaseVelocity,coastAxis,slideAlong} from './map-gesture.js';
 import {POPUP_STALLS,POPUP_PRIZES,POPUP_GIFT_BASE,POPUP_AWAY_PAY,migratePopup,popupWindow,previewWindow,syncPopup,tickPopup,claimPrize,buyStall,bestStall,stallCost,awayOverlap,popupSalesBonus,popupUnlocked,popupClock} from './popup-event.js';
 import {STALL_X,STALL_Z,STALL_D,POPUP_PROPS,POPUP_TAG,popupWalker,popupCrowd} from './popup-market-layout.js';
 import {scaledReward} from './progression.js';
@@ -111,7 +111,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     next.contract=Math.floor(finite(old.contract,0,0,1000));next.productMenu=migrateMenu(old.productMenu);next.sound=old.sound!==false;next.haptics=old.haptics!==false;next.lightMode=['day','night'].includes(old.lightMode)?old.lightMode:null;next.autoDrone=migrateAutoDrone(old.autoDrone);next.pickupWindow=migrateWindow(old.pickupWindow,next.autoDrone.owned);next.atm=migrateAtm(old.atm);next.atmEarned=finite(old.atmEarned,0,0,BIG);next.builds=migrateBuilds(old.builds);next.deals=migrateDeals(old.deals);next.flagship=migrateFlagship(old.flagship);next.quotes=migrateQuotes(old.quotes);next.flagshipSeen=old.flagshipSeen===true;next.city=migrateCity(old.city);next.citySeen=Array.isArray(old.citySeen)?old.citySeen.filter(function(id){return !!cityBuilding(id)}):[];
     next.globalLevel=Math.floor(finite(old.globalLevel,0,0,500));next.popup=migratePopup(old.popup);
     next.multiplier=Math.pow(1.25,next.globalLevel);
-    next.lastSeen=finite(old.lastSeen,Date.now(),0,Date.now());next.paidThrough=finite(old.paidThrough,finite(old.empire&&old.empire.clock,0,0,BIG),0,BIG);next.lines=LINES.map(function(_,i){return Math.floor(finite(old.lines&&old.lines[i],1,next.shopOpen?1:0,10000))});next.storageLevel=Math.min(20,Math.max(0,Math.floor(Number(old.storageLevel)||0)));var caps=stockCaps(next);next.stock=Array.from({length:5},function(_,i){return Math.floor(finite(old.stock&&old.stock[i],0,0,caps[i]))});next.staff=LINES.map(function(_,i){return Math.floor(finite(old.staff&&old.staff[i],0,0,10000))});next.abilities=migrateAbilities(old.abilities);next.kiosk=old.kiosk===true;next.lounge=migrateLounge(old.lounge);next.shopPlay=migrateShopPlay(old.shopPlay);next.loungeStaff=migrateLoungeHost(old.loungeStaff);next.loungeLift=next.lounge>0&&old.loungeLift===true;next.loungeSessions=Math.floor(finite(old.loungeSessions,0,0,1e9));next.loungeEarned=finite(old.loungeEarned,0,0,BIG);next.secondKiosk=next.kiosk&&old.secondKiosk===true;next.thirdKiosk=next.secondKiosk&&old.thirdKiosk===true;next.queueLevel=Math.min(7,Math.max(0,Math.floor(Number(old.queueLevel)||0)));next.theme='dispensary';next.gameSpeed=[0,1,2,4].indexOf(old.gameSpeed)>=0?old.gameSpeed:1;return next}catch(e){return fresh()}}
+    next.lastSeen=finite(old.lastSeen,Date.now(),0,Date.now());next.paidThrough=finite(old.paidThrough,finite(old.empire&&old.empire.clock,0,0,BIG),0,BIG);next.lines=LINES.map(function(_,i){return Math.floor(finite(old.lines&&old.lines[i],1,next.shopOpen?1:0,10000))});next.storageLevel=Math.min(20,Math.max(0,Math.floor(Number(old.storageLevel)||0)));var caps=stockCaps(next);next.stock=Array.from({length:5},function(_,i){return Math.floor(finite(old.stock&&old.stock[i],0,0,caps[i]))});next.staff=LINES.map(function(_,i){return Math.floor(finite(old.staff&&old.staff[i],0,0,10000))});next.abilities=migrateAbilities(old.abilities);next.kiosk=old.kiosk===true;next.lounge=migrateLounge(old.lounge);next.shopPlay=migrateShopPlay(old.shopPlay);next.loungeStaff=migrateLoungeHost(old.loungeStaff);next.loungeLift=next.lounge>0&&old.loungeLift===true;next.loungeSessions=Math.floor(finite(old.loungeSessions,0,0,1e9));next.loungeEarned=finite(old.loungeEarned,0,0,BIG);next.secondKiosk=next.kiosk&&old.secondKiosk===true;next.thirdKiosk=next.secondKiosk&&old.thirdKiosk===true;next.queueLevel=Math.min(7,Math.max(0,Math.floor(Number(old.queueLevel)||0)));next.theme='dispensary';next.gameSpeed=old.gameSpeed===4?2:[0,1,2].indexOf(old.gameSpeed)>=0?old.gameSpeed:1;return next}catch(e){return fresh()}}
   var firstRun=false;try{firstRun=!localStorage.getItem('shift-save')}catch(e){}
   var securitySelected=false,loungeSelected=false;
   // False once the player closes the station menu or taps empty map: the panel keeps its station, the map shows no pick.
@@ -124,10 +124,9 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function visualLight(){return state.lightMode?{night:state.lightMode==='night',darkness:state.lightMode==='night'?.34:0}:atmosphere(state.empire.network)}
   var lightToggle=document.createElement('button');lightToggle.id='lightToggle';lightToggle.type='button';lightToggle.onclick=function(){state.lightMode=visualLight().darkness>.15?'day':'night';save();renderUI()};document.querySelector('.speed-controls').appendChild(lightToggle);
   var speedButtons=Array.prototype.slice.call(document.querySelectorAll('[data-speed]'));
-  function setGameSpeed(value){if([0,1,2,4].indexOf(value)<0)return;if(state.gameSpeed!==value)playSound('tap',state.sound);state.gameSpeed=value;renderUI();save();notify(value===0?'GAME PAUSED':'GAME SPEED · '+value+'×')}
-  // The 1× button doubles as pause: pressed again at normal speed it stops the clock, and pressed while paused it resumes.
-  var speedOne=speedButtons.filter(function(b){return b.getAttribute('data-speed')==='1'})[0],PLAY_GLYPH=speedOne.innerHTML,PAUSE_GLYPH='<svg viewBox="0 0 18 16" fill="currentColor" aria-hidden="true"><path d="M5 3.5h3v9H5zM10 3.5h3v9h-3z"></path></svg>';
-  speedButtons.forEach(function(button){button.onclick=function(){var value=Number(button.getAttribute('data-speed'));setGameSpeed(value===1&&state.gameSpeed===1?0:value)}});
+  function setGameSpeed(value){if([0,1,2].indexOf(value)<0)return;if(state.gameSpeed!==value)playSound('tap',state.sound);state.gameSpeed=value;renderUI();save();notify(value===0?'GAME PAUSED':'GAME SPEED · '+value+'×')}
+  // Three plain buttons: pause, normal and double speed. The old 4× tier was dropped; saves that had it load at 2×.
+  speedButtons.forEach(function(button){button.onclick=function(){setGameSpeed(Number(button.getAttribute('data-speed')))}});
   var tickTime=performance.now(),tickRemainder=0;
   function tick(){if(SNAP)return;var now=performance.now(),seconds=(now-tickTime)/1000;tickTime=now;if(document.hidden){tickRemainder=0;return}completeBuilds();noticeFlagship();noticeCity();var elapsed=elapsedSteps(seconds+tickRemainder,state.gameSpeed);if(elapsed.offline){tickRemainder=0;collectOffline(elapsed.offline)}else{tickRemainder=Math.max(0,seconds+tickRemainder-Math.floor((seconds+tickRemainder+1e-8)/.05)*.05);for(var step=0;step<elapsed.steps;step++)simulate(.05)}}
   var saveFailed=false;
@@ -1198,7 +1197,15 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     if(kioskCount()<3)picks.push({kind:'kiosk',price:KIOSK_PRICES[kioskCount()]});
     if(counter)picks.push({kind:'counter',price:counter.price});
     var atmPrice=atm.level?atmMachineCost(atm):ATM_BUILD;if(atmPrice!==null&&atm.machines<3)picks.push({kind:'atm',price:atmPrice});
+    // When the brass names one of these (Kevin, 2026-11-08: "should push to purchase the ghost items more"), that one wears it.
+    var fix=state.shopOpen?lastFix:null,brass=fix&&ghostKind(fix);if(brass){var named=picks.filter(function(p){return p.kind===brass})[0];if(named)return named}
     return picks.sort(function(a,b){return a.price-b.price})[0]||null}
+  // The blueprint kind a best buy is (window, kiosk, counter, ATM build or a new machine, drone port), or null for a level.
+  function ghostKind(r){if(!r)return null;if(r.kind==='kiosk'||r.kind==='counter'||r.kind==='drone')return r.kind;if(r.kind==='window'&&!state.pickupWindow.owned)return 'window';if(r.kind==='atm'&&(!state.atm.level||r.machine))return 'atm';return null}
+  // New things on the map pull a little harder than one more level: a ghost buy is picked over a level paying up to a
+  // third more per dollar, so the brass, the map tag and the blueprint push the player to build it.
+  var GHOST_PULL=1.35,ghostGains={};
+  function ghostReadyNow(){var g=nextGhost();return !!g&&state.shopOpen&&state.money>=g.price}
   function fixtureGhosts(){var next=nextGhost(),g={};if(!next)return null;if(next.kind==='kiosk')g['kiosk'+kioskCount()]=true;else if(next.kind==='window')g.pickupWindow=true;else return null;return g}
   function frontFixtures(){return windowOpen()?FRONT_FIXTURES.filter(function(f){return !f.window}).concat(WINDOW_FIXTURES):isBuilding(state.builds,'window')?FRONT_FIXTURES.filter(function(f){return !f.window}):FRONT_FIXTURES}
   // The back-wall shelving stands just behind the counters; the smoking lounge is the room behind it (z −7 → −1.76).
@@ -3044,7 +3051,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
         if(j===4)staffer('b'+d.index+'s4',STAFF_MODELS.desks[(d.index+1)%STAFF_MODELS.desks.length],q.x-.35,q.y,q.z-1.5,{x:0,z:1},.3,{role:'desk',clock:workClock(4)+d.index*1.7,act:1});
         else{var spot=STAFF_SPOTS[j]||{dx:-.95,dz:-1.65};staffer('b'+d.index+'s'+j,STAFF_MODELS.stations[j],q.x+spot.dx,q.y,q.z+spot.dz,{x:-spot.dx,z:-spot.dz},spot.facing,{role:STAFF_ROLES[j],clock:workClock(j),act:1})}})});
     var fx=upgradeFx.frame(),rv=revealFx.frame();render.reveal=rv;
-    map3d.render({upgradeRings:fx.rings,fixtureSprings:fx.springs,revealBeams:rv.beams,sparkles:sparkles.frame(),fixtureReveal:revealScales(rv.pops),step:frameDelta,districts:districts,keepsakes:state.popup.keepsakes,hazeEast:eastHaze(storeLevels(),!!marketOn()),dry:render.dry,width:width,height:height,dpr:dpr,lowPower:window.canopyPowerSaver===true,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,characters:characters,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,intro:introTime(),loungeOpen:state.lounge>0,loungeTier:state.lounge,city:state.city,cityClaimed:cityClaimed(),cityBuild:cityBuildShares(),atm:atmFrame(),flagship:state.flagship,flagshipBuild:isBuilding(state.builds,'flagship')?1-buildShareLeft(state.builds,'flagship'):null,loungeBuild:isBuilding(state.builds,'lounge')?1-buildShareLeft(state.builds,'lounge'):null,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtureBuild:isBuilding(state.builds,'deck')||isBuilding(state.builds,'window')?Object.assign(isBuilding(state.builds,'deck')?{deck:1-buildShareLeft(state.builds,'deck')}:{},isBuilding(state.builds,'window')?{pickupWindow:1-buildShareLeft(state.builds,'window')}:{}):null,fixtures:Object.assign(windowFixtures(),{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2}),fixtureGhost:fixtureGhosts(),menus:kioskMenus(),menuClock:animationTime/1000,cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
+    map3d.render({upgradeRings:fx.rings,fixtureSprings:fx.springs,revealBeams:rv.beams,sparkles:sparkles.frame(),fixtureReveal:revealScales(rv.pops),step:frameDelta,districts:districts,keepsakes:state.popup.keepsakes,hazeEast:eastHaze(storeLevels(),!!marketOn()),dry:render.dry,width:width,height:height,dpr:dpr,lowPower:window.canopyPowerSaver===true,centerX:centerX,centerY:centerY,unit:unit,night:nightT,lookAt:look,stations:stations,people:people,figures:figures,characters:characters,backdrops:backdrops,ropes:ropes,props:props,cars:carPlacements(now),time:sceneTime,intro:introTime(),loungeOpen:state.lounge>0,loungeTier:state.lounge,city:state.city,cityClaimed:cityClaimed(),cityBuild:cityBuildShares(),atm:atmFrame(),flagship:state.flagship,flagshipBuild:isBuilding(state.builds,'flagship')?1-buildShareLeft(state.builds,'flagship'):null,loungeBuild:isBuilding(state.builds,'lounge')?1-buildShareLeft(state.builds,'lounge'):null,liftY:liftY,liftY2:liftY2,loungeSmokers:loungeSmokers,loungeLift:state.loungeLift,loungeCurtain:loungeCurtain,loungeExitCurtain:loungeExitCurtain,menuLines:flapLines(),fixtureBuild:isBuilding(state.builds,'deck')||isBuilding(state.builds,'window')?Object.assign(isBuilding(state.builds,'deck')?{deck:1-buildShareLeft(state.builds,'deck')}:{},isBuilding(state.builds,'window')?{pickupWindow:1-buildShareLeft(state.builds,'window')}:{}):null,fixtures:Object.assign(windowFixtures(),{deck:deliveryBuilt(),storefront:true,storefrontDoor:true,displayCase:true,kiosk0:kioskCount()>0,kiosk1:kioskCount()>1,kiosk2:kioskCount()>2}),fixtureGhost:fixtureGhosts(),ghostReady:ghostReadyNow(),menus:kioskMenus(),menuClock:animationTime/1000,cargo:{odo:cargoOdo,running:state.lines.map(function(n){return n>0})}});
     // A model that had not loaded when the tabs were painted: try again every half second until all are in.
     var wall=performance.now();if(picturesPending&&!(wall-(renderFrame3d.picturesTried||0)<500)){renderFrame3d.picturesTried=wall;picturesPending=false;paintThumbnails()}
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -3058,6 +3065,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // of them (both face +z), the kiosk screen on their left by the shop window, the ID desk; in a line, its front.
   function customerLook(c){
     if(c.walking)return null;
+    // Taking out cash: into the ATM's screen, which faces the pavement (+z) from the shop's front ledge (Kevin, 2026-11-08).
+    if(c.cash&&c.cash.stage==='use')return{x:0,z:-1};
     if(atOrderCounter(c,state.orderCounters)||c.phase==='pickup'&&Math.hypot(c.x-PICKUP_X,c.z-4.9)<.15)return{x:0,z:-1};
     if(c.phase==='kiosk'&&c.kioskIndex!=null&&!c.ordered&&Math.hypot(c.x+8.95,c.z-kioskZ(c.kioskIndex))<.15)return{x:-1,z:0};
     if(c.phase==='idCheck'&&Math.hypot(c.x-ID_CHECK.x,c.z-ID_CHECK.z)<.15)return{x:ID_DESK.x-c.x,z:ID_DESK.z-c.z};
@@ -3406,11 +3415,11 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   var KIOSK_PRICES=[25000,50000,100000],KIOSK_Z=[0,1,2].map(kioskZ);
   // What each tag shows now: null when there is nothing to buy there.
   function lotTags(){var tags=[],count=kioskCount(),orders=state.lines[4]>0;
-    if(orders&&!windowOpen())tags.push({el:windowMarker,name:'Window',build:'window',price:WINDOW_COST,best:windowSuggested(),x:PICKUP_WINDOW.x,y:2.4,z:PICKUP_WINDOW.z,buys:[{label:'Build',price:WINDOW_COST,go:purchaseWindow}]});
+    if(orders&&!windowOpen())tags.push({el:windowMarker,name:'Window',build:'window',price:WINDOW_COST,best:windowSuggested(),x:PICKUP_WINDOW.x,y:2.4,z:PICKUP_WINDOW.z,buys:[{label:'Build'+payoff('window'),price:WINDOW_COST,go:purchaseWindow}]});
     // Once open, the window keeps a small level tag: its box sells the next level and as many as the cash buys, like a
     // station's, and wears the brass when the window is the best buy.
     else if(windowOpen()&&!windowMaxed())tags.push({el:windowMarker,name:'Window',level:windowLevel(state.pickupWindow),price:windowNextCost(),best:windowSuggested(),x:PICKUP_WINDOW.x,y:2.4,z:PICKUP_WINDOW.z,buys:windowBuys()});
-    if(windowOpen()&&!deliveryBuilt())tags.push({el:droneMarker,name:'Drones',build:'deck',price:AUTO_DRONE_COST,best:state.shopOpen&&!!lastFix&&lastFix.kind==='drone',x:-9.39,y:7.2,z:-.2,buys:[{label:'Build',price:AUTO_DRONE_COST,go:purchaseAutoDrone}]});
+    if(windowOpen()&&!deliveryBuilt())tags.push({el:droneMarker,name:'Drones',build:'deck',price:AUTO_DRONE_COST,best:state.shopOpen&&!!lastFix&&lastFix.kind==='drone',x:-9.39,y:7.2,z:-.2,buys:[{label:'Build'+payoff('drone'),price:AUTO_DRONE_COST,go:purchaseAutoDrone}]});
     // Canopy HQ (src/flagship.js): from the late game on, the corner lot behind the shop sells its next stage; while a
     // stage builds the tag counts down and its box offers Finish now.
     if(flagshipUnlocked(state.lifetime,state.flagship,state.run.time)&&state.flagship<FLAGSHIP_MAX){var hqBuilding=isBuilding(state.builds,'flagship'),hqNext=flagshipNext(state.flagship),hqSkip=hqBuilding?buildSkipCost('flagship'):0;
@@ -3427,7 +3436,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       var building=isBuilding(state.builds,b.id),next=cityNext(b.id,stage),skip=building?buildSkipCost(b.id):0,price=cityCost(b.id,stage,state),at=cityTagAt(b.id);if(!at)return;
       tags.push({el:cityMarkers[b.id],name:b.name,build:b.id,price:building?skip:price,x:at.x,y:at.y,z:at.z,buildBuys:true,
         buys:building?[{label:'Finish now',price:skip,go:function(){skipBuildNow(b.id)}}]:[{label:next.name+' · '+stageGain(b.id),price:price,best:state.money>=price,go:function(){purchaseCity(b.id)}}]})});
-    if(orders&&count<3)tags.push({el:kioskMarker,name:'Kiosk',price:KIOSK_PRICES[count],x:-9.75,y:2.1,z:KIOSK_Z[count],buys:[{label:'Buy · +20% baskets',price:KIOSK_PRICES[count],go:[buyKiosk,buySecondKiosk,buyThirdKiosk][count]}]});
+    if(orders&&count<3)tags.push({el:kioskMarker,name:'Kiosk',price:KIOSK_PRICES[count],best:ghostBest('kiosk'),x:-9.75,y:2.1,z:KIOSK_Z[count],buys:[{label:'Buy'+payoff('kiosk',' · +20% baskets'),best:ghostBest('kiosk'),price:KIOSK_PRICES[count],go:[buyKiosk,buySecondKiosk,buyThirdKiosk][count]}]});
     // The next order counter, over its ghost (Kevin, 2026-11-02: like the kiosks).
     // The next branch's lot along the street (branch-districts.js), for lease: its tag opens the branch, or while it is
     // still locked says what opens it and takes a tap to its Empire row.
@@ -3438,14 +3447,24 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var atmTag=atmTagInfo();if(atmTag)tags.push(atmTag);
     // The weekend market's tag over its arch: the time left; brass while a stall can be bought. A tap opens its page.
     var market=marketOn();if(market){var mc=districtCentre(popupSlot(storeLevels()));tags.push({el:popupMarker,name:'Pop-up',text:popupClock(market.end-Date.now()),best:marketReady(),always:true,price:0,x:mc.x+POPUP_TAG.x,y:POPUP_TAG.y,z:mc.z+POPUP_TAG.z,buys:null})}
-    var counterAt=nextOrderCounter();if(counterAt)tags.push({el:counterMarker,name:'Counter',price:counterAt.price,x:counterAt.x,y:2.1,z:counterAt.z,buys:[{label:'Buy',price:counterAt.price,go:expandOrderCounters}]});
+    var counterAt=nextOrderCounter();if(counterAt)tags.push({el:counterMarker,name:'Counter',price:counterAt.price,best:ghostBest('counter'),x:counterAt.x,y:2.1,z:counterAt.z,buys:[{label:'Buy'+payoff('counter'),best:ghostBest('counter'),price:counterAt.price,go:expandOrderCounters}]});
     return tags}
   var ATM_NUMBERS=['2nd','3rd'];
+  // What a ghost adds, from the last best-buy pass: " · +$1.2K/s" (or the fallback when it was not priced).
+  function payoff(kind,fallback){var g=ghostGains[kind];return g>0?' · +'+fmt(g*state.gameSpeed*earnFactor(state.store,Date.now()))+'/s':fallback||''}
+  function ghostBest(kind){return state.shopOpen&&ghostKind(lastFix)===kind}
+  // The tag over the one blueprint on the map.
+  function ghostMarker(){var g=nextGhost();return g?{window:windowMarker,kiosk:kioskMarker,counter:counterMarker,atm:atmMarker}[g.kind]:null}
+  // Opens a ghost's buy box and glides the map to it when it is off to one side (the brass button, a tap on the blueprint).
+  function pickGhost(name){var t=lotTags().filter(function(x){return x.el.dataset.marker===name})[0];mapPicked=false;pickedTag=name;buyBoxFor=-1;if(t)presentAt({x:t.x,y:t.y-1,z:t.z});renderUI()}
+  // A ghost the cash first covers says so once (a soft chime and a short toast), and its tag hops.
+  var ghostToldKey=null;function tellGhostReady(t){var key=t.el.dataset.marker+'|'+t.price;if(ghostToldKey===key||!booted||!state.shopOpen||document.body.classList.contains('guide-open'))return;ghostToldKey=key;
+    t.el.classList.remove('is-hop');void t.el.offsetWidth;t.el.classList.add('is-hop');notify(t.name.toUpperCase()+' READY · tap its blueprint','upgrade')}
   function atmTagInfo(){if(!state.lines[4])return null;var atm=state.atm,spot=ATM_SPOTS[0],fix=state.shopOpen?recommendation():null,best=!!fix&&fix.kind==='atm';
-    if(!atm.level)return{el:atmMarker,name:'ATM',price:ATM_BUILD,x:spot.x,y:2.6,z:spot.z+.5,best:best,buys:[{label:'Build',price:ATM_BUILD,best:best,go:purchaseAtm}]};
+    if(!atm.level)return{el:atmMarker,name:'ATM',price:ATM_BUILD,x:spot.x,y:2.6,z:spot.z+.5,best:best,buys:[{label:'Build'+payoff('atm'),price:ATM_BUILD,best:best,go:purchaseAtm}]};
     var buys=[],levelPrice=atmLevelCost(atm.level),machinePrice=atmMachineCost(atm);
     if(levelPrice!==null){buys.push({label:'Lv '+(atm.level+1),price:levelPrice,best:best&&!fix.machine,go:purchaseAtmLevel});var q=atmMaxQuote(atm,state.money);if(q.levels>1)buys.push({label:'+'+q.levels,icon:FAST_FORWARD,price:q.cost,go:purchaseAtmMax})}
-    if(machinePrice!==null)buys.push({label:ATM_NUMBERS[atm.machines-1]+' ATM',price:machinePrice,best:best&&!!fix.machine,go:purchaseAtmMachine});
+    if(machinePrice!==null)buys.push({label:ATM_NUMBERS[atm.machines-1]+' ATM'+payoff('atm'),price:machinePrice,best:best&&!!fix.machine,go:purchaseAtmMachine});
     var bestBuy=buys.filter(function(b){return b.best})[0];
     return{el:atmMarker,name:'ATM',level:atm.level,price:bestBuy?bestBuy.price:buys.length?buys[0].price:0,x:spot.x,y:2.6,z:spot.z+.5,best:!!bestBuy,buys:buys.length?buys:null}}
   function purchaseAtm(){if(!buyAtm(state))return;atmReveal(0,true);telemetry.once('atm_built');save();renderUI();notify('ATM INSTALLED · cash users pay a fee on every withdrawal','upgrade')}
@@ -3471,7 +3490,11 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // Quiet by default (Kevin, 2026-11-07: "the upgrade buttons on the map feel too much"): a tag is just its small icon
     // unless it is the best buy and affordable, being built, or picked. The ghost under it shows what it sells; a tap
     // opens its buy box with the name and price.
-    var quiet=!t.always&&!building&&!(t.best&&state.money>=t.price)&&pickedTag!==el.dataset.marker;if(el.classList.contains('is-quiet')!==quiet){el.classList.toggle('is-quiet',quiet);updateMarkers.key=null}el.title=t.name;
+    // The blueprint's own tag (Kevin, 2026-11-08: push the ghost buys): while saving, its dashed circle fills as a ring
+    // with the cash toward its price; once the cash covers it, it wakes up with its name and price and hops once.
+    var ghostTag=el===ghostMarker()&&!building&&!t.level,save=ghostTag?Math.max(0,Math.min(1,state.money/Math.max(1,t.price))):0,ready=ghostTag&&save>=1&&state.shopOpen;
+    el.classList.toggle('is-saving',ghostTag&&!ready);el.classList.toggle('is-ready',ready);if(ghostTag)el.style.setProperty('--save',(save*100).toFixed(1)+'%');else el.style.removeProperty('--save');if(ready)tellGhostReady(t);
+    var quiet=!t.always&&!building&&!(t.best&&state.money>=t.price)&&!ready&&pickedTag!==el.dataset.marker;if(el.classList.contains('is-quiet')!==quiet){el.classList.toggle('is-quiet',quiet);updateMarkers.key=null}el.title=t.name;
     if(t.locked)key+='|locked';if(el.dataset.level!==key){el.innerHTML=signIcon(LOT_ICONS[el.dataset.marker]||LOT_ICONS.building)+'<span class=station-sign-name>'+t.name+'</span><span class=station-sign-level>'+(t.locked&&!building?LOCK_ICON+(t.lockText||''):shownLevel)+'</span>';el.dataset.level=key;updateMarkers.key=null}
     el.setAttribute('aria-label',t.text?t.name+' market, '+t.text+' left'+(t.best?', a stall to buy':'')+'. Open it':building?t.name+', being built. Opens in '+clock:t.locked?t.name+(t.lockText?', locked until '+t.lockText+' earned':', for lease. Locked, show what opens it'):t.name+(t.level?', level '+t.level+', next '+fmt(t.price):', '+fmt(t.price))+'. Show what to buy');
     signBuy(el,pickedTag===el.dataset.marker&&(!t.locked||t.lockText)&&(!building||t.buildBuys)?t.buys:null)});
@@ -3617,8 +3640,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     if(!state.shopOpen){var raised=(state.doorBuilt?1:0)+state.lines.filter(function(n){return n>0}).length,nextSite=!state.doorBuilt?'Security':raised<7?shortNames[slow]:null;$('flowLabel').textContent='Under construction';$('flowText').textContent=raised+' of 7 sites raised'+(nextSite?' · next: '+nextSite:' · ready to open');$('flowText').title='Tap a site on the map to raise it. Customers arrive once the shop opens.';flowButton(nextSite?'Build '+nextSite:'Open the shop','');flowMeter(raised/7);$('flowAction').dataset.mode='fix'}
     var line=LINES[selected],open=isOpen(selected),level=state.lines[selected],price=cost(selected),affordable=open&&(!level||state.money>=price);
     $('rate').dataset.paused=String(state.gameSpeed===0);document.body.dataset.gamePaused=String(state.gameSpeed===0);if(state.money<shownCash||performance.now()-cashRolledAt>500)shownCash=state.money;$('money').textContent=fmt(shownCash);$('rate').textContent=state.gameSpeed===0?'Paused':fmt((state.empire.activeStore?storeRate(state.empire,state.empire.activeStore-1):production()+branchIncome(state.empire))*state.gameSpeed*earnFactor(state.store,Date.now()))+'/s';document.querySelector('.stat.output small').textContent=state.empire.activeStore?'BRANCH INCOME':'CAPACITY';
-    var paused=state.gameSpeed===0;speedButtons.forEach(function(button){var value=Number(button.getAttribute('data-speed'));button.setAttribute('aria-pressed',String(value===state.gameSpeed||(value===1&&paused)))});
-    var glyph=paused?'pause':'play';if(speedOne.getAttribute('data-glyph')!==glyph){speedOne.setAttribute('data-glyph',glyph);speedOne.innerHTML=paused?PAUSE_GLYPH:PLAY_GLYPH}speedOne.setAttribute('aria-label',paused?'Paused. Resume normal speed':'Normal speed. Press again to pause');speedOne.title=paused?'Paused · press to resume':'Normal speed · press again to pause';speedOne.parentElement.setAttribute('data-paused',String(paused));
+    speedButtons.forEach(function(button){button.setAttribute('aria-pressed',String(Number(button.getAttribute('data-speed'))===state.gameSpeed))});speedButtons[0].parentElement.setAttribute('data-paused',String(state.gameSpeed===0));
     // The lounge's picture is the whole rooftop, wider than a station's, and each level is bought outright, so no MAX.
     selectedLine.classList.toggle('is-lounge',loungeSelected);selectedLine.classList.toggle('is-building',loungeSelected&&isBuilding(state.builds,'lounge'));$('buyMachine').removeAttribute('aria-label');$('buyMachine').classList.remove('is-countdown');buyActions.classList.toggle('single',loungeSelected&&!isBuilding(state.builds,'lounge'));
     if(securitySelected){renderSecuritySelection()}else if(loungeSelected){renderLoungeSelection()}else{
@@ -3865,7 +3887,15 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     chip.hidden=!ready;
   }
   function triggerAbility(i){if(!useAbility(state.abilities,i,state.staff[i]))return;burst(machinePos[i],'#d0a54e');notify(ABILITIES[i].name.toUpperCase()+' · '+ABILITY_FACTOR+'× SPEED, +'+Math.round(ABILITY_SALES*100)+'% SALES','upgrade');renderUI();save()}
-  function renderStationTeam(){renderStationLift();renderStationAbility();var row=$('stationTeam'),staff=stationStaff();if(!staff.train||!staff.max){row.hidden=true;return}row.hidden=false;
+  // The Team card's icon is a closeup of the crew who work the open station (Kevin, 2026-11-08: "replace the team icon
+  // under the station menu with a closeup of the characters"): the same Meshy model the map shows there, rendered head and
+  // shoulders by art/blender/people_portraits.py into icons/3d/crew-*.png.
+  function crewModelFor(){var m=securitySelected?STAFF_MODELS.door:loungeSelected?STAFF_MODELS.host:selected===4?STAFF_MODELS.desks[0]:STAFF_MODELS.stations[selected];return m?m.replace(/^people\/|\.glb$/g,''):null}
+  function paintTeamFace(){var icon=document.querySelector('#stationTeam .team-icon');if(!icon)return;var name=crewModelFor(),src=name?'icons/3d/crew-'+name+'.png':'';
+    var img=icon.querySelector('img.team-face');if(!src){if(img)img.remove();icon.classList.remove('has-face');return}
+    if(!img){img=document.createElement('img');img.className='team-face';img.alt='';img.draggable=false;img.decoding='async';icon.appendChild(img)}
+    if(img.getAttribute('src')!==src)img.setAttribute('src',src);icon.classList.add('has-face')}
+  function renderStationTeam(){renderStationLift();renderStationAbility();var row=$('stationTeam'),staff=stationStaff();if(!staff.train||!staff.max){row.hidden=true;return}row.hidden=false;paintTeamFace();
     $('teamTrain').classList.toggle('is-pick',!!lastFix&&state.shopOpen&&lastFix.kind==='staff'&&lastFix.index===selected&&!securitySelected&&!loungeSelected);
     [[$('teamTrain'),staff.train],[$('teamMax'),staff.max]].forEach(function(pair){var mine=pair[0],source=pair[1];mine.disabled=source.disabled;['span','b'].forEach(function(tag){var text=source.querySelector(tag).textContent;if(mine.querySelector(tag).textContent!==text)mine.querySelector(tag).textContent=text});mine.setAttribute('aria-label',source.getAttribute('aria-label')||'');mine.title=source.title||''});
     if($('teamName').textContent!==staff.name)$('teamName').textContent=staff.name;
@@ -4035,13 +4065,14 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       '<span class="stat" title="What a guest pays over a walk-in basket">'+ICON_JAR+'<b>+'+Math.round(loungeMarkup(1)*100-100)+'%</b><small>basket</small></span>'+
       '<span class="stat" title="Seats once open">'+ICON_SEAT+'<b>'+LOUNGE_TIERS[0].seats+'</b><small>seats</small></span>');
     if($('stationStatus').dataset.html!==loungeHtml){$('stationStatus').innerHTML=loungeHtml;$('stationStatus').dataset.html=loungeHtml}
-    $('upgradeLevel').textContent=!tier?'':maxed?'Lv '+level+' · '+tier.name:'Lv '+level+' → '+(level+1)+' · '+next.name;
-    renderUpgradeComparison('Seats',seats,next?next.seats:seats,false,!tier,maxed,{maxed:'Fully fitted',unbuilt:building?'Opens in '+clock:null,gain:function(before,after){return '+'+(after-before)+' seats · jar ×'+(next?next.spend:tier.spend)}});
+    // The level stays short so it never clips beside the title; the tier's name and what it does sit in the pill below.
+    $('upgradeLevel').textContent=!tier?'':maxed?'Lv '+level:'Lv '+level+' → '+(level+1);
+    renderUpgradeComparison('Seats',seats,next?next.seats:seats,false,!tier,maxed,{maxed:'Fully fitted',unbuilt:building?'Opens in '+clock:null,gain:function(before,after){return '+'+(after-before)+' seats'}});
     $('stationTier').textContent=tier?tier.name:'Construction site';$('stationTier').style.color=TIER_COLORS[Math.min(3,level)];
     $('upgradeFunding').textContent=building?'Opens in '+clock:maxed?'Fully fitted':affordable?(tier?'Ready to upgrade':'Ready to build'):fmt(Math.max(0,price-state.money))+' to go';
     $('upgradeProgress').value=building?(1-buildShareLeft(state.builds,'lounge'))*100:maxed?100:Math.min(100,state.money/price*100);$('upgradeProgress').setAttribute('aria-valuetext',building?'Opens in '+clock:maxed?'Fully fitted':affordable?'Ready':fmt(Math.max(0,price-state.money))+' needed for '+next.name);
     paintUpgradePreview(-2);
-    $('nextAppearance').classList.remove('unlock-road');$('nextAppearance').hidden=false;$('nextAppearance').textContent=next?next.name+' · 1 in '+next.share+' guests · jar ×'+next.spend:'Nothing left to fit in the back room.';
+    $('nextAppearance').classList.remove('unlock-road');$('nextAppearance').hidden=false;$('nextAppearance').textContent=next?tieLast(next.name+' · basket +'+Math.round((loungeMarkup(level+1,state.loungeStaff,state.loungeLift)-1)*100)+'%'):tieLast(tier.name+' · fully fitted');
     // Three states on one button: Build · cost, then the build clock counting down (Finish now beside it), then Upgrade.
     var loungeSkip=building?buildSkipCost('lounge'):0;$('buyMachine').classList.toggle('is-countdown',building);
     $('machineCost').textContent=building?clock:maxed?'—':fmt(price);$('buyMachine').disabled=building||!affordable;$('buyMachine').querySelector('span').textContent=building?'Opens in':tier?'Upgrade':'Build';if(building)$('buyMachine').setAttribute('aria-label','Lounge opens in '+clock);$('buyMachine').style.setProperty('--funded',(building?(1-buildShareLeft(state.builds,'lounge'))*100:maxed?0:Math.min(100,state.money/price*100))+'%');
@@ -4220,7 +4251,13 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     {neon:'#ffb6a8',glow:'#ff9a8a4a',halo:'#ff8a78',velvet:'#5c1e30',wall:['#2e1a24','#160c11','#22131b'],floor:'#2a1b22',gap:[.02,.05,.035]},
     {neon:'#9fe8d8',glow:'#7fdcc84a',halo:'#6fd8c4',velvet:'#1f4a4a',wall:['#173432','#0a1a19','#112826'],floor:'#142523',gap:[.2,.48,.42]},
     {neon:'#ffb07a',glow:'#ff9a5c4a',halo:'#ff8c4a',velvet:'#5a2a1c',wall:['#3a2418','#1d110a','#2c1a11'],floor:'#2a1b13',gap:[.22,.5,.44]},
-    {neon:'#ffd98a',glow:'#ffc86a4a',halo:'#ffbe55',velvet:'#3a1522',wall:['#4a3020','#261710','#382317'],floor:'#3b1a24',gap:[.15,.42,.34]}
+    {neon:'#ffd98a',glow:'#ffc86a4a',halo:'#ffbe55',velvet:'#3a1522',wall:['#4a3020','#261710','#382317'],floor:'#3b1a24',gap:[.15,.42,.34]},
+    // The four late tiers keep the members' club room and change the neon: heater orange, marquee cream, searchlight
+    // white, penthouse gold.
+    {neon:'#ffa36b',glow:'#ff8a4a4a',halo:'#ff7a38',velvet:'#3a1522',wall:['#4a3020','#261710','#382317'],floor:'#3b1a24',gap:[.15,.42,.34]},
+    {neon:'#fff0c8',glow:'#ffe6a84a',halo:'#ffd98a',velvet:'#1d4a35',wall:['#4a3020','#261710','#382317'],floor:'#3b1a24',gap:[.15,.42,.34]},
+    {neon:'#f4f8ff',glow:'#dfe9ff4a',halo:'#cfe0ff',velvet:'#24304a',wall:['#2c3446','#151a24','#202837'],floor:'#2a2f3b',gap:[.15,.42,.34]},
+    {neon:'#ffe08a',glow:'#ffd25a5a',halo:'#ffc640',velvet:'#3a1522',wall:['#5a3c22','#2e1d10','#452c19'],floor:'#3b1a24',gap:[.15,.42,.34]}
   ];
   function drawLoungeThumb(level){
     var tier=migrateLounge(level===undefined?state.lounge:level),open=tier>0,look=LOUNGE_LOOKS[Math.max(0,tier-1)],face=.16;
@@ -4259,7 +4296,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
         drawBox(0,-.4,0,1.05,.46,.34,['#e9dcc0','#9d8f72','#c7b995']);[-.28,.28].forEach(function(px){var plate=project(px,.35,-.4);ellipse(plate.x,plate.y,unit*.11,unit*.05,'#fbf8ee');ellipse(plate.x,plate.y,unit*.045,unit*.022,'#7a8a4a')});
         worldLine([[0,1.75,-.4],[0,1.31,-.4]],'#3a2a1e',.02);drawBox(0,-.4,1.18,.34,.34,.13,['#d9905b','#8a4f2c','#b8703f']);var bulb=project(0,1.15,-.4);litEllipse(bulb.x,bulb.y,unit*.05,unit*.03,'#fff0c8');lightCone(0,1.15,-.4,.44,.12,.5,'#ffd7a0',.1);var table=project(0,.36,-.4);glow(table.x,table.y,unit*.6,'#ffcf9a55',unit*.3);
       }
-      if(tier===8){
+      if(tier>=8){
         drawBox(0,-.5,0,1,.38,.4,['#6b2436','#3c1220','#8a3448']);drawBox(0,-.66,.4,1,.1,.42,['#6b2436','#3c1220','#8a3448']);
         [-.45,.45].forEach(function(sx){var sconce=project(sx,1.3,-.7);litEllipse(sconce.x,sconce.y,unit*.045,unit*.03,'#ffe2a8');glow(sconce.x,sconce.y,unit*.34,'#ffc86a48')});
       }
@@ -4974,6 +5011,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       }
       g.x+=g.dx;g.y+=g.dy;g.dx=g.dy=0;
       if(g.scale!==1){if(!g.rect)g.rect=canvas.getBoundingClientRect();gestureZoom(zoom*g.scale,g.fx-g.rect.left,g.fy-g.rect.top);g.scale=1}
+      var slid=slideAlongStreet(g.x,g.y);g.x=slid.x;g.y=slid.y;
       var edge=clampedPan(g.x,g.y);placeGesture(edge.x+rubberBand(g.x-edge.x,width),edge.y+rubberBand(g.y-edge.y,visibleHeight()));
       g.at=now;return;
     }
@@ -4985,6 +5023,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     }
     if(g.mode!=='coast')return;
     var dt=Math.min(.05,Math.max(0,(now-g.at)/1000));g.at=now;if(!dt){render.invalidated=true;return}
+    var glide=slideAlongStreet(g.x,g.y);if(glide.slid){g.x=glide.x;g.y=glide.y;var gv=g.vx*glide.tx+g.vy*glide.ty;g.vx=gv*glide.tx;g.vy=gv*glide.ty}
     var edge2=clampedPan(g.x,g.y);
     if(motionPreference.matches){placeGesture(edge2.x,edge2.y);endGesture();return}
     var ax=coastAxis(g.x,g.vx,Math.abs(g.x-edge2.x)>.01?g.x-edge2.x:0,dt),ay=coastAxis(g.y,g.vy,Math.abs(g.y-edge2.y)>.01?g.y-edge2.y:0,dt);
@@ -4992,6 +5031,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     placeGesture(g.x,g.y);
     if(!g.vx&&!g.vy){var rest=clampedPan(g.x,g.y);if(Math.abs(rest.x-g.x)<.5&&Math.abs(rest.y-g.y)<.5)endGesture()}
   }
+  // A push against the long street's edge slides the view along the street (map-gesture.js slideAlong).
+  function slideAlongStreet(x,y){return slideAlong(x,y,clampedPan,angle,FLOOR_SQUASH)}
   // The finger distance that stretches the map by `shown` past the edge (rubberBand run backwards).
   function unstretch(shown,size){if(!shown)return 0;var a=Math.min(Math.abs(shown),size*.98);return Math.sign(shown)*(1/(1-a/size)-1)*size/.55}
   // A finger on a station sign or the Manage tag is a finger on the map too: it pans and pinches with the others, and a
@@ -5024,7 +5065,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   });
   // A finger lifting takes its last move with it before it is forgotten.
   function flushGesture(e){if(e&&Object.keys(touches).length===1)mapGesture.liftAt=e.timeStamp;if(gestureMoved&&(mapGesture.dx||mapGesture.dy||mapGesture.scale!==1))stepMapGesture(performance.now())}
-  world.addEventListener('pointerup',function(e){if(!touches[e.pointerId])return;mapHintActivity();flushGesture(e);var onCanvas=e.target===canvas;if(gestureMoved&&!onCanvas)signTapVoid=performance.now();if(!onCanvas);else if(!gestureMoved&&Object.keys(touches).length===1&&state.empire.activeStore){var br=canvas.getBoundingClientRect(),f=BRANCH_THEMES[state.empire.activeStore-1].focus,fo=districtCentre(state.empire.activeStore-1),q=project(f.x+fo.x,f.y,f.z+fo.z);if(Math.hypot(e.clientX-br.left-q.x,e.clientY-br.top-q.y)<Math.max(45,unit*3))manageViewedStore()}else if(!gestureMoved&&Object.keys(touches).length===1){var rect=canvas.getBoundingClientRect(),best=-1,distance=60;machinePos.forEach(function(pos,i){var p=project(pos.x,1.4+(pos.y||0),pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=i;distance=d}});orderCounterPositions(state.orderCounters).forEach(function(pos){var p=project(pos.x,1.4,pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=4;distance=d}});var online=project(-10.7,8.45,1.5),od=Math.hypot(e.clientX-rect.left-online.x,e.clientY-rect.top-online.y);if(od<distance){showTray('orders');renderUI()}else if(best>=0)selectMachine(best);else if(mapPicked){mapPicked=false;renderUI()}}delete touches[e.pointerId];if(Object.keys(touches).length)gestureMoved=true;else gestureOrigin=null});
+  world.addEventListener('pointerup',function(e){if(!touches[e.pointerId])return;mapHintActivity();flushGesture(e);var onCanvas=e.target===canvas;if(gestureMoved&&!onCanvas)signTapVoid=performance.now();if(!onCanvas);else if(!gestureMoved&&Object.keys(touches).length===1&&state.empire.activeStore){var br=canvas.getBoundingClientRect(),f=BRANCH_THEMES[state.empire.activeStore-1].focus,fo=districtCentre(state.empire.activeStore-1),q=project(f.x+fo.x,f.y,f.z+fo.z);if(Math.hypot(e.clientX-br.left-q.x,e.clientY-br.top-q.y)<Math.max(45,unit*3))manageViewedStore()}else if(!gestureMoved&&Object.keys(touches).length===1){var rect=canvas.getBoundingClientRect(),best=-1,distance=60;machinePos.forEach(function(pos,i){var p=project(pos.x,1.4+(pos.y||0),pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=i;distance=d}});orderCounterPositions(state.orderCounters).forEach(function(pos){var p=project(pos.x,1.4,pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=4;distance=d}});var online=project(-10.7,8.45,1.5),od=Math.hypot(e.clientX-rect.left-online.x,e.clientY-rect.top-online.y);var gm=ghostMarker(),gt=gm&&lotTags().filter(function(x){return x.el===gm})[0],gp=gt&&project(gt.x,Math.max(.6,gt.y-1.3),gt.z),gd=gp?Math.hypot(e.clientX-rect.left-gp.x,e.clientY-rect.top-gp.y):Infinity;
+    if(gd<Math.min(distance,od,Math.max(40,unit*2.2))){pickedTag=null;pickGhost(gm.dataset.marker)}else if(od<distance){showTray('orders');renderUI()}else if(best>=0)selectMachine(best);else if(mapPicked){mapPicked=false;renderUI()}}delete touches[e.pointerId];if(Object.keys(touches).length)gestureMoved=true;else gestureOrigin=null});
   // Double-tap anywhere on the map (canvas or a station pill) zooms in around the tap, or back out when already close.
   var lastTap={time:0,x:0,y:0};
   canvas.parentElement.addEventListener('pointerup',function(e){
@@ -5081,8 +5123,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // ahead and valued on the total they cost, so a counter at its handoff floor is never bought over and over for nothing.
   function recommendation(){adviceLive=true;try{return bestBuy()}finally{adviceLive=false}}
   function bestBuy(){
-    var base=incomeRate(),reach=Math.max(0,state.money)+base*300,best=null,bestReach=null,LOOKAHEAD=6;
-    function consider(r){r.value=r.gain/r.spend;if(!best||r.value>best.value)best=r;if(r.price<=reach&&(!bestReach||r.value>bestReach.value))bestReach=r}
+    var base=incomeRate(),reach=Math.max(0,state.money)+base*300,best=null,bestReach=null,LOOKAHEAD=6;ghostGains={};
+    function consider(r){r.value=r.gain/r.spend;var gk=ghostKind(r);if(gk){r.value*=GHOST_PULL;ghostGains[gk]=r.gain}if(!best||r.value>best.value)best=r;if(r.price<=reach&&(!bestReach||r.value>bestReach.value))bestReach=r}
     function tryLevels(get,set,limit){var start=get();var found=economy.stepsToGain(function(k){set(start+k);var gain=incomeRate()-base;set(start);return gain},limit,base*1e-4);return found}
     // Each tier level (10, 20, 30, 50, 75, 100) doubles a station's output, and lifting both counters to a tier doubles every
     // basket; those jumps sit further off than the six-level look, so the next tier is priced as one bundle too.
@@ -5220,7 +5262,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function onlineIncome(){return state.lines[4]>0&&onlineOpen()?windowIncome(windowLevel(state.pickupWindow)):0}
   function openFork(index){showTray('boosts');if(shopBrowser&&shopBrowser.show)shopBrowser.show(shopBrowser.categoryOf('componentBuy'+index));renderUI();var card=$('componentBuy'+index).parentElement;if(card.scrollIntoView)card.scrollIntoView({block:'nearest'})}
   // A suggestion only points: a tap opens where the pick lives (its station, or its card in the Shop) and the player buys it there.
-  function actOnRecommendation(){var r=recommendation();if(!r)return;if(r.kind==='station'||r.kind==='staff')return selectMachine(r.index);if(r.kind==='strain'){showTray('flowers');showMenuView('strains');flowerFocus=r.index;renderFlowers();return}if(r.kind==='counter'||r.kind==='kiosk')return selectMachine(4);if(r.kind==='window'){pickedTag='window';buyBoxFor=-1;renderUI();return}if(r.kind==='drone'){pickedTag='drone';buyBoxFor=-1;renderUI();return}if(r.kind==='lounge'||r.kind==='host')return selectLounge();if(r.kind==='security')return selectSecurity();if(r.kind==='queue'){showTray('boosts');if(shopBrowser&&shopBrowser.show&&shopBrowser.categoryOf)shopBrowser.show(shopBrowser.categoryOf('upgradeQueue'));renderUI();var q=$('upgradeQueue');if(q&&q.scrollIntoView)q.scrollIntoView({block:'nearest'});return}if(r.kind==='cross'){showTray('flowers');showMenuView('breed');return}if(r.kind==='atm'){mapPicked=false;pickedTag='atm';buyBoxFor=-1;renderUI();return}if(r.kind==='branch'||r.kind==='branchLevel'||r.kind==='branchProject'){showTray('empire');empireShell.openStore(r.store);return}if(r.kind==='hq'||r.kind==='city'){mapPicked=false;pickedTag=r.kind==='hq'?'hq':r.id;buyBoxFor=-1;renderUI();return}openFork(r.index)}
+  function actOnRecommendation(){var r=recommendation();if(!r)return;if(r.kind==='station'||r.kind==='staff')return selectMachine(r.index);if(r.kind==='strain'){showTray('flowers');showMenuView('strains');flowerFocus=r.index;renderFlowers();return}if(r.kind==='counter'||r.kind==='kiosk'||r.kind==='window'||r.kind==='drone')return pickGhost(r.kind);if(r.kind==='lounge'||r.kind==='host')return selectLounge();if(r.kind==='security')return selectSecurity();if(r.kind==='queue'){showTray('boosts');if(shopBrowser&&shopBrowser.show&&shopBrowser.categoryOf)shopBrowser.show(shopBrowser.categoryOf('upgradeQueue'));renderUI();var q=$('upgradeQueue');if(q&&q.scrollIntoView)q.scrollIntoView({block:'nearest'});return}if(r.kind==='cross'){showTray('flowers');showMenuView('breed');return}if(r.kind==='atm')return pickGhost('atm');if(r.kind==='branch'||r.kind==='branchLevel'||r.kind==='branchProject'){showTray('empire');empireShell.openStore(r.store);return}if(r.kind==='hq'||r.kind==='city'){mapPicked=false;pickedTag=r.kind==='hq'?'hq':r.id;buyBoxFor=-1;renderUI();return}openFork(r.index)}
   $('flowAction').onclick=function(){if(state.gameSpeed===0)return setGameSpeed(1);if(!state.shopOpen){if(!state.doorBuilt)return buildStation('door');var next=state.lines.indexOf(0);return next<0?openShop():buildStation(next)}actOnRecommendation()};
   LINES.forEach(function(_,i){$('staffMax'+i).onclick=function(){trainStaffMax(i)}});
   $('trainIdChecker').onclick=function(){if(!state.doorBuilt)return buildStation('door');trainIdChecker(1)};
@@ -5288,7 +5330,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // Arrow keys still scroll a panel that has focus; WASD pans from anywhere outside a field.
     if(PAN_KEYS[e.code]&&!(e.code.indexOf('Arrow')===0&&t&&t.closest('.sheet'))){e.preventDefault();if(!heldPanKeys[e.code]){heldPanKeys[e.code]=true;mapHintActivity()}return}
     if(e.key===' '){e.preventDefault();setGameSpeed(state.gameSpeed===0?1:0)}
-    else if(e.key==='1'||e.key==='2'||e.key==='4')setGameSpeed(Number(e.key));
+    else if(e.key==='1'||e.key==='2')setGameSpeed(Number(e.key));
     else if(e.key==='Escape'&&panelOpen)collapsePanel();
   });
   document.addEventListener('keyup',function(e){if(heldPanKeys[e.code])delete heldPanKeys[e.code]});

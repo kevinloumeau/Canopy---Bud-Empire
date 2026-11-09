@@ -72,6 +72,7 @@
   <link rel="stylesheet" href="/src/loading-screen.css" />
   <link rel="stylesheet" href="/src/top-lane.css" />
   <link rel="stylesheet" href="/src/station-badges.css" />
+  <link rel="stylesheet" href="/src/ghost-push.css" />
   <link rel="stylesheet" href="/src/upgrade-fx.css" />
   <link rel="stylesheet" href="/src/station-fit.css" />
   <link rel="stylesheet" href="/src/type-figures.css" />
@@ -147,9 +148,9 @@
       <div class="stat output"><small>CAPACITY</small><strong id="rate">$0/s</strong></div>
 <div class="factory-info"><div id="customerStatus" class="customer-info"></div>    <div class="speed-controls" role="group" aria-label="Game speed" title="Controls production, customers, and animations. Offline earnings stay at normal speed; pause stops them.">
       <span class="speed-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18a9 9 0 1 1 16 0"/><path d="m12 13 4-5M5 13h1m2-6 1 1m3-4v1m6 8h1"/><circle cx="12" cy="14" r="1.5"/></svg></span>
-      <button type="button" data-speed="1" aria-label="Normal speed. Press again to pause" title="Normal speed · press again to pause" aria-pressed="true"><svg viewBox="0 0 18 16" fill="currentColor" aria-hidden="true"><path d="M5.5 3.5v9l7-4.5z"/></svg></button>
+      <button type="button" data-speed="0" aria-label="Pause" title="Pause" aria-pressed="false"><svg viewBox="0 0 18 16" fill="currentColor" aria-hidden="true"><path d="M5 3.5h3v9H5zM10 3.5h3v9h-3z"/></svg></button>
+      <button type="button" data-speed="1" aria-label="Normal speed" title="Normal speed" aria-pressed="true"><svg viewBox="0 0 18 16" fill="currentColor" aria-hidden="true"><path d="M5.5 3.5v9l7-4.5z"/></svg></button>
       <button type="button" data-speed="2" aria-label="Double speed" title="Double speed" aria-pressed="false"><svg viewBox="0 0 18 16" fill="currentColor" aria-hidden="true"><path d="M3.2 3.5v9l7-4.5z"/><path d="M7.7 3.5v9l7-4.5z"/></svg></button>
-      <button type="button" data-speed="4" aria-label="Quadruple speed" title="Quadruple speed" aria-pressed="false"><svg viewBox="0 0 18 16" fill="currentColor" aria-hidden="true"><path d="M0.5 3.5v9l7-4.5z"/><path d="M4.5 3.5v9l7-4.5z"/><path d="M8.5 3.5v9l7-4.5z"/></svg></button>
     </div></div>
     </header>
     <!-- One lane under the top bar: status chips on one row (shop activity, events, boosts), notes hang under it. -->

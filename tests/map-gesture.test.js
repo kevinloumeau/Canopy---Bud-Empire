@@ -1,7 +1,7 @@
 // Map drag physics (map-gesture.js): rubber band past the edge, fling speed, glide and spring back.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { rubberBand, addSample, releaseVelocity, coastAxis, STILL_MS } from '../src/map-gesture.js';
+import { rubberBand, addSample, releaseVelocity, coastAxis, slideAlong, STILL_MS } from '../src/map-gesture.js';
 
 test('rubber band follows the finger at about half speed and never passes the view size', () => {
   assert.equal(rubberBand(0, 400), 0);
@@ -52,4 +52,41 @@ test('a view past the edge springs back without wobbling past it', () => {
 test('long frames do not blow the spring up', () => {
   const { pos } = coastAxis(100, 0, 100, 0.05);
   assert.ok(pos >= 0 && pos < 100);
+});
+
+// A model of the branch street: the view's ground point may run along x but stays within a narrow band of z, seen
+// through the game's camera (turned by ANGLE, floor squashed by SQUASH, U px per map unit).
+const ANGLE = 0.57, SQUASH = 0.5, U = 10, C = Math.cos(ANGLE), S = Math.sin(ANGLE);
+const toGround = (px, py) => { const rx = -px / U, rz = -py / (U * SQUASH); return { x: rx * C + rz * S, z: rz * C - rx * S }; };
+const toPan = (x, z) => ({ x: -(x * C - z * S) * U, y: -(x * S + z * C) * U * SQUASH });
+const street = (east = 200) => (px, py) => { const g = toGround(px, py); return toPan(Math.max(-20, Math.min(east, g.x)), Math.max(-1, Math.min(1, g.z))); };
+
+test('a sideways push against the street edge slides down the street instead of stretching', () => {
+  const clamp = street(), start = toPan(50, 0);
+  // A 160 px drag to the left (the view travels right, east along the street).
+  const pushed = { x: start.x - 160, y: start.y };
+  const r = slideAlong(pushed.x, pushed.y, clamp, ANGLE, SQUASH);
+  assert.equal(r.slid, true);
+  // Where it lands is on the street: the clamp leaves it alone, so nothing springs back on release.
+  const rest = clamp(r.x, r.y);
+  assert.ok(Math.hypot(rest.x - r.x, rest.y - r.y) < 0.01, 'the slid view sits inside the clamp');
+  // It travels about as far across the screen as the finger did (it went about two thirds before, then sprang back).
+  assert.ok(start.x - r.x > 140, `travelled ${start.x - r.x} px of 160`);
+  assert.ok(toGround(r.x, r.y).x > 50 + 10, 'the view moved east along the street');
+});
+
+test('a push into a true edge keeps its stretch', () => {
+  // At the east end of the street a push further east cannot slide anywhere.
+  const clamp = street(60), end = toPan(60, 0);
+  const r = slideAlong(end.x - 160, end.y, clamp, ANGLE, SQUASH);
+  assert.equal(r.slid, false);
+  assert.equal(r.x, end.x - 160);
+  // A screen-square box (the flagship's own limits) is not the street: no slide.
+  const box = (px, py) => ({ x: Math.max(-100, Math.min(100, px)), y: Math.max(-50, Math.min(50, py)) });
+  assert.equal(slideAlong(0, -120, box, ANGLE, SQUASH).slid, false);
+  assert.equal(slideAlong(-180, 0, box, ANGLE, SQUASH).slid, false);
+  // Inside the clamp nothing changes.
+  const inside = slideAlong(start0().x, start0().y, street(), ANGLE, SQUASH);
+  assert.equal(inside.slid, false);
+  function start0() { return toPan(10, 0.5); }
 });

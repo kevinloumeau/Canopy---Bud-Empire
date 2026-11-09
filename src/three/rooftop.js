@@ -3,7 +3,9 @@
 // The roof grows with the lounge's tiers: Speakeasy is the pergola, its sofas and the fire table; Dab bar adds the
 // bar; Vinyl nights the DJ booth; Terrace the parasol tables along the front; Private booths drapes the pergola;
 // Tasting bar sets jar flights on the bar; Chef's table lays a long table by the front rail; Members' club adds the
-// brass and velvet. Before the lounge is bought the roof
+// brass and velvet; Fire terrace stands tall patio heaters round the deck; Marquee nights puts a bulb-lit CANOPY
+// marquee on the back rail; Searchlight gala sweeps two beams over the roof from the front corners; Penthouse roofs
+// the bar in brass-framed glass hung with globe lights. Before the lounge is bought the roof
 // is a taped-off slab and the shaft a bare steel frame.
 // Every position comes from layout.rooftop (ROOFTOP in main.js), which also places the guests' standing spots.
 import * as THREE from 'three';
@@ -19,9 +21,9 @@ export function buildRooftop(world, layout, { box, span, material }) {
   const roof = new THREE.Group();
   world.add(roof);
   const { x0, x1, z0, z1, y } = r, lift = r.lift;
-  const tiers = Array.from({ length: 9 }, () => new THREE.Group());
+  const tiers = Array.from({ length: 13 }, () => new THREE.Group());
   tiers.forEach(g => roof.add(g));
-  const [site, t1, t2, t3, t4, t5, t6, t7, t8] = tiers, levels = tiers.slice(1);
+  const [site, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12] = tiers, levels = tiers.slice(1);
   // The code-built furniture each Blender model replaces, hidden once its model loads (loadModels, below).
   const [k1, k2, k3, k4, k5, k6, k7, k8] = levels.map(t => { const k = new THREE.Group(); t.add(k); return k; });
   // Everything a bought lounge has, whatever its tier: deck boards, glass balustrade, elevator glazing and cab.
@@ -411,6 +413,78 @@ export function buildRooftop(world, layout, { box, span, material }) {
     box(k8, lx, y + 1.69, lz, .3, .05, .3, BRASS, { cast: false });
   });
 
+  // The four late tiers stand at the deck's edges and overhead, clear of the guests' spots and the walk in.
+  // Fire terrace: tall brass patio heaters, each a pole on a round foot under a reflector hood, the burner glowing.
+  const heaterFlame = glow('#ffb36b', '#ff7a2e'); lights.push([heaterFlame, .5, 1.6]);
+  [[x0 + .5, z1 - .5], [x0 + 7.6, z0 + .9], [x1 - .45, z1 - 2.95]].forEach(([hx, hz]) => {
+    const foot = new THREE.Mesh(new THREE.CylinderGeometry(.2, .24, .08, 14), material(BRASS)); foot.position.set(hx, y + .04, hz); t9.add(foot);
+    box(t9, hx, y + .08, hz, .06, 1.75, .06, BRASS);
+    const burner = new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, .3, 12).translate(0, .15, 0), heaterFlame); burner.position.set(hx, y + 1.83, hz); t9.add(burner);
+    const hood = new THREE.Mesh(new THREE.ConeGeometry(.42, .2, 16, 1, true).translate(0, -.1, 0), new THREE.MeshLambertMaterial({ color: BRASS, side: THREE.DoubleSide }));
+    hood.position.set(hx, y + 2.33, hz); hood.castShadow = true; t9.add(hood);
+    box(t9, hx, y + 2.33, hz, .1, .07, .1, BRASS, { cast: false });
+  });
+  // Marquee nights: a theatre marquee standing on the pergola's back beam, CANOPY in cream on forest green, ringed
+  // with bulbs that light up after dark.
+  const marquee = { x0: p.x0 + 1, x1: p.x0 + 3.6, z: p.z0, y0: y + p.h + .2, y1: y + p.h + .95 };
+  const marqueeCanvas = document.createElement('canvas'); marqueeCanvas.width = 512; marqueeCanvas.height = 160;
+  const marqueeTexture = new THREE.CanvasTexture(marqueeCanvas); marqueeTexture.colorSpace = THREE.SRGBColorSpace; marqueeTexture.anisotropy = 4;
+  function paintMarquee() {
+    const c = marqueeCanvas.getContext('2d'), W = marqueeCanvas.width, H = marqueeCanvas.height;
+    c.fillStyle = '#1d4a35'; c.fillRect(0, 0, W, H);
+    c.strokeStyle = BRASS; c.lineWidth = 8; c.strokeRect(14, 14, W - 28, H - 28);
+    c.fillStyle = CREAM; c.font = '700 88px "Bricolage Grotesque", "Helvetica Neue", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    if ('letterSpacing' in c) c.letterSpacing = '12px';
+    c.fillText('CANOPY', W / 2 + 6, H / 2 + 4);
+    marqueeTexture.needsUpdate = true;
+  }
+  paintMarquee();
+  if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', paintMarquee);
+  [marquee.x0 + .3, marquee.x1 - .3].forEach(px => box(t10, px, y + p.h - .05, marquee.z, .08, marquee.y0 - y - p.h + .05, .08, STEEL));
+  span(t10, marquee.x0 - .06, marquee.x1 + .06, marquee.y0 - .06, marquee.y1 + .06, marquee.z - .06, marquee.z + .02, OAK_DARK);
+  span(t10, marquee.x0 - .08, marquee.x1 + .08, marquee.y1 + .06, marquee.y1 + .1, marquee.z - .1, marquee.z + .08, BRASS, { cast: false });
+  {
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(marquee.x1 - marquee.x0, marquee.y1 - marquee.y0), new THREE.MeshLambertMaterial({ map: marqueeTexture, emissive: '#ffffff', emissiveMap: marqueeTexture, emissiveIntensity: 0 }));
+    face.position.set((marquee.x0 + marquee.x1) / 2, (marquee.y0 + marquee.y1) / 2, marquee.z + .025); t10.add(face); lights.push([face.material, .05, .55]);
+    const n = 11;
+    for (let k = 0; k <= n; k++) { const bx = marquee.x0 + k * (marquee.x1 - marquee.x0) / n; bulbs.push([t10, bx, marquee.y1 + .14, marquee.z + .04]); bulbs.push([t10, bx, marquee.y0 - .1, marquee.z + .06]); }
+  }
+  // Searchlight gala: a searchlight on a brass drum at each back corner, so the beams rise behind the deck rather than
+  // across it; each is a soft cone fading to nothing at its tip, faint by day and bright at night.
+  const beamCanvas = document.createElement('canvas'); beamCanvas.width = 4; beamCanvas.height = 128;
+  {
+    const c = beamCanvas.getContext('2d'), fade = c.createLinearGradient(0, 0, 0, 128);
+    fade.addColorStop(0, '#000000'); fade.addColorStop(.55, '#6b6250'); fade.addColorStop(1, '#fff3d0');
+    c.fillStyle = fade; c.fillRect(0, 0, 4, 128);
+  }
+  const beamTexture = new THREE.CanvasTexture(beamCanvas); beamTexture.colorSpace = THREE.SRGBColorSpace;
+  const beamMat = new THREE.MeshBasicMaterial({ map: beamTexture, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+  const beams = [];
+  [[x0 + .45, z0 + .45, 1], [x1 - .45, z0 + .45, -1]].forEach(([sx, sz, dir], k) => {
+    const drum = new THREE.Mesh(new THREE.CylinderGeometry(.24, .28, .34, 14), material(BRASS)); drum.position.set(sx, y + .17, sz); t11.add(drum);
+    const pivot = new THREE.Group(); pivot.position.set(sx, y + .5, sz); t11.add(pivot);
+    const lamp = new THREE.Mesh(new THREE.CylinderGeometry(.22, .17, .42, 14), material('#2b2f2a')); pivot.add(lamp);
+    const lens = new THREE.Mesh(new THREE.CircleGeometry(.2, 14).rotateX(-Math.PI / 2), glow('#fff6dc', '#ffe9b0')); lens.position.y = .215; pivot.add(lens); lights.push([lens.material, .4, 1.4]);
+    const beam = new THREE.Mesh(new THREE.CylinderGeometry(.9, .16, 9, 16, 1, true).translate(0, 4.7, 0), beamMat);
+    beam.userData.noPicture = true; beam.castShadow = false; pivot.add(beam);
+    beams.push([pivot, dir, k * 2.1]);
+  });
+  // Penthouse: the bar under a glass roof on slim brass posts, three globe lights hanging from its beams.
+  const pent = { x0: b.x0 - .2, x1: b.x1 + .3, z0: z0 + .15, z1: b.z + 1.05, h: 2.95 };
+  [[pent.x0, pent.z0], [pent.x1, pent.z0], [pent.x0, pent.z1], [pent.x1, pent.z1]].forEach(([px, pz]) => box(t12, px, y, pz, .08, pent.h, .08, BRASS));
+  span(t12, pent.x0 - .05, pent.x1 + .05, y + pent.h, y + pent.h + .08, pent.z1 - .05, pent.z1 + .05, BRASS);
+  span(t12, pent.x0 - .05, pent.x1 + .05, y + pent.h, y + pent.h + .08, pent.z0 - .05, pent.z0 + .05, BRASS);
+  span(t12, pent.x0 - .05, pent.x0 + .05, y + pent.h, y + pent.h + .08, pent.z0, pent.z1, BRASS);
+  span(t12, pent.x1 - .05, pent.x1 + .05, y + pent.h, y + pent.h + .08, pent.z0, pent.z1, BRASS);
+  for (let k = 1; k < 4; k++) { const mx = pent.x0 + k * (pent.x1 - pent.x0) / 4; span(t12, mx - .03, mx + .03, y + pent.h + .02, y + pent.h + .08, pent.z0, pent.z1, BRASS, { cast: false }); }
+  glassy(span(t12, pent.x0, pent.x1, y + pent.h + .08, y + pent.h + .1, pent.z0, pent.z1, '#cfe6df'));
+  const globeMat = glow('#fff4dc', '#ffd38a'); lights.push([globeMat, .3, 1.5]);
+  for (let k = 0; k < 3; k++) {
+    const gx = pent.x0 + (k + 1) * (pent.x1 - pent.x0) / 4, gz = (pent.z0 + pent.z1) / 2 + .35;
+    box(t12, gx, y + pent.h - .55, gz, .02, .55, .02, BRASS, { cast: false });
+    const globe = new THREE.Mesh(new THREE.SphereGeometry(.15, 14, 10), globeMat); globe.position.set(gx, y + pent.h - .66, gz); t12.add(globe);
+  }
+
   // The bulbs, one instanced mesh per tier so each appears with its tier.
   const bulbGeometry = new THREE.SphereGeometry(.06, 8, 6);
   const bulbMat = glow('#fff1cf', '#ffcf7a'); lights.push([bulbMat, .2, 1.6]);
@@ -602,7 +676,7 @@ export function buildRooftop(world, layout, { box, span, material }) {
     const drop = [], bounds = new THREE.Box3();
     copy.traverse(o => {
       if (o === copy) return;
-      if (!o.visible || o.isSprite) { drop.push(o); return; }
+      if (!o.visible || o.isSprite || o.userData.noPicture) { drop.push(o); return; }
       if (!o.isMesh || o.isInstancedMesh) return;
       if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
       bounds.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);
@@ -657,6 +731,11 @@ export function buildRooftop(world, layout, { box, span, material }) {
       });
       for (let i = used; i < puffs.length; i++) puffs[i].visible = false;
       roofLight.intensity = tier ? night * 6 : 0;
+      // The gala's searchlights sweep slowly out of step, faint against the day sky and bright after dark.
+      if (tier >= 11) {
+        beamMat.opacity = .12 + night * .5;
+        beams.forEach(([pivot, dir, phase]) => { const t = now / 2600 + phase; pivot.rotation.z = dir * (.22 + Math.sin(t) * .18); pivot.rotation.x = -.18 + Math.cos(t * .8) * .14; });
+      }
     }
   };
 }

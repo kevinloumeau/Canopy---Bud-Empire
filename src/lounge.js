@@ -1,8 +1,12 @@
 // The smoking lounge: a speakeasy behind the back-wall shelving, entered through a curtain at the left end and left by
 // a back door on to the exit lane. Guests who go in never touch the counters: they pay a cover at the curtain, buy the
 // basket they would have bought downstairs at the lounge premium, and free a seat when they leave. Each tier buys seats
-// and adds 15% to the premium, and from the third tier on a bigger share of the door heads straight in. Eight tiers
-// run from a quarter-million speakeasy to a half-billion members' club.
+// and adds 15% to the premium, and from the third tier on a bigger share of the door heads straight in. Twelve tiers
+// run from a quarter-million speakeasy to an eighty-billion penthouse. The first eight land in the first hour or two;
+// the last four carry the roof through the late game (a 6-hour sim buys them between about 1.5 and 4 hours). There
+// the seats, not the door, cap the lounge, so each late tier turns its seats over about 10% faster and adds 15% to
+// the premium: roughly a fifth more lounge income for three and a half times the price, so the lounge keeps adding
+// a share to the shop and never outgrows it (an earlier try at 40% more seats a tier tripled late-game income).
 //
 // The lounge used to sell one jar a guest, so every guest it took from the counters cost the shop a whole basket
 // (a sim in 2026-11: closing the lounge raised shop income 80%). A guest now always pays more upstairs than down.
@@ -22,8 +26,18 @@ export const LOUNGE_TIERS=[
   {name:'Chef’s table',cost:170000000,seats:38,share:2,cover:1800,spend:12,session:60,
    summary:'Thirty-eight seats. Guests pay 105% over a basket.'},
   {name:'Members’ club',cost:500000000,seats:50,share:2,cover:2800,spend:16,session:67,
-   summary:'Fifty seats, more than double a basket, and every VIP goes up.'}
+   summary:'Fifty seats, more than double a basket, and every VIP goes up.'},
+  {name:'Fire terrace',cost:2000000000,seats:58,share:2,cover:4000,spend:20,session:70,
+   summary:'Fifty-eight seats round tall brass heaters. Guests pay 135% over a basket.'},
+  {name:'Marquee nights',cost:7000000000,seats:66,share:2,cover:5600,spend:25,session:73,
+   summary:'A bulb-lit marquee and sixty-six seats, at +150%.'},
+  {name:'Searchlight gala',cost:25000000000,seats:75,share:2,cover:7800,spend:31,session:76,
+   summary:'Searchlights over the roof, seventy-five seats, +165% a basket.'},
+  {name:'Penthouse',cost:80000000000,seats:85,share:2,cover:11000,spend:38,session:79,
+   summary:'A glass roof over the bar, eighty-five seats, and guests pay 180% over a basket.'}
 ];
+// Members' club, the tier from which every VIP heads for the curtain.
+export const LOUNGE_MEMBERS=8;
 export const LOUNGE_MAX=LOUNGE_TIERS.length;
 
 export function migrateLounge(value){
@@ -55,12 +69,12 @@ export function buyLoungeTier(state){
   state.money-=cost;state.lounge=level+1;return true;
 }
 // Which arrivals head for the curtain: one in `share` by sequence. VIPs are twice as likely — one in half the share —
-// and every VIP goes in once the members' room opens.
+// and every VIP goes in once the members' club opens.
 export function loungeShare(level,kind){
   const tier=loungeTier(level);
   if(!tier)return 0;
   if(kind!=='vip')return tier.share;
-  return migrateLounge(level)>=LOUNGE_MAX?1:Math.max(1,Math.ceil(tier.share/2));
+  return migrateLounge(level)>=LOUNGE_MEMBERS?1:Math.max(1,Math.ceil(tier.share/2));
 }
 export function wantsLounge(level,sequence,kind){
   const share=loungeShare(level,kind);
@@ -73,7 +87,8 @@ export function loungeAdmission(level,seated,spareJars){
 }
 // What a lounge guest pays for each bag over a walk-in: 15% a tier, raised by the host's training (up to double) and the
 // second lift (a quarter). Sessions run longer at the bigger tiers, so the seats turn over from one guest every 20
-// seconds (Speakeasy) to one every 4 (Members' club): the lounge adds a share to the shop, it never outsells it.
+// seconds (Speakeasy) to one every 4 (Members' club) and one every 3 (Penthouse): the lounge adds a share to the
+// shop, it never outsells it.
 export const LOUNGE_PREMIUM=.15,LOUNGE_HOST_STEP=.1;
 export function loungeBoost(host=0,lift=false){return loungeHostSpeed(host)*(lift?LOUNGE_LIFT_SPEED:1);}
 export function loungeMarkup(level,host=0,lift=false){return loungeTier(level)?1+LOUNGE_PREMIUM*migrateLounge(level)*loungeBoost(host,lift):1;}

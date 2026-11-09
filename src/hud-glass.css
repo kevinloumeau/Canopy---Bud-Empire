@@ -16,7 +16,7 @@
 .hud .speed-controls{padding:3px;gap:2px;border:0;border-radius:14px;background:var(--ui-well);box-shadow:none}
 .hud .speed-controls button,.hud .speed-controls #lightToggle,.hud .speed-controls #settingsOpen{border:0;border-radius:11px;background:none;color:var(--ui-soft);box-shadow:none}
 .hud .speed-controls button[aria-pressed=true]{background:var(--ui-ink);color:var(--ui-on-ink);box-shadow:none}
-.hud .speed-controls[data-paused=true] [data-speed="1"][aria-pressed=true]{background:var(--ui-brass-wash);color:var(--ui-brass);box-shadow:inset 0 0 0 1px var(--ui-brass)}
+.hud .speed-controls[data-paused=true] [data-speed="0"][aria-pressed=true]{background:var(--ui-brass-wash);color:var(--ui-brass);box-shadow:inset 0 0 0 1px var(--ui-brass)}
 .hud .speed-controls button:focus-visible{outline:2px solid var(--ui-brass);outline-offset:2px}
 
 /* Goals: a quiet icon button that turns brass once a goal can be claimed. */

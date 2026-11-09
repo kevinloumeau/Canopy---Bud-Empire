@@ -10,6 +10,14 @@ test('the tiers get dearer and bigger, and each buys more seats and a higher tak
     assert.ok(b.seats>a.seats&&b.cover>a.cover&&b.spend>a.spend&&b.share<=a.share);
   }
   assert.ok(LOUNGE_TIERS[0].cost>=200000,'the first tier is a late-game buy');
+  assert.ok(LOUNGE_MAX>=10,'the lounge has at least ten levels');
+});
+test('the late tiers add a share, not a multiple: about 10% faster turnover each, for three to four times the price',()=>{
+  for(let i=8;i<LOUNGE_TIERS.length;i++){
+    const a=LOUNGE_TIERS[i-1],b=LOUNGE_TIERS[i],turnover=t=>t.seats/t.session,step=turnover(b)/turnover(a);
+    assert.ok(step>1.05&&step<1.15,`${b.name} turns its seats over ${step.toFixed(2)}x faster than ${a.name}`);
+    assert.ok(b.cost/a.cost>=3&&b.cost/a.cost<=4,`${b.name} costs ${(b.cost/a.cost).toFixed(1)}x ${a.name}`);
+  }
 });
 test('old saves have no lounge and malformed levels are clamped',()=>{
   for(const value of [undefined,null,NaN,Infinity,'2',{},-3])assert.equal(migrateLounge(value),0);
@@ -33,6 +41,7 @@ test('one guest in `share` heads for the curtain, nobody does while it is shut, 
   assert.equal(loungeShare(1,'vip'),2);assert.equal([...Array(40).keys()].filter(n=>wantsLounge(1,n,'vip')).length,20);
   assert.equal(loungeShare(3,'vip'),2);
   assert.equal(wantsLounge(LOUNGE_MAX,0,'vip'),true);assert.equal(wantsLounge(LOUNGE_MAX,7,'vip'),true);
+  assert.equal(loungeShare(8,'vip'),1,'every VIP goes up from the members’ club on');assert.equal(loungeShare(7,'vip'),1);
   assert.equal([...Array(30).keys()].filter(n=>wantsLounge(LOUNGE_MAX,n,'regular')).length,15);
 });
 test('admission needs an open lounge, a free seat and a spare jar',()=>{
@@ -84,10 +93,10 @@ test('the second elevator shaft is bought once, only with the lounge open, and l
   assert.equal(loungeTake(1,100,0,true).cover,Math.round(LOUNGE_TIERS[0].cover*3*LOUNGE_LIFT_SPEED));
   assert.ok(loungeCurrentRate(1,2,100,0,true)>loungeCurrentRate(1,2,100,0));
 });
-test('guests stay three times the base session, and the seats turn over between one guest every 20 s and every 4 s',()=>{
+test('guests stay three times the base session, and the seats turn over between one guest every 20 s and every 3 s',()=>{
   let last=0;
   for(let level=1;level<=LOUNGE_MAX;level++){
     assert.equal(loungeSessionSeconds(level),LOUNGE_TIERS[level-1].session*3);
-    const perSecond=loungeSeats(level)/loungeSessionSeconds(level);assert.ok(perSecond>last&&perSecond>=.045&&perSecond<=.26,LOUNGE_TIERS[level-1].name);last=perSecond;
+    const perSecond=loungeSeats(level)/loungeSessionSeconds(level);assert.ok(perSecond>last&&perSecond>=.045&&perSecond<=(level>8?.37:.26),LOUNGE_TIERS[level-1].name);last=perSecond;
   }
 });
