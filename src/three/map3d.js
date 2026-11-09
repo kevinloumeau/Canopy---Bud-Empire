@@ -327,6 +327,21 @@ export function createMap3D(canvas, layout) {
     });
     for (; n < upgradeRings.length; n++) { const u = upgradeRings[n]; u.pool.visible = u.ring.visible = u.echo.visible = false; }
   }
+  // The manager (frame.manager, the player): a lime ring and a soft pool of light on the floor under them, so "you" reads
+  // at a glance among the crew. It breathes slowly while they stand and work, and holds steady while they walk. Never
+  // brass: brass is the next buy's.
+  const youMarker = (() => {
+    const glow = (geometry, extra) => { const m = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial(Object.assign({ color: '#a8dc52', transparent: true, depthWrite: false }, extra))); m.renderOrder = 2; m.visible = false; world.add(m); return m; };
+    return { pool: glow(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), { map: glowTexture, color: '#c6f07a' }), ring: glow(new THREE.RingGeometry(.84, 1, 56).rotateX(-Math.PI / 2)) };
+  })();
+  function updateYouMarker(m, time) {
+    const on = !!m;
+    youMarker.pool.visible = youMarker.ring.visible = on;
+    if (!on) return;
+    const breathe = m.moving ? 0 : (Math.sin((time || 0) / 1000 * 2.4) + 1) / 2, r = .95 + breathe * .08;
+    youMarker.pool.position.set(m.x, m.y + .03, m.z); youMarker.pool.scale.set(3, 1, 3); youMarker.pool.material.opacity = (m.night ? .5 : .38) + breathe * .12;
+    youMarker.ring.position.set(m.x, m.y + .05, m.z); youMarker.ring.scale.set(r, 1, r); youMarker.ring.material.opacity = .9;
+  }
   // A big purchase's reveal (frame.revealBeams, from reveal-fx.js): a column of warm light rises out of the spot and
   // fades while brass sparkles burst up and drift out. Pooled (three at most), two draws each while one plays.
   const beamTexture = (() => {
@@ -1626,6 +1641,7 @@ export function createMap3D(canvas, layout) {
     });
     for (let n = glowing; n < boostGlows.length; n++) boostGlows[n].pool.visible = boostGlows[n].ring.visible = false;
     updateUpgradeRings(frame.upgradeRings);
+    updateYouMarker(frame.manager, frame.time);
     updateRevealBeams(frame.revealBeams, frame.unit || 40);
     updateSparkles(frame.sparkles);
 

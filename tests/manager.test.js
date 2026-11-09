@@ -14,4 +14,4 @@ test('the walker gets there, and hands-on counts only once it stands still at th
   let t=0;while(w.moving&&t<120){stepWalker(w,.1);t+=.1;}
   assert.ok(!w.moving&&t<60,'reaches the top floor in under a minute: '+t.toFixed(1));assert.equal(w.y,FLOOR_Y[2]);assert.equal(handsOn(w,0),HANDS_ON);
   assert.ok(w.ground>5);assert.equal(sendTo(w,0,spots[0]),false,'already there');});
-test('the saved station survives a bad save',()=>{assert.deepEqual(migrateManager(null),{at:-1});assert.deepEqual(migrateManager({at:3}),{at:3});assert.deepEqual(migrateManager({at:9}),{at:-1});});
+test('the saved station survives a bad save',()=>{assert.deepEqual(migrateManager(null),{at:-1,met:false});assert.deepEqual(migrateManager({at:3,met:true}),{at:3,met:true});assert.deepEqual(migrateManager({at:9,met:'yes'}),{at:-1,met:false});});
