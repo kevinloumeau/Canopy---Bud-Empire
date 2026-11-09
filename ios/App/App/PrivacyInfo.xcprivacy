@@ -2,15 +2,31 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- The shop tracks nobody. There is no account, no advertising identifier and no analytics: the Plausible tag
-	     in index.html is commented out, and the only URL anywhere in the built bundle is the SVG namespace. -->
+	<!-- The shop tracks nobody: no account, no advertising identifier, nothing shared with data brokers. -->
 	<key>NSPrivacyTracking</key>
 	<false/>
 	<key>NSPrivacyTrackingDomains</key>
 	<array/>
-	<!-- Nothing leaves the device, so there is nothing to declare as collected. -->
+	<!-- Anonymous gameplay counts go to TelemetryDeck (src/telemetry-deck.js) once its App ID is set: product
+	     interaction only, keyed to a random install id the SDK hashes, never linked to the player and never used
+	     for tracking. Declared now so the manifest is already right the day analytics switch on, and it matches
+	     the App Store privacy label (Usage Data > Product Interaction, Analytics, not linked, not tracking) and
+	     the public privacy page (public/privacy/index.html). The save, the age answer and purchases stay on device. -->
 	<key>NSPrivacyCollectedDataTypes</key>
-	<array/>
+	<array>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeProductInteraction</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
+			</array>
+		</dict>
+	</array>
 	<key>NSPrivacyAccessedAPITypes</key>
 	<array>
 		<dict>
