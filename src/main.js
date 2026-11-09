@@ -16,7 +16,7 @@ import {AUTO_DRONE_COST,AUTO_DRONE_INTERVAL,BULK_DRONE_COST,payAutoDrone,grantAu
 import {FRANCHISE_TIERS,FRANCHISE_GAIN,franchiseOffer,signFranchise} from './franchise.js';
 import {FORMATS,wantedFormat,formatPremium,stocks,formatCost,BOOST_MAX,boostCost,migrateMenu,unlockFormat,menuFormatFactor,milestone,prestigeOffer,elapsedSteps,OFFLINE_STEP} from './depth.js';
 import {SHOP_EVENTS,eventKind,eventGap,eventReward,eventToast} from './shop-events.js';
-import {PERKS,perkMax,startGrant,migratePerks,perkLevel,perkCost,buyPerk,perkStart,spenderGap,rushLength,trainerGap,keptBranch,FOUNDER_LOOK,FOUNDER_LEVEL} from './perks.js';
+import {PERKS,perkMax,startGrant,migratePerks,perkLevel,perkCost,buyPerk,perkStart,spenderGap,rushLength,trainerGap,keptBranch,FOUNDER_LOOK,FOUNDER_LEVEL,crossSeconds} from './perks.js';
 import {migrateRun,freshRun,tickRun,reopenMoment} from './reopen.js';
 import {makeSound,DUCKING} from './sfx.js';
 import {cueFor,PASSIVE_HAPTIC} from './sound-cues.js';
@@ -32,7 +32,7 @@ import {createTelemetry} from './telemetry.js';
 import {deckProvider} from './telemetry-deck.js';
 import {createReminders,planReminders} from './reminders.js';
 import {migrateAchievements,checkAchievements,achievementBonus} from './achievements.js';
-import {CULTIVARS,PARENT_LEVEL,migrateCrosses,crossBonus,crossCost,cultivarStatus,startCross,tickCross,sortedCultivars} from './breeding.js';
+import {CULTIVARS,PARENT_LEVEL,migrateCrosses,crossBonus,crossCost,cultivarStatus,startCross,tickCross,sortedCultivars,crossSkipCost,finishCross,CROSS_SECONDS} from './breeding.js';
 installQuietDom();
 installNoPageZoom();
 installSheetRoom();
@@ -409,32 +409,69 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       guideButton.onclick=function(){showGuide(guidePop.hidden)};
       document.addEventListener('pointerdown',function(e){if(!guidePop.hidden&&!e.target.closest('.menu-guide-pop,.menu-info'))showGuide(false)},true)}}
   else menuBoard.insertBefore(menuViews,$('strainNav'));
-  var breedPanel=document.createElement('section');breedPanel.className='breed-view';breedPanel.id='breedView';breedPanel.setAttribute('aria-labelledby','breedTitle');breedPanel.hidden=true;
-  breedPanel.innerHTML='<div class="library-head"><h3 id="breedTitle">Cultivar journal</h3><small id="breedSummary"></small></div><ul class="breed-list" id="breedList"></ul>';
+  // Breed view (redesigned 2026-11-09, Kevin: "needs to be thought out more"). Top to bottom it reads as one cross:
+  // the six cultivars as a shelf of split buds (pick one), then the bench with its two parent strains (Kevin's renders,
+  // each in a ring filling to level 5) × each other = the cultivar (a shadow with a "?" until found, filling with colour
+  // while it breeds), one line on what it needs or does, and one brass button for the next step.
+  var breedPanel=document.createElement('section');breedPanel.className='breed-view';breedPanel.id='breedView';breedPanel.setAttribute('aria-label','Breed');breedPanel.hidden=true;
+  var mixArt=function(c){return '<span class="breed-mix"><span class="breed-half">'+icon3d('strain-'+c.parents[0])+'</span><span class="breed-half">'+icon3d('strain-'+c.parents[1])+'</span></span>'};
+  var CHECK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5 10 17.5 19 7"/></svg>',LOCK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0 1 10 0v3M5.5 11h13v10h-13Z"/></svg>';
+  breedPanel.innerHTML='<div class="breed-head"><b id="breedSummary"></b><small id="breedBonus"></small></div>'+
+    '<div class="breed-strip" id="breedStrip" role="tablist" aria-label="Cultivars">'+CULTIVARS.map(function(c){return '<button type="button" role="tab" class="breed-pick" data-cultivar="'+c.id+'" aria-label="'+c.name+'" style="--a:'+STRAINS[c.parents[0]].color+';--b:'+STRAINS[c.parents[1]].color+'"><span class="breed-ring">'+mixArt(c)+'<span class="breed-fill">'+mixArt(c)+'</span></span><i class="breed-badge"></i></button>'}).join('')+'</div>'+
+    '<div class="breed-bench" id="breedBench" role="tabpanel">'+
+      '<div class="breed-cross">'+
+        [0,1].map(function(k){return '<button type="button" class="breed-parent" data-parent="'+k+'"><span class="breed-ring"><span class="breed-art"></span><i class="breed-badge"></i></span><b></b><small></small></button>'}).join('<i class="breed-op" aria-hidden="true">×</i>')+
+        '<i class="breed-op is-equals" aria-hidden="true">=</i>'+
+        '<div class="breed-result"><span class="breed-ring"><span class="breed-art"></span><em class="breed-unknown" aria-hidden="true">?</em></span><b id="breedName"></b><small id="breedGain"></small></div>'+
+      '</div>'+
+      '<p class="breed-note" id="breedNote"></p>'+
+      '<button type="button" class="breed-go" id="breedGo"><span class="buy-label"></span><span class="buy-gain"></span></button>'+
+    '</div>';
   menuBoard.append(breedPanel);
-  var menuView='strains';
+  var menuView='strains',breedFocus=null;
   function showMenuView(view){menuView=view;menuBoard.dataset.menuView=view;breedPanel.hidden=view!=='breed';menuViews.querySelectorAll('button').forEach(function(b){b.setAttribute('aria-selected',String(b.dataset.menuView===view))});renderBreed()}
   menuViews.querySelectorAll('button').forEach(function(b){b.onclick=function(){showMenuView(b.dataset.menuView)}});
-  var breedCards={};CULTIVARS.forEach(function(c){var li=document.createElement('li');li.className='breed-card';li.dataset.cultivar=c.id;
-    li.innerHTML='<div class="breed-copy"><b>'+c.name+'</b><small>'+STRAINS[c.parents[0]].name+' × '+STRAINS[c.parents[1]].name+'</small><em class="breed-status"></em><div class="breed-parents"></div></div><button type="button"></button>';
-    li.querySelector('button').onclick=function(){breedAction(c)};breedCards[c.id]=li});
+  breedPanel.querySelectorAll('.breed-pick').forEach(function(b){b.onclick=function(){breedFocus=b.dataset.cultivar;renderBreed()}});
+  function focusedCultivar(){return CULTIVARS.find(function(c){return c.id===breedFocus})||sortedCultivars(state)[0].c}
+  function showStrain(i){showMenuView('strains');var tab=$('strainTab'+i);if(tab)tab.click()}
+  breedPanel.querySelectorAll('.breed-parent').forEach(function(b){b.onclick=function(){showStrain(focusedCultivar().parents[+b.dataset.parent])}});
+  $('breedGo').onclick=function(){breedAction(focusedCultivar())};
   function openBreedingBench(){var index=COMPONENTS.findIndex(function(c){return c.key==='breedingLevel'});showTray('boosts');if(shopBrowser&&shopBrowser.show)shopBrowser.show(shopBrowser.categoryOf?shopBrowser.categoryOf('componentBuy'+index):2);renderUI();var card=$('componentBuy'+index).parentElement;card.classList.remove('is-recommended');void card.offsetWidth;card.classList.add('is-recommended');if(card.scrollIntoView)card.scrollIntoView({block:'nearest'})}
   function breedAction(c){var s=cultivarStatus(state,c);
     if(s.kind==='bench')return openBreedingBench();
-    if(s.kind==='prepare'){showMenuView('strains');var tab=$('strainTab'+s.missing);if(tab)tab.click();return}
-    if(startCross(state,c.id)){telemetry.send('cross',{id:c.id});save();renderUI();notify('BREEDING '+c.name.toUpperCase()+' · '+duration(state.crosses.active.remaining*1000),'upgrade')}}
+    if(s.kind==='prepare')return showStrain(s.missing);
+    if(s.kind==='growing'){var bred=finishCross(state);if(bred){telemetry.send('cultivar',{id:bred.id,count:state.crosses.done.length,skipped:true});save();renderUI();notify('DISCOVERED '+bred.name.toUpperCase()+' · +2% SALES','upgrade')}return}
+    if(startCross(state,c.id)){breedFocus=c.id;telemetry.send('cross',{id:c.id});save();renderUI();notify('BREEDING '+c.name.toUpperCase()+' · '+buildClock(state.crosses.active.remaining),'upgrade')}}
+  function setText(el,text){if(el.textContent!==text)el.textContent=text}
   function renderBreed(){
-    var x=state.crosses;$('breedSummary').textContent=x.done.length+'/'+CULTIVARS.length+' discovered · +'+Math.round(crossBonus(x)*100)+'% sales bonus';
+    var x=state.crosses;setText($('breedSummary'),x.done.length+' / '+CULTIVARS.length+' found');setText($('breedBonus'),'+'+Math.round(crossBonus(x)*100)+'% every sale');
     if(menuView!=='breed')return;
-    var list=$('breedList');sortedCultivars(state).forEach(function(entry,k){var c=entry.c,s=entry.s,li=breedCards[c.id],button=li.querySelector('button');
-      if(list.children[k]!==li)list.insertBefore(li,list.children[k]||null);li.dataset.state=s.kind;
-      var status=s.kind==='known'?'Discovered · '+c.lore+' · +2% sales bonus earned':s.kind==='growing'?'Breeding in progress · '+duration(s.remaining*1000)+' left':s.kind==='open'?'Ready to breed':s.kind==='bench'?'Find Breeding bench in Shop':'Prepare this pair';
-      var em=li.querySelector('.breed-status');if(em.textContent!==status)em.textContent=status;
-      var parents=s.kind==='prepare'?c.parents.map(function(i,n){var l=s.levels[n];return '<span style="--fill:'+Math.min(100,l/PARENT_LEVEL*100)+'%">'+STRAINS[i].name+' · '+(l<1?'Not unlocked':l>=PARENT_LEVEL?'Ready · Lv '+l:'Lv '+l+' / '+PARENT_LEVEL)+'</span>'}).join(''):'';
-      var pDiv=li.querySelector('.breed-parents');if(pDiv.innerHTML!==parents)pDiv.innerHTML=parents;pDiv.hidden=!parents;
-      var label=s.kind==='known'?'Discovered':s.kind==='growing'?'Breeding':s.kind==='bench'?'Open Shop':s.kind==='prepare'?((state.strains[s.missing]||0)<1?'Unlock ':'Upgrade ')+STRAINS[s.missing].name:s.busy?'Bench busy':'Breed · '+fmt(s.cost);
-      if(button.textContent!==label)button.textContent=label;
-      button.disabled=s.kind==='known'||s.kind==='growing'||(s.kind==='open'&&(s.busy||state.money<s.cost))})}
+    var total=crossSeconds(state.perks,CROSS_SECONDS),c=focusedCultivar(),s=cultivarStatus(state,c);
+    breedPanel.querySelectorAll('.breed-pick').forEach(function(b){var cc=CULTIVARS.find(function(q){return q.id===b.dataset.cultivar}),ss=cultivarStatus(state,cc);
+      b.dataset.state=ss.kind;b.setAttribute('aria-selected',String(cc===c));b.style.setProperty('--p',ss.kind==='known'?1:ss.kind==='growing'?(1-ss.remaining/total).toFixed(3):0);
+      b.title=cc.name+' · '+(ss.kind==='known'?'found':ss.kind==='growing'?'breeding':ss.kind==='open'?'ready to breed':'not ready')});
+    var bench=$('breedBench');bench.dataset.state=s.kind;bench.style.setProperty('--a',STRAINS[c.parents[0]].color);bench.style.setProperty('--b',STRAINS[c.parents[1]].color);
+    if(bench.dataset.cultivar!==c.id){bench.dataset.cultivar=c.id;
+      bench.querySelectorAll('.breed-parent').forEach(function(b,k){var i=c.parents[k];b.querySelector('.breed-art').innerHTML=icon3d('strain-'+i);b.querySelector('b').textContent=STRAINS[i].name;b.style.setProperty('--strain',STRAINS[i].color);b.setAttribute('aria-label','Go to '+STRAINS[i].name)});
+      bench.querySelector('.breed-result .breed-art').innerHTML=mixArt(c)+'<span class="breed-fill">'+mixArt(c)+'</span>';$('breedName').textContent=c.name}
+    bench.querySelectorAll('.breed-parent').forEach(function(b,k){var l=state.strains[c.parents[k]]||0,ready=l>=PARENT_LEVEL||s.kind==='known';
+      b.dataset.ready=String(ready);b.dataset.locked=String(l<1&&!ready);b.style.setProperty('--p',ready?1:Math.min(1,l/PARENT_LEVEL).toFixed(3));
+      setText(b.querySelector('small'),ready?'Lv '+l:l<1?'Locked':'Lv '+l+' / '+PARENT_LEVEL);
+      var badge=b.querySelector('.breed-badge'),icon=ready?CHECK:l<1?LOCK:'';if(badge.innerHTML!==icon)badge.innerHTML=icon;badge.hidden=!icon});
+    bench.style.setProperty('--p',s.kind==='known'?1:s.kind==='growing'?(1-s.remaining/total).toFixed(3):0);
+    setText($('breedGain'),s.kind==='known'?'Found':'+2% sales');
+    var clock=s.kind==='growing'?buildClock(s.remaining):buildClock(total);
+    var busy=x.active&&CULTIVARS.find(function(q){return q.id===x.active.pair});
+    var note=s.kind==='known'?c.lore:s.kind==='growing'?'Found in '+clock+' · adds 2% to every sale for good':s.kind==='bench'?'Crosses need the Breeding bench from Research':s.kind==='prepare'?'Both parents need level '+PARENT_LEVEL+' to cross':s.busy?busy.name+' is on the bench · '+buildClock(x.active.remaining)+' left':clock+' to breed · adds 2% to every sale for good';
+    setText($('breedNote'),tieLast(note));
+    var go=$('breedGo'),label,gain='',enabled=true,bi=componentIndex('breedingLevel');
+    if(s.kind==='known'){label='Discovered';enabled=false}
+    else if(s.kind==='growing'){var skip=crossSkipCost(state);label='Finish now';gain=fmt(skip);enabled=state.money>=skip}
+    else if(s.kind==='bench'){label='Get Breeding bench';gain=bi>=0&&componentUnlocked(bi)?fmt(componentCost(bi)):''}
+    else if(s.kind==='prepare'){var lv=state.strains[s.missing]||0;label=(lv<1?'Unlock ':'Upgrade ')+STRAINS[s.missing].name;gain=lv<1?'':'Lv '+lv+' → '+PARENT_LEVEL}
+    else if(s.busy){label='Bench busy';gain=buildClock(x.active.remaining);enabled=false}
+    else{label='Breed';gain=fmt(s.cost);enabled=state.money>=s.cost}
+    setText(go.querySelector('.buy-label'),label);var g=go.querySelector('.buy-gain');setText(g,gain);g.hidden=!gain;go.disabled=!enabled;go.classList.toggle('is-done',s.kind==='known')}
   showMenuView('strains');
   function renderFlowers(){
     renderBreed();
@@ -5340,7 +5377,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function onlineIncome(){return state.lines[4]>0&&onlineOpen()?windowIncome(windowLevel(state.pickupWindow)):0}
   function openFork(index){showTray('boosts');if(shopBrowser&&shopBrowser.show)shopBrowser.show(shopBrowser.categoryOf('componentBuy'+index));renderUI();var card=$('componentBuy'+index).parentElement;if(card.scrollIntoView)card.scrollIntoView({block:'nearest'})}
   // A suggestion only points: a tap opens where the pick lives (its station, or its card in the Shop) and the player buys it there.
-  function actOnRecommendation(){var r=recommendation();if(!r)return;if(r.kind==='station'||r.kind==='staff')return selectMachine(r.index);if(r.kind==='strain'){showTray('flowers');showMenuView('strains');flowerFocus=r.index;renderFlowers();return}if(r.kind==='counter'||r.kind==='kiosk'||r.kind==='window'||r.kind==='drone')return pickGhost(r.kind);if(r.kind==='lounge'||r.kind==='host')return selectLounge();if(r.kind==='security')return selectSecurity();if(r.kind==='queue'){showTray('boosts');if(shopBrowser&&shopBrowser.show&&shopBrowser.categoryOf)shopBrowser.show(shopBrowser.categoryOf('upgradeQueue'));renderUI();var q=$('upgradeQueue');if(q&&q.scrollIntoView)q.scrollIntoView({block:'nearest'});return}if(r.kind==='cross'){showTray('flowers');showMenuView('breed');return}if(r.kind==='atm')return pickGhost('atm');if(r.kind==='branch'||r.kind==='branchLevel'||r.kind==='branchProject'){showTray('empire');empireShell.openStore(r.store);return}if(r.kind==='hq'||r.kind==='city'){mapPicked=false;pickedTag=r.kind==='hq'?'hq':r.id;buyBoxFor=-1;renderUI();return}openFork(r.index)}
+  function actOnRecommendation(){var r=recommendation();if(!r)return;if(r.kind==='station'||r.kind==='staff')return selectMachine(r.index);if(r.kind==='strain'){showTray('flowers');showMenuView('strains');flowerFocus=r.index;renderFlowers();return}if(r.kind==='counter'||r.kind==='kiosk'||r.kind==='window'||r.kind==='drone')return pickGhost(r.kind);if(r.kind==='lounge'||r.kind==='host')return selectLounge();if(r.kind==='security')return selectSecurity();if(r.kind==='queue'){showTray('boosts');if(shopBrowser&&shopBrowser.show&&shopBrowser.categoryOf)shopBrowser.show(shopBrowser.categoryOf('upgradeQueue'));renderUI();var q=$('upgradeQueue');if(q&&q.scrollIntoView)q.scrollIntoView({block:'nearest'});return}if(r.kind==='cross'){breedFocus=null;showTray('flowers');showMenuView('breed');return}if(r.kind==='atm')return pickGhost('atm');if(r.kind==='branch'||r.kind==='branchLevel'||r.kind==='branchProject'){showTray('empire');empireShell.openStore(r.store);return}if(r.kind==='hq'||r.kind==='city'){mapPicked=false;pickedTag=r.kind==='hq'?'hq':r.id;buyBoxFor=-1;renderUI();return}openFork(r.index)}
   $('flowAction').onclick=function(){if(state.gameSpeed===0)return setGameSpeed(1);if(!state.shopOpen){if(!state.doorBuilt)return buildStation('door');var next=state.lines.indexOf(0);return next<0?openShop():buildStation(next)}actOnRecommendation()};
   LINES.forEach(function(_,i){$('staffMax'+i).onclick=function(){trainStaffMax(i)}});
   $('trainIdChecker').onclick=function(){if(!state.doorBuilt)return buildStation('door');trainIdChecker(1)};
