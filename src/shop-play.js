@@ -191,8 +191,10 @@ export function mountShopPlay({getState,getMoment,getAlerts,getFloor,getFocus,sh
   const advice=recap=>{const state=getState();return shiftAdvice(recap,{counters:state.orderCounters,comfortLevel:state.comfortLevel});};
   const el=(tag,props,...kids)=>{const node=Object.assign(document.createElement(tag),props);node.append(...kids);return node;};
   const figure=(label,value)=>el('div',{},el('dt',{textContent:label}),el('dd',{textContent:value}));
-  // Three answer tiles: the strain's own 3D render with its product on a corner badge, the name, the brass-edged word
-  // that answers the question, and the other half underneath.
+  // Three answer tiles: the 3D render of whatever the guest asked about, the other half on a corner badge, the name,
+  // the brass-edged word that answers the question, and the other half underneath. A mood question leads with the
+  // strain's bud; a product question ("Anything I don't have to smoke?") leads with the jar, pre-rolls or gummies, so
+  // the three tiles look different at a glance (Kevin, 2026-11-09).
   function renderMoment(){
     const moment=getMoment();if(!moment)return;
     const next=JSON.stringify([moment.customerId,moment.choices,moment.variant,moment.portrait]);if(next===momentKey)return;momentKey=next;
@@ -206,7 +208,8 @@ export function mountShopPlay({getState,getMoment,getAlerts,getFloor,getFocus,sh
       const b=el('button',{type:'button',className:'moment-pick'});b.dataset.choice=i;
       if(colors&&colors[option.strain])b.style.setProperty('--strain',colors[option.strain]);
       b.setAttribute('aria-label','Suggest '+name+', '+option.formatName+', '+option.trait);
-      b.innerHTML='<span class="moment-pick-art">'+ART('strain-'+option.strain,'moment-pick-strain')+ART('goods-'+option.format,'moment-pick-goods')+'</span>';
+      const strain=ART('strain-'+option.strain,'moment-pick-badge is-strain'),goods=ART('goods-'+option.format,'moment-pick-badge');
+      b.innerHTML='<span class="moment-pick-art">'+(moment.formatRequest?ART('goods-'+option.format,'moment-pick-hero is-goods')+strain:ART('strain-'+option.strain,'moment-pick-hero')+goods)+'</span>';
       b.append(el('strong',{textContent:name}),el('span',{className:'moment-pick-tag',textContent:label.tag}),el('small',{textContent:label.line}));
       return b;}));
   }

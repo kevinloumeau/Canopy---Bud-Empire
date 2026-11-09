@@ -66,6 +66,7 @@ import {DEALS,FLYER_MIN_LIFT,tokenPrice,dealWindow,windowEnds,migrateDeals,rollD
 import {freshStore,migrateStore,earnFactor,awayFactor,boostLeft,useToken,addBoost,countAd,adsLeft,dayNumber,doubleRoute,boostClock,rewardWay,fillJar,BOOST_SECONDS,AD_BOOST_SECONDS} from './store.js';
 import {mountStore} from './store-ui.js';
 import {mountSpin} from './spin-ui.js';
+import {CAMPAIGNS,freshMarketing,migrateMarketing,lift as marketingLift,runLeft as marketingRunLeft,restLeft as marketingRestLeft,phase as marketingPhase,price as marketingPrice,launch as launchCampaign,clock as marketingClock,MIN_LIFT as MARKETING_MIN_LIFT} from './marketing.js';
 import {freeReady} from './spin.js';
 import {HANDS_ON,workSpots,createWalker,sendTo,sendToSpot,floorSpot,stepWalker,handsOn,migrateManager} from './manager.js';
 import {createPurchases} from './purchases.js';
@@ -89,7 +90,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Contract progression is defined in depth.js, including post-city milestones.
   var $=function(id){return document.getElementById(id)};
   // A new shop starts as seven construction sites: the door and six stations are raised for free during the intro, then the sign flips.
-  function fresh(){return{researchVersion:RESEARCH_VERSION,store:freshStore(),manager:{at:-1,met:false},quotes:{},forks:freshForks(),shopPlay:migrateShopPlay(),money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),pickupWindow:migrateWindow(),atm:migrateAtm(),atmEarned:0,builds:migrateBuilds(),flagship:0,flagshipSeen:false,city:migrateCity(),citySeen:[],productMenu:migrateMenu(),sound:true,music:true,haptics:true,empire:migrateProgression(),popup:migratePopup(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,offlineLevel:0,spenderClock:180,shopEvents:0,rushTime:0,deals:migrateDeals(),crosses:{done:[],active:null},achievements:[],reminders:false,reminderOffered:false,perks:{points:0,levels:{}},run:freshRun(),trainerClock:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],abilities:migrateAbilities(),sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeStaff:0,loungeLift:false,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,guideGrant:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
+  function fresh(){return{researchVersion:RESEARCH_VERSION,marketing:freshMarketing(),store:freshStore(),manager:{at:-1,met:false},quotes:{},forks:freshForks(),shopPlay:migrateShopPlay(),money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),pickupWindow:migrateWindow(),atm:migrateAtm(),atmEarned:0,builds:migrateBuilds(),flagship:0,flagshipSeen:false,city:migrateCity(),citySeen:[],productMenu:migrateMenu(),sound:true,music:true,haptics:true,empire:migrateProgression(),popup:migratePopup(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,offlineLevel:0,spenderClock:180,shopEvents:0,rushTime:0,deals:migrateDeals(),crosses:{done:[],active:null},achievements:[],reminders:false,reminderOffered:false,perks:{points:0,levels:{}},run:freshRun(),trainerClock:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],abilities:migrateAbilities(),sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeStaff:0,loungeLift:false,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,guideGrant:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
   function readSave(){
     for(var key of ['shift-save','shift-save-backup']){
       try{var raw=localStorage.getItem(key);if(!raw)continue;var value=JSON.parse(raw);if(value&&typeof value==='object'&&!Array.isArray(value))return value}catch(e){}
@@ -101,7 +102,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // Saves from before the construction intro have no `shopOpen`; they are open shops with every station standing.
     next.shopOpen=old.shopOpen!==false;next.doorBuilt=next.shopOpen||old.doorBuilt===true;
     ['trafficLevel','pickupLevel','readyLevel','curingLevel','durationLevel','kioskSpeedLevel','onlineBonusLevel','comfortLevel','scannerLevel','webLevel','seedBatchLevel','growBatchLevel','harvestBatchLevel','packSpeedLevel','serviceLevel','signLevel','loyaltyLevel','basketLevel','terpeneLevel','breedingLevel','displayLevel','trendLevel','fleetLevel','cargoLevel','repeatLevel'].forEach(function(key){next[key]=Math.floor(finite(old[key],0,0,key==='pickupLevel'?12:MASTERY_MAX))});
-    next.offlineLevel=Math.floor(finite(old.offlineLevel,0,0,5));next.researchVersion=Math.floor(finite(old.researchVersion,0,0,RESEARCH_VERSION));var researchRefund=mergeResearch(next);next.forks=migrateForks(old.forks,next);next.spenderClock=finite(old.spenderClock,180,0,600);next.shopEvents=Math.floor(finite(old.shopEvents,0,0,1e9));next.rushTime=finite(old.rushTime,0,0,120);next.crosses=migrateCrosses(old.crosses,old.library,old.breed);next.achievements=migrateAchievements(old.achievements);next.reminders=old.reminders===true;next.reminderOffered=old.reminderOffered===true;next.perks=migratePerks(old.perks,next.empire.shares);next.store=migrateStore(old.store);next.manager=migrateManager(old.manager);next.run=migrateRun(old.run);next.trainerClock=finite(old.trainerClock,0,0,240);
+    next.offlineLevel=Math.floor(finite(old.offlineLevel,0,0,5));next.researchVersion=Math.floor(finite(old.researchVersion,0,0,RESEARCH_VERSION));var researchRefund=mergeResearch(next);next.forks=migrateForks(old.forks,next);next.spenderClock=finite(old.spenderClock,180,0,600);next.shopEvents=Math.floor(finite(old.shopEvents,0,0,1e9));next.rushTime=finite(old.rushTime,0,0,120);next.crosses=migrateCrosses(old.crosses,old.library,old.breed);next.achievements=migrateAchievements(old.achievements);next.reminders=old.reminders===true;next.reminderOffered=old.reminderOffered===true;next.perks=migratePerks(old.perks,next.empire.shares);next.store=migrateStore(old.store);next.marketing=migrateMarketing(old.marketing);next.manager=migrateManager(old.manager);next.run=migrateRun(old.run);next.trainerClock=finite(old.trainerClock,0,0,240);
     next.idStaff=Math.floor(finite(old.idStaff,0,0,economy.SECURITY_MAX_LEVEL));if(next.doorBuilt&&next.idStaff<1)next.idStaff=1;next.guideGrant=finite(old.guideGrant,0,0,1e6);
     next.strains=STRAINS.map(function(_,i){return Math.floor(finite(old.strains&&old.strains[i],i===0?1:0,i===0?1:0,strains.STRAIN_MAX))});
     next.activeStrain=Math.floor(finite(old.activeStrain,0,0,STRAINS.length-1));if(!next.strains[next.activeStrain])next.activeStrain=0;
@@ -216,7 +217,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     // VIPs: served their reserve they pay the Orchid premium, boost reputation and start a buzz; offered only everyday flower they snub the shop.
     if(c.kind==='vip'){if(c.strain>0){bonus*=strains.vipBonus(state.strains);state.empire.reputation=Math.min(1000,state.empire.reputation+strains.VIP_REPUTATION);state.vipBuzz=strains.VIP_BUZZ_SECONDS;burst({x:PICKUP_X,z:4.9,y:1.6},'#f0cf7f')}else{bonus=1;state.empire.reputation=Math.max(0,state.empire.reputation-strains.VIP_SNUB_REPUTATION)}}
     if(bonus>1&&c.strain>0)state.empire.reputation=Math.min(1000,state.empire.reputation+strains.reputationBonus(state.strains));
-    return bonus*(state.rushTime>0?2:1)*contractBoostFactor(state.empire)*abilitySales(state.abilities)}
+    return bonus*(state.rushTime>0?2:1)*contractBoostFactor(state.empire)*abilitySales(state.abilities)*(1+mkt('sales'))}
   // Flower menu: one jar illustration per strain, a row of cards to pick from, and a hero for the chosen strain.
   var STRAIN_LOOKS=[
     {kind:'Everyday',buyers:'Regulars always order this one.',pistil:'#d9c46a',frost:false,shape:'round'},
@@ -504,7 +505,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function nextCapacity(i){return economy.capacity(state.lines[i]+1,state.staff[i],state.multiplier)}
   function isOpen(i){return i===0||state.lines[i-1]>0}
   // Customers buy a basket of bags that grows with the order desk and doubles per retail tier, so the counters move items, not just people.
-  function basketSize(){return Math.max(1,Math.round(economy.basketSize(state.lines)*(1+state.basketLevel*.04)))}
+  function basketSize(){return Math.max(1,Math.round(economy.basketSize(state.lines)*(1+state.basketLevel*.04)*(1+mkt('basket'))))}
   function stationThroughput(i){
     if(!state.lines[i])return 0;
     if(i<4)return capacity(i)/[2,3,2,2][i]/(i===3?formatFactor('packing'):1)*outputFactor(state.city);
@@ -596,7 +597,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // While the guest at the head of the rope has a seat free, bag prep leaves a basket of jars for them, the way it does
   // for a waiting web order: the lounge pays more for them than the counters.
   // A bag upstairs starts from what it fetches at the counter, tips included (saleLift), so the markup is all extra.
-  function loungeBagValue(strain){return (strain===undefined?flowerValue():flowerValue(strain))*saleLift()*specialFactor('lounge')}
+  function loungeBagValue(strain){return (strain===undefined?flowerValue():flowerValue(strain))*saleLift()*specialFactor('lounge')*(1+mkt('lounge'))}
   function loungeReservedJars(){return state.lounge>0&&loungeWaiting().length&&loungeSeated()<loungeSeats(state.lounge)?basketSize():0}
   // A guest walks through the open door and the drapes into the back hallway, where the walls hide them on their way
   // to the elevator (`loungeFade` runs 1 → 0 over LOUNGE_STEP_IN seconds), and fades back in at the back door on the
@@ -661,17 +662,18 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // places (never more than the line's route holds), and the pickup clerk starts the handoff as the head of the line
   // comes up its last half unit, the way the doorman does; together they keep sales where they were at full pace.
   var WALK_PACE=.7,PICKUP_REACH=.5;
-  function walkSpeed(){return economy.walkSpeed(state.trafficLevel)*WALK_PACE}
+  function walkSpeed(){return economy.walkSpeed(state.trafficLevel)*WALK_PACE*(1+mkt('flow'))}
   // Floor flow draws VIPs as well as walk-ins: once reputation opens VIPs and a boutique strain is on the menu, 0.75%
   // more of the door a level (up to 22.5% at Mastery Lv 30) are VIPs, who buy a double basket of the best boutique strain.
   var FLOOR_VIPS=.0075,FLOOR_VIP_CAP=.225;
-  function floorVipShare(){return state.empire.reputation>=60&&strains.reserveStrain(menuStrains(),state.strains)!==null?Math.min(FLOOR_VIP_CAP,state.trafficLevel*FLOOR_VIPS):0}
+  function vipsFollow(){return state.empire.reputation>=60&&strains.reserveStrain(menuStrains(),state.strains)!==null}
+  function floorVipShare(){return vipsFollow()?Math.min(FLOOR_VIP_CAP,state.trafficLevel*FLOOR_VIPS)+mkt('vip'):0}
   function floorVip(kind,id){return kind!=='vip'&&floorVipShare()>0&&((Number(id)||0)*0.5698402910)%1<floorVipShare()?'vip':kind}
   function pickupReserve(){return pickupPlaces(Math.round(pickupPromised()/WALK_PACE),routeLength(queueRoute(true)),queueGap(false))}
   function queueLimit(){return Math.min(QUEUE_MAX,Math.min(12,6+Math.floor(Math.max(0,state.lines[4]-1)/2)+Math.floor(state.staff[4]/2))+state.queueLevel*2)}
   function counterServiceDuration(i,serviceCapacity){
     // Both equipment and training shorten the handoff, with gentler gains at high levels.
-    return economy.counterServiceDuration(i,serviceCapacity===undefined?capacity(i):serviceCapacity,formatFactor('service'))/(1+state.serviceLevel*.04);
+    return economy.counterServiceDuration(i,serviceCapacity===undefined?capacity(i):serviceCapacity,formatFactor('service'))/(1+state.serviceLevel*.04)/(1+mkt('flow'));
   }
   function advanceCounterService(c,i,dt){
     if(c.serviceStation!==i){c.serviceStation=i;c.serviceElapsed=0}
@@ -707,7 +709,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
       state.orderCounters/(h4+STEP_TO_DESK/ws)+kioskCount()/(kioskServiceDuration()+STEP_TO_KIOSK/ws),1/h5)}
   // Happy sales pay a tip on top of the basket (customerSaleBonus): measured at about a fifth more over a played hour, and Loyalty
   // cards add 3% tips and 3% from the longer high (its durationLevel rider) to every happy sale.
-  function saleLift(){return (1.22+state.durationLevel*.03)*(1+state.loyaltyLevel*.03)}
+  function saleLift(){return (1.22+state.durationLevel*.03)*(1+state.loyaltyLevel*.03)*(1+mkt('sales'))}
+  // Marketing campaigns running now (marketing.js). `mktForce` switches one on for the income model alone, to price it.
+  var mktForce=null;
+  function mkt(kind){var c=mktForce,now=Date.now(),on=marketingLift(state.marketing,kind,now);return c&&c.kind===kind&&!(marketingRunLeft(state.marketing,c.id,now)>0)?on+c.amount:on}
   // Packed jars a second off the plant side (seeds to pack), before the order desk turns them into bags.
   function jarRate(){return Math.min.apply(null,[0,1,2,3].map(function(i){return stationThroughput(i)}))}
   // Walk-in bags: what the desk preps and pickup hands over, out of the jars web orders leave, as far as customers come.
@@ -917,16 +922,16 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     {key:'webLevel',name:'Web marketing',base:2500,max:MASTERY_MAX},{key:'onlineBonusLevel',name:'Premium bags',base:2200,max:MASTERY_MAX},{key:'fleetLevel',name:'Drone fleet',base:4000,max:MASTERY_MAX},{key:'cargoLevel',name:'Cargo bays',base:3500,max:MASTERY_MAX}];
   // The kiosk screen suggests one more: a kiosk order is a fifth bigger than the counter's.
   var KIOSK_UPSELL=.2;
-  function kioskServiceDuration(){return .8+1.2/(1+state.kioskSpeedLevel*.15)}
+  function kioskServiceDuration(){return (.8+1.2/(1+state.kioskSpeedLevel*.15))/(1+mkt('flow'))}
   // How far the customer standing at each kiosk has got with their order (0..1), for the 3D map's touchscreens.
   function kioskMenus(){
     var out={};
     customers.forEach(function(c){if(c.kiosk&&c.kioskIndex!=null&&!c.ordered&&c.phase==='kiosk'&&Math.hypot(c.x+8.95,c.z-kioskZ(c.kioskIndex))<.15)out['kiosk'+c.kioskIndex]=Math.min(1,(c.orderTime||0)/kioskServiceDuration())});
     return out;
   }
-  function securityDuration(level){return economy.securityDuration(level===undefined?state.idStaff:level,state.scannerLevel)}
+  function securityDuration(level){return level===undefined?economy.securityDuration(state.idStaff,state.scannerLevel)/(1+mkt('flow')):economy.securityDuration(level,state.scannerLevel)}
   function securityMaxed(){return state.idStaff>=economy.SECURITY_MAX_LEVEL}
-  function arrivalInterval(){return (atmosphere(state.empire.network).night?1.2:.9)/(1+state.trafficLevel*.15)/formatFactor('demand')/strains.trafficFactor(menuStrains(),state.strainTrend.index)/strains.buzzFactor(state.vipBuzz)/(1+state.signLevel*.04)/specialFactor('traffic')/contractFactor(state.empire,'traffic')/cityTraffic(state.city)}
+  function arrivalInterval(){return (atmosphere(state.empire.network).night?1.2:.9)/(1+state.trafficLevel*.15)/formatFactor('demand')/strains.trafficFactor(menuStrains(),state.strainTrend.index)/strains.buzzFactor(state.vipBuzz)/(1+state.signLevel*.04)/(1+mkt('flow'))/specialFactor('traffic')/contractFactor(state.empire,'traffic')/cityTraffic(state.city)}
   // The waiting-area upgrade's places, capped at the spots the pickup line's route actually holds.
   function pickupPromised(){return 4+state.pickupLevel*2}
   function pickupLimit(){return pickupPlaces(pickupPromised(),routeLength(queueRoute(true)),queueGap(false))}
@@ -3446,10 +3451,12 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var near=laid.filter(function(l){return l.shown&&l.h&&Math.abs(x-l.x-ox)<(w+l.w)/2+90&&Math.abs(y-h/2-l.y-oy)<(h+l.h)/2+130});
     function cost(sx,sy){var left=x+sx-w/2-gap,right=x+sx+w/2+gap,bottom=y+sy+gap,upper=y+sy-h-gap,c=(Math.abs(sx)+Math.abs(sy))*.4;
       if(upper<top)c+=(top-upper)*w;if(bottom>floor)c+=(bottom-floor)*w;
+      // Keep the whole pill (and its pulse) on screen at the sides too.
+      if(left<gap+9)c+=(gap+9-left)*h*4;if(right>width-gap-9)c+=(right-width+gap+9)*h*4;
       for(var i=0;i<near.length;i++){var l=near[i],lx=l.x+ox,ly=l.y+oy,ix=Math.min(right,lx+l.w/2)-Math.max(left,lx-l.w/2),iy=Math.min(bottom,ly+l.h/2)-Math.max(upper,ly-l.h/2);if(ix>0&&iy>0)c+=ix*iy*(l.tag?1:3)}
       return c}
     var best=[0,0],bestCost=cost(0,0),last=eventTagShift.last||best;if(bestCost===0)return eventTagShift.last=best;
-    for(var sy=-120;sy<=120;sy+=8)for(var sx=-80;sx<=80;sx+=20){var c=cost(sx,sy);if(c<bestCost){bestCost=c;best=[sx,sy]}}
+    for(var sy=-120;sy<=120;sy+=8)for(var sx=-160;sx<=160;sx+=20){var c=cost(sx,sy);if(c<bestCost){bestCost=c;best=[sx,sy]}}
     // Keep last frame's spot while it is nearly as good, so the pill doesn't hop as its guest walks.
     if(cost(last[0],last[1])<=bestCost*1.2+40)best=last;
     return eventTagShift.last=best}
@@ -4693,7 +4700,21 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     COMPONENTS.forEach(function(c,i){if(document.getElementById('componentBuy'+i))return;var card=document.createElement('div');card.className='shop-upgrade shop-feature';card.innerHTML='<div class="shop-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+icons[c.key]+'</svg></div><div class="shop-copy"><h2>'+c.name+'</h2><strong id="componentBenefit'+i+'"></strong><small>'+blurbs[c.key]+'</small><small id="componentLevel'+i+'"></small></div><button id="componentBuy'+i+'"><span>Upgrade</span><b id="componentPrice'+i+'"></b></button>';pane.insertBefore(card,anchor)});
   })();
   $('expandOrderCounter').onclick=expandOrderCounters;$('buyOrderCounter').onclick=expandOrderCounters;
-  var shopBrowser=mountShopBrowser({getState:function(){return state},components:COMPONENTS,kiosks:kioskCount,queueLimit:queueLimit,openDeliveries:function(){showTray('orders')},deliveryDesk:function(){var building=isBuilding(state.builds,'window');return{built:onlineOpen(),building:building,clock:buildClock(buildLeft(state.builds,'window')),waiting:onlineRequestsReady(),price:fmt(WINDOW_COST),ready:!building&&state.money>=WINDOW_COST,progress:building?1-buildShareLeft(state.builds,'window'):Math.min(1,state.money/WINDOW_COST),toGo:fmt(Math.max(0,WINDOW_COST-state.money))}},recommendInfo:function(){var r=recommendation(),shelf=r.kind==='component'||r.kind==='fork';return{name:r.name,where:shelf?shopBrowser.categories[shopBrowser.categoryOf('componentBuy'+r.index)]:r.kind==='strain'?'Menu':'Stations',price:fmt(r.price),id:shelf?'componentBuy'+r.index:null,fork:r.kind==='fork'?r.fork:null,affordable:state.money>=r.price}},recommend:function(open){var r=recommendation();if(open){actOnRecommendation();return ''}return r.name+' · '+(r.kind==='component'||r.kind==='fork'?'in '+shopBrowser.categories[shopBrowser.categoryOf('componentBuy'+r.index)]+' · ':r.kind==='staff'?'train ':r.kind==='strain'&&!state.strains[r.index]?'unlock ':'upgrade ')+fmt(r.price)}});
+  // Marketing cards (marketing.js): built like the research cards, so the Research tab lays them out the same way.
+  (function(){var pane=document.querySelector('[data-pane="boosts"]'),anchor=pane.querySelector('.shop-milestone')||null;
+    CAMPAIGNS.forEach(function(c,i){if($('marketingRun'+i))return;var card=document.createElement('div');card.className='shop-upgrade shop-feature shop-campaign';card.dataset.campaign=c.id;card.innerHTML='<div class="shop-symbol" aria-hidden="true"></div><div class="shop-copy"><h2>'+c.name+'</h2><strong id="marketingEffect'+i+'">'+c.effect+'</strong><small>'+Math.round(c.seconds/60)+' min, then '+Math.round(c.rest/60)+' min rest</small></div><button id="marketingRun'+i+'"><span>Run</span><b id="marketingPrice'+i+'"></b></button>';pane.insertBefore(card,anchor);card.querySelector('button').onclick=function(){runCampaign(i)}})})();
+  // What a campaign adds: the income model with it switched on, as a share of income now. Worked out once a second.
+  var marketingCache={at:0,income:0,added:{}};
+  function marketingAdded(){var now=Date.now();if(now-marketingCache.at<1000)return marketingCache;var base=incomeRate();marketingCache={at:now,income:base,added:{}};
+    CAMPAIGNS.forEach(function(c){if(!(base>0)){marketingCache.added[c.id]=0;return}mktForce=c;var on=incomeRate();mktForce=null;marketingCache.added[c.id]=Math.max(0,on/base-1)});return marketingCache}
+  // A campaign's tile: running (time left), resting (time until ready), ready with a price, or not usable yet and why.
+  function campaignInfo(i){var c=CAMPAIGNS[i],now=Date.now(),phase=marketingPhase(state.marketing,c.id,now),m=marketingAdded(),added=m.added[c.id]||0,price=marketingPrice(c.id,m.income,added);
+    var locked=!state.shopOpen?'Opens with the shop':c.needs==='vip'&&!vipsFollow()?'VIPs at 60 loyalty':c.needs==='lounge'&&!loungeTier(state.lounge)?'Build the lounge':'',why=locked||(phase==='ready'&&added<MARKETING_MIN_LIFT?'Stock is the limit':''),short=locked?'Locked':'Not now';
+    return {id:c.id,phase:phase,left:phase==='running'?marketingRunLeft(state.marketing,c.id,now):marketingRestLeft(state.marketing,c.id,now),seconds:c.seconds,rest:c.rest,price:price,label:fmt(price),afford:state.money>=price,why:why,short:short,clock:marketingClock}}
+  function runCampaign(i){var c=CAMPAIGNS[i],info=campaignInfo(i);if(info.phase!=='ready'||info.why){if(info.why)notify(info.why);return}if(state.money<info.price)return notify('Need '+fmt(info.price-state.money)+' more');
+    if(!launchCampaign(state.marketing,c.id,Date.now()))return;state.money-=info.price;marketingCache.at=0;telemetry.send('marketing',{campaign:c.id});playSound('start',state.sound);upgradeFx.pop();
+    notify(c.name.toUpperCase()+' · '+c.effect.toUpperCase()+' FOR '+Math.round(c.seconds/60)+' MIN','upgrade');save();renderUI();haptic('firm')}
+  var shopBrowser=mountShopBrowser({getState:function(){return state},components:COMPONENTS,campaigns:CAMPAIGNS,campaignInfo:campaignInfo,kiosks:kioskCount,queueLimit:queueLimit,openDeliveries:function(){showTray('orders')},deliveryDesk:function(){var building=isBuilding(state.builds,'window');return{built:onlineOpen(),building:building,clock:buildClock(buildLeft(state.builds,'window')),waiting:onlineRequestsReady(),price:fmt(WINDOW_COST),ready:!building&&state.money>=WINDOW_COST,progress:building?1-buildShareLeft(state.builds,'window'):Math.min(1,state.money/WINDOW_COST),toGo:fmt(Math.max(0,WINDOW_COST-state.money))}},recommendInfo:function(){var r=recommendation(),shelf=r.kind==='component'||r.kind==='fork';return{name:r.name,where:shelf?shopBrowser.categories[shopBrowser.categoryOf('componentBuy'+r.index)]:r.kind==='strain'?'Menu':'Stations',price:fmt(r.price),id:shelf?'componentBuy'+r.index:null,fork:r.kind==='fork'?r.fork:null,affordable:state.money>=r.price}},recommend:function(open){var r=recommendation();if(open){actOnRecommendation();return ''}return r.name+' · '+(r.kind==='component'||r.kind==='fork'?'in '+shopBrowser.categories[shopBrowser.categoryOf('componentBuy'+r.index)]+' · ':r.kind==='staff'?'train ':r.kind==='strain'&&!state.strains[r.index]?'unlock ':'upgrade ')+fmt(r.price)}});
   var operationsUI=mountOperations({getState:function(){return state},format:fmt,changed:function(message){save();renderUI();if(message)notify(message,'upgrade')},visit:function(i,manage){visitStore(i+1,!manage);if(manage)manageViewedStore()}});
   function renderManagement(){
     var p=state.empire,report=p.returnReport,investment=recommendation();

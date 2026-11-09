@@ -4,15 +4,16 @@ import {tieLast} from './no-lone-words.js';
 import {roomy} from './sheet-room.js';
 // Reuse the original purchase nodes so prices, handlers and saves remain authoritative. Order counters, kiosks and the
 // customer line live on the Orders station instead (see order-extras.js); Start over lives in Settings.
-export function mountShopBrowser({getState,components,kiosks,queueLimit,recommend,recommendInfo,openDeliveries,deliveryDesk}) {
+export function mountShopBrowser({getState,components,campaigns=[],campaignInfo,kiosks,queueLimit,recommend,recommendInfo,openDeliveries,deliveryDesk}) {
   const pane=document.querySelector('[data-pane="boosts"]');
   pane.classList.add('shop-browser');
   // Research runs down three branches. A fork's two sides sit next to each other in the order below; a run takes one.
-  const categories=['Grow','Retail','Delivery'];
+  // Marketing (marketing.js) is the fourth: campaigns bought with cash that boost the shop for a few minutes.
+  const categories=['Grow','Retail','Delivery'].concat(campaigns.length?['Marketing']:[]);
   const byKey=key=>'componentBuy'+components.findIndex(c=>c.key===key);
   const definitions=[['upgradeStorage',0],['boost',0],[byKey('growBatchLevel'),0],[byKey('curingLevel'),0],[byKey('trendLevel'),0],[byKey('breedingLevel'),0],[byKey('offlineLevel'),0],
     [byKey('basketLevel'),1],[byKey('trafficLevel'),1],[byKey('displayLevel'),1],[byKey('loyaltyLevel'),1],[byKey('serviceLevel'),1],
-    [byKey('webLevel'),2],[byKey('onlineBonusLevel'),2],[byKey('fleetLevel'),2],[byKey('cargoLevel'),2]];
+    [byKey('webLevel'),2],[byKey('onlineBonusLevel'),2],[byKey('fleetLevel'),2],[byKey('cargoLevel'),2]].concat(campaigns.map((_,i)=>['marketingRun'+i,3]));
   // One label over each undecided fork and an "or" between its sides.
   // An undecided fork sits at the end of its branch as one card: both sides side by side with an "or" between them.
   const forkMarks=FORKS.map(f=>{const box=document.createElement('div');box.className='shop-fork';box.setAttribute('role','group');box.setAttribute('aria-label','Pick one: '+f.name);const head=document.createElement('p');head.className='shop-fork-head';head.innerHTML='<b>Pick one</b><span>The other closes until you reopen</span>';const or=document.createElement('p');or.className='shop-fork-or';or.setAttribute('aria-hidden','true');or.innerHTML='<span>or</span>';const end=document.createElement('i');end.className='shop-fork-end';end.setAttribute('aria-hidden','true');return {fork:f,box,head,or,end,ids:f.sides.map(byKey)}});
@@ -36,18 +37,19 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
     badge.className='shop-level';copy.append(badge);
     button.setAttribute('aria-label',copy.querySelector('h2,b').textContent+' upgrade');
     const effect=document.createElement('small');effect.className='shop-effect';node.append(effect);
-    const symbol=node.querySelector('.shop-symbol'),key=id.startsWith('componentBuy')?components[Number(id.replace('componentBuy',''))].key:id;
+    const symbol=node.querySelector('.shop-symbol'),campaign=id.startsWith('marketingRun')?Number(id.replace('marketingRun','')):-1,key=id.startsWith('componentBuy')?components[Number(id.replace('componentBuy',''))].key:campaign>=0?campaigns[campaign].id:id;
     // On phones the whole tile buys (a 26px price pill alone is too small to hit).
     node.addEventListener('click',e=>{if(e.target.closest('button')||!phoneTiles.matches||button.disabled)return;button.click()});
     const short=document.createElement('span');short.className='shop-short';short.setAttribute('aria-hidden','true');short.textContent=SHORT[key]||copy.querySelector('h2,b').textContent;copy.append(short);
     if(symbol&&ICONS_3D[key]){symbol.innerHTML=img3d('research-'+ICONS_3D[key]);symbol.classList.add('has-3d')}
-    return {id,category,node,button,badge,effect,symbol};
+    if(symbol&&campaign>=0){symbol.innerHTML=img3d(campaigns[campaign].icon);symbol.classList.add('has-3d')}
+    return {id,category,node,button,badge,effect,symbol,campaign};
   });
   const header=document.createElement('div');header.className='shop-browser-header';
   const icons={Grow:'<path d="M12 21c-4.5-2.5-7-6-7-10a7 7 0 0 1 14 0c0 4-2.5 7.5-7 10ZM12 21V9"/>',Retail:'<path d="M4 17h16M6 17a6 6 0 0 1 12 0M12 8v3M10 8h4"/>',Delivery:'<path d="M9 10h6v4H9zM4 6h3M17 6h3M5.5 6v4h3.5M18.5 6v4H15M9 14l-3 5M15 14l3 5M12 14v6"/>'};
   // The branch tabs get 3D icons too: the potted plant, the shopping bag and the drone.
-  const tabs3d={Grow:'goal-leaf',Retail:'goal-bag',Delivery:'research-fleet'};
-  header.innerHTML='<nav class="shop-categories" aria-label="Upgrade categories">'+categories.map((name,i)=>'<button type="button" data-shop-category="'+i+'" aria-pressed="'+(i===0)+'">'+(tabs3d[name]?'<span class="shop-category-icon is-3d" aria-hidden="true">'+img3d(tabs3d[name])+'</span>':'<svg class="shop-category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(icons[name]||'')+'</svg>')+'<em>'+name+'</em></button>').join('')+'</nav>';
+  const tabs3d={Grow:'goal-leaf',Retail:'goal-bag',Delivery:'research-fleet',Marketing:'marketing-tab'};
+  header.innerHTML='<nav class="shop-categories" aria-label="Upgrade categories" style="--tabs:'+categories.length+'">'+categories.map((name,i)=>'<button type="button" data-shop-category="'+i+'" aria-pressed="'+(i===0)+'">'+(tabs3d[name]?'<span class="shop-category-icon is-3d" aria-hidden="true">'+img3d(tabs3d[name])+'</span>':'<svg class="shop-category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(icons[name]||'')+'</svg>')+'<em>'+name+'</em></button>').join('')+'</nav>';
   const list=document.createElement('div');list.className='shop-items';
   const empty=document.createElement('p');empty.className='shop-empty';empty.textContent='Nothing affordable here yet. Turn off the filter to see what’s next.';
   const milestone=pane.querySelector('.shop-milestone'),reset=pane.querySelector('.shop-reset');
@@ -70,11 +72,26 @@ export function mountShopBrowser({getState,components,kiosks,queueLimit,recommen
   const droneNode=document.getElementById('buyAutoDrone');if(droneNode&&droneNode.parentElement&&pane.contains(droneNode))droneNode.parentElement.hidden=true;
   let category=0;
   header.querySelectorAll('[data-shop-category]').forEach(button=>button.onclick=()=>{category=Number(button.dataset.shopCategory);showDone=false;render()});
+  // A campaign tile: the ring drains brass while it runs (the pill under it counts down), refills green while it rests
+  // (the price pill says when it is ready), and is full and green with its price when it can run.
+  function paintCampaign(row){const info=campaignInfo(row.campaign),n=row.node,b=row.button,price=b.querySelector('b'),verb=b.querySelector('span');
+    const running=info.phase==='running',resting=info.phase==='resting',blocked=!!info.why&&!running&&!resting;
+    n.classList.toggle('is-running',running);n.classList.toggle('is-resting',resting);n.classList.toggle('is-blocked',blocked);n.classList.remove('is-maxed','is-mastered','is-closed','is-mastery','shows-verb');
+    const ring=running?info.left/info.seconds:resting?1-info.left/info.rest:blocked?0:1;
+    if(row.symbol){row.symbol.style.setProperty('--lv',(running?0:ring).toFixed(3));row.symbol.style.setProperty('--mv',(running?ring:0).toFixed(3))}
+    row.badge.hidden=true;
+    const label=running?'Live · '+info.clock(info.left):resting?'Ready in '+info.clock(info.left):blocked?info.short:info.label;if(price.textContent!==label)price.textContent=label;
+    verb.textContent=running?'Running':resting?'Ready in':'Run';
+    b.disabled=running||resting||blocked||!info.afford;
+    const line=blocked?info.why:campaigns[row.campaign].effect;if(row.effect.textContent!==line)row.effect.textContent=line;
+    const say=campaigns[row.campaign].name+', '+campaigns[row.campaign].effect+(running?', '+info.clock(info.left)+' left':resting?', ready in '+info.clock(info.left):blocked?', '+info.why:', '+info.label);
+    if(b.getAttribute('aria-label')!==say)b.setAttribute('aria-label',say);n.title=say}
   function render(){
     const state=getState(),affordable=false,roomFull=roomy(pane);
     let count=0,done=0;const order=[],gates={};
     header.querySelectorAll('[data-shop-category]').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.shopCategory)===category)));
     rows.forEach(row=>{
+      if(row.campaign>=0){paintCampaign(row);const here=row.category===category;row.node.hidden=!here;if(here)count++;order.push({row,isDone:false,closed:false,level:0});return}
       let level,max;
       if(row.id.startsWith('componentBuy')){const c=components[Number(row.id.replace('componentBuy',''))];level=state[c.key];max=c.max}
       else if(row.id==='buyAutoDrone'){level=state.autoDrone.bulk?2:state.autoDrone.owned?1:0;max=2}
