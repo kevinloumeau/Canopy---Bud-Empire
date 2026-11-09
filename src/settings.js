@@ -18,6 +18,9 @@ const ROW_ICONS={
  remindersToggle:line('<path d="M6.5 16.5V11a5.5 5.5 0 0 1 11 0v5.5l1.5 1.5H5z"/><path d="M10 20.5h4"/>'),
  guide:line('<path d="M12 21v-8"/><path d="M12 13c-4.5 0-7-2.5-7-7 4.5 0 7 2.5 7 7Z"/><path d="M12 15c0-4 2.3-6.5 7-6.5 0 4.2-2.5 6.5-7 6.5Z"/>'),
 };
+// The privacy page is public (GitHub Pages) so App Store Connect can link the same address. In the iOS app
+// Capacitor hands any link off its own origin to Safari, so the game never navigates away.
+export const PRIVACY_URL='https://kevinloumeau.github.io/Canopy---Bud-Empire/privacy/';
 const rowIcon=key=>'<i class="settings-icon">'+ROW_ICONS[key]+'</i>';
 const closeIcon=line('<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>');
 const replayIcon='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 10a5.5 5.5 0 1 0 1.7-4"/><path d="M5.5 2.8v3.6h3.6"/></svg>';
@@ -32,7 +35,7 @@ export function mountSettings({haptic}={}){
  wrap.innerHTML='<div class="modal settings" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><div class="settings-head"><h2 id="settingsTitle">Settings</h2><button type="button" class="settings-close" aria-label="Close settings">'+closeIcon+'</button></div>'+
   '<div class="settings-list">'+SWITCHES.map(switchRow).join('')+
   '<div class="settings-row"><span class="settings-label">'+rowIcon('guide')+'<span id="guideLabel">Start guide</span></span><button type="button" class="settings-chip" data-proxy="guide" aria-label="Replay the start guide">'+replayIcon+'Replay</button></div>'+
-  '</div><div class="settings-foot"><button type="button" class="settings-reset" data-proxy="resetOpen" aria-haspopup="dialog">Reset game</button><div class="settings-logo" role="img" aria-label="Canopy: Bud Empire"></div><p class="settings-note">Your shop saves on this device.</p></div></div>';
+  '</div><div class="settings-foot"><button type="button" class="settings-reset" data-proxy="resetOpen" aria-haspopup="dialog">Reset game</button><div class="settings-logo" role="img" aria-label="Canopy: Bud Empire"></div><p class="settings-note">Your shop saves on this device. <a class="settings-privacy" href="'+PRIVACY_URL+'" target="_blank" rel="noopener">Privacy&nbsp;policy</a></p></div></div>';
  document.body.append(wrap);
  const closeButton=wrap.querySelector('.settings-close');
  let opener=null;

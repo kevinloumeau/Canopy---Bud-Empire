@@ -11,6 +11,7 @@
 .modal.settings .settings-list{display:grid}
 .modal.settings .settings-foot{margin-top:10px;padding-top:2px;border-top:1px solid #c1d7b71f}
 .settings-note{margin:6px 4px 0;font-size:12px;color:var(--p-sage-70)}
+.settings-privacy{display:inline-block;padding:12px 4px;margin:-12px -4px;color:inherit;text-decoration:underline;text-underline-offset:2px;white-space:nowrap}
 /* The Shop tab keeps its links for now but they are no longer the way in. */
 .shop-reset{display:none}
 /* Pill order on every size: pause 1× 2× · day/night · settings. */
