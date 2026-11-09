@@ -53,6 +53,9 @@
 @media(prefers-reduced-motion:reduce){.guide-hero-art,.guide-hero::after{animation:none}}
 /* Construction steps: the tray is collapsed, so the card docks over it at the bottom and the whole map stays clear of it.
    The ring around a site pulses until it is tapped, then settles green for the reveal. */
+/* On phones the guide card takes the bottom of the screen, so the tray and its tab bar step out of sight while the guide
+   is open instead of peeking out under the card (Kevin, 2026-11-09). */
+@media(max-width:779px){.guide-open .sheet{visibility:hidden;pointer-events:none}}
 @media(max-width:779px){.start-guide.is-site .guide-card,.start-guide.is-open .guide-card{top:auto;bottom:max(12px,calc(env(safe-area-inset-bottom,0px) + 8px))}}
 .start-guide.is-site .guide-dots,.start-guide.is-open .guide-dots{display:none}
 .start-guide.is-site .guide-card,.start-guide.is-open .guide-card{padding-top:16px}

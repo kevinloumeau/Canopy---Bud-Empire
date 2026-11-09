@@ -4975,7 +4975,10 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     else{c=customers.filter(function(q){return q.id>=guideWatchFrom&&!q.lounge&&!q.kiosk}).sort(function(a,b){return a.id-b.id})[0]||null;if(c)guideGuestId=c.id}
     return c}
   function guestSpot(c){return c?{x:c.renderX===undefined?c.x:c.renderX,y:1,z:c.renderZ===undefined?c.z:c.renderZ}:guidePoint('door')}
-  function guideFollow(){guideWatchFrom=customerId;guideGuestId=-1;guideAim(guestSpot(guideFollowed()),guideZoom(true),true)}
+  // The guide follows the shop's very first guest (Kevin, 2026-11-09): the shop opens behind the plaque, so a guest or
+  // two are already walking in when the walk starts. Watch from the earliest guest still on the way to the ID check.
+  function guideFirstWaiting(){var ids=customers.filter(function(q){return !q.idChecked&&!q.lounge&&!q.kiosk}).map(function(q){return q.id});return ids.length?Math.min.apply(null,ids):customerId}
+  function guideFollow(){guideWatchFrom=guideFirstWaiting();guideGuestId=-1;guideAim(guestSpot(guideFollowed()),guideZoom(true),true)}
   // Where the followed guest is in their visit, for the guide's captions.
   function guideGuest(){var c=guideFollowed();if(!c)return guideGuestId>=0?'gone':'door';
     if(c.bag||c.phase==='leaving')return 'out';if(c.ordered)return 'pickup';if(c.idChecked)return 'order';return 'door'}
