@@ -68,7 +68,7 @@ import {mountStore} from './store-ui.js';
 import {mountSpin} from './spin-ui.js';
 import {CAMPAIGNS,freshMarketing,migrateMarketing,lift as marketingLift,runLeft as marketingRunLeft,restLeft as marketingRestLeft,phase as marketingPhase,price as marketingPrice,launch as launchCampaign,clock as marketingClock,MIN_LIFT as MARKETING_MIN_LIFT} from './marketing.js';
 import {freeReady} from './spin.js';
-import {HANDS_ON,workSpots,createWalker,sendTo,sendToSpot,floorSpot,stepWalker,handsOn,migrateManager} from './manager.js';
+import {workSpots,createWalker,sendTo,sendToSpot,floorSpot,stepWalker,handsOn,migrateManager,CALLS,CALL_LASTS,CALL_WORK,managerLevel,levelProgress,handsOnAt,callPay,createCalls,tickCalls} from './manager.js';
 import {createPurchases} from './purchases.js';
 import {createAds} from './rewarded-ads.js';
 // The self-order kiosks stand along the storefront glass from z 6.8 toward the back, KIOSK_GAP apart (Kevin 2026-11-02:
@@ -90,7 +90,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Contract progression is defined in depth.js, including post-city milestones.
   var $=function(id){return document.getElementById(id)};
   // A new shop starts as seven construction sites: the door and six stations are raised for free during the intro, then the sign flips.
-  function fresh(){return{researchVersion:RESEARCH_VERSION,marketing:freshMarketing(),store:freshStore(),manager:{at:-1,met:false},quotes:{},forks:freshForks(),shopPlay:migrateShopPlay(),money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),pickupWindow:migrateWindow(),atm:migrateAtm(),atmEarned:0,builds:migrateBuilds(),flagship:0,flagshipSeen:false,city:migrateCity(),citySeen:[],productMenu:migrateMenu(),sound:true,music:true,haptics:true,empire:migrateProgression(),popup:migratePopup(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,offlineLevel:0,spenderClock:180,shopEvents:0,rushTime:0,deals:migrateDeals(),crosses:{done:[],active:null},achievements:[],reminders:false,reminderOffered:false,perks:{points:0,levels:{}},run:freshRun(),trainerClock:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],abilities:migrateAbilities(),sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeStaff:0,loungeLift:false,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,guideGrant:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
+  function fresh(){return{researchVersion:RESEARCH_VERSION,marketing:freshMarketing(),store:freshStore(),manager:migrateManager(null),quotes:{},forks:freshForks(),shopPlay:migrateShopPlay(),money:30,lifetime:0,orderCounters:1,lightMode:null,journey:migrateJourney(),autoDrone:migrateAutoDrone(),pickupWindow:migrateWindow(),atm:migrateAtm(),atmEarned:0,builds:migrateBuilds(),flagship:0,flagshipSeen:false,city:migrateCity(),citySeen:[],productMenu:migrateMenu(),sound:true,music:true,haptics:true,empire:migrateProgression(),popup:migratePopup(),idStaff:0,curingLevel:0,durationLevel:0,kioskSpeedLevel:0,onlineBonusLevel:0,comfortLevel:0,offlineLevel:0,spenderClock:180,shopEvents:0,rushTime:0,deals:migrateDeals(),crosses:{done:[],active:null},achievements:[],reminders:false,reminderOffered:false,perks:{points:0,levels:{}},run:freshRun(),trainerClock:0,scannerLevel:0,webLevel:0,trafficLevel:0,pickupLevel:0,readyLevel:0,strains:[1,0,0,0],activeStrain:0,menuStrains:[0],lines:[0,0,0,0,0,0],doorBuilt:false,shopOpen:false,stock:[0,0,0,0,0],staff:[0,0,0,0,0,0],abilities:migrateAbilities(),sold:0,kiosk:false,secondKiosk:false,thirdKiosk:false,lounge:0,loungeStaff:0,loungeLift:false,loungeSessions:0,loungeEarned:0,queueLevel:0,storageLevel:0,onlineCompleted:0,onlineRequests:0,hints:{web:false,storage:false,queue:false},multiplier:1,globalLevel:0,contract:0,guideGrant:0,lastSeen:Date.now(),theme:'dispensary',gameSpeed:1,strainTrend:strains.migrateTrend(null,4),vipBuzz:0,seedBatchLevel:0,growBatchLevel:0,harvestBatchLevel:0,packSpeedLevel:0,serviceLevel:0,signLevel:0,loyaltyLevel:0,basketLevel:0,terpeneLevel:0,breedingLevel:0,displayLevel:0,trendLevel:0,fleetLevel:0,cargoLevel:0,repeatLevel:0}}
   function readSave(){
     for(var key of ['shift-save','shift-save-backup']){
       try{var raw=localStorage.getItem(key);if(!raw)continue;var value=JSON.parse(raw);if(value&&typeof value==='object'&&!Array.isArray(value))return value}catch(e){}
@@ -516,15 +516,29 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function production(){return Math.min.apply(null,LINES.map(function(_,i){return stationThroughput(i)}))*flowerValue()}
   // The grow house (city-buildings.js) fattens every plant-side batch.
   function batchSize(i){return economy.batchSize(state.lines[i])*(i<3?1+state[['seedBatchLevel','growBatchLevel','harvestBatchLevel'][i]]*.06:1)*(i<4?outputFactor(state.city):1)}
-  // The manager on the floor (manager.js): the station they stand at works HANDS_ON times faster. The walker is live
+  // The manager on the floor (manager.js): the station they stand at works handsOnAt(level) times faster. The walker is live
   // only (not saved; state.manager.at keeps their station), and null while the away pay is worked out.
   var managerWalker=null,MANAGER_MODEL='people/blazer-woman.glb',MANAGER_STATION_NAMES=['Seeds','Grow','Harvest','Pack','Orders','Pickup'];
   // Each frame: the manager appears once the shop is open (at their saved station, else Orders), and walks on real time.
   function tickManager(dt){if(!state.shopOpen||state.empire.activeStore)return;
     if(!managerWalker){var home=state.manager.at>=0&&state.lines[state.manager.at]>0?state.manager.at:state.lines[4]>0?4:-1;if(home<0)return;managerWalker=createWalker(managerSpots()[home]);managerWalker.target=home}
-    stepWalker(managerWalker,dt)}
+    stepWalker(managerWalker,dt);
+    // Floor calls run on played time: not while paused, and not before the player has met the manager.
+    var ev=tickCalls(managerCalls,state.gameSpeed>0&&state.manager.met&&!snapStill?dt:0,managerWalker,state.lines.map(function(n){return n>0}));if(ev)managerCallEvent(ev)}
+  // Floor calls (manager.js): one station at a time asks for the manager. Handling it pays a few seconds of income
+  // where they stand and counts toward the manager's level, which raises the hands-on speed and the pay.
+  var managerCalls=createCalls(),managerPaid=null,snapStill=window.__canopySnap!==undefined||/[?&]snap\b/.test(location.search);
+  function managerLv(){return managerLevel(state.manager.xp)}
+  function managerCallEvent(ev){render.invalidated=true;
+    if(ev.type==='open'){haptic('light');playSound('tap',state.sound);if(!state.manager.called){state.manager.called=true;save();notify(tieLast('A station needs you. Tap its lime tag to walk over.'),'info')}return}
+    if(ev.type!=='done')return;
+    var before=managerLv(),pay=callPay(incomeRate(),before);state.manager.xp++;
+    cashPop('call',{x:managerWalker.x,y:managerWalker.y+2.6,z:managerWalker.z},pay);managerPaid={text:'+'+fmt(pay),until:performance.now()+1900};
+    playSound('coin',state.sound);haptic('firm');telemetry.send('manager_call',{station:ev.station,level:before});
+    var now=managerLv();if(now>before)notify(tieLast('MANAGER LV '+now+' · Hands-on '+handsOnAt(now)+'×, calls pay more'),'upgrade');
+    save();renderUI()}
   // For screenshots (scripts/snap3d.mjs, whose frames stand still): stand the manager at station i at once.
-  if(window.__canopySnap!==undefined||/[?&]snap\b/.test(location.search))window.__canopyManagerAt=function(i,walk){managerGo(i);if(managerWalker&&walk){stepWalker(managerWalker,walk);renderUI();return [managerWalker.x,managerWalker.y,managerWalker.z].map(function(v){return +v.toFixed(2)})}if(managerWalker){var sp=managerSpots()[i];managerWalker.x=sp.x;managerWalker.y=sp.y;managerWalker.z=sp.z;managerWalker.path=[];managerWalker.moving=false;managerWalker.heading=sp.look}renderUI();return 'manager at '+i};
+  if(window.__canopySnap!==undefined||/[?&]snap\b/.test(location.search))window.__canopyManagerCall=function(station,phase,xp){if(xp!==undefined)state.manager.xp=xp;state.manager.met=true;managerPaid=null;managerCalls.call={station:station,left:CALL_LASTS*.7,work:phase==='work'?CALL_WORK*.6:0};if(phase==='paid'){managerCalls.call=null;managerPaid={text:'+'+fmt(callPay(incomeRate(),managerLv())),until:Infinity}}renderUI();return 'call '+station+' '+(phase||'open')};window.__canopyManagerCard=function(){openManagerCard();return 'card'};window.__canopyManagerAt=function(i,walk){managerGo(i);if(managerWalker&&walk){stepWalker(managerWalker,walk);renderUI();return [managerWalker.x,managerWalker.y,managerWalker.z].map(function(v){return +v.toFixed(2)})}if(managerWalker){var sp=managerSpots()[i];managerWalker.x=sp.x;managerWalker.y=sp.y;managerWalker.z=sp.z;managerWalker.path=[];managerWalker.moving=false;managerWalker.heading=sp.look}renderUI();return 'manager at '+i};
   // A tap on the shop floor that hits no station walks the manager there (Kevin, 2026-11-09: "manager should move to
   // where you tap"). The tap is turned back into map units on each floor's height, top floor first.
   function managerWalkTap(sx,sy){if(!managerWalker||state.empire.activeStore||!state.shopOpen||!map3dLayout||!map3dLayout.floors)return false;
@@ -532,7 +546,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var spot=floorSpot(function(y){var rx=(sx-centerX)/unit,rz=(sy-centerY+y*unit)/(unit*FLOOR_SQUASH);return {x:rx*c+rz*s,z:-rx*s+rz*c}},map3dLayout.floors);
     if(!spot)return false;sendToSpot(managerWalker,spot);render.invalidated=true;haptic('select');return true}
   if(window.__canopySnap!==undefined||/[?&]snap\b/.test(location.search))window.__canopyManagerTap=function(sx,sy,walk){if(!managerWalkTap(sx,sy))return null;var end=managerWalker.path[managerWalker.path.length-1];if(walk){stepWalker(managerWalker,walk);renderUI()}return end};
-  function managerFactor(i){return managerWalker?handsOn(managerWalker,i):1}
+  function managerFactor(i){return managerWalker?handsOn(managerWalker,i,managerLv()):1}
   function managerSpots(){var counters=orderCounterPositions(state.orderCounters);return workSpots(machinePos,counters[0])}
   // Sends the manager to a built station of the flagship, the first time placing them there.
   function managerGo(i){if(state.empire.activeStore||!(state.lines[i]>0))return;var spot=managerSpots()[i];
@@ -3493,21 +3507,63 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // floor under them (map3d.js updateYouMarker) it picks them out from the crew. A tap explains what the manager does.
   // It hides in a branch and off screen.
   var managerTag=document.createElement('button');managerTag.type='button';managerTag.className='marker manager-tag';managerTag.id='managerTag';managerTag.hidden=true;
-  managerTag.innerHTML='<span class="manager-goal"><i class="manager-badge" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.6" r="3.6"/><path d="M5.2 19.4c.7-3.6 3.4-5.6 6.8-5.6s6.1 2 6.8 5.6"/></svg></i><em></em></span>';
+  managerTag.innerHTML='<span class="manager-goal"><i class="manager-badge" aria-hidden="true"><b></b></i><em></em></span>';
   $('markers').appendChild(managerTag);
-  var MANAGER_TIP='You’re the manager. Tap a station to work it '+HANDS_ON+'× faster, or tap the floor to walk.';
-  managerTag.onclick=function(){notify(MANAGER_TIP,'info');haptic('select')};
+  var MANAGER_TIP=tieLast('You’re the manager. Tap a station to work it faster, and answer its calls for cash.');
+  managerTag.onclick=function(){openManagerCard();haptic('select')};
   function managerShown(){return !!managerWalker&&state.shopOpen&&!state.empire.activeStore&&!!map3d&&map3d.characterReady(MANAGER_MODEL)}
-  function updateManagerTag(){var w=managerWalker,show=managerShown();
-    // Only while they work a station (Kevin, 2026-11-09: no "You" label): the station and its hands-on speed.
+  function ringShare(el,share){var p=String(Math.round(Math.max(0,Math.min(1,share))*100));if(el.dataset.p!==p){el.dataset.p=p;el.style.setProperty('--p',p)}}
+  function updateManagerTag(){var w=managerWalker,show=managerShown();updateCallTag(show);
+    // Only while they work a station (Kevin, 2026-11-09: no "You" label): the station and its hands-on speed, with the
+    // manager's level in the lime badge and a ring round it for the way to the next level. While they handle a call
+    // the tag names the job and the ring fills with it, then shows what it paid for a moment.
     if(show&&(w.moving||!(w.target>=0&&state.lines[w.target]>0)))show=false;
     var pos=show?project(w.x,w.y+2.15,w.z):null;if(pos&&(pos.x<-40||pos.x>width+40||pos.y<40||pos.y>visibleHeight()))show=false;
     if(managerTag.hidden!==!show)managerTag.hidden=!show;if(!show)return;
     // The first time the manager is on screen, say who they are once.
     if(!state.manager.met&&introTime()>6){state.manager.met=true;save();setTimeout(function(){notify(MANAGER_TIP,'info')},600)}
-    var name=MANAGER_STATION_NAMES[w.target],hk=name+' '+HANDS_ON+'×';
-    if(managerTag.dataset.hands!==hk){managerTag.dataset.hands=hk;managerTag.querySelector('em').textContent=hk;managerTag.setAttribute('aria-label','Manager working '+name+', '+HANDS_ON+' times faster. Tap for what the manager does')}
+    if(managerPaid&&performance.now()>=managerPaid.until)managerPaid=null;
+    var call=managerCalls.call,working=!!call&&call.station===w.target,lv=managerLv(),name=MANAGER_STATION_NAMES[w.target];
+    var mode=managerPaid?'paid':working?'call':'',text=managerPaid?managerPaid.text:working?CALLS[w.target].doing:name+' '+handsOnAt(lv)+'×',hk=mode+'|'+text+'|'+lv;
+    if(managerTag.dataset.hands!==hk){managerTag.dataset.hands=hk;managerTag.dataset.mode=mode;managerTag.querySelector('em').textContent=text;managerTag.querySelector('b').textContent=lv;
+      managerTag.setAttribute('aria-label','Manager, level '+lv+'. '+(working?CALLS[w.target].doing:'Working '+name+', '+handsOnAt(lv)+' times faster')+'. Show the manager card')}
+    ringShare(managerTag,working?call.work/CALL_WORK:levelProgress(state.manager.xp).share);
     managerTag.style.transform='translate3d('+pos.x+'px,'+pos.y+'px,0) translate(-50%,-100%)'}
+  // A floor call's tag: a lime bell over the station that asks for the manager, with the job in two words and a ring
+  // that drains while the call stays open. A tap sends the manager without opening the station's upgrades. It goes
+  // once they stand there (their own tag takes over), and holds still, ring stopped, while they are on the way.
+  var BELL='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 16.5V11a5.5 5.5 0 0 1 11 0v5.5l1.5 2h-14z"/><path d="M10.2 21a2 2 0 0 0 3.6 0"/></svg>';
+  var callTag=document.createElement('button');callTag.type='button';callTag.className='marker manager-call';callTag.id='managerCall';callTag.hidden=true;
+  callTag.innerHTML='<i class="call-badge" aria-hidden="true">'+BELL+'</i><b></b>';$('markers').appendChild(callTag);
+  callTag.onclick=function(){var c=managerCalls.call;if(!c)return;managerGo(c.station);haptic('select');render.invalidated=true};
+  function updateCallTag(shown){var c=managerCalls.call,w=managerWalker,show=shown&&!!c&&!(w.target===c.station&&!w.moving),pos=null;
+    if(show){var st=machinePos[c.station];pos=project(st.x,(st.y||0)+3.05,st.z);if(pos.x<50||pos.x>width-50||pos.y<(updateMarkers.ceiling||40)+40||pos.y>visibleHeight())show=false}
+    if(callTag.hidden!==!show)callTag.hidden=!show;if(!show)return;
+    var coming=w.target===c.station,key=c.station+'|'+coming;
+    if(callTag.dataset.call!==key){callTag.dataset.call=key;callTag.classList.toggle('is-coming',coming);callTag.querySelector('b').textContent=CALLS[c.station].name;callTag.setAttribute('aria-label',CALLS[c.station].name+' at '+MANAGER_STATION_NAMES[c.station]+'. Send the manager')}
+    ringShare(callTag,c.left/CALL_LASTS);
+    callTag.style.transform='translate3d('+pos.x+'px,'+pos.y+'px,0) translate(-50%,-100%)'}
+  // The manager card (a tap on the manager or their tag): who you are and what you do, in three figures. The level in
+  // a lime ring that fills toward the next, the hands-on speed, what a call pays right now and the calls handled. With
+  // a call open, one lime button answers it.
+  var managerCard=document.createElement('div');managerCard.className='manager-overlay';managerCard.hidden=true;
+  managerCard.innerHTML='<section class="manager-card" role="dialog" aria-modal="true" aria-labelledby="managerCardTitle"><button type="button" class="manager-card-close" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'+
+    '<div class="manager-card-ring"><svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="25"/><circle class="fill" cx="28" cy="28" r="25" pathLength="100"/></svg><b></b></div>'+
+    '<h2 id="managerCardTitle">Manager</h2><p class="manager-card-next"></p>'+
+    '<div class="manager-card-stats"><div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg><b data-stat="speed"></b><span>Hands-on</span></div><div>'+BELL+'<b data-stat="pay"></b><span>Per call</span></div><div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><b data-stat="done"></b><span>Calls done</span></div></div>'+
+    '<p class="manager-card-hint"></p><button type="button" class="manager-card-go" hidden></button></section>';
+  document.body.appendChild(managerCard);
+  function closeManagerCard(){managerCard.hidden=true}
+  manageDialog(managerCard,closeManagerCard);
+  managerCard.onclick=function(e){if(e.target===managerCard)closeManagerCard()};managerCard.querySelector('.manager-card-close').onclick=closeManagerCard;
+  managerCard.querySelector('.manager-card-go').onclick=function(){var c=managerCalls.call;closeManagerCard();if(c){managerGo(c.station);haptic('select');render.invalidated=true}};
+  function openManagerCard(){var q=function(sel){return managerCard.querySelector(sel)},prog=levelProgress(state.manager.xp),lv=prog.level,c=managerCalls.call,go=q('.manager-card-go');
+    q('.manager-card-ring b').textContent=lv;q('.manager-card-ring .fill').style.strokeDasharray=Math.round(prog.share*100)+' 100';q('.manager-card-ring').setAttribute('aria-label','Level '+lv);
+    q('.manager-card-next').textContent=prog.max?'Top level':prog.left+(prog.left===1?' call':' calls')+' to Lv '+(lv+1);
+    q('[data-stat=speed]').textContent=handsOnAt(lv)+'×';q('[data-stat=pay]').textContent=fmt(callPay(incomeRate(),lv));q('[data-stat=done]').textContent=abbr(state.manager.xp);
+    q('.manager-card-hint').textContent=tieLast(prog.max?'Tap a station to work it. Answer its calls for cash.':'Tap a station to work it. Answer calls to level up.');
+    go.hidden=!c;if(c)go.textContent='Answer · '+CALLS[c.station].name;
+    managerCard.hidden=false}
   var loungeMarker=document.createElement('button');loungeMarker.className='marker';loungeMarker.dataset.marker='lounge';loungeMarker.onclick=selectLounge;$('markers').appendChild(loungeMarker);
   // Purchase tags for what can be bought next on the map (Kevin, 2026-10-22, like the lounge's): the pickup window on
   // its spot, then the drone port on its deck once the window is open, and a smaller tag over a ghost of the next kiosk.
@@ -5216,7 +5272,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // A finger lifting takes its last move with it before it is forgotten.
   function flushGesture(e){if(e&&Object.keys(touches).length===1)mapGesture.liftAt=e.timeStamp;if(gestureMoved&&(mapGesture.dx||mapGesture.dy||mapGesture.scale!==1))stepMapGesture(performance.now())}
   world.addEventListener('pointerup',function(e){if(!touches[e.pointerId])return;mapHintActivity();flushGesture(e);var onCanvas=e.target===canvas;if(gestureMoved&&!onCanvas)signTapVoid=performance.now();if(!onCanvas);else if(!gestureMoved&&Object.keys(touches).length===1&&state.empire.activeStore){var br=canvas.getBoundingClientRect(),f=BRANCH_THEMES[state.empire.activeStore-1].focus,fo=districtCentre(state.empire.activeStore-1),q=project(f.x+fo.x,f.y,f.z+fo.z);if(Math.hypot(e.clientX-br.left-q.x,e.clientY-br.top-q.y)<Math.max(45,unit*3))manageViewedStore()}else if(!gestureMoved&&Object.keys(touches).length===1){var rect=canvas.getBoundingClientRect(),best=-1,distance=60;machinePos.forEach(function(pos,i){var p=project(pos.x,1.4+(pos.y||0),pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=i;distance=d}});orderCounterPositions(state.orderCounters).forEach(function(pos){var p=project(pos.x,1.4,pos.z),d=Math.hypot(e.clientX-rect.left-p.x,e.clientY-rect.top-p.y);if(d<distance){best=4;distance=d}});var online=project(-10.7,8.45,1.5),od=Math.hypot(e.clientX-rect.left-online.x,e.clientY-rect.top-online.y);var gm=ghostMarker(),gt=gm&&lotTags().filter(function(x){return x.el===gm})[0],gp=gt&&project(gt.x,Math.max(.6,gt.y-1.3),gt.z),gd=gp?Math.hypot(e.clientX-rect.left-gp.x,e.clientY-rect.top-gp.y):Infinity;
-    if(gd<Math.min(distance,od,Math.max(40,unit*2.2))){pickedTag=null;pickGhost(gm.dataset.marker)}else if(od<distance){showTray('orders');renderUI()}else if(best>=0)selectMachine(best);else{var walked=managerWalkTap(e.clientX-rect.left,e.clientY-rect.top);if(mapPicked){mapPicked=false;renderUI()}else if(walked)renderUI()}}delete touches[e.pointerId];if(Object.keys(touches).length)gestureMoved=true;else gestureOrigin=null});
+    var me=managerShown()?project(managerWalker.x,managerWalker.y+1.1,managerWalker.z):null;
+    if(me&&Math.hypot(e.clientX-rect.left-me.x,e.clientY-rect.top-me.y)<Math.max(18,unit*.9)){openManagerCard();haptic('select')}else if(gd<Math.min(distance,od,Math.max(40,unit*2.2))){pickedTag=null;pickGhost(gm.dataset.marker)}else if(od<distance){showTray('orders');renderUI()}else if(best>=0)selectMachine(best);else{var walked=managerWalkTap(e.clientX-rect.left,e.clientY-rect.top);if(mapPicked){mapPicked=false;renderUI()}else if(walked)renderUI()}}delete touches[e.pointerId];if(Object.keys(touches).length)gestureMoved=true;else gestureOrigin=null});
   // Double-tap anywhere on the map (canvas or a station pill) zooms in around the tap, or back out when already close.
   var lastTap={time:0,x:0,y:0};
   canvas.parentElement.addEventListener('pointerup',function(e){
@@ -5431,7 +5488,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     for(var k=1;k<=start.strains&&k<state.strains.length;k++){if(!state.strains[k])state.strains[k]=1;if(state.menuStrains.indexOf(k)<0)state.menuStrains.push(k)}
     if(start.drone&&(!state.autoDrone.owned||(start.drone>1&&!state.autoDrone.bulk))){state.pickupWindow.owned=true;state.autoDrone={owned:true,enabled:true,remaining:0,bulk:start.drone>1,mode:start.drone>1?'bulk':'single'}}
     state.lounge=Math.max(state.lounge,start.lounge);state.empire.stake=perkLevel(state.perks,'stake')}
-  function resetRun(rank,sound,carry){if(rank>0)telemetry.send('prestige',{rank:rank});var keptDeals=state.deals,keptStore=state.store,haptics=state.haptics!==false,keptMusic=state.music!==false,keptReminders=[state.reminders,state.reminderOffered];state=fresh();state.deals=keptDeals||state.deals;state.store=keptStore;state.haptics=haptics;state.music=keptMusic;state.reminders=keptReminders[0]===true;state.reminderOffered=keptReminders[1]===true;moment=null;if(shopPlayUI)shopPlayUI.reset();state.empire.prestige=rank;state.sound=sound;if(carry){state.empire.shares=carry.shares;state.empire.lifetimeAll=carry.lifetimeAll;state.empire.franchise=carry.franchise||0;if(carry.contracts){state.empire.contracts.bank=carry.contracts.bank;state.empire.contracts.done=carry.contracts.done;state.empire.contracts.round=carry.contracts.round}state.empire.badges=carry.badges.slice();if(carry.stars)state.empire.stars=carry.stars.slice();state.crosses=carry.crosses;state.achievements=(carry.achievements||[]).slice();state.perks=carry.perks;var start=perkStart(state.perks);state.money+=start.money;state.startLine=start.line;applyStart(start);
+  function resetRun(rank,sound,carry){if(rank>0)telemetry.send('prestige',{rank:rank});var keptDeals=state.deals,keptStore=state.store,haptics=state.haptics!==false,keptMusic=state.music!==false,keptReminders=[state.reminders,state.reminderOffered],keptManager=state.manager;state=fresh();state.manager=migrateManager({met:keptManager.met,xp:keptManager.xp,called:keptManager.called});managerCalls=createCalls();managerPaid=null;managerWalker=null;state.deals=keptDeals||state.deals;state.store=keptStore;state.haptics=haptics;state.music=keptMusic;state.reminders=keptReminders[0]===true;state.reminderOffered=keptReminders[1]===true;moment=null;if(shopPlayUI)shopPlayUI.reset();state.empire.prestige=rank;state.sound=sound;if(carry){state.empire.shares=carry.shares;state.empire.lifetimeAll=carry.lifetimeAll;state.empire.franchise=carry.franchise||0;if(carry.contracts){state.empire.contracts.bank=carry.contracts.bank;state.empire.contracts.done=carry.contracts.done;state.empire.contracts.round=carry.contracts.round}state.empire.badges=carry.badges.slice();if(carry.stars)state.empire.stars=carry.stars.slice();state.crosses=carry.crosses;state.achievements=(carry.achievements||[]).slice();state.perks=carry.perks;var start=perkStart(state.perks);state.money+=start.money;state.startLine=start.line;applyStart(start);
       // A reopen keeps your place on the daily track, a running contract boost and the season ladder (claims included).
       if(carry.daily)state.empire.daily={day:carry.daily.day,streak:carry.daily.streak};if(carry.contracts)state.empire.contracts.boost=carry.contracts.boost||0;
       if(carry.season)state.empire.season=carrySeason(carry.season,carry.counters);

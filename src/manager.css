@@ -4,8 +4,13 @@
 .world .marker.manager-tag,.world .marker.manager-tag:not(.selected){left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0;min-height:0;padding:0;border:0;background:none;box-shadow:none;opacity:1;cursor:pointer;z-index:3;pointer-events:auto}
 .manager-tag .manager-goal{position:relative;display:flex;align-items:center;gap:6px;max-width:210px;height:30px;padding:0 11px 0 4px;border-radius:999px;background:linear-gradient(180deg,var(--ui-sheen),transparent 45%),var(--ui-glass);border:1px solid var(--ui-edge);box-shadow:var(--ui-shadow);-webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);color:var(--ui-ink);font:600 12px/1 'Bricolage Grotesque',system-ui,sans-serif;white-space:nowrap}
 .manager-tag .manager-goal::after{content:'';position:absolute;left:50%;bottom:-5px;width:9px;height:9px;transform:translateX(-50%) rotate(45deg);background:var(--ui-glass);border-right:1px solid var(--ui-edge);border-bottom:1px solid var(--ui-edge)}
-.manager-tag .manager-badge{display:grid;place-items:center;flex:none;width:22px;height:22px;border-radius:50%;background:var(--ui-leaf-glow);box-shadow:inset 0 1px 0 #ffffff59,0 1px 2px #06180c8c}
-.manager-tag .manager-badge svg{width:14px;height:14px;fill:none;stroke:#123020;stroke-width:2.2;stroke-linecap:round}
+/* The badge: the manager's level on lime, inside a ring that fills toward the next level (--p, 0 to 100), or with the
+   call being handled. */
+.manager-tag .manager-badge{position:relative;display:grid;place-items:center;flex:none;width:22px;height:22px;border-radius:50%;background:conic-gradient(var(--ui-leaf-glow) calc(var(--p,0)*1%),#ffffff2e 0)}
+.manager-tag .manager-badge::before{content:'';position:absolute;inset:2.5px;border-radius:50%;background:var(--ui-leaf-glow);box-shadow:inset 0 1px 0 #ffffff59,0 0 0 1.5px #0f2a1c}
+.manager-tag .manager-badge b{position:relative;overflow:visible;color:#123020;font:800 11px/1 'Bricolage Grotesque',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.manager-tag[data-mode=call] .manager-goal,.manager-tag[data-mode=paid] .manager-goal{border-color:#a8dc5280}
+.manager-tag[data-mode=paid] .manager-goal em{color:var(--ui-ink)}
 .manager-tag .manager-goal b{min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:600}
 .manager-tag .manager-goal em{flex:none;font-style:normal;font-weight:700;color:var(--ui-leaf-glow);font-variant-numeric:tabular-nums}
 .manager-tag.is-ready .manager-goal{border-color:#a8dc5266}
@@ -17,3 +22,52 @@
 .world .marker.manager-tag{text-transform:none;letter-spacing:0}
 .manager-tag .manager-goal em:empty{display:none}
 .world .marker.manager-tag[hidden]{display:none!important}
+
+/* A floor call (main.js updateCallTag): the station that asks for the manager wears a small forest-glass pill with a
+   lime bell, the job in two words and a ring round the bell that drains while the call is open. Lime is the manager's
+   colour, so the call and the manager's own tag read as a pair; brass stays the next buy's. */
+.world .marker.manager-call,.world .marker.manager-call:not(.selected){left:0;top:0;display:flex;align-items:center;gap:6px;min-width:0;min-height:0;height:30px;padding:0 11px 0 4px;border-radius:999px;border:1px solid #a8dc5266;background:linear-gradient(180deg,var(--ui-sheen),transparent 45%),var(--ui-glass-strong);box-shadow:var(--ui-shadow);-webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);color:var(--ui-ink);font:600 12px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:0;text-transform:none;white-space:nowrap;opacity:1;cursor:pointer;z-index:3;pointer-events:auto}
+.world .marker.manager-call[hidden]{display:none!important}
+.manager-call::after{content:'';position:absolute;left:50%;top:100%;width:9px;height:9px;margin-top:-5px;transform:translateX(-50%) rotate(45deg);background:var(--ui-glass-strong);border:solid #a8dc5266;border-width:0 1px 1px 0;border-radius:0 0 2px 0}
+.manager-call::before{content:'';position:absolute;inset:-8px -6px}
+.manager-call .call-badge{position:relative;display:grid;place-items:center;flex:none;width:22px;height:22px;border-radius:50%;background:conic-gradient(var(--ui-leaf-glow) calc(var(--p,100)*1%),#ffffff2e 0)}
+.manager-call .call-badge::before{content:'';position:absolute;inset:2.5px;border-radius:50%;background:var(--ui-leaf-glow);box-shadow:inset 0 1px 0 #ffffff59,0 0 0 1.5px #0f2a1c}
+.manager-call .call-badge svg{position:relative;width:11px;height:11px;fill:none;stroke:#123020;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.manager-call b{font-weight:600}
+.manager-call.is-coming{border-color:#ffffff24}
+.manager-call.is-coming b{color:var(--ui-soft)}
+.manager-call:active{transform:scale(.97)}
+.manager-call:focus-visible{outline:2px solid var(--ui-ink);outline-offset:2px}
+@media(prefers-reduced-motion:no-preference){
+ .manager-call:not(.is-coming) .call-badge{animation:manager-call-ring 1.8s ease-out infinite}
+ .manager-call:not(.is-coming) .call-badge svg{animation:manager-call-bell 1.8s ease-in-out infinite;transform-origin:50% 10%}}
+@keyframes manager-call-ring{0%{box-shadow:0 0 0 0 #a8dc5299}70%,100%{box-shadow:0 0 0 9px #a8dc5200}}
+@keyframes manager-call-bell{0%,40%,100%{transform:rotate(0)}10%{transform:rotate(-16deg)}20%{transform:rotate(13deg)}30%{transform:rotate(-7deg)}}
+.guide-open .manager-call,.guide-open .manager-tag{display:none!important}
+
+/* The manager card (main.js openManagerCard): who you are and what you do. A lime level ring, three figures with their
+   icons, one line of how, and a lime button when a call is open. Forest glass, centred over a soft scrim. */
+.manager-overlay{position:fixed;inset:0;z-index:57;display:grid;place-items:center;padding:calc(var(--safe-top,env(safe-area-inset-top,0px)) + 16px) 16px calc(var(--safe-bottom,env(safe-area-inset-bottom,0px)) + 16px);background:radial-gradient(120% 70% at 50% 45%,rgba(5,21,10,.34),rgba(4,16,8,.7));-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);color:var(--ui-ink);font-family:'Bricolage Grotesque',system-ui,sans-serif}
+.manager-overlay[hidden]{display:none}
+.manager-card{position:relative;box-sizing:border-box;width:min(332px,100%);padding:26px 16px 18px;border:1px solid var(--ui-edge);border-radius:28px;text-align:center;background:radial-gradient(90% 50% at 50% 0%,#a8dc521f,transparent 70%),linear-gradient(180deg,var(--ui-sheen),transparent 30%),var(--ui-glass-strong);-webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);box-shadow:var(--ui-shadow)}
+@media(prefers-reduced-motion:no-preference){.manager-card{animation:manager-card-in .4s cubic-bezier(.16,1,.3,1) both}}
+@keyframes manager-card-in{from{opacity:0;transform:translateY(14px) scale(.96)}}
+.manager-card-close{position:absolute;top:10px;right:10px;display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:none;color:var(--ui-soft);cursor:pointer}
+.manager-card-close svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.manager-card button:focus-visible{outline:2px solid var(--ui-ink);outline-offset:2px}
+.manager-card-ring{position:relative;display:grid;place-items:center;width:76px;height:76px;margin:0 auto}
+.manager-card-ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);fill:none}
+.manager-card-ring circle{stroke:#ffffff24;stroke-width:4}
+.manager-card-ring circle.fill{stroke:var(--ui-leaf-glow);stroke-linecap:round;stroke-dasharray:0 100}
+.manager-card-ring b{display:grid;place-items:center;width:54px;height:54px;border-radius:50%;background:var(--ui-leaf-glow);box-shadow:inset 0 2px 0 #ffffff59,0 2px 6px #06180c66;color:#123020;font:800 26px/1 'Bricolage Grotesque',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.manager-card h2{margin:12px 0 0;font:700 22px/1.1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.01em;color:var(--ui-ink)}
+.manager-card-next{margin:5px 0 0;font:600 13px/1.2 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-leaf-glow);font-variant-numeric:tabular-nums}
+.manager-card-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:16px}
+.manager-card-stats>div{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px 11px;border-radius:18px;background:var(--ui-well);box-shadow:inset 0 0 0 1px #ffffff12}
+.manager-card-stats svg{width:20px;height:20px;fill:none;stroke:var(--ui-leaf-glow);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.manager-card-stats b{font:700 19px/1 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.manager-card-stats span{font:600 11.5px/1.1 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-soft);white-space:nowrap}
+.manager-card-hint{margin:14px 6px 0;font:500 13px/1.35 'Bricolage Grotesque',system-ui,sans-serif;color:var(--ui-soft);text-wrap:balance}
+.manager-card-go{display:block;width:100%;min-height:48px;margin-top:14px;padding:0 16px;border:0;border-radius:16px;background:linear-gradient(180deg,#c3ec7a,var(--ui-leaf-glow));box-shadow:inset 0 1px 0 #ffffff80,0 4px 12px #06180c59;color:#123020;font:700 15px/1 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer}
+.manager-card-go[hidden]{display:none}
+.manager-card-go:active{transform:scale(.98)}
