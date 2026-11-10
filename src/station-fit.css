@@ -47,7 +47,7 @@
  /* One header height on every tab (so switching tabs never moves the sheet), with 10px over its controls so the grab
     handle never touches the Strains switch or the Collect pill. */
  .sheet:not(.collapsed) .panel-header{box-sizing:border-box;min-height:0;height:42px;padding-block:10px 0;align-items:center}
- .sheet:not(.collapsed) .panel-header #panelToggle{width:28px;height:28px}
+ .sheet:not(.collapsed) .panel-header #panelToggle,.sheet:not(.collapsed) .panel-header #panelExpand{width:28px;height:28px}
  .sheet #stockStatus{padding-top:4px;padding-bottom:6px}
  .sheet #stockStatus .stock-item{min-height:32px;padding-block:2px}
  .sheet .tray-tabs{margin-top:4px}
@@ -94,3 +94,20 @@
 
 /* Ability card: its name wraps to a balanced second line instead of cutting off ("Express pick…" at 375). */
 .sheet .station-tiles .station-ability .team-copy b{white-space:normal!important;text-wrap:balance;overflow:visible!important;text-overflow:clip!important;text-align:center;line-height:1.15!important}
+
+/* UI review 2026-11-10 (Kevin: "make all updates"): brass means one thing in the station grid, the next buy. The
+   selected tile is cream ink (the MAX button's outline), the slowest station keeps its small arrow in soft ink with no
+   orbiting outline, and only the best-buy tile wears brass: its dot, its ring and its name. */
+.sheet .machine-nav button[aria-pressed=true]{border-color:#fbf8ee99!important;background:linear-gradient(160deg,#ffffff24,#ffffff0d)!important;box-shadow:0 0 0 1px #fbf8ee26!important}
+.sheet .machine-nav button[aria-pressed=true] .station-icon,.sheet .machine-nav button[aria-pressed=true] .station-card-name,.sheet .machine-nav button[aria-pressed=true]>em{color:var(--ui-ink)!important}
+.sheet .machine-nav button[aria-pressed=true] .station-ring .map-ring-track circle:first-child{stroke:#fbf8ee55;fill:#ffffff12}
+.sheet .machine-nav button[aria-pressed=true] .station-ring>em{color:var(--ui-leaf-glow);box-shadow:inset 0 0 0 1px #fbf8ee55}
+.sheet .machine-nav button.is-bottleneck:not([aria-pressed=true]){background:var(--pop-fill,#ffffff0a);box-shadow:none}
+.sheet .machine-nav button.is-bottleneck[aria-pressed=true]{box-shadow:0 0 0 1px #fbf8ee26!important}
+.sheet .machine-nav button.is-bottleneck .station-orbit{display:none}
+.sheet .machine-nav button.is-bottleneck:not(.is-best-buy) .station-card-name{color:var(--pop-ink,#fbf8ee)!important}
+.sheet .machine-nav button.is-bottleneck:not(.is-best-buy)>em,.sheet .machine-nav button.is-bottleneck:not(.is-best-buy) .station-ring>em{color:var(--ui-leaf-glow)}
+.sheet .machine-nav button.is-bottleneck:not(.is-best-buy) .station-ring .map-ring-fill{stroke:var(--ui-leaf-glow)}
+.sheet .machine-nav button.is-bottleneck::after,.sheet .machine-nav button.is-bottleneck:not(.can-upgrade)::after{background:var(--ui-soft);box-shadow:none}
+.sheet .machine-nav button.is-best-buy .station-card-name,.sheet .machine-nav button.is-best-buy[aria-pressed=true] .station-card-name{color:var(--ui-brass)!important}
+.sheet .machine-nav button.is-best-buy .station-ring .map-ring-fill{stroke:var(--ui-brass)}

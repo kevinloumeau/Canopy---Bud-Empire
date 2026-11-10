@@ -135,3 +135,36 @@
 @container (max-height:539px){
  html body .sheet>[data-pane=flowers][data-room=full] .strain-hero-info>p{display:none!important}
 }
+
+/* UI review 2026-11-10: Orders has a crew row, an ability row and three extras (Kiosks, Customer line, Online orders),
+   which needed about 850px and were cut at the fold; Pickup with its two extras was cut too. With two or more extras
+   showing, the rows become compact tiles: crew (wide, for its two buttons) beside the ability, then the extras side by
+   side (three extras drop their icon so the names fit). The Counters strip becomes one line. Both stations now fit a
+   390-wide phone without scrolling. */
+@media(max-width:779px){
+ html body .sheet>[data-pane=factory][data-room=full]:has(.station-extra:not([hidden])~.station-extra:not([hidden])){padding-bottom:8px!important}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles:has(>.station-extra:not([hidden])~.station-extra:not([hidden])){grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:6px!important}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles:has(>.station-extra:not([hidden])~.station-extra:not([hidden]))>:is(#stationTeam,.station-team):not([hidden]){display:flex!important;flex-wrap:wrap;align-items:center!important;align-content:space-between;gap:4px 6px!important;padding:6px 8px!important;grid-column:span 2!important;position:relative}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles:has(>.station-extra:not([hidden])~.station-extra:not([hidden]))>:is(#stationTeam,#stationAbility):not([hidden]){grid-column:span 3!important}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles:has(>.station-extra:not([hidden])~.station-extra:not([hidden])):has(>#stationAbility[hidden])>#stationTeam:not([hidden]){grid-column:1/-1!important}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles:has(>.station-extra:not([hidden])~.station-extra:not([hidden])):not(:has(>.station-extra:not([hidden])~.station-extra:not([hidden])~.station-extra:not([hidden])))>:is(#stationTeam,.station-team).station-extra:not([hidden]){grid-column:span 3!important}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles:has(>.station-extra:not([hidden])~.station-extra:not([hidden]))>:is(#stationTeam,.station-team)>.team-icon{flex:0 0 20px;width:20px!important;height:20px!important}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles:has(>.station-extra:not([hidden])~.station-extra:not([hidden]))>:is(#stationTeam,.station-team)>.team-icon svg{width:13px;height:13px}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles:has(>.station-extra:not([hidden])~.station-extra:not([hidden]))>:is(#stationTeam,.station-team):has(button.is-owned)>.team-icon::after{right:-4px;bottom:-4px;width:11px;height:11px;background-size:11px}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles:has(>.station-extra:not([hidden])~.station-extra:not([hidden]))>:is(#stationTeam,.station-team)>.team-copy{display:contents!important}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles:has(>.station-extra:not([hidden])~.station-extra:not([hidden]))>:is(#stationTeam,.station-team)>.team-copy>b{flex:1 1 calc(100% - 26px);min-width:0;font-size:12px!important;line-height:1.15!important;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis;text-align:left}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles:has(>.station-extra:not([hidden])~.station-extra:not([hidden]))>:is(#stationTeam,.station-team)>.team-copy>small{flex:0 0 100%;min-width:0;font-size:10.5px!important;line-height:1.2!important;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis;text-align:left}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles:has(>.station-extra:not([hidden])~.station-extra:not([hidden]))>:is(#stationTeam,.station-team)>.team-copy>small:empty{display:none}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles:has(>.station-extra:not([hidden])~.station-extra:not([hidden]))>:is(#stationTeam,.station-team)>.team-copy>.line-pips{flex:0 0 100%}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles:has(>.station-extra:not([hidden])~.station-extra:not([hidden])~.station-extra:not([hidden]))>.station-team.station-extra>.team-icon{display:none!important}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles:has(>.station-extra:not([hidden])~.station-extra:not([hidden])~.station-extra:not([hidden]))>.station-team.station-extra>.team-copy>b{flex-basis:100%}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles:has(>.station-extra:not([hidden])~.station-extra:not([hidden]))>:is(#stationTeam,.station-team)>button{flex:1 1 40%;width:auto!important;min-height:30px!important;height:30px!important;padding-block:2px!important}
+ html body .sheet>[data-pane=factory][data-room=full] .order-counter-expansion{margin:2px 0 0;padding:6px 0 2px;gap:10px}
+ html body .sheet>[data-pane=factory][data-room=full] .order-counter-expansion .order-counter-visual{display:flex;align-items:center;gap:12px;max-width:none}
+ html body .sheet>[data-pane=factory][data-room=full] .order-counter-expansion .order-counter-heading{margin:0;gap:6px}
+ html body .sheet>[data-pane=factory][data-room=full] .order-counter-expansion .order-counter-slots{display:flex;gap:6px}
+ html body .sheet>[data-pane=factory][data-room=full] .order-counter-expansion .order-counter-slot svg{width:24px;height:22px}
+ html body .sheet>[data-pane=factory][data-room=full] .order-counter-expansion .order-counter-slot em{display:none}
+ html body .sheet>[data-pane=factory][data-room=full] .order-counter-expansion button:not([hidden]){display:flex;align-items:center;gap:6px;min-height:28px;padding:3px 10px;white-space:nowrap}
+ html body .sheet>[data-pane=factory][data-room=full] .order-counter-expansion button:not([hidden])+small{display:none}
+}
