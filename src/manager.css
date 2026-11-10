@@ -9,6 +9,7 @@
 .manager-tag .manager-badge{position:relative;display:grid;place-items:center;flex:none;width:22px;height:22px;border-radius:50%;background:conic-gradient(var(--ui-leaf-glow) calc(var(--p,0)*1%),#ffffff2e 0)}
 .manager-tag .manager-badge::before{content:'';position:absolute;inset:2.5px;border-radius:50%;background:var(--ui-leaf-glow);box-shadow:inset 0 1px 0 #ffffff59,0 0 0 1.5px #0f2a1c}
 .manager-tag .manager-badge b{position:relative;overflow:visible;color:#123020;font:800 11px/1 'Bricolage Grotesque',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.manager-tag.is-two .manager-badge b{font-size:9.5px;letter-spacing:-.03em}
 .manager-tag[data-mode=call] .manager-goal,.manager-tag[data-mode=paid] .manager-goal{border-color:#a8dc5280}
 .manager-tag[data-mode=paid] .manager-goal em{color:var(--ui-ink)}
 .manager-tag .manager-goal b{min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:600}
@@ -28,8 +29,9 @@
    colour, so the call and the manager's own tag read as a pair; brass stays the next buy's. */
 .world .marker.manager-call,.world .marker.manager-call:not(.selected){left:0;top:0;display:flex;align-items:center;gap:6px;min-width:0;min-height:0;height:30px;padding:0 11px 0 4px;border-radius:999px;border:1px solid #a8dc5266;background:linear-gradient(180deg,var(--ui-sheen),transparent 45%),var(--ui-glass-strong);box-shadow:var(--ui-shadow);-webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);color:var(--ui-ink);font:600 12px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:0;text-transform:none;white-space:nowrap;opacity:1;cursor:pointer;z-index:3;pointer-events:auto}
 .world .marker.manager-call[hidden]{display:none!important}
-.manager-call::after{content:'';position:absolute;left:50%;top:100%;width:9px;height:9px;margin-top:-5px;transform:translateX(-50%) rotate(45deg);background:var(--ui-glass-strong);border:solid #a8dc5266;border-width:0 1px 1px 0;border-radius:0 0 2px 0}
-.manager-call::before{content:'';position:absolute;inset:-8px -6px}
+/* .world .marker in front: illustrated.css hides every marker's ::after, which left the call pill without its pointer. */
+.world .marker.manager-call::after{content:'';display:block;position:absolute;left:50%;top:100%;width:9px;height:9px;margin-top:-5px;transform:translateX(-50%) rotate(45deg);background:var(--ui-glass-strong);border:solid #a8dc5266;border-width:0 1px 1px 0;border-radius:0 0 2px 0}
+.world .marker.manager-call::before{content:'';position:absolute;inset:-8px -6px}
 .manager-call .call-badge{position:relative;display:grid;place-items:center;flex:none;width:22px;height:22px;border-radius:50%;background:conic-gradient(var(--ui-leaf-glow) calc(var(--p,100)*1%),#ffffff2e 0)}
 .manager-call .call-badge::before{content:'';position:absolute;inset:2.5px;border-radius:50%;background:var(--ui-leaf-glow);box-shadow:inset 0 1px 0 #ffffff59,0 0 0 1.5px #0f2a1c}
 .manager-call .call-badge svg{position:relative;width:11px;height:11px;fill:none;stroke:#123020;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}

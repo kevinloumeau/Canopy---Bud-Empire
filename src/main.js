@@ -3530,7 +3530,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     if(managerPaid&&performance.now()>=managerPaid.until)managerPaid=null;
     var call=managerCalls.call,working=!!call&&call.station===w.target,lv=managerLv(),name=MANAGER_STATION_NAMES[w.target];
     var mode=managerPaid?'paid':working?'call':'',text=managerPaid?managerPaid.text:working?CALLS[w.target].doing:name+' '+handsOnAt(lv)+'×',hk=mode+'|'+text+'|'+lv;
-    if(managerTag.dataset.hands!==hk){managerTag.dataset.hands=hk;managerTag.dataset.mode=mode;managerTag.querySelector('em').textContent=text;managerTag.querySelector('b').textContent=lv;
+    if(managerTag.dataset.hands!==hk){managerTag.dataset.hands=hk;managerTag.dataset.mode=mode;managerTag.querySelector('em').textContent=text;managerTag.querySelector('b').textContent=lv;managerTag.classList.toggle('is-two',lv>9);
       managerTag.setAttribute('aria-label','Manager, level '+lv+'. '+(working?CALLS[w.target].doing:'Working '+name+', '+handsOnAt(lv)+' times faster')+'. Show the manager card')}
     ringShare(managerTag,working?call.work/CALL_WORK:levelProgress(state.manager.xp).share);
     managerTag.style.transform='translate3d('+pos.x+'px,'+pos.y+'px,0) translate(-50%,-100%)'}
@@ -4029,7 +4029,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
       if(x.button.querySelector('b').textContent!==price)x.button.querySelector('b').textContent=price;
       x.button.disabled=disabled;x.button.hidden=x.key==='window'&&owned;x.button.classList.toggle('is-owned',owned);x.button.classList.toggle('is-building',x.key==='window'&&building&&!w.owned)})}
   function renderOrderExtras(){var show=!securitySelected&&!loungeSelected&&selected===4&&state.lines[4]>0;
-    onlineRow.hidden=!show;if(show){var waiting=onlineOpen()?onlineRequestsReady():0,note=onlineOpen()?(waiting?waiting+' waiting':'None waiting'):'Needs pickup window';if(onlineRow.querySelector('small').textContent!==note)onlineRow.querySelector('small').textContent=note;var go=onlineOpen()?'Open':'Pickup';if(onlineRow.querySelector('button span').textContent!==go)onlineRow.querySelector('button span').textContent=go;onlineRow.querySelector('button').classList.toggle('is-waiting',waiting>0)}
+    onlineRow.hidden=!show;if(show){var waiting=onlineOpen()?onlineRequestsReady():0,note=onlineOpen()?(waiting?waiting+' waiting':'None waiting'):tieLast('Needs pickup window');if(onlineRow.querySelector('small').textContent!==note)onlineRow.querySelector('small').textContent=note;var go=onlineOpen()?'Open':'Pickup';if(onlineRow.querySelector('button span').textContent!==go)onlineRow.querySelector('button span').textContent=go;onlineRow.querySelector('button').classList.toggle('is-waiting',waiting>0)}
     orderExtras.forEach(function(x){x.row.hidden=!show;if(!show)return;var info=x.info.textContent.replace(/ (customers|installed)/,'');if(x.row.querySelector('small').textContent!==info)x.row.querySelector('small').textContent=info;
       ['span','b'].forEach(function(tag){var text=x.source.querySelector(tag).textContent;if(x.button.querySelector(tag).textContent!==text)x.button.querySelector(tag).textContent=text});
       x.button.disabled=x.source.disabled;x.button.setAttribute('aria-label',x.source.getAttribute('aria-label')||x.row.querySelector('b').textContent)})}
@@ -4280,7 +4280,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     $('upgradeFunding').textContent=maxed?'Top of the security track':affordable?'Ready to train':fmt(Math.max(0,price-state.money))+' to go';
     $('upgradeProgress').value=maxed?100:Math.min(100,state.money/price*100);$('upgradeProgress').setAttribute('aria-valuetext',affordable?'Training ready':fmt(Math.max(0,price-state.money))+' needed for level '+(lvl+1));
     paintUpgradePreview(-1);
-    var road=$('nextAppearance');road.classList.add('unlock-road');road.hidden=false;road.innerHTML=nextLook?'<b>Lv '+nextLook+'</b><span>new look · '+economy.SECURITY_TIERS[economy.stationLook(nextLook)-1]+'</span>':'<b>Flagship booth</b><span>every level still speeds checks</span>';
+    var road=$('nextAppearance');road.classList.add('unlock-road');road.hidden=false;road.innerHTML=nextLook?'<b>Lv '+nextLook+'</b><span>new look · '+economy.SECURITY_TIERS[economy.stationLook(nextLook)-1]+'</span>':'<b>Flagship booth</b><span>top look</span>';
     $('machineCost').textContent=maxed?'—':fmt(price);$('buyMachine').disabled=!affordable;$('buyMachine').querySelector('span').textContent='UPGRADE';
     $('buyMachineMax').disabled=!quote.levels;$('machineMaxLabel').textContent='MAX'+(quote.levels?' +'+quote.levels+' LV':'');$('machineMaxCost').textContent=quote.levels?fmt(quote.cost):'—';$('buyMachineMax').setAttribute('aria-label','Train security by '+quote.levels+' levels for '+fmt(quote.cost));
     $('buyMachine').style.setProperty('--funded',(maxed?0:Math.min(100,state.money/price*100))+'%');

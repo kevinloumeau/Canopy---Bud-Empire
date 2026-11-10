@@ -17,7 +17,7 @@
    little with the room, the names, levels and figures stay the SE's size, the gaps and the card's padding grow, and
    the card stretches to the bottom of the half-open sheet so it is never cut off by the crew rows below it. */
 @media(max-width:779px){
- .sheet>[data-pane=factory]>*{--st-thumb:min(calc(22px + var(--rp) * .094),52px);--st-tile:calc(var(--st-thumb) + 31px);--st-art:calc(var(--s-art) + 8px)}
+ .sheet>[data-pane=factory]>*{--st-thumb:min(calc(22px + var(--rp) * .094),52px);--st-tile:calc(var(--st-thumb) + 31px);--st-art:min(calc(var(--s-art) + 8px),100cqw - 262px)}
  .sheet .machine-nav{gap:var(--s-tile-gap)!important;margin:0 0 var(--s-gap)!important;padding:0!important;grid-auto-rows:var(--st-tile)}
  .sheet .machine-nav button{grid-template-rows:var(--st-thumb) auto auto!important;align-content:center;padding:3px 2px 2px!important}
  .sheet .machine-nav button .machine-thumb{width:calc(var(--st-thumb) * 1.4)!important;height:var(--st-thumb)!important}
