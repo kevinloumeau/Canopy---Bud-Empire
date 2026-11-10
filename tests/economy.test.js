@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {customerHandoff,HANDOFF_FLOOR,counterLanes,stationTier,tierBoost,retailBoost,batchSize,capacity,stationCost,staffCost,basketSize,storageCapacity,readyCapacity,onlineSize,counterServiceDuration,patience,walkSpeed,preferredStrain,rewardScale,stepsToGain,raiseTogether} from '../src/economy.js';
+import {customerHandoff,HANDOFF_FLOOR,counterLanes,stationTier,tierBoost,retailBoost,batchSize,capacity,stationCost,staffCost,basketSize,storageCapacity,readyCapacity,onlineSize,counterServiceDuration,patience,patienceScale,lineLimit,LINE_START,LINE_GROWTH,LINE_MAX,LINE_PATIENCE,walkSpeed,preferredStrain,rewardScale,stepsToGain,raiseTogether} from '../src/economy.js';
 import {migrateProgression,satisfyCustomer,dailyStatus,claimDaily,goalStatus,claimGoal,recordGoal,storeRate,buyStore,STORES} from '../src/progression.js';
 
 test('tiers double output at 10/20/30/50/75/100 and per-level gains stay linear between them',()=>{
@@ -26,7 +26,7 @@ test('counter handoff keeps its 1.4s floor and the service format factor',()=>{
 });
 
 test('queue comfort stretches patience, floor flow speeds walking, curing/duration are exposed as sale bonuses',()=>{
-  assert.equal(patience('hurried',0),20);assert.equal(patience('vip',0),15);assert.ok(Math.abs(patience('hurried',1)-23)<1e-9);assert.ok(Math.abs(patience('vip',8)-33)<1e-9);
+  assert.equal(patience('hurried',0),28);assert.equal(patience('vip',0),21);assert.ok(Math.abs(patience('hurried',1)-32.2)<1e-9);assert.ok(Math.abs(patience('vip',8)-46.2)<1e-9);
   assert.ok(Math.abs(walkSpeed(0)-2.8)<1e-9);assert.ok(walkSpeed(8)>2.8*1.15&&walkSpeed(8)<2.8*1.2);assert.ok(Math.abs(walkSpeed(undefined)-2.8)<1e-9);
   // Floor flow's pace tops out: level 20 is under 2.2× and level 40 barely faster than 20, so the shop never blurs.
   assert.ok(walkSpeed(20)<2.8*1.25&&walkSpeed(40)-walkSpeed(20)<.05);
@@ -136,3 +136,15 @@ test('stations a hair apart are priced as one bundle, so the pick stays on a sta
   assert.ok(options[5].gain>one.gain&&options[5].spend>one.spend);
 });
 
+
+test('a new shop starts with a line of eight, and patience stretches by as much as the line grew',()=>{
+  assert.equal(LINE_START,8);assert.equal(lineLimit(1,0,0),8);assert.equal(lineLimit(0,0,0),8);
+  // Every second desk level or desk employee adds a place, six at most; each Customer line upgrade adds two.
+  assert.equal(lineLimit(3,0,0),9);assert.equal(lineLimit(5,2,0),11);assert.equal(lineLimit(30,8,0),LINE_START+LINE_GROWTH);assert.equal(lineLimit(30,8,3),20);
+  assert.equal(lineLimit(100,20,8),LINE_MAX);assert.equal(lineLimit(100,20,40),LINE_MAX);assert.equal(lineLimit(1,0,11),LINE_MAX);
+  // The line is a third longer than the old six; patience grows a little more than that so nobody tips less for it.
+  assert.ok(LINE_PATIENCE>=LINE_START/6);assert.equal(patienceScale(0),LINE_PATIENCE);assert.ok(Math.abs(patienceScale(2)-LINE_PATIENCE*1.3)<1e-9);
+  const p=migrateProgression({});
+  assert.ok(satisfyCustomer(p,-1,'hurried','boutique',28,patienceScale(0))>1);assert.equal(satisfyCustomer(p,-1,'hurried','boutique',28.5,patienceScale(0)),1);
+  assert.equal(satisfyCustomer(p,-1,'vip','boutique',21,patienceScale(0)),2);assert.equal(satisfyCustomer(p,-1,'vip','boutique',21.5,patienceScale(0)),1);
+});
