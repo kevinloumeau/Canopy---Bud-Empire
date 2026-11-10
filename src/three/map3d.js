@@ -37,6 +37,9 @@ const MAX_PEOPLE = 160, MAX_CARS = 32;
 // bounce, so lit faces glow gold while the shade keeps its colour instead of going grey.
 const SUN_COLOUR = '#ffe7c4', SKY = '#fff4e2', BOUNCE = '#9f9a78';
 const SUN_STRENGTH = 2.5, SKY_STRENGTH = 1.32;
+// The night's share of the grade (CustomToneMapping, below): how much brighter the whole picture is exposed at full
+// night, and the colour added to its darks (display space).
+const NIGHT_EXPOSURE = .14, NIGHT_LIFT = [.022, .034, .075];
 
 // The colour grade, run in every lit material's own shader as Three.js's custom tone mapping (no extra render pass, so
 // it costs the phone a few instructions a pixel and no fill rate). Graded in display space: richer colour, sunlit
@@ -44,14 +47,20 @@ const SUN_STRENGTH = 2.5, SKY_STRENGTH = 1.32;
 // sky are mixed in after it at their own colour, so the town's edges still melt into the background exactly.
 THREE.ShaderChunk.tonemapping_pars_fragment = THREE.ShaderChunk.tonemapping_pars_fragment.replace(
   'vec3 CustomToneMapping( vec3 color ) { return color; }', `vec3 CustomToneMapping( vec3 color ) {
+  // After dark (toneMappingExposure runs from 1 by day to 1 + NIGHT_EXPOSURE at full night, which is how the night
+  // reaches every shader with no new uniform) the darks are lifted into a soft moonlit blue instead of being pushed
+  // down to forest green, and the S curve eases off, so dark paint, tree crowns and roofs keep their shape at night
+  // (Kevin, 2026-11-10: "too dark"). Lit rooms and lamplight sit above the lift and keep their warmth.
+  float night = clamp( ( toneMappingExposure - 1.0 ) / NIGHT_EXPOSURE, 0.0, 1.0 );
   vec3 c = pow( clamp( color * toneMappingExposure, 0.0, 1.0 ), vec3( 1.0 / 2.2 ) );
   float l = dot( c, vec3( .2126, .7152, .0722 ) );
   c = mix( vec3( l ), c, 1.16 );
-  c += smoothstep( .45, 1.0, l ) * vec3( .022, .01, -.018 ) + ( 1.0 - smoothstep( .0, .5, l ) ) * vec3( -.035, -.008, -.02 );
+  float dark = 1.0 - smoothstep( .0, .5, l );
+  c += smoothstep( .45, 1.0, l ) * vec3( .022, .01, -.018 ) + dark * mix( vec3( -.035, -.008, -.02 ), NIGHT_LIFT, night );
   c = clamp( c, 0.0, 1.0 );
-  c = mix( c, c * c * ( 3.0 - 2.0 * c ), .2 );
+  c = mix( c, c * c * ( 3.0 - 2.0 * c ), .2 * ( 1.0 - night * .6 ) );
   return pow( c, vec3( 2.2 ) );
-}`);
+}`.replace(/NIGHT_EXPOSURE/g, NIGHT_EXPOSURE.toFixed(3)).replace('NIGHT_LIFT', `vec3( ${NIGHT_LIFT.join(', ')} )`));
 
 export function createMap3D(canvas, layout) {
   let renderer;
@@ -1028,7 +1037,7 @@ export function createMap3D(canvas, layout) {
     (frame.stations || []).forEach(s => {
       if (!s.built || s.visible === false || (s.pop !== undefined && s.pop < 1) || s.index === undefined) return;
       const r = Math.max(s.w, s.d), grow = s.index === 1, counter = s.index === 4 || s.index === 6;
-      pool(s.x, s.y, s.z, r * 2.6, r * 2.6, 0, 0, grow ? GROW_LIGHT : counter ? COUNTER_LIGHT : TASK_LIGHT, grow ? .95 : s.y > 0 ? .75 : .55);
+      pool(s.x, s.y, s.z, r * 2.6, r * 2.6, 0, 0, grow ? GROW_LIGHT : counter ? COUNTER_LIGHT : TASK_LIGHT, grow ? .95 : s.y > 0 ? .9 : .55);
     });
     const sh = layout.shell;
     if (!sh) return;
@@ -1038,7 +1047,7 @@ export function createMap3D(canvas, layout) {
       if (floor) pool(x, floor.y, z, 6.4, 6.4, 0, 0, TASK_LIGHT, (floor.y > 0 ? .6 : .42) * power);
     });
     // The upper floors sit out of the ground floor's lamps, so they take a soft wash of their own.
-    layout.floors.forEach((f, n) => { if (n) pool(f.x || 0, f.y, f.z + f.d * .1, f.w * .95, f.d * 1.5, 0, 0, TASK_LIGHT, n === 2 ? .75 : .45); });
+    layout.floors.forEach((f, n) => { if (n) pool(f.x || 0, f.y, f.z + f.d * .1, f.w * .95, f.d * 1.5, 0, 0, TASK_LIGHT, n === 2 ? .95 : .55); });
   }
   // The online pickup window after dark (Kevin, 2026-11-08: "add exterior lighting for the pick up"): it sits on the
   // sidewalk outside the shop's own light, so it takes its own: a warm glow inside the hatch, a pool on the counter and
@@ -1202,8 +1211,8 @@ export function createMap3D(canvas, layout) {
   // it turns three-quarters to the camera (which looks back along (1, 0, 1); screen right is (cos 45°, 0, -sin 45°)),
   // to the side its sprite would face (facing > 0 is screen right).
   function placeCharacters(list, stepSeconds, night) {
-    Object.values(characterSources).forEach(s => s.materials.forEach(m => { m.emissiveIntensity = CHARACTER_LIFT * (1 - night * .85); }));
-    characterRim.value = CHARACTER_RIM * (1 - night * .7);
+    Object.values(characterSources).forEach(s => s.materials.forEach(m => { m.emissiveIntensity = CHARACTER_LIFT * (1 - night * .45); }));
+    characterRim.value = CHARACTER_RIM * (1 - night * .45);
     const seen = new Set();
     carriedBags.count = 0;
     (list || []).forEach((c, i) => {
@@ -1276,11 +1285,17 @@ export function createMap3D(canvas, layout) {
   }
 
   const matrix = new THREE.Matrix4(), position = new THREE.Vector3(), scale = new THREE.Vector3(), quaternion = new THREE.Quaternion(), colour = new THREE.Color();
-  const dayHemi = hemi.intensity, daySun = sun.intensity, nightSky = new THREE.Color('#1d2440'), daySky = hazeColour.clone();
+  const dayHemi = hemi.intensity, daySun = sun.intensity, nightSky = new THREE.Color('#242c50'), daySky = hazeColour.clone();
   // Moonlight (Kevin's visual review, 2026-11-07): after dark the sky light turns a cool blue-violet and the sun a pale
   // moon, so the night reads as night rather than a dim overcast day, while warm lamps, windows and the shop stand out.
   const daySkyLight = hemi.color.clone(), dayBounce = hemi.groundColor.clone(), daySunLight = sun.color.clone();
-  const moonSky = new THREE.Color('#8f98e6'), moonBounce = new THREE.Color('#3a3456'), moon = new THREE.Color('#a9b8ff');
+  // Brighter since 2026-11-10 (Kevin: "too dark"): a fuller moon and a lighter sky, so the street, the neighbours and the
+  // shop's roof and upper floor keep their shape, and the bounce off the ground no longer leaves undersides black.
+  const moonSky = new THREE.Color('#9aa6f2'), moonBounce = new THREE.Color('#57527e'), moon = new THREE.Color('#b4c2ff');
+  const NIGHT_SKY_DROP = .5, NIGHT_SUN_DROP = .7;
+  // Sunset: halfway between day and night the light used to pass through a flat grey, like an overcast afternoon. The
+  // low sun now turns amber and the sky a dusty rose on the way down (and back up at dawn), fading out by full night.
+  const sunsetSun = new THREE.Color('#ff9a52'), sunsetSky = new THREE.Color('#ffc2a6'), sunsetHaze = new THREE.Color('#b98a92');
   let lost = false;
   canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); lost = true; });
   canvas.addEventListener('webglcontextrestored', () => { lost = false; });
@@ -1299,7 +1314,7 @@ export function createMap3D(canvas, layout) {
     mesh.visible = true;
   };
   function placeFigures(figures, night) {
-    shade = 1 - night * .55;
+    shade = 1 - night * .4;
     figures.forEach((f, i) => place(f, card(i)));
     for (let i = figures.length; i < cards.length; i++) cards[i].visible = false;
   }
@@ -1323,13 +1338,15 @@ export function createMap3D(canvas, layout) {
 
     const night = frame.night || 0;
     breatheBlueprint(!!frame.ghostReady, (frame.time || 0) / 1000, night);
-    hemi.intensity = dayHemi * (1 - night * .66);
-    hemi.color.copy(daySkyLight).lerp(moonSky, night);
+    hemi.intensity = dayHemi * (1 - night * NIGHT_SKY_DROP);
+    const sunset = 4 * night * (1 - night);
+    hemi.color.copy(daySkyLight).lerp(moonSky, night).lerp(sunsetSky, sunset * .4);
     hemi.groundColor.copy(dayBounce).lerp(moonBounce, night);
-    sun.intensity = daySun * (1 - night * .86);
-    sun.color.copy(daySunLight).lerp(moon, night);
+    sun.intensity = daySun * (1 - night * NIGHT_SUN_DROP);
+    renderer.toneMappingExposure = 1 + night * NIGHT_EXPOSURE;
+    sun.color.copy(daySunLight).lerp(moon, night).lerp(sunsetSun, sunset * .6);
     nightWindowsUniform.value = night;
-    scene.background.copy(background).lerp(nightSky, night);
+    scene.background.copy(background).lerp(nightSky, night).lerp(sunsetHaze, sunset * .3);
     hazeUniforms.hazeColour.value.copy(scene.background);
     return night;
   }
@@ -1634,7 +1651,7 @@ export function createMap3D(canvas, layout) {
     updateRevealBeams(frame.revealBeams, frame.unit || 40);
     updateSparkles(frame.sparkles);
 
-    const figures = frame.figures || [], shade = 1 - night * .55;
+    const figures = frame.figures || [], shade = 1 - night * .4;
     placeFigures(figures, night);
     // An elevation gives way to its Blender model once that has loaded.
     flatMeshes.forEach(f => { f.visible = !!f.userData.ready && !(f.userData.model && fixtures[f.userData.model]); f.material.color.setScalar(shade); });
