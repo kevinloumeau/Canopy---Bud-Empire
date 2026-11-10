@@ -226,7 +226,7 @@ export function buildFlagship(world, layout, { material, nightWindows }) {
       shopGlass.emissiveIntensity = .05 + night * .6;
       curtain.emissiveIntensity = 0;
       curtain.color.copy(curtainDay).lerp(curtainNight, night * .85);
-      bladeMat.emissiveIntensity = .15 + night * .75;
+      bladeMat.emissiveIntensity = .15 + night * 1.05;
       crownGlow.color.set(BRASS).multiplyScalar(1 + night * .4);
     },
     // The top of what stands now, for the map tag.

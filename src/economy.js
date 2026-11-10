@@ -31,8 +31,18 @@ export function onlineSize(completed,lines){return (4+(completed%5)*3)*retailBoo
 export function counterLanes(level){return 1+Math.floor(Math.max(0,(level||0)-1)/5);}
 // Both equipment and training shorten the handoff, with gentler gains at high levels; 1.4s is the physical floor per lane.
 export function counterServiceDuration(station,rate,serviceFactor=1){return (1.4+Math.max(1.2/Math.pow(rate,.15),[2,3][station-4]/rate))*(station===5?serviceFactor:1);}
-// Hurried shoppers and VIPs judge their whole visit; Queue comfort stretches how long they stay cheerful.
-export function patience(type,comfortLevel){return (type==='vip'?15:20)*(1+Math.max(0,comfortLevel||0)*.15);}
+// The line a new shop starts with holds LINE_START shoppers (it was six until 2026-11-10; Kevin: "have the store a bit
+// busier by default"). Every second order desk level or desk employee adds a place, up to LINE_GROWTH more, then each
+// Customer line upgrade adds two, up to LINE_MAX. Arrivals were never the limit (someone new walks up the moment the
+// line has room), so a busier floor means a longer line, and a longer line is a longer wait at the same counters:
+// LINE_PATIENCE stretches the hurried and VIP patience to match, which keeps tips and reputation where they were (a
+// seeded 10-minute sim at five shop sizes sold the same bags and earned the same reputation as the six-place line).
+export const LINE_START=8,LINE_GROWTH=6,LINE_MAX=30,LINE_PATIENCE=1.4;
+// Hurried shoppers and VIPs judge their whole visit (28 and 21 seconds standing); Queue comfort stretches how long
+// they stay cheerful. patienceScale is the same stretch as a factor on progression.js's base 20 and 15 seconds.
+export function patience(type,comfortLevel){return (type==='vip'?15:20)*patienceScale(comfortLevel);}
+export function patienceScale(comfortLevel){return LINE_PATIENCE*(1+Math.max(0,comfortLevel||0)*.15);}
+export function lineLimit(deskLevel,deskStaff,lineLevel){return Math.min(LINE_MAX,Math.min(LINE_START+LINE_GROWTH,LINE_START+Math.floor(Math.max(0,(deskLevel||0)-1)/2)+Math.floor((deskStaff||0)/2))+(lineLevel||0)*2);}
 // Customers walk a little faster with each Floor flow level, with diminishing returns that top out at about 1.25× the
 // base pace (Kevin, 2026-11-07: shoppers looked too fast; it was 2.2×). Floor flow earns its keep through arrivals; a sim of
 // a busy shop at Lv 20 sold within 0.3% of the old pace, because counters, not the walk, set the rate.
