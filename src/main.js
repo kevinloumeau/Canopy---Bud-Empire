@@ -2233,8 +2233,21 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
         var route=c.kiosk?kioskRoute(c.kioskIndex):queueRoute(false),join=laneJoinIndex(route);
         // Step down the desk's door side and join the lane in the corridor in front of it, clear of the doorman.
         c.routeKind=c.kiosk?'kiosk':'order';c.laneDistance=routeLength(route.slice(0,join+1));c.waypoints=[{x:ID_CHECK.x,z:8.5},route[join]];
+        // A short line never reaches the pen's two front rows, and walking them empty sent every guest along the
+        // storefront toward the pickup window before doubling back (Kevin, 2026-11-10: "the customers walk to the
+        // window after id check"). When the line ends in the row by the counters and nobody ahead is still out in the
+        // front rows, the guest cuts through the pen's open left end straight to the back of that row.
+        if(!c.kiosk){var cut=orderShortcut(c);if(cut){c.laneDistance=cut.distance;c.waypoints=cut.waypoints}}
       }
     }
+  }
+  // The way straight into the order pen's counter row (see moveToIdCheck), or null when the line is too long for it.
+  function orderShortcut(c){
+    var pen=orderPen();if(pen.rows.length<2)return null;
+    var distance=Math.hypot(pen.right-ORDER_QUEUE_GATE.x,pen.rows[0]-ORDER_QUEUE_GATE.z)+pen.right-pen.left;
+    if(customerQueueDistance(c)>distance)return null;
+    if(customerQueue(c).some(function(q){return q!==c&&q.laneDistance!=null&&q.laneDistance>distance+.01}))return null;
+    return{distance:distance,waypoints:[{x:ID_CHECK.x,z:8.5},{x:-8.2,z:8.3},{x:pen.left-1.15,z:pen.rows[0]},{x:pen.left,z:pen.rows[0]}]};
   }
   function moveQueuedCustomer(c,dt){
     if(c.idChecked===false){moveToIdCheck(c,dt);return}
@@ -2779,7 +2792,8 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     var O=orderPen(),right=O.right+.65,left=O.left-.65,rows=O.rows,m=rows.length,top=(ORDER_QUEUE_GATE.z+rows[0])/2;
     var order=[[left,top,O.right-.6,top],[right,6.4,right,rows[m-1]]];
     for(var o=0;o<m-1;o++)order.push(o%2?[left,mid(rows[o],rows[o+1]),O.right-.6,mid(rows[o],rows[o+1])]:[right,mid(rows[o],rows[o+1]),O.left+.6,mid(rows[o],rows[o+1])]);
-    if(m>1)order.push([left,top,left,mid(rows[m-2],rows[m-1])]);
+    // The left side stays open beside the counter row: the way in while the line is short (orderShortcut).
+    if(m>2)order.push([left,mid(rows[0],rows[1]),left,mid(rows[m-2],rows[m-1])]);
     return[split,order];
   }
   // The smoking lounge's face. The shelving wall continues left into a speakeasy doorway — dark lacquer with brass
