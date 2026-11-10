@@ -59,7 +59,9 @@ export function floorSpot(ground,floors,margin=.6){
 export function sendToSpot(w,spot){w.target=-1;w.path=route(w,spot);w.look=null;w.moving=w.path.length>0;return w.moving;}
 // A fresh manager: standing at their home station (`at`, -1 for none) on the given spot.
 // `met`: the player has been shown who the manager is (the one-time "This is you" tip).
-export function migrateManager(raw){const at=raw&&Number.isInteger(raw.at)&&raw.at>=0&&raw.at<6?raw.at:-1;return {at,met:!!(raw&&raw.met===true)};}
+// `xp`: floor calls handled (the manager's level comes from it, and a reopen keeps it). `called`: the first call's tip was shown.
+export function migrateManager(raw){const at=raw&&Number.isInteger(raw.at)&&raw.at>=0&&raw.at<6?raw.at:-1,xp=raw&&Number.isFinite(raw.xp)?Math.max(0,Math.min(1e6,Math.floor(raw.xp))):0;
+  return {at,met:!!(raw&&raw.met===true),xp,called:!!(raw&&raw.called===true)};}
 // The live walker (not saved): where the figure is, the route left, the ground covered (drives the walk cycle).
 export function createWalker(spot){return {x:spot.x,y:spot.y,z:spot.z,path:[],heading:spot.look||{x:-1,z:1},look:spot.look||null,ground:0,moving:false,target:-1};}
 // Sends the walker to station i's spot. Returns false when already there (or on the way).
@@ -75,4 +77,48 @@ export function stepWalker(w,dt){if(!w.moving||!(dt>0))return w;let left=dt;
   if(!w.path.length)w.moving=false;
   return w;}
 // The hands-on factor for station i: HANDS_ON while the manager stands at it (arrived, not walking), else 1.
-export function handsOn(w,i){return w&&!w.moving&&w.target===i?HANDS_ON:1;}
+// At manager level `level` (managerLevel below) the factor is handsOnAt(level).
+export function handsOn(w,i,level=1){return w&&!w.moving&&w.target===i?handsOnAt(level):1;}
+
+// Floor calls (2026-11-10, "play as the manager"): the manager's job loop. Every so often one station calls for the
+// manager, with a lime tag on the map. Walk over (tap the tag or the station) and the manager handles it in CALL_WORK
+// seconds: cash worth a few seconds of the shop's income, and one step toward the next manager level. Levels raise the
+// hands-on speed and what a call pays. A call left alone closes after CALL_LASTS with nothing lost. Live play only, like
+// the hands-on speed, so the away pay and the economy sims leave it out.
+// name: the call's tag. doing: the manager's own tag while they handle it.
+export const CALLS=[
+  {name:'Sort seeds',doing:'Sorting seeds'},{name:'Check plants',doing:'Checking plants'},{name:'Check trim',doing:'Checking trim'},
+  {name:'Check labels',doing:'Checking labels'},{name:'Greet guests',doing:'Greeting guests'},{name:'Restock bags',doing:'Restocking bags'}];
+// Seconds: to the first call of a visit, between calls, to the next after one is missed, how long a call stays open
+// (the clock stops while the manager is on the way) and how long handling it takes.
+export const CALL_FIRST=25,CALL_EVERY=70,CALL_AFTER_MISS=40,CALL_LASTS=45,CALL_WORK=3;
+// Calls handled to reach each level (Lv 1 at 0). Lv 10 is about four hours of answering every call.
+export const LEVEL_CALLS=[0,3,8,15,25,40,60,90,130,180];
+export const MANAGER_MAX=LEVEL_CALLS.length;
+export function managerLevel(xp){let level=1;while(level<MANAGER_MAX&&xp>=LEVEL_CALLS[level])level++;return level;}
+// Where the manager is inside their level: `share` of the way to the next (1 at the top), and the calls `left` to it.
+export function levelProgress(xp){const level=managerLevel(xp);if(level>=MANAGER_MAX)return {level,share:1,left:0,max:true};
+  const from=LEVEL_CALLS[level-1],to=LEVEL_CALLS[level];return {level,share:(xp-from)/(to-from),left:to-xp,max:false};}
+// Hands-on speed: 1.5× at Lv 1, +0.1 a level (2.4× at Lv 10).
+export function handsOnAt(level){return Math.round((HANDS_ON+.1*(Math.max(1,Math.min(MANAGER_MAX,level))-1))*10)/10;}
+// A call pays this many seconds of the shop's income: 10 s at Lv 1, +2 s a level (28 s at Lv 10), never under $25.
+// One call every 80 s or so adds about 12% to a played minute at Lv 1 and about a third at Lv 10, the size of a crew burst.
+export function callSeconds(level){return 10+2*(Math.max(1,Math.min(MANAGER_MAX,level))-1);}
+export function callPay(income,level){return Math.max(25,Math.round(Math.max(0,Number.isFinite(income)?income:0)*callSeconds(level)));}
+// The live call clock (not saved: each visit starts CALL_FIRST from a call).
+export function createCalls(){return {wait:CALL_FIRST,call:null};}
+// Steps the calls by dt seconds for walker w. `built[i]`: station i exists. `roll` (0..1) picks the calling station,
+// never the one the manager is at or heading to. Returns what just happened, or null:
+// {type:'open'|'done'|'missed',station}.
+export function tickCalls(c,dt,w,built,roll=Math.random()){
+  if(!(dt>0)||!w)return null;
+  if(!c.call){c.wait-=dt;if(c.wait>0)return null;
+    const open=built.map((b,i)=>b&&i!==w.target?i:-1).filter(i=>i>=0);
+    if(!open.length){c.wait=5;return null;}
+    const station=open[Math.min(open.length-1,Math.floor(Math.max(0,roll)*open.length))];
+    c.call={station,left:CALL_LASTS,work:0};return {type:'open',station};}
+  const call=c.call,here=w.target===call.station;
+  if(here&&!w.moving){call.work+=dt;if(call.work<CALL_WORK)return null;c.call=null;c.wait=CALL_EVERY;return {type:'done',station:call.station};}
+  if(here)return null;
+  call.work=0;call.left-=dt;if(call.left>0)return null;
+  c.call=null;c.wait=CALL_AFTER_MISS;return {type:'missed',station:call.station};}
