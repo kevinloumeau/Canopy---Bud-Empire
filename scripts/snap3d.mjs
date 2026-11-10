@@ -9,7 +9,7 @@
 //   node scripts/snap3d.mjs out.png --phone --light night --advance 20 --save my-save.json --no-ui
 //
 // Options: --url (default http://127.0.0.1:4173/), --size WxH, --dpr, --phone (390×844), --save fresh|showcase|file,
-// --light day|night, --advance seconds of play before the shot, --no-ui (map only), --live (no ?snap, for timing),
+// --light day|night|0..1 (how far dusk has turned to night), --advance seconds of play before the shot, --no-ui (map only), --live (no ?snap, for timing),
 // --away seconds since the last visit (shows the welcome back report from 900), --eval 'js' run in the page before the capture, printing what it returns (--wait ms after it, default 400),
 // --stats (print the frame's draw calls, triangles and estimated GPU memory).
 // Chrome comes from CHROME, Playwright's Chromium (/opt/pw-browsers) or the default macOS path.
@@ -35,7 +35,7 @@ const dpr = Number(flags.dpr || 1);
 const view = {};
 if (flags.zoom) view.zoom = Number(flags.zoom);
 if (flags.at) { const [x, z, y] = String(flags.at).split(',').map(Number); Object.assign(view, { x, z, y: y || 0 }); }
-if (flags.light) view.light = flags.light;
+if (flags.light) view.light = isNaN(Number(flags.light)) ? flags.light : Number(flags.light);
 if (flags.advance) view.advance = Number(flags.advance);
 
 // A developed shop (as scripts/capture-showcase.mjs seeds it): every station at level 30, three counters, three strains.

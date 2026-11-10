@@ -26,6 +26,8 @@
 @media(hover:hover){.hud .speed-controls button:not([aria-pressed=true]):hover,.hud .customer-info #goalsOpen:hover{background:var(--ui-well-soft);color:var(--ui-ink)}}
 
 @media(max-width:700px){.hud{gap:8px}}
+/* Phones stack cash over income: the two lines sit close, as one readout. */
+@media(max-width:480px){.hud{row-gap:3px}}
 @media(min-width:701px){.hud{top:12px;left:16px;right:16px;padding:8px 10px 8px 16px!important;border-radius:20px}}
 /* Desktop: the bar runs the full width and the Stations panel hangs under it, same 16px side margin and a 12px gap,
    so the bar's right end and the panel's edge line up. Taller windows let the pane grow a little (crew cards show) but

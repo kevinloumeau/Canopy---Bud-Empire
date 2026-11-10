@@ -208,12 +208,12 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function chasesTrend(c){return c.kind==='regular'&&state.trendLevel>0&&((Number(c.id)||0)*0.7548776662)%1<trendChase()&&trendOnMenu()>0}
   function strainFor(c){if(c.kind==='vip'){var reserve=strains.reserveStrain(menuStrains(),state.strains);if(reserve!==null)return reserve}if(chasesTrend(c))return trendOnMenu();var preferred=economy.preferredStrain(c.kind,menuStrains(),state.strains);return preferred===null?menuChoice(c.id):preferred}
   function salePriceFor(c,strain){if(c.kind==='vip')return flowerValue(strain);var want=wantedType(c,strain);return Math.round(flowerValue(strain)/formatFactor('value',strain)*formatPremium(state.productMenu,want,strain)*(contractTwist(state.empire)==='prerolls'&&want===1?.8:1))}
-  // The running contract counts VIPs served within their 15 seconds and units of the type it asks for.
-  function recordContractSale(c){if(!contractTwist(state.empire))return;if(c.kind==='vip'){if(Math.max(0,(c.waitSeconds||0)-(c.adviceWait||0))<=15*(1+state.comfortLevel*.15))recordEvent(state.empire,'vip',1);return}var f=wantedType(c);if(f===2)recordEvent(state.empire,'edible',c.bags||1);else if(f===1)recordEvent(state.empire,'preroll',c.bags||1)}
+  // The running contract counts VIPs served within their patience (economy.patience) and units of the type it asks for.
+  function recordContractSale(c){if(!contractTwist(state.empire))return;if(c.kind==='vip'){if(Math.max(0,(c.waitSeconds||0)-(c.adviceWait||0))<=economy.patience('vip',state.comfortLevel))recordEvent(state.empire,'vip',1);return}var f=wantedType(c);if(f===2)recordEvent(state.empire,'edible',c.bags||1);else if(f===1)recordEvent(state.empire,'preroll',c.bags||1)}
   // A type contract's twist sends every other walk-in to that type, when the shop stocks it.
   function wantedType(c,strain){var t=contractTwist(state.empire),m=state.productMenu,s=strain!==undefined?strain:c.strain!==undefined?c.strain:menuChoice(c.id);if(c.id%2&&t==='edibles'&&stocks(m,2,s))return 2;if(c.id%2&&t==='prerolls'&&stocks(m,1,s))return 1;return wantedFormat(m,c.id,s)}
   // Satisfaction tips: patience stretches with Queue comfort, and Lasting effects sweeten every happy sale.
-  function customerSaleBonus(c){var bonus=satisfyCustomer(state.empire,-1,c.kind,(function(n){return n===0||c.kind==='regular'&&n>0&&n===state.strainTrend.index&&state.trendLevel>0}(c.normalStrain===undefined?c.strain:c.normalStrain))?'everyday':'boutique',Math.max(0,(c.waitSeconds||0)-(c.adviceWait||0)),1+state.comfortLevel*.15);if(bonus>1)bonus+=state.durationLevel*.03;
+  function customerSaleBonus(c){var bonus=satisfyCustomer(state.empire,-1,c.kind,(function(n){return n===0||c.kind==='regular'&&n>0&&n===state.strainTrend.index&&state.trendLevel>0}(c.normalStrain===undefined?c.strain:c.normalStrain))?'everyday':'boutique',Math.max(0,(c.waitSeconds||0)-(c.adviceWait||0)),economy.patienceScale(state.comfortLevel));if(bonus>1)bonus+=state.durationLevel*.03;
     // Strain identity: potency tips, the everyday and VIP perks, and Violet Haze's word of mouth on happy boutique sales.
     bonus*=strains.tipFactor(c.kind,strainPotency(c.strain||0));if(bonus>1)bonus*=1+state.loyaltyLevel*.03;
     if(c.strain===0)bonus*=strains.everydayBonus(state.strains);
@@ -564,7 +564,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // The pickup line is first come, first served: a ticket is issued when a customer reaches the line's tail, not when
   // they order, so a counter customer already in line is not held at the tail for a kiosk customer still walking over.
   function pickupOrder(c){return c.pickupTicket||Infinity}
-  var QUEUE_MAX=30;
+  var QUEUE_MAX=economy.LINE_MAX;
   // The drone deck's centre: Kevin asked for it a touch up and right, into the clear sidewalk behind the lounge.
   var DECK_X=-10.7,DECK_Z=.3;
   // Where a courier loads and lifts off: the top of the striped launch pad on online_deck.glb (its PadTop spans x -1.83
@@ -687,7 +687,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function floorVipShare(){return vipsFollow()?Math.min(FLOOR_VIP_CAP,state.trafficLevel*FLOOR_VIPS)+mkt('vip'):0}
   function floorVip(kind,id){return kind!=='vip'&&floorVipShare()>0&&((Number(id)||0)*0.5698402910)%1<floorVipShare()?'vip':kind}
   function pickupReserve(){return pickupPlaces(Math.round(pickupPromised()/WALK_PACE),routeLength(queueRoute(true)),queueGap(false))}
-  function queueLimit(){return Math.min(QUEUE_MAX,Math.min(12,6+Math.floor(Math.max(0,state.lines[4]-1)/2)+Math.floor(state.staff[4]/2))+state.queueLevel*2)}
+  function queueLimit(){return economy.lineLimit(state.lines[4],state.staff[4],state.queueLevel)}
   function counterServiceDuration(i,serviceCapacity){
     // Both equipment and training shorten the handoff, with gentler gains at high levels.
     return economy.counterServiceDuration(i,serviceCapacity===undefined?capacity(i):serviceCapacity,formatFactor('service'))/(1+state.serviceLevel*.04)/(1+mkt('flow'));
@@ -1177,7 +1177,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
         loungeFront:LOUNGE_FRONT,loungeDoor:LOUNGE_DOOR,loungeExit:LOUNGE_EXIT,loungeRight:LOUNGE_RIGHT,loungeHeader:2.05,loungeSign:{x:LOUNGE_DOOR.x,y:2.46,scale:.65},wallLeft:-6.7,wallRight:8.4,shelfLeft:-1.3+COUNTER_SHIFT,
         exitDoor:{x0:9.44,x1:11.25,h:3.3},column:{x:9.8,z:-1.8},merchCabinet:{back:8.41,face:9.27,z0:-6.84,z1:-4.8},
         planter:{x0:-11.7,x1:-10.75,z0:2,z1:5.6,tree:{x:-11.45,z:2.35}},baseboard:{x0:-10.65,x1:13,front:11.95,rear:-7,h:.32},hanging:{x0:-2.3,x1:2.3,y:9.05,z:-1.35},
-        lamps:[[-4,3.7,3.5,1.3],[4,3.7,3.5,1.3],[-4,3.7,8.5,1.1],[5,3.7,8.5,1.1],[-10,3,-4,.8],[-4,8.4,-3,1.2],[4,8.4,-3,1.2],[0,12.8,-4.5,1]]};
+        lamps:[[-4,3.7,3.5,1.3],[4,3.7,3.5,1.3],[-4,3.7,8.5,1.2],[5,3.7,8.5,1.3],[-10,3,-4,1],[-4,8.4,-3,1.5],[4,8.4,-3,1.5],[0,12.8,-4.5,1.9]]};
       // Sprite shop: the storefront and its doorway are flat elevations on the entrance wall's plane, the exit mat and
       // the lounge's runner lie on the floor where the old 2D map pinned them, and the display case casts its shadow
       // from a box under its figure.
@@ -2138,7 +2138,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // 9.3, between x −6.5 and −2.0, the gate at the right-hand end — a little back and to the right of the ID desk)
   // before its tail runs through the entry corridor in front of the ID desk and the doorman (never along the wall
   // beside them), crosses the threshold at z ≈ 9 and continues outside along the storefront.
-  // The pen's rows grow with the line: 2.4 wide for the starter line of six, full width (4.5) from twenty places.
+  // The pen's rows grow with the line: 2.7 wide for the starter line of eight, full width (4.5) from twenty places.
   var ORDER_ROWS=[7.0,8.15,9.3],ORDER_PEN_RIGHT=-2.0+COUNTER_SHIFT,PICKUP_AISLE_Z=5.5;
   // The ground floor runs out to x 13 on the right (Kevin, 2026-10-19: the exit route past the stairs was too narrow), so
   // leaving guests walk a lane at x 12.2, clear of the spiral stair (x 9.05-11.35), before turning in to the exit door.
@@ -2341,7 +2341,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     return (z < -7.5 && x < 9) || (x < -11.5 && z < 7.5);
   }
   function customerRatings(c){
-    var happiness=Math.max(15,Math.min(100,96-(c.waitSeconds||0)*1.2/(1+state.comfortLevel*.2)+(c.bag?18:0)));
+    var happiness=Math.max(15,Math.min(100,96-(c.waitSeconds||0)*1.2/economy.LINE_PATIENCE/(1+state.comfortLevel*.2)+(c.bag?18:0)));
     var strain=c.strain===undefined?menuChoice(c.id):c.strain;
     var tolerance=.8+(c.id%5)*.1;
     var potency=(strainPotency(strain)-strains.THC_BASE)*54/16.5;
@@ -3213,13 +3213,15 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // A single failed frame (for example a zero-width canvas while the page is being laid out) must not stop the scene forever.
   // Dev quick capture (?snap, driven by scripts/snap3d.mjs): the frame loop and the clock stand still, and
   // window.__canopySnap draws one frame on demand, so a cloud browser drawing WebGL on the CPU spends its time only on
-  // the frame it captures. view: {zoom, x, y, z} centres that map point at that zoom, light 'day' or 'night', advance
+  // the frame it captures. view: {zoom, x, y, z} centres that map point at that zoom, light 'day', 'night' or 0 to 1
+  // (how far the evening has turned to night), advance
   // runs the game that many seconds first, and draw:false sets the frame up (asking for its models) without drawing it.
   // Players never pass ?snap.
   var SNAP=/[?&]snap\b/.test(location.search);
   if(SNAP){
     window.__canopySnap=function(view){view=view||{};
-      if(view.light)state.lightMode=view.light;
+      if(typeof view.light==='number'){state.lightMode=null;state.empire.network.time=300+Math.max(0,Math.min(1,view.light))*90}
+      else if(view.light)state.lightMode=view.light;
       for(var step=0;step<Math.round((view.advance||0)*20);step++){simulate(.05);tickTaskClocks(.05)}
       if(view.zoom!==undefined||view.x!==undefined){zoom=Math.max(.65,Math.min(4,view.zoom||1));panX=panY=0;applyCamera();
         if(view.x!==undefined){var frame=cameraFrame(),p=project(view.x,view.y||0,view.z||0);panX=frame.x-p.x;panY=frame.y-p.y;applyCamera()}}
@@ -3865,7 +3867,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     $('buyMachine').style.setProperty('--funded',(!level?100:Math.min(100,state.money/price*100))+'%');
     $('upgradeHint').textContent=!open?'Build '+LINES[selected-1].name.toLowerCase()+' first.':!level?'Under construction · tap the site on the map, or Build here, to raise it.':!affordable?fmt(price-state.money)+' to go · customer sales earn cash automatically.':selected<4?'Larger batches per cycle. Train employees to shorten each cycle.':'Upgrade for faster '+['','','','','order preparation','customer service'][selected]+'.';
     $('upgradeHint').classList.toggle('ready',affordable);
-    if(selected===4&&level)$('upgradeHint').textContent+=' Training applies to all '+state.orderCounters+' counters. Baskets: '+qtyLabel(basketSize())+' per customer (+1 every desk level). Queue: '+queueLimit()+' customers · every 2 desk or employee upgrades adds a place (max 12).';
+    if(selected===4&&level)$('upgradeHint').textContent+=' Training applies to all '+state.orderCounters+' counters. Baskets: '+qtyLabel(basketSize())+' per customer (+1 every desk level). Queue: '+queueLimit()+' customers · every 2 desk or employee upgrades adds a place (max '+(economy.LINE_START+economy.LINE_GROWTH)+').';
     }
     renderOrderCounters();
     var doorSite=!state.doorBuilt,doorKey=doorSite?'site':String(state.idStaff);
@@ -4343,8 +4345,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var crown=icon('<path d="m4 9 6 5 6-9 6 9 6-5-3 17H7ZM9 22h14"/>');
     return '<h3 id="customerGuideTitle">Customer guide</h3><ul class="customer-lineup">'+
       '<li class="guide-customer"><div class="guide-portrait"><canvas width="180" height="260" aria-hidden="true"></canvas><span class="guide-flower" aria-hidden="true">'+strainArt(0,false)+'</span></div><h4>Regulars</h4><strong class="guide-preference">Meadow Mint</strong><span class="guide-caption">On the menu</span></li>'+
-      '<li class="guide-customer"><div class="guide-portrait"><canvas width="180" height="260" aria-hidden="true"></canvas><span class="guide-cue">'+clock+'</span></div><h4>Hurried</h4><strong class="guide-time" id="guideHurriedTime">≤20s</strong><span class="guide-caption">Whole visit</span></li>'+
-      '<li class="guide-customer guide-vip"><div class="guide-portrait"><canvas width="180" height="260" aria-hidden="true"></canvas><span class="guide-cue">'+crown+'</span></div><h4>VIPs</h4><strong class="guide-time" id="guideVipTime">≤15s</strong><span class="guide-caption">Whole visit<br>Reserve flower<br><b>2× pay</b></span></li></ul>'+
+      '<li class="guide-customer"><div class="guide-portrait"><canvas width="180" height="260" aria-hidden="true"></canvas><span class="guide-cue">'+clock+'</span></div><h4>Hurried</h4><strong class="guide-time" id="guideHurriedTime">≤28s</strong><span class="guide-caption">Whole visit</span></li>'+
+      '<li class="guide-customer guide-vip"><div class="guide-portrait"><canvas width="180" height="260" aria-hidden="true"></canvas><span class="guide-cue">'+crown+'</span></div><h4>VIPs</h4><strong class="guide-time" id="guideVipTime">≤21s</strong><span class="guide-caption">Whole visit<br>Reserve flower<br><b>2× pay</b></span></li></ul>'+
       '<p class="guide-comfort">'+clock+'<span id="guideComfort">Express lanes add time to both visit limits.</span></p>'+
       '<div class="guide-outcomes"><div>'+icon('<circle cx="16" cy="16" r="12"/><path d="m10 16 4 4 8-8"/>')+'<div><h4>Match</h4><strong>+1 <span>loyalty</span></strong><small id="guideMatchTip">+15% base tip</small></div></div><div>'+icon('<circle cx="16" cy="16" r="12"/><path d="m12 12 8 8m0-8-8 8"/>')+'<div><h4>Miss</h4><strong>−1 <span>loyalty</span></strong><small>Preference or time</small></div></div></div>'+
       '<div class="guide-unlock">'+crown+'<div><strong id="guideVipUnlock">VIPs at 60 loyalty</strong><span>35% base tips on regular matches</span></div></div>'+
