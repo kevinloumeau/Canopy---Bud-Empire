@@ -1,7 +1,8 @@
 // First-run walkthrough on the 3D map (Kevin, 2026-11-04: "the camera zoom and pinned to each station with description
 // and click to build, one by one, then focusing on a single guest walking in going through each step").
 //
-// 1. A hero card.
+// 1. A hero card: "You're the new manager", with the manager's looks in a row to swipe and pick from
+//    (avatar-picker.js; Kevin, 2026-11-10). Without the `avatar` option it shows the pre-rendered hero picture.
 // 2. Seven sites, in line order: the camera glides in and holds on the site, a ring pulses round its sign and one brass
 //    Build button (or a tap on the site) raises it.
 // 3. The grow room goes to Lv 10, its first new look. The guide grants exactly what that costs when it opens, so the
@@ -20,10 +21,11 @@
 // Nothing is jumped over, it stops at the hand-over card, and a second tap drops back to normal pace. Escape still
 // closes the guide outright.
 import {manageDialog} from './dialog-focus.js';
+import {mountAvatarPicker} from './avatar-picker.js';
 const SEEN_KEY='shift-guide-seen';
 const GROW_GOAL=10;
 const STEPS=[
- {hero:true,eyebrow:'Canopy · Day one',title:'You’re the new manager.',text:'Build your seven stations, flip the sign and run the floor.',cta:'Start building',beats:[['factory','Build'],['flowers','Sell'],['empire','Expand']]},
+ {hero:true,eyebrow:'Canopy · Day one',title:'You’re the new manager.',text:'Swipe to pick your look, then build your shop.',cta:'Start building'},
  {build:'door',eyebrow:'Build · 1 of 7',title:'Security',text:'Your guard checks every ID first.',target:'[data-marker=security]'},
  {build:0,eyebrow:'Build · 2 of 7',title:'Seed station',text:'Your crew starts every harvest here.',target:'[data-marker="0"]'},
  {build:1,eyebrow:'Build · 3 of 7',title:'Grow room',text:'Your growers raise it under the lamps.',target:'[data-marker="1"]'},
@@ -52,7 +54,7 @@ const FAST_BEAT=380,FAST_STOP=620,FAST_SETTLE=260,FAST_HELLO=350,FAST_OUT=650;
 export const FAST_SPEED=6;
 // The top bar's double-speed glyph, so the two controls read as the same thing.
 const FAST_ICON='<svg viewBox="0 0 18 16" fill="currentColor" aria-hidden="true"><path d="M3.2 3.5v9l7-4.5z"/><path d="M7.7 3.5v9l7-4.5z"/></svg>';
-export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,build,shopOpen,openShop,finish,sheet,reserve,select,camera,grow,guest,speed}){
+export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,build,shopOpen,openShop,finish,sheet,reserve,select,camera,grow,guest,speed,avatar}){
  // `sheet` folds the tray away on every step and `reserve` keeps the map framed above the docked card. `camera` points
  // the 3D view (look at a site, follow the guest, hand back); `grow` reads and buys the grow room's upgrade with the
  // guide's grant; `guest` reports where the followed guest is in their visit; `speed(on)` runs the game and the guide's
@@ -66,7 +68,10 @@ export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,buil
   '<div class="guide-sign" hidden aria-hidden="true"><i class="guide-sign-string"></i><i class="guide-sign-string"></i><div class="guide-plaque"><span class="guide-face is-closed">Closed</span><span class="guide-face is-open">Open</span></div></div>'+
   '<div class="guide-actions"><p class="guide-tap" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11V4.5a1.5 1.5 0 0 1 3 0V11m0-3.5a1.5 1.5 0 0 1 3 0V11m0-1.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1.2a6 6 0 0 1-4.9-2.5L3.5 15a1.6 1.6 0 0 1 2.4-2l3.1 3"/></svg><span>Tap to build</span></p><button type="button" class="guide-skip" aria-label="Fast forward" aria-pressed="false">'+FAST_ICON+'<span>Fast forward</span></button><button type="button" class="guide-next">Next</button></div></section>';
  document.body.append(root);
- const $=s=>root.querySelector(s),ring=$('.guide-ring'),dots=$('.guide-dots'),walkDots=$('.guide-walk');
+ const $=s=>root.querySelector(s);
+ // The hero's picture becomes the avatar picker when main.js passes the saved look's get and set.
+ let picker=null;if(avatar){const hero=$('.guide-hero');hero.classList.add('has-avatars');hero.innerHTML='<div></div>';picker=mountAvatarPicker(hero.firstChild,avatar);}
+ const ring=$('.guide-ring'),dots=$('.guide-dots'),walkDots=$('.guide-walk');
  const steps=STEPS.filter(s=>!s.follow);
  dots.innerHTML=steps.map(()=>'<i></i>').join('');
  let step=-1,raf=0,lastTarget=null,finished=false,advanceTimer=0,walk=-1,walkTimer=0,walkWatch=0,walkSince=0,fast=false,fastTimer=0;
@@ -121,6 +126,7 @@ export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,buil
   Array.from(dots.children).forEach((d,j)=>d.classList.toggle('is-on',j<=i));
   lastTarget=s.target||null;root.dataset.step=String(i);root.classList.toggle('is-spotlight',!!s.target||!!s.open);
   if(fit)fit();if(reserve)reserve(docked(s)?$('.guide-card').offsetHeight+12:0);requestAnimationFrame(place);next.focus({preventScroll:true});queueFast();
+  if(s.hero&&picker)picker.sync();
  }
  // The walk: the camera follows one guest and the caption changes as they reach each station. The card waits on the
  // guest, so its only button is Skip until they leave with the bag; then one brass button hands the shop over.
