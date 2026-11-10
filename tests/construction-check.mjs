@@ -122,9 +122,9 @@ try {
     while (await evaluate("document.querySelector('.start-guide').classList.contains('is-tour')")) {
       stops.push((await guide()).eyebrow); await evaluate("document.querySelector('.guide-next').click()"); await sleep(300);
     }
-    assert.deepEqual(stops, ['Coming up · Ghosts', 'Coming up · Rooftop', 'Coming up · The block']);
+    assert.deepEqual(stops, ['Coming up · Ghosts', 'Coming up · Rooftop', 'Coming up · The block', 'You · The manager']);
     await waitFor("document.querySelector('.start-guide').classList.contains('is-done')", 5000);
-    assert.equal((await guide()).cta, 'Let’s grow');
+    assert.equal((await guide()).cta, 'Start my shift');
     await evaluate("document.querySelector('.guide-next').click()");
     await waitFor("document.querySelector('.start-guide').hidden");
     assert.equal(await evaluate("localStorage.getItem('shift-guide-seen')"), '1');
