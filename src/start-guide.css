@@ -123,6 +123,18 @@
 .start-guide.is-walk .guide-actions{min-height:44px}
 .guide-next[hidden]{display:none}
 .start-guide.is-done .guide-next{flex:1;min-height:50px;font-size:15px}
+/* Fast forward sits in Skip's quiet place beside the brass button: the top bar's double-speed glyph and two words. It is
+   a toggle. On, it lights the way the top bar's active speed does and the glyph runs; the guide then plays itself. */
+.guide-actions .guide-skip{display:inline-flex;align-items:center;gap:7px;padding:0 12px;border:1px solid transparent;white-space:nowrap}
+.guide-actions .guide-skip[hidden]{display:none}
+.guide-skip svg{flex:0 0 auto;width:18px;height:16px}
+.guide-actions .guide-skip[aria-pressed=true]{border-color:var(--ui-edge,#e0f5cd35);background:var(--ui-well,#e1f5d622);color:var(--ui-ink,#f7fbed)}
+.guide-skip[aria-pressed=true] svg{color:var(--ui-leaf-glow,#c9e29c);animation:guide-fast-run .6s ease-in-out infinite}
+@keyframes guide-fast-run{0%,100%{transform:translateX(-1px)}50%{transform:translateX(2px)}}
+/* While the sites go up the row also carries the tap hint and the brass button, so the glyph stands alone there. */
+.start-guide.is-site:not(.is-walk) .guide-skip span{display:none}
+.start-guide.is-site:not(.is-walk) .guide-actions .guide-skip{justify-content:center;min-width:44px;padding:0}
+@media(prefers-reduced-motion:reduce){.guide-skip[aria-pressed=true] svg{animation:none}}
 /* Coming up: the shop's ghost buy tags breathe brass while the camera shows them. */
 body.guide-ghosts .world .marker.station-sign.is-lot:not(.is-landmark){opacity:1!important;border:1.5px solid var(--ui-brass,#e2c68a)!important;animation:guide-ghost 1.4s ease-in-out infinite}
 @keyframes guide-ghost{0%,100%{box-shadow:0 0 6px #e2c68a44}50%{box-shadow:0 0 18px #e2c68acc}}

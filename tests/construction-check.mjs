@@ -9,8 +9,9 @@
 // Checks, at phone and desktop sizes: a fresh profile opens the hero with every site unbuilt and no customers; each
 // site is built by a tap inside its spotlight ring (the ring never sits under the card); the grant buys Grow to Lv 10
 // and leaves the starting cash; the shop opens from the opening card, the walk follows one guest out with a bag and the
-// hand-over closes the guide; a half-built save resumes at its next site and Skip finishes the job and takes the grant
-// back; a save from before the intro loads as an open shop with every station standing.
+// hand-over closes the guide; a half-built save resumes at its next site, fast forward plays the rest by itself up to
+// the hand-over, a second tap returns to normal pace and Escape finishes the job and takes the grant back; a save from
+// before the intro loads as an open shop with every station standing.
 import { spawn } from 'node:child_process';
 import assert from 'node:assert/strict';
 import { mkdtemp, rm } from 'node:fs/promises';
@@ -78,7 +79,7 @@ try {
     let s = await status();
     assert.deepEqual(s.lineLevels, [0, 0, 0, 0, 0, 0]); assert.equal(s.shopOpen, false); assert.equal(s.doorBuilt, false);
     assert.equal((await guide()).cta, 'Start building');
-    await evaluate("document.querySelector('[data-speed=\"4\"]').click()"); await sleep(2500);
+    await evaluate("document.querySelector('[data-speed=\"2\"]').click()"); await sleep(2500);
     assert.equal((await status()).customers.length, 0, 'customers arrived before the shop opened');
     assert.equal(await evaluate("document.querySelector('#machineCost').textContent"), 'FREE');
     assert.equal(await evaluate("[...document.querySelectorAll('.marker.is-site')].length"), 7);
@@ -134,13 +135,32 @@ try {
     assert.equal((await guide()).open, false);
     assert.deepEqual((await status()).lineLevels, [1, 10, 1, 1, 1, 1]);
 
-    // A half-built shop resumes at its next site, and Skip raises the rest and opens up.
+    // A half-built shop resumes at its next site. Fast forward (the quiet button that used to be Skip) plays the rest by
+    // itself, even from a paused save: the remaining sites, the free upgrade, the opening, the guest's visit and the
+    // tour. It stops at the hand-over with the button off again, and the last tap is the player's.
     await boot({ lines: [1, 1, 0, 0, 0, 0], doorBuilt: true, shopOpen: false, money: 30, gameSpeed: 0, lastSeen: Date.now() });
     await waitFor("!document.querySelector('.start-guide').hidden");
     assert.equal((await guide()).eyebrow, 'Build · 4 of 7');
     assert.deepEqual((await status()).lineLevels, [1, 1, 0, 0, 0, 0]);
-    await evaluate("document.querySelector('.guide-skip').click()"); await sleep(400);
-    s = await status(); assert.deepEqual(s.lineLevels, [1, 1, 1, 1, 1, 1]); assert.equal(s.shopOpen, true); assert.equal(s.cash, 30, 'Skip kept the grant');
+    const fastOn = () => evaluate("document.querySelector('.guide-skip').getAttribute('aria-pressed')");
+    await evaluate("document.querySelector('.guide-skip').click()"); await sleep(150);
+    assert.equal(await fastOn(), 'true'); assert.equal((await guide()).open, true, 'fast forward closed the guide');
+    await waitFor("document.querySelector('.start-guide').classList.contains('is-done')", 60000);
+    s = await status(); assert.deepEqual(s.lineLevels, [1, 10, 1, 1, 1, 1]); assert.equal(s.shopOpen, true);
+    assert.equal(await fastOn(), 'false', 'fast forward stayed on at the hand-over');
+    assert.equal((await save()).guideGrant, 0, 'the grant was not spent on the upgrade'); assert.equal((await save()).gameSpeed, 0, 'fast forward changed the saved speed');
+    assert.equal((await guide()).cta, 'Start my shift');
+    await evaluate("document.querySelector('.guide-next').click()");
+    await waitFor("document.querySelector('.start-guide').hidden");
+
+    // A second tap drops back to normal pace: the card waits for its own tap again.
+    await boot({ lines: [1, 1, 0, 0, 0, 0], doorBuilt: true, shopOpen: false, money: 30, gameSpeed: 0, lastSeen: Date.now() });
+    await waitFor("!document.querySelector('.start-guide').hidden");
+    await evaluate("document.querySelector('.guide-skip').click()"); await evaluate("document.querySelector('.guide-skip').click()"); await sleep(1500);
+    assert.equal(await fastOn(), 'false'); assert.equal((await guide()).eyebrow, 'Build · 4 of 7');
+    // Escape still leaves outright: the rest is raised, the shop opens and the unspent grant is taken back.
+    await evaluate("document.querySelector('.start-guide').dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))"); await sleep(400);
+    s = await status(); assert.deepEqual(s.lineLevels, [1, 1, 1, 1, 1, 1]); assert.equal(s.shopOpen, true); assert.equal(s.cash, 30, 'leaving early kept the grant');
     assert.equal((await guide()).open, false);
 
     // A save from before the intro is an open shop with every station standing; the intro stays closed.
@@ -151,7 +171,7 @@ try {
     assert.equal(await evaluate("document.querySelector('.marker.is-site')"), null);
 
     assert.deepEqual(errors, [], `${name}: page errors`);
-    console.log(`${name}: fresh sites, seven taps with clear rings, the Lv 10 grow upgrade, opening, the guest walk, reload, resume, skip and legacy save passed`);
+    console.log(`${name}: fresh sites, seven taps with clear rings, the Lv 10 grow upgrade, opening, the guest walk, reload, resume, fast forward, escape and legacy save passed`);
   }
   ws.close();
 } finally {
