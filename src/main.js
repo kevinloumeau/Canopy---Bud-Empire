@@ -59,6 +59,7 @@ import {mountUiKit} from './ui-kit.js';
 import {makeMusic} from './music.js';
 import {createCashPops,rollCash,popFrame,POP_LIFE} from './cash-pops.js';
 import {rubberBand,addSample,releaseVelocity,coastAxis,slideAlong} from './map-gesture.js';
+import {clampTownView} from './map-clamp.js';
 import {POPUP_STALLS,POPUP_PRIZES,POPUP_GIFT_BASE,POPUP_AWAY_PAY,migratePopup,popupWindow,previewWindow,syncPopup,tickPopup,claimPrize,buyStall,bestStall,stallCost,awayOverlap,popupSalesBonus,popupUnlocked,popupClock} from './popup-event.js';
 import {STALL_X,STALL_Z,STALL_D,POPUP_PROPS,POPUP_TAG,popupWalker,popupCrowd} from './popup-market-layout.js';
 import {scaledReward} from './progression.js';
@@ -1418,11 +1419,15 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     centerX=frame.x+panX;centerY=frame.y+panY;unit=frame.unit*zoom;followDistrict();if(state.empire.activeStore)updateBranchMarker();if(window.__shiftReady)renderHomeChip()}
   // The branch whose block is under the middle of the view is the one being viewed: the top bar shows its income and
   // its Manage tag shows on its counter. Anywhere else (the flagship, a lot for lease) is the flagship's view.
-  var districtFollow=false;
+  var districtFollow=false,DISTRICT_HOLD=10;
   function storeLevels(){return state.empire.stores.map(function(s){return s.level})}
   function followDistrict(){
     if(!districtFollow||districtGlide)return;
     var c=viewCentre(),i=districtAt(c.x),id=i>=0&&state.empire.stores[i].level>0?i+1:0;
+    // The view changes hands only once its middle is well inside the next block. The sheet is a row shorter for a branch
+    // than for the flagship, which moves the frame and with it the middle of the view, so a view resting on the line
+    // between two blocks used to swap back and forth on every frame and the map shook.
+    if(id!==state.empire.activeStore&&(districtAt(c.x-DISTRICT_HOLD)!==i||districtAt(c.x+DISTRICT_HOLD)!==i))return;
     if(id===state.empire.activeStore||!selectStore(state.empire,id))return;
     syncMapView();renderUI();
   }
@@ -1431,41 +1436,15 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // visible map (the HUD's bottom to the bottom of the map, less the sheet on a phone) stays inside the hazed reach,
   // measured along the camera's rotated axes, so no edge of the town shows at any zoom. When the visible map is wider
   // than the reach, the view sits centred on it.
-  var TALL_HEADROOM=8;
   function clampPan(frame){if(SUNNY)clampSunnyPan(frame);else{panX=Math.max(-width*1.6,Math.min(width*1.6,panX));panY=Math.max(-height*1.6,Math.min(height*1.6,panY));}}
   // Where the camera clamp would put a view at (x, y), leaving the camera itself alone.
   function clampedPan(x,y){var sx=panX,sy=panY;panX=x;panY=y;clampPan(cameraFrame());var r={x:panX,y:panY};panX=sx;panY=sy;return r}
+  // The rules themselves are in map-clamp.js (clampTownView); this hands them the screen as it is now.
   function clampSunnyPan(frame){
-    var u=frame.unit*zoom,sq=FLOOR_SQUASH,c=Math.cos(angle),s=Math.sin(angle),view=SUNNY_VIEW;
-    var rx=-panX/u,rz=-panY/(u*sq),x=rx*c+rz*s,z=rz*c-rx*s;
-    // The town runs on east to the open branches and the next lot (branch-districts.js): the east limit moves out with
-    // the east haze, and past the flagship the allowed window slides east with the view, so the north and south
-    // limits stay where they are and the far edge stays inside the haze wherever the view is along the street.
-    var reach=Math.max(0,eastHaze(storeLevels(),!!marketOn())[0]-MAIN_EAST_HAZE[0]);
-    x=Math.max(view.centre.x[0],Math.min(view.centre.x[1]+reach,x));z=Math.max(view.centre.z[0],Math.min(view.centre.z[1],z));
-    var slide=Math.max(0,Math.min(reach,x-5));
-    rx=x*c-z*s;rz=x*s+z*c;
-    var top=hudBottom(),bottom=visibleHeight();
-    var fit=function(v,lo,hi){return lo>hi?(lo+hi)/2:Math.max(lo,Math.min(hi,v))};
-    rx=fit(rx,view.reach.rx[0]+slide*c+frame.x/u,view.reach.rx[1]+slide*c-(width-frame.x)/u);
-    // The rooftop lounge and Canopy HQ stand storeys above the ground the reach is measured on, so a view stopped at
-    // the north limit cut their tops off under the top bar (Kevin, 2026-11-02). Closer in, where a whole building no
-    // longer fits, the north limit gives TALL_HEADROOM map units of height more room; zoomed right out it adds none,
-    // so the far edge of the town still never shows.
-    var headroom=TALL_HEADROOM*Math.max(0,Math.min(1,(zoom-.65)/.5))/sq;
-    rz=fit(rz,view.reach.rz[0]-headroom+slide*s+Math.max(0,frame.y-top)/(u*sq),view.reach.rz[1]+slide*s-Math.max(0,bottom-frame.y)/(u*sq));
-    // The bottom corners of the view, where the sheet meets the map, look at flat paving with nothing tall to lift it out
-    // of the haze, so they stay out of the thick of it (SUNNY_VIEW.ground): the bottom-left corner is the view's furthest
-    // point south, the bottom-right its furthest east. A corner past its line moves the view straight back across it
-    // (up and across the screen together, so a view at the west or east limit still slides), and the bottom wins over
-    // the top: up there the terraces stand tall enough to rise out of the haze, down here bare ground would show it.
-    var below=Math.max(0,bottom-frame.y)/(u*sq),rxLo=view.reach.rx[0]+slide*c+frame.x/u,rxHi=view.reach.rx[1]+slide*c-(width-frame.x)/u;
-    var corner=function(edge,limit,gx,gz){
-      var e=gx*(rx+edge)+gz*(rz+below)-limit;if(e<=0)return;
-      var mx=rxLo>rxHi?rx:Math.max(rxLo,Math.min(rxHi,rx-e*gx));e-=gx*(rx-mx);rx=mx;if(e>0)rz-=e/gz};
-    corner(-frame.x/u,view.ground.south,-s,c);
-    corner((width-frame.x)/u,eastHaze(storeLevels(),!!marketOn())[0]+view.ground.east,c,s);
-    panX=-rx*u;panY=-rz*u*sq;
+    var u=frame.unit*zoom,sq=FLOOR_SQUASH,haze=eastHaze(storeLevels(),!!marketOn())[0];
+    var args={c:Math.cos(angle),s:Math.sin(angle),u:u,sq:sq,zoom:zoom,width:width,frameX:frame.x,frameY:frame.y,top:hudBottom(),bottom:visibleHeight(),view:SUNNY_VIEW,reach:Math.max(0,haze-MAIN_EAST_HAZE[0]),east:haze};
+    var v=clampTownView(-panX/u,-panY/(u*sq),args);
+    panX=-v.rx*u;panY=-v.rz*u*sq;
   }
   function zoomAt(next,x,y){if(mapGesture.mode==='coast')endGesture();presentCam=null;next=Math.max(.65,Math.min(4,next));var ratio=next/zoom,frame=cameraFrame();panX=x-(x-centerX)*ratio-frame.x;panY=y-(y-centerY)*ratio-frame.y;zoom=next;applyCamera()}
   // Desktop keyboard panning: arrows or WASD glide the camera while held. Direction is the way the view moves, so the
@@ -3244,7 +3223,9 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   var STATS=/[?&]stats\b/.test(location.search);
   // Dev hook for snap3d.mjs: plays a reveal by name (kiosk, window, deck, atm, hq, lounge, station) without buying it.
   if(STATS||SNAP)window.__canopyReveal=function(name){({kiosk:function(){kioskFx(0)},window:function(){showcase({x:PICKUP_WINDOW.x,y:1.3,z:PICKUP_WINDOW.z},{r:1.6,h:3.2,fixtures:WINDOW_FIXTURE_KEYS})},deck:function(){deckReveal({fixtures:['deck'],h:3})},atm:function(){atmReveal(0,true)},hq:hqReveal,lounge:function(){showcase(LOUNGE_SPOT,{floor:ROOFTOP.y,r:2.4,h:4})},station:function(){stationFx(1,true)}}[name]||function(){})();render.invalidated=true};
-  if(STATS||SNAP)window.__canopyCamera=function(){return{panX:Math.round(panX),panY:Math.round(panY),zoom:+zoom.toFixed(3),mode:mapGesture.mode,dock:Math.round(dockHeight),cy:Math.round(centerY),unit:unit}};
+  if(STATS||SNAP)window.__canopyCamera=function(){return{panX:Math.round(panX),panY:Math.round(panY),zoom:+zoom.toFixed(3),mode:mapGesture.mode,vx:Math.round(mapGesture.vx),vy:Math.round(mapGesture.vy),dock:Math.round(dockHeight),cy:Math.round(centerY),unit:unit}};
+  if(STATS||SNAP)window.__canopyClamp=function(x,y,z){var sz=zoom;if(z)zoom=z;var r=clampedPan(x,y);zoom=sz;return r};
+  if(STATS||SNAP)window.__canopyPan=function(x,y,z,free){if(z)zoom=z;panX=x;panY=y;applyCamera(free);return{x:panX,y:panY}};
   if(STATS||SNAP)window.__canopyStats=function(perModel){return map3d&&map3d.ok?map3d.stats(perModel):null};
   if(STATS){
     var statsBox=document.createElement('div');
@@ -5247,7 +5228,10 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
         var held=clampedPan(panX,panY);g.mode='drag';
         g.x=held.x+unstretch(panX-held.x,width);g.y=held.y+unstretch(panY-held.y,visibleHeight());
       }
-      g.x+=g.dx;g.y+=g.dy;g.dx=g.dy=0;
+      // Where the view may only run along a line (zoomed out, the street's slant) a sideways drag follows the line, so
+      // the map tracks the finger across the screen and only a push up or down stretches it.
+      if(g.dx){var was=clampedPan(g.x,g.y);g.x+=g.dx;var line=clampedPan(g.x,was.y);if(Math.abs(line.x-g.x)<.01)g.y+=line.y-was.y}
+      g.y+=g.dy;g.dx=g.dy=0;
       if(g.scale!==1){if(!g.rect)g.rect=canvas.getBoundingClientRect();gestureZoom(zoom*g.scale,g.fx-g.rect.left,g.fy-g.rect.top);g.scale=1}
       var slid=slideAlongStreet(g.x,g.y);g.x=slid.x;g.y=slid.y;
       var edge=clampedPan(g.x,g.y);placeGesture(edge.x+rubberBand(g.x-edge.x,width),edge.y+rubberBand(g.y-edge.y,visibleHeight()));
@@ -5261,11 +5245,18 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     }
     if(g.mode!=='coast')return;
     var dt=Math.min(.05,Math.max(0,(now-g.at)/1000));g.at=now;if(!dt){render.invalidated=true;return}
-    var glide=slideAlongStreet(g.x,g.y);if(glide.slid){g.x=glide.x;g.y=glide.y;var gv=g.vx*glide.tx+g.vy*glide.ty;g.vx=gv*glide.tx;g.vy=gv*glide.ty}
+    // The fling keeps its speed across the screen and takes the street's slant; an up or down flick into the edge stops.
+    var ride=function(){var glide=slideAlongStreet(g.x,g.y);if(glide.slid){g.x=glide.x;g.y=glide.y;var gv=g.vx/glide.tx;g.vx=gv*glide.tx;g.vy=gv*glide.ty}};ride();
     var edge2=clampedPan(g.x,g.y);
     if(motionPreference.matches){placeGesture(edge2.x,edge2.y);endGesture();return}
-    var ax=coastAxis(g.x,g.vx,Math.abs(g.x-edge2.x)>.01?g.x-edge2.x:0,dt),ay=coastAxis(g.y,g.vy,Math.abs(g.y-edge2.y)>.01?g.y-edge2.y:0,dt);
+    var ox2=Math.abs(g.x-edge2.x)>.01?g.x-edge2.x:0,oy2=Math.abs(g.y-edge2.y)>.01?g.y-edge2.y:0,ax=coastAxis(g.x,g.vx,ox2,dt),ay=coastAxis(g.y,g.vy,oy2,dt);
     g.x=ax.pos;g.vx=ax.v;g.y=ay.pos;g.vy=ay.v;
+    // Where the view may only run along a line (zoomed out, the street's slant), the axis the line holds follows it as
+    // the other axis glides, so a sideways fling rides the street instead of leaving it and springing back.
+    if(!ox2&&ax.v){var lineY=clampedPan(g.x,edge2.y);if(Math.abs(lineY.x-g.x)<.01)g.y+=lineY.y-edge2.y}
+    else if(!oy2&&ay.v){var lineX=clampedPan(edge2.x,g.y);if(Math.abs(lineX.y-g.y)<.01)g.x+=lineX.x-edge2.x}
+    // The step may have run off the street's edge: back onto it before it is drawn, so the glide never shows a frame off the line.
+    ride();
     placeGesture(g.x,g.y);
     if(!g.vx&&!g.vy){var rest=clampedPan(g.x,g.y);if(Math.abs(rest.x-g.x)<.5&&Math.abs(rest.y-g.y)<.5)endGesture()}
   }
