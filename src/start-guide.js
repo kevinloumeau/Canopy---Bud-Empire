@@ -13,6 +13,12 @@
 //    manager on the floor: "This is you" (Kevin, 2026-11-10: the story is that you play as the manager).
 // 6. The camera eases back to the whole shop and play begins.
 // Seen once (SEEN_KEY), replayable from Settings; on a replay every site is already standing so those steps just read.
+//
+// Fast forward (Kevin, 2026-11-10: "change skip to fast forward through"): the quiet button beside the brass one is a
+// toggle carrying the top bar's double-speed glyph. While it is on the guide plays itself: each card takes its own
+// action after a short beat, the pauses shrink and the game runs at FAST_SPEED so the guest's visit goes by quickly.
+// Nothing is jumped over, it stops at the hand-over card, and a second tap drops back to normal pace. Escape still
+// closes the guide outright.
 import {manageDialog} from './dialog-focus.js';
 const SEEN_KEY='shift-guide-seen';
 const GROW_GOAL=10;
@@ -39,10 +45,18 @@ const WALK=[
 // HELLO_HOLD keeps "Here they come" up long enough to read before the first stage caption replaces it. RING_GLIDE is
 // how long the spotlight ring takes to slide from one site to the next.
 const BUILT_PAUSE=900,UPGRADED_PAUSE=1500,OUT_PAUSE=2600,HELLO_HOLD=1400,RING_GLIDE=350;
-export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,build,shopOpen,openShop,finish,sheet,reserve,select,camera,grow,guest}){
+// Fast forward: FAST_BEAT is how long a card shows before it acts on its own, FAST_STOP the same for a tour stop (the
+// camera has further to travel), FAST_SETTLE the pause after a build or upgrade, FAST_HELLO and FAST_OUT the two walk
+// holds, and FAST_SPEED the game speed while it is on.
+const FAST_BEAT=380,FAST_STOP=620,FAST_SETTLE=260,FAST_HELLO=350,FAST_OUT=650;
+export const FAST_SPEED=6;
+// The top bar's double-speed glyph, so the two controls read as the same thing.
+const FAST_ICON='<svg viewBox="0 0 18 16" fill="currentColor" aria-hidden="true"><path d="M3.2 3.5v9l7-4.5z"/><path d="M7.7 3.5v9l7-4.5z"/></svg>';
+export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,build,shopOpen,openShop,finish,sheet,reserve,select,camera,grow,guest,speed}){
  // `sheet` folds the tray away on every step and `reserve` keeps the map framed above the docked card. `camera` points
  // the 3D view (look at a site, follow the guest, hand back); `grow` reads and buys the grow room's upgrade with the
- // guide's grant; `guest` reports where the followed guest is in their visit.
+ // guide's grant; `guest` reports where the followed guest is in their visit; `speed(on)` runs the game and the guide's
+ // camera fast while fast forward is on.
  const root=document.createElement('div');root.className='start-guide';root.hidden=true;
  root.innerHTML='<div class="guide-dim"></div><div class="guide-ring" hidden></div>'+
   '<section class="guide-card" role="dialog" aria-modal="true" aria-labelledby="guideTitle">'+
@@ -50,12 +64,12 @@ export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,buil
   '<div class="guide-dots" aria-hidden="true"></div><p class="guide-eyebrow" hidden></p><h2 id="guideTitle"></h2><p id="guideText" aria-live="polite"></p><ul class="guide-beats" hidden></ul>'+
   '<ol class="guide-walk" hidden aria-hidden="true">'+WALK.map(()=>'<li></li>').join('')+'</ol>'+
   '<div class="guide-sign" hidden aria-hidden="true"><i class="guide-sign-string"></i><i class="guide-sign-string"></i><div class="guide-plaque"><span class="guide-face is-closed">Closed</span><span class="guide-face is-open">Open</span></div></div>'+
-  '<div class="guide-actions"><p class="guide-tap" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11V4.5a1.5 1.5 0 0 1 3 0V11m0-3.5a1.5 1.5 0 0 1 3 0V11m0-1.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1.2a6 6 0 0 1-4.9-2.5L3.5 15a1.6 1.6 0 0 1 2.4-2l3.1 3"/></svg><span>Tap to build</span></p><button type="button" class="guide-skip">Skip</button><button type="button" class="guide-next">Next</button></div></section>';
+  '<div class="guide-actions"><p class="guide-tap" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11V4.5a1.5 1.5 0 0 1 3 0V11m0-3.5a1.5 1.5 0 0 1 3 0V11m0-1.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1.2a6 6 0 0 1-4.9-2.5L3.5 15a1.6 1.6 0 0 1 2.4-2l3.1 3"/></svg><span>Tap to build</span></p><button type="button" class="guide-skip" aria-label="Fast forward" aria-pressed="false">'+FAST_ICON+'<span>Fast forward</span></button><button type="button" class="guide-next">Next</button></div></section>';
  document.body.append(root);
  const $=s=>root.querySelector(s),ring=$('.guide-ring'),dots=$('.guide-dots'),walkDots=$('.guide-walk');
  const steps=STEPS.filter(s=>!s.follow);
  dots.innerHTML=steps.map(()=>'<i></i>').join('');
- let step=-1,raf=0,lastTarget=null,finished=false,advanceTimer=0,walk=-1,walkTimer=0,walkWatch=0,walkSince=0;
+ let step=-1,raf=0,lastTarget=null,finished=false,advanceTimer=0,walk=-1,walkTimer=0,walkWatch=0,walkSince=0,fast=false,fastTimer=0;
  const built=s=>s.build===undefined||!isBuilt||isBuilt(s.build);
  const upgraded=()=>!grow||grow.level()>=GROW_GOAL;
  // Steps that dock the card under the map and pin the camera: the sites, the upgrade, the opening and the walk.
@@ -106,7 +120,7 @@ export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,buil
   next.textContent=pending?'Build':upgrading?'Upgrade · Free':s.open?(opening?s.cta:'Follow a guest'):s.cta||'Next';
   Array.from(dots.children).forEach((d,j)=>d.classList.toggle('is-on',j<=i));
   lastTarget=s.target||null;root.dataset.step=String(i);root.classList.toggle('is-spotlight',!!s.target||!!s.open);
-  if(fit)fit();if(reserve)reserve(docked(s)?$('.guide-card').offsetHeight+12:0);requestAnimationFrame(place);next.focus({preventScroll:true});
+  if(fit)fit();if(reserve)reserve(docked(s)?$('.guide-card').offsetHeight+12:0);requestAnimationFrame(place);next.focus({preventScroll:true});queueFast();
  }
  // The walk: the camera follows one guest and the caption changes as they reach each station. The card waits on the
  // guest, so its only button is Skip until they leave with the bag; then one brass button hands the shop over.
@@ -129,7 +143,7 @@ export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,buil
   if(stage==='gone'&&walk<WALK.length-1){showWalk(WALK.length-1);return;}
   if(at<=walk)return;
   // Let the hello line be read before the first stage replaces it.
-  const wait=walk<0?HELLO_HOLD-(performance.now()-walkSince):0;
+  const wait=walk<0?(fast?FAST_HELLO:HELLO_HOLD)-(performance.now()-walkSince):0;
   if(wait>0){clearTimeout(walkTimer);walkTimer=setTimeout(watchGuest,wait);return;}
   showWalk(at);
  }
@@ -138,7 +152,7 @@ export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,buil
   swapCopy(w.title,w.text);
   Array.from(walkDots.children).forEach((d,j)=>{d.classList.toggle('is-on',j<i);d.classList.toggle('is-now',j===i);});
   if(sound&&i>0)sound('tap');
-  if(i===WALK.length-1){clearInterval(walkWatch);walkWatch=0;clearTimeout(walkTimer);walkTimer=setTimeout(startTour,OUT_PAUSE);}
+  if(i===WALK.length-1){clearInterval(walkWatch);walkWatch=0;clearTimeout(walkTimer);walkTimer=setTimeout(startTour,fast?FAST_OUT:OUT_PAUSE);}
  }
  // Coming up: the camera visits what the shop can buy next (the ghost items, the lounge, the next city building), one
  // caption and one Next each, then hands over.
@@ -154,10 +168,11 @@ export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,buil
   if(t.you)document.body.classList.add('guide-you');
   lastTarget=t.target||null;ring.hidden=true;root.classList.toggle('is-spotlight',true);
   const next=$('.guide-next');next.hidden=false;next.disabled=false;next.textContent='Next';$('.guide-skip').hidden=false;
-  camera.stop(t);if(sound&&tourAt>0)sound('tap');if(reserve)reserve($('.guide-card').offsetHeight+12);next.focus({preventScroll:true});
+  camera.stop(t);if(sound&&tourAt>0)sound('tap');if(reserve)reserve($('.guide-card').offsetHeight+12);next.focus({preventScroll:true});queueFast();
  }
  function handOver(){
-  walkDots.hidden=false;$('.guide-eyebrow').textContent='Your shift';swapCopy('The floor is yours.','Answer calls and upgrade the slowest station.');
+  // Fast forward ends here: the last card is the player's own tap, at normal pace.
+  setFast(false);walkDots.hidden=false;$('.guide-eyebrow').textContent='Your shift';swapCopy('The floor is yours.','Answer calls and upgrade the slowest station.');
   Array.from(walkDots.children).forEach(d=>{d.classList.add('is-on');d.classList.remove('is-now');});
   const next=$('.guide-next');next.hidden=false;next.textContent='Start my shift';$('.guide-skip').hidden=true;root.classList.add('is-done');
   if(camera)camera.home();if(reserve)reserve($('.guide-card').offsetHeight+12);next.focus({preventScroll:true});
@@ -178,7 +193,7 @@ export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,buil
  function close(){
   if(report&&!root.hidden)report(finished?'guide_complete':'guide_skip',{step:step+1});
   clearTimeout(advanceTimer);advanceTimer=0;clearTimeout(walkTimer);walkTimer=0;clearInterval(walkWatch);walkWatch=0;openTimers.forEach(clearTimeout);openTimers=[];opening=false;
-  root.hidden=true;document.body.classList.remove('guide-open');cancelAnimationFrame(raf);
+  setFast(false);root.hidden=true;document.body.classList.remove('guide-open');cancelAnimationFrame(raf);
   root.classList.remove('is-opening','is-leaving','is-walk','is-done','is-tour');document.body.classList.remove('guide-ghosts','guide-you');tour=[];tourAt=-1;$('.guide-sign').hidden=true;$('.guide-actions').hidden=false;$('.guide-next').hidden=false;
   try{localStorage.setItem(SEEN_KEY,'1');}catch(e){}
   if(reserve)reserve(0);if(finish)finish();if(grow&&grow.settle)grow.settle();if(camera)camera.release();if(collapse)collapse();
@@ -192,7 +207,7 @@ export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,buil
   if(opening)return;const wasOpen=shopOpen&&shopOpen();
   if(openShop)openShop();if(sound)sound('open');
   const reduced=typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(reduced||wasOpen){advance();return;}
+  if(reduced||wasOpen||fast){advance();return;}
   opening=true;root.classList.add('is-opening');
   setCopy('Open for business!','The first guest is on their way.');
   $('.guide-actions').hidden=true;$('.guide-sign').hidden=false;
@@ -204,16 +219,34 @@ export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,buil
   if(root.classList.contains('is-tour')){nextStop();return;}
   const s=STEPS[step];if(!s||s.follow)return;
   if(s.build!==undefined&&!built(s)){
-   if(!build||!build(s.build))return;
-   settle('Built',BUILT_PAUSE);return;
+   if(!build||!build(s.build)){setFast(false);return;}
+   settle('Built',fast?FAST_SETTLE:BUILT_PAUSE);return;
   }
   if(s.upgrade!==undefined&&!upgraded()){
-   if(!grow.buy())return;
+   if(!grow.buy()){setFast(false);return;}
    $('.guide-eyebrow').textContent='Lv '+GROW_GOAL+' · New look';
-   settle('Upgraded',UPGRADED_PAUSE);return;
+   settle('Upgraded',fast?FAST_SETTLE*2:UPGRADED_PAUSE);return;
   }
   if(s.open){celebrate();return;}
-  if(sound)sound('tap');advance();
+  if(sound&&!fast)sound('tap');advance();
+ }
+ // Fast forward. The toggle only sets the pace; queueFast is what plays the guide: whenever a card that waits on a tap
+ // comes up while it is on, the card's own action fires after a beat. The walk waits on the guest instead (sped up by
+ // `speed`), and a card that is settling or opening already moves on by itself.
+ function setFast(on){
+  on=!!on;clearTimeout(fastTimer);fastTimer=0;if(fast===on)return;
+  fast=on;root.classList.toggle('is-fast',on);const b=$('.guide-skip');b.setAttribute('aria-pressed',String(on));
+  if(speed)speed(on);if(!on)return;
+  if(report)report('guide_fast',{step:step+1});
+  // Turned on while the guest is already leaving: the long goodbye hold is cut to the fast one.
+  if(walk===WALK.length-1&&walkTimer&&!root.classList.contains('is-tour')){clearTimeout(walkTimer);walkTimer=setTimeout(startTour,FAST_OUT);}
+  queueFast();
+ }
+ function queueFast(){
+  clearTimeout(fastTimer);fastTimer=0;if(!fast||root.hidden||opening)return;
+  const c=root.classList,touring=c.contains('is-tour');
+  if(c.contains('is-done')||c.contains('is-built')||(c.contains('is-walk')&&!touring))return;
+  fastTimer=setTimeout(()=>{fastTimer=0;if(fast&&!root.hidden)act();},touring?FAST_STOP:FAST_BEAT);
  }
  function settle(label,pause){
   root.classList.remove('is-build');root.classList.add('is-built');$('.guide-tap').hidden=true;
@@ -221,7 +254,7 @@ export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,buil
   advanceTimer=setTimeout(advance,pause);
  }
  $('.guide-next').onclick=act;
- $('.guide-skip').onclick=()=>{if(!opening)close();};
+ $('.guide-skip').onclick=()=>{if(opening)return;if(sound)sound('tap');setFast(!fast);};
  // The world is inert while the guide is open, so a tap on the spotlit site lands on the dim layer; treat it as the tap.
  $('.guide-dim').addEventListener('click',e=>{
   const s=STEPS[step];if(!s||!root.classList.contains('is-build')||ring.hidden)return;

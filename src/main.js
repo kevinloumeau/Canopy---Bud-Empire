@@ -40,7 +40,7 @@ import {mountShopBrowser} from './shop-browser.js';
 import {tickOperations,atmosphere,neighborhood} from './operations.js';
 import {mountOperations} from './operations-ui.js';
 import {mountEmpireShell} from './empire-shell.js';
-import {mountStartGuide} from './start-guide.js';
+import {mountStartGuide,FAST_SPEED as GUIDE_FAST_SPEED} from './start-guide.js';
 import {mountSettings} from './settings.js';
 import {makeHaptics} from './haptics.js';
 import {nativePlugin} from './native-plugins.js';
@@ -132,7 +132,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Three plain buttons: pause, normal and double speed. The old 4× tier was dropped; saves that had it load at 2×.
   speedButtons.forEach(function(button){button.onclick=function(){setGameSpeed(Number(button.getAttribute('data-speed')))}});
   var tickTime=performance.now(),tickRemainder=0;
-  function tick(){if(SNAP)return;var now=performance.now(),seconds=(now-tickTime)/1000;tickTime=now;if(document.hidden){tickRemainder=0;return}completeBuilds();noticeFlagship();noticeCity();var elapsed=elapsedSteps(seconds+tickRemainder,state.gameSpeed);if(elapsed.offline){tickRemainder=0;collectOffline(elapsed.offline)}else{tickRemainder=Math.max(0,seconds+tickRemainder-Math.floor((seconds+tickRemainder+1e-8)/.05)*.05);for(var step=0;step<elapsed.steps;step++)simulate(.05)}}
+  // The speed the shop actually runs at: the player's setting, or the start guide's fast forward while that is on (it
+  // also runs a paused game, so a guide being fast-forwarded can never stall on a guest who is standing still).
+  var guideFast=false;function playSpeed(){return guideFast?GUIDE_FAST_SPEED:state.gameSpeed}
+  function tick(){if(SNAP)return;var now=performance.now(),seconds=(now-tickTime)/1000;tickTime=now;if(document.hidden){tickRemainder=0;return}completeBuilds();noticeFlagship();noticeCity();var elapsed=elapsedSteps(seconds+tickRemainder,playSpeed());if(elapsed.offline){tickRemainder=0;collectOffline(elapsed.offline)}else{tickRemainder=Math.max(0,seconds+tickRemainder-Math.floor((seconds+tickRemainder+1e-8)/.05)*.05);for(var step=0;step<elapsed.steps;step++)simulate(.05)}}
   var saveFailed=false;
   // Every save is also mirrored to the iOS app's own storage (src/native-save.js), so a WebKit storage wipe can't lose
   // the shop. saveCounter only goes up, across Start over and prestige too, so the newer copy is always the bigger one.
@@ -842,7 +845,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     }
     if(autoDroneReady(state.autoDrone,dt,state.lines[4]>0&&state.stock[3]>=onlineSize()&&onlineRequestsReady()>0)){state.autoDrone.remaining*=1-tapered(state.fleetLevel,.03,.015);sendOnlineOrders(autoDroneLimit(state.autoDrone)+(state.autoDrone.bulk&&state.autoDrone.mode==='bulk'?state.cargoLevel:0),true,'drone')}
     // Shifts run on wall time, so a recap always covers five minutes of play whatever the game speed.
-    if(state.shopOpen&&tickShift(state.shopPlay,dt/(state.gameSpeed||1),{queue:customers.filter(function(c){return !c.ordered&&(c.phase==='ordering'||c.phase==='kiosk')}).length,stockout:customers.some(function(c){return c.ordered&&!c.bag})&&state.stock[4]<1})&&shopPlayUI)shopPlayUI.render();
+    if(state.shopOpen&&tickShift(state.shopPlay,dt/(playSpeed()||1),{queue:customers.filter(function(c){return !c.ordered&&(c.phase==='ordering'||c.phase==='kiosk')}).length,stockout:customers.some(function(c){return c.ordered&&!c.bag})&&state.stock[4]<1})&&shopPlayUI)shopPlayUI.render();
   }
   function staffCost(i){return economy.staffCost(state.staff[i])}
   function idTrainingQuote(limit){
@@ -3260,10 +3263,10 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // Battery: the shop is left running for long stretches, so it draws at 30 fps in Low Power Mode (the iOS app sets
     // window.canopyPowerSaver) and once nobody has touched the screen for IDLE_AFTER ms; any touch brings 60 back.
     var easy=window.canopyPowerSaver===true||wallNow-lastInputAt>IDLE_AFTER;render.easy=easy;
-    var frameInterval=state.gameSpeed===0?250:easy?1000/30:1000/60;
+    var frameInterval=playSpeed()===0?250:easy?1000/30:1000/60;
     if(!render.invalidated&&render.drawnAt!==undefined&&wallNow-render.drawnAt<frameInterval-1){requestAnimationFrame(render);return}
     render.drawnAt=wallNow;render.invalidated=false;render.frames=(render.frames||0)+1;
-    var wallDelta=Math.min(.1,Math.max(0,(wallNow-(render.last===undefined?wallNow:render.last))/1000)),frameDelta=wallDelta*state.gameSpeed;tickManager(wallDelta);
+    var wallDelta=Math.min(.1,Math.max(0,(wallNow-(render.last===undefined?wallNow:render.last))/1000)),frameDelta=wallDelta*playSpeed();tickManager(wallDelta);
     render.last=wallNow;
     // A freshly built station rises out of its site on wall time, so the reveal plays at the same pace at every game speed.
     if(introAt){var introT=(performance.now()-introAt)/1000;if(introT>.85)$('world').classList.remove('building');if(introT>INTRO_END)introAt=0;render.invalidated=true}
@@ -5026,7 +5029,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     select:function(key){loungeSelected=key==='lounge';securitySelected=key==='door';if(key!=='door'&&key!=='lounge')selected=key;renderUI()},
     camera:{look:guideLook,follow:guideFollow,home:guideHome,release:guideRelease,tour:guideTour,stop:guideTourStop},
     grow:{level:function(){return state.lines[1]},price:function(){return fmt(growGoalCost())},grant:guideGrant,buy:guideUpgradeGrow,settle:guideSettleGrant},
-    guest:guideGuest});var guideReplay=document.createElement('button');guideReplay.type='button';guideReplay.className='guide-replay';guideReplay.textContent='Replay the start guide';guideReplay.onclick=function(){startGuide.open()};document.querySelector('.shop-reset').prepend(guideReplay);mountSettings({getState:function(){return state},setSpeed:setGameSpeed,haptic:haptic});
+    guest:guideGuest,speed:function(on){guideFast=!!on;render.invalidated=true}});var guideReplay=document.createElement('button');guideReplay.type='button';guideReplay.className='guide-replay';guideReplay.textContent='Replay the start guide';guideReplay.onclick=function(){startGuide.open()};document.querySelector('.shop-reset').prepend(guideReplay);mountSettings({getState:function(){return state},setSpeed:setGameSpeed,haptic:haptic});
   manageDialog($('resetModal'),function(){$('resetModal').hidden=true});manageDialog(prestigeDialog,function(){prestigeDialog.hidden=true});
   Array.prototype.forEach.call(document.querySelectorAll('[data-empire-view]'),function(button){button.onclick=function(){var view=button.getAttribute('data-empire-view');Array.prototype.forEach.call(document.querySelectorAll('[data-empire-view]'),function(b){b.setAttribute('aria-pressed',String(b===button))});Array.prototype.forEach.call(document.querySelectorAll('[data-empire-section]'),function(section){section.hidden=section.getAttribute('data-empire-section')!==view});document.querySelector('[data-pane=empire]').scrollTop=0;fitControls()}});
 
@@ -5138,11 +5141,11 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   function guideRelease(){guideGuestId=-1;guideWatchFrom=-1;guideCam=null;if(!guideMoved)return;guideMoved=false;if(!state.empire.activeStore)lookAtStore(0)}
   function stepGuideCam(dt){var g=guideCam;if(!g)return;
     if(mapGesture.mode!=='idle'){guideCam=null;return}
-    if(g.t!==undefined&&g.t<1){g.t=Math.min(1,g.t+dt/1.1);var e=g.t<.5?4*g.t*g.t*g.t:1-Math.pow(-2*g.t+2,3)/2;
+    if(g.t!==undefined&&g.t<1){g.t=Math.min(1,g.t+dt/(guideFast?.4:1.1));var e=g.t<.5?4*g.t*g.t*g.t:1-Math.pow(-2*g.t+2,3)/2;
       if(g.follow)g.to=guestSpot(guideFollowed());
       guidePlace({x:g.from.x+(g.to.x-g.from.x)*e,y:g.from.y+(g.to.y-g.from.y)*e,z:g.from.z+(g.to.z-g.from.z)*e},g.z0*Math.pow(g.z1/g.z0,e));
       if(g.t>=1){if(g.follow){g.point=g.to;g.zoom=g.z1}else guideCam=null}return}
-    if(g.follow){var to=guestSpot(guideFollowed()),k=1-Math.exp(-dt*4);g.point={x:g.point.x+(to.x-g.point.x)*k,y:g.point.y+(to.y-g.point.y)*k,z:g.point.z+(to.z-g.point.z)*k};guidePlace(g.point,g.zoom);render.invalidated=true}}
+    if(g.follow){var to=guestSpot(guideFollowed()),k=1-Math.exp(-dt*(guideFast?12:4));g.point={x:g.point.x+(to.x-g.point.x)*k,y:g.point.y+(to.y-g.point.y)*k,z:g.point.z+(to.z-g.point.z)*k};guidePlace(g.point,g.zoom);render.invalidated=true}}
   // The grow room's first new look (Lv 10) is part of the guide, paid with cash the guide grants when it opens.
   // state.guideGrant is what is left of that grant; the guide takes back whatever was not spent when it closes, so a
   // finished or skipped guide leaves the normal starting cash.

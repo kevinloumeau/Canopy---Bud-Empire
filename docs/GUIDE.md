@@ -44,7 +44,7 @@ Customers pass Security, order, collect their reserved bags and leave. Their pre
 
 The Goals button opens seven story chapters connecting the first ten bags, station growth, a broader menu, Riverside, Mara's first request, all three stores and relationships with Mara, Sol and Kit. Chapter actions open the relevant existing controls. Existing saves receive credit for milestones already reached; chapters add no new currency or cash rewards.
 
-Repeatable Shift goals remain available in the same dropdown. Empire home also links to the story. A new shop starts as seven construction sites: the first-run guide walks the door and the six stations in line order, each raised for free by tapping its site on the map (or the card's Build button), and ends by opening the shop, at which point customers begin to arrive. Skipping the guide finishes the build; a half-built shop resumes at its next site after a reload. The guide can be replayed from Settings once everything is standing.
+Repeatable Shift goals remain available in the same dropdown. Empire home also links to the story. A new shop starts as seven construction sites: the first-run guide walks the door and the six stations in line order, each raised for free by tapping its site on the map (or the card's Build button), and ends by opening the shop, at which point customers begin to arrive. The card's Fast forward button plays the rest of the guide by itself at speed, up to the last card (tap it again for normal pace), and Escape leaves the guide and finishes the build; a half-built shop resumes at its next site after a reload. The guide can be replayed from Settings once everything is standing.
 
 ### Deliveries
 
