@@ -57,7 +57,7 @@ body[data-store-view=branch] .rush-pill{display:none}
 .menu-views{display:grid;grid-template-columns:repeat(2,1fr);gap:4px;padding:3px;border-radius:12px;background:#ffffff0a;border:1px solid #ffffff12}
 .menu-views button{min-height:40px;border:0;border-radius:9px;background:none;color:#f6f1dfb3;font-weight:600}
 .menu-views button[aria-selected=true]{background:#c4e8a71f;color:#f6f1df;box-shadow:inset 0 0 0 1px #c4e8a740}
-.menu-board[data-menu-view=breed]>:not(.menu-board-head):not(.menu-views):not(.breed-view){display:none}
+.menu-board[data-menu-view=breed]>:not(.menu-board-head):not(.menu-views):not(.breed-view):not(.menu-guide-pop){display:none}
 /* Weekly special: one line at the top of Events. Between seasons the season card previews the next one. */
 .weekly-special{margin:0 0 10px;padding:9px 12px;border-radius:10px;background:#c4e8a714;border:1px solid #c4e8a73d;font-size:13px}
 .weekly-special b{color:var(--p-lime-78)}

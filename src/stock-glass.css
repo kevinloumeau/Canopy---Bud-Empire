@@ -51,3 +51,13 @@
    open tab fills its icon with a soft brass wash under a brass line, so where you are reads at a glance. */
 .sheet .tray-tabs .tray-icon{stroke-width:1.75}
 .sheet .tray-tabs button[aria-pressed=true] .tray-icon{color:var(--ui-brass);fill:color-mix(in srgb,var(--ui-brass) 24%,transparent)}
+
+/* UI review 2026-11-10: on 375 and 390 wide phones a 4-character count ("3.2K") ran into the next stage's icon and the
+   hairline before Delivery. The slots give their padding to the count and the icons come down 2px; text is unchanged. */
+@media(max-width:400px){
+ .sheet #stockStatus .stock-item:not(.stock-online){padding-inline:0;gap:3px}
+ .sheet #stockStatus .stock-online{margin-left:8px;padding:4px 2px 4px 6px;gap:3px}
+ .sheet #stockStatus .stock-online>span{min-width:0}
+ .sheet #stockStatus .stock-item>.stock-3d{width:20px;height:20px}
+ .sheet #stockStatus .stock-item>.stock-3d.is-wide{width:22px}
+}

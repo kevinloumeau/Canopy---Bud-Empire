@@ -19,12 +19,12 @@
  html body .sheet>[data-pane][data-room=full]:not([data-pane=goals])>*{--rp:clamp(0px,100cqh - 266px,96px)}
 
  /* ---------- Stations: the card at its own height, the crew rows in full under it ---------- */
- html body .sheet>[data-pane=factory][data-room=full]{justify-content:space-evenly}
+ html body .sheet>[data-pane=factory][data-room=full]{justify-content:space-evenly;row-gap:6px}
  html body .sheet>[data-pane=factory][data-room=full]>*{flex:none!important}
  html body .sheet>[data-pane=factory][data-room=full] .machine-nav{margin-bottom:0!important}
- html body .sheet>[data-pane=factory][data-room=full] .selected-line{min-height:0!important;grid-template-rows:auto auto!important;row-gap:14px!important;padding:14px 16px!important}
+ html body .sheet>[data-pane=factory][data-room=full] .selected-line{min-height:0!important;grid-template-rows:auto auto!important;row-gap:12px!important;margin-bottom:0!important;padding:10px 16px!important}
  html body .sheet>[data-pane=factory][data-room=full] .station-tiles{grid-template-columns:minmax(0,1fr)!important;gap:8px!important;margin:0!important}
- html body .sheet>[data-pane=factory][data-room=full] .station-tiles>:is(#stationTeam,.station-team){grid-column:auto!important;grid-template-columns:40px minmax(0,1fr) 84px 84px!important;grid-template-rows:auto!important;align-items:center!important;justify-items:stretch!important;column-gap:10px!important;row-gap:0!important;min-height:0!important;margin:0!important;padding:10px 12px!important;text-align:left!important}
+ html body .sheet>[data-pane=factory][data-room=full] .station-tiles>:is(#stationTeam,.station-team){grid-column:auto!important;grid-template-columns:48px minmax(0,1fr) 72px 72px!important;grid-template-rows:auto!important;align-items:center!important;justify-items:stretch!important;column-gap:10px!important;row-gap:0!important;min-height:0!important;margin:0!important;padding:10px 12px!important;text-align:left!important}
  html body .sheet>[data-pane=factory][data-room=full] .station-tiles>:is(#stationTeam,.station-team):is(.station-ability,#stationAbility),html body .sheet>[data-pane=factory][data-room=full] .station-tiles>:is(#stationTeam,.station-team):has(>button:only-of-type){grid-template-columns:40px minmax(0,1fr) 96px!important}
  html body .sheet>[data-pane=factory][data-room=full] .station-tiles .team-copy small{display:block!important;white-space:nowrap!important;text-overflow:ellipsis}
  html body .sheet>[data-pane=factory][data-room=full] .station-tiles>:is(#stationTeam,.station-team)>*{grid-column:auto!important;grid-row:auto!important;margin:0!important}
@@ -118,4 +118,20 @@
  /* A fork: its two rows inside one brass outline, "or" between them. */
  html body .sheet>[data-pane=boosts][data-room=full].shop-browser .shop-items>.shop-fork{display:grid;grid-template-columns:minmax(0,1fr)!important;grid-auto-rows:auto;gap:10px!important;margin:8px 0 0!important}
  html body .sheet>[data-pane=boosts][data-room=full] .shop-fork>.shop-item{grid-row:auto}
+}
+
+/* UI review 2026-11-10: the full-open Menu needed 566-596px but starts at a 440px pane, so on 390-wide phones (and
+   any phone with a notch inset) the Upgrade button was cut off. Its fixed sizes now follow the pane's height and the
+   button is pinned to the bottom, so it no longer moves from strain to strain. */
+@media(max-width:779px){
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-detail>.strain-hero{--art:clamp(72px,100cqh - 500px,96px);row-gap:clamp(7px,(100cqh - 500px) / 6,14px)!important}
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-hero-details{gap:clamp(4px,(100cqh - 500px) / 12,6px)}
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-hero .strain-format .format-options .strain-format-pill{padding:clamp(8px,(100cqh - 500px) / 6,14px) 6px clamp(7px,(100cqh - 500px) / 7,12px)!important}
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-hero .strain-format .format-options .strain-format-pill>img.icon-3d{width:clamp(36px,(100cqh - 400px) / 4,48px)!important;height:clamp(36px,(100cqh - 400px) / 4,48px)!important;margin-bottom:4px}
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-detail>.strain-hero{align-content:space-between!important}
+ html body .sheet>[data-pane=flowers][data-room=full] .menu-guide-pop{grid-auto-rows:minmax(64px,auto);align-content:center}
+}
+/* A short full-open pane (a small phone with a notch inset) drops the flavour line before anything is cut off. */
+@container (max-height:539px){
+ html body .sheet>[data-pane=flowers][data-room=full] .strain-hero-info>p{display:none!important}
 }

@@ -89,3 +89,11 @@ html body .world .map-controls button:active{background:#ffffff1f;transform:none
 }
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.lane-status{background:#1d3226}}
 @media(prefers-reduced-transparency:reduce){.lane-status{background:#1d3226;-webkit-backdrop-filter:none;backdrop-filter:none}}
+
+/* UI review 2026-11-10: at full open the sheet's header sits where the lane is, so a toast covered the tab title and the
+   Strains / Breed switch. While the sheet is tall the toast rides on the top bar as a solid banner for its second and
+   a half (the lane takes no taps). */
+@media(max-width:779px){
+ .app:has(.sheet.tall) .top-lane{top:calc(var(--hud-height,60px) - 48px);z-index:40}
+ .app:has(.sheet.tall) .top-lane .toast{min-height:44px;background:#1d3226;-webkit-backdrop-filter:none;backdrop-filter:none}
+}

@@ -41,8 +41,8 @@
 .breed-pick:focus-visible{outline:2px solid var(--ui-brass);outline-offset:-2px}
 
 /* The bench: parent × parent = cultivar. Parent rings sit level with the bigger cultivar ring. */
-.breed-bench{--pr:min(calc(56px + var(--rpx) * .26),104px);--rr:min(calc(68px + var(--rpx) * .3),124px);display:flex;flex-direction:column;justify-content:space-evenly;gap:var(--s-gap,10px);flex:1 1 auto;min-height:0}
-.breed-cross{display:grid;grid-template-columns:minmax(0,1fr) 14px minmax(0,1fr) 14px minmax(0,1.25fr);align-items:start;column-gap:2px}
+.breed-bench{--pr:min(calc(56px + var(--rpx) * .26),104px,23.3cqw);--rr:min(calc(68px + var(--rpx) * .3),124px,27.9cqw);display:flex;flex-direction:column;justify-content:flex-start;gap:var(--s-gap,10px);flex:1 1 auto;min-height:0}
+.breed-cross{margin-block:auto;display:grid;grid-template-columns:minmax(0,1fr) 14px minmax(0,1fr) 14px minmax(0,1.25fr);align-items:start;column-gap:2px}
 .breed-parent,.breed-result{display:grid;justify-items:center;gap:3px;min-width:0;padding:0;border:0;background:none;box-shadow:none;color:inherit;text-align:center}
 .breed-parent{--size:var(--pr);padding-top:calc((var(--rr) - var(--pr)) / 2);cursor:pointer;-webkit-tap-highlight-color:transparent}
 .breed-parent .breed-ring{--ring-c:var(--strain)}

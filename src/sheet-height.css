@@ -102,6 +102,8 @@ html body .sheet>[data-pane=employees]{display:flex;flex-direction:column}
  /* Drags may start from any part of the sheet that does not scroll; the browser must not claim those touches. */
  .sheet .panel-header,.sheet #stockStatus,.sheet #stockStatus .stock-item,.sheet .customer-mood,.sheet .tray-tabs,.sheet .tray-tabs button{touch-action:none}
  .sheet:not(.collapsed) .panel-header::before{content:'';position:absolute;top:3px;left:50%;width:36px;height:4px;margin-left:-18px;border-radius:2px;background:#cfe0c6;opacity:.4}
+ /* 10px over the header's controls on every phone (the SE already had it in station-fit.css), so the handle never touches the Strains switch. */
+ .sheet:not(.collapsed) .panel-header{padding-block:10px 0}
  .sheet:not(.collapsed) #panelExpand{display:grid;place-items:center;margin-left:auto;padding:0}
  .sheet .panel-header #panelExpand svg{width:18px;height:18px;transition:transform .25s ease}
  .sheet .panel-header #panelExpand[aria-pressed=true] svg{transform:rotate(180deg)}
