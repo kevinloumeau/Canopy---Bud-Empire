@@ -43,7 +43,7 @@
  .manager-call:not(.is-coming) .call-badge svg{animation:manager-call-bell 1.8s ease-in-out infinite;transform-origin:50% 10%}}
 @keyframes manager-call-ring{0%{box-shadow:0 0 0 0 #a8dc5299}70%,100%{box-shadow:0 0 0 9px #a8dc5200}}
 @keyframes manager-call-bell{0%,40%,100%{transform:rotate(0)}10%{transform:rotate(-16deg)}20%{transform:rotate(13deg)}30%{transform:rotate(-7deg)}}
-.guide-open .manager-call,.guide-open .manager-tag{display:none!important}
+.guide-open .manager-call,.guide-open:not(.guide-you) .manager-tag{display:none!important}
 
 /* The manager card (main.js openManagerCard): who you are and what you do. A lime level ring, three figures with their
    icons, one line of how, and a lime button when a call is open. Forest glass, centred over a soft scrim. */

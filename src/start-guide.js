@@ -9,31 +9,32 @@
 //    that at the start and replenish the money after the tutorial").
 // 4. The sign flips, and the camera follows the first guest through the door: ID check, order desk, pickup and out with
 //    the bag, with one caption per step.
-// 5. Coming up: the camera pans over the ghost buys, the rooftop lounge and the next city building.
+// 5. Coming up: the camera pans over the ghost buys, the rooftop lounge and the next city building, and ends on the
+//    manager on the floor: "This is you" (Kevin, 2026-11-10: the story is that you play as the manager).
 // 6. The camera eases back to the whole shop and play begins.
 // Seen once (SEEN_KEY), replayable from Settings; on a replay every site is already standing so those steps just read.
 import {manageDialog} from './dialog-focus.js';
 const SEEN_KEY='shift-guide-seen';
 const GROW_GOAL=10;
 const STEPS=[
- {hero:true,eyebrow:'Canopy · Day one',title:'Your shop opens today.',text:'Raise seven stations, flip the sign and let the neighborhood in.',cta:'Start building',beats:[['factory','Build'],['flowers','Sell'],['empire','Expand']]},
- {build:'door',eyebrow:'Build · 1 of 7',title:'Security',text:'Every guest shows ID here first.',target:'[data-marker=security]'},
- {build:0,eyebrow:'Build · 2 of 7',title:'Seed station',text:'Every harvest starts with a seed.',target:'[data-marker="0"]'},
- {build:1,eyebrow:'Build · 3 of 7',title:'Grow room',text:'Seedlings fill out under the lamps.',target:'[data-marker="1"]'},
- {build:2,eyebrow:'Build · 4 of 7',title:'Harvest table',text:'Ripe plants are trimmed and cured.',target:'[data-marker="2"]'},
- {build:3,eyebrow:'Build · 5 of 7',title:'Packing bar',text:'Flower is weighed and sealed in jars.',target:'[data-marker="3"]'},
- {build:4,eyebrow:'Build · 6 of 7',title:'Order desk',text:'Guests pick a strain and pay here.',target:'[data-marker="4"]'},
- {build:5,eyebrow:'Build · 7 of 7',title:'Pickup counter',text:'Bags go out, cash comes in.',target:'[data-marker="5"]'},
+ {hero:true,eyebrow:'Canopy · Day one',title:'You’re the new manager.',text:'Build your seven stations, flip the sign and run the floor.',cta:'Start building',beats:[['factory','Build'],['flowers','Sell'],['empire','Expand']]},
+ {build:'door',eyebrow:'Build · 1 of 7',title:'Security',text:'Your guard checks every ID first.',target:'[data-marker=security]'},
+ {build:0,eyebrow:'Build · 2 of 7',title:'Seed station',text:'Your crew starts every harvest here.',target:'[data-marker="0"]'},
+ {build:1,eyebrow:'Build · 3 of 7',title:'Grow room',text:'Your growers raise it under the lamps.',target:'[data-marker="1"]'},
+ {build:2,eyebrow:'Build · 4 of 7',title:'Harvest table',text:'Your trimmers cut and cure the ripe plants.',target:'[data-marker="2"]'},
+ {build:3,eyebrow:'Build · 5 of 7',title:'Packing bar',text:'Your packers weigh and seal every jar.',target:'[data-marker="3"]'},
+ {build:4,eyebrow:'Build · 6 of 7',title:'Order desk',text:'Your budtenders take orders and payment.',target:'[data-marker="4"]'},
+ {build:5,eyebrow:'Build · 7 of 7',title:'Pickup counter',text:'Your team hands over the bags. Cash comes in.',target:'[data-marker="5"]'},
  {upgrade:1,eyebrow:'Upgrade · On the house',title:'Grow room to Lv 10',text:'A new look and double the harvest.',target:'[data-marker="1"]'},
- {open:true,eyebrow:'Grand opening',title:'Ready to open.',text:'Flip the sign and follow your first guest inside.',cta:'Open the shop'},
+ {open:true,eyebrow:'Grand opening',title:'Ready to open.',text:'Flip the sign and watch your first guest come in.',cta:'Open the shop'},
  {follow:true}
 ];
 // The guest's walk, one caption per step. `stage` comes from main.js (guideGuest): door, order, pickup, out.
 const WALK=[
- {stage:'door',title:'ID at the door',text:'Security checks every guest first.'},
+ {stage:'door',title:'ID at the door',text:'Your guard checks every guest first.'},
  {stage:'order',title:'Order at the desk',text:'They pick a strain and pay.'},
- {stage:'pickup',title:'Bag at pickup',text:'A packed jar goes in the bag.'},
- {stage:'out',title:'Sold!',text:'Every bag out the door pays the till.'}
+ {stage:'pickup',title:'Bag at pickup',text:'Your team bags a packed jar.'},
+ {stage:'out',title:'Sold!',text:'Every bag out the door pays your till.'}
 ];
 // HELLO_HOLD keeps "Here they come" up long enough to read before the first stage caption replaces it. RING_GLIDE is
 // how long the spotlight ring takes to slide from one site to the next.
@@ -114,7 +115,7 @@ export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,buil
   root.classList.remove('is-hero','is-build','is-built','is-open');root.classList.add('is-site','is-walk','is-spotlight');
   $('.guide-hero').hidden=true;$('.guide-beats').hidden=true;$('.guide-tap').hidden=true;$('.guide-sign').hidden=true;$('.guide-actions').hidden=false;
   $('.guide-eyebrow').hidden=false;$('.guide-eyebrow').textContent='Your first guest';
-  swapCopy('Here they come','Watch one visit, start to finish.');walkSince=performance.now();
+  swapCopy('Here they come','Watch your crew handle one visit.');walkSince=performance.now();
   walkDots.hidden=false;Array.from(walkDots.children).forEach(d=>d.className='');
   $('.guide-skip').hidden=false;const next=$('.guide-next');next.hidden=true;
   if(camera)camera.follow();
@@ -144,19 +145,21 @@ export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,buil
  let tour=[],tourAt=-1;
  function startTour(){tour=camera&&camera.tour?camera.tour():[];tourAt=-1;nextStop();}
  function nextStop(){
-  tourAt++;document.body.classList.remove('guide-ghosts');
+  tourAt++;document.body.classList.remove('guide-ghosts','guide-you');
   if(tourAt>=tour.length){root.classList.remove('is-tour');lastTarget=null;ring.hidden=true;handOver();return;}
   const t=tour[tourAt];root.classList.add('is-tour');walkDots.hidden=true;
   $('.guide-eyebrow').textContent=t.eyebrow;swapCopy(t.title,t.text);
   if(t.glow)document.body.classList.add('guide-ghosts');
-  lastTarget=t.target||null;ring.hidden=true;
+  // The last stop is the manager: their own tag shows for this one card, with the ring round it.
+  if(t.you)document.body.classList.add('guide-you');
+  lastTarget=t.target||null;ring.hidden=true;root.classList.toggle('is-spotlight',true);
   const next=$('.guide-next');next.hidden=false;next.disabled=false;next.textContent='Next';$('.guide-skip').hidden=false;
   camera.stop(t);if(sound&&tourAt>0)sound('tap');if(reserve)reserve($('.guide-card').offsetHeight+12);next.focus({preventScroll:true});
  }
  function handOver(){
-  walkDots.hidden=false;$('.guide-eyebrow').textContent='Your turn';swapCopy('The shop is yours.','Upgrade the slowest station first.');
+  walkDots.hidden=false;$('.guide-eyebrow').textContent='Your shift';swapCopy('The floor is yours.','Answer calls and upgrade the slowest station.');
   Array.from(walkDots.children).forEach(d=>{d.classList.add('is-on');d.classList.remove('is-now');});
-  const next=$('.guide-next');next.hidden=false;next.textContent='Let’s grow';$('.guide-skip').hidden=true;root.classList.add('is-done');
+  const next=$('.guide-next');next.hidden=false;next.textContent='Start my shift';$('.guide-skip').hidden=true;root.classList.add('is-done');
   if(camera)camera.home();if(reserve)reserve($('.guide-card').offsetHeight+12);next.focus({preventScroll:true});
  }
  // Resume lands on the first site still to be raised, then the upgrade, then the opening.
@@ -176,7 +179,7 @@ export function mountStartGuide({showTray,collapse,fit,sound,report,isBuilt,buil
   if(report&&!root.hidden)report(finished?'guide_complete':'guide_skip',{step:step+1});
   clearTimeout(advanceTimer);advanceTimer=0;clearTimeout(walkTimer);walkTimer=0;clearInterval(walkWatch);walkWatch=0;openTimers.forEach(clearTimeout);openTimers=[];opening=false;
   root.hidden=true;document.body.classList.remove('guide-open');cancelAnimationFrame(raf);
-  root.classList.remove('is-opening','is-leaving','is-walk','is-done','is-tour');document.body.classList.remove('guide-ghosts');tour=[];tourAt=-1;$('.guide-sign').hidden=true;$('.guide-actions').hidden=false;$('.guide-next').hidden=false;
+  root.classList.remove('is-opening','is-leaving','is-walk','is-done','is-tour');document.body.classList.remove('guide-ghosts','guide-you');tour=[];tourAt=-1;$('.guide-sign').hidden=true;$('.guide-actions').hidden=false;$('.guide-next').hidden=false;
   try{localStorage.setItem(SEEN_KEY,'1');}catch(e){}
   if(reserve)reserve(0);if(finish)finish();if(grow&&grow.settle)grow.settle();if(camera)camera.release();if(collapse)collapse();
  }
