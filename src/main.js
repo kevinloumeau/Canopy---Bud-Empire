@@ -1174,7 +1174,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
         loungeFront:LOUNGE_FRONT,loungeDoor:LOUNGE_DOOR,loungeExit:LOUNGE_EXIT,loungeRight:LOUNGE_RIGHT,loungeHeader:2.05,loungeSign:{x:LOUNGE_DOOR.x,y:2.46,scale:.65},wallLeft:-6.7,wallRight:8.4,shelfLeft:-1.3+COUNTER_SHIFT,
         exitDoor:{x0:9.44,x1:11.25,h:3.3},column:{x:9.8,z:-1.8},merchCabinet:{back:8.41,face:9.27,z0:-6.84,z1:-4.8},
         planter:{x0:-11.7,x1:-10.75,z0:2,z1:5.6,tree:{x:-11.45,z:2.35}},baseboard:{x0:-10.65,x1:13,front:11.95,rear:-7,h:.32},hanging:{x0:-2.3,x1:2.3,y:9.05,z:-1.35},
-        lamps:[[-4,3.7,3.5,1.3],[4,3.7,3.5,1.3],[-4,3.7,8.5,1.1],[5,3.7,8.5,1.1],[-10,3,-4,.8],[-4,8.4,-3,1.2],[4,8.4,-3,1.2],[0,12.8,-4.5,1]]};
+        lamps:[[-4,3.7,3.5,1.3],[4,3.7,3.5,1.3],[-4,3.7,8.5,1.2],[5,3.7,8.5,1.3],[-10,3,-4,1],[-4,8.4,-3,1.5],[4,8.4,-3,1.5],[0,12.8,-4.5,1.9]]};
       // Sprite shop: the storefront and its doorway are flat elevations on the entrance wall's plane, the exit mat and
       // the lounge's runner lie on the floor where the old 2D map pinned them, and the display case casts its shadow
       // from a box under its figure.
@@ -3210,13 +3210,15 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // A single failed frame (for example a zero-width canvas while the page is being laid out) must not stop the scene forever.
   // Dev quick capture (?snap, driven by scripts/snap3d.mjs): the frame loop and the clock stand still, and
   // window.__canopySnap draws one frame on demand, so a cloud browser drawing WebGL on the CPU spends its time only on
-  // the frame it captures. view: {zoom, x, y, z} centres that map point at that zoom, light 'day' or 'night', advance
+  // the frame it captures. view: {zoom, x, y, z} centres that map point at that zoom, light 'day', 'night' or 0 to 1
+  // (how far the evening has turned to night), advance
   // runs the game that many seconds first, and draw:false sets the frame up (asking for its models) without drawing it.
   // Players never pass ?snap.
   var SNAP=/[?&]snap\b/.test(location.search);
   if(SNAP){
     window.__canopySnap=function(view){view=view||{};
-      if(view.light)state.lightMode=view.light;
+      if(typeof view.light==='number'){state.lightMode=null;state.empire.network.time=300+Math.max(0,Math.min(1,view.light))*90}
+      else if(view.light)state.lightMode=view.light;
       for(var step=0;step<Math.round((view.advance||0)*20);step++){simulate(.05);tickTaskClocks(.05)}
       if(view.zoom!==undefined||view.x!==undefined){zoom=Math.max(.65,Math.min(4,view.zoom||1));panX=panY=0;applyCamera();
         if(view.x!==undefined){var frame=cameraFrame(),p=project(view.x,view.y||0,view.z||0);panX=frame.x-p.x;panY=frame.y-p.y;applyCamera()}}
