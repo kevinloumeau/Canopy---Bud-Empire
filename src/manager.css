@@ -73,3 +73,12 @@
 .manager-card-go{display:block;width:100%;min-height:48px;margin-top:14px;padding:0 16px;border:0;border-radius:16px;background:linear-gradient(180deg,#c3ec7a,var(--ui-leaf-glow));box-shadow:inset 0 1px 0 #ffffff80,0 4px 12px #06180c59;color:#123020;font:700 15px/1 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer}
 .manager-card-go[hidden]{display:none}
 .manager-card-go:active{transform:scale(.98)}
+
+/* A call whose station is off the map strip shows as a lime chip in the top lane (main.js updateCallTag). */
+.lane-chip.call-pill,.lane-status>.lane-chip.call-pill{cursor:pointer;pointer-events:auto;gap:6px;padding:0 12px 0 10px;color:var(--ui-leaf-glow);font-weight:600}
+.lane-chip.call-pill svg{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;transform-origin:50% 10%}
+.lane-chip.call-pill .chip-name{color:var(--ui-ink)}
+.lane-chip.call-pill.is-coming,.lane-chip.call-pill.is-coming .chip-name{color:var(--ui-soft)}
+.lane-chip.call-pill:active{transform:scale(.97)}
+@media(prefers-reduced-motion:no-preference){.lane-chip.call-pill:not(.is-coming) svg{animation:manager-call-bell 1.8s ease-in-out infinite}}
+.guide-open .lane-chip.call-pill{display:none!important}
