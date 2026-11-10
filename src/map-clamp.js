@@ -99,7 +99,11 @@ function pass(rx, rz, o) {
   z = Math.max(view.centre.z[0], Math.min(view.centre.z[1], z));
   lim = limits(o, slideAt(o, x));
   rx = fit(x * c - z * s, lim.rxLo, lim.rxHi); rz = fit(x * s + z * c, lim.rzLo, lim.rzHi);
+  const ax = rx, az = rz;
   corner(-o.frameX / u, view.ground.south, -s, c);
+  // Where the room between the north limit and the south line is thin, straight back across the line lands above the
+  // north limit, and the two would pass the view east between them. There it comes straight up the screen instead.
+  if (rz < lim.rzLo - 1e-9) { rx = ax; rz = Math.min(az, (southLine(o, lim) + ax * s) / c); }
   return eastCorner();
 }
 

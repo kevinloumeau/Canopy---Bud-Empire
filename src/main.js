@@ -1416,11 +1416,15 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
     centerX=frame.x+panX;centerY=frame.y+panY;unit=frame.unit*zoom;followDistrict();if(state.empire.activeStore)updateBranchMarker();if(window.__shiftReady)renderHomeChip()}
   // The branch whose block is under the middle of the view is the one being viewed: the top bar shows its income and
   // its Manage tag shows on its counter. Anywhere else (the flagship, a lot for lease) is the flagship's view.
-  var districtFollow=false;
+  var districtFollow=false,DISTRICT_HOLD=10;
   function storeLevels(){return state.empire.stores.map(function(s){return s.level})}
   function followDistrict(){
     if(!districtFollow||districtGlide)return;
     var c=viewCentre(),i=districtAt(c.x),id=i>=0&&state.empire.stores[i].level>0?i+1:0;
+    // The view changes hands only once its middle is well inside the next block. The sheet is a row shorter for a branch
+    // than for the flagship, which moves the frame and with it the middle of the view, so a view resting on the line
+    // between two blocks used to swap back and forth on every frame and the map shook.
+    if(id!==state.empire.activeStore&&(districtAt(c.x-DISTRICT_HOLD)!==i||districtAt(c.x+DISTRICT_HOLD)!==i))return;
     if(id===state.empire.activeStore||!selectStore(state.empire,id))return;
     syncMapView();renderUI();
   }
@@ -1435,7 +1439,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // The rules themselves are in map-clamp.js (clampTownView); this hands them the screen as it is now.
   function clampSunnyPan(frame){
     var u=frame.unit*zoom,sq=FLOOR_SQUASH,haze=eastHaze(storeLevels(),!!marketOn())[0];
-    var args={c:Math.cos(angle),s:Math.sin(angle),u:u,sq:sq,zoom:zoom,width:width,frameX:frame.x,frameY:frame.y,top:hudBottom(),bottom:visibleHeight(),view:SUNNY_VIEW,reach:Math.max(0,haze-MAIN_EAST_HAZE[0]),east:haze};window.__clampArgs=args;
+    var args={c:Math.cos(angle),s:Math.sin(angle),u:u,sq:sq,zoom:zoom,width:width,frameX:frame.x,frameY:frame.y,top:hudBottom(),bottom:visibleHeight(),view:SUNNY_VIEW,reach:Math.max(0,haze-MAIN_EAST_HAZE[0]),east:haze};
     var v=clampTownView(-panX/u,-panY/(u*sq),args);
     panX=-v.rx*u;panY=-v.rz*u*sq;
   }
@@ -3214,7 +3218,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   var STATS=/[?&]stats\b/.test(location.search);
   // Dev hook for snap3d.mjs: plays a reveal by name (kiosk, window, deck, atm, hq, lounge, station) without buying it.
   if(STATS||SNAP)window.__canopyReveal=function(name){({kiosk:function(){kioskFx(0)},window:function(){showcase({x:PICKUP_WINDOW.x,y:1.3,z:PICKUP_WINDOW.z},{r:1.6,h:3.2,fixtures:WINDOW_FIXTURE_KEYS})},deck:function(){deckReveal({fixtures:['deck'],h:3})},atm:function(){atmReveal(0,true)},hq:hqReveal,lounge:function(){showcase(LOUNGE_SPOT,{floor:ROOFTOP.y,r:2.4,h:4})},station:function(){stationFx(1,true)}}[name]||function(){})();render.invalidated=true};
-  if(STATS||SNAP)window.__canopyCamera=function(){return{panX:Math.round(panX),panY:Math.round(panY),zoom:+zoom.toFixed(3),mode:mapGesture.mode,dock:Math.round(dockHeight),cy:Math.round(centerY),unit:unit}};
+  if(STATS||SNAP)window.__canopyCamera=function(){return{panX:Math.round(panX),panY:Math.round(panY),zoom:+zoom.toFixed(3),mode:mapGesture.mode,vx:Math.round(mapGesture.vx),vy:Math.round(mapGesture.vy),dock:Math.round(dockHeight),cy:Math.round(centerY),unit:unit}};
   if(STATS||SNAP)window.__canopyClamp=function(x,y,z){var sz=zoom;if(z)zoom=z;var r=clampedPan(x,y);zoom=sz;return r};
   if(STATS||SNAP)window.__canopyPan=function(x,y,z,free){if(z)zoom=z;panX=x;panY=y;applyCamera(free);return{x:panX,y:panY}};
   if(STATS||SNAP)window.__canopyStats=function(perModel){return map3d&&map3d.ok?map3d.stats(perModel):null};
@@ -5211,17 +5215,18 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     }
     if(g.mode!=='coast')return;
     var dt=Math.min(.05,Math.max(0,(now-g.at)/1000));g.at=now;if(!dt){render.invalidated=true;return}
-    var glide=slideAlongStreet(g.x,g.y);if(glide.slid){g.x=glide.x;g.y=glide.y;
-      // The fling keeps its speed across the screen and takes the street's slant; an up or down flick into the edge stops.
-      var gv=g.vx/glide.tx;g.vx=gv*glide.tx;g.vy=gv*glide.ty}
+    // The fling keeps its speed across the screen and takes the street's slant; an up or down flick into the edge stops.
+    var ride=function(){var glide=slideAlongStreet(g.x,g.y);if(glide.slid){g.x=glide.x;g.y=glide.y;var gv=g.vx/glide.tx;g.vx=gv*glide.tx;g.vy=gv*glide.ty}};ride();
     var edge2=clampedPan(g.x,g.y);
     if(motionPreference.matches){placeGesture(edge2.x,edge2.y);endGesture();return}
     var ox2=Math.abs(g.x-edge2.x)>.01?g.x-edge2.x:0,oy2=Math.abs(g.y-edge2.y)>.01?g.y-edge2.y:0,ax=coastAxis(g.x,g.vx,ox2,dt),ay=coastAxis(g.y,g.vy,oy2,dt);
     g.x=ax.pos;g.vx=ax.v;g.y=ay.pos;g.vy=ay.v;
     // Where the view may only run along a line (zoomed out, the street's slant), the axis the line holds follows it as
     // the other axis glides, so a sideways fling rides the street instead of leaving it and springing back.
-    if(!ox2&&ax.v){var ride=clampedPan(g.x,edge2.y);if(Math.abs(ride.x-g.x)<.01)g.y+=ride.y-edge2.y}
-    else if(!oy2&&ay.v){var rideY=clampedPan(edge2.x,g.y);if(Math.abs(rideY.y-g.y)<.01)g.x+=rideY.x-edge2.x}
+    if(!ox2&&ax.v){var lineY=clampedPan(g.x,edge2.y);if(Math.abs(lineY.x-g.x)<.01)g.y+=lineY.y-edge2.y}
+    else if(!oy2&&ay.v){var lineX=clampedPan(edge2.x,g.y);if(Math.abs(lineX.y-g.y)<.01)g.x+=lineX.x-edge2.x}
+    // The step may have run off the street's edge: back onto it before it is drawn, so the glide never shows a frame off the line.
+    ride();
     placeGesture(g.x,g.y);
     if(!g.vx&&!g.vy){var rest=clampedPan(g.x,g.y);if(Math.abs(rest.x-g.x)<.5&&Math.abs(rest.y-g.y)<.5)endGesture()}
   }
