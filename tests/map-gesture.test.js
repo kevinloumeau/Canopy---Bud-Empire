@@ -90,3 +90,19 @@ test('a push into a true edge keeps its stretch', () => {
   assert.equal(inside.slid, false);
   function start0() { return toPan(10, 0.5); }
 });
+
+test('a push up or down against the street edge moves nothing, and a sideways one follows the finger', () => {
+  // Kevin, 2026-11-10: "dont like the camera auto moving to the empty plot": half of an up or down swipe used to go
+  // sideways along the street.
+  const clamp = street(), start = toPan(50, 0);
+  for (const dy of [-120, -30, 40, 120]) {
+    const r = slideAlong(start.x, start.y + dy, clamp, ANGLE, SQUASH);
+    assert.equal(r.slid, true);
+    assert.ok(Math.abs(r.x - start.x) < 0.01, `a ${dy} px push moved the view ${r.x - start.x} px sideways`);
+    const rest = clamp(r.x, r.y);
+    // The band is two map units across (20 px here), so inside it the view may follow the push that far and no further.
+    assert.ok(Math.hypot(rest.x - start.x, rest.y - start.y) < 12, 'it rests where it was');
+  }
+  const side = slideAlong(start.x - 90, start.y, clamp, ANGLE, SQUASH);
+  assert.ok(Math.abs(side.x - (start.x - 90)) < 0.01, 'the view goes as far across the screen as the finger');
+});
