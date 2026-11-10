@@ -3439,17 +3439,19 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // event with a ring that fills as its goal does, then rush and boost, each with a ring that drains. The row wraps
   // instead of overlapping, and toasts hang under it, so nothing up there ever covers anything else.
   var laneStatus=$('laneStatus'),topLane=$('topLane');
-  function laneChip(id,cls){var el=document.createElement(/contract-pill|store-pill|spin-pill/.test(cls)?'button':'div');el.id=id;el.className='lane-chip '+cls;el.hidden=true;if(el.tagName==='BUTTON')el.type='button';else el.setAttribute('role','status');laneStatus.appendChild(el);return el}
+  function laneChip(id,cls){var el=document.createElement(/contract-pill|store-pill|spin-pill|call-pill/.test(cls)?'button':'div');el.id=id;el.className='lane-chip '+cls;el.hidden=true;if(el.tagName==='BUTTON')el.type='button';else el.setAttribute('role','status');laneStatus.appendChild(el);return el}
   var RING='<svg class="chip-ring" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><circle class="chip-ring-fill" cx="10" cy="10" r="7.5" pathLength="100"/></svg>';
   var BOLT='<svg class="chip-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>';
-  var contractPill=laneChip('contractPill','contract-pill'),rushPeak={rush:0,boost:0},rushPill=laneChip('rushPill','rush-pill'),boostPill=laneChip('boostPill','rush-pill boost-pill'),storePill=laneChip('storeBoostPill','rush-pill store-pill'),spinPill=laneChip('spinPill','spin-pill');
+  var contractPill=laneChip('contractPill','contract-pill'),rushPeak={rush:0,boost:0},rushPill=laneChip('rushPill','rush-pill'),boostPill=laneChip('boostPill','rush-pill boost-pill'),storePill=laneChip('storeBoostPill','rush-pill store-pill'),spinPill=laneChip('spinPill','spin-pill'),callPill=laneChip('callPill','call-pill'),laneRight=0;
   storePill.onclick=function(){if(storeUI)storeUI.open()};spinPill.onclick=function(){if(spinUI)spinUI.open()};
   contractPill.onclick=function(){showTray('goals');renderUI()};
   rushPill.title='Rush · 2× sales';spinPill.title='Lucky spin';boostPill.title='Event reward · 2× sales';storePill.title='Store boost · 2× earnings';
   var SPIN_ICON='<svg class="chip-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8.5" stroke="currentColor" stroke-width="1.8"/><path d="M12 13V4.5M12 13l7.4 4.2M12 13l-7.4 4.2" stroke="currentColor" stroke-width="1.6"/><path d="M9.5 1.5h5L12 5z" fill="currentColor"/></svg>';
   var MEDAL='<svg class="chip-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h4l1.6 4.2L14.2 2h3.8l-3.3 7.1A6 6 0 1 1 9.3 9L7 2Zm5 9.2-1.2 2.5-2.7.3 2 1.8-.6 2.7 2.5-1.4 2.5 1.4-.6-2.7 2-1.8-2.7-.3z" fill-rule="evenodd"/></svg>';
   function chipText(el,label,time){if(el.dataset.label!==label){el.dataset.label=label;el.innerHTML=(el===contractPill?RING:el===boostPill?MEDAL:el===spinPill?SPIN_ICON:BOLT)+'<span class="chip-name"></span><span class="chip-time"></span>';el.querySelector('.chip-name').textContent=label}var t=el.querySelector('.chip-time');if(t.textContent!==time)t.textContent=time}
-  function stackPills(){topLane.classList.toggle('has-chips',!(contractPill.hidden&&rushPill.hidden&&boostPill.hidden&&storePill.hidden&&spinPill.hidden))}
+  function stackPills(){topLane.classList.toggle('has-chips',!(contractPill.hidden&&rushPill.hidden&&boostPill.hidden&&storePill.hidden&&spinPill.hidden&&callPill.hidden));laneRight=laneStatus.getBoundingClientRect().right-world.getBoundingClientRect().left}
+  // A floor call whose station is off the map strip shows here instead of over the station (updateCallTag).
+  callPill.onclick=function(){var c=managerCalls.call;if(!c)return;managerGo(c.station);haptic('select');render.invalidated=true};
   function spenderInShop(){for(var i=0;i<customers.length;i++){var c=customers[i];if(c.bigSpender&&!c.tapped&&c.phase!=='leaving'&&c.phase!=='lounge')return c}return null}
   spenderTag.onclick=function(){var c=spenderInShop();if(!c)return;c.tapped=true;spenderTag.hidden=true;recordEvent(state.empire,'spender',1);
     var kind=c.shopEvent||'spender',reward=eventReward(kind,incomeRate(),rushLength(state.perks));
@@ -3499,22 +3501,41 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   managerTag.onclick=function(){openManagerCard();haptic('select')};
   function managerShown(){return !!managerWalker&&state.shopOpen&&!state.empire.activeStore&&!!map3d&&map3d.characterReady(MANAGER_MODEL)}
   function ringShare(el,share){var p=String(Math.round(Math.max(0,Math.min(1,share))*100));if(el.dataset.p!==p){el.dataset.p=p;el.style.setProperty('--p',p)}}
-  function updateManagerTag(){var w=managerWalker,show=managerShown();updateCallTag(show);
+  function updateManagerTag(){var w=managerWalker,show=managerShown();
+    // The call's tag is placed first and the manager's own tag then keeps clear of it.
+    var callBox=updateCallTag(show);
     // Only while they work a station (Kevin, 2026-11-09: no "You" label): the station and its hands-on speed, with the
     // manager's level in the lime badge and a ring round it for the way to the next level. While they handle a call
     // the tag names the job and the ring fills with it, then shows what it paid for a moment.
     if(show&&(w.moving||!(w.target>=0&&state.lines[w.target]>0)))show=false;
-    var pos=show?project(w.x,w.y+2.15,w.z):null;if(pos&&(pos.x<-40||pos.x>width+40||pos.y<40||pos.y>visibleHeight()))show=false;
+    var pos=show?project(w.x,w.y+2.15,w.z):null,call=managerCalls.call,working=!!call&&show&&call.station===w.target;
+    if(managerPaid&&performance.now()>=managerPaid.until)managerPaid=null;
+    // With the station's buy box open over their head, the plain tag steps aside and a job or its pay rides above the box.
+    if(show&&markerEls[w.target].classList.contains('has-buy')){if(managerPaid||working)pos.y-=60;else show=false}
+    limeFits.other=callBox;if(show&&!limeFits(pos,+managerTag.dataset.w||120))show=false;
     if(managerTag.hidden!==!show)managerTag.hidden=!show;if(!show)return;
     // The first time the manager is on screen, say who they are once.
     if(!state.manager.met&&introTime()>6){state.manager.met=true;save();setTimeout(function(){notify(MANAGER_TIP,'info')},600)}
-    if(managerPaid&&performance.now()>=managerPaid.until)managerPaid=null;
-    var call=managerCalls.call,working=!!call&&call.station===w.target,lv=managerLv(),name=MANAGER_STATION_NAMES[w.target];
+    var lv=managerLv(),name=MANAGER_STATION_NAMES[w.target];
     var mode=managerPaid?'paid':working?'call':'',text=managerPaid?managerPaid.text:working?CALLS[w.target].doing:name+' '+handsOnAt(lv)+'×',hk=mode+'|'+text+'|'+lv;
-    if(managerTag.dataset.hands!==hk){managerTag.dataset.hands=hk;managerTag.dataset.mode=mode;managerTag.querySelector('em').textContent=text;managerTag.querySelector('b').textContent=lv;managerTag.classList.toggle('is-two',lv>9);
+    if(managerTag.dataset.hands!==hk){managerTag.dataset.hands=hk;managerTag.dataset.mode=mode;managerTag.querySelector('em').textContent=text;managerTag.querySelector('b').textContent=lv;managerTag.classList.toggle('is-two',lv>9);managerTag.dataset.w=managerTag.offsetWidth;managerTag.classList.toggle('is-two',lv>9);
       managerTag.setAttribute('aria-label','Manager, level '+lv+'. '+(working?CALLS[w.target].doing:'Working '+name+', '+handsOnAt(lv)+' times faster')+'. Show the manager card')}
     ringShare(managerTag,working?call.work/CALL_WORK:levelProgress(state.manager.xp).share);
     managerTag.style.transform='translate3d('+pos.x+'px,'+pos.y+'px,0) translate(-50%,-100%)'}
+  // Whether a lime pill w wide fits with its foot at pos: under the top bar (and under the lane's chips where it
+  // would cross them) and above the sheet. Near a side it is slid in (pos.x changes) rather than cut off.
+  function limeFits(pos,w){var top=(updateMarkers.ceiling||58)+4,hw=w/2+8;if(pos.x<-20||pos.x>width+20||pos.y>visibleHeight())return false;
+    pos.x=Math.max(hw,Math.min(width-hw,pos.x));if(pos.x-hw<laneRight)top+=46;
+    // The lime pills are placed on their own, outside the signs' and buy tags' layout, so they step up clear of
+    // whatever is laid out under them (the brass next buy above all) and of the other lime pill (`limeFits.other`).
+    // The stations' small round badges do not count: most are not drawn, and the floors are too close to clear them all.
+    var laid=(updateMarkers.laid||[]).filter(function(l){return l.shown&&l.h&&l.w>30}),ox=centerX-updateMarkers.layX,oy=centerY-updateMarkers.layY,o=limeFits.other;
+    function hit(y){var cy=y-18;if(o&&Math.abs(pos.x-o.x)<(w+o.w)/2+4&&Math.abs(cy-o.y)<34)return true;
+      return laid.some(function(l){return Math.abs(pos.x-l.x-ox)<(w+l.w)/2+3&&Math.abs(cy-l.y-oy)<(32+l.h)/2+2})}
+    for(var k=0;k<8;k++){var y=pos.y-k*10;if(y-36<top)break;if(!hit(y)){pos.y=y;return true}}
+    // No clear spot: the manager's tag gives way to an open call's rather than sit on it.
+    if(o&&Math.abs(pos.x-o.x)<(w+o.w)/2+4&&Math.abs(pos.y-18-o.y)<34)return false;
+    return pos.y-36>=top}
   // A floor call's tag: a lime bell over the station that asks for the manager, with the job in two words and a ring
   // that drains while the call stays open. A tap sends the manager without opening the station's upgrades. It goes
   // once they stand there (their own tag takes over), and holds still, ring stopped, while they are on the way.
@@ -3522,13 +3543,17 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   var callTag=document.createElement('button');callTag.type='button';callTag.className='marker manager-call';callTag.id='managerCall';callTag.hidden=true;
   callTag.innerHTML='<i class="call-badge" aria-hidden="true">'+BELL+'</i><b></b>';$('markers').appendChild(callTag);
   callTag.onclick=function(){var c=managerCalls.call;if(!c)return;managerGo(c.station);haptic('select');render.invalidated=true};
-  function updateCallTag(shown){var c=managerCalls.call,w=managerWalker,show=shown&&!!c&&!(w.target===c.station&&!w.moving),pos=null;
-    if(show){var st=machinePos[c.station];pos=project(st.x,(st.y||0)+3.05,st.z);if(pos.x<50||pos.x>width-50||pos.y<(updateMarkers.ceiling||40)+40||pos.y>visibleHeight())show=false}
-    if(callTag.hidden!==!show)callTag.hidden=!show;if(!show)return;
+  function updateCallTag(shown){limeFits.other=null;var c=managerCalls.call,w=managerWalker,show=shown&&!!c&&!(w.target===c.station&&!w.moving),pos=null;
+    var open=show;if(show){var st=machinePos[c.station];pos=project(st.x,(st.y||0)+3.05,st.z);if(!limeFits(pos,+callTag.dataset.w||124))show=false}
+    // Off the map strip (the sheet half open, or zoomed in on another station) the call moves to the top lane.
+    var lane=open&&!show;if(callPill.hidden!==!lane){callPill.hidden=!lane;if(lane){callPill.dataset.label='';}stackPills()}
+    if(lane&&callPill.dataset.label!==CALLS[c.station].name){callPill.dataset.label=CALLS[c.station].name;callPill.innerHTML=BELL+'<span class="chip-name"></span>';callPill.querySelector('.chip-name').textContent=CALLS[c.station].name;callPill.setAttribute('aria-label',CALLS[c.station].name+' at '+MANAGER_STATION_NAMES[c.station]+'. Send the manager');stackPills()}
+    if(lane)callPill.classList.toggle('is-coming',w.target===c.station);
+    if(callTag.hidden!==!show)callTag.hidden=!show;if(!show)return null;
     var coming=w.target===c.station,key=c.station+'|'+coming;
-    if(callTag.dataset.call!==key){callTag.dataset.call=key;callTag.classList.toggle('is-coming',coming);callTag.querySelector('b').textContent=CALLS[c.station].name;callTag.setAttribute('aria-label',CALLS[c.station].name+' at '+MANAGER_STATION_NAMES[c.station]+'. Send the manager')}
+    if(callTag.dataset.call!==key){callTag.dataset.call=key;callTag.classList.toggle('is-coming',coming);callTag.querySelector('b').textContent=CALLS[c.station].name;callTag.dataset.w=callTag.offsetWidth;callTag.setAttribute('aria-label',CALLS[c.station].name+' at '+MANAGER_STATION_NAMES[c.station]+'. Send the manager')}
     ringShare(callTag,c.left/CALL_LASTS);
-    callTag.style.transform='translate3d('+pos.x+'px,'+pos.y+'px,0) translate(-50%,-100%)'}
+    callTag.style.transform='translate3d('+pos.x+'px,'+pos.y+'px,0) translate(-50%,-100%)';return {x:pos.x,y:pos.y-18,w:+callTag.dataset.w||124}}
   // The manager card (a tap on the manager or their tag): who you are and what you do, in three figures. The level in
   // a lime ring that fills toward the next, the hands-on speed, what a call pays right now and the calls handled. With
   // a call open, one lime button answers it.
