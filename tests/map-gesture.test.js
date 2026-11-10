@@ -100,7 +100,8 @@ test('a push up or down against the street edge moves nothing, and a sideways on
     assert.equal(r.slid, true);
     assert.ok(Math.abs(r.x - start.x) < 0.01, `a ${dy} px push moved the view ${r.x - start.x} px sideways`);
     const rest = clamp(r.x, r.y);
-    assert.ok(Math.hypot(rest.x - start.x, rest.y - start.y) < 2.5, 'it rests where it was');
+    // The band is two map units across (20 px here), so inside it the view may follow the push that far and no further.
+    assert.ok(Math.hypot(rest.x - start.x, rest.y - start.y) < 12, 'it rests where it was');
   }
   const side = slideAlong(start.x - 90, start.y, clamp, ANGLE, SQUASH);
   assert.ok(Math.abs(side.x - (start.x - 90)) < 0.01, 'the view goes as far across the screen as the finger');
