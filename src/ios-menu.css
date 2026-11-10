@@ -1,6 +1,7 @@
 /* The iOS build's simpler menu: four tabs, staff on the station, Deliveries under Shop › Online. */
 .sheet .tray-tabs{grid-template-columns:repeat(4,minmax(0,1fr))!important}
-.sheet .panel-header #panelExpand,.sheet:not(.collapsed) .panel-header #panelExpand{display:none}
+/* #panelExpand is shown on phones (sheet-height.css): the visible way to full open and back to half. */
+@media(min-width:780px){.sheet .panel-header #panelExpand{display:none}}
 .sheet .panel-header #panelBack{display:inline-flex;align-items:center;justify-content:center;gap:2px;flex:0 0 auto;width:auto;height:36px;min-width:0;margin-right:8px;padding:0 12px 0 6px;border:0;border-radius:12px;background:#d7edcb14;box-shadow:inset 0 0 0 1px #d7edcb30;color:#e8f4da;font-family:inherit;font-size:14px;font-weight:600;line-height:1}
 .sheet .panel-header #panelBack[hidden]{display:none}
 .sheet .panel-header #panelBack svg{display:block;width:18px;height:18px;flex:0 0 18px}
