@@ -59,9 +59,15 @@ export function floorSpot(ground,floors,margin=.6){
 export function sendToSpot(w,spot){w.target=-1;w.path=route(w,spot);w.look=null;w.moving=w.path.length>0;return w.moving;}
 // A fresh manager: standing at their home station (`at`, -1 for none) on the given spot.
 // `met`: the player has been shown who the manager is (the one-time "This is you" tip).
-// `xp`: floor calls handled (the manager's level comes from it, and a reopen keeps it). `called`: the first call's tip was shown.
+// The looks the player can pick for their manager (the start guide's first card, and the manager card later): Meshy
+// people from the shoppers' cast, by model id (public/models/people/<id>.glb, portrait public/guide/avatars/<id>.webp,
+// rendered by scripts/render-avatars.mjs). The first is the default. A shopper who would walk in as the manager's own
+// model is recast (main.js), so the manager never meets their double.
+export const AVATARS=[{id:'blazer-woman',name:'Blazer'},{id:'bomber-jacket-man',name:'Bomber'},{id:'office-woman',name:'Office'},{id:'green-sweater-man',name:'Sweater'},{id:'cream-outfit',name:'Cream'},{id:'gray-blazer',name:'Gray blazer'},{id:'trench-coat',name:'Trench'},{id:'pattern-shirt-man',name:'Pattern shirt'}];
+export function avatarId(raw){return AVATARS.some(a=>a.id===raw)?raw:AVATARS[0].id;}
+// `avatar`: the look picked. `xp`: floor calls handled (the manager's level comes from it, and a reopen keeps it). `called`: the first call's tip was shown.
 export function migrateManager(raw){const at=raw&&Number.isInteger(raw.at)&&raw.at>=0&&raw.at<6?raw.at:-1,xp=raw&&Number.isFinite(raw.xp)?Math.max(0,Math.min(1e6,Math.floor(raw.xp))):0;
-  return {at,met:!!(raw&&raw.met===true),xp,called:!!(raw&&raw.called===true)};}
+  return {at,met:!!(raw&&raw.met===true),xp,called:!!(raw&&raw.called===true),avatar:avatarId(raw&&raw.avatar)};}
 // The live walker (not saved): where the figure is, the route left, the ground covered (drives the walk cycle).
 export function createWalker(spot){return {x:spot.x,y:spot.y,z:spot.z,path:[],heading:spot.look||{x:-1,z:1},look:spot.look||null,ground:0,moving:false,target:-1};}
 // Sends the walker to station i's spot. Returns false when already there (or on the way).

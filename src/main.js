@@ -8,6 +8,7 @@ import {migrateShopPlay,picks as momentPicks,createMoment,judgeChoice,tipFor,rec
 import {migrateJourney,advanceJourney,CHAPTERS} from './journey.js';
 import {mountJourney} from './journey-ui.js';
 import {manageDialog} from './dialog-focus.js';
+import {mountAvatarPicker} from './avatar-picker.js';
 import {CITY_BUILDINGS,cityBuilding,migrateCity,cityUnlocked,cityNext,cityCost,cityQuote,payCity,openCityStage,awayExtraSeconds,awayPay,outputFactor,trafficFactor as cityTraffic,terpFactor,stageGain,CITY_TOPS} from './city-buildings.js';
 import {migrateQuotes,holdQuote,heldQuote} from './stage-quotes.js';
 import {FLAGSHIP_UNLOCK_LIFETIME,FLAGSHIP_MAX,FLAGSHIP_STEP,flagshipNext,flagshipCost,flagshipQuote,flagshipSales as hqSales,flagshipUnlocked,migrateFlagship,payFlagship,openFlagshipStage} from './flagship.js';
@@ -69,7 +70,7 @@ import {mountStore} from './store-ui.js';
 import {mountSpin} from './spin-ui.js';
 import {CAMPAIGNS,freshMarketing,migrateMarketing,lift as marketingLift,runLeft as marketingRunLeft,restLeft as marketingRestLeft,phase as marketingPhase,price as marketingPrice,launch as launchCampaign,clock as marketingClock,MIN_LIFT as MARKETING_MIN_LIFT} from './marketing.js';
 import {freeReady} from './spin.js';
-import {workSpots,createWalker,sendTo,sendToSpot,floorSpot,stepWalker,handsOn,migrateManager,CALLS,CALL_LASTS,CALL_WORK,managerLevel,levelProgress,handsOnAt,callPay,createCalls,tickCalls} from './manager.js';
+import {avatarId,workSpots,createWalker,sendTo,sendToSpot,floorSpot,stepWalker,handsOn,migrateManager,CALLS,CALL_LASTS,CALL_WORK,managerLevel,levelProgress,handsOnAt,callPay,createCalls,tickCalls} from './manager.js';
 import {createPurchases} from './purchases.js';
 import {createAds} from './rewarded-ads.js';
 // The self-order kiosks stand along the storefront glass from z 6.8 toward the back, KIOSK_GAP apart (Kevin 2026-11-02:
@@ -522,7 +523,7 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   function batchSize(i){return economy.batchSize(state.lines[i])*(i<3?1+state[['seedBatchLevel','growBatchLevel','harvestBatchLevel'][i]]*.06:1)*(i<4?outputFactor(state.city):1)}
   // The manager on the floor (manager.js): the station they stand at works handsOnAt(level) times faster. The walker is live
   // only (not saved; state.manager.at keeps their station), and null while the away pay is worked out.
-  var managerWalker=null,MANAGER_MODEL='people/blazer-woman.glb',MANAGER_STATION_NAMES=['Seeds','Grow','Harvest','Pack','Orders','Pickup'];
+  var managerWalker=null,MANAGER_STATION_NAMES=['Seeds','Grow','Harvest','Pack','Orders','Pickup'];
   // Each frame: the manager appears once the shop is open (at their saved station, else Orders), and walks on real time.
   function tickManager(dt){if(!state.shopOpen||state.empire.activeStore)return;
     if(!managerWalker){var home=state.manager.at>=0&&state.lines[state.manager.at]>0?state.manager.at:state.lines[4]>0?4:-1;if(home<0)return;managerWalker=createWalker(managerSpots()[home]);managerWalker.target=home}
@@ -532,6 +533,10 @@ if(/[?&]ui=kit(&|$)/.test(location.search))mountUiKit();
   // Floor calls (manager.js): one station at a time asks for the manager. Handling it pays a few seconds of income
   // where they stand and counts toward the manager's level, which raises the hands-on speed and the pay.
   var managerCalls=createCalls(),managerPaid=null,snapStill=window.__canopySnap!==undefined||/[?&]snap\b/.test(location.search);
+  // The manager's model is the look the player picked (manager.js AVATARS; the start guide's first card and the
+  // manager card both change it).
+  function managerModel(){return 'people/'+state.manager.avatar+'.glb'}
+  var managerAvatar={get:function(){return state.manager.avatar},set:function(id){state.manager.avatar=avatarId(id);save();render.invalidated=true}};
   function managerLv(){return managerLevel(state.manager.xp)}
   function managerCallEvent(ev){render.invalidated=true;
     if(ev.type==='open'){haptic('light');playSound('tap',state.sound);if(!state.manager.called){state.manager.called=true;save();notify(tieLast('A station needs you. Tap its lime tag to walk over.'),'info')}return}
@@ -2848,6 +2853,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // Who is asking on the pick card: the shopper model this customer walks in as (customer() casts CUSTOMER_MODELS by id),
   // with a first name of their own and their head-and-shoulders portrait (art/blender/people_portraits.py).
   var CUSTOMER_NAMES=['Remy','Jules','Morgan','Casey','Riley','Dana','Marcus','Sky','Noa','Elliot','Sage','Priya','Kai','Maya','Owen','Lena','Andre','Amira','Luis','Walter','Theo','Rosa','June','Vee','Jay'];
+  // A shopper cast as the manager's own model takes the next one, so the manager never meets their double.
+  function notManager(list,k){var n=list.length,file=list[k%n];return file===managerModel()?list[(k+1)%n]:file}
   function castMoment(m,id){var k=Math.abs(id|0)%CUSTOMER_MODELS.length;m.name=CUSTOMER_NAMES[k];m.portrait='people-'+CUSTOMER_MODELS[k].replace(/^people\/|\.glb$/g,'');return m}
   // Records the images one 2D figure draws (with every transform it applies) and turns each into four world points: a
   // flat card standing upright at the figure's feet, spanning screen-right and up, so the 3D camera shows it exactly
@@ -2904,7 +2911,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   // shoppers' cast, staff from the staff's (the counter clerks face their counters), walking by the ground they cover.
   var BRANCH_STAFF={10:STAFF_MODELS.desks[0],11:STAFF_MODELS.window,12:STAFF_MODELS.stations[5],16:STAFF_MODELS.desks[2]};
   function branchPerson(characters,x,z,id,moving,employee,gait){
-    var still=motionPreference.matches,file=employee?(BRANCH_STAFF[id]||STAFF_MODELS.host):CUSTOMER_MODELS[id%CUSTOMER_MODELS.length];
+    var still=motionPreference.matches,file=employee?(BRANCH_STAFF[id]||STAFF_MODELS.host):notManager(CUSTOMER_MODELS,id);
     if(!map3d.characterReady(file))return;
     var walking=!still&&!!(gait&&gait.heading)&&(gait.amount===undefined?moving:gait.amount>0);
     characters.push({file:file,id:'branch'+id,x:x,y:sceneElevation,z:z,ground:gait&&gait.ground||0,amount:walking?1:0,heading:gait&&gait.heading,look:employee&&(id===10||id===11)?{x:0,z:1}:null,facing:gait?gait.facing:.3,still:still});
@@ -3002,7 +3009,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     var figures=[];
     var characters=[],workClock=function(i){return motionPreference.matches?6.3:motionClocks[i]};
     function customer(id,x,y,z,gait,cast){
-      var file=CUSTOMER_MODELS[(cast===undefined?id:cast)%CUSTOMER_MODELS.length];
+      var file=notManager(CUSTOMER_MODELS,cast===undefined?id:cast);
       if(map3d.characterReady(file)){var still=motionPreference.matches;characters.push({file:file,id:id,x:x,y:y,z:z,ground:(gait.phase||0)/5,amount:still?0:gait.amount,heading:gait.heading,look:gait.look,facing:gait.facing,still:still,bag:!!gait.bag})}
     }
     // Staff are rigged models too, one per role (STAFF_MODELS), standing at work and facing it (look).
@@ -3086,8 +3093,8 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     // Pavement walkers and subway riders wear the shoppers' cast too, walking by the ground they cover.
     walkerPlacements(now).forEach(function(w){customer('walker'+w.g,w.x,w.y===undefined?-.012:w.y,w.z,{amount:1,phase:w.s*5,heading:w.heading,facing:w.facing},w.g*3+1)});
     // The manager (the player): a stand-in from the shoppers' cast until Kevin's own Meshy manager exists.
-    if(managerWalker&&!state.empire.activeStore&&map3d.characterReady(MANAGER_MODEL)){var mw=managerWalker,mStill=motionPreference.matches;
-      characters.push({file:MANAGER_MODEL,id:'manager',x:mw.x,y:mw.y,z:mw.z,ground:mw.ground,amount:mStill||!mw.moving?0:1,heading:mw.heading,look:mw.moving?null:mw.look,facing:mw.heading.x-mw.heading.z>0?.3:-.3,still:mStill})}
+    if(managerWalker&&!state.empire.activeStore&&map3d.characterReady(managerModel())){var mw=managerWalker,mStill=motionPreference.matches;
+      characters.push({file:managerModel(),id:'manager',x:mw.x,y:mw.y,z:mw.z,ground:mw.ground,amount:mStill||!mw.moving?0:1,heading:mw.heading,look:mw.moving?null:mw.look,facing:mw.heading.x-mw.heading.z>0?.3:-.3,still:mStill})}
     // The pickup window's clerk inside it, and its walk-ups (cast after the shop's own customers).
     if(windowOpen()){
       staffer('window',STAFF_MODELS.window,WINDOW_CLERK.x,0,WINDOW_CLERK.z,null,-1,{role:'window',clock:sceneTime/1000,act:windowServing?1:0});
@@ -3499,7 +3506,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   $('markers').appendChild(managerTag);
   var MANAGER_TIP=tieLast('You’re the manager. Tap a station to work it faster, and answer its calls for cash.');
   managerTag.onclick=function(){openManagerCard();haptic('select')};
-  function managerShown(){return !!managerWalker&&state.shopOpen&&!state.empire.activeStore&&!!map3d&&map3d.characterReady(MANAGER_MODEL)}
+  function managerShown(){return !!managerWalker&&state.shopOpen&&!state.empire.activeStore&&!!map3d&&map3d.characterReady(managerModel())}
   function ringShare(el,share){var p=String(Math.round(Math.max(0,Math.min(1,share))*100));if(el.dataset.p!==p){el.dataset.p=p;el.style.setProperty('--p',p)}}
   function updateManagerTag(){var w=managerWalker,show=managerShown();
     // The call's tag is placed first and the manager's own tag then keeps clear of it.
@@ -3560,10 +3567,11 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
   var managerCard=document.createElement('div');managerCard.className='manager-overlay';managerCard.hidden=true;
   managerCard.innerHTML='<section class="manager-card" role="dialog" aria-modal="true" aria-labelledby="managerCardTitle"><button type="button" class="manager-card-close" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'+
     '<div class="manager-card-ring"><svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="25"/><circle class="fill" cx="28" cy="28" r="25" pathLength="100"/></svg><b></b></div>'+
-    '<h2 id="managerCardTitle">Manager</h2><p class="manager-card-next"></p>'+
+    '<h2 id="managerCardTitle">Manager</h2><p class="manager-card-next"></p><div class="manager-card-looks"></div>'+
     '<div class="manager-card-stats"><div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg><b data-stat="speed"></b><span>Hands-on</span></div><div>'+BELL+'<b data-stat="pay"></b><span>Per call</span></div><div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><b data-stat="done"></b><span>Calls done</span></div></div>'+
     '<p class="manager-card-hint"></p><button type="button" class="manager-card-go" hidden></button></section>';
   document.body.appendChild(managerCard);
+  var managerLooks=mountAvatarPicker(managerCard.querySelector('.manager-card-looks'),managerAvatar);
   function closeManagerCard(){managerCard.hidden=true}
   manageDialog(managerCard,closeManagerCard);
   managerCard.onclick=function(e){if(e.target===managerCard)closeManagerCard()};managerCard.querySelector('.manager-card-close').onclick=closeManagerCard;
@@ -3574,7 +3582,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     q('[data-stat=speed]').textContent=handsOnAt(lv)+'×';q('[data-stat=pay]').textContent=fmt(callPay(incomeRate(),lv));q('[data-stat=done]').textContent=abbr(state.manager.xp);
     q('.manager-card-hint').textContent=tieLast(prog.max?'Tap a station to work it. Answer its calls for cash.':'Tap a station to work it. Answer calls to level up.');
     go.hidden=!c;if(c)go.textContent='Answer · '+CALLS[c.station].name;
-    managerCard.hidden=false}
+    managerCard.hidden=false;managerLooks.sync()}
   var loungeMarker=document.createElement('button');loungeMarker.className='marker';loungeMarker.dataset.marker='lounge';loungeMarker.onclick=selectLounge;$('markers').appendChild(loungeMarker);
   // Purchase tags for what can be bought next on the map (Kevin, 2026-10-22, like the lounge's): the pickup window on
   // its spot, then the drone port on its deck once the window is open, and a smaller tag over a ghost of the next kiosk.
@@ -5037,7 +5045,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     select:function(key){loungeSelected=key==='lounge';securitySelected=key==='door';if(key!=='door'&&key!=='lounge')selected=key;renderUI()},
     camera:{look:guideLook,follow:guideFollow,home:guideHome,release:guideRelease,tour:guideTour,stop:guideTourStop},
     grow:{level:function(){return state.lines[1]},price:function(){return fmt(growGoalCost())},grant:guideGrant,buy:guideUpgradeGrow,settle:guideSettleGrant},
-    guest:guideGuest,speed:function(on){guideFast=!!on;render.invalidated=true}});var guideReplay=document.createElement('button');guideReplay.type='button';guideReplay.className='guide-replay';guideReplay.textContent='Replay the start guide';guideReplay.onclick=function(){startGuide.open()};document.querySelector('.shop-reset').prepend(guideReplay);mountSettings({getState:function(){return state},setSpeed:setGameSpeed,haptic:haptic});
+    guest:guideGuest,avatar:managerAvatar,speed:function(on){guideFast=!!on;render.invalidated=true}});var guideReplay=document.createElement('button');guideReplay.type='button';guideReplay.className='guide-replay';guideReplay.textContent='Replay the start guide';guideReplay.onclick=function(){startGuide.open()};document.querySelector('.shop-reset').prepend(guideReplay);mountSettings({getState:function(){return state},setSpeed:setGameSpeed,haptic:haptic});
   manageDialog($('resetModal'),function(){$('resetModal').hidden=true});manageDialog(prestigeDialog,function(){prestigeDialog.hidden=true});
   Array.prototype.forEach.call(document.querySelectorAll('[data-empire-view]'),function(button){button.onclick=function(){var view=button.getAttribute('data-empire-view');Array.prototype.forEach.call(document.querySelectorAll('[data-empire-view]'),function(b){b.setAttribute('aria-pressed',String(b===button))});Array.prototype.forEach.call(document.querySelectorAll('[data-empire-section]'),function(section){section.hidden=section.getAttribute('data-empire-section')!==view});document.querySelector('[data-pane=empire]').scrollTop=0;fitControls()}});
 
@@ -5511,7 +5519,7 @@ var CUSTOMER_MODELS=['beanie-character','colorful-jacket','gray-blazer','plaid-s
     for(var k=1;k<=start.strains&&k<state.strains.length;k++){if(!state.strains[k])state.strains[k]=1;if(state.menuStrains.indexOf(k)<0)state.menuStrains.push(k)}
     if(start.drone&&(!state.autoDrone.owned||(start.drone>1&&!state.autoDrone.bulk))){state.pickupWindow.owned=true;state.autoDrone={owned:true,enabled:true,remaining:0,bulk:start.drone>1,mode:start.drone>1?'bulk':'single'}}
     state.lounge=Math.max(state.lounge,start.lounge);state.empire.stake=perkLevel(state.perks,'stake')}
-  function resetRun(rank,sound,carry){if(rank>0)telemetry.send('prestige',{rank:rank});var keptDeals=state.deals,keptStore=state.store,haptics=state.haptics!==false,keptMusic=state.music!==false,keptReminders=[state.reminders,state.reminderOffered],keptManager=state.manager;state=fresh();state.manager=migrateManager({met:keptManager.met,xp:keptManager.xp,called:keptManager.called});managerCalls=createCalls();managerPaid=null;managerWalker=null;state.deals=keptDeals||state.deals;state.store=keptStore;state.haptics=haptics;state.music=keptMusic;state.reminders=keptReminders[0]===true;state.reminderOffered=keptReminders[1]===true;moment=null;if(shopPlayUI)shopPlayUI.reset();state.empire.prestige=rank;state.sound=sound;if(carry){state.empire.shares=carry.shares;state.empire.lifetimeAll=carry.lifetimeAll;state.empire.franchise=carry.franchise||0;if(carry.contracts){state.empire.contracts.bank=carry.contracts.bank;state.empire.contracts.done=carry.contracts.done;state.empire.contracts.round=carry.contracts.round}state.empire.badges=carry.badges.slice();if(carry.stars)state.empire.stars=carry.stars.slice();state.crosses=carry.crosses;state.achievements=(carry.achievements||[]).slice();state.perks=carry.perks;var start=perkStart(state.perks);state.money+=start.money;state.startLine=start.line;applyStart(start);
+  function resetRun(rank,sound,carry){if(rank>0)telemetry.send('prestige',{rank:rank});var keptDeals=state.deals,keptStore=state.store,haptics=state.haptics!==false,keptMusic=state.music!==false,keptReminders=[state.reminders,state.reminderOffered],keptManager=state.manager;state=fresh();state.manager=migrateManager({met:keptManager.met,xp:keptManager.xp,called:keptManager.called,avatar:keptManager.avatar});managerCalls=createCalls();managerPaid=null;managerWalker=null;state.deals=keptDeals||state.deals;state.store=keptStore;state.haptics=haptics;state.music=keptMusic;state.reminders=keptReminders[0]===true;state.reminderOffered=keptReminders[1]===true;moment=null;if(shopPlayUI)shopPlayUI.reset();state.empire.prestige=rank;state.sound=sound;if(carry){state.empire.shares=carry.shares;state.empire.lifetimeAll=carry.lifetimeAll;state.empire.franchise=carry.franchise||0;if(carry.contracts){state.empire.contracts.bank=carry.contracts.bank;state.empire.contracts.done=carry.contracts.done;state.empire.contracts.round=carry.contracts.round}state.empire.badges=carry.badges.slice();if(carry.stars)state.empire.stars=carry.stars.slice();state.crosses=carry.crosses;state.achievements=(carry.achievements||[]).slice();state.perks=carry.perks;var start=perkStart(state.perks);state.money+=start.money;state.startLine=start.line;applyStart(start);
       // A reopen keeps your place on the daily track, a running contract boost and the season ladder (claims included).
       if(carry.daily)state.empire.daily={day:carry.daily.day,streak:carry.daily.streak};if(carry.contracts)state.empire.contracts.boost=carry.contracts.boost||0;
       if(carry.season)state.empire.season=carrySeason(carry.season,carry.counters);

@@ -1,0 +1,34 @@
+/* The manager avatar picker (src/avatar-picker.js): looks in a row that swipes and snaps. The middle one is full size
+   and lit; its neighbours are smaller and dim. --avatar-h is the portrait's height (the picture is 3:4, the figure
+   fills its middle half, so the items sit closer than the pictures are wide). */
+.avatar-picker{--avatar-h:200px;position:relative;height:var(--avatar-h);min-width:0;overflow:hidden}
+.avatar-track{position:relative;display:flex;align-items:flex-end;height:100%;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:none;padding:0 calc(50% - var(--avatar-h)*.26);touch-action:pan-x}
+.avatar-track::-webkit-scrollbar{display:none}
+.avatar-track:focus-visible{outline:2px solid var(--ui-ink);outline-offset:-3px;border-radius:16px}
+.avatar-item{flex:0 0 calc(var(--avatar-h)*.52);height:100%;display:grid;place-items:end center;padding:0;border:0;background:none;scroll-snap-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;transform:scale(.66);transform-origin:50% 92%;opacity:.5;filter:saturate(.7);transition:transform .25s cubic-bezier(.2,.8,.2,1),opacity .25s,filter .25s}
+.avatar-item img{display:block;width:calc(var(--avatar-h)*.75);height:var(--avatar-h);max-width:none;margin:0 calc(var(--avatar-h)*-.115);pointer-events:none;user-select:none;-webkit-user-drag:none}
+.avatar-item.is-on{transform:none;opacity:1;filter:none}
+@media(prefers-reduced-motion:reduce){.avatar-item{transition:none}}
+.avatar-step{position:absolute;top:50%;z-index:1;display:grid;place-items:center;width:36px;height:36px;margin-top:-18px;padding:0;border:1px solid var(--ui-edge);border-radius:50%;background:var(--ui-glass);-webkit-backdrop-filter:var(--ui-blur);backdrop-filter:var(--ui-blur);color:var(--ui-ink);cursor:pointer}
+.avatar-step::before{content:'';position:absolute;inset:-6px}
+.avatar-step.is-prev{left:10px}.avatar-step.is-next{right:10px}
+.avatar-step svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.avatar-step:disabled{opacity:.28;cursor:default}
+.avatar-step:active:not(:disabled){transform:scale(.94)}
+.avatar-step:focus-visible{outline:2px solid var(--ui-ink);outline-offset:2px}
+.avatar-dots{position:absolute;left:0;right:0;bottom:6px;display:flex;justify-content:center;gap:5px;pointer-events:none}
+.avatar-dots i{width:5px;height:5px;border-radius:50%;background:#ffffff40;transition:background .2s,transform .2s}
+.avatar-dots i.is-on{background:var(--ui-leaf-glow);transform:scale(1.3)}
+
+/* On the start guide's first card the picker is the picture: a sunlit stage behind the look in the middle. */
+.guide-hero.has-avatars{height:214px;background:radial-gradient(58% 78% at 50% 62%,#dff0b6 0%,#9fc98a 34%,#3f7453 68%,#1f3d2e 100%)}
+.guide-hero.has-avatars::before,.guide-hero.has-avatars::after{display:none}
+.guide-hero.has-avatars .avatar-picker{--avatar-h:256px;position:absolute;inset:auto 0 0}
+.guide-hero.has-avatars .avatar-dots{bottom:8px}
+
+/* On the manager card: a smaller row between the level and the figures. */
+/* The card's overlay is a one-column grid whose track may not grow with the row of looks inside the card. */
+.manager-overlay{grid-template-columns:minmax(0,1fr)}.manager-card{justify-self:center;min-width:0}
+.manager-card .avatar-picker{--avatar-h:150px;margin:2px -16px 0}
+.manager-card .avatar-dots{bottom:0}
+.manager-card .avatar-step{width:32px;height:32px;margin-top:-16px}

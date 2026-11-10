@@ -14,7 +14,7 @@ test('the walker gets there, and hands-on counts only once it stands still at th
   let t=0;while(w.moving&&t<120){stepWalker(w,.1);t+=.1;}
   assert.ok(!w.moving&&t<60,'reaches the top floor in under a minute: '+t.toFixed(1));assert.equal(w.y,FLOOR_Y[2]);assert.equal(handsOn(w,0),HANDS_ON);
   assert.ok(w.ground>5);assert.equal(sendTo(w,0,spots[0]),false,'already there');});
-test('the saved station survives a bad save',()=>{assert.deepEqual(migrateManager(null),{at:-1,met:false,xp:0,called:false});assert.deepEqual(migrateManager({at:3,met:true,xp:7.9,called:true}),{at:3,met:true,xp:7,called:true});assert.deepEqual(migrateManager({at:9,met:'yes',xp:-4,called:1}),{at:-1,met:false,xp:0,called:false});});
+test('the saved station survives a bad save',()=>{assert.deepEqual(migrateManager(null),{at:-1,met:false,xp:0,called:false,avatar:'blazer-woman'});assert.deepEqual(migrateManager({at:3,met:true,xp:7.9,called:true,avatar:'trench-coat'}),{at:3,met:true,xp:7,called:true,avatar:'trench-coat'});assert.deepEqual(migrateManager({at:9,met:'yes',xp:-4,called:1,avatar:'security-guard'}),{at:-1,met:false,xp:0,called:false,avatar:'blazer-woman'});});
 import {floorSpot} from '../src/manager.js';
 test('a floor tap lands on the top slab it hits, kept inside its edges',()=>{
   const floors=[{y:0,x:.75,z:2.475,w:24.5,d:18.95},{y:4.7,z:-2.95,w:18,d:7.4},{y:9.4,z:-3.6,w:13,d:6.6}];
@@ -49,3 +49,9 @@ test('levels rise with calls handled and raise the hands-on speed and the pay',(
   for(let l=2;l<=MANAGER_MAX;l++){assert.ok(handsOnAt(l)>handsOnAt(l-1));assert.ok(callSeconds(l)>callSeconds(l-1));}
   assert.equal(callPay(100,1),1000);assert.equal(callPay(0,1),25);assert.equal(callPay(NaN,3),25);assert.equal(callPay(100,MANAGER_MAX),2800);
   const w=createWalker(spots[2]);w.target=2;assert.equal(handsOn(w,2,4),1.8);assert.equal(handsOn(w,3,4),1);});
+
+import {AVATARS,avatarId} from '../src/manager.js';import {existsSync} from 'node:fs';
+test('every manager avatar has its model and its portrait, and an unknown look falls back to the first',()=>{
+  assert.ok(AVATARS.length>=6);assert.equal(new Set(AVATARS.map(a=>a.id)).size,AVATARS.length);
+  for(const a of AVATARS){assert.ok(existsSync('public/models/people/'+a.id+'.glb'),a.id+' model');assert.ok(existsSync('public/guide/avatars/'+a.id+'.webp'),a.id+' portrait');assert.ok(a.name);}
+  assert.equal(avatarId('nope'),AVATARS[0].id);assert.equal(avatarId(AVATARS[2].id),AVATARS[2].id);});

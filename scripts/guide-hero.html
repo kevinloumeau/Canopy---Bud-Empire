@@ -104,6 +104,24 @@ function drone() {
 
 const params = new URLSearchParams(location.search);
 const pick = (k, d) => params.has(k) ? params.get(k) : d;
+// ?solo=<people file>: one manager avatar on their own for the guide's picker (scripts/render-avatars.mjs): the
+// figure facing out on a round oak plinth with the manager's lime ring under their feet. Nothing else is drawn.
+if (params.has('solo')) {
+  slab.visible = deck.visible = trim.visible = base.visible = false;
+  const oak = new THREE.Mesh(new THREE.CylinderGeometry(.46, .46, .1, 64), new THREE.MeshLambertMaterial({ color: '#d8b685' })); oak.position.y = -.05; oak.receiveShadow = true; world.add(oak);
+  const foot = new THREE.Mesh(new THREE.CylinderGeometry(.49, .49, .04, 64), new THREE.MeshLambertMaterial({ color: '#c9a35a' })); foot.position.y = -.12; world.add(foot);
+  const lime = new THREE.Mesh(new THREE.RingGeometry(.3, .37, 64), new THREE.MeshBasicMaterial({ color: '#b6ea5a' })); lime.rotation.x = -Math.PI / 2; lime.position.y = .006; world.add(lime);
+  const pool = new THREE.Mesh(new THREE.CircleGeometry(.3, 48), new THREE.MeshBasicMaterial({ color: '#c8f078', transparent: true, opacity: .28, depthWrite: false })); pool.rotation.x = -Math.PI / 2; pool.position.y = .004; world.add(pool);
+  const who = await person(params.get('solo'), 0, 0, Math.PI / 4, 1.1);
+  const cam = createMapCamera(); world.updateMatrixWorld(true); cam.updateMatrixWorld(true);
+  // Every avatar is framed the same (plinth and a 1.5 m figure), so they line up in the row whatever their height.
+  const b = new THREE.Box3().setFromObject(foot).union(new THREE.Box3(new THREE.Vector3(-.25, 0, -.25), new THREE.Vector3(.25, 1.42 * HEIGHT_SCALE, .25))), xs = [], ys = [];
+  for (let k = 0; k < 8; k++) { const c = new THREE.Vector3(k & 1 ? b.max.x : b.min.x, k & 2 ? b.max.y : b.min.y, k & 4 ? b.max.z : b.min.z).applyMatrix4(cam.matrixWorldInverse); xs.push(c.x); ys.push(c.y); }
+  const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2, half = (Math.max(...ys) - Math.min(...ys)) / 2 * 1.04;
+  Object.assign(cam, { left: cx - half * W / H, right: cx + half * W / H, top: cy + half, bottom: cy - half }); cam.updateProjectionMatrix();
+  renderer.render(scene, cam); window.heroDone = true;
+  await new Promise(() => {});
+}
 const [desk, planter, menu] = await Promise.all(['order_desk_tier1.glb', 'shop_planter.glb', 'menu_board.glb'].map(f => load('/models/' + f)));
 [desk, planter, menu].forEach(g => shadows(g.scene));
 const deskTurn = +pick('deskTurn', Math.PI / 4);
